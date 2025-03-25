@@ -1,9 +1,9 @@
 # Manuál pro provoz
 
-Příručka pro provoz systému WebJET CMS.
+Manuál pro provoz WebJET CMS.
 
-## Stáhnout dokumentaci
+## Dokumentace ke stažení
 
-Tuto dokumentaci si můžete stáhnout také ve formátu PDF a vytisknout.
+Tuto dokumentaci si můžete stáhnout také v PDF formátu pro možnost vytištění.
 
-[Návod k obsluze - PDF](../_media/manuals/webjetcms-sysadmin.pdf)
+[Manuál pro provoz - PDF](../_media/manuals/webjetcms-sysadmin.pdf)

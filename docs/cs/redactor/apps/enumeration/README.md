@@ -1,83 +1,83 @@
 # Číselníky
 
-Aplikace Číselníky umožňuje vytvářet/upravovat/mazat a duplikovat pojmenované typy číselníků, do kterých lze následně ukládat data těchto číselníků. Typy číselníků a data lze také exportovat a importovat pomocí souboru.
+Aplikace Číselníky umožňuje vytvářet/editovat/mazat a duplikovat pojmenované typy číselníků, do kterých je následně možné ukládat data těchto číselníků. Typy a data číselníků lze také exportovat a importovat pomocí souboru.
 
 ![](dataTable_enumType.png)
 
 ## Typy číselníků
 
-Při vytváření nového typu číselníku je nutné zadat jedinečný název. Ostatní pole jsou nepovinná. Všimněte si karet **Řetězy** / **Čísla** / **Boolean** / **Data** které obsahují několik číslovaných polí. Tato pole slouží k definování formátu dat číselníku. Pokud zadáte název pole, vygenerují se z číselníkových dat pole s názvem, který odpovídá zadanému textu a typu karty.
+Při vytváření nového typu číselníku musíte zadat jméno, které bude unikátní. Ostatní pole jsou volitelná. Všimněte si karty **Řetězce** / **Čísla** / **Boolovské** / **Data**, které obsahují několik očíslovaných polí. Těmito poli zadefinujete jaký formát budou mít data daného číselníku. Pokud zadáte název, v datech číselníku se vygeneruje pole s jméno, které odpovídá zadanému textu a typu dané karty.
 
 ![](editor_enumType.png)
 
-Příklad: pokud na kartě vyplníte 2 pole. **Řetězy**
+Příklad: pokud vyplníte 2 pole v kartě **Řetězce**
 
 ![](editor_stringTab.png)
 
-a jedno pole na kartě **Boolean**,
+a jedno pole v kartě **Boolovské**,
 
 ![](editor_booleanTab.png)
 
-pak se v datech daného číselníku zobrazí 2 sloupce/ pole typu string a 1 sloupec/ pole typu boolean se zadanými názvy (viz obrázek v části [Seznam údajů o číselníku](#seznam-údajů-o-číselníku)).
+tak se v datech daného číselníku zobrazí 2 sloupce/pole typu řetězec a 1 sloupec/pole typu boolean s názvy, které byly zadány (viz obrázek v sekci [Seznam dat číselníků](#seznam-dat-číselníků)).
 
-To znamená, že můžete definovat formát dat číselníku pro každý číselník zvlášť. Jak napovídají názvy karet, můžete kombinovat textová, číselná, logická pole nebo pole s datem. Jejich počet je pro každý typ omezen počtem polí na jednotlivých kartách.
+To znamená, že si můžete zadefinovat formát dat číselníků pro každý číselník zvlášť. Jak již napovídají názvy karet, můžete kombinovat textová, číselná, boolovská nebo datová pole. Jejich počet je omezen pro každý typ počtem polí v jednotlivých kartách.
 
-### Základní karta
+### Karta Základní
 
-Na kartě "Základní" se nastavují vlastnosti:
-- Název typu - jedinečný název typu číselníku, nesmí být prázdný.
-- Propojit s číselníkem - vyberte ze všech číselníků pro propojení číselníku.
-- Povolit propojení s číselníkem - povolí propojení s jiným číselníkem (stejně jako v případě typu číselníku).
-- Povolit nadřazený odkaz na data tohoto číselníku - určuje, zda bude v datech tohoto číselníku povolen výběr nadřazeného odkazu.
+V kartě "Základní" se nastavují vlastnosti:
+- Název typu - jedinečný název pro typ číselníku, nesmí být prázdný.
+- Propojení na číselník - výběr ze všech číselníků pro propojení číselníku.
+- Povolit propojení na číselník - povolení propojení na jiný číselník (stejně jako v případě typu číselníku).
+- Povolit rodičovské propojení na data tohoto číselníku - určuje, zda budou mít data daného číselníku povoleno zvolení rodičovského propojení.
 
-Pro data nelze mít současně povolen "odkaz na vytáčení" a "nadřazený odkaz".
+Nemůžete mít současně povoleno pro data "propojení na číselník" a "rodičovské propojení".
 
-**Odkaz na číselník** má určitá omezení, a proto některé možnosti buď nelze vybrat (jsou označeny šedě), nebo se při jejich výběru zobrazí chybové hlášení.
+**Propojení na číselník** má určitá omezení a proto se některé možnosti buď nedají zvolit (označené šedou barvou) nebo jejich zvolení vrátí chybovou zprávu.
 
-1. Propojení číselníku se sebou samým je zakázáno. V případě číselníku **B** vyberete odkaz na jiný číselník, bude v samotném seznamu, ale tuto možnost nebude možné vybrat.
+1. Propojení číselníku samého na sebe je zakázáno. V případě že pro číselník **B** vybíráte propojení na jiný číselník, v seznam bude i on sám, ale tato možnost se nebude dát zvolit.
 
 ![](editor_select_1.png)
 
-2. Kruhové propojení číselníků je zakázáno. Pokud vytáčíte **A** vybere odkaz na číselník **B**, takže číselník **B** nelze propojit zpět na číselník **A**. Možnost výběru číselníku **A** bude pro vytáčení **B** ačkoli je viditelný a lze jej vybrat, při pokusu o uložení se zobrazí chybové hlášení.
+2. Kruhové propojení číselníků je zakázáno. Pokud si číselník **A** zvolí propojení na číselník **B**, tak číselník **B** se nemůže propojit zpět na číselník **A**. Možnost zvolit číselník **A** bude pro číselník **B** sice viditelná a bude ji moci i zvolit, ale při pokusu o uložení bude vrácena chybová zpráva.
 
 ![](editor_select_2.png)
 
-3. Odkaz na již smazaný číselník. Může se stát, že číselník **C** je spojen s číselníkem **D**, který byl následně vymazán. V tomto případě se zobrazí smazaný číselník **D** v možnostech s předponou **`(!deleted)_`**. Tato předpona dá jasně najevo, že číselník byl již smazán, a tuto možnost nebude možné vybrat. Číselník však **C** který byl propojen před smazáním číselníku **D** zachovává tento odkaz. Tento odkaz bude možné změnit, ale jakmile bude změněn, nebude možné se na smazaný číselník znovu odkazovat.
+3. Propojení na již vymazaný číselník. Může nastat situace, že číselník **C** se propojil na číselník **D**, který byl následně smazán. V tomto případě uvidíte smazaný číselník **D** v možnostech s prefixem **`(!deleted)_`**. Tento prefix bude jasně dávat najevo, že číselník již byl smazán a taková možnost nebude možné zvolit. Avšak číselník **C**, který se propojil ještě před smazáním číselníku **D** si toto propojení ponechá. Toto propojení bude možné změnit, ale po změně se zpětně na vymazaný číselník již znovu nedokáže propojit.
 
 ![](editor_select_3.png)
 
-**Povolit propojení s číselníkem** pokud je povoleno, bude možné jednotlivé údaje číselníku propojit s číselníky. I v tomto případě existují určitá omezení.
+**Povolit odkaz na číselník** pokud je povoleno, jednotlivá data číselníku se budou moci propojovat na číselníky. I v tomto případě zde jsou určitá omezení.
 
-1. Propojení s číselníky, z nichž data vycházejí, je zakázáno. Pokud data vytvořená pod číselníkem X mají povoleno propojení s číselníkem, možnost číselníku X se ani nezobrazí.
+1. Propojení na číselníky ze kterého data vycházejí je zakázáno. Pokud data vytváříte pod číselníkem X mají povoleno propojení na číselník, tak možnost na číselník X se ani nezobrazí.
 
-2. Odkaz na již smazaný číselník. Tento případ má stejné podmínky jako **Odkaz na číselník** pro typ číselníku.
+2. Propojení na již vymazaný číselník. Tento případ má stejné podmínky jako **Propojení na číselník** u typu číselníku.
 
-**Povolení nadřazeného odkazu na data tohoto číselníku** pokud je povoleno, budou si jednotlivé údaje číselníku moci vybrat nadřazený údaj z ostatních údajů pod stejným číselníkem. I v tomto případě existují určitá omezení.
+**Povolit rodičovský odkaz na data tohoto číselníku** je-li povoleno, jednotlivá data číselníku si budou moci zvolit rodiče z ostatních dat pod týmž číselníkem. I v tomto případě zde jsou určitá omezení.
 
-1. V tomto případě musí být splněna jedna podmínka. Aby bylo možné použít nadřazený odkaz, musí mít typ číselníku definovanou volbu pro **Řetěz 1**. Důvodem je, že hodnota ve vygenerovaném sloupci **Řetěz 1** se použije jako identifikátor pro výběr odkazu na nadřazený prvek.
+1. V tomto případě musí být splněna jedna podmínka. Pro používání rodičovského propojení musí mít typ číselníku definovanou možnost pro **Řetězec 1**. Důvodem je fakt, že hodnota ve vygenerovaném sloupci **Řetězec 1** se bude používat jako identifikátor, kterým se bude dát zvolit propojení na rodiče.
 
-2. Propojení číselníku se sebou samým je zakázáno. Při výběru nadřazeného odkazu na sebe sama nebudou údaje číselníku mezi možnostmi viditelné.
+2. Propojení záznamu číselníku na sebe je zakázáno. Data číselníku při výběru rodičovského propojení nebudou vidět mezi možnostmi sami sebe.
 
-!>**Varování:** pokud je zrušeno oprávnění "odkaz na číselník" nebo "nadřazený odkaz", budou odstraněny všechny odkazy, které byly vytvořeny na data tohoto číselníku, a to i v případě, že je toto oprávnění znovu uděleno.
+!>**Upozornění:** pokud "povolení propojení na číselník" nebo "povolení rodičovského propojení" bude odebráno, všechna propojení, která byla vytvořena u dat tohoto číselníku budou odstraněna a to iv případě, že toto povolení bude zpětně uděleno opět.
 
-Jako příklad uveďme situaci, kdy vytvoříme typ číselníku s X a tento typ číselníku umožňuje "odkaz na číselník". Pod tímto typem číselníku vytvoříme záznam, který má povoleno propojení s číselníkem a bude odkazovat na číselník Z. Pokud poté zrušíme povolení "propojení na číselník" pro typ číselníku X, záznam tohoto číselníku, který se propojil s číselníkem Z, toto propojení trvale ztratí. Pokud bychom "propojení na číselník" opět povolili, volba by se u záznamu objevila, ale předchozí volba na číselník Z by se vynulovala.
+Jako příklad mějme situaci, kdy si vytvoříme typ číselníku s označením X a tento typ číselníku povoluje „propojení na číselník“. Pod tímto typem číselníku vytvoříme záznam, který má povolené propojení na číselník a bude se propojovat na číselník Z. Pokud pak u typu číselníku X povolení "propojení na číselník" zrušíme, takto záznam tohoto číselníku, který se propojil na číselník Z, přijde o toto propojení natrvalo. Pokud bychom "propojení na číselník" opět povolili, u záznamu by se zobrazila možnost, ale předchozí volba na číselník Z by byla vynulována.
 
-## Seznam údajů o číselníku
+## Seznam dat číselníků
 
-Položka Data číselníku umožňuje upravovat data vytvořených typů číselníků. Je třeba vybrat číselník, který chcete spravovat, z nabídky v záhlaví stránky. Po výběru konkrétního číselníku se zobrazí jeho odpovídající údaje. Pokud má typ číselníku některé sloupce nepojmenované, tyto sloupce a jejich údaje se nezobrazí.
+Data číselníků umožňuje editovat data vytvořených typů číselníků. Je třeba z nabídky v hlavičce stránky vybrat číselník, který se bude spravovat. Po výběru konkrétního číselníku se zobrazí jeho příslušná data. V případě, že typ číselníku má některé sloupce nepojmenované, tyto sloupce a jejich data nebudou zobrazeny.
 
-!>**Varování:** v nabídce jsou pouze číselníky, které nebyly odstraněny.
+!>**Upozornění:** v nabídce jsou pouze číselníky, které nebyly vymazány.
 
 ![](dataTable_enumData.png)
 
 Příklad:
 
-Při vytváření číselníku **A** jsme vyplnili pole **Řetěz 1**, **Řetěz 2** a **Logická 1**. Vidíme, že tabulka má přesně ty sloupce, které jsme definovali v číselníku. Pokud vytvoříme nový záznam (nová data) pro číselník, vygenerují se nám v editoru 2 pole typu string a 1 pole typu boolean. Názvy těchto polí budou stejné, jaké jsme zadali při vytváření číselníku. Samozřejmě, pokud jsme to při vytváření číselníku povolili, můžeme mít v editoru např. **připojení rodičů** nebo **odkaz na číselník**.
+Při vytváření číselníku **A** jsme vyplnili pole **Řetězec 1**, **Řetězec 2** a **Boolean 1**. Vidíme, že tabulka mě přesně ty sloupce, které jsme v číselníku zadefinovali. Pokud budeme vytvářet nový záznam (nová data) pro číselník, v editoru se nám vygenerují 2 pole typu řetězec a 1 pole typu boolean. Názvy těchto polí budou stejné jako ty, co jsme zadali při vytváření číselníku. Samozřejmě, pokud to jsme při vytváření číselníku povolili, v editoru můžeme mít **rodičovské propojení** nebo **propojení na číselník**.
 
 ![](editor_enumData.png)
 
-Při změně vybraného typu číselníku lze změnit celou tabulku i editor dat číselníku.
+Při změně vybraného typu číselníku se může změnit celá tabulka i editor dat číselníků.
 
-## Vymazání dat
+## Mazání dat
 
-Ve výchozím nastavení se při odstranění záznamu číselníku nebo datového typu tento záznam fyzicky z databáze neodstraní, ale označí se jako odstraněný. Je to z důvodu ochrany před chybami při vyhledávání starých dat. Například pokud se používá číselník Barva vozu a my již nechceme, aby se barva vybírala pro nové záznamy, ale zároveň je třeba, aby se barva zobrazovala ve starých záznamech. Technicky je možné obnovit smazaný záznam přímo v databázi nastavením atributu `hidden`, ale uživatelské rozhraní to v současné době neumožňuje.
+Standardně se při smazání záznamu typu číselníku nebo dat fyzicky nesmažou z databáze, ale se označí jako smazané. Je to ochrana před chybami získání dat ve starých údajích. Např. používá-li se číselník Barva auta a už pro nové záznamy nechceme nějakou barvu mít na výběr, ale zároveň ve starých záznamech je třeba barvu zobrazit. Technicky lze smazaný záznam obnovit přímo v databázi nastavením atributu `hidden`, ale uživatelské rozhraní to aktuálně neumožňuje.

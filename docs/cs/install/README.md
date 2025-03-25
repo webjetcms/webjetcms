@@ -1,9 +1,9 @@
 # Instalace
 
-Instalační příručka WebJET CMS.
+Manuál pro instalaci WebJET CMS.
 
-## Stáhnout dokumentaci
+## Dokumentace ke stažení
 
-Tuto dokumentaci si můžete stáhnout také ve formátu PDF a vytisknout.
+Tuto dokumentaci si můžete stáhnout také v PDF formátu pro možnost vytištění.
 
-[Instalační příručka - PDF](../_media/manuals/webjetcms-install.pdf)
+[Manuál pro instalaci - PDF](../_media/manuals/webjetcms-install.pdf)

@@ -1,13 +1,13 @@
 # Odkazy na sociální sítě
 
-Vložte na stránku ikony s odkazy na sociální sítě Facebook, Twitter, Instagram, LinkedIn, Flickr atd.
+Vloží do stránky ikony s odkazy na sociální sítě Facebook, Twitter, Instagram, LinkedIn, Flickr atp.
 
 ## Nastavení aplikace
 
 V této části lze nastavit:
 - Vizuální styl
-- Zarovnání ikon (vlevo, uprostřed, vpravo)
-- Zadávání adres stránek jednotlivých sociálních sítí. Pokud pole není vyplněno, ikona sociální sítě se nezobrazí.
+- Zarovnání ikon (vlevo, střed, vpravo)
+- Zadání adres stránky pro jednotlivé sociální sítě. Pokud se nevyplní pole ikona sociální sítě se nezobrazí.
 
 ![](editor.png)
 

@@ -1,5 +1,5 @@
-# Výňatky
+# Ukázky
 
-V této části najdete praktické příklady, které můžete použít při programování návrhu pro WebJET CMS.
+V této sekci naleznete praktické ukázky, které můžete použít při vašem programování designu pro WebJET CMS.
 
 Pokračujte výběrem sekce v levém menu.

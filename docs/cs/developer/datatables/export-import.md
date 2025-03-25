@@ -1,40 +1,40 @@
 # Export a import
 
-Při exportu a importu dat se používají možnosti exportu a importu v nabídce [Datové tabulky API](https://datatables.net/extensions/buttons/examples/initialisation/export). Knihovna slouží k práci se soubory aplikace Excel [SheetJS](https://docs.sheetjs.com/).
+Export a import dat využívá možnosti exportu a importu v [API datatables](https://datatables.net/extensions/buttons/examples/initialisation/export). Pro práci s Excel soubory se používá knihovna [SheetJS](https://docs.sheetjs.com/).
 
-Po implementaci importu a exportu do datové tabulky nezapomeňte použít funkci [automatický test importu](../testing/datatable-import.md).
+Po implementaci importu a exportu do vaší datatabulky nezapomeňte použít i [automatizovaný test importu](../testing/datatable-import.md).
 
 ## Export dat
 
-- Umožňuje export do **Excel(xlsx) a přímý tisk na tiskárně**
-- Soubor je pojmenován podle aktuálního `title` a automaticky se přidá aktuální datum a čas.
-- Export v tabulce se stránkováním serveru lze nastavit na datový typ (**aktuální/všechny stránky, filtrované/všechny řádky, třídění**).
-- Při stránkování serveru se nejprve provede volání služby REST, ze které se provede **maximálně 50 000 záznamů**. Pokud potřebujete exportovat více záznamů, použijte vícenásobný export pomocí filtrování.
-- Zpracování dat serveru probíhá mimo datovou tabulku (z výkonnostních důvodů), je znovu generováno. `datetime` sloupců a `radio buttony` (podporovány jsou `date-time, date, *-select, *-boolean`).
-- Při exportu je v prvním řádku připraven seznam sloupců, **import proto není citlivý na pořadí sloupců**.
-- Pro **výběrová pole** (select/digits) s **exportovat textovou hodnotu** a při importu se rekonstruuje zpět na ID. To umožňuje mít **různá ID vázaných záznamů** mezi prostředími (např. ID šablony webové stránky), pokud se název shoduje, je záznam správně spárován. V důsledku toho je v exportu místo hodnoty ID také lidsky čitelný text.
+- Umožňuje export do **Excelu(xlsx) a přímý tisk na tiskárnu**
+- Souboru se nastaví jméno podle aktuálního `title` stránky a automaticky se doplní aktuální datum a čas.
+- Exportu v tabulce se serverovým stránkováním lze nastavit typ dat (**aktuální/všechny strany, filtrované/všechny řádky, řazení**).
+- Při serverovém stránkování se nejprve provede volání REST služby, ze které se získá **maximálně 50 000 záznamů**. Při potřebě exportovat více záznamů použijte vícenásobné exportování s využitím filtrování.
+- Zpracování serverových dat probíhá mimo datatabulky (kvůli výkonu), nově se generují `datetime` sloupce a `radio buttony` (podporovány jsou `date-time, date, *-select, *-boolean`).
+- Při exportu se v prvním řádku připraví seznam sloupců, **import následně není citlivý na pořadí sloupců**.
+- Pro **výběrová pole** (select/číselníky) se **exportuje textová hodnota** a při importu se zpět rekonstruuje na ID. Umožňuje to mít **rozdílné ID navázaných záznamů** mezi prostředími (např. ID šablony pro web stránku), pokud se shoduje jméno, korektně se záznam spáruje. V exportu je následně i lidsky srozumitelný text namísto ID hodnoty.
 
-Implementace je v souboru `export-import.js` ve funkci `bindExportButton(TABLE, DATA) ` který je inicializován přímo v `index.js` při inicializaci datové tabulky. HTML kód dialogového okna pro export je v souboru `datatables-data-export.pug` která je prostřednictvím `include` vložené do `layout.pug`.
+Implementace je v souboru `export-import.js` ve funkci `bindExportButton(TABLE, DATA) `, která je inicializována přímo v ` index.js` při inicializaci datatabulky. HTML kód exportního dialogu je v souboru `datatables-data-export.pug` který je přes `include` vkládaný do `layout.pug`.
 
 ### Příprava dat před exportem
 
-V datové tabulce se často načítají pouze základní data/sloupce (zejména při použití [editorFields](../datatables-editor/customfields.md) atribut). Proto je vždy nutné před exportem zavolat na server a získat kompletní data. Když je zjištěn export, místo `ProcessItemAction.GETALL` které se mají používat `ProcessItemAction.GETONE` jako při získávání jednoho záznamu. Vrácené entity tedy budou obsahovat všechna data.
+V datatabulce se často načítají jen základní data/sloupce (hlavně při použití [editorFields](../datatables-editor/customfields.md) atributu). Proto je před exportem vždy třeba volat server a získat kompletní data. Při detekování exportu se místo `ProcessItemAction.GETALL` použije `ProcessItemAction.GETONE` jako při získání jednoho záznamu. Vrácené entity tedy budou obsahovat všechna data.
 
-Při použití `serverSide=false` není možné použít všechny možnosti exportu datové tabulky (např. pouze filtrovaná data), protože je nemusí být možné zpracovat na serveru. Tyto volby jsou proto skryty, když kliknete na tlačítko pro otevření dialogového okna pro export (implementované přímo v aplikaci `index.js` ve funkci dialogového tlačítka pro export).
+Při použití `serverSide=false` na datatabulce nelze využít všech možností exportu (např. jen vyfiltrovaná data), protože se nemusí dát serverově zpracovat. Tyto možnosti jsou tedy schovány při kliknutí na tlačítko otevření dialogového okna exportu (implementováno přímo v `index.js` ve funkci tlačítka export dialogu).
 
 ### Provedení exportu
 
-Možnosti exportu se nastavují v dialogovém okně. Po kliknutí na tlačítko exportu se skutečná data načtou ze serveru voláním funkce `getDataToExport(serverSide, TABLE, pageVal, searchVal, orderVal)` které jsou zpracovány po volání `.then(response => {`. Pro každý řádek získaného objektu JSON `formatedData = content.map(c => {` pole řádků je pro export dat generováno iterací přes pole editoru. `DATA.fields.forEach((dc) => {`.
+V dialogovém okně se nastavují možnosti exportu. Po kliknutí na tlačítko exportovat se získají aktuální data ze serveru voláním funkce `getDataToExport(serverSide, TABLE, pageVal, searchVal, orderVal)`, které se zpracují po volání `.then(response => {`. Pro každý řádek ze získaného JSON objektu `formatedData = content.map(c => {` se generuje pole řádku pro export dat iterací přes pole editoru `DATA.fields.forEach((dc) => {`.
 
-Datová pole typu `json` jsou ošetřovány speciálně. Pro typy `dt-tree-page, dt-tree-group, dt-tree-dir` hodnota z je generována na výstupu `v.fullPath` (nebo `v.virtualPath` Pro `dt-tree-dir`). Výsledkem je, že export nebude obsahovat celý objekt JSON, ale hodnotu typu `["/Portal/Novinky", "/English/News"]`.
+Datová pole typu `json` se zpracovávají speciálně. Pro typy `dt-tree-page, dt-tree-group, dt-tree-dir` se do výstupu generuje hodnota z `v.fullPath` (nebo `v.virtualPath` pro `dt-tree-dir`). Výsledkem je, že v exportu nebude celý JSON objekt, ale hodnota typu `["/Portal/Novinky", "/English/News"]`.
 
-Výsledný objekt `formatedData` obsahuje dvourozměrné datové pole pro export. Ty se používají ve volání API datového pole tak, že simulují kliknutí na tlačítko pro export. `TABLE.button().add(0, {` zavoláním `$(".exportujem").click();`. Toto fiktivní tlačítko se po exportu přes `TABLE.buttons('.exportujem').remove();`. Takto simulujeme kliknutí na standardní tlačítko pro export datové tabulky - po kliknutí na tlačítko export v dialogovém okně se data připraví, do datové tabulky se přidá tlačítko pro export dat a na toto tlačítko se klikne. Po exportu se pak standardní tlačítko pro export skryje.
+Výsledný objekt `formatedData` obsahuje dvourozměrné pole dat pro export. Ty se použijí při API volání datatabulky simulováním kliknutí na tlačítko exportu `TABLE.button().add(0, {` pomocí volání `$(".exportujem").click();`. Toto fiktivní tlačítko se po exportu schová přes `TABLE.buttons('.exportujem').remove();`. Takto simulujeme kliknutí na standardní export tlačítko datatabulky – po kliknutí na exportovat v dialogovém okně se připraví data, přidá se do datatabulky tlačítko pro export dat a klikne se na toto tlačítko. Následně po exportu se standardní tlačítko pro export schová.
 
-Konfigurace exportu je nastavena v `exportOptions`. Důležité je zpracování v `customizeData` kde se znovu vygeneruje záhlaví tabulky. Původně obsahuje seznam sloupců tabulky, ale při úpravě se použije seznam sloupců pro editor. Kromě názvu sloupců je v něm uveden i `dc.label` hodnoty generuje také název atributu (`dc.name`), protože někdy se používají stejná jména (např. v editaci uživatele je výchozí uživatelské jméno, ale také jméno v sekci Doručovací adresa).
+Konfigurace exportu je nastavena v `exportOptions`. Důležité je zpracování v `customizeData` kde se nově generuje hlavička tabulky. Původně obsahuje seznam sloupců v tabulce, úprava ale použije seznam sloupců pro editor. Do názvu sloupce se kromě `dc.label` hodnoty generuje i jméno atributu (`dc.name`), protože někdy jsou použity stejné názvy (např. v editaci uživatele je standardní uživatelské jméno, ale i jméno v části Adresa doručení).
 
-### Zvláštní typ vývozu
+### Speciální typ exportu
 
-Pokud potřebujete implementovat speciální typ exportu, stačí na webovou stránku přidat následující prvek:
+Pokud potřebujete implementovat speciální typ exportu stačí ve web stránce přidat následující element:
 
 ```html
 <div class="hidden" id="datatableExportModalCustomOptions">
@@ -45,9 +45,9 @@ Pokud potřebujete implementovat speciální typ exportu, stačí na webovou str
 </div>
 ```
 
-v atributu `data-hide` je možné zadat seznam prvků, které se po nastavení výše uvedené možnosti automaticky skryjí.
+v atributu `data-hide` je možné specifikovat seznam elementů, které se automaticky schovají po nastavení uvedené možnosti.
 
-Potřeba implementovat funkci JS `window.exportDialogCustomCallback(type, TABLE)` která je provedena v rámci této možnosti:
+Potřebné je implementovat JS funkci `window.exportDialogCustomCallback(type, TABLE)`, která je provedena při této možnosti:
 
 ```javascript
 function exportDialogCustomCallback(type, TABLE) {
@@ -58,49 +58,48 @@ function exportDialogCustomCallback(type, TABLE) {
 
 ## Import dat
 
-- Povoleno **importovat data jako nová** (pro přidání do databáze) nebo **porovnat existující data podle vybraného sloupce** (např. název, adresa URL atd.). Při porovnávání nejprve vyhledá záznam v databázi a poté jej aktualizuje. Pokud neexistuje, vytvoří nový záznam.
-- **Import z formátu xlsx**.
-- Import se provádí **postupně v dávkách po 25 záznamech** aby nedošlo k přetížení serveru.
+- Umožňuje **importovat data jako nová** (doplní se do databáze) nebo **párovat existující data podle zvoleného sloupce** (např. jméno, URL adresa a podobně). Při párování nejprve pohledá záznam v databázi a následně jej aktualizuje. Pokud neexistuje, vytvoří nový záznam.
+- **Importuje se z formátu xlsx**.
+- Import se provádí **postupně v dávkách po 25 záznamech**, aby nebyl zatížen server.
 
-Implementace je v souboru `export-import.js` ve funkci `bindImportButton(TABLE, DATA) ` který je inicializován přímo v `index.js` při inicializaci datové tabulky. HTML kód dialogového okna importu je v souboru `datatables-data-import.pug` která je prostřednictvím `include` vložené do `layout.pug`.
+Implementace je v souboru `export-import.js` ve funkci `bindImportButton(TABLE, DATA) `, která je inicializována přímo v ` index.js` při inicializaci datatabulky. HTML kód importního dialogu je v souboru `datatables-data-import.pug` který je přes `include` vkládaný do `layout.pug`.
 
-V dialogovém okně importu se zobrazí seznam sloupců, podle kterých lze data importovat. Tento seznam je implementován přímo v `index.js` po kliknutí na tlačítko zobrazíte dialogové okno pro import. Možnosti jsou generovány pomocí seznamu `DATA.fields.forEach((col, index) => {`. Přeskočeny jsou atributy typu `hidden` nebo atributy s anotací `data-dt-import-hidden`.
+V dialogovém okně importu se zobrazuje seznam sloupců podle kterých lze data importovat. Tento seznam je implementován přímo v `index.js` po kliknutí na tlačítko zobrazení importního dialogu. Možnosti se generují ze seznamu `DATA.fields.forEach((col, index) => {`. Přeskočeny jsou atributy typu `hidden` nebo atributy s anotací `data-dt-import-hidden`.
 
-### Převod z aplikace Excel
+### Konverze z Excelu
 
-Převod ze souboru Excel na data se provádí přímo na straně klienta ve volání `document.getElementById('insert-file').addEventListener('change', e => {`, tedy hned po výběru souboru. Knihovna SheetJS se používá voláním [xlsx.read](https://docs.sheetjs.com/#parsing-options). V konfiguraci je zpracování data nastaveno pomocí atributu `cellDates: true`, který zajistí převod dat na `Date` objekt. Výsledkem čtení je objekt JSON excelData a vyvolání události `file-reader-done`.
+Konverze z Excel souboru na data se děje přímo na straně klienta ve volání `document.getElementById('insert-file').addEventListener('change', e => {`, neboli hned po výběru souboru. Používá se knihovna SheetJS voláním [xlsx.read](https://docs.sheetjs.com/#parsing-options). V konfiguraci je nastaveno zpracování dat pomocí atributu `cellDates: true`, což zajistí konverzi dat na `Date` objekt. Výsledkem čtení je JSON objekt excelData a vyvolání události `file-reader-done`.
 
-Zpracování dat z aplikace Excel v objektu `excelData` se koná v `$( document ).on('file-reader-done', () => {` kde bude provedeno několik úprav:
-- Je vygenerován objekt JSON, který jako název atributu použije hodnotu ze záhlaví tabulky za znakem |.
-- Struktura výsledného objektu JSON je stejná jako při standardním načítání/ukládání dat do datové tabulky.
-- Převádí data, textové hodnoty kódových dat na hodnotu ID a u polí typu JSON se provádí převod z řetězce na skutečný objekt JSON.
+Zpracování dat z Excelu v objektu `excelData` probíhá v `$( document ).on('file-reader-done', () => {` kde se provede několik úprav:
+- Generuje se JSON objekt, jako jméno atributu se použije hodnota z hlavičky tabulky za znakem |.
+- Struktura výsledného JSON objektu je stejná jako při standardním získání/uložení dat v datatabulce.
+- Konvertuje se data, textové hodnoty číselníkových dat na ID hodnotu a pro pole typy JSON se provede konverze z řetězce na reálný JSON objekt.
 
-Import se provádí voláním stejné služby REST jako při použití standardního editoru záznamů. Odesílá se však více záznamů najednou, maximálně však do počtu `chunks`. Při velkém počtu záznamů se služba REST volá postupně. `/editor`, s maximální hodnotou `chunks` záznamů (výchozí 25, definováno v konf. proměnné `chunksQuantity`). Zobrazí se také ukazatel průběhu, podobně jako v galerii při nahrávání souboru.
+Importování probíhá voláním stejné REST služby jako při použití standardního editoru záznamu. Odesílá se ale najednou více záznamů, maximálně ale podle hodnoty `chunks`. Pro velký počet záznamů se tedy postupně jmenuje REST služba `/editor`, přičemž v jednom volání je maximálně `chunks` záznamů (výchozí 25, definované v konf. proměnné `chunksQuantity`). Zobrazen je i ukazatel postupu podobně jako v galerii při nahrávání souboru.
 
 ### Aktualizace podle sloupce
 
-Pokud je v dialogovém okně importu vybrána možnost aktualizovat podle sloupce, je metoda volána. `DatatableRestControllerV2.editItemByColumn(T entity, String updateByColumn)`. Ten nejprve vyhledá záznamy v databázi podle zadaného sloupce a hodnoty v daném řádku v excelu. Např. záznamy podle shody `email` atribut v Excelu. Zde je důležité si uvědomit, že takových záznamů může být v databázi více a aktualizace při importu bude provedena pro více záznamů.
+Pokud je v dialogovém okně importu zvolena možnost aktualizovat podle sloupce jmenuje se metoda `DatatableRestControllerV2.editItemByColumn(T entity, String updateByColumn)`. Tato v první řadě vyhledá záznamy v databázi podle zadaného sloupce a hodnoty v daném řádku v excelu. Např. záznamy podle shody `email` atributu v excelu. Zde je důležité si uvědomit, že takových záznamů může být v databázi více a aktualizace během importu se provede na více záznamech.
 
-Po nalezení odpovídajících záznamů v databázi je třeba upravit sloupec ID entity
-&#x20;v importovaném řádku. Podle anotace `@Id` sloupec je identifikován (nemusí to být vždy `id`, může to být např. `userId`). Hodnota `Id` sloupec je nastaven na hodnotu existující entity v databázi a poté je záznam uložen voláním `editItem(entity, id)`.
+Po nalezení shodujících záznamů v databázi je třeba modifikovat ID sloupec entity importovaného řádku. Podle anotace `@Id` se identifikuje sloupec (ne vždy to musí být `id`, může to být například. `userId`). Hodnota `Id` sloupce se nastaví na hodnotu existující entity v databázi a následně se provede uložení záznamu voláním `editItem(entity, id)`.
 
-Zjednodušeně řečeno, celý kód vyhledá existující záznam v databázi a nastaví importovanou entitu. `id` na hodnotu nalezeného záznamu.
+V jednoduchosti celý kód vyhledá existující záznam v databázi a importované entitě nastaví `id` hodnotu na hodnotu nalezeného záznamu.
 
-> **Varování:** během implementace jsme zjistili, že pro třídy anotované pomocí Lombook není možné použít. `BeanUtils.setProperty` ani `BeanUtils.copyProperties`. Je nutné použít `BeanWrapperImpl` a `NullAwareBeanUtils.copyProperties`.
+> **Upozornění:** při implementaci jsme identifikovali problém, že pro třídy anotované přes Lombook nelze používat `BeanUtils.setProperty` ani `BeanUtils.copyProperties`. Je třeba použít `BeanWrapperImpl` a `NullAwareBeanUtils.copyProperties`.
 
-> **Varování:** je technicky možné importovat pouze některé sloupce, proto nepředpokládejte, že import bude vždy obsahovat všechna data. V opačném případě se zobrazí chyby jako např. `NullPointerException`. Zejména v `editorFields.toEntity` potřebu kontroly `null` hodnoty na atributech, aby nedošlo k selhání jejich přenosu.
+> **Upozornění:** importovat je technicky možné i jen některé sloupce, nepředpokládejte tedy, že import bude vždy obsahovat všechna data. Jinak vám budou nastávat chyby typu `NullPointerException`. Zvlášť v `editorFields.toEntity` je třeba kontrolovat `null` hodnoty na atributech, aby jejich přenos nepadal.
 
 ### Podporované anotace
 
 V anotaci `@DatatableColumn` lze použít následující možnosti
 
-- `@DataTableColumnEditorAttr(key = "data-dt-import-updateByColumn", value = "PROPERTY")` - v dialogovém okně importu nastaví vyhledávání podle sloupce pro tento sloupec. `PROPERTY`. Povinné, pokud např. v `editorFields` přepíšete vlastnost (např. `login`), ale při importu je třeba hledat/párovat podle původního atributu v databázi. `login`.
-- `@DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")` - takto označený atribut se v dialogovém okně importu nezobrazí.
-- `@DataTableColumn(className = "not-export")` - sloupec s třídou CSS `not-export` nebudou exportovány.
+- `@DataTableColumnEditorAttr(key = "data-dt-import-updateByColumn", value = "PROPERTY")` - v dialogu pro import nastaví pro tento sloupec vyhledávání podle sloupce `PROPERTY`. Potřebné pokud v `editorFields` přepisujete nějakou vlastnost (např. `login`) ale při importu potřebujete v databázi vyhledávat/párovat podle původního atributu `login`.
+- `@DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")` - takto anotovaný atribut se v dialogu pro import nezobrazí.
+- `@DataTableColumn(className = "not-export")` - sloupec s CSS třídou `not-export` se nebude exportovat.
 
-### Zvláštní typ dovozu
+### Speciální typ importu
 
-Pokud potřebujete implementovat speciální typ importu, stačí na webovou stránku přidat následující prvek:
+Pokud potřebujete implementovat speciální typ importu stačí ve web stránce přidat následující element:
 
 ```html
 <div class="hidden" id="datatableImportModalCustomOptions">
@@ -111,9 +110,9 @@ Pokud potřebujete implementovat speciální typ importu, stačí na webovou str
 </div>
 ```
 
-v atributu `data-hide` je možné zadat seznam prvků, které se po nastavení výše uvedené možnosti automaticky skryjí.
+v atributu `data-hide` je možné specifikovat seznam elementů, které se automaticky schovají po nastavení uvedené možnosti.
 
-Potřeba implementovat funkci JS `window.importDialogCustomCallback(type, TABLE)` která je provedena v rámci této možnosti:
+Potřebné je implementovat JS funkci `window.importDialogCustomCallback(type, TABLE)`, která je provedena při této možnosti:
 
 ```javascript
 function importDialogCustomCallback(type, TABLE) {
@@ -124,17 +123,17 @@ function importDialogCustomCallback(type, TABLE) {
 
 ## Poznámky k implementaci
 
-Číselné hodnoty (select) jsou exportovány jako textová hodnota. V souboru [datatables-wjfunctions.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js) jsou funkce `getOptionsTableExport` a `getOptionsTableImport` který připraví tabulku s klíčem `fieldName-value` (export) a `fieldName-label` (import) pro snadný převod mezi hodnotou a štítkem.
+Číselníkové hodnoty (select) se exportují jako textová hodnota. V souboru [datatables-wjfunctions.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js) jsou funkce `getOptionsTableExport` a `getOptionsTableImport`, které připraví tabulku s klíčem `fieldName-value` (export) a `fieldName-label` (import) pro snadný překlad mezi hodnotou a labelem.
 
-Nejsložitější částí je čtení dat ze serveru během stránkování serveru. Při požadavku na export musí být provedeno volání služby REST. To se provádí ve funkci `getDataToExport` kde se používá a upravuje `DATA.urlLatestParams` (parametry jako velikost, stránka atd. jsou nahrazeny). Data se načítají standardním ajaxovým voláním mimo API datového souboru (nechceme, aby datový soubor načítal tak velké množství dat - obava z jeho zhroucení). Trik s použitím takových dat je v tlačítku pro export ve volbě `customizeData: function(d)`, kde nahradíme data v datové tabulce nově získanými daty.
+Nejsložitější částí je čtení dat ze serveru při serverovém stránkování. Při požadavku na export se musí provést volání REST služby. Děje se to ve funkci `getDataToExport` kde se využívá a modifikuje `DATA.urlLatestParams` (nahradí se parametry jako size, page atd.). Data se získají standardním ajax voláním mimo API datatabulky (nechceme, aby datatabulka načítala tak velké množství dat - obava před jejím padnutím). Finta s využitím takových dat je v export tlačítku v optionu `customizeData: function(d)`, kde nahradíme data v datatabulce za nově získaná.
 
-Při importu jsou data transformována z formátu xlsx na objekt JSON. Ten se pak použije pro standardní volání editoru DT, kdy se na server odešle najednou 25 záznamů. Import je impelentován ve funkci `importData`. Stávající ukazatel průběhu se používá pro nahrávání souborů voláním události `$( document ).trigger('initAddedFileFromImageOutside', file);`.
+Při importu se transformují data z xlsx na JSON objekt. Ten se následně použije pro standardní volání DT editoru, kde se najednou odešle na server 25 záznamů. Import je impelentován ve funkci `importData`. Využívá se stávající progress bar pro upload souborů voláním eventu `$( document ).trigger('initAddedFileFromImageOutside', file);`.
 
-Konverze z formátu xlsx do formátu JSON je implementována v aplikaci `export-import.js`. Seznam sloupců je iterován a hodnota pro daný název sloupce je načtena z aplikace Excel. Do objektu JSON se vyplní pouze sloupce zadané v aplikaci Excel. Pro `-date` sloupce jsou formátovány pomocí data, protože z aplikace Excel se načítá pouze časové razítko.
+Konverze z xlsx na JSON formát je implementována v `export-import.js`. Iteruje se seznam sloupců a z Excelu se získává hodnota pro dané jméno sloupce. Do JSON objektu se naplní pouze sloupce zadané v Excelu. Pro `-date` sloupce se formátuje datum, protože z Excelu se získá jen timestamp.
 
-Modální okno pro import/export je globální, pokud je na stránce více datových tabulek, je nutné určit, ve které z nich se import/export provádí. Existují proměnné:
+Modální okno pro import/export je globální, pokud je na stránce více datatabulek je třeba určit, ve které se děje import/export. Existují proměnné:
 - `window.datatableExportModal.tableId` - ID tabulky pro export (selektor)
 - `window.datatableImportModal.tableId` - ID tabulky pro import (selektor)
 - `window.datatableImportModal.TABLE` - instance tabulky pro import
 
-Třída `DatatableRestControllerV2` obsahuje metody `isExporting()` pro detekci vývozu a `isImporting()` dovoz. Ty lze použít v implementaci řadiče REST, např. k ověření dat v metodě `validateEditor`.
+Třída `DatatableRestControllerV2` obsahuje metody `isExporting()` pro detekování exportu a `isImporting()` importu. Ty lze využít v implementaci vašeho REST controlleru, například. pro validaci dat v metodě `validateEditor`.

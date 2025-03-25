@@ -1,118 +1,118 @@
-# Archivní soubory
+# Archiv souborů
 
-Jediná aplikace pro správu souborů a jejich verzí. Umožňuje také nastavit budoucí publikování souborů a kategorizovat a přiřazovat soubory k produktům.
+Aplikace pro management souborů a jejich verzí na jednom místě. Umožňuje nastavovat i publikování souborů do budoucna a jednotlivé soubory zařadit do kategorií a přiřadit je k produktům.
 
 ## Seznam souborů v archivu
 
-V zobrazeném seznamu vidíme všechny soubory, které byly nahrány do archivu souborů v aktuálně vybrané doméně.
+Vzobrazeném seznamu vidíme všechny soubory, které byly vloženy do archivu souborů v aktuálně zvolené doméně.
 
 ![](file_list.png)
 
 ### Filtrování souborů
 
-Prostřednictvím filtru můžete zobrazené soubory odfiltrovat na základě:
-- **id souboru** - Jedinečné ID souboru
-- **Virtuální název** - Název, který se zobrazí při výpisu souborů na stránce.
-- **Skutečné jméno** - Skutečný název souboru s příponou ( např. Zmuva.pdf )
-- **Adresář** - Adresář, ve kterém se soubor nachází
-- **Produkt, kategorie, kód** - Informace, které jste nastavili při nahrávání souboru.
-- **Hlavní soubory** - jsou zobrazeny pouze hlavní soubory bez jejich starších verzí.
-- **Zobrazit** - zobrazené soubory, které mají povoleno zobrazení
+Přes filtr můžete od-filtrovat zobrazené soubory na základě:
+- **id souboru** - Jedinečné id souboru
+- **Virtuální jméno** - Jméno, které se zobrazí při výpisu souborů na stránce
+- **Reálné jméno** - Reálné jméno souboru is příponou (např. Zmuva.pdf)
+- **Adresář** - Adresář, ve kterém se nachází soubor
+- **Produkt, Kategorie, Kód** - Informace které jste si nastavili při vkládání souboru
+- **Hlavní soubory** – zobrazeny pouze hlavní soubory bez jejich starších verzí
+- **Zobrazovat** – zobrazené soubory, které mají zobrazení povoleno
 
-Filtrovat můžete pomocí více podmínek najednou. Např. produkt "ovoce" kategorie "jablko" kód "2015". Zobrazí se seznam souborů, které budou splňovat všechny tři uvedené podmínky filtru (nebo nebude nalezen žádný odpovídající soubor).
+Filtrovat můžete pomocí více podmínek najednou. Např. produkt „ovoce“ kategorie „jablko“ kód „2015“. Zobrazí se vám seznam souborů, které budou splňovat všechny tyto tři podmínky filtru (nebo se nenajde žádný vyhovující soubor).
 
 ![](filter.png)
 
 ### Akce nad soubory
 
-Prostřednictvím seznamu souborů můžeme nad vloženými soubory provádět různé funkce, jako je úprava, přejmenování, odstranění nebo vložení novější verze souboru, případně zrušení poslední změny. Tyto funkce naleznete ve sloupci nástrojů při výpisu souboru v archivu souborů:
-- ![](upload.png ":no-zoom"), **Nahrání nové verze** pokud chcete nahrát novou (aktuální) verzi již nahraného souboru, tento nástroj vám to umožní. Po kliknutí se zobrazí standardní okno s nastavením vlastností souboru, které však již budou předvyplněny podle starého souboru, který chcete aktualizovat. Nedoporučujeme tato předvyplněná pole měnit, protože by měla být totožná s vlastnostmi starého souboru. (z důvodu filtrovaného výpisu na stránce, protože výpis souborů umožňuje zobrazit na stránce i starší verze souboru, nejen tu aktuální).
-- ![](edit.png ":no-zoom"), **Upravit soubor** pokud chcete změnit některá nastavení souboru nebo zjistit, jaké vlastnosti soubor má, tento nástroj vám s tím pomůže.
-- ![](rename.png ":no-zoom"), **Přejmenování souboru** : Nástroj umožňuje přejmenovat název souboru
-- ![](file_history.png ":no-zoom"), **Zobrazit seznam verzí**, tento nástroj se zobrazí pouze v případě, že je vložena alespoň jedna verze, Zobrazit všechny archivní verze souboru.
-- ![](rollback.png ":no-zoom"), **Vrátit poslední změnu**, tento nástroj se zobrazí pouze v případě, že je vložena alespoň jedna verze.
-- ![](delete.png ":no-zoom"), **Odstranit soubor**, trvale odstraní soubor z archivu.
+Přes seznam souborů můžeme nad vloženými soubory provádět různé funkce jako editaci, přejmenovat, vymazat či vkládání aktuálnější verze souboru nebo vrácení poslední změny. Funkce najdeme ve sloupci nástroje při záznamu souboru v archivu souborů:
+- ![](upload.png ":no-zoom"), **Nahrát novou verzi**, v případě, že chcete nahrát novou (aktuální) verzi již nahraného souboru, tento nástroj vám to umožňuje. Po kliknutí se Vám otevře standardní okno s nastaveními vlastností souboru, které však již budou předvyplněny podle starého souboru, který chcete aktualizovat. Tato předvyplněná pole nedoporučujeme měnit, nakolik by měla být shodná s vlastnostmi starého souboru. (kvůli filtrovanému výpisu na stránce, jelikož výpis souborů umožňuje zobrazit na stránce i starší verze souboru, ne jen aktuální)
+- ![](edit.png ":no-zoom"), **Editovat soubor** , v případě, že chcete změnit nějaké nastavení souboru, případně zjistit jaké má soubor vlastnosti, tento nástroj vám k tomu poslouží.
+- ![](rename.png ":no-zoom"), **Přejmenovat soubor** : Nástroj umožňuje přejmenovat název souboru
+- ![](file_history.png ":no-zoom"), **Zobrazit seznam verzí**, tento nástroj se zobrazí až když je vložena alespoň jedna verze, Zobrazí všechny archivní verze souboru
+- ![](rollback.png ":no-zoom"), **Vrácení poslední změny zpět**, tento nástroj se zobrazí až když je vložena alespoň jedna verze
+- ![](delete.png ":no-zoom"), **Odstranit soubor**, Trvale odstraní soubor z archivu
 
 ### Karta Čekající soubory
 
-V kartách **Soubory čekající na vyřízení** zobrazí soubory, které byly nastaveny k pozdějšímu nahrání, když byly nahrány.
+V kartě **Čekající soubory** se zobrazují soubory, kterým bylo při vkládání nastaveno pozdější nahrání.
 
 ![](file_list_awaiting.png)
 
 ## Vložení nového souboru do archivu
 
-Pokud chcete do archivu přidat nový soubor, můžete tak učinit kliknutím na ikonu umístěnou nad seznamem souborů.
+Chcete-li vložit nový soubor do archivu, můžete tak učinit kliknutím na ikonu, která se nachází nad seznamem souborů
 
 ![](file_insert.png)
 
-V dialogovém okně vyberte soubor, který chcete nahrát, kliknutím na tlačítko **Vyberte soubor**. Je třeba vyplnit minimálně následující pole **Název virtuálního souboru**, ostatní pole jsou nepovinná:
+V dialogovém okně vyberete soubor, který chcete nahrát klepnutím na tlačítko **Vybrat soubor**. Dále je třeba vyplnit minimálně povinné pole **Virtuální jméno souboru**, zbývající pole jsou nepovinná:
 
 ![](dialog.png)
 
-- **Cílový adresář pro nahrávání souborů** - vyberte adresář, do kterého chcete soubor nahrát (to bude užitečné později při filtrování zobrazení souborů na stránce).
-- **Soubor k nahrání** - vyberte soubor, který chcete nahrát do archivu.
-- **Název virtuálního souboru** - zadejte název souboru, který se zobrazí na stránce (jako odkaz na soubor).
-- **Produkt** - zadejte libovolný název produktu (bude užitečné později při filtrování zobrazení souborů na stránce).
-- **Kategorie** - zadejte libovolný název kategorie (bude užitečné později při filtrování zobrazení souborů na stránce).
-- **Kód produktu** - zadejte libovolný kód produktu (bude užitečné později při filtrování zobrazení souborů na stránce).
-- **Zobrazit** - nastavení zobrazení souboru na stránce (pokud nechcete soubor na stránce zobrazit, zrušte zaškrtnutí tohoto nastavení).
-- **Datum začátku platnosti** - nastavení počátečního data platnosti souboru
-- **Datum vypršení platnosti** - nastavení data vypršení platnosti souboru
-- **Priorita** - pomocí priority můžete nastavit pořadí zobrazování souborů na stránce.
-- **Hlavní soubor** - pokud nechcete nahraný soubor použít jako hlavní soubor, ale pouze jako vzor (vzor jiného hlavního souboru), zadejte vstupní údaje **Hlavní soubor** k němuž bude právě nahrávaný soubor ukázkou (tento soubor se pak zobrazí na stránce ve výpisu souborů spolu s hlavním souborem, jehož odkaz jste vyplnili). Chcete-li získat odkaz na hlavní soubor, najděte jej v seznamu a klikněte v nástrojích na tlačítko **Upravit podle** ( ![](edit.png ":no-zoom") ), čímž se otevře okno s nastavenými vlastnostmi souboru. Odtud zkopírujte **Odkaz pro referenci** a vložte ji do vstupu **Odkaz na hlavní soubor**.
-- **Poznámka** - poznámka se zobrazí na stránce při odkazu na soubor.
-- **Nahrát soubor později** - pokud potřebujete soubor nahrát do archivu v určitý čas a datum, můžete nastavit, aby se soubor v budoucnu nahrál automaticky. Výběrem této možnosti se zobrazí skrytá pole
-  - **Datum pozdějšího nahrání** - vyberte den, kdy chcete soubor nahrát.
-  - **Čas pozdějšího nahrání** - vyberte čas, kdy chcete soubor nahrát.
-  - **E-maily oddělené čárkou** - zadejte e-maily oddělené čárkou, na které chcete zasílat oznámení o úspěšném/neúspěšném nahrání souboru do archivu.
+- **Cílový adresář pro upload souboru** - vyberte adresář, do kterého chcete soubor nahrát (později Vám to poslouží při filtrování zobrazení souborů na stránce)
+- **Soubor pro upload** - vyberte soubor, který chcete nahrát do archivu
+- **Virtuální jméno souboru** - zadejte jméno souboru, které se bude na stránce zobrazovat (jako odkaz na soubor)
+- **Produkt** - zadejte libovolný název produktu (později Vám to poslouží při filtrování zobrazení souborů na stránce)
+- **Kategorie** - zadejte libovolný název kategorie (později Vám to poslouží při filtrování zobrazení souborů na stránce)
+- **Kód produktu** - zadejte libovolný název kódu produktu (později Vám to poslouží při filtrování zobrazení souborů na stránce)
+- **Zobrazit** - nastavení pro zobrazení souboru na stránce (pokud nechcete soubor na stránce zobrazit, odškrtněte toto nastavení)
+- **Datum začátku platnosti** - nastavení data začátku platnosti souboru
+- **Datum konce platnosti** - nastavení data konce platnosti souboru
+- **Priorita** - pomocí priority umíte libovolně nastavit pořadí zobrazení souborů na stránce
+- **Hlavní soubor** - pokud nahrávaný soubor nechcete použít jako hlavní, jen jako vzor (vzor jiného hlavního souboru) zadejte do vstupu **Hlavní soubor**, kterému bude Vámi aktuálně nahrávaný soubor vzorem (tento soubor se pak na stránce ve výpisu souborů zobrazí spolu s hlavním souborem, jehož odkaz jste vyplnili). Pro získání odkazu hlavního souboru si najděte v seznamu daný soubor a klikněte v nástrojích na **Editovat** ( ![](edit.png ":no-zoom") ) čímž se Vám otevře okno s nastavenými vlastnostmi souboru. Z něj si zkopírujte **Link pro odkaz** a vložte jej do vstupu **Odkaz na hlavní soubor**.
+- **Poznámka** - poznámka se zobrazí na stránce při odkazu na soubor
+- **Nahrát soubor později** - v případě potřeby nahrání souboru do archivu v přesný čas a datum je možné nastavit nahrání souboru automaticky v budoucnosti. Výběrem možnosti se Vám zobrazí ukrytá pole
+  - **Datum pozdějšího nahrání** - vyberte den, ve kterém chcete soubor nahrát
+  - **Čas pozdějšího nahrání** - vyberte čas, ve kterém chcete soubor nahrát
+  - **Emaily oddělené čárkou** - zadejte emaily oddělené čárkou, na které chcete zaslat notifikaci o úspěšném/neúspěšném nahrání souboru do archivu
 
-Po úspěšném odeslání mohou nastat následující podmínky:
-- Soubor je úspěšně nahrán a zobrazí se v seznamu nahraných souborů.
-- Soubor byl úspěšně nahrán a zobrazí se ve výpisu. **čekající soubory** - tento stav nastane, pokud ve vlastnostech zkontrolujete a nastavíte **Nahrát soubor později**
-- Budete upozorněni, že soubor se stejným obsahem, jaký nahráváte, se již v archivu nachází. (Modul porovnává skutečný obsah souboru, nikoli jeho název). V takovém případě máte dvě možnosti:
-  - **Odstranit soubor** - aplikace zobrazí odkaz na soubor, který se již nachází v archivu a má stejný obsah jako soubor, který jste chtěli nahrát. Tímto způsobem můžete tento odkaz použít na stránce a nemusíte soubor nahrávat duplicitně. V takovém případě můžete soubor odstranit.
-  - **Uchovávejte soubor** - pokud chcete soubor nahrát do archivu a nechat jej duplikovat, klikněte na tlačítko **Uchovávejte soubor**
+Po úspěšném odeslání mohou nastat následující stavy:
+- Soubor se úspěšně nahraje a zobrazí se Vám ve výpisu nahraných souborů
+- Soubor se úspěšně nahraje a zobrazí se Vám ve výpisu **čekající soubory** - tento stav nastane tehdy, pokud ve vlastnostech zaškrtnete a nastavíte **Nahrát soubor později**
+- Zobrazí se Vám upozornění, že se již v archivu nachází soubor se stejným obsahem jako ten, který nahráváte. (Modul porovnává reálný obsah souboru, ne název). V tomto případě máte dvě možnosti:
+  - **Smazat soubor** - aplikace Vám zobrazil odkaz na soubor, který se již v archivu nachází a má stejný obsah jako soubor, který jste chtěli nahrát. Tím pádem umíte tento odkaz použít na stránce a nemusíte soubor nahrávat duplicitně. V takovém případě ten soubor můžete smazat.
+  - **Ponechat soubor** - pokud chcete přesto soubor do archivu nahrát a mít ho tam duplicitně, klikněte na **Ponechat soubor**
 
-## Vložení souboru z archivu do nastavení webové stránky a aplikace
+## Vložení souboru z archivu do web stránky a nastavení aplikace
 
-Na stránku [vložit aplikaci](../../webpages/working-in-editor/README.md#vložení-aplikace) Archiv souborů.
+Do stránky [vložte aplikaci](../../webpages/working-in-editor/README.md#vložení-aplikace) Archiv Souborů.
 
 ![](apps-insert.png)
 
-Po kliknutí na tlačítko "Vložit do stránky" se aplikace vloží do stránky a otevře se nastavení. Tato nastavení slouží jako filtr při výpisu souborů na stránce.
+Při kliknutí na tlačítko "Vložit do stránky" se aplikace vloží do stránky a otevřou se nastavení. Tato nastavení slouží jako filtr při výpisu souborů na stránce.
 
 ![](editor.png)
 
-Dialogové okno nastavení se skládá ze tří částí:
+Dialogové okno nastavení se skládá ze tří sekcí:
 
-1. sekce pro filtrování výpisu souborů na stránce, jsou to následující atributy:
-    - **Cílový adresář pro nahrávání souborů** - vyberte složku, ze které chcete soubory zobrazit.
-    - **Kód produktu** - zadejte kód (jako filtr), který chcete zobrazit.
-    - **Produkt** - zadejte produkt (jako filtr), který chcete zobrazit.
-    - **Kategorie** - zadejte kategorii (jako filtr), kterou chcete zobrazit.
-    - **Výpis souborů včetně dílčích souborů** - Pokud tuto možnost zaškrtnete, stránka zobrazí také soubory, které jsou ve vnořených podsložkách cílového adresáře, který jste nastavili.
-    - **Vzestupné pořadí výpisu hlavního souboru** - hlavní soubory budou na stránce seřazeny vzestupně.
-    - **Zobrazit hlavní soubory podle** - řazení hlavních souborů v archivu podle:
-      - Priorita - priorita, kterou si sami nastavíte při nahrávání nového souboru.
-      - Datum nahrání - časový údaj o přidání souboru do archivu
-      - Virtuální název souboru - abecední pořadí názvů souborů
-    - **Zobrazit archiv** - pokud je zaškrtnuto, zobrazí se na stránce také archivy hlavního souboru.
-    - **Vzestupné pořadí výpisu archivních souborů** - archivní soubory budou na stránce řazeny vzestupně.
-    - **Zobrazit záznamy v archivu podle** - seřadit soubory v archivu podle:
-      - Reference - třídí podle ID záznamu
-      - Priorita - priorita, kterou si sami nastavíte při nahrávání nového souboru.
-      - Orders - pořadí, v jakém je soubor nahrán.
-      - Datum nahrání - časový údaj o přidání souboru do archivu
-      - Virtuální název souboru - abecední pořadí názvů souborů
-    - **Archivní položka před otevřením** - Pořadové číslo, které určuje, které z vláken souborů má být otevřeno jako první.
-    - **Zobrazit pouze vybrané soubory** - můžete také ručně přidat soubory, které nevyhovují filtru, ale přesto je chcete zobrazit s výpisem.
+1. sekce pro filtrování výpisu souborů na stránku, jsou to následující atributy:
+    - **Cílový adresář pro upload souboru** - vyberte složku, ze které chcete zobrazit soubory
+    - **Kód produktu** - zadejte kód (jako filtr), který chcete zobrazit
+    - **Produkt** - zadejte produkt (jako filtr), který chcete zobrazit
+    - **Kategorie** - zadejte kategorii (jako filtr), kterou chcete zobrazit
+    - **Výpis souborů včetně pod souborů** - pokud zaškrtnete tuto možnost, na stránce se Vám zobrazí i soubory, které se nacházejí ve vnořených pod-složkách daného cílového adresáře, který jste si nastavili.
+    - **Vzestupné pořadí výpisu hlavních souborů** - hlavní soubory budou na stránce seřazeny vzestupně
+    - **Zobrazovat hlavní soubory podle** - řazení hlavních souborů v archivu podle:
+      - Priority - priority, kterou si sami nastavujete při nahrávání nového souboru
+      - Datum nahrání - časové reference přidání souboru do archivu
+      - Virtuální název souboru - abecedního pořadí názvů souborů
+    - **Zobrazit archiv** - při zaškrtnutí se vám na stránce zobrazí i archivy hlavního souboru
+    - **Vzestupné pořadí výpisu archivních souborů** - archivní soubory budou na stránce seřazeny vzestupně
+    - **Zobrazovat záznamy v archivu podle** - seřazení souborů v archivu podle:
+      - Reference - seřadí se podle ID záznamu
+      - Priority - priority, kterou si sami nastavujete při nahrávání nového souboru
+      - Pořadí - pořadí nahrání souboru
+      - Datum nahrání - časové reference přidání souboru do archivu
+      - Virtuální název souboru - abecedního pořadí názvů souborů
+    - **Položka archivu předotevřená** - pořadovým číslem určíte, který z vláken souborů má být před otevřen.
+    - **Zobrazit jen vybrané soubory** - k souborům umíte manuálně přidat i soubory, které filtr nesplňují, ale přesto je chcete k danému výpisu zobrazit
 
-2. Vyberte soubory, které chcete přidat do seznamu aplikací. Soubory lze filtrovat podle globálního id, virtuálního názvu, skutečného názvu, adresáře, produktu, kategorie, kódu.
+2. Vyberte soubory, které chcete přidat do výpisu aplikace. Soubory lze filtrovat podle globálního id, virtuálního jména, reálného jména, adresáře, produktu, kategorie, kódu.
 
-3. Výsledek/tabulka z pomocného vyhledávání. Tato část obsahuje očekávané soubory, kliknutím na Přidat přidáte soubor do seznamu vybraných souborů (pokud se mají zobrazit pouze vybrané soubory).
+3. Výsledek/tabulka z pomocného vyhledávání. V této sekci jsou očekávané soubory, kliknutím na Přidat lze přidat soubor do seznamu vybraných souborů (pokud se mají zobrazovat jen vybrané soubory).
 
 ## Zobrazení aplikace
 
-Konečný vzhled aplikace po přidání na stránku. Názvy jednotlivých souborů jsou odkazy na jejich stažení.
+Výsledný vzhled aplikace po přidání do stránky. Názvy jednotlivých souborů jsou odkazy ke stažení daných souborů.
 
 ![](file_archiv.png)

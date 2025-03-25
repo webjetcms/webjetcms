@@ -1,49 +1,49 @@
 # Tooltip
 
-V okně Tooltip můžete definovat text nápovědy/vysvětlení pro odborné výrazy, které se zobrazují na webové stránce. Obvykle se zobrazují jako text nápovědy v "bublině", když kurzor přejíždí nad odborným termínem. Definování Tooltipu prostřednictvím aplikace umožňuje globálně upravovat vysvětlení těchto odborných termínů na jednom místě. Při úpravě se pak změní ve všech použitích najednou.
+V aplikaci Tooltip můžete definovat pomocný text/vysvětlení pro odborné výrazy, které zobrazujete na webové stránce. Obvykle se zobrazují jako pomocný text v "bublinu" po průchodu kurzorem přes odborný výraz. Definování Tooltipu přes aplikaci umožňuje na jednom místě globálně upravovat vysvětlení těchto odborných výrazů. Následně když jej upravíte změní se ve všech použitích najednou.
 
 ![](webpage-tooltip.png)
 
-## Vytvoření nápovědy k nástroji
+## Vytvoření tooltipu
 
 ![](tooltip-dataTable.png)
 
-Kliknutím na ikonu "Přidat" zobrazíte dialogové okno pro vytvoření nápovědy.
+Klepnutím na ikonu „Přidat“ se vám zobrazí dialogové okno pro vytvoření tooltipu.
 
 V tomto okně definujete následující parametry:
-- Název - jedinečný identifikátor výrazu Tooltip/expert
-- Jazykové verze - SK / CZ / EN ...
-- Doména - možnost, na které doméně má být použit Tooltip
-- Text - textový obsah nápovědy
+- Název – jednoznačný identifikátor pro daný Tooltip / odborný výraz
+- Jazyková verze – SK / CZ / EN ...
+- Doména – volba, na které doméně se má daný Tooltip použít
+- Text – textový obsah tooltipu
 
 ![](tooltip-editor.png)
 
-Dialogové okno pro úpravu existujícího tipu vypadá stejně.
+Rovněž vypadá i dialogové okno pro editaci stávajícího tooltip-u.
 
-V tabulce máte k dispozici tlačítko "Duplikovat", pokud chcete zkopírovat existující tip nástroje a uložit jej pod jiným názvem, pro jinou jazykovou verzi nebo pro jinou doménu.
+V tabulce máte k dispozici tlačítko „Duplikovat“, pokud chcete stávající tooltip zkopírovat a uložit pod jiným názvem, pro jinou jazykovou verzi, nebo pro jinou doménu.
 
-## Import popisků nástrojů
+## Import tooltip-ů
 
-Na kartě Import je formulář pro nahrávání excelu s popisky. Formát excelu by měl být totožný s formátem, který získáte při exportu aktuálního seznamu do Excelu. Ikona exportu se nachází vlevo nahoře.
+V záložce Import se nachází formulář pro nahrání excelu s tooltipy. Formát excelu by měl být totožný s formátem, který získáte při exportu aktuálního seznamu do Excelu. Ikonka pro export se nachází v levé horní části.
 
 ![](tooltip-import-editor.png)
 
-## Vložení nápovědy do stránky
+## Vložení tooltipu do stránky
 
-Bublinu nad specializovaným výrazem můžete vytvořit přímo v editoru tak, že vyberete specializovaný výraz a kliknete na ikonu :
-- ![](editor-tooltip-icon.png ":no-zoom") Vložit nápovědu
+Vytvoření bubliny nad odborným výrazem je možné přímo v editoru označením odborného výrazu a následným kliknutím na ikonu:
+- ![](editor-tooltip-icon.png ":no-zoom") Vložit tooltip
 
-Otevře se dialogové okno a do pole Tooltip (klíč) zadejte začátek specializovaného výrazu. Server načte seznam výrazů obsahujících zadaný text, kliknutím myši vyberte přesný výraz:
+Otevře se dialogové okno, v poli Tooltip (klíč) zadejte začátek odborného výrazu. Ze serveru se načte seznam výrazů obsahujících zadaný text, kliknutím myší vyberte přesný výraz:
 
 ![](editor-tooltip-dialog.png)
 
-Kód HTML stránky pak bude obsahovat kód typu:
+Následně v HTML kódu stránky vznikne kód typu:
 
 ```html
 <p>Toto je <span class="wjtooltip" title="!REQUEST(wjtooltip:TestFinal)!">odborný výraz</span>.</p>
 ```
 
-který se zpracuje na serveru a vloží se skutečný text. Pro pěkné zobrazení "bubliny" je třeba do šablony (nebo prostřednictvím skriptů aplikace, v horším případě prostřednictvím pole HTML kódu v záhlaví v editoru stránky na kartě Šablona) přidat následující kód JavaScriptu:
+který je na serveru zpracován a je vloženo aktuální znění textu. Pro hezké zobrazení "bubliny" je třeba v šabloně (nebo přes aplikaci skripty, nebo v nejhorším případě přes pole HTML kód do hlavičky v editoru stránky v kartě Šablona) doplnit následující JavaScript kód:
 
 ```javascript
 <script type="text/javascript">
@@ -55,4 +55,4 @@ který se zpracuje na serveru a vloží se skutečný text. Pro pěkné zobrazen
 
 ![](webpage-tooltip.png)
 
-používá se rozšíření [Bootstrap Tooltip](https://getbootstrap.com/docs/4.0/components/tooltips/).
+použité je rozšíření [Bootstrap Tooltip](https://getbootstrap.com/docs/4.0/components/tooltips/).

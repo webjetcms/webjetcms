@@ -1,17 +1,17 @@
-# Array jsTree - stromová struktura
+# Pole jsTree - stromová struktura
 
-Datové pole jsTree integruje zobrazení stromové struktury v editoru. Stromová struktura umožňuje používat výběrové pole `checkbox` označit jednotlivé listy stromové struktury.
+Datové pole jsTree integruje zobrazení stromové struktury v editoru. Stromová struktura umožňuje pomocí výběrového pole `checkbox` označit jednotlivé listy stromové struktury.
 
-Zobrazení je viditelné u uživatelů na kartě Práva:
+Zobrazení je vidět v uživatelích v kartě Práva:
 
 ![](field-type-jstree.png)
 
 ## Použití anotace
 
-Anotace se používá jako `DataTableColumnType.JSTREE` a lze nastavit následující atributy:
-- `data-dt-field-jstree-name` - název objektu se stromovou strukturou, musí být objekt uložen jako `window.name`
+Anotace se používá jako `DataTableColumnType.JSTREE`, přičemž je možné nastavit následující atributy:
+- `data-dt-field-jstree-name` - jméno objektu se stromovou strukturou, objekt musí být uložen jako `window.name`
 
-Příklad úplné anotace:
+Kompletní příklad anotace:
 
 ```java
 @DataTableColumn(inputType = DataTableColumnType.JSTREE, title = "components.user.righrs.user_group_rights", tab = "rightsTab", visible = false, editor = {
@@ -20,7 +20,7 @@ Příklad úplné anotace:
 private String[] enabledItems;
 ```
 
-Objekt je třeba v modelu připravit a poté nastavit na hodnotu `window` objekt:
+Objekt je třeba připravit do modelu a následně nastavit do `window` objektu:
 
 ```java
 package sk.iway.iwcm.components.users;
@@ -57,7 +57,7 @@ public class UserDetailsListener {
 }
 ```
 
-a nastavení v souboru pug:
+a nastavení v pug souboru:
 
 ```javascript
 window.jstreePerms = [(${jstreePerms})];
@@ -67,19 +67,19 @@ window.jstreePerms = [(${jstreePerms})];
 
 Pole je implementováno v souboru [field-type-jstree.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-jstree.js).
 
-Vygeneruje kód HTML obsahující vyhledávací pole s možností výběru/nevýběru všech výběrových polí. Když je vyhledávání aktivní, zobrazí se na panelu nástrojů vedle vyhledávacího pole také ikona pro zrušení vyhledávání. Vyhledávání se aktivuje buď kliknutím na ikonu lupy, nebo stisknutím tlačítka `Enter` klíče.
+Generuje HTML kód obsahující vyhledávací pole s možností od/značení všech výběrových polí. Při aktivním vyhledávání se v nástrojové liště vedle vyhledávacího pole zobrazuje i ikona pro zrušení vyhledávání. Vyhledávání se aktivuje buď kliknutím na ikonu lupy, nebo stisknutím `Enter` klávesy.
 
-Zde jsme měli problém v tom, že naléhavé `Enter` zachycené komponentou vue `webjet-dte-jstree.vue`, vyřešili jsme to změnou anotace z `<button @click="toggleModals"` na adrese `<button @mouseup="toggleModals"`.
+Tady jsme měli problém v tom, že stisk `Enter` zachytávala vue komponenta `webjet-dte-jstree.vue`, vyřešili jsme to změnou anotace z `<button @click="toggleModals"` na `<button @mouseup="toggleModals"`.
 
-Název objektu JSON se stromovou strukturou se získá z atributu data `data-dt-field-jstree-name` a samotný objekt JSON se načte voláním `let jstreeJsonData = window[objName];`.
+Jméno JSON objektu se stromovou strukturou se získá z data atributu `data-dt-field-jstree-name` a následně se získá samotný JSON objekt voláním `let jstreeJsonData = window[objName];`.
 
-Nastavení vybraných výběrových polí `checkbox` se vykonává jako `set(conf, val)`. Nejprve se zruší vyhledávání (aby mezi zavřením a otevřením okna nezůstalo žádné nastavení), zruší se zaškrtnutí všech polí pro výběr a strom se zcela otevře voláním `conf._tree.jstree('open_all');`.
+Nastavení zvolených výběrových polí `checkbox` se provede ve funkci `set(conf, val)`. Nejdříve se zruší vyhledávání (aby nezůstalo nastavení mezi zavřením a otevřením okna), odškrtnou se všechna výběrová pole a strom se kompletně otevře voláním `conf._tree.jstree('open_all');`.
 
-Očekává se, že vybrané hodnoty v poli budou `iteruje` a voláním `conf._tree.jstree('select_node', v)` je zaškrtnuto přiřazené výběrové pole podle názvu. Hodnoty musí být jedinečné, aby nedocházelo k duplicitám na stránce (jedná se o ID prvků stromové struktury), proto doporučujeme používat pro názvy jedinečnou předponu. V objektu Java se předávají jako pole, např. `private String[] enabledItems;`.
+Zvolené hodnoty jsou očekávané v poli, které se `iteruje` a voláním `conf._tree.jstree('select_node', v)` se zaškrtne přiřazené výběrové pole podle názvu. Hodnoty je třeba mít unikátní, aby nedošlo k duplikaci ve stránce (jsou to ID elementů stromové struktury), proto doporučujeme použít jedinečný prefix při názvech. V Java objektu jsou přenášeny jako pole. `private String[] enabledItems;`.
 
-Získání vybraných hodnot při odeslání se provádí ve funkci `get(conf)` kde se používá volání API `conf._tree.jstree('get_selected')` získat pole vybraných hodnot.
+Získání zvolených hodnot při odeslání se provede ve funkci `get(conf)` kde je použito API volání `conf._tree.jstree('get_selected')` pro získání pole zvolených hodnot.
 
-Pole je v `index.js` vložen a inicializován následujícím kódem:
+Pole je v `index.js` vloženo a inicializováno následujícím kódem:
 
 ```javascript
 ...
@@ -88,4 +88,4 @@ import * as fieldTypeJsTree from './field-type-jstree';
 $.fn.dataTable.Editor.fieldTypes.jsTree = fieldTypeJsTree.typeJsTree();
 ```
 
-V souboru `_modal.css` jsou soubory stylů CSS, upravují výchozí soubory stylů CSS pro knihovnu jsTree tím, že vynucují použití `Font Awesome` Ikony.
+V souboru `_modal.css` jsou CSS styly, ty upravují výchozí CSS styly pro jsTree knihovnu vynucením použití `Font Awesome` ikon.

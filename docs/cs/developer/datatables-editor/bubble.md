@@ -1,10 +1,10 @@
-# Úpravy v zobrazení mřížky
+# Upravit v zobrazení mřížky
 
-Datové tabulky podporují přímé úpravy buněk v režimu úprav `bubble`. Chcete-li režim zapnout, klikněte na **Úpravy v zobrazení mřížky** na panelu nástrojů. Poté klikněte na buňku a zobrazí se dialogové okno s editorem vybrané buňky.
+Datatables podporují přímou úpravu buňky v režimu editace `bubble`. Režim se zapne klepnutím na tlačítko **Upravit v zobrazení mřížky** v nástrojové liště. Následně kliknutím na buňku se zobrazí dialogové okno s editorem zvolené buňky.
 
 ## Inicializace režimu
 
-Úpravy v zobrazení mřížky jsou inicializovány v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) Kód:
+Upravit v zobrazení mřížky se inicializuje v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) kódem:
 
 ```javascript
 // aktivuj rezim uprava bunky / bubble
@@ -15,11 +15,11 @@ $(dataTableInit).on('click', 'table.dataTable tbody td', function (e) {
 }
 ```
 
-tj. po kliknutí na buňku tabulky. Problematická je kombinace editace v editoru WebJET, která přidává rozdělení polí do listů při zachování dialogového okna editoru v režimu `DOM` stromu i po jeho uzavření. V této kombinaci se zobrazí pole ve stromu. `bubble` editor byl nesprávný (zobrazovala se všechna pole aktuálního listu). Z tohoto důvodu se při úpravě buňky nastaví třída CSS `show` pouze na aktuálně upravovaný atribut.
+neboli po kliknutí na buňku tabulky. Problematická je kombinace WebJET úprav editoru, která přidává rozdělení polí do listů a zároveň zachování dialogu editoru v `DOM` stromu i po jeho zavření. V této kombinaci bylo zobrazení polí v `bubble` editoru nekorektní (zobrazila se všechna pole v aktuálním listu). Z toho důvodu je při editaci buňky nastavena CSS třída `show` jen na právě editovaný atribut.
 
-Použití tříd CSS `div.DTE_Bubble` v [\_modal.scss](../../../src/main/webapp/admin/v9/src/scss/3-base/_modal.scss) je nastaveno zobrazení všech listů `div.tab-pane` (nejen aktivní) a současně všechny `div.row` které nemají sadu `show` Třída. V [\_table.scss](../../../src/main/webapp/admin/v9/src/scss/3-base/_table.scss) zvýraznění buněk je nastaveno na `:hover` v režimu `body.datatable-cell-editing`.
+Pomocí CSS třídy `div.DTE_Bubble` v [\_modal.scss](../../../src/main/webapp/admin/v9/src/scss/3-base/_modal.scss) je nastaveno zobrazení všech listů `div.tab-pane` (nejen aktivního) a zároveň jsou schovány všechny `div.row`, které nemají nastavenou `show` třídu. V [\_table.scss](../../../src/main/webapp/admin/v9/src/scss/3-base/_table.scss) je nastaveno zvýraznění buňky při `:hover` v režimu `body.datatable-cell-editing`.
 
-Získání názvu upravovaného atributu bylo komplikované, nakonec je realizováno následujícím kódem:
+Získání jména editovaného atributu bylo komplikované, nakonec je implementováno následujícím kódem:
 
 ```javascript
 const colIndex = TABLE.cell(this).index().column;
@@ -27,20 +27,20 @@ let datatableColumn = TABLE.settings().init().columns[colIndex];
 let columnName = datatableColumn.name;
 ```
 
-klíčem je získat pořadové číslo buňky z aktuálně kliknuté buňky. `TD` prvek. Do proměnné `columnName` je uložen název atributu. Nastavení `show` třída je následně zabezpečena kódem:
+klíčové je získání pořadového čísla buňky z aktuálně kliknutého `TD` elementu. Do proměnné `columnName` je uloženo jméno atributu. Nastavení `show` třídy je následně zabezpečeno kódem:
 
 ```javascript
 $("div.DTE_Field").removeClass("show");
 $("div.DTE_Field_Name_"+columnName).addClass("show");
 ```
 
-Před otevřením samotného editoru buněk se zavolá služba REST, aby se získala data řádků. Často datová tabulka v seznamu neobsahuje všechna data potřebná pro editor (kvůli optimalizaci rychlosti načítání), používá se atribut `fetchOnEdit=true` v konfiguraci datového souboru. Po kliknutí na buňku se tedy vždy zavolá funkce `refreshRow` pro získání aktuálních a úplných dat řádku (ve službě REST se používá `ProcessItemAction.GETONE`).
+Před otevřením samotného editoru buňky je volána REST služba pro získání dat řádku. Často datatabulka v seznamu neobsahuje všechna data potřebná pro editor (z důvodu optimalizace rychlosti načítání), používá se atribut `fetchOnEdit=true` v konfiguraci datatabulky. Po kliknutí na buňku je tedy vždy volána funkce `refreshRow` pro získání aktuálních a kompletních údajů řádku (v REST službě se použije `ProcessItemAction.GETONE`).
 
-Volání samotného editoru prostřednictvím rozhraní API `EDITOR.bubble($(this), {` je již standardní, mění se pouze hodnota volby. `submit` na hodnotu `all` pro odeslání všech atributů řádku (nikoli pouze hodnoty jednoho atributu).
+Samotné vyvolání editoru přes API `EDITOR.bubble($(this), {` je již standardní, upravena je jen hodnota možnosti `submit` na hodnotu `all` pro odesílání všech atributů řádku (nejen hodnoty jednoho atributu).
 
-## Neupravitelné buňky
+## Ne editovatelné buňky
 
-Buňky, které nelze upravovat (např. ID, buňky pouze pro čtení), mají nastavenou třídu CSS. `cell-not-editable`. Tuto třídu lze nastavit v anotaci `@DatatableColumn.className`. Automatické nastavení v [DatatableColumn.setCellNotEditable](../../../src/main/java/sk/iway/iwcm/system/datatable/json/DataTableColumn.java) pro pole typu:
-- `hidden` - typová pole `hidden`
-- `textarea` - se nám zdálo nerozumné v malém `bubble` editoru pro zobrazení velké textové oblasti
-- `editor.disabled` - pole, která mají nastavené `disabled` atribut na hodnotu `disabled`
+Buňky, které nelze upravovat (např. ID, buňky pouze pro čtení) mají nastavenou CSS třídu `cell-not-editable`. Tuto třídu lze nastavit v anotaci `@DatatableColumn.className`. Automaticky se nastaví v [DatatableColumn.setCellNotEditable](../../../src/main/java/sk/iway/iwcm/system/datatable/json/DataTableColumn.java) pro pole typu:
+- `hidden` - pole typu `hidden`
+- `textarea` - zdálo se nám nerozumné v malém `bubble` editoru zobrazovat velkou textovou oblast
+- `editor.disabled` - pole, která mají nastaven `disabled` atribut na hodnotu `disabled`

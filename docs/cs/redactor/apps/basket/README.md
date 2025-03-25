@@ -1,56 +1,56 @@
-# Elektronické obchodování
+# Elektronický obchod
 
-Prostřednictvím aplikace E-shop můžete vytvořit a spravovat jednoduchý e-shop. V aplikaci definujete jednotlivé produkty a jejich atributy (např. velikost, barvu), způsoby doručení nebo platby. Aplikace eviduje seznam přijatých objednávek, umožňuje nastavit jejich stav s možností upozornění na změny v objednávce na e-mail zákazníka.
+Přes aplikaci E-shop můžete vytvořit a spravovat jednoduchý elektronický obchod. V rámci aplikace definujete jednotlivé produkty a jejich atributy (např. velikost, barva), způsoby doručení či platby. Aplikace evidujete seznam přijatých objednávek, umožňuje nastavovat jejich stav s možností notifikace změn v objednávce na zákazníky email.
 
 ## Nastavení aplikace
 
 ### Karta Nastavení:
 - **Adresář**: Zadejte cestu k adresáři.
-- **Uspořádat podle**: Vyberte kritérium řazení, například "Priorita".
-  - **Vzestupně**: Určete, zda se mají řadit vzestupně.
-- **Stránkování**: Určuje, zda je povoleno stránkování.
-- **Počet položek na stránce**: Zadejte počet položek na stránce, např. `15`.
-- **Pozice stránkování**: Vyberte, kde se má stránkování zobrazit, například "Nad a pod produkty".
-- **Šířka miniatury obrázku**: Zadejte šířku miniatury obrázku v pixelech, např. `190`.
-- **Výška náhledu obrázku**: Zadejte výšku miniatury obrázku v pixelech, např. `190`.
-- **Zobrazit výběr kategorií**: Určete, zda se má zobrazit výběr kategorie.
-- **Zobrazit možnost uspořádání**: Povolte možnost uspořádání produktů.
-- **Testovací režim (nelze vytvořit žádnou objednávku)**: Aktivace testovacího režimu.
+- **Uspořádat podle**: Vyberte kritérium uspořádání, například „Priority“.
+  - **Vzestupně**: Definujte, zda se má uspořádat vzestupně.
+- **Stránkování**: Určuje, zda je stránkování zapnuto.
+- **Počet položek na stránce**: Zadejte počet položek na stránce, například `15`.
+- **Pozice stránkování**: Vyberte, kde se má stránkování zobrazit, například „Nad i pod produkty“.
+- **Šířka náhledového obrázku**: Zadejte šířku náhledu obrázku v pixelech, například `190`.
+- **Výška náhledového obrázku**: Zadejte výšku náhledu obrázku v pixelech, například `190`.
+- **Zobrazit výběr kategorie**: Definujte, zda se má zobrazit výběr kategorie.
+- **Zobrazit možnost uspořádání**: Zapnutí možnosti uspořádání produktů.
+- **Testovací režim (nelze vytvořit objednávka)**: Aktivace testovacího režimu.
 - **Katalog produktů (bez nákupního košíku)**: Zobrazení katalogu bez možnosti nákupu.
-- **Tajný klíč pro službu "ověřeno zákazníky" (heureka.sk)**: Zadejte tajný klíč služby.
+- **Tajný klíč pro službu "ověřeno zákazníky" (heureka.sk)**: Zadejte tajný klíč pro službu.
 
 #### Způsob doručení:
-- **Zadejte způsob doručení**: Vyplňte prosím dostupné způsoby doručení.
-  - Při stisknutí **Přidat** lze vyplnit: **Cena bez DPH**, **Měna**, **Daň**, **Cena s DPH**, **Stará cena s DPH**
+- **Zadejte způsob doručení**: Vyplňte dostupné způsoby doručení.
+  - Při stisku **Přidat** lze vyplnit: **Cena bez DPH**, **Měna**, **Daň**, **Cena s DPH**, **Stará cena s DPH**
 
 ![](editor.png)
 
 ### Karta Vizuální styl:
-- Možnost výběru ze dvou stylů zobrazení.
+- Možnost vybrat ze dvou stylů pro zobrazení.
 
 ![](editor-style.png)
 
 ### Seznam objednávek:
 
-Při zobrazení je možné filtrovat podle:
+Při zobrazení lze vyfiltrovat podle:
 - **Stav**
 - **Vydáno / odesláno**
-- **Název**
+- **Jméno**
 - **E-mail**
 - **Číslo**
 
 ![](editor-list.png)
 
 ### Karta položky:
-- **Název webové stránky**: Zadejte název webové stránky.
+- **Název web stránky**: Zadejte název web stránky.
 - **Popis produktu**: Zadejte popis produktu.
-- **Zobrazit štítek**: Povolit zobrazení štítku produktu.
+- **Zobrazit štítek**: Zapnout zobrazení štítku produktu.
 
 #### Přidat variantu:
 - **Název varianty**: Zadejte název varianty produktu.
-- **Variantní hodnoty**: Zadejte dostupné hodnoty variant.
+- **Hodnoty varianty**: Zadejte dostupné hodnoty varianty.
 
-#### Informace o výrobku:
+#### Informace o produktu:
 - **Cena bez DPH**
 - **Měna**
 - **Daň**

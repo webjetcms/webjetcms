@@ -1,23 +1,23 @@
  <div class="sidebar-section">Manuál pro provoz</div>
 
-- [:point\_left: Zpět na úvod](/?back)
-- Zabezpečení
+- [:point\_left: Zpět na Úvod](/?back)
+- Bezpečnost
   - [Bezpečnostní testy](/sysadmin/pentests/README.md)
-  - [Kontrola zranitelnosti knihoven](/sysadmin/dependency-check/README.md)
-  - [Aktualizace WebJET](/sysadmin/update/README.md)
+  - [Kontrola zranitelností knihoven](/sysadmin/dependency-check/README.md)
+  - [Aktualizace WebJETu](/sysadmin/update/README.md)
 - Audit
   - [Audit](/sysadmin/audit/README.md)
-  - [Seznam oznámení](/sysadmin/audit/audit-notifications.md)
+  - [Seznam notifikací](/sysadmin/audit/audit-notifications.md)
   - [Změněné stránky](/sysadmin/audit/audit-changed-webpages.md)
-  - [Čeká se na zveřejnění](/sysadmin/audit/audit-awaiting-publish-webpages.md)
-  - [Úrovně logovaní](/sysadmin/audit/audit-log-levels.md)
-  - [Soubory protokolu](/sysadmin/audit/audit-log-files.md)
-  - [Nejnovější protokoly](/sysadmin/audit/memory-logging.md)
-- Operace
-  - [Výkonnost serveru](/sysadmin/performance/README.md)
+  - [Čeká na publikování](/sysadmin/audit/audit-awaiting-publish-webpages.md)
+  - [Úrovně logování](/sysadmin/audit/audit-log-levels.md)
+  - [Log soubory](/sysadmin/audit/audit-log-files.md)
+  - [Poslední logy](/sysadmin/audit/memory-logging.md)
+- Provoz
+  - [Výkon serveru](/sysadmin/performance/README.md)
   - [Monitorování serveru](/sysadmin/monitoring/README.md)
-  - [Restartování](/sysadmin/restart.md)
-  - [Výměna dat uzlu clusteru](/sysadmin/monitoring/nodes-logic.md)
-  - [Vymazání dat](/sysadmin/data-deleting/README.md)
+  - [Restartovat](/sysadmin/restart.md)
+  - [Výměna údajů uzlů clusteru](/sysadmin/monitoring/nodes-logic.md)
+  - [Mazání dat](/sysadmin/data-deleting/README.md)
 - Soubory
   - [Zálohování systému](/sysadmin/files/backup/README.md)

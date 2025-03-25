@@ -1,20 +1,20 @@
-# Poskytování služeb REST
+# Zabezpečení REST služeb
 
-## Pravidla URL
+## Pravidla URL adres
 
-Při přípravě služeb REST dodržujte následující předpony URL:
-- `/rest` - veřejně dostupná služba REST
-- `/rest/private` nebo `/private/rest` - klidová služba, vyžadující přihlášení
-- `/admin/rest` - klidová služba vyžadující přihlášení správce
+Při přípravě REST služeb prosím dodržujte následovně URL prefixy:
+- `/rest` - veřejně dostupná REST služba
+- `/rest/private` nebo `/private/rest` - rest služba, vyžadující přihlášení
+- `/admin/rest` - rest služba vyžadující přihlášení administrátora
 
-Pro `websocket` je nutné použít předponu `/websocket/` jinak by nemusely správně procházet web. `firewall`. Doporučujeme používat následující předpony:
-- `/websocket/` - veřejně dostupné `websocket`
+Pro `websocket` je třeba používat prefix `/websocket/` jinak nemusí korektně procházet přes web `firewall`. Doporučujeme používat následující prefixy:
+- `/websocket/` - veřejně dostupný `websocket`
 - `/websocket/private/` - `websocket` vyžadující přihlášení
-- `/websocket/admin/` - `websocket` vyžadující přihlášení správce
+- `/websocket/admin/` - `websocket` vyžadující přihlášení administrátora
 
 ## Kontrola práv
 
-Kontrolu oprávnění k jednotlivým službám/metodám REST je třeba provádět pomocí anotace:
+Kontrolu práv na jednotlivých REST službách/metodách je třeba provést pomocí anotace:
 
 ```java
 //prihalseny pouzivatel
@@ -29,11 +29,11 @@ Kontrolu oprávnění k jednotlivým službám/metodám REST je třeba provádě
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat&menuUsers')")
 ```
 
-Předpony URL a anotace jsou **povinné** zajistit, aby systém **dvojitá kontrola**.
+URL prefixy a anotace jsou **povinné**, aby v systému byla zabezpečena **dvojitá kontrola**.
 
-## Token CSRF
+## CSRF token
 
-Při volání služeb správy REST `/admin/rest/*` Je vyžadováno nastavení tokenu CSRF. To je [k dispozici ve standardní výbavě](../../developer/frameworks/thymeleaf.md#layoutservice) v objektu `window.csrfToke` a je automaticky nastaven pro všechna volání prostřednictvím knihovny `jQuery` v `app.js`:
+Při volání REST služeb administrace `/admin/rest/*` je vyžadováno nastavení CSRF tokenu. Ten je [standardně dostupný](../../developer/frameworks/thymeleaf.md#layoutservice) v objektu `window.csrfToke` a je automaticky nastaven pro všechna volání přes knihovnu `jQuery` v `app.js`:
 
 ```JavaScript
 $.ajaxSetup({
@@ -43,13 +43,13 @@ $.ajaxSetup({
 });
 ```
 
-Výjimkou jsou volání obsahující výraz v adrese URL. `/html` nebo `html/` kde se očekává vrácení kódu HTML namísto objektu JSON.
+Výjimku mají volání obsahující v URL adrese výraz `/html` nebo `html/`, kde se předpokládá vrácení HTML kódu namísto JSON objektu.
 
-Nastavením konfigurační proměnné `logoffRequireCsrfToken` na hodnotu `true` je možné aktivovat požadavek na CSRF token pro odhlášení uživatele (z administrační i zákaznické oblasti).
+Nastavením konfigurační proměnné `logoffRequireCsrfToken` na hodnotu `true` je možné aktivovat vyžadování CSRF tokenu pro odhlášení uživatele (z administrace i zákaznické zóny).
 
-### Vložení tokenu na webovou stránku
+### Vložení tokenu ve web stránce
 
-Token CSRF lze vložit do textu webové stránky pomocí makra. `!CSRF_INPUT!` který vloží celé pole HTML, nebo pomocí příkazu `!CSRF_TOKEN!` který vloží hodnotu tokenu CSRF.
+CSRF token lze vložit do textu web stránky pomocí makra `!CSRF_INPUT!`, které vloží kompletní HTML pole, nebo pomocí `!CSRF_TOKEN!`, které vloží hodnotu CSRF tokenu.
 
 ```html
 <form action="/logoff.do?forward=/apps/prihlaseny-pouzivatel/zakaznicka-zona/csrf-logoff.html" method="post">
@@ -63,7 +63,7 @@ Token CSRF lze vložit do textu webové stránky pomocí makra. `!CSRF_INPUT!` k
 </form>
 ```
 
-Případně můžete použít přímo rozhraní API třídy [CSRF](../../../../src/webjet8/java/sk/iway/iwcm/system/stripes/CSRF.java) pro generování hodnoty `public static String getCsrfToken(HttpSession session, boolean saveToSession)` nebo celé pole HTML `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. Přidání hlaviček HTTP pro všechna volání AJAX prostřednictvím `jQuery` můžete použít následující kód:
+Případně můžete využít přímo API třídy [CSRF](../../../../src/webjet8/java/sk/iway/iwcm/system/stripes/CSRF.java) pro generování hodnoty `public static String getCsrfToken(HttpSession session, boolean saveToSession)` nebo celého HTML pole `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. Pro přidání HTTP hlavičky pro všechny AJAX volání přes `jQuery` můžete použít následující kód:
 
 ```html
 <script>
@@ -75,9 +75,9 @@ $.ajaxSetup({
 </script>
 ```
 
-### Ochrana URL
+### Ochrana URL adres
 
-Ochranu CSRF lze aktivovat na libovolné adrese URL, např. `/private/rest` nastavením konfigurační proměnné `csrfRequiredUrls` do kterého na novém řádku zadáte začátky adres URL, pro které by měla být vyžadována ochrana CSRF. Podporován je také formát se znaky `%` obsahuje a `!` pro konce na. Příklad:
+CSRF ochranu lze aktivovat na libovolné URL adresy, například `/private/rest` nastavením konfigurační proměnné `csrfRequiredUrls` do které zadáte na nový řádek začátky URL adres pro které má být CSRF ochrana vyžadována. Podporován je i formát se znaky `%` pro obsahuje a `!` pro končí na. Příklad:
 
 ```
 /private/rest

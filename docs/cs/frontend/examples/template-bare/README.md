@@ -1,125 +1,125 @@
-# Holá šablona
+# Bare šablona
 
-Základní ukázka šablony pro WebJET CMS pomocí [Šablony Thymeleaf](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README) napsané ve formátu [PugJS](http://docs.webjetcms.sk/v2022/#/developer/frameworks/pugjs). Je založen na [Spustit Bootstrap - Bare](https://startbootstrap.com/template/bare/).
+Základní ukázková šablona pro WebJET CMS s využitím [Thymeleaf šablon](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README) napsaných ve formátu [PugJS](http://docs.webjetcms.sk/v2022/#/developer/frameworks/pugjs). Je založena na [Start Bootstrap - Bare](https://startbootstrap.com/template/bare/).
 
-Doporučujeme ji použít jako základ pro jakoukoli novou šablonu pro WebJET CMS.
+Doporučujeme ji použít jako základ JAKÉKOLIV nové šablony pro WebJET CMS.
 
-Zdrojový kód šablony můžete získat v části [WebJET CMS github repozitář](https://github.com/webjetcms/templates-bare).
+Zdrojový kód šablony můžete získat ve [WebJET CMS github repozitáři](https://github.com/webjetcms/templates-bare).
 
 ![](barepage.png)
 
-## Použití v systému WebJET CMS
+## Použití ve WebJET CMS
 
-Stáhněte si šablonu a umístěte ji do složky `templates/bare/bootstrap-bare/` (pokud používáte projekt gradle, tak samozřejmě ještě na `src/main/webapp`). Pokud jej umístíte do jiné složky, musíte upravit cesty ve zdrojových kódech, stačí vyhledat tento řetězec v souborech a upravit cestu.
+Šablonu stáhněte a umístěte do složky `templates/bare/bootstrap-bare/` (pokud používáte gradle projekt tak samozřejmě ještě do `src/main/webapp`). Pokud ji umístíte do jiné složky je třeba upravit cesty ve zdrojových kódech, stačí když vyhledáte tento řetězec v souborech a cestu upravíte.
 
-Všechny cesty, které zapíšete do `.pug/.scss/.js` soubory, které používáte, včetně předpony `/templates/bare/....` tedy jako pro použití v systému WebJET. Pokud spustíte místní verzi prostřednictvím `npm run start`, ale cesty mají předponu `/` (protože kořenová složka je ve skutečnosti `dist`). V souboru `node_scripts/bs-config.js` je nastaveno přesměrování, pokud změníte cestu k šabloně, nezapomeňte ji upravit také v tomto souboru.
+Všechny cesty, které píšete do `.pug/.scss/.js` souborů používáte včetně prefixu `/templates/bare/....`, neboli jakoby pro použití ve WebJETu. Pokud spustíte lokální verzi přes `npm run start`, silnice ale mají prefix `/` (jelikož kořenová složka je vlastně `dist`). V souboru `node_scripts/bs-config.js` je nastaveno přesměrování, pokud změníte cestu k šabloně nezapomeňte ji upravit iv tomto souboru.
 
-V terminálu přejděte do složky `src/main/webapp/templates/bare/bootstrap-bare` a generovat `dist` verze příkazu:
+V terminálu přejděte do složky `src/main/webapp/templates/bare/bootstrap-bare` a vygenerujte `dist` verzi příkazem:
 
 ```sh
 npm install
 npm run build
 ```
 
-Před vytvořením nové struktury domény/stránek v systému WebJET CMS doporučujeme nejprve vytvořit šablony.
+Před vytvořením nové domény/struktury stránek ve WebJET CMS doporučujeme nejprve vytvořit šablony.
 
 ### Skupina šablon
 
 Vytvořte novou skupinu šablon s názvem `Bare`, nastavte pole:
-- `Priečinok` nastavit na `/templates/bare/bootstrap-bare` (nebo do složky, kde máte šablonu).
-- `Typ editora stránok` nastavit na `Page Builder`.
+- `Priečinok` nastavte na `/templates/bare/bootstrap-bare` (případně na složku kde máte šablonu umístěnou)
+- `Typ editora stránok` nastavte na hodnotu `Page Builder`.
 
 ![](tempgroup-editor.png)
 
-Na kartě Metadata nastavte:
-- `Autor, Copyright, Developer, Generator` k vašim datům (použitým v šabloně)
+V kartě metadata nastavte:
+- `Autor, Copyright, Developer, Generator` na vaše údaje (používají se v šabloně)
 
 ![](tempgroup-editor-metadata.png)
 
 ### Šablona
 
-Vytvoření nové šablony `Bare - Hlavná šablóna`, nastavte pole:
+Vytvořte novou šablonu `Bare - Hlavná šablóna`, nastavte pole:
 - `Názov šablóny` na hodnotu `Bare - Hlavná šablóna`
-- `HTML Šablóna` na hodnotu `bare/bootstrap-bare/dist/index.html` (pokud se složka dist ve výběru nezobrazí, zkontrolujte, zda jste vygenerovali `dist` verze po stažení šablony).
+- `HTML Šablóna` na hodnotu `bare/bootstrap-bare/dist/index.html` (pokud se vám složka dist ve výběru nezobrazuje zkontrolujte, zda jste vygenerovali `dist` verzi po stažení šablony).
 
 ![](temp-editor.png)
 
-Na kartě Styl nastavte
+V kartě Styl nastavte
 
 - `Hlavný CSS štýl` na hodnotu `/templates/bare/bootstrap-bare/dist/css/ninja.min.css`.
 
 ![](temp-editor-style.png)
 
-### Struktura webových stránek
+### Struktura web stránek
 
-Pokud jste ještě nevytvořili novou strukturu domény/sídla, můžete nyní **vytvořit novou doménu** a nastavit její šablonu `Bare - Hlavná šablóna`:
-- klikněte na Webové stránky - seznam webových stránek
-- klikněte na ikonu `+` přidání nové složky
-- Zadejte název složky `Slovensky`
-- zadejte název položky nabídky `sk`
-- zadejte hodnotu do adresy URL `sk`
-- nastavit rodičovskou složku na kořenovou složku (hodnota `/`)
-- nastavit doménu
+Pokud jste nevytvořili ještě novou doménu/strukturu stránek, nyní **vytvořte novou doménu** a nastavte její šablonu `Bare - Hlavná šablóna`:
+- klikněte na Web stránky-Seznam web stránek
+- klikněte na ikonu `+` pro přidání nové složky
+- zadejte Název složky `Slovensky`
+- zadejte Název položky v menu `sk`
+- zadejte do URL adresa hodnotu `sk`
+- nastavte Nadřazenou složku na kořenovou složku (hodnotu `/`)
+- nastavte doménu
 
 ![](group-editor.png)
 
-Na kartě Šablona:
+V kartě Šablona:
 - v poli Šablona pro webové stránky vyberte `Bare - Hlavná šablóna`
 
 ![](group-editor-temp.png)
 
-Pokud již máte vytvořenou strukturu domény/místa, doporučujeme upravit stávající složky - na kartě Šablona složky nastavte. `Bare - Hlavná šablóna` a zapněte možnost `Aplikovať na všetky existujúce podpriečinky a podstránky`. Nastavte to také na kartě `Systém` do stávajících složek.
+Pokud již doménu/strukturu stránek máte vytvořenou, doporučujeme upravit stávající složky - v kartě Šablona složky nastavte `Bare - Hlavná šablóna` a zapněte možnost `Aplikovať na všetky existujúce podpriečinky a podstránky`. Toto nastavte iv kartě `Systém` na stávající složky.
 
-### Úprava záhlaví a zápatí
+### Nastavení hlavičky a patičky
 
-Přejděte do části Webové stránky - Seznam webových stránek, klikněte na kartu Systém a přejděte do složky Záhlaví. Otevřete stránku `Základná hlavička` v editoru. Na kartě Šablona zkontrolujte, zda stránka používá šablonu. `Bare - Hlavná šablóna` (pokud ne, nastavte a uložte stránku a znovu ji otevřete v editoru). Odstraňte vše na stránce a poté přidejte blok Page Builder. `Header-menu`.
+Přejděte do sekce Web stránky - Seznam web stránek, klikněte na kartu Systém a přejděte do složky Hlavičky. Otevřete stránku `Základná hlavička` v editoru. V kartě Šablona zkontrolujte, že stránka používá šablonu `Bare - Hlavná šablóna` (pokud ne, nastavte a stránku uložte a znovu otevřete v editoru). Smažte vše co se ve stránce nachází a následně přidejte Page Builder blok `Header-menu`.
 
-Zobrazí se 3 sloupce:
-- Logo WebJET - můžete si ho vyměnit za logo vhodné pro vaše stránky
-- Nabídka aplikace - pravděpodobně není správně nastavena kořenová složka, klikněte v aplikaci na ikonu tužky a v okně nastavení aplikace změňte nastavení. `Koreňový adresár` do adresáře domény. Zatím jste však nevytvořili strukturu stránek, takže aplikace zatím nic nezobrazí.
-- Přepínání jazyků - zobrazí přepínač jazyků `SK - EN` Pokud jazykové mutace nepoužíváte, můžete aplikaci odstranit.
+Zobrazí se vám 3 sloupce:
+- WebJET logo – to můžete změnit za vhodné logo vaší stránky
+- Menu aplikace - pravděpodobně nemá správně nastavenou kořenovou složku, klikněte na ikonu tužky v aplikaci av okně nastavení aplikace změňte `Koreňový adresár` na adresář vaší domény. Zatím ale nemáte vytvořenou strukturu stránek aplikace tedy zatím nebude nic zobrazovat.
+- Přepínání jazykové mutace - zobrazuje přepínač jazykové mutace `SK - EN`, pokud jazykové mutace nepoužíváte, aplikaci můžete vymazat.
 
 ![](header-editor.png)
 
-Podobně postupujte i při nastavení zápatí (str. `Základná pätička`), vše vymažte a vložte blok `footer-footer`. Kromě standardních textových sloupců, kde můžete snadno upravovat text podle svých potřeb, obsahuje zápatí aplikace:
-- Přihlášení k `newslettra` (hromadný e-mail) - používá se zjednodušená verze s pouhým polem pro zadání e-mailu. Zjednodušený registrační formulář se registruje do všech e-mailových skupin, které mají tuto možnost povolenou `Povoliť pridávanie/odoberanie zo skupiny samotným používateľom` a `Vyžadovať potvrdenie e-mailovej adresy`.
-- GDPR cookies - aplikace pro nastavení cookies, jejich seznam je převzat z aplikace GDPR-Cookie Manager, ve které nastavíte seznam cookies, které webové stránky používají. Můžete importovat [základní seznam souborů cookie](cookies.xlsx).
+Podobně postupujte pro nastavení patičky (stránka `Základná pätička`), smažte všechno a vložte blok `footer-footer`. Kromě standardních textových sloupců, kde můžete jednoduše upravit text podle vašich potřeb, obsahuje patička aplikace:
+- Přihlášení do `newslettra` (hromadného emailu) - používá se zjednodušená varianta pouze s polem pro zadání emailu. Zjednodušený registrační formulář registruje do všech emailových skupin, které mají zapnutou možnost `Povoliť pridávanie/odoberanie zo skupiny samotným používateľom` a `Vyžadovať potvrdenie e-mailovej adresy`.
+- GDPR cookies - aplikace pro nastavení cookies, jejich seznam bere z aplikace GDPR-Cookie manažer, ve které nastavíte seznam cookies, které web stránka používá. Můžete importovat [základní seznam cookies](cookies.xlsx).
 
-Přejděte do seznamu šablon a nastavte záhlaví/zápatí na šablonu `Bare - Hlavná šablóna` (na kartě Šablona nastavte pole Záhlaví a Zápatí).
+Přejděte do Šablony-seznamu šablon a hlavičku/patičku nastavte šabloně `Bare - Hlavná šablóna` (v kartě Šablona nastavte pole Hlavička a Patička).
 
-Poznámka: šablona obsahuje nabídku v záhlaví, proto v nastavení šablony ponechte položky Hlavní a Boční navigace prázdné.
+Poznámka: šablona obsahuje menu v hlavičce, proto položky Hlavní a boční navigace ponechejte v nastavení šablony prázdné.
 
 ### Nastavení jazykových mutací
 
-Šablona je připravena pro jazykové mutace, používá aplikaci Zrcadlení struktury. Doporučujeme vytvořit kořenové složky v seznamu webových stránek (karta Složky). `Slovensky` a `English`.
+Šablona je připravena pro jazykové mutace, využívá aplikaci Zrcadlení struktury. Doporučujeme v seznamu web stránek (karta Složky) vytvořit kořenové složky `Slovensky` a `English`.
 
-Nastavení pole na složky `URL adresa` na hodnotu `sk` nebo `en`, nastavené stejným způsobem `Názov položky v menu` na hodnotu `sk` nebo `en` (tato položka se zobrazí v záhlaví přepínače jazyků) a na kartě Šablona pole `Jazyk` na příslušnou hodnotu. Poté postupujte podle pokynů pro [nastavení zrcadlení](http://docs.webjetcms.sk/v2022/#/redactor/apps/docmirroring/README).
+Složkou nastavte pole `URL adresa` na hodnotu `sk` nebo `en`, rovněž nastavte `Názov položky v menu` na hodnotu `sk` nebo `en` (tato položka se zobrazí v hlavičce v přepínači jazyků) a v kartě Šablona pole `Jazyk` na příslušnou hodnotu. Následně postupujte podle návodu pro [nastavení zrcadlení](http://docs.webjetcms.sk/v2022/#/redactor/apps/docmirroring/README).
 
-Pro druhou jazykovou verzi vytvořte kopie záhlaví/zápatí, přidejte předponu pro automatické použití v příslušné jazykové verzi. `EN-` k názvu stránky (např. stránka `Default Hlavička` duplikát na `EN-Default Hlavička`). Na stránce upravte nastavení aplikace (kořenová složka aplikace menu).
+Pro druhou jazykovou mutaci vytvořte kopie hlavičky/patičky, pro jejich automatické použití v příslušné jazykové verzi přidejte prefix `EN-` k názvu stránky (např. stránku `Default Hlavička` zduplikujte na `EN-Default Hlavička`). Ve stránce upravte nastavení aplikací (kořenová složka pro aplikaci menu).
 
-### Vytváření stránek
+### Vytvoření stránek
 
-Šablona obsahuje několik hotových bloků, které můžete do stránky přidat jednoduše pomocí PageBuilderu.
+Šablona obsahuje několik připravených bloků, ve stránce je přidáte jednoduše přes PageBuilder.
 
-## Pro webového designéra
+## Pro web designéra
 
-Pokud chcete upravit kód šablony (HTML, CSS, JavaScript), prostudujte si níže uvedené body.
+Prostudujte si níže uvedené body, chcete-li upravit kód šablony (HTML, CSS, JavaScript).
 
-### Struktura stromu
+### Stromová struktura
 
-Všechny soubory šablon jsou umístěny ve složce src, která má následující strukturu:
-- `assets` - obrázky, ikony a písma, doporučujeme dodržovat navrhovanou strukturu podsložek. Ve složce `images` jsou k dispozici ukázkové obrázky pro bloky PageBuilder.
-- `js` - JavaScript, hlavní soubor je `ninja.js`.
-- `pug` - Kód HTML šablon ve formátu [PugJS](https://pugjs.org/).
-  - `includes` - Sdílené bloky mezi šablonami (např. záhlaví sdílené mezi šablonou hlavní stránky a podstránkou).
-  - `pagebuilder` - bloky pro [PageBuilder](http://docs.webjetcms.sk/v2022/#/frontend/page-builder/blocks). V blocích doporučujeme co nejvíce využívat možnosti `include`. Do `container` vložit existující bloky `column` bloků a do `section` Stávající `container` Bloky. Při změně `column` se změna projeví také v bloku `container` a `section` bloky.
-- `scss` - Styly CSS ve formátu pro [Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/)
+Všechny soubory šablony se nacházejí ve složce src, která obsahuje následující strukturu:
+- `assets` - obrázky, ikony a písma, doporučujeme dodržet navrženou strukturu pod složek. Ve složce `images` se nacházejí ukázkové obrázky pro bloky PageBuilder.
+- `js` - JavaScript soubory, hlavní soubor je `ninja.js`.
+- `pug` - HTML kód šablon ve formátu [PugJS](https://pugjs.org/).
+  - `includes` - sdílené bloky mezi šablonami (např. hlavička sdílená mezi šablonou hlavní stránky a pod stránky).
+  - `pagebuilder` - bloky pro [PageBuilder](http://docs.webjetcms.sk/v2022/#/frontend/page-builder/blocks). V blocích doporučujeme využívat v maximální možné míře možnost `include`. Do `container` bloků vkládejte stávající `column` bloky a do `section` stávající `container` bloky. Při změně `column` bloku se změna projeví iv `container` a `section` blocích.
+- `scss` - CSS styly ve formátu pro [Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/)
 
-Šablony návrhů jsou zkompilovány z formátu pug do formátu HTML pro použití prostřednictvím [Thymeleaf](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README). Pro prototypování pomocí `npm run start` doporučujeme postupovat podle možnosti `include` bloky pro PageBuilder do šablon. Tímto způsobem můžete ověřit zobrazení stránky a obsah současně s ověřením zobrazení bloku. V ideálním případě použijete všechny bloky na jedné stránce v prototypu. To usnadňuje vizuální ověření jejich funkčnosti a zobrazení při změně stylů CSS nebo kódu HTML.
+Designové šablony jsou kompilovány z pug formátu do HTML formátu pro použití přes [Thymeleaf](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README). Pro prototypování s použitím `npm run start` doporučujeme dodržet možnost `include` bloků pro PageBuilder do šablon. Najednou tak ověříte zobrazení stránky is obsahem a zároveň ověříte i zobrazení bloků. V ideálním stavu použijete v prototypu všechny bloky na jedné stránce. Snadno tak vizuálně ověříte jejich funkčnost a zobrazení při změně CSS stylů nebo HTML kódu.
 
-### Generování verze dist
+### Generování dist verze
 
-`dist` pro vytvoření adresáře použijte následující příkazy:
+`dist` adresář vygenerujete následujícími příkazy:
 
 ```sh
 #vygenerovanie dist adresara
@@ -132,35 +132,35 @@ npm run build
 npm run start
 ```
 
-individuální `npm` skripty jsou definovány v [package.json](package.json) v prvcích `scripts` a vyrobené z `node_scripts/*.js` Adresář:
-- `npm run build` - generuje kompletní `dist` Adresář.
-- `npm run build:assets` - znovu vygeneruje soubory z adresáře `assets` (obrázky, ikony písma).
-- `npm run build:pug` - přegeneruje soubory HTML ze zdrojových souborů pug.
-- `npm run build:scripts` - znovu vygeneruje soubory JavaScriptu z adresáře src.
-- `npm run build:scss` - generuje soubory css ze zdrojového kódu `scss` soubory.
-- `npm run clean` - maže `dist` Adresář.
-- `npm run start` - spustí režim prototypování - generuje `dist` sleduje změny v souborech a otevře prohlížeč s verzí prototypu.
-- `npm run start:debug` - spustí režim prototypování pomocí `debug` Režim prohlížeče.
+jednotlivé `npm` skripty jsou definovány v [package.json](package.json) v elementu `scripts` a provedeno z `node_scripts/*.js` adresáře:
+- `npm run build` - vygeneruje kompletní `dist` adresář.
+- `npm run build:assets` - nově vygeneruje soubory z adresáře `assets` (obrázky, ikony písma).
+- `npm run build:pug` - nově vygeneruje HTML soubory ze zdrojových pug souborů.
+- `npm run build:scripts` - nově vygeneruje JavaScript soubory ze src adresáře.
+- `npm run build:scss` - vygeneruje css soubory ze zdrojových `scss` souborů.
+- `npm run clean` - smaže `dist` adresář.
+- `npm run start` - spustí režim prototypování - vygeneruje `dist` adresář, sleduje změny v souborech a otevře prohlížeč s prototyp verzí.
+- `npm run start:debug` - spustí režim prototypování s `debug` režimem prohlížeče.
 
-Konfigurace pro režim prototypování `browser-sync` se nachází v souboru [node-scripts/bs-config.js](node_scripts/bs-config.js). Možná je potřeba upravit cestu pro nahrazení adres písem/obrázků, které jsou v souborech CSS propojeny s plnou adresou URL (protože během prototypování se adresa URL stránek liší od adresy ve finální verzi prostřednictvím systému WebJET CMS).
+Konfigurace pro režim prototypování `browser-sync` se nachází v souboru [node-scripts/bs-config.js](node_scripts/bs-config.js). Tam je případně třeba upravit cestu pro nahrazování adres písem/obrázků, které jsou linkovány s plnou URL adresou v CSS souborech (jelikož během prototypování se URL adresa stránek odlišuje vůči adrese ve finální verzi přes WebJET CMS).
 
-### Zpracování souborů v jazyce JavaScript
+### Zpracování JavaScript souborů
 
-Aby bylo možné používat moduly npm přímo v souboru [ninja.js](src/js/ninja.js) se používá [browserify](https://www.npmjs.com/package/browserify) s prodloužením [esmify](https://www.npmjs.com/package/esmify). Zpracování je v souboru [render-scripts.js](node_scripts/render-scripts.js).
+Aby bylo možné používat přímo npm moduly v souboru [ninja.js](src/js/ninja.js) je použit [browserify](https://www.npmjs.com/package/browserify) s rozšířením [esmify](https://www.npmjs.com/package/esmify). Zpracování je v souboru [render-scripts.js](node_scripts/render-scripts.js).
 
-Důvodem je, že všechny knihovny JavaScriptu použité na webové stránce lze spravovat prostřednictvím npm (tj. snadno aktualizovat).
+Důvod je, aby se všechny použité JavaScript knihovny ve web stránce daly spravovat přes npm (čili snadno aktualizovat).
 
-V souboru `ninja.js` abyste mohli použít `import/require` importovat knihovny potřebné pro zobrazení stránky.
+V souboru `ninja.js` tedy můžete použít `import/require` pro importování potřebných knihoven pro zobrazení stránky.
 
-Pak můžete použít [npm-check-updates](https://www.npmjs.com/package/npm-check-updates) pro správu verzí a snadné aktualizace.
+Následně můžete použít [npm-check-updates](https://www.npmjs.com/package/npm-check-updates) pro kontrolu verzí a snadnou aktualizaci.
 
 ### Seznam stylů pro editor
 
-V editoru můžete kromě základních formátovacích prvků Odstavec a Nadpis 1-6 přidat také potřebné styly CSS. V zájmu komplexnosti `ninja.min.css` jsou zapsány do souboru `src/scss/editor.scss` který je generován na `dist/css/editor.css`.
+V editoru lze kromě základních formátovacích prvků Odstavec a Nadpis 1-6 přidat potřebné CSS styly. Z důvodu komplexnosti `ninja.min.css` se tyto zapisují do souboru `src/scss/editor.scss` který je generován do `dist/css/editor.css`.
 
 ![](editor-stylecombo.png)
 
-Podporováno je základní použití stylů na libovolný prvek i stylování konkrétních prvků HTML:
+Podporováno je základní aplikování styly na libovolný element, ale také stylování konkrétních HTML elementů:
 
 ```css
 .blue {
@@ -194,15 +194,15 @@ table {
 }
 ```
 
-Pokud se kurzor nachází v tabulce, zobrazí se v poli pro výběr stylu také možnosti stylu pro tuto tabulku:
+Pokud se kurzor nachází v tabulce zobrazí se ve výběrovém poli Styl i možnosti stylů pro tabulku:
 
 ![](editor-stylecombo-table.png)
 
-Při použití více stylů CSS najednou (např. `btn btn-primary`) se použijí na aktuálně vybraný prvek. Styly, které se aplikují pouze na prvek, se ve výběrovém poli nezobrazují, pokud není prvek vybrán nebo není přítomen kurzor.
+Při použití více CSS stylů najednou (např. `btn btn-primary`) se aplikují na aktuálně zvolený element všechny. Styly, které se aplikují pouze na element, se ve výběrovém poli nezobrazí, pokud není daný element označen, nebo se v něm nenachází kurzor.
 
-Pokud `editor.css` nevkládáte ani do návrhu šablony, takže se její styly při zobrazení webové stránky neuplatní. Ve výchozím nastavení se tedy používá pouze jako seznam definic stylů.
+Pokud `editor.css` nevkládáte také do designu šablony, tak se jeho styly při zobrazení web stránky neaplikují. Standardně se tedy používá jen jako seznam definic stylů.
 
-Pokud chcete, můžete styl zobrazený v poli výběru v editoru definovat také přímo v jiných souborech. Takto definovaný styl však musí obsahovat komentář jako první. `/* editor */`. Příklad je v souboru `src/scss/3-base/_link.scss`:
+Pokud chcete, můžete definovat styl zobrazený ve výběrovém poli v editoru i přímo v ostatních souborech. Takto definovaný styl ale musí obsahovat jako první komentář `/* editor */`. Příklad je v souboru `src/scss/3-base/_link.scss`:
 
 ```css
 a {
@@ -215,9 +215,9 @@ a {
 }
 ```
 
-ve výběrovém poli se zobrazí možnost nastavení stylu CSS. `btn more-info` na prvku A. Výhodou tohoto postupu je, že máte definici editoru i samotných stylů na jednom místě.
+ve výběrovém poli se následně zobrazí možnost nastavení CSS stylu `btn more-info` na A elementu. Výhoda takového použití je v tom, že máte na jednom místě definici pro editor i samotné styly.
 
-Při použití stylu CSS, který nemá nastavenou značku HTML, se styl použije na nadřazený prvek, ve kterém se nachází kurzor. Pokud chcete styl aplikovat pouze na vybraný text (selektor), musíte jej definovat pro značku HTML `span`:
+Při aplikování CSS stylu, který nemá nastaven žádný HTML tag, se styl aplikuje na rodičovský element ve kterém se nachází kurzor. Chcete-li styl aplikovat pouze na označený text (selekci) je třeba jej definovat pro HTML tag `span`:
 
 ```css
 span.more-info {
@@ -228,17 +228,17 @@ span.more-info {
 }
 ```
 
-Poté můžete vybrat text a použít tento styl pouze na vybraný text. Pokud by neměl značku HTML `span` by se použil na nadřazený prvek, tj. obvykle na celý odstavec - `p`.
+následně lze označit text a aplikovat tento styl pouze na označený text. Pokud by neměl HTML značku `span` aplikoval by se na rodičovský element, čili typicky na celý odstavec - `p`.
 
-## Vytváření bloků PageBuilder
+## Tvorba PageBuilder bloků
 
-Pokud potřebujete vytvořit nový blok pro PageBuilder, postupujte podle tohoto návodu.
+Pokud potřebujete vytvořit nový blok pro PageBuilder postupujte podle tohoto návodu.
 
-### Struktura složky
+### Struktura složek
 
-Bloky jsou umístěny v `scr/pug/pagebuilder` a jsou v podsložkách `column,container,section` podle typu bloku. Ty jsou pak uspořádány podle svého významu; složky můžete pojmenovat libovolným způsobem. V knihovně bloků se pak zobrazí pod tímto názvem složky.
+Bloky se nacházejí v `scr/pug/pagebuilder` a jsou v pod složkách `column,container,section` podle typu bloku. Následně jsou organizovány podle jejich významu, složky můžete pojmenovat libovolně podle vaší potřeby. Pod názvem této složky se pak zobrazí v knihovně bloků.
 
-Doporučujeme postupovat odspodu, tj. nejprve vytvořit bloky voblasti `column` pak je pomocí include vložte do složky `container` a ten následně do `section`.
+Doporučujeme postupovat ze spodu, tedy nejprve vytvořit bloky v `column` složky, ty následně pomocí include vložit do `container` a to následně do `section`.
 
 Například soubor `src/pagebuilder/column/card/card.pug`:
 
@@ -251,7 +251,7 @@ Například soubor `src/pagebuilder/column/card/card.pug`:
             a.btn.btn-primary(href='#') Go somewhere
 ```
 
-Soubor `src/pug/pagebuilder/container/cards/cards.pug`
+soubor `src/pug/pagebuilder/container/cards/cards.pug`
 
 ```
 .container
@@ -261,32 +261,32 @@ Soubor `src/pug/pagebuilder/container/cards/cards.pug`
 
 ```
 
-Soubor `src/pug/pagebuilder/section/cards/cards.pug`
+soubor `src/pug/pagebuilder/section/cards/cards.pug`
 
 ```
 section
     include ../../container/cards/cards
 ```
 
-Výhodou takového postupu je, že pokud něco změníte. `column` pug, projeví se to použitím `include` změna příkazu i v `container` také v `section` Verze.
+výhoda takového postupu je v tom, že pokud upravíte něco v `column` pug souboru, projeví se díky použití `include` příkazu změna iv `container` iv `section` verzi.
 
-### Generování náhledů bloků PageBuilder
+### Generování náhledů PageBuilder bloků
 
-Pokud upravíte soubor bloku pug pro PageBuilder, můžete vygenerovat náhledové obrázky voláním adresy `/components/grideditor/phantom/generator.jsp`. Použijte následující nastavení:
-- Šířka: 1000
-- Výška: 600
-- přiblížení: 1
+Pokud upravíte pug soubor bloku pro PageBuilder můžete vygenerovat náhledové obrázky voláním adresy `/components/grideditor/phantom/generator.jsp`. Použijte následující nastavení:
+- šířka: 1000
+- výška: 600
+- zoom: 1
 - docid: 383
-- Šablona JSP: `/templates/bare/bootstrap-bare/dist/index.html`
+- JSP šablona: `/templates/bare/bootstrap-bare/dist/index.html`
 
-Náhledové obrázky jsou generovány ve stejné struktuře jako soubory bloků pug. Jsou také generovány do `dist` složka. V procesu sestavování se obrazy kopírují ve skriptu `render-assets.js`. Při ruční změně obrázku můžete tento skript spustit pouze příkazem:
+Náhledové obrázky se vygenerují do stejné struktury jako jsou pug soubory bloků. Zároveň se vygenerují i do `dist` složky. Při build procesu se obrázky kopírují ve skriptu `render-assets.js`. Při manuální změně obrázku můžete spustit pouze tento skript příkazem:
 
 ```sh
 npm run build:assets
 ```
 
-Generování vyžaduje nainstalované [PhantomJS](https://phantomjs.org/download.html), umístění a nastavení konfiguračních proměnných je v souboru `localconf.jsp`.
+Generování vyžaduje nainstalován [PhantomJS](https://phantomjs.org/download.html), umístění a nastavení konf. proměnných je v souboru `localconf.jsp`.
 
-## Autorská práva a licence
+## Copyright and License
 
-Copyright 2013-2021 Start Bootstrap LLC. Kód uvolněn pod licencí [MIT](https://github.com/StartBootstrap/startbootstrap-bare/blob/master/LICENSE) licence.
+Copyright 2013-2021 Start Bootstrap LLC. Code released pod the [MIT](https://github.com/StartBootstrap/startbootstrap-bare/blob/master/LICENSE) license.

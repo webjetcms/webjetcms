@@ -1,52 +1,52 @@
-# Statistiky průzkumu
+# Statistika ankety
 
-Sekce **Statistiky průzkumu** nabízí úplný přehled o tom, jak jednotliví uživatelé v dané anketě hlasovali. Kromě tabulky s údaji nabízí také grafy, které umožňují rychlou a snadnou analýzu dat.
+Sekce **Statistika ankety** nabízí plný přehled o hlasování jednotlivých uživatelů v dané anketě. Kromě tabulky s daty poskytuje také grafy, jako rychlý a přehledný způsob analýzy dat.
 
 ![](inquiry-stat_page.png)
 
-Záhlaví stránky obsahuje také část se samotnou otázkou, která si zachovává stejnou strukturu jako při jejím vytvoření.
+Hlavička stránky obsahuje také část se samotnou otázkou, která si zachovává stejnou strukturu jako byla vytvořena.
 
 ## Filtrování dat
 
-K filtrování všech dat (odpovědí uživatele v dotazníku) se primárně používá externí filtr v záhlaví stránky.
+K filtrování všech dat (uživatelských odpovědí v anketě) se primárně využívá externí filtr v hlavičce stránky.
 
 ![](inquiry-stat_filter.png)
 
-### Filtrování podle data
+### Datové filtrování
 
-Umožňuje filtrovat podle data hlasování uživatele v dané anketě. Pokud není zadáno žádné datum, je výchozí rozsah 1 měsíc.
+Umožňuje filtrovat podle data, kdy uživatel hlasoval v dané anketě. Pokud žádné datum není zadáno, přednastavený je rozsah 1 měsíc.
 
 ![](inquiry-stat_filter_dayDate.png)
 
 ### Filtrování podle uživatele
 
-Umožňuje filtrovat podle toho, kdo v anketě hlasoval. Seznam možností zahrnuje každého uživatele, který v anketě hlasoval, a 3 přednastavené možnosti :
-- Všechny
-- Přihlášeno
+Umožňuje filtrovat podle toho, kdo hlasoval v anketě. Seznam možnosti obsahuje každého uživatele, který hlasoval v anketě a 3 přednastavené možnosti :
+- Všichni
+- Přihlášen
 - Nepřihlášen
 
 ![](inquiry-stat_filter_userSelect.png)
 
-### Filtrovat podle odpovědi
+### Filtrování podle odpovědi
 
-Umožňuje filtrovat podle odpovědi v anketě, pro kterou jste hlasovali. Můžete tak filtrovat data pouze pro konkrétní odpověď a zobrazit. Seznam možností obsahuje všechny možné odpovědi, které byly pro danou anketu vytvořeny.
+Umožňuje filtrování podle odhlasované odpovědi ankety. Umíte si tak odfiltrovat data pouze pro konkrétní odpověď a prohlédnout. Seznam možnosti obsahuje všechny možné odpovědi, které byly pro danou anketu vytvořeny.
 
 ![](inquiry-stat_filter_answerSelect.png)
 
 ## Tabulka
 
-Tabulka obsahuje všechny filtrované záznamy o hlasování uživatelů. Tato data lze v tabulce dále filtrovat (třídit) podle potřeby, **Ale** tyto akce nad tabulkou nemají vliv na data použitá v grafech.
+Tabulka obsahuje všechny odfiltrované záznamy o uživatelských hlasováních. Tato data lze v tabulce dále filtrovat (seřadit) podle potřeby, **ale** tyto akce nad tabulkou neovlivňují data použitá v grafech.
 
 ![](inquiry-stat_table.png)
 
-## Grafické znázornění odpovědí
+## Graf Zastoupení odpovědí
 
-Graf **Zastoupení odpovědí** poskytuje rychlý přehled o tom, pro které odpovědi uživatelé ve zvoleném časovém rozmezí hlasovali nejčastěji.
+Graf **Zastoupení odpovědí** poskytuje rychlý přehled o tom, pro které odpovědi uživatelé nejvíce hlasovali ve zvoleném časovém rozsahu.
 
 ![](inquiry-stat_pie_chart.png)
 
 ## Graf Odpovědi podle dnů
 
-Graf **Odpovědi podle dnů** poskytuje rychlý přehled o tom, ve kterých dnech uživatelé v dané anketě hlasovali nejvíce, a to ve zvoleném časovém rozmezí.
+Graf **Odpovědi podle dnů** poskytuje rychlý přehled o tom, ve které dny uživatelé nejvíce hlasovali v dané anketě, za ve zvolený časový rozsah.
 
 ![](inquiry-stat_line_chart.png)

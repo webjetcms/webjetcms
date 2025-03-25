@@ -1,14 +1,14 @@
-# Rámeček To se mi líbí na Facebooku
+# Facebook Like Box
 
-Aplikace Facebook Like Box umožňuje propagovat vaši stránku na Facebooku (nelze ji použít pro skupiny a osobní profily). Aplikace zobrazuje příspěvky na nástěnce a v seznamu přátel stránky.
+Aplikaci Facebook Like Box umožňuje propagovat vaši Facebook stránku (nelze použít na skupiny a osobní profily). Aplikace zobrazí příspěvky na nástěnce a seznam přátel stránky.
 
 ## Nastavení aplikace
 
-- **Adresa vaší stránky na Facebooku**: Zadejte adresu stránky na Facebooku, např. `https://www.facebook.com/interway.sk/`.
-- **Šířka**: Určete šířku, na kterou se má stránka zobrazit, např. `980`.
-- **Výška**: Zadejte výšku, na kterou se má stránka zobrazit, např. `600`.
-- **Ukažte tváře svých přátel**: Umožňuje zobrazit tváře přátel.
-- **Zobrazit komentáře**: Povolit zobrazení komentářů.
+- **Adresa vaší Facebook stránky**: Zadejte adresu Facebook stránky, například `https://www.facebook.com/interway.sk/`.
+- **Šířka**: Zadejte šířku pro zobrazení stránky, například `980`.
+- **Výška**: Zadejte výšku pro zobrazení stránky, například `600`.
+- **Ukaž tváře přátel**: Povolit zobrazení tváří přátel.
+- **Ukaž komentáře**: Povolit zobrazení komentářů.
 
 ![](editor.png)
 

@@ -1,25 +1,25 @@
 # Page Builder
 
-Page Builder je speciální režim pro úpravu stránek. V tomto režimu se neupravuje celá stránka, ale pouze její vybrané části.
+Page Builder je speciální režim editace stránek. V tomto režimu není editována celá stránka ale jen její vybrané části.
 
-Viz příručka pro [webdesignér](../../../frontend/page-builder/README.md), nebo pro [editora](../../../redactor/webpages/pagebuilder.md).
+Podívejte se na manuál pro [web designéra](../../../frontend/page-builder/README.md), nebo pro [redaktora](../../../redactor/webpages/pagebuilder.md).
 
 ![](../../../redactor/webpages/pagebuilder.png)
 
 ## Implementační detaily
 
-Režim se aktivuje nastavením atributu `editingMode=pagebuilder` na objektu [DocEditorFields](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html). V atributu `editingModeLink` je odkaz, který se načte do iframe. Nastavují se pomocí metody `setEditingMode`.
+Režim je aktivován nastavením atributu `editingMode=pagebuilder` na objektu [DocEditorFields](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html). V atributu `editingModeLink` je odkaz, který se načte do iframe. Nastavuje jejich metoda `setEditingMode`.
 
-Tento odkaz obsahuje parametr URL `inlineEditorAdmin=true`, podle něj můžete najít místa v kódu implementující funkci Page Builder. Pokud je tento parametr nastaven, přesměrování stránky se neprovádí (pokud má stránka atribut `externalLink`).
+Tento odkaz obsahuje URL parametr `inlineEditorAdmin=true`, podle něj můžete v kódu najít místa implementující funkci Page Builder. Když je tento parametr zadán neprovede se přesměrování stránky (pokud má stránka nastaven atribut `externalLink`).
 
-Technicky se karta Obsah v editoru skládá ze dvou částí. `div` prvků, z nichž jeden obsahuje standardní editor CK a druhý iframe pro nástroj Page Builder. Kód je vytvořen v `field-type-wysiwyg.js`. Kromě toho se zobrazí výběrové pole, které umožňuje přepínání mezi editory (zajišťuje je nástroj `switchEditingMode`).
+Technicky je karta Obsah v editoru složená ze dvou `div` elementů, jeden obsahuje standardní CK Editor a jeden iframe pro Page Builder. Kód vzniká v `field-type-wysiwyg.js`. Kromě toho je zobrazeno výběrové pole, které zajišťuje funkci přepínání mezi editory (zajišťuje funkce `switchEditingMode`).
 
 ## Nová stránka
 
-Nástroj Page Builder se otevírá v iframe jako zobrazená webová stránka, což ztěžuje jeho zobrazení pro novou webovou stránku. V tomto případě se otevře hlavní stránka adresáře, samozřejmě s nastavením prázdných dat. Po uložení je nová webová stránka již správně vytvořena a lze ji upravovat. Nastavení adresy URL pro hlavní stránku se provádí v položce [DocEditorFields.setEditingMode](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html).
+Page Builder se otevírá v iframu jako zobrazená web stránka, což komplikuje zobrazení pro novou web stránku. V takovém případě se otevře hlavní stránka adresáře, přičemž samozřejmě se nastaví prázdná data. Po uložení již vznikne korektně nová web stránka, která lze editovat. Nastavení URL adresy pro hlavní stránku se děje v [DocEditorFields.setEditingMode](../../../../javadoc/sk/iway/iwcm/doc/DocEditorFields.html).
 
 ## Optimalizace rychlosti načítání
 
-Při inicializaci nástroje Page Builder se editor CK přepne do režimu kódu HTML, aby se zabránilo zbytečnému načítání obrázků, stylů CSS atd. pro editor, který není zobrazen. Naopak ve standardním režimu je iframe pro nástroj Page Builder nastaven na adresu URL `about: blank`.
+Při inicializaci Page Builder je CK Editor přepnut do režimu HTML kódu, aby se zbytečně nečetly obrázky, CSS styly atd. pro editor, který není zobrazen. Naopak, při standardním režimu je iframe pro Page Builder nastaven na URL adresu `about: blank`.
 
-Objekty vložené do stránky jsou v `ShowDoc.fixDataForInlineEditingAdmin` nastavit na prázdné hodnoty, aby se zabránilo zbytečnému načítání záhlaví, zápatí, menu atd. Ve výchozím nastavení načítá nástroj Page Builder kód HTML pomocí volání AJAX. `/admin/inline/get_page.jsp` pro uložení jednoho volání je hodnota pro `doc_data` atribut přenesen v `inline_page_toolbar.jsp` prostřednictvím objektu JSON `window.inlineEditorDocData` který, pokud existuje, se použije místo AJAXu k načtení dat.
+Vkládané objekty do stránky jsou v `ShowDoc.fixDataForInlineEditingAdmin` nastaveno na prázdné hodnoty, aby se zbytečně nenačítala hlavička, patička, menu atp. Standardně Page Builder získá HTML kód pomocí AJAX volání `/admin/inline/get_page.jsp`, abychom jedno volání ušetřili je hodnota pro `doc_data` atribut přenesena v `inline_page_toolbar.jsp` přes JSON objekt `window.inlineEditorDocData`, který pokud existuje použije se místo AJAX získání dat.

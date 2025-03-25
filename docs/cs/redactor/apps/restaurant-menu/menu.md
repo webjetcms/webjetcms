@@ -1,68 +1,68 @@
-# Vytváření nabídek
+# Tvorba menu
 
-Část **Vytváření nabídek** spadá do sekce Menu restaurace. Umožňuje vydávat jídelní lístky přiřazením jídel ke konkrétním dnům. Samozřejmě poskytuje možnost přidávat/upravovat/duplikovat/mazat tato přiřazení a také je importovat a exportovat.
+Část **Tvorba menu** spadá pod sekci Restaurační menu. Umožňuje vystavení jídelníčku a to přiřazením jídel ke konkrétním dnům. Samozřejmě poskytuje možnost přidávání/upravování/duplikování/mazání těchto přiřazení i jejich importování a exportování.
 
 ![](menu-data-table.png)
 
-Jídlo je ve výchozím nastavení reprezentováno sloupci Kategorie a Název jídla. Zbývající sloupce reprezentující jídlo lze přidat v nastavení datové tabulky. Hodnota ve sloupci Název jídla je sama o sobě odkazem, který vás po kliknutí přesměruje do tabulky Jídla a automaticky otevře editor vybraného jídla ([Jídla](./meals.md)).
+Jídlo je ve výchozím nastavení reprezentováno sloupci Kategorie a Název jídla. Zbývající sloupce reprezentující jídlo lze přidat v nastavení datatabulky. Samotná hodnota ve sloupci Název jídla je odkaz, která Vás po kliknutí na ni přesměruje do tabulky Jídla a automaticky otevře editor zvoleného jídla ([Jídla](./meals.md)).
 
-Záznamy v této tabulce jsou přísně filtrovány:
-- podle data (den v týdnu)
-- podle zvolené kategorie (1-polévka, 2-hlavní jídlo, 3-přílohy a 4-dezerty).
-- pak podle zvolené pozice
+Záznamy v této tabulce jsou striktně filtrovány:
+- dle data (dne v týdnu)
+- dle zvolené kategorie (1-Polévky, 2-Hlavní jídla, 3-Přílohy a 4-Dezerty)
+- následně podle zvolené pozice
 
-Tento systém třídění je dobře vidět na obrázku v části [Režim zobrazení](../restaurant-menu/menu.md#režim-zobrazení), přičemž se zobrazí záznamy z celého týdne.
+Tento systém řazení je dobré vidět na obrázku v sekci [Režim zobrazení](../restaurant-menu/menu.md#režim-zobrazení), při zobrazení záznamů z celého týdne.
 
-## Vytvoření nového záznamu
+## Vytváření nového záznamu
 
 Parametry:
-- Kategorie, seznam pro výběr kategorie potravin (přednastavená kategorie Polévky).
-- Název potraviny, seznam, který se dynamicky doplňuje podle aktuálně vybrané kategorie potravin. Seznam obsahuje všechna definovaná jídla v rámci vybrané kategorie (automaticky se vybere první jídlo ve vráceném seznamu).
-- Datum, ke kterému je potravina přiřazena, se automaticky vyplní podle hodnoty filtru data ( [Filtr data](../restaurant-menu/menu.md#filtr-data) ) a nelze je změnit
-- Pozice, při vytváření nového záznamu (pouze při vytváření) je jeho hodnota přednastavena jako nejvyšší priorita pro kombinaci daného dne a vybrané kategorie potravin + 10. To znamená, že pokud je například pro den 23.11.2023 a kategorii potravin Polévky nejvyšší priorita 20, nastaví se hodnota 30. Při změně kategorie jídla se hodnota automaticky znovu přednastaví.
+- Kategorie, seznam na výběr kategorie jídla (přednastavená kategorie Polévky)
+- Název jídla, seznam, který se dynamicky naplní podle aktuálně zvolené kategorie jídla. Seznam obsahuje všechna definovaná jídla pod danou zvolenou kategorií (automaticky se zvolí první jídlo ve vráceném seznamu)
+- Datum, ke kterému se jídlo přiřadí se automaticky naplní podle hodnoty datového filtru ( [Datový filtr](../restaurant-menu/menu.md#datový-filtr) ) a nedá se změnit
+- Pozice, při pořizování nového záznam (pouze při pořizování) se jeho hodnota před-nastaví jako největší priorita pro kombinaci daného dne a zvolené kategorie jídla + 10. To znamená, že například. pokud pro den 23.11.2023 a kategorii jídla Polévky je nejvyšší priorita 20, tak nastaví hodnotu 30. Při změně kategorie jídla se hodnota automatický opět před-nastaví.
 
 ## Ovládací prvky
 
-Tabulka obsahuje speciální ovládací prvky, které umožňují snadnější práci s daty a režimem zobrazení:
+Tabulka obsahuje speciální ovládací prvky, umožňující snazší práci s daty a režimem zobrazení:
 
 ![](menu-external-filter.png)
 
-### Filtr data
+### Datový filtr
 
-Filtr data ![](menu-external-filter-date.png ":no-zoom") se používá k omezení zobrazených záznamů pouze na určitý den. Automaticky je nastaveno na aktuální den (**Varování:** jeho poslední aktuální hodnota se při opuštění stránky neuloží).
+Datový filtr ![](menu-external-filter-date.png ":no-zoom") slouží k omezení zobrazených záznamů pouze na konkrétní den. Automatický se nastaví na aktuální den (**Upozornění:** jeho poslední aktuální hodnota se při odchodu ze stránky neuloží).
 
 ### Režim zobrazení
 
-Režim zobrazení ![](menu-external-filter-type.png ":no-zoom") umožňuje změnit rozsah, ve kterém se záznamy zobrazují. Umožňuje volbu zobrazení po dnech a týdnech.
+Režim zobrazení ![](menu-external-filter-type.png ":no-zoom") umožňuje změnit rozsah, ve kterém se záznamy zobrazují. Poskytuje na výběr zobrazení podle dní a týdnů.
 
-Předvolba je **zobrazení podle dnů**, což jste mohli vidět již na úvodním obrázku tabulky výše. V tomto zobrazení jsou záznamy filtrovány pouze pro jeden konkrétní den.
+Přednastaveno je **zobrazení podle dnů**, které jste mohli vidět již na úvodním obrázku tabulky výše. Při tomto zobrazení se filtrují záznamy pouze pro jeden specifický den.
 
-Pokud se rozhodnete **zobrazení podle týdnů**, budou filtrovány záznamy za celý týden (7 dní). Týden je vždy brán jako rozsah od pondělí do neděle.
+Pokud zvolíte **zobrazení podle týdnů**, budou se filtrovat záznamy pro celý týden (7 dní). Jako týden je brán vždy rozsah od Pondělí po Neděli.
 
-Změna týdne změnou hodnoty **Filtr data**. Filtr automaticky odvodí celý týden od vybraného data a zobrazí všechny hodnoty v tomto časovém období.
+Změnu týdne dosáhnete změnou hodnoty **Datumového filtru**. Filtr si automaticky od zvoleného data odvodí celý týden a všechny hodnoty v tomto časovém úseku budou zobrazeny.
 
-Příklad: Pokud vyberete datum 28.11.2023 (úterý), pak se v režimu Týdny automaticky nastaví rozsah od pondělí 27.11.2023 (včetně) do neděle 03.12.2023 (včetně). Bez ohledu na to, který den v tomto rozsahu vyberete, budou filtrované záznamy vždy stejné, pokud tato data spadají do stejného týdne. Samotný týden můžete změnit pouze výběrem data, které spadá do jiného týdne (např. 04.12.2023).
+Příklad: pokud zvolíte datum 28.11.2023 (Úterý) tak v módu Týdny se rozsah nastaví automaticky od Pondělí 27.11.2023 (včetně) do Neděle 03.12.2023 (včetně). Nezáleží, který den v tomto rozsahu zvolíte, vždy budou filtrované záznamy stejné, pokud jsou tato data ve stejném týdnu. Samotný týden můžete změnit až zvolením data, které spadá do jiného týdne (např. 04.12.2023).
 
-Samozřejmě nezáleží na tom, čí týden projde dalším měsícem nebo rokem. Jak vidíme z následujícího obrázku, zobrazí se nám záznamy z celého týdne a automaticky se zobrazí sloupec **Den v týdnu** aby bylo možné lépe určit, do kterého dne záznamy patří. Při přechodu z jednoho dne na druhý jsou záznamy také barevně odlišeny.
+Samozřejmě, nezáleží čí týden přechází přes jiný měsíc nebo rok. Jak můžeme z následujícího obrázku vidět, zobrazí se nám záznamy z celého týdne a automaticky se zobrazí sloupec **Den v týdnu**, pro lepší určení, pod který den záznamy patří. Také záznamy jsou barevné odlišeny při přechodu z jednoho dne na jiný.
 
 ![](menu-data-table-weeks.png)
 
-Původně nastavené datum ve filtru se nezmění (samozřejmě ho můžete změnit) a při přepnutí do režimu **zobrazení podle dnů** zobrazí záznamy dne, jehož datum je aktuálně nastaveno.
+Původně nastavené datum ve filtru se nemění (samozřejmě jej změnit můžete) a při přepnutí do módu **zobrazení podle dnů** se zobrazí záznamy dne, jehož datum je aktuálně nastaveno.
 
-### Stav data
+### Datový status
 
-Stav data slouží především k zobrazení aktuálně vybraného dne v týdnu.
+Datový status slouží primárně k zobrazení aktuálně zvoleného dne týdne.
 
-V módě **zobrazení podle dnů** zobrazí, který den v týdnu je aktuálně vybrán a který týden v roce.
+V módě **zobrazení podle dnů** zobrazuje informaci jaký den v týdnu je aktuálně zvolen a jaký týden v roce to je
 
 ![](menu-external-filter-status-a.png)
 
-V módě **zobrazení podle týdnů** zobrazuje, který týden v roce je a který rok.
+V módě **zobrazení podle týdnů** zobrazuje informaci o jaký týden v roce jde a o jaký rok
 
 ![](menu-external-filter-status-b.png)
 
-Na předchozích obrázcích vidíte, že tento stav data zahrnuje také šipky vpravo a vlevo. Tyto šipky slouží ke snadnému procházení kalendáře:
-- šipka vlevo znamená posun do minulosti.
-- šipka vpravo znamená posun do budoucnosti.
+Na předchozích obrázcích můžete vidět, že tento datový status obsahuje i šipky vpravo a vlevo. Tyto šipky slouží k jednoduchému posuvu v kalendáři:
+- šipka vlevo je posun do minulosti
+- šipka vpravo je posun do budoucnosti
 
-V módě **zobrazení podle dnů** se posouváte pouze o jeden den, v módě **zobrazení podle týdnů** se posunete o celý týden (7 dní). Při tomto posunu se automaticky nastaví filtr data, abyste viděli, který den/týden je aktuálně nastaven.
+V módě **zobrazení podle dnů** se posouváte pouze o jeden den, v módě **zobrazení podle týdnů** se posouváte o celý týden (7 dní). S tímto posunem se automaticky nastaví také datový filtr, abyste měli přehled, který den/týden je aktuálně nastaven.

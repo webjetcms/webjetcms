@@ -1,37 +1,37 @@
 # Platby
 
-Vnořená tabulka Platby v podrobnostech objednávky poskytuje přehled plateb pro konkrétní objednávku. Nad touto tabulkou je možné provádět všechny datové operace.
+Vnořená tabulka Platby v detailu objednávky poskytuje přehled plateb ke konkrétní objednávce. Nad touto tabulkou jsou možné všechny operace s daty.
 
-Požadovaná částka příkazu nemusí být uhrazena jednorázově, ale může být uhrazena v jednotlivých platbách, proto jsou platby vedeny v samostatné tabulce.
+Požadovaná částka objednávky nemusí být zaplacena najednou, ale může být zaplacena v jednotlivých platbách, což je důvod proč jsou platby vedeny v samostatné tabulce.
 
 ![](editor_payments.png)
 
-## Přidání/změna plateb
+## Přidání/úprava plateb
 
 ![](editor_payments_editor.png)
 
 Okno editoru plateb obsahuje pouze několik parametrů.
 
-**Datum**, automaticky nastaví aktuální datum při vytvoření platby. Tuto hodnotu nelze změnit a při editaci zůstává nezměněna.
+**Datum**, automatické nastavené aktuální datum, kdy je platba vytvářena. Tuto hodnotu nelze změnit a při úpravě zůstává nezměněna.
 
-**Způsob platby**, nabízí následující možnosti.
+**Způsob platby**, poskytuje na výběr následující možnosti.
 
 ![](editor_payments_editor_paymentMethods.png)
 
-**Součet**, výši platby na objednávku. Zadaná částka má svá omezení.
+**Suma**, částka platby k objednávce. Zadaná částka má svá omezení.
 
-Zadaná částka nesmí být menší než 0,01.
+Zadaná částka nemůže být menší než 0.01.
 
 ![](editor_payments_editor_minPayment.png)
 
-Součet všech plateb nebo jedna platba nesmí být vyšší než celková částka příkazu k úhradě.
+Součet všech plateb nebo jedna samostatná platba nesmí být větší než celková částka objednávky k úhradě.
 
 ![](editor_payments_editor_maxPayment.png)
 
-## Tabulka v zápatí
+## Patička tabulky
 
-Zápatí tabulky obsahuje užitečné informace o tom, kolik z celkové částky objednávky bylo skutečně zaplaceno a jaká je celková cena objednávky. Uživatel tak má přehled o tom, kolik ještě musí zaplatit, nebo zda je již vše zaplaceno.
+Patička tabulky obsahuje užitečnou informaci o tom, kolik z celkové částky objednávky je již reálně uhrazeno a také to, jaká je ta celková cena objednávky. Uživatel má tak přehled, kolik ještě musí zaplatit nebo ať už je vše zaplaceno.
 
 ![](editor_payments_footer_a.png)
 
-Informace v zápatí se automaticky mění v průběhu času, kdykoli je platba změněna, nebo. [položky](./items.md#noha-stolu).
+Informace v patičce se automaticky mění v čase při každé úpravě platby, nebo [položky](./items.md#patička-tabulky).

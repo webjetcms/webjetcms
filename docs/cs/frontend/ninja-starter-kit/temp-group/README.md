@@ -2,64 +2,64 @@
 
 ## Vytvoření nové skupiny šablon
 
-Ve výchozím nastavení je vytvořena nová skupina pro **výchozí jazyk** na projektu (ve většině případů je to **Slovenská**, ale je nastavena v konstantě `defaultLanguage`).
+Nová skupina se vytváří ve výchozím nastavení pro **výchozí jazyk** na projektu (ve většině případů to je **čeština**, ale nastavuje se to v konstantě `defaultLanguage`).
 
-To znamená, že všechny hodnoty zadané do polí při vytváření skupiny (kromě názvu skupiny a složky) se ve výchozím nastavení vytvoří v textových klíčích pro výchozí jazyk.
+Čili všechny zadané hodnoty (kromě Název skupiny a Složka) v polích při vytváření skupiny se ve výchozím nastavení vytvářejí v textových klíčů pro výchozí jazyk.
 
-## Odstranění skupiny
+## Smazání skupiny
 
-Skupinu šablon lze **smazat** pro všechny případy, **Pokud** danou skupinu šablon **nepoužívá se** (žádná šablona ji nemá nastavenou).
+Skupinu šablon je možné **smazat** jen v tom případě, **pokud** daná skupina šablon **není použita** (nemá ji žádná šablona nastavenou).
 
-Při odstraňování skupiny se **fyzicky neodstraní šablonu** v adresáři /template/, **ale všechny informace o skupině šablon uložené v databázi jsou odstraněny.** + všechny definované textové klíče pro skupinu.
+Při smazání skupiny se **nesmaže fyzicky šablona** v adresáři /template/, **ale smažou se všechny informace o skupině šablon uložené v databázi** + všechny zadefinované textové klíče pro danou skupinu.
 
-## Jazyk pro úpravu textu
+## Jazyk pro úpravu textů
 
-Tabulka se seznamem skupin šablon **zobrazuje texty ve výchozím nastavení pro nastavený výchozí jazyk.** na projektu (ve většině případů je to slovenština, ale je nastavena v konstantní `defaultLanguage`).
+Tabulka se seznamem skupin šablon **zobrazuje texty ve výchozím nastavení pro výchozí výchozí jazyk** na projektu (ve většině případů to je čeština, ale nastavuje se to v konstantě `defaultLanguage`).
 
-Pokud je zvolen jiný jazyk, do tabulky se načtou nové texty pro zvolený jazyk.
+V případě zvolení jiného jazyka se tabulka načte s novými texty pro vybraný jazyk.
 
-- Pokud není v tomto jazyce definován žádný text, zobrazí se prázdná buňka (bez textu).
-- To, že se zobrazí prázdná buňka, však neznamená, že front-end zobrazí prázdnou hodnotu.
-  - **Zobrazení textu ve front-endu funguje následovně:**
-    - vyhledá text definovaný v položce **aktuálně zobrazený jazyk** (například v EN)
-    - pokud text neexistuje, hledá v jazyce nastaveném v konstantě `defaultLanguage` (například CZ)
-    - pokud text neexistuje, hledání v databázi **CS** jazyk
+- Pokud v tomto jazyce není text definován, zobrazí se prázdná buňka (bez textu).
+- To, že se zobrazuje prázdná buňka však neznamená, že se na front-end zobrazí prázdná hodnota.
+  - **Zobrazení textu na front-end funguje následovně:**
+    - hledá text definovaný v **aktuálně zobrazeném jazyce** (pro příklad např. v EN)
+    - pokud text neexistuje, hledá v jazyce nastaveném v konstantě `defaultLanguage` (pro příklad např. CZ)
+    - pokud text neexistuje, hledá na tvrdo v **CS** jazyce
 
 ## Úprava skupiny
 
-Každou skupinu šablon lze přizpůsobit.
+Každou skupinu šablon lze upravit.
 
-Při úpravách se otevře modální okno, které obsahuje pole s výchozími hodnotami nastavenými pro aktuálně zvolený jazyk.
+Při úpravě se otevře modální okno, ve kterém se nacházejí pole s výchozími hodnotami, které jsou nastaveny pro aktuálně zvolený jazyk.
 
 **Příklad úpravy:**
 
-- vybraný jazyk pro úpravu textu je angličtina
-- při úpravě skupiny se v polích nastaví výchozí hodnoty pro angličtinu.
-- Při úpravě šablony není možné ji měnit:
-  - jazyk (přebírá se z pole pro výběr jazyka pro úpravu textu).
-  - pole Název a Složka jsou nastavena globálně pro všechny jazyky, není možné definovat pole pro každý jazyk zvlášť.
+- zvolený Jazyk pro úpravu textů je Anglicky
+- při úpravě skupiny se pole předvolí nastavenými hodnotami pro anglický jazyk
+- Při úpravě šablony nelze změnit:
+  - jazyk (ten se přebírá z výběrového pole Jazyk pro úpravu textů)
+  - pole Název a Složka se nastavují globálně pro všechny jazyky, nelze pole definovat individuálně pro každý jazyk
 
 ## Použití skupiny
 
-V úpravě virtuální šablony je pole **Skupina šablon** ve kterém se podle potřeby nastaví jedna skupina ze seznamu všech skupin šablon.
+V úpravě virtuální šablony je pole **Skupina šablon** ve které se z listu všech skupin šablon nastavuje jedna skupina podle potřeby.
 
-Po výběru skupiny se v poli pro výběr **Šablona HTML** zobrazit vše **dostupné šablony HTML pro vybranou skupinu** (vše **Soubory JSP** ve fyzickém adresáři vybrané skupiny, kromě adresáře **/includes/**).
+Po vybrání skupiny se ve výběrovém poli **HTML Šablona** zobrazí všechny **dostupné HTML šablony pro zvolenou skupinu** (zobrazí se všechny **JSP soubory** ve fyzickém adresáři zvolené skupiny kromě adresáře **/includes/**).
 
-## Použití předpon textových klíčů
+## Použití prefixu textových klíčů
 
-*Příklad použití předpony:*
+*Příklad použití prefixu:*
 
 ```properties
 testujemPrefix.editor.field_a=GPS súradnice
 ```
 
-Pro všechny šablony ve skupině s nastavenou předponou **I testPrefix** je nastaven **název nepovinného pole A** na stránce "**Souřadnice GPS**".
+Pro všechny šablony ve skupině s nastaveným prefixem **testujiPrefix** se nastaví **název volitelného pole A** ve stránce na "**GPS souřadnice**".
 
 ## Migrace skupiny
 
-Pokud migrujete skupinu do jiného prostředí, musíte provést následující kroky:
-- přenést fyzický adresář skupiny do `/templates/` z prostředí A do prostředí B
-  - pokud soubory JSP migrované šablony obsahují přímo propojené moduly a další soubory JSP, které nejsou v prostředí B, migrujte i je.
+V případě migrace skupiny na jiné prostředí, je třeba udělat tyto kroky:
+- přenést fyzický adresář skupiny v `/templates/` z prostředí A na prostředí B
+  - jsou-li v JSP souborech migrované šablony přímo linkovány moduly a jiné JSP soubory, které na prostředí B nejsou, přenést i ty
 - zkontrolovat nastavené proměnné `$wj-install-name` a `$wj-template-name` v souboru `_variables.scss`
-- Vytvoření a nastavení skupiny v prostředí B na základě vzoru z prostředí A
-- Export textových klíčů z prostředí A s předponou nastavenou v poli **Předpona textových klíčů** a import do prostředí B
+- Vytvoření a nastavení skupiny na prostředí B podle vzoru z prostředí A
+- Exportování textových klíčů z prostředí A s prefixem nastaveným v poli **Prefix textových klíčů** a importování na prostředí B

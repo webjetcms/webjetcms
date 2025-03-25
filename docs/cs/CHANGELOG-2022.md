@@ -2,545 +2,545 @@
 
 ## 2022.52
 
-> Verze 2022.52 se zaměřuje na **lepší použitelnost**, obsahuje vylepšení na základě připomínek uživatelů. Byly přepracovány aplikace Poll, definice atributů, **Kontrola odkazů a prázdných stránek, Statistika**, Rezervace. Bannerová aplikace přidává možnost používat **volitelná pole**, v galerii je mnoho drobných vylepšení.
+> Verze 2022.52 je zaměřena na **zlepšení použitelnosti**, obsahuje vylepšení na základě připomínek uživatelů. Předělány do nového designu jsou aplikace Anketa, definování atributů, **Kontrola odkazů a prázdných stránek, Statistika**, Rezervace. Aplikace Banner přidává možnost použití **volitelných polí**, v galerii je množství drobných zlepšení.
 
 Významné změny v této verzi:
-- Datové tabulky
-  - Zapamatování nastaveného počtu záznamů na stránku - pokud nastavíte jinou než automatickou hodnotu, tabulka si bude pamatovat nastavený počet záznamů na stránku.
-  - Import - vylepšeno zobrazení čísla řádku při chybě importu, přidáno odstranění mezer na začátku a na konci textu, zobrazeny informace při importu mnoha záznamů.
-- Webové stránky
-  - Při vytváření nové stránky se okno editoru přepne na kartu Základní, abyste mohli ihned zadat název stránky.
-  - Přidána funkce [kontrola odkazů a prázdných stránek](redactor/webpages/linkcheck.md).
+- Datatabulky
+  - Pamatování nastaveného počtu záznamů na straně - pokud nastavíte jinou než automatickou hodnotu tabulka si bude pamatovat nastavený počet záznamů na straně.
+  - Import - zlepšené zobrazení čísla řádku při chybě importu, doplněné odstranění mezer na začátku a na konci textu, zobrazená informace při importu spousty záznamů.
+- Web stránky
+  - Při vytváření nové stránky se okno editoru přepne do karty Základní, aby bylo možné hned zadat jméno stránky.
+  - Přidána funkce na [kontrolu odkazů a prázdných stránek](redactor/webpages/linkcheck.md).
 - Aplikace
-  - Přepracováno: Atributy stránky, anketa, statistiky, rezervace a seznam objektů rezervace
-  - Systém bannerů - přidaná možnost [nastavit volitelná pole A-F](frontend/webpages/customfields/README.md) v případě potřeby zaznamenat/zobrazit další informace (např. další nadpis/odkaz/text tlačítka v banneru).
-  - Galerie - automatický výpočet počtu obrázků na stránku a zapamatování nastavené velikosti obrázku `SML`.
-  - Galerie - přidána možnost otočit fotografii vlevo/vpravo (původně byla k dispozici pouze pravá možnost).
-- Zabezpečení a API
+  - Předěláno do nového designu: Atributy stránky, Anketa, Statistika, Rezervace a Seznam rezervačních objektů
+  - Bannerový systém - doplněna možnost [nastavovat volitelná pole A-F](frontend/webpages/customfields/README.md), které umožní v případě potřeby evidovat/zobrazovat dodatečné informace (např. dodatečný nadpis/odkaz/text tlačítka v banneru).
+  - Galerie - automatický výpočet počtu obrázků na stranu a pamatování si nastavené velikosti obrázků `SML`.
+  - Galerie - přidána možnost otočit fotku doleva/doprava (původně byla jen možnost doprava).
+- Bezpečnost a API
   - Aktualizované knihovny `Spring Security` a další.
   - Přidána možnost použít Google reCaptcha v3.
-  - [Přihlášení pomocí klíče API](custom-apps/spring/api-auth.md) odeslaný v hlavičce HTTP požadavku.
+  - [Přihlašování pomocí API klíče](custom-apps/spring/api-auth.md) posílaného v HTTP hlavičce požadavku.
 
-### Převratné změny
+### Průlomové změny
 
-- Během paralelního testování jsme zjistili chybu v akvizici. `domainId` v instalacích s více doménami. Proto bylo načítání této hodnoty změněno podle nejnižší hodnoty. `groupId` složky v doméně (původně to bylo podle priority řazení). Tato změna může vést k narušení vztahů v databázi, proto je možné definovat konf. proměnnou `domainId-www.domena.sk` a hodnotu ID, která odkazuje na původně nastavenou hodnotu.
+- Během paralelního testování jsme identifikovali chybu v získávání `domainId` v multi doménových instalacích. Z toho důvodu došlo ke změně získání této hodnoty podle nejnižšího `groupId` složky v dané doméně (původně to bylo podle priority uspořádání). Tato změna může vést k zkažení vztahů v databázi, proto je možné definovat konf. proměnnou `domainId-www.domena.sk` a hodnotou ID, která odkazuje na původně nastavenou hodnotu.
 - `FtpDownloader` - třída zrušena.
-- Banner - pokud používáte vlastní kód Java pro čtení bannerů, název primárního klíče byl změněn z `bannerId` na standardní `id`.
+- Banner - pokud používáte vlastní Java kód pro čtení bannerů došlo ke změně názvu primárního klíče z `bannerId` na standardní `id`.
 
-### Webové stránky
+### Web stránky
 
-- Při vytváření kořenových složek s názvem `Slovensky, Česky, English, Deutsch` automaticky nastaví dvoupísmenný kód jazyka a pořadí uspořádání na `10, 20, 30, 40` (#market-245).
-- Opraveno řazení seznamu webových stránek při prvním načtení, pokud je nastaveno jiné než výchozí řazení podle ID stránky.
-- Opraven náhled nově vytvořené stránky.
-- Pokud je definováno více než 30 značek (skupin Perex), zobrazí se na kartě Perex jako vyhledávací pole s více možnostmi výběru místo standardního seznamu zaškrtávacích políček (#54857).
-- Při vytváření nové stránky se okno editoru přepne na kartu Základní, aby bylo možné ihned zadat název stránky (#54857).
-- Při přepnutí domény na domovské stránce se automaticky přepne do sekce Webové stránky (pokud má uživatel práva) (#54857-4).
-- FontAwesome - vylepšena podpora pro použití FontAwesome na webových stránkách (správné načítání písma v administraci) (#39751-51).
-- Vlastnosti aplikace - upraveno vkládání seznamu objektů (seznam bannerů, galerie...) do nového návrhu v úpravě vlastností aplikace. Technicky se přesměrování z původní adresy URL na novou provede, pokud je definována v položce `MenuService`. (#54705).
-- Opraveno filtrování složky Systém a Koš, pokud je podsložkou hlavní složky domény (při aktualizaci starého webu). Nyní již složka Systém není kořenovou složkou. Opraveno zobrazování stránek při přepínání karet Složky, Systém a Koš (někdy se nenačítal seznam stránek ve složce Systém) (#54953-4).
-- Přidáno tlačítko na [zobrazit statistiky webových stránek](redactor/apps/stat/README.md) (#54953-3).
-- Atributy stránky - [definování atributů](redactor/webpages/doc-attributes/README.md) převedeny na datové tabulky (#54709).
-- Přidána funkce [kontrola odkazů a prázdných stránek](redactor/webpages/linkcheck.md) (#54697).
+- Při vytváření kořenových složek s názvem `Slovensky, Česky, English, Deutsch` se u prázdného pole URL adresa automaticky nastaví dvou písmenový kód jazyka a pořadí uspořádání na `10, 20, 30, 40` (#market-245).
+- Opraveno uspořádání seznamu web stránek při prvním načtení, pokud je nastaveno jinak než na výchozí uspořádání podle ID stránky.
+- Opraveno zobrazení náhledu nově vytvořené stránky.
+- Pokud je definováno více než 30 značek (perex skupin) zobrazí se v kartě Perex jako multi výběrové pole s vyhledáváním namísto standardního seznamu zaškrtávacích polí (#54857).
+- Při vytváření nové stránky se okno editoru přepne do karty Základní, aby bylo možné hned zadat jméno stránky (#54857).
+- Při přepnutí domény na úvodní stránce se automaticky přepne do sekce Web stránky (pokud má uživatel práva) (#54857-4).
+- FontAwesome - zlepšená podpora používání FontAwesome ve web stránkách (korektní načtení fontu v administraci) (#39751-51).
+- Vlastnosti aplikace - upravené vkládání seznamu objektů (seznam bannerů, galerie...) pro nový design v editaci vlastností aplikace. Technicky se provede přesměrování z původní URL adresy na novou pokud je definována v `MenuService`. (#54705).
+- Opraveno filtrování složky Systém a Koš pokud je to podsložka hlavní složky domény (při aktualizaci starého webu). Nově bývá složka Systém již jako kořenová složka. Opraveno zobrazení stránek při přepnutí karet Složky, Systém a Koš (někdy se nenačetl znovu seznam stránek ve složce Systém) (#54953-4).
+- Doplněno tlačítko na [zobrazení statistiky web stránky](redactor/apps/stat/README.md) (#54953-3).
+- Atributy stránky - [definování atributů](redactor/webpages/doc-attributes/README.md) předěláno do datatabulek (#54709).
+- Přidána funkce na [kontrolu odkazů a prázdných stránek](redactor/webpages/linkcheck.md) (#54697).
 
 ![](redactor/webpages/linkcheck-datatable.png)
 
-### Průzkum
+### Anketa
 
-- Aplikace přepracována do nového designu (#54705).
-- Vytvořil [dokumentace k editoru](redactor/apps/inquiry/README.md) (#54705).
+- Aplikace předělané na do nového designu (#54705).
+- Vytvořeno [dokumentace pro redaktora](redactor/apps/inquiry/README.md) (#54705).
 
 ![](redactor/apps/inquiry/inquiry-editor_basic.png)
 
 ### Bannerový systém
 
-- Přidána možnost nastavení banneru klienta, opraveno zobrazení statistik (možnost změny data a chyby, pokud banner neobsahuje žádné statistiky) (#39751-52).
-- Přidána kontrola oprávnění "Zobrazit všechny bannery" - pokud uživatel toto oprávnění nemá, zobrazí se pouze bannery, u kterých je nastaven jako klient (#39751-52).
-- Přidána možnost [nastavit volitelná pole A-F](frontend/webpages/customfields/README.md) aby bylo možné v případě potřeby zaznamenat/zobrazit další informace (např. další nadpis/odkaz/text tlačítka v banneru) (#39751-52).
+- Doplněna možnost nastavit k banneru klienta, opraveno zobrazení statistiky (možnost změnit data a chyba pokud banner neobsahuje žádnou statistiku) (#39751-52).
+- Doplněna kontrola práva "Zobrazit všechny bannery" - pokud uživatel toto právo nemá, zobrazí se mu jen bannery kde je nastaven jako klient (#39751-52).
+- Doplněna možnost [nastavovat volitelná pole A-F](frontend/webpages/customfields/README.md), které umožní v případě potřeby evidovat/zobrazovat dodatečné informace (např. dodatečný nadpis/odkaz/text tlačítka v banneru) (#39751-52).
 
 ### Galerie
 
-- **Automatický výpočet počtu obrázků na stránku** - podobně jako se počítá počet řádků v datové tabulce, počítá se počet obrázků, které se vejdou do okna najednou, podle velikosti okna pro optimální stránkování (#54857).
-- Textový editor - vylepšena kompatibilita se starým editorem, povoleno stylování textu (#39751-50).
-- Autor - přidána možnost formátovat text se jménem autora (tučně, odkaz...) (#54857-4).
-- **Nastavení velikosti paměti** - galerie si pamatuje nastavenou velikost miniatur (`S,M,L`) nebo zobrazení tabulky (#54857-4).
-- Vytvořením nové složky se nastaví režim Vlastní zobrazení místo chybného Přesný rozměr, který zkresluje poměr stran (#54857-4).
-- Atribut nastavený podle obrázku `loading="lazy"` načítat obrázek pouze při posouvání stránky (zvýšení rychlosti a snížení objemu dat u velkých galerií).
-- Upravené stránkování (kompatibilita s Bootstrapem).
-- Po přidání fotografie se provede její odstranění. `EXIF` informace z důvodu bezpečnosti a také z důvodu. **odstranění orientace (rotace)**, je-li nakonfigurován `ImageMagick`. Původní fotografie v editoru byla zobrazena s rotací podle `EXIF` ale ne zmenšené informace, což způsobilo nekonzistenci zobrazení (#54909).
-- Při použití `ImageMagick` se nejprve odstraní z originálu, když se obrázek otočí `EXIF` informace o jeho natočení, aby se originál a náhledová fotografie nelišily (#54909).
-- Přidána možnost **otočení fotografie vlevo/vpravo** (původně byla k dispozici pouze pravá možnost), opravena možnost otáčení obrázku s příponou `.jpeg` (#39751-52).
-- Přidána možnost změnit název souboru v editoru (po změně se přejmenují i soubory s fotografiemi na disku) (#39751-52).
-- Aby se v editoru nezobrazovala stará verze obrázku, přidali jsme k jeho cestě náhodný parametr URL. To způsobí, že se při každém otevření editoru znovu načte ze serveru (#39751-52).
-- Přidáno **Nástroj lupa pro zvětšení/zmenšení obrázku** v editoru na kartě Oblast zájmu (#54953-3).
+- **Automatický výpočet počtu obrázků na stránku** - podobně jako se počítá počet řádků v datatabulce, tak se podle velikosti okna počítá počet obrázků, které se vejdou najednou do okna pro optimální stránkování (#54857).
+- Editor textu - zlepšená kompatibilita se starým editorem, povoleno stylování textu (#39751-50).
+- Autor - přidána možnost formátovat text se jménem autora (tučné písmo, odkaz...) (#54857-4).
+- **Pamatování nastavené velikosti** - galerie si pamatuje nastavenou velikost náhledů (`S,M,L`), nebo zobrazení ve formě tabulky (#54857-4).
+- Vytvoření nové složky nastaví režim Zobrazení na míru namísto chybného Přesný rozměr který deformuje poměr stran (#54857-4).
+- Obrázkem nastavený atribut `loading="lazy"` pro načtení obrázku až při posunu stránky (zvýšení rychlosti a snížení objemu dat u velkých galerií).
+- Upravené stránkování (Bootstrap kompatibilita).
+- Po přidání fotky se provede odstranění `EXIF` informace kvůli bezpečnosti a také kvůli **odstranění orientace (otočení)**, je-li nakonfigurován `ImageMagick`. Originál fotka v editoru totiž byla zobrazena s otočením podle `EXIF` informace, ale zmenšeniny ne, což vytvářelo nesoulad zobrazení (#54909).
+- Při použití `ImageMagick` se při otočení obrázku nejprve z originálu odstraní `EXIF` informace o jeho otočení, aby nevznikaly rozdíly mezi originál a náhledovou fotkou (#54909).
+- Přidána možnost **otočit fotku doleva/doprava** (původně byla jen možnost doprava), opravena možnost otočit obrázek s příponou `.jpeg` (#39751-52).
+- Přidána možnost změnit jméno souboru v editoru (po změně se přejmenují i soubory fotografie na disku) (#39751-52).
+- Aby se předešlo zobrazení staré verze obrázku v editoru přidali jsme náhodný URL parametr k jeho cestě. To způsobí, že se při každém otevření editoru načte nově ze serveru (#39751-52).
+- Přidán **nástroj Lupa pro zvětšení/zmenšení obrázku** v editoru v kartě Oblast zájmu (#54953-3).
 
-### Statistiky
+### Statistika
 
-Aplikace [Statistiky](redactor/apps/stat/README.md) kompletně přepracován do nové vizuální podoby. Aktualizované stránky [příručka pro redaktora](redactor/apps/stat/README.md) s popisem jednotlivých statistik (#54497, #54585).
+Aplikace [Statistika](redactor/apps/stat/README.md) kompletně předěláno do nového vizuálu. Doplněno [manuál pro redaktora](redactor/apps/stat/README.md) s popisem jednotlivých statistik (#54497, #54585).
 
 ![](redactor/apps/stat/stats-page.png)
 
-- Přidána možnost nastavit konkrétní složku pro zobrazení statistik (#54953-3).
+- Doplněna možnost nastavit specifickou složku pro zobrazení statistiky (#54953-3).
 
 ### Rezervace
 
-Aplikace Rezervace a seznam objektů rezervace přepracované do nové vizuální podoby. Přidáno [příručka pro redaktora](redactor/apps/reservation/reservations/README.md) (#54701).
+Aplikace rezervace a seznam rezervačních objektů předělané do nového vizuálu. Doplněno [manuál pro redaktora](redactor/apps/reservation/reservations/README.md) (#54701).
 
 ![](redactor/apps/reservation/reservations/reservation-editor_basic_tab_1.png)
 
 ### Vyhledávání
 
-- `Lucene` - Přidána podpora češtiny, angličtiny a němčiny. Pro tyto jazyky se používá standardní parser a `stemmer` k dispozici přímo v `Lucene` (`org.apache.lucene.analysis.JAZYK`).
-- `Lucene` - při indexování webových stránek se bere v úvahu jazyk webové stránky (podle jazyka složky nebo šablony). Do indexu se přidávají pouze stránky ve stejném jazyce, jako je vytvořený index.
+- `Lucene` - doplněna podpora českého, anglického a německého jazyka. Pro tyto jazyky se používá standardní analyzér a `stemmer` dostupný přímo v `Lucene` (`org.apache.lucene.analysis.JAZYK`).
+- `Lucene` - při indexování web stránek se bere v úvahu jazyk web stránky (dle jazyka složky nebo šablony). Do indexu se přidají pouze stránky ve shodném jazyce jako je vytvořený index.
 
-### Datové tabulky
+### Datatabulky
 
-- **Zapamatování nastaveného počtu záznamů na stránce** - pokud nastavíte jinou než automatickou hodnotu, tabulka si bude pamatovat nastavený počet záznamů na stránce (#39751-50).
-- Stránkování - **zvýšený počet čísel stránek** v zápatí tabulky. U hlavních tabulek a šířky obrazovky větší než 800 pixelů se počet položek stránkování (původně 7 položek) počítá podle šířky tabulky (#39751-50,54857-4).
-- `Quill` - jednoduchý editor HTML - rozšířeny možnosti jednoduchého editoru HTML (používá se např. v galerii, otázkách a odpovědích...) - přidáno nastavení pro horní/podsazený index, barvy, zarovnání, možnost upravovat kód HTML (#54857-4).
-- Přidána možnost konfigurace [onPreXhr](developer/datatables/README.md) pro možnost přidání parametrů URL pro volání služby REST. To se používá, pokud je na stránce speciální filtr, například ve statistikách (#54585).
-- Přidána možnost konfigurace [defaultSearch](developer/datatables/README.md#možnosti-konfigurace) pro inicializaci vyhledávání před prvním voláním služby REST (používá se v aplikaci Statistiky pro zapamatování dat od-do zadaných mezi jednotlivými stránkami statistik) (#54585).
-- Přidána možnost nastavení hodnoty `null` (zadané jako řetězec) v poli výběru (pro možnost nastavení/filtrace `null/true/false`) (#54701).
-- Přidaný typ pole `TIME_HM/TIME_HMS` Pro [výběr hodin a minut](developer/datatables-editor/standard-fields.md#time_hm-a-time_hms) (a případně sekundy) (#54701).
-- Dovoz - doplněno **zobrazení čísla řádku při chybě** i když importovaná entita nedědí od entity `ActiveRecordBase` (#39751-53).
-- Import - přidáno odstranění mezer na začátku a na konci hodnoty v buňce (aby např. nedošlo k chybě importu kvůli nesprávné e-mailové adrese) (#39751-53).
-- Import - přidáno zobrazení průběhu importu v %, přidána ikona indikátoru k tlačítku importu (#39751-53).
+- **Pamatování nastaveného počtu záznamů na straně** - pokud nastavíte jinou než automatickou hodnotu tabulka si bude pamatovat nastavený počet záznamů na straně (#39751-50).
+- Stránkování - **zvětšený počet čísel stránkování** v patičce tabulky. Pro hlavní tabulky a šířku obrazovky více než 800 bodů je podle šířky tabulky vypočten počet položek stránkování (původně 7 položek) (#39751-50,54857-4).
+- `Quill` - jednoduchý HTML editor - rozšířené možnosti jednoduchého HTML editoru (používaného např. v galerii, dotazy a odpovědi...) - přidáno nastavení horní/dolní index, barvy, zarovnání, možnost upravit HTML kód (#54857-4).
+- Přidána konfigurační možnost [onPreXhr](developer/datatables/README.md) pro možnost přidání URL parametrů pro volání REST služby. Používá se, pokud je na stránce speciální filtr, například ve statistice (#54585).
+- Přidána konfigurační možnost [defaultSearch](developer/datatables/README.md#možnosti-konfigurace) pro inicializování vyhledávání před prvním voláním REST služby (používá se v aplikaci Statistika k pamatování zadaných dat od-do mezi jednotlivými stránkami statistiky) (#54585).
+- Přidána možnost nastavit hodnotu `null` (zadanou jako řetězec) ve výběrovém poli (pro možnost nastavení/filtrování `null/true/false`) (#54701).
+- Přidán typ pole `TIME_HM/TIME_HMS` pro [výběr hodin a minut](developer/datatables-editor/standard-fields.md#time_hm-a-time_hms) (a případně vteřin) (#54701).
+- Import - doplněno **zobrazení čísla řádku při chybě** i když importovaná entita nedědí z `ActiveRecordBase` (#39751-53).
+- Import - doplněno odstranění mezer na začátku a konci hodnoty v buňce (aby např. nenastala chyba importu kvůli nesprávné email adrese) (#39751-53).
+- Import - doplněno zobrazení progresu importu v %, doplněna indikační ikona na tlačítko importu (#39751-53).
 
-### Zabezpečení
+### Bezpečnost
 
 - Aktualizovaná knihovna `Spring Security` na verzi `5.6.+` (#39751-50).
-- Aktualizované knihovny JavaScriptu (#54857-4).
-- Opravena možná zranitelnost XSS v auditu (#54857-4).
-- Registrace uživatele - přidána kontrola JavaScriptu pro pole Opakovat heslo, která zabrání odeslání formuláře, pokud se neshoduje s polem Heslo.
+- Aktualizováno JavaScript knihovny (#54857-4).
+- Opravena možná XSS zranitelnost v auditu (#54857-4).
+- Registrace uživatele - doplněna JavaScript kontrola pole Zopakovat heslo, aby nešel formulář odeslat, pokud se neshoduje s polem Heslo.
 - Přidána možnost použít **Google reCaptcha v3**.
 
-### Přístup k rozhraní API
+### API přístup
 
-- Přidána možnost programového volání služeb správy REST z externího systému (#54941).
-- [Přihlášení pomocí klíče API](custom-apps/spring/api-auth.md) odeslaný v hlavičce HTTP požadavku.
-- Klíč API se generuje v profilu příslušného uživatele zadáním znaku `*` je vygenerován náhodný klíč API.
+- Přidána možnost volat REST služby administrace programově z externího systému (#54941).
+- [Přihlašování pomocí API klíče](custom-apps/spring/api-auth.md) posílaného v HTTP hlavičce požadavku.
+- API klíč je se generuje v profilu příslušného uživatele, zadáním znaku `*` se vygeneruje náhodný API klíč.
 
-### Další drobné změny
+### Jiné drobné změny
 
-- Administrace - levé menu - když kliknete na položku, která je v menu nízko, menu se po načtení stránky posune výš, aby byla položka viditelná a zobrazily se všechny položky menu druhé úrovně (#54701).
-- Animace načítání - přidána možnost zobrazit [animace načítání](developer/frameworks/webjetjs.md#animace-načítání), např. při generování grafu (#54585).
-- Banner - přidána možnost nastavení [parametr URL kampaně](redactor/apps/banner/README.md#banner-s-obsahem) a zobrazení banneru pouze během kampaně.
-- Dialogy - Upraveno zobrazení starších dialogů (např. nastavení aplikace, dialogy editoru stránek) na nový styl záhlaví a karet (#39751-52).
-- Přesměrování domény - opraveno získávání doménového aliasu při detekci `xsrf` (při vytváření aliasu domény již není nutné přidávat doménu do proměnné conf. `xsrfReferers`).
-- Formulář snadno - přidána detekce vložení `check_form` pro kontrolu vyplněných polí. Pokud se na stránce již nachází objekt (existuje `checkFormLoaded`) nebude nutné vkládat skript pro jeho vložení (#54393).
-- Formulář snadno - upravené zobrazení textu tooltipu - podpora pro Bootstrap 5, nahrazení špatného textu `.popover` z `.tooltip` (#54393).
-- Formulář snadno - upraveno generování ID polí pro výběrová a zaškrtávací pole, aby bylo možné správně kliknout na text a vybrat příslušnou možnost (#market-245).
-- Snadno se tvoří - **nastavit minimální šířku pole pro zobrazení na řádku** aby se na mobilním telefonu pole zobrazovala na celou šířku a ne vedle sebe (kde jsou příliš malá) (#54857).
-- Hromadný e-mail - přidána kontrola (ověření) e-mailové adresy při přihlašování/odhlašování k hromadnému e-mailu.
-- Hromadný e-mail - přidaná možnost **zadat více e-mailových adres v dialogovém okně pro odhlášení odběru.** (#39751-53).
-- Hromadné e-maily - přidána kontrola duplicit při zadávání odhlašovaných e-mailových adres (#39751-53).
-- Hromadný e-mail - opravena chyba při přidávání e-mailu do kampaně, pokud je e-mail na seznamu pro odhlášení. Místo chyby je přidání považováno za správné a pokračuje na další záznam (#39751-53).
-- Soubory - přidána možnost použít [externí adresář pro soubory](frontend/setup/README.md) jako součást webové aplikace. Nastavuje se jako konfigurační proměnná `cloudStaticFilesDir={FILE_ROOT}static-files` který nastaví ukládání souborů pro každou doménu zvlášť ve složce. `static_files` v kořenové složce webové aplikace (#39751-47).
-- Šablony - v editoru přibyla karta Složky a webové stránky, která obsahuje **seznam složek a stránek, které používají zobrazenou šablonu.** (#54693).
-- Zrcadlení struktury - kořenové složky se již nebudou synchronizovat, aby bylo možné nastavit jejich pořadí v administraci (např. první slovenská a druhá anglická).
-- Přidána funkce API [WJ.prompt](developer/frameworks/webjetjs.md#získání-hodnoty) získat od uživatele hodnotu (např. heslo pro potvrzení smazání atd.) (#54701).
+- Administrace - levé menu - při kliknutí na položku která je nízko v menu se při načtení stránky posune menu výše, aby byla položka viditelná a byly zobrazeny případné položky druhé úrovně menu (#54701).
+- Animace načítání - přidána možnost zobrazit [animaci načítání](developer/frameworks/webjetjs.md#animace-načítání) Např. během generování grafů (#54585).
+- Banner - přidána možnost nastavení [kampaňového URL parametru](redactor/apps/banner/README.md#banner-typu-obsahový-banner) a zobrazení banneru jen při kampani.
+- Dialogová okna - upravený vizuál dialogových oken starších částí (např. nastavení aplikace, dialogy v editoru stránek) na nový styl hlavičky a karet (#39751-52).
+- Doménové přesměrování - opraveno získání doménového aliasu při detekci `xsrf` (již není nutné při vytvoření doménového aliasu přidat doménu i do konf. proměnné `xsrfReferers`).
+- Formulář snadno - přidána detekce vložení `check_form` pro kontrolu vyplněných polí. Pokud se již ve stránce nachází (existuje objekt `checkFormLoaded`) nebude se zbytečně vkládat skript na jeho vložení (#54393).
+- Formulář snadno - upravené zobrazování tooltip textu - podpora pro Bootstrap 5, nahrazení vadného `.popover` z `.tooltip` (#54393).
+- Formulář snadno - upravené generování ID pole pro výběrová a zaškrtávací pole, aby se korektně dalo kliknout na text a zvolila se příslušná možnost (#market-245).
+- Formulář snadno - **nastavená minimální šířka pole při řádkovém zobrazení** tak, aby se na mobilním telefonu pole zobrazily na celou šířku a ne vedle sebe (kde jsou příliš malé) (#54857).
+- Hromadný email - doplněná kontrola email adresy (validace) při přihlášení/odhlášení z hromadného emailu.
+- Hromadný email - přidána možnost **zadat více email adres v dialogu odhlášeného emailu** (#39751-53).
+- Hromadný email - přidána kontrola duplicit při zadávání odhlášených email adres (#39751-53).
+- Hromadný email - opravena chyba přidání emailu do kampaně pokud je email na seznamu odhlášených emailů. Namísto chyby se přidání považuje za korektní a pokračuje se na další záznam (#39751-53).
+- Soubory - přidána možnost používat [externí adresář pro soubory](frontend/setup/README.md) jako součást web aplikace. Nastavuje se jako konf. proměnná `cloudStaticFilesDir={FILE_ROOT}static-files` což nastaví ukládání souborů pro každou doménu samostatně ve složce `static_files` v kořenové složce web aplikace (#39751-47).
+- Šablony - v editoru přidána karta Složky a Web stránky se **seznamem složek a stránek používajících zobrazenou šablonu** (#54693).
+- Zrcadlení struktury - kořenovou složkou se již nebude synchronizovat pořadí uspořádání, aby se dalo nastavit jejich pořadí v administraci (např. první Česky a druhé English).
+- Doplněna API funkce [WJ.prompt](developer/frameworks/webjetjs.md#získání-hodnoty) pro získání hodnoty od uživatele (např. heslo pro potvrzení smazání a podobně) (#54701).
 
 ### Dokumentace
 
-- Vytvoření dokumentace a optimalizace projektu `basecms` pro nastavení [režim ladění](custom-apps/vscode/debugging/README.md) v kódu VS pro soubory Java i JavaScript (#54393).
-- Přidána dokumentace pro nastavení [parametr URL kampaně](redactor/apps/banner/README.md#banner-s-obsahem) a zobrazení banneru pouze během kampaně.
-- Vyplněná dokumentace pro [Thymeleaf](frontend/thymeleaf/webjet-objects.md) objekty šablon (`${ninja.temp.baseCssLink},${ninja.temp.cssLink})`.
-- Vytvořená dokumentace k aplikaci [Statistiky](redactor/apps/stat/README.md) (#54497).
-- Dokumentace v sekci Programování zákaznických aplikací byla doplněna o možnost připojit k aplikaci modul JavaScriptu jako [položka v oblasti administrátora](custom-apps/admin-menu-item/README.md#přiložení-souboru-javascript) (#54585).
-- Vytvořená dokumentace k editoru pro aplikaci [rezervace](redactor/apps/reservation/reservations/README.md) a [objekty rezervace](redactor/apps/reservation/reservation-objects/README.md) (#54701).
-- Vytvořená dokumentace pro programování zákaznických aplikací - [Autorizace tokenů](custom-apps/spring/api-auth.md), [poskytování služeb REST](custom-apps/spring/rest-url.md), doplněné o dokumentaci k nastavení [SpringSecurity](custom-apps/spring-config/README.md#nastavení-zabezpečení-pružin) (#54941).
-- Statistiky - přidány informace o ukládání statistik [bez souhlasu GDPR](redactor/apps/stat/README.md) (#54709).
-- Atributy stránky - dokumentace vytvořená pro [definování atributů](redactor/webpages/doc-attributes/README.md) (#54709).
-- Vytvořená dokumentace k editoru pro aplikaci [Galerie](redactor/apps/gallery/README.md) (#54953-4).
+- Vytvořená dokumentace a optimalizovaný projekt `basecms` pro nastavení [debug režimu](custom-apps/vscode/debugging/README.md) ve VS Code pro Java i JavaScript soubory (#54393).
+- Doplněna dokumentace pro nastavení [kampaňového URL parametru](redactor/apps/banner/README.md#banner-typu-obsahový-banner) a zobrazení banneru jen při kampani.
+- Doplněna dokumentace pro [Thymeleaf](frontend/thymeleaf/webjet-objects.md) objekty šablony (`${ninja.temp.baseCssLink},${ninja.temp.cssLink})`.
+- Vytvořená dokumentace pro aplikaci [statistika](redactor/apps/stat/README.md) (#54497).
+- Doplněna dokumentace v sekci Programování zákaznických aplikací o možnost přiložení JavaScript modulu k aplikaci jako [položka v admin části](custom-apps/admin-menu-item/README.md#přiložení-javascript-souboru) (#54585).
+- Vytvořená dokumentace pro redaktora pro aplikaci [rezervace](redactor/apps/reservation/reservations/README.md) a [rezervační objekty](redactor/apps/reservation/reservation-objects/README.md) (#54701).
+- Vytvořená dokumentace pro Programování zákaznických aplikací - [Autorizace tokenem](custom-apps/spring/api-auth.md), [zabezpečení REST služeb](custom-apps/spring/rest-url.md), doplněná dokumentace o nastavení [SpringSecurity](custom-apps/spring-config/README.md#nastavení-springsecurity) (#54941).
+- Statistika - doplněná informace o ukládání statistiky [bez GDPR souhlasu](redactor/apps/stat/README.md) (#54709).
+- Atributy stránky - vytvořená dokumentace k [definování atributů](redactor/webpages/doc-attributes/README.md) (#54709).
+- Vytvořená dokumentace pro redaktora pro aplikaci [galerie](redactor/apps/gallery/README.md) (#54953-4).
 
 ### Testování
 
-- Webové stránky - přidány testy pro vyplňování polí webové stránky, čas publikování, duplikace, zobrazení historie, poznámky editora, výběr šablony atd. (#52996).
-- Automatizované testy - přepracované volání `I.isFirefox/I.isChromium` do samostatného `Page` objekt `Browser`. Takže hovory jsou `Browser.isFirefox()/Browser.isChromium()/Browser.getBrowserType()` (#MR302).
-- Automatizované testy - přepracované volání `I.wjDocsScreenshot` do samostatného `Page` objekt `Document`.
-- Galerie - přidán test pro zapamatování nastavené velikosti obrázku a zobrazení HTML textu v popisu a autorovi fotografie (#54857-4).
-- Překladové klíče - doplněný test hledání o začíná/končí s a rovná se (#54857-4).
-- Přidané funkce `DT.checkTableCell, DT.checkTableRow` k otestování hodnoty v [buňce tabulky a v celém řádku](developer/testing/README.md#další-funkce-webjetu).
-- Přidáno generování sestav [pokrytí kódu](developer/testing/codecoverage.md) během testování (#54909).
-- Změna způsobu vizuálního porovnávání obrázků z [Podobají se](https://codecept.io/visual/#visual-testing) na adrese [pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper) který lze použít i při paralelním spouštění testů (#54909).
-- Přidána možnost spouštět [paralelní testy](developer/testing/parallel.md) pro jejich rychlejší provádění (#54909).
-- Přidána možnost [testování služeb REST](developer/testing/README.md#testovací-služby) (#54941).
-- Přidaná funkce `Document.screenshotAppEditor(docId, path, callback, width, height)` vytvořit snímek nastavení aplikace (#54953-4).
+- Web stránky - doplněné testy vyplnění polí web stránky, časového publikování, duplikování, zobrazení historie, poznámky redaktora, výběr šablony atp. (#52996).
+- Automatizované testy - předělané volání `I.isFirefox/I.isChromium` do samostatného `Page` objektu `Browser`. Čili volání jsou `Browser.isFirefox()/Browser.isChromium()/Browser.getBrowserType()` (#MR302).
+- Automatizované testy - předělané volání `I.wjDocsScreenshot` do samostatného `Page` objektu `Document`.
+- Galerie - doplněný test pamatování nastavené velikosti obrázků a zobrazení HTML textu v popisu a autorovi fotografie (#54857-4).
+- Překladové klíče - doplněný test hledání podle začíná/končí na a rovná se (#54857-4).
+- Přidané funkce `DT.checkTableCell, DT.checkTableRow` pro testování hodnoty v [buňce tabulky a v celém řádku](developer/testing/README.md#webjet-doplňkové-funkce).
+- Přidáno generování reportu [pokrytí kódu](developer/testing/codecoverage.md) během testování (#54909).
+- Změněný způsob vizuálního porovnání obrázků z [Resemble](https://codecept.io/visual/#visual-testing) na [pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper), který umí být použit i při paralelním spuštění testů (#54909).
+- Přidána možnost spouštět [testy paralelně](developer/testing/parallel.md) pro jejich rychlejší provedení (#54909).
+- Přidána možnost [testovat REST služby](developer/testing/README.md#testování-rest-služeb) (#54941).
+- Přidána funkce `Document.screenshotAppEditor(docId, path, callback, width, height)` pro pořízení snímku nastavení aplikace (#54953-4).
 
 ### Oprava chyb
 
-- Systém bannerů - opraveno zobrazení atributu Displayable při otevření okna editoru v datové tabulce (#54857).
-- Bannerový systém - opraveno zobrazení seznamu bannerů, chybně se zobrazovalo pouze prvních 20 bannerů (#54697).
-- Datové tabulky - opraveno (zbytečné) ukládání stavu tabulky, pokud je v konfiguraci nastaveno řazení podle určitého sloupce. Stav tabulky je možné uložit až 800ms po její inicializaci, kdy se očekává, že uživatel provede nějakou akci.
-- Datové tabulky - opraveno zobrazení názvu objektu, který má být odstraněn, pokud je to `GroupDetails` objekt (#39751-53).
-- Formuláře - opraveno zobrazení seznamu vyplněných formulářů, pokud název pole (sloupce) obsahuje znak závorky (#39751-52).
-- Hromadný e-mail - přidána kontrola platnosti e-mailové adresy při importu příjemců, pokud je neplatná, zobrazí se chybová zpráva. Před importem jsou z e-mailu odstraněny mezery (#39751-51).
-- Média - opravena kontrola práv při úpravách existujících médií na stránce (#39751-52).
-- Sledování serveru - opraveno zobrazení textů překladu (#39751-52).
-- Překladové klíče - opraveno vyhledávání klíčů podle začíná s, končí s a rovná se (#54857-4).
-- Šablony - opraveno načítání seznamu pro výběr záhlaví/zápatí/menu, filtrování podle skupiny šablon (název vs. obsahuje shodu), filtrování podle ochrany proti spamu a počtu použití (#54857-4).
-- Statistiky - opraveno načítání dat od začátku roku - problém s číslem týdne na přechodech mezi roky) (#39751-53).
-- Webové stránky - opravené ukládání polí `Odverejniť stránku po tomto dátume` (#52996).
-- Webové stránky - opraveno nastavení domény po přihlášení, pokud aktuální doména neodpovídá poli pro výběr domény (#39751-47).
-- Webové stránky - opravena možnost zadat adresu URL obsahující znak @, aniž by byla považována za e-mailovou adresu (např. odkaz na profil TikTok).
-- Webové stránky - opraveno stránkování v editoru na kartě Média (#39751-54).
-- Webové stránky - opravena možnost duplikovat složku (54953-3).
+- Bannerový systém - opraveno zobrazení atributu Zobrazitelný při otevření okna editoru v datatabulce (#54857).
+- Bannerový systém - opraveno zobrazení seznamu bannerů, chybně se zobrazilo jen prvních 20 bannerů (#54697).
+- Datatabulky - opraveno (zbytečné) uložení stavu tabulky, pokud má nastavenou konfigurační možnost uspořádání podle určitého sloupce. Stav tabulky je možné až 800ms po její inicializaci, kdy se předpokládá provedení akce uživatelem.
+- Datatabulky - opraveno zobrazení názvu objektu ke smazání pokud se jedná o `GroupDetails` objekt (#39751-53).
+- Formuláře - opraveno zobrazení seznamu vyplněných formulářů pokud jméno pole (sloupec) obsahuje znak závorky (#39751-52).
+- Hromadný e-mail - doplněna kontrola platnosti email adresy při importu příjemců, pokud je neplatná zobrazí se chybová zpráva. Z emailu jsou před importem odstraněny mezery (#39751-51).
+- Média - opravena kontrola práv při editaci stávajícího média ve stránce (#39751-52).
+- Monitorování serveru - opraveno zobrazení překladových textů (#39751-52).
+- Překladové klíče - opraveno vyhledávání klíče podle začíná na, končí na a rovná se (#54857-4).
+- Šablony - opravené načtení výběrového seznamu hlaviček/patiček/menu, filtrování podle skupiny šablon (shoda názvu vs obsahuje), filtrování podle spam ochrany a počtu použití (#54857-4).
+- Statistika - opravené načítání údajů od začátku roku - problém s číslem týdne na přechodu let) (#39751-53).
+- Web stránky - opravené ukládání pole `Odverejniť stránku po tomto dátume` (#52996).
+- Web stránky - opraveno nastavení domény po přihlášení pokud aktuální doména není ve shodě s polem pro výběr domény (#39751-47).
+- Web stránky - opravena možnost zadat URL adresu obsahující znak @, aniž by to bylo považováno za email adresu (např. odkaz na TikTok profil).
+- Web stránky - opravené stránkování v editoru v kartě Média (#39751-54).
+- Web stránky - opravena možnost duplikovat složku (54953-3).
 
 ### Pro programátora
 
-- Přidaná funkce `WJ.confirm` Pro [získání hodnoty](developer/frameworks/webjetjs.md#získání-hodnoty) (#54701).
+- Doplněná funkce `WJ.confirm` pro [získání hodnoty](developer/frameworks/webjetjs.md#získání-hodnoty) (#54701).
 
 ![meme](_media/meme/2022-52.jpg ":no-zoom")
 
 ## 2022.40
 
-> Verze 2022.40 se zaměřuje na **zlepšení bezpečnosti**. Obsahuje aktualizované knihovny Java a JavaScript a zkontrolované zranitelnosti. Přináší však i řadu dalších změn pro **zlepšování práce na základě zpětné vazby** - zapamatování poslední složky na webových stránkách, zapamatování pořadí sloupců a rozložení v datových tabulkách, možnost posouvání okna atd. Jemně **upravuje design uživatelského rozhraní** (novější sada ikon, jemnější barvy nabídky).
+> Verze 2022.40 je zaměřena na **zlepšení bezpečnosti**. Obsahuje aktualizované Java i JavaScript knihovny a zkontrolované zranitelnosti. Přináší ale i řadu jiných změn pro **zlepšení práce na základě zpětné vazby** - zapamatování poslední složky ve web stránkách, pamatování pořadí sloupců a uspořádání v data tabulkách, možnost posouvat okno atp. Jemně **upravuje design uživatelského rozhraní** (novější sada ikon, jemnější barevnost menu).
 
 Významné změny v této verzi:
-- Zabezpečení
-  - Aktualizace knihoven Java a JavaScript, aktualizace VueJS z verze 2 na verzi 3.
-  - Změněný algoritmus `hashovania` hesla na standardní [bcrypt](sysadmin/pentests/README.md#algoritmus-hashování-hesel).
-  - Všechny chybové hlášky `Stack Trace` jsou směrovány přes `Logger`, takže se v seznamu objeví také [Poslední protokoly](sysadmin/audit/memory-logging.md) v sekci Audit.
-  - Přidána možnost generování hlavičky HTTP `Access-Control-Allow-Origin` k zajištění přístupu ke službám REST.
-- Datové tabulky
-  - Přidáno dynamické počítání počtu řádků na stránce podle velikosti okna prohlížeče.
+- Bezpečnost
+  - Aktualizováno Java a JavaScript knihovny, aktualizováno VueJS z verze 2 na verzi 3.
+  - Změněný algoritmus `hashovania` hesel na standard [bcrypt](sysadmin/pentests/README.md#algoritmus-hashování-hesel).
+  - Všechny chybové výpisy `Stack Trace` jsou směrovány přes `Logger`, zobrazí se tedy iv seznamu [Posledních logů](sysadmin/audit/memory-logging.md) v sekci Audit.
+  - Přidána možnost generovat HTTP hlavičku `Access-Control-Allow-Origin` pro zajištění přístupu k REST službám.
+- Datatabulky
+  - Doplněno dynamické počítání počtu řádků na stranu podle velikosti okna prohlížeče.
   - Přidána možnost přesouvat okno editoru.
-  - Přidaná paměť [pořadí sloupců a způsob uspořádání.](redactor/datatables/README.md#pamatovat-na-uspořádání) tabulky.
-  - Přidáno [klávesová zkratka](redactor/datatables/README.md#klávesové-zkratky), `CTRL+S/CMD+S` uložit záznam do databáze, aniž byste museli zavřít okno editoru a pokračovat v práci.
-- Webové stránky
-  - Nástroj pro tvorbu stránek - doplněno [přepínání velikosti obrazovky](redactor/webpages/pagebuilder.md#nastavení-šířky-sloupce) nastavit šířku sloupce pro počítače, tablety a mobilní zařízení.
-  - Přidána možnost zobrazení [náhled kompletních webových stránek](redactor/webpages/editor.md#náhled-stránky) bez uložení.
-  - Seznam webových stránek v rámci jednoho přihlášení si pamatuje naposledy zobrazenou složku (stromovou strukturu), při návratu se složka znovu rozbalí.
+  - Přidáno zapamatování [pořadí sloupců a způsobu uspořádání](redactor/datatables/README.md#pamatování-uspořádání) tabulky.
+  - Přidána [klávesová zkratka](redactor/datatables/README.md#klávesové-zkratky), `CTRL+S/CMD+S` pro uložení záznamu do databáze bez zavření okna editoru pro pokračování v práci.
+- Web stránky
+  - Page Builder - doplněno [přepínání velikosti obrazovky](redactor/webpages/pagebuilder.md#nastavení-šířky-sloupců) pro nastavení šířky sloupce pro desktop, tablet a mobilní telefon.
+  - Přidána možnost zobrazit [náhled kompletní web stránky](redactor/webpages/editor.md#náhled-stránky) bez jejího uložení.
+  - Seznam web stránek si v rámci jednoho přihlášení pamatuje naposledy zobrazenou složku (stromovou strukturu), při návratu se složka znovu rozbalí.
 - Aplikace
-  - Přepracováno: Hromadné e-maily, kalendář událostí/seznam a typy.
-  - Formulář snadno - přidána možnost generovat formuláře s více poli v jednom řádku a typ pole Vybrat seznam - vybrat.
-  - Vyhledávání - přidány váhy pro nadpis stránky (váha 20) a nadpisy (váha 10), aby bylo možné upřednostnit výsledky na stránkách, kde se hledaný výraz nachází v nadpisu nebo v nadpisu.
+  - Předěláno do nového designu: Hromadný e-mail, Kalendář událostí/Seznam a typy.
+  - Formulář snadno - přidána možnost generovat formuláře s více poli v jednom řádku a typ pole Výběrový seznam - select.
+  - Vyhledávání - přidána váhy pro titulek stránky (váha 20) a nadpisy (váha 10) pro možnost uspořádání výsledků s prioritou stránek, kde je hledaný výraz v titulku nebo nadpisu.
 
-Níže najdete kompletní seznam změn v této verzi.
+Níže naleznete kompletní seznam změn v této verzi.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/ZJGYsQo-_Q4" title="Přehrávač videí YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/ZJGYsQo-_Q4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ### PageBuilder
 
-- Upravené zobrazení rámečků kolem prvků - nezobrazují se a zejména se ihned skrývají, ale jsou animované. To zlepšuje použitelnost kliknutí na tlačítko ozubeného kola, které nezmizí okamžitě při mírném posunutí myši mimo rámeček (#54345).
-- Po zavření okna se náhled stránky odstraní, aby se při opětovném otevření okna nezobrazovala předchozí verze/webová stránka.
-- Když odstraníte všechny karty nebo `accordion` se zobrazí tlačítko + pro přidání nové položky. Je tedy možné správně odstranit všechny prvky a poté je znovu přidat.
-- Po odstranění všech sekcí (bloků) ze stránky se zobrazí modré tlačítko + pro přidání nové položky.
-- Přidán styl CSS `pb-col` a `pb-col-auto` pro možnost nastavení sloupců, které [šířku nelze nastavit](frontend/page-builder/settings.md#sloupec-zelené-barvy).
-- Doplněno [přepínání velikosti obrazovky](redactor/webpages/pagebuilder.md#nastavení-šířky-sloupce) pro stolní počítače, tablety a mobilní zařízení. Umožňuje upravit šířku sloupců podle vybraného zařízení (#39751).
-- Velikost okna editoru zvýšena na 1210 pixelů na šířku, aby bylo možné nastavit třídy CSS `col-xl-` pro šířku 1200 bodů `desktop` (#39751).
-- Přidána podpora provádění `data-th-src` a `data-th-href` atributy včetně `${ninja.temp.basePathXXX}` při vkládání bloku do stránky (#39751-38).
+- Upravené zobrazení rámů kolem elementů - nejsou zobrazeny a hlavně schovány okamžitě, ale jsou animovány. Zlepšuje to použitelnost kliknutí na tlačítko ozubeného kola, které nezmizí okamžitě když přejedete myší mírně mimo rámeček (#54345).
+- Po zavření okna se smaže náhled stránky, aby při novém otevření okna neblikla předchozí verze/web stránka.
+- Při smazání všech karet nebo `accordion` se zobrazí tlačítko + pro přidání nové položky. Je tak možné korektně smazat všechny elementy a následně je nově přidat.
+- Při smazání všech sekcí (bloků) ze stránky se zobrazí modré tlačítko + pro přidání nové položky.
+- Přidán CSS styl `pb-col` a `pb-col-auto` pro možnost nastavení sloupců, kterým se [nelze nastavovat šířka](frontend/page-builder/settings.md#column-zelená-barva).
+- Doplněno [přepínání velikosti obrazovky](redactor/webpages/pagebuilder.md#nastavení-šířky-sloupců) pro desktop, tablet a mobilní telefon. Umožňuje nastavit šířky sloupce podle zvoleného zařízení (#39751).
+- Velikost okna editoru zvětšená na šířku 1210 bodů, aby bylo možné nastavovat CSS třídy `col-xl-` pro šířku 1200 bodů `desktop` (#39751).
+- Přidána podpora provedení `data-th-src` a `data-th-href` atributů včetně `${ninja.temp.basePathXXX}` při vložení bloku do stránky (#39751-38).
 
-### Webové stránky
+### Web stránky
 
-- Při vytváření nové domény se ve složce Systém automaticky vytvoří základní stránky záhlaví/zápatí/menu pro nastavení záhlaví/zápatí a menu.
-- Při vytváření složky se prázdné pole URL automaticky nastaví na dvoupísmenný kód jazyka (např. `sk`) pro názvy `Slovensky, English, Deutsch a Česky`.
-- Pokud existuje jak místní (pro doménu), tak globální (s nenakonfigurovanou doménou) složka Systém zobrazí v seznamu webových stránek pouze místní složku (aby se nezobrazovaly dvě složky se stejným názvem, které nelze na první pohled rozlišit).
-- Ve vlastnostech složky jsou skupiny rozděleny tak, aby omezovaly přístup a hromadné e-maily stejně jako na webových stránkách (#54493).
-- Přidána možnost zobrazení [náhled kompletních webových stránek](redactor/webpages/editor.md#náhled-stránky) bez uložení (#54513).
+- Při vytvoření nové domény se automaticky vytvoří stránky Základní hlavička/patička/menu ve složce Systém pro nastavení hlavičky/patičky a menu.
+- Při vytvoření složky se prázdné pole URL adresa automaticky nastaví na dvou písmenový kód jazyka (např. `sk`) pro názvy `Slovensky, English, Deutsch a Česky`.
+- Pokud existuje lokální (pro doménu) i globální (s nenastavenou doménou) složku Systém v seznamu web stránek se zobrazí jen lokální (aby se nezobrazovaly dvě složky se stejným názvem, které nelze na první pohled odlišit).
+- Ve vlastnostech složky jsou rozděleny skupiny pro omezení přístupu a hromadný e-mail stejně jako ve web stránkách (#54493).
+- Přidána možnost zobrazit [náhled kompletní web stránky](redactor/webpages/editor.md#náhled-stránky) bez jejího uložení (#54513).
 
 ![](redactor/webpages/save-work-version.png)
 
-- Přidána možnost ve stromové struktuře [zobrazit ID adresáře, pořadí uspořádání a také seznam webových stránek](redactor/webpages/README.md#nastavení-zobrazení-stromové-struktury) (pro účely přetahování) (#54513).
-- Přidáno vyhledávání v jazyce záhlaví/zápatí/menu (hledání stránky `LNG-meno`) při nastavování jazyka adresáře, i když se nepoužívá místní jazyk. `System` Složka (#39751).
-- Upravená velikost a poloha okna vlastností aplikace - okno je vycentrované a jeho maximální velikost se vypočítává podle dostupné plochy (#39751).
+- Přidána možnost ve stromové struktuře [zobrazit ID adresáře, pořadí uspořádání a také seznam web stránek](redactor/webpages/README.md#nastavení-zobrazení-stromové-struktury) (pro účely drag\&drop) (#54513).
+- Přidáno hledání jazykové mutace hlavičky/patičky/menu (hledá se stránka `LNG-meno`) při nastavení jazyka adresáře i když se nepoužívá lokální `System` složka (#39751).
+- Upravená velikost a pozice okna vlastností aplikace - okno je umístěno na střed a je vypočten maximální rozměr dle dostupné plochy (#39751).
 
 ![](redactor/webpages/jstree-settings.png)
 
-- Modifikované pořízení [seznam stylů CSS pro výběrové pole v editoru.](frontend/examples/template-bare/README.md#seznam-stylů-pro-editor) - pokud je v šabloně nastaven minifikovaný soubor CSS, vyhledá se jeho neminifikovaná verze. Současně se při čtení souboru CSS hledání zastaví po nalezení `@media` výraz, který obvykle po vložení `bootstrap` na začátku znamená, že nebudou nalezeny žádné styly. Nový kód prohledá soubor CSS ještě jednou a vyhledá komentář `/* editor */`. Pokud je nalezena, použije se definice z předchozího řádku (#39751-35).
+- Upravené získání [seznamu CSS stylů pro výběrové pole v editoru](frontend/examples/template-bare/README.md#seznam-stylů-pro-editor) - pokud je v šabloně nastaven minifikovaný CSS soubor hledá se jeho ne-minifikovaná verze. Zároveň při čtení CSS souboru skončí prohledávání po nalezení `@media` výrazu, což typicky při vložení `bootstrap` pro začátek znamená, že se nenajdou žádné styly. Nový kód prohledává CSS soubor ještě jednou a hledá komentář `/* editor */`. Pokud se najde použije se definice z předchozího řádku (#39751-35).
 
 ![](frontend/examples/template-bare/editor-stylecombo.png)
 
-- V Editoru stránek na kartě Šablona přidány stránky menu do seznamu volných objektů (původně se zobrazoval pouze seznam záhlaví a zápatí) (#39751-36).
-- Pokud má stránka nastavenou možnost "Automaticky generovat URL z názvu položky menu" a již existuje stránka se stejnou URL/názvem (např. v koši), zobrazí se hlášení "Zadaná virtuální cesta je již na stránce použita" pouze při vytváření stránky, poté se použije adresa s pořadovým číslem na konci.
-- Karty Systém a Koš se nezobrazí, pokud uživatel nemá oprávnění ke složce nebo stránce na těchto kartách (#39751-39).
-- Přidáno zobrazení složek ve stromové struktuře podle práv ke konkrétním stránkám. V seznamu složek se poté zobrazí pouze stránky, ke kterým má uživatel práva (#39751-39).
-- V kartách [Historie](redactor/webpages/history.md) zobrazuje datum plánovaného zveřejnění stránky, změnil pořadí záznamů tak, aby plánované události byly na začátku seznamu (#54513-15).
-- Historie - přidána možnost odstranit naplánovanou změnu na webové stránce (#54513-15).
-- Přidáno [Karta Složky](redactor/webpages/README.md#karty-webových-stránek) do tabulky dat. Umožňuje používat funkce datové tabulky, jako jsou hromadné operace, úpravy buněk, duplikování a na složkách se stromovou strukturou (#54797).
+- V editoru stránek v kartě Šablona do seznamu pro volné objekty přidány i stránky pro menu (původně se zobrazoval pouze seznam pro hlavičky a patičky) (#39751-36).
+- Pokud má stránka nastavenu možnost "Automaticky generovat URL adresu z názvu položky v menu" a již existuje stránka se stejnou URL adresou/názvem (např. v koši) zobrazí se hlášení "Zadaná virtuální cesta je již použita na stránce" pouze při vytvoření stránky, následně se bude používat adresa s pořadovým číslem na konci.
+- Karty Systém a Koš se nezobrazí, pokud uživatel nemá právo na některou složku nebo stránku v těchto kartách (#39751-39).
+- Doplněno zobrazení složek ve stromové struktuře podle práv na konkrétní stránky. V seznamu stránek se ve složce následně zobrazí pouze stránky, na které má uživatel práva (#39751-39).
+- V kartě [Historie](redactor/webpages/history.md) se zobrazuje datum plánovaného publikování stránky, změněné uspořádání záznamů tak, aby plánované události byly na začátku seznamu (#54513-15).
+- Historie - přidána možnost smazat naplánovanou změnu ve web stránce (#54513-15).
+- Přidána [karta Složky](redactor/webpages/README.md#karty-web-stránek) do datatabulky. Umožňuje využívat funkce datatabulky jako hromadné operace, úprava buňky, duplikovat i na stromovou strukturu složek (#54797).
 
 ![](_media/changelog/2022q3/2022-40-folders-dt.png)
 
-- Zapamatování naposledy otevřené složky - seznam webových stránek si pamatuje naposledy otevřenou složku v rámci jednoho přihlášení, při návratu do seznamu webových stránek se složka znovu otevře (#39751-45).
+- Zapamatování naposledy otevřené složky - seznam web stránek si vrámci jednoho přihlášení pamatuje naposledy otevřenou složku, při návratu na seznam web stránek se složka znovu otevře (#39751-45).
 
 ### AB testování
 
-- Přidána možnost vytvořit verzi B stránky pro testovací aplikaci AB
-- Vytvořil [dokumentace k editoru](redactor/apps/abtesting/README.md).
+- Přidána možnost vytvořit B verzi stránky pro aplikaci AB testování
+- Vytvořeno [dokumentace pro redaktora](redactor/apps/abtesting/README.md).
 
 ![](redactor/apps/abtesting/datatable.png)
 
 ### Šablony
 
-- [Šablony Thymeleaf](frontend/thymeleaf/tags.md#provádění-značek-include) přidána možnost zachovat obalový prvek nastavením atributu `data-iwcm-remove` zachovat strukturu shodnou s prototypováním a možnost používat prvky jako `header, article, footer`.
+- [Thymeleaf šablonám](frontend/thymeleaf/tags.md#provedení-include-značky) přidána možnost zachovat obalovací element nastavením atributu `data-iwcm-remove` pro zachování struktury shodné s prototypováním a možností použití elementů jako `header, article, footer`.
 - Upravený editor šablon a skupin šablon - lepší rozdělení polí do karet.
-- Skupiny šablon - přidán přepínač jazyka Metadata, opraveno nastavení českého překladu, opraveno nastavení polí `Generator` (#39751).
+- Skupiny šablon - doplněn přepínač jazyka Metadat, opraveno nastavení českých překladů, opraveno nastavení pole `Generator` (#39751).
 
 ### Formulář snadno
 
-- Přidána možnost zobrazit jednotlivá pole v řádku (takže pole se zobrazují vedle sebe, nikoli pod sebou). Přidáno pole Nový řádek pro vytvoření nového řádku a pole Prázdná buňka pro vložení prázdného místa do řádku. Pole v řádku jsou automaticky rovnoměrně rozdělena podle místa v řádku.
-- Pokud je zadáno textové pole zástupného znaku, ale pole Hodnota je prázdné, název pole se nad ním nezobrazí, zobrazí se pouze text zástupného znaku. To umožňuje vytvořit formulář, který zabírá méně místa.
+- Přidána možnost zobrazit jednotlivá pole v řádku (čili pole jsou zobrazena vedle sebe, ne pod sebou). Přidáno pole Nový řádek pro vytvoření nového řádku a Prázdná buňka pro vložení prázdného prostoru do řádku. Polím v řádku se automaticky stejným dílem přerozdělí prostor v řádku.
+- Je-li zadáno pole Zástupný text ale pole Hodnota je prázdné, tak se nad polem nezobrazí název pole, zobrazen je pouze zástupný text. Umožňuje to vytvořit formulář, který zabírá menší prostor.
 
 ![](redactor/apps/formsimple/formsimple-rowview.png)
 
-- Přidána možnost [vytvořit skupiny polí](redactor/apps/formsimple/README.md#Položky), např. výběrová pole a zaškrtávací políčka. Znak se používá jako oddělovač `|` nebo znak `,` nebo mezery. Znak `|` musí být použita, pokud má jedna z možností obsahovat čárku.
+- Přidána možnost [vytvářet skupiny polí](redactor/apps/formsimple/README.md#Položky) Např. výběrová pole a zaškrtávací pole. Jako rozdělovač se používá znak `|`, nebo znak `,` nebo mezera. Znak `|` je třeba použít pokud jedna z možností má obsahovat čárku.
 
 ![](redactor/apps/formsimple/formsimple-radiogroup.png)
 
-- Přidány hodnoty z pole Select list - select, jednotlivé hodnoty jsou odděleny znakem `,`, je možné zadat různý text a hodnotu ve formuláři `Pomaranč:orange,Jablko:apple`.
+- Přidán ty pole Výběrový seznam - select, jednotlivé hodnoty se oddělují znakům `,`, je možné zadat rozdílný text a hodnotu ve formě `Pomaranč:orange,Jablko:apple`.
 
 ### Formuláře
 
-- Upraveno filtrování dat tak, aby umožňovalo vyhledávání ve všech sloupcích (původní verze neumožňovala vyhledávání v žádném sloupci).
-- Rozšířená stránka [možnosti exportu](redactor/apps/form/README.md) - přidána možnost exportovat filtrovaná data, dosud neexportované a také označené řádky (#54513).
+- Upraveno filtrování dat pro možnost vyhledávání ve všech sloupcích (původní varianta neumožňovala hledat v libovolném sloupci).
+- Rozšířené [možnosti exportu](redactor/apps/form/README.md) - přidána možnost exportovat vyfiltrovaná data, zatím neexportované a také označené řádky (#54513).
 
 ![](redactor/apps/form/export-advanced.png)
 
-- V dialogovém okně se zobrazí náhled vyplněného formuláře pro vybraný jednotlivý řádek. Pokud je označeno více řádků, zobrazí se každý formulář na nové kartě pro snadnější porovnání (#39751-40).
+- Náhled vyplněného formuláře se pro označený jeden řádek zobrazí v dialogovém okně. Pokud je označeno více řádků zobrazí se každý formulář v nové kartě pro snazší porovnání (#39751-40).
 
 ### GDPR
 
-- Správce souborů cookie - upraveny styly pro standard Bootstrap, tlačítka změněna z odkazu na standardní tlačítko, aby nedocházelo ke kolizi barev tlačítek odkazu a patičky (#54345).
-- Hledání - přidány odkazy pro zobrazení podrobností nalezeného záznamu (#54513).
-- GDPR Cookies - přidána možnost zobrazit lištu cookies v zadaném jazyce, lze nastavit pomocí parametru `lng` (#39751).
+- Cookie Manažer - upravené styly pro standard Bootstrap, tlačítka změněná z odkazu na standardní tlačítko, aby nekolidovala barvy odkazu a tlačítka v patičce (#54345).
+- Vyhledávání - doplněné odkazy na zobrazení detailu nalezeného záznamu (#54513).
+- GDPR Cookies - přidána možnost zobrazit cookies lištu v zadaném jazyce, ten nastavíte parametrem `lng` (#39751).
 
 ### Hromadný e-mail
 
-Aplikace v novém vizuálním provedení. Přidána možnost nastavení začátku odesílání kampaně. Import příjemců je možný z `xlsx` formátu, výběrem skupiny uživatelů nebo zadáním e-mailových adres.
+Aplikace předělána do nového vizuálu. Přidána možnost nastavení začátku odesílání kampaně. Import příjemců je možný z `xlsx` formátu, výběrem skupiny uživatelů, nebo zadáním emailových adres.
 
 ![](redactor/apps/dmail/campaings/dataTable.png)
 
-- Přidán jednodušší formulář pro přihlášení k odběru hromadných e-mailů (zobrazuje pouze pole pro zadání e-mailové adresy). Přihlašuje do všech e-mailových skupin, které mají tuto možnost povolenou `Povoliť pridávanie/odoberanie zo skupiny samotným používateľom` a `Vyžadovať potvrdenie e-mailovej adresy`. Neobsahuje ani `captcha` prvek, takže je vyžadováno potvrzení e-mailové adresy. Formulář používá `Bootstrap v5` zobrazit formulář a dialogové okno.
-- Vytvořená dokumentace s popisem provozu [zasílání hromadných e-mailů](redactor/apps/dmail/campaings/how-sender-works.md).
-- Do editoru byla přidána karta Náhled pro zobrazení vybrané stránky e-mailu. Pokud stránka používá inline editaci/PageBuilder, lze ji také upravovat (#39751-44).
+- Přidán jednodušší formulář pro registraci do hromadného emailu (zobrazuje jen pole pro zadání emailové adresy). Registruje do všech emailových skupin, které mají zapnutou možnost `Povoliť pridávanie/odoberanie zo skupiny samotným používateľom` a `Vyžadovať potvrdenie e-mailovej adresy`. Neobsahuje ani `captcha` element, proto je vyžadováno zapnuté potvrzení e-mailové adresy. Formulář využívá `Bootstrap v5` pro zobrazení formuláře a dialogového okna.
+- Vytvořená dokumentace s popisem fungování [odesílání hromadných emailů](redactor/apps/dmail/campaings/how-sender-works.md).
+- Do editoru přidána karta Náhled se zobrazením zvolené stránky emailu. Pokud stránka používá inline editaci/PageBuilder, lze ji také upravovat (#39751-44).
 
-### Kalendář akcí
+### Kalendář událostí
 
-- Přepracovaný seznam událostí s novými vizuálními prvky a tabulkami dat. Připravil [příručka pro redaktora](redactor/apps/calendar/README.md) (#54473).
-- Konfigurace typů událostí přepracovaná do nových vizuálů a datových tabulek. Připravil [příručka pro redaktora](redactor/apps/calendar/calendar-types/README.md) (#54473).
+- Seznam událostí předělaný do nového vizuálu a datatabulek. Připraven [manuál pro redaktora](redactor/apps/calendar/README.md) (#54473).
+- Konfigurace typů událostí předělaná do nového vizuálu a datatabulek. Připraven [manuál pro redaktora](redactor/apps/calendar/calendar-types/README.md) (#54473).
 
 ![](redactor/apps/calendar/calendar-datatable.png)
 
 ### Uživatelé
 
-- V seznamu skupin uživatelů v editoru přibyla karta Uživatelé se seznamem uživatelů v editované skupině (#54493).
-- V seznamu uživatelských skupin upraveno načítání seznamu webových stránek pro stránkování serveru (#54493).
-- Seznam uživatelů lze filtrovat podle skupiny uživatelů (#54493).
+- V seznamu skupin uživatelů v editoru doplněna karta Uživatelé se seznamem uživatelů v editované skupině (#54493).
+- V seznamu skupin uživatelů upraveno načtení seznamu web stránek na serverové stránkování (#54493).
+- V seznamu uživatelů je možné filtrování podle skupin uživatelů (#54493).
 
 ### Vyhledávání
 
-- `Lucene` - upravené indexování - název stránky je indexován s váhou 20 (zatímco název je indexován jak v původní podobě, tak v základní podobě prostřednictvím `Lemmas`), jsou všechny nadpisy extrahovány ze stránky a použity s váhou 10. Chcete-li zobrazit výsledky, musíte nastavit `orderType="score"`, který pak seřadí výsledky podle počtu dosažených bodů.
-- `Lucene` - modifikované vyhledávání - zadaný text je nejprve převeden do základního tvaru (tzv. `Lemmas`) a teprve poté se prohledává.
+- `Lucene` - upravené indexování - indexuje se titulek stránky s váhou 20 (přičemž titulek se indexuje v původním tvaru i v základním přes `Lemmas`), ze stránky se získají všechny nadpisy a použijí se s váhou 10. Pro zobrazení výsledků je třeba nastavit `orderType="score"`, které následně seřadí výsledky podle dosaženého počtu bodů.
+- `Lucene` - upravené vyhledávání - zadaný text se nejprve převede do základního tvaru (tzv. `Lemmas`) a až následně se vyhledává.
 
-### Datové tabulky
+### Datatabulky
 
-- Editovatelné výběrové pole - zvětšila se velikost editačního okna na stejnou velikost, jakou má editace webové stránky, aby se lépe zobrazovalo (např. při úpravě záhlaví z editace šablony) (#54345).
-- Přidána možnost importovat a exportovat i z vnořených tabulek (správně zobrazených nad otevřeným oknem editoru se správným stmíváním) (#54377).
-- Přidána metoda pro použití specifických parametrů vyhledávání také pro [první (úplné) načtení tabulky](developer/datatables/restcontroller.md#filtrování-při-zobrazení-všech-záznamů) (volání `addSpecSearch` při volání `getAll`). Jen ve vaší implementaci `getAll` metoda volání `getAllItemsIncludeSpecSearch` (#54493).
-- Přidána možnost exportovat data ve formátu `CSV` (#54513).
-- Přidaný typ pole [MULTISELECT](developer/datatables-editor/standard-fields.md) (#54273).
-- Upravena velikost sloupce Stav tak, aby zbytečně nezabíral šířku tabulky (#54273-26).
-- Přidány popisky ikon pro maximalizaci okna editoru, přidáno tlačítko pro zavření okna v záhlaví (#54273-26).
-- Přidáno dynamické počítání počtu řádků na stránce podle velikosti okna prohlížeče (#54273-26).
+- Výběrové pole s možností editace – zvětšená velikost okna editace na stejnou velikost jako má editace web stránky pro lepší responzivní zobrazení (např. při úpravě hlavičky z editace šablony) (#54345).
+- Přidána možnost importu a exportu iz vnořených tabulek (korektně se zobrazí přes otevřené okno editoru se správným zatemněním) (#54377).
+- Přidána metoda pro aplikování specifických parametrů hledání i při [prvním (kompletním) načtení tabulky](developer/datatables/restcontroller.md#filtrování-při-zobrazení-všech-záznamů) (volá `addSpecSearch` při volání `getAll`). Stačí ve vaší implementaci `getAll` volat metodu `getAllItemsIncludeSpecSearch` (#54493).
+- Přidána možnost exportovat data i ve formátu `CSV` (#54513).
+- Přidán typ pole [MULTISELECT](developer/datatables-editor/standard-fields.md) (#54273).
+- Upravená velikost sloupce Stav, tak aby zbytečně nezabíral šířku tabulky (#54273-26).
+- Doplněno popisky ikony pro maximalizování okna editoru, doplněno tlačítko pro zavření okna v hlavičce (#54273-26).
+- Doplněno dynamické počítání počtu řádků na stranu podle velikosti okna prohlížeče (#54273-26).
 
 ![](redactor/datatables/dt-pagelength.png)
 
-- Přidáno [klávesová zkratka](redactor/datatables/README.md#klávesové-zkratky), `CTRL+S/CMD+S`, který uloží záznam do databáze, ale ponechá otevřené okno editoru (#54273-26).
+- Přidána [klávesová zkratka](redactor/datatables/README.md#klávesové-zkratky), `CTRL+S/CMD+S`, která provede uložení záznamu do databáze, ale zároveň ponechá otevřené okno editoru (#54273-26).
 - Import - při chybě importu se v chybové zprávě zobrazí číslo řádku a také podrobný seznam chyb (#39751-39).
-- Přidána možnost `tab.hideOnCreate` a `tab.hideOnEdit` k ukrytí [karty v editoru](developer/datatables-editor/README.md#karty-v-editoru) pro nový záznam a úpravu stávajícího záznamu (#54749).
-- Doplněno [název upravované položky](redactor/datatables/README.md#zobrazení-názvu-v-záhlaví-okna) v záhlaví editoru a v seznamu položek v dialogovém okně pro potvrzení odstranění (#54753).
+- Doplněna možnost `tab.hideOnCreate` a `tab.hideOnEdit` pro schování [karty v editoru](developer/datatables-editor/README.md#karty-v-editoru) pro nový záznam a editaci existujícího záznamu (#54749).
+- Doplněno [název editované položky](redactor/datatables/README.md#zobrazení-názvu-v-hlavičce-okna) v hlavičce editoru a seznam položek v dialogovém okně potvrzení smazání (#54753).
 
 ![](redactor/datatables/dt-delete-confirm.png)
 
-- Zlepšená vizuální konzistence starých tabulek generovaných pomocí `displaytag` a prostřednictvím starší verze `DataTables`. Stránkování je posunuto doprava, řádkování a přejetí myší je (#39751-42).
-- Přidána možnost nastavit kartu na [plná výška okna editoru](developer/datatables-editor/README.md#karty-v-editoru) (#39751-42).
-- Přidána možnost [přesunout okno](redactor/datatables/README.md#možnost-přesunout-okno) editor (#54513-21).
-- Přidaná paměť [pořadí sloupců a způsob uspořádání.](redactor/datatables/README.md#pamatovat-na-uspořádání) Tabulky (#54513-22).
+- Zlepšená jednotnost vizuálu starých tabulek generovaných přes `displaytag` a přes starší verzi `DataTables`. Stránkování je posunuto napravo, řádkování a přechod myší přes řádky je (#39751-42).
+- Přidána možnost nastavit kartu na [plnou výšku okna editoru](developer/datatables-editor/README.md#karty-v-editoru) (#39751-42).
+- Přidána možnost [přesouvat okno](redactor/datatables/README.md#možnost-přesouvat-okno) editoru (#54513-21).
+- Přidáno zapamatování [pořadí sloupců a způsobu uspořádání](redactor/datatables/README.md#pamatování-uspořádání) tabulky (#54513-22).
 
 ### Jazykové mutace
 
-- Opraveno načítání administrace v jiných jazycích než ve slovenštině.
-- Stránky skenované pro statické texty bez překladů, texty nahrazené překladovými klíči.
-- Přidány překlady pro češtinu a angličtinu.
-- Přidána možnost použít parametry pro použití překladu [klíče v souborech JavaScript](developer/frameworks/jstranslate.md#frontendová-knihovna).
+- Opraveno načtení administrace v jiném než slovenském jazyce.
+- Prohledané stránky na výskyt statických textů bez překladů, texty nahrazené překladovými klíči.
+- Doplněny překlady pro češtinu a angličtinu.
+- Přidána možnost použití parametrů pro použití překladových [klíčů v JavaScript souborech](developer/frameworks/jstranslate.md#frontend-knihovna).
 
-### Zabezpečení
+### Bezpečnost
 
-- Aktualizace knihoven spring na verzi 5.6.5 a thymeleaf na verzi 3.0.15.
-- Změněný algoritmus `hashovania`, [hesla do bcrypt](sysadmin/pentests/README.md#algoritmus-hashování-hesel).
-- Doplněno [kontrola práv k zobrazení stránky](developer/frameworks/thymeleaf.md#kontrola-práv) v administraci (původně bylo kontrolováno pouze volání služby REST). Je založena na vyhledání adresy URL v nabídce a následném získání práva pro tuto adresu URL. To se pak ověřuje pomocí práv přihlášeného uživatele (#54649).
-- Na adrese [testy datových souborů](developer/testing/datatable.md#testování-práv) je nutné zadat možnost `perms` pro testování práv.
-- Volání skriptu `/admin/mem.jsp` je povolen pouze pro IP adresy nastavené v proměnné conf. `serverMonitoringEnableIPs`. Původně byl skript k dispozici vždy (sloužil k základnímu monitorování), ale zobrazuje potenciálně citlivé údaje.
-- Doplněná dokumentace [Bezpečnostní zkoušky pro provoz](sysadmin/pentests/README.md) další řešení pro zjištění zabezpečení a nastavení pro nezobrazování podrobných chyb a verzí `Apache Tomcat` (#43144).
-- Odstraněna možnost přímého zobrazení komponenty JSP `/components/user/logon.jsp`. Při přístupu k souboru chráněnému heslem se přesměrování na stránku `logon.jsp`, ale vnitřní `forward`, takže adresa URL zůstane původní. V případě potřeby doporučujeme použít proměnnou conf. `fileAccessDeniedDocId` nastavit ID stránky pro zobrazení přihlášení při přístupu k souboru a nastavit správné ID stránky pro přihlášení složky webu (#43144).
-- Upravené přesměrování při použití znaků `//` v adrese URL - doména i port jsou zachovány (absolutní adresa s doménou se nepoužívá) (#43144).
-- Diskuze/Fórum - Volání AJAXu `/components/forum/new.jsp` lze zavolat pouze po zobrazení diskusního fóra, tuto stránku nelze zavolat, pokud stránka neobsahuje diskusi (#43144).
-- Upravená výzva `/topdf` zobrazit chybu 404 místo prázdného PDF v případě nenalezení stránky, také přesměrování stránky (#43144) ošetřeno.
-- Odstranění staré verze `jquery.cookie.js` v aplikaci GDPR - nahrazena verzí v aplikaci `_common` adresář (#43144).
-- Aktualizace knihovny Spring na verzi `5.3.+`, `Amazon AWS` 1.12.+ a `Jquery UI` na verzi 1.13.2 (#546734).
-- Aktualizováno `Vue.js` z verze 2.6 na verzi 3.2.37, `vue-router` na verzi 4.1 a `vue-advanced-cropper` v bodě 2.8.
-- Aktualizace všech knihoven JavaScriptu pro `/admin/v9/` (#54721-3).
-- Aktualizováno FontAwesome (ikony) na verzi 6 (#54721-3).
+- Aktualizované knihovny spring na 5.6.5 a thymeleaf na 3.0.15.
+- Změněný algoritmus `hashovania`, [hesel na bcrypt](sysadmin/pentests/README.md#algoritmus-hashování-hesel).
+- Doplněna [kontrola práv při zobrazení stránky](developer/frameworks/thymeleaf.md#kontrola-práv) v administraci (původně se kontrolovalo jen volání REST služby). Založeno je na vyhledání URL adresy v menu a následném získání práva pro danou URL adresu. To se následně ověří s právy přihlášeného uživatele (#54649).
+- Při [testu datatabulek](developer/testing/datatable.md#testování-práv) je povinné zadání možnosti `perms` pro testování práv.
+- Volání skriptu `/admin/mem.jsp` je povoleno pouze pro IP adresy nastavené v konf. proměnné `serverMonitoringEnableIPs`. Původně byl skript dostupný vždy (používal se pro základní monitorování), ale zobrazuje potenciálně citlivé údaje.
+- Doplněná dokumentace [Bezpečnostní testy pro provoz](sysadmin/pentests/README.md) o další řešení bezpečnostních nálezů a nastavení pro nezobrazení podrobné chyby a verze `Apache Tomcat` (#43144).
+- Zrušená možnost přímo zobrazit JSP komponentu `/components/user/logon.jsp`. Při přístupu k zaheslovanému souboru se již neprovede přesměrování na `logon.jsp`, ale se provede vnitřní `forward`, čili URL adresa zůstane původní. V případě potřeby doporučujeme použít konf. proměnnou `fileAccessDeniedDocId` k nastavení ID stránky pro zobrazení přihlášení při přístupu k souboru a nastavit korektně ID stránky pro přihlášení složkou web stránek (#43144).
+- Upravené přesměrování při použití znaků `//` v URL adrese - zachová se doména i port (nepoužije se absolutní adresa is doménou) (#43144).
+- Diskuse/Fórum - AJAX volání `/components/forum/new.jsp` je možné jen po zobrazení diskusního fóra, není tuto stránku možné volat, pokud web neobsahuje diskusi (#43144).
+- Upravené volání `/topdf` aby v případě nenalezené stránky zobrazilo chybu 404 namísto prázdného PDF, ošetřeno i přesměrování stránky (#43144).
+- Odstraněná stará verze `jquery.cookie.js` v aplikaci GDPR - nahrazena verzí v `_common` adresáři (#43144).
+- Aktualizovaná knihovna Spring na verzi `5.3.+`, `Amazon AWS` na 1.12.+ a `Jquery UI` na 1.13.2 (#546734).
+- Aktualizováno `Vue.js` z verze 2.6 na verzi 3.2.37, `vue-router` na verzi 4.1 a `vue-advanced-cropper` na 2.8.
+- Aktualizováno všechny JavaScript knihovny pro `/admin/v9/` (#54721-3).
+- Aktualizován FontAwesome (ikony) na verzi 6 (#54721-3).
 
 ![](_media/changelog/2022q3/ncu-2022-40.png)
 
-- Všechny chybové hlášky `Stack Trace` přesměrován ze standardního výstupu prostřednictvím `Logger`. Takže se také objeví v seznamu [Poslední protokoly](sysadmin/audit/memory-logging.md) v sekci Audit (#54269).
-- Přidána možnost generování hlavičky HTTP `Access-Control-Allow-Origin`, je nastaven v konfiguračních proměnných `accessControlAllowOriginValue a accessControlAllowOriginUrls`. Ve výchozím nastavení se hlavička generuje pro adresy URL začínající na `/rest/,/private/rest/,/admin/rest/`.
-- Aktualizovaná knihovna `org.json` na adrese 20220924.
+- Všechny chybové výpisy `Stack Trace` přesměrováno ze standardního výstupu přes `Logger`. Zobrazí se tedy iv seznamu [Posledních logů](sysadmin/audit/memory-logging.md) v sekci Audit (#54269).
+- Přidána možnost generovat HTTP hlavičku `Access-Control-Allow-Origin`, nastavuje se v konf. proměnných `accessControlAllowOriginValue a accessControlAllowOriginUrls`. Ve výchozím nastavení se hlavička generuje pro URL začínající na `/rest/,/private/rest/,/admin/rest/`.
+- Aktualizovaná knihovna `org.json` na 20220924.
 
-### Další drobné změny
+### Jiné drobné změny
 
-- Systém bannerů - přidána možnost filtrovat bannery podle zobrazitelnosti - kontroluje nejen aktivní možnost, ale také omezení počtu zobrazení/kliknutí a omezení data (#39751-44).
-- Systém bannerů - přidáno tlačítko pro zobrazení statistik bannerů, do editoru přidána karta statistik (#39751-44).
-- Hromadný e-mail - když získáte kód HTML hromadného e-mailu, do stránky se nevloží jQuery, což je pro e-mailovou verzi zbytečné.
-- Optimalizace výkonu - optimalizováno načítání seznamu šablon - upraveno načítání skupin šablon, data jednotlivých objektů (stránek) se načítají dynamicky pouze v případě potřeby (#53273).
-- Otázky a odpovědi - přidána kontrola SPAMu a možnost zobrazit obrázek Captcha (přidáním hodnoty `,qa` na konf. proměnnou `captchaComponents`). Dokud je přihlášen správce, není kontrolována.
-- Hledání v administraci - vyhledávání po kliknutí na název stránky otevře editor v novém okně (původně se ve staré verzi editoru otevíralo ve vyskakovacím okně) (#39751-44).
-- Úvod - přidány překlady sekcí Aplikace přizpůsobené pro WebJET a Novinky ve WebJETu. Seznam novinek je načítán z externího serveru, a proto je aktualizován bez aktualizace samotného WebJETu. Uživatelé tak mohou vidět seznam změn i ve verzi, kterou ještě nenasadili (#39751-45).
+- Bannerový systém - doplněná možnost filtrování banneru podle zobrazitelný - kontroluje nejen možnost aktivní, ale také omezení na počet zobrazení/kliknutí a datumová omezení (#39751-44).
+- Bannerový systém - doplněno tlačítko pro zobrazení statistiky banneru, doplněná karta se statistikou do editoru (#39751-44).
+- Hromadný email - při získání HTML kódu hromadného emailu se do stránky nebude vkládat jQuery, které je pro emailovou verzi zbytečné.
+- Optimalizace výkonu - optimalizované načítání seznamu šablon - upravené získání skupiny šablon, data jednotlivých objektů (stránek) se načítají dynamicky až v případě jejich potřeby (#53273).
+- Otázky a odpovědi - přidána SPAM kontrola a možnost zobrazení Captcha obrázku (přidáním hodnoty `,qa` do konf. proměnné `captchaComponents`). Nekontroluje se pokud je přihlášen administrátor.
+- Vyhledávání v administraci - vyhledávání po kliknutí na jméno stránky otevře editor v novém okně (původně otevíral v popup okně starou verzi editoru) (#39751-44).
+- Úvod - doplněné překlady sekce Aplikace upravené pro WebJET a Novinky ve WebJETu. Seznam novinek je čten z externího serveru a aktualizuje se tedy i bez aktualizace samotného WebJETu. Uživatelé tak mohou vidět seznam změn i ve verzi, kterou ještě nemají nasazenou (#39751-45).
 
 ### Dokumentace
 
-- Vytvořená dokumentace [Vzor šablony Bare](frontend/examples/template-bare/README.md) pro frontendového programátora.
-- Vytvořená dokumentace k editoru - [Hromadné e-mailové kampaně](redactor/apps/dmail/campaings/README.MD) a [Přihlašovací formulář](redactor/apps/dmail/form/README.md).
-- Vytvořená dokumentace s popisem provozu [zasílání hromadných e-mailů](redactor/apps/dmail/campaings/how-sender-works.md).
-- Vytvořená dokumentace k editoru pro aplikaci [seznam formulářů](redactor/apps/form/README.md).
-- Dokumentace vytvořená pro [náhled celé webové stránky](redactor/webpages/editor.md#náhled-stránky) bez uložení pro editor a také pro [programátor](developer/apps/webpages/README.md#náhled-stránky).
-- Dokumentace vytvořená pro použití [specifický JavaScript](developer/frameworks/README.md#webpack) pro vložení do souboru pug.
-- Přidána dokumentace k možnosti přidat tlačítko do [editor datových souborů](developer/datatables-editor/README.md#Speciální-tlačítka).
-- Vytvořená dokumentace k editoru pro aplikaci [AB testování](redactor/apps/abtesting/README.md).
-- Vytvořená dokumentace pro programátora [nastavení trvalého uživatele](developer/frameworks/webjetjs.md#nastavení-trvalého-uživatele)
-- Vytvořena dokumentace pro editor aplikace Kalendář akcí - [Seznam událostí](redactor/apps/calendar/README.md) a [Konfigurace typů událostí](redactor/apps/calendar/calendar-types/README.md) (#54473).
-- Vytvořená dokumentace pro programátora se seznamem [typy polí pro editor DataTables](developer/datatables-editor/standard-fields.md) (#54273).
-- Přidána dokumentace pro webdesignéra popisující metodu [přidání stylů do výběrového pole v editoru](frontend/examples/template-bare/README.md#seznam-stylů-pro-editor) (#39751-35).
-- Vytvořená ukázka a dokumentace [nahrávání souborů](custom-apps/spring-mvc/admin-with-upload.md) a [import z aplikace Excel](custom-apps/spring-mvc/admin-excel-import.md) pro programátora zákaznických aplikací (#54449).
-- Doplněná dokumentace [Bezpečnostní zkoušky pro provoz](sysadmin/pentests/README.md) další řešení pro zjištění zabezpečení a nastavení pro nezobrazování podrobných chyb a verzí `Apache Tomcat` (#43144).
-- Odkaz na nápovědu v administraci směřoval na hlavní stránku dokumentace nebo na konkrétní stránku (pokud již existuje), místo aby směřoval na starou dokumentaci k verzi 8 (#39751-40).
-- Vytvořená dokumentace auditu s [popis typů auditních záznamů](sysadmin/audit/README.md) pro provoz (#54269).
-- Přidána dokumentace pro programátora o [použití validace polí](developer/datatables-editor/datatable-columns.md#validace) (#54597).
-- Přidána dokumentace k editoru - [Webové stránky - karty webových stránek](redactor/webpages/README.md#karty-webových-stránek) (#54797).
-- Přidána dokumentace pro nastavení [Záhlaví zabezpečení HTTP](sysadmin/pentests/README.md#hlavičky-http).
+- Vytvořená dokumentace [ukázkové Bare šablony](frontend/examples/template-bare/README.md) pro frontend programátora.
+- Vytvořená dokumentace pro redaktora - [Hromadný email kampaně](redactor/apps/dmail/campaings/README.MD) a [Formulář pro přihlášení](redactor/apps/dmail/form/README.md).
+- Vytvořená dokumentace s popisem fungování [odesílání hromadných emailů](redactor/apps/dmail/campaings/how-sender-works.md).
+- Vytvořená dokumentace pro redaktora pro aplikaci [seznam formulářů](redactor/apps/form/README.md).
+- Vytvořená dokumentace k [náhledu kompletní web stránky](redactor/webpages/editor.md#náhled-stránky) bez jejího uložení pro redaktora a také pro [programátora](developer/apps/webpages/README.md#náhled-stránky).
+- Vytvořená dokumentace k použití [specifického JavaScript](developer/frameworks/README.md#webpack) souboru pro vkládání do pug souboru.
+- Doplněna dokumentace pro možnost přidání tlačítka do [editora datatabulky](developer/datatables-editor/README.md#Speciální-tlačítka).
+- Vytvořená dokumentace pro redaktora pro aplikaci [AB testování](redactor/apps/abtesting/README.md).
+- Vytvořená dokumentace pro programátora k použití [perzistentních nastavení uživatele](developer/frameworks/webjetjs.md#perzistentní-nastavení-uživatele)
+- Vytvořená dokumentace pro redaktora k aplikaci Kalendář událostí - [Seznam událostí](redactor/apps/calendar/README.md) a [Konfigurace typů událostí](redactor/apps/calendar/calendar-types/README.md) (#54473).
+- Vytvořená dokumentace pro programátora se seznamem [typů polí pro DataTables editor](developer/datatables-editor/standard-fields.md) (#54273).
+- Přidána dokumentace pro web designéra s popisem způsobu [přidání stylů do výběrového pole v editoru](frontend/examples/template-bare/README.md#seznam-stylů-pro-editor) (#39751-35).
+- Vytvořená ukázka a dokumentace [nahrání souboru](custom-apps/spring-mvc/admin-with-upload.md) a [importu z Excelu](custom-apps/spring-mvc/admin-excel-import.md) pro programátora zákaznických aplikací (#54449).
+- Doplněná dokumentace [Bezpečnostní testy pro provoz](sysadmin/pentests/README.md) o další řešení bezpečnostních nálezů a nastavení pro nezobrazení podrobné chyby a verze `Apache Tomcat` (#43144).
+- Odkaz Nápověda v administraci směrovaný na hlavní stránku dokumentace, nebo na specifickou stránku (pokud již existuje) místo směrování do staré dokumentace pro verzi 8 (#39751-40).
+- Vytvořená dokumentace Audit s [popisem typů auditních záznamů](sysadmin/audit/README.md) pro provoz (#54269).
+- Doplněna dokumentace pro programátora o [použití validace polí](developer/datatables-editor/datatable-columns.md#validace) (#54597).
+- Doplněna dokumentace pro redaktora - [Web stránky - karty web stránek](redactor/webpages/README.md#karty-web-stránek) (#54797).
+- Doplněna dokumentace pro nastavení [bezpečnostních HTTP hlaviček](sysadmin/pentests/README.md#http-hlavičky).
 
 ### Testování
 
-- Upraveno automatické testování datové tabulky - po smazání záznamu se tabulka obnoví a znovu se zkontroluje, zda byl záznam smazán (pokud např. došlo k chybě při mazání z mezipaměti) (#54513).
+- Upraveno automatizované testování datatabulky - po smazání záznamu je tabulka obnovena a znovu je zkontrolováno, zda se záznam smazal (pokud nastala např. chyba smazání v cache) (#54513).
 - Vytvořený test nastavení zobrazení stromové struktury `jstreesettings.js` (#54513).
-- Skripty - přidán test pro kontrolu vložení skriptů do stránky podle podmínek struktury i data (#39751).
-- Skupiny šablon - přidán test pro ukládání a zobrazování metadat na stránce, ověření ukládání podle jazyka (#39751).
-- Sestavovač stránek - vytvořen test přepínání a režimu Sestavovač stránek a Standard (#39751).
-- Datatable - přidán test pro maximalizaci okna, jeho zavření kliknutím na ikonu v záhlaví a dynamický výpočet počtu řádků na stránce (#54273-16).
-- Webové stránky - přidán test pro uložení stránky pomocí klávesové zkratky CTRL+s/CMS+s (#54273-16).
-- Na adrese [testy datových souborů](developer/testing/datatable.md#testování-práv) je nutné zadat možnost `perms` pro testování práv.
-- Kontrola práv k souborům - přidán test `links.js` ověřit přihlašovací údaje při přístupu k souboru v základní verzi, a to i s pěknou přihlašovací stránkou.
-- Přidány testy zobrazení médií (`media.js`) na webové stránce, včetně testů dat změn webové stránky (#54689).
-- Aktualizováno `CodeceptJS` na verzi `3.3.5`, Chromium na verzi 105, Firefox na verzi 103 (#54721-4).
-- Přidán test pro kontrolu práv k úpravám konfiguračních proměnných (omezená práva) (#54749).
+- Skripty - doplněný test kontroly vkládání skriptů do stránky podle podmínek struktury i dat (#39751).
+- Skupiny šablon - doplněn test ukládání a zobrazení metadat ve stránce, ověření ukládání podle jazykové mutace (#39751).
+- Page Builder - vytvořený test přepínání a režimu Page Builder a Standardní (#39751).
+- Datatabulka - přidán test maximalizace okna, jeho zavření kliknutím na ikonu v hlavičce a dynamického výpočtu počtu řádků na straně (#54273-16).
+- Web stránky - přidán test ukládání stránky klávesovou zkratkou CTRL+s/CMS+s (#54273-16).
+- Při [testu datatabulek](developer/testing/datatable.md#testování-práv) je povinné zadání možnosti `perms` pro testování práv.
+- Kontrola práv na soubor - přidaný test `links.js` pro ověření zadávání přihlašovacích údajů při přístupu k souboru v základní verzi i se zobrazením pěkné přihlašovací stránky.
+- Doplněné testy zobrazení médií (`media.js`) na webové stránce včetně testů dat změny webové stránky (#54689).
+- Aktualizován `CodeceptJS` na verzi `3.3.5`, Chromium na verzi 105, Firefox na verzi 103 (#54721-4).
+- Doplněn test kontroly práv editace konf.
 
 ### Oprava chyb
 
-- Výběrové pole s možností úprav - opraveno zavírání okna při úpravách záhlaví ze šablony, kde je otevřeno třetí okno, např. pro úpravy médií (#54345).
-- Vylepšeno nastavení velikosti ckeditoru při zobrazení z upravitelného výběrového pole (#54345).
-- Opraveno načítání překladových souborů v jiném jazyce než SK.
-- Opravena funkce restartování WebJETu kliknutím na nabídku v Ovládacích panelech.
-- Opraveno vyhledávání ve vnořené datové tabulce - po zadání termínu a stisknutí klávesy Enter se vyhledávání nespustilo, ale byly vybrány všechny řádky (#54493).
-- Opraveno abecední řazení v hlavní nabídce v sekci Aplikace (správně zpracovává i diakritiku) (#53273).
-- Šablony - opraveno získávání aktuálně nastavené šablony HTML při úpravách. I když na disku neexistuje, bude zachována v seznamu dostupných šablon HTML (#53273).
-- Šablony - opraveno nastavení ID prázdné stránky v šabloně (bylo nesprávně nastaveno na -2, které se používá na webových stránkách místo -1) (#53273).
-- Monitorování serveru - opravena velikost místa na disku (#54513).
-- Skripty - upraveno zobrazení karty Skript tak, aby bylo zřejmé, že obsahuje textovou oblast (#54513).
-- Šablony - opravené obnovení `cache` paměti po odstranění šablony.
-- PageBuilder - přidáno odstranění tříd CSS a kódu HTML PageBuilderu, pokud je kód nesprávný (např. vnořený `div.section` na `div.section`) nebo byl nástroj ponechán otevřený (např. nastavení šířky sloupce) (#39751).
+- Výběrové pole s možností editace - opraveno zavření okna při editaci hlavičky ze šablony kde je otevřeno třetí okno nap. pro editaci médií (#54345).
+- Zlepšené nastavení velikosti ckeditora při zobrazení z výběrového pole s možností editace (#54345).
+- Opraveno načtení překladových souborů v jiném než SK jazyce.
+- Opravena funkce restartování WebJETu kliknutím na menu v Ovládací panely.
+- Opraveno vyhledávání ve vnořené datatabulce - po zadání výrazu a stisku klávesy Enter se nespustilo vyhledávání ale se označily všechny řádky (#54493).
+- V hlavním menu v sekci Aplikace opraveno uspořádání podle abecedy (korektně zpracuje i diakritiku) (#53273).
+- Šablony - opraveno získání aktuálně nastavené HTML šablony při editaci. I když neexistuje na disku zachová se v seznamu dostupných HTML šablon (#53273).
+- Šablony - opravené nastavení ID prázdné stránky v šabloně (chybně se nastavovalo -2, které se používá ve web stránkách namísto hodnoty -1) (#53273).
+- Monitorování serveru - opravený tooltip velikosti místa na disku (#54513).
+- Skripty - upravené zobrazení karty Skript aby bylo jasné, že obsahuje textovou oblast (#54513).
+- Šablony - opraveno obnovení `cache` paměti po smazání šablony.
+- PageBuilder - doplněno odstranění CSS tříd a HTML kódu PageBuilder pokud je kód nekorektní (např. vnořeno `div.section` do `div.section`), nebo zůstal otevřený některý nástroj (např. nastavení šířky sloupce) (#39751).
 - Skripty - opraveno vkládání skriptů do stránky, které nemají nastavená omezení (#39751).
-- Firefox - přidáno podržení pozice okna při kliknutí na aplikaci v editoru v režimu Page Builder (Firefox nesprávně přesouval okno úplně dolů nebo na místo, kde je kurzor) (#39751).
-- Webové stránky - opravena smyčka otevírání webové stránky, pokud je hodnota `domainName`, `NULL` (#39751).
-- Galerie - opravena možnost zavřít dialogové okno pro nahrávání souborů, opravena chyba při ukládání obrázku, kdy i kliknutí na tlačítko zrušit uložilo změnu v editoru (#39751).
-- Galerie - opravena duplicita záznamu - také soubor/fotografie je správně zkopírován. Název je nastaven na název v záložce Popis, případně je existence souboru testována přidáním čísla 1-100 na konec názvu souboru.
-- Webové stránky - přidáno obnovení stromové struktury, pokud se při změně názvu, pořadí, stavu zobrazení, složky a externího odkazu zobrazují také webové stránky (#39751).
-- Webové stránky / datové tabulky - opravena editace více záznamů najednou - `fetch` ze serveru byl původně proveden pouze na prvním záznamu, opraven tak, aby byl proveden na všech označených záznamech. Chyba způsobovala, že se při úpravě více webových stránek neukládal text. `data not loaded` do těla webové stránky (#39751-36).
-- Mapa stránek - opravené zobrazení `/sitemap.xml` (#54637).
-- Webové stránky - přidané funkce API `openLinkDialogWindow` a `openImageDialogWindow` z verze 8 otevřít dialogové okno pro výběr odkazu/obrázku, např. v dialogovém okně tlačítka (#39751).
-- Bannery - opravena chyba nastavení `domainId` pro instalaci jedné domény podle kompatibility s verzí 8 (#54645).
-- Bannery - opravena chyba ve vyhledávání podle aktivity banneru (#39751-44).
-- Média - opraveno nastavení oprávnění pro zobrazení aplikace Média v editoru stránky (#39751).
-- Média - při úpravách prostřednictvím nástroje Správa všech médií bude zachováno datum poslední změny média, takže se bude na webové stránce zobrazovat i nadále (obvykle se média zobrazují pouze starší než datum posledního uložení související webové stránky). U nových médií bude datum a čas nastaven na datum a čas posledního uložení přiřazené webové stránky (#54689).
-- Přehrávač videa - přidána podpora `Bootstrap 5` - Nastavení stylu CSS `ratio ratio-16x9` pro správný poměr stran zobrazeného videa (#39751-39).
-- Datové tabulky - při maximalizaci okna se následně maximalizovalo i potvrzení o odstranění, což nevypadalo dobře. Upraveno tak, aby se při zobrazení potvrzení o smazání záznamu maximalizace zrušila (#39751-39).
-- Nástroj pro tvorbu stránek - opraveno nastavení šablony při vytváření nové stránky - nastavuje se podle šablony složky, nikoli podle šablony hlavní stránky (#39751-39).
-- Webové stránky - opravené otevření stránky po zadání jejího ID ve složce Systém, pokud je nastavení povoleno. `templatesUseRecursiveSystemFolder=true` (#54513-16).
-- Datové tabulky - opravena úprava buněk po přesunutí sloupce (#54513-16).
-- Webová stránka - opraveno zobrazení jména autora v datové tabulce po úpravě stránky (#54753).
-- Webové stránky - opravené vyhledávání podle skupiny perex (#39751-42).
-- Galerie - opraveno abecední řazení položek ve stromové struktuře (#39751-43).
-- Galerie - opraveno nastavení velikosti editoru obrázků a oblasti zájmu při maximalizaci okna, vylepšena podpora úprav velkých fotografií (posunutí fotografie v okně) (#39751-43).
-- Galerie - opravena úprava více řádků textu perexu/anotace (#39751-44).
-- Cluster - opraveno mazání objektů mezipaměti voláním `Cache.getInstance().removeObjectStartsWithName` - požadavek na smazání začínající místo přesného seznamu (který může být v každém uzlu jiný) se zapíše přímo do clusteru (#54273-32).
-- Hromadné e-maily - opraveno počáteční nastavení příjemců, počtu příjemců a odeslaných e-mailů při ukládání kampaně, neodstranění e-mailů, pokud je uživatel ve vybrané i odstraněné skupině (#39751-44).
-- Datová tabulka - opraveno vyhledávání po změně pořadí sloupců (#43144).
+- Firefox - doplněné držení pozice okna při kliknutí na aplikaci v editoru v režimu Page Builder (Firefox chybně posunul okno na úplný spodek, nebo na místo kde je kurzor) (#39751).
+- Web stránky - opraveno zacyklení otevření web stránky pokud je hodnota `domainName`, `NULL` (#39751).
+- Galerie - opravena možnost zavřít dialog nahrávání souborů, opravena chyba uložení obrázku, kdy se i po kliknutí na zrušit uložila změna v editoru (#39751).
+- Galerie - opraveno duplikování záznamu - korektně se zkopíruje i soubor/fotografie. Jméno se nastaví podle názvu v kartě Popis, nebo se testuje existence souboru přidáním čísla 1-100 na konec jména souboru.
+- Web stránky - doplněné obnovení stromové struktury pokud jsou zobrazeny i web stránky při změně názvu, pořadí, stavu zobrazení, složky a externího odkazu (#39751).
+- Web stránky / datatabulky - opravena editace více záznamů najednou - `fetch` ze serveru se původně provedl pouze na první záznam, opraveno aby se provedl na všechny označené záznamy. Chyba způsobila při editaci více web stránek uložení textu `data not loaded` do těla webové stránky (#39751-36).
+- Mapa stránek - opraveno zobrazení `/sitemap.xml` (#54637).
+- Web stránky - doplněné API funkce `openLinkDialogWindow` a `openImageDialogWindow` z verze 8 pro otevření dialogu výběru odkazu/obrázku, např. v dialogu tlačítka (#39751).
+- Bannery - opravená chyba nastavení `domainId` při jedno doménové instalaci podle kompatibility s verzí 8 (#54645).
+- Bannery - opravena chyba hledání podle aktivnosti banneru (#39751-44).
+- Média - opraveno nastavení práv pro zobrazení aplikace Média v editoru stránek (#39751).
+- Média - při editaci přes Správa všech médií zůstane zachováno datum poslední změny média aby se nadále zobrazovalo na web stránce (typicky se média zobrazí jen starší než datum posledního uložení přiřazené web stránky). U nového média se nastaví datum a čas na datum a čas posledního uložení zadané webové stránky (#54689).
+- Video přehrávač - přidána podpora `Bootstrap 5` - nastavení CSS stylu `ratio ratio-16x9` pro korektní poměr stran zobrazeného videa (#39751-39).
+- Datatabulky - při maximalizaci okna se následně i potvrzení smazání zobrazovalo maximalizované, což nevypadalo dobře. Upraveno tak, aby při zobrazení potvrzení smazání záznamu se maximalizování zrušilo (#39751-39).
+- Page Builder - opraveno nastavení šablony při vytvoření nové stránky - nastaví se podle šablony složky ne podle šablony hlavní stránky (#39751-39).
+- Web stránky - opraveno otevření stránky po zadání jejího ID v Systém složky při zapnutém nastavení `templatesUseRecursiveSystemFolder=true` (#54513-16).
+- Datatabulky - opravena editace buňky po přesunu sloupce (#54513-16).
+- Web stránky - opraveno zobrazení jména autora v datatabulce po editaci stránky (#54753).
+- Web stránky - opraveno vyhledávání podle perex skupiny (#39751-42).
+- Galerie - opraveno uspořádání položek ve stromové struktuře podle abecedy (#39751-43).
+- Galerie - opraveno nastavení velikosti editoru obrázků a oblasti zájmu při maximalizování okna, zlepšená podpora při úpravě velkých fotografií (posun fotky v okně) (#39751-43).
+- Galerie - opravena editace více řádkového textu perexu/anotace (#39751-44).
+- Cluster - opravené mazání cache objektů voláním `Cache.getInstance().removeObjectStartsWithName` - do clusteru se zapíše přímo požadavek na mazání začínající na místo přesného seznamu (který může být na jednotlivých nodech rozdílný) (#54273-32).
+- Hromadný email - opraveno prvotní nastavení příjemců, počet příjemců a odeslaných emailů při uložení kampaně, ne-odstranění emailů je-li uživatel ve zvolené i odstraněné skupině (#39751-44).
+- Datatabulka - opraveno vyhledávání po změně pořadí sloupců (#43144).
 
 ![meme](_media/meme/2022-40.jpg ":no-zoom")
 
 ## 2022.18
 
-> Verze 2022.18 přidává integraci PageBuilderu do webových stránek, možnost používat šablony návrhu napsané ve frameworku Thymeleaf, zobrazení posledních zpráv v protokolech, mnoho vylepšení použitelnosti na základě připomínek uživatelů, přepracované Formuláře - regulární výrazy, Hromadná pošta - odhlášení e-mailů. Na domovskou stránku přidány miniaplikace Záložky a Zpětná vazba.
+> Verze 2022.18 přidává integraci nástroje PageBuilder do web stránek, možnost používat designové šablony psané ve frameworku Thymeleaf, zobrazení posledních zpráv v logech, mnohá zlepšení použitelnosti na základě připomínek uživatelů, předělané aplikace Formuláře - regulární výrazy, Hromadný email - odhlášené emaily. Na úvodní stránku přidány mini aplikace Záložky a zpětná vazba.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/6IPrdHvhYrc" title="Přehrávač videí YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/6IPrdHvhYrc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 **PageBuilder**
 
-Nástroj Page Builder je integrován do editoru webových stránek. V tomto režimu se neupravuje celá stránka, ale pouze její vybrané části. Nástroj Page Builder odděluje úpravu textu/obrázků a úpravu struktury stránky. Tím se zabrání náhodnému odstranění strukturálních prvků webové stránky při úpravě jejího textu (#54349).
+Do editoru web stránek je integrován Page Builder. V tomto režimu není editována celá stránka ale jen její vybrané části. Page Builder odděluje editaci textů/obrázků a struktury stránek. Nestane se tak to, že omylem smažete strukturální elementy web stránky při editaci jejího textu (#54349).
 
-Pro nově vytvořené šablony doporučujeme připravit a použít bloky nástroje Page Builder namísto původních bloků HTML. Zajistíte tak lepší a snadnější úpravy složitých stránek. Režim Page Builder je třeba nastavit a povolit ve skupině šablon.
+Pro nově vytvářené šablony doporučujeme připravit a používat bloky pro Page Builder namísto původních HTML bloků. Zaručíte tak lepší a jednodušší editaci komplexních stránek. Režim Page Builder je třeba nastavit a povolit ve skupině šablon.
 
-Dokumentace pro [editora](redactor/webpages/pagebuilder.md), [webdesignér](frontend/page-builder/README.md) Také [programátor](developer/apps/webpages/pagebuilder.md).
+Vytvořena je dokumentace pro [redaktora](redactor/webpages/pagebuilder.md), [web designéra](frontend/page-builder/README.md) i [programátora](developer/apps/webpages/pagebuilder.md).
 
 ![](redactor/webpages/pagebuilder.png)
 
-- Přidána možnost generovat náhodné ID při vkládání bloku do stránky zadáním hodnoty. `__ID__` do kódu bloku (#54345).
-- Přidána možnost neoznačovat sekce nastavením třídy CSS `pb-not-section`, nastavení kontejneru `pb-not-container` a nastavení sloupců `pb-not-column` (#54345).
+- Přidána možnost generovat náhodné ID při vložení bloku do stránky zadáním hodnoty `__ID__` do kódu bloku (#54345).
+- Přidána možnost neoznačit sekci nastavením CSS třídy `pb-not-section`, kontejner nastavením `pb-not-container` a sloupec nastavením `pb-not-column` (#54345).
 
-**Webové stránky**
+**Web stránky**
 
-Přidána možnost zobrazení [akční tlačítka](developer/datatables-editor/notify.md) v oznámení. Pokud například existuje pracovní verze stránky, zobrazí se tlačítko pro otevření poslední pracovní verze stránky. Editor tak nemusí přecházet na kartu Historie a klikat na tlačítko pro úpravu pracovní verze (#54375).
+Přidána možnost zobrazovat [akční tlačítka](developer/datatables-editor/notify.md) v notifikaci. Např. pokud existuje pracovní verze stránky zobrazí se tlačítko pro otevření poslední pracovní verze stránky. Redaktor tak nemusí přecházet do karty Historie a tam klepnout na tlačítko pro editaci pracovní verze (#54375).
 
 ![](developer/datatables-editor/notify.png)
 
-Byla přidána možnost vytvořit nový objekt záhlaví/zápatí/menu/volný objekt přímo při úpravě webové stránky nebo šablony, který se použije místo verze šablony, nebo upravit stávající stránku (např. pokud potřebujete upravit logo nebo text v zápatí).
+Přidána možnost přímo při editaci web stránky nebo šablony vytvořit novou hlavičku/patičku/menu/volný objekt, která se použije namísto verze ze šablony nebo editovat existující stránku (např. pokud potřebujete upravit logo, nebo text v patičce).
 
 ![](redactor/webpages/header-doc-edit.png)
 
-- Vylepšené vytváření nových složek domény. Opraveno automatické vytváření složek `system` s podsložkami záhlaví, zápatí a menu. Po vytvoření se stránka v prohlížeči obnoví, aby se nová doména správně odrazila ve výběru domény záhlaví. Přidána metoda API `EditorFacade.createEmptyWebPage` pro jednoduché [vytvoření nové stránky](developer/apps/webpages/api.md).
-- Upravena ikona pro výběr ikony Nadřazená složka a Přesměrovat na kříž. Původní ikona tužky evokuje, že se chystáte upravit daný adresář nebo adresu přesměrování, ale ve skutečnosti se jedná o výběr existujícího adresáře (nikoliv o jeho úpravu/změnu).
-- Seznam značek (skupin perexů) je řazen abecedně bez ohledu na velikost písma a diakritiku (#53805).
-- Přidána ikona stavu hlavní stránky (hvězdička) pro filtrování webových stránek podle hlavní stránky (užitečné i při zobrazování webových stránek z podsložek) (#54381).
-- Po kliknutí do pole ID/adresa se pole zvětší, aby bylo možné snadněji zadat název stránky (#54381).
+- Vylepšené vytváření složky nové domény. Opraveno automatické vytvoření složky `system` s pod přihrádkami hlavičky, patičky a menu. Po vytvoření se obnoví stránka v prohlížeči, aby se nová doména korektně promítla do výběrového menu domén v hlavičce. Přidána API metoda `EditorFacade.createEmptyWebPage` pro snadné [vytvoření nové stránky](developer/apps/webpages/api.md).
+- Upravená ikona pro výběr Nadřazené složky a Přesměrování na ikonu kříže. Původní ikona tužky evokuje, že daný adresář nebo adresu přesměrování lze upravovat, realita ale je, že vybíráte existující adresář (ne editujete/upravujete).
+- Seznam značek (perex skupin) je uspořádán podle abecedy bez ohledu na velikost písma a diakritiku (#53805).
+- Přidána stavová ikona hlavní stránky (hvězda) možnost filtrovat web stránky podle hlavní stránky (vhodné použití při zobrazení web stránek iz podsložek) (#54381).
+- Po kliknutí do pole ID/adresa se pole zvětší pro pohodlnější psaní jména stránky (#54381).
 
 **Formuláře**
 
-Sekce Regulární výrazy, v níž se definují pravidla pro kontrolu vyplnění polí, je přepracována a má nový design a datovou tabulku.
+Sekce regulární výrazy, přes kterou se definují pravidla pro kontrolu vyplnění polí, předělána do nového designu a datatabulky.
 
 ![](redactor/apps/form/regexp-datatable.png)
 
-Ve formuláři byly přidány podrobnosti:
-- Tlačítko pro náhled vyplněného formuláře a ikona "oka" přímo v řádku formuláře pro snadné zobrazení (# 54273).
-- Zobrazení odkazu pro stažení souborů formuláře.
-- Možnost zadat komentář do formuláře.
-- Zobrazení údajů přihlášeného uživatele (ve výchozím nastavení vypnuto, nastaveno na zobrazení sloupců v tabulce).
-- Zaznamená datum posledního exportu formuláře.
-- Datum posledního vyplnění formuláře v seznamu formulářů, nastavené na řazení podle tohoto sloupce.
-- Oddělené zobrazení formulářů podle domén (`domainId`).
-- Přidáno mazání záznamu formuláře a všech záznamů (celého formuláře).
-- Přidaná kontrola práv v rámci `docId` (v seznamu se zobrazují pouze formuláře webových stránek, ke kterým má uživatel oprávnění - hodnota je zaškrtnuta `docId` posledního odeslaného formuláře).
+V detailu formuláře přidáno:
+- Tlačítko pro zobrazení náhledu vyplněného formuláře a ikona "oka" přímo v řádku formuláře pro snadné zobrazení (#54273).
+- Zobrazení odkazu ke stažení souborů formuláře.
+- Možnost zadat poznámku k formuláři.
+- Zobrazení údajů přihlášeného uživatele (výchozí vypnuto, pro zobrazení nastavte zobrazení sloupců v tabulce).
+- Evidence data posledního exportu formuláře.
+- Datum posledního vyplnění formuláře v seznamu formulářů, nastavené uspořádání podle tohoto sloupce.
+- Oddělené zobrazení formulářů podle domény (`domainId`).
+- Doplněno mazání záznamu formuláře i všech záznamů (celého formuláře).
+- Doplněna kontrola práv podle `docId` (v seznamu se zobrazí pouze formuláře web stránek, na které má uživatel oprávnění - kontroluje se hodnota `docId` posledně odeslaného formuláře).
 
 **Formulář snadno**
 
-- Přidán typ pole pro nahrávání souborů (libovolný typ souboru), dokumentů (soubory typu .doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf) a obrázků (soubory typu .gif,.png,.jpg,.jpeg,.svg) (#54273).
-- Přidána možnost nastavit zástupný text (`placeholder`) pro standardní textová pole. Umožňuje zobrazit pomocný text v prázdném poli (např. formát očekávaného telefonního čísla 0903xxxyyy) (#54381).
+- Přidán typ pole pro nahrání souborů (libovolný typ souboru), dokumentů (soubory typu .doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf) a obrázků (soubory typu .gif,.png,.jpg,.jpeg,.svg) (#54273).
+- Přidána možnost nastavení zástupného textu (`placeholder`) pro standardní textová pole. Umožňují zobrazit pomocný text v prázdném poli (např. formát očekávaného telefonního čísla 0903xxxyyy) (#54381).
 
 **Šablony**
 
-- Přidána možnost použít [Šablony Thymeleaf](frontend/thymeleaf/README.md) místo starého JSP. To přináší výhodu lepší možnosti prototypování designu přímo v kódu HTML.
+- Přidána možnost používat [Thymeleaf šablony](frontend/thymeleaf/README.md) stránek namísto starých JSP. Přináší to výhodu v lepší možnosti prototypování designu přímo v HTML kódu.
 
 ```html
 <span data-th-text="${docDetails.title}">Titulok stránky</span>
@@ -551,186 +551,186 @@ Ve formuláři byly přidány podrobnosti:
 <div data-iwcm-write="doc_data"/>
 <div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
 ```
-- Šablony položek menu upraveny tak, aby přímo obsahovaly podpoložky Seznam šablon a Seznam skupin šablon (položky jsou přesunuty do první úrovně menu).
-- Pro místní adresář Systém přidáno vyhledávání jazykové verze záhlaví/zápatí/menu podle jazyka adresáře. Pokud má šablona nastavené záhlaví `SK-Default hlavička` a adresář nastavit jazyk Angličtina hledá `EN-Default hlavička` (na třetím místě musí být -). Pokud existuje, použije se.
+- Menu položka šablony upravena tak, že přímo obsahuje pod položky Seznam šablon a Seznam skupin šablon (položky jsou přesunuty na první uroveň menu).
+- Pro lokální System adresář doplněno hledání jazykové verze hlavičky/patičky/menu podle jazyka adresáře. Pokud má šablona nastavenou hlavičku `SK-Default hlavička` a adresář nastaven jazyk Anglicky hledá se `EN-Default hlavička` (na třetím místě musí být znak -). Pokud existuje, použije se.
 
 **Automatizované úkoly**
 
-- Přidána možnost ručního spuštění automatizované úlohy kliknutím na tlačítko v datové tabulce (#54273).
+- Doplněna možnost manuálně spustit automatizovanou úlohu kliknutím na tlačítko v datatabulce (#54273).
 
 **Audit**
 
-Přidána možnost ukládat poslední zprávy protokolu do paměti serveru s možností jejich snadného zobrazení. Podporována je také možnost načítat zprávy protokolu z jiného uzlu clusteru (např. z uzlu CMS si můžete vyžádat poslední zprávy protokolu z veřejných uzlů).
+Přidána možnost ukládat poslední log zprávy do paměti serveru s jednoduchou možností jejich zobrazení. Podporována je i možnost načíst log zprávy z jiného uzlu clusteru (např. z CMS uzlu umíte vyžádat poslední log zprávy z veřejných uzlů).
 
 ![](sysadmin/audit/memory-logging.png)
 
-**Hromadný e-mail**
+**Hromadný email**
 
-Přepracování sekce s neodebíranými e-maily na datovou tabulku, vytvoření [dokumentace k editoru](redactor/apps/dmail/unsubscribed/README.md).
+Předělaná část odhlášené emaily do datatabulky, vytvořená [dokumentace pro redaktora](redactor/apps/dmail/unsubscribed/README.md).
 
 ![](redactor/apps/dmail/unsubscribed/unsubscribed-datatable.png)
 
 **Překladové klíče**
 
-- Přidáno tlačítko pro vymazání mezipaměti překladových klíčů a jejich opětovné načtení ze souboru a databáze. Užitečné, pokud během provozu změníte překladový soubor a potřebujete jej znovu načíst (#54401).
-- Přidána informační zpráva při pokusu o odstranění klíče, který je v souboru překladu (lze odstranit pouze upravené klíče v databázi).
-- Pevné uspořádání klíčů podle ID.
-- Opraveno zobrazení duplicitních klíčů, které se vyskytují jak v souboru, tak v databázi (zobrazí se změněný klíč z databáze).
+- Přidáno tlačítko pro smazání cache paměti překladových klíčů a jejich znovu načtení ze souboru a databáze. Vhodné pokud změníte během provozu překladový soubor a potřebujete jej znovu načíst (#54401).
+- Doplněno informační hlášení při pokusu o smazání klíče, který se nachází v překladovém souboru (mazat je možné jen upravené klíče nacházející se v databázi).
+- Opraveno uspořádání klíčů podle ID.
+- Opraveno zobrazení duplicitních klíčů, které se nacházejí v souboru i databázi (zobrazí se upravený klíč z databáze).
 
 **Aplikace**
 
-Přidána možnost [přidání aplikace do seznamu aplikací](custom-apps/appstore/README.md) pomocí anotace Java `@WebjetAppStore` a možnost nastavit parametry aplikace pomocí anotací. `@DataTableColumn`. Díky tomu lze aplikaci snadno zobrazit v seznamu aplikací, vložit ji do stránky a upravit její parametry bez dalšího programování (#54333).
+Přidána možnost [vložit aplikaci do seznamu aplikací](custom-apps/appstore/README.md) pomocí Java anotace `@WebjetAppStore` a možnost nastavení parametrů aplikace pomocí anotací `@DataTableColumn`. Jednoduše je tak možné bez dodatečného programování zobrazit aplikaci v seznamu aplikací, vkládat ji do stránky a upravovat její parametry (#54333).
 
 ![](custom-apps/appstore/democomponent-prop.png)
 
-- Seznam aplikací je v nabídce uspořádán abecedně. První jsou zákaznické aplikace (v souboru `modinfo.properties` mají atribut `custom=true`), následované standardními aplikacemi WebJET CMS (#54381).
+- Seznam aplikací je v menu uspořádán podle abecedy. První jsou aplikace zákazníka (v souboru `modinfo.properties` mají atribut `custom=true`), následují standardní aplikace WebJET CMS (#54381).
 
-**Datové tabulky**
+**Datatabulky**
 
-- Přidána zjednodušená možnost [nastavení číselníku pro výběrová pole](developer/datatables/restcontroller.md#číselníky-pro-výběrová-pole) přepsáním metody `getOptions(DatatablePageImpl<T> page)`
-- Přidána možnost [neexportovat vybraný sloupec](developer/datatables/README.md#exportimport) pomocí nastavení `className` atribut na hodnotu `not-export` (#54273).
-- Přidána možnost nastavit [hodnoty výběrového pole](developer/datatables-editor/datatable-columns.md#možnosti-výběrového-pole) voláním metod rozhraní Java API nebo hodnot z číselníku aplikace.
-- Opravena úprava buněk, pokud se neprovede načtení záznamu ze serveru (podmínka `fetchOnEdit` Je `false`).
-- Přidána kontrola duplicitních zpráv při volání `DatatableRestControllerV2.addNotify`. Stejná zpráva se opakuje pouze jednou, přičemž se kontroluje, zda nadpis, text a typ oznámení souhlasí.
-- Přidána kontrola otevřeného okna editoru při opuštění stránky. Pokud je otevřené, zobrazí se při přechodu na jinou stránku potvrzení o opuštění stránky. Neplatí pro uživatele s přihlašovacím jménem začínajícím na `tester` (#54413).
-- Typ pole Výběrové pole s možností editace umožňuje upravovat a přidávat webové stránky [také ze systému karet a košíku](developer/datatables-editor/field-select-editable.md). Přidány popisy ikon (`tooltip`) a skrytí ikony úprav, pokud má vybraná webová stránka ID menší než 1.
-- Přidán typ pole pro výběr adresáře v souborovém systému pomocí [typ pole json](developer/datatables-editor/field-json.md#možnosti-názvu-třídy) a hodnoty `className='dt-tree-dir-simple'` (#54433).
-- Přidána možnost pro volitelná pole typu pole výběru [zadejte prázdnou hodnotu](frontend/webpages/customfields/README.md#výběrové-pole) (#53805).
-- Upravená nastavení [sloupce zobrazené v datové tabulce](redactor/datatables/README.md#nastavení-zobrazení-sloupců). Zobrazení je sloupcové a kromě názvu sloupce obsahuje také název karty v editoru, případný nadpis a pomocný text. To usnadňuje identifikaci potřebných sloupců (#54381).
+- Přidána zjednodušená možnost [nastavení číselníků pro select boxy](developer/datatables/restcontroller.md#číselníky-pro-select-boxy) přepsáním metody `getOptions(DatatablePageImpl<T> page)`
+- Přidána možnost [neexportovat vybraný sloupec](developer/datatables/README.md#exportimport) pomocí nastavení `className` atributu na hodnotu `not-export` (#54273).
+- Přidána možnost nastavovat [hodnoty výběrového pole](developer/datatables-editor/datatable-columns.md#možnosti-výběrového-pole) voláním Java API metody nebo hodnotami z aplikace číselník.
+- Opravena editace buňky pokud se nemá provést načtení záznamu ze serveru (podmínka `fetchOnEdit` je `false`).
+- Doplněna kontrola duplicit notifikačních zpráv při volání `DatatableRestControllerV2.addNotify`. Opakovaná stejná zpráva se zobrazí jen jednou, kontroluje se shoda titulku, textu a typu notifikace.
+- Přidána kontrola otevřeného okna editoru při opuštění stránky. Pokud je otevřen zobrazí se potvrzení opuštění stránky při přechodu na jinou stránku. Nepoužije se pro uživatele s přihlašovacím jménem začínajícím na `tester` (#54413).
+- Pole typu Výběrové pole s možností editace umožňuje editovat a přidávat web stránky [iz karet Systém a koš](developer/datatables-editor/field-select-editable.md). Přidány popisy ikon (`tooltip`) a schování ikony pro editaci, pokud je vybraná web stránka s ID méně než 1.
+- Přidán typ pole pro výběr adresáře na souborovém systému pomocí [typu pole json](developer/datatables-editor/field-json.md#možnosti-classname) a hodnoty `className='dt-tree-dir-simple'` (#54433).
+- Pro volitelná pole typu výběrové pole přidána možnost [zadat prázdnou hodnotu](frontend/webpages/customfields/README.md#výběrové-pole) (#53805).
+- Upravené nastavení [zobrazených sloupců v datatabulce](redactor/datatables/README.md#nastavení-zobrazení-sloupců). Zobrazení je sloupcové, kromě jména sloupce obsahuje také jméno karty v editoru, případný nadpis a pomocný text. Lépe se tak dají identifikovat potřebné sloupce (#54381).
 
 ![](redactor/datatables/dt-colvis.png)
 
 - Přidána možnost maximalizovat dialogové okno editoru (#54381).
-- Po kliknutí na tlačítko uložit v editoru se animace zobrazí také přímo na tlačítku (ne jen v horní části okna), aby byla jasnější (#54381).
+- Po klepnutí na tlačítko uložit v editoru se zobrazí animace i přímo na tlačítku (nejen v horní části okna) pro jasnější indikaci (#54381).
 
 **Úvod**
 
-Přidáno [Aplikace Záložky mini](redactor/admin/welcome.md?id=záložky) kde můžete přidat odkazy na často používané sekce ze systému WebJET CMS. Po přihlášení nemusíte sekci vyhledávat v nabídce, ale můžete přejít přímo na svou oblíbenou sekci v záložkách.
+Přidána [mini aplikace Záložky](redactor/admin/welcome.md?id=záložky), do které si můžete přidat odkazy na často používané sekce z WebJET CMS. Po přihlášení tak nemusíte hledat sekci v menu, ale přímo v záložkách přejdete do vaší oblíbené sekce.
 
 ![](redactor/admin/bookmarks.png)
 
-Přidáno [Aplikace Zpětná vazba mini](redactor/admin/welcome.md?id=spätná-väzba) prostřednictvím kterého můžete programátorům systému WebJET CMS zaslat svůj komentář nebo pochvalu. Vaše připomínky zvážíme a přidáme je do [mapy rozvoje](ROADMAP.md). Svým názorem můžete také zlepšit fungování systému WebJET CMS.
+Přidána [mini aplikace Zpětná vazba](redactor/admin/welcome.md?id=spätná-väzba) přes kterou můžete poslat vaši připomínku, komentář nebo pochvalu k WebJET CMS nám programátorem. Vaše připomínky posoudíme a přidáme do [mapy rozvoje](ROADMAP.md). Můžete tak i vašim názorům zlepšit fungování WebJET CMS.
 
 ![](redactor/admin/feedback.png)
 
-Přidáno rozbalovací menu v záhlaví po kliknutí na jméno přihlášeného uživatele. Obsahuje možnosti:
-- Profil - úprava vlastního profilu (jméno, e-mail... - po změně profilu se musíte odhlásit a znovu přihlásit).
-- Dvoufázové ověřování - možnost aktivovat dvoufázové ověřování pomocí aplikace. `Google Authenticate` při přihlašování do administrace. Tím se zvýší bezpečnost vašeho účtu, protože kromě hesla musíte pro přihlášení zadat také kód z mobilního zařízení. Doporučujeme toto nastavení u všech účtů, jejichž prostřednictvím lze spravovat uživatelské účty a práva.
-- Správa šifrovacích klíčů - umožňuje vytvořit nový šifrovací klíč pro šifrování formulářů a zadat stávající klíč pro jejich dešifrování. Vyžaduje právo Formuláře.
-- Odhlášení - odhlášení ze správy.
+Přidáno výsuvné menu v hlavičce po kliknutí na jméno přihlášeného uživatele. Obsahuje možnosti:
+- Profil - upravit vlastní profil (jméno, email... - po změně profilu je třeba se odhlásit a znovu přihlásit).
+- Dvoustupňové ověřování - možnost aktivovat dvoustupňové ověřování pomocí aplikace `Google Authenticate` při přihlašování do administrace. Zvyšuje se tak bezpečnost vašeho účtu, protože kromě hesla je pro přihlášení třeba zadat také kód z vašeho mobilního zařízení. Doporučujeme nastavit na všechny účty, přes které lze spravovat uživatelské účty a práva.
+- Správa šifrovacích klíčů – umožňuje vytvořit nový šifrovací klíč pro šifrování formulářů a zadat existující klíč pro jejich dešifrování. Vyžaduje právo Formuláře.
+- Odhlášení - odhlášení z administrace.
 
-Aplikace todo, která ještě nebyla implementována, se zatím nezobrazuje na domovské stránce (#54381).
+Aplikace todo, která dosud nebyla implementována se zatím na úvodní stránce nezobrazuje (#54381).
 
-**Další změny**
+**Jiné změny**
 
-- Přidána možnost použít [Šablony Thymeleaf](custom-apps/spring-mvc/README.md#frontend) pro aplikace Spring MVC.
-- Menu - použití menu při nastavování parametru `classes="bootstrap"` také generuje třídy `nav-item,nav-link,dropdown,dropdown-toggle`.
-- Volitelná pole - přidaná pole pro [výběr adresáře](frontend/webpages/customfields/README.md#výběr-adresáře-souborového-systému) v souborovém systému (#54433).
+- Přidána možnost používat [Thymeleaf šablony](custom-apps/spring-mvc/README.md#frontend) pro Spring MVC aplikace.
+- Menu - aplikace menu při nastavení parametru `classes="bootstrap"` generuje také třídy `nav-item,nav-link,dropdown,dropdown-toggle`.
+- Volitelná pole - přidána ty pole pro [výběr adresáře](frontend/webpages/customfields/README.md#výběr-adresáře-souborového-systému) na souborovém systému (#54433).
 
 ![](frontend/webpages/customfields/webpages-dir.png)
 
-- Sledování serveru - do seznamu Aktuální hodnoty byl v případě instalace clusteru přidán seznam počtu otevřených relací v jednotlivých uzlech (#54453).
-- Sledování serveru - přidáno mazání konfiguračních proměnných `statDistinctUsers-` a `statSessions-` z databáze v režimu `cluster auto`. Jsou vymazány starší než 30 minut, což již považujeme za nedostupný uzel clusteru. Tyto proměnné se již nezobrazují v seznamu konfiguračních proměnných, protože pro uživatele nemá smysl je měnit.
+- Monitorování serveru - do seznamu Aktuální hodnoty v případě cluster instalace přidán seznam počtu otevřených session na jednotlivých uzlech (#54453).
+- Monitorování serveru - doplněno mazání konf. proměnných `statDistinctUsers-` a `statSessions-` z databáze v režimu `cluster auto`. Mažou se starší 30 minut, což pokládáme za již nedostupný uzel clusteru. Tyto proměnné se již nezobrazují v seznamu konfiguračních proměnných, protože nemá smysl je uživatelsky měnit.
 
-**Zabezpečení**
+**Bezpečnost**
 
-- Přidáno nahrazování speciálních znaků HTML v chybových zprávách entitami, aby se v případě chyby nemusel spouštět kód HTML.
-- Aktualizace verze jara z 3.5.15 na 3.5.18 kvůli zranitelnosti [CVE-2022-22965: Spring Framework RCE přes Data Binding na JDK 9+](https://spring.io/blog/2022/03/31/spring-framework-rce-early-announcement).
-- Aktualizované knihovny `dom4j` v bodě 2.1.3, `jackson-annotations, jackson-core, jackson-databind` v bodě 2.13.2, `medatata-extractor` v bodě 2.17, `poi` v bodě 5.2.2, `mariadb-java-client` v bodě 2.7.5.
-- Aktualizované knihovny `spring` v bodě 5.3.19, `zxcvbn` na verzi 2.0.1, `moment` v bodě 2.29.3.
+- Doplněno nahrazení speciálních znaků HTML v chybových hlášeních za entity, aby nedošlo k provedení HTML kódu v případě chyby.
+- Aktualizovaná verze Spring z 3.5.15 na 3.5.18 z důvodu zranitelnosti [CVE-2022-22965: Spring Framework RCE s datem Binding on JDK 9+](https://spring.io/blog/2022/03/31/spring-framework-rce-early-announcement).
+- Aktualizované knihovny `dom4j` na 2.1.3, `jackson-annotations, jackson-core, jackson-databind` na 2.13.2, `medatata-extractor` na 2.17, `poi` na 5.2.2, `mariadb-java-client` na 2.7.5.
+- Aktualizované knihovny `spring` na 5.3.19, `zxcvbn` na 2.0.1, `moment` na 2.29.3.
 
 **Dokumentace**
 
-- Dokumentace pro programování zákaznických aplikací byla doplněna o nastavení [Spring](custom-apps/spring-config/README.md) a upravený [příklad datové tabulky](custom-apps/admin-menu-item/README.md) do aplikace Kontakty.
-- Přidán příklad pro programování [Aplikace Spring MVC](custom-apps/spring-mvc/README.md) (#54273).
-- K dispozici je externí úložiště artefaktů WebJET CMS maven (vyžaduje přístupové údaje) a ukázka [repozitář github](https://github.com/webjetcms/basecms).
-- Přidána dokumentace k použití skenování zranitelností v knihovnách pro [programátor](developer/backend/security.md#skenování-zranitelností-v-knihovnách) Také [provoz](sysadmin/dependency-check/README.md).
-- Dokumentace vytvořená pro použití [Šablony webových stránek Thymeleaf](frontend/thymeleaf/README.md).
-- Vytvořená dokumentace k nástroji Page Builder pro [editora](redactor/webpages/pagebuilder.md), [webdesignér](frontend/page-builder/README.md) Také [programátor](developer/apps/webpages/pagebuilder.md).
-- Vytvořená dokumentace o možnosti [neexportovat vybraný sloupec](developer/datatables/README.md#exportimport) datové tabulky (#54273).
-- Dokumentace vytvořená pro [Úvodní obrazovka](redactor/admin/welcome.md) používat záložky a posílat zpětnou vazbu.
-- Dokumentace vytvořená pro [odhlášeným e-mailem](redactor/apps/dmail/unsubscribed/README.md) z aplikace pro hromadné e-maily.
+- Doplněna dokumentace pro programování zákaznických aplikací o nastavení [Spring](custom-apps/spring-config/README.md) a upraven [příklad datatabulky](custom-apps/admin-menu-item/README.md) na aplikaci Kontakty.
+- Doplněný příklad pro programování [Spring MVC aplikace](custom-apps/spring-mvc/README.md) (#54273).
+- Zpřístupněný externí repozitář maven artefaktů WebJET CMS (vyžaduje přístupové údaje) a ukázkový [github repozitář](https://github.com/webjetcms/basecms).
+- Doplněna dokumentace použití kontroly zranitelností v knihovnách pro [programátora](developer/backend/security.md#kontrola-zranitelností-v-knihovnách) i [provoz](sysadmin/dependency-check/README.md).
+- Vytvořená dokumentace k používání [Thymeleaf šablon web stránek](frontend/thymeleaf/README.md).
+- Vytvořená dokumentace k Page Builder pro [redaktora](redactor/webpages/pagebuilder.md), [web designéra](frontend/page-builder/README.md) i [programátora](developer/apps/webpages/pagebuilder.md).
+- Vytvořená dokumentace k možnosti [neexportovat vybraný sloupec](developer/datatables/README.md#exportimport) datatabulky (#54273).
+- Vytvořená dokumentace k [úvodní obrazovce](redactor/admin/welcome.md) pro použití záložek a zaslání zpětné vazby.
+- Vytvořená dokumentace k [odhlášeným emailem](redactor/apps/dmail/unsubscribed/README.md) z aplikace hromadný email.
 - Opraveno zobrazení grafů v dokumentaci.
-- Dokumentace vytvořená pro možnost nastavení [hodnoty výběrového pole](developer/datatables-editor/datatable-columns.md#možnosti-výběrového-pole) editoru dat voláním funkce API nebo vložením dat z aplikace dialeru.
-- Dokumentace vytvořená pro [přidání aplikace do seznamu aplikací](custom-apps/appstore/README.md) pro programátora vlastních aplikací.
-- Vytvořena sekce Šablony v dokumentaci k editoru - [Úprava webové stránky](redactor/webpages/editor.md).
-- Přidána dokumentace pro nastavení volitelného pole [typu výběru adresáře souborového systému](frontend/webpages/customfields/README.md#výběr-adresáře-souborového-systému).
+- Vytvořená dokumentace pro možnost nastavení [hodnot výběrového pole](developer/datatables-editor/datatable-columns.md#možnosti-výběrového-pole) editoru datatabulky pomocí volání API funkce nebo pomocí vložení údajů z aplikace číselník.
+- Vytvořená dokumentace pro [vložení aplikace do seznamu aplikací](custom-apps/appstore/README.md) pro programátora zakázkových aplikací.
+- Vytvořená sekce Šablona v dokumentaci pro redaktora - [Editace web stránky](redactor/webpages/editor.md).
+- Doplněna dokumentace pro nastavení volitelného pole [typu výběr adresáře souborového systému](frontend/webpages/customfields/README.md#výběr-adresáře-souborového-systému).
 - Vytvořená dokumentace [Monitorování serveru](sysadmin/monitoring/README.md) pro provoz (#54453).
 - Vytvořená dokumentace k aplikaci [Formulář snadno](redactor/apps/formsimple/README.md) (#54831).
-- Vytvořená dokumentace k editoru [nastavení zobrazení sloupců](redactor/datatables/README.md#nastavení-zobrazení-sloupců) v datové tabulce (#54381).
+- Vytvořená dokumentace pro redaktora k [nastavení zobrazení sloupců](redactor/datatables/README.md#nastavení-zobrazení-sloupců) v datatabulce (#54381).
 
 **Testování**
 
-- Přidána možnost nastavení hodnoty pole pro [automatizovaný test datových souborů](developer/testing/datatable.md#možnosti-nastavení) prostřednictvím možnosti `testingData`. To je nutné, pokud má pole specifický formát (např. e-mailová adresa, číslo, omezený počet znaků).
-- Přidána autodetekce [povinné pole typu email](developer/testing/datatable.md#metoda-generování-povinných-polí) (podle názvu pole obsahujícího výraz e-mail), pole se pak správně vyplní názvem domény.
-- Přidán test pro zobrazení seznamu aplikací, vyhledávání podle názvu, vkládání aplikací JSP a Spring do stránky a úpravu jejich parametrů - `tests/webpages/appstore.js` (#54333).
-- Upraveno spouštění testů ve Firefoxu (#54437).
-- Přidané funkce `Browser.isChromium() a Browser.isFirefox()` Pro [detekce prohlížeče](developer/testing/README.md#detekce-prohlížeče) v testech (#54437).
-- Přidán test pro nastavení tagů (perexových skupin) pro webovou stránku (#53805).
-- Přidáno generování sestav prostřednictvím knihovny [Allure](developer/testing/allure.md). Jsou publikovány pro [chrom](http://docs.webjetcms.sk/allure/chromium/) také pro [firefox](http://docs.webjetcms.sk/allure/firefox/) (#54437).
+- Přidána možnost nastavit hodnotu pole pro [automatizovaný test datatabulky](developer/testing/datatable.md#možnosti-nastavení) přes možnost `testingData`. Je to nutné, pokud má pole specifický formát (např. email adresa, číslo, limitovaný počet znaků).
+- Přidána autodetekce [povinného pole typu email](developer/testing/datatable.md#způsob-generování-povinných-polí) (na základě jména pole obsahujícího výraz email), pole se následně korektně vyplní is doménovým jménem.
+- Přidán test zobrazení seznamu aplikací, vyhledání podle jména, vložení JSP i Spring aplikace do stránky a editace jejich parametrů - `tests/webpages/appstore.js` (#54333).
+- Upravené testy pro běh v prohlížeči firefox (#54437).
+- Doplněné funkce `Browser.isChromium() a Browser.isFirefox()` pro [detekci prohlížeče](developer/testing/README.md#detekce-prohlížeče) v testech (#54437).
+- Přidán test nastavení značek (perex skupin) pro web stránku (#53805).
+- Přidáno generování reportů přes knihovnu [Allure](developer/testing/allure.md). Zveřejněny jsou pro [chromium](http://docs.webjetcms.sk/allure/chromium/) i pro [firefox](http://docs.webjetcms.sk/allure/firefox/) (#54437).
 
 ![](developer/testing/allure-overview.png)
 
 **Oprava chyb**
 
-- Opraveno zobrazení seznamu formulářů (#54274).
+- Opraveno zobrazení seznamu formuláře (#54274).
 - Opravena aplikace Dotazník - chybějící CSRF token (#54274).
-- Opraveno ukládání nových uživatelů v databázích MS SQL a Oracle (#54273).
-- Opraveno načítání změněného textu v šabloně Ninja po uložení skupiny šablon (#54345).
-- Ninja - upravená pole předvolby R-T na stránce v souladu s použitím v šabloně Ninja (#54345).
-- Média - Opravena kontrola oprávnění, pokud uživatel nemá oprávnění spravovat všechna média (#54273).
-- Šablony - opravena duplicita šablon stránek (#54345).
-- Ve staré verzi v8 opraveno zobrazení menu pro přidávání přesměrování, přidán odkaz pro přechod na novou verzi (#53805).
-- Úvod - přidány odkazy na aplikace v ikonách v prvním bloku (návštěvy, formuláře...) (#53805).
-- Formuláře - regulární výrazy - opraveno přidání regulárního výrazu do MS SQL (#54273).
-- Opravena chyba při zavírání vnořeného dialogu (např. pro výběr adresáře) po kliknutí na ztmavenou část (#54433).
-- Webové stránky - opravené nastavení domény pro zadané `groupid` parametry v adrese URL.
-- Odstranění dat - objekty cache - opraveno zobrazení potvrzovacího tlačítka při odstraňování.
-- Opraveny chyby SQL při vytváření čisté instalace nad databází Oracle (verze 19c) (#54457).
-- Webové stránky - opravena chyba při ukládání značek (skupiny perex) (#53805).
-- Média - Opraveno zobrazení aplikace Média v seznamu aplikací v editoru stránky (#54381).
+- Opraveno ukládání nového uživatele v MS SQL a Oracle databázi (#54273).
+- Opraveno načtení změněných textů v Ninja šabloně po uložení skupiny šablon (#54345).
+- Ninja - upravená přednastavená pole R-T ve stránce v souladu s využitím v Ninja šabloně (#54345).
+- Média - opravena kontrola práv pokud uživatel nemá oprávnění správa všech médií (#54273).
+- Šablony - opraveno duplikování šablony stránek (#54345).
+- Ve staré v8 verzi opraveno zobrazení menu pro přidání přesměrování, přidán odkaz na přepnutí na novou verzi (#53805).
+- Úvod - doplněné odkazy na aplikace v ikonách v prvním bloku (návštěvy, formuláře...) (#53805).
+- Formuláře - regulární výrazy - opraveno přidání regulárního výrazu na MS SQL (#54273).
+- Oprava chyby zavření vnořeného dialogového okna (např. pro výběr adresáře) po kliknutí na ztmavenou část (#54433).
+- Web stránky - opraveno nastavení domény při zadaném `groupid` parametru v URL adrese.
+- Mazání dat - cache objekty - opraveno zobrazení potvrzovacího tlačítka při mazání.
+- Opraveny SQL chyby při vytvoření čisté instalace nad Oracle databází (verze 19c) (#54457).
+- Web stránky - opravena chyba ukládání značek (perex skupin) (#53805).
+- Média - opraveno zobrazení aplikace Média v seznamu aplikací v editoru stránek (#54381).
 
 ![meme](_media/meme/2022-18.jpg ":no-zoom")
 
 ## 2022.0
 
-> Verze 2022.0 přináší bezpečnostní aktualizaci závislostí knihoven Java a JavaScript.
+> Verze 2022.0 přináší bezpečnostní aktualizaci závislostí Java a JavaScript knihoven.
 
-**Zabezpečení**
+**Bezpečnost**
 
-- Aktualizace knihoven Java na novější verze, aktualizace základního systému WebJET CMS na verzi 8.9.
-- Přidaný nástroj [Kontrola závislostí OWASP](https://jeremylong.github.io/DependencyCheck/index.html) vyvolaný příkazem `gradlew dependencyCheckAnalyze` ke kontrole zranitelností v použitých knihovnách Java a JavaScript.
-- **Varování:** změnit protokolování z `log4j` na adrese `logback`. Po aktualizaci ověřte, zda byly soubory úspěšně odstraněny. `commons-logging-1.1.jar, log4j.jar, slf4j-api-1.5.3.jar` (aktualizováno na verzi 1.7.33), `slf4j-jcl-1.5.3.jar` z adresáře `/WEB-INF/lib`.
-- E-mail / SMTP - přidána možnost nastavení verze `TLS` pro odesílání e-mailů (připojení k serveru SMTP). Nastavuje se pomocí konfigurační proměnné `smtpTLSVersion`, ve výchozím nastavení nastaveno na `TLSv1.2`.
-- Soubory - funkce pro převod z formátu Word do formátu PDF byla odstraněna (online služba, kterou jsme používali, již nefunguje).
-- **Varování:** stará knihovna odstraněna `commons-httpclient-3.1`, API `Tools.downloadUrl(String basePath, HttpServletRequest req)` upraveno pro použití v knihovně v4, metody odstraněny `Tools.proxyUrl`. V aplikaci Proxy je možné použít možnost `ProxyByHttpClient` (stávající verze používají `ProxyByHttpClient4`). Doporučujeme používat knihovnu `Apache HttpClient Fluent API` pro konkrétní připojení HTTP (příklady https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
-- Aktualizovaná sada knihoven `jQuery UI` z verze 1.8.23 na 1.13.1.
-- Fotogalerie - aktualizovaná knihovna `jquery.prettyPhoto`, opravená funkčnost s jQuery v3.
-- Odstranění nepoužívaných/starých verzí knihovny jQuery, aktualizace `moment.js, jquery-ui.min.js, jquery-ui.css, handlebars.min.js`.
-- Aktualizovaná knihovna `hibernate-validator` od verze 6.0.13 do 6.0.22, `jboss-logging` v bodě 3.4.3, `joda-time` dne 2.10.13, `junit` v bodě 4.13.2, `guava` dne 30.1.
-- Aktualizovaná knihovna `velocity` z 1,7 na 2,3, `velocity-tools` z 2.0 na 3.1 a `commons-lang3` z 3.3.2 na 3.12
-- Aktualizovaná knihovna `jsoup` z 1.7.2 na 1.14.3, `socialauth` od 4.12 do 4.15 + `openid4java` z verze 0.9.5 na 0.9.6, `snakeyaml` od 1.12 do 1.30 `http-client, http-core` od 4.5.6 do 4.5.13, `http-mime` smazáno (není nutné), `commons-codec` z 1.6 na 1.11
-- Aktualizovaná knihovna `standard.jar` a `jstl.jar` z verze 1.1.2 na verzi 1.2.5 (nahrazením `taglibs-standard-spec` a `taglibs-standard-impl`)
-- **Varování:** Aktualizováno `Apache POI` z verze 3.14-beta1 na 5.2.0, změnilo se API, seznam typických změn na http://docs.webjetcms.sk/v8/#/back-end/apache-poi/, přidáno `commons-math`, `log4j-api`, `log4j-to-slf4j-2.17.1`, `SparseBitSet-1.2`.
-- Aktualizováno `commons-collection4` od 4.1 do 4.4, `commons-compress` z 1,10 na 1,21, `commons-io` z 2,6 na 2,11, `pdfbox` a `fontbox` z verze 2.0.2 na 2.0.25, `xmlbeans` z verze 2.6.0 na 5.0.3
-- Aktualizováno `springfox/swagger` z verze 2.6.1 na 3.0.0, `commons-upload` z verze 1.3.3 na 1.4
-- Aktualizováno `Spring` z verze 5.1.1.RELEASE na 5.3.15, aktualizováno `spring-data` z 2.1.1 na 2.6.1
-- Zrušeno `webdav/milton servlet` (již dlouho se nepoužívá), knihovny `milton-api, milton-servlet`.
-- Aktualizovaná knihovna `jackson-annotations, jackson-core, jackson-databind` z verze 2.0.7 na 2.13.1
-- `Apache Struts` - opravené zranitelnosti `CVE-2014-0114, CVE-2016-1181, CVE-2016-1182, CVE-2015-0899` Podle https://github.com/bingcai/struts-mini/commit/df4da55bc2b0c3c1f4687a61c49458dfbde0e3c3 a https://github.com/tkhanateconsysdotcom/struts1-forever/commit/eda3a79907ed8fcb0387a0496d0cb14332f250e8
-- Odstraněná knihovna `itext` která obsahuje neopravené zranitelnosti a nová verze je komerční. Odstraněna možnost exportu do PDF v `DisplayTag` a exportovat formulář do formátu PDF (`/formtopdf.do`), pokud potřebujete v projektu získat knihovnu `itext` ručně přidat s rizikem možné zranitelnosti
-- **Varování:** aktualizované knihovny `bcprov-jdk5on-154.jar` na 1,70, `common-beanutils-1.9.2.jar` v bodě 1.9.4, `tink-1.2.2.jar` na verzi 1.6.1 zkontrolujte adresář `WEB-INF/lib` po aktualizaci, pokud byly staré verze správně odstraněny.
-- REST - dokumentace ke službám REST `swagger` aktualizováno na verzi 4.2.1 a přesunuto na adresu URL `/admin/swagger-ui/index.html` (vyžadováno oprávnění účtu správce a současně povolena konfigurační proměnná) `swaggerEnabled` na true). Je třeba odstranit z projektů gradle `implementation("sk.iway:webjet:${webjetVersion}:swagger-ui")`.
-- Správa aktualizována na `Bootstrap` verze 4.6.1
+- Aktualizované verze Java knihoven na novější verze, aktualizovaný základní WebJET CMS na verzi 8.9.
+- Přidaný nástroj [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html) spouštěný příkazem `gradlew dependencyCheckAnalyze` pro kontrolu zranitelností v použitých Java a JavaScript knihovnách.
+- **Upozornění:** změna logování z `log4j` na `logback`. Po aktualizaci ověřte, že se úspěšně smazaly soubory `commons-logging-1.1.jar, log4j.jar, slf4j-api-1.5.3.jar` (aktualizováno na verzi 1.7.33), `slf4j-jcl-1.5.3.jar` z adresáře `/WEB-INF/lib`.
+- Email / SMTP - přidána možnost nastavit verzi `TLS` pro odesílání emailů (připojení na SMTP server). Nastavuje se přes konf. proměnnou `smtpTLSVersion`, ve výchozím nastavení nastaveno na `TLSv1.2`.
+- Soubory - zrušena funkce konverze z Word formátu do PDF (online služba, kterou jsme používali již nefunguje).
+- **Upozornění:** odstraněna stará knihovna `commons-httpclient-3.1`, API `Tools.downloadUrl(String basePath, HttpServletRequest req)` upraveno pro použití v4 knihovny, zrušené metody `Tools.proxyUrl`. V aplikaci Proxy zrušena možnost použití `ProxyByHttpClient` (existující verze použijí `ProxyByHttpClient4`). Doporučujeme použít knihovnu `Apache HttpClient Fluent API` pro specifické HTTP spojení (příklady https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
+- Aktualizovaná sada knihoven `jQuery UI` z 1.8.23 na 1.13.1.
+- Foto galerie - aktualizovaná knihovna `jquery.prettyPhoto`, opravena funkčnost s jQuery v3.
+- Smazané nepoužívané/staré verze jQuery knihovny, aktualizován `moment.js, jquery-ui.min.js, jquery-ui.css, handlebars.min.js`.
+- Aktualizovaná knihovna `hibernate-validator` z 6.0.13 na 6.0.22, `jboss-logging` na 3.4.3, `joda-time` na 2.10.13, `junit` na 4.13.2, `guava` na 30.1.
+- Aktualizovaná knihovna `velocity` z 1.7 na 2.3, `velocity-tools` z 2.0 na 3.1 a `commons-lang3` z 3.3.2 na 3.12
+- Aktualizovaná knihovna `jsoup` z 1.7.2 na 1.14.3, `socialauth` z 4.12 na 4.15 + `openid4java` z 0.9.5 na 0.9.6, `snakeyaml` z 1.12 na 1.30 `http-client, http-core` z 4.5.6 na 4.5.13, `http-mime` smazané (není třeba), `commons-codec` z 1.6 na 1.11
+- Aktualizovaná knihovna `standard.jar` a `jstl.jar` z verze 1.1.2 na 1.2.5 (nahrazením za `taglibs-standard-spec` a `taglibs-standard-impl`)
+- **Upozornění:** aktualizován `Apache POI` z 3.14-beta1 na 5.2.0, má změněné API, seznam typických změn na http://docs.webjetcms.sk/v8/#/back-end/apache-poi/, přidáno `commons-math`, `log4j-api`, `log4j-to-slf4j-2.17.1`, `SparseBitSet-1.2`.
+- Aktualizován `commons-collection4` z 4.1 na 4.4, `commons-compress` z 1.10 na 1.21, `commons-io` z 2.6 na 2.11, `pdfbox` a `fontbox` z 2.0.2 na 2.0.25, `xmlbeans` z 2.6.0 na 5.0.3
+- Aktualizován `springfox/swagger` z 2.6.1 na 3.0.0, `commons-upload` z 1.3.3 na 1.4
+- Aktualizován `Spring` z 5.1.1.RELEASE na 5.3.15, aktualizován `spring-data` z 2.1.1 na 2.6.1
+- Zrušen `webdav/milton servlet` (již se dlouhodobě nepoužíval), knihovny `milton-api, milton-servlet`.
+- Aktualizovaná knihovna `jackson-annotations, jackson-core, jackson-databind` z 2.0.7 na 2.13.1
+- `Apache Struts` - zaplátané zranitelnosti `CVE-2014-0114, CVE-2016-1181, CVE-2016-1182, CVE-2015-0899` podle https://github.com/bingcai/struts-mini/commit/df4da55bc2b0c3c1f4687a61c49458dfbde0e3c3 a https://github.com/tkhanateconsysdotcom/struts1-forever/commit/eda3a7c9 50e8
+- Smazaná knihovna `itext`, která má neopravené zranitelnosti a nová verze je komerční. Zrušena možnost exportu PDF v `DisplayTag` a exportu formuláře do PDF (`/formtopdf.do`), pokud potřebujete v projektu je třeba si knihovnu `itext` manuálně přidat s rizikem možné zranitelnosti
+- **Upozornění:** aktualizované knihovny `bcprov-jdk5on-154.jar` na 1.70, `common-beanutils-1.9.2.jar` na 1.9.4, `tink-1.2.2.jar` na 1.6.1, zkontrolujte adresář `WEB-INF/lib` po aktualizaci zda se korektní smazaly staré verze.
+- REST - dokumentace k REST službám `swagger` aktualizována na verzi 4.2.1 a přesunuta na URL adresu `/admin/swagger-ui/index.html` (potřebná autorizace admin účtem a zároveň zapnutá konf. proměnná `swaggerEnabled` na true). Z gradle projektů je třeba smazat `implementation("sk.iway:webjet:${webjetVersion}:swagger-ui")`.
+- Administrace aktualizována na `Bootstrap` verze 4.6.1
 
-**Další změny**
+**Jiné změny**
 
-- Elektronický obchod - přidána detekce varianty v košíku, pokud není nastavena nebo se nezobrazuje.
-- Elektronický obchod - do detailu objednávky byla přidána možnost Vydáno/odesláno.
+- Elektronický obchod - přidána detekce varianty v košíku, není-li nastaven ani se nezobrazí.
+- Elektronický obchod - doplněna možnost Vydáno/Odesláno do detailu objednávky.
 
 **Oprava chyb**
 
-- Galerie - opravené zobrazení na kartě Oblast zájmu.
-- Datové tabulky - odesílání souborů - opraveno nastavení stavu odesílání po dokončení (nesprávně zůstalo zobrazeno točící se kolečko).
+- Galerie - opraveno zobrazení v kartě Oblast zájmu.
+- Datatabulky - nahrání souboru - opraveno nastavení stavu nahrávání po skončení (chybně zůstalo zobrazeno točící kolo).
 
 ![meme](_media/meme/2022-0.jpg ":no-zoom")

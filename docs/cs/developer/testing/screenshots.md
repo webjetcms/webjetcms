@@ -1,15 +1,15 @@
-# Generování snímků dokumentace
+# Generování snímků obrazovky dokumentace
 
-Snímky obrazovky (`screenshot`) pro příručku/dokumentaci by měly být generovány automaticky, aby je bylo možné kdykoli (např. po změně návrhu) znovu vygenerovat. K jejich generování se používá framework CodeceptJS používaný pro automatizované testování. Skripty jsou tedy velmi podobné těm pro testování.
+Snímky obrazovky (`screenshot`) pro manuál/dokumentaci je třeba generovat automatizovaně, aby je bylo možné kdykoliv znovu vygenerovat (např. po změně designu). Pro jejich generování je využit CodeceptJS framework používaný pro automatizované testování. Skripty jsou tedy velmi podobné těm pro testování.
 
-Pro účely dokumentace jsou k dispozici speciální funkce:
-- `Document.screenshot(screenshotFilePath, width, height)` - pořídí snímek celé obrazovky, parametry `width` a `height` jsou nepovinné.
-- `Document.screenshotElement(selector, screenshotFilePath, width, height)` - vytvoří snímek prvku podle zadaného parametru `selector` parametr.
+Pro potřeby dokumentace existují speciální funkce:
+- `Document.screenshot(screenshotFilePath, width, height)` - pořídí snímek celé obrazovky, parametry `width` a `height` jsou volitelné.
+- `Document.screenshotElement(selector, screenshotFilePath, width, height)` - pořídí snímek elementu podle zadaného `selector` parametru.
 - `Document.screenshotAppEditor(docId, path, callback, width, height)` - pořídí snímek nastavení aplikace v editoru (např. galerie).
 
-!>**Varování:** snímky obrazovky se automaticky ukládají do `/docs` Adresář. Pro zadanou cestu `/redactor/webpages/domain-select.png` bude vytvořen soubor `/docs/redactor/webpages/domain-select.png`.
+!>**Upozornění:** snímky obrazovky jsou automaticky ukládány do `/docs` adresáře. Pro zadanou cestu `/redactor/webpages/domain-select.png` vznikne soubor `/docs/redactor/webpages/domain-select.png`.
 
-[Příklad](../../../src/test/webapp/screenshots/generator/manual-redactor.js) scénáře pro vytváření snímků obrazovky:
+[Příklad](../../../src/test/webapp/screenshots/generator/manual-redactor.js) scénáře pro pořízení snímků obrazovky:
 
 ```javascript
 Feature('manual-redactor');
@@ -39,7 +39,7 @@ Scenario('web-pages-list', ({ I, DT, Document }) => {
 });
 ```
 
-Chcete-li vygenerovat snímky obrazovky, použijte následující příkaz:
+Snímky obrazovky vygenerujete následujícím příkazem:
 
 ````shell
 cd src/test/webapp
@@ -51,9 +51,9 @@ npm run scr screenshots/generator/manual-sysadmin.js
 npm run scr:current
 ````
 
-## Úprava stylů CSS
+## Úprava CSS stylů
 
-V některých případech je při vytváření snímku prvku užitečné nechat zobrazit jeho větší část (okraje) nebo nastavit prvku vhodnou třídu CSS (např. pro orámování prvku). Z automatizovaného testu je možné v kontextu stránky spustit kód JavaScriptu. Příkladem je test [manual-redactor.js](../../../src/test/webapp/screenshots/generator/manual-redactor.js):
+V některých případech při pořízení snímku elementu je vhodné mít zobrazenou větší část (okraje), případně elementu nastavit vhodnou CSS třídu (např. pro orámování elementu). Z automatizovaného testu lze provést JavaScript kód v kontextu stránky. Příklad je v testu [manual-redactor.js](../../../src/test/webapp/screenshots/generator/manual-redactor.js):
 
 ```javascript
 Scenario('custom-fields', async({ I, Document }) => {
@@ -73,4 +73,4 @@ Scenario('custom-fields', async({ I, Document }) => {
 });
 ```
 
-kde jsou pole A i pole B v editoru nastavena tak, aby byla odsazena shora a zdola. Pro pole B je nastaveno větší odsazení odspodu, protože chceme, aby se pole výběru a jeho hodnoty zobrazovaly na obrázku.
+kde pro pole A i pole B v editoru je nastaveno odsazení shora a dolů. Pro pole B je nastaveno větší odsazení z dolů, jelikož na snímek chceme mít zobrazeno i výběrové pole a jeho hodnoty.

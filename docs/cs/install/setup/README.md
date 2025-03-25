@@ -1,29 +1,29 @@
-# Nastavení nové instalace
+# Zřízení nové instalace
 
-Pokyny pro vytvoření nové instalace/čisté databáze pro nový projekt v aplikaci WebJET. Instalace je z bezpečnostních důvodů povolena pouze v doméně. `localhost`, po instalaci můžete použít standardní název domény.
+Návod na zřízení nové instalace/čisté databáze pro nový projekt ve WebJETu. Instalace je z bezpečnostních důvodů povolena pouze na doméně `localhost`, po instalaci můžete používat standardní doménové jméno.
 
 ## Předpoklady
 
-- lokálně funkční WebJET (nakonfigurovaný Tomcat, webová aplikace)
-- přístup k DB serveru s právy k vytvoření nového schématu DB (nebo již vytvořeného schématu DB).
+- lokálně funkční WebJET (nakonfigurován Tomcat, web aplikace)
+- přístup na DB server s právy pro zřízení nového DB schématu (nebo již zřízené DB schéma)
 
 ## Základní požadavky na server
 
-- Server s minimálně 8 GB paměti (pro aplikace s větší zátěží minimálně 12 GB), procesor s minimálně `Dual Core 2 GHz` (pro servery s větším zatížením čtyřjader), diskový prostor alespoň 40 GB.
-- Databáze `MySQL/MariaDB verzie 5.0+` (v kódování UTF-8) nebo databáze `Microsoft SQL 2012+` nebo databáze `Oracle 11g+` nebo `PostgreSQL 16+`.
-- [Otevřený JDK](https://adoptium.net/temurin/releases/) verze 17 a aplikační server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
-- Připojení k serveru SMTP pro odesílání e-mailů.
-- Funkční server DNS.
-- Pro urychlení generování náhledových obrázků doporučujeme nainstalovat knihovnu [ImageMagick](https://imagemagick.org/script/download.php).
+- Server s minimálně 8 GB paměti (pro aplikace s větší zátěží minimálně 12GB), procesor alespoň `Dual Core 2 GHz` (pro servery s větší zátěží Quad core), místo na disku alespoň 40GB.
+- Databáze `MySQL/MariaDB verzie 5.0+` (s kódováním UTF-8), nebo databáze `Microsoft SQL 2012+` nebo databáze `Oracle 11g+` nebo `PostgreSQL 16+`.
+- [Open JDK](https://adoptium.net/temurin/releases/) verze 17 a aplikační server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
+- Připojení na SMTP server pro posílání emailů.
+- Funkční DNS server.
+- Pro urychlení generování náhledových obrázků doporučujeme nainstalovanou knihovnu [ImageMagick](https://imagemagick.org/script/download.php).
 
-Pro instalace výrobků, jako jsou `NET, LMS, DSK` minimální požadavky vhodné pro instalace až 50 uživatelů (25 pracujících současně). Při vyšším počtu uživatelů je nutné přiměřeně navýšit paměť RAM a procesor - pro každých dalších 50 současně pracujících uživatelů +4 GB paměti a 1 CPU. Pro více než 200 uživatelů doporučujeme clusterové řešení.
+Pro instalace produktů jako je `NET, LMS, DSK` jsou uvedeny minimální požadavky vhodné pro instalace do 50 uživatelů (současně pracujících 25). Pro vyšší počet uživatelů je třeba vhodně navýšit paměť RAM i CPU – pro každých dalších současně pracujících 50 uživatelů +4GB paměti a 1CPU. Pro více než 200 uživatelů doporučujeme clusterové řešení.
 
-Pro instalace výrobků, jako jsou `NET, LMS, DSK` je nutné na serveru povolit `websocket` připojení a instalace serveru [RabbitMQ](https://www.rabbitmq.com/).
+Pro instalace produktů jako je `NET, LMS, DSK` je na serveru třeba povolit `websocket` spojení a instalovat server [RabbitMQ](https://www.rabbitmq.com/).
 
-## Vytvoření schématu DB
+## Vytvoření DB schématu
 
-- připojit se k serveru DB a vytvořit novou databázi/schéma (pokud ještě není vytvořeno).
-- v souboru `src/main/resources/poolman.xml` v projektu gradle nebo `/WEB-INF/classes/poolman.xml` při použití připraveného souboru WAR nastavte připojení k databázi:
+- připojte se na DB server a vytvořte novou databázi / schéma (pokud ještě není zřízena)
+- v souboru `src/main/resources/poolman.xml` v gradle projektu, nebo `/WEB-INF/classes/poolman.xml` při použití hotového WAR souboru, nastavte databázové připojení:
 
 [MariaDB](https://mariadb.com/kb/en/library/about-mariadb-connector-j/):
 
@@ -89,27 +89,27 @@ Pro instalace výrobků, jako jsou `NET, LMS, DSK` je nutné na serveru povolit 
 </poolman>
 ```
 
-Podporovány jsou následující prvky XML:
-- `dbname` - název databázového připojení, pro tabulky WebJET CMS musí mít hodnotu `iwcm`, ale v XML jich můžete nastavit více `datasource` a vytvořit spojení s jinými databázemi, nastavte zde jedinečný název.
-- `driver` - třída ovladače databáze java
-- `url` - URL ve formátu pro `JDBC` Připojení
+Podporovány jsou následující XML elementy:
+- `dbname` - jméno databázového připojení, pro WebJET CMS tabulky musí mít hodnotu `iwcm`, v XML ale můžete nastavit více `datasource` elementů a vytvořit tak připojení i do dalších databází, nastavte sem unikátní jméno
+- `driver` - java třída databázového ovladače
+- `url` - URL adresa ve formátu pro `JDBC` připojení
 - `username` - přihlašovací jméno
 - `password` - přihlašovací heslo
 
-Volitelně je možné nastavit:
-- `initialConnections` - výchozí počet otevřených databázových připojení (výchozí 0)
-- `minimumSize` - minimální počet trvale otevřených databázových připojení (výchozí 0)
-- `maximumSize` - maximální počet otevřených databázových připojení (výchozí 50)
-- `connectionTimeout` - počet sekund, po které je spojení považováno za neuzavřené (výchozí 300)
-- `autoCommit` - pokud je nastaveno na true, je nastaveno `connection.setAutoCommit(true);` (výchozí nastavení `false`)
-- `testQuery` - testovací výraz SQL pro ověření funkčnosti připojení. Pro `JDBC` ovladače v4 se používají k volání `isValid()`, pro starší řidiče je třeba nastavit. Hodnota `true` nastaví výchozí výraz `SELECT 1` (používá se automaticky pro `jtds` ovladač). Je však možné nastavit vlastní výraz SQL.
+Volitelně lze nastavit:
+- `initialConnections` - výchozí počet otevřených databázových spojení (výchozí 0)
+- `minimumSize` - minimální počet neustále otevřených databázových spojení (výchozí 0)
+- `maximumSize` - maximální počet otevřených databázových spojení (výchozí 50)
+- `connectionTimeout` - počet sekund, kdy je spojení považováno za neuzavřené (výchozí 300)
+- `autoCommit` - je-li nastaveno na true nastaví se `connection.setAutoCommit(true);` (výchozí `false`)
+- `testQuery` - testovací SQL výraz pro ověření funkčnosti spojení. Pro `JDBC` ovladače v4 se používá volání `isValid()`, pro starší ovladače je třeba nastavit. Hodnota `true` nastaví výchozí výraz `SELECT 1` (použije se automaticky pro `jtds` ovladač). Je ale možné nastavit váš vlastní SQL výraz.
 
-## Plnění režimu DB
+## Naplnění DB schématu
 
-WebJET obsahuje integrovanou konfiguraci, která dokáže naplnit prázdné schéma DB.
+WebJET obsahuje vestavěnou konfiguraci, která umí naplnit prázdné DB schéma.
 
-- spustit WebJET/Tomcat
-- WebJET při spuštění hlásí chybu (více chyb)
+- spusťte WebJET / Tomcat
+- při startu WebJET zahlásí chybu (více chyb)
 
 ```log
 [27.11 8:32:49 {webjet} {InitServlet}] -----------------------------------------------
@@ -125,26 +125,26 @@ java.sql.SQLSyntaxErrorException: Table 'MENO-SCHEMY._conf_' doesn't exist
 ...
 ```
 
-Při pokusu o přihlášení nebo přístup na webové stránky WebJET se zobrazí chybová zpráva:
+Při pokusu o přihlášení nebo přístup k webové stránce WebJET zobrazí chybové hlášení:
 
 ![](./error.png)
 
-- Otevřete adresu URL v prohlížeči [instalace](http://localhost/wjerrorpages/setup/setup).
+- V prohlížeči otevřete URL adresu [instalace](http://localhost/wjerrorpages/setup/setup).
 
-> WebJET vše, co začíná na `/wjerrorpages/` bude zpracován, i když není spuštěn. Automaticky poskytuje statický soubor [/wjerrorpages/dberror.html](http://localhost/wjerrorpages/dberror.html) pro jakýkoli požadavek GET. V adresáři `/wjerrorpages/` je možné mít i obrázky, ale doporučujeme je vkládat prostřednictvím `data:` vstup přímo do `dberror.html`.
+> WebJET vše co začíná na `/wjerrorpages/` zpracuje i když není nastartován. Automaticky poskytuje statický soubor [/wjerrorpages/dberror.html](http://localhost/wjerrorpages/dberror.html) při jakémkoli GET požadavku. V adresáři `/wjerrorpages/` je možné mít i obrázky, doporučujeme je ale raději vložit přes `data:` zápis přímo do `dberror.html`.
 
-- Výše uvedená adresa URL má výjimku a je povoleno ji použít, i když WebJET není správně spuštěn (ale pouze na doméně `localhost` nebo `iwcm.interway.sk`).
-- Zobrazí se dialogové okno instalace WebJET:
+- Výše uvedená URL má výjimku a je povoleno její použití i při nekorektně nastartovaném WebJETu (ale jen na doméně `localhost` nebo `iwcm.interway.sk`).
+- Zobrazí se vám dialog instalace WebJETu:
 
 ![](./setup.png)
 
-- Zkontrolujte/zadejte údaje pro nastavení připojení k databázi (výchozí hodnoty jsou hodnoty ze souboru poolman.xml). Instalace vytváří připojení přímo k těmto hodnotám (ignoruje hodnoty v souboru poolman.xml), takže je potřebuje. Pokud však soubor `poolman.xml` již existuje, nepřepisuje se, takže při dalším spuštění se hodnoty v položce `poolman.xml`. Pokud soubor neexistuje, bude vytvořen podle zadaných hodnot.
-- Zadejte jedinečný název instalace (bez mezer a diakritiky, např. `interway2023`) a licenční číslo (pokud nepoužíváte verzi Open Sorce) a zkontrolujte ostatní hodnoty.
-- Klepnutím na tlačítko OK spusťte instalaci. Pokud je ověření zadaných hodnot úspěšné, zobrazí se následující zpráva:
+- Zkontrolujte/zadejte údaje pro nastavení databázového připojení (předvolí se hodnoty ze souboru poolman.xml). Instalace vytváří spojení přímo na uvedené hodnoty (ignoruje hodnoty v poolman.xml), proto je potřebuje. Pokud ale soubor `poolman.xml` již existuje, nepřepíše ho, čili pro další start se už použijí hodnoty v `poolman.xml`. Pokud soubor neexistuje, vytvoří se podle zadaných hodnot.
+- Zadejte unikátní název instalace (bez mezer a diakritiky, například. `interway2023`) a licenční číslo (pokud nepoužíváte Open Sorce verzi) a zkontrolujte ostatní hodnoty.
+- Klepněte na OK pro spuštění instalace. Pokud validace zadaných hodnot proběhne úspěšně, uvidíte následující hlášení:
 
 ![](./setup-saved.png)
 
-Na pozadí WebJET vyplní počáteční data (podle `/WEB-INF/sql/blank_web_DBTYPE.sql`) a poté provede restart. Pokud se restart neprovede automaticky (server není nastaven na automatický restart), restartujte aplikační server ručně.
+Na pozadí WebJET naplní iniciální data (podle `/WEB-INF/sql/blank_web_DBTYPE.sql`) a následně provede restart. Pokud se restart neprovede automaticky (server nemá nastaveno automatické restartování) restartujte aplikační server manuálně.
 
 V logu byste měli vidět něco jako:
 
@@ -180,7 +180,7 @@ INSERT INTO users VALUES("3", "", "VIP", "Klient", "vipklient", "d1a9b4b9977e482
 [27.11 9:24:31 {webjet} {InitServlet}] RESTART request ret=true
 ```
 
-Po restartu se provede aktualizace schématu podle následujícího postupu. `autoupdate.xml`:
+Po restartu se provede aktualizaci schématu podle `autoupdate.xml`:
 
 ```
 PathFilter init
@@ -237,11 +237,11 @@ PathFilterInit - customPath: /Users/jeeff/Documents/DISK_E/webapps-server/ppa
 [webjet][s.i.i.s.s.SpringSecurityConf][INFO][0] 2023-09-29 12:18:13 - configure - SpringAppInitializer - end - sk.iway.webjet_init.SpringConfig
 ```
 
-V tomto okamžiku je WebJET inicializován a spuštěn do výchozího stavu.
+V tomto momentě je WebJET inicializován a spuštěn do standardního stavu.
 
 ## Přihlášení do administrace
 
-Přihlaste se do [administrátor sekce](http://localhost/admin/) s názvem `admin` a heslo `heslo`:
+Přihlaste se do [admin sekce](http://localhost/admin/) se jménem `admin` a heslem `heslo`:
 
 ![](./first-login.png)
 
@@ -249,13 +249,13 @@ WebJET vás vyzve ke změně hesla:
 
 ![](./change-password.png)
 
-Po přihlášení se na domovské obrazovce může zobrazit zpráva, že převod databáze nebyl proveden. Klikněte na odkaz [Spuštění konverze](http://localhost/admin/update/update_webjet7.jsp) pro převod databáze. Pokud se tato zpráva nezobrazí, je instalační databáze již připravena v novém formátu, pokračujte. [nastavením práv](#nastavení-práv).
+Po přihlášení se vám na úvodní obrazovce může zobrazit hlášení, že nebyla provedena konverze databáze. Klikněte na linku [Spustit konverzi](http://localhost/admin/update/update_webjet7.jsp) pro konverzi databáze. Pokud se vám hlášení nezobrazí, je instalační databáze již připravena v novém formátu, pokračujte [nastavením práv](#nastavení-práv).
 
 ![](./main-page.png)
 
-Na stránce převodu začněte na konci [hashování hesel](http://localhost/admin/update/update_passwords.jsp) přepnout režim ukládání hesel na zabezpečený `hash`.
+Ve stránce s konverzí spusťte na konci [hashování hesel](http://localhost/admin/update/update_passwords.jsp) pro přepnutí režimu ukládání hesel na bezpečný `hash`.
 
-Doporučujeme také odstranit `STAT` tabulky, jak je uvedeno na stránce (není nutné), například vložením příkazů do [/admin/updatedb.jsp](http://localhost/admin/updatedb.jsp).
+Také doporučujeme smazat `STAT` tabulky jak je uvedeno ve stránce (nejsou potřebné), například vložením příkazů do [/admin/updatedb.jsp](http://localhost/admin/updatedb.jsp).
 
 ```sql
 DROP TABLE stat_browser;
@@ -266,27 +266,27 @@ DROP TABLE stat_doc;
 DROP TABLE stat_views;
 ```
 
-Zavřete kartu, na které je převod proveden.
+Zavřete kartu, ve které máte konverzi.
 
 ## Nastavení práv
 
-V původním okně přejděte na [Uživatelé -> Seznam uživatelů](http://localhost/admin/v9/users/user-list/), pomocí navigace v levém menu.
+V původním okně přejděte do části [Uživatelé -> Seznam uživatelů](http://localhost/admin/v9/users/user-list/), pomocí navigace v levém menu.
 
 ![](./users.png)
 
-Otevřené úpravy **Admin** Uživatelé. Po zobrazení okna zaškrtněte karty **Osobní údaje** a **Kontaktní údaje** vaše údaje.
+Otevřete si editaci **admin** uživatele. Po zobrazení okna zkontrolujete v kartách **Osobní údaje** a **Kontaktní údaje** své údaje.
 
 ![](./user-edit.png)
 
-V kartách **Práva** povolit potřebná práva. Minimálně přidejte práva:
+V kartě **Práva** povolte potřebná práva. Minimálně přidejte práva:
 - Konfigurace
 - Konfigurace - zobrazení všech proměnných
 
 ![](./user-perms.png)
 
-Po nastavení práv se odhlaste, aby se nová práva uplatnila, a znovu se přihlaste. Po přihlášení přejděte na [Nastavení/Konfigurace](http://localhost/admin/v9/settings/configuration/) a nastavte následující konfigurační proměnné:
-- Pokud je server v prostředí InterWay nebo je umístěn za proxy serverem/vyvažovačem zátěže, nastavte proměnnou `serverBeyoundProxy` na hodnotu `true`. V tomto režimu WebJET očekává v hlavičce HTTP IP adresu návštěvníka. `x-forwarded-for` a protokol používaný v `x-forwarded-proto`.
-- Proměnnou můžete nastavit `logLevel` na hodnotu `debug` pro podrobnější logovaní.
-- Doporučujeme nastavit proměnnou `webEnableIPs` na seznam prefixů IP adres, ze kterých budete před spuštěním přistupovat na web (např. 127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5).
+Po nastavení práv se odhlaste pro aplikování nových práv a znovu se přihlaste. Po přihlášení přejděte do sekce [Nastavení/Konfigurace](http://localhost/admin/v9/settings/configuration/) a nastavte následující konf. proměnné:
+- Pokud je server v prostředí InterWay, nebo je umístěn za proxy serverem/load balancerem nastavte proměnnou `serverBeyoundProxy` na hodnotu `true`. WebJET v tomto režimu očekává IP adresu návštěvníka v HTTP hlavičce `x-forwarded-for` a použitý protokol v `x-forwarded-proto`.
+- Můžete nastavit proměnnou `logLevel` na hodnotu `debug` pro podrobnější logování.
+- Doporučujeme nastavit proměnnou `webEnableIPs` na seznam prefixů IP adres, ze kterých budete na web před spuštěním přistupovat (např. 127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5).
 
-Dále postupujte podle pokynů pro [nastavení šablony](../../frontend/setup/README.md).
+Dále pokračujte podle návodu pro [nastavení šablon](../../frontend/setup/README.md).

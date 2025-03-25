@@ -1,43 +1,43 @@
 # Přesměrování
 
-## Objízdné trasy
+## Přesměrování cest
 
-Zobrazí seznam existujících přesměrování, která se provedou, pokud zadaná adresa URL neexistuje. Přesměrování se vytvářejí automaticky při změně adresy URL existující stránky nebo při změně adresářové struktury.
+Zobrazuje seznam existujících přesměrování, které se provedou, pokud zadaná URL adresa neexistuje. Přesměrování vznikají automaticky při změně URL adresy existující stránky nebo při změně adresářové struktury.
 
 ![](redirect-path.png)
 
-Klikněte na ikonu **Přidat** lze definovat nové přesměrování. Podporováno je také přesměrování včetně parametrů v adrese URL. Nejprve se hledá shoda včetně parametrů, pokud není nalezena, systém se pokusí najít shodu bez zadaných parametrů.
+Klepnutím na ikonu **Přidat** je možné zadefinovat nové přesměrování. Podporováno je také přesměrování včetně parametrů v URL adrese. Nejprve se hledá shoda včetně parametrů, pokud se nenajde, systém se pokusí najít shodu bez zadaných parametrů.
 
-Hodnota pole [kód přesměrování](https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections) určuje typ přesměrování, nejčastěji používané kódy jsou:
-- `301` trvalé přesměrování, vyhledávače by měly upravit adresu stránky na tuto novou hodnotu.
+Hodnota pole [přesměrovací kód](https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections) určuje typ přesměrování, nejčastěji se používají následující kódy:
+- `301` trvalé přesměrování, vyhledávače by si měly upravit adresu stránky na tuto novou hodnotu.
 - `302` dočasné přesměrování.
 
 ![](path-editor.png)
 
-### Přesměrování pomocí regulárních výrazů
+### Přesměrování přes regulární výrazy
 
-Pomocí regulárních výrazů lze nastavit složitější přesměrování celých větví adres URL (např. po migraci starého webu). Přesměrování pomocí regulárních výrazů se zadávají pomocí předpony `regexp:`.
+Pomocí regulárních výrazů lze nastavit složitější přesměrování celých větví URL adres (např. po migraci starého webu). Přesměrování přes regulární výraz se zadávají s prefixem `regexp:`.
 
-Původní adresu URL lze tedy zadat ve formátu `regexp:^\/thisiswhere\/oldfiles\/(.+)` který bude správně přeložen na novou adresu URL i při provedení/přenesení skupin na novou adresu URL ve tvaru `/thisiswhere/myfilesmovedto/$1`
+Původní URL je tedy možné zadat ve formátu `regexp:^\/thisiswhere\/oldfiles\/(.+)` které se bude korektně překládat na novou URL is provedením/přenesením skupin na nové URL ve tvaru `/thisiswhere/myfilesmovedto/$1`
 
-Přesměrování se provádí například. `/thisiswhere/oldfiles/page.html` na adrese `/thisiswhere/myfilesmovedto/page.html`.
+Provede se přesměrování např. `/thisiswhere/oldfiles/page.html` na `/thisiswhere/myfilesmovedto/page.html`.
 
-## Přesměrování domény
+## Přesměrování domén
 
-V části **Přesměrování domény** můžete definovat přesměrování požadavků v rámci celé domény (např. přesměrování `domena.sk` na adrese `www.domena.sk`).
+V sekci **Přesměrování domén** můžete definovat přesměrování požadavků celé domény (např. přesměrování `domena.sk` na `www.domena.sk`).
 
 ![](redirect-domain.png)
 
-V dialogovém okně definice domény můžete zadat následující hodnoty:
-- **Původní doména** - název domény, kterou chcete přesměrovat, např. `domena.sk`.
-- **Cílová doména** - název domény, na kterou chcete požadavek přesměrovat, např. `www.domena.sk`, doporučujeme zadat také `http/s` předpona `https://www.domena.sk`.
-- **Původní protokol** - Určuje protokol, pro který se přesměrování používá:
-  - **prázdná hodnota** - přesměrování se používá bez ohledu na protokol.
-  - **http** - přesměrování se používá pouze v případě, že je původní protokol `http` (nastavte, pokud chcete přesměrovat verzi http na zabezpečený server) `https` verze, v tomto případě zadejte také doménu s protokolem do pole Cílová doména. `https://` na začátku).
-  - **https** - přesměrování se používá pouze v případě, že je původní protokol `https`.
-  - **alias** - vytvoří doménový alias - hodnota zadaná do pole Původní doména bude viděna (a zpracována) interně WebJETem jako hodnota domény v poli Cílová doména. Použijte např. při migraci dat z produkčního do testovacího prostředí, zadejte hodnotu v testovacím prostředí jako původní doménu a zadejte doménu v produkčním prostředí (bez předpony http) jako cílovou doménu.
-- **Aktivní** - přesměrování se použije pouze v případě, že je toto pole zaškrtnuto.
-- **Parametry přesměrování** - pokud je zaškrtnuto, jsou do přesměrování přidány parametry původního požadavku HTTP, např. `?docid=4`.
-- **Přesměrování cesty** - pokud je zaškrtnuto, je k přesměrování přidána cesta původního požadavku HTTP, např. `/produkty/webjet/novinky.html`.
+V dialogovém okně pro definici domény můžete zadat následující hodnoty:
+- **Původní doména** - název domény, kterou chcete přesměrovat, například. `domena.sk`.
+- **Cílová doména** - název domény, na kterou chcete požadavek přesměrovat, například. `www.domena.sk`, doporučujeme zadat i `http/s` prefix `https://www.domena.sk`.
+- **Původní protokol** - určuje, pro jaký protokol se přesměrování použije:
+  - **prázdná hodnota** - přesměrování se použije bez ohledu na protokol.
+  - **http** - přesměrování se použije pouze, pokud je původní protokol `http` (nastavte, pokud chcete přesměrovat http verzi na zabezpečenou `https` verzi, v tom případě i zadejte do pole Cílová doména doménu s protokolem `https://` na začátku).
+  - **https** - přesměrování se použije pouze, pokud je původní protokol `https`.
+  - **alias** - vytvoří doménový alias - hodnota zadaná v poli Původní doména bude interně pro WebJET viděna (a zpracována) jako hodnota domény v poli Cílová doména. Použijte když např. migrujete data z produkce na test, jako původní doménu zadejte hodnotu v test prostředí a jako cílovou zadejte doménu v produkci (bez http prefixu).
+- **Aktivní** - přesměrování se použije, pouze pokud je toto pole zaškrtnuto.
+- **Přesměrovat parametry** - pokud zaškrtnete, přidají se k přesměrování i parametry původní HTTP požadavku. `?docid=4`.
+- **Přesměrovat cestu** - pokud zaškrtnete, přidá se k přesměrování i cesta původní HTTP požadavku. `/produkty/webjet/novinky.html`.
 
 ![](domain-editor.png)

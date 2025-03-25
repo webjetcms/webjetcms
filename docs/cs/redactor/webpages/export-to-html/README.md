@@ -1,27 +1,27 @@
 # Export do HTML
 
-Prostřednictvím aplikace **Export do HTML** je možné exportovat webové stránky do formátu HTML a následně je omezeně používat v offline prostředí. Export funguje na principu stažení výsledných webových stránek a jejich uložení do souboru HTML.
+Přes aplikaci **Export do HTML** lze exportovat web stránky do HTML formátu a následně je v omezené míře použít v offline prostředí. Export funguje na principu stahování výsledných web stránek a jejich uložení do HTML souboru
 
-Vygenerované stránky se ukládají do složky `/html`.
+Vygenerované stránky se uloží do složky `/html`.
 
-## Proces generování souborů HTML
+## Proces generování HTML souborů
 
-Po zadání ID složky, pro kterou chcete vytvořit offline verzi, a kliknutí na tlačítko . **OK** zahájí proces generování souborů HTML. Tento proces může trvat několik desítek minut v závislosti na počtu stránek v dané větvi webu.
+Po zadání ID složky, pro kterou chcete vytvořit offline verzi, a kliknutí na **OK** se spustí proces generování HTML souborů. Tento proces může trvat několik desítek minut podle počtu stránek v dané větvi web sídla.
 
 ![](export-to-html.png)
 
-Počkejte na dokončení celého procesu. Během této doby byste měli v okně vidět informace o počtu již vygenerovaných stránek a celkovém počtu stránek. Výsledkem je složka `/html` obsahující HTML kód každé stránky a případně archiv ZIP s vybranými složkami (složka je automaticky přidána do archivu ZIP `/html`).
+Čekejte, až celý proces skončí. Během toho by se vám v okně měla zobrazovat informace o počtu již vygenerovaných stránek ao celkovém počtu stránek. Výsledkem je složka `/html` obsahující HTML kód jednotlivých stránek a případně ZIP archiv se zvolenými složkami (do ZIP archivu se automaticky přidává i složka `/html`).
 
 ![](report.png)
 
-## Vytvoření archivu ZIP
+## Vytvoření ZIP archivu
 
-Chcete-li vytvořit archiv ZIP, musíte vybrat možnost **Zálohování systému**, můžete také vybrat složky, které mají být do archivu ZIP zahrnuty. Upozorňujeme, že množství dat ve vybraných složkách může být velké a soubor ZIP nemusí být vygenerován správně (limit je do 2 GB souboru).
+Pro vytvoření ZIP archivu je třeba zvolit možnost **Zálohování systému**, můžete také vybrat, které složky se do ZIP archivu mají zahrnout. Upozorňujeme, že objem dat ve zvolených složkách může být velký a ZIP soubor se nemusí vygenerovat správně (omezení je na 2GB soubor).
 
 ## Exportované soubory
 
-Vygenerované stránky se ukládají do složky `/html` a po výběru možnosti Zálohování systému se výsledný soubor ZIP uloží do kořenové složky.
+Vygenerované stránky se uloží do složky `/html` a po zvolení možnosti Zálohování systému se výsledný ZIP soubor uloží do kořenové složky.
 
 ![](exported-files.png)
 
-!> **Varování:** po vytvoření exportu doporučujeme celou složku ihned smazat. `/html` a také archiv ZIP s názvem začínajícím na `offline-` v kořenové složce serveru.
+!> **Upozornění:** po vytvoření exportu doporučujeme ihned smazat celou složku `/html` a také ZIP archiv s názvem začínajícím na `offline-` v kořenové složce serveru.

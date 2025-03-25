@@ -1,35 +1,35 @@
 # Uživatelé
 
-Aplikace umožňuje snadno vložit na stránku informace o přihlášeném uživateli, včetně jména, e-mailu, adresy a volitelných polí. Kromě toho umožňuje vložit přihlašovací formulář do zabezpečené sekce nebo registrační formulář pro nové uživatele.
+Aplikace umožňuje snadno vložit informace o přihlášeném uživateli na stránku, včetně jména, emailu, adresy a volitelných polí. Kromě toho umožňuje vložit přihlašovací formulář do zabezpečené sekce nebo registrační formulář pro nové uživatele.
 
 ## Nastavení aplikace
 
-### Nastavení registračního formuláře:
+### Nastavení pro Registrační formulář:
 
-Zadejte své registrační údaje. Pro výchozí nastavení můžete ponechat přednastavené hodnoty.
+Zadejte údaje pro registraci uživatele. Pro standardní nastavení můžete ponechat hodnoty, které jsou přednastavené.
 
-- **Skupiny uživatelů**
+- **Uživatelské skupiny**
 - **Zobrazená pole**
 - **Povinná pole**
 
 #### Další nastavení:
-- **Stránka DocID po registraci**: Stránka, která se zobrazí po úspěšné registraci (ponechte prázdnou, pokud chcete uživatele ponechat na původní stránce).
-- **Oznámení o registraci**: E-mailová adresa, na kterou bude zasláno oznámení o nové registraci (pokud nechcete být informováni, nechte prázdnou).
-- **Vyžadovat potvrzení e-mailové adresy**: Uživateli bude zaslán potvrzovací e-mail s odkazem na ověření adresy. Pokud je třeba e-mail schválit, potvrzovací e-mail nebude odeslán.
-- **Stránka DocID se schvalovacím e-mailem**: Stránka, ze které bude uživateli zaslán e-mail, pokud je vyžadováno schválení (pro standardní zprávu ponechte prázdné).
+- **DocID stránky po registraci**: Stránka, která se zobrazí po úspěšné registraci (ponechte prázdné, pokud chcete uživatele nechat na původní stránce).
+- **Notifikace o registraci**: E-mailová adresa, na kterou bude zaslána notifikace o nové registraci (ponechte prázdné, pokud nechcete zasílat notifikaci).
+- **Vyžadovat potvrzení e-mailové adresy**: Uživateli bude zaslán potvrzující e-mail s odkazem na ověření adresy. Pokud je e-mail třeba schválit, potvrzující e-mail se nezašle.
+- **DocID stránky s e-mailem o schválení**: Stránka, ze které bude uživateli zaslán e-mail v případě potřeby schválení (ponechte prázdné pro standardní zprávu).
 - **Automatické přihlášení po registraci**: Po úspěšné registraci bude uživatel automaticky přihlášen.
-- **Odesílání přes AJAX**: Formulář se odešle na pozadí bez obnovení stránky (nelze odeslat žádné fotografie).
-- **Použití vlastních polí**:
-  - **Použijte pole A** Popis pole A.
-  - **Použijte pole B** Popis pole B.
-  - **Použijte pole C** Popis pole C.
-  - **Použijte pole D** Popis pole D.
-  - **Použijte pole E** Popis pole E.
+- **Odeslat přes AJAX**: Formulář bude odeslán na pozadí bez obnovení stránky (nelze odesílat fotografie).
+- **Použij vlastní pole**:
+  - **Použij pole A**: Popis k poli A.
+  - **Použij pole B**: Popis k poli B.
+  - **Použij pole C**: Popis k poli C.
+  - **Použij pole D**: Popis k poli D.
+  - **Použij pole E**: Popis k poli E.
 
-### Nastavení přihlašovacího formuláře:
+### Nastavení pro Přihlašovací formulář:
 
-#### Skupiny uživatelů:
-- Skupiny, ke kterým se uživatel může připojit nebo odpojit během registrace.
+#### Uživatelské skupiny:
+- Skupiny, do kterých se může uživatel přihlásit nebo z nich odhlásit během registrace.
 
 ![](editor.png)
 
@@ -39,11 +39,11 @@ Zadejte své registrační údaje. Pro výchozí nastavení můžete ponechat p�
 
 ![](user.png)
 
-### Registrační formulář
+### Přihlašovací formulář
 
 ![](signin.png)
 
-### E-mailový autorizační řádek
+### Linka pro autorizaci e-mailu
 
 ![](email.png)
 
@@ -51,6 +51,6 @@ Zadejte své registrační údaje. Pro výchozí nastavení můžete ponechat p�
 
 ![](password.png)
 
-### Název
+### Jméno
 
 ![](name.png)

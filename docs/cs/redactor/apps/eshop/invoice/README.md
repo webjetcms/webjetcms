@@ -1,19 +1,19 @@
 # Seznam objednávek
 
-Aplikace Seznam objednávek poskytuje přehled všech objednávek vytvořených pomocí elektronického obchodu s možností jejich správy.
+Aplikace Seznam objednávek poskytuje přehled všech vytvořených objednávek pomocí elektronického obchodu, s možností jejich spravování.
 
-Aplikace neumožňuje přidávání nových objednávek pomocí vytvoření/duplikace/importu. Povoleny jsou pouze akce editace/odstranění/export.
+Aplikace neumožňuje přidávání nových objednávek pomocí vytvoření/duplikování/importování. Povolené akce jsou pouze úprava/mazání/exportování.
 
 ![](datatable.png)
 
 ## Úprava objednávky
 
-Okno pro úpravu objednávky se skládá z karet:
+Okno pro úpravu objednávky sestává z karet:
 - Základní
-- Oznámení
+- Notifikace
 - Platby
 - Položky
-- Zobrazit objednávky
+- Zobrazení objednávky
 
 ### Karta - Základní
 
@@ -21,56 +21,56 @@ Poskytuje základní informace o objednávce.
 
 ![](editor_basic.png)
 
-Důležitým parametrem je **Stav** který označuje aktuální stav objednávky, v níž se právě nachází.
+Důležitý je parametr **Stav**, který indikuje aktuální stav objednávky, ve kterém se právě nachází.
 
 ![](editor_basic_status.png)
 
-Zobrazené stavy jsou k dispozici automaticky. Pokud chcete přidat nové stavy, můžete tak učinit pomocí konfigurační proměnné `basketInvoiceBonusStatuses`. Přidejte nový stav jako id\_status|translation\_key.
+Zobrazené stavy jsou automaticky dostupné. Pokud si přejete přidat nové stavy, můžete tak učinit pomocí konfigurační proměnné `basketInvoiceBonusStatuses`. Nový status přidáte jako hodnotu id\_statusu|překladový\_klíč.
 
-!>**Varování:** hodnota id\_status musí být rovna nebo větší než 10. Přidané stavy s hodnotou menší než 10 nebudou ignorovány.
+!>**Upozornění:** hodnota id\_statusu musí být rovna nebo větší číslu 10. Přidané statusy a menší hodnotou než 10 budou ignorovány.
 
-Pokud zvolíte možnost **Odeslání oznámení klientovi**, bude po uložení upravené zakázky odesláno oznámení (přehled oznámení naleznete v následující kapitole).
+Pokud zvolíte možnost **Odeslat notifikaci klientovi**, tak notifikace bude odeslána při uložení upravované objednávky (přehled notifikace v následující kapitole).
 
-### Karta - Oznámení
+### Karta - Notifikace
 
-Poskytuje náhled e-mailového oznámení zákazníkovi s možností změny textu. Oznámení bude odesláno pouze v případě, že je tato možnost vybrána **Odeslání oznámení klientovi** na kartě Základní.
+Poskytuje náhled emailové notifikace na zákazníka, s možností změny textu. Notifikace se odešle pouze v případě zvolení možnosti **Odeslat notifikaci klientovi** v kartě Základní.
 
-**Odesílatel** - automaticky vyplněná hodnota s e-mailem aktuálně přihlášeného uživatele. Slouží jako e-mail odesílatele oznámení a tuto adresu je možné změnit.
+**Odesílatel** - automatický vyplněná hodnota s emailem aktuálně přihlášeného uživatele. Slouží jako email odesílatele notifikace a lze tuto adresu změnit.
 
-**Příjemce** - hodnota je získána z formuláře při vytváření objednávky v e-shopu. E-mail příjemce lze také změnit.
+**Příjemce** - hodnota je získána z formuláře při vytváření objednávky v elektronickém obchodě. Email příjemce lze také změnit.
 
-**Předmět** - automaticky vyplněná hodnota s textem **Stav objednávky změny (ID objednávky)**. Slouží jako předmět odeslaného e-mailu (oznámení) a lze jej změnit.
+**Předmět** - automatický vyplněná hodnota s textem **Změna stavu objednávky (id objednávky)**. Slouží jako předmět odeslaného emailu (notifikace) a lze ji změnit.
 
-**Text oznámení** - tělo/text odeslaného e-mailu. Hodnota `{STATUS}` bude po odeslání nahrazen aktuálním stavem objednávky. Hodnota `{ORDER_DETAILS}` bude nahrazen celkovým přehledem objednávek, který lze nalézt v části [Karta - Zobrazit objednávku](#karta-zobrazení-objednávky).
+**Text notifikace** - tělo/text odeslaného emailu. Hodnota `{STATUS}` bude při odeslání nahrazena aktuálním stavem objednávky. Hodnota `{ORDER_DETAILS}` na nahradí celkovým přehledem objednávky, který naleznete v části [Karta - Zobrazení objednávky](#karta-zobrazení-objednávky).
 
 ![](editor_notify.png)
 
 ### Karta - Platby
 
-Poskytuje [přehled všech plateb](payments.md) k této objednávce (ve formě vnořené tabulky) a možnost spravovat platby.
+Poskytuje [přehled všech plateb](payments.md) k této objednávce (ve formě vnořené tabulky) a možnost správy plateb.
 
 ![](editor_payments.png)
 
-### Karta - Předměty
+### Karta - Položky
 
-Poskytuje přehled [všechny položky objednávky](items.md) a možnost spravovat položky.
+Poskytuje přehled [všech položek objednávky](items.md) a možnost správy položek.
 
 ![](editor_items.png)
 
-### Karta - Zobrazit objednávku
+### Karta - Zobrazení objednávky
 
-Poskytuje celkový přehled o objednávce, včetně plateb a položek. Tento přehled **nelze upravovat**, má pouze informativní charakter. Je rovněž vložen do zaslaných [oznámení](#karta-oznámení) uživateli jako náhradní hodnotu `{ORDER_DETAILS}`.
+Poskytuje celkový přehled objednávky, včetně plateb a položek. Tento přehled **není možné upravovat**, slouží pouze pro informační účely. Také se tento přehled vloží do odeslané [notifikace](#karta-notifikace) uživateli, jako náhrada hodnoty `{ORDER_DETAILS}`.
 
-Při změně hodnot [platby](#platby-kartou) nebo hodnoty [položky](#karta-položky) tento přehled objednávek je aktualizován a poskytuje tak vždy aktuální informace.
+Při změně hodnot [plateb](#karta-platby) nebo hodnot [položek](#karta-položky) se se tento přehled objednávky obnoví a poskytuje tak vždy aktuální informace.
 
 ![](editor_order_status.png)
 
-## Stav změnového příkazu
+## Změna stavu objednávky
 
-Pokud byla do objednávky přidána platba (nebo více plateb), která **nepokrývá celkovou částku objednávky** k úhradě, stav objednávky na pozadí se automaticky nastaví na hodnotu **Částečně uhrazeno**.
+Pokud objednávce byla přidána platba (nebo více plateb), která **nepokrývá celkovou částku objednávky** k uhrazení, tak se stav objednávky na pozadí automaticky nastaví na hodnotu **Částečně zaplacená**.
 
-Pokud byla do objednávky přidána platba (nebo více plateb), která **pokrývá celkovou částku objednávky** k úhradě, stav objednávky na pozadí se automaticky nastaví na hodnotu **Placené**.
+Pokud objednávce byla přidána platba (nebo více plateb), která **pokrývá celkovou částku objednávky** k uhrazení, tak se stav objednávky na pozadí automaticky nastaví na hodnotu **Zaplacená**.
 
-## Odstranění objednávky
+## Vymazání objednávky
 
-Chcete-li objednávku odstranit, musíte nejprve změnit její stav na. **Zrušeno**. Po vymazání se automaticky vymažou související platby a položky objednávky.
+Chcete-li vymazat objednávku, je třeba nejprve změnit stav na **Stornována**. Po vymazání se automaticky vymažou i související platby a položky objednávky.

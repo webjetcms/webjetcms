@@ -1,25 +1,25 @@
 # jsTree
 
-Knihovna [jsTree](https://www.jstree.com/) je jquery `plugin`, který zobrazuje stromové struktury v aplikaci WebJET.
+Knihovna [jsTree](https://www.jstree.com/) je jquery `plugin`, kterým zobrazujeme stromové struktury ve WebJETu.
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
 - [jsTree](#jstree)
-  - [Základní inicializace ve spolupráci se Spring REST](#základní-inicializace-ve-spolupráci-s-pružinovým-odpočinkem)
-  - [Konfigurace](#Konfigurace)
-    - [Vytvoření nového řadiče REST](#vytvoření-nového-řadiče-odpočinku)
+  - [Základní inicializace v spolupráce se Spring REST](#základní-inicializace-v-spolupráce-se-spring-rest)
+  - [Konfigurace](#konfigurace)
+    - [Vytvoření nového REST controlleru](#vytvoření-nového-rest-controlleru)
     - [Vlastní typy objektů](#vlastní-typy-objektů)
-    - [Nastavení displeje](#nastavení-displeje)
-    - [Změna adresy URL služby REST](#změnit-url-adresu-služby-rest)
-  - [Ikony a třídy CSS](#ikony-a-třídy-css)
-    - [Jak používat ikony](#jak-používat-ikony)
+    - [Úprava zobrazení](#úprava-zobrazení)
+    - [Změna URL adresy REST služby](#změna-url-adresy-rest-služby)
+  - [Ikony a CSS třídy](#ikony-a-css-třídy)
+    - [Způsob použití ikon](#způsob-použití-ikon)
 
 <!-- /code_chunk_output -->
 
-## Základní inicializace ve spolupráci se Spring REST
+## Základní inicializace v spolupráce se Spring REST
 
-Implementace jsTree ve WebJETu se konfiguruje pomocí objektu JSON ve formátu `app.js`.
+WebJET implementace jsTree se konfiguruje pomocí JSON objektu v `app.js`.
 
 Základní příklad:
 
@@ -145,19 +145,19 @@ script.
 
 ## Konfigurace
 
-Adresa volané služby REST se konfiguruje pomocí atributů HTML. `data-rest-url` a `data-rest-param-name` (název parametru odeslaného službě REST).
+Adresa volané REST služby se konfiguruje pomocí HTML atributů `data-rest-url` a `data-rest-param-name` (název parametru poslaného do REST služby).
 
-V objektu `window.treeInitialJson` je možné nastavit inicializační data JSON pro počáteční zobrazení stromové struktury. První zobrazení tak bude rychlejší, protože není třeba volat službu REST. Předávání dat do backendu je popsáno v části [thymeleaf](../frameworks/thymeleaf.md#vkládání-vlastních-objektů-do-modelu).
+V objektu `window.treeInitialJson` lze nastavit inicializační JSON data pro prvotní zobrazení stromové struktury. První zobrazení bude tedy rychlejší, jelikož není třeba volat REST službu. Předání dat na backendu je popsáno v sekci [thymeleaf](../frameworks/thymeleaf.md#vložení-vlastních-objektů-do-modelu).
 
-### Vytvoření nového řadiče REST
+### Vytvoření nového REST controlleru
 
-Nový řadič by měl rozšířit třídu [JsTreeRestController](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeRestController.java), implementovat abstraktní metody stromu (položky nabídky), `move` (implementace přenosu položek BE) a `checkAccessAllowed` (kontrola uživatelských práv na vyžádání).
+Nový controller by měl rozšiřovat třídu [JsTreeRestController](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeRestController.java), implementovat abstraktní metody tree (položky menu), `move` (BE implementace přesunu položky) a `checkAccessAllowed` (kontrola práv uživatele pomocí requestu).
 
 ### Vlastní typy objektů
 
-K objektu `JsTreeItem` byl přidán `String customType`, pro definování vlastního typu v zákaznických implementacích. Použití je stejné jako v případě `Type` kde můžeme porovnat `Enumy`, pouze v tomto případě porovnáváme `Stringy`, metodou `equals`.
+Do objektu `JsTreeItem` byl přidán `String customType`, pro definování vlastního typu v zákaznických implementacích. Použití je stejné jako v případě `Type`, kde si umíme porovnat `Enumy`, jen v tomto případě porovnáváme `Stringy`, metodou `equals`.
 
-Typ použití
+Použití typu
 
 ```java
 if (original.getType() == JsTreeItemType.GROUP) {
@@ -165,7 +165,7 @@ if (original.getType() == JsTreeItemType.GROUP) {
 }
 ```
 
-Použijte `customType`
+Použití `customType`
 
 ```java
 if ("custom-jstree-item".equals(original.getCustomType())) {
@@ -173,11 +173,11 @@ if ("custom-jstree-item".equals(original.getCustomType())) {
 }
 ```
 
-### Nastavení displeje
+### Úprava zobrazení
 
-Před zobrazením stromové struktury je objekt JS otestován. `window.jstreeCustomizeData`. Pokud existuje, nazývá se. Před zobrazením může přijatá data upravit.
+Před zobrazením stromové struktury se testuje JS objekt `window.jstreeCustomizeData`. Pokud existuje, je zavolán. Může upravit přijatá data před jejich zobrazením.
 
-Příkladem je zobrazení ID a pořadí uspořádání v seznamu webových stránek implementovaném v systému `src/js/pages/web-pages-list/jstreesettings.js`:
+Příkladem je zobrazení ID a pořadí uspořádání v seznamu web stránek implementované v `src/js/pages/web-pages-list/jstreesettings.js`:
 
 ```javascript
     jstreeCustomizeData(data) {
@@ -203,9 +203,9 @@ Příkladem je zobrazení ID a pořadí uspořádání v seznamu webových strá
 
 ![](../../redactor/webpages/jstree-settings.png)
 
-### Změna adresy URL služby REST
+### Změna URL adresy REST služby
 
-Adresa URL služby REST se získá z atributu data `data-rest-url`, pokud ji potřebujete dynamicky měnit, můžete vytvořit funkci JavaScriptu. `window.getJstreeUrl`, která se použije místo hodnoty v atributu data:
+URL adresa REST služby se získává z data atributu `data-rest-url`, pokud jej potřebujete dynamicky měnit můžete vytvořit JavaScript funkci `window.getJstreeUrl`, která se použije místo hodnoty v data atributu:
 
 ```JavaScript
 var somStromcek = null;
@@ -222,23 +222,23 @@ window.getJstreeUrl = function() {
 }
 ```
 
-## Ikony a třídy CSS
+## Ikony a CSS třídy
 
-Ikona se nastavuje pomocí [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS voláním [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). Hodnota je například `ti ti-folder-filled` nebo `ti ti-map-pin`.
+Ikonu se nastavuje pomocí [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS třídy voláním [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). Hodnota je například `ti ti-folder-filled` nebo `ti ti-map-pin`.
 
-Rozhraní API poskytuje metody pro nastavení atributů HTML pro prvky LI a A pomocí atributů [li\_attr a a\_attr](https://www.jstree.com/docs/json/). Pro snadné přidávání tříd CSS poskytuje rozhraní API metody `JsTreeItem.addLiClass` a `JsTreeItem.addAClass`. Můžete tedy nastavit stavy CSS `is-not-public` nebo `fa-is-internal`.
+API poskytuje metody pro nastavení HTML atributů na LI i A elementu pomocí atributů [li\_attr a a\_attr](https://www.jstree.com/docs/json/). Pro snadné přidání CSS třídy API poskytuje metody `JsTreeItem.addLiClass` a `JsTreeItem.addAClass`. Můžete tak nastavit CSS stavy `is-not-public` nebo `fa-is-internal`.
 
-JsTree neumožňuje zobrazit více ikon za sebou, což potřebujeme pro zobrazení stavu adresářů a webových stránek, přidáme je jako HTML kód do textu pomocí metody `JsTreeItem.addTextIcon`.
+JsTree neumožňuje zobrazit více ikon v řádku, což potřebujeme pro zobrazení stavu adresářů a web stránek, ty přidáváme jako HTML kód k textu pomocí metody `JsTreeItem.addTextIcon`.
 
 Příklady jsou ve třídách [GroupsJsTreeItem](../../../src/main/java/sk/iway/iwcm/doc/GroupsJsTreeItem.java) a [DocumentsJsTreeItem](../../../src/main/java/sk/iway/iwcm/doc/DocumentsJsTreeItem.java).
 
-### Jak používat ikony
+### Způsob použití ikon
 
-Používání ikon má následující pravidla:
-- <i class="ti ti-folder-filled" role="presentation" ></i> / <i class="ti ti-map-pin" role="presentation" ></i> celá stránka a ikona složky = zobrazí se v nabídce
-- <i class="ti ti-folder" role="presentation" ></i> / <i class="ti ti-map-pin-off" role="presentation" ></i> prázdná stránka a ikona složky = nezobrazuje se v nabídce
-- <i class="ti ti-lock" role="presentation" ></i> zámek = k dispozici pouze pro přihlášeného návštěvníka
-- <span style="color: #FF4B58">červená barva</span> = nedostupné pro veřejnost (interní adresář) nebo stránku s vypnutým zobrazením (v DT je možné použít CSS třídu is-not-public na řádek).
-- **tučné písmo** = hlavní stránka adresáře (v DT je možné použít CSS třídu `is-default-page`)
+Použití ikon má následující pravidla:
+- <i class="ti ti-folder-filled" role="presentation" ></i> / <i class="ti ti-map-pin" role="presentation" ></i> plná ikonka stránky i složky = zobrazen v menu
+- <i class="ti ti-folder" role="presentation" ></i> / <i class="ti ti-map-pin-off" role="presentation" ></i> prázdná ikonka stránky i složky = nezobrazený v menu
+- <i class="ti ti-lock" role="presentation" ></i> zámek = dostupné pouze pro přihlášeného návštěvníka
+- <span style="color: #FF4B58">červená barva</span> = nedostupné pro veřejnost (interní adresář) nebo stránka s vypnutým zobrazením (v DT lze použít CSS třídu is-not-public na řádek)
+- **tučné písmo** = hlavní stránka adresáře (v DT lze použít CSS třídu `is-default-page`)
 - <i class="ti ti-external-link" ></i> šipka ven = stránka je přesměrována
-- <i class="ti ti-eye-off" ></i> přeškrtnuté oko = stránku nelze prohledávat.
+- <i class="ti ti-eye-off" ></i> přeškrtnuté oko = stránku nelze vyhledat

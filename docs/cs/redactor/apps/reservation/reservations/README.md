@@ -1,132 +1,164 @@
 # Seznam rezervací
 
-Aplikace **Seznam rezervací** umožňuje vytvářet/upravovat/mazat rezervace a také je importovat ze souboru Excel a exportovat do souboru Excel/CSV (nebo je dokonce při exportu ihned vytisknout).
+Aplikace **Seznam rezervací** umožňuje vytváření/úpravu/mazání rezervací, jakož i jejich import z Excel souboru a export do Excel/CSV souboru (případně i možnost okamžitého tisku při exportu).
 
-Seznam obsahuje také 3 tlačítka pro schválení/odmítnutí/obnovení rezervace, viz. sekce . [Schválení výhrad](#schválení-výhrad). V levém menu můžete také přejít na [Statistiky rezervací](../reservations-stat/README.md).
+Seznam obsahuje také 3 tlačítka pro schvalování/zamítnutí/resetování rezervace, viz. sekce [Schvalování rezervací](#schvalování-rezervací). V levém menu můžete přejít i do [Statistiky rezervací](../reservations-stat/README.md).
 
 ![](reservation-datatable.png)
 
-Editor rezervací obsahuje 4 karty, jejichž funkce jsou popsány v následujícím popisu.
+Editor rezervací obsahuje 4 karty, jejichž funkce jsou v následujícím popisu.
 
 ## Základní
 
-Karta **Základní** jak název napovídá, obsahuje základní informace o rezervaci. Důležitý je seznam s výběrem objektu rezervace, ke kterému se rezervace vztahuje.
+Karta **Základní** jak již napovídá název, obsahuje základní informace ohledně rezervace. Důležitý je seznam s výběrem rezervačního objektu, ke kterému se rezervace vztahuje.
 
-![](reservation-editor_basic_tab_1.png)
+|           Hodinové rezervace |          Celodenní rezervace |
+| :-------------------------------------: | :-------------------------------------: |
+| ![](reservation-editor_basic_tab_1.png) | ![](reservation-editor_basic_tab_2.png) |
 
-Karta obsahuje také výběr data od/do a výběr času od/do. U tohoto výběru je třeba upozornit na jednu důležitou věc. Pokud vyberete dny od 01.01.2022 do 03.01.2022 mezi 08:00 a 16:00, neznamená to, že rezervace začíná 01.01.2022 v 08:00 a trvá do 03.01.2022 v 16:00 a vše v tomto rozsahu je rezervováno. NE. Při takto zvolených hodnotách to v praxi znamená, že tento objekt rezervace rezervujete od 08:00 do 16:00 pro každý den zvlášť. Důvod je jednoduchý, tímto způsobem můžete rezervovat objekt v určitém čase na více dní, aniž byste museli rezervovat celý interval. Pokud je pro objekt nastaven interval rezervace od 05:00 do 20:00, rezervuje se pro každý den pouze uvedený časový interval a zbytek intervalu se nerezervuje, i když rezervace trvá například 3 dny.
+Kompozice karty se bude lišit podle toho, zda zvolený rezervační objekt je celodenní nebo ne. Více informací se dozvíte v části [Seznam rezervačních objektů](../reservation-objects/README.md).
 
-!>**Varování:** pokud lze objekt rezervace rezervovat [POUZE na celý den](../reservation-objects/README.md) budou následující možnosti skryté a nedostupné:
-- výběr času
-- přehled intervalů rezervací zařízení pro jednotlivé dny.
+**Celodenní rezervace**
 
-![](reservation-editor_basic_tab_2.png)
+V tomto režimu se rezervuje objekt na celý den. Nejlepším příkladem je rezervace hotelového pokoje. Potřebujete zadat datumový rozsah rezervace a čas příjezdu/odjezdu.
 
-Přepínač **Zobrazit platnost vytvářené rezervace ?** Po výběru se zobrazí textové pole s informací o platnosti rezervace. To znamená, zda lze v daném rozsahu vytvořit rezervaci pro vybraný objekt. Více informací o možných stavech v tomto poli je vysvětleno v části [Ověřování rezervací](#potvrzení-platnosti-rezervací). Pokud je rezervace platná, rámeček textového pole se zbarví zeleně, a pokud rezervace není platná, zbarví se červeně.
+!>**Upozornění:** dá-li se rezervační objekt rezervovat pouze na celý den, poslední den v datovém rozsahu se nepočítá, neboť v ten den zákazník odchází. Proto rezervační rozsah při celodenních rezervacích musí být minimálně 2 dny.
 
-**Cena rezervace** zobrazí aktuální cenu vytvářené rezervace. Cena závisí na vybraném objektu rezervace, intervalu rezervace a speciálních cenách nastavených pro daný objekt rezervace.
+**Hodinové rezervace**
 
-!>**Varování:** sleva uživatele se pak automaticky uplatní na tuto cenu rezervace. Tato procentuální sleva je nastavena pro konkrétní [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří k více **skupiny uživatelů** které mají stanovenou procentní slevu, bude použita největší z nich. Pokud má sleva hodnotu `0%`, částka rezervace se nemění. Pokud má sleva hodnotu `100%`, rezervace je zdarma.
+U tohoto typu rezervace je třeba si uvědomit jednu podstatnou věc. Pokud si zvolíte dny od 01.01.2022 do 03.01.2022 v době od 08:00 do 16:00, neznamená to, že rezervace začíná 01.01.2022 v 08:00 a trvá do 03.01.2022 16:00 a vše. Ale tak tomu není. U těchto zvolených hodnot to v praxi znamená, že jsi tento **rezervační objekt rezervujete v době od 08:00 do 16:00 pro každý den zvlášť**. Důvod je prostý, tímto způsobem si umíte rezervovat objekt v určitém čase pro více dní bez potřeby rezervování celého intervalu. Pokud je rezervační interval pro daný objekt nastaven od 05:00 do 20:00 tak pro jednotlivé dny se rezervuje pouze zadaný časový interval a zbytek intervalu rezervován není, i když rezervace trvá například 3 dny.
 
-!>**Varování:** platí aktuální ceny a slevy, tj. cena, která byla vypočtena v okamžiku provedení rezervace. To znamená, že pokud máte rezervaci naplánovanou např. na měsíc a cena objektu rezervace se v této době zvýší nebo se změní sleva uživatele, cena rezervace se **se nezmění**. **Nicméně** Pokud rezervaci změníte, budou použity aktuální ceny a slevy, což může vést ke změně původní ceny, kterou již nebude možné vrátit zpět.
-
-Stav rezervace a cena rezervace se aktualizují vždy, když se změní datum, čas nebo objekt rezervace.
-
-![](reservation-editor_basic_tab_3.png)
-
-V dolní části karty se zobrazuje přehled s intervaly rezervací pro jednotlivé dny v týdnu. Tyto časy jsou nastaveny podle aktuálně vybraného objektu rezervace. To je pomůcka při vytváření/úpravě rezervace, pokud si přesně nepamatujete, kdy je možné daný objekt rezervace rezervovat pro konkrétní den v týdnu.
+Ve spodní části karty si můžete všimnout přehledu s rezervačními intervaly objektu pro jednotlivé dny v týdnu. Tyto časy se nastaví podle aktuálně zvoleného rezervačního objektu. Je to pomůcka při vytváření/úpravě rezervace, pokud si přesně nepamatujete kdy lze konkrétní rezervační objekt rezervovat pro konkrétní den v týdnu. Tento přehled se zobrazuje **pouze pro hodinové rezervace**.
 
 ![](reservation-editor_basic_tab_4.png)
 
+Pole **Upozornění** zobrazuje informace o platnosti vytvářené rezervace. To znamená, zda se rezervace pro zvolený objekt dá v daném rozsahu vytvořit nebo ne. Bližší informace o možných stavech v tomto poli jsou vysvětleny v sekci [Validace rezervací](#validace-rezervací). Pokud je rezervace platná ohraničení textového pole změní barvu na zelenou a není-li rezervace platná, změní barvu na červenou.
+
+**Cena rezervace** zobrazuje aktuální cenu vytvářené rezervace. Cena se odvíjí o zvoleného rezervačního objektu, rezervačního intervalu a od nastavených speciálních cen k danému rezervačnímu objektu.
+
+!>**Upozornění:** na tuto cenu rezervace se následně automaticky aplikuje sleva uživatele. Tato procentuální sleva je nastavena pro specifické [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří do více **skupin uživatelů** které mají nastavenou procentuální slevu, použije se z nich ta největší. Pokud sleva má hodnotu `0%`, částka rezervace se nemění. Pokud sleva má hodnotu `100%`, rezervace je zdarma.
+
+!>**Upozornění:** platí právě aktuální ceny a slevy, tedy cena která byla vypočtena při vytváření rezervace. To znamená, že pokud máte naplánovanou rezervaci například. o měsíc a za tu dobu se zvedne cena rezervačního objektu, nebo se změní uživatelova sleva, cena rezervace **se nezmění**. **Nicméně**, pokud svou vytvořenou rezervaci upravíte, použijí se aktuální ceny a slevy, což může změnit původní cenu, ke které se již zpětně nedostanete.
+
+Stav rezervace i cena rezervace se obnovují vždy po změně data, času nebo rezervačního objektu.
+
+![](reservation-editor_basic_tab_3.png)
+
 ## Osobní údaje
 
-V kartách **Osobní údaje** lze nastavit údaje žadatele o rezervaci. Většina údajů je automaticky nastavena z profilu přihlášené osoby, ale tyto hodnoty lze také změnit nebo je vůbec nezadávat.
+V kartě **Osobní údaje** lze nastavit údaje žadatele o rezervaci. Většina dat se automaticky nastaví z profilu přihlášené osoby, ale tyto hodnoty lze také změnit nebo vůbec nezadat.
 
 ![](reservation-editor_personalInfo_tab.png)
 
 ## Speciální cena
 
-Karta **Speciální cena** obsahuje vnořenou tabulku s informacemi o speciální ceně objektu rezervace pro určité období. Položky v tabulce jsou nastaveny podle aktuálně vybraného objektu rezervace ze záložky [Základní](../reservations/README.md#Základní) a lze je pouze exportovat, ale nelze je přidávat, upravovat ani mazat (slouží pouze pro informační účely).
+Karta **Speciální cena** obsahuje vnořenou tabulku s údaji o speciální ceně rezervačního objektu pro konkrétní období. Záznamy v tabulce se nastaví podle aktuálně zvoleného rezervačního objektu z karty [Základní](../reservations/README.md#základní) a lze je pouze exportovat, ale nelze je přidávat, upravovat nebo odstranit (slouží pouze pro informační účely).
 
 ![](reservation-editor_specialPrice_tab.png)
 
-## Schválení
+## Schvalování
 
-Karta **Schválení** slouží ke změně stavu rezervace. Tato karta se zobrazuje pouze za určitých podmínek.
+Karta **Schvalování** slouží ke změně stavu rezervace. Tato karta se zobrazuje pouze za specifických podmínek.
 
 Podmínky pro zobrazení karty:
-- editace záznamu, karta se zobrazí pouze při editaci záznamu o rezervaci.
-- musí mít objekt rezervace, který se snaží rezervovat, parametr **Je vyžadováno schválení** a musí být zadán e-mail schvalovatele.
-- schvalovatel, kartu lze ukázat pouze osobě, která má oprávnění rezervaci schválit. To znamená, že pokud se e-mail přihlášeného uživatele shoduje s e-mailem schvalovatele zadaným v rezervačním systému a byly splněny předchozí body, karta se uživateli zobrazí.
+- editace záznamu, karta se zobrazí pouze při editace záznamu rezervace
+- potřeba schválení, rezervační objekt, který se rezervace snaží rezervovat musí mít parametr **Je třeba schválení** a musí mít zadaný email schvalovatele
+- schvalovatel, karta se může zobrazit pouze osobě, která má povolení danou rezervaci schválit. To znamená, že pokud email přihlášeného uživatele se shoduje s emailem schvalovatele zadaným v rezervačním systému a předchozí body byly splněny, karta se uživateli zobrazí
 
-Po zobrazení obsahuje karta přepínač mezi třemi stavy, do kterých může rezervace vstoupit. Při přechodu z jednoho stavu do druhého se spustí akce změny stavu rezervace, jako by se použila tlačítka pro změnu stavu. Tyto akce budou lépe vysvětleny v části **Schválení výhrad**.
+Po zobrazení, karta obsahuje 3 tlačítka pro změnu stavu rezervace. Tyto akce budou lépe vysvětleny v sekci **Schvalování rezervací**.
 
 ![](reservation-editor_acceptation_tab.png)
 
-## Ověřování rezervací
+## Validace rezervací
 
-Logika ověřování rezervací je důležitou součástí aplikace. **Seznam rezervací**, který kontroluje, zda vytvářená nebo upravovaná rezervace splňuje všechna pravidla a podmínky. Ověřování se automaticky spustí při pokusu o uložení nové rezervace nebo o úpravu stávající rezervace. Pokud je rezervace platná (splňuje všechny potřebné požadavky), bude akce vytvoření/úpravy úspěšná, v opačném případě dojde k chybě a uživatel bude upozorněn buď konkrétní, nebo obecnou chybovou zprávou.
+Validační logika rezervací je důležitá část aplikace **Seznam rezervací**, která kontroluje zda vytvářená nebo upravovaná rezervace splňuje všechna pravidla a podmínky. Validace se automaticky spustí při pokusu o uložení nové rezervace nebo úpravě již existující. Pokud je rezervace platná (splňuje vše potřebné) akce vytvoření/úpravy bude úspěšná, v opačném případě nastane chyba a uživatel bude obeznámen buď konkrétním nebo obecným chybovým hlášením.
 
-Rezervace nebude uložena/upravena, dokud nebude splňovat všechna pravidla validace.
+Rezervace nebude možné uložit/upravit dokud nebude splňovat všechna pravidla validace.
 
-### Rozsah dat
+### Datový rozsah
 
-Datum od musí být kratší než datum do (pokud jsou data stejná, je vyhrazen pouze jeden den).
+Datum od musí být menší roven datu do (pokud jsou data stejná tak rezervuje pouze ten jeden den).
+
+!>**Upozornění:** v případě **celodenních rezervací**, musí být rozsah **alespoň 2 dny**, protože poslední den rozsahu je den odjezdu, a do rezervace jako takové se nepočítá.
 
 ### Časový rozsah
 
-Čas od musí být výrazně kratší než čas do, protože si musíte vyhradit alespoň 1 minutu. Současně se kontroluje, zda je tento časový rozsah větší nebo alespoň roven hodnotě "Minimální délka rezervace (v minutách)" nastavené pro objekt rezervace.
+Validace časového rozsahu se liší podle typu rezervace.
+
+**Celodenní rezervace**
+
+Při celodenních rezervacích se časová složka nevaliduje, protože **Čas příjezdu** / **Čas odjezdu** nejsou ve stejný den a je to jen na vašem rozhodnutí.
+
+!>**Upozornění:** silně doporučujeme, aby **Čas příjezdu** byl větší než **Čas odjezdu**, jinak se pokoj v den odjezdu starého zákazníka nebude dát rezervovat novým zákazníkům.
+
+**Hodinové rezervace**
+
+**Čas od** musí být ostře menší než **Čas do**, protože musíte rezervovat minimálně 1 minutu. Současně se kontroluje zda tento časový rozsah je větší nebo alespoň roven jako zadaná hodnota "Minimální délka rezervace (v minutách)" nastavená pro daný rezervační objekt.
 
 ### Rozsah v minulosti
 
-Den(y) nelze rezervovat v minulosti. Pokud se pokoušíte rezervovat na dnešek, časový úsek nemůže být v minulosti.
+Nemůžete rezervovat den/dny v minulosti. Pokud se snažíte provádět rezervaci na dnešní den tak časový interval nemůže být v minulosti.
 
-### Platný rozsah rezervací,
+!>**Upozornění:** na vlastní riziko máte možnost uložit rezervaci iv případě, že zvolený rozsah se nachází v minulosti. Stačí v kartě **základní** zvolit možnost **Povolit vytvoření v minulosti**.
 
-Zkontroluje, zda je zadaný časový rozsah v intervalu rezervace objektu. Tato kontrola se provádí pro každý rezervovaný den zvlášť. Pokud se například pokoušíte rezervovat objekt mezi 08:00 a 09:00 na následující 3 dny a i jeden z těchto dnů má jiný rezervační interval, rezervace není platná. V úvahu se samozřejmě berou i speciální rezervační intervaly pro jednotlivé dny v týdnu, více informací naleznete na stránce [časy podle dnů](../reservation-objects/README.md#časy-podle-dnů).
+### Platný rezervační rozsah
 
-### Maximální počet rezervací najednou
+Tato kontrola se provádí pouze pro **hodinové rezervace**. Kontroluje se, zda zadaný časový rozsah je uvnitř rezervačního intervalu objektu. Tato kontrola se provede pro každý rezervovaný den zvlášť. Například, pokud se snažíte rezervovat objekt v době od 08:00-09:00 na nejbližší 3 dny, a byť jen jeden z těchto dny má jiný rezervační interval, tak rezervace není platná. Samozřejmě v úvahu se berou i speciální rezervační intervaly pro jednotlivé dny v týdnu, více informací v sekcích [časy podle dnů](../reservation-objects/README.md#časy-podle-dnů).
 
-V tomto případě se kontroluje, zda po přidání rezervace nedojde k překročení více rezervací najednou, jak umožňuje parametr **Maximální počet rezervací najednou** objektu. Rezervace se považují za překrývající se, pokud se jejich časové intervaly překrývají alespoň v jedné minutě (intervaly se nepřekrývají, pokud je začátek jednoho z nich koncem druhého v téže minutě). Například pokud máte 4 rezervace a jejich časové intervaly jsou `08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00` takže vidíme, že rezervace v době `08:00-11:00` protíná 3 různé rezervy, ale nikdy ne více než 2 současně, protože ostatní 3 rezervy se navzájem neprotínají.
+### Maximální počet rezervací ve stejnou dobu
 
-Kontrola bere všechny rezervace (ale pouze ty, které byly schváleny) nad objektem ve stejný den a testuje, zda bude tento limit překročen po přidání naší rezervace. Testuje se pro každý den zvlášť, a pokud i jeden den překročí maximální počet rezervací ve stejném čase, bude rezervace označena jako neplatná.
+V tomto případě se kontroluje čí se po přidání rezervace nebude protínat více rezervací ve stejnou dobu jako je povoleno parametrem. **Maximální počet rezervací ve stejnou dobu** daného objektu. Rezervace se považují na prolínající, pokud se jejich časové intervaly prolínají alespoň v jedné minutě (intervaly se neprolínají, pokud začátek jednoho je konec druhého ve stejnou minutu).
 
-## Schválení výhrad
+**Celodenní rezervace**
 
-Změnit stav rezervace je možné buď pomocí editoru, přesněji na kartě [Schválení](../reservations/README.md#Schválení), která se zobrazuje pouze za určitých specifických podmínek, nebo pomocí tlačítek pro změnu stavu rezervace.
+Při těchto rezervacích jsme doporučili, aby **Čas příjezdu** byl ostře větší než doba odjezdu. Např. pokud čas příjezdu je vždy 14:00 a čas odjezdu je vždy 10:00, tak po odchodu starého zákazníka v 10:00 je stále čas pokoj uklidit (nebo jinak připravit) pro nového zákazníka, který se v tomto pokoji ubytuje ve 14:00. Takové rezervace se neprotínají a lze pokoj rezervovat v den kdy jiný zákazník z něj odchází. V realitě to vypadá, že rezervace se protínají, ale není tomu tak (protože starý zákazník odejde před příchodem nového).
 
-Stejně jako na kartě **Schválení** také tlačítka nabízejí 3 různé stavy, a to :
-- ![](button-approve.png ":no-zoom"), **Schválení** Rezervace (Rezervace schváleny)
-- ![](button-reject.png ":no-zoom"), **Odmítnout** Rezervace (Rezervace zamítnuty)
-- ![](button-reset.png ":no-zoom"), **Obnovení stavu** Rezervace (Rezervace čekají na schválení)
+**Hodinové rezervace**
 
-### Vyžaduje se schválení
+Například pokud máte 4 rezervace, a jejich časové intervaly jsou `08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00` tak vidíme, že rezervace v čase `08:00-11:00` se prolíná se 3 různými rezervacemi, ale současně se jich nikdy neprolíná více než 2, protože ostatní 3 rezervace se neprolínají mezi sebou navzájem.
 
-Rezervaci je třeba schválit, pokud je u objektu rezervace nastaven schvalovatel a osoba, která rezervaci vytváří/upravuje, není schvalovatelem. Přihlášená osoba NENÍ schvalovatelem, pokud se její e-mail neshoduje s e-mailem nastaveného schvalovatele v objektu rezervace.
+Při kontrole se vezmou všechny rezervace nad objektem ve stejný den a testuje se zda po přidání naší rezervace se tento limit nepřekročí. Testuje se to pro každý den samostatně a pokud i jen jeden den přesáhne maximální počet rezervací ve stejnou dobu, rezervace bude označena za neplatnou.
 
-V takovém případě bude na e-mail schvalovatele odeslána žádost o schválení rezervace. Tato žádost obsahuje základní informace o rezervaci a také přímý odkaz na rezervaci.
+!>**Upozornění:** při kontrole protínání se využívají **pouze schváleno** rezervace nad daným rezervačním objektem.
+
+!>**Upozornění:** na vlastní riziko máte možnost uložit rezervaci i v případě nadměrné rezervace, kdy se překročí maximální počet rezervací. Stačí v kartě **základní** zvolit možnost **Povolit nadrezervace**.
+
+## Schvalování rezervací
+
+Změna stavu rezervace je možná buď pomocí editoru a to přesněji v kartě [Schvalování](../reservations/README.md#schvalování), která se zobrazuje pouze za určitých specifických podmínek, nebo pomocí tlačítek pro změnu stavu rezervace.
+
+Stejně jako v kartě **Schvalování** i tlačítka nabízejí 3 různé stavy a to :
+- ![](button-approve.png ":no-zoom"), **Schválení** rezervace (Rezervace byla schválena)
+- ![](button-reject.png ":no-zoom"), **Zamítnutí** rezervace (Rezervace byla zamítnuta)
+- ![](button-reset.png ":no-zoom"), **Resetovat stav** rezervace (Rezervace čeká na schválení)
+
+### Nutné schválení
+
+Rezervaci je třeba schválit v případě, že rezervační objekt má nastaveného schvalovatele a osoba co vytváří/upravuje rezervaci není schvalovatel. Přihlášená osoba NENÍ schvalovatel, pokud se jeho email neshoduje s nastaveným emailem schvalovatele v rezervačním objektu.
+
+V takovém případě se odešle na email schvalovatele žádost o schválení rezervace. Taková žádost obsahuje základní informace o rezervaci, jakož i přímý odkaz na tuto rezervaci.
 
 ### Automatické schválení
 
-Rezervaci nemusíte schvalovat, pokud objekt rezervace nemá nastaveného schvalovatele nebo pokud objekt rezervace má nastaveného schvalovatele a schvalovatelem je osoba, která je právě přihlášena. Přihlášená osoba JE schvalovatelem, pokud se její e-mail shoduje s nastaveným e-mailem schvalovatele v objektu rezervace.
+Rezervaci není třeba schvalovat, pokud rezervační objekt nemá nastaveného schvalovatele, nebo když rezervační objekt má nastaveného schvalovatele a jím je právě přihlášená osoba. Přihlášená osoba je schvalovatel, pokud se jeho email shoduje s nastaveným emailem schvalovatele v rezervačním objektu.
 
-### Provedení rezervace
+### Vytváření rezervace
 
-Při pokusu o vytvoření rezervace se na pozadí spustí ověřování. Pokud proběhne úspěšně, rezervace se uloží a její stav se nastaví podle situace:
-- pokud rezervaci NENÍ třeba schválit, je automaticky schválena a má status **Rezervace byla schválena**.
-- pokud rezervace MUSÍ být schválena, bude automaticky uložena se stavem **Rezervace čeká na schválení** a na e-mail schvalovatele je odeslána žádost o schválení. Schvalovatel se může rozhodnout, zda rezervaci schválí, zamítne nebo v ní neprovede žádnou změnu. Pokud se však změní stav rezervace, je na e-mail žadatele o rezervaci odeslána zpráva informující o změně stavu (tento e-mail žadatele byl automaticky přednastaven při vytvoření rezervace v aplikaci [Osobní údaje](../reservations/README.md#osobní-údaje)).
+Při pokusu o vytvoření rezervace se nám na pozadí spustí validace. Pokud byla úspěšná, rezervace se uloží a nastaví se její stav podle situace:
+- pokud rezervaci NENÍ NUTNÉ schvalovat, taková rezervace se schválí automaticky a získá status **Rezervace byla schválena**.
+- pokud rezervaci JE NUTNÉ schvalovat, uloží se automaticky se statusem **Rezervace čeká na schválení** a na email schvalovatele se odešle žádost o schválení. Schvalovatel se může rozhodnout, zda rezervaci schválí, zamítne nebo neprovede žádnou změnu. Pokud se však stav rezervace změní, odešle se zpráva na email žadatele o rezervaci s informací o změně stavu (tento email žadatele se automatický přednastavil při vytváření rezervace v kartě [Osobní údaje](../reservations/README.md#osobní-údaje)).
 
 ### Úprava rezervace
 
-Při pokusu o změnu rezervace se na pozadí spustí ověřování. Pokud proběhne úspěšně, rezervace se uloží a její stav se nastaví podle situace:
-- pokud rezervaci NENÍ třeba schválit, upravená rezervace se uloží a automaticky schválí, čímž získá status. **Rezervace byla schválena**.
-- pokud je rezervace MUSÍ být schválena, její předchozí stav se resetuje na hodnotu **Rezervace čeká na schválení** (bez ohledu na to, zda byla schválena nebo zamítnuta) a na e-mail schvalovatele je opět odeslána zpráva s žádostí o schválení. Schvalovatel se opět může rozhodnout, zda rezervaci schválí, zamítne nebo v ní neprovede žádné změny. Pokud se však stav rezervace změní, je na e-mail žadatele o rezervaci opět zaslána zpráva informující o změně stavu.
+Při pokusu o úpravu rezervace se nám na pozadí spustí validace. Pokud byla úspěšná, rezervace se uloží a nastaví se její stav podle situace:
+- pokud rezervaci NENÍ NUTNÉ schvalovat, taková upravená rezervace se uloží a automaticky schválí, čímž získá status **Rezervace byla schválena**.
+- pokud rezervaci JE NUTNÉ schvalovat, tak se její předchozí status vynuluje na hodnotu **Rezervace čeká na schválení** (nezáleželo na tom zda byla schválena nebo zamítnuta) a opět se odesílá zpráva na email schvalovatele s prosbou o schválení. Schvalovatel se opět může rozhodnout zda rezervaci schválí, zamítne nebo neprovede žádnou změnu. Pokud se však stav rezervace změní, opět se odešle zpráva na email žadatele o rezervaci s informací o změně stavu.
 
 ### Změna stavu rezervace
 
-Jak bylo uvedeno výše, můžete se pokusit změnit stav rezervace pomocí karty nebo tlačítek. V případě karty je to řešeno tak, že ji vidí pouze osoba, která k tomu má právo. V případě tlačítek je to ošetřeno tak, že je může vidět každý.
+Jak je zmíněno výše, stav rezervace může zkusit změnit pomocí karty nebo tlačítek. V případě karty je to ošetřeno tak, že ji vidí pouze osoba, která má na to právo. V případě tlačítek je to tak, že je vidí každý.
 
-Při každém pokusu o změnu rezervace se zobrazí potvrzení této akce.
+Při každém pokusu o změnu rezervace se zobrazí potvrzení akce.
 
 ![](approve_sure.png)
 
@@ -134,48 +166,48 @@ Při každém pokusu o změnu rezervace se zobrazí potvrzení této akce.
 
 ![](reset_sure.png)
 
-Pokud se rozhodnete službu zrušit, nic se nestane. Pokud se přesto rozhodnete akci spustit, bude na pozadí zkontrolováno naše právo na tuto rezervaci. Pokud se ukáže, že toto právo nemáme, zobrazí se chybové hlášení a stav rezervace se nezmění.
+Pokud se rozhodnete akci zrušit, nic se nestane. Rozhodnete-li se akci přesto spustit, na pozadí se ověří naše právo nad touto rezervací. Pokud nastane případ, že právo nemáme, bude zobrazena chybová zpráva a stav rezervace se nezmění.
 
 ![](approve_no_right.png)
 
-Pokud máme právo na změnu, bude záležet na tom, jaký stát se snažíte nastavit:
+Pokud právo na změnu máme, dále to bude záležet na tom, jaký stav se snažíte nastavit:
 
-**SCHVÁLENÍ REZERVACE**, bez ohledu na původní stav rezervace se na pozadí spustí validace, která rozhodne, co se s rezervací stane.
+**SCHVÁLENÍ REZERVACE**, nezáleží na původním stavu rezervace, na pozadí se spustí validace která rozhodne co se stane s rezervací
 
-- pokud je ověření úspěšné, rezervace je schválena, zobrazí se potvrzovací zpráva a žadateli je zaslán e-mail.
-- pokud ověření nebylo úspěšné, rezervace je automaticky zamítnuta, zobrazí se chybové hlášení s důvodem zamítnutí a žadateli je zaslán e-mail.
+- pokud byla validace úspěšná, rezervace se schválí, zobrazí se potvrzující zpráva a odešle se email žadateli
+- pokud byla validace neúspěšná, rezervace se automaticky zamítne, zobrazí se chybová zpráva s důvodem zamítnutí a odešle se email žadateli
 
 ![](approved.png)
 
-**ODMÍTNUTÍ REZERVACE**, bez ohledu na původní stav rezervace bude rezervace jednoduše odmítnuta, bude vrácena potvrzovací zpráva a žadateli bude zaslán e-mail.
+**ZAMÍTNUTÍ REZERVACE**, nezáleží na původním stavu rezervace, rezervace bude prostě zamítnuta, vrátí se potvrzující hláška a odešle se email žadateli.
 
 ![](rejected.png)
 
-**RESETOVÁNÍ STAVU REZERVACE**, bez ohledu na původní stav rezervace, bude stav rezervace jednoduše vynulován, bude vrácena potvrzovací zpráva a žadateli bude zaslána zpráva.
+**RESETOVÁNÍ STAVU REZERVACE**, nezáleží na původním stavu rezervace, stav rezervace bude prostě resetován, vrátí se potvrzující hláška a odešle se zpráva žadateli.
 
 ![](reset.png)
 
-E-maily zaslané žadateli při změně stavu rezervace obsahují základní informace o rezervaci, její nový stav a také jméno schvalovatele, který stav této rezervace změnil.
+Odeslané emaily žadateli při změně stavu rezervace obsahují základní informace o rezervaci, její nový stav a také jméno schvalovatele, který tento změnil stav této rezervace.
 
-## Odstranění rezervací
+## Mazání rezervací
 
-Odstranění rezervace závisí na objektu rezervace, nad kterým byla rezervace vytvořena. Objekt rezervace může mít nastaveno heslo, které mění proces mazání - heslo bylo nastaveno na kartě [Pokročilé](../reservation-objects/README.md#Pokročilé).
+Mazání rezervací je závislé na tom, nad jakým rezervačním objektem byla tato rezervace vytvořena. Rezervační objekt může mít nastavené heslo, které změní průběh mazání rezervace - heslo se nastavovalo v kartě [Pokročilé](../reservation-objects/README.md#pokročilé).
 
-Pokud heslo NENÍ nastaveno, budou rezervace nad tímto objektem rezervace smazány.
+Pokud heslo NENÍ nastaveno, tak rezervace nad tímto rezervačním objektem se budou dát vymazat.
 
-Pokud je nastaveno heslo, budete vyzváni k jeho zadání.
+Pokud heslo je nastaveno, budete vyzváni k zadání tohoto hesla.
 
-- Pokud mažete více rezervací nad stejným objektem (který má heslo), budete vyzváni k zadání tohoto hesla pouze jednou (nemusíte ho zadávat dvakrát pro každou rezervaci zvlášť).
-- Pokud odstraňujete více rezervací, které se týkají více objektů s nastaveným heslem, můžete být vyzváni k zadání více hesel (opět bez duplicit).
+- V případě, že vymazáváte více rezervací nad stejným objektem (který má heslo), tak budete vyzváni pouze jednou k zadání tohoto hesla (nemusíte jej duplicitně zadávat pro každou rezervaci zvlášť).
+- V případě, že vymazáváte více rezervací, které jsou nad více objekty s nastaveným heslem, tak můžete být vyzváni k zadání několika hesel (zase bez duplicit).
 
-Zobrazená žádost o zadání hesla vás bude informovat o tom, pro který objekt rezervace je třeba zadat heslo. Pokud zadáte více hesel a rozhodnete se jedno nebo více z nich nezadávat (zrušíte akci zadání hesla), celková akce vymazání rezervace nebude ovlivněna. Nezadané heslo se automaticky považuje za špatné, a proto se rezervace a objekty s tímto heslem nevymažou.
+V zobrazené žádosti o zadání hesla budete informováni, pro který rezervační objekt musíte heslo zadat. Pokud zadáváte více hesel a jedno nebo více z nich se rozhodnete nezadat (zrušíte akci zadávání hesla), celková akce vymazávání rezervací tím však nebude ovlivněna. Nezadané heslo je automaticky považováno za špatné a proto se neodstraní rezervace and objektem s tímto heslem.
 
 ![](set_password.png)
 
-Po zadání všech potřebných hesel budete vyzváni k odstranění rezervací. Pomocí zobrazeného okna můžete celou akci přerušit nebo rozhodnutí potvrdit.
+Po zadání všech potřebných hesel se zobrazí výzva k vymazání rezervací. Pomocí zobrazeného okna můžete celou akci přerušit, nebo potvrdit rozhodnutí.
 
 ![](delete_dialog.png)
 
-Pokud bylo jedno nebo více hesel nesprávných, bude vrácena zpráva pro každou rezervaci, kterou z tohoto důvodu nebylo možné vymazat. Zpráva obsahuje informace o tom, které heslo objektu rezervace nebylo zadáno správně a kterou rezervaci nebylo možné z tohoto důvodu vymazat.
+Pokud bylo jedno nebo více hesel nesprávných, vrátí se hláška pro každou rezervaci, kterou nebylo možné kvůli tomu vymazat. Hláška obsahuje informaci o tom, které heslo rezervačního objektu nebylo zadáno správně a která rezervace kvůli tomu nemohla být vymazána.
 
 ![](delete_error.png)

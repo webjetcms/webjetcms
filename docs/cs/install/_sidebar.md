@@ -1,14 +1,14 @@
  <div class="sidebar-section">Instalace</div>
 
-- [:point\_left: Zpět na úvod](/?back)
+- [:point\_left: Zpět na Úvod](/?back)
 - Instalace
   - [Předpoklady a verze](/install/versions.md)
-  - [Nastavení nové instalace](/install/setup/README.md)
+  - [Zřízení nové instalace](/install/setup/README.md)
   - [Nastavení licenčního čísla](/install/license/README.md)
 - Konfigurace
   - [Základní konfigurace](/install/config/README.md)
   - [Externí konfigurace](/install/external-configuration.md)
-  - [Ochrana proti spamu](/install/config/spam-protection.md)
+  - [Spam ochrana](/install/config/spam-protection.md)
 - Migrace
   - [Migrace mezi prostředími](/install/migrate-dev-prod.md)
 - MultiWeb

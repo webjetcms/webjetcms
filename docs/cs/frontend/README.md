@@ -1,7 +1,7 @@
-# Dokumentace pro frontendového programátora
+# Dokumentace pro frontend programátora
 
-Dokumentace v této části je určena programátorům, kteří připravují návrh webu založeného na WebJET 2023.
+Dokumentace v této sekci je určena pro frontend programátora, který připravuje design stránky založené na WebJET 2023.
 
-Nejprve doporučujeme prostudovat použití [Framework Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/) pro přípravu šablon v systému WebJET CMS.
+Nejprve doporučujeme nastudovat si použití [Ninja frameworku](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/) pro přípravu šablon ve WebJET CMS.
 
-Tato dokumentace je v rané fázi a zatím upozorňuje na hlavní rozdíly mezi šablonami webových stránek ve WebJET 8 a WebJET 2023. Oddíly, které zde nejsou uvedeny, se používají stejně jako ve WebJET 8, použijte prosím příručku WebJET 8.
+Tato dokumentace je v raném stádiu a zdůrazňuje zatím hlavní rozdíly mezi šablonami web stránek ve WebJET 8 a WebJET 2023. Zde neuvedené části se používají stejně jako ve WebJET 8, použijte manuál k WebJET 8.

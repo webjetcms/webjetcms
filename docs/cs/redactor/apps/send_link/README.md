@@ -1,25 +1,25 @@
-# Odeslání stránky e-mailem
+# Poslat stránku emailem
 
-Vloží do stránky aplikaci, která umožňuje odeslat odkaz na aktuální stránku spolu s vyplněným textem na e-mailovou adresu. Pokud návštěvník najde na vašich stránkách zajímavé informace, může je přeposlat na svůj e-mail nebo na e-mail přítele, se kterým chce stránku sdílet.
+Vloží do stránky aplikaci, která umožňuje poslat odkaz na aktuální stránku spolu s doplněným textem na e-mail adresu. Pokud návštěvník najde zajímavé informace na vašem webu, může si je přeposlat na svůj email, nebo na email přítele kterému chce stránku sdílet.
 
 ## Nastavení aplikace
 
-V nastavení můžete vybrat z následujících možností:
-- Odeslání celé stránky e-mailem
-- Odeslání názvu stránky, perexu a odkazu na stránku e-mailem
+V nastaveních lze vybrat z možností:
+- Poslat e-mailem celou stránku
+- Poslat e-mailem název stránky, perex a linku na stránku
 
 ![](editor.png)
 
 ## Zobrazení aplikace
 
-Uživatel má k dispozici tato pole:
+Pro uživatele jsou pole:
 - Vaše jméno
 - Váš e-mail
 - E-mail příjemce
 - Předmět
 - Zadejte text z obrázku
-- Nahlásit
+- Zpráva
 
-Všechna pole kromě zprávy jsou povinná
+Přičemž všechna pole kromě zprávy jsou povinná
 
 ![](send_link.png)

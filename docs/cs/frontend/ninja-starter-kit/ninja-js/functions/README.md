@@ -2,23 +2,23 @@
 
 | Funkce | Popis |
 | --------------- | ---------------------- |
-| init(config) | Inicializace zásuvného modulu |
-| log(param) | Protokolování v konzoli |
-| isTouchDevice() | detekce zařízení |
+| init(config) | Inicializace pluginu |
+| log(param) | Logování v konzole |
+| isTouchDevice() | Detekování zařízení |
 
-## Inicializace zásuvného modulu
+## Inicializace pluginu
 
-Abyste mohli zásuvný modul Ninja používat, musíte jej inicializovat.
+Pro použití Ninja pluginu je třeba jej inicializovat.
 
-!> V šabloně je nutné mít skripty potřebné pro zásuvný modul Ninja, které jsou v části `global-functions.min.js`
+!> Je třeba mít v šabloně nalinkované skripty, potřebné pro Ninja plugin, které jsou v `global-functions.min.js`
 
-Inicializace zásuvného modulu:
+Inicializace pluginu:
 
 ```javascript
 Nina.init();
 ```
 
-Inicializace zásuvného modulu s použitými nastaveními a událostmi:
+Inicializace pluginu s nastaveními a použitými událostmi:
 
 ```javascript
 Nina.init({
@@ -33,15 +33,15 @@ Nina.init({
 });
 ```
 
-## Přihlašování v konzole
+## Logování v konzole
 
-Bude obsahovat seznam **console.warn** se zadaným parametrem, pokud je nastaven při inicializaci zásuvného modulu. `debug` na adrese `true`, nebo pokud je parametr nastaven v adrese URL. `ninjaDebug` na adrese `true`.
+Vypíše **console.warn** se zadaným parametrem je-li při inicializaci pluginu nastaven `debug` na `true`, nebo je-li v URL adrese nastaven parametr `ninjaDebug` na `true`.
 
-Ninja.log v podstatě volá console.warn, který je obalený podmínkou, že se provede pouze v případě, že je povolen režim ladění.
+Ninja.log v podstatě zavolá console.warn, který je obalen podmínkou, že se provede pouze v případě, je-li zapnut debug režim.
 
-Ve svých skriptech tak můžete mít spoustu Ninja.logů, které vám pomáhají při vývoji, a nemusíte je mazat, stačí vypnout režim ladění a logy se nebudou spouštět.
+Čili můžeš mít ve svých skriptů klidně hodně Ninja.logů, které ti pomáhají při vývoji a nemusíš je smazat, stačí pokud vypneš debug režim a log se neprovede.
 
-!> console.warm() je také log, stejně jako console.log() nebo console.info() atd. Je však barevně odlišen. Ve výchozím nastavení je žlutý. Tím se rozlišují logy, které jsou s pluginem Ninja, a standardní logy mimo plugin Ninja.
+!> console.warm() je také log, podobně jako console.log() nebo console.info() atp. Je ale barevně odlišen. Má standardně žlutou barvu. Tím se odliší logy, které jsou s Ninja pluginu a standartní logy mimo Ninja pluginu.
 
 Příklad použití:
 
@@ -49,9 +49,9 @@ Příklad použití:
 Nina.log("Hello world");
 ```
 
-## Detekce zařízení
+## Detekování zařízení
 
-Vrací hodnotu true, pokud je zařízení detekováno jako dotykové.
+Vrátí true pokud je zařízení detekováno jako dotykové.
 
 Příklad použití:
 
@@ -59,7 +59,7 @@ Příklad použití:
 Nina.isTouchDevice();
 ```
 
-Kód, který při volání kontroluje, zda se jedná o dotykové zařízení:
+Kód, který po zavolání kontroluje, zda se jedná o dotykové zařízení:
 
 ```javascript
 var isTouchDevice = false,

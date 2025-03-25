@@ -1,42 +1,42 @@
 # Nastavení složky
 
-Chcete-li zobrazit nastavení složky, klikněte pravým tlačítkem myši na složku a vyberte možnost Nastavení složky. Okno obsahuje následující karty:
+Nastavení složky zobrazíte kliknutím pravým tlačítkem na složku a volbou Nastavení složky. Okno obsahuje následující karty:
 - Základní
-- Indexování (**Varování:** vykazuje se pouze za zvláštních okolností)
+- Indexování (**Upozornění:** zobrazena pouze za speciálních okolnosti)
 - Použití
 
 ## Základní
 
-Karta **Základní** poskytuje základní informace o složce a možnost omezit přístupová práva pomocí skupiny uživatelů.
+Karta **Základní** poskytuje základní informace o složce i možnost omezit přístupová práva pomocí Skupiny uživatelů.
 
-Pomocí možnosti "Indexovat soubory pro vyhledávání" povolíte indexování souborů ve složce.
+Možností "Indexovat soubory pro vyhledávání" povolujete indexování souborů dané složky.
 
 ![](folder_settings_basic.png)
 
 ## Indexování
 
-Karta **Indexování** se zobrazí POUZE tehdy, pokud adresa URL složky začíná hodnotou `/files`. Používá se pro akce indexování souborů. Indexování se provádí POUZE tehdy, je-li povoleno na kartě [Základní](#Základní).
+Karta **Indexování** se zobrazí POUZE pokud URL adresa dané složky začíná hodnotou `/files`. Slouží k akci indexování souborů. Indexování se provede POUZE pokud je povoleno v kartě [Základní](#základní).
 
 ![](folder_settings_index.png)
 
-Stisknutím tlačítka "Index" zahájíte proces indexování, který může trvat několik minut.
+Po stisku tlačítka "Indexuj" se spustí indexování, které může trvat několik minut.
 
-| Indexování není povoleno nebo nebyly nalezeny žádné soubory k indexování | Indexování je povoleno a byly nalezeny soubory k indexování |
+| Indexování není povoleno, nebo nebyly nalezeny soubory k indexování | Indexování je povoleno a nalezeny soubory k indexování |
 | :----------------------------------------------------------------: | :-----------------------------------------------------: |
 | ![](folder_settings_index_empty.png)                | ![](folder_settings_index_not-empty.png)         |
 
 ## Použití
 
-Karta **Použití** ukazuje použití složky ve formě vnořené datové tabulky. Každý záznam představuje jednu webovou stránku. Datová tabulka obsahuje sloupce:
-- Název, webová stránka
-- Adresa URL, webová stránka
+Karta **Použití** zobrazuje použití složky ve formě vnořené datatabulky. Každý záznam představuje web stránku. Datatabulka obsahuje sloupce:
+- Název, web stránky
+- URL adresa, web stránky
 
-Obě hodnoty jsou současně přímky směřující do různých míst.
+Obě hodnoty jsou současně linky směřující na rozdílné lokace.
 
-**Název** je odkaz na webovou stránku [Seznam webových stránek](../../../../redactor/webpages/README.md), kde se vyhledá webová stránka a automaticky se otevře editor.
+**Název** web stránky je linka na [Seznam web stránek](../../../../redactor/webpages/README.md), kde se daná web stránka vyhledá a automatický otevře editor.
 
 ![](folder_link_A.png)
 
-**Adresa URL** je odkaz přímo na webovou stránku.
+**URL adresa** web stránky je linka přímo na danou web stránku.
 
 ![](folder_link_B.png)

@@ -1,50 +1,50 @@
- <div class="sidebar-section">Webový designér</div>
+ <div class="sidebar-section">Web designér</div>
 
-- [:point\_left: Zpět na úvod](/?back)
+- [:point\_left: Zpět na Úvod](/?back)
 - Nastavení
   - [Šablony](/frontend/setup/README.md)
-  - [Obecná nastavení](/frontend/setup/config.md)
+  - [Všeobecná nastavení](/frontend/setup/config.md)
   - [Volitelná pole](/frontend/webpages/customfields/README.md)
   - [FontAwesome](/frontend/webpages/fontawesome/README.md)
 - Šablony
   - [Způsob zobrazení stránky](/frontend/templates/README.md)
   - [Šablony](/frontend/templates/templates.md)
   - [Skupiny šablon](/frontend/templates/template-groups.md)
-- Šablony Thymeleaf
+- Thymeleaf šablony
   - [Úvod](/frontend/thymeleaf/README.md)
   - [Atributy, podmínky a cykly](/frontend/thymeleaf/statements.md)
-  - [Štítky WebJET CMS](/frontend/thymeleaf/tags.md)
+  - [Značky WebJET CMS](/frontend/thymeleaf/tags.md)
   - [Seznam dostupných atributů](/frontend/thymeleaf/webjet-objects.md)
-  - [Nahrazení textu](/frontend/thymeleaf/text-replaces.md)
-- Šablony JSP
+  - [Nahrazování textů](/frontend/thymeleaf/text-replaces.md)
+- JSP šablony
   - [Základní šablona](/frontend/jsp/README.md)
-- Startovací sada Ninja
+- Ninja Starter Kit
   - [Úvod](/frontend/ninja-starter-kit/README.md)
   - [Nastavení](/frontend/ninja-starter-kit/temp-group/README.md)
   - [Základní kód](/frontend/ninja-starter-kit/ninja-bp/README.md)
   - Dostupné objekty
-    - [Informace o webu](/frontend/ninja-starter-kit/ninja-jv/page/README.md)
+    - [Informace o stránce](/frontend/ninja-starter-kit/ninja-jv/page/README.md)
     - [Informace o šabloně](/frontend/ninja-starter-kit/ninja-jv/temp/README.md)
     - [Informace o projektu](/frontend/ninja-starter-kit/ninja-jv/temp-group/README.md)
     - [Informace o zařízení](/frontend/ninja-starter-kit/ninja-jv/user-agent/README.md)
-    - [Informace o systému WebJET CMS](/frontend/ninja-starter-kit/ninja-jv/webjet/README.md)
+    - [Informace o WebJET CMS](/frontend/ninja-starter-kit/ninja-jv/webjet/README.md)
     - [Režim ladění](/frontend/ninja-starter-kit/ninja-jv/debug/README.md)
   - JavaScript
     - [Nastavení](/frontend/ninja-starter-kit/ninja-js/settings/README.md)
     - [Události](/frontend/ninja-starter-kit/ninja-js/events/README.md)
     - [Funkce](/frontend/ninja-starter-kit/ninja-js/functions/README.md)
   - Styly
-    - [Nomenklatura](/frontend/ninja-starter-kit/ninja-cs/naming/README.md)
+    - [Názvosloví](/frontend/ninja-starter-kit/ninja-cs/naming/README.md)
 - Přizpůsobení aplikací
-  - [Úprava souboru JSP](/frontend/customize-apps/README.md)
+  - [Úprava JSP souboru](/frontend/customize-apps/README.md)
 - PageBuilder
   - [Úvod](/frontend/page-builder/README.md)
   - [Nastavení](/frontend/page-builder/settings.md)
   - [Bloky](/frontend/page-builder/blocks.md)
-- Výňatky
-  - [Vzorové šablony](/frontend/examples/README.md)
-  - [Holá šablona](/frontend/examples/template-bare/README.md)
-  - [Kreativní šablona](/frontend/examples/templates-creative/README.md)
+- Ukázky
+  - [Ukázkové šablony](/frontend/examples/README.md)
+  - [Bare šablona](/frontend/examples/template-bare/README.md)
+  - [Creative šablona](/frontend/examples/templates-creative/README.md)
 - Generování obrázků
-  - [Servlet Thumb](/frontend/thumb-servlet/README.md)
-  - [Zajímavosti](/frontend/thumb-servlet/interest-point.md)
+  - [Thumb servlet](/frontend/thumb-servlet/README.md)
+  - [Bod zájmu](/frontend/thumb-servlet/interest-point.md)

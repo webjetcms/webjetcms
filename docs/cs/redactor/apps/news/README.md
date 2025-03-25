@@ -1,76 +1,76 @@
 # Novinky
 
-Aplikace Zprávy vloží do stránky seznam webových stránek v zadané složce. Slouží k vložení seznamu novinek, tiskových zpráv, ale i dalších podobných výpisů (seznam kontaktních míst, osobních kontaktů, produktů apod.).
+Aplikace Novinky, vloží do stránky seznam web stránek v zadané složce. Používá se pro vkládání seznamu novinek, tiskových zpráv, ale i jiných podobných výpisů (seznam kontaktních míst, osobních kontaktů, produktů a podobně).
 
 ![](news.png)
 
 # Seznam novinek
 
-Seznam novinek v administraci je podobný seznamu webových stránek, ale neobsahuje stromovou strukturu. Nachází se v nabídce Příspěvky/Novinky. V horní části můžete vybrat složku, která se má v tabulce zobrazit.
+Seznam novinek v administraci je podobný seznamu web stránek, ale neobsahuje stromovou strukturu. Nachází se v menu Příspěvky/Novinky. V horní části lze vybrat složku pro zobrazení v tabulce.
 
 ![](admin-dt.png)
 
-Hodnoty v poli pro výběr složky v záhlaví jsou generovány:
-- automaticky - pokud je konf. proměnná `newsAdminGroupIds` je nastavena na prázdnou hodnotu, seznam ID složek se získá vyhledáním termínu `!INCLUDE(/components/news/` v tělech stránek a sledováním nastaveného ID složky `groupIds`.
-- podle konf. proměnné `newsAdminGroupIds` kde můžete zadat čárkou oddělený seznam ID složek, např. `17,23*,72`, kde pokud ID složky končí znakem `*` při výběru se načtou také zprávy (webové stránky) z podsložek.
+Hodnoty ve výběrovém poli složky v hlavičce se generují:
+- automaticky - je-li konf. proměnná `newsAdminGroupIds` nastavena na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `!INCLUDE(/components/news/` v tělech stránek a dohledáním nastaveného ID složky `groupIds`.
+- podle konf. proměnné `newsAdminGroupIds`, kde je možné zadat cedkou oddělený seznam ID složek, například. `17,23*,72`, přičemž pokud ID složky končí na znak `*` načítají se při výběru i novinky (web stránky) z pod složek.
 
-Kliknutím na název zprávy se otevře editor, který je totožný s editorem [editor stránek](../../webpages/editor.md).
+Klepnutím na název novinky se otevře editor shodný s [editorem stránek](../../webpages/editor.md).
 
 ![](admin-edit.png)
 
-# Nastavení aplikace na webové stránce
+# Nastavení aplikace ve web stránce
 
-Aplikace vložená do webové stránky má následující karty:
+Aplikace vložená do web stránky má následující karty:
 
 ## Parametry aplikace
 
-Na kartě Parametry aplikace se nastavuje základní chování aplikace a její nastavení.
+V záložce parametry aplikace nastavujete základní chování aplikace a její nastavení.
 
 ![](editor-dialog.png)
 
-- Adresář - ID adresářů (složek webových stránek), ze kterých budou vybírány novinky (stránky). Pomocí tlačítka Přidat můžete vybrat více ID adresářů.
-- Včetně podadresářů - při výběru této možnosti se načítají také zprávy z podadresářů vybraných adresářů z pole Adresář.
-- Typy stránek - výběr stránek podle data platnosti
-  - Aktuální - je platné datum začátku a konce - zobrazí se pouze novinky, jejichž datum platnosti (začátek a konec pulikace) je v rozsahu aktuálního data.
-  - Staré - zobrazí se novinky, které mají datum ukončení v minulosti (archiv).
-  - Všechny - novinky se zobrazí bez ohledu na datum začátku a konce jejich zveřejnění.
-  - Další - zobrazí se pouze novinky, které mají budoucí datum zahájení publikování.
-  - Aktuálně platné - zobrazí se pouze zprávy s vyplněným datem zahájení (datum ukončení nemusí být vyplněno) a datem ukončení, jejichž rozsah je platný v aktuálním datu a čase.
-- Uspořádat podle - určuje, jak je seznam novinek uspořádán.
-  - Priorita
-  - Datum zahájení zveřejňování
-  - Datum konání akce
-  - Datum poslední změny
-  - Název stránky
+- Adresář - ID adresářů (složek web stránek), ze kterých se budou vybírat novinky (stránky). Tlačítkem Přidat, můžete vybrat více ID adresářů.
+- Zahrnout podadresáře - zvolením této možnosti se načtou novinky iz podadresářů zvolených adresářů z pole Adresář.
+- Typy stránek - výběr stránek podle datumové platnosti
+  - Aktuálně - je platné datum začátku a konce - zobrazí se jen novinky, jejichž datum platnosti (začátek a konec pulikování) je v rozmezí aktuálního data.
+  - Staré – zobrazí se novinky, které mají datum konce v minulosti (archiv).
+  - Všechny – zobrazí se novinky bez ohledu na datum začátku a konce jejich publikování.
+  - Následující – zobrazí se jen novinky, které mají datum začátku publikování v budoucnosti.
+  - Aktuálně platné - zobrazí se pouze novinky s vyplněným datem začátku (konec nemusí být vyplněn) a konce jejichž rozsah je platný v aktuální datum a čas.
+- Uspořádat podle - určuje způsob uspořádání seznamu novinek
+  - Priority
+  - Data začátku publikování
+  - Data konání
+  - Data poslední změny
+  - Názvu stránky
   - Místa
   - ID stránky
-  - Hodnocení - hodnocení stránky (např. při použití e-shopu) - hodnocení se nastavuje pomocí aplikace pro hodnocení stránek.
-- Vzestupně - ve výchozím nastavení je seznam seřazen sestupně (např. od nejnovějších zpráv po nejstarší), zaškrtnutím tohoto políčka se pořadí obrátí - od nejstarších po nejnovější.
-- Stránkování - pokud je zaškrtnuto, zobrazí se také stránkování seznamu novinek (pokud je počet novinek větší než hodnota v poli Počet položek na stránce).
-- Počet položek na stránce - počet zobrazených novinek na jedné stránce, pokud je stránkování odškrtnuto, podle této hodnoty se počet novinek načítá z databáze, vhodné například pro úvodní stránku, kde chcete mít zobrazeny například 3 novinky a odkaz na seznam všech novinek, ale nechcete zobrazovat stránkování.
-- Přeskočit první - počet záznamů, které chcete přeskočit při načítání seznamu (např. pokud máte na stránce pod sebou dvě aplikace s odlišným designem a chcete přeskočit počet záznamů z první aplikace v druhé aplikaci).
-- Anotace (perex) nemusí být vyplněna - ve výchozím nastavení se zobrazí pouze novinky, které mají anotaci (perex) vyplněnou, pokud toto políčko zaškrtnete, načtou se i novinky, které anotaci (perex) vyplněnou nemají.
-- Načíst s textem stránky (méně optimální) - ve výchozím nastavení se text stránky z databáze nenačítá, pokud jej potřebujete zobrazit, zaškrtněte toto políčko. Načítání však bude pomalejší a náročnější na výkon databáze a serveru.
-- Kontrola duplicity - pokud stránka obsahuje více aplikací novinek na jedné stránce, zaznamená se seznam již zobrazených novinek. Stávající jsou ze seznamu odstraněny. Počet zobrazených záznamů se však následně nemusí shodovat, ale zároveň se nestane, že by se stejná novinka na jedné stránce zobrazovala vícekrát.
-- Vyloučit stránky hlavní složky - pokud je vybráno, jsou vyloučeny stránky hlavní složky (pro Včetně podadresářů). Předpokládá se, že podsložky obsahují hlavní stránku se seznamem novinek v dané složce. Takové stránky jsou vyloučeny a v seznamu novinek se nepoužívají.
-- Vložení tříd do `Velocity` šablony - speciální pole pro programátora, kde může definovat třídu (program) jazyka Java, kterou lze následně použít v šabloně. Pokud nemáte přesné instrukce, co do tohoto pole vložit, nechte ho prázdné.
-- Doba vyrovnávací paměti (minuty) - počet minut, po které je seznam novinek zapamatován. Načítání seznamu novinek může být náročné na výkon databáze, doporučujeme nastavit vyrovnávací dobu alespoň na 10 minut. Tím se zrychlí zobrazení stránky (zejména pokud se seznam novinek nachází například na domovské stránce).
+  - Ratingu - hodnocení stránky (např. při použití eshopu) - hodnocení se nastavuje pomocí aplikace hodnocení stránky.
+- Vzestupně - standardně se uspořádá seznam sestupně (např. od nejnovější novinky po nejstarší), zaškrtnutím tohoto pole bude uspořádání naopak - od nejstarší po nejnovější
+- Stránkování - pokud zaškrtnete zobrazí se i stránkování seznamu novinek (je-li počet novinek větší než hodnota v poli Počet položek na stránce)
+- Počet položek na stránce - počet zobrazených novinek na jedné stránce, je-li stránkování nezaškrtnuto podle této hodnoty se načte z databáze počet novinek, vhodné například. na úvodní stránku kde chcete mít zobrazeno např. 3 novinky a odkaz na seznam všech novinek, ale stránkování nechcete zobrazit.
+- Přeskočit prvních - počet záznamů, které chcete přeskočit při načítání seznamu (např. pokud máte ve stránce dvě aplikace pod sebou s jiným designem a ve druhé chcete přeskočit počet záznamů z první aplikace)
+- Nemusí být vyplněn perex (anotace) - standardně se zobrazí jen novinky, které mají vyplněnou anotaci (perex), pokud zaškrtnete toto pole, načtou se i ty, které anotaci (perex) vyplněnou nemají
+- Načtení s textem stránky (méně optimální) - standardně se z databáze nenačítá text stránky, pokud jej pro zobrazení potřebujete, zaškrtněte toto pole. Načtení ale bude pomalejší a náročnější na výkon databáze a serveru.
+- Kontrolovat duplicitu - pokud stránka obsahuje více aplikací novinky v jedné stránce, eviduje se seznam již zobrazených novinek. Již existující se vyřadí ze seznamu. Nemusí ale následně sedět počet zobrazených záznamů, zároveň se ale nestane, že bude na jedné stránce zobrazena stejná novinka víckrát.
+- Vyloučit hlavní stránky složek - pokud je zvoleno vyloučí se hlavní stránky složek (při možnosti Zahrnout podadresáře). Předpokládá se, že podadresáře obsahují hlavní stránku se seznamem novinek v této složce. Takové stránky se vyloučí a nepoužijí se v seznamu novinek.
+- Vložit třídy do `Velocity` šablony - speciální pole pro programátora, kterým lze zadefinovat Java třídu (program), kterou lze následně použít v šabloně. Pokud nemáte přesné instrukce co do tohoto pole vložit ponechte jej prázdné.
+- Čas vyrovnávací paměti (minuty) - počet minut pamatování seznamu novinek. Načtení seznamu novinek může být náročné na výkon databáze, doporučujeme nastavit vyrovnávací paměť na minimálně 10 minut. Urychlí to zobrazení stránky (hlavně pokud je seznam novinek např. na úvodní stránce).
 
 ## Šablona
 
-Na kartě Šablona vyberete vizuální způsob zobrazení seznamu novinek.
+V kartě šablona volíte vizuální způsob zobrazení seznamu novinek.
 
 ![](editor-dialog-templates.png)
 
-Pokud máte správně nastavenou možnost Zprávy a tiskové zprávy - Vytvářet a upravovat šablony, můžete vytvořit novou šablonu návrhu zpráv a upravit stávající. Šablony designu zpráv se upravují ve vlastním editoru. Ve výchozím nastavení doporučujeme provádět pouze drobné úpravy kódu HTML šablony a používat možnosti, které nabízí kontextová nabídka v editoru šablony zpravodaje.
+Máte-li právo Novinky a tiskové zprávy - Vytvoření a úprava šablon můžete vytvořit novou designovou šablonu novinek a upravovat stávající. Designové šablony novinek se upravují ve vlastním editoru. Standardně doporučujeme provádět jen drobné úpravy v HTML kódu šablony a využít možností, které vám nabízí kontextové menu v editoru šablon novinek.
 
-Šablony zpráv používané [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) pro zobrazení, takže je možné definovat cykly, podmínky a další programový kód. Připraveny jsou šablony s jedním, dvěma a třemi sloupci. Doporučujeme, aby šablony upravovali pouze uživatelé, kteří vědí, co dělají, a znají syntaxi `Velocity Engine`. Doporučujeme vycházet z připravených šablon a v případě potřeby je upravit. Standardní editor by neměl mít právo upravovat šablony newsletteru, měl by je pouze používat.
+Šablony novinek používají [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) pro zobrazení, je tedy možné definovat cykly, podmínky a jiný programový kód. Připraveny jsou šablony s jedním, dvěma i třemi sloupci. Šablony doporučujeme editovat pouze uživateli, kteří vědí co dělají a znají syntax `Velocity Engine`. Doporučujeme vycházet z připravených šablon a případně je jen upravovat. Standardní redaktor by neměl mít právo na editaci šablon novinek, měl by je jen používat.
 
-Při úpravách šablon je v dialogovém okně k dispozici kontextová nabídka (po kliknutí pravým tlačítkem myši do pole Kód HTML nebo Kód stránkování HTML), která umožňuje snadné vkládání programových bloků. Šablony lze duplikovat, proto doporučujeme začít vytvořením kopie existující šablony a poté pouze upravit kód HTML.
+Při úpravě šablon je v dialogovém okně dostupné kontextové menu (když kliknete pravým tlačítkem do pole HTML kód nebo HTML kód stránkování) pomocí kterého snadno vložíte programové bloky. Šablony lze duplikovat, doporučujeme vám tedy začít vytvořením kopie stávající šablony a následně jen upravit HTML kód.
 
-Uložení náhledového obrázku šablony do složky `/components/news/images/MENO-SABLONY.png`.
+Náhledový obrázek pro šablonu uložte do `/components/news/images/MENO-SABLONY.png`.
 
-Některé příklady práce s pokročilými objekty:
+Několik ukázek práce s pokročilými objekty:
 
 ```velocity
 //nastavenie premennej podla pageParams objektu:
@@ -131,7 +131,7 @@ $totalPages
 #if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
 ```
 
-Pokud potřebujete zobrazit datum prvního uložení webové stránky, nastavte proměnnou conf. `editorAutoFillPublishStart` na hodnotu `true`. Po nastavení editor automaticky vyplní pole Datum zahájení na kartě Perex editoru aktuálním datem. Toto datum lze v případě potřeby změnit také ručně. V šabloně pak můžete použít následující objekty:
+Pokud potřebujete zobrazovat datum prvního uložení web stránky nastavte konf. proměnnou `editorAutoFillPublishStart` na hodnotu `true`. Po nastavení bude editor automaticky vyplňovat pole Datum začátku v kartě Perex v editoru aktuálním datem. Toto datum lze v případě potřeby i manuálně změnit. Následně v šabloně můžete použít následující objekty:
 
 ```velocity
 //datum a cas posledneho ulozenia
@@ -141,58 +141,58 @@ $doc.lastUpdateDate $doc.lastUpdateTime
 $doc.publishStartString
 ```
 
-## Skupina Perex
+## Perex skupiny
 
-Na kartě Skupiny Perex můžete vytvořit podmínky pro zobrazování zpráv pouze z vybraných skupin Perex. Slouží např. k označení Top novinky na domovské stránce apod.
+V kartě Perex skupiny můžete vytvářet podmínky pro zobrazení novinek jen ze zvolených perex skupin. Používají se k označení například. Top zprávy na úvodní stránce a podobně.
 
-Pokud potřebujete ze seznamu vyloučit skupinu perexů, nastavte ji v poli Nezobrazovat vybrané skupiny perexů.
+Zároveň pokud potřebujete ze seznamu vyloučit perex skupinu nastavte ji do pole Nezobrazit zvolené perex skupiny.
 
 ![](editor-dialog-perex.png)
 
-Používá se, pokud máte v horní části domovské stránky sekci TOP zprávy, kde se zobrazují zprávy označené příznakem TOP, a pod nimi seznam dalších zpráv. Vyloučením perexu skupiny TOP z druhého seznamu novinek zabráníte duplicitě.
+Používá se to v případě, že máte na úvodní stránce v horní části sekci TOP Novinky kde zobrazujete novinky označené příznakem TOP a následně pod tím máte seznam ostatních novinek. Vyloučením perex skupiny TOP z druhého seznamu novinek zamezíte duplicitě.
 
 ## Filtr
 
-Na kartě Filtr můžete definovat pokročilé možnosti zobrazování zpráv podle atributů databáze a podmínek. Mezi jednotlivými podmínkami se používá `A/AND`, tj. musí být splněny všechny zadané podmínky filtru.
+V kartě filtr můžete definovat pokročilé možnosti zobrazení novinek podle databázových atributů a podmínek. Mezi jednotlivými podmínkami se používá `A/AND`, tedy musí být splněny všechny zadané podmínky filtru.
 
 ![](editor-dialog-filter.png)
 
 ## Novinky
 
-Na kartě Zprávy se zobrazuje seznam novinek, které se načítají podle vybraných adresářů na kartě Parametry aplikace. Můžete si prohlédnout seznam novinek a snadno upravovat existující novinky (upravovat název, fotografii nebo text novinky). Můžete také vytvořit novou položku novinek.
+V kartě novinky se zobrazí seznam novinek, které se načtou podle zvolených adresářů z karty Parametry aplikace. Vidíte tak seznam novinek a můžete jednoduše stávající novinky upravovat (upravit nadpis, fotografii, případně text novinky). Rovněž můžete vytvořit novou novinku.
 
 ![](editor-dialog-newslist.png)
 
 # Vyhledávání
 
-Aplikace také podporuje dynamické vyhledávání/filtraci zpráv přímo na webové stránce pomocí parametrů URL. Filtrování zobrazených novinek na webové stránce můžete doplnit podle přání návštěvníka (např. podle kategorie, data apod.). Vyhledávání/filtrace se zadává do parametrů URL ve formátu:
+Aplikace podporuje také dynamické vyhledávání/filtrování novinek přímo na web stránce pomocí URL parametrů. Umíte tak ve web stránce přidat filtrování zobrazených novinek podle přání návštěvníka (např. podle kategorie, dat atd.). Vyhledávání/filtrování se zadává do URL parametrů ve formátu:
 
 ```
 search[fieldName_searchType]=value
 search[title_co]=test
 ```
 
-kde hodnota searchType může mít následující možnosti:
+přičemž hodnota searchType může mít následující možnosti:
 - `eq` - přesná shoda
 - `gt` - více než
 - `ge` - více než včetně
 - `le` - méně než včetně
 - `lt` - méně než
-- `sw` - počínaje
-- `ew` - končí na adrese
+- `sw` - začíná na
+- `ew` - končí na
 - `co` - obsahuje
-- `swciai` - začíná na libovolné velikosti písmen a diakritiky
-- `ewciai` - koncovka bez rozlišení velkých a malých písmen a diakritiky
-- `cociai` - obsahuje písmena a diakritiku bez rozlišení velikosti písmen.
+- `swciai` - začíná na bez ohledu na velikost písmen a diakritiku
+- `ewciai` - končí na bez ohledu na velikost písmen a diakritiku
+- `cociai` - obsahuje bez ohledu na velikost písmen a diakritiku
 
-Při zadávání parametrů URL může nastat problém s odmítnutím hodnoty `[]` a zobrazení chyby `400 - Bad Request`, v takovém případě použijte náhradní `[=%5B, ]=%5D`, příklad volání:
+Při zadávání URL parametrů může nastat problém s odmítnutím hodnoty `[]` a zobrazením chyby `400 - Bad Request`, v takovém případě použijte náhradu `[=%5B, ]=%5D`, příklad volání:
 
 ```
 /zo-sveta-financii/?search%5Btitle_co%5D=konsolidacia
 ```
 
-Vyhledávání parametrů URL může probíhat vícekrát, pro více parametrů se používá spojení `AND`.
+URL parametr search se může vyskytovat vícekrát, pro více parametrů se použije spojení `AND`.
 
 # Možné konfigurační proměnné
 
-- `newsAdminGroupIds` - Seznam ID složek zpráv. ID jsou oddělena čárkami.
+- `newsAdminGroupIds` - Seznam ID složek s novinkami. ID jsou odděleny čárkami.

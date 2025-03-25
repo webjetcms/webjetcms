@@ -1,6 +1,6 @@
 # Působivá prezentace
 
-Animované zobrazení prezentace s 3D efektem přechodu mezi snímky. U každého snímku můžete definovat název, podtitul, barvu písma a pozadí, ilustrační fotografii.
+Animované zobrazení prezentace s 3D efektem přechodu mezi snímky. Každému snímku můžete definovat nadpis, podnadpis, barvu písma a pozadí, ilustrační fotografii.
 
 ## Nastavení aplikace
 
@@ -15,7 +15,7 @@ V této části lze nastavit:
 
 ### Položky
 
-Tato část slouží k přidání nebo odebrání položky: Při přidávání lze vyplnit nadpis, podnadpis, přesměrování, barvu nadpisu, barvu podnadpisu, barvu pozadí. Současně lze pro nadpis a podnadpis upravit styl písma (tučné, kurzíva, odsazení, velikost a styl) pomocí pokročilého nastavení. U nadpisů lze měnit pořadí přetažením. Položku můžete odebrat klepnutím na červený křížek.
+V této části je přidat nebo odebrat položku: Při přidání lze vyplnit nadpis, podnadpis, přesměrování, barvu nadpisu, barvu podnadpisu, barvu pozadí. Zároveň při nadpisu a podnadpisu lze pomocí rozšířeného nastavení upravit styl písma (hrubé písmo, kurzíva, odsazení, velikost a styl). U položek lze změnit pořadí přesunutím. Odebrání položky lze kliknutím na červený křížek.
 
 ![](editor-items.png)
 

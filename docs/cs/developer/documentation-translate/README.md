@@ -1,22 +1,22 @@
 # Překlad dokumentace
 
-V této části se budeme zabývat tím, jak zajistit překlad stávající dokumentace.
+V této části si rozebereme, jak zajistit překlad již existující dokumentace.
 
 ## Deepmark
 
-Pro automatický překlad souborů `markdown` používáme **vlastní verze** zdarma dostupný nástroj [deepmark](https://github.com/izznatsir/deepmark) který používá [DeepL](https://www.deepl.com/cs/translator) Překladatel.
+K automatizovanému překladu souborů `markdown` využijeme **vlastní verzi** dostupného bezplatného nástroje [deepmark](https://github.com/izznatsir/deepmark), který využívá [DeepL](https://www.deepl.com/cs/translator) překladač.
 
-Tato vlastní upravená verze původního `Deepmark` najdete zveřejněné jako [@webjetcms/deepmark](https://www.npmjs.com/package/@webjetcms/deepmark).
+Tuto vlastní upravenou verzi originálního `Deepmark` najdete publikovanou jako [@webjetcms/deepmark](https://www.npmjs.com/package/@webjetcms/deepmark).
 
 ### Instalace
 
-Stejné `deepmark` instalovat do umístění, kde je umístěna dokumentace, což je v našem případě složka `docs`.
+Samotný `deepmark` nainstalujete v lokaci, kde se nachází dokumentace, což je v našem případě složka `docs`.
 
-Chcete-li jej nainstalovat, použijte příkaz `npm i @webjetcms/deepmark`, který nainstaluje aktuální verzi.
+Nainstalujete ho příkazem `npm i @webjetcms/deepmark`, čímž se nainstaluje právě aktuální verze.
 
 **NEBO**
 
-Pokud chcete použít konkrétní verzi, můžete ji přidat jako `dependencie` do souboru `package.json` ve složce dokumentace jako
+Chcete-li využívat konkrétní verzi můžete jej přidat jako `dependencie` do souboru `package.json` ve složce s dokumentací jako
 
 ```json
 "dependencies": {
@@ -24,17 +24,17 @@ Pokud chcete použít konkrétní verzi, můžete ji přidat jako `dependencie` 
 }
 ```
 
-a poté jej nainstalujte příkazem `npm install`.
+a následně jej nainstalovat příkazem `npm install`.
 
 ### Proměnná prostředí
 
-Vzhledem k tomu, že `deepmark` používá překladatele k překladu `DeepL`, je třeba nastavit proměnnou prostředí `DEEPL_AUTH_KEY ` s autorizačním klíčem na ` DeepL`.
+Nakolik `deepmark` využívá k překladu překladač `DeepL`, musíte nastavit proměnnou prostředí `DEEPL_AUTH_KEY ` s autorizačním klíčem k ` DeepL`.
 
 ### Konfigurační soubor `deepmark`
 
-V konfiguračním souboru nastavíme místo, odkud budeme `markdown` přeložit, a také umístění, kde budou tyto přeložené soubory uloženy. Rovněž určíme, z jakého jazyka a do jakého jazyka má být překlad proveden.
+V konfiguračním souboru nastavíme web, odkud budeme `markdown` překládat i web, kde se tyto přeložené soubory uloží. Také definujeme z jakého a do jakého jazyka se má překlad provést.
 
-!>**Varování:** tento konfigurační soubor **musí být** nazvaný jako `deepmark.config.mjs` a musí být na stejném místě, kde jsme nainstalovali `deepmark`. V našem případě je to složka `docs`.
+!>**Upozornění:** tento konfigurační soubor **musí být** nazvaný jako `deepmark.config.mjs` a musí být ve stejné lokaci, kde jsme instalovali `deepmark`. V našem případě se jedná o složku `docs`.
 
 ```javascript
 /** @type {import("deepmark").UserConfig} */
@@ -47,31 +47,31 @@ export default {
 };
 ```
 
-!>**Varování:** pokud není cílové místo překladu vytvořeno, vytvoří se automaticky. Pokud cílové umístění již obsahuje soubory se stejným názvem, budou přepsány. V opačném případě budou vytvořeny nové soubory.
+!>**Upozornění:** pokud cílová lokace překladů vytvořena není vytvoří se automaticky. Pokud cílová lokace již obsahuje soubory se stejným názvem budou přepsány. Jinak budou vytvořeny nové soubory.
 
-## Zahájení překladu
+## Spuštění překladu
 
-Než začneme, musíme říci, že samotný překlad může pracovat ve třech režimech. `hybrid, offline, online`. Důrazně doporučujeme používat režim `hybrid` kde jsou již přeložené fráze uloženy v místní databázi, což šetří jak čaj, tak počet použitých znaků.
+Pro samotným spuštěním si musíme říci, že samotný překlad může fungovat ve třech režimech `hybrid, offline, online`. Silně doporučujeme používat mód `hybrid`, kde se již přeložené fráze uloží do lokální databáze, čímž se šetří čaj i počet použitých znaků.
 
-!>**Varování:** Všimněte si, že počet překladů je omezen, a proto se doporučuje používat tento režim pro úsporu počtu překladů.
+!>**Upozornění:** je třeba si uvědomit, že počet překladů je limitován a proto se doporučuje používat tento mód k šetření počtu překladů.
 
-Překlad provedete prostřednictvím konzoly, kde v umístění `docs` pro spuštění procesu použijte příkaz `npm run translate`. V konzole by se měly zobrazit informace o tom, jak jsou jednotlivé soubory překládány. Zobrazí se také seznam **Start** a **Konec** celý proces překladu.
+Překlad provedete přes konzoli, kde v lokaci `docs` proces spustíte příkazem `npm run translate`. V konzole byste měli vidět informace, jak se jednotlivé soubory překládají. Také je vypsán **začátek** a **konec** celého procesu překladu.
 
 ![](translation-log.PNG)
 
 ## Rozdíly mezi `deepmark` a `@webjetcms/deepmark`
 
-Mezi naší upravenou verzí a původní verzí je několik důležitých rozdílů, které si rozebereme v jednotlivých podkapitolách.
+Mezi naší upravenou a originální verzí je několik důležitých rozdílů, které si rozebereme v jednotlivých podkapitolách.
 
-Téměř veškerá naše vlastní logika je v souboru, který jsme vytvořili na adrese `docs\node_modules\@webjetcms\deepmark\dist\webjet-logic.js`.
+Téměř všechna naše vlastní logika je v námi vytvořeném souboru na adrese `docs\node_modules\@webjetcms\deepmark\dist\webjet-logic.js`.
 
 ### Kopírování obrázků
 
-Jednou z funkcí překladu je zkopírování všech nepřeložitelných souborů ze zdrojové složky do cílové složky. Mezi tyto soubory patří `.png, .jpg, .jpge, .ico, .css` a další. Ve skutečnosti všechny soubory, které nejsou typu `markdown`. Toto chování může být výhodné, protože nemusíte ručně kopírovat všechny závislé soubory.
+Jedna z vlastností překladu, je zkopírování všech nepřeložitelných souborů ze zdrojové složky do cílové. Mezi tyto soubory se řadí `.png, .jpg, .jpge, .ico, .css` a další. Vlastně všechny soubory, které nejsou typu `markdown`. Toto chování může být výhodné, protože nemusíte ručně kopírovat všechny závislé soubory.
 
-!>**Varování:** nevýhodou je, že pokud do EN dokumentace přidáte konkrétní upravené obrázky pro anglickou verzi, budou při každém překladu přepsány původními obrázky ze slovenské verze. Z tohoto důvodu byla tato logika upravena tak, že při překladu **nikdy nekopírovali obrázky**.
+!>**Upozornění:** nevýhodou je fakt, že pokud si do EN dokumentace přidáte specifický upravené obrázky pro anglickou variantu, tak se při každém překladu znovu přepíší původními obrázky ze slovenské varianty. Z tohoto důvodu byla tato logika upravena tak, aby se při překladu **obrázky nikdy nekopírovali**.
 
-Úprava byla použita v souboru `docs/node_modules/deepmark/dist/config.js`, kolem řádku 240. Byla přidána nová podmínka pro vynechání souboru s příponou pro obrázky, např. `.png, .jpg, .jpge`. Tímto způsobem se soubory s danými příponami při překladu nezkopírují.
+Úprava byl aplikována v souboru `docs/node_modules/deepmark/dist/config.js`, kolem řádku 240. Přidána byla nová podmínka, k přeskočení soubor s příponou pro obrázky Např. `.png, .jpg, .jpge`. Takto se soubory s danými příponami nebudou při překladu kopírovat.
 
 ```javascript
 if (path.endsWith(".md") || path.endsWith(".mdx")) {
@@ -94,11 +94,11 @@ if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg")) {
 
 ### Přeskočení překladu části souboru
 
-Pokud se páříte v `markdown` některé části souboru, které nemají být přeloženy, jako jsou kódy,... `markdown` nabízí možnost přeskočit překlad části souboru, pokud je text zabalen do **\`text\`** nebo kód zabalený jako **\`\`Kód\`\`**. Problém nastává, když kód v souboru neslouží k ilustračním účelům, ale k provedení nějaké logiky.
+Pokud máte v `markdown` souboru nějaké části, které se nemají překládat jako například kódy, samotný `markdown` nabízí možnost přeskočit překlad části souboru, pokud text je obalen v **\`text\`** nebo kód obalený jako **\`\`\`kód\`\`\`**. Problém nastává v případě, že kód v souboru neslouží pro ilustrační účely, ale má provést nějakou logiku.
 
-!>**Varování:**, v případě, že ji nezabalíte jako **\`\`Kód\`\`**, může být kód částečně přeložen, čímž se stane nefunkčním. Pokud kód zabalíte jako **\`\`Kód\`\`**, ale nepřekládá se **ani se nesmí provádět**.
+!>**Upozornění:**, v případě že ho neobalíte jako **\`\`\`kód\`\`\`**, tak se tento kód může částečně přeložit, čímž se stane nefunkční. Pokud ten kód obalíte jako **\`\`\`kód\`\`\`**, nepřeloží se ale **ani se neprovede**.
 
-**Řešení** byla tvorba vlastních značek `<!-- deepmark-ignore-start -->` a `<!-- deepmark-ignore-end -->` které zajišťují, že kódy (nebo dokonce text) obsažené v těchto značkách nejsou překládány. **Ale** se provede samotný kód. Logika těchto značek vybírá označené části kódu ze souboru ještě před vlastním překladem a teprve po překladu je do souboru vrací, a sice **beze změny**.
+**Řešením** bylo vytvoření vlastních značek `<!-- deepmark-ignore-start -->` a `<!-- deepmark-ignore-end -->`, které zajišťují, že kódy (nebo i text) obalené v těchto značkách se nepřeloží **ale** samotný kód se provede. Logika za těmito značkami ještě před samotným překladem vybere označené části kódu ze souboru a teprve po překladu je vloží zpět do souboru a to **beze změny**.
 
 ```javascript
 <!-- deepmark-ignore-start -->
@@ -106,19 +106,47 @@ YOUR CODE HERE PLEASE
 <!-- deepmark-ignore-end -->
 ```
 
-**Seznam vynechaných částí**
+**Výpis přeskočených částí**
 
-Pokud přeskočíte výpis části souboru pomocí výše uvedených značek, přeskočená část se automaticky vypíše v konzole. Pokud je tato funkce nežádoucí, je třeba `docs\node_modules\@webjetcms\deepmark\dist\cli.js` odebrat volání funkce `logIgnoredContentInfo(ignoredContent);`, který zajišťuje výpis vynechaných částí.
+Pokud se přeskakuje výpis části souboru pomocí zmíněných značek, do konzoly se daná přeskočená část automaticky vypíše. Pokud by tato funkce byla nežádoucí, je třeba v souboru `docs\node_modules\@webjetcms\deepmark\dist\cli.js` odstranit volání funkce `logIgnoredContentInfo(ignoredContent);`, která zajišťuje výpis přeskočených částí.
 
-### Formátování souborů
+### Formátování souboru
 
-Originál `deepmark` má problém se správným formátováním přeložených souborů. Přidává zbytečné mezery/řádky, nepřekládá správně některé symboly nebo ničí strukturu seznamů či tabulek špatným odsazením. Tento problém je v naší verzi `@webjetcms/deepmark` vyřešeno několika kroky, aby se těmto chybám v přeložených souborech předešlo. Nebudeme se zabývat všemi úpravami, ale zmíníme, že nejdůležitější je metoda `customizeTranslatedMarkdown` který v několika krocích upraví/formátuje již přeložené soubory.
+Originální `deepmark` má problém se správným formátováním přeložených souborů. Přidává nadbytečné mezery/řádky, nepřeloží korektně některé symboly nebo špatným odsazením zničí strukturu seznamů či tabulek. Tento problém je v naší verzi `@webjetcms/deepmark` řešen několika kroky aby se zabránilo těmto chybám v přeložených souborů. Nebude rozebírat všechny úpravy, ale vzpomeneme si, že nejdůležitější je metoda `customizeTranslatedMarkdown`, která upravuje/formátuje již přeložené soubory v několika krocích.
+
+### Výběr služby poskytující překlady
+
+V konfiguračním souboru **`deepmark.config.mjs`** můžeme nastavit službu poskytující překlady pomocí proměnné **`translationEngine`**. Tato proměnná může nabývat jedné ze dvou hodnot:
+- **[`deepl`](https://www.deepl.com/docs-api) ** – ** DeepL** výchozí služba, pokud proměnná není nastavena
+- **[`google`](https://cloud.google.com/translate) ** – ** Google Translate API** alternativní služba pro překlady
+
+Pokud proměnná **`translationEngine`** není definována, systém automaticky použije **DeepL**.
+
+#### Proměnná prostředí
+
+Chcete-li použít **Google Translate API**, musíte nastavit proměnnou prostředí `GOOGLE_AUTH_KEY` s autorizačním klíčem ke **Google Translate API**.
+
+#### Příklad konfigurace
+
+Níže je ukázka konfigurace s použitím **Google Translate**:
+
+```javascript
+/** @type {import("deepmark").UserConfig} */
+export default {
+    sourceLanguage: 'sk',
+    outputLanguages: ['en-US'],
+    directories: [
+        ['sk', '$langcode$'],
+    ],
+    translationEngine: "google"    // Voľba prekladovej služby
+};
+```
 
 ### Verze závislostí
 
-Vzhledem k tomu, že `deepmark` používá závislosti, jejichž verze jsou již zastaralé, většinu závislostí jsme aktualizovali na novější verze. Ne všude jsme použili nejnovější verze, protože ne všechny byly kompatibilní buď s ostatními závislostmi, nebo s aktuálním formátem použitým v programu. `deepmark`.
+Nakolik `deepmark` využívá závislosti, jejichž verze jsou již zastaralé, aktualizovali jsme většinu závislostí na novější verze. Ne všude jsme použili nejvíce aktuální verze, jelikož ne všechny byly kompatibilní buď s jinými závislostmi nebo se samotným použitým formátem v `deepmark`.
 
-Seznam **Originál** závislosti:
+Seznam **původních** závislostí:
 
 ```json
 "dependencies": {
@@ -142,7 +170,7 @@ Seznam **Originál** závislosti:
 	},
 ```
 
-Seznam **Aktualizováno** závislosti:
+Seznam **aktualizováno** závislostí:
 
 ```json
 "dependencies": {
@@ -162,19 +190,20 @@ Seznam **Aktualizováno** závislosti:
 	"micromark-extension-html-comment": "^0.0.1",
 	"micromark-extension-mdxjs": "^3.0.0",
 	"prettier": "^3.3.3",
-	"yaml": "^2.5.0"
+	"yaml": "^2.5.0",
+	"@google-cloud/translate": "^8.5.1"
 },
 ```
 
-## Problematický formát zdrojového souboru
+## Problémový formát zdrojových souborů
 
-Při překladu se můžete setkat s tím, že výsledný překlad porušil strukturu souboru. Tento problém může nastat, pokud váš `markdown` soubory obsahují syntaxi, která `deepmark` nedokáže zpracovat. V další části si ukážeme některé problémové syntaxe.
+Při překladu se můžete setkat s tím, že výsledný překlad rozbil strukturu souboru. Tento problém může nastat v případě, že Vaše `markdown` soubory obsahují syntax, který `deepmark` nedokáže zpracovat. V následující části si ukážeme několik problémových syntaxí.
 
-!>**Varování:**, mnoho problémů bylo vyřešeno ve verzi `@webjetcms/deepmark`, ale stále existují situace, kdy určitý formát souboru způsobí problémy při překladu a následném formátování.
+!>**Upozornění:**, mnohé problémy se vyřešily ve verzi `@webjetcms/deepmark`, avšak stále jsou situace, kdy určitý formát souboru způsobí problémy při překladu a následném formátování.
 
-### Kombinace typů seznamů
+### Kombinování typů seznamů
 
-Pokud například zkombinujete číselný seznam s klasickým seznamem s odrážkami, text se přeloží, ale struktura seznamu se změní. **může** rozpadnout. Proto jejich kombinaci nevyužíváme.
+Pokud zkombinujete například číselný seznam s klasickým přes odrážky, text se sice přeloží, ale struktura seznamu se **může** rozpadnout. Proto nedoslechneme využívat jejich kombinaci.
 
 ```javascript
 1. aaaa
@@ -183,21 +212,21 @@ Pokud například zkombinujete číselný seznam s klasickým seznamem s odráž
    - dddd
 ```
 
-Doporučujeme používat nekombinované typy seznamů.
+Doporučujeme použít nekombinované typy seznamů.
 
 ### Speciální znaky
 
-Vaše soubory mohou obsahovat mnoho speciálních znaků, které mají v souborech `markdown` zvláštní role. Tyto speciální znaky mohou následně poškodit formát. Doporučujeme takové znaky **vždy** Citace.
+Vaše soubory mohou obsahovat mnoho speciálních znaků, které mají v souborech `markdown` speciální roli. Takové speciální znaky mohou následně poškodit formát. Doporučujeme takové znaky **vždy** citovat.
 
-Např. pokud mluvíte o číselné hodnotě, nepoužívejte znaky `<` a `>`. Raději použijte slovo verze menší/větší. Nebo citujte znaky \``<`\` a \``>`\`.
+Např. pokud mluvíte o číselné hodnotě nepoužívejte znaky `<` a `>`. Raději použijte slovní verzi menší/větší. Nebo znaky citujte \``<`\` a \``>`\`.
 
 ### Po sobě jdoucí citace
 
-Pokud pracujete s `markdown` soubory, které víte, že pomocí značek **\`\`** text mezi nimi se stává citátem a takové citáty se nepřekládají. Problém nastává, když v textu následují 2 nebo více citátů za sebou a nejsou odděleny žádným symbolem.
+Pokud pracujete s `markdown` soubory víte, že využitím značek **\`\`** se stává text mezi nimi citací a takové citace se nepřekládají. Problém nastává, pokud v textu následují za sebou 2 nebo více citací, které nejsou odděleny žádným symbolem.
 
-Například. **\`Citace\_1\` \`Citace\_2\`**. Takový zápis může vést k chybám při překladu, proto doporučujeme přidat mezi uvozovky znak, např. **\`Quote\_1\`**, **\`Quote\_2\`**, nebo citace na odkaz **\`Citace\_1 Citace\_2\`**, případně **\`Citace\_1, Citace\_2\`**. Stejný problém se vyskytuje i u jiných kombinací, jako jsou citace a odkazy.
+Např. **\`Quote\_1\` \`Quote\_2\`**. Takový zápis může víš k selhání překladu a proto doporučujeme přidat mezi citace nějaký znak, například. **\`Quote\_1\`**, **\`Quote\_2\`**, nebo citace spojit **\`Quote\_1 Quote\_2\`**, případně **\`Quote\_1, Quote\_2\`**. Stejný problém nastává iu jiných kombinací, jako jsou například citace a linky.
 
-Problémové kombinace, kterým je třeba se vyhnout (na pořadí nezáleží):
+Problémové kombinace, kterým se musíte vyhnout (na pořadí nezáleží):
 
 ```
 - `Quote_1` `Quote_2\`
@@ -210,11 +239,11 @@ Problémové kombinace, kterým je třeba se vyhnout (na pořadí nezáleží):
 
 ### Neoznačený kód
 
-Velký problém nastane, pokud zdrojové soubory obsahují neoznačený zdrojový kód. Takový kód může narušit překlad nebo zcela zkazit výsledný formát souboru. **Každý kód musí být řádně citován** a přidejte název programovacího jazyka, ve kterém byl vytvořen.
+Velký problém nastává, pokud zdrojové soubory obsahují neoznačený programovací zdrojový kód. Takový kód může přerušit překlad, nebo úplně pokazit výsledný formát souboru. **Každý kód, musí být řádně citován** a přidáme i název programovacího jazyka, ve kterém vznikl.
 
 ***
 
-\`\`javascript
+\`\`\`javascript
 
 VÁŠ KÓD ZDE
 
@@ -238,6 +267,6 @@ VÁŠ KÓD ZDE
 
 ***
 
-### Nevědomost `markdown` formát
+### Nevědomost `markdown` formátu
 
-Nejčastější chybou bude pravděpodobně nesprávný formát v důsledku neznalosti formátu souboru. `markdown`. Základní syntaxi si můžete přečíst na adrese [Základní syntaxe](https://www.markdownguide.org/basic-syntax/).
+Nejčastější chyba bude asi nesprávný formát z důvodu nevědomosti formátu souborů `markdown`. O základní syntaxi se můžete dočíst na stránce [Basic Syntax](https://www.markdownguide.org/basic-syntax/).

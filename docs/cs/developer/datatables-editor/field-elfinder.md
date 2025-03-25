@@ -1,19 +1,19 @@
-# Typ pole - výběr elfinderu/souboru
+# Field Type - elfinder/výběr souboru
 
-Datové pole elfinder integruje výběr odkazu na soubor pomocí aplikace elfinder/files. Pole se zobrazuje jako textové pole s ikonou tužky na konci. Kliknutím na ikonu se otevře dialogové okno pro výběr elfinderu/souboru.
+Datové pole elfinder integruje výběr odkazu na soubor pomocí aplikace elfinder/soubory. Pole se zobrazuje jako textové pole, na konci má ikonu tužky. Klepnutím na ikonu se otevře dialogové okno s elfinderem/výběrem souboru.
 
-U pole obsahujícího odkaz na obrázek se na začátku pole zobrazí náhled obrázku.
+Pro pole obsahující odkaz na obrázek se na začátku pole zobrazuje náhled obrázku.
 
-Hodnota pole se zobrazí s šedým pozadím, ale pole není typu `disabled`, lze hodnotu v případě potřeby upravit nebo vložit ze schránky. Šedá barva je zvolena jako vodítko pro uživatele, který má kliknout na ikonu výběru odkazu.
+Hodnota pole je zobrazena s šedým pozadím, pole ale není typu `disabled`, v případě potřeby lze hodnotu upravit, nebo vložit ze schránky. Šedá barva je zvolena, aby uživatele naváděla kliknout na ikonu výběru odkazu.
 
 ![](field-type-elfinder.png)
 
 ## Použití anotace
 
-Anotace se používá jako `DataTableColumnType.ELFINDER` a lze nastavit následující atributy:
-- `className` - pokud obsahuje hodnotu `image` na začátku pole se zobrazí náhled vybraného obrázku (nebo prázdná ikona obrázku, pokud obrázek ještě není vybrán).
+Anotace se používá jako `DataTableColumnType.ELFINDER`, přičemž je možné nastavit následující atributy:
+- `className` - pokud obsahuje hodnotu `image` zobrazí se na začátku pole náhled zvoleného obrázku (nebo ikona prázdného obrázku, pokud obrázek ještě není zvolen)
 
-Příklad úplné anotace:
+Kompletní příklad anotace:
 
 ```java
 //vyber obrazka = className="image"
@@ -34,8 +34,8 @@ private String externalLink;
 
 ## Poznámky k implementaci
 
-Implementace je v souboru [field-type-elfinder.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). Podle `className` vygeneruje příslušný kód HTML pro vstupní pole. Do proměnné `conf._prepend` ukládá odkaz na prvek prepend (`div.input-group-prepend .input-group-text`) s náhledovým obrázkem. Funkce `setValue(conf, val)` slouží k nastavení hodnoty pole a také k nastavení náhledového obrázku (pokud je typu `.jpg` nebo `.png`).
+Implementace je v souboru [field-type-elfinder.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-elfinder.js). Podle `className` generuje vhodný HTML kód input pole. Do proměnné `conf._prepend` ukládá odkaz na prepend element (`div.input-group-prepend .input-group-text`) s náhledem obrázku. Funkce `setValue(conf, val)` se používá k nastavení hodnoty pole a zároveň k nastavení náhledového obrázku (je-li typu `.jpg` nebo `.png`).
 
-Náhledový obrázek je nastaven jako `background-image`, zároveň je `prepend` nastavit třídu CSS prvku `has-image`.
+Náhledový obrázek je nastaven jako `background-image`, zároveň je `prepend` elementu nastavená CSS třída `has-image`.
 
-Otevření okna elfinderu se provádí voláním funkce [WJ.openElFinder](../frameworks/webjetjs.md#dialog-iframe) se sadou `callback` fungovat `setValue`.
+Otevření okna elfinder-a je zajištěno voláním funkce [WJ.openElFinder](../frameworks/webjetjs.md#iframe-dialog) s nastaveným `callback` na funkci `setValue`.

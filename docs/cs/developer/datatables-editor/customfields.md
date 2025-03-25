@@ -1,10 +1,10 @@
 # Volitelná pole
 
-Prostřednictvím volitelných polí je možné nastavit volitelné atributy (hodnoty, texty) webové stránky a adresáře podle potřeb zákazníka. Tyto hodnoty lze poté přenést a použít v šabloně stránky, viz. [dokumentace pro Frontend programátora](../../frontend/webpages/customfields/README.md).
+Přes volitelná pole lze web stránce a adresáři nastavovat volitelné atributy (hodnoty, texty) dle potřeby zákazníka. Hodnoty je následně možné přenést a použít v šabloně stránky, viz [dokumentace pro Frontend programátora](../../frontend/webpages/customfields/README.md).
 
 # Backend
 
-Nastavení nepovinných polí závisí na použité šabloně, skupině šablon nebo doméně (protože jsou řízeny nastavením překladového klíče). Proto je třeba volitelná pole odeslat z backendu pro každou upravovanou webovou stránku zvlášť. Přenos nastavení je realizován obecně [BaseEditorFields.getFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java):
+Nastavení volitelných polí jsou závislá na použité šabloně, skupině šablon nebo domény (jelikož jsou řízena nastavením překladových klíčů). Možnosti je tedy z backend-u třeba odesílat pro každou editovanou web stránku samostatně. Přenos nastavení je genericky implementován [BaseEditorFields.getFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java):
 
 ```java
 @JsonIgnore
@@ -20,7 +20,7 @@ public List<Field> getFields(Object bean, String keyPrefix, char lastAlphabet) {
 }
 ```
 
-Volejte `getFields` jak vidíte, má anotaci `@JsonIgnore`. Je nutné implicitně zavolat metodu pro přípravu pole objektů. Základní příklad použití:
+volání `getFields` jak vidíte má anotaci `@JsonIgnore`. Metodu musíte implicitně zavolat pro přípravu pole objektů. Základní příklad použití:
 
 ```java
 //vytvorte triedu, ktora extenduje BaseEditorFields, nemusi obsahovat nic dalsie (ak nepotrebujete v editore dodatocne polia)
@@ -67,7 +67,7 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2<Qu
 }
 ```
 
-Příklad v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) kde je více operací, a proto metoda `fromDocDetails` je implementován samostatně v `editorFields` a volán z `DocRestController.processFromEntity`.
+Příklad v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) kde je více operací a proto metoda `fromDocDetails` je implementována samostatně v `editorFields` objektu a volaná z `DocRestController.processFromEntity`.
 
 ```java
 
@@ -103,23 +103,23 @@ public void fromDocDetails(DocDetails doc, boolean loadSubQueries) {
 }
 ```
 
-v metodě `fromDocDetails` nejprve se nastaví předpony překladového klíče pro vyhledávání podle skupiny šablon i ID šablony a poté se načte seznam. `fieldsDefinition` (frontend implicitně hledá tento seznam v objektu `editorFields.fieldsDefinition`).
+v metodě `fromDocDetails` jsou nejprve nastaveny prefixy překladových klíčů pro vyhledávání podle skupiny šablon i podle ID šablony a následně je získán seznam `fieldsDefinition` (frontend implicitně tento seznam hledá v objektu `editorFields.fieldsDefinition`).
 
-Pro funkčnost je nutné, aby fazole obsahovala atributy s názvem `fieldX`, který zase s voláním `getFields` může do libovolné fazole vnést nepovinná pole.
+Pro funkčnost je třeba aby daný bean obsahoval atributy s názvem `fieldX`, což následně s voláním `getFields` umí přinést volitelná pole do libovolného beanu.
 
 ## Frontend
 
-Integrace do editoru datových souborů je implementována v souboru [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). Pro každé pole objektu JSON `editorFields.fieldsDefinition` jsou získána nastavení a pole formuláře jsou znovu vytvořena ve stromu DOM.
+Integrace do editoru datatabulky je implementována v souboru [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). Pro každé pole z JSON objektu `editorFields.fieldsDefinition` se získá nastavení a nově se v DOM stromu vytvoří formulářová pole.
 
-Klíčové je propojit formulářové pole s existujícím editorem, což zajistí volání:
+Klíčové je připojení formulářového pole ke stávajícímu editoru, to je zabezpečeno voláním:
 
 ```javascript
 EDITOR.field("field"+keyUpper).s.opts._input = inputBox.find('input, select');
 ```
 
-které z nového `inputBox` získá pole formuláře a nastaví jej do editoru. Používá se interní volání API `.s.opts._input` což je nebezpečné z hlediska změn API v editoru datových tabulek, ale nenašli jsme jiné řešení.
+které z nového `inputBox` objektu získá formulářové pole a to nastaví editoru. Je použito interní API volání `.s.opts._input`, což je nebezpečné z pohledu změn v API v datatables editoru, ale jiné řešení jsme nenašli.
 
-Volání funkce se provádí v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) při otevření okna.
+Vyvolání funkce je provedeno v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) při otevření okna.
 
 ```javascript
 import * as CustomFields from './custom-fields';
@@ -130,7 +130,7 @@ EDITOR.on('open', function (e, mode, action) {
 });
 ```
 
-V případě použití `multiple select` uloží hodnotu pole jako `Array`. Převod na řetězce oddělené `|` před odesláním je formulář zabezpečen pomocí metody `prepareCustomFieldsDataBeforeSend` který se volá v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+V případě použití `multiple select` tento ukládá hodnotu pole jako `Array`. Konverze na String oddělený `|` před odesláním formuláře je zajištěna pomocí metody `prepareCustomFieldsDataBeforeSend`, která se jmenuje v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
 ```
 EDITOR.on('preSubmit', function (e, data, action) {
@@ -142,9 +142,9 @@ EDITOR.on('preSubmit', function (e, data, action) {
 
 ## Přejmenování sloupců
 
-Pokud potřebujete také přejmenovat zobrazené sloupce v tabulce podle volitelných polí, stačí nastavit možnost `customFieldsUpdateColumns: true` při inicializaci datové tabulky. Nastavení nepovinných polí se získávají z prvního záznamu `content[0].editorFields.fieldsDefinition` po každém načtení dat.
+Pokud potřebujete i přejmenovat zobrazené sloupce v tabulce podle volitelných polí stačí nastavit volbu `customFieldsUpdateColumns: true` při inicializaci datatabulky. Nastavení volitelných polí se získají z prvního záznamu `content[0].editorFields.fieldsDefinition` po každém načtení dat.
 
-Sloupce s `null` v `label` jsou v tabulce skryty a jsou skryty i v nastavení zobrazení sloupců (jako by neexistovaly).
+Sloupce s `null` v `label` se v tabulce schovají a schovají se iv nastavení zobrazení sloupců (jakoby neexistovaly).
 
 ```javascript
 translationKeysTable = WJ.DataTable({
@@ -155,10 +155,10 @@ translationKeysTable = WJ.DataTable({
 });
 ```
 
-Nastavením `customFieldsUpdateColumnsPreserveVisibility` na hodnotu `true` nastavení zobrazení sloupce pro režim je pro uživatele zachováno. `customFieldsUpdateColumns`. Lze ji použít pouze v případě, že se sloupce datové tabulky během zobrazení nemění. Například v sekci Překladové klíče se data nemění, lze ji nastavit na hodnotu `true` a uživatel zachová nastavení zobrazení sloupců. V sekci Číselníky se sloupce mění při změně číselníku (načtení dat), tato volba zde neplatí.
+Nastavením `customFieldsUpdateColumnsPreserveVisibility` na hodnotu `true` se pro uživatele zachová nastavení zobrazení sloupců pro režim `customFieldsUpdateColumns`. Lze použít pouze v případě, kdy pro datatabulku nejsou měněny sloupce během zobrazení. Např. v sekci Překladové klíče se data nemění, lze nastavit na `true` a uživateli se zachová nastavení zobrazení sloupců. V sekci Číselníky se mění sloupce při změně číselníku (načtení dat), tam tato možnost není použitelná.
 
-### Podrobnosti o provádění
+### Detaily implementace
 
-Zpracování probíhá v `index.js` ve funkci `updateOptionsFromJson`. Pokud je tato možnost zapnutá `DATA.customFieldsUpdateColumns===true` a objekt JSON obsažený v prvním záznamu obsahuje `editorFields?.fieldsDefinition` takže názvy sloupců v záhlaví a také v tabulce `DATA` zařízení. Sloupce s názvem `null` jsou skryty (to je zajištěno konfigurací `colVis` ve funkci `columns` kde sloupce s názvem `null` vynechat). Pak se `$("#"+DATA.id).trigger("column-reorder.dt");` aktualizovat názvy sloupců v nastavení zobrazení sloupců (`colvis`).
+Zpracování je v `index.js` ve funkci `updateOptionsFromJson`. Je-li zapnuta možnost `DATA.customFieldsUpdateColumns===true` a JSON objekt obsahuje v prvním záznamu obsahuje `editorFields?.fieldsDefinition` tak se změní názvy sloupců v hlavičce a také v `DATA` objektu. Sloupce s názvem `null` se schovají (to zabezpečuje konfigurace `colVis` ve funkci `columns` kde se sloupce s názvem `null` vynechají). Následně se vyvolá `$("#"+DATA.id).trigger("column-reorder.dt");` aby se aktualizovaly názvy sloupců v nastavení zobrazení sloupců (`colvis`).
 
-V definici `buttons.colvis` je upravené čtení `columnText` aby vždy přebírala aktuální hodnotu z `DATA` definice a `columns` funkce, která určuje, jaké sloupce se zobrazí v nastavení, vrací hodnotu `true/false` podle toho, zda má sloupec název `null`. Tímto způsobem se v nastavení zobrazení sloupců vždy zobrazí aktuální názvy sloupců a ty, které nemají definovaný název, se skryjí (jsou použity).
+V definici `buttons.colvis` je upraveno čtení `columnText` tak, aby vzalo vždy aktuální hodnotu z `DATA` definice a `columns` funkci, která definuje jaké sloupce se v nastavení zobrazí, se vrátí `true/false` podle toho, zda má sloupec název `null`. Takto se vždy v nastavení zobrazení sloupců zobrazí aktuální názvy sloupců a schovají se ty, které nemají definovaný název (napoužívají se).

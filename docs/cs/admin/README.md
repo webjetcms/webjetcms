@@ -1,13 +1,13 @@
-# Příručka pro správce
+# Manuál pro správce
 
-Dokumentace v této části je určena pro správce, který konfiguruje systém WebJET CMS.
+Dokumentace v této sekci je určena pro správce, který konfiguruje WebJET CMS.
 
-## Stáhnout dokumentaci
+## Dokumentace ke stažení
 
-Tuto dokumentaci si můžete stáhnout také ve formátu PDF a vytisknout.
+Tuto dokumentaci si můžete stáhnout také v PDF formátu pro možnost vytištění.
 
-[Příručka správce - PDF](../_media/manuals/webjetcms-admin.pdf)
+[Manuál pro správce - PDF](../_media/manuals/webjetcms-admin.pdf)
 
-Formát starší základní dokumentace `docx` Stáhnout. Obsahuje informace o základní práci s WebJET CMS pro správce. Nemusí obsahovat všechny nejnovější změny a neobsahuje popis všech funkcí a možností. Za směrodatnou považujte vždy online dokumentaci na této stránce, verzi v. `docx` formát je pouze doplňkovou možností.
+Starší základní základní dokumentace ve formátu `docx` ke stažení. Obsahuje informace k základní práci s WebJET CMS pro administrátora. Nemusí obsahovat všechny nejnovější změny a neobsahuje popis všech funkcí a možností. Vždy považujte za právoplatnou online dokumentaci na této stránce, verze v `docx` formátu je jen doplňková možnost.
 
-[WebJET\_for\_administrators.docx](../_media/manuals/WebJET_pre_administratorov.docx)
+[WebJET\_pre\_administratorů.docx](../_media/manuals/WebJET_pre_administratorov.docx)

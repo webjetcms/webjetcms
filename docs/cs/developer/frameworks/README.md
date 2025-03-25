@@ -1,14 +1,14 @@
-# Základní popis použitých rámců
+# Základní popis použitých frameworků
 
 Použité technologie:
 - [Spring REST + Spring DATA](spring.md)
-- [thymeleaf.org](thymeleaf.md) - šablonovací systém napojený na backend Javy
-- `webpack+node` pro kompilaci souborů html/PUG/JS
-- datatables.net + [editor](https://editor.datatables.net) - základní práce a editace tabulkových dat, napojení na Spring přes DatatablesRestControllerV2 - příklad v sekci [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) a [gallery.pug](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
-- [pugjs.org](pugjs.md) - `preprocessor` pro generování kódu HTML pro stránky
-- [Vue.js](vue.md) - k dispozici jako `window.Vue`, krátká ukázka v [fotogalerie](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [thymeleaf.org](thymeleaf.md) - šablonovací systém napojený na Java backend
+- `webpack+node` pro kompilování html/PUG/JS souborů
+- datatables.net + [editor](https://editor.datatables.net) - základní práce a editace tabulkových dat, napojené na Spring přes DatatablesRestControllerV2 - příklad v [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) a [gallery.pug](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
+- [pugjs.org](pugjs.md) - `preprocessor` pro generování HTML kódu stránek
+- [Vue.js](vue.md) - dostupné jako `window.Vue`, krátká ukázka ve [foto galerii](../../../src/main/webapp/admin/v9/views/pages/apps/gallery.pug)
 
-Celý postup generování webové stránky v systému `/admin/v9/` je následující:
+Celý postup generování web stránky v `/admin/v9/` je následující:
 
 ```mermaid
 graph TD;
@@ -19,21 +19,21 @@ graph TD;
     ThymeleafAdminController.java/LayoutService.java-->prehliadac
 ```
 
-proto je nutné přemýšlet o tom, co se v kterém kroku děje.
+je tedy třeba přemýšlet co se ve kterém kroku děje.
 
 ## npm
 
-Pro sestavení souborů JS/CSS se používá `node`, základní příkazy:
+Pro build JS/CSS souborů se používá `node`, základní příkazy:
 - `npm install` - nainstaluje všechny potřebné moduly
-- `npm outdated` - seznamy zastaralých modulů
-- `npm update MODUL` - aktualizuje zadaný modul, ale pozor, aktualizuje pouze `minor` verze, pokud nezadáte název modulu, aktualizují se všechny moduly.
-- `npm i MODUL@VERZIA` - nainstaluje/aktualizuje modul na zadanou verzi.
-- `npm audit` - seznam modulů obsahujících zranitelnost
+- `npm outdated` - vypíše seznam zastaralých modulů
+- `npm update MODUL` - aktualizuje zadaný modul, pozor aktualizuje jen `minor` verzi, pokud jméno modulu nezadáte, aktualizuje všechny moduly
+- `npm i MODUL@VERZIA` - nainstaluje/aktualizuje modul do zadané verze
+- `npm audit` - vypíše seznam modulů obsahujících zranitelnost
 - `npm audit fix` - aktualizuje moduly obsahující zranitelnost
-- `npm list --depth=0` - seznam nainstalovaných modulů, parametr depth lze použít k určení hloubky vnoření.
-- `npm view MODUL version` - vypíše aktuální nejnovější verzi modulu
+- `npm list --depth=0` - vypíše seznam nainstalovaných modulů, parametrem depth lze určit hloubku vnoření
+- `npm view MODUL version` - vypíše aktuální nejnovější verzi daného modulu
 
-Pokud potřebujete aktualizovat také závislosti, můžete použít modul [npm-check-updates](https://flaviocopes.com/update-npm-dependencies/):
+Pokud potřebujete aktualizovat i závislosti, můžete postupovat s využitím modulu [npm-check-updates](https://flaviocopes.com/update-npm-dependencies/):
 
 ```shell
 //instalacia modulu
@@ -48,7 +48,7 @@ npm install
 
 ## Události
 
-!>**Varování:** není možné použít událost v kódu JavaScript `$(document).ready`, protože je třeba nejprve inicializovat úložiště překladových klíčů. Implementovali jsme vlastní funkci `window.domReady.add` v knihovně [připraveno](../libraries/ready-extender.md), která se provede až po inicializaci úložiště překladových klíčů.
+!>**Upozornění:** v JavaScript kódu nelze využívat událost `$(document).ready`, protože nejprve musí být inicializováno úložiště překladových klíčů. Implementovali jsme vlastní funkci `window.domReady.add` v knihovně [ready](../libraries/ready-extender.md), která je provedena až po inicializaci úložiště překladových klíčů.
 
 ```javascript
 window.domReady.add(function () {
@@ -63,9 +63,9 @@ window.domReady.add(function () {
 
 ## Webpack
 
-Skládání a sestavování `pug/js/css` provádí [webpack](https://webpack.js.org/).
+Skládání a kompilace `pug/js/css` se provádí pomocí [webpack](https://webpack.js.org/).
 
-Soubory JS a CSS jsou po kompilaci uloženy v `dist` složka. Odtud se PUG načte pomocí seznamu ze stránky `htmlWebpackPlugin.files`. Současně se ve výchozím nastavení vkládají pouze skripty, které nezačínají předponou. `pages_`. Soubor s touto předponou bude vložen pouze tehdy, pokud se jeho název shoduje s názvem souboru pug.
+JS a CSS soubory se ukládají po zkompilování do `dist` složky. Z něj jsou do PUG vkládány s využitím seznamu z `htmlWebpackPlugin.files`. Ve výchozím nastavení se vkládají pouze skripty, které nezačínají na prefix `pages_`. Soubor s tímto prefixem se vloží pouze v případě, že se jeho jméno shoduje se jménem pug souboru.
 
 ```javascript
 // Outpul all script files
@@ -80,8 +80,8 @@ each js in WPF.js
         script(type='text/javascript', src=js)
 ```
 
-Pokud tedy potřebujete vložit speciální soubor JavaScriptu pro stránku v administraci, vytvořte jej ve složce `src/main/webapp/admin/v9/src/js/pages/` Pokud předpokládáte, že budete používat několik samostatných souborů JS spojených do jednoho, vytvořte podsložku. Příkladem je `src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js` který se nachází v podsložce `web-pages-list` a ve scénáři `web-pages-list.js` třída je importována z `preview.js`.
+Pokud tedy potřebujete pro některou stránku v administraci vložit speciální JavaScript soubor vytvořte jej ve složce `src/main/webapp/admin/v9/src/js/pages/`, pokud předpokládáte použití více samostatných JS souborů kombinovaných do jednoho celku vytvořte si i podsložku. Příkladem je `src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js` který je v podsložce `web-pages-list` a ve skriptu `web-pages-list.js` se importuje třída z `preview.js`.
 
-Tento skript se vloží pouze při volání webové stránky. `web-pages-list.pug`, tj. na adrese URL `/admin/v9/webpages/web-pages-list/`.
+Tento skript se vloží pouze při volání webové stránky `web-pages-list.pug`, tedy u URL adrese `/admin/v9/webpages/web-pages-list/`.
 
-Výše uvedený postup lze použít pouze pro soubory PUG, protože skript je do generovaného HTML vložen během kompilace. Pro aplikace z `/apps` složky, které používají přímo `.html` soubory jsou připraveny k vložení JavaScriptu [soubor jako modul](../../custom-apps/admin-menu-item/README.md#přiložení-souboru-javascript) při zobrazení stránky HTML.
+Uvedený postup lze použít pouze pro PUG soubory, jelikož skript se vkládá do vygenerovaného HTML během kompilace. Pro aplikace z `/apps` složky, které používají přímo `.html` soubory je připraveno vkládání JavaScript [souboru jako modul](../../custom-apps/admin-menu-item/README.md#přiložení-javascript-souboru) během zobrazení HTML stránky.

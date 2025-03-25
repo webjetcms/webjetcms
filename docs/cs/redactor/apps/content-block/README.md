@@ -1,16 +1,16 @@
-# Obsahový blok
+# Content Block
 
-Slouží k vkládání připraveného kódu HTML. Zadáte základní údaje, jako je nadpis, obrázek, barva, a na stránce se vygeneruje definovaný blok kódu HTML podle zvoleného typu. Blok kódu připraví webdesignér podle vašich požadavků.
+Slouží k vložení připraveného HTML kódu. Zadáte základní údaje jako nadpis, obrázek, barva a do stránky se vygeneruje definovaný blok HTML kódu podle zvoleného typu. Kód bloku vám připraví designér web sídla dle požadavků.
 
 ## Nastavení aplikace
 
 V této části lze nastavit:
 - Design
-- Název
+- Nadpis
 - Obrázek 1
 - Obrázek 2
 - Barva pozadí
-- Třída CSS
+- CSS třída
 
 ![](editor.png)
 

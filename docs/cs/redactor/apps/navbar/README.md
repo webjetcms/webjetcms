@@ -1,29 +1,29 @@
-# Navigační panel
+# Navigační lišta
 
-Navigační panel (navbar / breadcrumb / breadcrumb navigation) zobrazuje na webové stránce cestu, na kterou lze kliknout, k aktuálně zobrazené webové stránce. Kliknutím na názvy adresářů se lze snadno dostat do další úrovně níže. Příklad:
+Navigační lišta (navbar/breadcrumb/drobková navigace) zobrazuje ve web stránce klikatelnou cestu k aktuálně zobrazené web stránce. Na názvy adresářů lze kliknout a dostat se jednoduše o úroveň níže. Příklad:
 
 ![](navbar.png)
 
-Zobrazení položky na navigačním panelu závisí na nastavení pole Navigační panel na kartě Navigace v adresáři webových stránek. Má následující možnosti:
-- Stejně jako menu - zobrazení v navigačním panelu se chová stejně, jako je nastaveno pole zobrazení v menu.
-- Zobrazit - položka se zobrazí na navigačním panelu.
-- Nezobrazovat - položka se nezobrazí na navigačním panelu (včetně podsložek).
+Zobrazení položky v navigační liště je závislé na nastavení pole Navigační lišta v kartě Navigace adresáře web stránek. Má následující možnosti:
+- Stejně jako menu - zobrazení v navigační liště se chová stejně jako je nastaveno pole pro zobrazení v menu.
+- Zobrazit - položka se v navigační liště zobrazí.
+- Nezobrazit - položka se v navigační liště nezobrazí (a to včetně podsložek).
 
-U možnosti zobrazení můžete nastavit možnost zobrazení pro webovou stránku, která je stále zobrazena (obvykle se jedná o poslední položku na navigačním panelu). Tato možnost se nachází rovněž na kartě Navigace a obsahuje tyto možnosti:
-- Zobrazit - webová stránka se zobrazí na navigačním panelu.
-- Nezobrazovat - webová stránka se nezobrazí na navigačním panelu.
+Při možnosti zobrazit můžete ještě zobrazené webové stránce nastavit možnost zobrazení (typicky se jedná o poslední položku v navigační liště). Ta je rovněž v kartě Navigace a obsahuje možnosti:
+- Zobrazit - web stránka se v navigační liště zobrazí.
+- Nezobrazit - web stránka se v navigační liště nezobrazí.
 
 ![](groups-dialog.png)
 
 ## Použití
 
-Navigační panel je vložen přímo do šablony JSP jako značka:
+Navigační lišta se vkládá přímo do JSP šablony jako značka:
 
 ```html
 <iwcm:write name="navbar"/>
 ```
 
-nebo jej lze vložit přímo do webové stránky jako výraz:
+nebo je možné ji vložit přímo do web stránky jako výraz:
 
 ```html
 !REQUEST(navbar)!

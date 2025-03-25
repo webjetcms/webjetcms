@@ -1,51 +1,51 @@
-# Výkonnost serveru
+# Výkon serveru
 
-Pro optimální výkon serveru je třeba splnit několik požadavků a nastavení. Každá aplikace (např. fotogalerie, anketa atd.) vložená do webové stránky způsobuje zpomalení. Aplikace obvykle provádějí další požadavky na databázi nebo potřebují číst data ze souborového systému.
+Pro optimální výkon serveru je potřeba splnit několik požadavků a nastavení. Každá vložená aplikace (např. foto galerie, anketa atd.) do web stránky způsobuje zpomalení. Aplikace typicky provádějí dodatečné databázové požadavky, nebo potřebují číst data ze souborového systému.
 
-Vyhledávače, které neustále procházejí a indexují webové stránky na vašem serveru, mohou mít také významný vliv na výkon. Jejich návštěvnost nemusí být viditelná např. v nástroji Google Analytics, ale je viditelná v nástroji [Statistiky](../../redactor/apps/stat/README.md) poskytované systémem WebJET CMS.
+Výrazný vliv na výkon mohou mít také vyhledávače, které neustále procházejí a indexují web stránky na vašem serveru. Jejich návštěvnost nemusí být vidět například. v Google Analytics, ale je vidět v [statistice](../../redactor/apps/stat/README.md), kterou poskytuje WebJET CMS.
 
 ## Identifikace problémů
 
-Nejprve je třeba zjistit, kde dochází ke zpomalení. Pokud dokážete na první pohled identifikovat webovou stránku, která se vám zdá pomalá, můžete použít parametr URL. `?_writePerfStat=true`. V opačném případě zapněte monitorování serveru, při kterém můžete identifikovat webové stránky, jejichž spuštění trvá nejdéle.
+Jako první je třeba identifikovat místa, kde dochází ke zpomalení. Pokud umíte na první pohled identifikovat web stránku, která se vám zdá pomalá, můžete použít URL parametr `?_writePerfStat=true`. Jinak zapněte monitorování serveru, ve kterém umíte identifikovat web stránky, které jsou prováděny nejdéle.
 
-### Parametr URL
+### URL parametrem
 
-Použití parametru URL `?_writePerfStat=true` je možné získat seznam aplikací vložených do webové stránky s časem jejich spuštění. Například stránka `/sk/` zobrazit jako `/sk/?_writePerfStat=true`.
+Pomocí URL parametru `?_writePerfStat=true` je možné získat výpis aplikací vložených ve web stránce s časem jejich provedení. Například stránku `/sk/` zobrazíte jako `/sk/?_writePerfStat=true`.
 
-Při tomto způsobu zobrazení webové stránky se výraz typu `PerfStat: 3 ms (+3) !INCLUDE(...)`. Na standardní webové stránce nemusí být snadno vyhledatelný, proto doporučujeme zobrazit zdrojový kód stránky - v nabídce Chrome Zobrazit-Vývojář-Zobrazit zdrojový kód. Poté použijte vyhledávací výraz prohlížeče `PerfStat:`.
+Při takovém zobrazení web stránky se do HTML kódu vloží po každé aplikaci výraz typu `PerfStat: 3 ms (+3) !INCLUDE(...)`. Ve standardně zobrazené webové stránce nemusí být dobře dohledatelný, proto doporučujeme zobrazit zdrojový kód stránky - v Chrome menu Zobrazit-Vývojář-Zobrazit zdrojový kód. Následně použijte vyhledávání v prohlížeči výrazu `PerfStat:`.
 
-Tento výraz je ve formátu `PerfStat: 3 ms (+3)` kde první číslo je celková doba provedení jednoho úkonu. `iwcm:write` a číslo v závorce je doba provádění této aplikace. Následuje cesta k aplikaci a její parametry. Zajímá vás tedy primární číslo v závorce.
+Tento výraz je ve formátu `PerfStat: 3 ms (+3)` kde první číslo znamená celkový čas provedení jednoho `iwcm:write` výrazu a číslo v závorce je čas provedení této aplikace. Následně následuje cesta k aplikaci a její parametry. Vás tedy zajímá primární číslo v závorce.
 
-Použití parametru URL `_disableCache=true` můžete vypnout ukládání aplikací do mezipaměti.
+Pomocí URL parametru `_disableCache=true` lze vypnout vyrovnávací paměť aplikací.
 
 ### Monitorování serveru
 
-Chcete-li získat komplexní zobrazení, můžete zapnout funkci [monitorování serveru](../monitoring/README.md) nastavením následujících konfiguračních proměnných:
-- `serverMonitoringEnable` - umožňuje funkci monitorování a protokolování serveru
-- `serverMonitoringEnablePerformance` - zapíná monitorování výkonu aplikací a webových stránek
-- `serverMonitoringEnableJPA` - umožňuje funkci sledování dotazů SQL
+Pro komplexní pohled můžete zapnout funkci [monitorování serveru](../monitoring/README.md) nastavením následujících konfiguračních proměnných:
+- `serverMonitoringEnable` - zapne funkci monitorování serveru a zaznamenávání hodnot
+- `serverMonitoringEnablePerformance` - zapne funkci monitorování výkonu aplikací a web stránek
+- `serverMonitoringEnableJPA` - zapne funkci monitorování SQL požadavků
 
-!>**Varování:** monitorování výkonu aplikací a dotazů SQL zatěžuje server, nedoporučujeme mít tuto funkci trvale zapnutou.
+!>**Upozornění:** monitorování výkonu aplikací a SQL požadavků zatěžuje server, nedoporučujeme mít tuto funkci permanentně zapnutou.
 
-Po nastavení konfiguračních proměnných je třeba provést následující úkony. **restartovat aplikační server** aktivovat sledování výkonu při inicializaci.
+Po nastavení konfiguračních proměnných je třeba provést **restart aplikačního serveru**, aby se při inicializaci aktivovalo sledování výkonu.
 
-V části Sledování serveru - Aplikace/WEB stránky/Dotazy SQL pak můžete identifikovat části, jejichž spuštění trvá dlouho. Zaměřte se na nejčastěji spouštěné aplikace/dotazy SQL a optimalizujte je.
+Následně v sekci Monitorování serveru - Aplikace/WEB stránky/SQL dotazy umíte identifikovat části, které se dlouho provádějí. Zaměřte se na nejčastěji prováděné aplikace/SQL dotazy a jejich optimalizaci.
 
-### Celková doba generování webové stránky
+### Celkový čas generování web stránky
 
-K dispozici je aplikace `/components/_common/generation_time.jsp` který po vložení do zápatí šablony webové stránky vygeneruje do kódu HTML celkový čas generování webové stránky.
+Existuje aplikace `/components/_common/generation_time.jsp` kterou pokud vložíte do patičky šablony web stránky vygeneruje do HTML kódu celkovou dobu generování web stránky.
 
 Lze nastavit následující parametry aplikace:
-- `hide` - výchozí nastavení `true` - čas generování se zobrazí jako komentář v kódu HTML.
-- `onlyForAdmin` - výchozí nastavení `false` - čas generování se zobrazí pouze v případě, že je přihlášen správce.
+- `hide` - ve výchozím nastavení `true` - čas generování se zobrazí jako komentář v HTML kódu
+- `onlyForAdmin` - ve výchozím nastavení `false` - čas generování se zobrazí jen pokud je přihlášen administrátor
 
-Do zápatí (nebo do vhodného volného pole) šablony webové stránky vložte následující kód:
+Do patičky (nebo vhodného volného pole) šablony web stránky vložte následující kód:
 
 ```html
 !INCLUDE(/components/_common/generation_time.jsp, hide=true, onlyForAdmin=false)!
 ```
 
-V místě vložené aplikace se zobrazí informace o době provádění celé webové stránky v ms:
+Na místě vložené aplikace se zobrazí informace o době provedení celé web stránky v ms:
 
 ```html
 <!-- generation time: 4511 ms -->
@@ -53,8 +53,9 @@ V místě vložené aplikace se zobrazí informace o době provádění celé we
 
 ## Měření výkonu databázového serveru a souborového systému
 
-Pro porovnání výkonu prostředí - např. testovacího a produkčního prostředí - lze použít níže uvedené skripty. Jejich spuštění vyžaduje právo aktualizovat WebJET. Prostředí můžete měřit a porovnávat bez zátěže, ale také za provozu nebo při testech výkonu.
-- `/admin/update/dbspeedtest.jsp` - měří výkon při čtení dat z databázového serveru.
+Pro srovnání výkonu prostředí testovací VS produkční prostředí lze použít níže uvedené skripty. Jejich spuštění vyžaduje právo na aktualizaci WebJET. Měřit a porovnávat prostředí můžete bez zátěže, ale i během provozu nebo výkonnostních testů.
+
+- `/admin/update/dbspeedtest.jsp` - měří výkon čtení údajů z databázového serveru.
 
 Dobré hodnoty jsou například:
 
@@ -80,9 +81,9 @@ Total time: 1869 ms, per item: 0.5029601722282023 ms
 Total bytes: 685783.0, per second: 366925.09363295883 B/s
 ```
 
-Vzhledem k rozdílnému počtu záznamů v databázi je nutné porovnat. `per item` Hodnoty.
+Z důvodu rozdílného počtu záznamů v databázi je třeba srovnávat `per item` hodnoty.
 
-- `/admin/update/fsspeedtest.jsp` - kontroluje rychlost čtení seznamu souborů ze souborového systému, měla by být kontrolována zejména v případě, že používáte síťový souborový systém.
+- `/admin/update/fsspeedtest.jsp` - kontroluje rychlost čtení seznamu souborů ze souborového systému, je třeba ověřit hlavně pokud používáte síťový souborový systém.
 
 Dobré hodnoty jsou například:
 
@@ -99,76 +100,76 @@ modinfo listing done, diff=220 ms
 Total time=522ms
 ```
 
-## Optimalizace databázových dotazů
+## Optimalizace databázových požadavků
 
-Chcete-li optimalizovat počet požadavků na databázi, můžete povolit ukládání do mezipaměti - `cache`.
+Optimalizovat počet databázových požadavků lze zapnutím vyrovnávací paměti - `cache`.
 
-### Webové stránky
+### Web stránky
 
-Každá webová stránka má na kartě Základní možnost **Povolení ukládání stránek do mezipaměti**. Zapnutím této možnosti se obsah webové stránky přenese z tabulky. `documents` je uložen v mezipaměti. Při zobrazení webové stránky není nutné volat databázi pro načtení obsahu webové stránky.
+Každá web stránka má v kartě Základní možnost **Povolit uložení stránky do vyrovnávací paměti**. Zapnutím této možnosti se obsah web stránky z tabulky `documents` uloží do vyrovnávací paměti. Při zobrazení web stránky nebude nutné provést databázové volání pro získání obsahu web stránky.
 
-Tuto možnost doporučujeme povolit na nejnavštěvovanějších webových stránkách, jejichž seznam můžete získat v aplikaci. [Statistiky](../../redactor/apps/stat/README.md#horní-stránky).
+Tuto možnost doporučujeme zapnout na nejvíce navštěvovaných web stránkách, jejichž seznam získáte v aplikaci [statistika](../../redactor/apps/stat/README.md#top-stránky).
 
 ![](../../redactor/webpages/editor/tab-basic.png)
 
 ### Aplikace
 
-Podobně jako u webových stránek můžete mezipaměť povolit také u aplikací. Některé aplikace mají tuto možnost k dispozici přímo v [nastavení aplikace](../../custom-apps/appstore/README.md#zobrazení-karty) vložené na webové stránce na kartě Zobrazit jako pole. **Doba vyrovnávací paměti**.
+Podobně jako pro web stránky lze zapnout vyrovnávací paměť i pro aplikace. Některé aplikace mají tuto možnost dostupnou přímo v [nastavení aplikace](../../custom-apps/appstore/README.md#karta-zobrazení) vložené ve web stránce v kartě Zobrazení jako pole **Čas vyrovnávací paměti**.
 
 ![](../../custom-apps/appstore/common-settings-tab.png)
 
-Pokud aplikace nemá toto nastavení k dispozici, můžete parametr nastavit v kódu HTML textu webové stránky přidáním parametru `, cacheMinutes=xxx` například na parametry vestavěné aplikace:
+Pokud aplikace toto nastavení nemá dostupné stále můžete parametr nastavit v HTML kódu textu web stránky přidáním parametru `, cacheMinutes=xxx` k parametrům vložené aplikace, například:
 
 ```html
 !INCLUDE(sk.iway.iwcm.components.reservation.TimeBookApp, reservationObjectIds=2560+2561, device=, cacheMinutes=10)!
 ```
 
-!>**Varování:** je důležité si uvědomit, že mezipaměť je globální pro celý aplikační server. Jako klíč se používá cesta k souboru aplikace, jednotlivé parametry uvedené v kódu HTML webové stránky a jazyk aktuálně zobrazené webové stránky. Parametry URL webové stránky nejsou brány v úvahu.
+!>**Upozornění:** je třeba si uvědomit, že vyrovnávací paměť je globální pro celý aplikační server. Jako klíč se použije cesta k souboru aplikace, jednotlivé parametry zadané v HTML kódu web stránky a jazyk aktuálně zobrazené web stránky. Neberou se v úvahu URL parametry web stránky.
 
-Mezipaměť tedy nelze použít, pokud se například zobrazuje stránkovací seznam, kde se číslo stránky předává pomocí parametru URL. Existuje však výjimka pro aplikace, které obsahují seznam novinek v názvu souboru `/news/news` vyrovnávací paměť se použije pouze v případě, že v adrese URL není zadán žádný parametr. `page` nebo je hodnota tohoto parametru jiná než `1`. Tímto způsobem se vyrovnávací paměť používá i pro seznam novinek, ale ukládá se pouze první stránka výsledků. Další stránky se neukládají.
+Vyrovnávací paměť nelze tedy použít například pokud se zobrazí například stránkování seznamu kde číslo strany se přenáší pomocí URL parametru. Aby ale bylo možné uložit seznam novinek existuje výjimka – pro aplikace obsahující v názvu souboru `/news/news` se použije vyrovnávací paměť pouze pokud v URL adrese není zadán parametr `page`, respektive hodnota tohoto parametru je jiná než `1`. Takto se vyrovnávací paměť použije i pro seznam novinek, ale uloží se do ní jen první strana výsledků. Další strany nejsou ukládány.
 
 ## Optimalizace souborového systému
 
-Webové stránky obvykle obsahují mnoho dalších souborů - obrázky, soubory stylů CSS, soubory JavaScriptu atd. - které je třeba načíst společně s webovou stránkou. Rychlost zobrazení proto závisí také na počtu a velikosti těchto souborů.
+Web stránky typicky obsahují spoustu doplňkových souborů – obrázky, CSS styly, JavaScript soubory a podobně, které je třeba spolu s web stránkou načíst. Rychlost zobrazení tedy závisí i na počtu a velikosti těchto souborů.
 
 ### Nastavení vyrovnávací paměti
 
-Je možné nastavit prohlížeč tak, aby používal mezipaměť pro soubory webových stránek - soubor se tak nebude načítat opakovaně při každém zobrazení webové stránky, ale pokud jej prohlížeč již má uložený v mezipaměti, použije jej. Tím se zrychlí zobrazení webové stránky a sníží se zatížení serveru. Příkladem může být obrázek loga, který je obvykle na každé stránce, ale je velmi nepravděpodobné, že by se měnil - nebo se mění řádově jednou za několik měsíců.
+Pro soubory web stránky lze nastavit použití vyrovnávací paměti v prohlížeči - soubor se tak nebude opakovaně číst při každém zobrazení web stránky, ale pokud jej již má prohlížeč ve vyrovnávací paměti, tak se použije. Zrychlí se tak zobrazení web stránky a sníží zátěž na server. Příkladem je obrázek loga, který je typicky na každé stránce, ale jeho změna je vysoce nepravděpodobná – respektive mění se řádově jednou za několik měsíců.
 
-Je možné nastavit následující konfigurační proměnné, které ovlivňují hlavičku HTTP. `Cache-Control`:
-- `cacheStaticContentSeconds` - nastavit počet sekund, výchozí `300`.
-- `cacheStaticContentSuffixes` - seznam rozšíření, pro která je hlavička HTTP `Cache-Control` ve výchozím nastavení vygenerovány `.gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2`.
+Lze nastavit následující konfigurační proměnné, které ovlivňují HTTP hlavičku `Cache-Control`:
+- `cacheStaticContentSeconds` - nastavený počet sekund, ve výchozím nastavení `300`.
+- `cacheStaticContentSuffixes` - seznam přípon, pro které se HTTP hlavička `Cache-Control` vygeneruje, ve výchozím nastavení `.gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2`.
 
-Pro přesnější nastavení můžete použít aplikaci [Hlavičky HTTP](../../admin/settings/response-header/README.md) kde můžete nastavit různé hodnoty pro různé adresy URL.
+Pro přesnější nastavení lze použít aplikaci [HTTP hlavičky](../../admin/settings/response-header/README.md), kde můžete nastavit rozdílné hodnoty pro rozdílné URL adresy.
 
 ![](../../admin/settings/response-header/editor-wildcard.png)
 
-## Chování správce
+## Chování pro administrátora
 
-Pokud je přihlášen správce, vyrovnávací paměť aplikace se nepoužívá (předpokládá se, že správce chce vždy vidět aktuální stav).
+Pokud je přihlášen administrátor vyrovnávací paměť pro aplikace se nepoužije (předpokládá se, že administrátor vždy chce vidět aktuální stav).
 
-Toto chování lze změnit nastavením konfigurační proměnné `cacheStaticContentForAdmin` na hodnotu `true`. Tuto hodnotu je vhodné nastavit zejména u intranetových instalací, kde se uživatelé ověřují proti `SSO/ActiveDirectory` serveru a i při práci v intranetovém prostředí mají práva správce.
+Toto chování lze změnit nastavením konfigurační proměnné `cacheStaticContentForAdmin` na hodnotu `true`. Vhodné je tuto hodnotu nastavit hlavně pro intranet instalace, kde se uživatelé ověřují vůči `SSO/ActiveDirectory` serveru ai při běžné práci v intranet prostředí mají práva administrátora.
 
 ## Vyhledávače
 
-Vyhledávače a různí další roboti mohou server značně zatížit. Zejména s nástupem učení umělé inteligence dochází k významnému procházení internetu a naplňování databází pro učení umělé inteligence. Boti často zkoušejí různé parametry URL, aby získali další data.
+Vyhledávače a různé jiné roboty mohou výrazně zatížit server. Zvláště s nástupem učení umělé inteligence dochází k výraznému prohledávání internetu a plnění databází pro učení umělé inteligence. Roboty často zkoušejí různé URL parametry pro získání dodatečných dat.
 
-### Nastavení souboru robots.txt
+### Nastavení robots.txt
 
-Chování robotů lze ovlivnit nastavením v souboru `/robots.txt`. Pokud neexistuje, je vygenerován jako výchozí. Umístěte svou upravenou verzi do `/files/robots.txt`, z tohoto umístění jej WebJET zobrazí při volání `/robots.txt`.
+Chování robotů lze ovlivnit nastavením v souboru `/robots.txt`. Tento pokud neexistuje je generován ve výchozím stavu. Vámi upravenou verzi umístěte do `/files/robots.txt`, z tohoto webu jej WebJET zobrazí při volání `/robots.txt`.
 
-Použití souboru [robots.txt](https://en.wikipedia.org/wiki/Robots.txt) můžete ovlivnit chování robotů a vyhledávačů - omezit adresy URL, které mohou používat, nastavit rozestupy mezi požadavky atd.
+Pomocí souboru [robots.txt](https://en.wikipedia.org/wiki/Robots.txt) můžete ovlivnit chování robotů a vyhledávačů - omezit URL adresy, které mohou použít, nastavit odstup mezi požadavky atp.
 
-## Další nastavení
+## Ostatní nastavení
 
-### Reverzní server DNS
+### Reverzní DNS server
 
-Statistiky, audit a další aplikace mohou z IP adresy načíst reverzní záznam DNS. Používají se volání API `InetAddress.getByName(ip).getHostName()`. Server DNS však nemusí být na serverech/DMZ k dispozici a toto volání může trvat několik sekund, než dojde k chybě. Obecně takové volání zpomaluje provádění požadavku HTTP.
+Statistika, audit a další aplikace mohou získávat reverzní DNS záznam z IP adresy. Používá se API volání `InetAddress.getByName(ip).getHostName()`. Na serverech/v DMZ nemusí ale být DNS server dostupný a toto volání může trvat několik sekund než nastane chyba. Obecně takové volání zpomaluje provedení HTTP požadavku.
 
-Nastavením konfigurační proměnné `disableReverseDns` na hodnotu `true` je možné zakázat načítání názvu DNS z IP adresy návštěvníka a urychlit provádění dotazů. V poli pro hodnotu `hostname` pak se zapíše hodnota IP adresy.
+Nastavením konfigurační proměnné `disableReverseDns` na hodnotu `true` je možné vypnout získávání DNS názvu z IP adresy návštěvníka a zrychlit provádění požadavků. Do pole pro hodnotu `hostname` se tehdy zapíše hodnota IP adresy.
 
-### Vypnutí statistik
+### Vypnutí statistiky
 
-Zápis statistických dat je asynchronní, provádí se dávkově, takže zobrazení webové stránky nečeká na zápis statistických dat do databáze.
+Zapisování údajů statistiky je asynchronní, provádí se v dávkách tak, aby zobrazení web stránky nečekalo na zápis údajů statistiky do databáze.
 
-Pokud je provoz vysoký nebo hledáte problémy s výkonem, můžete dočasně zakázat zaznamenávání statistik provozu nastavením konfigurační proměnné. `statMode` na hodnotu `none`. Standardní hodnota je `new`.
+Při vysoké návštěvnosti nebo hledání problémů s výkonem můžete dočasně vypnout zapisování statistik návštěvnosti nastavením konfigurační proměnné `statMode` na hodnotu `none`. Standardní hodnota je `new`.

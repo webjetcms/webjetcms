@@ -1,20 +1,20 @@
-# Položka menu v sekci správce
+# Položka v menu admin části
 
-Správa je založena na [datové tabulky](../../developer/datatables/README.md) a [Rozhraní REST](../../developer/datatables/restcontroller.md). Základem je pochopení jejich fungování podle dokumentace pro [Programátor systému WebJET CMS](../../developer/README.md).
+Administrace je založena na [data tabulkách](../../developer/datatables/README.md) a [REST rozhraní](../../developer/datatables/restcontroller.md). Jako základ je třeba pochopit jejich fungování podle dokumentace pro [Programátora WebJET CMS](../../developer/README.md).
 
-V této ukázce naprogramujeme správu kontaktů, tabulka se používá. `contact` který existuje ve standardní instalaci WebJET CMS (ale obvykle se nepoužívá).
+V této ukáže naprogramujeme správu kontaktů, využita je tabulka `contact`, která existuje ve standardní instalaci WebJET CMS (ale typicky se nepoužívá).
 
 ![](contact.png)
 
 ## Backend
 
-Ideální řešení využívá `Spring DATA` úložiště, řadič REST a datovou tabulku vygenerovanou z `@DataTableColumn`, [Anotace](../../developer/datatables-editor/datatable-columns.md).
+Ideální řešení využívá `Spring DATA` repozitář, REST controller a datatabulku generovanou z `@DataTableColumn`, [anotací](../../developer/datatables-editor/datatable-columns.md).
 
-Ukázka entity JPA s anotacemi `@DataTableColumn`, [pro datovou tabulku a editor](../../developer/datatables-editor/datatable-columns.md). Všimněte si také poznámky `@EntityListeners` pro automatické [logovaní auditu](../../developer/backend/auditing.md) při změně entity.
+Ukázková JPA entita is anotacemi `@DataTableColumn`, [pro datatabulku a editor](../../developer/datatables-editor/datatable-columns.md). Také si všimněte anotace `@EntityListeners` pro automatické [zapisování auditu](../../developer/backend/auditing.md) při změně entity.
 
-Povinná pole a další validace [nastavíte anotace](../../developer/datatables/restcontroller.md#validace---povinná-pole), `@NotBlank,@Size,@Email` atd.
+Povinná pole a jiné validace [nastavujete anotacemi](../../developer/datatables/restcontroller.md#validace--povinná-pole), `@NotBlank,@Size,@Email` atp.
 
-!>**Varování:** nepoužívat primitivní typy v entitě `int, long` ale pouze objekt `Integer, Long` jinak nebude filtrování/vyhledávání fungovat správně.
+!>**Upozornění:** v entitě nepoužívejte primitivní typy `int, long` ale jen objektové `Integer, Long`, jinak nebude korektně fungovat filtrování/vyhledávání.
 
 ```java
 package sk.iway.basecms.contact;
@@ -89,7 +89,7 @@ public class ContactEntity {
 }
 ```
 
-Vzorové úložiště JPA, při jeho použití vždy použijte také `Pageable` objekt pro stránkování a rozvržení. Podpora dynamického generování vyhledávacích kritérií (v metodě řadiče REST `addSpecSearch`) úložiště také rozšiřuje `JpaSpecificationExecutor`.
+Ukázkový JPA repozitář, při jeho použití vždy využívejte i `Pageable` objekt pro stránkování a uspořádání. Pro podporu dynamického generování vyhledávacích kritérií (v REST controlleru metoda `addSpecSearch`) repozitář rozšiřuje i `JpaSpecificationExecutor`.
 
 ```java
 package sk.iway.basecms.contact;
@@ -111,13 +111,13 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long>, J
 }
 ```
 
-!>**Varování:** si všimněte použití `JpaSpecificationExecutor`. Umožňuje dynamické vytváření příkazu SQL pro vyhledávání/filtraci/uspořádání záznamů v datové tabulce. Pokud byste jej nepoužili, vyhledává ve tvaru [Dotazování podle příkladu](https://www.baeldung.com/spring-data-query-by-example) když **Nesmíte** používat primitivní typy a inicializační hodnoty v entitě (např. `String text="test"`). Při vyhledávání by pak hodnota byla `test` automaticky vyhledávány, i když nejsou zadány. To řeší `JpaSpecificationExecutor`, který hledá pouze parametry zadané ve filtru (testováním parametrů požadavku začínajících na znaky `search`).
+!>**Upozornění:** všimněte si použití `JpaSpecificationExecutor`. Ten umožňuje dynamickou tvorbu SQL příkazu pro vyhledávání/filtrování/uspořádání záznamů v datatabulce. Pokud byste jej nepoužili, tak se vyhledává ve formě [Query By Example](https://www.baeldung.com/spring-data-query-by-example) kdy **nesmíte** použít primitivní typy a inicializační hodnoty v Entitě (např. `String text="test"`). Při vyhledávání by se pak hodnota `test` automaticky hledala i když není zadána. Toto řeší `JpaSpecificationExecutor`, který hledá pouze parametry zadané ve filtru (testováním request parametrů začínajících na `search`).
 
-Ukázka kontroléru REST, vždy věnujte pozornost kontrole práv pomocí anotace `@PreAuthorize` a nezapomeňte na anotaci `@Datatable` pro správné generování chybových odpovědí.
+Ukázkový REST controller, vždy dávejte pozor na kontrolu práv přes anotaci `@PreAuthorize` a nezapomeňte i anotaci `@Datatable` pro korektní generování chybových odpovědí.
 
-V metodě `getOptions` nastaví možnosti pole pro výběr země.
+V metodě `getOptions` nastavuje možnosti pro výběrové pole země.
 
-V metodě `beforeSave` je možné nastavit další (needitovatelné) údaje před uložením entity do databáze.
+V metodě `beforeSave` je možné nastavit dodatečné (needitovatelné) údaje před uložením entity do databáze.
 
 ```java
 package sk.iway.basecms.contact;
@@ -188,13 +188,13 @@ public class ContactRestController extends DatatableRestControllerV2<ContactEnti
 
 ## Frontend
 
-Jak bylo uvedeno výše, pro frontend se používají datové tabulky. Administrace je zkompilována ze souborů pug do html a poté zobrazena.
+Jak je zmíněno výše pro frontend se využívají datatabulky. Administrace je zkompilována z pug souborů do html a následně zobrazena.
 
-Abychom vám usnadnili vytvoření nové stránky v administraci, zavedli jsme předpřipravenou šablonu rozvržení stránky. Přidáte pouze prostřední část stránky (šablona zajistí vygenerování záhlaví a nabídky). [Mapování adres URL](../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) se připravuje jako `/apps/{app}/admin/` nebo `/apps/{app}/admin/{subpage}`.
+Pro snadné vytvoření nové stránky v administraci jsme zavedli před připravenou šablonu rozložení stránky. Vy doplníte jen střední část stránky (šablona zajistí generování hlavičky a menu). [Mapování URL adres](../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) je připraveno jako `/apps/{app}/admin/` nebo `/apps/{app}/admin/{subpage}`.
 
-Stačí připravit soubor `/apps/{app}/admin/index.html` nebo `/apps/{app}/admin/{subpage}.html` Kde: `{app}` je název adresáře, ve kterém je aplikace umístěna (bez diakritiky a mezer), a `{subpage}` je název souboru bez přípony (pokud to není název index.html).
+Stačí připravit soubor `/apps/{app}/admin/index.html` nebo `/apps/{app}/admin/{subpage}.html` kde `{app}` je jméno adresáře ve kterém je aplikace (bez diakritiky a mezer) a `{subpage}` je případné jméno souboru bez přípony (nejedná-li se o jméno index.html).
 
-Příkladem je aplikace `src/main/webapp/apps/contact/admin/index.html` voláno prostřednictvím adresy URL `/apps/contact/admin/`:
+Příkladem je aplikace `src/main/webapp/apps/contact/admin/index.html` volaná přes URL adresu `/apps/contact/admin/`:
 
 ```html
 <script>
@@ -234,15 +234,15 @@ Příkladem je aplikace `src/main/webapp/apps/contact/admin/index.html` voláno 
 <table id="dataTable" class="datatableInit table"></table>
 ```
 
-Použití funkce [WJ.breadcrumb](../../developer/frameworks/webjetjs.md#navigační-panel) je vygenerován navigační panel.
+Pomocí funkce [WJ.breadcrumb](../../developer/frameworks/webjetjs.md#navigační-lišta) je vygenerována navigační lišta.
 
 ![](breadcrumb.png)
 
-Funkce [WJ.DataTable](../../developer/datatables/README.md#možnosti-konfigurace) inicializuje datovou tabulku ve stránce na tabulku HTML s kódem `id=dataTable`. Vezměte prosím na vědomí výzvu `window.domReady.add` použít místo `$(document).ready` - volání čekající na inicializaci [překladové klíče](../../developer/libraries/translator.md) a teprve po jejich získání se zavolá zadaná funkce.
+Funkce [WJ.DataTable](../../developer/datatables/README.md#možnosti-konfigurace) inicializuje ve stránce datatabulku do HTML tabulky s `id=dataTable`. Upozorňujeme na volání `window.domReady.add`, které je třeba používat místo `$(document).ready` - volání čeká na inicializaci [překladových klíčů](../../developer/libraries/translator.md) a teprve po jejich získání je vyvolána zadaná funkce.
 
 ![](datatable.png)
 
-Pro zobrazení položky nabídky a zobrazení uživatelských práv je třeba ještě vytvořit konfigurační soubor. `modinfo.properties`, umístěte ji do `/apps/MENO_APLIKACIE/`, pro náš případ `src/main/webapp/apps/contact/modinfo.properties`:
+Pro zobrazení položky v menu a zobrazení práva pro uživatele je ještě třeba vytvořit konfigurační soubor `modinfo.properties`, ten umístěte do `/apps/MENO_APLIKACIE/`, pro náš případ `src/main/webapp/apps/contact/modinfo.properties`:
 
 ```sh
 #prekladovy kluc menu polozky
@@ -265,9 +265,9 @@ custom=true
 #leftSubmenu1Link=/apps/contact/admin/subpage/
 ```
 
-Pokud máte web, jako je `master-detail` který není definován v `modinfo.properties` nemusí se správně zobrazit levé menu, protože neví, jakou položku má zvýraznit. Nejjednodušším řešením je pojmenovat takovou stránku `meno-details.html` (jako je adresa URL `/apps/stat/admin/top-details/?docId=35267&dateRange=` v souboru `/apps/stat/admin/top-details.html`). Termín `-details` nebo `-detail` je při hledání položky menu, kterou chcete zvýraznit, odstraněn, takže hlavní (`master`) Strana.
+Máte-li stránky typu `master-detail`, která není definována v `modinfo.properties` nemusí se korektně zobrazit levé menu, protože neví jakou položku má zvýraznit. Nejjednodušší řešení je takovou stránku pojmenovat `meno-details.html` (jako je např. URL adresa `/apps/stat/admin/top-details/?docId=35267&dateRange=` v souboru `/apps/stat/admin/top-details.html`). Výraz `-details` nebo `-detail` se při hledání položky na zvýraznění v menu odstraní a zvýrazní se tak hlavní (`master`) stránka.
 
-Pokud takové použití není vhodné, můžete na stránce použít funkci JavaScript. `WJ.selectMenuItem(href)` zvýraznit zadanou položku nabídky. V parametru `href` zadejte přímo adresu URL stránky v nabídce, kterou chcete zvýraznit:
+Pokud takové použití není vhodné můžete využít ve vaší stránce JavaScript funkci `WJ.selectMenuItem(href)` pro zvýraznění zadané menu položky. V parametru `href` zadáte přímo URL adresu stránky v menu, kterou chcete zvýraznit:
 
 ```JavaScript
 window.domReady.add(function () {
@@ -275,11 +275,11 @@ window.domReady.add(function () {
 });
 ```
 
-V případě staré komponenty JSP zavolejte funkci pomocí příkazu `setTimeout` které se provedou po zobrazení stránky.
+V případě staré JSP komponenty funkci volejte pomocí `setTimeout` aby se provedla až po zobrazení stránky.
 
-### Připojení souboru JavaScript
+### Přiložení JavaScript souboru
 
-Pokud potřebujete k aplikaci připojit JavaScript, modul WebJET automaticky vyhledá soubor. `/apps/{app}/admin/{app}.js` a pokud existuje, vloží jej do záhlaví kódu HTML jako modul a importuje jej jako objekt. `appModule`:
+Pokud potřebujete k aplikaci připojit JavaScript modul WebJET automaticky hledá soubor `/apps/{app}/admin/{app}.js` a pokud existuje vloží jej do hlavičky HTML kódu jako modul, přičemž jej importuje jako objekt `appModule`:
 
 ```html
 <script type="module">
@@ -288,7 +288,7 @@ Pokud potřebujete k aplikaci připojit JavaScript, modul WebJET automaticky vyh
 </script>
 ```
 
-Například v aplikaci stat by byl soubor `/apps/stat/admin/stat.js`:
+Například v aplikaci stat by existoval soubor `/apps/stat/admin/stat.js`:
 
 ```javascript
 export const ChartType = {
@@ -308,11 +308,11 @@ export async function setAmchart(chartForm) {
 }
 ```
 
-který je pak v kódu JavaScript/HTML volán jako `appModule.ChartType.Bar` atd.
+který se následně v JavaScript/HTML kódu jmenuje jako `appModule.ChartType.Bar` atp.
 
 ## Automatizovaný test
 
-Tabulka s daty je připravena [základní automatizovaný test](../../developer/testing/datatable.md), který stačí nakonfigurovat. Vytvořte nový testovací scénář v `src/test/webapp/tests/apps/contact.js` s alespoň základním testem:
+Pro datatabulku je připraven [základní automatizovaný test](../../developer/testing/datatable.md), který stačí nakonfigurovat. Vytvořte nový testovací scénář v `src/test/webapp/tests/apps/contact.js` s alespoň základním testem:
 
 ```javascript
 Feature('contact');

@@ -2,40 +2,40 @@
 
 ## Inicializace editoru
 
-Při editaci stránky je editor inicializován na jednotlivé editovatelné bloky, tj. **na stránce je inicializováno více editorů najednou**. Nástroj Page Builder slouží k úpravě struktury stránky pomocí blokových nástrojů. Editor CK slouží k úpravě samotného textu.
+Při editaci stránky se editor inicializuje na jednotlivé editovatelné bloky, čili **v jednom čase je ve stránce inicializováno více editorů**. Přes Page Builder se upravuje struktura stránky pomocí jeho nástrojů pro práci s bloky. Přes CK editor se upravují samotné texty.
 
-Editor je automaticky inicializován na:
-- sloupcové prvky (`class="col-*"`)
-- prvky označené třídou CSS `pb-editable` (`class="pb-editable"`)
+Editor se automaticky inicializuje na:
+- column elementy (`class="col-*"`)
+- elementy označené CSS třídou `pb-editable` (`class="pb-editable"`)
 
 **Nastavení a konfigurace:**
 
-Chcete-li správně spustit nástroj Page Builder, nastavte:
-- ve vlastnostech skupiny šablon Typ editoru stránky na Typ editoru stránky
-- pokud chcete, aby byl nástroj Page Builder k dispozici i při zobrazení stránky na frontendu, nastavte konfigurační proměnnou `inlineEditingEnabled` na adrese `true`
-- v případě nestandardních `bootstrap gridu`, konfigurační proměnná `bootstrapColumns` který určuje počet sloupců `gridu`
+Pro správné spuštění Page Builder nastavte:
+- ve vlastnostech skupiny šablon Typ editoru stránek na hodnotu Page Builder
+- pokud chcete, aby byl dostupný Page Builder i při zobrazení stránky na frontendu nastavte konfigurační proměnnou `inlineEditingEnabled` na `true`
+- v případě nestandardního `bootstrap gridu`, konfigurační proměnnou `bootstrapColumns`, která určuje počet sloupců `gridu`
 
-Další konfigurační proměnné, které lze upravit:
-- `inlineEditableObjects` - objekty, na které se kromě doc\_data vztahují úpravy (např. doc\_header, doc\_footer, doc\_right\_menu).
-- `inlineEditingEnabledDefaultValue` - po nastavení na `true` režim úprav je automaticky povolen při načtení stránky (není třeba klikat na tlačítko Upravit).
-- `inlineEditingDisabledUrls` - seznam adres URL, pro které nebude inline editor k dispozici.
-- `pageBuilderPrefix` - prefix používaný pro třídy CSS Page Builder (ve výchozím nastavení pb), lze změnit pouze tehdy, pokud změníte prefixy i u tříd CSS Page Builder.
+Další konf. proměnné, které lze upravit:
+- `inlineEditableObjects` - objekty, na která se kromě doc\_data aplikuje editace (např. doc\_header, doc\_footer, doc\_right\_menu)
+- `inlineEditingEnabledDefaultValue` - po nastavení na `true` se automaticky zapne editační režim při načítání stránky (bez potřeby kliknout na Editovat)
+- `inlineEditingDisabledUrls` - seznam URL adres, pro které nebude dostupný inline editor
+- `pageBuilderPrefix` - prefix, který se používá pro CSS třídy Page Builder (výchozí pb), změnit je možné pouze pokud změníte i prefixy v CSS třídách Page Builder
 
 **Výjimky**
 
-Režim je nastaven pro skupinu šablon, pokud potřebujete. **vypnutí konkrétního režimu šablony** můžete nastavit další možnost v šabloně na kartě Základní v poli `Typ editora stránok` jak je používá skupina šablon.
+Režim se nastavuje pro skupinu šablon, pokud potřebujete v některé **konkrétní šabloně režim vypnout** můžete v šabloně v kartě Základní nastavit jinou možnost v poli `Typ editora stránok` jak používá skupina šablon.
 
-**Hlavy/podpatky**
+**Hlavičky/patičky**
 
-Nástroj Page Builder v editoru se inicializuje na celou stránku, načte se včetně stylů CSS a šablony do prvku iframe. V tomto režimu však nechceme zobrazovat další prvky webové stránky (záhlaví, zápatí...), takže tyto prvky jsou nastaveny na prázdnou hodnotu. Kromě toho se při zobrazení stránky zobrazí atribut CSS `display: none` následující prvky jsou skryté:
+Page Builder v editoru je inicializován na celou stránku, načte se včetně CSS stylů a šablony do iframe elementu. V tomto režimu ale nechceme zobrazovat ostatní elementy web stránky (hlavičku, patičku...) proto jsou tyto elementy nastaveny na prázdnou hodnotu. Navíc při zobrazení stránky jsou přes CSS atribut `display: none` schované následující elementy:
 
 ```css
  body div.header, body header, body div.footer, body footer { display: none; }
 ```
 
-## Konvence tříd CSS s podporou nástroje Ninja page builder
+## Konvence CSS tříd s podporou pro Ninja page builder
 
-Správná struktura html kódu, nad kterou se může inicializovat nástroj Page Builder, je následující:
+Korektní struktura html kódu, nad kterou se dokáže Page Builder inicializovat, je následující:
 
 ```html
 <section>
@@ -64,11 +64,11 @@ Správná struktura html kódu, nad kterou se může inicializovat nástroj Page
 </section>
 ```
 
-Styling se doporučuje pouze u `section`, `container` a `column content` protože pouze tyto prvky může uživatel upravovat pomocí nástroje Page Builder.
+Stylování je doporučeno pouze na `section`, `container` a `column content`, protože jen tyto elementy si umí uživatel upravit pomocí Page Builder.
 
-!>**Varování:** v `column` není dovoleno používat přímo text, je nutné použít alespoň prvek P. Navíc kvůli možnosti nastavení odsazení (`margin/padding`) v rámci `column` obsah prvku je po otevření v nástroji Page Builder zabalen do prvku DIV s třídou CSS `column-content`.
+!>**Upozornění:** v `column` elementech není povoleno použít přímo text, je třeba použít minimálně P element. Navíc z důvodu možnosti nastavení odsazení (`margin/padding`) v rámci `column` elementu je obsah elementu po otevření v Page Builderu obalený do DIV elementu s CSS třídou `column-content`.
 
-Tedy z kódu:
+Čili z kódu:
 
 ```html
 <div class="col-4">
@@ -76,7 +76,7 @@ Tedy z kódu:
 </div>
 ```
 
-bude vytvořen po inicializaci kódu nástroje Page Builder:
+vznikne po inicializaci Page Builder kód:
 
 ```html
 <div class="col-4">
@@ -86,25 +86,25 @@ bude vytvořen po inicializaci kódu nástroje Page Builder:
 </div>
 ```
 
-## Stylování prvků
+## Stylování elementů
 
 ### `SECTION` (modrá barva)
 
-Inicializace při použití prvku: `<section>`.
+Inicializace při použití elementu: `<section>`.
 
-Stylování podle třídy s předponou: `pb-style-section-`
+Stylování pomocí třídy, s prefixem: `pb-style-section-`
 
 ```html
 <section class="pb-style-section-team-26"></section>
 ```
 
-Nastavením třídy CSS `pb-not-section` prvek \**nebude považován za oddíl* prvek.
+Nastavením CSS třídy `pb-not-section` se element \**nebude považovat za section* element.
 
-### `CONTAINER` (červená)
+### `CONTAINER` (červená barva)
 
-Inicializace při použití tříd CSS: `container` nebo `pb-custom-container`. Nastavením třídy CSS `pb-not-container` s prvkem **nebude považován za kontejner** i když má třídu CSS `container`.
+Inicializace při použití CSS třídy: `container` nebo `pb-custom-container`. Nastavením CSS třídy `pb-not-container` se element **nebude považovat za kontejner** i když má CSS třídu `container`.
 
-Stylování podle třídy s předponou: `pb-style-container-`
+Stylování pomocí třídy, s prefixem: `pb-style-container-`
 
 ```html
 <div class="container pb-style-container-group-26"></div>
@@ -112,47 +112,47 @@ Stylování podle třídy s předponou: `pb-style-container-`
 
 ### `ROW`
 
-`<div class="row">` není v současné době možné upravovat pomocí nástroje Page Builder, používá se z důvodu kompatibility s bootstrapem.
+`<div class="row">` se momentálně nedá editovat pomocí Page Builder, je použit z důvodu bootstrap kompatibility.
 
 ### `COLUMN` (zelená barva)
 
-Inicializace při použití třídy: `col-` NEBO `pb-col-` (pokud prvek DIV není standardním prvkem bootstrap `col-`). Akceptovány jsou také hodnoty `pb-col` a `pb-col-auto` - pokud prvek obsahuje tyto styly CSS, ikona nastavení šířky sloupce se na panelu nástrojů nezobrazí.
+Inicializace při použití třídy: `col-` NEBO `pb-col-` (pokud DIV element není standardní bootstrap `col-`). Akceptovány jsou i hodnoty `pb-col` a `pb-col-auto` - pokud element obsahuje tyto CSS styly, tak v nástrojové liště se nezobrazí ikona nastavení šířky sloupce.
 
-Pokud má sloupec třídu CSS `pb-not-editable` takže s **nebude považován za sloupec** (nebude automaticky obsahovat upravitelný text). Pokud u needitovatelného prvku potřebujete mít možnost nastavit šířku/kopírování/posun atd., nastavte třídu CSS. `pb-always-mark` bude prvek vybrán a zobrazí se zelené pole s jeho možnostmi.
+Pokud má column CSS třídu `pb-not-editable` tak se **nebude považovat za column** (nebude v něm automaticky i editovatelný text). Pokud pro needitovatelný element potřebujete mít možnost nastavování šířky/kopírování/přesouvání atp. nastavením CSS třídy `pb-always-mark` se element označí a bude se zobrazovat zelený rámeček is jeho možnostmi.
 
-Stylování podle třídy s předponou: `pb-style-column-`.
+Stylování pomocí třídy, s prefixem: `pb-style-column-`.
 
 ```html
 <div class="col-12 pb-style-content-person-26"></div>
 ```
 
-Nastavením třídy CSS `pb-not-column` prvek \**nebudou považovány za sloupce* i když má třídu CSS `col-`.
+Nastavením CSS třídy `pb-not-column` se element \**nebude považovat za columns* i když má CSS třídu `col-`.
 
-## Výjimky při úpravách
+## Výjimky editace
 
-### Upravitelný prvek
+### Editovatelný element
 
-Pokud je vyžadována úprava prvku, který není jedním z výše uvedených, je možné použít prvek s třídou `pb-editable`.
+Pokud se vyžaduje editování elementu, který není z mezi výše zmíněných, lze použít element s třídou `pb-editable`.
 
-Tento prvek nebude stylovatelný pomocí nástroje Page Builder, ale bude upravitelný pomocí editoru CK.
+Tento element nebude možné nastylovat pomocí Page Builder, ale bude editovatelný pomocí CK editoru.
 
 ```html
 <div class="pb-editable"></div>
 ```
 
-### Neupravitelný prvek
+### Needitovatelný element
 
-Pokud je vyžadován prvek, který nechcete upravovat, je možné použít třídu `pb-not-editable`.
+Pokud se vyžaduje element, který nechcete, aby byl editovatelný, lze použít třídu `pb-not-editable`.
 
-Tím se zakáže inicializace editoru Page Builder a CK na prvku a všech prvcích v něm.
+To zakáže inicializaci Page Builder a CK editoru na daný element a všechny elementy v něm.
 
 ```html
 <section class="pb-not-editable"></section>
 ```
 
-## Jedinečné ID
+## Unikátní ID
 
-Potřebujete-li v blocích použít jedinečné ID, můžete použít hodnotu `__ID__`, která je nahrazena náhodnou hodnotou (`timestamp`).
+Pokud potřebujete, aby v blocích bylo použito unikátní ID můžete použít hodnotu `__ID__`, která se v HTML kódu po vložení do stránky nahradí za náhodnou hodnotu (`timestamp`).
 
 ```html
 <div class="carousel slide" id="carouselControls__ID__" data-bs-ride="carousel">
@@ -166,7 +166,7 @@ Potřebujete-li v blocích použít jedinečné ID, můžete použít hodnotu `_
 
 ## Události
 
-PageBuilder zavolá `windows` několik událostí. Můžete si je poslechnout takto:
+PageBuilder během práce vyvolá na `windows` objektu více událostí. Poslouchat na ně můžete následovně:
 
 ```javascript
 window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
@@ -174,10 +174,10 @@ window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
 });
 ```
 
-V současné době jsou podporovány následující události:
+Aktuálně jsou podporovány následující události:
 - `WJ.PageBuilder.loaded` - po nahrání stránky v editoru
 - `WJ.PageBuilder.gridChanged` - změna v `gride`
-- `WJ.PageBuilder.styleChange` - změna vlastností bloku (stylování)
-- `WJ.PageBuilder.newElementAdded` - přidán nový prvek
-- `WJ.PageBuilder.elementDuplicated` - duplikovaný prvek
-- `WJ.PageBuilder.elementMoved` - přesunutý prvek
+- `WJ.PageBuilder.styleChange` - změna ve vlastnostech bloku (stylování)
+- `WJ.PageBuilder.newElementAdded` - přidán nový element
+- `WJ.PageBuilder.elementDuplicated` - duplikovaný element
+- `WJ.PageBuilder.elementMoved` - přesunutý element

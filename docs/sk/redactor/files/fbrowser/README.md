@@ -13,6 +13,7 @@ Pozostáva z niekoľkých častí:
 ## Panel nástrojov
 
 Panel nástrojov ponúka široký výber nástrojov/funkcií na prácu so súbormi a priečinkami daných súborov. Každé tlačidlo, ponúka iný jedinečný nastroj.
+
 !>**Upozornenie:** jednotlivé tlačidlá sa aktivujú iba za špecifický podmienok, takže nie sú vždy dostupné. Panel nástrojov obsahuje taktiež vyhľadávanie.
 
 Dané nástroje sú poľa logiky rozdelené do 3 kariet:

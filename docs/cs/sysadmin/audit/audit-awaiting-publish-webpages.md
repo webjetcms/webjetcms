@@ -1,11 +1,11 @@
-# Čeká se na zveřejnění
+# Čeká na publikování
 
-Položka nabídky Čekající obsahuje seznam stránek, jejichž zveřejnění je naplánováno v budoucnu. Obsahuje informace o tom, jaká webová stránka (na jaké adrese/cestě) a kdy bude zveřejněna. Další informace o webových stránkách naleznete zde [Seznam webových stránek](../../redactor/webpages/README.md).
+V menu položce Čeká na publikování je seznam stránek, které mají v budoucnu naplánované publikování. Obsahuje informace o tom o jakou web stránku (na jaké adrese/cestě) a kdy se bude publikovat. Bližší informace o web stránkách naleznete zde [Seznam web stránek](../../redactor/webpages/README.md).
 
-Cílem je přehledně zobrazit seznam stránek, které budou v budoucnu automaticky změněny. Zobrazí se všechny stránky bez ohledu na práva uživatele ke stromové struktuře stránek a vybrané doméně.
+Cílem je přehledně zobrazit seznam stránek, které v budoucnu budou automaticky změněny. Zobrazeny jsou všechny stránky bez ohledu na práva uživatele na stromovou strukturu stránek a zvolenou doménu.
 
-Webové stránky, které čekají na vypnutí zobrazení, jsou zobrazeny červeně - po tomto datu jsou nastaveny na stránku Publikovat. Takové stránky nebudou po nastaveném datu veřejně zobrazitelné.
+Červenou barvou jsou zobrazeny web stránky, které čekají na vypnutí zobrazování – mají nastavenou možnost Odveřejnit stránku po tomto datu. Takové stránky po nastaveném datu nebudou veřejně zobrazitelné.
 
-V seznamu se nezobrazují stránky v koši, ty se nezveřejňují.
+V seznamu se nezobrazují stránky v koši, pro ty se publikování neprovádí.
 
 ![](audit-awaiting-publish-webpages.png)

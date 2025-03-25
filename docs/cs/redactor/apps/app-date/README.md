@@ -1,12 +1,12 @@
 # Datum
 
-Aplikace vloží aktuální datum, název data nebo datum poslední změny webové stránky.
+Aplikace vloží do stránky aktuální datum, svátek příslušející k danému dni nebo datum poslední změny webstránky.
 
 ## Nastavení aplikace
 
 V této části lze nastavit:
-- Formát žádosti, jak se zobrazuje
-- U některých formátů můžete zvolit, zda se má zobrazit datum nebo čas.
+- Formát aplikace, jak se zobrazí
+- U některých formátů lze vybrat, zda se zobrazí datum nebo čas
 
 ![](editor.png)
 

@@ -1,7 +1,7 @@
-# Pokrytí kódu
+# Pokrytí kódem
 
-> Měření pokrytí kódu testy vyjadřuje procento kódu, které se provede během testovacích scénářů. Čím vyšší je procento pokrytí kódu testovacími scénáři, tím nižší je pravděpodobnost, že kód obsahuje neodhalené softwarové chyby.
+> Měření pokrytí kódem testy vyjadřuje procento kódu, který je proveden během testovacích scénářů. Čím větší je procento pokrytí kódu testovacími scénáři, tím nižší je šance, že kód obsahuje nezjištěné softwarové chyby.
 
-WebJET obsahuje integrovanou knihovnu [jacoco](https://github.com/jacoco/jacoco) který sleduje, která část kódu je během běhu spuštěna, a poté generuje podrobnou zprávu ve formátu HTML. V něm můžete procházet jednotlivé balíčky až na úroveň javových tříd a metod a podrobně zvýraznit, které části kódu byly během testů provedeny a které nikoli.
+WebJET obsahuje integrovanou knihovnu [jacoco](https://github.com/jacoco/jacoco), která během běhu sleduje, která část kódu je provedena a následně vygeneruje podrobný report v HTML formátu. V něm můžete procházet jednotlivými balíky až do úrovně java tříd a metod s podrobným zvýrazněním, které části kódu se během testů provedly a které ne.
 
-Více v pokynech pro [Programátor systému WebJET CMS](../../developer/testing/codecoverage.md).
+Více je v návodu pro [programátora WebJET CMS](../../developer/testing/codecoverage.md).

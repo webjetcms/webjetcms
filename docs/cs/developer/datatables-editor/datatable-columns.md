@@ -1,16 +1,16 @@
-# Sloupce datových tabulek
+# Datatables columns
 
-Pole JSON "sloupce" pro DataTables lze generovat pomocí anotací nad vlastnostmi objektu Java. JSON se vloží do souboru pug pomocí volání:
+JSON pole "columns" pro DataTables lze vygenerovat anotacemi nad vlastnostmi Java objektu. JSON se do pug souboru vloží pomocí volání:
 
 ```javascript
 let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.gallery.GalleryEntity')})];
 ```
 
-Kde: `sk.iway.iwcm.components.gallery.GalleryEntity` je objekt spravovaný prostřednictvím DataTables.
+Kde `sk.iway.iwcm.components.gallery.GalleryEntity` je objekt manageováni přes DataTables.
 
-Všechna pole objektu, která mají anotaci, jsou namapována na JSON. `@DataTableColumn`.
+Do JSON se mapují všechna pole objektu, která mají anotaci `@DataTableColumn`.
 
-Anotace `@DataTableColumn` má stejné vlastnosti jako [původní objekt sloupců](../datatables/README.md). Pomocí zkratky inputType je také možné nastavit některé vlastnosti, které jsou definovány. `enum dataTableColumnType`.
+Anotace `@DataTableColumn` má stejné vlastnosti jako [původní columns objekt](../datatables/README.md). Dále lze nastavit určité vlastnosti pomocí zkratky inputType, které jsou definovány `enum dataTableColumnType`.
 
 ## Příklady
 
@@ -92,99 +92,100 @@ private Integer[] passwordProtected;
 
 ## Vlastnosti @DataTableColumn
 
-Původní dokumentace na webu [datatables.net](https://datatables.net/reference/option/columns:)
+Původní dokumentace na stránce [datatables.net](https://datatables.net/reference/option/columns:)
 
 Povinná pole:
-- `inputType` - Zkratka, `enum DataTableColumnType` - určuje typ datového pole. Je také možné použít zřetězenou hodnotu (např: `inputType = { DataTableColumnType.OPEN_EDITOR, DataTableColumnType.JSON },`).
-- `title` - pokud není zadán, je automaticky generován jako `components.meno_beanu_bez_dto_alebo_bean_na_konci.name` - https://datatables.net/reference/option/columns.title, viz dokumentace pro [přeložil](#překlady-nadpisů-sloupců). **Varování:** pokud je title prázdný (nebo je v něm mezera), pak se atribut automaticky nastaví na sloupec `hidden=true`.
+- `inputType` - zkratka, `enum DataTableColumnType` - určuje typ datového pol. Možné je použít i spojenou hodnotu (např.: `inputType = { DataTableColumnType.OPEN_EDITOR, DataTableColumnType.JSON },`).
+- `title` - pokud není zadán automaticky se vygeneruje jako `components.meno_beanu_bez_dto_alebo_bean_na_konci.name` - https://datatables.net/reference/option/columns.title, viz dokumentace k [překladem](#překlady-názvů-sloupců). **Upozornění:** pokud je title prázdný (nebo tvrdá mezera) tak se automaticky sloupci nastaví atribut `hidden=true`.
 
 Volitelná pole:
 - `tab` - zkratka pro nastavení `{editor: {tab: String}}`
-- `className` - další styl CSS nastavený na `TD` pokud chcete nahradit styl CSS nastavený pomocí `inputType` zadejte ji pomocí znaménka `!` na začátku - https://datatables.net/reference/option/columns.className. Existují speciální třídy CSS:
-  - `disabled` - nastaví pole na šedou barvu, což evokuje, že není editovatelné.
-  - `DTE_Field_Has_Checkbox` - nastaví odsazení od spodního okraje na `-14px` aby před dalším polem nezůstala žádná mezera.
-  - `hide-on-create` - skryje pole při vytváření nového záznamu.
-  - `hide-on-edit` - skryje pole při úpravě záznamu.
+- `className` - doplňkový CSS styl nastaven na `TD` elemente, chcete-li nahradit CSS styl nastavený pomocí `inputType` zadejte jej se znakem `!` na začátku - https://datatables.net/reference/option/columns.className. Existují speciální CSS třídy:
+  - `disabled` - nastaví pole na šedou barvu, což evokuje, že je needitovatelné.
+  - `DTE_Field_Has_Checkbox` - nastaví odsazení od spodu na hodnotu `-14px` aby nezůstala mezera před dalším polem.
+  - `hide-on-create` - schová pole při pořizování nového záznamu.
+  - `hide-on-edit` - schová pole při editaci záznamu.
+  - `hide-on-duplicate` - schová pole při duplikování záznamu.
   - `not-export` - pole nebude exportováno.
-  - `show-html` - zobrazí se kód HTML v hodnotě, včetně entit typu `&#39;`, nastaví atribut na sloupec `entityDecode: false`.
-  - `wrap` - umožňuje obtékání textu, používá se především v polích typu `textarea`.
-  - `multiweb-noteditable` - v instalaci MultiWebu je pole zobrazeno šedě, což evokuje, že není editovatelné.
+  - `show-html` - zobrazí se HTML kód v hodnotě včetně entit typu `&#39;`, sloupci nastaví atribut `entityDecode: false`.
+  - `wrap` - zapne zalamování textu, používá se primárně v polích typu `textarea`.
+  - `multiweb-noteditable` - v MultiWeb instalaci je pole zobrazeno šedou barvou, což evokuje, že je needitovatelné.
 - `name` - https://datatables.net/reference/option/columns.name
 - `data` - https://datatables.net/reference/option/columns.data
 - `defaultContent` - https://datatables.net/reference/option/columns.defaultContent
-- `orderable` - `true/false` hodnota pro povolení možnosti rozložení v datové tabulce
+- `orderable` - `true/false` hodnota pro zapnutí možnosti uspořádání v datatabulce
 - `renderFormat` - https://datatables.net/reference/option/columns.renderFormat
 - `renderFormatLinkTemplate` - https://datatables.net/reference/option/columns.renderFormatLinkTemplate
 - `renderFormatPrefix` - https://datatables.net/reference/option/columns.renderFormatPrefix
-- `sortAfter` - název pole, za které je toto pole přidáno v pořadí.
+- `sortAfter` - jméno pole za které se přidá toto pole v pořadí
 - `editor` - objekt `DataTableColumnEditor`
-- `hidden` - pole se v datové tabulce nezobrazí a uživatel nemá možnost `visible` nelze zobrazit, pole lze použít v editoru.
-- `hiddenEditor` - pokud `true` sloupec se v editoru nezobrazuje
-- `visible` - pole je skryté, ale uživatel si ho může zobrazit https://datatables.net/reference/option/columns.visible
-- `filter` - pokud false, filtr se v záhlaví tabulky nezobrazí.
-- `perms` - hodnota pro kontrolu práv (např. multiDomain), pole se nezobrazí, pokud přihlášený uživatel nemá povoleno dané právo.
-- `defaultValue` - výchozí hodnota pro nový záznam (použije se pouze v případě, že je nastaveno `fetchOnCreate` na adrese `false` protože v tomto případě budou vrácena data přednastavená ze serveru). Může obsahovat makra:
-  - `{currentDomain}` - je nahrazena aktuálně vybranou doménou
-  - `{currentDate}` - se nahradí aktuálním datem
-  - `{currentDateTimeSeconds}` - je nahrazen aktuálním datem a časem včetně sekund.
-  - `{currentTime}` - je nahrazen pro aktuální čas
-- `alwaysCopyProperties` - při editaci záznamu se prázdný `null` hodnoty jsou zachovány a zkopírovány z existujícího objektu v databázi. To neplatí pro pole datum/čas, ta se přepisují automaticky. Pokud to potřebujete použít pro jiný typ pole a také přenést `null` nastavit hodnotu atributu na `true`, nebo na `false` pokud nechcete, aby se pole s datem automaticky přepisovala.
+- `hidden` - pole se nezobrazí v datatabulce a uživatel si jej na rozdíl od `visible` nemůže zobrazit, pole může být použito v editoru
+- `hiddenEditor` - pokud je `true` nezobrazí se sloupec v editoru
+- `visible` - pole se schová, ale uživatel si jej může zobrazit https://datatables.net/reference/option/columns.visible
+- `filter` - je-li false, nezobrazí se v hlavičce tabulky filtr
+- `perms` - hodnota pro kontrolu práv (např. multiDomain), pole se nezobrazí, pokud přihlášený uživatel nemá uvedené právo povoleno
+- `defaultValue` - výchozí hodnota pro nový záznam (použije se pouze pokud je nastaveno `fetchOnCreate` na `false`, protože pro tento případ se vrátí data přednastavená ze serveru). Může obsahovat makra:
+  - `{currentDomain}` - nahradí se za aktuálně zvolenou doménu
+  - `{currentDate}` - nahradí se za aktuální datum
+  - `{currentDateTimeSeconds}` - nahradí se za aktuální datum a čas včetně sekund
+  - `{currentTime}` - nahradí se za aktuální čas
+- `alwaysCopyProperties` - při editaci záznamu se prázdné `null` hodnoty zachovají a zkopírují ze stávajícího objektu v databázi. Pro pole typu datum/čas to neplatí, ty se přepíší automaticky. Pokud potřebujete toto použít i pro jiný typ pole a přenést i `null` hodnotu nastavte atribut na `true`, případně na `false` pokud nechcete automatický přepis pro datová pole.
 
 ## Vlastnosti @DataTableColumnEditor
 
-- `type` - typ `input` prvek
-- `label` - překladový klíč názvu pole v editoru (pokud se liší od klíče `DatatableColumn.title`)
-- `message` - překladový klíč pro zobrazení nápovědy, pokud není zadán, automaticky vyhledá překladový klíč podle `DatatableColumn.title.tooltip`. Podporuje zadávání formátování pomocí základních [Markdown](../frameworks/webjetjs.md#markdown-parser).
-- `tab` - [karta, ve které se pole nachází](README.md#karty-v-editoru)
-- `attr` - `HashMap` Atributy HTML, které mají být nastaveny pro vstupní pole
-  - `data-dt-field-hr` (`before/after`) - přidá dělicí čáru před nebo za prvek
-  - `data-dt-field-headline` (překladový klíč) - přidá nadpis před prvek
-  - `data-dt-field-full-headline` (překladový klíč) - přidá nadpis na celou šířku před prvek (včetně šedé oblasti s názvy prvků), používá se pro nadpis před vnořenou datovou tabulkou v samostatné kartě.
-- `multiple` - nastaví atribut `multiple` na poli HTML (používá se pro pole typu `MULTISELECT`).
-- `separator` - nastaví oddělovací znak pro pole type `MULTISELECT`. Pokud jsou data prázdná, jsou odesílána a přijímána jako pole, pokud jsou nastavena jako řetězec oddělený zadaným znakem (obvykle čárkou).
-- `data-dt-escape-slash` - nastavením na hodnotu `true` zapnout nahrazování znaků `/` pro entitu`&#47;`. Používá se v případě webové stránky a složky, kde je potřeba znak v názvu. `/` nahradit, protože se používá k oddělení silnice.
+- `type` - typ `input` elementu
+- `label` - překladový klíč názvu pole v editoru (pokud se odlišuje od `DatatableColumn.title`)
+- `message` - překladový klíč pro zobrazení tooltipu, není-li zadáno automaticky se hledá překlad pro klíč podle `DatatableColumn.title.tooltip`. Podporuje zadání formátování pomocí základního [Markdown](../frameworks/webjetjs.md#markdown-parser).
+- `tab` - [karta, ve kterém se pole nachází](README.md#karty-v-editoru)
+- `attr` - `HashMap` HTML atributů, které se nastaví vstupnímu poli
+  - `data-dt-field-hr` (`before/after`) - přidá rozdělovací čáru před nebo za element
+  - `data-dt-field-headline` (překladový klíč) - přidá před element nadpis
+  - `data-dt-field-full-headline` (překladový klíč) - přidá před element nadpis na celou šířku (včetně šedé plochy s názvy elementů), používá se pro nadpis před vnořenou datatabulkou v samostatné kartě
+- `multiple` - nastavuje atribut `multiple` na HTML poli (používá se pro pole typu `MULTISELECT`).
+- `separator` - nastavuje oddělovací znak pro pole typu `MULTISELECT`. Pokud je prázdná data se posílají a přijímají jako pole, pokud je nastaveno tak jako řetězec oddělený uvedeným znakem (typicky čárka).
+- `data-dt-escape-slash` - nastavením na hodnotu `true` zapnete náhradu znaku `/` za entitu `&#47;`. Používá se v případě web stránky a složky, kde je třeba v názvu znak `/` nahradit, jelikož se používá k oddělení cesty.
 
-Překladový klíč pro nápovědu je automaticky vyhledáván podle překladového klíče `title` s koncovkou `.tooltip`. Pokud tedy máte anotaci `@DataTableColumn(title = "group.superior_directory"` automaticky vyhledá text překladu pomocí klíče `group.superior_directory.tooltip`. Pokud existuje, použije se.
+Překladový klíč pro tooltip se automaticky hledá podle překladového klíče `title` se suffixem `.tooltip`. Máte-li tedy anotaci `@DataTableColumn(title = "group.superior_directory"` automaticky se hledá překladový text s klíčem `group.superior_directory.tooltip`. Pokud existuje, použije se.
 
 ## Vlastnosti DataTableColumnType
 
-Nastaví typ pole, více v seznamu [standardní pole formuláře](standard-fields.md).
-- `ID` - sloupec primárního klíče
-- `OPEN_EDITOR` - automaticky vytvoří odkaz na sloupec pro otevření editoru, měl by být použit na hlavní textové pole, nejlépe první v pořadí.
+Nastavuje typ pole, více v seznamu [standardních formulářových polí](standard-fields.md).
+- `ID` - sloupec s primárním klíčem
+- `OPEN_EDITOR` - automaticky na sloupci vytvoří odkaz na otevření editoru, mělo by se použít na hlavní textové pole, ideálně první v pořadí
 - `TEXT` - standardní textové pole (jeden řádek)
-- `TEXTAREA` - standardní pole pro zadávání více řádků textu
-- `SELECT` - doporučujeme zasílat možnosti prostřednictvím [Služba REST](../datatables/restcontroller.md#číselníky-pro-výběrová-pole)
-- `MULTISELECT` - výběrové pole pro vícenásobnou volbu
-- `BOOLEAN` - zaškrtávací políčko s možnostmi `true/false`
-- `CHECKBOX` - zaškrtávací políčko se speciální hodnotou, možnost pro vybranou a nevybranou hodnotu lze nastavit pomocí atributu editoru `@DataTableColumnEditorAttr(key = "unselectedValue", value = "")`
-- `DISABLED` - zobrazené pole nebude možné upravovat
+- `TEXTAREA` - standardní pole pro zadání více řádků textu
+- `SELECT` - výběrové pole, možnosti doporučujeme odesílat přes [REST službu](../datatables/restcontroller.md#číselníky-pro-select-boxy)
+- `MULTISELECT` - výběrové pole pro výběr více možností
+- `BOOLEAN` - zaškrtávací pole s možnostmi `true/false`
+- `CHECKBOX` - zaškrtávací pole se speciální hodnotou, možnost pro vybranou i nevybranou hodnotu lze nastavit atributem editoru `@DataTableColumnEditorAttr(key = "unselectedValue", value = "")`
+- `DISABLED` - zobrazené pole nebude editovatelné
 
 Číselné:
 - `NUMBER` - číselné pole
-- `TEXT_NUMBER` - zobrazí zaokrouhlené číslo, vyšší číslo vypíše v textové podobě, např. `10 tis.` místo `10000`
-- `TEXT_NUMBER_INVISIBLE` - číselné pole, které se nezobrazuje v tabulce ani v editoru.
+- `TEXT_NUMBER` - zobrazí zaokrouhlené číslo, při vyšším čísle vypíše v textové podobě. `10 tis.` místo `10000`
+- `TEXT_NUMBER_INVISIBLE` - číselné pole, které se nezobrazí v tabulce ani v editoru
 
-Datováno:
-- `DATE` - kliknutím do pole pro zadání data zobrazíte výběr kalendáře.
-- `DATETIME` - pole pro zadání data a času, po kliknutí do pole se zobrazí výběr kalendáře s možností zadat čas.
-- `TIME_HM` - pole pro zadávání pouze času, po kliknutí do pole se zobrazí výběr s možností výběru hodin a minut.
-- `TIME_HMS` - pole pro zadávání pouze času, po kliknutí do pole se zobrazí výběr s možností výběru hodin, minut a sekund.
+Datové:
+- `DATE` - pole pro zadání data, po kliknutí do pole zobrazí kalendářový výběr
+- `DATETIME` - pole pro zadání data a času, po kliknutí do pole zobrazí kalendářový výběr s možností zadání časového údaje
+- `TIME_HM` - pole pro zadání výhradně času, po kliknutí do pole se zobrazí výběr s možností zvolení hodin a minut
+- `TIME_HMS` - pole pro zadání výhradně času, po kliknutí do pole se zobrazí výběr s možností zvolení hodin, minut a sekund
 
 Speciální:
-- `GALLERY_IMAGE` - speciální typ pole pro zobrazení obrázku s vypnutým popiskem sloupce.
-- `QUILL` - jednoduchý editor se základním formátováním kódu HTML, jako je tučné písmo, kurzíva atd.
-- `WYSIWYG` - plnohodnotný editor kódu HTML pro webové stránky
-- `JSON` - výběrové pole [adresář](field-json.md)
-- `DATATABLE` - [vnořená datová tabulka](field-datatable.md)
-- `ELFINDER` - [výběr odkazu](field-elfinder.md) do souboru/webové stránky
+- `GALLERY_IMAGE` - speciální typ pole pro zobrazení obrázku s vypnutým titulkem sloupce
+- `QUILL` - jednoduchý editor se základním formátováním HTML kódu jako tučné písmo, kurzíva a podobně
+- `WYSIWYG` - plnohodnotný editor HTML kódu pro web stránku
+- `JSON` - pole pro výběr [adresáře](field-json.md)
+- `DATATABLE` - [vnořená datatabulka](field-datatable.md)
+- `ELFINDER` - [výběr odkazu](field-elfinder.md) na soubor / web stránku
 
 ## Možnosti výběrového pole
 
-Typ pole `DataTableColumnType.SELECT` můžete nastavit `option` hodnoty nad:
-- [Služba REST](../datatables/restcontroller.md#Číselníky-pro-výběrová-pole) a nastavení voličů pro výběrová pole. Toto je preferované řešení pro standardní datové tabulky.
-- Nastavení atributů možností přímo pomocí anotace `@DataTableColumnEditorAttr(key = "Slovensky", value = "sk")`.
-- Voláním statické metody pomocí anotace `@DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value")`. V `key` atribut je specifikován předponou `method:` a metoda, která musí vracet `List` objekty. V atributu `value = "label:value"` anotaci je přiřazen název atributu pro popis a název atributu pro hodnotu výběrového pole (v příkladu se jmenuje `objekt.getLabel() a objekt.getValue()`).
-- Připojení k aplikaci číselníků zadáním `@DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")`. V `key` prefix je uveden v atributu `enumeration:` jméno nebo ID vytáčení. V atributu `value = "string1:string2"` anotace je uveden název atributu pro popis a název atributu pro hodnotu výběrového pole - v příkladu se jmenuje `objekt.getString1() a objekt.getString2()`.
+Polu typu `DataTableColumnType.SELECT` můžete nastavovat `option` hodnoty přes:
+- [REST službu](../datatables/restcontroller.md#Číselníky-pro-select-boxy) a nastavování číselníků pro select boxy. Toto je preferované řešení pro standardní datatabulky.
+- Nastavením options atributů přímo pomocí anotace `@DataTableColumnEditorAttr(key = "Slovensky", value = "sk")`.
+- Voláním statické metody pomocí anotace `@DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value")`. V `key` atributu je zadaná prefixem `method:` třídě a metoda, která musí vrátit `List` objektů. V atributu `value = "label:value"` anotace je zadáno jméno atributu pro popis a jméno atributu pro hodnotu výběrového pole (v příkladu se tedy jmenuje `objekt.getLabel() a objekt.getValue()`).
+- Napojením na aplikaci číselníky zadáním `@DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")`. V `key` atributu je zadaný prefix `enumeration:` jméno nebo ID číselníku. V atributu `value = "string1:string2"` anotace je zadáno jméno atributu pro popis a jméno atributu pro hodnotu výběrového pole - v příkladu se tedy jmenuje `objekt.getString1() a objekt.getString2()`.
 
 ```java
 @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", editor = {
@@ -207,30 +208,30 @@ private String country;
 
 ## Povinná pole
 
-Povinná pole lze opatřit poznámkami:
-- `@NotEmpty` - nevyprázdní pole, neumožňuje zadat mezeru nebo tabulátor.
-- `@NotBlank` - nevyprázdní pole, ale umožní zadat mezeru.
+Povinná pole lze označit anotacemi:
+- `@NotEmpty` - neprázdné pole, neumožní zadat mezeru nebo tabulátor
+- `@NotBlank` - neprázdné pole, umožní ale zadat mezeru
 
-Další možnosti ověřování jsou popsány v dokumentaci pro. [restcontroller](../datatables/restcontroller.md#validace---povinná-pole).
+Další možnosti validace jsou popsány v dokumentaci k [restcontrolleru](../datatables/restcontroller.md#validace--povinná-pole).
 
-## Ověřování
+## Validace
 
-Standardní anotace jsou podporovány pro ověřování polí pomocí [javax.validation.Validator](https://www.baeldung.com/javax-validation). Příklad ověření délky pole:
+Podporovány jsou standardní anotace pro validace polí pomocí [javax.validation.Validator](https://www.baeldung.com/javax-validation). Příklad validace délky pole:
 
 ```java
         @Size(min = 10, max = 20, message = "form.p2.size")
         private String p2;
 ```
 
-překladové tlačítko pro zobrazení konkrétní nastavené hodnoty min a max:
+překladový klíč pro zobrazení konkrétní nastavené hodnoty pro min i max:
 
 ```properties
 form.p2.size=Pole P2 musí byť medzi {min} a {max} znakmi
 ```
 
-## Pomocník JS pro rozšíření vlastností
+## JS Helper pro rozšíření vlastností
 
-Soubor `app-init.js` obsahuje funkci `WJ.DataTable.mergeColumns` přidat vlastnosti na základě názvu objektu (názvu pole). Projde pole objektů sloupců, najde objekt se stejným názvem jako argumentovaný objekt a použije příkaz `jQuery.extend` se tento objekt rozšíří.
+Soubor `app-init.js` obsahuje funkci `WJ.DataTable.mergeColumns` pro doplnění vlastností, na základny názvu objektu (pole name). Přeiteruje pole objektů columns, najde objekt se stejným name jako argument objekt a pomocí `jQuery.extend` tento objekt rozšíří.
 
 ```javascript
 WJ.DataTable.mergeColumns(columns, {
@@ -243,7 +244,7 @@ WJ.DataTable.mergeColumns(columns, {
 });
 ```
 
-Pokud potřebujete pouze přidat nový sloupec, můžete to provést jednoduchým přidáním do seznamu. V příkladu jde o přidání *Skryté stránky* pole (atribut `visible: false`):
+Pokud potřebujete jen doplnit nový sloupec můžete to provést jednoduše přidáním do seznamu. V příkladu se jedná o přidání *skrytého* pole (atribut `visible: false`):
 
 ```javascript
 columns.push({
@@ -260,17 +261,17 @@ columns.push({
 
 ## Vnořené atributy
 
-Často je nutné přidat k entitě další atributy pro editor (např. `checkbox` pro použití změny na podřízené entity, další informační pole atd.). Za tímto účelem lze entitu rozšířit o nový atribut (který není uložen v databázi) obsahující další údaje. Obvykle jej nazýváme `editorFields` a implementovat potřebnou třídu pro danou entitu. Příklady jsou v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) nebo [GroupEditorFields](../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). Ve třídách je pouze atribut editorField, např. `private DocEditorFields editorFields = null;`.
+Často je nutné k entitě přidat pro editor doplňkové atributy (např. `checkbox` pro aplikování změny i na podřazené entity, doplňkové pole s informací atd.). Pro tento účel lze entitu rozšířit o nový atribut (který se neukládá do databáze) obsahující doplňkové údaje. Typicky ho voláme `editorFields` a pro entitu implementujeme potřebnou třídu. Příklady jsou v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) nebo [GroupEditorFields](../../../src/main/java/sk/iway/iwcm/doc/GroupEditorField.java). Ve třídách je následně jen editorField atribut. `private DocEditorFields editorFields = null;`.
 
-Implementovaná třída `EditorFields`, např. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) obvykle obsahuje metody `fromDocDetails` pro nastavení atributů v `editorFields` třídy před úpravami a `toDocDetails` pro nastavení atributů zpět do `DocDetails` před uložením. Tyto metody je třeba v kódu v jazyce Java volat implicitně.
+Implementovaná třída `EditorFields` Např. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typicky obsahuje metody `fromDocDetails` pro nastavení atributů v `editorFields` třídě před editací a `toDocDetails` pro zpětné nastavení atributů v `DocDetails` před uložení. Tyto metody je třeba implicitně volat ve vašem Java kódu.
 
-!>**Varování:** pokud je entita uložena v mezipaměti (jako např. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavení atributu `editorFields` zůstane také v mezipaměti a může zbytečně zabírat paměť a vytvářet zbytečně velká data při serializaci JSON. V `GroupDetails` v editorFields odkazuje na `parentGroupDetails`.
+!>**Upozornění:** pokud je entita ukládána v cache (např. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavení atributu `editorFields` zůstane iv cache a může zbytečně zabírat paměť a vytvářet při JSON serializaci zbytečně velká data. V `GroupDetails` v editorFields odkazuje na `parentGroupDetails`.
 
-Při standardním postupu se každý `GroupDetails` sada objektů `editorFields` objekt. Při serializaci hluboce vnořeného adresáře se pak vnoří objekty editorFields.parentGroupDetails.editorFields.parentGroupDetails atd. Objekt GroupDetails prostě neměl potřebné první pole editorFields. Řešením je nejprve objekt `GroupDetails` naklonovat a nastavit ji `editorFields`. Příkladem je `GroupEditorField.fromGroupDetails` který objekt naklonuje a poté jej vrátí. Použití v kódu je pak následující `group = gef.fromGroupDetails(group);`.
+Při standardním postupu se postupně na každém `GroupDetails` objektu nastavil `editorFields` objekt. Při serializaci hluboce vnořeného adresáře se následně vnořovaly objekty editorFields.parentGroupDetails.editorFields.parentGroupDetails atp. Objekt GroupDetails neměl jen potřebný první editorFields. Řešením je nejprve objekt `GroupDetails` naklonovat a až tak do něj nastavit `editorFields`. Příklad je v `GroupEditorField.fromGroupDetails` který naklonuje objekt a následně jej vrátí. Použití v kódu je pak jako `group = gef.fromGroupDetails(group);`.
 
-Běžné metody pro datatable jsou ve třídě [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) které může vaše třída rozšířit. Obsahuje metody pro přidání řádku třídy CSS a přidání ikony do nadpisu. Viz dokumentaci k [stylování datové tabulky](../datatables/README.md#stylování-řádků).
+Společné metody pro datatabulku jsou ve třídě [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), kterou může vaše třída rozšířit. Obsahuje metody pro přidání CSS třídy řádku a přidání ikony k titulku. Více v dokumentaci k [stylování datatabulky](../datatables/README.md#stylování-řádku).
 
-Pro vložení anotace vnořených atributů je možné použít anotaci `@DatatableColumnNested` jako např. v [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na atributu `editorFields`:
+Pro vložení anotace vnořených atributů lze použít anotaci `@DatatableColumnNested` jako je např. v [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na atributu `editorFields`:
 
 ```java
 @DataTableColumnNested
@@ -278,7 +279,7 @@ Pro vložení anotace vnořených atributů je možné použít anotaci `@Datata
 private DocEditorFields editorFields = null;
 ```
 
-anotovaný atribut bude prohledán kvůli anotaci. `@DatatableColumn` rekurzivní. Výsledkem je generování vnořené anotace. Všimněte si atributu data a name obsahujícího předponu `editorFields.`. Pokud potřebujete nastavit vlastní prefix (název proměnné), můžete použít parametr prefix. `@DataTableColumnNested(prefix = "menoPremennej")`. Prefix můžete také nastavit na prázdnou hodnotu, pak se prefix negeneruje.
+takto anotovaný atribut bude prohledán k anotaci `@DatatableColumn` rekurzivní. Výsledkem bude vygenerování vnořené anotace. Všimněte si data a name atribut obsahující prefix `editorFields.`. Pokud potřebujete nastavit vlastní prefix (jméno proměnné) můžete použít parametr prefix `@DataTableColumnNested(prefix = "menoPremennej")`. Prefix můžete nastavit i na prázdnou hodnotu, tehdy se prefix nevygeneruje.
 
 ```javascript
 {
@@ -302,9 +303,9 @@ anotovaný atribut bude prohledán kvůli anotaci. `@DatatableColumn` rekurzivn�
 }
 ```
 
-Anotace `@Transient` Informuje entity JPA, že atribut není uložen v databázi.
+Anotace `@Transient` říká JPA entitám, že daný atribut není ukládán do databáze.
 
-Nastavení dat mezi entitou a `editorFields` je možné implementovat metody v řadiči REST. `processFromEntity` pro nastavení `editorFields` atributy nebo `processToEntity` pro nastavení atributů v entitě z `editorFields`. Příkladem může být [UserDetailsController](../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsController.java). Metody jsou automaticky volány při čtení všech záznamů, načítání jednoho záznamu, vyhledávání nebo ukládání dat.
+Pro nastavení údajů mezi entitou a `editorFields` v REST controlleru lze implementovat metody `processFromEntity` pro nastavení `editorFields` atributů nebo `processToEntity` pro nastavení atributů v entitě z `editorFields`. Příklad je vidět v [UserDetailsController](../../../src/main/java/sk/iway/iwcm/components/users/userdetail/UserDetailsController.java). Metody se automaticky volají při čtení všech záznamů, při získání jednoho záznamu, vyhledávání nebo při ukládání dat.
 
 ```java
     /**
@@ -345,13 +346,13 @@ Nastavení dat mezi entitou a `editorFields` je možné implementovat metody v �
     }
 ```
 
-## Třídění pořadí polí
+## Sortování pořadí polí
 
-Ve výchozím nastavení jsou pole uspořádána v pořadí, v jakém jsou zapsána ve zdrojovém kódu (ačkoli to specifikace anotací nezaručuje, funguje to tak). Pokud však používáte vnořené atributy, nelze pořadí nastavit podle pořadí v kódu.
+Pole jsou ve výchozím nastavení uspořádána v pořadí, jak jsou zapsána ve zdrojovém kódu (i když specifikace anotace to negarantuje, funguje to tak). Pokud ale používáte vnořené atributy pořadí neumíte nastavit pořadím v kódu.
 
-Proto je možné použít atribut `sortAfter` do kterého zadáte atribut dat předchozího pole. Anotované pole se pak přidá do výstupu JSON za zadané pole. Logika je implementována v metodě [DataTableColumnsFactory.sortColumns](../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java).
+Proto je možné využít atribut `sortAfter` do kterého zadáte data atribut předchozího pole. Anotované pole se následně do JSON výstupu přidá za uvedené pole. Logika je implementována v metodě [DataTableColumnsFactory.sortColumns](../../../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java).
 
-V případě potřeby lze zadat zvláštní hodnotu `sortAfter = "FIRST"` přesunout pole na začátek seznamu. To by mělo být použito v případě rozšířených entit prostřednictvím `@MappedSuperclass` pokud i první `id` atribut je v této entitě.
+V případě potřeby lze zadat speciální hodnotu `sortAfter = "FIRST"` pro přesun pole na začátek seznamu. Je třeba to použít v případě rozšířených entit přes `@MappedSuperclass` i první `id` atribut je v této entitě.
 
 Příklad použití:
 
@@ -362,17 +363,17 @@ Příklad použití:
     private Boolean allowChangeUrl=false;
 ```
 
-## Překlady nadpisů sloupců
+## Překlady názvů sloupců
 
-Jak bylo uvedeno výše, atribut `title` obsahuje název sloupce. Z důvodů překladu nelze použít přímo název sloupce, je třeba použít překladový klíč.
+Jak je uvedeno výše, atribut `title` obsahuje jméno sloupce. Z důvodu překladů nemůžete použít přímo český název sloupce, je třeba použít překladový klíč.
 
-Pokud je atribut `title` nezadáte, překladový klíč se automaticky vyhledá ve formátu `components.meno_beanu_bez_dto_alebo_bean_na_konci.name`, např. `components.monitoring.date_insert`.
+Když atribut `title` nezadáte, automaticky se hledá překladový klíč ve formátu `components.meno_beanu_bez_dto_alebo_bean_na_konci.name`, neboli například. `components.monitoring.date_insert`.
 
-**Pokud upravujete existující aplikaci/komponentu.** z WebJET 8 do WebJET 2021, je nejlepší vyhledat původní překladové klíče. Ušetříte tak čas při překladu, protože WeBJET 8 je již přeložen do několika jazyků.
+**Pokud upravujete existující aplikaci/komponentu** z WebJET 8 do WebJET 2021 je nejlepší vyhledat původní překladové klíče. Ušetří se tak čas při překladech, protože WeBJET 8 je již přeložen do více jazyků.
 
-V souboru [src/main/webapp/files/text.properties](../../../../src/main/webapp/WEB-INF/classes/text.properties) je původní soubor překladu z WebJET 8 (jen pro příklad, nijak jej neupravujte). Můžete v něm vyhledat požadovaný text a do `title` atribut pro zadání nalezeného překladového klíče.
+V souboru [src/main/webapp/files/text.properties](../../../../src/main/webapp/WEB-INF/classes/text.properties) je původní překladový soubor z WebJET 8 (pouze pro ukázku, v žádném případě jej nemodifikujte). Můžete vyhledat požadovaný text v něm a do `title` atributu zadat nalezený překladový klíč.
 
-Další možností je zobrazit původní stránku s parametrem URL `?showTextKeys=true` což způsobí, že se před textem zobrazí překladové klávesy. Stránka bude z hlediska designu pravděpodobně nefunkční (protože text bude příliš dlouhý), ale na klíče se můžete podívat prostřednictvím inspektora.
+Jinou možností je zobrazit původní stránku s URL parametrem `?showTextKeys=true` což způsobí zobrazení překladových klíčů před textem. Stránka bude pravděpodobně rozbitá z designového pohledu (jelikož texty budou příliš dlouhé), ale přes inspektor se umíte na klíče podívat.
 
 Například:
 
@@ -380,14 +381,14 @@ Například:
 http://iwcm.interway.sk/components/server_monitoring/admin_monitoring_all.jsp?showTextKeys=true
 ```
 
-Pokud již formulář na stránce odešlete, zobrazí se samozřejmě původní texty, parametr, který přidáte jako `&showTextKeys=true`, ale pravděpodobně se zobrazí stránka 403/404 kvůli ochraně WebJET. Řešením je použití konzoly JavaScriptu, do které zadáte:
+Pokud již odešlete formulář na stránce, samozřejmě se vám zobrazí původní texty, parametr přidáte jako `&showTextKeys=true`, ale pravděpodobně se vám zobrazí stránka 403/404 z důvodu ochrany WebJETu. Řešení je použít JavaScript konzoli, kde zadáte:
 
 ```javascript
 window.location.href=window.location.href+"&showTextKeys=true";
 ```
 
-správně projde ochranou WebJETu a klíče se vám zobrazí.
+to korektně projde ochranou WebJETu a klíče se vám zobrazí.
 
-**Pokud jste vytvořili novou aplikaci nebo jste nenašli vhodný překladový klíč.** je třeba jej přidat do souboru [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
+**Pokud jste vytvořili novou aplikaci, nebo jste nenašli vhodný překladový klíč** je třeba jej přidat do souboru [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
 
-Po přidání překladu je třeba soubor znovu načíst. `text-webjet9.properties` WebJETom. Uděláte to tak, že zavoláte [domovská stránka s parametrem ?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true) nebo restartováním aplikačního serveru.
+Po přidání překladu je třeba znovu načíst soubor `text-webjet9.properties` WebJETem. To provedete voláním [úvodní stránky s parametrem ?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true) nebo restartem aplikačního serveru.

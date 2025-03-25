@@ -1,16 +1,16 @@
-# Oznámení
+# Notifikace
 
-Při práci s editorem je možné ze služby REST odeslat oznámení, které se zobrazí uživateli.
+Při práci s editorem je z REST služby možné poslat notifikaci, která se zobrazí uživateli.
 
 ![](notify.png)
 
-V současné době jsou podporovány následující operace pro zobrazení oznámení:
+Aktuálně je podporováno zobrazení notifikace při následujících operacích:
 - `/all` - získání všech záznamů
-- `/{id}` - získání záznamu do editoru (při použití příkazu `fetchOnCreate/fetchOnEdit`)
+- `/{id}` - získání záznamu do editoru (při použití možnosti `fetchOnCreate/fetchOnEdit`)
 - `/editor` - uložení záznamu v editoru
-- `/action/{action}` - provedení [akce serveru](../datatables/README.md#tlačítko-pro-provedení-akce-serveru) v tabulce
+- `/action/{action}` - provedení [serverové akce](../datatables/README.md#tlačítko-pro-provedení-serverové-akce) v tabulce
 
-Stačí přidat oznámení do služby REST:
+Notifikaci přidáte jednoduše ve vaší REST službě:
 
 ```java
 addNotify(new NotifyBean(prop.getText("text.warning"), prop.getText("editor.notify.checkHistory"), NotifyBean.NotifyType.WARNING, 15000));
@@ -19,15 +19,15 @@ NotifyBean notify = new NotifyBean(prop.getText("editor.approve.notifyTitle"), g
 addNotify(notify);
 ```
 
-konstruktor [NotifyBean](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) třída má následující parametry:
-- `String title` - titulek oznámení
-- `String text` - text oznámení
-- `NotifyType type` - typ oznámení (`SUCCESS, INFO, WARNING, ERROR`)
-- `long timeout` - počet ms pro automatické zavření oznámení nebo 0 pro vypnutí automatického zavírání.
+konstruktor [NotifyBean](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) třídy má následující parametry:
+- `String title` - titulek notifikace
+- `String text` - text notifikace
+- `NotifyType type` - typ notifikace (`SUCCESS, INFO, WARNING, ERROR`)
+- `long timeout` - počet ms pro automatické zavření notifikace, nebo 0 pro vypnutí automatického zavření
 
 ## Přidání tlačítka
 
-Do oznámení lze přidat tlačítko pro provedení akce (např. načtení poslední stránky z historie). Použití metody API [NotifyBean.addButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) můžete přidat tlačítko (typ objektu [NotifyButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyButton.html)). Po kliknutí na tlačítko se spustí zadaná funkce JavaScriptu (je vložena jako atribut `onlick` na tlačítku). Definici volané funkce musíte implementovat přímo ve stránce.
+Do notifikace je možné přidat tlačítko pro provedení akce (např. načtení poslední stránky z historie). Pomocí API metody [NotifyBean.addButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyBean.html) můžete přidat tlačítko (objekt typu [NotifyButton](../../../javadoc/sk/iway/iwcm/system/datatable/NotifyButton.html)). Po kliknutí na tlačítko se provede zadaná JavaScript funkce (vkládá se jako atribut `onlick` na tlačítku). Definování volané funkce musíte implementovat přímo v dané stránce.
 
 Příklad:
 
@@ -46,15 +46,15 @@ addNotify(notify);
 
 ### Backend
 
-Oznámení se ukládají do služby REST za jejího běhu. `ThreadLocal` objekt `ThreadBean` aby je bylo možné kdykoli přidat. Poté se vygenerují do výstupního objektu JSON:
-- Pro `DatatableResponse` seznam oznámení je přidán jako `if(hasNotify()) response.setNotify(getThreadData().getNotify());`
-- pro vrácenou entitu na `BaseEditorFields` objekt jako `addNotifyToEditorFields(T entity);`, aktuální pouze při volání `getOne`
+Notifikace jsou během běhu REST služby ukládány do `ThreadLocal` objektu `ThreadBean`, aby je bylo možné přidat kdykoli. Následně jsou generovány do výstupního JSON objektu:
+- pro `DatatableResponse` je seznam notifikací přidán jako `if(hasNotify()) response.setNotify(getThreadData().getNotify());`
+- pro vrácenou entitu do `BaseEditorFields` objektu jako `addNotifyToEditorFields(T entity);`, aktuálně jen při volání `getOne`
 
 ### Frontend
 
-Zobrazení oznámení je implementováno přímo v `index.js` na 2 místech:
-- `EDITOR.on('submitSuccess', function (e, json, data, action)` - volán při ukládání v editoru, oznámení se načítají z adresáře `json.notify`
-- `_executeAction(action, ids)` - zavolá, když je v tabulce provedena akce serveru, oznámení jsou získávána z. `json.notify`
-- `refreshRow(id, callback)` - toto volání se používá, když `fetchOnCreate/fetchOnEdit`, oznámení jsou získávána z `json.editorFields.notify` objekt
+Zobrazení notifikace je implementováno přímo v `index.js` na 2 místech:
+- `EDITOR.on('submitSuccess', function (e, json, data, action)` - volané při uložení v editoru, notifikace se získají z `json.notify`
+- `_executeAction(action, ids)` - volané při provedení serverové akce v tabulce, notifikace se získají z `json.notify`
+- `refreshRow(id, callback)` - toto volání je použito při `fetchOnCreate/fetchOnEdit`, oznámení se získají z `json.editorFields.notify` objektu
 
-Samotné zobrazení oznámení je implementováno ve funkci `showNotify(notifyList)` který pro každý prvek seznamu oznámení vyvolá zobrazení prostřednictvím [WJ.notify](../frameworks/webjetjs.md#oznámení)
+Samotné zobrazení notifikace je implementováno ve funkci `showNotify(notifyList)` která pro každý prvek seznamu oznámení volá zobrazení přes [WJ.notify](../frameworks/webjetjs.md#notifikace)

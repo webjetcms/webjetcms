@@ -1,21 +1,21 @@
 # Položky
 
-Vnořená tabulka Položky v detailu objednávky poskytuje přehled o položkách v konkrétní objednávce, počtu položek a také o individuální nebo celkové ceně. Ceny jsou uvedeny bez DPH a včetně DPH.
+Vnořená tabulka Položky v detailu objednávky poskytuje přehled položek konkrétní objednávky, počet kusů i jednotlivou nebo celkovou cenu. Uváděny jsou ceny bez a včetně DPH.
 
-Povoleny jsou pouze operace pro úpravu a mazání položek objednávky. Přidávání nových položek je možné pouze přímo v e-shopu.
+Umožněny jsou pouze operace pro úpravu a mazání položek objednávky. Přidávání nových položek je možné pouze přímo v elektronickém obchodu.
 
 ![](editor_items.png)
 
 # Úprava položky
 
-Okno editoru položek nabízí možnost změnit pouze jeden parametr, a to **Množství** kusů dané položky. Typ položky a cena bez DPH jsou pevné a nelze je měnit.
+Okno editoru položek nabízí možnost změny pouze jediného parametru a to **Množství** kusů dané položky. Typ položky i cena bez DPH jsou fixní a nelze je změnit.
 
 ![](editor_items_editor.png)
 
-## Tabulka v zápatí
+## Patička tabulky
 
-Zápatí tabulky obsahuje užitečné informace o tom, jaká je celková částka objednávky k úhradě včetně DPH. Pokud se změní počet položek nebo se některá položka odstraní, tato hodnota se automaticky upraví.
+Patička tabulky obsahuje užitečnou informaci o tom, jaká je celková částka objednávky k uhrazení, včetně DPH. Pokud se počet položek změní nebo je nějaká položka vymazána, tato hodnota se automaticky upraví.
 
 ![](editor_items_footer.png)
 
-Tato změna se automaticky promítne do zápatí tabulky. [platby](./payments.md#noha-stolu).
+Tato změna se automaticky projeví i patičce tabulky [platby](./payments.md#patička-tabulky).

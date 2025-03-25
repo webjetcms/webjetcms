@@ -1,6 +1,6 @@
 # Slit slider
 
-Oživte svou stránku úžasným animovaným posuvníkem fotografií. Využijte efekt rozdělení a otevření fotografie, který dodá dynamiku a zajímavost. Každou fotografii lze doplnit popiskem a textem, což umožňuje ještě větší personalizaci a interakci se zákazníkem.
+Oživte svou stránku s úchvatným animovaným sliderem fotografií. Využijte efekt rozdělení a otevření fotografií, který přidává dynamiku a zaujetí. Každá fotografie může být doplněna nadpisem a textem, což umožňuje ještě větší personalizaci a interakci se zákazníky.
 
 ## Nastavení aplikace
 
@@ -8,14 +8,14 @@ Oživte svou stránku úžasným animovaným posuvníkem fotografií. Využijte 
 
 V této části lze nastavit:
 - Výška
-- Nastavení písma nadpisu (zarovnání písma, velikost písma, horní odstup)
-- Nastavení písma podnadpisu (Zarovnání písma, Velikost písma, Odsazení nahoře)
+- Nastavení písma nadpisu (Zarovnání písma, Velikost písma, Odsazení shora)
+- Nastavení písma podnadpisu (Zarovnání písma, Velikost písma, Odsazení shora)
 
 ![](editor-style.png)
 
 ### Položky
 
-Tato část slouží k přidání nebo odebrání položky: Při přidávání lze vyplnit nadpis, podnadpis, přesměrování, barvu nadpisu, barvu podnadpisu, barvu pozadí a obrázek. U položek lze měnit pořadí přetažením. Odstranění položky lze provést kliknutím na červený křížek.
+V této části je přidat nebo odebrat položku: Při přidání lze vyplnit nadpis, podnadpis, přesměrování, barvu nadpisu, barvu podnadpisu, barvu pozadí a obrázek. U položek lze změnit pořadí přesunutím. Odebrání položky lze kliknutím na červený křížek.
 
 ![](editor-items.png)
 
