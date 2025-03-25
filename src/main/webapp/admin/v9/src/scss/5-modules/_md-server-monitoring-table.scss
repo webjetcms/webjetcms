@@ -4,7 +4,6 @@
 }
 
 .monitoring-table {
-    min-height: 300px;
     width: 100%;
     background-color: #edeff6;
     border-radius: 10px;
@@ -31,8 +30,9 @@
 }
 
 .monitoring-disk-space {
-    padding-left: 38px;
-    padding-right: 38px;
+    p {
+        padding-left: 10px;
+    }
 }
 .monitoring-container {
     padding-left: 10px;

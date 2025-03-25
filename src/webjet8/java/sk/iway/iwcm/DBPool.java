@@ -1,26 +1,20 @@
 package sk.iway.iwcm;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.PropertyElf;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Set;
-import java.util.Vector;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXParseException;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
+import sk.iway.iwcm.system.dbpool.WebJetHikariDataSource;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -31,19 +25,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXParseException;
-
-import sk.iway.iwcm.doc.DebugTimer;
-import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
-import sk.iway.iwcm.system.cluster.ClusterDB;
-import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
-import sk.iway.iwcm.system.dbpool.WebJetHikariDataSource;
-import sk.iway.iwcm.system.jpa.JpaTools;
-import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
+import java.io.*;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *  Database pooling s pouzitim DBCP
@@ -109,14 +99,14 @@ public class DBPool
 		String password;
 		String url;
 
-		int initialSize;
 		int minActive;
 		int maxActive;
 
+		boolean autoCommit;
+		boolean readOnly;
+		String transactionIsolation;
+
 		int removeAbandonedTimeout;
-
-		int counter = 0;
-
 
 		String systemIwcmDBName = InitServlet.getContextDbName();
 		if (Tools.isEmpty(systemIwcmDBName)) systemIwcmDBName = System.getProperty("webjetDbname");
@@ -150,15 +140,12 @@ public class DBPool
 						ConfigurableDataSource ds;
 						for (Node n : list)
 						{
-						    counter++;
-
 							//default values
 							driver = "com.mysql.jdbc.Driver";
 							username = "user";
 							password = "pass";
 							url = "jdbc:mysql://localhost/webjet_web?useUnicode=true&characterEncoding=windows-1250";
 
-							initialSize = 0;
 							minActive = 0;
 							maxActive = 50;
 
@@ -174,22 +161,16 @@ public class DBPool
 								dbname = "iwcm";
 							}
 
-							if ("autoincrement".equals(systemIwcmDBName) && "iwcm".equals(dbname))
-                            {
-                                //toto je specialny pripad, ked inicializujeme vsetky spojenia z poolman-conf.xml pre zmenu hesla
-                                dbname = "autoincrement"+counter;
-                            }
-
-							//iwcm1 preskakujeme pre rychlost inicializacie
-							if ("iwcm1".equals(dbname)) continue;
-
 							driver = XmlUtils.getFirstChildValue(n, "driver");
 							url = XmlUtils.getFirstChildValue(n, "url");
 							username = XmlUtils.getFirstChildValue(n, "username");
 							password = XmlUtils.getFirstChildValue(n, "password");
-							initialSize = getIntValue(XmlUtils.getFirstChildValue(n, "initialConnections"), initialSize);
 							minActive = getIntValue(XmlUtils.getFirstChildValue(n, "minimumSize"), minActive);
 							maxActive = getIntValue(XmlUtils.getFirstChildValue(n, "maximumSize"), maxActive);
+
+							autoCommit = Tools.getBooleanValue(XmlUtils.getFirstChildValue(n, "autoCommit"), true);
+							readOnly = Tools.getBooleanValue(XmlUtils.getFirstChildValue(n, "readOnly"), false);
+							transactionIsolation = XmlUtils.getFirstChildValue(n, "transactionIsolation");
 
 							removeAbandonedTimeout = getIntValue(XmlUtils.getFirstChildValue(n, "connectionTimeout"), removeAbandonedTimeout);
 
@@ -264,61 +245,72 @@ public class DBPool
 							if (password == null) password = "";
 							password = decryptPassword(password);
 
-							HikariDataSource hs = new HikariDataSource();
-							hs.setLeakDetectionThreshold(removeAbandonedTimeout*1000l);
+							HikariConfig hc = new HikariConfig();
+							hc.setLeakDetectionThreshold(removeAbandonedTimeout*1000l);
+							hc.setAutoCommit(autoCommit);
+							hc.setReadOnly(readOnly);
+							if(Tools.isNotEmpty(transactionIsolation)) {
+								hc.setTransactionIsolation(transactionIsolation);
+							}
+							if((hc.isAutoCommit() || hc.isReadOnly()) && Tools.isEmpty(transactionIsolation)) {
+								hc.setTransactionIsolation(""+Connection.TRANSACTION_READ_COMMITTED);
+							}
 
 							//for jdbc4 drivers we use isValid(), for older drivers we use testQuery
 							String testQuery = XmlUtils.getFirstChildValue(n, "testQuery");
-							if (driver.contains("jtds") && Tools.isEmpty(testQuery)) testQuery = "SELECT 1";
-							if ("true".equals(testQuery)) testQuery = "SELECT 1";
+							if (Tools.isEmpty(testQuery) || "true".equals(testQuery)) {
+								testQuery = "SELECT 1";
+								if (driver.contains("oracle")) testQuery = "SELECT 1 FROM dual";
+							}
 							if (testQuery != null && testQuery.length()>1) {
-								Logger.println(DBPool.class, "Setting testQuery="+testQuery+" driver="+driver);
-								hs.setConnectionTestQuery(testQuery);
+								Logger.println(DBPool.class, "HikariCP testQuery: "+testQuery+", driver:"+driver);
+								hc.setConnectionTestQuery(testQuery);
+								hc.setConnectionInitSql(testQuery);
 							}
 
-							ds = new WebJetHikariDataSource(hs);
-
-							WebJetHikariDataSource source = (WebJetHikariDataSource)ds;
-
-							Logger.println(DBPool.class, "Using HikariCP");
-							source.setInitialPoolSize(initialSize);
-							Logger.println(DBPool.class, "HikariCP initialPoolSize=" + initialSize);
-
-							source.setMinPoolSize(minActive);
-							Logger.println(DBPool.class, "HikariCP minPoolSize=" + minActive);
-
-							source.setMaxPoolSize(maxActive);
-							Logger.println(DBPool.class, "HikariCP maxPoolSize=" + maxActive);
+							Logger.println(DBPool.class, "HikariCP minPoolSize: " + minActive);
+							hc.setMinimumIdle(minActive);
+							Logger.println(DBPool.class, "HikariCP maxPoolSize: " + maxActive);
+							hc.setMaximumPoolSize(maxActive);
+							Constants.setInt("webjetDbMaximumSize", maxActive);
 
 							if (driver.contains("oracle")) {
-								source.setConnectionProperty("SetBigStringTryClob", "true");
 								Logger.println(DBPool.class, "HikariCP SetBigStringTryClob=" + true);
+								hc.addDataSourceProperty("SetBigStringTryClob", "true");
 							}
 
-							//okrem Oracle mozeme robit takyto validation query
-							ds.setPreferredTestQuery("SELECT 1");
-							if(driver.contains("oracle"))
-								ds.setPreferredTestQuery("select 'validationQuery' from dual");
+							hc.setDriverClassName(driver);
+							hc.setUsername(username);
+							hc.setPassword(password);
+							hc.setJdbcUrl(url);
 
-							ds.setInitialPoolSize(initialSize);
-							ds.setDriverClass(driver);
-							ds.setUser(username);
-							ds.setPassword(password);
-							ds.setJdbcUrl(url);
+							String hikariProperties = XmlUtils.getFirstChildValue(n, "hikariProperties");
+							if (Tools.isNotEmpty(hikariProperties)) {
+								//convert String to properties, construct HikariConfig from it ant use to construct HikariDataSource
+								Properties props = new Properties();
+								try {
+									Logger.println(DBPool.class, "HikariCP properties=" + hikariProperties);
+									props.load(new StringReader(hikariProperties.trim()));
+									PropertyElf.setTargetFromProperties(hc, props);
+								} catch (IOException e) {
+									Logger.error(e);
+								}
+							}
 
-					      dataSourcesTable.put(dbname, ds);
+							HikariDataSource hs = new HikariDataSource(hc);
+							ds = new WebJetHikariDataSource(hs);
+							dataSourcesTable.put(dbname, ds);
 
-					      Constants.setInt("webjetDbMaximumSize", maxActive);
 							Logger.println(DBPool.class, "Initialized Datasource " + dbname + " url=" + url);
 
-					      if (availableDatabases == null)
-					      {
-					      	availableDatabases = new StringBuilder(dbname);
-					      }
-					      else
-					      {
-					      	availableDatabases.append(',').append(dbname);
-					      }
+							if (availableDatabases == null)
+							{
+								availableDatabases = new StringBuilder(dbname);
+							}
+							else
+							{
+								availableDatabases.append(',').append(dbname);
+							}
 
 						}
 					}
@@ -329,7 +321,7 @@ public class DBPool
 			}
 			catch (Exception ex)
 			{
-				sk.iway.iwcm.Logger.error(ex);
+				Logger.error(ex);
 			}
 		}
 
@@ -380,7 +372,7 @@ public class DBPool
 			}
 			catch (SQLException e)
 			{
-				sk.iway.iwcm.Logger.error(e);
+				Logger.error(e);
 			}
 		}
 
@@ -402,7 +394,7 @@ public class DBPool
 		catch (Exception e)
 		{
 			System.err.println("Failled to cleanup ClassLoader for webapp " + e.getMessage()); //NOSONAR
-			sk.iway.iwcm.Logger.error(e);
+			Logger.error(e);
 		}
 
 		if (destroyInstance) instance = null;
@@ -422,7 +414,7 @@ public class DBPool
 			}
 			catch (Exception e)
 			{
-				sk.iway.iwcm.Logger.error(e);
+				Logger.error(e);
 			}
 		}
 	}
@@ -566,10 +558,10 @@ public class DBPool
 				 }
 				 catch (Exception ex2)
 				 {
-					  sk.iway.iwcm.Logger.error(ex2);
+					  Logger.error(ex2);
 				 }
 			}
-			sk.iway.iwcm.Logger.error(ex);
+			Logger.error(ex);
 		}
 
 		//no a teraz je to uplne v prdeli...
@@ -602,7 +594,7 @@ public class DBPool
 		}
 		catch (Exception ex)
 		{
-			sk.iway.iwcm.Logger.error(ex);
+			Logger.error(ex);
 		}
 	}
 
@@ -619,7 +611,7 @@ public class DBPool
 		}
 		catch (Exception ex)
 		{
-			sk.iway.iwcm.Logger.error(ex);
+			Logger.error(ex);
 		}
 	}
 
@@ -708,12 +700,12 @@ public class DBPool
 				isr.close();
 				is.close();
 			} else {
-				sk.iway.iwcm.Logger.error(DBPool.class, poolmanPath+" file doesn't exists");
+				Logger.error(DBPool.class, poolmanPath+" file doesn't exists");
 			}
 		}
 		catch (Exception ex)
 		{
-			sk.iway.iwcm.Logger.error(ex);
+			Logger.error(ex);
 		}
 
 		Runtime rt = Runtime.getRuntime();
@@ -722,10 +714,10 @@ public class DBPool
 	   long used = total - free;
 	   long max = rt.maxMemory();
 	   int proces = rt.availableProcessors();
-	   Logger.println(DBPool.class,"Free  = "+(free/1024/1024) +" MB ("+free +" bytes)<br>");
-	   Logger.println(DBPool.class,"Total = "+(total/1024/1024)+" MB ("+total+" bytes)<br>");
-	   Logger.println(DBPool.class,"Used = "+(used/1024/1024)+" MB ("+used+" bytes)<br>");
-	   Logger.println(DBPool.class,"Max  = "+(max/1024/1024)+" MB ("+max+" bytes)<br>");
+	   Logger.println(DBPool.class,"Mem Free   = "+(free/1024/1024) +" MB ("+free +" bytes)<br>");
+	   Logger.println(DBPool.class,"Mem Total  = "+(total/1024/1024)+" MB ("+total+" bytes)<br>");
+	   Logger.println(DBPool.class,"Mem Used   = "+(used/1024/1024)+" MB ("+used+" bytes)<br>");
+	   Logger.println(DBPool.class,"Mem Max    = "+(max/1024/1024)+" MB ("+max+" bytes)<br>");
 	   Logger.println(DBPool.class,"Processors = "+proces);
 
 		//Logger.println(this,"xml="+contextFile);
@@ -864,8 +856,9 @@ public class DBPool
 					}
 				}
 			}
+		} catch(Exception e) {
+            Logger.error(e);
 		}
-		catch(Exception e){sk.iway.iwcm.Logger.error(e);}
 
 		externalDataSources = wjDataSources;
 	}
@@ -979,8 +972,9 @@ public class DBPool
 						}
 					}
 					catch (Exception e){}
+				} catch(Exception e) {
+                    Logger.error(e);
 				}
-				catch(Exception e){sk.iway.iwcm.Logger.error(e);}
 			}
 		}
 		catch (javax.naming.NameNotFoundException e)
@@ -1021,7 +1015,7 @@ public class DBPool
 				}
 				catch (Exception ex)
 				{
-					 sk.iway.iwcm.Logger.error(ex);
+					 Logger.error(ex);
 					 Logger.debug(DBPool.class, "Default password used.");
 				}
 		  }
