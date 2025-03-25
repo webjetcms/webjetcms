@@ -91,110 +91,111 @@ function initClosure() {
         }
     }
 
-    $(function () {
-        var current = location.pathname;
-        //../logon-user-details/ nemame v menu, chceme zobrazit menu polozku .../logon-user/
-        current = current.replace("index-details", "");
-        current = current.replace("index-detail", "");
-        current = current.replace("-details", "");
-        current = current.replace("-detail", "");
-        if (current.endsWith("/") === false && current.indexOf(".") === -1) {
-            current += "/";
-        }
-        var search = location.search;
-        if (search!=null && search.indexOf("?menu=")==0) current = current + search;
-        var currentWithHash = current+window.location.hash;
-        currentWithHash = currentWithHash.replace("?#", "#");
-        if ("/admin/v9/webpages/linkcheck/"==current) current = "/admin/v9/webpages/web-pages-list/";
-        $('.md-main-menu__item__link, .md-main-menu__item__sub-menu__item__link').each(function () {
-            let $this = $(this);
+    var current = location.pathname;
+    //../logon-user-details/ nemame v menu, chceme zobrazit menu polozku .../logon-user/
+    current = current.replace("index-details", "");
+    current = current.replace("index-detail", "");
+    current = current.replace("-details", "");
+    current = current.replace("-detail", "");
+    if (current.endsWith("/") === false && current.indexOf(".") === -1) {
+        current += "/";
+    }
+    var search = location.search;
+    if (search!=null && search.indexOf("?menu=")==0) current = current + search;
+    var currentWithHash = current+window.location.hash;
+    currentWithHash = currentWithHash.replace("?#", "#");
+    if ("/admin/v9/webpages/linkcheck/"==current) current = "/admin/v9/webpages/web-pages-list/";
 
-            //console.log("Comparing: this=", $this.attr('href'), "current=", current, " eq=", ($this.attr('href')==current));
-            if ($this.attr('href') === current || $this.attr('href') === currentWithHash) {
-                $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
+    //console.log("Current=", current, "currentWithHash=", currentWithHash);
 
-                let mainMenuItem = $this.parents(".md-main-menu__item");
-                mainMenuItem.addClass("md-main-menu__item--active");
-                //mainMenuItem.addClass("md-main-menu__item--open");
+    $('.md-main-menu__item__link, .md-main-menu__item__sub-menu__item__link').each(function () {
+        let $this = $(this);
 
-                let mainMenu = $this.parents(".md-main-menu");
-                mainMenu.addClass("md-main-menu--open");
-                let menuId = mainMenu.data("menu-id");
-                $('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
+        //console.log("Comparing: this=", $this.attr('href'), "current=", current, " eq=", ($this.attr('href')==current));
+        if ($this.attr('href') === current || $this.attr('href') === currentWithHash) {
+            $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
-                let mainTitle = mainMenuItem.find(".md-main-menu__item__link").text();
+            let mainMenuItem = $this.parents(".md-main-menu__item");
+            mainMenuItem.addClass("md-main-menu__item--active");
+            //mainMenuItem.addClass("md-main-menu__item--open");
 
-                //move submenu items to tabs
-                let tabs = mainMenuItem.find(".md-main-menu__item__sub-menu div");
-                //console.log("tabs=", tabs);
-                if (tabs.length>0) {
-                    //iterate over all tabs, find A elements and create UL - LI structure
-                    let ul = $("<ul class='nav' role='tablist'></ul>");
-                    tabs.each(function() {
-                        let $this = $(this);
-                        let aOriginal = $this.find("a");
-                        let active = $this.hasClass("md-main-menu__item__sub-menu__item--active") ? " active" : "";
-                        let li = $("<li class='nav-item' role='presentation'></li>");
-                        let a = $("<a class='nav-link"+active+"' role='tab'>"+aOriginal.text()+"</a>");
-                        a.attr("href", aOriginal.attr("href"));
-                        li.append(a);
-                        ul.append(li);
+            let mainMenu = $this.parents(".md-main-menu");
+            mainMenu.addClass("md-main-menu--open");
+            let menuId = mainMenu.data("menu-id");
+            $('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
 
-                        if (" active"===active) {
-                            hideFirstBreadcrumbItem(a, mainTitle);
-                        }
-                    });
-                    //wrap UL with md-tabs div
-                    ul = $("<div class='md-tabs md-tabs-dropdown'></div>").append(ul);
+            let mainTitle = mainMenuItem.find(".md-main-menu__item__link").text();
 
-                    //append UL to main menu
-                    $(".ly-submenu").html(ul);
-                    $("body").addClass("ly-submenu-active");
-                }
-
-                //set main title
-                WJ.setTitle(mainTitle);
-                let $headerTitle = $(".header-title");
-                hideFirstBreadcrumbItem($headerTitle, mainTitle);
-
-                //handle tabs click - we need also to execute link so it cant be BS tabs
-                $(".ly-submenu .md-tabs li").on("click", "a", function(e) {
+            //move submenu items to tabs
+            let tabs = mainMenuItem.find(".md-main-menu__item__sub-menu div");
+            //console.log("tabs=", tabs);
+            if (tabs.length>0) {
+                //iterate over all tabs, find A elements and create UL - LI structure
+                let ul = $("<ul class='nav' role='tablist'></ul>");
+                tabs.each(function() {
                     let $this = $(this);
-                    let isActive = $this.hasClass("active");
-                    $this.parents(".md-tabs").find("li a.active").removeClass("active");
-                    if (isActive) {
-                        $this.addClass("active");
-                        //this is click on active tab burger menu on small device, prevent click, just open/close menu
-                        if ($this.closest('ul').css("position")=="relative") {
-                            $this.closest('ul').toggleClass("open");
-                            e.preventDefault();
-                        }
-                    } else {
-                        $this.addClass("active");
-                        $this.closest('ul').removeClass("open");
+                    let aOriginal = $this.find("a");
+                    let active = $this.hasClass("md-main-menu__item__sub-menu__item--active") ? " active" : "";
+                    let li = $("<li class='nav-item' role='presentation'></li>");
+                    let a = $("<a class='nav-link"+active+"' role='tab'>"+aOriginal.text()+"</a>");
+                    a.attr("href", aOriginal.attr("href"));
+                    li.append(a);
+                    ul.append(li);
+
+                    if (" active"===active) {
+                        hideFirstBreadcrumbItem(a, mainTitle);
                     }
                 });
-            }
-        });
+                //wrap UL with md-tabs div
+                ul = $("<div class='md-tabs md-tabs-dropdown'></div>").append(ul);
 
-        //scrolll selected left menu item into view
-        let $menuItem = $("div.md-main-menu__item--active");
-        if ($menuItem.length>0) {
-            let top = $menuItem.position().top;
-            if (top > 150) {
-                setTimeout(()=> {
-                    scrollbarMenu.scrollTop = top-52;
-                }, 50);
+                //append UL to main menu
+                $(".ly-submenu").html(ul);
+                $("body").addClass("ly-submenu-active");
             }
+
+            //set main title
+            WJ.setTitle(mainTitle);
+            let $headerTitle = $(".header-title");
+            hideFirstBreadcrumbItem($headerTitle, mainTitle);
+
+            //handle tabs click - we need also to execute link so it cant be BS tabs
+            $(".ly-submenu .md-tabs li").on("click", "a", function(e) {
+                let $this = $(this);
+                let isActive = $this.hasClass("active");
+                $this.parents(".md-tabs").find("li a.active").removeClass("active");
+                if (isActive) {
+                    $this.addClass("active");
+                    //this is click on active tab burger menu on small device, prevent click, just open/close menu
+                    if ($this.closest('ul').css("position")=="relative") {
+                        $this.closest('ul').toggleClass("open");
+                        e.preventDefault();
+                    }
+                } else {
+                    $this.addClass("active");
+                    $this.closest('ul').removeClass("open");
+                }
+            });
         }
+    });
 
-        $(".ly-sidebar .menu-wrapper a").on("click", function () {
-            var $this = $(this);
-            if ($this.parent().hasClass("md-main-menu__item--has-children")) return;
-            var href = $(this).attr("href");
-			if (href.indexOf("javascript:") === 0) return;
-            WJ.selectMenuItem(href);
-        });
+    //scrolll selected left menu item into view
+    let $menuItem = $("div.md-main-menu__item--active");
+    if ($menuItem.length>0) {
+        let top = $menuItem.position().top;
+        if (top > 150) {
+            setTimeout(()=> {
+                scrollbarMenu.scrollTop = top-52;
+            }, 50);
+        }
+    }
+
+    $(".ly-sidebar .menu-wrapper a").on("click", function () {
+        var $this = $(this);
+        if ($this.parent().hasClass("md-main-menu__item--has-children")) return;
+        var href = $(this).attr("href");
+        if (href.indexOf("javascript:") === 0) return;
+        WJ.selectMenuItem(href);
     });
 
     //sidebar toogler responsive
