@@ -1,10 +1,15 @@
 package sk.iway.iwcm.test;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
 
 import org.springframework.mock.web.MockServletContext;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.ConstantsV9;
@@ -47,4 +52,16 @@ public class BaseWebjetTest
 
 
 	protected SimpleQuery query = new SimpleQuery();
+
+	/**
+	 * Load constants from database, override default values from Constants class
+	 */
+	protected void loadConstantsFromDB() {
+        try (Connection db_conn = DBPool.getConnection()) {
+            Map<String, String> databaseValues = InitServlet.getDatabaseValues(db_conn);
+            InitServlet.loadConstants(databaseValues, null);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

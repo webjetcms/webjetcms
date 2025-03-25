@@ -1,7 +1,7 @@
 <%@page import="sk.iway.iwcm.tags.WriteTag"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250"
+%><%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.inquiry.*,sk.iway.iwcm.*,java.io.*" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
@@ -117,26 +117,20 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>1)
 {
    iBean.setImgRootDir(imgRootDir);
    request.setAttribute("inquiry", iBean);
-%>
-	<script type="text/javascript">
-	<!--
-	//document.write('<link type="text/css" href="/components/inquiry/inquiry.css" rel="stylesheet"/>');
-   //document.write('<link type="text/css" href="/css/bootstrap.css" rel="stylesheet"/>');
-   <% if("01".equals(style)){ %>
-   document.write('<link type="text/css" href="/components/inquiry/inquiry.css" rel="stylesheet"/>');
+   if("01".equals(style)){ %>
+      <link type="text/css" href="/components/inquiry/inquiry.css" rel="stylesheet"/>
    <%} else if("02".equals(style)){ %>
-      document.write('<link type="text/css" href="/components/inquiry/inquiry_bootstrap.css" rel="stylesheet"/>');
+      <link type="text/css" href="/components/inquiry/inquiry_bootstrap.css" rel="stylesheet"/>
    <%} else if("03".equals(style)){ %>
-      document.write('<link type="text/css" href="/components/inquiry/inquiry_bootstrap2.css" rel="stylesheet"/>');
+      <link type="text/css" href="/components/inquiry/inquiry_bootstrap2.css" rel="stylesheet"/>
    <%}%>
-	-->
-	</script>
 	<%=Tools.insertJQuery(request) %>
 	<script type="text/javascript" src="/components/inquiry/ajax_vote.jsp"></script>
    <div class="inquiry" id="resultsDiv-<%=qID %>" style="width:<%=widthStyle%>">
         <jsp:include flush="true" page='<%="/components/inquiry/voteResultsDiv.jsp?qID="+qID %>' />
    </div>
-<%  } %>
-<%
-	WriteTag.setInlineComponentEditTextKey("components.inquiry.inline.title", request);
+   <%
+}
+
+WriteTag.setInlineComponentEditTextKey("components.inquiry.inline.title", request);
 %>

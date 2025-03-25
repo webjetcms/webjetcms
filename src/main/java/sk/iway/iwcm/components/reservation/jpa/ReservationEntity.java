@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
@@ -118,14 +119,17 @@ public class ReservationEntity implements Serializable {
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title="reservation.reservations.status",
-        hiddenEditor = true,
+        className = "disabled hide-on-create",
         editor = {
 			@DataTableColumnEditor(
 				options = {
                     @DataTableColumnEditorAttr(key = "reservation.reservations.status.waiting", value = "null"),
 					@DataTableColumnEditorAttr(key = "reservation.reservations.status.accepted", value = "true"),
 					@DataTableColumnEditorAttr(key = "reservation.reservations.status.denied", value = "false")
-				}
+				},
+                attr = {
+                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
+                }
 			)
 		}
     )
@@ -160,10 +164,12 @@ public class ReservationEntity implements Serializable {
     )
     private BigDecimal price;
 
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
     @Column(name = "domain_id")
     private Integer domainId;
 
     @Column(name = "user_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private Integer userId;
 
     @Transient
@@ -179,4 +185,9 @@ public class ReservationEntity implements Serializable {
     public String getReservationObjectName() {
         return reservationObjectForReservation != null ? reservationObjectForReservation.getName() : "";
     }
+
+    //For date-book-app
+    @Transient
+    @JsonIgnore
+    private String actualDate;
 }

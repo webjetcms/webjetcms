@@ -36,7 +36,10 @@ const actions = {
   stat_button: 'buttons-statistics',
   settings_button: 'buttons-settings',
   import_export_button: 'buttons-import-export',
+  import_button: 'btn-import-dialog',
+  export_button: 'btn-export-dialog',
   resend_button: 'buttons-resend',
+  remove_group_button: 'buttons-removeGroupFromAll',
 };
 
 const getButtonSelector = (context, action) => {

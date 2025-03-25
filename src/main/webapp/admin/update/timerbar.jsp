@@ -1,6 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
-%><%@ page pageEncoding="windows-1250" %>
+%><%@ page pageEncoding="utf-8" %>
 // Timer Bar - Version 1.0
 // Author: Brian Gosselin of http://scriptasylum.com
 // Script featured on http://www.dynamicdrive.com
@@ -104,7 +104,7 @@ function progressBarInit()
    resizeEl(PBdone,0,0,barheight-2,0);
    if(ns4) PBouter.visibility="show";
    else PBouter.style.visibility="visible";
-   //Pid=setInterval('incrCount()',95); 
+   //Pid=setInterval('incrCount()',95);
 }
 
 function resizeEl(id,t,r,b,l)
@@ -124,11 +124,11 @@ function resizeEl(id,t,r,b,l)
 
 function printMessage(idName, message)
 {
-   if (document.getElementById)  
+   if (document.getElementById)
    {
       id = document.getElementById(idName);
       id.innerHTML = message;
-   }   
+   }
 }
 
 progressBarInit();

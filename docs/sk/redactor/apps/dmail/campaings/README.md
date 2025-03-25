@@ -10,7 +10,13 @@ E-mail je možné posielať návštevníkom, ktorí sú registrovaní v admin č
 
 ## Základné
 
-Pri vytváraní nového záznamu máme v karte **Základné** na výber iba jednu kartu zo základnými informáciami, ktoré potrebujeme vyplniť a to "Predmet" a "Web stránka". Údaje o odosielateľovi sa vyplnia automatický podľa prihláseného používateľa, ale môžete ich samozrejme zmeniť.
+Pri vytváraní nového záznamu máme v karte **Základné** na výber iba jednu kartu zo základnými informáciami, ktoré potrebujeme vyplniť a to **Predmet** a **Web stránka**.
+
+**Predmet** sa automatický vyplní po zvolení **Web stránka s textom e-mailu**. Prednastavený bude do predmetu názov web stránky, ktorý môžete samozrejme zmeniť. Ak zmeníte hodnotu **Web stránka s textom e-mailu** a **Predmet** už obsahuje nejakú hodnotu, budete vyzvaný notifikáciou či si želáte zmeniť aktuálny predmet za nový.
+
+![](subject_confirm.png)
+
+Údaje o odosielateľovi sa vyplnia automatický podľa prihláseného používateľa, ale môžete ich samozrejme zmeniť. Ak chcete aby sa ako prednastavené používali iné hodnoty, môžete k tomu použiť konfiguračné premenné `dmailDefaultSenderName` a `dmailDefaultSenderEmail`.
 
 Text emailu je prebratý z vybranej web stránky (vrátane jej dizajnu). Odporúčame si v sekcii Web stránky vytvoriť priečinok napr. ```Newsletter``` s nastavenou vhodnou šablónou. V tomto priečinku najskôr vytvorte web stránku s textom emailu a následne ju vyberte v kampani.
 
@@ -131,7 +137,7 @@ Korektný súbor pre import získate jednoducho exportom príjemcov. Následne m
 !>**Upozornenie:**
 
 - Import z xlxs súboru nepodporuje pridanie viacerých emailov v jednej bunke ako v prípade manuálneho pridania. V bunke musí byť vždy len jedna emailová adresa.
-- Import z xlxs súboru podporuje výnimku formátu emailu. Pri manuálnom pridaní musí mať každý mail formát **meno@domena.sk**. Ak však kopírujete emaily napr. z aplikácie Outlook, skopírovaná hodnota môže mať formát ```"Ján Tester <jan_tester@test.com>"```. V prípade, že hodnota obsahuje znaky ```<>```, **(presne v tomto poradí)**, použije sa hodnota medzi nimi. V tomto prípade by to bola práve hodnota ```jan_tester@test.com```. Táto hodnota musí mať formát **meno@domena.sk**.
+- Import z xlxs súboru podporuje výnimku formátu emailu. Pri manuálnom pridaní musí mať každý mail formát **meno@domena.sk**. Ak však kopírujete emaily napr. z aplikácie `Outlook`, skopírovaná hodnota môže mať formát ```"Ján Tester <jan_tester@test.com>"```. V prípade, že hodnota obsahuje znaky ```<>```, **(presne v tomto poradí)**, použije sa hodnota medzi nimi. V tomto prípade by to bola práve hodnota ```jan_tester@test.com```. Táto hodnota musí mať formát **meno@domena.sk**.
 
 ## Otvorenia
 

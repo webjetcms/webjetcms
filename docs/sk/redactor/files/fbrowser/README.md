@@ -67,6 +67,8 @@ Priečinok                  |  Súbor
 :-------------------------:|:-------------------------:
 ![](info_folder.png)       |  ![](info_file.png)
 
+!>**Upozornenie:** veľkosť priečinku ráta veľkosť súborov v danom priečinky, neráta súbory v pod-priečinkoch.
+
 <br/><br/>
 - <button class="btn btn-sm btn-warning"><span><i class="ti ti-edit"></i></span></button>, **Upraviť**, umožňuje úpravy súborov a IBA súborov. Bližšie informácie v časti [Úprava súborov](../fbrowser/file-edit/README.md).
 - <button class="btn btn-sm btn-duplicate"><span><i class="ti ti-copy"></i></span></button>, **Duplikovať**, umožňuje duplikovať označené priečinky/súbory. Klonované priečinky/súbory sa uložia do rovnakej lokácie, z ktorej boli duplikované.
@@ -134,6 +136,6 @@ Taktiež ste si mohli všimnúť nástroje, ktoré sme si v sekcií [Panela nás
 
 ## Konfigurácia
 
-- **elfinderMoveConfirm** - štandardne sa zobrazí potvrdenie presunu súboru alebo priečinka, pri použití funkcie "drag & drop" alebo kopírovania/vloženia cez kontextové menu. Ak chcete potvrdzovanie presunu súboru alebo priečinka vypnúť zmeňte hodnotu konfiguračnej premennej `elfinderMoveConfirm` na `false`.
+- `elfinderMoveConfirm` - štandardne sa zobrazí potvrdenie presunu súboru alebo priečinka, pri použití funkcie "drag & drop" alebo kopírovania/vloženia cez kontextové menu. Ak chcete potvrdzovanie presunu súboru alebo priečinka vypnúť zmeňte hodnotu konfiguračnej premennej `elfinderMoveConfirm` na `false`.
 
 ![](move-confirm.png)

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.reservation;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ActiveRecord;
 
 /**
@@ -28,23 +31,23 @@ import sk.iway.iwcm.database.ActiveRecord;
 public class ReservationObjectTimesBean extends ActiveRecord implements Serializable
 {
 	private static final long serialVersionUID = -1L;
-	
+
 	@Id
 	@GeneratedValue(generator="WJGen_reservation_object_times")
-	@TableGenerator(name="WJGen_reservation_object_times",pkColumnValue="reservation_object_times")	
+	@TableGenerator(name="WJGen_reservation_object_times",pkColumnValue="reservation_object_times")
 	@Column(name="object_time_id")
 	private int objectTimeId;
 	@Column(name="object_id")
 	private int objectId;
 	@Column(name="cas_od")
-	private String casOd;
+	private Date timeFrom;
 	@Column(name="cas_do")
-	private String casDo;
+	private Date timeTo;
 	@Column(name="den")
 	private int den;
 	@Column(name="domain_id")
 	private int domainId;
-	
+
 	public int getObjectTimeId()
 	{
 		return objectTimeId;
@@ -77,7 +80,7 @@ public class ReservationObjectTimesBean extends ActiveRecord implements Serializ
 	{
 		this.domainId = domainId;
 	}
-	
+
 	@Override
 	public int getId()
 	{
@@ -90,19 +93,19 @@ public class ReservationObjectTimesBean extends ActiveRecord implements Serializ
 	}
 	public String getCasOd()
 	{
-		return casOd;
+		return Tools.formatTime(timeFrom);
 	}
 	public void setCasOd(String casOd)
 	{
-		this.casOd = casOd;
+		timeFrom = new Date(DB.getTimestamp("01.01.2000", casOd));
 	}
 	public String getCasDo()
 	{
-		return casDo;
+		return Tools.formatTime(timeTo);
 	}
 	public void setCasDo(String casDo)
 	{
-		this.casDo = casDo;
+		timeTo = new Date(DB.getTimestamp("01.01.2000", casDo));
 	}
-	
+
 }

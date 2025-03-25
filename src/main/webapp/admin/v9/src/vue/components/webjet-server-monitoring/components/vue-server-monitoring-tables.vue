@@ -1,6 +1,6 @@
 <template>
-    <section class="col">
-        <h6 class="server-monitoring-table-header"><i :class="keyIndex === 0 ? 'ti ti-info-square' : 'ti ti-server'" style="margin: 0px 10px"></i> {{ displayData.tableName }}</h6>
+    <div class="col-md-6">
+        <h6 class="server-monitoring-table-header mt-2"><i :class="displayData.icon" style="margin: 0px 10px"></i> {{ displayData.tableName }}</h6>
         <table class="monitoring-table">
             <tr v-for="(data, key, index) in sortedData" :key="index" class="table-data" :data-index="index">
                 <td v-text="translate(key)"></td>
@@ -10,7 +10,7 @@
                 </td>
             </tr>
         </table>
-    </section>
+    </div>
 </template>
 
 <script lang="js">
@@ -65,21 +65,8 @@
                         'serverIP': this.formatedData.serverIP,
                         'serverContry': this.formatedData.serverContry,
                         'serverLanguage': this.formatedData.serverLanguage,
-                        'dbActive': this.formatedData.dbActive,
-                        'dbIdle': this.formatedData.dbIdle,
                         'serverCpus': this.formatedData.serverCpus,
-                        'cacheItems': this.formatedData.cacheItems,
-                        'sessionsTotal': this.formatedData.sessionsTotal
-                    }
-
-                    if (typeof this.formatedData.sessionsList != "undefined" && this.formatedData.sessionsList!=null) {
-                        let that = this;
-
-                        //console.log(that.sortedData);
-                        this.formatedData.sessionsList.forEach(function(obj) {
-                            //console.log(obj.label);
-                            that.sortedData["- "+obj.label] = obj.value;
-                        });
+                        'clusterNodeName': this.formatedData.clusterNodeName
                     }
                 } else if (this.keyIndex == 1) {
                     this.sortedData = {
@@ -93,10 +80,35 @@
                         'swServerOsVersion': this.formatedData.swServerOsVersion,
                         'licenseExpirationDate': this.formatedData.licenseExpirationDate
                     }
-                }
+                } else if (this.keyIndex == 2) {
+                    this.sortedData = {
+                        'dbTotal': this.formatedData.dbTotal,
+                        'dbActive': this.formatedData.dbActive,
+                        'dbIdle': this.formatedData.dbIdle,
+                        'dbWaiting': this.formatedData.dbWaiting,
+                    }
+                } else if (this.keyIndex == 3) {
+                    this.sortedData = {
+                        'memTotal': this.formatedData.memTotal,
+                        'memFree': this.formatedData.memFree,
+                        'memUsed': this.formatedData.memUsed,
+                        'memMax': this.formatedData.memMax,
+                        'cacheItems': this.formatedData.cacheItems,
+                        'sessionsTotal': this.formatedData.sessionsTotal
+                    }
+                    if (typeof this.formatedData.sessionsList != "undefined" && this.formatedData.sessionsList!=null) {
+                        let that = this;
 
+                        //console.log(that.sortedData);
+                        this.formatedData.sessionsList.forEach(function(obj) {
+                            //console.log(obj.label);
+                            that.sortedData["- "+obj.label] = obj.value;
+                        });
+                    }
+                }
             },
             translate(key) {
+                if (key.startsWith("-")) return key;
                 var translated = "";
 
                 //console.log("this=", this, "preklad=", this.$cpuLoad, "2=", this["$serverContry"]);

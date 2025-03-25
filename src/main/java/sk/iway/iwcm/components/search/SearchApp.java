@@ -45,7 +45,7 @@ public class SearchApp extends WebjetComponentAbstract {
     private int perpage = 10;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.search.check_duplicty",
         tab = "basic"
     )

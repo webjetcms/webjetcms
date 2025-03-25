@@ -459,6 +459,7 @@ public class InquiryDB
 			{
 				lvd = new LabelValueDetails();
 				lvd.setLabel(DB.getDbString(rs, "question_group"));
+				lvd.setValue(DB.getDbString(rs, "question_group"));
 				aList.add(lvd);
 			}
 			rs.close();
@@ -1560,7 +1561,7 @@ public class InquiryDB
 
 				if(user == null)  iuve.setUserId(-1);
 				else iuve.setUserId(user.getUserId());
-				
+
 				iuve.setQuestionId(questionID);
 				iuve.setAnswerId(aID[k]);
 				iuve.setDayDate(date);

@@ -191,7 +191,7 @@ Scenario('odhlasenie', ({I}) => {
     I.logout();
 });
 
-Scenario('BUG filtrovanie aktivny', ({I, DT}) => {
+Scenario('BUG filtrovanie aktivny', async ({I, DT}) => {
     I.amOnPage("/apps/banner/admin/");
 
     I.dtWaitForLoader();
@@ -216,7 +216,7 @@ Scenario('BUG filtrovanie aktivny', ({I, DT}) => {
     I.say("Filter podla active");
     I.amOnPage("/apps/banner/admin/");
     I.dtResetTable("bannerDataTable");
-    DT.showColumn("Aktívny", "bannerDataTable");
+    await DT.showColumn("Aktívny", "bannerDataTable");
 
     I.dtFilterSelect("active", "Nie");
     I.see("Test banner vypnuty");
@@ -448,8 +448,10 @@ Scenario('Device type specific banner', ({I, DTE}) => {
 });
 
 function selectDevices(I, DTE, selectDevices) {
-    let allDevices = ["Phone", "Tablet", "Pc"];
-    let checkboxPrefix = "#commonAdvancedSettingsDevice";
+    let allDevices = {
+        "Phone" : '#DTE_Field_device_0',
+        "Tablet" : '#DTE_Field_device_1',
+        "Pc" : '#DTE_Field_device_2'};
 
     //Open page
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73822");
@@ -470,15 +472,15 @@ function selectDevices(I, DTE, selectDevices) {
     I.switchTo("iframe.cke_dialog_ui_iframe") //iframe
     I.switchTo("#editorComponent") //iframe
 
-    I.waitForElement("#tabLinkcommonAdvancedSettings");
-    I.clickCss("#tabLinkcommonAdvancedSettings");
+    I.waitForElement("#pills-dt-component-datatable-commonSettings-tab");
+    I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
 
     //Check wanted, unchecke rest
-    allDevices.forEach((device) => {
+    Object.keys(allDevices).forEach((device) => {
         if(selectDevices.includes(device)) {
-            I.checkOption(checkboxPrefix + device);
+            I.checkOption(allDevices[device]);
         } else {
-            I.uncheckOption(checkboxPrefix + device);
+            I.uncheckOption(allDevices[device]);
         }
     });
 

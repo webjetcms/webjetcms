@@ -468,3 +468,9 @@ async function deleteFile(I, fileName) {
         I.waitForInvisible(fileName);
     }
 }
+
+Scenario('BUG 57669 - file size in dir', async ({ I }) => {
+    I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3Rv");
+    I.waitForText("Súčet: 27.09 MB", 10, ".elfinder-statusbar .elfinder-stat-size.elfinder-stat-size-recursive");
+    I.waitForText("Položky: 327", 10, ".elfinder-statusbar .elfinder-stat-size");
+});

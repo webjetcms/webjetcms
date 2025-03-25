@@ -2,7 +2,7 @@
 <%@page import="sk.iway.iwcm.Constants"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.Identity,sk.iway.iwcm.PageParams,sk.iway.iwcm.PathFilter,sk.iway.iwcm.FileTools" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.Identity,sk.iway.iwcm.PageParams,sk.iway.iwcm.PathFilter,sk.iway.iwcm.FileTools" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@page import="sk.iway.iwcm.Tools"%>
@@ -115,9 +115,9 @@ if (url.startsWith("/components/")) {
 			//je to spring komponenta, prepni sa na zobrazenie cez datatabulku
 			%>
 				<script type="text/javascript">
-					var src = '/admin/v9/webpages/component?id=1';
+					var src = '/admin/v9/webpages/component?id=1&name='+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>");
 					var iframe = window.parent.$('#editorComponent');
-					//console.log("iframe=", iframe);
+					//console.log("iframe=", iframe, "src=", src);
 					iframe
 						.after($('<input type="hidden" id="className" />').val("<%=ResponseUtils.filter(componentName) %>"))
 						.after($('<input type="hidden" id="parameters" />').val(""))
@@ -254,7 +254,7 @@ if (height > 500) height = 500;
 </div>
 <% } %>
 
-<div class="tab-pane toggle_content" style="height: <%=height%>px; overflow: auto; min-width:700px;">
+<div class="tab-pane toggle_content" style="height: <%=height%>px !important; overflow: auto; min-width:700px;">
 
 	<div class="tab-page" id="tabMenu1" style="display: block; min-height: 400px;">
 		<table border="0" cellspacing="0" cellpadding="1">
@@ -398,7 +398,7 @@ if (height > 500) height = 500;
 
 	<% if (Tools.isNotEmpty(propSearchKey)) { %>
 	<div class="tab-page tab-page-iframe" id="tabMenu2">
-		<iframe src="/admin/prop_search.jsp?search=yes&text=<%=propSearchKey %>" width="100%" height="380<%--=height-20--%>" frameborder="0"></iframe>
+		<iframe id="propSearchIframe" src="/admin/v9/settings/translation-keys/#dt-filter-key=<%=propSearchKey %>" width="100%" height="<%=height%>" frameborder="0"></iframe>
 	</div>
 	<% } %>
 

@@ -290,6 +290,7 @@ test {
     systemProperty 'file.encoding', 'UTF-8'
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
+    systemProperty 'webjetDbname', '/poolman-local.xml'
 }
 
 java {
@@ -406,7 +407,8 @@ gretty {
         '-Dwebjet.serverMonitoringEnableJPA=true',
         '-Dwebjet.webEnableIPs=1,2,3,4,5,6,7,8,9,0',
         '-Dwebjet.adminEnableIPs=1,2,3,4,5,6,7,8,9,0',
-        '-Dwebjet.cloudStaticFilesDir=-'
+        '-Dwebjet.cloudStaticFilesDir=-',
+        '-Dwebjet.passwordAdminExpiryDays=0'
     ]
 
     //enable jacoco also for appStart and appStartDebug tasks

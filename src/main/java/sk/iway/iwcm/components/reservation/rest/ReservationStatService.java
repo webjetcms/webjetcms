@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.calendar.Month;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -22,7 +23,7 @@ import sk.iway.iwcm.components.reservation.jpa.ReservationStatDTO;
 
 @Service
 public class ReservationStatService {
-    
+
     private ReservationStatService() {}
 
     private static final BigDecimal HOUR_IN_MILLIS = new BigDecimal(1000 * 60 * 60);
@@ -32,7 +33,7 @@ public class ReservationStatService {
         DAYS;
 
         public static ReservationType getReservationType(String reservationType) {
-            if(Tools.isEmpty(reservationType) == false && "typeDays".equals(reservationType))
+            if("typeDays".equals(reservationType))
                 return ReservationType.DAYS;
             return ReservationType.HOURS;
         }
@@ -69,7 +70,7 @@ public class ReservationStatService {
 
         public void addToValue(BigDecimal addValue) { this.value = this.value.add(addValue); }
     }
-    
+
     /**
      * Return table data for the given month and reservation type -> for reservation stat page
      * @param serachDate - text in format yyyy-MM
@@ -83,7 +84,7 @@ public class ReservationStatService {
 
         //Get all reservations for the given month, domain and they MUST be accepted
         List<ReservationEntity> filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());
-        
+
         //Group reservations by reservation object id AND creatorId
         // !! if creatorId is null or -1 (no logged user) -> group by reservation object id AND email
         Map<String, ReservationStatDTO> reservationsStatMap = new HashMap<>();
@@ -110,24 +111,24 @@ public class ReservationStatService {
 
             //Combination already in map
             rs.setTotalPrice( rs.getTotalPrice().add( re.getPrice() ) );
-            
+
             //Number of reservations -> count +1 every time
             rs.setNumberOfReservations( rs.getNumberOfReservations() + 1 );
-            
+
             //Number of reserved days -> one reservation can be for multiple days
             int daysInterval = getDayDiff(re.getDateFrom(), re.getDateTo());
             rs.setNumberOfReservedDays( rs.getNumberOfReservedDays() + daysInterval );
 
-            if(ReservationType.HOURS.equals(reservationType) == true) {
+            if(ReservationType.HOURS.equals(reservationType)) {
                 //Number of total reserved hours -> it's time range * reserved days
                 rs.setTotalReservedHours( rs.getTotalReservedHours().add( computeHoursInterval(re, daysInterval) ) );
             }
 
-            reservationsStatMap.put(key, rs); 
+            reservationsStatMap.put(key, rs);
         }
-    
+
         for(ReservationStatDTO rs : reservationsStatMap.values()) {
-            if(ReservationType.HOURS.equals(reservationType) == true)
+            if(ReservationType.HOURS.equals(reservationType))
                 rs.setAverageTimePerDay( divide(rs.getTotalReservedHours(), rs.getNumberOfReservedDays(), 2) );
 
             rs.setAverageIntervalInDays( divide(rs.getNumberOfReservedDays(), rs.getNumberOfReservations(), 2) );
@@ -158,7 +159,7 @@ public class ReservationStatService {
         for(ReservationEntity re : filteredReservations) {
             String key = "";
             DoublePieChartData cd = new DoublePieChartData(0, BigDecimal.ZERO, "");
-            if("users".equals(wantedValue) == true) {
+            if("users".equals(wantedValue)) {
                 key = re.getUserId() > 0 ? re.getUserId().toString() : re.getEmail();
                 cd = map.get(key);
 
@@ -168,7 +169,7 @@ public class ReservationStatService {
                 } else cd.incrementA();
 
 
-            } else if("objects".equals(wantedValue) == true) {
+            } else if("objects".equals(wantedValue)) {
                 key = re.getReservationObjectId().toString();
                 cd = map.get(key);
 
@@ -179,7 +180,7 @@ public class ReservationStatService {
 
             //Set value B -> HOURS
             int daysInterval = getDayDiff(re.getDateFrom(), re.getDateTo());
-            if(ReservationType.HOURS.equals(reservationType) == true)
+            if(ReservationType.HOURS.equals(reservationType))
                 cd.addToB( computeHoursInterval(re, daysInterval) );
             else cd.addToB( new BigDecimal(daysInterval) );
 
@@ -218,13 +219,13 @@ public class ReservationStatService {
             String key = re.getReservationObjectName();
             List<LineChartData> reservationData = map.get(key);
 
-            long timeDiff = timePartDiff(re.getDateFrom(), re.getDateTo());
+            long timeDiff = DateTools.timePartDiff(re.getDateFrom(), re.getDateTo());
             BigDecimal hours = divide(timeDiff, HOUR_IN_MILLIS, 2);
 
             int firstReservationDay = getDayOfMonth(re.getDateFrom());
             int reservationRangeDiff = getDayDiff(re.getDateFrom(), re.getDateTo());
             for(int i = firstReservationDay; i < (firstReservationDay + reservationRangeDiff); i++) {
-                if(ReservationType.HOURS.equals(reservationType) == true)
+                if(ReservationType.HOURS.equals(reservationType))
                     reservationData.get(i-1).addToValue(hours);
                 else reservationData.get(i-1).addToValue(BigDecimal.ONE);
             }
@@ -236,29 +237,6 @@ public class ReservationStatService {
     }
 
     /**
-     * Return in milliseconds time difference between two TIME parts of the given dates (date part is ignored)
-     * @param from
-     * @param to
-     * @return
-     */
-    private static long timePartDiff(Date from, Date to) {
-        Calendar cal1 = Calendar.getInstance();
-        cal1.setTime(from);
-        cal1.set(Calendar.YEAR, 2000);
-        cal1.set(Calendar.MONTH, 0);
-        cal1.set(Calendar.DAY_OF_MONTH, 1);
-
-        Calendar cal2 = Calendar.getInstance();
-        cal2.setTime(to);
-        cal2.set(Calendar.YEAR, 2000);
-        cal2.set(Calendar.MONTH, 0);
-        cal2.set(Calendar.DAY_OF_MONTH, 1);
-
-        //Time diff in milliseconds for ONE DAY
-        return cal2.getTimeInMillis() - cal1.getTimeInMillis();
-    }
-
-    /**
      * Return total hours interval for the given reservation and days interval
      * First compute time diff in milliseconds for ONE DAY and then multiply by days interval
      * @param re
@@ -267,8 +245,8 @@ public class ReservationStatService {
      */
     private static BigDecimal computeHoursInterval(ReservationEntity re, int daysInterval) {
         //Time diff in milliseconds for ONE DAY
-        long timeDiff = timePartDiff(re.getDateFrom(), re.getDateTo());
-        
+        long timeDiff = DateTools.timePartDiff(re.getDateFrom(), re.getDateTo());
+
         //Time diff in milliseconds for WHOLE reservation -> timeDiff * daysInterval
         long wholeDiff = timeDiff * daysInterval;
 
@@ -296,7 +274,7 @@ public class ReservationStatService {
     private static Date[] getDateRange(String searchDate) {
         int year;
         int month;
-        if(Tools.isEmpty(searchDate) == false && searchDate.matches("\\d{4}-\\d{2}")) {
+        if(Tools.isNotEmpty(searchDate) && searchDate.matches(ReservationService.REGEX_YYYY_MM)) {
             String[] dateParts = searchDate.split("-");
             year = Integer.parseInt(dateParts[0]);
             month = Integer.parseInt(dateParts[1]) - 1; //-1 because Calendar month starts  with 0

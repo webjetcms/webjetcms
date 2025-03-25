@@ -71,10 +71,14 @@ function testDemoComponent(I, testAllFields=false) {
     I.seeInField("#DTE_Field_stringField", stringField);
 }
 
-Scenario('spring - zoznam aplikacii', ({ I, DTE, Browser }) => {
+Scenario('spring - zoznam aplikacii', ({ I, DT, DTE, Browser }) => {
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=17321");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=15257");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+
     I.wait(6);
 
     I.switchTo('.cke_wysiwyg_frame.cke_reset');

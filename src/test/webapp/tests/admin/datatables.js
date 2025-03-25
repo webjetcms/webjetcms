@@ -1,5 +1,10 @@
 Feature('admin.datatables');
 
+//rows withou md-tabs in header
+var rows = 13;
+//rows with md-tabs in header
+var rowsTabs = 12;
+
 Before(({ I, login }) => {
      login('admin');
 });
@@ -50,14 +55,14 @@ Scenario('Bug oznacenia vsetkych riadkov', ({ I }) => {
     I.amOnPage("/admin/v9/settings/configuration/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("13 riadkov označených", "div.dt-info");
+    I.see(rows+" riadkov označených", "div.dt-info");
 
     //
     I.say("serverSide=true")
     I.amOnPage("/admin/v9/settings/redirect/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("13 riadkov označených", "div.dt-info");
+    I.see(rowsTabs+" riadkov označených", "div.dt-info");
 });
 
 
@@ -108,7 +113,7 @@ Scenario('Maximalizovat - zrusene pre zmazanie zaznamu', ({ I, DT, DTE }) => {
 Scenario('Dynamicke urcenie poctu zaznamov', ({ I }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
 
-    I.see("Záznamy 1 až 13 z");
+    I.see("Záznamy 1 až "+rows+" z");
 
     I.resizeWindow(1280, 900);
     I.refreshPage();
@@ -267,28 +272,36 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.clickCss('.btn.buttons-collection.dropdown-toggle.buttons-page-length');
     I.waitForVisible("div.dt-button-collection");
 
-    I.click("Automaticky (13)");
+    I.click("Automaticky ("+rowsTabs+")");
     I.click("Uložiť");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 13 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
 
     //
     I.say("reloadni v auto rezime");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 13 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
 
     //
     I.say("zvacsi okno a over, ze auto rezim funguje");
     I.resizeWindow(1280, 1000);
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 19 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 18 z", "div.dt-footer-row");
 });
 
 Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.resetTable();
+    I.amOnPage("/admin/v9/settings/redirect/");
+    I.see("Záznamy 1 až "+rowsTabs+" z", "div.dt-footer-row");
+
+    //
+    I.say("Table withou md-tabs");
+    I.amOnPage("/admin/v9/webpages/attributes/");
+    DT.resetTable("attributesDataTable");
+    I.see("Záznamy 1 až "+rows+" z", "div.dt-footer-row");
 });
 
 function checkTemplateIdValue(I, checkToastMessage=true) {
@@ -333,4 +346,30 @@ Scenario('select - missing ID', ({ I, DT, DTE }) => {
 
     DTE.waitForEditor();
     checkTemplateIdValue(I, true);
+});
+
+Scenario("conditional tabs", ({ I, DT, DTE }) => {
+    //
+    I.say("hide-on-create");
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+    I.click(DT.btn.add_button);
+
+    DTE.waitForEditor();
+    I.seeElement(locate("#pills-dt-editor-datatableInit li a").withText("Základné"));
+    I.dontSeeElement("#pills-dt-editor-datatableInit li.hide-on-create");
+    I.dontSeeElement(locate("#pills-dt-editor-datatableInit li a").withText("Priečinky"));
+
+    //
+    DT.addContext("campaings", "#campaingsDataTable_wrapper");
+    I.say("hide-on-duplicate");
+    I.amOnPage("/apps/dmail/admin/");
+    DT.filterContains("subject", "testOfUnsucribed");
+    I.click(".buttons-select-all");
+    I.click(DT.btn.campaings_duplicate_button);
+    DTE.waitForEditor("campaingsDataTable");
+    I.seeElement(locate("#pills-dt-editor-campaingsDataTable li a").withText("Základné"));
+    I.dontSeeElement("#pills-dt-editor-campaingsDataTable li.hide-on-duplicate");
+    I.dontSeeElement(locate("#pills-dt-editor-campaingsDataTable li a").withText("Otvorenia"));
+
 });

@@ -45,6 +45,11 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
     @Override
     protected void tree(Map<String, Object> result, JsTreeMoveItem item) {
         int id = item.getIdInt();
+        if (id < 1 && item.getId() != null && item.getId().startsWith("/")) {
+            //try to get ID from path
+            GroupDetails group = GroupsDB.getInstance().getGroupByPath(item.getId());
+            if (group != null) id = group.getGroupId();
+        }
         final Identity user = UsersDB.getCurrentUser(getRequest());
 
         if (GroupsDB.isGroupViewable(user, id)==false && GroupsDB.isGroupEditable(user, id)==false) {

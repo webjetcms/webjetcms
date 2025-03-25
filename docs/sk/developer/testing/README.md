@@ -456,7 +456,7 @@ I.assertAbove(2, 1, 'Target data not above the given value');
 I.assertAbove(1, 2, 'Target data not below the given value');
 ```
 
-Ak je potrebné, môžete využiť aj [assert](https://www.npmjs.com/package/assert) knižnicu. Príklad použitia je v teste [gallery.js](../../../../src/test/webapp/tests/apps/gallery.js):
+Ak je potrebné, môžete využiť aj [assert](https://www.npmjs.com/package/assert) knižnicu. Príklad použitia je v teste [gallery.js](../../../../src/test/webapp/tests/apps/gallery/gallery.js):
 
 ```javascript
 const assert = require('assert');
@@ -755,6 +755,12 @@ DELETE FROM documents_history WHERE doc_id=22955 AND publicable=0;
 UPDATE groups SET sort_priority=10 WHERE parent_group_id IN (15257, 80578);
 DELETE FROM media WHERE media_fk_id NOT IN (259) AND (media_title_sk LIKE '%autotest%' OR media_title_sk LIKE 'image test%' OR media_title_sk LIKE '%onerror=alert%' OR media_title_sk LIKE 'media%');
 OPTIMIZE TABLE media;
+```
+
+Ak chcete plošne zmeniť heslá v testovacej databáze použite:
+
+```sql
+UPDATE users SET password='bcrypt:...', password_salt='bcrypt:...' WHERE user_id>1 AND login NOT IN ('user_sha512', 'user_bcrypt');
 ```
 
 ## Testovanie REST služieb

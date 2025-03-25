@@ -110,17 +110,19 @@ Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     I.see(loginText);
     I.see(forgotPassword);
 
-    //I.sendGetRequest('/admin/v9/', {'x-auth-token': '','wjlogontoken': 'FdGVzdGVyOlpaVlZydUNBdEhuM3F5Yzg|'});
-    //I.seeResponseCodeIs(200);
+    //get random ascii letter
+    let letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    let logonToken = letter+btoa("tester:"+I.getDefaultPassword());
+    logonToken = logonToken.replace(/=/g, "|");
 
-    I.executeScript(function() {
+    I.executeScript(function(token) {
         $.ajax({
             url: "/admin/v9",
             headers: {
-                'wjlogontoken': 'FdGVzdGVyOlpaVlZydUNBdEhuM3F5Yzg|'
+                'wjlogontoken': token
             }
         });
-    });
+    }, logonToken);
 
     //musime cakat kym dobehne ajax na prihlasenie
     I.wait(5);

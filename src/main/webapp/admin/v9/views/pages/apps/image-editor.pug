@@ -92,6 +92,11 @@ block content
             galleryTable.EDITOR.field('selectedWidth').hide();
 
             galleryTable.EDITOR.on('open', function (e, type, action) {
+                if (imagePath.indexOf("://")>=0) {
+                    WJ.notifyError("[[\#{components.chat.error}]]", "[[\#{image_editor.imageIsOnRemoteServer}]]");
+                    $(".DTE_Footer .btn-primary").hide();
+                }
+
                 $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                 //console.log("Reseting imageEditorInstance");
                 //zresetuj image editor instance

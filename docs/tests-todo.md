@@ -8,14 +8,14 @@
 - [x] #54133 - Používatelia - pridať test slabého hesla - existuje používateľ ```testerslabeheslo```, jemu je potrebne s pouzivatelom ```tester``` v admine nastaviť slabé heslo ```tentousermavelmislabeheslo```, následne sa odhlásiť, prihlásiť sa s kontom ```testerslabeheslo```. Mala by sa zobraziť výzva na zadanie nového hesla, zadať kvalitnejšie heslo, odskúšať hlásenia o požadovaných vlastnostiach hesla. Následne sa s kvalitným heslom pokúsiť prihlásiť. Po úspechu znova v admine s kontrom ```tester``` nastaviť heslo ```tentousermavelmislabeheslo``` pre použitie v iných testoch.
 - [x] Web stránky - 24008 Media - editujem stránku, kliknem na kartu Media, otvorím Media, zatvorim krížikom hore, kliknem na Uložiť vo web stránke, okno sa nezatvorí. (opravené, test v webpages.js)
 - [x] #39751-46 Galéria - test nahratia obrázka, jeho otočenia (overenie otočenia porovnaním screenshotu) (#57053).
-- [ ] Media - test keď používateľ nemá práva na všetky média, že ide editovať médium v stránke a pridať nové (#57625).
+- [x] Media - test keď používateľ nemá práva na všetky média, že ide editovať médium v stránke a pridať nové (#57625).
 - [x] Formuláre - test kliknutia na linku pri formulároch s nastaveným Dátum potvrdenia súhlasu - `/apps/formular/formular-doubleoptin.html` (#57125)
-- [ ] Web stránky - vytvorím novú stránku, ktorá má rovno nastavené publikovanie do budúcnosti, publikujem. Následne otvorím znova v editore, zobrazí sa notifikácia, že existuje verzia v budúcnosti. Zatvorím okno, označím riadok a stránku zmažem. Posiela sa v JSON dátach aj Json notify, nesmie to padnúť. Overiť sa dá zmazaním riadku `@NoArgsConstructor` v triede `NotifyButton`  (#57625).
+- [x] Web stránky - vytvorím novú stránku, ktorá má rovno nastavené publikovanie do budúcnosti, publikujem. Následne otvorím znova v editore, zobrazí sa notifikácia, že existuje verzia v budúcnosti. Zatvorím okno, označím riadok a stránku zmažem. Posiela sa v JSON dátach aj Json notify, nesmie to padnúť. Overiť sa dá zmazaním riadku `@NoArgsConstructor` v triede `NotifyButton` (#57625).
 - [x] Galéria - cez web stránku dialóg vloženia obrázku do stránky vytvorím priečinok v galérii, nahrám fotku a následne prejdem do galérie. Priečinok je biely, nejde zmazať (ID je -1, takže entita sa nenájde) (#57053).
 - [x] Úlohy na pozadí - overiť aplikovanie zmeny v úlohách, napr. zapnúť auditovanie, overiť, že sa audituje, vypnúť úlohu atď (#57141).
-- [ ] Galéria - test pridania priečinka podľa práva používateľa - `jtester`, pomocou JS kódu odstrániť `disabled` a skúsiť pridať priečinok. Rozšíriť test `BUG - buttons-create disabled #56393-17` (#57625).
-- [ ] Galéria - pridať test aplikovania vodoznaku - `compareScreenshots`, porovnať fotografie, presunúť test v `gallery-regenerate-images.js` do `gallery-watermark.js` priečinka  (#57625).
-- [ ] Zlepšiť testy voliteľné polia - test `yellow` šablóny  (#57625).
+- [x] Galéria - test pridania priečinka podľa práva používateľa - `jtester`, pomocou JS kódu odstrániť `disabled` a skúsiť pridať priečinok. Rozšíriť test `BUG - buttons-create disabled #56393-17` (#57625).
+- [x] Galéria - pridať test aplikovania vodoznaku - `compareScreenshots`, porovnať fotografie, presunúť test v `gallery-regenerate-images.js` do `gallery-watermark.js` priečinka  (#57625).
+- [x] Zlepšiť testy voliteľné polia - test `yellow` šablóny  (#57625).
 - [x] Aktualizovať `codeceptjs`, pozor na problém s `Allure`, asi aktualizovať podľa https://allurereport.org/docs/codeceptjs/, nahradiť v `I.jstreeClick` volanie `.withText(name)` za `.withTextEquals(name)` (#57433).
 - [ ] Testovať `passwordAdminExpiryDays`, nastaviť režim pravidelnej zmeny hesiel pre test používateľov.
 - [ ] Prihlásenie emailom, vytvorenie nového používateľa - nastavenie `login`.
@@ -23,6 +23,7 @@
 - [ ] Web stránky - otestovať usporiadanie priečinkov a stránok, pridanie, presun drag&drop, regenerovanie, nastavenie `sortPriorityIncrementGroup,sortPriorityIncrementDoc`.
 - [ ] Dokumentácia - v `docs/sk/redactor/admin/password-recovery/README.md` sú obrázky `admin-recovery-form-1.png` a iné, ktoré nie sú nikde v testoch a teda sa nikdy nevygenerujú.
 - [ ] Titulok - doplniť kontrolu názvu stránky v titulku vo formáte `názov | WebJET CMS`.
+- [ ] Hromadný e-mail - otestovať prihlásenie do hromadného emailu, vrátane `simple` verzie.
 
 ## PostgreSQL
 

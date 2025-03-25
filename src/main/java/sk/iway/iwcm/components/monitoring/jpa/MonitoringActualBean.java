@@ -57,8 +57,10 @@ public class MonitoringActualBean {
     private String serverContry;
     private String serverLanguage;
 
+    private Integer dbTotal;
     private Integer dbActive;
     private Integer dbIdle;
+    private Integer dbWaiting;
 
     private Integer cacheItems;
     private Integer sessionsTotal;
@@ -75,7 +77,7 @@ public class MonitoringActualBean {
     private String swServerName;
     private String swServerOs;
     private String swServerOsVersion;
-    private String licenseExpirationDate; 
+    private String licenseExpirationDate;
 
     public MonitoringActualBean() {
         /** volne miesto na disku **/
@@ -131,8 +133,10 @@ public class MonitoringActualBean {
         try
         {
             ds = (ConfigurableDataSource) DBPool.getInstance().getDataSource("iwcm");
+            dbTotal = ds.getNumTotal();
             dbActive = ds.getNumActive();
             dbIdle = ds.getNumIdle();
+            dbWaiting = ds.getNumWaiting();
         } catch (Exception ex) {
             //
         }

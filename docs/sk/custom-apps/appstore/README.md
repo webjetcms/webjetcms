@@ -30,12 +30,16 @@ Anotácia má nasledovné parametre:
 
 - ```nameKey``` - prekladový kľúč **mena aplikácie** (v príkladoch je priamo text, odporúčame ale použiť prekladový kľúč), napr. ```components.DemoComponent.title```.
 - ```descKey``` - prekladový kľúč **opisu aplikácie**, ak nie je zadaný hľadá sa prekladový kľúč zadaný ako ```nameKey.desc``` (ak ```nameKey``` končí na ```.title``` nahradí sa ```.title``` za ```.desc```).
+- ```itemKey``` - unikátny identifikátor aplikácie pre prístupové práva, typicky ```cmp_app_name```.
+- ```variant``` - v zozname aplikácii sa štandardne zobrazuje len jedna aplikácia s rovnakým ```itemKey```. Ak je potrebné mať v zozname viac aplikácií s rovnakým ```itemKey```, môžete nastaviť rozdielnu variantu aplikácie, napriklad ```variant = "unsubscribe",``` pre variantu aplikácie na odhlásenie.
 - ```imagePath``` - cesta k obrázku **ikony** aplikácie. Môže sa jednať o súbor, alebo môže byť zadaná CSS trieda pre ikonu [TablerIcons](https://tabler.io/icons) ako ```ti ti-meno-ikony```.
 - ```galleryImages``` - čiarkou oddelený zoznam obrázkov, ktoré sa zobrazia v opise aplikácie, napr. ```/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png```.
 - ```componentPath``` - čiarkou oddelený zoznam JSP súborov pre ktoré sa má aplikácia zobraziť (ak sa nejedná o Spring aplikáciu), napríklad ```/components/search/search.jsp,/components/search/lucene_search.jsp```. Pri vložení novej aplikácie sa použije prvý JSP súbor.
 - ```domainName``` - ak máte multi doménovú inštaláciu môžete obmedziť zobrazenie aplikácie len na zadanú doménu. Môžete zadať viac domén oddelených čiarkou.
 - ```commonSettings``` - parameter určujúci, či sa v editore aplikácie zobrazí karta Zobrazenie pre spoločné nastavenia. Prednastavená hodnota je `true`, čiže karta sa bude zobrazovať.
 - ```custom``` - nastavte na `true` pre vaše zákaznícke aplikácie. Automaticky sa nastaví podľa toho, či sa nachádza v package `sk.iway.iwcm`. Zákaznícke aplikácie sú v zozname aplikácií na začiatku zoznamu.
+- ```componentPath``` - ak prepisujete staršiu aplikáciu v JSP kóde nastavte na cestu k tomuto JSP súboru, napríklad ```componentPath = "/components/calendar/calendar.jsp"```.
+- ```customHtml``` - ak potrebujete vykonať [doplnkový kód](#doplnkový-html-kód), upraviť CSS štýly a podobne nastavte na cestu k HTML súboru, ktorý sa doplní k editácii aplikácie v editore web stránok. Napríklad ```customHtml = "/apps/calendar/admin/editor-component.html"```.
 
 ![](democomponent-desc.png)
 
@@ -482,19 +486,8 @@ public class GalleryApp extends WebjetComponentAbstract {
 			}
 		}
 
-		//check if the current style is in the list
-		if (Tools.isNotEmpty(getStyle()))
-		{
-			boolean found = false;
-			for (OptionDto option : styleOptions)
-			{
-				if (option.getValue().equals(getStyle())) found = true;
-			}
-			if (found == false)
-			{
-				addPair(getStyle(), styleOptions, prop);
-			}
-		}
+		//check if the current style is in the list (maybe it's customer style)
+		styleOptions = addCurrentValueToOptions(styleOptions, getStyle());
 
         options.put("style", styleOptions);
 
@@ -594,6 +587,85 @@ Cache sa nepoužije ak:
 - zadaná hodnota parametra `cacheMinutes` < 1
 - v URL adrese sa nachádza parameter `page` (neaplikuje sa ak je hodnota 1, teda pre prvú stranu napr. zoznamu noviniek)
 - v URL adrese sa nachádza parameter `_disableCache=true`
+
+## Doplnkový HTML kód
+
+V niektorých prípadoch je potrebné vykonať doplnkový HTML/JavaScript kód pri úprave vlastností aplikácie v editore. V anotácii `@WebjetAppStore` je možné nastaviť cestu k doplnkovému HTML súboru v atribúte `customHtml`, napríklad:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.calendar.CalendarApp")
+@WebjetAppStore(
+    nameKey = "components.calendar.title",
+    descKey = "components.calendar.desc",
+    itemKey = "cmp_calendar",
+    imagePath = "/components/calendar/editoricon.png",
+    galleryImages = "/components/calendar/",
+    componentPath = "/components/calendar/calendar.jsp",
+    customHtml = "/apps/calendar/admin/editor-component.html"
+)
+@Getter
+@Setter
+public class CalendarApp extends WebjetComponentAbstract {
+
+}
+```
+
+Zadaný HTML kód je vložený do stránky s editorom aplikácie. Je možné využiť nasledovné funkcie pre vykonanie JavaScript kódu:
+
+- `appBeforeXhr(data)` - volané pred získaním informácií o editore, `data` obsahuje objekt posielaný do REST služby.
+- `appAfterXhr(response)` - volané po získaní dát z REST služby, je možné modifikovať dáta (napr. doplniť vstupné pole) v `response` objekte.
+- `appAfterInit(response, datatable)` - volané po inicializácii datatabuľky, v `datatable` je inštancia datatabuľky/editora.
+- `appGetComponentPath(componentPath, componentDatatable)` - volané pri vložení aplikácie do stránky, môžete zmeniť cestu pre vložený `INCLUDE` napr. na základe vybraných možností.
+- `appGetComponentCode(componentPath, params, componentDatatable)` - volané pri vložení aplikácie do stránky, môže vrátiť kompletný kód pre vloženie do stránky (nemusí to byť priamo `!INCLUDE` kód).
+
+Ukážkový kód, ktorý reaguje na zmenu výberového poľa:
+
+```html
+<script>
+
+    function appBeforeXhr(data) {
+        console.log("appBeforeXhr, data=", data);
+    }
+
+    function appAfterXhr(response) {
+        console.log("appAfterXhr, response=", response);
+    }
+
+    function appGetComponentPath(componentPath, datatable) {
+        let field = $("#DTE_Field_field").val();
+        if ("last_update" === field) {
+            //change component path to last_update.jsp
+            return "/components/app-date/last_update.jsp";
+        }
+        return componentPath;
+    }
+
+    function appGetComponentCode(componentPath, params, datatable) {
+        //fields like !DATE!, !DATE_TIME! insert directly into page
+        let field = $("#DTE_Field_field").val();
+        if (field.indexOf("!")==0) return field;
+        return null;
+    }
+
+    function appAfterInit(response, datatable) {
+        console.log("appAfterInit, response=", response, "datatable=", datatable);
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            //add event listener to the form
+            $("#DTE_Field_typ_kalendara").on("change", function() {
+                var value = $(this).val();
+                console.log("DTE_Field_typ_kalendara changed, value=", value);
+                if (value === "1") {
+
+                } else {
+
+                }
+            });
+        });
+    }
+
+</script>
+```
 
 ## Implementačné detaily
 

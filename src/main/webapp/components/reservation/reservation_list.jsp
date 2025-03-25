@@ -14,7 +14,6 @@
 <%@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<iwcm:checkLogon admin="true" perms="cmp_reservation"/>
 <%@page import="sk.iway.iwcm.users.UserDetails"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%

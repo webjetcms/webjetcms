@@ -14,6 +14,7 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
+- ```2025.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
 - ```2025.0``` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny
 - ```2024.52``` - stabilizovaná verzia 2024.52, nepribúdajú do nej denné zmeny
 - ```2024.0.52``` - stabilizovaná verzia 2024.0.52 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
@@ -57,6 +58,40 @@ Verzia `YEAR.0.x` sa teda zásadne nemení, obsahuje opravy chýb (ak oprava nev
 Zároveň ale nemusí byť verzia `YEAR.0.x` najbezpečnejšia. Ak je potrebné aktualizovať použitú knižnicu vo WebJETe a tá obsahuje zásadnejšie zmeny nemôžeme túto zmenu vykonať v `YEAR.0.x` verzii, pretože by sa porušila kompatibilita.
 
 Platí teda, že `YEAR.0.x` je **najstabilnejšia** z pohľadu zmien a `YEAR.0-SNAPSHOT` je **najbezpečnejšia** z pohľadu zraniteľností.
+
+## Zmeny pri prechode na 2025.0-SNAPSHOT
+
+Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:
+
+```gradle
+repositories {
+    mavenCentral()
+    maven {
+        url "https://pd4ml.tech/maven2/"
+    }
+    maven {
+        name = "github"
+        url = uri("https://maven.pkg.github.com/webjetcms/webjetcms")
+        credentials {
+            //define in gradle.properties or as environment variables
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+            password = project.findProperty("gpr.api-key") ?: System.getenv("GPR_API_KEY")
+        }
+    }
+    flatDir {
+       dirs 'libs'
+   }
+}
+```
+
+Žiaľ GitHub Packages nie sú verejne dostupné, je preto potrebné nastaviť prihlasovacie údaje `gpr.user` a `gpr.api-key` v súbore `gradle.properties` alebo cez `ENV` premenné. Prihlasovacie údaje vám poskytneme na vyžiadanie.
+
+!> **Upozornenie:** upravená inicializácia Spring a JPA:
+
+- JPA entity sa v `package sk.iway.INSTALL-NAME` neinicializujú automaticky, predpokladá sa postupný prechod na Spring DATA. Ak potrebujete `@Entity` inicializovať nastavte konfiguračnú premennú `jpaAddPackages` na potrebnú hodnotu - napríklad `sk.iway.INSTALL-NAME`. Inicializujú sa len triedy obsahujúce anotáciu `@Entity` alebo `@Converter`.
+- Vo `web.xml` už nie je potrebná inicializácia `Apache Struts`, zmažte celú `<servlet>` sekciu obsahujúcu `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` obsahujúci `<servlet-name>action</servlet-name>`.
+- Upravené poradie inicializácie Spring - inicializácia WebJET tried sa vykoná pred zákazníckymi triedami `SpringConfig`.
+- Upravená inicializácia `Swagger` - ak nie je nastavená konfiguračná premenná `swaggerEnabled` na hodnotu `true` ani sa pri štarte nevykoná prehľadanie Java tried.
 
 ## Zmeny pri prechode na 2024.0-SNAPSHOT
 

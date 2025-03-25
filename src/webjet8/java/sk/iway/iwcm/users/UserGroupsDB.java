@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import sk.iway.iwcm.Adminlog;
@@ -552,13 +553,34 @@ public class UserGroupsDB extends DB
 				}
 			}
 
-			if(maxPriceDiscount == 0) newPrice = price;
-			else if(maxPriceDiscount == 100) newPrice = BigDecimal.ZERO;
-			else newPrice = price.multiply(new BigDecimal(100 - maxPriceDiscount)).divide(new BigDecimal(100));
+			newPrice = getPriceByDiscount(price, maxPriceDiscount);
 		}
 
 		Logger.debug(UserGroupsDB.class, "calculatePrice: price=" + price + ", newPrice=" + newPrice + ", maxPriceDiscount=" + maxPriceDiscount + ", user=" + user);
 
 		return newPrice;
+	}
+
+	public Map<String, BigDecimal> calculatePrices(Map<String, BigDecimal> prices, UserDetails user) {
+		int maxPriceDiscount = 0;
+		if(user != null) {
+			for (int groupId : Tools.getTokensInt(user.getUserGroupsIds(), ",")) {
+				UserGroupDetails group = getUserGroup(groupId);
+				if (group != null && group.getPriceDiscount() > maxPriceDiscount) {
+					maxPriceDiscount = group.getPriceDiscount();
+				}
+			}
+		}
+		Map<String, BigDecimal> discountedPrices = new java.util.HashMap<>();
+		for (Map.Entry<String, BigDecimal> entry : prices.entrySet()) {
+			discountedPrices.put(entry.getKey(), getPriceByDiscount(entry.getValue(), maxPriceDiscount));
+		}
+		return discountedPrices;
+	}
+
+	private BigDecimal getPriceByDiscount(BigDecimal price, int discount) {
+		if(discount == 0) return price;
+		if(discount == 100) return BigDecimal.ZERO;
+		return price.multiply(new BigDecimal(100 - discount)).divide(new BigDecimal(100));
 	}
 }

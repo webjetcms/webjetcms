@@ -52,7 +52,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -125,7 +125,13 @@ public class ConstantsV9 {
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_SECURITY, "If true, /logoff.do requires CSRF token");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 
+		Constants.setString("reservationAllDayStartTime", "14:00", "reservations", "Hodina, od ktorej sa začína celodenná rezervácia");
+		Constants.setString("reservationAllDayEndTime", "10:30", "reservations", "Hodina, do ktorej sa končí celodenná rezervácia");
+
 		Constants.setBoolean("virtualPathLastSlash", true, Constants.MOD_CONFIG, "If true, virtual path will have last slash for main pages in folder");
+
+		Constants.setString("defaultSenderName", "", Constants.mods(Constants.MOD_DMAIL, Constants.MOD_RESERVATION, Constants.MOD_FORMMAIL), "If set, it will be used as sender name. For modules dmail,reservation,formmail you can specify custom value by prefix. e.g. dmailDefaultSenderName.");
+		Constants.setString("defaultSenderEmail", "", Constants.mods(Constants.MOD_DMAIL, Constants.MOD_RESERVATION, Constants.MOD_FORMMAIL), "If set, it will be used as sender email. For modules dmail,reservation,formmail you can specify custom value by prefix. e.g. dmailDefaultSenderEmail.");
 
 		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
 		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");

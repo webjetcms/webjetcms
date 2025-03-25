@@ -249,6 +249,9 @@ public class AdminLogonController {
         LogonTools.invalidateSessionOnFirstPost(request);
         HttpSession session = request.getSession();
 
+        //fix: after passwordExpiryDay notifycation it was possible to go to logon and skip verification
+        session.removeAttribute(Constants.USER_KEY+"_changepassword");
+
         Prop prop = Prop.getInstance(request.getServletContext(), request);
 
         String twoFaRedirect = verify2FaKey(request);

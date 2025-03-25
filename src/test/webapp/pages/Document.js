@@ -87,7 +87,7 @@ module.exports = {
 
       I.switchTo('.cke_wysiwyg_frame.cke_reset');
       I.switchTo(locate("iframe.wj_component").first());
-      I.click(locate("a.inlineComponentButton.cke_button").first());
+      I.click("a.inlineComponentButton.cke_button");
 
       I.wait(5);
 

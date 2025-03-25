@@ -21,8 +21,11 @@
 
     <!-- Maven Central properties -->
     <property name="ossrh-staging-repository-url" value="https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/" />
-    <!-- there server id in the Maven settings.xml -->
     <property name="ossrh-server-id" value="ossrh" />
+
+    <!-- GitHub snapshot repository -->
+    <property name="github-repository-url" value="https://maven.pkg.github.com/webjetcms/webjetcms" />
+    <property name="github-server-id" value="github" />
 
     <target name="update-version" depends="define-artifact-properties">
         <propertyfile comment="Build Information"
@@ -39,7 +42,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.0" />
+        <property name="artifact.version" value="2025.0-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -85,7 +88,7 @@
         </exec>
     </target>
 
-    <target name="updatezip" depends="setup,copyNodeModules" description="Pripravi update.zip s rozbalenou WebJET strukturou - bez jarpackaging">
+    <target name="expandwar" depends="setup,copyNodeModules" description="Expands war archive">
         <delete dir="${root}"/>
 
         <unzip src="${wardir}${projectname}.war" dest="${outdir}">
@@ -132,7 +135,7 @@
 
     </target>
 
-    <target name="makejars" depends="define-artifact-properties,updatezip,compile" description="prepare all jar files">
+    <target name="makejars" depends="define-artifact-properties,expandwar,compile" description="prepare all jar files">
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" />
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}.jar" defaultexcludes="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes">
@@ -322,7 +325,7 @@
 
     </target>
 
-    <target name="compile" depends="updatezip" description="compile all classes">
+    <target name="compile" depends="expandwar" description="compile all classes">
         <ant antfile="compile.xml" inheritAll="false" target="compile" dir="ant" useNativeBasedir="true"/>
     </target>
 
@@ -448,7 +451,7 @@
             <arg value="gpg:sign-and-deploy-file"/>
             <arg value="-Dgpg.keyname=0x36F2327F"/>
             <arg value="-Durl=${ossrh-staging-repository-url}"/>
-            <arg value="-DrepositoryId=ossrh"/>
+            <arg value="-DrepositoryId=${ossrh-server-id}"/>
             <arg value="-DpomFile=${artifact.pom}"/>
             <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}.jar"/>
         </exec>
@@ -478,68 +481,29 @@
             <arg value="gpg:sign-and-deploy-file"/>
             <arg value="-Dgpg.keyname=0x36F2327F"/>
             <arg value="-Durl=${ossrh-staging-repository-url}"/>
-            <arg value="-DrepositoryId=ossrh"/>
+            <arg value="-DrepositoryId=${ossrh-server-id}"/>
             <arg value="-DpomFile=${artifact.pom}"/>
             <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}-${classifier}.jar"/>
             <arg value="-Dclassifier=${classifier}"/>
         </exec>
     </target>
 
-    <!--target name="generateSignatures" depends="define-artifact-properties" description="Generate asc, md5 and sha1 files">
-        <delete includeemptydirs="true">
-            <fileset dir="${artifact.dir}">
-                <include name="*.md5"/>
-                <include name="*.sha1"/>
-                <include name="*.asc"/>
-            </fileset>
-        </delete>
+    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy version to Maven staging repository">
+        <exec executable="mvn">
+            <arg value="-e"/>
+            <arg value="-X"/>
+            <arg value="gpg:sign-and-deploy-file"/>
+            <arg value="-Dgpg.keyname=0x36F2327F"/>
+            <arg value="-Durl=${github-repository-url}"/>
+            <arg value="-DrepositoryId=${github-server-id}"/>
+            <arg value="-DpomFile=${artifact.pom}"/>
+            <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}.jar"/>
+            <arg value="-Dfiles=${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar,${artifact.dir}/${artifact.name}-${artifact.version}-components.jar,${artifact.dir}/${artifact.name}-${artifact.version}-javadoc.jar,${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar,${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar"/>
+            <arg value="-Dclassifiers=admin,components,javadoc,sources,libs"/>
+            <arg value="-Dtypes=jar,jar,jar,jar,jar"/>
+        </exec>
 
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value=".jar"/>
-        </antcall>
-
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value=".pom"/>
-        </antcall>
-
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value="-admin.jar"/>
-        </antcall>
-
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value="-components.jar"/>
-        </antcall>
-
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value="-sources.jar"/>
-        </antcall>
-
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value="-javadoc.jar"/>
-        </antcall>
-
-        <antcall target="generateSignatureImpl">
-            <param name="signExt" value="-libs.jar"/>
-        </antcall>
+        <echo message="Verify on https://github.com/webjetcms?tab=packages"/>
     </target>
-
-    <target name="generateSignatureImpl" description="Generate asc, md5 and sha1 files">
-        <echo message="-> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
-        <exec executable="shasum" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1">
-            <arg value="-a"/>
-            <arg value="1"/>
-            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
-        </exec>
-        <exec executable="md5" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.md5">
-            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
-        </exec>
-        <exec executable="gpg">
-            <arg value="-ab"/>
-            <arg value="-     -yes"/>
-            <arg value="-     -local-user"/>
-            <arg value="0x36F2327F"/>
-            <arg value="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
-        </exec>
-    </target-->
 
 </project>

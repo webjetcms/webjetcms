@@ -41,10 +41,12 @@ public class CacheObjectsService {
         List<CacheDto> cacheDtoList = memoryCleanupMapper.beanListToDtoList(listOfCacheBeans);
 
         String sort = request.getParameter("sort");
-        String[] sortArray = sort.split(",");
-        Pair<String, String> sortPair = new Pair<>(sortArray[0], sortArray[1]);
+        if (sort != null) {
+            String[] sortArray = sort.split(",");
+            Pair<String, String> sortPair = new Pair<>(sortArray[0], sortArray[1]);
 
-        sortCacheDtos(sortPair, cacheDtoList);
+            sortCacheDtos(sortPair, cacheDtoList);
+        }
 
         PagedListHolder<CacheDto> holder = new PagedListHolder<>(cacheDtoList);
         holder.setPage(pageable.getPageNumber());

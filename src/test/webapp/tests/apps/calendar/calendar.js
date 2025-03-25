@@ -2,12 +2,13 @@ Feature('apps.calendar');
 
 var randomNumber;
 
-Before(({ I, login }) => {
+Before(({ I, login, DT }) => {
     login('admin');
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
     }
+    DT.addContext("calendar", "#calendarEventsDataTable_wrapper");
 });
 
 Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
@@ -113,6 +114,64 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.see("DomainTest_Test23");
     DT.filterContains("title", "Deň zdravia");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('logoff', ({ I }) => {
+    I.logout();
+});
+
+Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps, Document }) => {
+    I.amOnPage("/apps/calendar/admin/");
+    I.click(DT.btn.calendar_add_button);
+    DTE.waitForEditor("calendarEventsDataTable");
+    DTE.fillField("title", "autotest-event-" + randomNumber);
+    I.clickCss("#pills-dt-calendarEventsDataTable-advanced-tab");
+    DTE.selectOption("typeId", "Kultúra");
+    DTE.save("calendarEventsDataTable");
+
+    Apps.insertApp('Kalendár', '#components-calendar-title', null);
+
+    const defaultParams = {
+        typyNazvy: '',
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.waitForElement("div.calendar", 10);
+    I.seeElement(locate("a").withText("Kultúra"))
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        typyNazvy: 'Šport',
+    };
+    DTE.clickSwitch('typyNazvy_1');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.waitForElement("div.calendar", 10);
+    I.dontSeeElement(locate("a").withText("Kultúra"))
+});
+
+Scenario('Revert', ({ I, DT }) => {
+    I.amOnPage("/apps/calendar/admin/");
+    DT.filterContains("title", "autotest-event-" + randomNumber);
+    DT.deleteAll("calendarEventsDataTable");
 });
 
 Scenario('logout', async ({I}) => {

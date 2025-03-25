@@ -21,7 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 public class GdprApp extends WebjetComponentAbstract {
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.gdpr.cookies.showLink",
         tab = "basic"
     )

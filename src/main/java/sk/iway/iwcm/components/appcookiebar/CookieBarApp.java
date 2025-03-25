@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 public class CookieBarApp extends WebjetComponentAbstract {
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         tab = "basic",
         title="components.app-cookiebar.cookiebar_title")
     private boolean checkbox_title = true;
@@ -93,7 +93,7 @@ public class CookieBarApp extends WebjetComponentAbstract {
     private String cookie_ButtonTextDecline;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         tab = "basic",
         title="components.app-cookiebar.showLink")
     private boolean showLink;

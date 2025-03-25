@@ -46,7 +46,7 @@ public class SiteBrowserApp extends WebjetComponentAbstract {
     private String target = "_blank";
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.site_browser.show_actual_dir",
         tab = "basic"
     )

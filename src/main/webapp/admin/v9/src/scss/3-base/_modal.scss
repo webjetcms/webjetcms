@@ -294,6 +294,50 @@ body.modal-open {
                 color: $nice-black;
             }
         }
+        .DTE_Field_Type_imageRadio {
+            div.DTE_Field_InputControl {
+                .image_radio_item {
+                    margin-bottom: 6px;
+                    label {
+                        text-align: center;
+                        border: 2px solid $white;
+                        border-radius: 6px;
+                        padding: 6px;
+                        transition: border-color 0.4s ease, background-color 0.4s ease;
+                        &:hover {
+                            background-color: $nice-gray-200;
+                            //border-color: $primary-hover;
+                        }
+                        input {
+                            margin-right: 4px;
+                        }
+                    }
+                    .image_radio_item_inner {
+                        display: none;
+                    }
+                }
+                .image_radio_item:has(input:is(:checked)) {
+                    label {
+                        border: 2px solid $primary;
+                    }
+                }
+            }
+            &.image-radio-horizontal {
+                .image_radio_item {
+                    display: inline-block;
+                    margin-right: 6px;
+                }
+            }
+            &.image-radio-fullwidth {
+                .col-sm-4, .col-sm-7 {
+                    width: 100%;
+                    flex: 0 0 100%;
+                    padding-left: 2rem;
+                    text-align: left;
+                    background-color: white;
+                }
+            }
+        }
     }
     &-header {
         display: block;
@@ -431,7 +475,7 @@ body.modal-open {
                     visibility: hidden;
                 }
             }
-            div.md-breadcrumb {
+            div.md-tabs {
                 li.nav-item.hide-on-create {
                     display: none;
                 }
@@ -445,8 +489,22 @@ body.modal-open {
                     visibility: hidden;
                 }
             }
-            div.md-breadcrumb {
+            div.md-tabs {
                 li.nav-item.hide-on-edit {
+                    display: none;
+                }
+            }
+        }
+
+        &[data-action="duplicate"] {
+            .DTE_Field {
+                &.hide-on-duplicate {
+                    display: none;
+                    visibility: hidden;
+                }
+            }
+            div.md-breadcrumb, div.md-tabs {
+                li.nav-item.hide-on-duplicate {
                     display: none;
                 }
             }
@@ -870,11 +928,6 @@ div.DTE_Bubble_Background {
                     display: inline-block;
                 }
             }
-
-            .modal-content {
-                //otherwise window is moved up in webpages list
-                //max-height: 100vh;
-            }
         }
 
         .col-form-label {
@@ -989,9 +1042,9 @@ html.in-iframe, html.in-iframe-show-table {
         }
     }
 
-    div.ly-header, div.ly-sidebar, div.container > div.md-breadcrumb,
+    div.ly-header, div.ly-sidebar, div.container > div.md-tabs,
     //fotogaleria/web nadpisy nad tree/datatable
-    div.container > .row > .col-md-4 > div.md-breadcrumb, div.container > .row > .col-md-8 > div.md-breadcrumb {
+    div.container > .row > .col-md-4 > div.md-tabs, div.container > .row > .col-md-8 > div.md-tabs {
         display: none;
     }
 

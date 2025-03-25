@@ -129,4 +129,9 @@ public enum DataTableColumnType {
      * Static text (no input field)
      */
     STATIC_TEXT,
+
+    /**
+     * Radio buttons with images
+     */
+    IMAGE_RADIO,
 }

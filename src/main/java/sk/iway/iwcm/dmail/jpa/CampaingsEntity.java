@@ -51,7 +51,8 @@ public class CampaingsEntity implements Serializable {
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title="components.dmail.camp.subject",
-        tab = "main"
+        tab = "main",
+        sortAfter = "editorFields.pageToSend"
     )
     @Size(max = 255)
     private String subject;

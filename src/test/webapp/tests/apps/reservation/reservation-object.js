@@ -123,7 +123,7 @@ function setSpecialTimeRange(I, fieldLetter, dateValueFrom, dateValueTo) {
 }
 
 Scenario('remove BASE test reservation object', async ({I, DT}) => {
-    SL.deleteReservationObject(I, DT, base_reservation_object);
+    await SL.deleteReservationObject(I, DT,'editorFields.selectedReservation', base_reservation_object);
 });
 
 Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
@@ -189,7 +189,7 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
 });
 
 Scenario('remove prices reservation object', async ({I, DT}) => {
-    SL.deleteReservationObject(I, DT, prices_reservation_object);
+    await SL.deleteReservationObject(I, DT,'editorFields.selectedReservation', prices_reservation_object);
 });
 
 function addPriceEntity(I, DTE, modal, dateFrom, dateTo, price) {

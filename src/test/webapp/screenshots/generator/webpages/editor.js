@@ -242,7 +242,7 @@ Scenario('remove Pixabay image', ({ I, Document }) => {
     I.clickCss("span.elfinder-button-icon.elfinder-button-icon-rm");
     I.waitForVisible( locate("div.ui-dialog-titlebar > span.elfinder-dialog-title").withText("Vymazať") );
     I.click( locate("button.ui-button > span.ui-button-text").withText("Vymazať") );
-    I.waitForInvisible(`.elfinder-cwd-filename`); 
+    I.waitForInvisible(`.elfinder-cwd-filename`);
 });
 
 Scenario('appstore', ({ I, DTE, Document, i18n }) => {
@@ -292,4 +292,17 @@ Scenario('fontawesome', ({ I, DTE, Document }) => {
     I.clickCss("a[title='Insert Font Awesome']");
     I.wait(3);
     Document.screenshot("/frontend/webpages/fontawesome/editor.png");
+});
+
+Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=25");
+    DTE.waitForEditor();
+    I.wait(4);
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.waitForVisible("#WebJETEditorBody .btn.btn-primary", 10);
+    I.click(locate("#WebJETEditorBody .btn.btn-primary").first());
+
+    Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button.png');
+
+    I.switchTo();
 });

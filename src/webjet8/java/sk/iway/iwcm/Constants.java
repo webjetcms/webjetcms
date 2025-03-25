@@ -50,6 +50,9 @@ public class Constants {
 	public static final String SERVER_NAME_MACRO = "SERVER_NAME";
 	public static final String MOD_CAPTCHA = "captcha";
 	public static final String MOD_FILE_ARCHIV = "file_archiv";
+	public static final String MOD_DMAIL = "dmail";
+	public static final String MOD_RESERVATION = "reservation";
+	public static final String MOD_FORMMAIL = "formmail";
 
 	public static final String MOD_OBSOLETE = "obsolete";
 
@@ -980,7 +983,7 @@ public class Constants {
 		setBoolean("xssProtectionStrictGet", true, MOD_SECURITY,
 				"ak je nastavene na true je vykonavana kontrola na specificke znaky (apostrof, uvodzovky atd) vo vsetkych GET parametroch");
 		setString("xssProtectionStrictGetUrlExceptionSystem",
-				"/images,/components/_common/flash/open-flash-chart,/admin/FCKeditor/,/admin/dialogframe.jsp,%editor_component.jsp,/components/_common/banner,/components/reloadParentClose.jsp,/admin/fbrowser/fileprop/,/components/data_deleting/admin_deleting_,/components/editor_component_universal.jsp,/admin/prop_,/admin/fbrowser.,/admin/skins/webjet6/left_files-tree.jsp,/admin/imageeditor/load_image.jsp,/components/adminlog/adminlog.jsp,%_autocomplete.jsp,/admin/editor.do,%admin_news_list.jsp,/admin/inline/dialogframe_inline.jsp,/admin/searchall.jsp,/admin/offline.do,/admin/swfupload/multiple_files_upload_popup.jsp,/components/basket/admin_products_list.jsp,/admin/archive.jsp,/admin/inline/form_report_problem.jsp,/components/gallery/ajax/getimagedata.jsp,/components/basket/admin_transports_list.jsp,/admin/rest/document,/admin/v9/files/dialog",
+				"/images,/components/_common/flash/open-flash-chart,/admin/FCKeditor/,/admin/dialogframe.jsp,%editor_component.jsp,/components/_common/banner,/components/reloadParentClose.jsp,/admin/fbrowser/fileprop/,/components/data_deleting/admin_deleting_,/components/editor_component_universal.jsp,/admin/prop_,/admin/fbrowser.,/admin/skins/webjet6/left_files-tree.jsp,/admin/imageeditor/load_image.jsp,/components/adminlog/adminlog.jsp,%_autocomplete.jsp,/admin/editor.do,%admin_news_list.jsp,/admin/inline/dialogframe_inline.jsp,/admin/searchall.jsp,/admin/offline.do,/admin/swfupload/multiple_files_upload_popup.jsp,/components/basket/admin_products_list.jsp,/admin/archive.jsp,/admin/inline/form_report_problem.jsp,/components/gallery/ajax/getimagedata.jsp,/components/basket/admin_transports_list.jsp,/admin/rest/document,/admin/v9/files/dialog,/admin/v9/apps/image-editor/",
 				MOD_SECURITY,
 				"casti URL adries (ich zaciatky) pre ktore sa nepouzije xssProtectionStrictGet, jednotlive URL su oddelene ciarkou");
 		setString("xssProtectionStrictGetUrlException", "", MOD_SECURITY,
@@ -2338,6 +2341,8 @@ public class Constants {
 	 * - {SERVER_NAME}
 	 */
 	public static String executeMacro(String value) {
+		if (Tools.isEmpty(value)) return value;
+
 		value = Tools.replace(value, "{INSTALL_NAME}", getInstallName());
 
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();

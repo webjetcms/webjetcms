@@ -31,14 +31,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class ContentBlockApp extends WebjetComponentAbstract {
-    
+
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         tab = "basic",
         title="components.inquiry.design"
     )
     private String type;
-    
+
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         tab = "basic",
@@ -99,7 +99,7 @@ public class ContentBlockApp extends WebjetComponentAbstract {
             );
         }
 
-        options.put("type", typeOptions);
+        options.put("type", addCurrentValueToOptions(typeOptions, getType()));
 
         return options;
     }

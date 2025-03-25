@@ -180,10 +180,12 @@ public class TranslationKeyService {
         }
         List<TranslationKeyEntity> translationKeys = getAllData(UsersDB.getCurrentUser(request), searchText);
         String sort = request.getParameter("sort");
-        String[] sortArray = sort.split(",");
-        Pair<String, String> sortPair = new Pair<>(sortArray[0], sortArray[1]);
+        if (sort != null) {
+            String[] sortArray = sort.split(",");
+            Pair<String, String> sortPair = new Pair<>(sortArray[0], sortArray[1]);
 
-        sortTranslationKeys(sortPair, translationKeys);
+            sortTranslationKeys(sortPair, translationKeys);
+        }
 
         return translationKeys;
     }

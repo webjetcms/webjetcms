@@ -29,7 +29,7 @@ body.webjetcms-admin-body {
 }
 
 body:not(.page-builder) div.input-group span.input-group-btn .btn {
-    border: 1px solid #e5e5e5;
+    border: 1px solid #868EA5;
     height: 100%;
     border-top-right-radius: 6px !important;
     border-bottom-right-radius: 6px !important;
@@ -41,8 +41,8 @@ body:not(.page-builder) div.input-group span.input-group-btn .btn {
 }
 body:not(.page-builder) div.input-group span.input-group-btn .btn:has(i.ti) {
     /* file_archiv_upload.jsp */
-    padding-top: 0px;
-    border: 1px solid #ddd;
+    padding-top: 3px;
+    border: 1px solid #868EA5;
     border-left-width: 0px;
 }
 body:not(.page-builder) div.input-group span.input-group-btn .btn i.ti {
@@ -1065,9 +1065,28 @@ a.cke_dialog_ui_button span.cke_dialog_ui_button {
     line-height: normal !important;
 }
 
-.fab {
-    font-family: "tabler-icons";
-    font-weight: 400;
+/* font-awesome simulation by tabler-icons */
+.fa, .fas, .fab {
+  font-family: "tabler-icons";
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+}
+.fa-angle-left:before {
+  content: "\ea60";
+}
+.fa-angle-right:before {
+  content: "\ea61";
+}
+.fa-angle-up:before {
+  content: "\ea62";
+}
+.fa-angle-down:before {
+  content: "\ea5f";
 }
 
 .dropdown-submenu > a:after {
@@ -1313,4 +1332,8 @@ a.cke_dialog_ui_button span.cke_dialog_ui_button {
   body.top-menu-open div.page-sidebar-wrapper div.autoscroller {
     height: auto;
   }
+}
+
+.bootstrap-timepicker-widget table td input {
+  width: 45px;
 }

@@ -1,4 +1,4 @@
-Feature('apps.inquiry');
+Feature('apps.inquiry.inquiry');
 
 var randomNumber;
 var questionName = "name-autotest-";
@@ -204,3 +204,78 @@ Scenario('test struts refactor', ({I}) => {
     I.seeInCurrentUrl("fail=1");
 
 });
+
+Scenario('testovanie app - Inquiry', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Anketa', '#components-inquiry-title');
+
+    const defaultParams = {
+        group: '',
+        imagesLength: '10',
+        percentageFormat: '0',
+        orderBy: 'answer_id',
+        order: 'ascending',
+        width: '100%',
+        random: 'true',
+        totalClicks: 'true',
+        displayVoteResults: 'true',
+        style: '01',
+        color: '01'
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.see("AKO SA VÁM PÁČI WEBJET");
+    I.seeElement(locate(".bar_fill").first());
+    I.seeElement("//div[@class='inquiry' and contains(@style, 'width:100%')]");
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        group: 'inquiry',
+        imagesLength: '5',
+        percentageFormat: '0.0',
+        orderBy: 'answer_text',
+        order: 'ascending',
+        width: '70%',
+        random: 'false',
+        totalClicks: 'false',
+        displayVoteResults: 'false',
+        style: '02',
+        color: '03'
+    };
+
+    DTE.selectOption('group', changedParams.group);
+    I.click(locate('div').withChild('#DTE_Field_group'));
+    DTE.fillField('imagesLength', changedParams.imagesLength);
+    DTE.selectOption('percentageFormat', changedParams.percentageFormat);
+    DTE.selectOption('orderBy', 'Textu otázky');
+    DTE.fillField('width', changedParams.width);
+    DTE.clickSwitch('random_0');
+    DTE.clickSwitch('totalClicks_0');
+    DTE.clickSwitch('displayVoteResults_0');
+    Apps.switchToTabByIndex(1);
+    I.clickCss('label[for=DTE_Field_style_1]');
+    I.clickCss('label[for=DTE_Field_color_2]');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.see("HOW DO YOU LIKE WEBJET");
+    I.dontSeeElement(locate(".bar_fill").first());
+    I.seeElement("//div[@class='inquiry' and contains(@style, 'width:70%')]");
+});
+
+
+

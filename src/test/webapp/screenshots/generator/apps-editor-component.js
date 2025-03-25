@@ -10,35 +10,29 @@ function tabLinkNone(Document, I, DT, DTE) {
 
 }
 function tabLink1(Document, I, DT, DTE) {
-    I.clickCss("#tabLink1");
+    I.click("#tabLink1");
 }
 function tabLink1Spring(Document, I, DT, DTE) {
-    I.clickCss("#pills-dt-editor-component-datatable li:nth-child(1) a");
+    I.click("#pills-dt-editor-component-datatable li:nth-child(1) a");
 }
 function tabLink2(Document, I, DT, DTE) {
-    I.clickCss("#tabLink2");
+    I.click("#tabLink2");
 }
 function tabLink2Spring(Document, I, DT, DTE) {
-    I.clickCss("#pills-dt-editor-component-datatable li:nth-child(2) a");
+    I.click("#pills-dt-editor-component-datatable li:nth-child(2) a");
 }
 function tabLink2Wait(Document, I, DT, DTE) {
-    I.clickCss("#tabLink2");
+    I.click("#tabLink2");
     I.wait(5);
 }
 function tabLink3(Document, I, DT, DTE) {
-    I.clickCss("#tabLink3");
+    I.click("#tabLink3");
 }
 function tabLink3Spring(Document, I, DT, DTE) {
-    I.clickCss("#pills-dt-editor-component-datatable li:nth-child(3) a");
+    I.click("#pills-dt-editor-component-datatable li:nth-child(3) a");
 }
-function basicTab(Document, I, DT, DTE){
-    I.clickCss("#pills-dt-component-datatable-basic-tab");
-}
-function settingTab(Document, I, DT, DTE){
-    I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
-}
+
 function screenshotWebAndApp(I, Document, docId, path, webSelector, callback1=null, callback2=null, width, height) {
-    I.say("Screenshoting :" + path);
     I.amOnPage("/showdoc.do?docid="+docId+"&NO_WJTOOLBAR=true");
     var counter = 1;
     if ("/components/app-docsembed"==path) {
@@ -92,16 +86,15 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     Document.screenshot(basePath+"/components/send_link/screenshot-1.jpg");
     //if (1==1) return;
 
-    screenshotWebAndApp(I, Document, 48204, "/components/inquiry", "#resultsDiv-1", tabLink1);
+    screenshotWebAndApp(I, Document, 48204, "/components/inquiry", "#resultsDiv-1", tabLink1Spring);
     screenshotWebAndApp(I, Document, 77667, "/components/inquirysimple", ".inquiryBoxDefault", tabLink1, tabLink2);
-    screenshotWebAndApp(I, Document, 77668, "/components/file_archiv", ".ly-content", tabLinkNone, null, 640, 480);
-    screenshotWebAndApp(I, Document, 21343, "/components/banner", ".ly-content", tabLinkNone, tabLink3, 640, 480);
+    screenshotWebAndApp(I, Document, 77668, "/components/file_archiv", ".documents", tabLinkNone, null, 640, 480);
+    screenshotWebAndApp(I, Document, 21343, "/components/banner", ".banner-content", tabLinkNone, tabLink3, 640, 480);
 
     screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1, tabLink2, 800, 600);
     screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1, tabLink2, 800, 600);
-    screenshotWebAndApp(I, Document, 60029, "/components/quiz", "#quiz", tabLink1, null, 800, 600); 
-    screenshotWebAndApp(I, Document, 77767, "/components/app-date", ".dateapp", tabLinkNone, null, 800, 600);
-    screenshotWebAndApp(I, Document, 77768, "/components/date", ".dateapp", tabLinkNone, null, 800, 600);
+    screenshotWebAndApp(I, Document, 60029, "/components/quiz", "#quiz", tabLink1Spring, null, 800, 600);
+    screenshotWebAndApp(I, Document, 77767, "/components/app-date", ".ly-content .container", tabLinkNone, null, 800, 600);
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22");
     DTE.waitForEditor();
@@ -109,7 +102,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.amOnPage("/apps/dmail/admin/?id=1");
     DTE.waitForEditor("campaingsDataTable");
     Document.screenshot(basePath+"/components/dmail/screenshot-2.jpg");
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
+    I.click("#pills-dt-campaingsDataTable-groupsTab-tab");
     Document.screenshot(basePath+"/components/dmail/screenshot-3.jpg");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77768");
@@ -125,7 +118,8 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     Document.screenshot(basePath+"/components/emoticon/screenshot-1.jpg");
 
     screenshotWebAndApp(I, Document, 26180, "/components/formsimple", "#formMailForm-formular-lahko", tabLink1, tabLink2, 800, 600);
-    screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1, tabLink2, 800, 600);
+    screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
+    screenshotWebAndApp(I, Document, 120026, "/components/news-calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 59889, "/components/map", "#map1", tabLink1, tabLink2, 1000, 1200);
     screenshotWebAndApp(I, Document, 24217, "/components/sitemap", ".sitemaptest", tabLinkNone, null, 640, 480);
 
@@ -146,7 +140,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.switchTo("#editorComponent");
     I.wait(4);
     Document.screenshot(basePath+"/components/htmlbox/screenshot-1.jpg");
-    I.clickCss("#tabLink2");
+    I.click("#tabLink2");
     Document.screenshot(basePath+"/components/htmlbox/screenshot-2.jpg");
 
     screenshotWebAndApp(I, Document, 77776, "/components/related-pages", ".ly-content .container", tabLinkNone, null, 800, 600);

@@ -294,7 +294,7 @@ public class Logger
 		}
 	}
 
-	private static org.slf4j.Logger getLogger(Class<?> className) {
+	protected static org.slf4j.Logger getLogger(Class<?> className) {
 		org.slf4j.Logger logger;
 		if (className == null) {
 			logger = LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME); //NOSONAR
@@ -308,7 +308,7 @@ public class Logger
 		return logger;
 	}
 
-	private static org.slf4j.Logger getLogger(Object o)
+	protected static org.slf4j.Logger getLogger(Object o)
 	{
 		String className = "sk.iway.iwcm.Logger";
 
@@ -349,11 +349,39 @@ public class Logger
 		return o.getClass().getName();
 	}
 
-	private static boolean looksLikeClassName(String str)
+	protected static boolean looksLikeClassName(String str)
 	{
-		if (str.startsWith("sk.iway") || str.startsWith("org.") || str.startsWith("net.") || str.startsWith("com."))
+		if (str.startsWith("sk.") || str.startsWith("org.") || str.startsWith("net.") || str.startsWith("com.") || str.startsWith("cz."))
 		{
 			return true;
+		}
+		//iterate over logWebjetPackages
+		String[] packages = Constants.getArray("logWebjetPackages");
+		for (String pack : packages)
+		{
+			if (str.startsWith(pack))
+			{
+				return true;
+			}
+		}
+		//iterate over springAddPackages
+		packages = Constants.getArray("springAddPackages");
+		for (String pack : packages)
+		{
+			if (str.startsWith(pack))
+			{
+				return true;
+			}
+		}
+		//iterate over logLevels
+		String[] logLevels = Constants.getArray("logLevels");
+		for (String logLevel : logLevels)
+		{
+			String[] tokens = Tools.getTokens(logLevel, "=", true);
+			if (tokens.length == 2 && str.startsWith(tokens[0]))
+			{
+				return true;
+			}
 		}
 		return false;
 	}

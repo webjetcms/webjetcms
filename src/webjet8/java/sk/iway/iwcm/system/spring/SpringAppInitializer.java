@@ -9,6 +9,7 @@ import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import sk.iway.iwcm.*;
+import sk.iway.iwcm.doc.DebugTimer;
 
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
@@ -16,21 +17,25 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration.Dynamic;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class SpringAppInitializer implements WebApplicationInitializer
 {
-	private List<String> customConfigs = new ArrayList<>();
+	private static DebugTimer dtGlobal = null;
 
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException
 	{
-		boolean initialized = InitServlet.initializeWebJET(servletContext);
+		List<String> springConfigClasses = new ArrayList<>();
+		dtGlobal = new DebugTimer("WebJET.init");
+		boolean initialized = InitServlet.initializeWebJET(dtGlobal, servletContext);
 		String installName = Constants.getInstallName();
 
 		Logger.println(this,"SPRING: onStartup");
 		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
-		customConfigs.add("sk.iway.iwcm.system.spring.BaseSpringConfig");
+		springConfigClasses.add("sk.iway.iwcm.system.spring.BaseSpringConfig");
+
+		//WebJET 9/2021
+		springConfigClasses.add("sk.iway.webjet.v9.V9SpringConfig");
 
 		if (initialized) {
 			String contextDbName = servletContext.getInitParameter("webjetDbname");
@@ -38,7 +43,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 			InitServlet.setContextDbName(contextDbName);
 
 			if (Tools.isNotEmpty(installName)) {
-				customConfigs.add("sk.iway." + installName + ".SpringConfig");
+				springConfigClasses.add("sk.iway." + installName + ".SpringConfig");
 				Constants.setInstallName(installName);
 			}
 
@@ -48,16 +53,13 @@ public class SpringAppInitializer implements WebApplicationInitializer
 				//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
 				try {
 					Class.forName(logClassName);
-					customConfigs.add(logClassName);
+					springConfigClasses.add(logClassName);
 				} catch (ClassNotFoundException e) {
 					//nenasiel sa LogSpringConfig, skusime teda pridat po starom
-					customConfigs.add("sk.iway." + logInstallName + ".SpringConfig");
+					springConfigClasses.add("sk.iway." + logInstallName + ".SpringConfig");
 				}
 
 			}
-
-			//WebJET 9/2021
-			customConfigs.add("sk.iway.webjet.v9.V9SpringConfig");
 		}
 
 		ctx.setServletContext(servletContext);
@@ -72,10 +74,10 @@ public class SpringAppInitializer implements WebApplicationInitializer
 
 		if (initialized == false) {
 			//WebJET is not initialized - there is no DB connection, allow only setup
-			customConfigs.clear();
+			springConfigClasses.clear();
 			addScanPackagesInit(ctx);
 		} else {
-			loadConfigs(ctx);
+			loadSpringConfigs(springConfigClasses, ctx);
 			servletContext.addListener(RequestContextListener.class);
 			addScanPackages(ctx);
 			servletContext.addListener(new ContextLoaderListener(ctx));
@@ -92,76 +94,50 @@ public class SpringAppInitializer implements WebApplicationInitializer
 			//it is normally initialized in V9SpringConfig, but we need to add it here for setup/bad db connection
 			servletContext.addFilter("failedSetCharacterEncodingFilter", new SetCharacterEncodingFilter()).addMappingForUrlPatterns(null, false, "/*");
 		}
+
+		dtGlobal.diff("Spring onStartup done");
+
+		if (initialized) InitServlet.setWebjetInitialized();
 	}
 
-	private void loadConfigs(AnnotationConfigWebApplicationContext ctx) {
-		// filtrovanie neexistujucich tried
-		List<String> customConfigsLocal = customConfigs.stream().filter(c-> {
-			try {
-				return Class.forName(c) != null;
-			} catch (ClassNotFoundException e) {
-				//sk.iway.iwcm.Logger.error(e);
-				Logger.println(this, "SPRING: NOT found custom config (1) " + c);
-			}
-			return false;
-		}).collect(Collectors.toList());
-		Class<?>[] objectArray = new Class[customConfigsLocal.size()];
+	private void loadSpringConfigs(List<String> customConfigs, AnnotationConfigWebApplicationContext ctx) {
+
+		List<Class<?>> classList = new ArrayList<>();
 
 		// naplnenie pola tried
-		for (int i = 0; i < customConfigsLocal.size(); i++) {
-			String customConfig = customConfigsLocal.get(i);
+		for (String customConfig : customConfigs) {
 			try {
 				Class<?> aClass = Class.forName(customConfig);
 				if (aClass != null) {
-					objectArray[i] = aClass;
+					classList.add(aClass);
 					Logger.println(this, "SPRING: found custom config " + customConfig);
 				}
 				else {
-					Logger.println(this, "SPRING: NOT found custom config (2) " + customConfig);
+					Logger.println(this, "SPRING: NOT found custom config 1 " + customConfig);
 				}
 			} catch (Exception e) {
 				// config class asi neexistuje.
-				Logger.println(this, "SPRING: found custom config (3) " + customConfig);
+				Logger.println(this, "SPRING: NOT found custom config 2 " + customConfig);
 			}
 
 		}
-		ctx.register(objectArray);
+
+		ctx.register(classList.toArray(new Class[classList.size()]));
 	}
 
 	private void addScanPackages(AnnotationConfigWebApplicationContext ctx) {
 		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.calendar");
 		packages.add("sk.iway.iwcm.system.spring");
-		packages.add("sk.iway.iwcm.users");
-		packages.add("sk.iway.iwcm.rest");
-		packages.add("sk.iway.iwcm.components");
-		packages.add("sk.iway.iwcm.users");
-		packages.add("sk.iway.iwcm.components");
-		packages.add("sk.iway.iwcm.editor");
-		packages.add("sk.iway.iwcm.admin");
-		/* vyhladava rekurzivne
-		packages.add("sk.iway.iwcm.components.events");
-		packages.add("sk.iway.iwcm.components.quiz");
-		packages.add("sk.iway.iwcm.components.inquirySimple");
-		packages.add("sk.iway.iwcm.components.organization");
-		packages.add("sk.iway.iwcm.components.inzercia");
-		packages.add("sk.iway.iwcm.components.restaurant_menu");
-		*/
-		packages.add("sk.iway.iwcm.doc.templates");
-		packages.add("sk.iway.iwcm.system.datatables");
-		packages.add("sk.iway.iwcm.logon");
-		packages.add("sk.iway.iwcm.doc.groups");
-		packages.add("sk.iway.iwcm.grideditor");
-		//packages.add("sk.iway.intranet.dms");
-		packages.add("sk.iway.iwcm.localconf");
 
 		String addPackages = Constants.getString("springAddPackages");
 		if (Tools.isNotEmpty(addPackages)) {
 			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, ",")));
 		}
 
-		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
-		ctx.scan(packages.toArray(new String[packages.size()]));
+		if (packages.isEmpty()==false) {
+			Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
+			ctx.scan(packages.toArray(new String[packages.size()]));
+		}
 	}
 
 	/**
@@ -174,5 +150,9 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		packages.add("sk.iway.iwcm.setup");
 		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
 		ctx.scan(packages.toArray(new String[packages.size()]));
+	}
+
+	public static void dtDiff(String message) {
+		if (dtGlobal!=null) dtGlobal.diff(message);
 	}
 }

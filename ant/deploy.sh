@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#RUN AS to save log:
+#./deploy.sh 2>&1 | tee deploy.log
+
 # Exit immediately if a command exits with a non-zero status
 set -e
 
@@ -21,6 +24,7 @@ ant update-version
 #ant deploy
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
+ant deployGithub
 
 #GITHUB: just run ant deployStaging
 #then close repo and deploy it

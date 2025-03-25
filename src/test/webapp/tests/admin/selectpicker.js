@@ -224,7 +224,7 @@ Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DTE, Document }) 
     await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
 });
 
-Scenario('BUG-set selectpickerbinded after fields visibility change', ({ I, DT }) => {
+Scenario('BUG-set selectpickerbinded after fields visibility change', async ({ I, DT }) => {
     var selector = "#datatableInit_wrapper .dt-scroll-headInner th.dt-th-fieldA select.filter-input-prepend.selectpickerbinded";
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
@@ -232,7 +232,7 @@ Scenario('BUG-set selectpickerbinded after fields visibility change', ({ I, DT }
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=21686");
     DT.waitForLoader();
     I.jstreeClick("Voliteľné polia");
-    DT.showColumn("text - A");
+    await DT.showColumn("text - A");
 
     I.waitForElement(selector, 10);
 

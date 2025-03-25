@@ -1,6 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.FileTools,sk.iway.iwcm.PageParams,sk.iway.iwcm.Tools,sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails" %><%@ page import="sk.iway.spirit.MediaDB" %><%@ page import="sk.iway.spirit.model.Media" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.FileTools,sk.iway.iwcm.PageParams,sk.iway.iwcm.Tools,sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails" %><%@ page import="sk.iway.spirit.MediaDB" %><%@ page import="sk.iway.spirit.model.Media" %>
 <%@ page import="java.util.Iterator" %>
 <%@ page import="java.util.List" %>
 <%@

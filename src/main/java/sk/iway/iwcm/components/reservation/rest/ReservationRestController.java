@@ -109,93 +109,11 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             //Check if reservation object ID is set
             if(entity.getReservationObjectId() != null) {
                 entity.setReservationObjectForReservation( ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId()).orElse(null) );
-                entity.getEditorFields().toReservationEntity(entity, reservationRepository, getRequest(), false);
+                entity.getEditorFields().toReservationEntity(entity, reservationRepository, getRequest(), false, isImporting(), action);
             } else throwError("");
         }
 
         return entity;
-    }
-
-    @RequestMapping(path={"/reservation-object/{objectId}"})
-    public ReservationObjectEntity getReservationObject(@PathVariable Long objectId) {
-        if(objectId != null) {
-            //Get reservation object
-            ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);
-
-            //First set default values
-            String defaultTimeRangeString = getTimeStringRange(reservationObject.getReservationTimeFrom(), reservationObject.getReservationTimeTo());
-            HashMap<Integer, String> objectTimesInfo = new HashMap<>();
-            for(int day = 1; day <= 7; day++)
-                objectTimesInfo.put(day, defaultTimeRangeString);
-
-            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {
-                //Key (Integer) is day of week 1,2 ... 7
-                //Value (String) is combination timeFrom + "-" + timeTo (HH:mm format)
-                String timeRangeString = getTimeStringRange(objectTime.getTimeFrom(), objectTime.getTimeTo());
-                objectTimesInfo.put(objectTime.getDay(), timeRangeString);
-            }
-
-            reservationObject.setObjectTimesInfo(objectTimesInfo);
-
-            return reservationObject;
-        } else throwError("");
-        return null;
-    }
-
-
-    @RequestMapping(
-        value="/check-reservation-validity",
-        params={"date-from", "date-to", "time-from", "time-to", "object-id", "reservation-id"})
-    public String checkReservationValidity(
-        @RequestParam("date-from") Long dateFrom,
-        @RequestParam("date-to") Long dateTo,
-        @RequestParam("time-from") Long timeFrom,
-        @RequestParam("time-to") Long timeTo,
-        @RequestParam("object-id") Long objectId,
-        @RequestParam("reservation-id") Long reservationId) {
-
-        String unexpectedError = getProp().getText("html_area.insert_image.error_occured");
-
-        if(dateFrom == null || dateTo == null || timeFrom == null || timeTo == null || objectId == null)
-            return unexpectedError;
-
-        //Get reservation object
-        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);
-        //We need keep data as fresh for validation, so get joined object times from DB
-        reservationObject.setReservationObjectTimeEntities( rotr.findAllByObjectIdAndDomainId(reservationObject.getId(), CloudToolsForCore.getDomainId()) );
-
-        //Create reservation entity (just for test purpose)
-        ReservationEntity reservation = new ReservationEntity();
-
-        //Set reservation
-        reservation.setDateFrom(new Date(dateFrom));
-        reservation.setDateTo(new Date(dateTo));
-        reservation.setId(reservationId);
-        ReservationEditorFields ef = new ReservationEditorFields();
-        ef.setReservationTimeFrom(DefaultTimeValueConverter.getValidTimeValue(new Date(timeFrom)));
-        ef.setReservationTimeTo(DefaultTimeValueConverter.getValidTimeValue(new Date(timeTo)));
-        reservation.setEditorFields(ef);
-
-        ReservationService reservationService = new ReservationService(getProp());
-
-        //Prepare entity
-        reservationService.prepareReservationToValidation(reservation, Tools.isTrue(reservationObject.getReservationForAllDay()));
-
-        String error = null;
-        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
-            error = reservationService.checkReservationTimeRangeValidity(reservation, reservationObject);
-            if(error != null) return error;
-        }
-
-        error = reservationService.checkReservationOverlappingValidity(reservation, reservationObject, reservationRepository);
-        if(error != null) return error;
-
-        return null;
-    }
-
-    private String getTimeStringRange(Date start, Date end) {
-        if(start == null || end == null) return "";
-        return new SimpleDateFormat("HH:mm").format(start) + " - " + new SimpleDateFormat("HH:mm").format(end);
     }
 
     @Override
@@ -279,7 +197,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
                     entity.setAccepted(Boolean.FALSE);
 
                     //Send email
-                    reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());
+                    reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);
 
                     //Save changes entity
                     reservationRepository.save(entity);
@@ -288,13 +206,13 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
                 }
             }
 
-            String error2 = reservationService.checkReservationOverlappingValidity(entity, reservationObject, reservationRepository);
+            String error2 = reservationService.checkReservationOverlappingValidity(entity, reservationObject, reservationRepository, false);
             if(error2 != null) {
                 //REJECT entity auto
                 entity.setAccepted(Boolean.FALSE);
 
                 //Send email
-                reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());
+                reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);
 
                 //Save changes entity
                 reservationRepository.save(entity);
@@ -306,7 +224,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             entity.setAccepted(Boolean.TRUE);
 
             //Send email
-            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());
+            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);
             addNotify(new NotifyBean(acceptanceTitle, getProp().getText("reservation.reservations.reservation_accepted_succ"), NotifyType.SUCCESS, 15000));
         } else if("reject".equals(action)) {
             //Is this status already set ?
@@ -318,7 +236,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             entity.setAccepted(Boolean.FALSE);
 
             //Send email
-            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());
+            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);
             addNotify(new NotifyBean(acceptanceTitle, getProp().getText("reservation.reservations.reservation_rejected_succ"), NotifyType.SUCCESS, 15000));
         } else if("reset".equals(action)) {
             //Is this status already set ?
@@ -331,7 +249,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             entity.setAccepted(null);
 
             //Send email
-            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());
+            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);
             addNotify(new NotifyBean(acceptanceTitle, getProp().getText("reservation.reservations.reservation_reset_succ"), NotifyType.SUCCESS, 15000));
         }
 
@@ -348,12 +266,8 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
         //INSERT action
         if(entity.getId() == null || entity.getId() == -1) {
-            //Set domain id, not null
             entity.setDomainId(CloudToolsForCore.getDomainId());
-
-            //Set creator id
             entity.setUserId(userId);
-
             entity.setId(-1L);
         }
 
@@ -397,14 +311,13 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 			append = "";
 		}
 
-		List<Integer> reservationObejctIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT reservation_object_id FROM reservation_object WHERE name " + operator +" ?", prepend + valueClean + append);
+		List<Integer> reservationObejctIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT reservation_object_id FROM reservation_object WHERE name " + operator + " ?", prepend + valueClean + append);
 		if(reservationObejctIds.isEmpty() == false) predicates.add(root.get(jpaProperty).in(reservationObejctIds));
 		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));
 	}
 
     @Override
     public boolean deleteItem(ReservationEntity entity, long id) {
-
         String unexpectedError = getProp().getText("html_area.insert_image.error_occured");
         String errorTitle = getProp().getText("reservation.reservations.password_for_delete.error_title");
 
@@ -443,18 +356,22 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
     @Override
     public void afterSave(ReservationEntity entity, ReservationEntity saved) {
-        //Check if we must send Acceptation email
-        ReservationObjectEntity reservationObject = entity.getReservationObjectForReservation();
-        ReservationService reservationService = new ReservationService(getProp());
+        if(!isImporting()) {
+            //Check if we must send Acceptation email
+            ReservationObjectEntity reservationObject = entity.getReservationObjectForReservation();
+            ReservationService reservationService = new ReservationService(getProp());
 
-        if(reservationObject != null && Tools.isTrue(reservationObject.getMustAccepted()) && entity.getAccepted() == null) {
-            //for some reason time part is lost even when in DB its saved good
-            entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()) );
-            entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()) );
-            reservationService.sendAcceptationEmail(entity, getRequest());
+            if(reservationObject != null && Tools.isTrue(reservationObject.getMustAccepted()) && entity.getAccepted() == null) {
+                //for some reason time part is lost even when in DB its saved good
+                entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()) );
+                entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()) );
+                reservationService.sendAcceptationEmail(entity, getRequest());
+            }
+
+            //Send email only if reservation was created - new only
+            if(entity.getId() == -1)
+                reservationService.sendCreatedReservationEmail(saved, getRequest());
         }
-
-        reservationService.sendCreatedReservationEmail(saved, getRequest());
     }
 
     @Override
@@ -463,15 +380,28 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             //Is object set as ALL DAY reservation ? - if yes, we do not need to check time
             Boolean allDay = false;
             if (entity.getReservationObjectId()!=null) allDay = ror.isReservationForAllDay(entity.getReservationObjectId());
-            if(Tools.isFalse(allDay)) {
+
+            if(Tools.isTrue(allDay)) {
+                if(entity.getEditorFields().getArrivingTime() == null) {
+                    //errors.rejectValue("errorField.editorFields.arrivingTime", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                    if (entity.getEditorFields().getReservationTimeFrom() != null) entity.getEditorFields().setArrivingTime(entity.getEditorFields().getReservationTimeFrom());
+                    else entity.getEditorFields().setArrivingTime(ReservationService.getArrivalTime(entity));
+                }
+                if(entity.getEditorFields().getDepartureTime() == null) {
+                    //errors.rejectValue("errorField.editorFields.departureTime", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                    if (entity.getEditorFields().getReservationTimeTo() != null) entity.getEditorFields().setDepartureTime(entity.getEditorFields().getReservationTimeTo());
+                    else entity.getEditorFields().setDepartureTime(ReservationService.getDepartureTime(entity));
+                }
+            } else {
                 if(entity.getEditorFields().getReservationTimeFrom() == null)
                     errors.rejectValue("errorField.editorFields.reservationTimeFrom", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
                 if(entity.getEditorFields().getReservationTimeTo() == null)
                     errors.rejectValue("errorField.editorFields.reservationTimeTo", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
             }
 
-            if(Tools.isEmpty(entity.getEmail()) == false && Tools.isEmail(entity.getEmail()) == false)
+            if(Tools.isNotEmpty(entity.getEmail()) && Tools.isEmail(entity.getEmail())==false) {
                 errors.rejectValue("errorField.email", null, getProp().getText("javax.validation.constraints.Email.message"));
+            }
         }
 
         super.validateEditor(request, target, user, errors, id, entity);
@@ -491,4 +421,117 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             int userId = ReservationService.getUserToPay(null, reservationId, reservationRepository, getRequest());
             return ReservationService.calculateReservationPrice(dateFrom, dateTo, timeFrom, timeTo, objectId, userId, ror, ropr);
         }
+
+    @RequestMapping(path={"/reservation-object/{objectId}"})
+    public ReservationObjectEntity getReservationObject(@PathVariable Long objectId) {
+        if(objectId != null) {
+            //Get reservation object
+            ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);
+            if(reservationObject == null) {
+                throwError("Reservation object was not found.");
+                return null;
+            }
+
+            //First set default values
+            String defaultTimeRangeString = getTimeStringRange(reservationObject.getReservationTimeFrom(), reservationObject.getReservationTimeTo());
+            HashMap<Integer, String> objectTimesInfo = new HashMap<>();
+            for(int day = 1; day <= 7; day++)
+                objectTimesInfo.put(day, defaultTimeRangeString);
+
+            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {
+                //Key (Integer) is day of week 1,2 ... 7
+                //Value (String) is combination timeFrom + "-" + timeTo (HH:mm format)
+                String timeRangeString = getTimeStringRange(objectTime.getTimeFrom(), objectTime.getTimeTo());
+                objectTimesInfo.put(objectTime.getDay(), timeRangeString);
+            }
+
+            reservationObject.setObjectTimesInfo(objectTimesInfo);
+
+            return reservationObject;
+        } else throwError("");
+        return null;
+    }
+
+    @RequestMapping(
+        value="/check-reservation-validity",
+        params={"date-from", "date-to", "time-from", "time-to", "object-id", "reservation-id", "allow-history-save", "allow-overbooking", "isDuplicate"})
+    public String checkReservationValidity(
+        @RequestParam("date-from") Long dateFrom,
+        @RequestParam("date-to") Long dateTo,
+        @RequestParam("time-from") Long timeFrom, //or aka arrivalTime if it's all day reservation
+        @RequestParam("time-to") Long timeTo,     //or aka departureTime if it's all day reservation
+        @RequestParam("object-id") Long objectId,
+        @RequestParam("reservation-id") Long reservationId,
+        @RequestParam("allow-history-save") boolean allowHistorySave,
+        @RequestParam("allow-overbooking") boolean allowOverbooking,
+        @RequestParam("isDuplicate") boolean isDuplicate) {
+
+        String unexpectedError = getProp().getText("html_area.insert_image.error_occured");
+
+        if(dateFrom == null || dateTo == null || timeFrom == null || timeTo == null || objectId == null)
+            return unexpectedError;
+
+        //Get reservation object
+        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);
+        if(reservationObject == null) {
+            throwError("Reservation object was not found.");
+            return null;
+        }
+
+        //We need keep data as fresh for validation, so get joined object times from DB
+        reservationObject.setReservationObjectTimeEntities( rotr.findAllByObjectIdAndDomainId(reservationObject.getId(), CloudToolsForCore.getDomainId()) );
+
+        //Create reservation entity (just for test purpose)
+        ReservationEntity reservation = new ReservationEntity();
+
+        //Set reservation
+        reservation.setDateFrom(new Date(dateFrom));
+        reservation.setDateTo(new Date(dateTo));
+
+        if(isDuplicate) {
+            reservation.setId(Long.valueOf(-1));
+        } else {
+            reservation.setId(reservationId);
+        }
+
+        ReservationEditorFields ef = new ReservationEditorFields();
+
+        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {
+            ef.setArrivingTime(DefaultTimeValueConverter.getValidTimeValue(new Date(timeFrom)));
+            ef.setDepartureTime(DefaultTimeValueConverter.getValidTimeValue(new Date(timeTo)));
+        } else {
+            ef.setReservationTimeFrom(DefaultTimeValueConverter.getValidTimeValue(new Date(timeFrom)));
+            ef.setReservationTimeTo(DefaultTimeValueConverter.getValidTimeValue(new Date(timeTo)));
+        }
+
+        ef.setAllowHistorySave(allowHistorySave);
+        ef.setAllowOverbooking(allowOverbooking);
+
+        reservation.setEditorFields(ef);
+
+        ReservationService reservationService = new ReservationService(getProp());
+
+        //Prepare entity
+        try{
+            reservationService.prepareReservationToValidation(reservation, Tools.isTrue(reservationObject.getReservationForAllDay()));
+        } catch(IllegalArgumentException e) {
+            return unexpectedError;
+        }
+
+        String error = null;
+        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
+            error = reservationService.checkReservationTimeRangeValidity(reservation, reservationObject);
+            if(error != null) return error;
+        }
+
+        error = reservationService.checkReservationOverlappingValidity(reservation, reservationObject, reservationRepository, false);
+        if(error != null) return error;
+
+        return null;
+    }
+
+    private String getTimeStringRange(Date start, Date end) {
+        if(start == null || end == null) return "";
+        return new SimpleDateFormat("HH:mm").format(start) + " - " + new SimpleDateFormat("HH:mm").format(end);
+    }
 }

@@ -129,7 +129,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
 
     I.clickCss("#bSubmitIdAjax");
     I.dontSee("Prosím, opravte nasledovné chyby", "#ajaxFormResultContainer");
-    I.see("Profil úspešne uložený", "#ajaxFormResultContainer");
+    I.waitForText("Profil úspešne uložený", 10, "#ajaxFormResultContainer");
 
     //reload profile, check changes save
     I.amOnPage('/apps/prihlaseny-pouzivatel/moj-profil/');

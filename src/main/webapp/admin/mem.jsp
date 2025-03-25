@@ -40,7 +40,7 @@ body
         ConfigurableDataSource ds = null;
         try {
             ds = (ConfigurableDataSource) DBPool.getInstance().getDataSource("iwcm");
-            out.println("DBPool active: <b>" + ds.getNumActive() + "</b> idle=" + ds.getNumIdle() + "<br>");
+            out.println("DBPool total: " + ds.getNumTotal() + " active: <b>" + ds.getNumActive() + "</b> idle:" + ds.getNumIdle() + " waiting: " + ds.getNumWaiting() + " <br>");
         }
         catch (Exception ex) {}
 

@@ -46,6 +46,7 @@ import sk.iway.iwcm.system.cron.CronFacade;
 import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.cron.WebjetDatabaseTaskSource;
 import sk.iway.iwcm.system.proxy.WebJETProxySelector;
+import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.users.UserGroupsDB;
 /**
  *  Inicializacia systemu, nastavenie databazy, overenie licencie
@@ -95,13 +96,42 @@ public class InitServlet extends HttpServlet
 	{
 		//not used anymore, initialized from spring on start
 		if (isWebjetInitialized()) {
+
+			//run cron4j, it's here because it may need spring classes to run correctly
+			try
+			{
+				SpringAppInitializer.dtDiff("Starting cron");
+
+				CronFacade cf = CronFacade.getInstance();
+				cf.setTaskSource(new WebjetDatabaseTaskSource());
+				cf.start();
+
+				//spustim tie ktore sa maju spustit hned po starte
+				List<CronTask> startupTasks = CronDB.getCronTasksRunAtStartup();
+				String clusterNodeName = Constants.getString("clusterMyNodeName");
+				if(startupTasks != null)
+				{
+					for(CronTask t : startupTasks)
+					{
+						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
+						{
+							Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
+							cf.runSimpleTaskOnce(t);
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
+
 			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
+			SpringAppInitializer.dtDiff("WebJET INIT DONE");
 		}
 	}
 
-
-	public static boolean initializeWebJET(ServletContext servletContext) {
-		DebugTimer dt = new DebugTimer("InitServlet.init");
+	public static boolean initializeWebJET(DebugTimer dt, ServletContext servletContext) {
 
 		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
 		Constants.setServletContext(servletContext);
@@ -530,16 +560,13 @@ public class InitServlet extends HttpServlet
 				Logger.println(InitServlet.class,"guesing install name: "+installName);
 			}
 
-			Constants.setInstallName(installName);
-			Logger.setInstallName(installName);
+			dt.diff("Before loadConstants");
+			loadConstants(databaseValues, servletContext);
+			dt.diff("After loadConstants");
 
 			if ("O".equals(Constants.getString("wjVersion"))==false) {
 				Constants.setString("amchartLicense", ConfDB.tryDecrypt("encr"+"ypted:f4a06"+"45be29a4d976"+"9f5f8683d106619"));
 			}
-
-			dt.diff("Before loadConstants");
-			loadConstants(databaseValues, servletContext);
-			dt.diff("After loadConstants");
 
 			String clusterMyNodeName = getInitParameter("clusterMyNodeName", null, servletContext);
 			int webjetNodeId = Tools.getIntValue(System.getProperty("webjetNodeId"), -1);
@@ -728,7 +755,7 @@ public class InitServlet extends HttpServlet
 
 					Logger.println(InitServlet.class, "get hostname");
 					String serverName = InetAddress.getLocalHost().getHostName();
-					Logger.println(InitServlet.class, "get hostname done");
+					Logger.println(InitServlet.class, "get hostname done, serverName="+serverName);
 					emailBody.append("ServerName: ").append(serverName).append('\n');
 					//emailBody += "ServerIP: " + InetAddress.getLocalHost().getHostAddress() + "\n";
 
@@ -845,32 +872,6 @@ public class InitServlet extends HttpServlet
 
 		dt.diff("after cluster refresher");
 
-		//spusti cron4j
-		try
-		{
-			CronFacade cf = CronFacade.getInstance();
-			cf.setTaskSource(new WebjetDatabaseTaskSource());
-			cf.start();
-
-			//spustim tie ktore sa maju spustit hned po starte
-			List<CronTask> startupTasks = CronDB.getCronTasksRunAtStartup();
-			if(startupTasks != null)
-			{
-				for(CronTask t : startupTasks)
-				{
-					if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
-					{
-						Logger.println(InitServlet.class, "Spustam cron {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
-						cf.runSimpleTaskOnce(t);
-					}
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-
 		//Logger.println(InitServlet.class,"---------------- INIT DONE --------------");
 
 		dt.diff("Init done");
@@ -897,8 +898,8 @@ public class InitServlet extends HttpServlet
 		{
 			Logger.println(InitServlet.class,"VOLAM localconf.jsp");
 			//String localconf = Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp");
-			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp"), 30000);
-			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk/localconf.jsp"), 35000);
+			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp"), 50000);
+			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk/localconf.jsp"), 55000);
 			//Logger.println(InitServlet.class,"VOLAM localconf.jsp, vystup:\n"+localconf);
 		}
 
@@ -910,9 +911,7 @@ public class InitServlet extends HttpServlet
 
 		Constants.setLong("licenseExpiryDate", licenseExpiryDate);
 
-		dt.diff("DONE");
-
-		setWebjetInitialized(true);
+		dt.diff("InitServlet DONE");
 
 		return true;
 	}
@@ -976,7 +975,7 @@ public class InitServlet extends HttpServlet
 		setActualVersion(Tools.replace(InitServlet.actualVersion, "{minor.number}", minorVersion));
 	}
 
-	private static Map<String, String> getDatabaseValues(Connection db_conn)
+	public static Map<String, String> getDatabaseValues(Connection db_conn)
 	{
 		Map<String, String> databaseValues = new Hashtable<>();
 		try
@@ -1144,18 +1143,20 @@ public class InitServlet extends HttpServlet
 			String value;
 
 			List<LabelValueDetails> names = new ArrayList<>();
-			for (Map.Entry<String, String> entry : databaseValues.entrySet())
-			{
-				name = entry.getKey();
-				value = entry.getValue();
+			if (databaseValues != null) {
+				for (Map.Entry<String, String> entry : databaseValues.entrySet())
+				{
+					name = entry.getKey();
+					value = entry.getValue();
 
-				if (skipValues.get(name)==null)
-				{
-					names.add(new LabelValueDetails(name, value));
-				}
-				else
-				{
-					Logger.println(InitServlet.class,"skipping: " + name);
+					if (skipValues.get(name)==null)
+					{
+						names.add(new LabelValueDetails(name, value));
+					}
+					else
+					{
+						Logger.println(InitServlet.class,"skipping: " + name);
+					}
 				}
 			}
 
@@ -1228,6 +1229,12 @@ public class InitServlet extends HttpServlet
 		catch (Exception ex)
 		{
 			sk.iway.iwcm.Logger.error(ex);
+		}
+
+		String installName = Constants.getString("installName");
+		if (Tools.isNotEmpty(installName)) {
+			Constants.setInstallName(installName);
+			Logger.setInstallName(installName);
 		}
 	}
 
@@ -1337,11 +1344,13 @@ public class InitServlet extends HttpServlet
 		}
 
 		//moznost nastavenia custom hodnoty v <Content elemente server.xml <Parameter name="webjet_XXX" value="vvv" override="true"/>
-		String valueContext = servletContext.getInitParameter("webjet_"+name);
-		if (Tools.isNotEmpty(valueContext))
-		{
-			value = valueContext;
-			source = "InitParameter-context webjet_";
+		if (servletContext != null) {
+			String valueContext = servletContext.getInitParameter("webjet_"+name);
+			if (Tools.isNotEmpty(valueContext))
+			{
+				value = valueContext;
+				source = "InitParameter-context webjet_";
+			}
 		}
 
 		if (value!=null)
@@ -1567,8 +1576,12 @@ public class InitServlet extends HttpServlet
 		InitServlet.valid = valid;
 	}
 
-	private static void setWebjetInitialized(boolean webjetInitialized) {
-		InitServlet.webjetInitialized = webjetInitialized;
+	private static void setWebjetInitialized(boolean initialized) {
+		InitServlet.webjetInitialized = initialized;
+	}
+
+	public static void setWebjetInitialized() {
+		InitServlet.webjetInitialized = true;
 	}
 
 	public static Date getServerStartDatetime() {

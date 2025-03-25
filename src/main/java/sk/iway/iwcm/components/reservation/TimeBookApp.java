@@ -39,6 +39,7 @@ import sk.iway.iwcm.system.annotations.DefaultHandler;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -61,7 +62,7 @@ public class TimeBookApp extends WebjetComponentAbstract {
     private ReservationObjectPriceRepository ropr;
 
     private static final String VIEW_PATH = "/apps/reservation/mvc/time-book"; //NOSONAR
-    private static final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final String ERROR_MSG = "components.reservation.reservation_app.save_error";
 
     @Autowired
     public TimeBookApp(ReservationObjectRepository ror, ReservationRepository rr, ReservationObjectPriceRepository ropr) {
@@ -74,7 +75,7 @@ public class TimeBookApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = "components.reservation.time_book.reservation_object_ids", tab = "basic", editor = {
         @DataTableColumnEditor(
             options = {
-                @DataTableColumnEditorAttr(key = "method:sk.iway.iwcm.components.reservation.rest.ReservationService.getReservationObjectSelectList", value = "label:value")
+                @DataTableColumnEditorAttr(key = "method:sk.iway.iwcm.components.reservation.rest.ReservationService.getReservationObjectHoursSelectList", value = "label:value")
             }
         )
     })
@@ -107,25 +108,25 @@ public class TimeBookApp extends WebjetComponentAbstract {
             realErrors.add(new FieldError("entity", "email", Prop.getInstance(request).getText("javax.validation.constraints.Email.message")));
         }
 
-        if (realErrors == null || realErrors.isEmpty() == true) {
+        if(Tools.isEmpty(realErrors)) {
             Prop prop = Prop.getInstance(request);
 
             Long reservationObjectId = Tools.getLongValue(request.getParameter("reservationObjectId"), -1);
             if(reservationObjectId == -1) {
-                return returnError(prop.getText("components.reservation.reservation_app.save_error"), model, request);
+                return returnError(prop.getText(ERROR_MSG), model, request);
             }
 
             String reservationDateString = request.getParameter("reservationDateHidden");
             Date reservationDate;
-            if(reservationDateString.matches("\\d{4}-\\d{2}-\\d{2}") == true)
-                reservationDate = Tools.getDateFromString(reservationDateString, DATE_FORMAT);
-            else {
-                return returnError(prop.getText("components.reservation.reservation_app.save_error"), model, request);
+            if(reservationDateString.matches(ReservationService.REGEX_YYYY_MM_DD)) {
+                reservationDate = Tools.getDateFromString(reservationDateString, ReservationService.FE_DATEPICKER_FORMAT);
+            } else {
+                return returnError(prop.getText(ERROR_MSG), model, request);
             }
 
             String[] timeRange = Tools.getTokens(request.getParameter("timeRange"), "-");
             if(timeRange.length != 2) {
-                return returnError(prop.getText("components.reservation.reservation_app.save_error"), model, request);
+                return returnError(prop.getText(ERROR_MSG), model, request);
             }
 
             //Remove ":00" postfix
@@ -141,12 +142,12 @@ public class TimeBookApp extends WebjetComponentAbstract {
             try {
                 ReservationObjectEntity roe = ror.findById(entity.getReservationObjectId()).orElse(null);
                 if(roe == null) {
-                    return returnError(prop.getText("components.reservation.reservation_app.save_error"), model, request);
+                    return returnError(prop.getText(ERROR_MSG), model, request);
                 }
 
                 entity.setReservationObjectForReservation(roe);
                 ReservationEditorFields ref = new ReservationEditorFields();
-                ref.toReservationEntity(entity, rr, request, true);
+                ref.toReservationEntity(entity, rr, request, true, false, ProcessItemAction.CREATE);
             } catch (Exception e) {
                 return returnError( e.getLocalizedMessage(), model, request);
             }
@@ -159,8 +160,12 @@ public class TimeBookApp extends WebjetComponentAbstract {
             boolean isAccepted = ReservationService.acceptation(entity, request);
             rr.save(entity);
 
+            //After save send mail
+            ReservationService reservationService = new ReservationService(prop);
+            reservationService.sendCreatedReservationEmail(entity, request);
+
             //Add suitable message
-            if(isAccepted == true) {
+            if(isAccepted) {
                 model.addAttribute("saveMsg", prop.getText("components.reservation.reservation_app.save_msg"));
             } else {
                 model.addAttribute("saveMsg", prop.getText("components.reservation.reservation_app.save_msg_acceptation"));
@@ -177,7 +182,7 @@ public class TimeBookApp extends WebjetComponentAbstract {
     }
 
     private void prepareTimeBookApp(Model model, HttpServletRequest request, Date setReservationDate) {
-        if(Tools.isEmpty(reservationObjectIds) == true) return;
+        if(Tools.isEmpty(reservationObjectIds)) return;
         Integer[] ids = Arrays.stream( Tools.getTokensInt(reservationObjectIds, "+") ).boxed().toArray( Integer[]::new );
         List<ReservationObjectEntity> reservationObjectList = ror.findAllByIdIn(ids);
 
@@ -185,20 +190,11 @@ public class TimeBookApp extends WebjetComponentAbstract {
         if(setReservationDate != null) {
             reservationDate = setReservationDate;
         } else {
-            String reservationDateString = request.getParameter("reservation-date");
-            if(Tools.isEmpty(reservationDateString) == true) {
-                reservationDate = new Date();
-            } else {
-                //Returns as yyyy-MM-dd
-                if(reservationDateString.matches("\\d{4}-\\d{2}-\\d{2}") == true)
-                    reservationDate = Tools.getDateFromString(reservationDateString, DATE_FORMAT);
-                else
-                    reservationDate = new Date();
-            }
+            reservationDate = ReservationService.getReservationDate(request.getParameter("reservation-date"), ReservationService.FE_DATEPICKER_FORMAT);
         }
 
         //datepicker require yyyy-MM-dd string as value
-        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        SimpleDateFormat format = new SimpleDateFormat(ReservationService.FE_DATEPICKER_FORMAT);
         model.addAttribute("reservationDate", format.format(reservationDate));
 
         /* Prepare list with hour that represent reservation range (joined by all reservation objects range) */

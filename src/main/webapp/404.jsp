@@ -4,7 +4,7 @@
 if (request.getAttribute("404.allready.generated")!=null) return;
 
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools"
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools"
 %><%@ page import="sk.iway.iwcm.components.export.ExportDatBean"%><%@page import="sk.iway.iwcm.components.export.ExportDatDB"
 %><%@ page import="sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails,sk.iway.iwcm.i18n.Prop" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@page import="sk.iway.iwcm.system.UrlRedirectBean"
@@ -245,7 +245,7 @@ if (redirectBean != null)
 {
 	response.setStatus(redirectBean.getRedirectCode());
 	String newUrl = redirectBean.getNewUrl();
-	System.out.println("redirectBean1="+redirectBean.getUrlRedirectId()+" path="+path+" newUrl="+newUrl);
+	//System.out.println("redirectBean1="+redirectBean.getUrlRedirectId()+" path="+path+" newUrl="+newUrl);
 
 	if (redirectIncludingQuery==false && Tools.isNotEmpty(queryString)) newUrl = Tools.addParametersToUrlNoAmp(newUrl, queryString);
 
@@ -255,7 +255,7 @@ if (redirectBean != null)
 	%>
 	<html><script>window.location.href='<%=newUrl%>';</script></html>
 	<%
-	System.out.println("SOM STRANKA 404, redirecting to:" + newUrl);
+	//System.out.println("SOM STRANKA 404, redirecting to:" + newUrl);
 	return;
 }
 

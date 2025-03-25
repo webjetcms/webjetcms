@@ -94,9 +94,9 @@ public class ReservationManager
 				rob.setMaxReservations(1);
 			rob.setCancelTimeBefor(rs.getInt("cancel_time_befor"));
 			String timeFrom = DB.getDbString(rs, "reservation_time_from");
-			rob.setReservationTimeFrom(Tools.isEmpty(timeFrom) ? "0:00" : timeFrom);
+			rob.setReservationTimeFrom(Tools.isEmpty(timeFrom) ? "0:00" : Tools.formatTime(rs.getTimestamp("reservation_time_from")));
 			String timeTo = DB.getDbString(rs, "reservation_time_to");
-			rob.setReservationTimeTo(Tools.isEmpty(timeTo) ? "23:59" : timeTo);
+			rob.setReservationTimeTo(Tools.isEmpty(timeTo) ? "23:59" : Tools.formatTime(rs.getTimestamp("reservation_time_to")));
 			rob.setPriceForDay(rs.getDouble("price_for_day"));
 			rob.setPriceForHour(rs.getDouble("price_for_hour"));
 			rob.setPriceForDayString(rs.getDouble("price_for_day"));
@@ -1943,8 +1943,8 @@ public class ReservationManager
 		String downloadUrl = Tools.getBaseHrefLoopback(request) + emailUrl + "?reservationId=" + reservation.getReservationId() + "&hash="+reservation.getHashValue() + canceledString;
 		String data = Tools.downloadUrl(downloadUrl);
 
-		String senderName = reservationObject.getName();
-		String fromEmail = "no-reply@"+Tools.getBaseHref(request).replace("https://", "").replace("http://", "").replace("www.", "");
+		String senderName = SendMail.getDefaultSenderName("reservation", reservationObject.getName());
+		String fromEmail = SendMail.getDefaultSenderEmail("reservation", null);
 		String toEmail = reservation.getEmail();
 		String subject = prop.getText("components.reservation.approved");
 		if(approved==false)

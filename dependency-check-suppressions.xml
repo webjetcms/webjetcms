@@ -148,6 +148,34 @@
    <packageUrl regex="true">^pkg:maven/sk\.iway\.wjstruts/wjstruts-taglib@.*$</packageUrl>
    <cve>CVE-2023-34149</cve>
   </suppress>
+  <suppress>
+   <notes><![CDATA[
+   file name: wjstruts-core-1.3.10.jar (shaded: org.apache.struts:struts-core:1.3.10)
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.struts/struts-core@.*$</packageUrl>
+   <cve>CVE-2012-0391</cve>
+  </suppress>
+  <suppress>
+   <notes><![CDATA[
+   file name: wjstruts-core-1.3.10.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/sk\.iway\.wjstruts/wjstruts-core@.*$</packageUrl>
+   <cve>CVE-2012-0391</cve>
+  </suppress>
+  <suppress>
+   <notes><![CDATA[
+   file name: wjstruts-taglib-1.3.10.jar (shaded: org.apache.struts:struts-taglib:1.3.10)
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.apache\.struts/struts-taglib@.*$</packageUrl>
+   <cve>CVE-2012-0391</cve>
+  </suppress>
+  <suppress>
+   <notes><![CDATA[
+   file name: wjstruts-taglib-1.3.10.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/sk\.iway\.wjstruts/wjstruts-taglib@.*$</packageUrl>
+   <cve>CVE-2012-0391</cve>
+  </suppress>
 
  <!-- NOTE: it is reported as vulnerable, but due to incorrectly specified spring versions in the vulnerabilities -->
  <suppress>
@@ -308,6 +336,13 @@
   <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-messaging@.*$</packageUrl>
   <cve>CVE-2024-38820</cve>
  </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-web-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-web@.*$</packageUrl>
+   <cve>CVE-2024-38820</cve>
+ </suppress>
 
  <!-- NOTE: we are not using WebMvc.fn or WebFlux.fn in WebJET CMS, 5.4.41 is not available for OpenSource projects, plan to migrate to Spring 6.x in 2025 -->
  <suppress>
@@ -334,6 +369,15 @@
   ]]></notes>
   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-web@.*$</packageUrl>
   <vulnerabilityName>CVE-2024-38828</vulnerabilityName>
+ </suppress>
+
+ <!-- NOTE: max password length in WebJET is 64 chars, this vulnerability is for 72 chars password with same letters, FIXED in PasswordSecurity which will not allow this kind of passwords -->
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-security-crypto-5.8.16.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-crypto@.*$</packageUrl>
+   <vulnerabilityName>CVE-2025-22228</vulnerabilityName>
  </suppress>
 
 </suppressions>

@@ -320,3 +320,12 @@ Scenario("BUG key with tab prefix/suffix", ({ I, DT, DTE }) => {
     I.see("Záznamy 0 až 0 z 0");
 
 });
+
+Scenario("BUG prop search in editor_component_universal.jsp", ({ I, Apps }) => {
+    Apps.openAppEditor(121439, "wjDialogHeaderTableRow");
+    I.waitForElement(locate("#tabLink2").withText("Prekladové kľúče"), 10);
+    I.click("#tabLink2");
+    I.switchTo("#propSearchIframe");
+    I.waitForText("editor.field_a", 10);
+    I.switchTo();
+});

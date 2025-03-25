@@ -44,7 +44,7 @@ if(request.getParameter("load_calendar_content") != null && "true".equals(reques
 		   <tr>
 				<td>&nbsp;</td>
 				<td valign="middle" align="left">&nbsp;</td>
-				<td><input type="image" src="/components/mail/images/hourmeter.jpg" ismap="ismap"/>&nbsp;&nbsp;&nbsp;&nbsp; </td>
+				<td><input type="image" src="/components/reservation/hourmeter.jpg" ismap="ismap"/>&nbsp;&nbsp;&nbsp;&nbsp; </td>
 				<td>&nbsp;</td>
 			</tr>
 			<%

@@ -3,7 +3,7 @@
 if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
 %>
-<%@ page pageEncoding="windows-1250"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <script type="text/javascript" src="/components/basket/jscript.jsp"></script>
@@ -146,7 +146,7 @@ void addTransportFee(List<BasketItemBean> basketItems, HttpServletRequest reques
                   <td></td>
                   <td></td>
 
-                  <td > Celková cena:</td>
+                  <td > Celkovï¿½ cena:</td>
 
                   <td > <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
                       <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>

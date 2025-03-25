@@ -40,7 +40,10 @@
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
     "terminal.integrated.shellIntegration.enabled": false,
 
-    "spellright.language": [ "sk_SK" ],
+    "spellright.language": [
+        "cs_CZ",
+        "sk_SK"
+    ],
     "spellright.groupDictionaries": false,
     "spellright.documentTypes": [
         "markdown"
