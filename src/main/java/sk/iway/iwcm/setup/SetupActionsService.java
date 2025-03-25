@@ -439,9 +439,6 @@ public class SetupActionsService {
 		StringBuilder poolman = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n")
 				.append("\r\n")
 				.append("<poolman>\r\n")
-				.append("\r\n")
-				.append("  <management-mode>local</management-mode>\r\n")
-				.append("\r\n")
 				.append("  <datasource>\r\n")
 				.append("      <dbname>iwcm</dbname>\r\n")
 				.append("      <driver>").append(sForm.getDbDriver()).append("</driver>\r\n");

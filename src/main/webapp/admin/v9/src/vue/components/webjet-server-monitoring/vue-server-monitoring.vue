@@ -55,8 +55,10 @@
                 monitoringTablesData: [],
                 monitoringData: Object,
                 chartData: Object,
-                firstTableItems: ['serverRuntime', 'serverActualTime', 'serverStartTime', 'remoteIP', 'serverIP', 'serverContry', 'serverLanguage', 'dbActive', 'dbIdle', 'serverCpus', 'cacheItems', 'sessionsTotal', 'sessionsList'],
-                secondTableItems: ['swJavaVendor', 'swRuntime', 'swVmName', 'swJavaVersion', 'swVmVersion', 'swServerName', 'swServerOs', 'swServerOsVersion', 'licenseExpirationDate']
+                firstTableItems: ['serverRuntime', 'serverActualTime', 'serverStartTime', 'remoteIP', 'serverIP', 'serverContry', 'serverLanguage', 'serverCpus', 'clusterNodeName'],
+                secondTableItems: ['swJavaVendor', 'swRuntime', 'swVmName', 'swJavaVersion', 'swVmVersion', 'swServerName', 'swServerOs', 'swServerOsVersion', 'licenseExpirationDate'],
+                dbTableItems: ['dbTotal', 'dbActive', 'dbIdle', 'dbWaiting'],
+                memTableItems: ['memTotal', 'memFree', 'memUsed', 'memMax', 'cacheItems', 'sessionsTotal', 'sessionsList'],
             }
         },
         components: {
@@ -72,7 +74,6 @@
                 //user nema monitoring prava, schovame grafy, toto sa deje na uvodnej stranke
                 $("section.server-monitoring-section").hide();
             } else {
-                this.updateData();
                 this.startInterval();
                 const dhis = this;
                 $("#pills-translation-keys-language-tab").replaceWith($("#secondsDropdown").html());
@@ -131,10 +132,13 @@
                 var dis = this;
                 var t = {};
                 var d = {};
+                var db = {};
+                var mem = {};
 
                 $.each(this.monitoringData, function(name, value){
                     if (dis.firstTableItems.includes(name)) {
                         t["tableName"] = window.vueMonitoringApp.config.globalProperties.$vseobecneInformacie;
+                        t["icon"] = "ti ti-info-square";
                         if (name == "serverIP") {
                             t[name] = value[0];
 
@@ -143,18 +147,33 @@
                         t[name] = value;
                     } else if (dis.secondTableItems.includes(name)) {
                         d["tableName"] = window.vueMonitoringApp.config.globalProperties.$informacieOsoftveri;
+                        d["icon"] = "ti ti-server";
                         d[name] = value;
+                    } else if (dis.dbTableItems.includes(name)) {
+                        db["tableName"] = window.vueMonitoringApp.config.globalProperties.$dbPool;
+                        db["icon"] = "ti ti-database";
+                        db[name] = value;
+                    } else if (dis.memTableItems.includes(name)) {
+                        mem["tableName"] = window.vueMonitoringApp.config.globalProperties.$memInfo;
+                        mem["icon"] = "ti ti-cpu-2";
+                        mem[name] = value;
                     }
+
                 });
 
                 dis.monitoringTablesData = [];
-                dis.monitoringTablesData.push(t, d);
+                dis.monitoringTablesData.push(t, d, db, mem);
                 dis.formatData();
             },
             formatData() {
                 this.monitoringTablesData[0].serverRuntime = this.msToDays(this.monitoringTablesData[0].serverRuntime);
                 this.monitoringTablesData[0].serverStartTime = moment(this.monitoringTablesData[0].serverStartTime).format('DD.MM.YYYY HH:mm:ss');
                 this.monitoringTablesData[0].serverActualTime = moment(this.monitoringTablesData[0].serverActualTime).format('DD.MM.YYYY HH:mm:ss');
+
+                this.monitoringTablesData[3].memTotal = this.bytesToSize(this.monitoringTablesData[3].memTotal);
+                this.monitoringTablesData[3].memFree = this.bytesToSize(this.monitoringTablesData[3].memFree);
+                this.monitoringTablesData[3].memUsed = this.bytesToSize(this.monitoringTablesData[3].memUsed);
+                this.monitoringTablesData[3].memMax = this.bytesToSize(this.monitoringTablesData[3].memMax);
             },
             msToDays(ms) {
                 var days  = Math.floor(ms / (24*60*60*1000)),
@@ -173,6 +192,12 @@
                 secText = secText.replace("{1}", sec);
 
                 return text + " " + secText;
+            },
+            bytesToSize(bytes) {
+                //format bytes MB
+                if (bytes == 0) return '0 MB';
+                var k = 1024;
+                return (bytes / k / k).toFixed(2) + ' MB';
             }
         }
     }

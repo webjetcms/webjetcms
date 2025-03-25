@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
     <datasource>
         <dbname>iwcm</dbname>
         <driver>org.mariadb.jdbc.Driver</driver>
 
-        <url>jdbc:mysql://mysql.local/webjetcms_web</url>
+        <url>jdbc:mariadb://mariadb.local/webjetcms_web</url>
 
         <username>webjetcms</username>
         <password>*********</password>

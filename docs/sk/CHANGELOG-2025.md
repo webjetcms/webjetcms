@@ -39,6 +39,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/news-calendar/news-calendar.png)
 
+### Monitorovanie servera
+
+- Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
+
 ### Rezervácie
 
 - **Podpora pre nadmernú rezerváciu** – umožňuje administrátorom vytvoriť viac rezervácií `overbooking` na ten istý termín (#57405).
@@ -67,6 +71,8 @@ Iné zmeny:
 - Pridaná podpora pre získanie mena a emailu odosielateľa pre rôzne emailové notifikácie použitím `SendMail.getDefaultSenderName(String module, String fallbackName), getDefaultSenderEmail(String module, String fallbackEmail)` (#57389).
 - Pridaná možnosť nastaviť koreňový priečinok pre [pole typu JSON](developer/datatables-editor/field-json.md) vo formáte ID aj cesty: `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")` alebo `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "26")`.
 - Spustenie úloh na pozadí sa vykoná až po kompletnej inicializácii vrátane `Spring` (#43144).
+- Doplnená možnosť nastaviť [všetky vlastnosti HikariCP](install/setup/README.md#vytvorenie-db-schémy) (#54273-61).
+- Doplnená kontrola, či databázový ovládač podporuje nastavenie sekvencií (#54273-61).
 
 ### Testovanie
 

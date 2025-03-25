@@ -39,4 +39,7 @@ public interface ConfigurableDataSource extends DataSource
 
 	public int getNumIdle();
 
+	public int getNumTotal();
+
+	public int getNumWaiting();
 }

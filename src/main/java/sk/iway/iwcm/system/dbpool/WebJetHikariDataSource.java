@@ -94,6 +94,17 @@ public class WebJetHikariDataSource implements ConfigurableDataSource {
     }
 
     @Override
+    public int getNumTotal() {
+
+        return originalSource.getHikariPoolMXBean().getTotalConnections();
+    }
+
+    @Override
+    public int getNumWaiting() {
+        return originalSource.getHikariPoolMXBean().getThreadsAwaitingConnection();
+    }
+
+    @Override
     public Connection getConnection() throws SQLException {
         return originalSource.getConnection();
     }
