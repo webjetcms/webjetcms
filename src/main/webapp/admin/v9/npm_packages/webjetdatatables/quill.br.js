@@ -21,6 +21,7 @@ export function lineBreakMatcher() {
 	newDelta.insert({'sbreak': ''});
 	return newDelta;
 }
+
 export class SoftLineBreakBlot extends Embed {
 	static blotName = 'sbreak';
 	static tagName = 'br';
