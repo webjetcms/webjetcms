@@ -5,6 +5,7 @@ import static sk.iway.iwcm.Tools.isAnyEmpty;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.users.crypto.Bcrypt;
 import sk.iway.iwcm.users.crypto.Sha512;
 
@@ -108,6 +109,25 @@ public final class PasswordSecurity {
 	{
 		if(isAnyEmpty(salt, hash))
 			return false;
+
+		//CVE-2025-22228
+		//BCryptPasswordEncoder.matches(CharSequence,String) will incorrectly return true for passwords larger than 72 characters as long as the first 72 characters are the same.
+		if (Tools.isNotEmpty(password)) {
+			String test = password.trim();
+			//verify all characters are not same
+			if (test.length() > 64) {
+				char c = test.charAt(0);
+				int counter = 0;
+				for (int i = 1; i < test.length(); i++) {
+					if (c == test.charAt(i)) {
+						counter++;
+					}
+				}
+				if (counter == test.length() - 1) {
+					return false;
+				}
+			}
+		}
 
 		if(hash.startsWith("bcrypt:") && salt.startsWith("bcrypt:")) {
 			//!! salt is not required, because is build into hash
