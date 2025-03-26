@@ -132,7 +132,36 @@ block content
                     }
 
                     componentDatatable.EDITOR.on('open', function (e, mode, action) {
-                        $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(response.title);
+                        var foundParentTitle = false;
+                        var dialogBodyElements = window.parent.parent.$(".cke_editor_data_dialog .cke_dialog_body");
+                        //iterate over if and try to find one with iframe
+                        dialogBodyElements.each(function(index, element) {
+                            var $this = $(element);
+                            var iframe = $this.find("iframe");
+                            if (iframe.length > 0 && iframe.attr("src").indexOf("webjetcomponet.jsp") > 0) {
+                                var titleElement = $this.find(".cke_dialog_title");
+                                if (titleElement.length > 0) {
+                                    titleElement.text(response.title);
+                                    foundParentTitle = true;
+                                    //remove top border and hide title in this window
+                                    titleElement.parent().find("table.cke_dialog_contents tr:first-child td.cke_dialog_contents_body:first-child")[0].style.setProperty("border-top-width", "0px", "important");
+                                    $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").parent().hide();
+
+                                    //update iframe heights
+                                    $(".iframeFieldType").each(function(index, element) {
+                                        var $this = $(element);
+                                        //console.log("iframe=", $this, "height=", $this.attr("height"));
+                                        $this.css("height", "521px");
+                                        $this.find("iframe").attr("height", "521");
+                                    });
+                                }
+                            }
+                        });
+
+                        if (foundParentTitle === false) {
+                            $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").parent().show();
+                            $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(response.title);
+                        }
                     });
 
                     if (response.componentPath != null && response.componentPath != '') {

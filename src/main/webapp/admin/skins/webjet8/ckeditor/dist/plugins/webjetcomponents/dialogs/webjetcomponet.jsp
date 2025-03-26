@@ -1,7 +1,7 @@
 <%@page import="org.apache.struts.util.ResponseUtils"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.*" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
 <%@ page import="sk.iway.iwcm.editor.appstore.AppManager" %>
 <%@ page import="java.util.Map" %>
@@ -42,6 +42,20 @@ body { overflow: hidden; }
     var docId = -1;
     var groupId = -1;
     var title = null;
+
+    var dialogBodyElements = window.parent.$(".cke_editor_data_dialog .cke_dialog_body");
+    //iterate over if and try to find one with iframe
+    dialogBodyElements.each(function(index, element) {
+        var $this = $(element);
+        var iframe = $this.find("iframe");
+        if (iframe.length > 0 && iframe.attr("src").indexOf("webjetcomponet.jsp") > 0) {
+            var titleElement = $this.find(".cke_dialog_title");
+            if (titleElement.length > 0) {
+                titleElement.text("<iwcm:text key="components.cloud.apps.title"/>");
+                titleElement.parent().find("table.cke_dialog_contents tr:first-child td.cke_dialog_contents_body:first-child")[0].style.setProperty("border-top-width", null);
+            }
+        }
+    });
 
     function getCkEditorInstanceElfinder() {
         return editor;
