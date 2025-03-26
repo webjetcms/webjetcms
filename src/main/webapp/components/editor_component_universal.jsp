@@ -115,17 +115,9 @@ if (url.startsWith("/components/")) {
 			//je to spring komponenta, prepni sa na zobrazenie cez datatabulku
 			%>
 				<script type="text/javascript">
-					var src = '/admin/v9/webpages/component?id=1&name='+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>");
+					var src = '/admin/v9/webpages/component?id=1&name='+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>")+"&className="+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>")+"&docId=<%=ResponseUtils.filter(request.getParameter("docId")) %>&groupId=<%=ResponseUtils.filter(request.getParameter("groupId")) %>&title="+encodeURIComponent("<%=ResponseUtils.filter(request.getParameter("title")) %>");
+
 					var iframe = window.parent.$('#editorComponent');
-					//console.log("iframe=", iframe, "src=", src);
-					iframe
-						.after($('<input type="hidden" id="className" />').val("<%=ResponseUtils.filter(componentName) %>"))
-						.after($('<input type="hidden" id="parameters" />').val(""))
-						.after($('<input type="hidden" id="docId" />').val("<%=ResponseUtils.filter(request.getParameter("docId")) %>"))
-						.after($('<input type="hidden" id="groupId" />').val("<%=ResponseUtils.filter(request.getParameter("groupId")) %>"))
-						.after($('<input type="hidden" id="title" />').val("<%=ResponseUtils.filter(request.getParameter("title")) %>"))
-						.after($('<input type="hidden" id="originalComponentName" />').val(""))
-                    	.after($('<input type="hidden" id="originalJspFileName" />').val(""));
 
 					iframe.attr('src', src);
 				</script>

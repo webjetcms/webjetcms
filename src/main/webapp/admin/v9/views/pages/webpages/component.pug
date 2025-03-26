@@ -6,6 +6,7 @@ block content
         .modal-header {
             margin-top: 6px !important;
             border-top-width: 0px !important;
+            padding-right: 0px !important;
         }
         .modal.DTED .modal-header .DTE_Header_Content .row .col-sm-4 {
             width: 33.33333333% !important;
@@ -20,14 +21,27 @@ block content
             componentPath = null,
             componentColumns = null;
 
+        //WJ.debugTimer(true);
+        WJ.debugTimer("component.pug");
+
         window.domReady.add(function () {
-            componentClass = $('#className', window.parent.document).val();
-            let parameters = $('#parameters', window.parent.document).val();
-            let docId = $('#docId', window.parent.document).val();
-            let groupId = $('#groupId', window.parent.document).val();
-            let title = $('#title', window.parent.document).val();
-            let originalComponentName = $('#originalComponentName', window.parent.document).val();
-            let originalJspFileName = $('#originalJspFileName', window.parent.document).val();
+            var componentJson = [(${componentJson})];
+            var requestJson = [(${requestJson})];
+            var requestJsonTest = [(${requestJsonTest})];
+            //console.log("componentJson=", componentJson, "requestJson=", requestJson, "requestJsonTest=", requestJsonTest);
+
+            if (componentJson == null || requestJson == null) {
+                return;
+            }
+
+            componentClass = requestJson.className;
+            let parameters = requestJson.parameters;
+            let docId = requestJson.docId;
+            let groupId = requestJson.groupId;
+            let title = requestJson.pageTitle;
+            let originalComponentName = requestJson.originalComponentName;
+            let originalJspFileName = requestJson.originalJspFileName;
+
             componentPath = componentClass;
 
             //console.log("PUG docId=", docId, "groupId=", groupId, "title=", title, "componentPath=", componentPath, "originalComponentName=", originalComponentName, "originalJspFileName=", originalJspFileName);
@@ -50,137 +64,142 @@ block content
                 window.appBeforeXhr(data);
             }
 
-            $.ajax({
-                method: 'post',
-                url: '/admin/rest/components/component',
-                data: JSON.stringify(data),
-                dataType: 'json',
-                contentType: 'application/json',
-                success: function(response) {
+            WJ.debugTimer("has data");
 
-                    //console.log("success, response=", response);
-                    if (typeof response.error !== 'undefined') {
-                        WJ.notifyError(response.error);
-                        return;
-                    }
+            if (componentJson != null) {
+                createDatatable(componentJson);
+            }
+            //WJ.debugTimer("end");
+        });
 
-                    if (typeof window.appAfterXhr === "function") {
-                        window.appAfterXhr(response);
-                    }
+        function createDatatable(response) {
+            //console.log("success, response=", response);
+            if (typeof response.error !== 'undefined') {
+                WJ.notifyError(response.error);
+                return;
+            }
 
-                    componentColumns = response.columns;
+            if (typeof window.appAfterXhr === "function") {
+                window.appAfterXhr(response);
+            }
 
-                    componentColumns.push({
-                        "data" : "id",
-                        "name" : "id",
-                        "title" : "ID",
-                        "defaultContent" : "",
-                        "className" : "dt-select-td cell-not-editable",
-                        "renderFormat" : "dt-format-selector",
-                        "editor" : {
-                          "type" : "hidden",
-                          "required" : false
-                        },
-                        "sortAfter" : "",
-                        "perms" : "",
-                        "array" : false
-                    });
+            componentColumns = response.columns;
 
-                    response.data['id'] = 1;
-                    var multidata = convertMultichoiseData(response.data);
-                    //console.log("multidata=", multidata, "original=", response.data);
+            componentColumns.push({
+                "data" : "id",
+                "name" : "id",
+                "title" : "ID",
+                "defaultContent" : "",
+                "className" : "dt-select-td cell-not-editable",
+                "renderFormat" : "dt-format-selector",
+                "editor" : {
+                    "type" : "hidden",
+                    "required" : false
+                },
+                "sortAfter" : "",
+                "perms" : "",
+                "array" : false
+            });
 
-                    //create json data for editor, prevent call to REST service using "forceData": true
-                    let jsonData = {
-                        "content": [
-                            multidata
-                        ],
-                        "notify": null,
-                        "totalPages": 1,
-                        "totalElements": 1,
-                        "last": true,
-                        "size": 12,
-                        "number": 0,
-                        "sort": {
-                            "empty": false,
-                            "unsorted": false,
-                            "sorted": true
-                        },
-                        "first": true,
-                        "numberOfElements": 1,
-                        "empty": false,
-                        "forceData": true
-                    }
+            response.data['id'] = 1;
+            var multidata = convertMultichoiseData(response.data);
+            //console.log("multidata=", multidata, "original=", response.data);
 
-                    componentDatatable = WJ.DataTable({
-                        id: 'component-datatable',
-                        url: '/admin/rest/components',
-                        initialData: jsonData,
-                        columns: componentColumns,
-                        serverSide: false,
-                        editorId: "id",
-                        fetchOnCreate: false,
-                        fetchOnEdit: false,
-                        idAutoOpener: true,
-                        tabs: response.tabs,
-                        editorLocking: false,
-                        hideTable:true
-                    });
+            //create json data for editor, prevent call to REST service using "forceData": true
+            let jsonData = {
+                "content": [
+                    multidata
+                ],
+                "notify": null,
+                "totalPages": 1,
+                "totalElements": 1,
+                "last": true,
+                "size": 12,
+                "number": 0,
+                "sort": {
+                    "empty": false,
+                    "unsorted": false,
+                    "sorted": true
+                },
+                "first": true,
+                "numberOfElements": 1,
+                "empty": false,
+                "forceData": true
+            }
 
-                    if (response.options != null) {
-                        componentDatatable.updateOptionsFromJson(response);
-                    }
+            WJ.debugTimer("createDatatable");
 
-                    componentDatatable.EDITOR.on('open', function (e, mode, action) {
-                        var foundParentTitle = false;
-                        var dialogBodyElements = window.parent.parent.$(".cke_editor_data_dialog .cke_dialog_body");
-                        //iterate over if and try to find one with iframe
-                        dialogBodyElements.each(function(index, element) {
-                            var $this = $(element);
-                            var iframe = $this.find("iframe");
-                            if (iframe.length > 0 && iframe.attr("src").indexOf("webjetcomponet.jsp") > 0) {
-                                var titleElement = $this.find(".cke_dialog_title");
-                                if (titleElement.length > 0) {
-                                    titleElement.text(response.title);
-                                    foundParentTitle = true;
-                                    //remove top border and hide title in this window
-                                    titleElement.parent().find("table.cke_dialog_contents tr:first-child td.cke_dialog_contents_body:first-child")[0].style.setProperty("border-top-width", "0px", "important");
-                                    $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").parent().hide();
+            componentDatatable = WJ.DataTable({
+                id: 'component-datatable',
+                url: '/admin/rest/components',
+                initialData: jsonData,
+                columns: componentColumns,
+                serverSide: false,
+                editorId: "id",
+                fetchOnCreate: false,
+                fetchOnEdit: false,
+                idAutoOpener: true,
+                tabs: response.tabs,
+                editorLocking: false,
+                hideTable:true
+            });
 
-                                    //update iframe heights
-                                    $(".iframeFieldType").each(function(index, element) {
-                                        var $this = $(element);
-                                        //console.log("iframe=", $this, "height=", $this.attr("height"));
-                                        $this.css("height", "521px");
-                                        $this.find("iframe").attr("height", "521");
-                                    });
-                                }
-                            }
-                        });
+            WJ.debugTimer("AFTER createDatatable");
 
-                        if (foundParentTitle === false) {
-                            $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").parent().show();
-                            $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(response.title);
-                        }
-                    });
+            if (response.options != null) {
+                componentDatatable.updateOptionsFromJson(response);
+            }
 
-                    if (response.componentPath != null && response.componentPath != '') {
-                        //it there is multiple path separated by comma use originalJspFileName is not empty otherwise use first one
-                        let paths = response.componentPath.split(",");
-                        //console.log("paths=", paths, "originalJspFileName=", originalJspFileName);
-                        if (paths.length > 1 && originalJspFileName != null && originalJspFileName != '') {
-                            componentPath = originalJspFileName;
-                        } else {
-                            componentPath = paths[0];
+            componentDatatable.EDITOR.on('open', function (e, mode, action) {
+                WJ.debugTimer("open");
+
+                var foundParentTitle = false;
+                var dialogBodyElements = window.parent.parent.$(".cke_editor_data_dialog .cke_dialog_body");
+                //iterate over if and try to find one with iframe
+                dialogBodyElements.each(function(index, element) {
+                    var $this = $(element);
+                    var iframe = $this.find("iframe");
+                    if (iframe.length > 0 && iframe.attr("src").indexOf("webjetcomponet.jsp") > 0) {
+                        var titleElement = $this.find(".cke_dialog_title");
+                        if (titleElement.length > 0) {
+                            titleElement.text(response.title);
+                            foundParentTitle = true;
+                            //remove top border and hide title in this window
+                            titleElement.parent().find("table.cke_dialog_contents tr:first-child td.cke_dialog_contents_body:first-child")[0].style.setProperty("border-top-width", "0px", "important");
+                            $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").parent().hide();
+
+                            //update iframe heights
+                            $(".iframeFieldType").each(function(index, element) {
+                                var $this = $(element);
+                                //console.log("iframe=", $this, "height=", $this.attr("height"));
+                                $this.css("height", "521px");
+                                $this.find("iframe").attr("height", "521");
+                            });
                         }
                     }
+                });
 
-                    if (typeof window.appAfterInit === "function") {
-                        window.appAfterInit(response, componentDatatable);
-                    }
+                if (foundParentTitle === false) {
+                    $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").parent().show();
+                    $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(response.title);
                 }
             });
-        });
+
+            if (response.componentPath != null && response.componentPath != '') {
+                //it there is multiple path separated by comma use originalJspFileName is not empty otherwise use first one
+                let paths = response.componentPath.split(",");
+                //console.log("paths=", paths, "originalJspFileName=", originalJspFileName);
+                if (paths.length > 1 && originalJspFileName != null && originalJspFileName != '') {
+                    componentPath = originalJspFileName;
+                } else {
+                    componentPath = paths[0];
+                }
+            }
+
+            if (typeof window.appAfterInit === "function") {
+                window.appAfterInit(response, componentDatatable);
+            }
+        }
 
         /**
          * Convert multichoise data from string to array

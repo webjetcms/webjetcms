@@ -599,3 +599,4 @@ Ak potrebujete skryť počas nahrávania určitý blok môžete mu nastaviť CSS
 - ```WJ.escapeHtml(string)``` - Nahradí nebezpečné znaky v HTML kóde za entity pre ich bezpečné vypísanie.
 - ```WJ.base64encode(text)``` - zakóduje algoritmom `base64` zadaný text s podporou znakov v ```utf-8```.
 - ```WJ.base64decode(encodedText)``` - dekóduje algoritmom `base64` zadaný text s podporou znakov v ```utf-8```.
+- `WJ.debugTimer(message)` - vypíše hlásenie s časovým údajom od prvej správy. Hlásenia je potrebné zapnúť volaním `WJ.debugTimer(true)`, inak sa nezobrazia. Nie je tam potrebné zakomentovať všetky hlásenia v kóde.

@@ -32,6 +32,16 @@ body { overflow: hidden; }
     <input type="hidden" name="title" id="title"/>
 </form>
 
+<form id="springComponentForm" name="springComponentForm" method="post" action="" target="editorComponent" style="display: none" enctype="multipart/form-data">
+    <input type="hidden" name="className"/>
+    <input type="hidden" name="parameters"/>
+    <input type="hidden" name="docId"/>
+    <input type="hidden" name="groupId"/>
+    <input type="hidden" name="title"/>
+    <input type="hidden" name="originalComponentName"/>
+    <input type="hidden" name="originalJspFileName"/>
+</form>
+
 <script type="text/javascript">
 
     var editor = window.parent.getCkEditorInstance();
@@ -192,7 +202,7 @@ body { overflow: hidden; }
                 //console.log("CURRENT PARAMETERS=", parameters);
 
                 var src = '/admin/v9/webpages/component?id=1&showOnlyEditor=true&name=' + encodeURIComponent(c);
-                var iframe = $('#editorComponent');
+                /*var iframe = $('#editorComponent');
                 iframe
                     .after($('<input type="hidden" id="className" />').val(c))
                     .after($('<input type="hidden" id="parameters" />').val(parameters))
@@ -202,7 +212,19 @@ body { overflow: hidden; }
                     .after($('<input type="hidden" id="originalComponentName" />').val(originalComponentName))
                     .after($('<input type="hidden" id="originalJspFileName" />').val(originalJspFileName));
 
-                iframe.attr('src', src);
+                iframe.attr('src', src);*/
+
+                var form = document.springComponentForm;
+                form["className"].value = c;
+                form["parameters"].value = parameters;
+                form["docId"].value = docId;
+                form["groupId"].value = groupId;
+                form["title"].value = title;
+                form["originalComponentName"].value = originalComponentName;
+                form["originalJspFileName"].value = originalJspFileName;
+                form.setAttribute("action", src);
+                form.submit();
+
                 return;
             }
         }
