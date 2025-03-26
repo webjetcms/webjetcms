@@ -6,6 +6,7 @@
 //import htmlEditButton from "quill-html-edit-button";
 
 import { htmlEditButton } from "./quill.htmlEditButton";
+import { SoftLineBreakBlot, shiftEnterHandler, lineBreakMatcher } from "./quill.br";
 
 export function typeQuill() {
 
@@ -46,6 +47,7 @@ export function typeQuill() {
                 //'themes/snow': Snow,
                 "modules/htmlEditButton": htmlEditButton
             });
+            Quill.register(SoftLineBreakBlot);
 
             // Define the matcher function
             function removeStylesAndClasses(node, delta) {
@@ -81,6 +83,22 @@ export function typeQuill() {
                         buttonHTML: "<i class='ti ti-code'></i> ", // Text to display in the toolbar button, default: <>
                         buttonTitle: WJ.translate("datatables.quill.htmlButton.tooltip.js"), // Text to display as the tooltip for the toolbar button, default: Show HTML source
                         debug: false
+                    },
+                    clipboard: {
+                        matchers: [
+                            ['BR', lineBreakMatcher]
+                        ]
+                    },
+                    keyboard: {
+                        bindings: {
+                            "shift enter": {
+                                key: 'Enter',
+                                shiftKey: true,
+                                handler: function (range) {
+                                    shiftEnterHandler(this.quill, range);
+                                }
+                            }
+                        }
                     }
                 }
             }, conf.opts));
