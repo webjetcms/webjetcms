@@ -5,13 +5,16 @@ block content
     include jsinclude
 
     style(type="text/css").
-        .md-tabs {
-            margin-bottom: 0;
-            padding-top: 2px;
+        @media (max-width: 1199px) {
+            .tabbable-elfinder .elfinder-toolbar {
+                padding-left: 60px !important;
+            }
+            .elfinder-mobile .elfinder-toolbar {
+                padding-left: 74px !important;
+                padding-top: 12px !important;
+            }
         }
-        .md-tabs ul {
-            padding-left: 15px;
-        }
+
 
     script.
         let editor = null;
@@ -67,6 +70,16 @@ block content
 
         function initializeElfinder()
         {
+            WJ.headerTabs({
+                id: 'tabsFilter',
+                tabs: [
+                    { url: "javascript:elfinderTabClick('file')", id: "files", title: '[[\#{fbrowse.file}]]', active: true },
+                    { url: "javascript:elfinderTabClick('tools')", id: "tools", title: '[[\#{editor_dir.tools}]]', active: false },
+                    { url: "javascript:WJ.openPopupDialog('/components/sync/export_setup.jsp', 650, 500);", id: "export", title: '[[\#{fbrowser.export-import}]]', active: false }
+                ]
+            });
+            window.initSubmenuTabsClick();
+
             elFinderInstance = $('#finder').elfinder({
                 'bind': {
                     'upload.pre mkdir.pre mkfile.pre rename.pre archive.pre ls.pre': [
@@ -221,17 +234,6 @@ block content
         }
 
     .tabbable.tabbable-custom.tabbable-full-width.tabbable-elfinder
-        div.md-tabs
-            ul.nav( role='tablist')
-                li.nav-item(role='presentation')
-                    a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
-                        | [[\#{fbrowse.file}]]
-                li.nav-item
-                    a.nav-link(onclick="elfinderTabClick('tools')" style='cursor:pointer' aria-selected=false data-bs-toggle='tab' role='presentation')
-                        | [[\#{editor_dir.tools}]]
-                li.nav-item.last.noperms-cmp_sync
-                    a.nav-link(href="javascript:WJ.openPopupDialog('/components/sync/export_setup.jsp', 650, 500);" style='cursor:pointer' aria-selected=false role='presentation')
-                        | Export - Import
 
         #finder [[\#{divpopup-blank.wait_please}]]
 

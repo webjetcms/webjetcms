@@ -59,6 +59,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Hromadný email - pri duplikovaní kampane doplnené duplikovanie zoznamu príjemcov (#57533).
 - Dátové tabuľky - import - upravená logiky **Preskočiť chybné záznamy** pri importe tak, aby sa pri tejto možnosti spracovali aj generické chyby `Runtime` a zabezpečilo sa dokončenie importu bez prerušenia. Tieto chyby sa následne zobrazia používateľovi pomocou notifikácie v priebehu importovania (#57405).
 - Súbory - opravený výpočet veľkosti súborov/priečinkov v pätičke prieskumníka a pri zobrazení detailu priečinka (#57669).
+- Navigácia - opravená navigácia pomocou kariet v mobilnom zobrazení (#57673).
 
 ### Pre programátora
 

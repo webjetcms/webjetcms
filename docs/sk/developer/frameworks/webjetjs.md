@@ -39,7 +39,7 @@ Pre notifikácie používame knižnicu [toastr](https://github.com/CodeSeven/toa
 - ```text``` (String) - text zobrazenej notifikácie, nepovinné
 - ```timeout``` (int) - čas, po ktorom sa notifikácia schová, nepovinné, hodnota 0 znamená, že sa notifikácia bude zobrazovať, pokiaľ ju používateľ nezatvorí
 - ```buttons``` (json) - pole tlačidiel zobrazených pod textom notifikácie
-- ```appendToExisting``` (boolean) - po nastavení na `true` je text pridaný do existujúcej notifikácie rovnakého typu. Ak ešte neexistuje, vytvorí sa nová notifikácia.
+- ```appendToExisting``` (boolean) - po nastavení na ```true``` je text pridaný do existujúcej notifikácie rovnakého typu. Ak ešte neexistuje, vytvorí sa nová notifikácia.
 - ```containerId``` (String) - CSS ID kontajnera, do ktorého bude notifikácia vložená.
 
 Pripravené sú aj skrátené verzie, odporúčame používať tie:
@@ -222,7 +222,7 @@ Ochrana pre CSRF tokeny a spojenie so serverom je okrem časovača nastavená aj
 
 ## Navigačná lišta
 
-Navigačnú lištu typicky s filrom, alebo návratom späť, vygenerujete volaním JS funkcie ```JS.breadcrumb```, tá ako parameter dostáva konfiguračný JSON objekt vo formáte:
+Navigačnú lištu typicky s filtrom, alebo návratom späť, vygenerujete volaním JS funkcie ```JS.breadcrumb```, tá ako parameter dostáva konfiguračný JSON objekt vo formáte:
 
 ```javascript
 {
@@ -411,6 +411,39 @@ WJ.headerTabs({
 });
 ```
 
+Ak inicializujete karty neskôr (po inicializácii WebJETu) je potrebné ešte zavolať funkciu `window.initSubmenuTabsClick();` pre nastavenie udalostí. Príklad:
+
+```javascript
+WJ.headerTabs({
+    id: 'tabsFilter',
+    tabs: [
+        { url: "javascript:elfinderTabClick('file')", id: "files", title: '[[\#{fbrowse.file}]]', active: true },
+        { url: "javascript:elfinderTabClick('tools')", id: "tools", title: '[[\#{editor_dir.tools}]]', active: false },
+        { url: "javascript:WJ.openPopupDialog('/components/sync/export_setup.jsp', 650, 500);", id: "export", title: 'Export - Import', active: false }
+    ]
+});
+window.initSubmenuTabsClick();
+```
+
+Na udalosť zmeny karty môžete reagovať ako:
+
+```javascript
+$('#pills-linkcheck a[data-wj-toggle="tab"]').on('click', function (e) {
+    let selectedTab = e.target.id;
+
+    if(selectedTab === "pills-brokenLinks-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
+        linkCheckDataTable.ajax.reload();
+    } else if(selectedTab === "pills-hiddenPages-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
+        linkCheckDataTable.ajax.reload();
+    } else if(selectedTab === "pills-emptyPages-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
+        linkCheckDataTable.ajax.reload();
+    }
+});
+```
+
 ## Kontrola práv
 
 Pri zobrazení web stránky je vygenerovaný objekt ```window.nopermsJavascript``` so zoznamom práv, ktoré používateľ nemá povolené. Toto pole nikdy nepoužívajte priamo, pre kontrolu práv použite API volanie:
@@ -564,5 +597,5 @@ Ak potrebujete skryť počas nahrávania určitý blok môžete mu nastaviť CSS
 - ```WJ.htmlToText(htmlCode)``` - Skonvertuje zadaný HTML kód na čistý text. Interne vytvorí skrytý ```DIV``` element, ktorému nastaví HTML kód a následne z neho získa čistý text.
 - ```WJ.initTooltip($element)``` - Inicializuje na zadanom jQuery elemente (alebo kolekcii) ```tooltip``` s MarkDown podporou.
 - ```WJ.escapeHtml(string)``` - Nahradí nebezpečné znaky v HTML kóde za entity pre ich bezpečné vypísanie.
-- ```WJ.base64encode(text)``` - zakóduje algoritmom `base64` zadaný text s podporou znakov v `utf-8`.
-- ```WJ.base64decode(encodedText)``` - dekóduje algoritmom `base64` zadaný text s podporou znakov v `utf-8`.
+- ```WJ.base64encode(text)``` - zakóduje algoritmom `base64` zadaný text s podporou znakov v ```utf-8```.
+- ```WJ.base64decode(encodedText)``` - dekóduje algoritmom `base64` zadaný text s podporou znakov v ```utf-8```.

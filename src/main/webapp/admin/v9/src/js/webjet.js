@@ -915,11 +915,19 @@ const WJ = (() => {
             if (idNoHash.indexOf("/")==0) {
                 href = idNoHash;
             }
+            if (typeof data.id != "undefined") {
+                idNoHash = data.id;
+            }
 
             let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
-            anchor.attr("href", href);
+            if (data.url.indexOf("javascript:")==0) {
+                anchor.attr("href", data.url);
+            } else {
+                anchor.attr("href", href);
+            }
             if (href.indexOf("#")==0) {
-                anchor.attr("data-bs-toggle", "tab");
+                //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
+                anchor.attr("data-wj-toggle", "tab");
                 anchor.attr("role", "presentation");
             }
 
