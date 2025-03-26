@@ -43,6 +43,7 @@ body { overflow: hidden; }
     var groupId = -1;
     var title = null;
 
+    //reset title and line
     var dialogBodyElements = window.parent.$(".cke_editor_data_dialog .cke_dialog_body");
     //iterate over if and try to find one with iframe
     dialogBodyElements.each(function(index, element) {
