@@ -14,7 +14,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class FilePropertiesDTO {
-    
+
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="fbrowse.file_name",
@@ -51,7 +51,6 @@ public class FilePropertiesDTO {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/elfinder/file-usage?filePath={fullPath}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.system.elfinder.FileUsageDTO"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,celledit"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-full-headline", value = "fbrowse.usage"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false")
             }
         )
@@ -65,7 +64,6 @@ public class FilePropertiesDTO {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/elfinder/file-history?filePath={fullPath}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.system.elfinder.FileHistoryEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,celledit"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-full-headline", value = "elfinder.file_prop.history.headline"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true")
             }
         )

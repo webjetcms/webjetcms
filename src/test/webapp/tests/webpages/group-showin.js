@@ -13,11 +13,11 @@ function setCheckValueRecursive(I, DTE, folder, subfolder, fieldName, value, for
     //nastav hodnotu a zaskrtni force subgroup
     I.click("div.tree-col div.dt-buttons button.buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-menu-tab");
+    I.clickCss("#pills-dt-groups-datatable-menu-tab");
     DTE.selectOption(fieldName, value);
     I.wait(1);
     I.see(value, "div.DTE_Field_Name_"+fieldName+" button.dropdown-toggle div.filter-option");
-    I.click("#DTE_Field_editorFields-"+forceFieldName+"_0");
+    I.clickCss("#DTE_Field_editorFields-"+forceFieldName+"_0");
     I.wait(1);
     DTE.save();
 
@@ -26,7 +26,7 @@ function setCheckValueRecursive(I, DTE, folder, subfolder, fieldName, value, for
     I.jstreeNavigate(folder);
     I.click("div.tree-col div.dt-buttons button.buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-menu-tab");
+    I.clickCss("#pills-dt-groups-datatable-menu-tab");
     I.see(value, "div.DTE_Field_Name_"+fieldName+" button.dropdown-toggle div.filter-option");
     DTE.cancel();
 
@@ -36,7 +36,7 @@ function setCheckValueRecursive(I, DTE, folder, subfolder, fieldName, value, for
     I.jstreeClick(subfolder);
     I.click("div.tree-col div.dt-buttons button.buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-menu-tab");
+    I.clickCss("#pills-dt-groups-datatable-menu-tab");
     I.see(value, "div.DTE_Field_Name_"+fieldName+" button.dropdown-toggle div.filter-option");
     DTE.cancel();
 }

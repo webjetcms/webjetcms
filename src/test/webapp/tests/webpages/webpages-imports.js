@@ -28,13 +28,13 @@ Scenario('Over importovanie web stránok zo zip súboru (XML)', async ({ I, DT, 
 
     I.say("Choose ZIP import");
     I.waitForElement("form.importExportTable");
-    I.click("#type3"); //aka import web pages from zip file (xml)
-    I.click("#btnOk");
+    I.clickCss("#type3"); //aka import web pages from zip file (xml)
+    I.clickCss("#btnOk");
 
     I.say("Select ZIP file then press OK");
     I.waitForElement(fileInput);
     I.attachFile(fileInput, zipFileLocation);
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     I.say("IMPORT menu - check and selecting options");
     I.waitForElement("#syncForm");
@@ -69,7 +69,7 @@ Scenario('Over importovanie web stránok zo zip súboru (XML)', async ({ I, DT, 
     let primaryPageCheckbox = locate("#syncForm").find("input.doc-checkbox[data-id='doc_73280']");
     I.waitForElement(primaryPageCheckbox, 10);
     I.uncheckOption(primaryPageCheckbox);
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     I.say("Check returned message's");
     I.waitForText("Synchronizujem priečinok: - / -");
@@ -121,13 +121,13 @@ Scenario('BUG - test multidomain - cant see other domain data during import', as
 
     I.say("Choose ZIP import");
     I.waitForElement("form.importExportTable");
-    I.click("#type3"); //aka import web pages from zip file (xml)
-    I.click("#btnOk");
+    I.clickCss("#type3"); //aka import web pages from zip file (xml)
+    I.clickCss("#btnOk");
 
     I.say("Select ZIP file then press OK");
     I.waitForElement(fileInput);
     I.attachFile(fileInput, zipFileLocation);
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     I.say("Now verify that other domain data are not visible");
     I.seeInField("#doc_options_info", "2 / 2");
@@ -165,8 +165,8 @@ Scenario('Over importovanie web stránok z Excel súboru', async ({ I, DT, DTE }
     //
     I.say("Choose EXCEL import");
     I.waitForElement("#dialogCentralRow");
-    I.click("#type2"); //aka import web pages from excel file
-    I.click("#btnOk");
+    I.clickCss("#type2"); //aka import web pages from excel file
+    I.clickCss("#btnOk");
 
     I.say("Verify import menu");
     I.waitForElement("#xlsImportForm");
@@ -176,7 +176,7 @@ Scenario('Over importovanie web stránok z Excel súboru', async ({ I, DT, DTE }
     I.say("Insert file and pres OK");
     I.waitForElement(fileInput);
     I.attachFile(fileInput, excelFileLocation);
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     I.say("Check importing process");
     I.waitForElement("body.closeTableBody");
@@ -217,7 +217,7 @@ function createTestFolder(I, DTE, DT, importGroupName) {
     I.click(DT.btn.tree_add_button);
     DTE.waitForEditor("groups-datatable");
     I.waitForElement("#DTE_Field_groupName");
-    I.click("#DTE_Field_groupName");
+    I.clickCss("#DTE_Field_groupName");
     I.fillField("#DTE_Field_groupName", importGroupName);
     I.groupSetRootParent();
     DTE.save();
@@ -235,7 +235,7 @@ async function prepareImportWindow(I, importGroupName) {
 function checkBody(I, DT, DTE, pageName, pageBody, shouldBeThere) {
     DT.filterContains("title", pageName);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-    I.click("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
     I.click(DT.btn.edit_button);
     DTE.waitForEditor();
 

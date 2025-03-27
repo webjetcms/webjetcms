@@ -19,7 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentInterface;
-import sk.iway.iwcm.editor.rest.ComponentsRestController;
+import sk.iway.iwcm.editor.rest.ComponentsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.annotations.DefaultHandler;
 
@@ -42,7 +42,7 @@ public class WebjetComponentResolver {
     public String render(HttpServletRequest request, HttpServletResponse response, WebjetComponentInterface component, PageParams pageParams) throws Exception {
         try {
             // naplnenie page params do triedy komponenty
-            ComponentsRestController.setParametersToBean(component, pageParams);
+            ComponentsService.setParametersToBean(component, pageParams);
 
             // inicializacna metoda pre potreby komponenty
             component.init();

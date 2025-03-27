@@ -190,7 +190,7 @@ function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
     }
 
     I.switchTo();
-    I.click("#modalIframe div.modal-footer button.btn-primary");
+    I.clickCss("#modalIframe div.modal-footer button.btn-primary");
 }
 
 function checkFormSimpleData(I, DT, random, random2) {
@@ -289,7 +289,7 @@ Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     //oznac zaznam a zmaz ho
-    I.click("#form-detail tbody tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#form-detail tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
     I.waitForElement("#form-detail_modal");
     DTE.save();
@@ -303,7 +303,7 @@ Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/");
     DT.filterEquals("formName", "formular-lahko");
 
-    I.click("#forms-list tbody tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#forms-list tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
     I.waitForElement("#forms-list_modal");
     DTE.save();
@@ -327,7 +327,7 @@ Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT }) => {
     I.click("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     //I.click(locate('.dropdown-item').withText("test23.tau27.iway.sk"));
-    I.click("#bs-select-1-1");
+    I.clickCss("#bs-select-1-1");
     I.waitForElement("#toast-container-webjet", 10);
     I.click(".toastr-buttons button.btn-primary");
     I.wait(1);
@@ -357,12 +357,12 @@ Scenario("formsimple-encrypted", ({ I }) => {
     I.amOnPage("/apps/form/admin/#/detail/formular-lahko-encrypted");
     I.see("encrypted-tink-tester_42");
 
-    I.click("#form-detail tbody tr:nth-child(1) a.form-view");
+    I.clickCss("#form-detail tbody tr:nth-child(1) a.form-view");
     I.switchTo("#modalIframeIframeElement");
     I.see("encrypted-tink");
     I.dontSee("Technické info");
     I.switchTo();
-    I.click("#modalIframe button.btn-close");
+    I.clickCss("#modalIframe button.btn-close");
 
     //
     I.say("Setting decrypt key");
@@ -377,14 +377,14 @@ Scenario("formsimple-encrypted", ({ I }) => {
     I.see("Test odoslania formularu random: "+randomNumber);
     I.see("true");
 
-    I.click("#form-detail tbody tr:nth-child(1) a.form-view");
+    I.clickCss("#form-detail tbody tr:nth-child(1) a.form-view");
     I.switchTo("#modalIframeIframeElement");
     I.dontSee("encrypted-tink");
     I.see("Technické info");
     I.see(randomNumber, "span.form-control.emailInput-text");
     I.switchTo();
     I.see("Vytlačiť", "#modalIframe div.modal-footer button");
-    I.click("#modalIframe button.btn-close");
+    I.clickCss("#modalIframe button.btn-close");
 });
 
 Scenario("form with note field", ({ I, DT }) => {
@@ -496,7 +496,7 @@ function openAdvancedTab(I) {
     I.wait(2);
     I.switchTo("#editorComponent");
     I.wait(2);
-    I.click("#tabLink2");
+    I.clickCss("#tabLink2");
 }
 
 function fillAdvancedTab(I, ccEmails, forward, useFormMailDocId) {
@@ -567,7 +567,7 @@ Scenario("formsimple-wysiwyg", ({ I, DT, DTE }) => {
 
     //
     I.say("Delete form record");
-    I.click("#form-detail tbody tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#form-detail tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
     I.waitForElement("#form-detail_modal");
     DTE.save();

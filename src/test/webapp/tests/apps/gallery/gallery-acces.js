@@ -35,7 +35,7 @@ function openUserSettingsDialog(I) {
      I.switchTo("#modalIframeIframeElement");
      I.waitForText(userLogin, 60);
      I.waitForElement("#pills-dt-datatableInit-rightsTab-tab", 10);
-     I.click('#pills-dt-datatableInit-rightsTab-tab');
+     I.clickCss('#pills-dt-datatableInit-rightsTab-tab');
 }
 
 // skontroluj ci mam prava na galeriu
@@ -184,14 +184,14 @@ function uploadImage(I, folder, image) {
           // over, ze do podpriecinka autotest-subfolder2 sa da pridat obrazok
           I.waitForVisible('.ti.ti-circle-check.float-end', 25);
           I.dontSeeElement(locate('.toast-error-message').withText('Do tohto adresára nemôžete nahrávať súbory'), 10);
-          I.click('#upload-wrapper-close');
+          I.clickCss('#upload-wrapper-close');
           I.waitForInvisible('#upload-wrapper', 15);
           I.seeElement(locate('#galleryTable td.dt-row-edit a').withText(image));
      } else {
           // over, ze do ostatnych priecinkov nemozno pridat obrazok
           I.waitForVisible('.ti.ti-alert-circle.float-end', 25);
           I.waitForElement(locate('.toast-error-message').withText('Do tohto adresára nemôžete nahrávať súbory'), 10);
-          I.click('#upload-wrapper-close');
+          I.clickCss('#upload-wrapper-close');
           I.waitForInvisible('#upload-wrapper', 15);
           I.dontSeeElement(locate('#galleryTable td.dt-row-edit a').withText(image));
      }

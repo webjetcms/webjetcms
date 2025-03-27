@@ -189,7 +189,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			else
 			{
 		%>
-			<html:form action="/inquiry.answer.do" name="inquiryAnswerForm" type="sk.iway.iwcm.inquiry.AnswerForm" scope="request">
+			<form action="/inquiry.answer.do" name="inquiryAnswerForm">
 				<div class="inquiryBox">
 				<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 					<div class="inquiryAnswer">
@@ -215,7 +215,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 				</div>
 				<input type="hidden" name="questionID" value="<bean:write name="answer" property="questionID" />"/>
 		      	<input type="button" onclick="anketaMulti(this.form, questionID);" name="maSubmit" value="<iwcm:text key="inquiry.multipleAnswer.submit"/>" class="button100"><br>
-			</html:form>
+			</form>
 		<%
 			clicksTotal = iBean.getTotalClicksMultiple();
 			}
@@ -262,7 +262,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			else
 			{
 		%>
-			<html:form action="/inquiry.answer.do" name="inquiryAnswerForm" type="sk.iway.iwcm.inquiry.AnswerForm" scope="request">
+			<form action="/inquiry.answer.do" name="inquiryAnswerForm">
 				<div class="span6 inquiryBox">
 					<h3><bean:write name="inquiry" property="question" filter="false"/></h3>
 					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
@@ -288,7 +288,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 					<p><input type="hidden" name="questionID" value="<bean:write name="answer" property="questionID" />"/>
 			      	<input type="button" onclick="anketaMulti(this.form, questionID);" name="maSubmit" value="<iwcm:text key="inquiry.multipleAnswer.submit"/>" class="btn btn-large btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>"></p>
 				</div>
-			</html:form>
+			</form>
 		<%
 			clicksTotal = iBean.getTotalClicksMultiple();
 			}
@@ -348,7 +348,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			else
 			{
 		%>
-		<html:form action="/inquiry.answer.do" name="inquiryAnswerForm" type="sk.iway.iwcm.inquiry.AnswerForm" scope="request">
+		<form action="/inquiry.answer.do" name="inquiryAnswerForm">
 		<div class="panel panel-primary">
 			<div class="panel-heading">
 				<h3 class="panel-title">
@@ -390,7 +390,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 				<%}%>
 			</div>
 		</div>
-		</html:form>
+		</form>
 		<%
 			clicksTotal = iBean.getTotalClicksMultiple();
 			}

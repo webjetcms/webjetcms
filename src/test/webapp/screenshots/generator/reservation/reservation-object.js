@@ -22,15 +22,15 @@ Scenario('reservation object screens', async ({ I, DT, DTE, Document }) => {
     DTE.waitForEditor("reservationObjectDataTable");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_basic_tab.png");
 
-    I.click("#pills-dt-reservationObjectDataTable-advanced-tab");
+    I.clickCss("#pills-dt-reservationObjectDataTable-advanced-tab");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_advance_tab.png");
 
-    I.click("#pills-dt-reservationObjectDataTable-chooseDays-tab");
+    I.clickCss("#pills-dt-reservationObjectDataTable-chooseDays-tab");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_chooseDay_tab.png");
 
-    I.click("#pills-dt-reservationObjectDataTable-specialPrice-tab");
+    I.clickCss("#pills-dt-reservationObjectDataTable-specialPrice-tab");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_prices_tab.png");
 
-    I.click("#datatableFieldDTE_Field_editorFields-objectPrices_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-objectPrices_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_prices_add.png");
 });

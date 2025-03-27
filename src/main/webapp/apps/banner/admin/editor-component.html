@@ -25,7 +25,6 @@
             const fieldElement2 = $(".DTE_Field_Name_displayMode");
             fieldElement2.on("click", function() {
                 const isChecked = $("#DTE_Field_displayMode_0").prop("checked");
-                console.log("isChecked=", isChecked);
                 switch (isChecked) {
                     case true:
                         setFieldsVisibility([], ['bannerIndex', 'explain']);

@@ -21,7 +21,7 @@ Scenario('visits', ({ I, DT, Document }) => {
         I.fillField("#statsDataTable_extfilter input.dt-filter-to-dayDate", "06/30/2022");
     }
 
-    I.click("#statsDataTable_extfilter button.dt-filtrujem-dayDate");
+    I.clickCss("#statsDataTable_extfilter button.dt-filtrujem-dayDate");
     DT.waitForLoader("statsDataTable");
 
     //Days page
@@ -53,7 +53,7 @@ Scenario('stat - page screenshots', ({ I, DT, Document }) => {
         I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "06/30/2022");
     }
 
-    I.click("#topDataTable_extfilter button.dt-filtrujem-dayDate");
+    I.clickCss("#topDataTable_extfilter button.dt-filtrujem-dayDate");
     DT.waitForLoader("topDataTable");
 
     //Top page
@@ -91,7 +91,7 @@ Scenario('page screenshots-vesmir', ({ I, DT, Document }) => {
         I.fillField("#topDataTable_extfilter input.dt-filter-from-dayDate", "31.5.2022");
         I.fillField("#topDataTable_extfilter input.dt-filter-to-dayDate", "30.6.2022");
     }
-    I.click("#topDataTable_extfilter button.dt-filtrujem-dayDate");
+    I.clickCss("#topDataTable_extfilter button.dt-filtrujem-dayDate");
     DT.waitForLoader("topDataTable");
 
     //dalsie stranky

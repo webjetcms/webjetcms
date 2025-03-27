@@ -134,6 +134,8 @@ const WJ = (() => {
         //nastav title
         const title = options.title || '';
         $('#modalIframe .modal-header h5').html(title);
+        if (title === "") $('#modalIframe .modal-header h5').hide();
+        else $('#modalIframe .modal-header h5').show();
 
         //nastav button title
         const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");
@@ -915,11 +917,19 @@ const WJ = (() => {
             if (idNoHash.indexOf("/")==0) {
                 href = idNoHash;
             }
+            if (typeof data.id != "undefined") {
+                idNoHash = data.id;
+            }
 
             let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
-            anchor.attr("href", href);
+            if (data.url.indexOf("javascript:")==0) {
+                anchor.attr("href", data.url);
+            } else {
+                anchor.attr("href", href);
+            }
             if (href.indexOf("#")==0) {
-                anchor.attr("data-bs-toggle", "tab");
+                //cant use data-bs-toggle because in elfinder is initialized after app-init and events will colide for mobile menu
+                anchor.attr("data-wj-toggle", "tab");
                 anchor.attr("role", "presentation");
             }
 
@@ -1198,6 +1208,27 @@ const WJ = (() => {
         return Base64.decode(encodedText);
     }
 
+    /**
+     * Log debug message with timestamp and diff in ms from last log.
+     * To enable/disable debug timer use debugTimer(true) as first call.
+     * @param {*} message
+     */
+    function debugTimer(message) {
+        if (typeof message === "boolean") {
+            window.debugTimerEnabled = message;
+            return;
+        }
+        if (window.debugTimerEnabled !== true) return;
+
+        let now = new Date();
+        if (typeof window.lastDebugTimer == "undefined") window.lastDebugTimer = now;
+        if (typeof window.firstDebugTimer == "undefined") window.firstDebugTimer = now;
+        let diff = now - window.lastDebugTimer;
+        let diffFirst = now - window.firstDebugTimer;
+        window.lastDebugTimer = now;
+        console.log("DebugTimer: " + message + " - " + diffFirst + "ms (+ " + diff + "ms)");
+    }
+
     return {
         showHelpWindow: (link) => {
             return showHelpWindow(link);
@@ -1383,6 +1414,9 @@ const WJ = (() => {
         },
         selectMenuItem: (href) => {
             return selectMenuItem(href);
+        },
+        debugTimer: (message) => {
+            return debugTimer(message);
         },
         //DEPRECATED
         toastWarning: (type, title, text, timeOut) => {

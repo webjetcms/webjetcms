@@ -14,4 +14,6 @@ public class ComponentRequest {
     private int docId;
     private int groupId;
     private String pageTitle;
+    private String originalComponentName;
+    private String originalJspFileName;
 }

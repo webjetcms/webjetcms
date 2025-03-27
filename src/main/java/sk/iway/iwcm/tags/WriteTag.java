@@ -208,7 +208,12 @@ public class WriteTag extends BodyTagSupport
 						showToolbar = false;
 					}
 
-					if (request.getHeader("dmail")!=null || request.getAttribute("NO WJTOOLBAR")!=null || request.getParameter("NO_WJTOOLBAR")!=null || request.getAttribute("isPreview")!=null)
+					if (request.getParameter("NO_WJTOOLBAR")!=null)
+					{
+						request.getSession().setAttribute("NO_WJTOOLBAR", "1");
+					}
+
+					if (request.getHeader("dmail")!=null || request.getAttribute("NO WJTOOLBAR")!=null || (request.getSession()!=null && request.getSession().getAttribute("NO_WJTOOLBAR")!=null) || request.getParameter("NO_WJTOOLBAR")!=null || request.getAttribute("isPreview")!=null)
 					{
 						showToolbar = false;
 					}
@@ -222,6 +227,12 @@ public class WriteTag extends BodyTagSupport
 					if (Constants.getBoolean("disableWebJETToolbar"))
 					{
 						showToolbar = false;
+					}
+
+					if ("false".equals(request.getParameter("NO_WJTOOLBAR")))
+					{
+						showToolbar = true;
+						request.getSession().removeAttribute("NO_WJTOOLBAR");
 					}
 
 					if (inlineEditingToolbarAppended)

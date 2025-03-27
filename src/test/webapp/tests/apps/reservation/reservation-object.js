@@ -132,11 +132,11 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     I.clickCss("button.buttons-create");
     I.dtWaitForEditor("reservationObjectDataTable");
 
-    I.click("#DTE_Field_name");
+    I.clickCss("#DTE_Field_name");
     I.fillField("#DTE_Field_name", prices_reservation_object);
 
     //Not important but required
-    I.click("#DTE_Field_description");
+    I.clickCss("#DTE_Field_description");
     I.fillField("#DTE_Field_description", "Reservation entity test + test of special prices inner data table.");
 
     I.say("During create cant see special prices tab");

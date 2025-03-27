@@ -27,7 +27,7 @@ Scenario('redizajn-wj8', ({ I, Document }) => {
 Scenario('webpages-fielda-d', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=7611");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     I.scrollTo("div.DTE_Field_Name_htmlHead");
     I.click("div.DTE_Field_Name_tempFieldADocId button.dropdown-toggle");
     Document.screenshot("/_media/changelog/2021q4/editor-fielda-d.png");
@@ -36,7 +36,7 @@ Scenario('webpages-fielda-d', ({ I, DTE, Document }) => {
 Scenario('datatables select missing ID', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63979");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     Document.screenshot("/_media/changelog/2023-40/editor-tempid-missing.png");
 });
 

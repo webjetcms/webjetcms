@@ -9,7 +9,7 @@ Before(({ I, login }) => {
 Scenario('test indexovania suborov', ({I}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_1_");
 
-    I.click("#finder > div.elfinder-workzone > div.ui-state-default.elfinder-navbar.ui-resizable > div.elfinder-tree > div:nth-child(2)");
+    I.clickCss("#finder > div.elfinder-workzone > div.ui-state-default.elfinder-navbar.ui-resizable > div.elfinder-tree > div:nth-child(2)");
     I.rightClick('#iwcm_2_L2ZpbGVz');
     I.click( locate('div.elfinder-contextmenu-item').withChild( locate("span").withText("Nastavenie priečinka") ) );
     I.switchTo("#modalIframeIframeElement");

@@ -106,7 +106,7 @@ pageContext.setAttribute("doc", doc);
 			if (group != null)
 			{%>
 			<tr>
-				<td><strong><iwcm:text key="stat.group_name"/>:</strong></td>
+				<td><strong><iwcm:text key="admin.temp_group_list.directory"/>:</strong></td>
 				<td><a href='<%=GroupsController.BASE_URL%><%=group.getGroupId()%>' target="_blank"><%=group.getGroupName()%></a></td>
 			</tr>
 			<%

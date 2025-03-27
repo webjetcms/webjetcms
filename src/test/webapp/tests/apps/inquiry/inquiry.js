@@ -21,9 +21,9 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
         dataTable: 'inquiryDataTable',
         perms: 'menuInquiry',
         createSteps: function(I, options) {
-            I.click("#pills-dt-inquiryDataTable-advanced-tab");
+            I.clickCss("#pills-dt-inquiryDataTable-advanced-tab");
             I.fillField("#DTE_Field_questionGroup", "autotest");
-            I.click("#pills-dt-inquiryDataTable-basic-tab");
+            I.clickCss("#pills-dt-inquiryDataTable-basic-tab");
         }
     });
 });
@@ -33,23 +33,23 @@ Scenario('test inner table', async ({I, DT, DTE}) => {
 
     I.click("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("inquiryDataTable");
-    I.click("#pills-dt-inquiryDataTable-answers-tab");
+    I.clickCss("#pills-dt-inquiryDataTable-answers-tab");
 
     //Check not null field
     addAnswer(I, "");
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty.");
-    I.click("#datatableFieldDTE_Field_editorFields-answers_modal > div > div > div.DTE_Header.modal-header > button");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-answers_modal > div > div > div.DTE_Header.modal-header > button");
 
     //Add two answers
     addAnswer(I, answerA);
     addAnswer(I, answerB);
 
     //Close question
-    I.click("#inquiryDataTable_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
+    I.clickCss("#inquiryDataTable_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
 
     I.click("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("inquiryDataTable");
-    I.click("#pills-dt-inquiryDataTable-answers-tab");
+    I.clickCss("#pills-dt-inquiryDataTable-answers-tab");
 
     //Check that tmp answers was removed
     I.dontSee(answerA);
@@ -60,13 +60,13 @@ Scenario('test inner table', async ({I, DT, DTE}) => {
     addAnswer(I, answerB);
 
     //Set group
-    I.click("#pills-dt-inquiryDataTable-advanced-tab");
-    I.click("#DTE_Field_questionGroup");
+    I.clickCss("#pills-dt-inquiryDataTable-advanced-tab");
+    I.clickCss("#DTE_Field_questionGroup");
     I.fillField("#DTE_Field_questionGroup", testGroup);
 
     //Set question name
-    I.click("#pills-dt-inquiryDataTable-basic-tab");
-    I.click("#DTE_Field_questionText");
+    I.clickCss("#pills-dt-inquiryDataTable-basic-tab");
+    I.clickCss("#DTE_Field_questionText");
     DTE.fillQuill("questionText", questionName);
 
     //Save
@@ -76,7 +76,7 @@ Scenario('test inner table', async ({I, DT, DTE}) => {
     DT.filterContains("questionText", questionName);
     I.click(questionName);
     DTE.waitForEditor("inquiryDataTable");
-    I.click("#pills-dt-inquiryDataTable-answers-tab");
+    I.clickCss("#pills-dt-inquiryDataTable-answers-tab");
 
     //Check that answers are there
     I.see(answerA);
@@ -120,7 +120,7 @@ Scenario('test inner table', async ({I, DT, DTE}) => {
     I.click(questionName);
     I.seeInField("#DTE_Field_totalClicks", "1");
 
-    I.click("#pills-dt-inquiryDataTable-answers-tab");
+    I.clickCss("#pills-dt-inquiryDataTable-answers-tab");
     I.waitForText(answerA, "#datatableFieldDTE_Field_editorFields-answers");
     I.click(answerA);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-answers");
@@ -144,10 +144,10 @@ Scenario('test inner table-delete', ({I, DT}) => {
 });
 
 function addAnswer(I, answer) {
-    I.click("#datatableFieldDTE_Field_editorFields-answers_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
-    I.click("#DTE_Field_answerText");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-answers_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
+    I.clickCss("#DTE_Field_answerText");
     I.fillField("#DTE_Field_answerText", answer);
-    I.click("#datatableFieldDTE_Field_editorFields-answers_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-answers_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
 }
 
 Scenario('test inquiry groups', ({I}) => {

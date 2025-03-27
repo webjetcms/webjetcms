@@ -106,7 +106,7 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
         I.click(pageNameA);
         DTE.waitForEditor();
         Document.notifyCheckAndClose("Existuje rozpracovaná alebo neschválená verzia tejto stránky. Skontrolujte kartu História.");
-        I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
+        I.clickCss("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
 
         within("#pills-dt-datatableInit-history", () => {
             DT.filterContains("historyApprovedByName", "neschválené");
@@ -132,7 +132,7 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
         I.click(pageNameA);
         DTE.waitForEditor();
         Document.notifyCheckAndClose("Existuje rozpracovaná alebo neschválená verzia tejto stránky. Skontrolujte kartu História.");
-        I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
+        I.clickCss("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
 
         within("#pills-dt-datatableInit-history", () => {
             DT.filterContains("historyDisapprovedByName", "Tester Playwright");
@@ -510,7 +510,7 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
             I.click(pageName);
             DTE.waitForEditor();
             I.toastrClose();
-            I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
+            I.clickCss("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
 
             within("#pills-dt-datatableInit-history", () => {
                 // disapprove is always Tester_L2 Playwright no matter of includeFirstStepApprove

@@ -27,14 +27,14 @@ Scenario('web-pages-list', ({ I, DT, Document }) => {
     I.click("div.js-domain-toggler div.bootstrap-select button");
 
     //priecinky system/kod
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     Document.screenshotElement("div.tree-col", "/redactor/webpages/system-folder.png", 1280, 300);
 
     //screenshot nastavenia aplikacie galeria
     Document.screenshotAppEditor(45926, "/redactor/apps/gallery/editor-dialog.png", function(Document, I, DT, DTE) {
         //prepni sa na prvu kartu
-        I.click("#tabLink1");
+        I.clickCss("#tabLink1");
     }, 1280, 800);
 });
 ```

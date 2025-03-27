@@ -15,8 +15,6 @@ Scenario('search files', ({I, Document}) => {
     //
     I.say("Searching in current directory and subdirectories");
     I.fillField("div.elfinder-button-search input", "monitor");
-    I.waitForElement("div.elfinder-button-search div.elfinder-button-menu", 10);
-    I.wait(0.5);
     I.clickCss("label[for=elfinder-finderSearchFromCwdRecursive]");
     I.waitForLoader(".WJLoaderDiv");
 

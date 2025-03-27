@@ -192,7 +192,7 @@ Scenario('overenie dropdown menu', ({ I }) => {
     I.relogin("admin");
 
     I.amOnPage("/admin/v9/");
-    I.click("#dropdownMenuUser");
+    I.clickCss("#dropdownMenuUser");
     I.see("Profil", "ul.dropdown-menu.show");
     I.see("Dvojstupňové overovanie", "ul.dropdown-menu.show");
     I.see("Správa šifrovacích kľúčov");
@@ -215,7 +215,7 @@ Scenario('odhlasenie', ({ I }) => {
 Scenario('overenie nezobrazenie spravy sifrovacich klucov', ({ I }) => {
     I.relogin("tester2");
     I.amOnPage("/admin/v9/?removePerm=cmp_form");
-    I.click("#dropdownMenuUser");
+    I.clickCss("#dropdownMenuUser");
     I.see("Profil", "ul.dropdown-menu.show");
     I.see("Dvojstupňové overovanie", "ul.dropdown-menu.show");
     I.dontSee("Správa šifrovacích kľúčov");

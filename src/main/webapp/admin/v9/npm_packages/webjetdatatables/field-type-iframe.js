@@ -32,7 +32,7 @@ export function typeIframe() {
             conf._id = id;
             conf.val = "";
 
-            //if you change HEIGHT change also .form-group.row.DTE_Field_Type_iframe in _modal.scss
+            //if you change HEIGHT change also .form-group.row.DTE_Field_Type_iframe in _modal.scss AND ALSO in component.pug
             const htmlCode = $(`<div class="iframeFieldType"><iframe id="${id}" src="about:blank" width="100%" height="490"></iframe></div>`);
 
             return htmlCode;

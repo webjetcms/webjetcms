@@ -22,7 +22,7 @@ Scenario('banner-stat a banner-detail', ({I, Document}) => {
     }
     
 
-    I.click("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
+    I.clickCss("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
     I.wait(2);
 
     //Header

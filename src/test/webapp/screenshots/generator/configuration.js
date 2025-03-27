@@ -11,6 +11,7 @@ Scenario('Components configuration', ({ I, DTE, Document }) => {
 
     I.moveCursorTo('#toast-container-webjet');
     Document.screenshot("/admin/setup/configuration/page.png");
+    I.toastrClose();
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor(datatableName);
@@ -21,10 +22,7 @@ Scenario('Components configuration', ({ I, DTE, Document }) => {
     I.pressKey('e');
     I.pressKey('s');
     Document.screenshotElement("#configurationDatatable_modal > div > div.DTE_Action_Create", "/admin/setup/configuration/editor_1.png");
-
-    within("#configurationDatatable_modal > div > div.DTE_Action_Create", () => {
-        I.click( locate(".ui-menu-item-wrapper").withText("ABTesting") );
-    });
+    I.click( locate(".ui-menu-item-wrapper").withText("ABTesting") );
 
     Document.screenshotElement("#configurationDatatable_modal > div > div.DTE_Action_Create", "/admin/setup/configuration/editor_2.png");
 });

@@ -14,7 +14,7 @@ Scenario('Kontrolova editor locking hlasenia', ({ I, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=274");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-media-tab");
+    I.clickCss("#pills-dt-datatableInit-media-tab");
     I.wait(5);
     I.click("asdfasdfasdf");
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");

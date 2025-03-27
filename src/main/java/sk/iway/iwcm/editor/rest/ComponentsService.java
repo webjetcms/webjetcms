@@ -1,18 +1,10 @@
 package sk.iway.iwcm.editor.rest;
 
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.Advised;
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
@@ -33,7 +25,6 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,36 +34,28 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * Rest controller pre datatabulku zobrazenia parametrov aplikacie (v appstore)
  */
-@RestController
-@RequestMapping(value = "/admin/rest/components")
-@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuWebpages')")
-public class ComponentsRestController {
+public class ComponentsService {
 
-    /**
-     * Rest endpoint pre ziskanie dat, stlpcov a tabov pre editor,
-     * @param componentRequest ComponentRequest
-     * @return ResponseEntity<Map<String, Object>>
-     */
-    @PostMapping(value = "/component", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> component(@RequestBody ComponentRequest componentRequest, HttpServletRequest request) {
+
+    public static Map<String, Object> getComponentResponse(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
 
         String className = componentRequest.getClassName();
         if (Tools.isEmpty(className)) {
             result.put("error", "Class name empty");
-            return ResponseEntity.ok(result);
+            return result;
         }
 
         ApplicationContext applicationContext = SpringContext.getApplicationContext();
         if (!applicationContext.containsBean(className)) {
             result.put("error", "Class with name: " + className + " not found");
-            return ResponseEntity.ok(result);
+            return result;
         }
 
         WebjetComponentInterface bean = getWebjetComponentBean(applicationContext, className);
         if (bean == null) {
             result.put("error", "Class with name: " + className + " is not webjet component");
-            return ResponseEntity.ok(result);
+            return result;
         }
 
         try {
@@ -99,17 +82,7 @@ public class ComponentsRestController {
             sk.iway.iwcm.Logger.error(e);
         }
 
-        return ResponseEntity.ok(result);
-    }
-
-    /**
-     * Rest endpoint pre ziskanie vsetkych komponent, Datatable tento endpoint vola, ale pre komponenty nie je potrebny, tak vracia prazdny zoznam
-     * @param ignoredPageable Pageable
-     * @return Page<T>
-     */
-    @GetMapping("/all")
-    public Page<T> getAll(Pageable ignoredPageable) {
-        return new PageImpl<>(Collections.emptyList());
+        return result;
     }
 
     /**
@@ -290,7 +263,7 @@ public class ComponentsRestController {
 
             return value;
         } catch (Exception ex) {
-            Logger.error(ComponentsRestController.class, ex);
+            Logger.error(ComponentsService.class, ex);
         }
         return null;
     }
@@ -301,13 +274,13 @@ public class ComponentsRestController {
      * @param className String
      * @return WebjetComponentInterface
      */
-    private WebjetComponentInterface getWebjetComponentBean(ApplicationContext applicationContext, String className) {
+    private static WebjetComponentInterface getWebjetComponentBean(ApplicationContext applicationContext, String className) {
         WebjetComponentInterface bean = null;
         try {
             bean = applicationContext.getBean(className, WebjetComponentInterface.class);
         }
         catch (Exception e) {
-            Logger.error(ComponentsRestController.class, "exception", e);
+            Logger.error(ComponentsService.class, "exception", e);
         }
 
         if (bean == null) {

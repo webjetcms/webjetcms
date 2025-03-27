@@ -14,10 +14,10 @@ Scenario('menu editor', async ({ I, DTE, Document }) => {
 
     I.click(".tree-col .buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-menu-tab");
+    I.clickCss("#pills-dt-groups-datatable-menu-tab");
     Document.screenshot("/redactor/apps/menu/groups-dialog.png");
 
-    I.amOnPage("/apps/menu/");
+    I.amOnPage("/apps/menu/?NO_WJTOOLBAR=true");
     Document.screenshotElement("header.ly-header", "/redactor/apps/menu/top-menu.png");
     Document.screenshotElement("#menutest", "/redactor/apps/menu/left-menu.png");
 });

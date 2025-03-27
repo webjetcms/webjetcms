@@ -171,18 +171,18 @@ Scenario('Chybne texty', ({ I, DTE, DT }) => {
      DTE.waitForEditor();
      I.waitForElement(locate('#pills-dt-datatableInit-basic-tab.active'), 10);
 
-     I.click('#pills-dt-datatableInit-template-tab');
+     I.clickCss('#pills-dt-datatableInit-template-tab');
      I.dontSee('Nothing selected');
 
      // Zalozka PEREX - chybajuca diakritika v 'Znacky' => dalsia perex skupina
-     I.click('#pills-dt-datatableInit-perex-tab');
+     I.clickCss('#pills-dt-datatableInit-perex-tab');
      I.waitForElement("label[for=DTE_Field_perexGroups]", 10);
      I.scrollTo("label[for=DTE_Field_perexGroups]");
      I.see('ďalšia perex skupina');
      I.dontSee('dalsia perex skupina');
 
      // Zalozka VOLITELNE POLIA - polka nazvu labela v anglictine 'Alternatívny title'
-     I.click('#pills-dt-datatableInit-fields-tab');
+     I.clickCss('#pills-dt-datatableInit-fields-tab');
      I.see('SEO titulok');
      I.dontSee('Alternatívny title');
      I.forceClick('Zrušiť', '#datatableInit_modal');

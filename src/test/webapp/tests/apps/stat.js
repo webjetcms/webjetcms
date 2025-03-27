@@ -28,7 +28,7 @@ Scenario("visits", async ({ I, DT, Document }) => {
     DT.checkTableRow("statsDataTable", 2, ["30", "30.05.2022", "2", "2", "1"]);
 
     //change from stat days to stat weeks
-    I.click("#statsDataTable_extfilter button[data-stat-type=weeks]");
+    I.clickCss("#statsDataTable_extfilter button[data-stat-type=weeks]");
 
     DT.checkTableRow("statsDataTable", 1, ["6", "2 022", "22", "79", "27", "1"]);
     DT.checkTableRow("statsDataTable", 2, ["5", "2 022", "21", "410", "124", "1"]);
@@ -39,12 +39,12 @@ Scenario("visits", async ({ I, DT, Document }) => {
     DT.checkTableRow("statsDataTable", 3, ["12", "2 022", "28", "637", "294", "1"]);
 
     //change from stat weeks to stat months
-    I.click("#statsDataTable_extfilter button[data-stat-type=months]");
+    I.clickCss("#statsDataTable_extfilter button[data-stat-type=months]");
 
     DT.checkTableRow("statsDataTable", 1, ["3", "2 022", "7", "2 197", "944", "2"]);
 
     //change from stat months to hours months
-    I.click("#statsDataTable_extfilter button[data-stat-type=hours]");
+    I.clickCss("#statsDataTable_extfilter button[data-stat-type=hours]");
     DT.checkTableRow("statsDataTable", 1, ["1", "0", "159", "12", "3"]);
 });
 

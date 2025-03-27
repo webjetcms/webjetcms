@@ -145,17 +145,17 @@ Scenario('vyplnenie poli', async ({ I, DT, DTE }) => {
     //etc
 
     //Set values
-    I.click('#DTE_Field_fieldA');
+    I.clickCss('#DTE_Field_fieldA');
     I.fillField('#DTE_Field_fieldA', value1);
-    I.click('#DTE_Field_fieldB');
+    I.clickCss('#DTE_Field_fieldB');
     I.fillField('#DTE_Field_fieldB', value2);
-    I.click('#DTE_Field_fieldC');
+    I.clickCss('#DTE_Field_fieldC');
     I.fillField('#DTE_Field_fieldC', value3);
 
     //Test ERROR
     DTE.save();
     I.see("Povinné pole. Zadajte aspoň jeden znak.");
-    I.click('#DTE_Field_key');
+    I.clickCss('#DTE_Field_key');
     I.fillField('#DTE_Field_key', newEntityName);
 
     DTE.save();
@@ -214,9 +214,9 @@ Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
     DTE.waitForEditor();
 
     //Change only 2 values (but all this values will be set into DB ass new values)
-    I.click('#DTE_Field_fieldA');
+    I.clickCss('#DTE_Field_fieldA');
     I.fillField('#DTE_Field_fieldA', value1);
-    I.click('#DTE_Field_fieldB');
+    I.clickCss('#DTE_Field_fieldB');
     I.fillField('#DTE_Field_fieldB', value2);
 
     DTE.save();

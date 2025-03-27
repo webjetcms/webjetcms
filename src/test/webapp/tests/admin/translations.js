@@ -23,7 +23,7 @@ Scenario("CZ verzia preklady", ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=141");
     DTE.waitForEditor();
     I.see("Existuje rozpracovaná nebo neschválená verze této stránky.");
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.see("Nadřazený adresář");
     DTE.cancel();
 
@@ -53,7 +53,7 @@ Scenario("EN verzia preklady", ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=141");
     DTE.waitForEditor();
     I.see("There is a pending or unapproved version of this page.");
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.see("Parent folder");
     DTE.cancel();
 

@@ -29,7 +29,7 @@ Scenario('test zmeny domeny pri vytvarani zaznamu', ({I}) => {
     I.click("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     //I.click(locate('.dropdown-item').withText("test23.tau27.iway.sk"));
-    I.click("#bs-select-1-1");
+    I.clickCss("#bs-select-1-1");
     I.waitForElement("#toast-container-webjet", 10);
     I.click(".toastr-buttons button.btn-primary");
     I.wait(1);

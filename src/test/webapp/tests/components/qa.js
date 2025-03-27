@@ -24,7 +24,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
             DTE.fillField("fromName", "Web tester");
             DTE.fillField("fromEmail", "tester@balat.sk");
 
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             DTE.fillQuill("answerToEmail", "Toto je odpoved do emailu.");
             //oznac emailu ako bold
             I.pressKey('ArrowLeft');
@@ -37,7 +37,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
             DTE.fillQuill("answer", "Toto je odpoved na web stranku.");
         },
         editSteps: function(I, options) {
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             I.wait(1);
         },
         editSearchSteps: function(I, options) {
@@ -46,7 +46,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
             //I.wait(20);
         }, 
         duplicateSteps: function(I, options) {
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             I.wait(1);
         },
     });

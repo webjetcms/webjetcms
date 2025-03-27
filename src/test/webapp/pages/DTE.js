@@ -153,7 +153,7 @@ module.exports = {
       */
      async fillCkeditor(htmlCode) {
           this.waitForCkeditor();
-          I.click('#trEditor');
+          I.clickCss('#trEditor');
           I.pressKey('ArrowLeft');
           await I.executeScript(function (html) {
                window.ckEditorInstance.setData(html);

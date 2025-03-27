@@ -38,7 +38,7 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
     I.say("Webpage logoff link using !CSRF_INPUT! macro");
     I.amOnPage("/apps/prihlaseny-pouzivatel/zakaznicka-zona/csrf-logoff.html");
     I.waitForElement("#logoffButtonInput", 10);
-    I.click("#logoffButtonInput");
+    I.clickCss("#logoffButtonInput");
     I.waitForText("Zadajte vaše prihlasovacie údaje", 10, "article .container");
 
     //
@@ -46,7 +46,7 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
     I.say("Webpage logoff link using !CSRF_TOKEN! macro");
     I.amOnPage("/apps/prihlaseny-pouzivatel/zakaznicka-zona/csrf-logoff.html");
     I.waitForElement("#logoffButtonToken", 10);
-    I.click("#logoffButtonToken");
+    I.clickCss("#logoffButtonToken");
     I.waitForText("Zadajte vaše prihlasovacie údaje", 10, "article .container");
 
     //
@@ -57,7 +57,7 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
     await I.executeScript(function() {
         document.userLogoffForm["__token"].value = "aaaa"
     });
-    I.click("#logoffButtonToken");
+    I.clickCss("#logoffButtonToken");
     I.waitForText("text sa zobrazí len prihlásenému používateľovi.", 10);
 });
 

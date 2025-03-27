@@ -10,8 +10,8 @@ Scenario('slit slider', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/app-slit_slider/app-slit_slider.png");
 
     Document.screenshotAppEditor(77870, "/redactor/apps/app-slit_slider/editor-style.png", function(Document, I, DT, DTE) {
-        I.click("#tabLink2");
+        I.clickCss("#tabLink2");
         Document.screenshot("/redactor/apps/app-slit_slider/editor-items.png");
-        I.click("#tabLink1");
+        I.clickCss("#tabLink1");
     });
 });

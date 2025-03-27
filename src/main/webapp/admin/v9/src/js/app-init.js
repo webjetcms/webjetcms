@@ -25,6 +25,30 @@ if (window != window.top) {
     }
 }
 
+window.initSubmenuTabsClick = function() {
+    //handle tabs click - we need also to execute link so it cant be BS tabs
+    $(".ly-submenu .md-tabs li").on("click", "a", function(e) {
+        let $this = $(this);
+        let isActive = $this.hasClass("active");
+        let href = $this.attr("href");
+        $this.parents(".md-tabs").find("li a.active").removeClass("active");
+
+        if (isActive) {
+            $this.addClass("active");
+            //this is click on active tab burger menu on small device, prevent click, just open/close menu
+            if ($this.closest('ul').css("position")=="relative") {
+                $this.closest('ul').addClass("open");
+                e.preventDefault();
+            }
+        } else {
+            $this.addClass("active");
+            $this.closest('ul').removeClass("open");
+            //hide menu
+            $("div.js-sidebar-toggler").trigger("click");
+        }
+    });
+}
+
 function initClosure() {
 
     // =======================
@@ -159,23 +183,7 @@ function initClosure() {
             let $headerTitle = $(".header-title");
             hideFirstBreadcrumbItem($headerTitle, mainTitle);
 
-            //handle tabs click - we need also to execute link so it cant be BS tabs
-            $(".ly-submenu .md-tabs li").on("click", "a", function(e) {
-                let $this = $(this);
-                let isActive = $this.hasClass("active");
-                $this.parents(".md-tabs").find("li a.active").removeClass("active");
-                if (isActive) {
-                    $this.addClass("active");
-                    //this is click on active tab burger menu on small device, prevent click, just open/close menu
-                    if ($this.closest('ul').css("position")=="relative") {
-                        $this.closest('ul').toggleClass("open");
-                        e.preventDefault();
-                    }
-                } else {
-                    $this.addClass("active");
-                    $this.closest('ul').removeClass("open");
-                }
-            });
+            window.initSubmenuTabsClick();
         }
     });
 
@@ -203,6 +211,9 @@ function initClosure() {
         $("div.ly-sidebar").toggleClass("active");
         $("div.ly-page-wrapper").toggleClass("active");
         $(this).children("i").toggleClass("ti-x");
+        //hide sub-menu
+        $(".ly-header .ly-submenu .md-tabs ul.nav").removeClass("open");
+
     });
 
     // =======================

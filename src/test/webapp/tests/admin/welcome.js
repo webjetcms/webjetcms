@@ -23,12 +23,12 @@ Scenario("zalozky", ({ I }) => {
     I.waitForElement("#bookmark_modal");
     I.wait(2);
 
-    I.click("#bookmark_modal button.btn-primary");
+    I.clickCss("#bookmark_modal button.btn-primary");
     I.see("Povinné pole. Zadajte aspoň jeden znak.", "#bookmark_modal");
 
     I.fillField("Názov záložky", title);
     I.fillField("Adresa stránky", "/admin/v9/"+random);
-    I.click("#bookmark_modal button.btn-primary");
+    I.clickCss("#bookmark_modal button.btn-primary");
 
     I.waitForInvisible("#bookmark_modal");
 
