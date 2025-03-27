@@ -350,6 +350,8 @@ function submitReservation(I, requiresApproval = false) {
         I.waitForText('Vaša rezervácia bola úspešne vytvorená a schválená.', 10);
     else
         I.waitForText('Vaša rezervácia bola úspešne vytvorená a teraz čaká na schválenie.', 10);
+
+    I.refreshPage();
 }
 
 function clickDate(I, year, month, day) {

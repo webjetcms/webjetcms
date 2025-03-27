@@ -23,13 +23,13 @@ Scenario('dir usage', async ({I, DT}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_2_L2ltYWdlcw_E_E");
 
     I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
-
+    
     I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie priečinka"));
     I.waitForVisible("#modalIframe", 10);
 
     I.switchTo("#modalIframeIframeElement");
 
-    I.see("Indexovať súbory pre vyhľadávanie");
+    I.waitForText("Indexovať súbory pre vyhľadávanie", 20);
     I.see("Obchodní partneri");
 
     getFileUsage(I, DT, "#datatableFieldDTE_Field_editorFields-docDetailsList_processing");
