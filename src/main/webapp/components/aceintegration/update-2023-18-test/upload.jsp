@@ -14,12 +14,12 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <div class="box_toggle">
 	<div class="toggle_content">
 		<div id="tabMenu1">
-			<html:form action="/admin/importxls.do" name="xlsImportForm" type="sk.iway.iwcm.xls.ImportXLSForm" enctype="multipart/form-data">
+			<form action="/admin/importxls.do" name="xlsImportForm" enctype="multipart/form-data">
 				<table>
 					<tr>
 						<td>Vyberte súbor:</td>
 						<td>
-							<html:file property="file" styleClass="input"/>
+							<input type="file" styleClass="input"/>
 						</td>
 					</tr>
 					<tr>
@@ -36,7 +36,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 						</td>
 					</tr>
 				</table>
-			</html:form>
+			</form>
 		</div>
 	</div>
 </div>

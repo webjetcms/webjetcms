@@ -394,7 +394,7 @@ function getOrderFormParametersString()
 
 	<div class="tab-page" id="tabMenu1" style="display: block; padding: 15px;">
 
-			<html:form action="/admin/editor.do" onsubmit="return false" name="textForm" type="sk.iway.iwcm.editor.EditorForm">
+			<form action="/admin/editor.do" onsubmit="return false" name="textForm">
 <div class="clearfix">
 			<h2><iwcm:text key="basket.shopSettings"/></h2>
 				<div class="form-group hidden">
@@ -681,19 +681,19 @@ function getOrderFormParametersString()
 						</div>
 					</div>
 				</div>
-			</html:form></div>
+			</form></div>
 <div class="clearfix">
 			<h2><iwcm:text key="components.basket.mode_of_transport"/></h2>
 			<div>
-				<iframe id="transportIframeWindowTab" frameborder="0" name="transportIframeWindowTab" width="950" height="700" src="/admin/iframe_blank.jsp"></iframe>
+				<iframe id="transportIframeWindowTab" frameborder="0" name="transportIframeWindowTab" width="100%" height="700" src="/admin/iframe_blank.jsp"></iframe>
 			</div>
 	</div></div>
 
 	<div class="tab-page" id="tabMenu2">
-		<iframe id="componentIframeWindowTab" frameborder="0" name="componentIframeWindowTab" width="950" height="490" src="/admin/iframe_blank.jsp"></iframe>
+		<iframe id="componentIframeWindowTab" frameborder="0" name="componentIframeWindowTab" width="100%" height="530" src="/admin/iframe_blank.jsp"></iframe>
 	</div>
 	<div class="tab-page" id="tabMenu3">
-		<iframe id="invoicesIframeWindowTab" frameborder="0" name="invoicesIframeWindowTab" width="950" height="490" src="/admin/iframe_blank.jsp"></iframe>
+		<iframe id="invoicesIframeWindowTab" frameborder="0" name="invoicesIframeWindowTab" width="100%" height="530" src="/admin/iframe_blank.jsp"></iframe>
 	</div>
 
 		<div class="tab-page" id="tabMenu4">
@@ -771,7 +771,7 @@ function getOrderFormParametersString()
 		{ %>
 			$("#groupIds").val(window.opener.textForm.groupId.value);
 	<% } %>
-		resizeDialog(750,570);
+
 	}
 //-->
 

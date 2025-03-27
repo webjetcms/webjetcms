@@ -134,6 +134,8 @@ const WJ = (() => {
         //nastav title
         const title = options.title || '';
         $('#modalIframe .modal-header h5').html(title);
+        if (title === "") $('#modalIframe .modal-header h5').hide();
+        else $('#modalIframe .modal-header h5').show();
 
         //nastav button title
         const buttonTitle = options.buttonTitleKey ? WJ.translate(options.buttonTitleKey) : WJ.translate("button.submit");

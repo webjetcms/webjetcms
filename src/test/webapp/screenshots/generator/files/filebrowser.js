@@ -93,7 +93,7 @@ Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) 
     I.rightClick(`.elfinder-cwd-filename[title="foto-1.jpg"]`);
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjeditswitch');
-    
+
     I.wait(5);
     I.switchToNextTab();
     I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
@@ -125,16 +125,16 @@ Scenario('filebrowser - workspace screens', ({ I, Document }) => {
 
     I.waitForElement("#iwcm_1_L2ZpbGVz");
     I.doubleClick( locate("#iwcm_1_L2ZpbGVz" ) );
-    I.waitForElement("#iwcm_1_L2ZpbGVzL2p1cmtvLmpwZw_E_E");
+    I.waitForElement("#iwcm_1_L2ZpbGVzL2p1cmtvLmpwZw_E_E"); //files/jurko.jpg
 
     I.rightClick( locate("div.elfinder-cwd-wrapper > div.elfinder-cwd") );
     I.waitForVisible("div.elfinder-contextmenu.elfinder-contextmenu-ltr");
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_workspace.png");
 
-    I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );
+    I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );  //files/protected
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_folder.png");
 
-    I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );
+    I.rightClick( locate("#iwcm_1_L2ZpbGVzL2p1cmtvLmpwZw_E_E") );
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_file.png");
 });
 
@@ -236,6 +236,7 @@ Scenario('filebrowser - file properties screens', ({ I, DTE, Document, i18n }) =
     I.waitForVisible("iframe#modalIframeIframeElement");
 
     I.switchTo("#modalIframeIframeElement");
+    I.waitForElement("#pills-dt-datatableInit-usage-tab", 10);
     I.clickCss("#pills-dt-datatableInit-usage-tab");
     I.waitForInvisible("#datatableFieldDTE_Field_docDetailsList_processing");
     I.switchTo();
@@ -243,6 +244,7 @@ Scenario('filebrowser - file properties screens', ({ I, DTE, Document, i18n }) =
 
     I.amOnPage("/admin/v9/webpages/web-pages-list?docid=60028");
     DTE.waitForEditor();
+    I.wait(2);
     Document.screenshot("/redactor/files/fbrowser/file-settings/file_link_A.png");
 
     I.amOnPage("/apps/contentblock/");

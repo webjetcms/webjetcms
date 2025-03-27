@@ -343,7 +343,7 @@ body.modal-open {
         display: block;
         padding-top: 8px;
         padding-bottom: 0px;
-        padding-right: 52px; //because of close btn on small devices
+        //padding-right: 52px; //because of close btn on small devices
         background-color: $nice-gray;
         .md-breadcrumb {
             border: 0;
@@ -1087,6 +1087,10 @@ html.in-iframe:not(.in-iframe-show-footer-primary) {
     .modal:not(.DTE_nested_modal) .modal-dialog-scrollable {
         div.modal-content {
             div.modal-footer {
+                padding-top: 0px; //otherwise it will show on elfinder fileprop as double line
+                padding-bottom: 0px;
+                border-top-width: 0px;
+
                 div.DTE_Footer_Content {
                     display: none;
                 }
@@ -1117,8 +1121,9 @@ html.in-iframe-show-table {
 #modalIframe.close-button-over {
     div.modal-content {
         div.modal-header {
-            padding-top: 6px !important;
-            padding-bottom: 6px !important;
+            //eg. file properties in elfinder
+            padding-top: 0px !important;
+            padding-bottom: 0px !important;
             border: 0px;
             button.btn-close {
                 position: absolute;

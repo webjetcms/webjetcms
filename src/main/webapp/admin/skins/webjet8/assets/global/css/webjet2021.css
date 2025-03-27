@@ -956,6 +956,9 @@ table.wjDialogHeaderTable, #componentsWindowTable {
 #componentsWindowTable .box_tab ul.tab_menu {
     margin-left: 5px;
 }
+#componentsWindowTable .box_tab ul.tab_menu li {
+  margin-bottom: 0px;
+}
 #componentsWindowTableMainDiv .tab-pane {
     background-color: white;
 }
