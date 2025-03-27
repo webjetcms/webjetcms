@@ -118,7 +118,11 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.users.userdetail",
     "sk.iway.iwcm.components.users.usergroups",
     "sk.iway.iwcm.components.welcome",
-    "sk.iway.webjet.v9"
+    "sk.iway.webjet.v9",
+    "sk.iway.iwcm.components.appmedia",
+    "sk.iway.iwcm.components.carouselslider",
+    "sk.iway.iwcm.components.sitemap",
+    "sk.iway.iwcm.components.appsocialicon"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
