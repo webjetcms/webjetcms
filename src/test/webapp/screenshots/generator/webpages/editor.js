@@ -306,3 +306,8 @@ Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
 
     I.switchTo();
 });
+
+Scenario('webjet-toolbar', ({ I, DTE, Document }) => {
+    I.amOnPage("/investicie/?NO_WJTOOLBAR=false");
+    Document.screenshot('/redactor/webpages/webjet-toolbar.png');
+});

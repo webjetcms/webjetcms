@@ -104,7 +104,7 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     DTE.waitForEditor();
     I.wait(6);
 
-    I.click("a.cke_button__components");
+    I.clickCss("a.cke_button__components");
 
     I.waitForVisible("div.cke_dialog_body");
     I.wait(2);
@@ -119,7 +119,7 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.wait(3);
 
     Document.screenshot("/custom-apps/appstore/democomponent-desc.png");
-    
+
     confLng = I.getConfLng();
     switch (confLng) {
         case 'sk':
@@ -146,11 +146,12 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     DTE.waitForEditor();
     I.wait(6);
 
-    I.click("a.cke_button__components");
+    I.clickCss("a.cke_button__components");
 
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
+    I.waitForElement("#apps-contact-title", 10);
     I.clickCss("#apps-contact-title");
     I.wait(3);
 
