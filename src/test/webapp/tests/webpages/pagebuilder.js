@@ -65,6 +65,7 @@ Scenario('overenie zobrazenia podla sablony', ({I, DTE, Document}) => {
 Scenario('bug - prepnutie editora', ({I, DTE, Apps, Document}) => {
     //bug: nacitam do editora stranku, prepnem na Standardny editor, prepnem do HTML kodu, ulozim
     //otvorim inu stranku, prepnem editor na Standardny a vidim stary text
+
     //reset PB settings
     Document.resetPageBuilderMode();
 
