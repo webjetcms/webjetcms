@@ -7,7 +7,7 @@ var csvFile = "tests/apps/dmail/testCSV.txt";
 var recipientsWrapper = "#datatableFieldDTE_Field_recipientsTab_wrapper";
 var recipientsModal = "#datatableFieldDTE_Field_recipientsTab_modal";
 
-Before(({ I, login }) => {
+Before(({ I, login, DT }) => {
     login('admin');
     I.amOnPage("/apps/dmail/admin/");
 
@@ -17,9 +17,10 @@ Before(({ I, login }) => {
         entityName = "name-autotest-" + randomNumber;
         console.log(entityName);
     }
+    DT.addContext("recipients","#datatableFieldDTE_Field_recipientsTab_wrapper");
 });
 
-Scenario('campaings', ({ I, DTE, Document }) => {
+Scenario('campaings', ({ I, DTE, DT, Document }) => {
 
     //Campaings data table
     Document.screenshot("/redactor/apps/dmail/campaings/dataTable.png");
@@ -50,10 +51,24 @@ Scenario('campaings', ({ I, DTE, Document }) => {
     I.clickCss("#pills-dt-campaingsDataTable-advanced-tab");
     Document.screenshotElement("#campaingsDataTable_modal > div > div", "/redactor/apps/dmail/campaings/advanced.png");
 
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    Document.screenshotElement("#campaingsDataTable_modal > div > div", "/redactor/apps/dmail/campaings/users.png");
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    Document.screenshotElement(DT.btn.recipients_group_button, "/redactor/apps/dmail/campaings/users_from_group_button.png");
+    I.click(DT.btn.recipients_group_button);
+    I.waitForElement("#modalIframeIframeElement", 10);
+    I.switchTo("#modalIframeIframeElement");
 
-    I.click(locate('label').withText('Bankári'));
+    I.checkOption("input[type=checkbox][value='Newsletter']");
+    I.checkOption("input[type=checkbox][value='VIP Klienti']");
+
+    Document.screenshot("/redactor/apps/dmail/campaings/users.png");
+
+    I.switchTo();
+    Document.screenshotElement(locate("#modalIframe button").withText("OK"), "/redactor/apps/dmail/campaings/users_from_group_OK_button.png");
+    I.click(locate("#modalIframe button").withText("OK"));
+
+    I.waitForInvisible("#modalIframeIframeElement", 10);
+    Document.screenshotElement("#campaingsDataTable_modal > div > div", "/redactor/apps/dmail/campaings/receivers_B.png");
+
     DTE.save();
 
     I.click(entityName);

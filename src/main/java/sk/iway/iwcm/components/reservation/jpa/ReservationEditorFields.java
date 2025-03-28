@@ -70,8 +70,8 @@ public class ReservationEditorFields {
         sortAfter = "accepted",
         tab = "basic"
     )
-    private Boolean allowHistorySave;    
-    
+    private Boolean allowHistorySave;
+
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
         title = "components.reservation.allow_overbooking",
@@ -194,7 +194,7 @@ public class ReservationEditorFields {
     public void fromReservationEntity(ReservationEntity originalEntity, ProcessItemAction action, HttpServletRequest request) {
 
         ReservationObjectEntity selected = originalEntity.getReservationObjectForReservation();
-        
+
         if(action == ProcessItemAction.CREATE) {
             //Logged user
             Identity user = UsersDB.getCurrentUser(request);
@@ -222,7 +222,7 @@ public class ReservationEditorFields {
                 }
             }
         }
-    
+
         if(selected != null) {
             selectedReservation = selected.getName();
             if(Tools.isNotEmpty(selected.getPassword())) needPasswordToDelete = Boolean.TRUE;

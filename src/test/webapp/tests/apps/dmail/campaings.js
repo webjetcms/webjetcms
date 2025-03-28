@@ -9,7 +9,7 @@ var excelFile = "tests/apps/dmail/emails-import.xlsx";
 
 var baseEntityName, xlsEntityName, rawEntityName, ugEntityName, prijemcoviaEntityName;
 
-Before(({ I, login }) => {
+Before(({ I, login, DT }) => {
     login('admin');
     I.amOnPage("/apps/dmail/admin/");
 
@@ -18,6 +18,8 @@ Before(({ I, login }) => {
         entityNameOriginal = "name-autotest-" + randomNumber;
         console.log(entityNameOriginal);
     }
+    DT.addContext("recipients","#datatableFieldDTE_Field_recipientsTab_wrapper");
+    DT.addContext("campaings" ,"#campaingsDataTable_wrapper");
 });
 
 Scenario('campaings-zakladne testy', ({I, DT, DTE}) => {
@@ -134,7 +136,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
 
     //First import WITHOUT set default custom name
-    I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
+    I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success");
     I.waitForElement(recipientsModal);
     I.wait(1);
     var importEmails = "vipklient@balat.sk, admin@balat.sk"
@@ -147,7 +149,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.see("WebJET Administrátor");
 
     //First import WITH set default custom name
-    I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
+    I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success");
     I.wait(1);
     importEmails = "vipklient@balat.sk, partner@balat.sk"
     I.clickCss("#DTE_Field_recipientEmail")
@@ -210,11 +212,30 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     deleteCampaingByName(I, DT, DTE, rawEntityName);
  });
 
- Scenario('testy skupiny pouzivatelov', ({I, DT, DTE}) => {
+ Scenario('duplicity in groups check', async ({ I, DT, DTE }) => {
+    I.click(DT.btn.campaings_add_button);
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    I.click(DT.btn.recipients_group_button);
+    I.waitForElement("#modalIframeIframeElement", 10);
+    I.switchTo("#modalIframeIframeElement");
+
+    let groups = await I.grabTextFromAll("div.custom-control.form-switch label");
+    groups = [...groups];
+    const hasDuplicates = groups.some((group, index) =>
+        groups.indexOf(group) !== index
+    );
+    I.assertFalse(hasDuplicates, "Existujú duplicity v zozname.");
+    I.switchTo();
+    I.click(locate("#modalIframe button").withText("OK"));
+});
+
+Scenario('testy skupiny pouzivatelov', ({I, DT, DTE}) => {
     ugEntityName = entityNameOriginal + "-ug";
 
     /* PREPARE ENTITY */
-    I.clickCss("div.dt-buttons button.buttons-create");
+    I.click(DT.btn.campaings_add_button);
     DTE.waitForEditor("campaingsDataTable");
 
     I.clickCss("button.btn-vue-jstree-item-edit")
@@ -230,11 +251,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     DT.filterContains("subject", ugEntityName);
     I.click(ugEntityName);
     DTE.waitForEditor("campaingsDataTable");
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.wait(1);
-
-    I.waitForElement(locate('#pills-dt-campaingsDataTable-groupsTab label.form-check-label').withText('Bankári'), 5);
-    I.click(locate('#pills-dt-campaingsDataTable-groupsTab label.form-check-label').withText('Bankári'));
+    editGroups(I, DT, ["Bankári"], []);
     I.wait(1);
     DTE.save();
 
@@ -250,13 +267,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.see("Matej Pavlík");
 
     DT.clearFilter('recipientName');
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.click(locate('label').withText('Bankári'));
-    I.wait(0.5);
-    I.click(locate('label').withText('Obchodní partneri'));
-    I.wait(0.5);
-    I.click(locate('label').withText('VIP Klienti'));
-    I.wait(0.5);
+    editGroups(I, DT, ['Obchodní partneri', 'VIP Klienti'],['Bankári']);
     DTE.save();
 
     I.click(ugEntityName);
@@ -275,12 +286,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.dontSee("Meno Priezvisko");
     I.dontSee("TestUser Test");
 
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.wait(1);
-    I.click(locate('label').withText('Obchodní partneri'));
-    I.wait(0.5);
-    I.click(locate('label').withText('VIP Klienti'));
-    I.wait(0.5);
+    editGroups(I, DT, [], ['Obchodní partneri', 'VIP Klienti']);
     DTE.save();
 
     I.click(ugEntityName);
@@ -294,7 +300,7 @@ Scenario('campaings skupiny delete', ({I, DT, DTE}) => {
     deleteCampaingByName(I, DT, DTE, ugEntityName);
 });
 
-Scenario('BUG pocty prijemcov', ({I, DTE}) => {
+Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
     prijemcoviaEntityName = entityNameOriginal+"-prijemcovia";
 
     //It's 3 not 2 BUT one of them is invalid
@@ -308,14 +314,12 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
 
     I.clickCss("button.btn-vue-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
-    I.click('Testovaci newsletter');
+    I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
-    I.clickCss("#DTE_Field_subject")
+    //Set subject
     I.fillField("#DTE_Field_subject", prijemcoviaEntityName);
 
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-
-    I.click("Newsletter", "div.DTE_Field_Name_editorFields\\.emails");
+    editGroups(I, DT, ['Newsletter'], []);
 
     //TODO - after CodeceptJS update start using withTextEquals that finds EXACT text not just LIKE match
     //I.click( locate("div").withChild( locate("label").withTextEquals('Newsletter') ).find("input") );
@@ -329,8 +333,7 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     I.say("Pridam skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(prijemcoviaEntityName);
     I.dtWaitForEditor("campaingsDataTable");
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.click("Vianočné pozdravy", "div.DTE_Field_Name_editorFields\\.emails");
+    editGroups(I, DT, ["Vianočné pozdravy"], []);
     DTE.save();
 
     overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
@@ -339,8 +342,7 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     I.say("Odoberem skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(prijemcoviaEntityName);
     I.dtWaitForEditor("campaingsDataTable");
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.click("Vianočné pozdravy", "div.DTE_Field_Name_editorFields\\.emails");
+    editGroups(I, DT, [], ["Vianočné pozdravy"]);
     DTE.save();
 
     overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
@@ -383,7 +385,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.clickCss("#pills-dt-campaingsDataTable-main-tab");
     I.clickCss("button.btn-vue-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
-    I.click('Testovaci newsletter');
+    I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
     I.clickCss("#pills-dt-campaingsDataTable-preview-tab");
     I.wait(1);
@@ -530,9 +532,7 @@ Scenario("Duplicity check", ({I, DT, DTE}) => {
 
     //
     I.say("Selecting groups with multiple vipklient@balat.sk email");
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.checkOption("Bankári", "#pills-dt-campaingsDataTable-groupsTab");
-    I.checkOption("VIP Klienti", "#pills-dt-campaingsDataTable-groupsTab");
+    editGroups(I, DT, ["Bankári", "VIP Klienti"], []);
     DTE.save();
     I.click("Duplicity check campaign");
     DTE.waitForEditor("campaingsDataTable");
@@ -541,9 +541,7 @@ Scenario("Duplicity check", ({I, DT, DTE}) => {
     I.see("Záznamy 1 až 1 z 1", recipientsWrapper);
 
     //deselect groups
-    I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
-    I.uncheckOption("Bankári", "#pills-dt-campaingsDataTable-groupsTab");
-    I.uncheckOption("VIP Klienti", "#pills-dt-campaingsDataTable-groupsTab");
+    editGroups(I, DT, [], ["Bankári", "VIP Klienti" ]);
     DTE.save();
 });
 
@@ -652,7 +650,7 @@ Scenario('Check BUG recipients + constraint MultipleEmails', ({ I, DT, DTE}) => 
         I.click(entityName);
         DTE.waitForEditor("campaingsDataTable");
         I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
-        I.see("Záznamy 1 až 1 z 1", recipientsWrapper);
+        I.see("Záznamy 1 až 1 z 1", recipientsWrapper); //TODO recipient sa strati
 
     I.say("Remove campaing");
         DTE.cancel();
@@ -723,7 +721,6 @@ Scenario('FEATURE - before save/action remove all un-subscribed emails', ({ I, D
     I.amOnPage('/apps/dmail/admin/?id=2744');
     DTE.waitForEditor("campaingsDataTable");
 
-
     I.say("Add email");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     addEmail(I, DTE, "", email);
@@ -768,6 +765,31 @@ Scenario('FEATURE - before save/action remove all un-subscribed emails', ({ I, D
     I.dontSee(email);
 });
 
+function editGroups(I, DT, groupsToAdd = [], groupsToRemove = []) {
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    I.click(DT.btn.recipients_group_button);
+    I.waitForElement("#modalIframeIframeElement", 10);
+
+    I.switchTo("#modalIframeIframeElement");
+    groupsToAdd.forEach((group) => {
+        const checkbox = `input[type=checkbox][value='${group}']`;
+        I.dontSeeCheckboxIsChecked(checkbox);
+        I.checkOption(checkbox);
+    });
+
+    groupsToRemove.forEach((group) => {
+        const checkbox = `input[type=checkbox][value='${group}']`;
+        I.seeCheckboxIsChecked(checkbox)
+        I.uncheckOption(checkbox);
+    });
+
+    I.switchTo();
+    I.click(locate("#modalIframe button").withText("OK"));
+
+    //Wait to recipients table to refresh
+    I.waitForInvisible("#datatableFieldDTE_Field_recipientsTab_processing", 30);
+}
+
 function prepareCampaignForInsert(I, DTE, entityName) {
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
@@ -776,7 +798,7 @@ function prepareCampaignForInsert(I, DTE, entityName) {
     I.clickCss("button.btn-vue-jstree-item-edit");
     I.waitForElement("#jsTree");
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
-    I.click('Testovaci newsletter');
+    I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
     I.clickCss("#DTE_Field_subject")
     I.fillField("#DTE_Field_subject", entityName);
@@ -958,4 +980,45 @@ Scenario('Feature setting of subject', ({I, DTE}) => {
     I.say("IF click OK - subject should be changed");
     I.click(locate("#toast-container-webjet").find("button.btn-primary"));
     I.seeInField("#DTE_Field_subject", "Registracia do newsletra");
+});
+
+Scenario('BUG - remove users from unselected groups while campain is not save yet', ({I, DT, DTE}) => {
+    I.amOnPage("/apps/dmail/admin/");
+
+    I.click(DT.btn.campaings_add_button);
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.say("add email to campain");
+    editGroups(I, DT, ['Newsletter'], []);
+
+    I.say("check that email is in campain");
+    I.see("vipklient@balat.sk");
+    I.see("user_sha512@balat.sk");
+
+    I.say("Add default recipient");
+    I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success");
+    I.waitForElement(recipientsModal);
+    I.fillField("#DTE_Field_recipientName", "test");
+    I.fillField("#DTE_Field_recipientEmail", "testdefault@balat.sk");
+    I.clickCss(recipientsModal + " > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
+    I.waitForInvisible("#datatableFieldDTE_Field_recipientsTab_processing", 30);
+    
+    I.say("Check that see default recipient");
+    I.see("testdefault@balat.sk");
+
+    I.say("Remove group and test if recipients are removed");
+    editGroups(I, DT, [], ['Newsletter']);
+
+    I.dontSee("vipklient@balat.sk");
+    I.dontSee("user_sha512@balat.sk");
+
+    I.see("testdefault@balat.sk");
+    
+    I.click( locate(recipientsWrapper).find("button.buttons-select-all") );
+    I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-remove") );
+    I.waitForElement("div.DTE_Action_Remove");
+    I.waitForText("Naozaj chcete zmazať položku?", 5);
+    I.click("Zmazať", "div.DTE_Action_Remove");
+
+    I.dontSee("testdefault@balat.sk");
 });

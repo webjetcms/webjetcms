@@ -2,8 +2,9 @@ Feature('apps-editor-component');
 
 var basePath = "/../../src/main/webapp";
 
-Before(({ I, login }) => {
+Before(({ I, login, DT }) => {
     login('admin');
+    DT.addContext("recipients","#datatableFieldDTE_Field_recipientsTab_wrapper");
 });
 
 function tabLinkNone(Document, I, DT, DTE) {
@@ -102,8 +103,12 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.amOnPage("/apps/dmail/admin/?id=1");
     DTE.waitForEditor("campaingsDataTable");
     Document.screenshot(basePath+"/components/dmail/screenshot-2.jpg");
-    I.click("#pills-dt-campaingsDataTable-groupsTab-tab");
+
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    I.click(DT.btn.recipients_group_button);
+    I.waitForElement("#modalIframeIframeElement", 10);
     Document.screenshot(basePath+"/components/dmail/screenshot-3.jpg");
+    I.click(locate("#modalIframe button").withText("OK"));    
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77768");
     DTE.waitForEditor();

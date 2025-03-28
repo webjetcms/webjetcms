@@ -28,7 +28,6 @@
                 { id: 'main', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true},
                 { id: 'preview', title: /*[[#{editor.preview}]]*/ '', content: '<div class="previewContainer"><iframe id="emailPreviewIframe" src="about:blank" width="100%" height="500"></iframe><div>' },
                 { id: 'advanced', title: /*[[#{datatable.tab.advanced}]]*/ '' },
-                { id: 'groupsTab', title: /*[[#{user.admin.userGroups}]]*/ '' },
                 { id: 'receivers', title: /*[[#{components.dmail.campaings.tab.receivers}]]*/ '' },
                 { id: 'opens', title: /*[[#{components.dmail.campaings.tab.opens}]]*/ '', className: "hide-on-duplicate" },
                 { id: 'clicks', title: /*[[#{components.dmail.campaings.tab.clicks}]]*/ '', className: "hide-on-duplicate" }
@@ -194,22 +193,66 @@
                     }
                 });
 
-                //add insert button
-                /*recipientTable.button().add(1, {
-                    text: '<i class="ti ti-download"></i>',
+                //add insert groups button
+                $("#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-create").removeClass("buttons-divider");
+                recipientTable.button().add(1, {
+                    text: '<i class="ti ti-library-plus"></i>',
                     action: function (e, dt, node) {
+                        let campaingId = campaingsDataTable.EDITOR.field("id").val();
+                        let emails = campaingsDataTable.EDITOR.field("editorFields.emails").val();
+                        let permisions = campaingsDataTable.EDITOR.field("editorFields.permisions").val();
+
                         WJ.openIframeModal({
-                            url: "/components/dmail/admin_email_iframe_v9.jsp",
+                            url: "/apps/dmail/admin/add-email-group/?campaingId="+campaingId+"&emails="+emails+"&permisions="+permisions,
                             width: 570,
                             height: 565,
-                            buttonTitleKey: "button.close"
+                            closeButtonPosition: "close-button-over",
+                            buttonTitleKey: 'button.confirm',
+                            okclick: function() {
+                                $('#modalIframeIframeElement').contents().find('div.modal.DTED.show div.DTE_Footer button.btn-primary').trigger("click");
+                                setCheckedToWindow();
+                                return true;
+                            }
                         });
+
                     },
-                    className: 'btn btn-success',
+                    className: 'btn btn-success btn-add-group buttons-divider',
                     attr: {
-                        'title': '[[#{components.dmail.admin_email.pridat_podla_xls}]]'
+                        title : /*[[#{components.dmail.add_group_button.title}]]*/ '',
+                        'data-toggle': 'tooltip'
                     }
-                });*/
+                });
+
+                function setCheckedToWindow() {
+                    let allSelected = [];
+
+                    //Prepare checked emails
+                    let checkedEmails = $('#modalIframeIframeElement').contents().find("#emails").find("input:checked").map(function() {
+                        let email = (this.id).replace('email_', '');
+                        allSelected.push(email);
+                        return email;
+                    }).get();
+
+                    //Prepare checked permissions
+                    let checkedPermissions = $('#modalIframeIframeElement').contents().find("#perms").find("input:checked").map(function() {
+                        let permission = (this.id).replace('perm_', '');
+                        allSelected.push(permission);
+                        return permission;
+                    }).get();
+
+                    //Set checked values to editor (back into CAMPAIN)
+                    campaingsDataTable.EDITOR.field("userGroupsIds").val(allSelected.toString());
+                    campaingsDataTable.EDITOR.field("editorFields.emails").val(checkedEmails);
+                    campaingsDataTable.EDITOR.field("editorFields.permisions").val(checkedPermissions);
+
+                    //Prepare custom data with new selected values and execute action to add/remove recipients
+                    let customData = {
+                        campaingId: campaingsDataTable.EDITOR.field("id").val() + "",
+                        emails: checkedEmails.toString(),
+                        permissions: checkedPermissions.toString()
+                    };
+                    recipientTable.executeAction("addRecipients", true, null, null, JSON.stringify(customData));
+                }
             }
         });
     });

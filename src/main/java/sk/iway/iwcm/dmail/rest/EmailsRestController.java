@@ -1,9 +1,10 @@
 package sk.iway.iwcm.dmail.rest;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.DmailUtil;
@@ -28,10 +30,9 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
-import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
-import sk.iway.iwcm.users.UserDetails;
-import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.users.UserGroupsDB;
 
 @RestController
 @RequestMapping("/admin/rest/dmail/emails")
@@ -42,15 +43,17 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
     private final EmailsRepository emailsRepository;
     private final CampaingsRepository campaingsRepository;
     private final StatClicksRepository statClicksRepository;
+    private final UserDetailsRepository userDetailsRepository;
 
     private static final String NEW_LINE = "<br><br>";
 
     @Autowired
-    public EmailsRestController(EmailsRepository emailsRepository, CampaingsRepository campaingsRepository, StatClicksRepository statClicksRepository) {
+    public EmailsRestController(EmailsRepository emailsRepository, CampaingsRepository campaingsRepository, StatClicksRepository statClicksRepository, UserDetailsRepository userDetailsRepository) {
         super(emailsRepository);
         this.emailsRepository = emailsRepository;
         this.campaingsRepository = campaingsRepository;
         this.statClicksRepository = statClicksRepository;
+        this.userDetailsRepository = userDetailsRepository;
     }
 
     @Override
@@ -67,12 +70,17 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 page = new DatatablePageImpl<>(emailsRepository.findAllByCampainIdAndDomainId(campainId, CloudToolsForCore.getDomainId() , pageable));
             } else if(selectType.equals("opens")) {
                 page = new DatatablePageImpl<>(emailsRepository.findAllByCampainIdAndDomainIdAndSeenDateIsNotNull(campainId, CloudToolsForCore.getDomainId(), pageable));
+            } else {
+                //Empty page
+                page = new DatatablePageImpl<>(new ArrayList<>());   
             }
         } else {
             page = new DatatablePageImpl<>(emailsRepository.findAll(pageable));
         }
 
         processFromEntity(page, ProcessItemAction.GETALL);
+
+        page.addOptions("groupIds", UserGroupsDB.getInstance().getUserGroups(), "userGroupName", "userGroupId", false);
 
         return page;
     }
@@ -105,7 +113,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         CampaingsEntity campaign = (campainId > 0L) ? campaingsRepository.getById(campainId) : null;
 
         //Load allready pushed emails in DB
-        for (String email : emailsRepository.getAllCampainEmails( CampaingsRestController.getCampaignId(campaign, getUser()), CloudToolsForCore.getDomainId()) ) {
+        for (String email : emailsRepository.getAllCampainEmails( DmailService.getCampaignId(campaign, getUser()), CloudToolsForCore.getDomainId()) ) {
             emailsTable.add(email.toLowerCase());
         }
 
@@ -152,7 +160,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             if (emailsToInsert.length==1) emailToInsert = entity;
             else emailToInsert = new EmailsEntity(recipientEmail, entity.getRecipientName());
 
-            boolean prepareSuccess = prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);
+            boolean prepareSuccess = DmailService.prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);
             if(prepareSuccess == false) continue;
 
             //Save entity into DB
@@ -178,64 +186,6 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         //Insert item fn is override and dont save any entity
         //Save step is allready made in beforeSave fn
         return editItem(entity, -1);
-    }
-
-    /**
-     * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
-     * @param campaign
-     * @param loggedUserId
-     * @param entity
-     */
-    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
-
-        //trimni email adresu
-        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());
-
-        //sprav lower case
-        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());
-
-        //Get email recipient(user) using email
-        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);
-        if(recipient == null) {
-            entity.setRecipientUserId(-1);
-            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName("- -");
-        }
-        else {
-            //Check if user is valid
-            if(UserDetailsService.isUserDisabled(recipient) == true) return false;
-
-            entity.setRecipientUserId(recipient.getUserId());
-            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(recipient.getFullName());
-        }
-
-        //Set create values
-        if (campaign == null || campaign.getId()==null || campaign.getId().longValue()<1) {
-            entity.setCampainId((long)-loggedUserId);
-            entity.setUrl("");
-            entity.setSubject("");
-            entity.setSenderName("");
-            entity.setSenderEmail("");
-            entity.setCreatedByUserId(loggedUserId);
-        } else {
-            entity.setCampainId(campaign.getId());
-            entity.setUrl(campaign.getUrl());
-            entity.setSubject(campaign.getSubject());
-            entity.setSenderName(campaign.getSenderName());
-            entity.setSenderEmail(campaign.getSenderEmail());
-            entity.setCreatedByUserId(loggedUserId);
-        }
-
-        entity.setCreateDate(new Date());
-        entity.setRetry(0);
-
-        //Set domainId
-        entity.setDomainId( CloudToolsForCore.getDomainId() );
-
-        if (entity.getId()==null || entity.getId().longValue()<1) {
-            entity.setDisabled(true);
-        }
-
-        return true;
     }
 
     @Override
@@ -271,9 +221,52 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 Logger.error(EmailsRestController.class, e);
                 return false;
             }
-        }
 
-        Sender.resetSenderWait();
+            Sender.resetSenderWait();
+        } 
+        else if("addRecipients".equals(action)) {
+            String customData = getRequest().getParameter("customData");
+
+            try {
+                JSONObject jsonObject = new JSONObject(customData);
+                Long campaingId = Tools.getLongValue( jsonObject.getString("campaingId"), -1L);
+                String emailsString = Tools.getStringValue( jsonObject.getString("emails"), "");
+                String permissionString = Tools.getStringValue( jsonObject.getString("permissions"), "");
+
+                CampaingsEntity campain;
+                if(campaingId > 0) {
+                    campain = campaingsRepository.getById(campaingId);
+                } else {
+                    //Problem we dont have campain yet (create fake)
+                    campain = new CampaingsEntity();
+                    campain.setId( Long.valueOf(-getUser().getUserId()) );
+
+                    // We CANT tell which groups were selected before, because campain is not saved yet
+                    // For savety reason, we must remove ALL emails that have recipient_user_id
+                    emailsRepository.deleteByCampainIdAndDomainIdWhereRecipientUserIsSet(-getUser().getUserId() , CloudToolsForCore.getDomainId());
+                }
+
+                //This prefixes are used in FE to distinguish between emails and permissions (FE cut them out but just to be sure)
+                if(Tools.isNotEmpty(emailsString)) emailsString = emailsString.replace("email_", "");
+                if(Tools.isNotEmpty(permissionString)) permissionString = permissionString.replace("perm_", "");
+
+                Integer[] emailIds = Tools.getTokensInteger(emailsString, ",");
+                Integer[] permissionIds = Tools.getTokensInteger(permissionString, ",");
+
+                String selectedGroupsString = UserDetailsService.getUserGroupIds(emailIds, permissionIds);
+                int[] selectedGroups = Tools.getTokensInt(selectedGroupsString, ",");
+                int[] originalGroups = Tools.getTokensInt(campain.getUserGroupsIds(), ",");
+                DmailService.handleEmails(selectedGroups, originalGroups, campain, emailsRepository, userDetailsRepository, getRequest());
+                
+                if(campaingId > 0) {
+                    //Update campain user groups (if campain is allready created)
+                    campaingsRepository.updateUserGroups(selectedGroupsString, campaingId, CloudToolsForCore.getDomainId());
+                }
+
+            } catch (Exception ex) {
+                sk.iway.iwcm.Logger.error(ex);
+            }
+        }
 
         return true;
     }

@@ -39,6 +39,7 @@ const actions = {
   import_button: 'btn-import-dialog',
   export_button: 'btn-export-dialog',
   resend_button: 'buttons-resend',
+  group_button :'btn-add-group',
   remove_group_button: 'buttons-removeGroupFromAll',
 };
 

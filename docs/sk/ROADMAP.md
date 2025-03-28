@@ -46,7 +46,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [ ] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
-- [ ] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
+- [x] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
 - [ ] Datatable - opraviť počítanie označených riadkov po ich vymazaní.
 
 ## 2024

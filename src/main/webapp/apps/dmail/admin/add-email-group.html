@@ -1,0 +1,127 @@
+<script type="text/javascript" data-th-inline="javascript">
+
+    //Call BE for data
+    let url = "/admin/rest/dmail/campaings/user-perms";
+
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    
+    const campaingId = urlParams.get('campaingId');
+    const emails = urlParams.get('emails');
+    const permisions = urlParams.get('permisions');
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function (data) {
+            let permissions = JSON.parse(data);
+            addEmails(permissions.emails, emails);
+            addPerms(permissions.perms, permisions);
+        },
+        error: function (error) {
+            console.log(error);
+        }
+    });
+
+    function addEmails(emails, checked) {
+        for (const key in emails) {
+            let emailDiv = document.createElement('div');
+            emailDiv.className = 'custom-control form-switch';
+
+            let input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'form-check-input';
+            input.id = `email_${key}`;
+            input.value = emails[key];
+
+            let label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = `email_${key}`;
+            label.textContent = emails[key];
+
+            emailDiv.appendChild(input);
+            emailDiv.appendChild(label);
+
+            document.querySelector('#emails .DTE_Field_InputControl > div').appendChild(emailDiv);
+        }
+
+        if(checked != undefined && checked != null && checked != '') {
+            let checkedArr = (checked.trim()).split(',');
+            checkedArr.forEach(email => {
+                document.querySelector(`#email_${email}`).checked = true;
+            });
+        }
+    }
+
+    function addPerms(perms, checked) {
+        for (const key in perms) {
+            let permDiv = document.createElement('div');
+            permDiv.className = 'custom-control form-switch';
+
+            let input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'form-check-input';
+            input.id = `perm_${key}`;
+            input.value = perms[key];
+
+            let label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = `perm_${key}`;
+            label.textContent = perms[key];
+
+            permDiv.appendChild(input);
+            permDiv.appendChild(label);
+
+            document.querySelector('#perms .DTE_Field_InputControl > div').appendChild(permDiv);
+        }
+
+        if(checked != undefined && checked != null && checked != '') {
+            let checkedArr = (checked.trim()).split(',');
+            checkedArr.forEach(email => {
+                document.querySelector(`#perm_${email}`).checked = true;
+            });
+        }
+    }
+
+</script>
+
+<div>
+    <div class="form-group row row-headline">
+        <div class="col-sm-7 offset-sm-4">
+            <h5 data-th-text="#{menu.email}">emails</h5>
+        </div>
+    </div>
+
+    <div id="emails" class="DTE_Field form-group row DTE_Field_Type_checkbox">
+        <span data-dte-e="label" class="col-sm-4 col-form-label" data-th-text="#{groupedit.type_email}">
+        </span>
+        <div data-dte-e="input" class="col-sm-7">
+            <div data-dte-e="input-control" class="DTE_Field_InputControl" style="display: block;">
+                <div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group row row-hr">
+        <div class="col-sm-7 offset-sm-4">
+            <hr>
+        </div>
+    </div>
+
+    <div class="form-group row row-headline">
+        <div class="col-sm-7 offset-sm-4">
+            <h5 data-th-text="#{user.admin.editUserGroups}">userGroups</h5>
+        </div>
+    </div>
+
+    <div id="perms" class="DTE_Field form-group row DTE_Field_Type_checkbox">
+        <span data-dte-e="label" data-th-text="#{user.permissions.label}">
+            <div data-dte-e="msg-label" class="DTE_Label_Info"></div>
+        </span>
+        <div>
+            <div data-dte-e="input-control" class="DTE_Field_InputControl" style="display: block;">
+                <div></div>
+            </div>
+        </div>
+    </div>
+</div>
