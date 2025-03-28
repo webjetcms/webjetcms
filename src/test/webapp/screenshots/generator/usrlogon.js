@@ -26,10 +26,10 @@ Scenario('zaheslovana-zona-screen-y', ({ I, DT, DTE, Document }) => {
     DT.filterContains("userGroupName", "noApprove_allowUserEdit");
     I.click("noApprove_allowUserEdit_1");
     DTE.waitForEditor("userGroupsDataTable");
-    I.click("#pills-dt-userGroupsDataTable-folders-tab");
+    I.clickCss("#pills-dt-userGroupsDataTable-folders-tab");
     I.wait(1);
     Document.screenshot("/redactor/zaheslovana-zona/user-groups-page-editor-folders.png");
-    I.click("#pills-dt-userGroupsDataTable-sites-tab");
+    I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
     Document.screenshot("/redactor/zaheslovana-zona/user-groups-page-editor-pages.png");
 
@@ -40,24 +40,23 @@ Scenario('zaheslovana-zona-screen-y', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/zaheslovana-zona/docs-login.png");
     DTE.cancel();
     I.click(locate("a.jstree-anchor").withText("Prihlásený používateľ"));
-    I.switchTo("div.tree-col");
-    I.click("button.buttons-edit");
+    I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-access-tab");
+    I.clickCss("#pills-dt-groups-datatable-access-tab");
     Document.screenshot("/redactor/zaheslovana-zona/set-login-page.png");
     DTE.cancel();
 
     I.click(locate("a.jstree-anchor").withText("Zákaznícka zóna"));
     I.click("button.buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-access-tab");
+    I.clickCss("#pills-dt-groups-datatable-access-tab");
     Document.screenshot("/redactor/zaheslovana-zona/set-user-groups.png");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=64542");
     DTE.waitForEditor();
     I.wait(5);
     Document.screenshot("/redactor/zaheslovana-zona/docs-register-1.png");
-    I.click("#cke_1_contents");
+    I.clickCss("#cke_1_contents");
     I.wait(1);
     Document.screenshot("/redactor/zaheslovana-zona/docs-register-2.png", 1500, 800);
 });

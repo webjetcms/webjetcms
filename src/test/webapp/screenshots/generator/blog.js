@@ -7,13 +7,13 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.amOnPage("/apps/blog/admin/");
 
     Document.screenshot("/redactor/apps/blog/blogger-blog.png");
-    Document.screenshotElement("#bloggerArticlesDataTable_extfilter", "/redactor/apps/blog/groupFilter_defaultValue.png");
+    Document.screenshotElement("#groupSelect_wrapper", "/redactor/apps/blog/groupFilter_defaultValue.png");
 
     Document.screenshotElement("button.buttons-create", "/redactor/apps/blog/add_article.png");
     Document.screenshotElement("button.buttons-add-folder", "/redactor/apps/blog/add_folder.png");
 
     I.clickCss(sectionSelector);
-    Document.screenshotElement("body > div.bs-container.dropdown.bootstrap-select > div", "/redactor/apps/blog/groupFilter_allValues.png");
+    Document.screenshotElement("#groupSelect_wrapper > div > .dropdown-menu.show", "/redactor/apps/blog/groupFilter_allValues.png");
 
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-warning");
@@ -45,7 +45,7 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm/NewSubFolder") );
     I.wait(1);
     I.clickCss(sectionSelector);
-    Document.screenshotElement("body > div.bs-container.dropdown.bootstrap-select > div", "/redactor/apps/blog/groupFilter_allValues_withNew.png");
+    Document.screenshotElement("#groupSelect_wrapper > div > .dropdown-menu.show", "/redactor/apps/blog/groupFilter_allValues_withNew.png");
 
     I.say("remove added folder");
     I.relogin("tester");
@@ -67,7 +67,7 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.amOnPage("/apps/blog/admin/?docId=81958");
     DTE.waitForEditor("bloggerArticlesDataTable");
     Document.screenshot("/redactor/apps/blog/editor-text.png");
-    I.click("#pills-dt-bloggerArticlesDataTable-perex-tab");
+    I.clickCss("#pills-dt-bloggerArticlesDataTable-perex-tab");
     Document.screenshot("/redactor/apps/blog/editor-perex.png");
 });
 

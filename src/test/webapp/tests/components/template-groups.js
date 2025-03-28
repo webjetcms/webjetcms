@@ -19,7 +19,7 @@ Scenario('ukladanie metadat', ({ I, DT, DTE }) => {
     I.click("Demo JET");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
     I.seeInField("#DTE_Field_projectDeveloper", "InterWay Developer SK");
     I.seeInField("#DTE_Field_projectGenerator", "WebJET CMS Generator SK");
 
@@ -27,13 +27,13 @@ Scenario('ukladanie metadat', ({ I, DT, DTE }) => {
 
     //prepni jazyk na en
     I.click("Slovenský jazyk", "div.breadcrumb-language-select");
-    I.click("#bs-select-2-2");
+    I.clickCss("#bs-select-2-2");
     DT.waitForLoader();
 
     I.click("Demo JET");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
     I.seeInField("#DTE_Field_projectDeveloper", "Developer EN");
     I.seeInField("#DTE_Field_projectGenerator", "Generator EN");
 
@@ -82,7 +82,7 @@ Scenario('overenie nacitania podla prihlaseneho jazyka', ({ I, DTE }) => {
     I.click("Demo JET");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
     I.dontSeeInField("#DTE_Field_projectDeveloper", "Developer SK");
     I.dontSeeInField("#DTE_Field_projectGenerator", "Generator SK");
     I.seeInField("#DTE_Field_projectDeveloper", "Developer CZ");
@@ -102,7 +102,7 @@ function checkMetadataAuthor(author, I, DTE) {
     I.click("Demo JET");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
     I.fillField("#DTE_Field_projectAuthor", author);
 
     DTE.save();

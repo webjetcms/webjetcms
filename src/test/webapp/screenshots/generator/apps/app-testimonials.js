@@ -10,8 +10,8 @@ Scenario('app testimonials', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/app-testimonials/app-testimonials.png");
 
     Document.screenshotAppEditor(77773, "/redactor/apps/app-testimonials/editor-style.png", function(Document, I, DT, DTE) {
-        I.click("#tabLink2");
+        I.clickCss("#tabLink2");
         Document.screenshot("/redactor/apps/app-testimonials/editor-items.png");
-        I.click("#tabLink1");
+        I.clickCss("#tabLink1");
     });
 });

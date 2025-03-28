@@ -100,7 +100,7 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("calendarEventsDataTable");
-    I.click("#pills-dt-calendarEventsDataTable-advanced-tab");
+    I.clickCss("#pills-dt-calendarEventsDataTable-advanced-tab");
     I.waitForElement("div.DTE_Field_Name_typeId");
     I.click( locate("div.DTE_Field_Name_typeId").find("button.dropdown-toggle") );
     I.waitForElement("div.dropdown-menu.show");

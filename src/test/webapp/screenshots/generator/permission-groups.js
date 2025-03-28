@@ -10,6 +10,6 @@ Scenario('permission-groups', ({ I, Document }) => {
     Document.screenshot("/admin/users/permissiongroups-datatable.png", 1280, 700);
 
     I.click("button.buttons-create");
-    I.click("#pills-dt-permissionGroupsDataTable-perms-tab");
+    I.clickCss("#pills-dt-permissionGroupsDataTable-perms-tab");
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/permissiongroups-editor.png");
 });

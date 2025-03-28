@@ -10,8 +10,8 @@ Scenario('app htmlbox', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/htmlbox/htmlbox.png");
 
     Document.screenshotAppEditor(81104, "/redactor/apps/htmlbox/editor-our.png", function(Document, I, DT, DTE) {
-        I.click("#tabLink2");
+        I.clickCss("#tabLink2");
         Document.screenshot("/redactor/apps/htmlbox/editor-general.png");
-        I.click("#tabLink1");
+        I.clickCss("#tabLink1");
     });
 });

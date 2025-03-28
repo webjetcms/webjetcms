@@ -22,7 +22,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Getter
 @Setter
 public class FolderPropertiesEditorFields {
-    
+
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title = "editor.directory_name",
@@ -48,7 +48,6 @@ public class FolderPropertiesEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/elfinder/file-usage?filePath={dirUrl}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.system.elfinder.FileUsageDTO"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,celledit"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-full-headline", value = "fbrowse.usage"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false")
             }
         )

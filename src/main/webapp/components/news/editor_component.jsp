@@ -416,7 +416,7 @@ function loadComponentIframe()
 
 
 
-		<html:form action="/admin/editor.do" onsubmit="return false" name="textForm" type="sk.iway.iwcm.editor.EditorForm">
+		<form action="/admin/editor.do" onsubmit="return false" name="textForm" type="sk.iway.iwcm.editor.EditorForm">
 		<table border="0" cellspacing="0" cellpadding="1">
 			<tr>
 				<td style="width:200px !important;"><iwcm:text key="components.news.groupids"/>:</td>
@@ -584,7 +584,7 @@ function loadComponentIframe()
 				<td>&nbsp;</td>
 			</tr>
 		</table>
-		</html:form>
+		</form>
 
 	</div>
 	<div class="tab-page tab-page-iframe" id="tabMenu2">

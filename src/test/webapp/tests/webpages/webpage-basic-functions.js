@@ -23,18 +23,18 @@ function createNewWebPage(I, randomNumber, DTE, DT) {
      I.waitForElement(DT.btn.add_button, 10);
      I.click(DT.btn.add_button);
      I.dtWaitForEditor();
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement('#DTE_Field_title');
-     I.click('#DTE_Field_title');
+     I.clickCss('#DTE_Field_title');
      I.clearField('#DTE_Field_title');
      I.fillField('#DTE_Field_title', auto_webPage);
-     I.click('#DTE_Field_navbar');
+     I.clickCss('#DTE_Field_navbar');
      I.clearField('#DTE_Field_navbar');
      I.fillField('#DTE_Field_navbar', auto_webPage);
      // Pridanie textu do obsahu
-     I.click('#pills-dt-datatableInit-content-tab');
+     I.clickCss('#pills-dt-datatableInit-content-tab');
      I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-     I.click('#trEditor');
+     I.clickCss('#trEditor');
      I.type('<!-- This is an autotest -->');
      // Ulozenie
      DTE.save();
@@ -133,7 +133,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      // ------------------------------------ KONTROLA ULOZENIA UDAJOV ---------------------------------------------------------------
      checkEditedWebPage(I, randomNumber);
      I.waitForElement('.toast-message', note, 15);
-     I.click('#pills-dt-datatableInit-basic-tab');
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForValue('.dt-tree-container>.form-group>div>div.input-group>input.form-control', '/' + folder_name, 5);
      I.seeInField('#DTE_Field_virtualPath', '/' + folder_name, 5);
      I.seeInField('#DTE_Field_editorFields-redactorNote', note);

@@ -35,7 +35,7 @@ Scenario("Check that after change, page is on top of audit-changed-webpages + it
     I.say("change prepared web page");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+pageDocId);
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-content-tab");
+    I.clickCss("#pills-dt-datatableInit-content-tab");
     I.waitForElement("#cke_data", 10);
     await DTE.fillCkeditor(newBody);
     DTE.save();
@@ -47,7 +47,7 @@ Scenario("Check that after change, page is on top of audit-changed-webpages + it
     I.say("check body");
     I.click(pageTitle);
     DTE.waitForEditor("changedWebPagesDataTable");
-    I.click("#pills-dt-changedWebPagesDataTable-content-tab");
+    I.clickCss("#pills-dt-changedWebPagesDataTable-content-tab");
     I.waitForElement("#cke_data", 10);
     I.switchTo("iframe.cke_reset");
     I.see(newBody);

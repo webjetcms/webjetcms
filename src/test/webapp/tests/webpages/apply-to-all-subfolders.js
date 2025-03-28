@@ -26,27 +26,27 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   // podla nazvu nameOfTest vyberie zalozku,selectValue pre vsetky podpriecinky a ulozi zmeny
   I.say('Vyberam hodnotu ' + selectValue.toUpperCase() + ' pre vsetky podpriecinky priecinka name-autotest');
   if (nameOfTest === 'webPage') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Šablóna pre web stránky', 10);
     DTE.selectOption('tempId', selectValue);
     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceTemplateToSubgroupsAndPages_0').find('.form-check-label'));
   } else if (nameOfTest === 'language') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Jazyk', 10);
     DTE.selectOption('lng', selectValue);
     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceLngToSubFolders_0').find('.form-check-label'));
   } else if (nameOfTest === 'htmlCode') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('HTML kód novej stránky', 10);
     DTE.selectOption('newPageDocIdTemplate', selectValue);
     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceNewPageDocIdTemplateSubFolders_0').find('.form-check-label'));
   } else if (nameOfTest === 'unloggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
     DTE.selectOption('menuType', selectValue);
     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceMenuTypeSubfolders_0').find('.form-check-label'));
   } else if (nameOfTest === 'loggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
     DTE.selectOption('loggedMenuType', selectValue);
     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-forceLoggedMenuTypeSubfolders_0').find('.form-check-label'));
@@ -64,19 +64,19 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   DTE.waitForEditor("groups-datatable");
   I.waitForText(auto_name, 5);
   if (nameOfTest === 'webPage') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Šablóna pre web stránky', 10);
   } else if (nameOfTest === 'language') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Jazyk', 10);
   } else if (nameOfTest === 'htmlCode') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('HTML kód novej stránky', 10);
   } else if (nameOfTest === 'unloggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
   } else if (nameOfTest === 'loggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
   }
   I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
@@ -91,19 +91,19 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   DTE.waitForEditor("groups-datatable");
   I.waitForText(auto_folder_one, 5);
   if (nameOfTest === 'webPage') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Šablóna pre web stránky', 10);
   } else if (nameOfTest === 'language') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Jazyk', 10);
   } else if (nameOfTest === 'htmlCode') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('HTML kód novej stránky', 10);
   } else if (nameOfTest === 'unloggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
   } else if (nameOfTest === 'loggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
   }
   I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
@@ -118,19 +118,19 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   DTE.waitForEditor("groups-datatable");
   I.waitForText(auto_folder_two, 5);
   if (nameOfTest === 'webPage') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Šablóna pre web stránky', 10);
   } else if (nameOfTest === 'language') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('Jazyk', 10);
   } else if (nameOfTest === 'htmlCode') {
-    I.click('#pills-dt-groups-datatable-template-tab');
+    I.clickCss('#pills-dt-groups-datatable-template-tab');
     I.waitForText('HTML kód novej stránky', 10);
   } else if (nameOfTest === 'unloggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu neprihlásenému používateľovi', 10);
   } else if (nameOfTest === 'loggedUser') {
-    I.click('#pills-dt-groups-datatable-menu-tab');
+    I.clickCss('#pills-dt-groups-datatable-menu-tab');
     I.waitForText('Zobrazenie odkazu prihlásenému používateľovi', 10);
   }
   I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);

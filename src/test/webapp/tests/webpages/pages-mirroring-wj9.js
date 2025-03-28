@@ -26,7 +26,7 @@ function wj9CreateMirroringWebpage(I, DT, DTE, randomNumber) {
      I.jstreeClick(auto_folder_sk);
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
-     //I.click("#pills-dt-datatableInit-content-tab");
+     //I.clickCss("#pills-dt-datatableInit-content-tab");
      //I.waitForVisible('#cke_1_toolbox');
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Názov web stránky'));
@@ -37,7 +37,7 @@ function wj9CreateMirroringWebpage(I, DT, DTE, randomNumber) {
      I.jstreeClick(auto_folder_sk);
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
-     //I.click("#pills-dt-datatableInit-content-tab");
+     //I.clickCss("#pills-dt-datatableInit-content-tab");
      //I.waitForVisible('#cke_1_toolbox');
      I.clickCss('#pills-dt-datatableInit-basic-tab');
      I.waitForElement(locate('.col-sm-4.col-form-label').withText('Názov web stránky'));

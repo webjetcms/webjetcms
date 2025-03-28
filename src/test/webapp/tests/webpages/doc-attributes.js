@@ -31,7 +31,7 @@ Scenario('atributy v stranke', async ({I, DT, DTE}) => {
     I.click("Dell P2772");
     DTE.waitForEditor();
     I.seeElement("#pills-dt-datatableInit-attributes-tab");
-    I.click("#pills-dt-datatableInit-attributes-tab");
+    I.clickCss("#pills-dt-datatableInit-attributes-tab");
 
     var container = "#panel-body-dt-datatableInit-attributes";
     within(container, () => {
@@ -51,7 +51,7 @@ Scenario('atributy v stranke', async ({I, DT, DTE}) => {
     I.click("Apple 5k");
     DTE.waitForEditor();
     I.seeElement("#pills-dt-datatableInit-attributes-tab");
-    I.click("#pills-dt-datatableInit-attributes-tab");
+    I.clickCss("#pills-dt-datatableInit-attributes-tab");
 
     I.seeInField("#atr_1", "27");
     I.seeCheckboxIsChecked('#atr_2_false');

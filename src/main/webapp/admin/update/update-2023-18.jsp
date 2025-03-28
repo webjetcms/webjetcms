@@ -372,6 +372,10 @@ static {
 
 	//prop search
 	replaces.add(new OptionDto("/admin/prop_search.jsp?search=yes&text=", "/admin/v9/settings/translation-keys/#dt-filter-key=", ".jsp"));
+
+	//remove html:form elements
+	replaces.add(new OptionDto("<html:form", "<form", ".jsp"));
+	replaces.add(new OptionDto("</html:form", "</form", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

@@ -20,7 +20,7 @@ Scenario('navbar editor', async ({ I, DTE, Document }) => {
     DTE.cancel();
     I.click(".tree-col .buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-menu-tab");
+    I.clickCss("#pills-dt-groups-datatable-menu-tab");
     Document.screenshot("/redactor/apps/navbar/groups-dialog.png");
 
     I.amOnPage("/apps/navbar/subfolder1/the-page-appears-navbar.html");

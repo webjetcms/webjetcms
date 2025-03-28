@@ -11,7 +11,7 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
     I.waitForElement("#datatableImportModal");
     I.clickCss("label[for=dt-settings-import4]");
     Document.screenshot("/admin/settings/translation-keys/dataTable-import.png", 1280, 500);
-    I.click("#datatableImportModal .modal-footer button.btn-outline-secondary");
+    I.clickCss("#datatableImportModal .modal-footer button.btn-outline-secondary");
 
     var entityName = "editor.disableAfterEnd";
     var entityName2 = "admin.fck.last_pages";
@@ -28,14 +28,14 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
     Document.screenshotElement("#datatableInit_modal > div > div", "/admin/settings/translation-keys/dataTable_edit.png");
     I.wait(2);
 
-    I.click("#datatableInit_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
+    I.clickCss("#datatableInit_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
 
     I.click("div.dt-buttons button.buttons-create");
     DTE.waitForEditor();
     Document.screenshotElement("div.DTE_Action_Create", "/admin/settings/translation-keys/dataTable_create.png");
     I.wait(2);
 
-    I.click("#datatableInit_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
+    I.clickCss("#datatableInit_modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-outline-secondary.btn-close-editor");
 
     I.fillField("input.dt-filter-key", entityName2);
     I.pressKey('Enter', "input.dt-filter-key");

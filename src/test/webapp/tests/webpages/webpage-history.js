@@ -153,7 +153,7 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // 1.KONTROLA HISTORIE NA ZALOZKE HISTORIA
      I.say('3.Kontrola historie na zalozke Historia');
      I.toastrClose();
-     I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
+     I.clickCss("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
      I.waitForVisible('#datatableFieldDTE_Field_editorFields-history_wrapper');
 
      // V tabulke vidim 2 zaznamy s dnesnym datumom

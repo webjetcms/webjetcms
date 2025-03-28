@@ -23,7 +23,7 @@ Before(({ I, login }) => {
 Scenario("Structure clone screenshots", async ({ I, Document })  => {
     I.amOnPage("/components/clone_structure/clone_structure.jsp");
     Document.screenshot("/redactor/apps/clone-structure/clone_structure.png", 750, 500);
-    //I.click("#dialogCentralRow > div > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input.button50");
+    //I.clickCss("#dialogCentralRow > div > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input.button50");
     //Document.screenshot("/redactor/apps/clone-structure/clone_structure_2.png");
 });
 

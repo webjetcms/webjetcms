@@ -20,7 +20,7 @@ Scenario('Screens', ({ I, DT, Document }) => {
     Document.screenshot("/redactor/webpages/import-export-window.png");
 
     I.checkOption("#type5");
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     if("sk" === confLng) {
         I.waitForElement( locate("h2").withText("Hotovo"), 60 );
@@ -34,11 +34,11 @@ Scenario('Screens', ({ I, DT, Document }) => {
 
     I.amOnPage("/components/import_web_pages/import_pages.jsp?groupId=59160");
     I.checkOption("#type3");
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
     I.waitForElement(zipFileInput);
     Document.screenshot("/redactor/webpages/import-zip-window.png");
     I.attachFile(zipFileInput, zipFileLocation);
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
     I.waitForElement("#syncForm");
     Document.screenshot("/redactor/webpages/imported-zip-window.png");
 
@@ -49,14 +49,14 @@ Scenario('Screens', ({ I, DT, Document }) => {
 
     I.amOnPage("/components/import_web_pages/import_pages.jsp?groupId=59160");
     I.waitForElement("#dialogCentralRow");
-    I.click("#type2");
-    I.click("#btnOk");
+    I.clickCss("#type2");
+    I.clickCss("#btnOk");
     I.waitForElement("#xlsImportForm");
     I.fillField("#xlsImportForm > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type=text]:nth-child(1)", "59160");
     Document.screenshot("/redactor/webpages/import-excel-window.png");
     I.waitForElement(excelFileInput);
     I.attachFile(excelFileInput, excelFileLocation);
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     if("sk" === confLng) {
         I.waitForText("Import dokončený", 120);

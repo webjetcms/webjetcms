@@ -248,7 +248,7 @@ export class DatatableOpener {
             const maxPageNumberSearch = 5;
 
             if (rowForEditing.length>0) {
-                //console.log("som na spravnej strane");
+                //WJ.debugTimer("som na spravnej strane");
                 /**
                  * @description Musíme odstrániť event, pretože by afektoval ostatné tabuľky.
                  * @see https://datatables.net/reference/api/off()

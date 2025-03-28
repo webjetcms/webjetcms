@@ -11,14 +11,14 @@ Scenario('backend', ({ I, Document }) => {
     Document.screenshot("/custom-apps/admin-menu-item/contact.png");
 
     //breadcrumb
-    Document.screenshotElement("div.ly-container div.md-breadcrumb", "/custom-apps/admin-menu-item/breadcrumb.png");
+    Document.screenshotElement("div.ly-header > .ly-container.container", "/custom-apps/admin-menu-item/breadcrumb.png");
 
     //datatable
     Document.screenshotElement("#dataTable_wrapper", "/custom-apps/admin-menu-item/datatable.png");
 
     //breadcrumb s vyberom jazyka
     I.amOnPage("/apps/gdpr/admin/");
-    Document.screenshotElement("div.ly-container div.md-breadcrumb", "/developer/frameworks/breadcrumb-language.png");
+    Document.screenshotElement("#cookiesDataTable_wrapper > div.dt-header-row.clearfix", "/developer/frameworks/breadcrumb-language.png");
 });
 
 Scenario('frontend', ({ I, Document }) => {

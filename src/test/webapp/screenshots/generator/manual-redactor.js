@@ -17,14 +17,14 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.say("priecinky system/kos");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     Document.screenshotElement("div.tree-col", "/redactor/webpages/system-folder.png", 1360, 300);
 
     I.say("listy naposledy upravene a cakajuce na schvalenie");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
-    I.click("#pills-waiting-tab");
+    I.clickCss("#pills-waiting-tab");
     DT.waitForLoader();
     Document.screenshot("/_media/changelog/2021q1/2021-13-awaiting-approve.png", 1360, 500);
 
@@ -101,7 +101,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
     I.wait(5);
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
-    I.click("#WebJETEditorBody img");
+    I.clickCss("#WebJETEditorBody img");
     I.wait(3);
     Document.screenshot("/redactor/webpages/editor-floating-tools.png");
     I.switchTo();
@@ -112,7 +112,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.resizeWindow(1280, 550);
     DTE.waitForEditor();
     I.wait(5);
-    I.click("#webpagesSaveCheckbox");
+    I.clickCss("#webpagesSaveCheckbox");
     I.moveCursorTo("div.DTE_Form_Buttons div.form-check label span");
     Document.screenshot("/redactor/webpages/save-work-version.png");
     I.wjSetDefaultWindowSize();
@@ -129,7 +129,7 @@ Scenario('media', ({ I, DT, DTE, Document }) => {
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka"]);
     I.click("Úvodná stránka", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-media-tab");
+    I.clickCss("#pills-dt-datatableInit-media-tab");
     DT.waitForLoader();
     Document.screenshot("/redactor/webpages/media.png");
 
@@ -147,7 +147,7 @@ Scenario('media', ({ I, DT, DTE, Document }) => {
     //bubble editacia
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
-    I.click("#mediaTable tbody tr:nth-child(3) td:nth-child(4)");
+    I.clickCss("#mediaTable tbody tr:nth-child(3) td:nth-child(4)");
     Document.screenshot("/_media/changelog/2021q2/2021-17-media-bubble.png", 1280, 400);
 
     //media skupiny
@@ -162,10 +162,10 @@ Scenario('historia', ({ I, DT, DTE, Document, i18n }) => {
     //media
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-history-tab");
+    I.clickCss("#pills-dt-datatableInit-history-tab");
     DT.waitForLoader();
     //zmen usporiadanie od najstarsieho, tam mame fake data
-    //I.click("#datatableFieldDTE_Field_editorFields-history_wrapper th.dt-format-date-time");
+    //I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper th.dt-format-date-time");
     //DT.waitForLoader();
 
     I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 120);
@@ -175,7 +175,7 @@ Scenario('historia', ({ I, DT, DTE, Document, i18n }) => {
     I.fillField(".dt-filter-from-publishStartStringExtra", i18n.getDate("01/10/2025"));
     I.clickCss("button.dt-filtrujem-publishStartStringExtra");
     DT.waitForLoader();
-    I.click("#datatableFieldDTE_Field_editorFields-history tr:nth-child(1) td.dt-select-td");
+    I.clickCss("#datatableFieldDTE_Field_editorFields-history tr:nth-child(1) td.dt-select-td");
 
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-edit", "/redactor/webpages/history-btn-edit.png");
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-preview", "/redactor/webpages/history-btn-preview.png");
@@ -198,7 +198,7 @@ Scenario('konfiguracia', ({ I, DTE, Document }) => {
     I.click(historyName);
     DTE.waitForEditor(datatableName);
 
-    I.click("#pills-dt-configurationDatatable-advanced-tab");
+    I.clickCss("#pills-dt-configurationDatatable-advanced-tab");
 
     Document.screenshot("/_media/changelog/2021q1/2021-13-configuration-history.png", 1280, 600);
 });
@@ -220,7 +220,7 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
     I.jstreeNavigate(["Jet portal 4", "Kontakt"]);
     I.click("Kontakt", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-perex-tab");
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
     I.wait(1);
     I.scrollTo("#datatableInit_modal .DTE_Field_Name_perexGroups", 5, 5);
     Document.screenshot("/redactor/webpages/webpage-perex-groups.png");
@@ -234,7 +234,7 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.jstreeNavigate(["Test stavov", "Voliteľné polia"]);
     I.click("Voliteľné polia", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-fields-tab");
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
     Document.screenshot("/frontend/webpages/customfields/webpages.png");
 
@@ -362,7 +362,7 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
             DT.filterContains("question", "Koľko nôh ma pavúk ?");
             I.click("Koľko nôh ma pavúk ?");
             DTE.waitForEditor("qaDataTable");
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             Document.screenshot("/redactor/apps/qa/admin-edit.png");
             break;
 
@@ -374,7 +374,7 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
             DT.filterContains("question", "How many legs does a spider have ?");
             I.click("How many legs does a spider have ?");
             DTE.waitForEditor("qaDataTable");
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             Document.screenshot("/redactor/apps/qa/admin-edit.png");
             break;
 
@@ -386,7 +386,7 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
             DT.filterContains("question", "Kolik nohou má pavouk");
             I.click("Kolik nohou má pavouk ?");
             DTE.waitForEditor("qaDataTable");
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             Document.screenshot("/redactor/apps/qa/admin-edit.png");
             break;
 
@@ -413,7 +413,7 @@ Scenario('logon', ({ I, Document, i18n }) => {
 
     I.fillField("#username", "testerslabeheslo");
     I.fillField("#password", "tentousermavelmislabeheslo");
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
     I.wait(2);
     Document.screenshot("/redactor/admin/logon-weak-password.png", 1080, 685);
 });
@@ -465,7 +465,7 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     I.wait(2); //Need to wait for included app thumbnails to load
     Document.screenshot("/redactor/admin/editor-tablet.png");
 
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.resizeWindow(390, 844);
     Document.screenshot("/redactor/admin/editor-phone.png");
 
@@ -477,7 +477,7 @@ Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
     //podla title
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=25861");
     I.wait(5);
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.moveCursorTo("div.DTE_Field_Name_generateUrlFromTitle button.btn-tooltip");
 
     Document.screenshot("/redactor/webpages/virtual-path-title.png")
@@ -486,7 +486,7 @@ Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
     //podla urlDirName
     I.click("Podľa urlDirName");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.moveCursorTo("div.DTE_Field_Name_urlInheritGroup button.btn-tooltip");
 
     Document.screenshot("/redactor/webpages/virtual-path-inherit.png")
@@ -540,7 +540,7 @@ Scenario('webpages-temp-edit-btn', ({ I, DTE, Document }) => {
     //screenshot ikon editacie Hlavicky/Paticky vo web stranke
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=7611");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     DTE.selectOption("headerDocId", "Hlavičky/Default header");
     I.wait(3);
     Document.screenshot("/redactor/webpages/editor-templates-tab.png");
@@ -556,7 +556,7 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
     I.checkOption("#jstree-settings-showid");
     I.checkOption("#jstree-settings-showorder");
     I.checkOption("#jstree-settings-showpages");
-    I.click("#jstree-settings-submit");
+    I.clickCss("#jstree-settings-submit");
 
     I.jstreeClick("Test stavov");
     I.jstreeClick("Zobrazený v menu");
@@ -603,10 +603,10 @@ Scenario('formsimple', ({ I, DTE, Document }) => {
     I.wait(2);
     I.switchTo("#editorComponent");
     I.wait(2);
-    I.click("#tabLink2");
+    I.clickCss("#tabLink2");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-advanced.png");
 
-    I.click("#tabLink3");
+    I.clickCss("#tabLink3");
     Document.screenshot("/redactor/apps/formsimple/editor-dialog-items.png");
 
     I.switchTo();

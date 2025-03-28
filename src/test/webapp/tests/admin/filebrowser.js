@@ -85,7 +85,7 @@ Scenario('dir properties', async ({I, DT}) => {
 function openDirEditorAndCheck(I, dirPath) {
     //Open dir editor for /files/protected/dir-edit-form-test
     I.say("Opening /files/protected/dir-edit-form-test");
-    I.click("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3Q_E");
+    I.clickCss("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3Q_E");
     I.rightClick('#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3Q_E');
     I.click( locate('div.elfinder-contextmenu-item').withChild( locate("span").withText("Nastavenie priečinka") ) );
     I.switchTo("#modalIframeIframeElement");
@@ -94,7 +94,7 @@ function openDirEditorAndCheck(I, dirPath) {
 
 function openFileEditorAndCheck(I, fileName) {
     //Open properties of the file
-    I.click("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3QvdGVzdGpwZ2F0dGFjaG1lbnRmaWxlLmpwZw_E_E");
+    I.clickCss("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3QvdGVzdGpwZ2F0dGFjaG1lbnRmaWxlLmpwZw_E_E");
     I.rightClick("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3QvdGVzdGpwZ2F0dGFjaG1lbnRmaWxlLmpwZw_E_E");
     I.click( locate('div.elfinder-contextmenu-item').withChild( locate("span").withText("Nastavenie súboru") ) );
     I.switchTo("#modalIframeIframeElement");

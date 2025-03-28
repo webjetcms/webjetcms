@@ -20,7 +20,7 @@ Scenario('Zobrazenie nazvu v hlavicke', ({ I, DTE, Document }) => {
     I.forceClick("#datatableInit tbody tr:nth-child(1) td.dt-select-td");
     I.forceClick("#datatableInit tbody tr:nth-child(2) td.dt-select-td");
 
-    I.click("#datatableInit_wrapper button.buttons-remove");
+    I.clickCss("#datatableInit_wrapper button.buttons-remove");
 
     Document.screenshot("/redactor/datatables/dt-delete-confirm.png", 1280, 450);
 

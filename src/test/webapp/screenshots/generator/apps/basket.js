@@ -17,8 +17,5 @@ Scenario('Elektronický obchod', ({ I, DT, DTE, Document }) => {
         Document.screenshot("/redactor/apps/basket/editor-items.png");
         I.clickCss('#tabLink1');
     });
-    
 
-
-    
 });

@@ -13,7 +13,7 @@ Scenario('export-users', ({ I, Document }) => {
     I.click("button[data-dtbtn=export]");
     Document.screenshot("/redactor/datatables/export-dialog.png", 1280, 430);
 
-    I.click("#pills-export-advanced-tab");
+    I.clickCss("#pills-export-advanced-tab");
     Document.screenshotElement("#datatableExportModal > div > div.DTE_Action_Edit", "/redactor/datatables/export-dialog-advanced.png");
 });
 
@@ -105,5 +105,5 @@ function insertFile(I, fileName, skipWrong) {
          I.uncheckOption( locate("#datatableImportModal").find("#skip-wrong-data") );
     }
 
-    I.click("#submit-import");
+    I.clickCss("#submit-import");
 }

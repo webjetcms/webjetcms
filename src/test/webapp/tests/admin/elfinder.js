@@ -315,7 +315,7 @@ Scenario('Explorer - file diacritics test', async ({ I }) => {
 
     I.amOnPage("/admin/v9/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
-    I.click("#nav-iwcm_2_L2ZpbGVz"); //files
+    I.clickCss("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
 
     I.say('Try to rename a folder to the name with diacritics');
