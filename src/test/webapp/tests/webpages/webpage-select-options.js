@@ -36,7 +36,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      // ------------------------ ZALOZKA SABLONA ------------------
      I.say('Select options na zalozke Sablona');
      I.clickCss('#pills-dt-datatableInit-template-tab');
-     I.waitForText('Šablóna web stránky', 10);
+     I.waitForText('Šablóna', 10);
 
      // Sablona web stranky
      I.dtEditorSelectOption('tempId', 'Homepage');
@@ -75,7 +75,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      // Zalozka SABLONA
      I.checkEditedWebPage(randomNumber);
      I.clickCss('#pills-dt-datatableInit-template-tab');
-     I.waitForText('Šablóna web stránky', 10);
+     I.waitForText('Šablóna', 10);
      I.waitForElement(locate('.filter-option-inner-inner').withText('Homepage'), 10); // Sablona web stranky
      I.waitForElement(locate('.filter-option-inner-inner').withText('Prázdne'), 10); // Hlavicka
      I.waitForElement(locate('.filter-option-inner-inner').withText('Prázdne'), 10); // Paticka

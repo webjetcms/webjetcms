@@ -85,8 +85,8 @@ block content
             //init BS toggle
             $('div#searchDataTable_extfilter [data-bs-toggle="tooltip"]').tooltip();
 
-            $("#pills-tabsFilter").on("click", "a.nav-link", function() {
-                switchTab();
+            $('#pills-tabsFilter a[data-wj-toggle="tab"]').on('click', function (e) {
+                switchTab(e.currentTarget.id);
             });
 
             $("#searchDataTable_extfilter").on("click", "button.filtrujem", function() {
@@ -230,9 +230,9 @@ block content
                 });
             }
 
-            function switchTab() {
+            function switchTab(activeTab) {
                 let allTabs = $("#pills-tabsFilter").find("a.nav-link");
-                let activeTab = $("#pills-tabsFilter").find("a.nav-link.active").attr("id");
+                //let activeTab = $("#pills-tabsFilter").find("a.nav-link.active").attr("id");
 
                 // Hide groups selector if not in webPages tab
                 if("pills-webPages-tab" === activeTab) {

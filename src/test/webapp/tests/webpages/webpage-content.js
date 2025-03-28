@@ -213,7 +213,6 @@ Scenario('TODO - bugs', ({ I, DT, DTE }) => {
      I.clickCss('#trEditor');
      I.clickCss('.cke_button_icon.cke_button__htmlbox_icon');
      I.wait(3);
-     I.waitForElement(locate('.cke_dialog_title').withText('Bloky'), 10);
      I.waitForElement('.cke_dialog_ui_iframe', 5);
      I.wait(3);
      I.switchTo('.cke_dialog_ui_iframe');

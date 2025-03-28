@@ -21,7 +21,7 @@ Before(({ I, login }) => {
 });
 
 
-Scenario('Verify Tabs and Data Table Headers in Admin Search', ({ I }) => {
+Scenario('Verify Tabs and Data Table Headers in Admin Search', ({ I, DT }) => {
     const pageHeaders = {
         webpages: [
             "ID",
@@ -58,6 +58,7 @@ Scenario('Verify Tabs and Data Table Headers in Admin Search', ({ I }) => {
     I.clickCss(TabIds.WEB_PAGES);
     verifyHeaders(
         I,
+        DT,
         pageHeaders.webpages,
         TableWrappers.WEB_PAGES,
         [TableWrappers.FILES, TableWrappers.TRANSLATION_KEYS]
@@ -67,6 +68,7 @@ Scenario('Verify Tabs and Data Table Headers in Admin Search', ({ I }) => {
     I.clickCss(TabIds.FILES);
     verifyHeaders(
         I,
+        DT,
         pageHeaders.files,
         TableWrappers.FILES,
         [TableWrappers.WEB_PAGES, TableWrappers.TRANSLATION_KEYS]
@@ -76,6 +78,7 @@ Scenario('Verify Tabs and Data Table Headers in Admin Search', ({ I }) => {
     I.clickCss(TabIds.TRANSLATION_KEYS)
     verifyHeaders(
         I,
+        DT,
         pageHeaders.translationKeys,
         TableWrappers.TRANSLATION_KEYS,
         [TableWrappers.WEB_PAGES, TableWrappers.FILES]
@@ -330,7 +333,8 @@ async function verifyRecordCountChange(I, DT, column, value, tableWrapper) {
     I.assertAbove(recordsBefore, recordsAfter, `Target data after filter on ${column} is not less than the original value`);
 }
 
-function verifyHeaders(I, headers, visibleWrapper, hiddenWrappers) {
+function verifyHeaders(I, DT, headers, visibleWrapper, hiddenWrappers) {
+    DT.waitForLoader();
     for (const header of headers) {
         I.waitForText(header, 'tr > th');
     }

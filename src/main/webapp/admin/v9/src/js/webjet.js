@@ -946,6 +946,7 @@ const WJ = (() => {
         tabs.html("");
         tabs.append(ul);
         $("body").addClass("ly-submenu-active");
+        window.initSubmenuTabsClick();
     }
 
     const htmlToTextRegex = /(<([^>]+)>)/ig;

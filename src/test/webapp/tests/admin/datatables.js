@@ -306,7 +306,7 @@ Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {
 
 function checkTemplateIdValue(I, checkToastMessage=true) {
     if (checkToastMessage) {
-        I.waitForText("Pole Šablóna web stránky (tempId) neobsahuje možnosť s ID 5.", 10, "div.toast-message");
+        I.waitForText("Pole Šablóna (tempId) neobsahuje možnosť s ID 5.", 10, "div.toast-message");
         I.toastrClose();
     }
     I.clickCss("#pills-dt-datatableInit-template-tab");

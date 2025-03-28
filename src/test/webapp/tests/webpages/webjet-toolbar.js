@@ -15,7 +15,8 @@ function testToolbarVisibility(I, visible=true) {
 
 Scenario('verify toolbar visibility', async ({ I, Document, DTE }) => {
 
-    I.relogin("admin")
+    I.relogin("admin");
+    Document.setConfigValue("disableWebJETToolbar", "false");
 
     I.amOnPage("/admin/v9/");
     I.amOnPage("/investicie/");
@@ -43,6 +44,22 @@ Scenario('verify toolbar visibility', async ({ I, Document, DTE }) => {
     I.amOnPage("/admin/v9/");
     I.amOnPage("/investicie/");
 
+    testToolbarVisibility(I, false);
+});
+
+Scenario('verify toolbar visibility-revert', async ({ I, Document }) => {
+    I.relogin("admin");
+    Document.setConfigValue("disableWebJETToolbar", "true");
+    I.amOnPage("/investicie/");
+    testToolbarVisibility(I, false);
+
+    I.amOnPage("/investicie/?NO_WJTOOLBAR=false");
+    testToolbarVisibility(I, true);
+
+    I.amOnPage("/investicie/?NO_WJTOOLBAR=true");
+    testToolbarVisibility(I, false);
+
+    I.amOnPage("/investicie/");
     testToolbarVisibility(I, false);
 });
 

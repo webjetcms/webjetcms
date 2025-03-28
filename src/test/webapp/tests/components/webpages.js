@@ -366,7 +366,7 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     I.waitForVisible('.btn.buttons-collection.dropdown-toggle.buttons-colvis');
 
     I.click(locate('button').withAttr({ title: 'Zobrazenie stĺpcov' }));
-    I.click(locate('span').withText('Šablóna web stránky'));
+    I.click(locate('span').withText('Šablóna'));
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
     DT.waitForLoader();
 

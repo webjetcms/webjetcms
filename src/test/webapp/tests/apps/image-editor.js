@@ -53,7 +53,9 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     I.assertContain(imageName, "_1280_", "Picture has wrong dimensions");
     let imageSource = "https://pixabay.com/get/" + imageName.substring(0, imageName.indexOf("_1280_")+5) + ".jpg";
 
-    DTE.seeInField('imageSource', imageSource);
+    let imageSourceField = await I.grabValueFrom("#DTE_Field_imageSource");
+    I.assertEqual(imageSource, imageSourceField, "Image source does not match expected URL");
+
     DTE.fillField('imageName', testFileName);
     I.clickCss('.DTE_Form_Buttons > button.btn-primary');
     DTE.waitForLoader();

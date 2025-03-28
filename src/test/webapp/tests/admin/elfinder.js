@@ -8,11 +8,11 @@ function getFileUsage(I, DT, loader) {
 
     I.clickCss("#pills-dt-datatableInit-usage-tab");
 
-    I.waitForText("Použitie súboru", 300);
+    I.waitForText("Použitie", 300, ".nav-link.active");
 
     DT.waitForLoader(loader);
 
-    I.see("Použitie súboru");
+    I.see("Použitie", ".nav-link.active");
 
     I.see("Test file usage");
 

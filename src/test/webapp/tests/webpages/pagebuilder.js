@@ -62,7 +62,7 @@ Scenario('overenie zobrazenia podla sablony', ({I, DTE, Document}) => {
     Document.resetPageBuilderMode();
 });
 
-Scenario('bug - prepnutie editora', ({I, DTE, Document}) => {
+Scenario('bug - prepnutie editora', ({I, DTE, Apps, Document}) => {
     //bug: nacitam do editora stranku, prepnem na Standardny editor, prepnem do HTML kodu, ulozim
     //otvorim inu stranku, prepnem editor na Standardny a vidim stary text
 
@@ -77,8 +77,7 @@ Scenario('bug - prepnutie editora', ({I, DTE, Document}) => {
     I.wait(2);
 
     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-    I.clickCss('#trEditor', null, { position: { x: 177, y: 400 } });
-    I.pressKey(['Ctrl', 'Q']);
+    Apps.switchEditor('html');
     I.see("Suspendisse interdum dolor justo, ac venenatis massa");
 
     I.wait(1);
@@ -94,8 +93,7 @@ Scenario('bug - prepnutie editora', ({I, DTE, Document}) => {
     I.dontSee("This is old page");
     I.switchTo();
 
-    I.clickCss('#trEditor', null, { position: { x: 177, y: 400 } });
-    I.pressKey(['Ctrl', 'Q']);
+    Apps.switchEditor('standard');
     I.dontSee("Suspendisse interdum dolor justo, ac venenatis massa");
 
     //reset PB settings
