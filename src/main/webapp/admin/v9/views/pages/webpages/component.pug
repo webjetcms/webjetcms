@@ -189,7 +189,7 @@ block content
                 //it there is multiple path separated by comma use originalJspFileName is not empty otherwise use first one
                 let paths = response.componentPath.split(",");
                 //console.log("paths=", paths, "originalJspFileName=", originalJspFileName);
-                if (paths.length > 1 && originalJspFileName != null && originalJspFileName != '') {
+                if (paths.length > 1 && typeof originalJspFileName !== "undefined" && originalJspFileName != null && originalJspFileName != '') {
                     componentPath = originalJspFileName;
                 } else {
                     componentPath = paths[0];

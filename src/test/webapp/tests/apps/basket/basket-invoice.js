@@ -31,8 +31,9 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
     I.clickCss("button.addToBasket");
 
     I.say("Go to basket");
-    I.click(".webjetToolbarClose");
+    await I.clickIfVisible('.cookies-bar-wrapper .btn-akcept');
     I.clickCss("body > div.ly-page-wrapper > header > div.container > nav > div.menu-holder > div > a");
+    I.waitForElement(".md-basket-dropdown.open", 10);
     I.clickCss("#orderButton > a");
     I.fillField("#deliveryNameId", testerName);
     I.fillField("#deliveryCityId", "Prešov");

@@ -131,7 +131,7 @@ Scenario("error", ({ I, DT }) => {
     I.say("BUG: Verify that we will load more than 1000 rows");
     DT.setDates("01.10.2023", "31.10.2023", "#errorDataTable_extfilter");
     I.amOnPage("/apps/stat/admin/error/");
-    I.waitForText("Záznamy 1 až 11 z 1,217", 10, ".dt-footer-row");
+    I.waitForText("Záznamy 1 až 10 z 1,217", 10, ".dt-footer-row");
 
     DT.checkTableRow("errorDataTable", 1, ["1", "2 023", "44", "/", "", "9"]);
 
