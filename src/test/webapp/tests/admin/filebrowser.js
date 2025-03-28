@@ -79,7 +79,7 @@ Scenario('dir properties', async ({I, DT}) => {
     I.say("Test usage");
         I.clickCss("#pills-dt-datatableInit-usage-tab");
         DT.waitForLoader("#datatableFieldDTE_Field_editorFields-docDetailsList_processing", 200);
-        I.see("Použitie súboru");
+        I.see("Použitie", ".nav-link.active");
 });
 
 function openDirEditorAndCheck(I, dirPath) {
@@ -122,5 +122,5 @@ Scenario('file properties', async ({I, DT}) => {
     I.say("Test usage");
         I.clickCss("#pills-dt-datatableInit-usage-tab");
         DT.waitForLoader("#datatableFieldDTE_Field_docDetailsList_processing", 200);
-        I.see("Použitie súboru");
+        I.see("Použitie", ".nav-link.active");
 });
