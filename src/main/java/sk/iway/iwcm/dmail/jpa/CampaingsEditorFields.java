@@ -28,17 +28,11 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @Setter
 public class CampaingsEditorFields implements Serializable {
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "groupedit.type_email", tab = "groupsTab", hidden = true, editor = {
-        @DataTableColumnEditor(attr = {
-            @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "menu.email"),
-            @DataTableColumnEditorAttr(key = "unselectedValue", value = "") }) })
-    private Integer[] emails;
-
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "user.permissions.label", tab = "groupsTab", hidden = true, editor = {
-        @DataTableColumnEditor(attr = {
-            @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "user.admin.editUserGroups"),
-            @DataTableColumnEditorAttr(key = "unselectedValue", value = "") }) })
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private Integer[] permisions;
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer[] emails;
 
     //Replacement for CampaingsEntity.userGroupsIds, showen in table as text but hidden in editor
     @DataTableColumn(inputType = DataTableColumnType.TEXT,
@@ -176,9 +170,6 @@ public class CampaingsEditorFields implements Serializable {
             String docLink = docDB.getDocLink(campOriginal.getEditorFields().getPageToSend().getDocId(), null, true, request);
             if(!docLink.equals(campOriginal.getUrl())) campOriginal.setUrl(docLink);
         } else campOriginal.setUrl("");
-
-        //Check if user groups was changed
-        campOriginal.setUserGroupsIds(UserDetailsService.getUserGroupIds(campOriginal.getEditorFields().getPermisions(), campOriginal.getEditorFields().getEmails()));
 
         //Cannot be null
         if(campOriginal.getCountOfSentMails() == null) campOriginal.setCountOfSentMails(0);

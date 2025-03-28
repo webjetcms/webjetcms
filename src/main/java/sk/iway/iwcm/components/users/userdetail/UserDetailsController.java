@@ -294,7 +294,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         return entity;
     }
 
-    //Return list od user ids that belongs into selected groups
+    //Return list of user ids that belongs into selected groups
     public static List<Integer> getUserIdsByUserGroupsIds(UserDetailsRepository repo, List<Integer> groupIds) {
         List<Integer> userIds = new ArrayList<>();
         for(Integer groupId : groupIds) {

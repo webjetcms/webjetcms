@@ -1,22 +1,20 @@
 package sk.iway.iwcm.dmail.rest;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,10 +22,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
-import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.EmailDB;
 import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.dmail.jpa.CampaingsEditorFields;
@@ -40,10 +36,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
-import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
-import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
-import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -129,7 +122,7 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
     }
 
     @Override
-	public void beforeSave(CampaingsEntity entity) {
+    public void beforeSave(CampaingsEntity entity) {
         Identity user = UsersDB.getCurrentUser(getRequest());
 
         if(entity.getId() != null && entity.getId().longValue() > 0) {
@@ -142,14 +135,15 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         entity = processToEntity(entity, ProcessItemAction.CREATE);
 
+        //String errorTitle = getProp().getText("datatables.error.title.js");
         if(entity.getId()==null || entity.getId().longValue() <1) {
             entity.setCreateDate(new Date());
             entity.setCreatedByUserId(user.getUserId());
 
-            addEmails(Arrays.stream(selectedGroups).boxed().collect(Collectors.toList()), entity);
+            DmailService.addEmails(Arrays.stream(selectedGroups).boxed().toList(), entity, emailsRepository, userDetailsRepository, getRequest());
         } else {
             if(!Arrays.equals(selectedGroups, originalGroups)) {
-                handleEmails(selectedGroups, originalGroups, entity);
+                DmailService.handleEmails(selectedGroups, originalGroups, entity, emailsRepository, userDetailsRepository, getRequest());
             }
         }
 	}
@@ -170,126 +164,6 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         //resetni sender
         Sender.resetSenderWait();
-    }
-
-    //Add and/or remove emails which belongs to campain by ceratin user group
-    private void handleEmails(int[] selectedGroups, int[] originalGroups, CampaingsEntity entity) {
-        /* We need compare saved groups ids and now selected group ids
-            so we can add/delete emails mapped on current domain, where reciver belongs to one of that groups*/
-        List<Integer> groupsRemoved = new ArrayList<>();
-        List<Integer> groupsAdded = new ArrayList<>();
-        List<Integer> selectedGroupsList = Arrays.stream(selectedGroups).boxed().collect(Collectors.toList());
-
-        //Fn handleEmails is called only if selectedGroups != originalGroups
-        if(selectedGroups == null || selectedGroups.length == 0) {
-            groupsRemoved = Arrays.stream(originalGroups).boxed().collect(Collectors.toList());
-
-        } else if(originalGroups == null || originalGroups.length == 0) {
-            groupsAdded = Arrays.stream(selectedGroups).boxed().collect(Collectors.toList());
-        } else {
-            //Find of groups witch ids were removed from selected
-            for(int originalId : originalGroups) {
-                boolean find = false;
-                for(int selectedId : selectedGroups) {
-                    if(originalId == selectedId) {
-                        find = true;
-                        break;
-                    }
-                }
-                if(!find) groupsRemoved.add(originalId);
-            }
-
-            //Find of groups witch ids were added to selected
-            for(int selectedId : selectedGroups) {
-                boolean find = false;
-                for(int originalId : originalGroups) {
-                    if(selectedId == originalId) {
-                        find = true;
-                        break;
-                    }
-                }
-                if(!find) groupsAdded.add(selectedId);
-            }
-        }
-
-        //toto je zoznam userId ktore musia zostat zachovane
-        //jeden user moze byt vo viacerych user skupinach, ked odoberieme, musi zostat ak je v inej
-        Set<Integer> mustContainUserId = new HashSet<>();
-        List<Integer> userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, selectedGroupsList);
-        for (Integer uid : userIds) {
-            mustContainUserId.add(uid);
-        }
-
-        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, entity.getId());
-        if(groupsAdded.isEmpty()==false) addEmails(groupsAdded, entity);
-    }
-
-    /**
-     * Odstrani pouzivatelov v skupine groupsRemoved, zachova ale pouzivatelov v mustContainUserId
-     * (user moze byt vo viacerych skupinach, takze moze byt v tej co musi zostat zachovane)
-     * @param groupsRemoved
-     * @param mustContainUserId
-     * @param campainId
-     */
-    private void removeEmails(List<Integer> groupsRemoved, Set<Integer> mustContainUserId, Long campainId) {
-
-        List<Integer> userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsRemoved);
-        List<Integer> filteredUserIds = new ArrayList<>();
-
-        for (Integer uid : userIds) {
-            if (mustContainUserId.contains(uid)) continue;
-            filteredUserIds.add(uid);
-        }
-
-        //Delete all emails under removed user group
-        emailsRepository.deleteCampainEmail(campainId, filteredUserIds, CloudToolsForCore.getDomainId());
-    }
-
-    //Add emails which belongs to certain user group and campain
-    private void addEmails(List<Integer> groupsAdded, CampaingsEntity entity) {
-        Identity user = UsersDB.getCurrentUser(getRequest());
-
-        //Now get all emails under campain actualy in DB - we need it to prevent duplicity
-        Map<String, Integer> emailsTable = new Hashtable<>();
-        if (entity.getId() != null && entity.getId().longValue()>0) {
-            for (String email : emailsRepository.getAllCampainEmails( getCampaignId(entity, getUser()), CloudToolsForCore.getDomainId()) ) {
-                emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);
-            }
-        }
-
-        //Get all emails under selected user groups
-        List<String> recpientEmails = UserDetailsController.getUserEmailsByUserGroupsIds(userDetailsRepository, groupsAdded);
-
-        //Get all unsubscribed emails
-        Set<String> unsubscribedEmails = DmailUtil.getUnsubscribedEmails();
-
-        for(String recipientEmail : recpientEmails) {
-            //Unsubcribed check
-            if(unsubscribedEmails.contains(recipientEmail.toLowerCase()) == true) continue;
-
-            //Check duplicity (if this emial alreadry belongs to campain)
-            if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;
-            else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);
-
-            //Check validity then continue
-            if (Tools.isEmail(recipientEmail) == true) {
-                //Prepare and save email
-                EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);
-                boolean prepareSuccess = EmailsRestController.prepareEmailForInsert(entity, user.getUserId(), emailToAdd);
-                if(prepareSuccess == false) continue; //Email is not valid
-
-                emailToAdd.setSubject(entity.getSubject());
-                emailToAdd.setUrl(entity.getUrl());
-
-                emailToAdd.setDomainId( CloudToolsForCore.getDomainId() );
-
-                //Save record in DB
-                emailsRepository.save(emailToAdd);
-            } else {
-                if (getLastImportedRow()!=null) addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("datatable.error.importRow", String.valueOf(getLastImportedRow().intValue()+1), "`"+recipientEmail)+"` "+getProp().getText("components.dmail.emailIsNotValid"), NotifyType.ERROR));
-                else addNotify(new NotifyBean(getProp().getText("datatables.error.title.js"), getProp().getText("components.dmail.unsubscribe.email.error", "`"+recipientEmail+"`"), NotifyType.ERROR));
-            }
-        }
     }
 
     @Override
@@ -348,16 +222,23 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         return true;
     }
 
-    /**
-     * Returns ID of campaign. If campaign is not saved yet, returns -ID of current user used as temporary ID for nested tables
-     * @param entity
-     * @param user
-     * @return
-     */
-    public static Long getCampaignId(CampaingsEntity entity, UserDetails user) {
-        if (entity != null && entity.getId() != null && entity.getId().longValue()>0) return entity.getId();
-        if (user == null) return 0L;
-        return Long.valueOf(-user.getUserId());
+    @GetMapping(path = "/user-perms", produces = "text/plain;charset=UTF-8")
+    public String getUserPerms() {
+        JSONObject json = new JSONObject();
+
+        Map<String, String> emailPerms = new HashMap<>();
+        for(UserGroupDetails ugd : UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL)) {
+            emailPerms.put(ugd.getUserGroupId() + "", ugd.getUserGroupName());
+        }
+        json.put("emails", emailPerms);
+
+        Map<String, String> permPerms = new HashMap<>();
+        for(UserGroupDetails ugd  : UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS)) {
+            permPerms.put(ugd.getUserGroupId() + "", ugd.getUserGroupName());
+        }
+        json.put("perms", permPerms);
+
+        return json.toString();
     }
 
     @Override
