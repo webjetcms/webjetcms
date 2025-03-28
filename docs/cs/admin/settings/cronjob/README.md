@@ -1,72 +1,72 @@
 # Automatizované úkoly
 
-Automatické úlohy umožňují definovat úlohy, které se na serveru provádějí automaticky. Položku najdete v části **Nastavení** pod nadpisem **Automatizované úkoly**.
+Automatizované úlohy umožňují definovat úlohy, které jsou prováděny automatizovaně na serveru. Položku naleznete v sekci **Nastavení** pod položkou **Automatizované úkoly**.
 
 ![](dataTable.png)
 
-V okně editoru záznamů můžete nastavit:
-- **Název úkolu** - Zadejte název úlohy, který popisuje, co úloha dělá (vlastní název).
-- **Úkol** - odkaz na třídu jazyka Java implementující metodu `main` které mají být provedeny. Například je připravena úloha stahování dat [cs.iway.iwcm.system.cron.DownloadURL](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/DownloadURL.java)
-- **Parametry úlohy** - parametry předané pro zadanou úlohu oddělené znakem `|`. V případě úlohy `DownloadURL` jsou parametry:
+V okně editoru záznamu lze nastavit:
+- **Název úkolu** - Zadejte název úlohy, který bude popisovat, co úkol dělá (váš vlastní název).
+- **Role** - odkaz na Java třídu implementující metodu `main`, která se provede. Připravena je například. úkol na stahování dat [cs.iway.iwcm.system.cron.DownloadURL](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/DownloadURL.java)
+- **Parametry úlohy** - parametry prodané pro zadaný úkol oddělené znakem `|`. V případě úlohy `DownloadURL` jsou parametry:
   - `URL-adresa|[fromEmail]|[toEmail]|[subject]`
-  - Požadovaný parametr **ADRESA URL** musí obsahovat úplnou adresu včetně `http://`.
-  - Nepovinné parametry `fromEmail,toEmail,subject` po stažení stránky ji můžete odeslat na zadaný e-mail (pro kontrolu).
-- **Rok, den v měsíci, den v týdnu, měsíc, hodina, minuta, sekunda** - časový interval, ve kterém se má zadaná úloha provést. Možné hodnoty jsou například:
-  - `*` - se provádí vždy.
-  - `*/10` - každých 10 (nebo jiný zadaný počet).
-  - `20` - pokud má typ hodnotu 20.
-  - `3-5` - 3., 4. a 5. časová jednotka. Počítá se od nuly, takže každou sekundu lze zapsat jako rozpětí 0-59.
-  - Chcete-li například spouštět událost každých 10 minut, zadejte příkaz `*` a do terénu **Zápis** vstoupíte `*/10`.
-- **Spuštění po startu systému** - Určuje, zda se má úloha spouštět automaticky při spuštění WebJETu (např. pro aktualizaci dat).
-- **Povolené** - Uvádí, zda je úloha aktuálně povolena nebo zakázána. Pokud je povolena, bude se provádět podle zadaného plánu. Pokud je zakázána, nebude spuštěna vůbec.
-- **Auditované stránky** - Zjišťuje, zda jsou v auditu zaznamenány záznamy o plnění úkolů. Tato volba je užitečná pro sledování a kontrolu provádění úloh.
-- **Běh na uzel** - Určuje, na kterém uzlu nebo serveru má být úloha spuštěna, pokud pracujete v prostředí clusteru s více uzly.
+  - Povinný parametr **URL-adresa** musí být kompletní adresa včetně `http://`.
+  - Nepovinné parametry `fromEmail,toEmail,subject` umožňují po stažení stránky její zaslání na zadaný email (pro kontrolu).
+- **Rok, den v měsíci, den v týdnu, měsíc, hodina, minuta, vteřina** - časový interval, kdy se má zadaný úkol provést. Možné hodnoty jsou například:
+  - `*` - provede se vždy.
+  - `*/10` - každých 10 (nebo jiné zadané číslo).
+  - `20` - když má daný typ hodnotu 20.
+  - `3-5` - 3., 4. a 5. časovou jednotku. Počítá se od nuly, takže každá vteřina se dá zapsat jako rozpětí 0-59.
+  - Pokud například. chcete událost spouštět každých 10 minut, zadáte všude znak `*` a do pole **Minuty** zadáte `*/10`.
+- **Spouštění po startu** - Určuje, zda se má úloha spustit automaticky po startu WebJET (např. pro aktualizaci údajů).
+- **Povoleno** - Určuje, zda je úloha aktuálně povolena nebo zakázána. Je-li povolena, bude se provádět podle zadaného časového harmonogramu. Pokud je zakázána, nebude se spouštět vůbec.
+- **Auditováno** - Určuje, zda jsou záznamy o provedení úkolu zaznamenávány v auditu. Tato možnost je užitečná pro sledování a kontrolu provádění úkolů.
+- **Běží na uzlu** - Určuje, na kterém uzlu nebo serveru se má úloha provádět, pokud pracujete v prostředí s více uzly clusteru.
 
 ![](editor.png)
 
-Změny časování úloh se použijí okamžitě, ale již zahájené úlohy zůstanou spuštěny, dokud nebudou dokončeny.
+Změny pro časování úloh se aplikují okamžitě, ale již odstartované úlohy zůstanou běžet dokud neskončí.
 
 ## Standardní úkoly
 
-[cs.iway.iwcm.system.cron.Echo](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/Echo.java) - Diagnostická úloha - vypíše svůj první parametr do konzoly.
+[cs.iway.iwcm.system.cron.Echo](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/Echo.java) - Diagnostická úloha - svůj první parametr vypíše do konzole.
 
 **Parametry:**
 
-1. Text, který chcete zadat.
+1. Text, který chcete vypsat.
 
-[cs.iway.iwcm.system.cron.DownloadURL](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/DownloadURL.java) - Stáhne adresu URL a odešle ji do e-mailu.
+[cs.iway.iwcm.system.cron.DownloadURL](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/DownloadURL.java) - Stáhne zadané URL a pošle jej na email.
 
 **Parametry:**
 
-1. URL, včetně `http://` předpony, např. `https://www.interway.sk/`.
+1. URL, včetně `http://` předpony, například `https://www.interway.sk/`.
 
-2. E-mail odesílatele.
+2. Email odesílatele.
 
-3. Příjemce (případně několik oddělených čárkou).
+3. Přijímatel (možná i více oddělených čárkou).
 
 4. Předmět zprávy.
 
-[sk.iway.iwcm.system.cron.SqlBatchRunner](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/SqlBatchRunner.java) - Provede příkazy SQL zadané jako parametry.
+[cs.iway.iwcm.system.cron.SqlBatchRunner](../../../../../src/webjet8/java/sk/iway/iwcm/system/cron/SqlBatchRunner.java) - Spustí SQL příkazy zadané jako parametry.
 
-**Parametry:** příkazy SQL oddělené znakem `|`.
+**Parametry:** SQL příkazy, oddělené znakem `|`.
 
-[cs.iway.iwcm.filebrowser.UnusedFilesCleaner](../../../../../src/webjet8/java/sk/iway/iwcm/filebrowser/UnusedFilesCleaner.java) - Prohledá zadaný adresář (adresář souborů) a vyhledá indexované soubory, na které již neodkazuje žádná stránka, a takové soubory zruší. Je to proto, že takové nepoužívané soubory by se mohly objevit ve výsledcích vyhledávání. Automatické pročištění má smysl pouze pro automatické indexování, které je povoleno konfigurační proměnnou `fileIndexerIndexAllFiles`.
+[cs.iway.iwcm.filebrowser.UnusedFilesCleaner](../../../../../src/webjet8/java/sk/iway/iwcm/filebrowser/UnusedFilesCleaner.java) - Přezkoumá zadaný adresář (souborový), zda neobsahuje indexované soubory, na které se již žádná stránka neodkazuje, a zruší publikování takových souborů. Takové nepoužité soubory by se totiž mohly zobrazovat ve výsledcích vyhledávání. Automatické pročišťování má význam pouze při automatickém indexování, které se zapíná konfigurační proměnnou `fileIndexerIndexAllFiles`.
 
 **Parametry:**
 
 1. Adresář pro skenování, např.: `/files`.
 
-2. E-mail, na který budou zasílána oznámení o smazaných souborech.
+2. Email, na který se pošle oznámení o zrušených souborech.
 
-3. `true/false` Hodnota. Pokud je hodnota nastavena `true`, stránka nebude zveřejněna. Pokud `false`, bude odesláno pouze oznámení.
+3. `true/false` hodnota. Je-li nastavena hodnota `true`, stránkám se zruší publikování. Pokud `false`, pošle se pouze notifikace.
 
-[cs.iway.iwcm.doc.GroupPublisher](../../../../../src/webjet8/java/sk/iway/iwcm/doc/GroupPublisher.java) - Zveřejňuje naplánované změny ve složkách webových stránek.
+[cs.iway.iwcm.doc.GroupPublisher](../../../../../src/webjet8/java/sk/iway/iwcm/doc/GroupPublisher.java) - Publikuje naplánované změny ve složkách web stránek.
 
 **Parametry:**
 
 - Nemá.
 
-[cs.iway.iwcm.calendar.CalendarDB](../../../../../src/webjet8/java/sk/iway/iwcm/calendar/CalendarDB.java) - Odesílá e-mailová oznámení o nadcházejících událostech v kalendáři událostí.
+[cs.iway.iwcm.calendar.CalendarDB](../../../../../src/webjet8/java/sk/iway/iwcm/calendar/CalendarDB.java) - Posílá notifikace na email o blížících se událostech v kalendáři událostí.
 
 **Parametry:**
 
@@ -78,31 +78,31 @@ Změny časování úloh se použijí okamžitě, ale již zahájené úlohy zů
 
 - Nemá.
 
-[cs.iway.iwcm.system.monitoring.MonitoringManager](../../../../../src/webjet8/java/sk/iway/iwcm/system/monitoring/MonitoringManager.java) - Ukládá data pro monitorování serveru.
+[cs.iway.iwcm.system.monitoring.MonitoringManager](../../../../../src/webjet8/java/sk/iway/iwcm/system/monitoring/MonitoringManager.java) - Ukládá údaje pro monitorování serveru.
 
 **Parametry:**
 
 - Nemá.
 
-[cs.iway.iwcm.stat.StatWriteBuffer](../../../../../src/webjet8/java/sk/iway/iwcm/stat/StatWriteBuffer.java) - Údaje o statistikách návštěvnosti webových stránek se shromažďují v paměti. Po spuštění této třídy se paměť vyčistí a zapíše do databáze.
+[cs.iway.iwcm.stat.StatWriteBuffer](../../../../../src/webjet8/java/sk/iway/iwcm/stat/StatWriteBuffer.java) - Údaje o statistikách návštěvnosti web stránky se sbírají do paměti. Při spuštění této třídy se paměť vyčistí a zapíše se do databáze.
 
 **Parametry:**
 
 - Nemá.
 
-[cs.iway.iwcm.stat.heat\_map.HeatMapCleaner](../../../../../src/webjet8/java/sk/iway/iwcm/stat/heat_map/HeatMapCleaner.java) - Odstraní vygenerované obrázky teplotních map kliknutí ve statistikách.
+[cs.iway.iwcm.stat.heat\_map.HeatMapCleaner](../../../../../src/webjet8/java/sk/iway/iwcm/stat/heat_map/HeatMapCleaner.java) - Maže generované obrázky teplotních map kliknutí ve statistice.
 
 **Parametry:**
 
 - Nemá.
 
-[cs.iway.iwcm.system.ConfPreparedPublisher](../../../../../src/webjet8/java/sk/iway/iwcm/system/ConfPreparedPublisher.java) - Zveřejňuje naplánované změny konfiguračních proměnných.
+[cs.iway.iwcm.system.ConfPreparedPublisher](../../../../../src/webjet8/java/sk/iway/iwcm/system/ConfPreparedPublisher.java) - Publikuje naplánované změny v konfiguračních proměnných.
 
 **Parametry:**
 
 - Nemá.
 
-[cs.iway.iwcm.components.file\_archiv.FileArchivatorInsertLater](../../../../../src/webjet8/java/sk/iway/iwcm/components/file_archiv/FileArchivatorInsertLater.java) - Zveřejní naplánované změny v archivu souborů.
+[cs.iway.iwcm.components.file\_archiv.FileArchivatorInsertLater](../../../../../src/webjet8/java/sk/iway/iwcm/components/file_archiv/FileArchivatorInsertLater.java) - Publikuje naplánované změny v archivu souborů.
 
 **Parametry:**
 

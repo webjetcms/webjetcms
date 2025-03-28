@@ -1,14 +1,14 @@
-# Spring MVC - import souboru Excel
+# Spring MVC - import Excel souboru
 
-Často je nutné importovat soubor aplikace Excel (formát `xlsx`), tento příklad rozšiřuje [ukázka nahrávání souborů](admin-with-upload.md) o Import dat ze souboru aplikace Excel.
+Často je třeba importovat soubor ve formátu Excel (formát `xlsx`), tento příklad rozšiřuje [ukázku nahrání souboru](admin-with-upload.md) o import údajů z Excel souboru.
 
-[Ukázkový soubor](contact.xlsx) pro dovoz.
+[Ukázkový soubor](contact.xlsx) pro import.
 
 # Backend
 
-Třída, která naslouchá události nahrávání souboru, je podobná třídě [náhled nahrávání souborů](admin-with-upload.md), liší se pouze v následném volání služby pro import ze souboru aplikace Excel. `springImportService.importFile(form.getDocument());`.
+Třída, která poslouchá událost nahrání souboru je podobná [ukázce nahrání souboru](admin-with-upload.md), liší se jen následným voláním služby pro import z Excel souboru `springImportService.importFile(form.getDocument());`.
 
-Ukázka obsahuje také příklad přenosu atributů při použití přesměrování. `model.addAttribute("redirect", redirect);`.
+Ukázka obsahuje i příklad přenosu atributů při použití přesměrování `model.addAttribute("redirect", redirect);`.
 
 ```java
 package sk.iway.basecms.contact.excelimport;
@@ -92,13 +92,13 @@ public class ExcelUploadExampleListener extends AbstractUploadListener<Form> {
 }
 ```
 
-Import se provádí automaticky mapováním sloupce v souboru aplikace Excel na název atributu. `ContactEntity`. První řádek souboru Excel tedy obsahuje hodnoty:
+Import probíhá automaticky mapováním sloupce v Excel souboru na jméno atributu `ContactEntity`. První řádek v Excel souboru tedy obsahuje hodnoty:
 
 `id name zip street city phone contact`
 
-Import zpracování třídy rozšiřuje [AbstractExcelImportService](../../../javadoc/sk/iway/iwcm/admin/xls/AbstractExcelImportService.html) který zajišťuje samotný import.
+Třída pro zpracování importu rozšiřuje [AbstractExcelImportService](../../../javadoc/sk/iway/iwcm/admin/xls/AbstractExcelImportService.html), který zajišťuje samotný import.
 
-V případě potřeby je možné některé metody přepsat, například v metodě `beforeRow` vygeneruje náhodné telefonní číslo a upraví formát buňky PSČ, která je sice v souboru aplikace Excel označena jako Text, ale někdy je importována jako číslo.
+V případě potřeby je možné přepsat některé metody, ukázka v metodě `beforeRow` generuje náhodné telefonní číslo a upravuje formát buňky PSČ, která i když je v Excel souboru označena jako Text importuje se někdy jako číslo.
 
 ```java
 package sk.iway.basecms.contact.excelimport;
@@ -166,7 +166,7 @@ public class ExcelImportService extends AbstractExcelImportService<ContactEntity
 
 # Frontend
 
-Frontendový soubor je téměř totožný s [ukázka nahrávání souboru](admin-with-upload.md), rozdíl je pouze v zobrazené zprávě o úspěšném importu `${success}` a adresu URL pro odeslání formuláře `@{/apps/contact/admin/excelimport/}`.
+Frontend soubor je téměř shodný s [ukázkou nahrání souboru](admin-with-upload.md), rozdíl je pouze v zobrazeném hlášení úspěšného importu `${success}` a URL adrese pro odeslání formuláře `@{/apps/contact/admin/excelimport/}`.
 
 ```html
 <script type="text/javascript">
@@ -226,4 +226,4 @@ Frontendový soubor je téměř totožný s [ukázka nahrávání souboru](admin
 
 ## Poznámky k implementaci
 
-Pro převod hodnoty z Excelu do Entity se používá `ConversionService` nakonfigurováno v `V9SpringConfig.conversionService()`. Cílem bylo použít stejný převodník, jaký se používá mezi řetězci z odesílaného formuláře ve standardním jaru. Zajišťuje konverzi datových typů řetězec, číslo, binární hodnota atd.
+Pro konverzi hodnoty z Excelu do Entity se používá `ConversionService` nakonfigurováno v `V9SpringConfig.conversionService()`. Cílem bylo použít stejný konverter jako se používá mezi řetězci z odeslání formuláře ve standardním Springu. Zajišťuje konverzi datových typů řetězec, číslo, binární hodnota atp.

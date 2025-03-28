@@ -1,21 +1,21 @@
 # Slider
 
-Přidejte na stránku poutavý animovaný posuvník s obrázky. Vyberte si ze široké škály stylů designu a animačních efektů, některé návrhy obsahují také nadpis a další text.
+Přidejte na svou stránku poutavý animovaný slider s obrázky. Vyberte si z široké nabídky designových stylů a animačních efektů, některé designy obsahují také nadpis a doplňkový text.
 
 ## Nastavení aplikace
 
 ### Nastavení
 
-V této části můžete nastavit styl výběrem z dostupných stylů:
+V této části lze nastavit styl výběrem z dostupných stylů:
 - Classic
 - ContentBox
-- Kostka
-- Elegantní
-- Události
-- Seznam funkcí
+- Cube
+- Elegant
+- Events
+- FeatureList
 - FrontPage
-- Galerie
-- Záhlaví
+- Gallery
+- Header
 - Lightbox
 - TextNavigation
 
@@ -26,19 +26,19 @@ V této části můžete nastavit styl výběrem z dostupných stylů:
 V této části lze nastavit:
 - Rozměry
 - Zobrazení šipek vpravo a vlevo
-- Efekt pohyblivé fotografie
+- Efekt pohyblivé fotky
 - Styl navigace
-- Zobrazení miniatur při najetí na navigaci
-- Povolení posouvání uchopením
+- Zobrazit náhledy při přejetí myší přes navigaci
+- Povolit posouvání chycením
 - Náhodné pořadí
-- Automatické spuštění
+- Automaticky spustit
 - Počet smyček
-- Doba zobrazení obrázku
+- Čas zobrazení obrázku
 - Zobrazit odpočítávání
 - Barva odpočítávání
 - Pozice odpočítávání
-- Přejděte na první obrázek
-- Pozastavení při najetí myší
+- Přechod na první obrázek
+- Pozastavit při přejetí myší
 - Číslování
 - Stín
 
@@ -49,32 +49,32 @@ V této části lze nastavit:
 V této části lze vybrat přechody:
 - Fade
 - Cross fade
-- Sklíčko
-- Elastické
+- Slide
+- Elastic
 - Slice
-- Žaluzie
-- Bloky
+- Blinds
+- Blocks
 - Shuffle
-- Dlaždice
+- Tiles
 - Flip
-- Flip se zoomem
+- Flip with zoom
 - 3D
-- 3D horizontální
-- 3D se zoomem
-- 3D horizontální se zoomem
+- 3D horizontal
+- 3D with zoom
+- 3D horizontal with zoom
 - 3D flip
-- 3D flip se zoomem
-- 3D dlaždice
-- Ken boom
+- 3D flip with zoom
+- 3D tiles
+- Ken bums
 
 ![](editor-transitions.png)
 
 ### Položky
 
-V této části můžete přidat nebo odebrat položku:
-- Při přidávání můžete vyplnit název, podnázev, přesměrování.
-- Pořadí položek můžete změnit jejich přetažením.
-- Položku můžete odebrat kliknutím na červený křížek.
+V této části lze přidat nebo odebrat položku:
+- Při přidání lze vyplnit nadpis, podnadpis, přesměrování.
+- U položek lze změnit pořadí přesunutím.
+- Odebrání položky lze kliknutím na červený křížek.
 
 ![](editor-items.png)
 

@@ -1,26 +1,26 @@
  <div class="sidebar-section">Programování zákaznických aplikací</div>
 
-- [:point\_left: Zpět na úvod](/?back)
+- [:point\_left: Zpět na Úvod](/?back)
 - Spring
   - [Konfigurace Spring](/custom-apps/spring-config/)
-  - [Autorizace tokenů](/custom-apps/spring/api-auth.md)
-  - [Poskytování služeb REST](/custom-apps/spring/rest-url.md)
-  - [Rozšíření úložišť Spring DATA systému WebJET CMS](/custom-apps/spring/repository-extend.md)
+  - [Autorizace tokenem](/custom-apps/spring/api-auth.md)
+  - [Zabezpečení REST služeb](/custom-apps/spring/rest-url.md)
+  - [Rozšíření Spring DATA repozitářů WebJET CMS](/custom-apps/spring/repository-extend.md)
   - [Veřejné služby](/custom-apps/spring/public-services.md)
 - Aplikace
-  - [Položka menu v sekci správce](/custom-apps/admin-menu-item/)
-  - [Seznam webových stránek/novinek](/custom-apps/news/)
+  - [Položka v menu admin části](/custom-apps/admin-menu-item/)
+  - [Seznam web stránek/novinek](/custom-apps/news/)
   - [Uživatelé](/custom-apps/apps/user/README.md)
   - [Konfigurace](/custom-apps/config/README.md)
 - Spring MVC
-  - [Aplikace na webové stránce](/custom-apps/spring-mvc/)
-  - [Správce s nahráváním souborů](/custom-apps/spring-mvc/admin-with-upload.md)
-  - [Import správce z aplikace Excel](/custom-apps/spring-mvc/admin-excel-import.md)
+  - [Aplikace ve web stránce](/custom-apps/spring-mvc/)
+  - [Admin s nahráním souboru](/custom-apps/spring-mvc/admin-with-upload.md)
+  - [Admin import z Excelu](/custom-apps/spring-mvc/admin-excel-import.md)
 - Appstore
   - [Zobrazení v seznamu aplikací](/custom-apps/appstore/)
-- Kód VS
+- VS Code
   - [Úvod](/custom-apps/vscode/README.md)
-  - [Nastavení režimu ladění](/custom-apps/vscode/debugging/README.md)
+  - [Nastavení debug režimu](/custom-apps/vscode/debugging/README.md)
 - Testování
   - [Možnosti testování](/custom-apps/testing/README.md)
-  - [Pokrytí kódu](/custom-apps/testing/codecoverage.md)
+  - [Pokrytí kódem](/custom-apps/testing/codecoverage.md)

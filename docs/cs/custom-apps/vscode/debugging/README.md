@@ -1,13 +1,13 @@
-# Nastavení režimu ladění
+# Nastavení debug režimu
 
-Při správném nastavení projektu gradle je možné ladit nejen kód v jazyce Java, ale také soubory v jazyce JavaScript. Podporován je tzv. `hot-swap`, tj. změna kódu za běhu serveru bez jeho restartování. Standardní omezení, podle kterého lze změny provádět pouze uvnitř metod (Java nepodporuje `hot-swap` kde se mění struktura - přidávají se nové metody nebo se mění parametry stávajících metod). V takovém případě je nutné webovou aplikaci restartovat.
+S korektním nastavením gradle projektu lze debugovat nejen Java kód, ale také JavaScript soubory. Podporován je tzn. `hot-swap`, neboli výměna kódu za běhu serveru bez potřeby jeho restartu. Platí ale standardní omezení, že změny lze provést pouze uvnitř metod (Java nepodporuje `hot-swap` při kterém se mění struktura - přidají se nové metody, nebo stávajícím se změní parametry). V takovém případě je třeba provést restart web aplikace.
 
 ## Nastavení aplikačního serveru
 
-Pro spuštění aplikačního serveru Tomcat v rámci projektu gradle se používá rozšíření [gretty](https://gretty-gradle-plugin.github.io/gretty-doc/). Podporuje hot-swap, ale musí být správně nastaven. Důležité jsou následující parametry:
-- `reloadOnClassChange = false` - zakáže automatický restart Tomcatu při kompilaci třídy, čímž zabrání restartu aplikačního serveru.
-- `-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005` - aktivuje možnost připojení ladicího programu na portu 5005.
-- `-Dwebjet.showDocActionAllowedDocids=4,383,390` - seznam ID stránek, které lze otevřít přímo zadáním parametru docid v adrese URL bez přihlášení do administrace (slouží k otevření stránky přímo v prohlížeči `Launch Chrome`).
+Pro spuštění aplikačního serveru Tomcat v rámci gradle projektu se používá rozšíření [gretty](https://gretty-gradle-plugin.github.io/gretty-doc/). To podporuje hot-swap, musí být ale korektně nastaveno. Důležité jsou následující parametry:
+- `reloadOnClassChange = false` - vypne automatický restart Tomcat při zkompilování třídy, to zamezí restartování aplikačního serveru.
+- `-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005` - aktivuje možnost připojení debugger na portu 5005.
+- `-Dwebjet.showDocActionAllowedDocids=4,383,390` - seznam ID stránek, které lze přímo otevřít zadáním docid parametru v URL bez přihlášení do administrace (používá se pro přímé otevření stránky v `Launch Chrome`).
 
 ```gradle
 gretty {
@@ -43,13 +43,13 @@ gretty {
 }
 ```
 
-V minulosti bylo také možné použít parametr `managedClassReload = true`, ale používá knihovnu, která není podporována v Javě 11 a vyšší, pokud ji máte v projektu nastavenou, odstraňte ji z konfigurace gretty.
+V minulosti bylo možné použít i parametr `managedClassReload = true`, ten ale používá knihovnu, která nemá podporu v Java 11 a více, pokud jej v projektu máte nastaveno, smažte jej z konfigurace gretty.
 
-!>**Varování:** pokud máte otevřený soubor, který obsahuje chybu (např. html nebo dokonce JavaScript), režim ladění se nespustí správně nebo se po spuštění serveru odpojí. VS Code zřejmě nerozlišuje, v jakém typu souboru se chyba nachází, nesmíte mít při spuštění otevřený soubor, jehož karta se zobrazuje červeně.
+!>**Upozornění:** pokud máte otevřený soubor, který obsahuje chybu (např. html, nebo i JavaScript) nespustí se debug režim korektně, respektive po spuštění serveru se odpojí. VS Code zjevně nerozlišuje v jakém typu souboru je chyba, nesmíte mít při spuštění otevřený soubor, jehož karta je zobrazena červenou barvou.
 
-## Nastavení pro ladění JavaScriptu
+## Nastavení pro JavaScript debug
 
-Abyste mohli ladit soubory JavaScriptu, musíte spustit prohlížeč (Chrome) speciálním způsobem, který otevře možnost připojení k vývojářským nástrojům. To se nastavuje v souboru `.vscode/launch.json` ve kterém můžete mít konfiguraci:
+Aby bylo možné debugovat JavaScript soubory je třeba speciálním způsobem spustit prohlížeč (Chrome), který otevře možnost připojení se na vývojářské nástroje. To se nastavuje v souboru `.vscode/launch.json` ve kterém můžete mít konfiguraci:
 
 ```json
 {
@@ -72,13 +72,13 @@ Abyste mohli ladit soubory JavaScriptu, musíte spustit prohlížeč (Chrome) sp
 }
 ```
 
-Zobrazí se v možnosti spuštění Ladění. Důležité je nastavení:
-- `webRoot` - kořenovou složku se zdrojovými kódy.
-- `sourceMapPathOverrides` - nastavení vyhledávání zdrojového kódu proti `.map` soubor.
+Ta se objeví v možnosti spuštění Debug. Důležité je nastavení:
+- `webRoot` - kořenová složka se zdrojovými kódy.
+- `sourceMapPathOverrides` - nastavení hledání zdrojových kódů vůči `.map` souborem.
 
-Zde je důležité poznamenat, že pokud jsou soubory JavaScript kompilovány, je nutné vygenerovat `.map` Soubor. Ve vašem vývojovém prostředí však obvykle nemá přesnou cestu, takže v konfiguraci `sourceMapPathOverrides` je možné nastavit nahrazení/doplnění cesty na absolutní.
+Zde je důležité si uvědomit, že pokud jsou JavaScript soubory kompilované, je třeba aby se generoval i `.map` soubor. Ten ale typicky nemá přesně nastavenou cestu ve vašem vývojovém prostředí, proto v konfiguraci `sourceMapPathOverrides` je možné nastavit nahrazení/doplnění cesty na absolutní.
 
-Na `webpack` také vygeneroval `.map` soubor je třeba nakonfigurovat nastavením atributu `devtoolModuleFilenameTemplate`:
+Aby `webpack` generoval také `.map` soubor je třeba upravit konfiguraci nastavením atributu `devtoolModuleFilenameTemplate`:
 
 ```
 module.exports = {
@@ -92,9 +92,9 @@ module.exports = {
 }
 ```
 
-Pokud se používají `node` je třeba použít skripty pro generování jako ve vzorových šablonách. [exorcista](https://www.npmjs.com/package/exorcist), upravili jsme vzorové šablony pro správné zadání. Možné změny jsou ve skriptu `node_scripts/render-scripts.js` ve kterém je nastaven název `.map` soubor.
+Pokud se používají `node` skripty pro generování jako je v ukázkových šablonách je třeba použít [exorcist](https://www.npmjs.com/package/exorcist), ukázkové šablony jsme upravili pro korektní zápis. Případné změny jsou ve skriptu `node_scripts/render-scripts.js` ve kterém se nastavuje název `.map` souboru.
 
-Například pro [Holá šablona](../../../frontend/examples/template-bare/README.md) nastavení cesty jsou následující:
+Například pro [šablonu Bare](../../../frontend/examples/template-bare/README.md) je nastavení cest následující:
 
 ```json
 {
@@ -113,21 +113,21 @@ Například pro [Holá šablona](../../../frontend/examples/template-bare/README
 }
 ```
 
-Mapování souborů v JavaScriptu umožňuje kombinovat soubory prostřednictvím `combine.jsp/<combine data-iwcm-combine.../>`, který propojuje více souborů v aplikaci WebJET. Pro adresu stránky můžete použít parametr `combineEnabledRequest=false` zakázat kombinování souborů (nebo `combineEnabled=false` který si také pamatuje vypnutí v relaci a používá ho pro další stránky).
+Mapování JavaScript souborů komplikuje kombinování souborů přes `combine.jsp/<combine data-iwcm-combine.../>`, které ve WebJETu spojuje více souborů. Pro adresu stránky můžete použít parametr `combineEnabledRequest=false` pro vypnutí kombinování souborů (případně `combineEnabled=false` které si navíc vypnutí zapamatuje v session a použije jej i na další stránky).
 
-Pokud je zkompilovaný `ninja.js` (jako např. v šabloně `bare`, včetně jQuery a bootstrapu) a je to také první soubor v seznamu, takže `combine` nevytváří pro tento soubor počáteční komentář a čísla řádků se pak shodují s čísly `.map` soubor, takže v tomto případě `combine` není třeba ji vypínat.
+Pokud se používá zkompilovaný `ninja.js` (jako např. v šabloně `bare`, obsahující i jQuery a bootstrap) a zároveň je to první soubor v seznamu, tak `combine` pro tento soubor negeneruje úvodní komentář a čísla řádků pak sedí vůči `.map` souboru, tedy pro tento případ `combine` není třeba vypnout.
 
-Pro začátek doporučujeme přidat parametr `NO_WJTOOLBAR=true` nepřidávat na stránku nástroj pro řádkové úpravy.
+Pro spuštění doporučujeme přidat i parametr `NO_WJTOOLBAR=true` aby se do stránky nepřidával nástroj pro inline editaci stránky.
 
-Pokud používáte multidoménu, nezapomeňte správně nastavit parametr `-Dwebjet.showDocActionAllowedDocids` v `build.gradle` otevřít webovou stránku zadáním jejího `docid`.
+Pokud používáte multidomain nezapomeňte správně nastavit parametr `-Dwebjet.showDocActionAllowedDocids` v `build.gradle` pro možnost otevření web stránky zadáním jí `docid`.
 
-## Ukázka konfiguračního souboru VS Code
+## Ukázkový soubor konfigurace VS Code
 
-V konfiguračním souboru `launch.json` můžete mít více konfigurací, které můžete spouštět podle potřeby. Můžete mít více konfigurací Java a více konfigurací JavaScript. Výhodou je, že VS Code může spustit režim ladění na úrovni kódu Java a současně spustit ladění JavaScriptu. Mezi různými režimy ladění můžete přepínat v plovoucím krokovém panelu.
+V konfiguračním souboru `launch.json` můžete mít několik konfigurací, které můžete spouštět podle potřeby. Můžete mít více Java konfigurací a více JavaScript. Výhoda je, že VS Code umí spustit debug režim na úrovni Java kódu a zároveň s ním spustit i JavaScript debug. V plovoucí liště krokování se umíte přepínat mezi jednotlivými debug režimy.
 
-V ukázkovém souboru jsou 2 konfigurace jazyka Java - jedna pro připojení k databázi v souboru `poolman.xml` a jeden pro připojení v souboru `poolman-local.xml` (např. do místní databáze). Soubor `src/main/resources/poolman-local*.xml` je v `.gitignore` a každý programátor si je může nakonfigurovat podle svých potřeb. Konfigurace `Debug (Attach)` je určen pro dodatečné připojení k ladicímu portu po spuštění projektu (nebo po jeho spuštění z terminálu).
+V ukázkovém souboru jsou 2 Java konfigurace - jedna pro databázové připojení v souboru `poolman.xml` a jedno pro připojení v souboru `poolman-local.xml` (tj. např. do vaší lokální databáze). Soubor `src/main/resources/poolman-local*.xml` je v `.gitignore` a může jej mít každý programátor nastavený podle svých potřeb. Konfigurace `Debug (Attach)` je určena k dodatečnému připojení se k debug portu po spuštění projektu (nebo po jeho spuštění z terminálu).
 
-Kromě toho jsou zde příklady spuštění ladění JavaScriptu pro různé složky (šablony).
+Kromě toho jsou tam ukázky spuštění JavaScript debug pro různé složky (šablony).
 
 ```json
 {
@@ -213,4 +213,4 @@ Kromě toho jsou zde příklady spuštění ladění JavaScriptu pro různé slo
 }
 ```
 
-Poznámka ve vzorové konfiguraci `sourceMapPathOverrides` ukázka mapování modulů NPM přes webpack v aplikaci `Launch Chrome`, přesná ukázka mapování souborů v programu `Launch Chrome Bare` a mapování se všemi soubory ve složce ve složce `Launch Chrome Creative`. Tyto možnosti můžete v projektu kombinovat podle potřeby.
+Všimněte si v ukázce konfigurace `sourceMapPathOverrides` ukázku mapování NPM modulů přes webpack v `Launch Chrome`, přesnou ukázku mapování souborů v `Launch Chrome Bare` a mapování s všech souborů ve složce v `Launch Chrome Creative`. Tyto možnosti můžete podle potřeby kombinovat, jak potřebujete ve vašem projektu.

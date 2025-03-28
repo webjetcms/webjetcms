@@ -1,22 +1,22 @@
-# Režim ladění
+# Debug režim
 
-| Metoda | Typ | Popis
-| -------------- | --------- | ----------- |
-| ${ninja.debug} | *Boolean* | Režim ladění |
+ | Metoda | Typ | Popis |
+ | -------------- | --------- | ----------- |
+ | ${ninja.debug} | *Boolean* | Debug režim |
 
-## Režim ladění *Boolean*
+## Debug režim *Boolean*
 
 <!-- tabs:start -->
 
 #### ** Popis **
 
-Vrací se `true` pokud je parametr v url `ninjaDebug` nastavit na `true`, nebo pokud je v `config.properties` sada atributů `ninjaDebug` na adrese `true`.
+Vrátí `true`, je-li parametr v url `ninjaDebug` nastaven na `true`, nebo je-li v `config.properties` nastavený atribut `ninjaDebug` na `true`.
 
 ```java
 ${ninja.debug}
 ```
 
-Příklad nastavení v adrese URL:
+Příklad nastavení v URL adrese:
 
 ```url
 www.nazovdomeny.sk?ninjaDebug=true
@@ -28,15 +28,15 @@ Příklad nastavení v `config.properties`
 ninjaDebug=true
 ```
 
-#### ** Náhled **
+#### ** Ukázka **
 
-Používá se v :ghost:<code>html-attributes.jsp</code>
+Použité v :ghost:<code>html-attributes.jsp</code>
 
 ```html
 <html data-is-ninja-debug="${ninja.debug}" >
 ```
 
-Používá se v :ghost:<code>debug-info.jsp</code>
+Použité v :ghost:<code>debug-info.jsp</code>
 
 ```java
 <c:if test="${ninja.debug}">

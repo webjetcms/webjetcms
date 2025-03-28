@@ -1,82 +1,82 @@
 # Zapomenuté heslo
 
-Pokud jste zapomněli své heslo, můžete jej obnovit následujícím způsobem.
+V případě, že jste zapomněli své heslo můžete ho obnovit následujícím způsobem.
 
-## Sekce správce
+## Admin sekce
 
-Pokud jste zapomněli heslo do sekce správce, můžete si na přihlašovací stránce vyžádat obnovení hesla.
+Pokud jste zapomněli své heslo pro admin sekci, můžete požádat o obnovení hesla na přihlašovací stránce.
 
-Klikněte na možnost ![](admin-recover-password-btn.png ":no-zoom") zobrazí se formulář pro obnovení hesla.
+Klepnutím na na možnost ![](admin-recover-password-btn.png ":no-zoom") se zobrazí formulář pro obnovení hesla.
 
 ![](admin-recovery-page.png)
 
-Musíte zadat svůj **e-mailová adresa** nebo **přihlašovací jméno**. Chcete-li žádost odeslat, stiskněte tlačítko ![](admin-send-btn.png ":no-zoom"). Upozornění vás upozorní, že pokud účet existuje, bude vám na příslušnou e-mailovou adresu zaslán e-mail.
+Do pole musíte zadat Vaši **emailovou adresu** nebo **přihlašovací jméno**. Žádost odešlete stisknutím tlačítka ![](admin-send-btn.png ":no-zoom"). Zobrazená notifikace Vás upozorní, že pokud účet existuje, bude zaslán email na patřičnou e-mailovou adresu.
 
 ![](admin-recovery-page-notif.png)
 
 ## Zákaznická zóna
 
-Pokud jste zapomněli heslo do zákaznické zóny, můžete si na přihlašovací stránce vyžádat obnovení hesla.
+Pokud jste zapomněli své heslo pro zákaznickou zónu, můžete požádat o obnovení hesla na přihlašovací stránce.
 
-Klikněte na možnost **Zapomněli jste heslo?** zobrazí se skryté pole pro obnovení.
+Klepnutím na na možnost **Zapomněli jste heslo?** se zobrazí skryté pole pro obnovení.
 
-| Před | Po |
+|             Před |              Po |
 | :---------------------------: | :---------------------------: |
 | ![](user-recovery-page-1.png) | ![](user-recovery-page-2.png) |
 
-Musíte zadat svůj **e-mailová adresa** nebo **přihlašovací jméno**. Chcete-li žádost odeslat, stiskněte tlačítko ![](user-send-btn.png ":no-zoom"). Upozornění vás upozorní, že pokud účet existuje, bude vám na příslušnou e-mailovou adresu zaslán e-mail.
+Do pole musíte zadat Vaši **emailovou adresu** nebo **přihlašovací jméno**. Žádost odešlete stisknutím tlačítka ![](user-send-btn.png ":no-zoom"). Zobrazená notifikace Vás upozorní, že pokud účet existuje, bude zaslán email na patřičnou e-mailovou adresu.
 
 ![](user-recovery-page-notif.png)
 
-## E-mail pro změnu hesla
+## Email ke změně hesla
 
-Odeslaný e-mail obsahuje 2 odkazy:
-- odkaz na změnu hesla, **Chcete-li změnit heslo, klikněte do 30 minut zde.**
-- odkaz na zrušení akce změny hesla, **Pokud jste o změnu hesla nepožádali, můžete tuto akci zrušit kliknutím sem.**
+Zaslaný email obsahuje 2 odkazy:
+- odkaz pro změnu hesla, **Chcete-li změnit heslo, klikněte sem do 30 minut.**
+- odkaz na zrušení akce změny hesla, **Pokud jste nepožádali o změnu hesla můžete tuto akci zrušit kliknutím zde.**
 
 ![](email.png)
 
 ### Akce změny hesla
 
-Klikněte na první odkaz, **Chcete-li změnit heslo, klikněte do 30 minut zde.**, budete přesměrováni na stránku pro změnu hesla.
+Klepnutím na první odkaz, **Chcete-li změnit heslo, klikněte sem do 30 minut.**, se dostanete na stránku ke změně hesla.
 
-| Sekce správce | Uživatelská sekce
+|          Admin sekce |     Uživatelská sekce |
 | :----------------------------: | :---------------------------: |
 | ![](admin-recovery-form-1.png) | ![](user-recovery-form-1.png) |
 
-!> **Varování:** přihlašovací jméno je typem výběrového pole kvůli možnosti registrace více přihlašovacích jmen se stejným e-mailem (např. přihlášení do administrace a zákaznického účtu). Výběrové pole tedy obsahuje všechna přihlašovací jména, která sdílejí zadanou e-mailovou adresu. **Heslo se změní pouze pro uživatele, jehož přihlašovací jméno jste zvolili.**
+!> **Upozornění:** přihlašovací jméno je typu výběrové pole z důvodu možnosti registrace více přihlašovacích jmen se stejným emailem (např. přihlášení do administrace a zákaznické konto). Výběrové pole tak obsahuje všechna přihlašovací jména, která sdílejí zadanou emailovou adresu. **Heslo bude změněno pouze uživateli, jehož přihlašovací jméno zvolíte.**
 
-Poté musíte zadat nové heslo a znovu jej zadat pro ověření. Pokud se hesla neshodují nebo nesplňují minimální požadavky na kvalitu hesla, budete na to upozorněni.
+Následně musíte zadat nové heslo a znovu jej zadat pro ověření. Pokud se hesla nebudou shodovat nebo nebudou splňovat minimální požadavky na kvalitu hesla, budete upozorněni.
 
-| Heslo neodpovídá | Slabé heslo |
+|       Heslo se neshoduje |          Slabé heslo |
 | :----------------------------: | :----------------------------: |
 | ![](admin-recovery-form-2.png) | ![](admin-recovery-form-3.png) |
 | ![](user-recovery-form-2.png)  | ![](user-recovery-form-3.png)  |
 
-Pokud se heslo vybraného uživatele úspěšně změní, zobrazí se následující zpráva.
+Pokud se heslo pro zvoleného uživatele úspěšně změní, zobrazí se následující hlášení.
 
-| Sekce správce | Uživatelská sekce
+|          Admin sekce |     Uživatelská sekce |
 | :----------------------------: | :---------------------------: |
 | ![](admin-recovery-form-4.png) | ![](user-recovery-form-4.png) |
 
-!> **Varování:** po úspěšné změně hesla odkaz, který vás přivedl na formulář pro změnu hesla. **se stává nefunkční** to znamená, že jej nelze použít k opětovné změně hesla pro stejného nebo jiného uživatele. Odkaz se rovněž stane nefunkčním, pokud jste akci neprovedli do 30 minut od obdržení e-mailu.
+!> **Upozornění:** po úspěšné změně hesla se odkaz, kterým jste se dostali k formuláři na změnu **stává nefunkčním**, tedy nebude možné použít k opětovné změně hesla pro stejného nebo jiného uživatele. Odkaz se stává také nefunkční, pokud jste akci neprovedli do 30 minut od přijetí emailu.
 
-| Sekce správce | Uživatelská sekce
+|              Admin sekce |          Uživatelská sekce |
 | :-------------------------------------: | :------------------------------------: |
 | ![](admin-recovery-form-notWorking.png) | ![](user-recovery-form-notWorking.png) |
 
-### Změna akce zrušení
+### Akce zrušení změny
 
-Klikněte na druhý odkaz **Pokud jste o změnu hesla nepožádali, můžete tuto akci zrušit kliknutím sem.** budete přesměrováni zpět na stránku, která vás informuje, že akce změny hesla byla zrušena, a na které se zobrazí první odkaz pro změnu hesla. **se stala nefunkční**.
+Klepnutím na druhý odkaz **Pokud jste nepožádali o změnu hesla můžete tuto akci zrušit kliknutím zde.** se opět dostanete na stránku, která Vám sdělí že akce změny hesla byla zrušena, čímž se první odkaz na změnu hesla **stala nefunkční**.
 
-| Sekce správce | Uživatelská sekce
+|            Admin sekce |        Uživatelská sekce |
 | :---------------------------------: | :--------------------------------: |
 | ![](admin-recovery-form-cancel.png) | ![](user-recovery-form-cancel.png) |
 
 ## Poznámky k implementaci
 
-- změna hesla funguje prostřednictvím auditní stopy, kdy se při požadavku na změnu hesla vytvoří záznam typu. `USER_CHANGE_PASSWORD` který má v popisu text `Vyžiadanie zmeny hesla`
-- při požadavku na změnu hesla se kontroluje, zda tato auditní stopa existuje a zda není starší než 30 minut; pokud neexistuje nebo je starší, odkaz na změnu hesla již nebude fungovat a auditní stopa zůstane zachována.
-- při použití odkazu pro zrušení změny hesla je tento záznam z auditu vymazán.
-- pokud je e-mail použitý ke změně hesla spojen s více účty, obsahuje auditní záznam vždy přihlašovací jméno posledního uživatele, který může změnit heslo prostřednictvím tohoto e-mailu.
-- po úspěšné změně hesla je auditní záznam vymazán.
+- změna hesla funguje přes záznam auditu, kde při žádosti o změnu hesla se vytvoří záznam typu `USER_CHANGE_PASSWORD`, který má v popisu text `Vyžiadanie zmeny hesla`
+- při akci o změnu hesla se ověří, zda tento auditní záznam existuje a zda není starší 30 minut, pokud neexistuje nebo je starší, odkaz ke změně hesla již nebude fungovat a záznam zůstane existovat
+- při použití odkazu ke zrušení změny hesla se vymaže tento záznam z auditu
+- pokud email použitý pro změnu hesla je spojen s více účty, v auditním záznamu je vždy přihlašovací jméno nejnovějšího uživatele, kterým lze přes tento email změnit heslo
+- po úspěšné akci změny hesla se záznam z auditu vymaže

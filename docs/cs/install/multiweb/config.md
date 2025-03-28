@@ -1,13 +1,13 @@
 # Konfigurace
 
-Pro správnou funkci musí být splněny následující požadavky:
+Pro správné fungování je třeba dodržet následující požadavky:
 - [Nastavení šablon](../../frontend/setup/README.md) pro správu více domén
-- První doména se nazývá řídicí doména, neměla by obsahovat skutečnou webovou stránku, slouží k nastavení globálních parametrů.
-- Doporučujeme vytvořit doménový alias pro každou doménu. Vytvoříte jej v konfiguraci jako klíč `multiDomainAlias:DOMAIN-NAME` s vhodnou hodnotou názvu domény bez mezer, www a přípon, např. `interway`. Doménový alias umožňuje připravit webové stránky na pracovní doméně a poté je přesunout na produkční doménu. Zadaný doménový alias bude použit pro vyhledávání souborů šablon a přizpůsobených aplikačních souborů.
+- První doméně je tzn. řídící, neměla by obsahovat reálnou web stránku, slouží k nastavování globálních parametrů.
+- Pro každou doménu doporučujeme vytvořit doménový alias. Vytvoříte jej v konfiguraci jako klíč `multiDomainAlias:DOMAIN-NAME` s vhodnou hodnotou doménového jména bez mezer, www a přípony. `interway`. Doménový alias vám umožní připravit web na pracovní doméně a následně jej přesunout na produkční doménu. Zadaný doménový alias se použije pro hledání souborů šablon a upravených souborů aplikací.
 
-## Nastavení nové domény
+## Zřízení nové domény
 
-V současné době je třeba vytvořit novou doménu pomocí níže uvedeného příkazu SQL. Výraz `DOMAIN-NAME` nahradit názvem domény. Přihlašovací jméno je `Heslo1`. Po přidání je třeba buď odstranit mezipaměť prostřednictvím řídicí domény v Ovládacích panelech->Objekty mezipaměti kliknutím na tlačítko odstranit vše, nebo restartovat aplikační server.
+Aktuálně je třeba novou doménu vytvořit níže uvedeným SQL příkazem. Výraz `DOMAIN-NAME` nahraďte za doménové jméno. Přihlašovací jméno je `Heslo1`. Po přidání je třeba buď přes řídicí doménu smazat cache v Ovládací panely->Cache objekty kliknutím na smazat vše, nebo restartovat aplikační server.
 
 ```sql
 INSERT INTO `groups` (`group_name`, `internal`, `parent_group_id`, `navbar`, `default_doc_id`, `temp_id`, `sort_priority`, `password_protected`, `menu_type`, `url_dir_name`, `sync_id`, `sync_status`, `html_head`, `logon_page_doc_id`, `domain_name`, `new_page_docid_template`, `install_name`, `field_a`, `field_b`, `field_c`, `field_d`, `logged_menu_type`, `link_group_id`)

@@ -1,24 +1,24 @@
-# Připravenost knihovny
+# Knihovna 'Ready'
 
-pro správu a spouštění zpětných volání.
-
-***
-
-**Závislosti**
-
-- [Nástroje](tools.md)
+pro správu a spouštění callbacků.
 
 ***
 
-### Popis operace:
+**Dependencies (závislosti)**
 
-`ReadyExtender` slouží jako virtuální úložiště nebo sběrač funkcí shromážděných během načítání webu a tato sbírka funkcí je na konci vykreslování ručně spuštěna v pořadí, v jakém je v úložišti (v pořadí, v jakém byly funkce přidány).
+- [Tools](tools.md)
 
-**Při přidávání funkce lze také zadat její pořadí.**
+***
 
-Na konci načítání webu, např. v okně `document.ready` zavolat metodu [fire()](#požár) a tím se spustí provádění shromážděných funkcí.
+### Popis fungování:
 
-Můžeme tedy určit, kdy se má která funkce spustit, a nemusíme sledovat pořadí provádění klasických funkcí. `document.ready` a potřebujeme pouze jednu funkci `document.ready` pro provedení [fire()](#požár)
+`ReadyExtender` slouží jako virtuální úložiště resp. collector funkcí, sesbíraných při načítání webu a tato kolekce funkcí se na konci renderu manuálně provede v pořadí v jakém se nachází v úložišti (v pořadí v jakém byly funkce přidány).
+
+**Pořadí přidané funkce lze také určit při jejím přidávání.**
+
+Na konci načítání webu, například. v `document.ready` zavoláme metodu [fire()](#fire) a tím se spustí vykonávání sesbíraných funkcí.
+
+Můžeme si tedy určit, kdy se má, která funkce spustit a odpadá nám potřeba sledovat pořadí provádění klasických `document.ready` funkcí a stačí nám pouze jedna funkce `document.ready` pro provedení [fire()](#fire)
 
 ## Vytvoření instance:
 
@@ -60,27 +60,27 @@ window.domReady.add(() => {
 window.domReady.fire();
 ```
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
-| Metody | Gettery
+| Metody | Gettery |
 | ------------------- | --------------------- |
-| [add()](#přidat)       | [listName](#listName) |
-| [remove()](#odstranit) | [list](#list)         |
-| [fire()](#požár)     |
+| [add()](#add)       | [listName](#listName) |
+| [remove()](#remove) | [dopis](#dopis)         |
+| [fire()](#fire)     |
 
 ***
 
-### Podrobný popis funkcí
+### Detailní popis funkcí
 
 #### add()
 
 Přidá do seznamu novou funkci.
 
-**Druhý vstupní argument** určuje pořadí přidané funkce. Je číslováno od 1. Pokud není zadáno, je funkce přidána na konec seznamu.
+**Druhý vstupní argument** určuje pořadí přidávané funkce. Čísluje se od 1. Pokud není zadáno, funkce se přidá na konec seznamu.
 
-**Třetí vstupní argument** nastavená na TRUE zajistí, že pokud funkce na dané pozici existuje (`orderId`), funkce se přepíše a předchozí funkce se přidá na další volnou pozici.
+**Třetí vstupní argument** nastaven na TRUE zajistí, že se při existenci funkce na dané pozici (`orderId`), na sílu přepíše funkce a předešlá se přidá na nejbližší volné místo.
 
 ```javascript
 /**
@@ -98,7 +98,7 @@ add(callback, orderId = 0, rewriteOrder = false);
 
 #### remove()
 
-Odebere zpětné volání ze seznamu na základě jeho pořadového čísla.
+Odstraní callback ze seznamu na základě čísla jeho pořadí.
 
 ```javascript
 /**
@@ -114,7 +114,7 @@ remove(orderId);
 
 #### fire()
 
-Spustí provedení všech zpětných volání v seznamu v daném pořadí.
+Spustí provedení všech callbacků v seznamu, zařadím podle pořadí.
 
 ```javascript
 /**
@@ -129,7 +129,7 @@ fire();
 
 #### listName
 
-Získání vygenerovaného názvu úložiště
+Získá vygenerovaný název úložiště
 
 ```javascript
 /**
@@ -146,9 +146,9 @@ const IdReadyCallbackListu = window.domReady.listName;
 
 ***
 
-#### list
+#### dopis
 
-Vrátí úplný seznam všech přidaných funkcí s jejich pořadovým číslem.
+Vrátí kompletní seznam všech přidaných funkcí is jejich pořadovým číslem
 
 ```javascript
 /**

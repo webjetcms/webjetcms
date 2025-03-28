@@ -1,10 +1,10 @@
 # DatatableRestControllerV2.java
 
-Třída Java [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) zapouzdřuje komunikaci s [datová tabulka](README.md) a [Redakci](../datatables-editor/README.md).
+Java třída [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) zapouzdřuje komunikaci s [datatabulkou](README.md) a [editorem](../datatables-editor/README.md).
 
 ## Základní implementace
 
-Při implementaci konkrétní služby REST je nutné rozšířit DatatableRestControllerV2. V **v ideálním případě pomocí repozitářů Spring DATA** implementační třída v jazyce Java může vypadat takto:
+Při implementaci specifické REST služby je třeba rozšířit DatatableRestControllerV2. V **ideálním případě použití Spring DATA repozitářů** může implementační Java třída vypadat následovně:
 
 ```java
 package sk.iway.iwcm.components.redirects;
@@ -30,14 +30,14 @@ public class RedirectRestController extends DatatableRestControllerV2<RedirectBe
 }
 ```
 
-důležitý je konstruktor, který předává úložiště Spring DATA. `RedirectsRepository`, anotace `@Datatable` zajistit správné zpracování chybových hlášení a anotací. `PreAuthorize` pro kontrolu práv:
+důležitý je konstruktor, který předává Spring DATA repozitář `RedirectsRepository`, anotace `@Datatable`, která zajistí korektní zpracování chybových zpráv a anotace `PreAuthorize` pro kontrolu práv:
 
 ```java
 @Datatable
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
-!>**Varování:** Entita Spring DATA musí mít jako PK `Long id` (ne např. `adminlogId` a podobně), pokud se sloupec v databázi jmenuje jinak, je nutné nastavit název sloupce:
+!>**Upozornění:** Spring DATA entita musí mít jako PK `Long id` (ne např. `adminlogId` a podobně), pokud se sloupec v databázi jmenuje jinak, je třeba mu nastavit jméno sloupce:
 
 ```java
 @Id
@@ -47,9 +47,9 @@ důležitý je konstruktor, který předává úložiště Spring DATA. `Redirec
 private Long id;
 ```
 
-!>**Varování:** v datové entitě **NESMÍTE používat primitivní typy** Stejně jako `int`, `long` ale objekty `Integer`, `Long`, jinak vyhledávání nebude fungovat. Toho využívá ExampleMatcher, který do dotazu do DB nevkládá objekty NULL. U primitivních typů však NULL použít nemůže, nastaví jim hodnotu 0 a pak je přidá do databáze. `WHERE` podmínky.
+!>**Upozornění:** v datové entitě **NESMÍTE používat primitivní typy** jak `int`, `long` ale objekty `Integer`, `Long`, jinak nebude fungovat vyhledávání. To používá ExampleMatcher, který NULL objekty nevloží do DB dotazu. Pro primitivní typy ale nemůže použít NULL, nastaví je na hodnotu 0 a následně přidá do `WHERE` podmínky.
 
-Komplexní ukázka včetně kontroly práv, odstranění souborů a provedení speciální akce:
+Komplexní ukázka is kontrolou práv, mazáním souborů a provedením speciální akce:
 
 ```java
 package sk.iway.iwcm.components.gallery;
@@ -145,9 +145,9 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 }
 ```
 
-## Metody manipulace s daty
+## Metody pro manipulaci s daty
 
-Třídu můžete také zkonstruovat pomocí `NULL` úložiště, v takovém případě je třeba implementovat metody pro práci s daty:
+Třídu můžete konstruovat is `NULL` repozitářům, v takovém případě je třeba implementovat metody pro práci s daty:
 
 ```java
 /**
@@ -228,7 +228,7 @@ public ExampleMatcher getSearchProperties(Map<String, String> params, Map<String
 public Page<T> searchItem(@RequestParam Map<String, String> params, Pageable pageable, T search)
 ```
 
-můžete v implementaci použít existující rozhraní API, např.:
+v implementaci můžete využít již existující API, např.:
 
 ```java
 @Override
@@ -261,7 +261,7 @@ public Page<T> searchItem(Map<String, String> params, Pageable pageable, T searc
 }
 ```
 
-Pokud potřebujete data před uložením upravit nebo provést nějakou akci po uložení do databáze (např. nastavit datum uložení nebo `domainId`) použijte metodu `beforeSave` nebo `afterSave`:
+Pokud potřebujete upravit data před uložením, nebo provést akci po uložením do databáze (např. nastavit datum uložení, nebo `domainId`) použijte metodu `beforeSave` nebo `afterSave`:
 
 ```java
 
@@ -339,13 +339,13 @@ Pokud potřebujete data před uložením upravit nebo provést nějakou akci po 
 	}
 ```
 
-Metoda `public void afterSave(T entity, T saved)` je volán po uložení entity - objektu `entity` je původní odeslaný objekt, `saved` je uložená verze. Když je nový záznam `ID` se nachází pouze v `saved` entitu. Pokud používáte metody pro aktualizaci mezipaměti, nezapomeňte implementovat veřejnou metodu `void afterDelete(T entity, long id)` volán po odstranění položky.
+Metoda `public void afterSave(T entity, T saved)` je volána po uložení entity - objekt `entity` je původní odeslaný objekt, `saved` je uložena verze. Při novém záznamu se `ID` nachází jen v `saved` entite. Pokud používáte metody pro aktualizaci cache nezapomeňte implementovat i metodu public `void afterDelete(T entity, long id)` vyvolanou po smazání záznamu.
 
-!>**Varování:** nedoporučujeme přepisovat pomocí anotace. `@Override` Metody REST vždy překryjte ve své třídě. `xxxItem` Metody.
+!>**Upozornění:** nedoporučujeme přepsat přes anotaci `@Override` REST metody, vždy přepisujte ve vaší třídě `xxxItem` metody.
 
-Při duplikaci záznamu je nutné z přijatých dat "vymazat" hodnotu ID atributu. Obvykle se jedná o atribut s názvem `id`, ale nemusí tomu tak být vždy. Název atributu se tedy hledá podle anotace množiny `DataTableColumnType.ID`.
+Při duplikování záznamu je třeba přijatým datům "smazat" hodnotu ID atributu. Typicky se jedná o atribut se jménem `id`, ale nemusí to platit vždy. Jméno atributu se tedy hledá podle nastavené anotace `DataTableColumnType.ID`.
 
-Při použití [vnořené/dodatečné atributy](../datatables-editor/datatable-columns.md#vnořené-atributy) ve formě `editorFields` lze implementovat metody `processFromEntity` pro nastavení `editorFields` atributy nebo `processToEntity` pro nastavení atributů v entitě z `editorFields`. Metody jsou automaticky volány při čtení všech záznamů, načítání jednoho záznamu, vyhledávání nebo ukládání dat.
+Při použití [vnořených/doplňkových atributů](../datatables-editor/datatable-columns.md#vnořené-atributy) ve formě `editorFields` lze implementovat metody `processFromEntity` pro nastavení `editorFields` atributů nebo `processToEntity` pro nastavení atributů v entitě z `editorFields`. Metody se automaticky volají při čtení všech záznamů, při získání jednoho záznamu, vyhledávání nebo při ukládání dat.
 
 ```java
 	/**
@@ -369,13 +369,13 @@ Při použití [vnořené/dodatečné atributy](../datatables-editor/datatable-c
 	}
 ```
 
-Při přepisování metod `getAllItems` nebo `searchItem` je nutné vyvolat metodu `processFromEntity` na každém prvku vráceného seznamu. V podstatě můžete zavolat metodu `processFromEntity(Page<T> page, ProcessItemAction action)` Nad stránkami `Page` objekt, který pro všechny záznamy z `Page` objektu volá metodu `processFromEntity(T entity, ProcessItemAction action)`.
+Při přepsání metod `getAllItems` nebo `searchItem` je třeba vyvolat metodu `processFromEntity` na každém elementu vráceného seznamu. Efektivní můžete zavolat metodu `processFromEntity(Page<T> page, ProcessItemAction action)` nad `Page` objektem, která pro všechny záznamy z `Page` objektu zavolá metodu `processFromEntity(T entity, ProcessItemAction action)`.
 
 ## Filtrování při zobrazení všech záznamů
 
-Někdy je nutné filtrovat data i při zobrazení všech záznamů (např. ve vnořené datové tabulce podle nějaké skupiny nebo uživatelských práv).
+Někdy je třeba i při zobrazení všech záznamů filtrovat data (např. u vnořené datatabulky podle nějaké skupiny nebo podle práv uživatele).
 
-Existuje metoda `Page<T> DatatableRestControllerV2.getAllItemsIncludeSpecSearch(T empty, Pageable pageable)` které můžete použít ve své implementaci. Její volání zajistí, že se metody provedou. `addSpecSearch` i po načtení všech záznamů. Můžete zde implementovat další podmínky.
+Existuje metoda `Page<T> DatatableRestControllerV2.getAllItemsIncludeSpecSearch(T empty, Pageable pageable)`, kterou můžete použít ve vaší implementaci. Její volání zajistí provedení metod `addSpecSearch` i při získání všech záznamů. Tam můžete implementovat dodatečné podmínky.
 
 ```java
 @Override
@@ -427,21 +427,21 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Neexistující atributy v editoru
 
-Ve výchozím nastavení nemusí všechny atributy entity pocházet z editoru, takže hodnoty existující entity a data odeslaná z editoru se před uložením sloučí. Ve výchozím nastavení jsou všechny ne `null` Atributy. To však neumožňuje zadat prázdné datum (po jeho nastavení). Proto jsou atributy typu DataTableColumn s poznámkou `Date` jsou převedeny, i když mají `null` Hodnota. Toto spojení je provedeno v metodě `public T editItem(T entity, long id)` pomocí `NullAwareBeanUtils.copyProperties(entity, one);`.
+Standardně z editoru nemusí přicházet všechny atributy entity, proto se před uložením spojují hodnoty stávající entity a údajů zaslaných z editoru. Standardně se přepíší všechny ne `null` atributy. To ale neumožňuje zadat prázdné datum (pokud již bylo jednou nastaveno). Proto atributy anotovány DataTableColumn typu `Date` jsou přeneseny i když mají `null` hodnotu. Toto spojení se provádí v metodě `public T editItem(T entity, long id)` s využitím `NullAwareBeanUtils.copyProperties(entity, one);`.
 
 ## Obnovení dat po uložení
 
-Voláním metody `setForceReload(true);` je možné vynutit obnovení datové tabulky po uložení.
+Voláním metody `setForceReload(true);` je možné vynutit obnovení dat datatabulky po uložení.
 
-To je nutné, pokud je uložený objekt přesunut do jiného adresáře apod. Ukázka je v [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+Je to nutné pokud se uložený objekt přesune do jiného adresáře a podobně. Ukázka je ve [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
 
-## Číselníky pro výběrová pole
+## Číselníky pro select boxy
 
-Pro výběrová pole v editoru a automatický převod ID na hodnotu (např. `templateId` na název šablony) je přidán do rozšíření WebJETu. `PageImpl` objekt [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), který umožňuje odesílat data vytáčení.
+Pro select boxy v editoru a automatickou konverzi ID na hodnota (např. `templateId` na jméno šablony) je ve WebJETu přidáno rozšíření `PageImpl` objektu [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), které umožňuje posílat číselníková data.
 
-Ty jsou automaticky nastaveny na `options` objektu v definici sloupců v editoru objektů a jsou automaticky použity pro převod ID na hodnotu.
+Tyto se automaticky nastaví do `options` objektu v columns definici editor objektu a automaticky se také použijí pro převod ID-hodnota.
 
-Příkladem je [TranslationKeyController.java](../../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
+Příklad je v [TranslationKeyController.java](../../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
 
 ```java
     //najlepsie riesenie je prepisat metodu getOptions a doplnit page.addOptions metody
@@ -477,7 +477,7 @@ Příkladem je [TranslationKeyController.java](../../../../src/main/java/sk/iway
     }
 ```
 
-Při volání `page.addOptions` nastaví třetí `true/false` parametr přidávající původní `Java Beanu` do výstupního objektu. Pokud je nastavena hodnota `true`, v objektu JSON, bude původní Bean k dispozici v původním objektu. Toho lze využít k načtení dat, např. šablon:
+Při volání `page.addOptions` nastavuje třetí `true/false` parametr přidání původního `Java Beanu` do výstupního objektu. Pokud je nastaveno na `true`, v JSON objektu bude původní Bean dostupný v objektu original. Lze toho využít k získání dat např. šablony:
 
 ```javascript
 setCssStyle() {
@@ -493,11 +493,11 @@ setCssStyle() {
 
 ## Vyhledávání
 
-K dispozici jsou 2 režimy vyhledávání:
-- `ByExample` - používá metodu `Example<T> exampleQuery = Example.of(search, matcher);` který nastaví podmínky vyhledávání na `search` entitu a následně ji použít pro vyhledávání. Všechny atributy v entitě musí být objekty, ty, které mají `NULL` nebude při vyhledávání použita. Takové vyhledávání nepodporuje všechny možnosti.
-- `Specification` - používá dynamické vytváření podmínek SQL, musí úložiště rozšířit `JpaSpecificationExecutor<T>`. To je **doporučené řešení** a umožňuje vyhledávat podle datových rozsahů a také používat speciální vyhledávání.
+Existují 2 režimy vyhledávání:
+- `ByExample` - využívá metodu `Example<T> exampleQuery = Example.of(search, matcher);` která nastaví vyhledávací podmínky do `search` entity a následně ji použije pro vyhledávání. V entitě musí být všechny atributy jako objekty, ty co mají `NULL` hodnotu se do vyhledávání nepoužijí. Takové vyhledávání nepodporuje všechny možnosti.
+- `Specification` - využívá dynamické vytvoření SQL podmínek, repozitář musí rozšiřovat `JpaSpecificationExecutor<T>`. Toto je **doporučené řešení** a umožňuje vyhledávání podle rozsahu dat a také použití speciálního vyhledávání.
 
-Varování. **Oracle** databázi, je třeba nastavit vyhledávání bez ohledu na velikost písma a diakritiku pomocí nastavení SQL. Ve výchozím nastavení to zajišťuje funkce `trigger tgg_after_logon_ci_ai` které WebJET automaticky vytvoří. Pokud vyhledávání nefunguje správně, zkontrolujte, zda je správně definováno:
+Upozornění: pro **Oracle** databázi je třeba nastavit vyhledávání bez ohledu na velikost písma a diakritiku nastavením SQL. Standardně to zajišťuje `trigger tgg_after_logon_ci_ai`, který WebJET automaticky vytvoří. Pokud vyhledávání nefunguje správně, ověřte, že je správně definován:
 
 ```sql
 CREATE or REPLACE TRIGGER tgg_after_logon_ci_ai
@@ -508,17 +508,17 @@ CREATE or REPLACE TRIGGER tgg_after_logon_ci_ai
     END;
 ```
 
-Společnost Oracle nepodporuje vyhledávání bez ohledu na velikost písma a diakritiku v. `clob` sloupce. Pro tento případ však WebJET použije funkci `LOWER` před vyhledáváním, což umožní vyhledávání bez ohledu na případ. Seznam názvů atributů JPA, pro které bude funkce použita, je definován v proměnné conf. `jpaToLowerFields`. Předpokladem je použití úložiště, které rozšiřuje `JpaSpecificationExecutor<T>`.
+Oracle nepodporuje vyhledávání bez ohledu na velikost písma a diakritiky v `clob` sloupcích. Pro tento případ WebJET ale použije funkci `LOWER` před vyhledáváním, což umožní vyhledávání bez ohledu na velikost písmen. Seznam názvů JPA atributů, pro které se funkce použije, je definován v konf. `jpaToLowerFields`. Podmínkou je použití repozitáře, který rozšiřuje `JpaSpecificationExecutor<T>`.
 
 ### Vyhledávání podle rozsahu dat
 
-Chcete-li vyhledávat podle rozsahu dat, musíte kombinovat vyhledávání podle příkladu a konkrétní podmínky. DT v `app.js` odešle hodnotu s předponou `daterange:`, podle něhož se vyhledávání v `DatatableRestControllerV2.searchItem`. V metodě se použije kombinace hodnot:
+Pro vyhledávání podle rozsahu dat je třeba zkombinovat vyhledávání by Example a specifickou podmínku. DT v `app.js` posílá hodnotu s prefixem `daterange:`, podle které se následně použije vyhledávání v `DatatableRestControllerV2.searchItem`. Využije se zkombinování hodnot v metodě:
 
 ```java
 private Specification<T> getSpecFromRangeAndExample(Map<String, String> ranges, Example<T> example) {
 ```
 
-Podmínkou je, aby úložiště Spring DATA také rozšiřovalo repozitář `JpaSpecificationExecutor`, příkladem je [PřesměrováníÚložiště](../../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
+Podmínkou je, aby Spring DATA repozitář rozšiřoval i `JpaSpecificationExecutor`, příklad je v [RedirectsRepository](../../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
 
 ```java
 package sk.iway.iwcm.components.redirects;
@@ -532,11 +532,11 @@ public interface RedirectsRepository extends JpaRepository<RedirectBean, Long>, 
 }
 ```
 
-!>**Varování:** všechna úložiště JPA musí být definována jako veřejná, jinak nebudou v klientských projektech dostupná.
+!>**Upozornění:** všechny JPA repozitáře je nutné definovat jako public, jinak nebudou dostupné v klientských projektech.
 
 ### Speciální vyhledávání
 
-Pokud je třeba provést speciální vyhledávání, je možné metodu přepsat `addSpecSearch` ve kterém lze implementovat konkrétní podmínku. Příkladem může být [GroupSchedulerRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) kde můžete vyhledávat podle uživatelského jména i parametru:
+V případě potřeby provedení speciálního vyhledávání je možné přepsat metodu `addSpecSearch` ve které je možné implementovat specifickou podmínku. Příklad je v [GroupSchedulerRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) kde se vyhledává podle jména uživatele i podle parametru:
 
 ```java
 @Override
@@ -555,7 +555,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-!>**Varování:** Úložiště JPA musí také dědit z funkce `JpaSpecificationExecutor`, Příklad:
+!>**Upozornění:** JPA Repozitář musí dědit iz `JpaSpecificationExecutor`, příklad:
 
 ```java
 @Repository
@@ -569,11 +569,11 @@ public interface GroupSchedulerDtoRepository extends JpaRepository<GroupSchedule
 
 #### Podpůrné metody
 
-Kromě obecné metody `addSpecSearch` (která interně volá následující speciální metody) je možné použít metody ze třídy [SpecSearch](../../../javadoc/sk/iway/iwcm/system/datatable/SpecSearch.html):
+Kromě obecné metody `addSpecSearch` (která interně volá následující speciální metody) lze použít metody ze třídy [SpecSearch](../../../javadoc/sk/iway/iwcm/system/datatable/SpecSearch.html):
 
-**Vyhledávání podle jména/příjmení**
+**Hledání podle jména/příjmení**
 
-Vyhledávání podle jména v `paramValue`, kde jsou nalezená ID uživatelů vyhledávána jako IN v položce `jpaProperty`:
+Vyhledávání podle zadaného jména/příjmení v `paramValue`, přičemž nalezené ID uživatelů se hledají jako IN v `jpaProperty`:
 
 `addSpecSearchUserFullName(String paramValue, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`
 
@@ -596,9 +596,9 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-**Vyhledávání podle seznamu odděleného čárkou**
+**Hledání podle čárkou odděleného seznamu**
 
-Chcete-li vyhledávat podle seznamu ID oddělených čárkou (např. skupin uživatelů), můžete použít metodu `addSpecSearchPasswordProtected(String userGroupName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)` pro vyhledávání podle názvu skupiny uživatelů nebo metodou `addSpecSearchPasswordProtected(Integer userGroupId, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)` pro vyhledávání podle zadaného ID:
+Pro hledání podle čárkou odděleného seznamu ID (např. skupiny uživatelů) lze použít metodu `addSpecSearchPasswordProtected(String userGroupName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)` pro hledání podle jména skupiny uživatelů, nebo metodu `addSpecSearchPasswordProtected(Integer userGroupId, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)` pro hledání podle zadaného ID:
 
 ```java
 @Override
@@ -622,13 +622,13 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-Seznam je uložen v databázi jako `id1,id2,id3`, proto se hledání skládá ze všech možností výskytu: `id OR id,% OR %,id,% OR %,id`.
+Seznam je v databázi uložen jako `id1,id2,id3`, proto hledání skládá všechny možnosti výskytu: `id OR id,% OR %,id,% OR %,id`.
 
-**Vyhledávání podle názvu značky (skupiny perex)**
+**Hledání podle jména značky (perex skupiny)**
 
-Chcete-li vyhledávat podle seznamu ID značek oddělených čárkou, můžete použít metodu `addSpecSearchPerexGroup(String perexGroupName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`.
+Pro hledání podle čárkou odděleného seznamu ID značek lze použít metodu `addSpecSearchPerexGroup(String perexGroupName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`.
 
-Toto hledání se automaticky použije, pokud hledání obsahuje parametr `searchPerexGroups`, se volá přímo v `DatatableRestControllerV2.addSpecSearch`.
+Toto vyhledávání se automaticky použije, pokud vyhledávání obsahuje parametr `searchPerexGroups`, je voláno přímo v `DatatableRestControllerV2.addSpecSearch`.
 
 ```java
 public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder) {
@@ -644,7 +644,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 **Hledání podle hodnoty v cizí tabulce**
 
-Pokud máte vztah mezi tabulkou a jinou tabulkou pomocí propojení přes ID a hledáte podle textu, můžete použít příkaz `addSpecSearchIdInForeignTable(String paramValue, String foreignTableName, String foreignTableId, String foreignColumnName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`. Provede vyhledání výrazu `paramValue` v zadané tabulce a sloupci s použitím nalezených hodnot ID jako `IN` výraz při filtrování. Dotaz SQL typu: `"SELECT DISTINCT "+foreignTableId+" FROM "+foreignTableName+" WHERE "+foreignColumnName+" "+operator+" ?", prepend+valueClean+append`.
+Máte-li vztah mezi tabulkou a jinou tabulkou propojením přes ID a hledáte podle textu můžete použít `addSpecSearchIdInForeignTable(String paramValue, String foreignTableName, String foreignTableId, String foreignColumnName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`. To provede hledání výrazu `paramValue` v zadané tabulce a sloupci, přičemž nalezené hodnoty ID použije jako `IN` výraz při filtrování. Provede se SQL dotaz typu: `"SELECT DISTINCT "+foreignTableId+" FROM "+foreignTableName+" WHERE "+foreignColumnName+" "+operator+" ?", prepend+valueClean+append`.
 
 ```java
 @Override
@@ -658,9 +658,9 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-**Vyhledávání docid podle zadané cesty**
+**Hledání docid podle zadané cesty**
 
-Pokud se vám ukáže cesta k `DocDetails` (typicky pro pole typu json) je možné použít příkaz `addSpecSearchDocFullPath(String paramValue, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`:
+Máte-li zobrazenou cestu k `DocDetails` objektu (typicky u pole typu json) lze k filtrování podle cesty použít metodu `addSpecSearchDocFullPath(String paramValue, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`:
 
 ```java
 @Override
@@ -678,9 +678,9 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-**Vyhledávání mapování entit**
+**Hledání při mapování entity**
 
-Pokud má vaše entita namapovanou jinou entitu (typu `ContactCategoryEntity` v příkladu):
+Pokud má vaše entita mapovanou další entitu (typu `ContactCategoryEntity` v příkladu):
 
 ```java
 @Getter
@@ -705,7 +705,7 @@ public class ContactPlaceEntity {
     ...
 ```
 
-ve formě výběrového menu (číselníková hodnota) a přenos prostřednictvím `page.addOptions` Při vyhledávání podle ID je třeba nastavit hodnotu ID a název ze služby REST pro vyhledávání ve vnořené entitě:
+ve formě výběrového menu (číselníková hodnota) a přenášíte přes `page.addOptions` ID hodnoty a název z REST služby je třeba při vyhledávání podle ID nastavit hledání ve vnořené entitě:
 
 ```java
 @Override
@@ -726,7 +726,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-V souboru HTML je nutné definovat mapování textu z entity na hodnotu, což se provádí pomocí následujícího kódu:
+V HTML souboru je třeba definovat mapování textu z entity na hodnotu, to zabezpečíte následujícím kódem:
 
 ```JavaScript
 let columns = [(${layout.getDataTableColumns("sk.iway.projekt.model.ContactPlaceEntity")})];
@@ -747,9 +747,9 @@ $.each(columns, function(i, v){
 });
 ```
 
-### Zobrazení uživatelského jména a vyhledávání
+### Zobrazení jména uživatele a vyhledávání
 
-Vzhledem k tomu, že v databázi často ukládáme pouze ID uživatele, typicky v adresáři `user_id` a zobrazení a vyhledávání podle uživatelského jména, můžete použít následující řešení. Je nutné použít generované/`@Transient` (není uloženo v databázi) pole `userFullName`, s původním polem `userId` nemusíte psát poznámky. Příklad v `DTO/Bean` zařízení:
+Protože v databázi často ukládáme pouze ID uživatele, typicky v poli `user_id` a zobrazovat a vyhledávat chceme podle jména uživatele můžete použít následující řešení. Je třeba použít generované/`@Transient` (neukládá se do databáze) pole `userFullName`, přičemž původní pole `userId` nemusíte anotovat. Příklad v `DTO/Bean` objektu:
 
 ```java
     @Transient
@@ -772,11 +772,11 @@ Vzhledem k tomu, že v databázi často ukládáme pouze ID uživatele, typicky 
 	}
 ```
 
-Úložiště Spring musí rozšířit `JpaSpecificationExecutor` jako výše. Standardní implementace v `DatatableRestControllerV2.addSpecSearch` již zahrnuje vyhledávání podle parametru `searchUserFullName` což je pro tyto případy typické. Pokud tedy nepotřebujete žádné další speciální vyhledávání, bude zobrazení a vyhledávání podle uživatelského jména fungovat automaticky.
+Spring repozitář musí rozšiřovat `JpaSpecificationExecutor`, jak je uvedeno výše. Standardní implementace v `DatatableRestControllerV2.addSpecSearch` již obsahuje hledání podle parametru `searchUserFullName`, které je typické pro takové případy. Pokud tedy nepotřebujete jiné speciální hledání, bude vám zobrazení a vyhledání podle jména uživatele fungovat automaticky.
 
-## Ověřování / povinná pole
+## Validace / povinná pole
 
-Do editoru je integrována standardní validace jazyka Java [javax.validation](https://www.baeldung.com/javax-validation). Proto je nutné v `JPA Beane` nastavit požadované validační anotace:
+Do editoru je integrována standardní Java validace [javax.validation](https://www.baeldung.com/javax-validation). Je tedy třeba v `JPA Beane` nastavit požadované validační anotace:
 
 ```java
 @Entity
@@ -804,19 +804,19 @@ Nejčastější anotace:
 @Past //zadamy datum musi byt v minulosti, aplikovatelne na Date objekty
 ```
 
-Zachytávání chybových zpráv je implementováno ve třídě [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde je objekt převeden `ConstraintViolation` na textu. Aby bylo možné upravit chybové hlášení prostřednictvím WebJET, hledá se překladový klíč v metodě `getErrorMessage`. Pokud je nalezen, použije se, jinak se použije standardní hlášení z `javax.validation`.
+Zachycení chybového hlášení je implementováno ve třídě [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde se konvertuje objekt `ConstraintViolation` na text. Pro možnost úpravy chybového hlášení přes WebJET je hledaný překladový klíč v metodě `getErrorMessage`. Pokud se najde, použije se, jinak se použije standardní hlášení z `javax.validation`.
 
-Klíč překladu může používat atributy anotace, např. `{min}` nebo zadanou hodnotu jako `${validatedValue}`.
+V překladovém klíči lze použít atributy anotace. `{min}` nebo zadanou hodnotu jako `${validatedValue}`.
 
-Anotaci můžete provést pomocí atributu `message` nastavit text chybové zprávy. Doporučujeme však zadat překladový klíč, nikoli přímo text ve slovenštině:
+Anotacím můžete přes atribut `message` nastavit text chybového hlášení. Doporučujeme ale zadat překladový klíč, ne přímo text v českém jazyce:
 
 ```java
 @Pattern(message="components.module.property", regexp = "^.+@.+\\.")
 ```
 
-Při použití `@Convert` anotace s použitím objektu namísto primitivní hodnoty (např. `GroupDetailsConverter`) anotace má být použita pro entitu `@Valid`. To pak vyvolá ověření vnořeného objektu. Technický problém spočívá v tom, že chyba je vyvolána v systému `group.navbarName`, ale v datové tabulce žádné takové pole neexistuje. Třída `DatatableExceptionHandlerV2` s tím zachází tak, že pro pole obsahující znak `.` v názvu do výstupního JSON objektu vygeneruje jako název pole hodnotu pouze před znakem `.`, např. `group`. Výjimkou je pole s názvem `editorFields` která se ponechává v původní/úplné podobě.
+Při použití `@Convert` anotace s využitím objektu namísto primitivní hodnoty (např. `GroupDetailsConverter`) je na entitě třeba použít anotaci `@Valid`. Ta následně vyvolá validaci vnořeného objektu. Technický problém je v tom, že chyba se vyvolá v `group.navbarName`, ale takové pole neexistuje v datatabulce. Třída `DatatableExceptionHandlerV2` toto ošetřuje tak, že pro pole obsahující znak `.` v názvu do vystupného JSON objektu generuje jako jméno pole hodnotu jen před znakem `.`, neboli například. `group`. Výjimka je pole s názvem `editorFields`, které se ponechá v původním/plném tvaru.
 
-Pokud vám jednoduchá validace nestačí, můžete implementovat metodu `validateEditor`:
+Pokud vám nestačí jednoduchá validace můžete implementovat metodu `validateEditor`:
 
 ```java
     /**
@@ -841,7 +841,7 @@ Pokud vám jednoduchá validace nestačí, můžete implementovat metodu `valida
     }
 ```
 
-Pokud potřebujete specificky kontrolovat oprávnění (např. pro webové stránky, oprávnění složek), můžete implementovat metodu `public boolean checkItemPerms(T entity, Long id)`. Metoda je standardně volána pro operace úprav/vytvoření/smazání/akce/vyhledání záznamu:
+Pokud potřebujete speciálně kontrolovat práva (např. u web stránek povolení ke složkám) můžete implementovat metodu `public boolean checkItemPerms(T entity, Long id)`. Metoda se standardně jmenuje při operacích editace/vytvoření/smazání/provedení akce/získání záznamu:
 
 ```java
     @Override
@@ -857,15 +857,15 @@ Pokud potřebujete specificky kontrolovat oprávnění (např. pro webové strá
 
 ## Vyvolání chyby
 
-Chyby řízené programem je třeba ošetřit přetížením metody `validateEditor` (viz příklad výše), kde můžete před uložením záznamu provést ověření. Z parametru `target.getAction()` (DatatableRequest) lze identifikovat typ akce.
+Programově kontrolované chyby je třeba ošetřit přetížením metody `validateEditor` (viz příklad výše), kde můžete provést validace před uložením záznamu. Z parametru `target.getAction()` (DatatableRequest) můžete identifikovat typ akce.
 
-!>**Varování:** Metoda `validateEditor` je také volán ke smazání, můžete jej otestovat jako `if ("remove".equals(target.getAction()) ...`.
+!>**Upozornění:** metoda `validateEditor` se jmenuje i pro vymazání, můžete jej testovat jako `if ("remove".equals(target.getAction()) ...`.
 
-V případě chyby zjištěné až při ukládání (např. v metodě `editItem`) můžete vyvolat obecnou chybovou zprávu zavoláním metody `throwError(String error)` nebo `throwError(List<String> errors)`. Příkladem je [GroupsRestController](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
+V případě chyby detekované až při uložení (např. v metodě `editItem`) můžete vyvolat obecné chybové hlášení voláním metody `throwError(String error)` nebo `throwError(List<String> errors)`. Příklad je v [GroupsRestController](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
 
-## Zabránění odstranění / úpravě záznamu
+## Zabránění smazání / editace záznamu
 
-V některých případech je nutné zabránit úpravám nebo vymazání záznamu. Je možné přetížit metody `beforeSave` nebo `beforeDelete`, Příklad:
+Pro některé případy je třeba zamezit editaci nebo smazání záznamu. Je možné přetížit metody `beforeSave` nebo `beforeDelete`, příklad:
 
 ```java
 @Override
@@ -885,19 +885,19 @@ public boolean beforeDelete(ConfPreparedEntity entity) {
 
 ## Export a import dat
 
-Pro test exportu dat je možné zavolat metodu `isExporting()` který vrací hodnotu `true` pokud se právě provádí export dat.
+Pro test exportu dat lze volat metodu `isExporting()`, která vrátí hodnotu `true` pokud je právě prováděn export dat.
 
-Při importu je možné data upravit/ověřit implementací metody `preImportDataEdit`. Tato metoda se volá před importem a je možné data upravit. Příkladem je třída [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
+Pro import lze modifikovat/validovat údaje implementací metody `preImportDataEdit`. Tato metoda je volána před samotným importem a lze v ní data modifikovat. Příklad je ve třídě [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
 
-## Verze rozšíření
+## Rozšiřující verze
 
 Pro speciální případy existují rozšiřující třídy.
 
 ### DatatableRestControllerAvailableGroups.java
 
-Třída implementuje kontrolu práv pro aplikace, jejichž práva jsou založena na struktuře webových stránek (uživateli by se měly zobrazit pouze záznamy, které odpovídají právům nastaveným pro stromovou strukturu), nebo jsou použity v instalaci MultiWeb. Příkladem je nastavení skupin médií, kde je třeba filtrovat skupiny médií podle práv uživatele na struktuře webových stránek. Například pokud má uživatel práva pouze ke složce "/Slovak/News", měly by se zobrazit pouze skupiny, které jsou nastaveny pro zobrazení v této složce (a případně všechny bez omezení).
+Třída implementuje kontrolu práv pro aplikace, jejichž práva jsou založena na struktuře web stránek (uživateli se mají zobrazit jen záznamy, které vyhovují jemu nastaveným právům na stromovou strukturu), případně se používají v MultiWeb instalaci. Příkladem je nastavení média skupin, kde je třeba filtrovat skupiny médií podle práv uživatele na strukturu web stránek. Pokud uživatel má kupř. právo pouze na složku "/Česky/Novinky" mají se zobrazit jen skupiny které se mají nastavené zobrazení v této složce (a případně všechny bez omezení).
 
-Základní použití je podobné standardnímu `DatatableRestControllerV2`, ale v konstruktoru je třeba zadat také název sloupce s hodnotou ID a název sloupce se seznamem práv ke struktuře webové stránky:
+Základní použití je podobné jako standardní `DatatableRestControllerV2`, ale do konstruktoru je třeba zadat i jméno sloupce s ID hodnotou a jméno sloupce se seznamem práv na strukturu web stránek:
 
 ```java
 @RestController
@@ -914,7 +914,7 @@ public class MediaGroupRestController extends DatatableRestControllerAvailableGr
 }
 ```
 
-Třída `DatatableRestControllerAvailableGroups` v metodě `public boolean checkItemPerms(T entity, Long id)` Kontroluje práva k aktuální i původní entitě, aby nebylo možné upravovat existující entity, ke kterým uživatel nemá práva.
+třída `DatatableRestControllerAvailableGroups` v metodě `public boolean checkItemPerms(T entity, Long id)` kontroluje práva na aktuální i původní entitu, aby nebylo možné modifikovat stávající entity, na které uživatel nemá práva.
 
 ```java
 public abstract class DatatableRestControllerAvailableGroups<T, ID extends Serializable> extends DatatableRestControllerV2<T, ID> {

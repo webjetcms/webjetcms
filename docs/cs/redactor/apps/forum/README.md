@@ -1,12 +1,12 @@
-# Fórum/Diskuze
+# Fórum/Diskuse
 
-Aplikace Fórum/Diskuze, která umožňuje vložit na stránku diskuzi, má následující možnosti zobrazení:
+Aplikace Fórum/Diskuse, která umožňuje do stránky vložit diskusi, má následující možnosti zobrazení:
 - Diskusní fórum - jednoduchá diskuse pod článkem.
-- Diskusní fórum - diskuse na více témat (`Message board`), kde je diskuse rozdělena do skupin a podtémat, která budou obsahovat jednotlivé příspěvky. Dílčí témata může přidávat i uživatel.
+- Nástěnka diskusí - vícetémová diskuse (`Message board`), kde se diskuse dělí na skupiny a pod-témata, které budou obsahovat jednotlivé příspěvky. Pod-témata může přidávat také uživatel.
 
 ## Diskusní fórum
 
-"Diskusní fórum" je druh jednoduché diskuse.
+"Diskusní fórum" je typ jednoduché diskuse.
 
 ![](forum-list-forum.png)
 
@@ -16,33 +16,33 @@ Nastavení aplikace se skládá ze dvou karet **Parametry aplikace** a **Seznam 
 
 ### Karta - Parametry aplikace
 
-Karta Parametry aplikace obsahuje několik dalších parametrů a omezení:
-- **Výběr součásti** - volba mezi "Diskusní fórum" a "Diskusní fórum" (volba typu diskuse).
-- **Uspořádat podle času odeslání** - sestupně nebo vzestupně.
+Karta parametry aplikace obsahuje několik dodatečných parametrů a omezení :
+- **Zvolte komponentu** - výběr mezi "Diskusním fórem" a "Nástěnkou diskusí" (výběr typu diskuse).
+- **Uspořádat podle času příspěvku** - sestupné nebo vzestupné uspořádání.
 - **Způsob zobrazení textu stránky**
-  - Vestavěný rámec (`iframe`) - při zobrazení kompletního výpisu diskuse se v rámečku zobrazí obsah původní stránky.
-  - Zobrazení perexu - při zobrazení celého výpisu diskuse se zobrazí pouze perex původní stránky.
-  - Nezobrazuje se vůbec - zobrazí se pouze výpis z diskuse.
-  - Normální - když se zobrazí celý výpis diskuse, zobrazí se také celý text původní stránky.
-  - Celé fórum včetně textů - kompletní výpis celé diskuse bude vložen na stránku.
-- **Stránkování diskuse** - při zapnutí stránkování diskuse se objeví další parametr. **Počet příspěvků na stránce**, která určuje způsob stránkování a její výchozí hodnota je 10.
-- **Odeslání oznámení autorovi stránky, když je do diskuse přidán příspěvek.** - pokud je vybrána, autor stránky, na které se diskuse nachází, bude informován e-mailem o každém příspěvku přidaném do diskuse (jedinou výjimkou je, pokud příspěvek přidal autor stránky).
+  - Vložený rámec (`iframe`) - při zobrazení kompletního výpisu diskuse, se obsah původní stránky zobrazí do rámce.
+  - Zobrazí se perex - při zobrazení kompletního výpisu diskuse, se zobrazí pouze perex původní stránky.
+  - Nezobrazí se vůbec - zobrazí se pouze výpis diskuse.
+  - Normálně - při zobrazení kompletního výpisu diskuse, se zobrazí i kompletní znění původní stránky
+  - Celé fórum, včetně textů – do stránky se vloží kompletní výpis celé diskuse.
+- **Stránkovat diskusi** - při povolení stránkovat diskusi se objeví ještě dodatečný parametr **Počet příspěvků na stránce**, který určí, jak se bude stránkovat a jeho přednastavená hodnota je 10.
+- **Odeslat notifikaci autorovi stránky při přidání příspěvku do diskuse** - pokud je možnost zvolena, autor stránky kde se daná diskuse nachází bude e-mailem informován o každém přidaném příspěvku do diskuse (výjimka je pouze v případě, že samotný autor stránky přidal příspěvek).
 
-!>**Varování:** pokud chcete **každý** autor diskusní stránky obdrží oznámení, můžete to nastavit pomocí konfigurační proměnné. `forumAlwaysNotifyPageAuthor`, kterou nastavíte na hodnotu `true`. Pokud ji nastavíte na `false`, bude záležet na nastavení každé diskuse. **Totéž platí pro diskusní fórum**
+!>**Upozornění:** chcete-li aby **každý** autor stránky s diskusí dostával notifikaci, můžete to nastavit konfigurační proměnnou `forumAlwaysNotifyPageAuthor`, kterou nastavíte na hodnotu `true`. Nastavíte-li ji na hodnotu `false`, bude to záležet na nastavení jednotlivých diskusi. **Totéž platí i pro Nástěnku diskusí**
 
-Pokud chcete, aby autor diskusní stránky vždy obdržel oznámení, můžete nastavit konfigurační proměnnou. `forumAlwaysNotifyPageAuthor` na hodnotu `true`.
+Chcete-li aby vždy autor stránky s diskusí dostával notifikaci, můžete nastavit konfigurační proměnnou `forumAlwaysNotifyPageAuthor` na hodnotu `true`.
 
-### Tab - Seznam diskusí
+### Karta - Seznam diskusí
 
-Záložka Seznam diskusí je vnořená stránka se seznamem všech diskusí (diskusní fórum i diskusní fórum). Více informací o záložce Seznam diskuzí naleznete zde [Seznam diskusí](forum-list.md).
+Karta seznam diskusí je vnořená stránka se seznamem všech diskusí (Diskusní fórum i Nástěnka diskusí). O seznamu diskusí se dozvíte více zde [Seznam diskusí](forum-list.md).
 
-## Diskusní fórum
+## Nástěnka diskusí
 
-"Diskusní fórum", označované také jako `Message board`, je typem diskuse o více tématech. Lze ji vložit jako aplikaci do stránky. Diskuze je rozdělena do skupin (sekcí) a podtémat. U každého podtématu se zaznamenává počet přidaných příspěvků, počet zobrazení a datum přidání posledního příspěvku, které se zobrazují pod názvem tématu.
+"Nástěnka diskusí", též označovaná jako `Message board`, je typ vícetémové diskuse. Do stránky lze vložit jako aplikaci. Diskuse se dělí na skupiny (sekce) a na pod-témata. Pro každou pod-téma se eviduje počet přidaných příspěvků, počet vidění a datum přidání posledního příspěvku, které jsou zobrazeny pod názvem tématu.
 
 ![](forum-list-main.png)
 
-Návštěvník tak může vytvořit nové téma a k němu se pak přidávají diskusní příspěvky. Vzniká tak jakási stromová struktura diskusních příspěvků.
+Návštěvník tedy může vytvořit nové téma a následně do tématu se přidávají diskusní příspěvky. Vytváří se tak určitá stromová struktura diskusních příspěvků.
 
 ![](forum-list-board.png)
 
@@ -52,20 +52,20 @@ Nastavení aplikace se skládá ze dvou karet **Parametry aplikace** a **Seznam 
 
 ### Karta - Parametry aplikace
 
-Karta Parametry aplikace obsahuje několik dalších parametrů:
-- **Výběr součásti** - volba mezi "Diskusní fórum" a "Diskusní fórum" (volba typu diskuse).
-- **Směr uspořádání** - sestupně nebo vzestupně.
-- **Řazení témat** konkrétně
+Karta parametry aplikace obsahuje několik dodatečných parametrů:
+- **Zvolte komponentu** - výběr mezi "Diskusním fórem" a "Nástěnkou diskusí" (výběr typu diskuse).
+- **Směr uspořádání** - sestupné nebo vzestupné uspořádání.
+- **Řazení témat** a to
   - Podle posledního příspěvku.
   - Podle data vytvoření tématu.
-- **Počet příspěvků na stránce** - zadejte počet příspěvků, které se zobrazí na jedné stránce. Výchozí hodnota je 10.
-- **Počet zobrazených čísel stránek** - určuje počet přímých číselných odkazů na stránky ze stránkovaného seznamu. Výchozí hodnota je 10.
-- **Zapněte čas. omezení mazání příspěvků** - zapnout, pokud chcete povolit mazání příspěvků pouze do vypršení časového limitu. Právo smazat příspěvek má pouze autor.
-- **Časový limit (min)** - zadejte číselnou hodnotu v min. Přednastavená hodnota je 30 minut.
-- **Odeslání oznámení autorovi stránky, když je do diskuse přidán příspěvek.** - pokud je vybrána, autor stránky, na které se diskuse nachází, bude informován e-mailem o každém příspěvku přidaném do diskuse (jedinou výjimkou je, pokud příspěvek přidal autor stránky).
+- **Počet příspěvků na stránce** - zadejte počet příspěvků, které se zobrazí na jedné stránce. Přednastavená hodnota je 10.
+- **Počet zobrazených čísel stránek** - určuje počet přímých číselných odkazů na stránky ze stránkovaného seznamu. Přednastavená hodnota je 10.
+- **Zapnout čas. limit na mazání příspěvků** - zapněte jej, chcete-li umožnit mazání příspěvků jen dokud neuplyne časový limit. Na vymazání příspěvku má právo pouze jeho autor.
+- **Časový limit (min)** - uveďte číselnou hodnotu v min. Přednastavená hodnota je 30 minut.
+- **Odeslat notifikaci autorovi stránky při přidání příspěvku do diskuse** - pokud je možnost zvolena, autor stránky kde se daná diskuse nachází bude e-mailem informován o každém přidaném příspěvku do diskuse (výjimka je pouze v případě, že samotný autor stránky přidal příspěvek).
 
-!>**Varování:** pokud chcete, aby autor diskusní stránky vždy obdržel oznámení, můžete nastavit konfigurační proměnnou `forumAlwaysNotifyPageAuthor` na hodnotu `true`.
+!>**Upozornění:** pokud chcete, aby vždy autor stránky s diskusí dostával notifikaci, můžete nastavit konfigurační proměnnou `forumAlwaysNotifyPageAuthor` na hodnotu `true`.
 
 ### Seznam diskusí
 
-Záložka Seznam diskusí je vnořená stránka se seznamem všech diskusí (diskusní fórum i diskusní fórum). Více informací o záložce Seznam diskuzí naleznete zde [Seznam diskusí](forum-list.md).
+Karta seznam diskusí je vnořená stránka se seznamem všech diskusí (Diskusní fórum i Nástěnka diskusí). O seznamu diskusí se dozvíte více zde [Seznam diskusí](forum-list.md).

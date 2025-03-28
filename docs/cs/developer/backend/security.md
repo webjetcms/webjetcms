@@ -1,27 +1,27 @@
-# Zabezpečení
+# Bezpečnost
 
-## Skenování zranitelností v knihovnách
+## Kontrola zranitelností v knihovnách
 
-Projekt integruje nástroj [Kontrola závislostí OWASP](https://jeremylong.github.io/DependencyCheck/index.html) který dokáže kontrolovat zranitelnosti v knihovnách Java i JavaScript. Chcete-li spustit kontrolu zranitelností, spusťte následující příkaz:
+V projektu je integrovaný nástroj [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html), který dokáže kontrolovat zranitelnosti v Java i JavaScript knihovnách. Kontrolu zranitelností spustíte příkazem:
 
 ```sh
 gradlew --info dependencyCheckAnalyze
 ```
 
-který vytvoří zprávu ve formátu HTML do souboru `build/reports/dependency-check-report.html`. Tuto zprávu můžete snadno otevřít ve webovém prohlížeči. Doporučujeme ji zkontrolovat před každým `release` nová verze.
+který vytvoří report ve formátu HTML do souboru `build/reports/dependency-check-report.html`. Tento report můžete snadno otevřít ve web prohlížeči. Kontrolu doporučujeme provádět před každým `release` nové verze.
 
 ![](dependency-check.png)
 
-Analýza může obsahovat falešně pozitivní výsledky. Existují následující soubory, ve kterých jsou nastaveny výjimky:
-- `/dependency-check-suppressions.xml` - soubor obsahuje výjimky pro standardní WebJET CMS, nikdy jej neupravujte.
-- `dependency-check-suppressions-project.xml` - můžete do souboru přidat výjimky pro svůj projekt. Přímo ve zprávě je k dispozici tlačítko `suppress` který po kliknutí zobrazí kód XML výjimky. Jednoduše jej zkopírujte do souboru uvnitř značky `suppressions`.
+Analýza může obsahovat falešné nálezy. Existují následující soubory, ve kterých se nastavují výjimky:
+- `/dependency-check-suppressions.xml` - soubor obsahuje výjimky pro standardní WebJET CMS, nikdy soubor nemodifikujte.
+- `dependency-check-suppressions-project.xml` - do souboru můžete přidávat výjimky pro váš projekt. Přímo v reportu je tlačítko `suppress` na které když klepnete zobrazí se vám XML kód výjimky. Ten jednoduše zkopírujte do souboru dovnitř značky `suppressions`.
 
-Kontrolu lze provádět také přímo nad vygenerovaným `war` archivovat pomocí [verze cli](../../sysadmin/dependency-check/README.md).
+Kontrolu lze provádět i přímo nad vygenerovaným `war` archivem pomocí [cli verze](../../sysadmin/dependency-check/README.md).
 
-## Nebezpečný kód HTML
+## Nebezpečný HTML kód
 
-Pokud máte na frontendovém rozhraní pole, které umožňuje formátování HTML, lze do něj vložit potenciálně nebezpečný kód. Například v datové tabulce je pole typu `DataTableColumnType.QUILL`. Ve výchozím nastavení se při načítání objektu JPA z databáze použijí značky HTML, jako např. `<, >` převedeny na entity typu HTML `&lt;, &gt;`. To zajišťuje třída `XssAttributeConverter` který má sadu atributů `@Converter(autoApply = true)`.
+Pokud máte na frontendu pole, které umožňuje HTML formátování, může do něj být vložen potenciálně nebezpečný kód. V datatabulce se jedná např. o pole typu `DataTableColumnType.QUILL`. Standardně při získání JPA objektu z databáze jsou HTML značky jako `<, >` konvertováno na HTML entity typu `&lt;, &gt;`. Zajišťuje to třída `XssAttributeConverter` která má nastavený atribut `@Converter(autoApply = true)`.
 
-Pokud potřebujete pracovat s kódem HTML, musíte atribut opatřit poznámkou:
-- `@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)` - umožňuje veškerý kód HTML, doporučujeme jej používat minimálně nebo pouze v případech, kdy má kód HTML skutečně obsahovat JavaScript nebo jiný potenciálně nebezpečný kód.
-- `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)` - umožňuje pouze základní formátování HTML podle doporučení [OWASP](https://owasp.org/www-project-java-html-sanitizer/). Tento převodník doporučujeme používat pro všechny vstupy, kde se používá jednoduchý WYSIWYG editor. `DataTableColumnType.QUILL`.
+Pokud potřebujete pracovat s HTML kódem je třeba daný atribut anotovat:
+- `@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)` - povolí veškerý HTML kód, doporučujeme používat v minimální míře, respektive pouze v případě, kdy HTML kód skutečně má obsahovat i např. JavaScript nebo jiný potenciálně nebezpečný kód.
+- `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)` - povolí pouze základní HTML formátování podle doporučení [OWASP](https://owasp.org/www-project-java-html-sanitizer/). Tento konvertor doporučujeme používat na všechny vstupy, kde je používán jednoduchý WYSIWYG editor typu `DataTableColumnType.QUILL`.

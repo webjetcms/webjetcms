@@ -1,47 +1,47 @@
 # Seznam produktů
 
-Aplikace Seznam produktů poskytuje přehled a správu dostupných produktů pro elektronické obchodování.
+Aplikace Seznam produktů poskytuje přehled a správu dostupných produktů pro elektronický obchod.
 
 ![](datatable.png)
 
-Zobrazené produkty jsou filtrovány podle vybraného **kategorie produktů**. Taková kategorie výrobků je reprezentována složkou. V levém horním rohu aplikace se nachází filtr kategorií. ![](select.png ":no-zoom") což ve skutečnosti zruší filtrování dat pro danou složku, ale také pro všechny podsložky.
+Zobrazené produkty jsou filtrovány podle zvolené **kategorie produktů**. Taková kategorie produktů je reprezentována složkou. V levém horním rohu aplikace se nachází filtr kategorie ![](select.png ":no-zoom") čímž se vlastně odfiltrují data pro danou složku ale i všechny podsložky.
 
-Dostupné složky reprezentující kategorie jsou uspořádány do tzv. stromu, kde jsou podsložky vždy za příslušnou nadřazenou složkou.
+Dostupné složky reprezentující kategorie jsou uspořádány do tzn. stromu, kde pod-složky jsou vždy po příslušnou rodičovskou složku.
 
 ![](select-options.png)
 
-První možností v seznamu je vždy hlavní sekce, která představuje všechny kategorie (zobrazí se všechny produkty). Po výběru kategorie (složky) se zobrazí údaje této složky a všech podsložek.
+První možnost v seznamu je vždy hlavní sekce, která reprezentuje všechny kategorie (všechny produkty budou zobrazeny). Při zvolení kategorie (složka) se zobrazí data dané složky i všech podsložek.
 
 ## Přidání nové kategorie produktů
 
-Přidáním nové kategorie se vytvoří podsložka, která se umístí pod aktuálně vybranou složku (kategorii).
+Přidáním nové kategorie se vytvoří podsložka, která bude umístěna pod právě zvolenou složku (kategorii).
 
-Příklad. Pokud jsme právě vybrali složku ![](select-phones.png ":no-zoom") a vytvořit nový s názvem **Android**, bude vytvořena nová složka na adrese ![](select-phones-android.png ":no-zoom")
+Příklad. Máme-li právě zvolená složka ![](select-phones.png ":no-zoom") a vytvoříme nový s názvem **Android**, tak nám vznikne nová složka na adrese ![](select-phones-android.png ":no-zoom")
 
-Přidejte novou složku kliknutím na ![](add-folder-button.png ":no-zoom"). Po jeho stisknutí se zobrazí okno pro přidání složky.
+Novou složku přidáme tlačítkem ![](add-folder-button.png ":no-zoom"). Po jeho stisknutí se zobrazí okno pro přidání složky
 
 ![](toaster-new-folder.png)
 
-Okno obsahuje také informace o tom, pod jakou složkou bude tato nová složka vytvořena. Po (ne)vyplnění polí v okně a potvrzení tlačítkem ![](toaster-new-folder-button.png ":no-zoom") mohou nastat čtyři situace:
-- pokud není zadán název nové kategorie, vytvoření se nezdaří a zobrazí se zpráva.
+Okno obsahuje také informaci o tom, pod jakou složku se tato nová vytvoří. Po (ne)vyplnění pole v okně a potvrzení tlačítkem ![](toaster-new-folder-button.png ":no-zoom") mohou nastat čtyři situace:
+- pokud název nové kategorie nebude zadán, vytvoření se nezdaří a zobrazena bude hláška
 
 ![](toaster-new-folder-A.png)
 
-- pokud název nové kategorie není jedinečný (jedinečný pro danou složku), vytvoření se nezdaří a zobrazí se zpráva.
+- pokud název nové kategorie nebude unikátní (unikátní pro danou složku), vytvoření se nezdaří a zobrazena bude hláška
 
 ![](toaster-new-folder-B.png)
 
-- pokud se vyskytne jiná chyba, zobrazí se zpráva.
+- nastane-li jiná chyba, bude zobrazena hláška
 
 ![](toaster-new-folder-A.png)
 
-- pokud vše půjde dobře
+- pokud vše proběhne úspěšně
 
 ![](toaster-new-folder-C.png)
 
-## Řízení produktů
+## Správa produktů
 
-Produkty jsou zastoupeny stránkami, které můžete přidat do určitých kategorií. Nadřazená složka je na stránce automaticky přednastavena podle aktuálně vybrané kategorie (lze ji však změnit). Nad produkty (stránkami) můžete provádět všechny operace, jako je vytváření/úprava/skloňování/import ...
+Produkty jsou reprezentovány stránkami, které můžete přidávat pod konkrétní kategorie. Nadřazená složka se ve stránce automaticky přednastaví podle aktuálně zvolené kategorie (ale je možné ji změnit). Nad produkty (stránkami) je možné provádět všechny operace jak vytvořit/upravit/klonovat/importovat...
 
 ![](new-product.png)
 
@@ -49,19 +49,19 @@ Produkty jsou zastoupeny stránkami, které můžete přidat do určitých kateg
 
 ### Karta **Perex**
 
-V kartách **Perex** je důležité nastavení:
-- hodnoty **Obrázek**. Tento obrázek se zobrazí v e-shopu jako náhled produktu.
+V kartě **Perex** je důležité nastavení:
+- hodnoty **Obrázek**. Tento obrázek se zobrazí v elektronickém obchodě jako náhled produktu.
 
 ![](new-product-image.png)
 
-- hodnoty **Štítky**. Tyto značky usnadňují filtrování produktů v e-shopu.
+- hodnoty **Značky**. Pomocí těchto značek lze v elektronickém obchodě produkty snadno filtrovat.
 
 ![](new-product-perex.png)
 
 ### Karta Atributy
 
-Na kartě atributy použijeme výběr skupiny telefonů ve specifikacích položky. Jak je vidět na obrázku níže, pro skupinu `iPhone X` je možné nastavit barvu a paměťovou variantu zařízení. Tato výběrová pole se zobrazují v e-shopu vedle údajů o produktu.
+V kartě atributy využijeme výběr skupiny telefonu na specifikaci zboží. Jak je to patrné na obrázku níže, pro skupinu `iPhone X` je možné nastavení barvy a paměťové varianty zařízení. Tato výběrová pole se zobrazují v elektronickém obchodě, u detailu produktu.
 
 ![](new-product-attr.png)
 
-Další informace o atributech v [Atributy stránky](../../../webpages/doc-attributes/README.md).
+Více o atributech se dočtete v části [Atributy stránky](../../../webpages/doc-attributes/README.md).

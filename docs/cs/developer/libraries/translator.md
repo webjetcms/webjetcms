@@ -2,34 +2,34 @@
 
 ***
 
-**Závislosti**
+**Dependencies (závislosti)**
 
 - [StorageHandler](storage-handler.md)
-- [Nástroje](tools.md)
+- [Tools](tools.md)
 - [jQuery Ajax](https://api.jquery.com/jquery.ajax/), *[Přesměruje na oficiální dokumentaci]*
 
 ***
 
-Knihovna slouží k implementaci jazykových překladů v systému. **WebJET**. Lze jej použít v souborech Javascript i přímo ve vykreslovaném dokumentu HTML, kde se texty vkládají na straně serveru.
+Knihovna slouží k implementaci jazykových překladů v systému **WebJET**. Použít ji lze jak v Javascript souborech, tak přímo ve vyrenderovaném HTML dokumentu, kde jsou texty vkládány serverově.
 
-### Popis operace:
+### Popis fungování:
 
-Při vytváření instance třídy `Translator` je vytvořen ve svém konstruktoru [StorageHandler](storage-handler.md) na kterou je nastaven klíč úložiště. V prostředí DEV nás na tuto skutečnost upozorní zpráva v konzoli js. `Store name was set successfully to: translate` Kde: `translate` je název úložiště, který se nastavuje přímo v konstruktoru třídy `Translator`.
+Při vytvoření instance třídy `Translator` se v jejím konstruktoru vytvoří [StorageHandler](storage-handler.md), kterému je nastaven klíč úložiště. O této skutečnosti nás v DEV prostředí upozorní v js konzole hláška `Store name was set successfully to: translate` kde `translate` je název úložiště, který je nastaven přímo v konstruktoru třídy `Translator`.
 
-Poté instance čeká na volání metod. [load()](#Převzato-z), nebo [onBeforeLoad()](#onbeforeload), [onAfterLoad()](#zatížení-šelfu)
+Následně instance čeká na zavolání metod [load()](#load), nebo [onBeforeLoad()](#onbeforeload), [onAfterLoad()](#onafterload)
 
-Metoda [load()](#Převzato-z) kontroluje existenci místních (existujících) překladů:
-- Pokud **neexistují**, provede požadavek API a uloží překlady do úložiště a instance je ve stavu `DONE & READY`.
-- Pokud **existuje**, zkontroluje, zda jsou uložené překlady aktuální, a to porovnáním data poslední aktualizace uloženého v úložišti a data, ke kterému máme přístup v databázi. `window` v proměnné `window.propertiesLastModified`
-  - Pokud jsou data **jinak**, požadavek API je proveden a získané překlady jsou uloženy v úložišti a instance je ve stavu `DONE & READY`.
-  - Pokud jsou data **Stejné**, není provedena žádná další akce a instance je ve stavu `DONE & READY`.
+Metoda [load()](#load) zkontroluje existenci lokálních (již existujících) překladů:
+- Pokud **neexistují**, tak provede API request a získané překlady uloží do úložiště a instance je ve stavu `DONE & READY`.
+- Pokud **existují**, tak zkontroluje, zda jsou uložené překlady aktuální na základě porovnání data poslední aktualizace uloženém v úložišti a data, které máme přístupné ve `window` v proměnné `window.propertiesLastModified`
+  - Jsou-li data **rozdílně**, tak se provede API request a získané překlady uloží do úložiště a instance je ve stavu `DONE & READY`.
+  - Jsou-li data **stejné**, tak se neprovede žádná další akce a instance je ve stavu `DONE & READY`.
 
-Metody [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#zatížení-šelfu) přidá námi definovanou funkci do zásobníku zpětných volání, která se provede tak, jak je popsáno v podrobnostech metody. [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#zatížení-šelfu).
+Metody [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#onafterload) přidají námi zadefinovanou funkci do callback stacku, který se provede tak, jak je popsáno v detailu metod [onBeforeLoad()](#onbeforeload) a [onAfterLoad()](#onafterload).
 
-Metoda [přeložit()](#přeložit) přijme vstupní argument (překladový klíč) a pokusí se vyhledat konkrétní překlad v úložišti překladů.
+Metoda [translate()](#translate) převezme vstupní argument (překladový klíč) a na základě něj se pokusí vyhledat v úložišti překladů konkrétní překlad.
 
-- Pokud je překlad **existuje**, takže metoda jej vrací jako výsledek.
-- Pokud je překlad **neexistuje**, nebo byl vložen neplatný překladový klíč, metoda vrátí jako výsledek vstupní klíč.
+- Pokud překlad **existuje**, tak jej metoda vrátí, jak svůj result.
+- Pokud překlad **neexistuje**, nebo byl vložen nevalidní překladový klíč, tak metoda vrátí ten vstupní klíč, jako svůj result.
 
 ## Vytvoření instance:
 
@@ -42,9 +42,9 @@ import {Translator} from "./libs/translator/translator";
 window.webjetTranslationService = new Translator();
 ```
 
-Poté jej implementuje do souboru [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js), kde pomocí funkce [load()](#Převzato-z) načíst překlady ze serveru, pokud ještě neexistují lokálně nebo pokud došlo k aktualizaci.
+Následně ji implementuje v souboru [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js), kde pomocí funkce [load()](#load) načteme překlady ze serveru pokud ještě neexistují lokálně nebo pokud existuje update.
 
-Funkce [load()](#Převzato-z) sám zkontroluje aktuálnost existujících překladů a rozhodne, zda má odeslat požadavek na rozhraní API.
+Funkce [load()](#load) si sama zkontroluje aktuálnost stávajících překladů a rozhodne se, zda má provést request na API.
 
 ```javascript
 // Spustenie načítania prekladov
@@ -55,31 +55,31 @@ window.webjetTranslationService.onAfterLoad(() => {
 
 ## Překlady v kódu:
 
-### Inline (přímo v souborech javascript)
+### Inline (přímo v javascript souborech)
 
-V souborech Javascript používáme funkci `WJ.translate()` která implementuje metodu [přeložit()](#přeložit), takže metoda [přeložit()](#přeložit) z knihovny se nikdy nepoužívá přímo, pokud neexistují implementace v jiných třídách, které budou používat API z `Translate`.
+V Javascript souborech, používáme funkci `WJ.translate()`, která implementuje metodu [translate()](#translate), takže metodu [translate()](#translate) z knihovny nepoužíváme nikdy přímo pokud se nejedná o implementace v jiných třídách, které budou využívat API z `Translate`.
 
-**V souborech WebJET používáme:**
+**Ve WebJET souborech používáme:**
 
 ```javascript
 const preklad = WJ.translate('translation.key'); // V premennej preklad máme preložený text alebo ak text neeixstuje, tak samotnú hodnotu kľúča
 ```
 
-### Úplná stránka HTML
+### Pro celou HTML stránku
 
-**Implementace v systému WebJET CMS tuto funkci nevyžaduje, protože všechny překlady jsou zpracovávány během vykreslování stránky.**
+**Implementace ve WebJET CMS nevyžaduje tuto funkcionalitu, protože se všechny překlady řeší již při renderu stránky.**
 
-Pro překlady přímo ve vykreslované stránce se používají datové atributy html. **data-translator**, `data-translator="prekladový.kľúč"`.
+Pro překlady přímo ve vyrenderované stránce se používají html data atributy **data-translator**, `data-translator="prekladový.kľúč"`.
 
-Atribut data lze umístit na libovolnou značku HTML, ale musí se nacházet bezprostředně u značky, která obsahuje překládaný text. Pokud je umístěn na značce HTML, která obsahuje další kód HTML, musí být tento kód HTML zahrnut i do samotného překladu, jinak bude stávající kód HTML nahrazen hodnotou z překladu.
+Data atribut může být umístěn na jakoukoli HTML značku ale musí být bezprostředně na značně, která obsahuje překládaný text. Pokud je umístěn na HTML značce, která obsahuje další HTML kód, musí být tento HTML kód obsažen i v samotném překladu, jinak bude stávající HTML nahrazen hodnotou z překladu.
 
-!>**Varování:**, *Při nastavování přeloženého textu funkce odstraní všechny existující události, které se nacházejí na daném prvku a jeho potomcích.*
+!>**Upozornění:**, *Funkce při nastavování překládaného textu odstraňuje všechny existující eventy, které jsou na daném elementu a na jeho potomcích.*
 
 ```html
 <span data-translator="components.datatables.data.insertDate">Dátum vloženia</span>
 ```
 
-Pak je třeba přidat volání funkce překladu do stránky HTML.
+Následně je třeba přidat do HTML stránky volání překladové funkce.
 
 ```javascript
 $(document).ready(() => {
@@ -89,7 +89,7 @@ $(document).ready(() => {
 });
 ```
 
-nebo umístěte na konec stránky
+nebo umístit na konec stránky
 
 ```html
 <body>
@@ -107,36 +107,36 @@ nebo umístěte na konec stránky
 
 ***
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
 Metody:
-- [load()](#Převzato-z)
+- [load()](#load)
 - [onBeforeLoad()](#onbeforeload)
-- [onAfterLoad()](#zatížení-šelfu)
-- [přeložit()](#přeložit)
+- [onAfterLoad()](#onafterload)
+- [translate()](#translate)
 - [htmlTranslate()](#htmltranslate)
 
 Gettery:
-- [jazyk](#jazyk)
-- [datum](#datum)
+- [language](#language)
+- [date](#date)
 
-Nastavovači:
+Settery:
 - [urlLoad](#urlload)
 - [urlUpdate](#urlupdate)
 
-Podrobnější rozhraní API najdete v [Úložiště GIT](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/translator#kni%C5%BEnica-translator)
+Podrobnější API se nachází v [GIT repozitáři](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/translator#kni%C5%BEnica-translator)
 
 ***
 
-### Podrobný popis funkcí
+### Detailní popis funkcí
 
 #### load()
 
-Volání provede požadavek na server API.
+Zavoláním se provede request na server API.
 
-*Adresy URL lze změnit pomocí [urlLoad](#urlload) a [urlUpdate](#urlupdate).*
+*URL adresy lze měnit pomocí [urlLoad](#urlload) a [urlUpdate](#urlupdate).*
 
 ```javascript
 /**
@@ -149,13 +149,13 @@ window.webjetTranslationService.load();
 
 #### onBeforeLoad()
 
-Metoda umožňuje přidat zpětná volání, která se provedou ihned po zavolání metody. [load()](#Převzato-z).
+Metoda zajišťuje přidávání callbaků, které se provedou bezprostředně po zavolání metody [load()](#load).
 
-Zpětná volání lze přidávat libovolně, ale vždy pouze před voláním výše uvedené metody.
+Callbacky můžeme přidávat libovolně, ale vždy jen před voláním výše zmíněné metody.
 
-Nepovinný druhý atribut `rewrite` zajistit, aby byla nastavena na hodnotu `TRUE` že se provede pouze poslední přidané zpětné volání.
+Volitelný druhý atribut `rewrite` zajistí v případě, je-li nastaven na `TRUE`, že se provede pouze naposledy přidaný callback.
 
-Metoda vrací instanci třídy `Translator` a je tedy možné ji sledovat pomocí `DOT operátora` volat další metody.
+Metoda vrací instanci třídy `Translator` a tak je možné za ní pomocí `DOT operátora` volat další metody.
 
 ```javascript
 /**
@@ -172,13 +172,13 @@ window.webjetTranslationService.onBeforeLoad(callback, rewrite = false);
 
 #### onAfterLoad()
 
-Metoda umožňuje přidání zpětných volání, která se provedou po úspěšném přijetí dat z rozhraní API serveru po volání metody. [load()](#Převzato-z).
+Metoda zajišťuje přidávání callbaků, které se provedou po úspěšném přijetí dat ze server API po zavolání metody [load()](#load).
 
-Zpětná volání lze přidávat libovolně, ale vždy pouze před voláním výše uvedené metody.
+Callbacky můžeme přidávat libovolně, ale vždy jen před voláním výše zmíněné metody.
 
-Nepovinný druhý atribut `rewrite` zajistit, aby byla nastavena na hodnotu `TRUE` že se provede pouze poslední přidané zpětné volání.
+Volitelný druhý atribut `rewrite` zajistí v případě, je-li nastaven na `TRUE`, že se provede pouze naposledy přidaný callback.
 
-Metoda vrací instanci třídy `Translator` a je tedy možné ji sledovat pomocí `DOT operátora` volat další metody.
+Metoda vrací instanci třídy `Translator` a tak je možné za ní pomocí `DOT operátora` volat další metody.
 
 ```javascript
 /**
@@ -193,9 +193,9 @@ window.webjetTranslationService.onAfterLoad(callback, rewrite = false);
 
 ***
 
-#### přeložit()
+#### translate()
 
-Zavoláním této metody získáme překlad do aktuálně používaného jazyka na základě klíče.
+Zavoláním této metody získáme překlad v aktuálně používaném jazyce na základě klíče.
 
 Pokud překlad neexistuje nebo byl vložen neplatný klíč, metoda vrátí hodnotu tohoto klíče.
 
@@ -213,11 +213,11 @@ window.webjetTranslationService.translate(translationFieldName);
 
 #### htmlTranslate()
 
-Zavoláním této metody v dolní části stránky nebo pomocí funkce `document.ready` to znamená, že po dokončení vykreslování webu zajistíme, aby všechny prvky na stránce, které mají definovaný atribut data. `data-translator` textové hodnoty budou změněny `innerHTML` na základě klíče zadaného v atributu dat. `data-translator`.
+Zavoláním této metody na konci stránky nebo pomocí `document.ready` neboli po dokončení renderu webu zajistíme, že všem elementům na stránce, které mají zadefinovaný data atribut `data-translator` budou změněny textové hodnoty `innerHTML` na základě klíče uvedeného v data atributu `data-translator`.
 
-!>**Varování:**, *Při nastavování přeloženého textu funkce odstraní všechny existující události, které se nacházejí na daném prvku a jeho potomcích.*
+!>**Upozornění:**, *Funkce při nastavování překládaného textu odstraňuje všechny existující eventy, které jsou na daném elementu a na jeho potomcích.*
 
-[Klikněte pro více informací o použití](#pro-celou-stránku-html)
+[Klikni pro více informací o použití](#pro-celou-html-stránku)
 
 ```html
 <span data-translator="components.datatables.data.insertDate">
@@ -240,11 +240,11 @@ window.webjetTranslationService.htmlTranslate(scope = document);
 
 ***
 
-**gettery**
+**getters**
 
-#### jazyk
+#### language
 
-Vrátí jazyk používaný aplikací přímo z obchodu.
+Vrací používaný jazyk aplikace přímo ze Store.
 
 ```javascript
 /**
@@ -258,9 +258,9 @@ const lang = window.webjetTranslationService.language;
 
 ***
 
-#### datum
+#### date
 
-Vrací datum poslední aktualizace ve formátu časové značky (milisekundy).
+Vrátí datum poslední aktualizace ve formátu timestamp (milisekundy).
 
 ```javascript
 /**
@@ -274,11 +274,11 @@ const date = window.webjetTranslationService.date;
 
 ***
 
-**nastavovače**
+**setters**
 
 #### urlLoad
 
-Zadání nové adresy API pro načtení dostupných překladů. Adresa musí být změněna před voláním metody [load()](#Převzato-z)
+Zadání nové API adresy pro načtení dostupných překladů. Adresu je třeba měnit ještě před zavoláním metody [load()](#load)
 
 ```javascript
 /**

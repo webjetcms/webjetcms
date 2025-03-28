@@ -1,40 +1,40 @@
-# Nastavení souborů
+# Nastavení souboru
 
-Chcete-li zobrazit nastavení souboru, klikněte na soubor pravým tlačítkem myši a vyberte možnost Nastavení souboru. Okno obsahuje následující karty:
+Nastavení souboru zobrazíte kliknutím pravým tlačítkem na soubor a volbou Nastavení souboru. Okno obsahuje následující karty:
 - Základní
-- Indexování (**Varování:** vykazuje se pouze za zvláštních okolností)
+- Indexování (**Upozornění:** zobrazena pouze za speciálních okolnosti)
 - Použití
 
 ## Základní
 
 Karta **Základní** informuje o názvu a umístění souboru. Název souboru lze změnit.
 
-Parametr "Změnit název ve všech souborech" přepíše název souboru novým názvem, takže odkaz na tento soubor bude po změně názvu aktuální.
+Parametrem "Změnit název ve všech souborech" se přepíše název souboru za nový, aby linka na tento soubor byla aktuální po změně jeho názvu.
 
 ![](file_settings_basic.png)
 
 ## Indexování
 
-Karta **Indexování** se zobrazí POUZE tehdy, pokud umístění souboru začíná hodnotou `/files`. Používá se pro akce indexování souborů.
+Karta **Indexování** se zobrazí POUZE pokud umístění daného souboru začíná hodnotou `/files`. Slouží k akci indexování souboru.
 
 ![](file_settings_index.png)
 
-Stisknutím tlačítka "Index" zahájíte proces indexování, který může trvat několik minut.
+Po stisku tlačítka "Indexuj" se spustí indexování, které může trvat několik minut.
 
 ![](file_settings_index_done.png)
 
 ## Použití
 
-Karta **Použití** ukazuje použití složky ve formě vnořené datové tabulky. Každá položka představuje webovou stránku používající daný soubor. Datová tabulka obsahuje sloupce:
-- Název, webová stránka
-- Adresa URL, webová stránka
+Karta **Použití** zobrazuje použití složky ve formě vnořené data-tabulky. Každý záznam představuje web stránku využívající daný soubor. Data-tabulka obsahuje sloupce:
+- Název, web stránky
+- URL adresa, web stránky
 
-Obě hodnoty jsou současně přímky směřující do různých míst.
+Obě hodnoty jsou současně linky směřující na rozdílné lokace.
 
-**Název** je odkaz na webovou stránku [Seznam webových stránek](../../../../redactor/webpages/README.md), kde se vyhledá webová stránka a automaticky se otevře editor.
+**Název** web stránky je linka na [Seznam web stránek](../../../../redactor/webpages/README.md), kde se daná web stránka vyhledá a automatický otevře editor.
 
 ![](file_link_A.png)
 
-**Adresa URL** je odkaz přímo na webovou stránku.
+**URL adresa** web stránky je linka přímo na danou web stránku.
 
 ![](file_link_B.png)

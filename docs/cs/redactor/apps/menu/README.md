@@ -1,6 +1,6 @@
-# Menu (navigace)
+# Menu (navigační)
 
-Aplikace menu vytváří navigační menu pro celý web (tzv. horní menu nebo levé menu). Grafická podoba nabídky je definována pomocí kaskádových stylů (CSS). Příklady horního a levého menu:
+Aplikace menu generuje navigační menu pro celé web sídlo (tzv. horní menu, nebo levé menu). Grafická podoba menu se definuje pomocí kaskádových stylů (CSS). Příklady zobrazení horního a levého menu:
 
 Horní menu:
 
@@ -10,44 +10,44 @@ Levé menu:
 
 ![](left-menu.png)
 
-Zobrazení položky nabídky závisí na nastavení pole Nabídka na kartě Navigace v adresáři webových stránek. Má následující možnosti:
-- Zobrazit - položka se zobrazí v navigační nabídce.
-- Nezobrazovat - položka se nezobrazí v navigační nabídce (včetně podsložek).
-- Zobrazit bez podsložek - položka se zobrazí v navigační nabídce, ale její další podsložky se nezobrazí (výhodou je, že u podsložek není třeba nastavovat způsob zobrazení).
-- Zobrazit včetně webových stránek - v navigační nabídce se zobrazí složka a webové stránky ze složky se zobrazí jako samostatné položky. Ve výchozím nastavení možnost Zobrazit nezobrazuje webové stránky ze složky jako samostatné položky nabídky.
+Zobrazení položky v menu je závislé na nastavení pole Menu v kartě Navigace adresáře web stránek. Má následující možnosti:
+- Zobrazit - položka se v navigačním menu zobrazí.
+- Nezobrazit - položka se v navigačním menu nezobrazí (a to včetně podsložek).
+- Zobrazit bez podsložek - položka se v navigačním menu zobrazí, ale nebudou zobrazeny její další podsložky (výhoda je v tom, že podsložkou není třeba nastavovat způsob zobrazení).
+- Zobrazit včetně web stránek - v navigačním menu se zobrazí složka a zobrazí se i web stránky ze složky jako samostatné položky. Standardně u možnosti Zobrazit se nezobrazují webové stránky z adresáře jako samostatné menu položky.
 
 ![](groups-dialog.png)
 
-Při zobrazování včetně webových stránek můžete ještě nastavit možnost zobrazit v nabídce každou webovou stránku zvlášť. Tato možnost se nachází rovněž na kartě Navigace a obsahuje volby:
-- Zobrazit - webová stránka se zobrazí v nabídce.
-- Nezobrazovat - webová stránka se v nabídce nezobrazí.
+Při zobrazení včetně webových stránek můžete ještě samostatně každé webové stránce nastavit možnost zobrazení v menu. Možnost je rovněž v kartě Navigace a obsahuje možnosti:
+- Zobrazit - web stránka se v menu zobrazí.
+- Nezobrazit - web stránka se v menu nezobrazí.
 
 ## Nastavení aplikace
 
-Ve vlastnostech aplikace můžete nastavit:
+Ve vlastnostech aplikace lze nastavit:
 - Kořenový adresář - výběr kořenového adresáře
-- Odsazení od kořenového adresáře - počet úrovní adresáře od kořenového adresáře, o které má být výpis odsazen. Používá se v případě, že máte horní menu s hlavními položkami a levé menu s podpoložkami - menu s podpoložkami je nastaveno na posun o 2, takže menu nevypisuje hlavní položky, ale pouze podpoložky.
+- Posun od kořenového adresáře – počet úrovní adresářů od kořenového adresáře o které se výpis má posunout. Používá se v případě, kdy máte horní menu s hlavními položkami a levé menu s podpoložkami - menu podpoložek má nastavený posun o 2 aby se nevypsaly do menu hlavní položky ale až podpoložky.
 - Maximální hloubka menu - -1 menu bez omezení hloubky generování.
-- Generované styly CSS
-  - Žádné (čistý XHTML)
-  - Základní - generuje otevřenou třídu na otevřeném prvku
-  - Vše - vygeneruje řadu tříd: zobrazená úroveň, zda položka obsahuje podpoložky, ID adresáře, zda je položka otevřená nebo uzavřená
-- Generovat prázdný span - vygeneruje prázdný html tag span v odkazu
-- Rozbalit všechny položky - rozbalí se všechny úrovně nabídky
-- Nastavit proměnné - tato funkce se používá, když chceme vygenerovat konkrétní název úrovně do nabídky mapr. prostřednictvím !WRITE(!ROOT\_GROUP\_NAME!)!
-- ID stylu hlavního prvku UL - ID prvku
+- Generované CSS styly
+  - Žádné (čisté XHTML)
+  - Základní - generuje třídu open na otevřenou položku
+  - Všechny - generuje řady tříd: zobrazovanou úroveň, zda položka obsahuje podpoložky, id adresáře, zda je položka otevřena nebo zavřená
+- Generovat prázdný span - generuje prázdný html tag span do odkazu
+- Rozbalit všechny položky - všechny úrovně menu budou rozbaleny
+- Nastavit proměnné - tato funkcionalita se využívá, když chceme generovat nadpis specifické úrovně do menu mapr. přes !WRITE(!ROOT\_GROUP\_NAME!)!
+- ID stylu hlavního UL elementu - ID elementu
 - Název adresáře pro MenuInfo
-- Vložit perex - zabalí název <span class="title">název</span> a odměna za to <span class="perex">perexový text</span>
-- Vložit perex z úrovně - vloží perex pouze z definované úrovně
+- Vložit perex - obalí nazev <span class="title">název</span> a přidá za to <span class="perex">text perexu</span>
+- Vložit perex od úrovně - vloží perex až od definované úrovně
 
 ![](editor-dialog.png)
 
 ## MenuInfo
 
-Slouží k vkládání popisů sekcí nebo reklamních bannerů do menu (megamenu).
+Slouží ke vkládání popisů k sekci nebo reklamních bannerů do menu (megamenu).
 
-Do pole MenuInfo zadáte název adresáře, který se v případě nalezení nevytvoří v menu jako standardní odkaz, ale v menu se vygeneruje obsah hlavní stránky tohoto adresáře. Vygeneruje se záhlaví a obsah stránky.
+Do pole MenuInfo zadáváte název adresáře, který pokud se najde nevygeneruje se do menu jako standardní odkaz ale se do menu vygeneruje obsah hlavní stránky tohoto adresáře. Generuje se titulek a obsah stránky.
 
 **Příklad:**
 
-Při úpravě nabídky komponenty zadáte do pole MenuInfo název adresáře, např. Informace. Ve struktuře webu, která se v menu vygeneruje, vytvoříte adresář Informace. Do něj přidáte potřebné údaje a stránku publikujete. Ve vygenerovaném menu se místo standardního odkazu zobrazí název a obsah stránky Informace.
+Při editaci menu komponenty zadáte do pole MenuInfo název adresáře. Informace. Ve struktuře web sídla která se generuje do menu vytvoříte adresář Informace. Doplníte potřebné údaje do stránky a stránku vypublikujete. Titulek a obsah stránky Informace se budou zobrazovat v generovaném menu namísto standardního odkazu.

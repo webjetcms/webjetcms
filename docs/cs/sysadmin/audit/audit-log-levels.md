@@ -1,14 +1,14 @@
-# Úrovně logovaní
+# Úrovně logování
 
-Aplikace Úrovně protokolování umožňuje spravovat úrovně protokolování pro jednotlivé balíčky java.
+Aplikace Úrovně logování umožňuje správu úrovni logování pro jednotlivé java balíčky.
 
 ![](audit-log-levels-datatable.png)
 
-První záznam v tabulce je vždy **Hlavní úroveň logovaní** (základní úroveň).
+První záznam v tabulce je vždy **Hlavní úroveň logování** (základní úroveň).
 
-Používají se 2 konfigurační proměnné:
-- **logLevel**, obsahuje hodnotu úrovně protokolování pro **Hlavní úroveň logovaní**
-- **logLevels**, obsahuje seznam balíčků java s úrovněmi protokolování (každý na novém řádku). Např:
+Využívají se 2 konfigurační proměnné:
+- **logLevel**, obsahuje hodnotu úrovně logování pro **Hlavní úroveň logování**
+- **logLevels**, obsahuje seznam java balíků s úrovní logování (každý na novém řádku). Např.:
 
 ```
 sk.iway=DEBUG
@@ -16,26 +16,26 @@ sk.iway.iwcm=WARN
 org.springframework=WARN
 ```
 
-Změny nad tabulkou se ukládají lokálně do konstanty. Pokud chcete změny (nastavení) uložit trvale, musíte v editoru vybrat možnost **Uložit do databáze**. Po uložení se aktualizují konfigurační proměnné v databázi.
+Změny nad tabulkou jsou uchovávány lokálně v konstantě. Pokud změny (nastavení) chcete uložit permanentně, v editoru je třeba zvolit možnost **Uložit do databáze**. Při uložení se aktualizují zmíněné konfigurační proměnné v databázi.
 
-# Přidat
+# Přidání
 
-Pro přidání akcí je vyžadována hodnota balíčku java a úroveň protokolování. Pokud zadáte již přidaný balíček, nevytvoří se duplicitní hodnota, ale stávající se aktualizuje.
+Při akci přidání je potřebná hodnota java balíku (package) a úrovně logování. Pokud zadáte již přidaný package, nevytvoří se duplicitní hodnota, ale aktualizuje se již existující.
 
 ![](audit-log-levels-editor.png)
 
-# Upravit podle
+# Editace
 
-Akce úprav se chová odlišně pro hlavní úroveň protokolování a pro ostatní úrovně protokolování.
+Akce editace se chová rozdílně pro Hlavní úroveň logování a ostatní logování.
 
-## Hlavní úroveň logovaní
+## Hlavní úroveň logování
 
-Při úpravách hlavní úrovně můžeme vybrat pouze protokolování NORMAL nebo DEBUG (pro podrobné protokolování). Pokud v editoru změníte hodnotu `Package`, nebude provedena žádná změna. Protože hlavní úroveň musí být stále přítomna, lze měnit pouze hodnotu úrovně protokolování.
+Při editaci hlavní úrovně můžeme zvolit pouze logování typu NORMAL nebo DEBUG (pro podrobné logování). Pokud v editoru změníte hodnotu `Package`, žádná změna se neprovede. Jelikož hlavní úroveň musí být stále přítomna, změnit lze pouze hodnotu úrovně logování.
 
-## Ostatní těžba dřeva
+## Ostatní logování
 
-Změna úrovně protokolování se uloží, pokud změníte balíček, původní protokolování zmizí a bude nahrazeno tímto novým. Povoleny jsou všechny úrovně protokolování kromě hodnoty NORMAL.
+Změna úrovně logování se uloží, pokud změníte package, původní logování zmizí a bude nahrazeno tímto novým. Povoleny jsou všechny úrovně logování kromě hodnoty NORMAL.
 
 # Mazání
 
-Všechny balíčky úrovně protokolování lze odstranit s výjimkou **Hlavní úroveň protokolování**. Když se jej pokusíte odstranit, nic se s ním nestane (nezmění se ani hodnota).
+Všechny packages s úrovní logování lze vymazat kromě **Hlavní úrovně logování**. Při pokusu o vymazání se nic s ní nestane (ani hodnota se nezmění).

@@ -1,10 +1,10 @@
-# Přechod ze systému Struts na Spring
+# Přechod ze Struts do Spring
 
-Struts je stará technologie MVC (framework), která pomocí konfiguračního souboru `struts-config.xml` mapuje příchozí požadavky na `Struts Action` objekty. Ve WebJETu postupně nahrazujeme Struts systémem Spring MVC/REST.
+Struts je stará MVC technologie (framework), která s pomocí konfiguračního souboru `struts-config.xml` mapuje příchozí požadavky na `Struts Action` objekty. Ve WebJETu postupně Struts nahrazujeme za Spring MVC/REST.
 
 ## Původní mapování pomocí Struts
 
-Mapování adres URL `*.do` je nakonfigurován v souboru `struts-config.xml`, ve vzorovém mapování `/inquiry.answer` (skutečná adresa URL má příponu `.do` to znamená. `/inquiry.answer.do`) na třídu `InquiryAnswerAction`.
+Mapování URL adres `*.do` se konfiguruje v souboru `struts-config.xml`, v ukázce mapování `/inquiry.answer` (skutečné URL má příponu `.do`, čili `/inquiry.answer.do`) na třídu `InquiryAnswerAction`.
 
 ```xml
 <action path="/inquiry.answer" type="sk.iway.iwcm.inquiry.InquiryAnswerAction">
@@ -13,7 +13,7 @@ Mapování adres URL `*.do` je nakonfigurován v souboru `struts-config.xml`, ve
 </action>
 ```
 
-Akční třída, v tomto případě `InquiryAnswerAction`, zpracuje požadavek pomocí metody `execute` a může používat data uložená v `ActionForm` fazole. Poté použije metodu `mapping.findForward()` přesměrovat požadavek na výstupní zobrazení v souboru JSP. V příkladu je přesměrování použito k zobrazení `fail`, který je definován v souboru `struts-config.xml` Stejně jako `/components/inquiry/fail.jsp`.
+Action třída, v tomto případě `InquiryAnswerAction`, zpracovává požadavek pomocí metody `execute` a může využívat data uložená ve `ActionForm` bean. Následně používá metodu `mapping.findForward()` pro přesměrování požadavku na výstupní zobrazení v JSP souboru. V příkladu je použito přesměrování k zobrazení `fail`, které je definováno v souboru `struts-config.xml` jak `/components/inquiry/fail.jsp`.
 
 ```java
     @Override
@@ -32,13 +32,13 @@ Akční třída, v tomto případě `InquiryAnswerAction`, zpracuje požadavek p
 
 ## Přechod z mapování Struts na Spring
 
-Chcete-li přejít na Spring, odstraňte mapování z položky `struts-config.xml` a vytvořit nový v řídicích jednotkách Spring. Problém je, pokud potřebujete zachovat původní adresy URL (protože je lze použít v různých souborech JSP). Není možné vytvořit mapování Spring na `/cokolvek.do` jako `*.do` zpracovává Struts `servlet`. Řešením je třída `UnknownAction` který mapuje neznámý server Struts `*.do` volání na `*.struts` které můžete mapovat již na jaře:
+Pro přechod na Spring vymažte mapování ze `struts-config.xml` a vytvořte nové ve Spring kontroloři. Problém je, pokud potřebujete zachovat původní URL adresy (jelikož se mohou používat v různých JSP souborech). Nelze vytvořit Spring mapování na `/cokolvek.do`, vzhledem k tomu `*.do` zpracuje Struts `servlet`. Řešením je třída `UnknownAction`, která mapuje neznámé Struts `*.do` volání na `*.struts`, které již můžete ve Spring mapovat:
 
 ```xml
     <action path="/unknown" type="sk.iway.iwcm.sync.UnknownAction" unknown="true" />
 ```
 
-Třída `UnknownAction` neznámé požadavky jsou upraveny tak, aby přípona `.do` je nahrazen koncovkou `.struts`:
+Třída `UnknownAction` se neznámé požadavky upraví tak, že přípona `.do` se nahradí za příponu `.struts`:
 
 ```java
     public class UnknownAction extends Action {
@@ -62,7 +62,7 @@ Třída `UnknownAction` neznámé požadavky jsou upraveny tak, aby přípona `.
     }
 ```
 
-Pokud tedy potřebujete zachovat adresu URL `/cokolvek.do` ve třídě Spring nastavíte mapování na `/cokolvek.struts`:
+Čili pokud potřebujete zachovat URL adresu `/cokolvek.do` ve Spring třídě nastavíte mapování na `/cokolvek.struts`:
 
 ```java
     @Controller
@@ -81,11 +81,11 @@ Pokud tedy potřebujete zachovat adresu URL `/cokolvek.do` ve třídě Spring na
     }
 ```
 
-## Příklady provádění
+## Příklady implementace
 
-### Přesunutí požadavku do souboru JSP
+### Přesun požadavku na JSP soubor
 
-Ve většině případů bude pravděpodobně stačit, když metoda řadiče mapující požadavek bude mít návratový typ `String` přesunout požadavek do souboru JSP. Můžeme například vrátit odkaz na soubor `ok.jsp`, který sloužil jako výstupní zobrazení úspěšného hlasování v anketě. Je třeba dbát na to, aby řádek neobsahoval příponu `.jsp`, což zajistí, že mapování Spring bude nastaveno tak, aby k vrácenému odkazu přidávalo příponu. `.html` pro vyhledávání `Thymeleaf` nebo pokud nenajde příponu `.jsp` pro použití `jsp` soubor.
+Ve většině případů bude zřejmě stačit, aby metoda kontroléru mapující požadavek měla návratový typ `String` pro přesun požadavku na JSP soubor. , například můžeme vrátit odkaz k souboru `ok.jsp`, který sloužil jako výstupní zobrazení úspěšného hlasování v anketě. Třeba si dávat pozor, aby linka neobsahovala příponu `.jsp`, to zajistí nastavené Spring mapování, které k vrácenému odkazu přidá příponu `.html` pro hledání `Thymeleaf` šablony nebo pokud ji nenajde příponu `.jsp` pro použití `jsp` souboru.
 
 ```java
     @GetMapping("/inquiry.answer.struts")
@@ -95,9 +95,9 @@ Ve většině případů bude pravděpodobně stačit, když metoda řadiče map
     }
 ```
 
-### Přesměrování na
+### Přesměrování
 
-Pokud potřebujete přesměrovat na jinou stránku, stačí přidat k vrácené hodnotě předponu `redirect:`, ale doporučujeme použít metodu `String SpringUrlMapping.redirect(String url)` přidat předponu, aby nedošlo k překlepu. Příkladem použití je situace, kdy uživatel ještě není přihlášen, a proto ho přesměruje na přihlašovací stránku.
+Pokud potřebujete provést přesměrování na jinou stránku stačí vrácené hodnotě přidat předponu `redirect:`, doporučujeme ale použít metodu `String SpringUrlMapping.redirect(String url)` pro přidání prefixu, abyste neudělali překlep. Příklad využití je situace kdy uživatel ještě není přihlášen, tak jej přesměruje na přihlašovací stránku.
 
 ```java
     @GetMapping("/inquiry.answer.struts")
@@ -108,13 +108,13 @@ Pokud potřebujete přesměrovat na jinou stránku, stačí přidat k vrácené 
     }
 ```
 
-### Přímý výstup kódu HTML
+### Přímý výstup HTML kódu
 
-Pokud potřebujete generovat kód HTML přímo ve třídě, můžete použít příkaz `PrintWriter`. Metoda musí mít návratový typ `void` a anotace `@ResponseBody`.
+Pokud potřebujete ve třídě generovat přímo HTML kód můžete použít `PrintWriter`. Metoda musí mít návratový typ `void` a anotaci `@ResponseBody`.
 
-V tomto případě již přesměrování neprovádíte pomocí předpony `redirect:` ale přímo prostřednictvím `HttpServletResponse.sendRedirect` Metody.
+V takovém případě přesměrování již neděláte pomocí předpony `redirect:` ale přímo přes `HttpServletResponse.sendRedirect` metody.
 
-V případě přesunu požadavku do souboru JSP můžete použít metodu `request.getRequestDispatcher("/admin/findex.jsp").forward(request, response);`.
+V případě přesunu požadavku na JSP soubor můžete využít metodu `request.getRequestDispatcher("/admin/findex.jsp").forward(request, response);`.
 
 ```java
     @ResponseBody

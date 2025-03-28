@@ -1,14 +1,14 @@
 # Export dokumentace do formátu PDF
 
-V této části se budeme zabývat tím, jak exportovat dokumentaci docsify do PDF.
+V této části si rozebereme, jak exportovat docsify dokumentaci do PDF
 
-použití nástroje **Převod dokumentů do formátu PDF**.
+pomocí nástroje **Docsify-to-PDF**.
 
-Tento nástroj umožňuje snadno exportovat dokumentaci vytvořenou pomocí aplikace Docsify do formátu PDF, což usnadňuje její sdílení a distribuci.
+Tento nástroj umožňuje snadný export dokumentace vytvořené pomocí Docsify do formátu PDF, čímž usnadňuje sdílení a distribuci.
 
 ## Instalace
 
-Instalace se provádí příkazem:
+Instalaci provedeme příkazem:
 
 ```bash
 npm install --save-dev docsify-to-pdf
@@ -18,7 +18,7 @@ npm install --save-dev docsify-to-pdf
 
 ### Konfigurační soubor:
 
-Je nutné vytvořit konfigurační soubor `.docsifytopdfrc.<js|json|yaml>` nebo "docsifytopdf" v poli `package.json` (jako rcfile) s tímto nastavením:
+Je třeba vytvořit konfigurační soubor `.docsifytopdfrc.<js|json|yaml>` nebo "docsifytopdf" pole v `package.json` (jako rcfile) s tímto nastavením:
 
 ### Příklad obsahu `.docsifytopdfrc.js`:
 
@@ -34,7 +34,7 @@ module.exports = {
 
 ### Přidání skriptu do `package.json`:
 
-Chcete-li spustit převodník pomocí příkazu `npm run convert`, musíme přidat skript do `package.json`:
+K tomu, abychom mohli spouštět konvertor pomocí příkazu `npm run convert`, musíme přidat skript do `package.json`:
 
 ```json
 {
@@ -44,43 +44,43 @@ Chcete-li spustit převodník pomocí příkazu `npm run convert`, musíme přid
 }
 ```
 
-### Spuštění převodníku:
+### Spuštění konvertoru:
 
-Spusťte převodník pomocí příkazu:
+Konvertor spustíme pomocí příkazu:
 
 ```bash
 npm run convert
 ```
 
-Po úspěšném exportu se zobrazí výstup SUCCESS spolu s cestou k exportovanému souboru PDF.
+Po úspěšném exportování vidíme výstup SUCCESS spolu s cestou k exportovanému PDF.
 
 ### Spuštění pomocí skriptu convert-to-pdf.js
 
-Ve složce `/docs` skript je umístěn `convert-to-pdf.js`. V této složce spustíte příkaz
+Ve složce `/docs` se nachází skript `convert-to-pdf.js`. V této složce spuštěním příkazu
 
 ```bash
 npm run pdf
 ```
 
-je spuštěn skript, který automatizuje převod dokumentace na základě **Docsify** do strukturovaného **PDF** úpravou a reorganizací souborů, generováním obsahu a samotným převodem. Po dokončení také provede operace čištění, aby obnovil systém souborů do původního stavu. Skript vygeneruje dokumentaci k jednotlivým částem: `Redaktor`, `Správca`, `Prevádzka`, `Inštalácia`, `Používanie administrácie a datatabuľky`, `Web stránky a Súbory`, `Aplikácie` v jazycích : `sk`, `en` a `cs`.
+se spustí skript, který zajistí automatizaci konverze dokumentace založené na **Docsify** do strukturovaného **PDF** tím, že modifikuje a reorganizuje soubory, generuje seznam obsahu a provádí samotnou konverzi. Po dokončení také provede čistící operace, aby obnovil souborový systém do jeho původního stavu. Skript vygeneruje dokumentaci pro části: `Redaktor`, `Správca`, `Prevádzka`, `Inštalácia`, `Používanie administrácie a datatabuľky`, `Web stránky a Súbory`, `Aplikácie` v jazycích : `sk`, `en` a `cs`.
 
-Je nutné počkat na dokončení skriptu, jinak nebude souborový systém obnoven do původního stavu a změněné a reorganizované soubory zůstanou ve struktuře.
+Je třeba počkat na dokončení běhu skriptu, jinak se neobnoví souborový systém do původního stavu a zůstanou modifikované a reorganizované soubory ve struktuře.
 
-Doporučujeme použít tento skript místo `npm run convert`.
+Doporučujeme používat tento skript namísto `npm run convert`.
 
 ## Řešení chyb
 
-Při práci s nástrojem **Převod dokumentů do formátu PDF** můžeme narazit na chyby:
+Při práci s nástrojem **Docsify-to-PDF** můžeme narazit na některé chyby:
 
 ### Chyba: `anchors processing error`
 
-Toto upozornění se objevuje při generování obsahu na začátku nebo jiného odkazu v dokumentaci. Je způsobeno tím, že se nepodařilo spárovat odkaz s kotvou v dokumentu. Nejčastější příčinou je odlišný nadpis v dokumentaci (v případě `README.md` ) než v souboru s definicí postranní nabídky (`_sidebar.md`). Tento problém lze vyřešit přepsáním nadpisu nebo vložením kotvy HTML na místo odkazu:
+Toto upozornění nastává při generování seznamu obsahu na začátku nebo jiného propojení v dokumentaci. Je způsobena nespárováním odkazu na kotvu v dokumentu. Nejčastější příčinou je jiný nadpis v dokumentaci (v `README.md` ) než je v souboru pro definování postranního menu (`_sidebar.md`). Tento problém lze vyřešit přepsáním nadpisu nebo vložením HTML kotvy na místo odkazování:
 
 ```html
  <a id="sekcia---platnosť"><a>`
 ```
 
-za chybu:
+pro chybu:
 
 ```javascript
 WARNING:
@@ -94,32 +94,32 @@ anchors processing errors
 ]
 ```
 
-## Možnosti pro loutkáře:
+## Možnosti pro puppeteer:
 
-V konfiguračním souboru `.docsifytopdfrc.<js|json|yaml>` můžeme nastavit různé možnosti pro loutkáře.
+V konfiguračním souboru `.docsifytopdfrc.<js|json|yaml>` umíme nastavit různé možnosti pro puppeteer.
 
-### Funkce PDF
+### Vlastnosti PDF
 
-- `displayHeaderFooter` (nepovinné/`boolean`) - Zda se má zobrazit záhlaví a zápatí. (`false`)
-- `footerTemplate` (nepovinné/`string`) - Šablona HTML pro tisk zápatí. Má stejná omezení a podporu speciálních tříd jako šablona `PDFOptions.headerTemplate`. (`-`)
-- `format` (nepovinné/`PaperFormat`) - Pokud je nastavena, má přednost před možnostmi šířky a výšky. (`letter`)
-- `headerTemplate` (nepovinné/`string`) - Šablona HTML pro tiskovou hlavičku. Mělo by to být platné HTML s následujícími třídami:
+- `displayHeaderFooter` (volitelné/`boolean`) - Zda se má zobrazit hlavička a patička. (`false`)
+- `footerTemplate` (volitelné/`string`) - HTML šablona pro tiskovou patičku. Má stejná omezení a podporu speciálních tříd jako `PDFOptions.headerTemplate`. (`-`)
+- `format` (volitelné/`PaperFormat`) - Je-li nastaveno, má to prioritu před možnostmi šířky a výšky. (`letter`)
+- `headerTemplate` (volitelné/`string`) - HTML šablona pro tiskovou hlavičku. Měla by být platným HTML s následujícími třídami:
   - `date` formátované datum tisku
   - `title` název dokumentu
   - `url` umístění dokumentu
-  - `pageNumber` aktuální číslo stránky
-  - `totalPages` celkový počet stránek dokumentu (`-`)
-- `height` (nepovinné/`string | number`) - Nastaví výšku papíru. Můžete zadat číslo nebo řetězec s jedničkou. (`-`)
-- `landscape` (nepovinné/`boolean`) - Zda se má tisknout v orientaci na šířku. (`false`)
-- `margin` (nepovinné/`PDFMargin`) - Nastaví okraje PDF souboru. (`undefined`)
-- `omitBackground` (nepovinné/`boolean`) - Skryje výchozí bílé pozadí a umožní vám vytvářet soubory PDF s průhledností. (`false`)
-- `outline` (nepovinné/`boolean`) - (Experimentální) Generuje osnovu dokumentu. (`false`)
-- `pageRanges` (nepovinné/`string`) - Rozsahy stránek pro tisk, např. 1-5, 8, 11-13. Prázdný řetězec, což znamená, že se vytisknou všechny stránky. (`"" (všetky strany)`)
-- `path` (nepovinné/`string`) - Cesta, kam se má soubor uložit. (`undefined`)
-- `preferCSSPageSize` (nepovinné/`boolean`) - Upřednostní velikost stránky zadanou v CSS @page před šířkou, výškou nebo formátem. (`false`)
-- `printBackground` (nepovinné/`boolean`) - Nastavte na `true` posunout grafické prvky na pozadí. (`false`)
-- `scale` (nepovinné/`number`) - Měřítko zobrazení webové stránky. Hodnota musí být mezi 0,1 a 2. (`1`)
-- `tagged` (nepovinné/`boolean`) - (Experimentální) Vytvoří tagované (přístupné) PDF. (`true`)
-- `timeout` (nepovinné/`number`) - Časový limit v milisekundách. Chcete-li časový limit vypnout, nastavte hodnotu 0. (`30_000`)
-- `waitForFonts` (nepovinné/`boolean`) - Pokud `true`, čeká na `document.fonts.ready`. (`true`)
-- `width` (nepovinné/`string | number`) - Nastaví šířku papíru. Můžete zadat číslo nebo řetězec s jedničkou. (`-`)
+  - `pageNumber` aktuální číslo strany
+  - `totalPages` celkový počet stran v dokumentu (`-`)
+- `height` (volitelné/`string | number`) - Nastaví výšku papíru. Můžete zadat číslo nebo řetězec s jednotkou. (`-`)
+- `landscape` (volitelné/`boolean`) - Zda se má tisknout v orientaci na šířku. (`false`)
+- `margin` (volitelné/`PDFMargin`) - Nastaví okraje PDF. (`undefined`)
+- `omitBackground` (volitelné/`boolean`) - Skryje výchozí bílé pozadí a umožní generovat PDF s průhledností. (`false`)
+- `outline` (volitelné/`boolean`) - (Experimentálně) Generuje osnovu dokumentu. (`false`)
+- `pageRanges` (volitelné/`string`) - Rozsahy stran pro tisk, například. 1–5, 8, 11–13. Prázdný řetězec, což znamená, že se tisknou všechny strany. (`"" (všetky strany)`)
+- `path` (volitelné/`string`) - Cesta, kam uložit soubor. (`undefined`)
+- `preferCSSPageSize` (volitelné/`boolean`) - Dává přednost velikosti stránky uvedené v CSS @page před šířkou, výškou nebo formátem. (`false`)
+- `printBackground` (volitelné/`boolean`) - Nastavte na `true`, aby se tiskly grafické prvky pozadí. (`false`)
+- `scale` (volitelné/`number`) - Měřítko zobrazení webové stránky. Hodnota musí být mezi 0.1 a 2. (`1`)
+- `tagged` (volitelné/`boolean`) - (Experimentální) Generuje označené (přístupné) PDF. (`true`)
+- `timeout` (volitelné/`number`) - Časový limit v milisekundách. Pro vypnutí časového limitu nastavte 0. (`30_000`)
+- `waitForFonts` (volitelné/`boolean`) - Je-li `true`, čeká na `document.fonts.ready`. (`true`)
+- `width` (volitelné/`string | number`) - Nastaví šířku papíru. Můžete zadat číslo nebo řetězec s jednotkou. (`-`)

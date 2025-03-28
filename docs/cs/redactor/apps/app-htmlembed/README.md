@@ -1,11 +1,11 @@
-# Vložení kódu HTML
+# Vložení HTML kódu
 
-Přidejte na stránku externí kód HTML pro aplikace, které nejsou přímo podporovány, například video TikTok nebo příspěvek z X/Twitteru. Obohaťte svůj obsah o interaktivní prvky a zapojte návštěvníky.
+Přidejte na svou stránku externí HTML kód pro aplikace, které nejsou přímo podporovány, jako například TikTok video nebo příspěvek z X/Twitter. Obohaťte svůj obsah o interaktivní prvky a zaujměte své návštěvníky.
 
 ## Nastavení aplikace
 
-V nastavení můžete:
-- Vložení kódu HTML do stránky
+V nastaveních lze:
+- Vložit HTML kód do stránky
 
 ![](editor.png)
 

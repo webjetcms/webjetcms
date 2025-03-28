@@ -1,133 +1,133 @@
-# Stránky chráněné heslem
+# Zaheslované stránky
 
-Na stránkách chráněných heslem je možné definovat část webu, která je přístupná pouze po zadání uživatelského jména a hesla - někdy se označuje jako část pro členy nebo část s řízeným přístupem. Je možné definovat více skupin uživatelů a definovat tak několik různých částí webu přístupných uživatelům z různých skupin. Jedna část webu může být přístupná pouze pro klienty a jiná pro obchodní partnery.
+Pomocí zaheslovaných stránek lze definovat část web sídla přístupnou pouze po zadání jména a hesla – někdy označované jako členská sekce, respektive sekce s kontrolovaným přístupem. Je možné definovat více skupin uživatelů a tím zadefinovat několik různých částí web sídla dostupných pro uživatele v různých skupinách. Jedna část webu může být dostupná pouze pro Klienty a jiná zase pro Obchodní partnery.
 
 ## Definování skupin
 
-Nejprve je třeba definovat skupiny uživatelů. Seznam uživatelských skupin je k dispozici v levém menu v části **Uživatelé** Stejně jako **Skupiny uživatelů**.
+Nejprve je třeba definovat skupiny uživatelů. Seznam skupin uživatelů je dostupný v levém menu v sekci **Uživatelé** jak **Skupiny uživatelů**.
 
 ![](user-groups-page.png)
 
 Systém rozlišuje dva typy skupin:
-- Přístupy do části webu chráněné heslem - skupina pro stránky chráněné heslem
-- Hromadný odběr e-mailů - skupina pro e-mailový distribuční seznam
+- Přístupů k zaheslované sekci web sídla - skupina pro zaheslované stránky
+- Přihlášení k hromadnému e-mailu - skupina pro distribuční seznam pro posílání emailů
 
-Dále nás zajímá typ **Přístupy do sekce webových stránek chráněné heslem**. Vlastnosti můžete nastavit v editoru:
-- Název - jedinečný název skupiny.
-- Typ skupiny uživatelů - typ skupiny, který jsme uvedli výše.
-- Poznámka - jakákoli poznámka.
-- Vyžaduje schválení - pokud je zaškrtnuto, bude po registraci uživatele do této skupiny nejprve odeslán e-mail správci, aby registraci schválil. Uživatel bude vytvořen v databázi, ale nebude mít zaškrtnutou možnost Schváleno a nebude se moci přihlásit.
-- Povolit přidání/odebrání ze skupiny uživatelem - pokud je tato možnost vybrána, uživatel bude moci sám přidat/odebrat skupinu při registraci nebo ve svém profilu/nastavení. Obvykle se používá u skupin hromadných e-mailů, aby si uživatel mohl sám nastavit, do jakých e-mailových skupin se bude přihlašovat. Tato možnost by měla být zaškrtnuta také u skupin do zaheslované sekce, do které se uživatel může registrovat. Například uživatel se zaregistruje do skupiny Zákazník, která má tuto volbu povolenou, ale skupina Velkoobchod tuto volbu nemá a přiřadit skupinu zákazníkovi může pouze správce.
-- Vyžadovat ověření e-mailové adresy - pokud je nastaveno, bude uživateli po registraci zaslán e-mail s odkazem, na který je třeba kliknout pro ověření e-mailové adresy.
-- ID stránky textu e-mailu - ID stránky textu e-mailu, který bude uživateli odeslán po schválení. Obvykle se jedná o uvítací e-mail.
+Nás dále zajímá právě typ **Přístupů k zaheslované sekci web sídla**. V editoru můžete nastavit vlastnosti:
+- Název – unikátní název skupiny.
+- Typ skupiny uživatelů - typ skupiny, který jsme zmiňovali výše.
+- Poznámka - libovolná poznámka.
+- Vyžaduje schválení - pokud je zaškrtnuto tak po zaregistrování uživatele do této skupiny se nejprve zašle email ke schválení registrace administrátorovi. Uživatel se vytvoří v databázi, nebude mít ale zvolenou možnost Schválen a nebude se moci přihlásit.
+- Povolit přidávání/odebírání ze skupiny samotným uživatelům - pokud je zvoleno, tak skupinu si bude moci přidat/odebrat sám uživatel při registraci, nebo v jeho profilu/nastaveních. Obvykle se používá pro skupiny pro hromadný email, aby si sám uživatel mohl nastavit do jakých emailových skupin bude přihlášen. Možnost je třeba zvolit i pro skupiny k zaheslované sekci do kterých se může uživatel registrovat. Např. uživatel se registruje do skupiny Zákazník, která má povolenou možnost, ale skupina Velkoobchod tuto možnost nemá a skupinu může přiřadit zákazníkovi jen administrátor.
+- Vyžadovat potvrzení e-mailové adresy - je-li nastaveno, tak uživateli bude po registraci odeslán email s odkazem, na který bude muset kliknout pro ověření platnosti email adresy.
+- ID stránky s textem e-mailu - ID stránky s textem emailu který se uživateli zašle po jeho schválení. Typicky se jedná o uvítací email.
 
 ![](user-groups-page-editor.png)
 
-Pomocí aplikace Přihlášený uživatel můžete do stránky s textem e-mailu vložit pole, která jsou nahrazena hodnotami zadanými uživatelem, podobně jako při definování. [hromadný e-mail](../apps/dmail/campaings/README.md#Základní). Kromě výše uvedených polí můžete zadat další pole:
+Do stránky s textem e-mailu lze pomocí aplikace Přihlášený uživatel vkládat pole, která se nahradí za hodnoty zadané uživatelem podobně jako při definování [hromadného emailu](../apps/dmail/campaings/README.md#základní). Kromě uvedených polí lze zadat dodatečná pole:
 - `!APPROVER_USER_NAME!` - celé jméno schvalovatele.
-- `!APPROVER_USER_PHONE!` - telefonní kontaktní údaje schvalovatele.
-- `!APPROVER_USER_EMAIL!` - e-mailová adresa schvalovatele.
-- `!LOGGED_USER_PASSWORD!` - zadané heslo lze použít pouze pro okamžité schválení (pokud je heslo stále dostupné z registračního formuláře) nebo po kliknutí na tlačítko pro schválení s vygenerováním nového hesla.
+- `!APPROVER_USER_PHONE!` - telefonní kontakt na schvalovatele.
+- `!APPROVER_USER_EMAIL!` - emailová adresa schvalovatele.
+- `!LOGGED_USER_PASSWORD!` - zadané heslo lze použít pouze při okamžitém schválení (kdy je heslo dostupné ještě z registračního formuláře) nebo při kliknutí na tlačítko pro schválení s generováním nového hesla.
 
-## Přihlašovací dialogová stránka
+## Stránka s přihlašovacím dialogem
 
-Pokud přistupujete k webu chráněnému heslem, zobrazí WebJET standardní přihlašovací dialog. Pro přihlášení však můžete vytvořit a použít speciální stránku s vhodným textem a designem.
+WebJET zobrazí standardní přihlašovací dialog pokud přistupujete k zaheslované stránce. Můžete ale vytvořit a použít speciální stránku s vhodným textem a designem pro přihlášení.
 
-Vytvořte novou stránku (nezáleží na tom, kde bude, může být buď v hlavním adresáři, nebo v adresáři, který chcete chránit heslem) a vložte do ní aplikaci Přihlášený uživatel->Přihlašovací formulář. Název stránky je rovněž libovolný. Obsahem stránky tedy bude kód `!INCLUDE(/components/user/logon.jsp)!` který představuje registrační formulář.
+Vytvořte novou stránku (je jedno kde se bude nacházet, může být buď v hlavním adresáři, nebo v adresáři, který chcete zaheslovat) a do stránky vložte aplikaci Přihlášený uživatel->Přihlašovací formulář. Název stránky je také libovolný. Tedy obsah stránky bude kód `!INCLUDE(/components/user/logon.jsp)!`, který reprezentuje přihlašovací formulář.
 
 ![](docs-login.png)
 
-Stránku uložte a poznamenejte si její ID. Na stránku můžete přidat další vysvětlující text nebo odkaz na registrační stránku.
+Stránku uložte a poznamenejte si její ID. Do stránky můžete vložit ještě nějaký vysvětlující text, případně odkaz na stránku s registrací.
 
-## Registrační stránka
+## Stránka s registrací
 
-Pokud chcete, aby návštěvníci měli možnost se zaregistrovat, vytvořte stránku a vložte do ní aplikaci Přihlášený uživatel->Registrační formulář. Obsahem stránky pak bude kód `!INCLUDE(/components/user/newuser.jsp, ...)!` který představuje registrační formulář.
+Chcete-li, aby návštěvníci měli možnost registrace vytvořte stránku a vložte do ní aplikaci Přihlášený uživatel->Registrační formulář. Obsah stránky bude tedy kód `!INCLUDE(/components/user/newuser.jsp, ...)!` , který reprezentuje formulář registrace.
 
 ![](docs-register-1.png)
 
-Při úpravách registračního formuláře můžete kromě vzhledu formuláře nastavit i jeho chování ve spánku. Nejdůležitějšími parametry jsou:
-- **Zobrazená pole** a **Povinná pole** nastavit vzhled samotného formuláře a pole, která jsou povinná.
-- **E-mailová adresa musí být jedinečná** pokud je vybrána, systém zkontroluje, zda je uživatel se zadanou e-mailovou adresou již registrován, a pokud ano, bude opětovná registrace zamítnuta.
-- **DocID stránky, která se zobrazí po úspěšné registraci.**, zde zadejte ID stránky, která obsahuje text o úspěšné registraci.
-- **Oznámení o registraci vám bude zasláno na váš e-mail.** &#x70;okud je vybrána, bude na tento e-mail zasláno oznámení při každé registraci nového uživatele (pokud je prázdná, nebudou zasílána žádná oznámení).
-- **Vyžadovat potvrzení e-mailové adresy**, bude vyžadováno ověření e-mailové adresy uživatelem nebo schválení správcem. Další informace o této možnosti naleznete na adrese [Typy ověření](#typy-ověřování).
+Při editaci registračního formuláře můžete kromě vzhledu formuláře nastavit také jeho spávání. Nejdůležitější parametry jsou:
+- **Zobrazená pole** a **Povinná pole**, kterými nastavíte samotný vzhled formuláře a která pole jsou povinná.
+- **E-mailová adresa musí být unikátní**, pokud je možnost zvolena, systém zkontroluje, zda uživatel se zadanou e-mailovou adresou již není zaregistrován, a pokud ano, opětovná registrace bude zamítnuta.
+- **DocID stránky, která se zobrazí po úspěšné registraci**, zde zadejte ID stránky, která obsahuje text o úspěšné registraci.
+- **Notifikace o registraci se zašle na e-mail**, pokud je možnost zvolena, na tento e-mail se odešle notifikace při každé registraci nového uživatele (je-li hodnota prázdná, notifikace se nebudou odesílat).
+- **Vyžadovat potvrzení e-mailové adresy**, bude se vyžadovat ověření e-mailové adresy uživatelem nebo jeho schválení administrátorem. Bližší informace o tom naleznete v sekci [Typy ověření](#typy-ověření).
 
 ![](docs-register-2.png)
 
-## Definování dostupných stránek/složek
+## Definování dostupných stránek / složek
 
-Pro správnou funkci je nutné definovat stránky nebo složky, které mají být přístupné pouze po zadání hesla. Pokud zaheslujete složku, budou zaheslovány všechny stránky v této složce. To však neplatí pro podsložky a stránky v rámci podsložek.
+Pro správné fungování je třeba zadefinovat stránky nebo složky, které mají být dostupné až po zadání hesla. Pokud zaheslujete složku, všechny stránky v této složce budou zaheslovány. Netýká se to však podsložek a stránek v podsložkách.
 
-Klikněte na možnost WEBové stránky->Seznam webových stránek a přejděte do složky, kterou chcete chránit heslem. Klikněte na Upravit složku a tam na kartě Přístup vyberte skupiny, pro které má být složka přístupná.
+Klikněte na menu WEB Stránky->Seznam web stránek a přejděte do složky, kterou chcete zaheslovat. Klepněte na Upravit složku a tam v kartě Přístup zvolte skupiny, pro které má být složka dostupná.
 
 ![](set-user-groups.png)
 
-Seznam složek, pro které je skupina Users použita, se zobrazí při úpravě skupiny na kartě **Složky**.
+Seznam složek pro které je Skupina Uživatelů použita se zobrazuje při editaci skupiny v kartě **Složky**.
 
 ![](user-groups-page-editor-folders.png)
 
-ID stránky pro složku můžete nastavit pomocí speciálního přihlašovacího formuláře. Pokud není nastaveno, zobrazí se jednoduchý/standardní přihlašovací formulář. Stránku můžete nastavit buď na složku, která je zaheslovaná, nebo nejlépe na kořenovou složku, protože ID stránky přihlašovacího formuláře se hledá rekurzivně až do kořenové složky, dokud není nalezena. Do tohoto pole tedy zadejte ID stránky, na kterou jste aplikaci umístili. `/components/user/logon.jsp` nebo kliknutím na tlačítko Vybrat stránku vyberte stránku ze seznamu.
+Složce můžete nastavit ID stránky se speciálním formulářem pro přihlášení. Pokud není nastavena, zobrazí se jednoduchý/standardní formulář pro přihlášení. Stránku můžete nastavit buď složce, která je zaheslovaná, nebo nejlépe kořenové složce, protože ID stránky s přihlašovacím formulářem se vyhledává rekurzivně až ke kořenové složce, dokud se nenajde. Do tohoto pole tedy zadejte ID stránky do které jste vložili aplikaci `/components/user/logon.jsp`, případně klepnutím na tlačítko Vyber stránku vyberte ze seznamu.
 
 ![](set-login-page.png)
 
-Chcete-li heslem chránit pouze určitou stránku, otevřete ji v editoru a kliknutím na kartu Přístup vyberte skupiny, pro které má být stránka dostupná.
+Chcete-li zaheslovat pouze specifickou stránku, otevřete si ji v editoru a klikněte na kartu Přístup a tam zvolte skupiny, pro které má být stránka dostupná.
 
-Seznam webových stránek, pro které se skupina uživatelů používá, se zobrazuje při úpravách skupiny na kartě **Webové stránky**.
+Seznam web stránek pro které je Skupina Uživatelů použita se zobrazuje při editaci skupiny v kartě **Web stránky**.
 
 ![](user-groups-page-editor-pages.png)
 
 ## Typy ověření
 
-Na základě nastavení registračního formuláře a vybraných skupin uživatelů se můžete registrovat třemi způsoby.
+Na základě nastavení registračního formuláře a zvolených poživatelských skupin rozlišujeme 3 způsoby registrace.
 
-Před vysvětlením různých metod registrace je třeba zmínit vztah mezi parametry. **Vyžaduje schválení** a **Povolit přidání/odebrání ze skupiny samotným uživatelem** při úpravě skupiny uživatelů. Pokud je tato možnost **Povolit přidání/odebrání ze skupiny samotným uživatelem** není vybrána, požadované schválení skupiny se ignoruje. V zásadě není třeba schvalovat skupinu uživatelů, kterou uživatel stejně nemůže přidat.
+Před samotným vysvětlením jednotlivých způsobů registrace musíme zmínit vztah mezi parametry **Vyžaduje schválení** a **Povolit přidávání/odebírání ze skupiny samotným uživatelům** při editaci skupiny uživatelů. V případě, že možnost **Povolit přidávání/odebírání ze skupiny samotným uživatelům** není zvolena, vyžadované schválení pro skupinu se ignoruje. V principu není třeba schvalovat skupinu uživatelů, kterou si uživatel stejně nemůže přidat.
 
 ### Okamžité schválení
 
-K okamžitému schválení nového registrovaného uživatele dojde pouze v případě, že:
+Okamžité schválení nového registrovaného uživatele nastává pouze v případě:
 
-1. v registračním formuláři NENÍ vybrána možnost **Vyžadovat potvrzení e-mailové adresy**
+1. registrační formulář NEMÁ zvolenou možnost **Vyžadovat potvrzení e-mailové adresy**
 
-2. skupiny uživatelů ve formuláři NEMAJÍ vybranou možnost **Vyžaduje schválení**
+2. uživatelské skupiny ve formuláři NEMAJÍ zvolenou možnost **Vyžaduje schválení**
 
-3. skupiny uživatelů ve formuláři HAVE vybraná možnost **Povolit přidání/odebrání ze skupiny samotným uživatelem**
+3. uživatelské skupiny ve formuláři MAJÍ zvolenou možnost **Povolit přidávání/odebírání ze skupiny samotným uživatelům**
 
-Pokud jsou tyto požadavky splněny, bude uživatel automaticky schválen a přihlášen ihned po registraci. Uživatel také obdrží e-mail o úspěšné registraci, který bude obsahovat přihlašovací jméno a heslo uživatele.
+Pokud jsou tyto požadavky splněny, uživatel bude po registraci automaticky schválen a okamžitě přihlášen. Také uživatel obdrží email o úspěšné registraci, který bude obsahovat uživatelovo přihlašovací jméno a heslo.
 
-!>**Varování:** Pokud skupina uživatelů vyžaduje schválení, ale uživatel nemá povoleno přidávání/odebírání ze skupiny, parametr **Vyžaduje schválení** bude ignorován, i když bude zvolen a dojde k okamžitému schválení.
+!>**Upozornění:** V případě, že uživatelská skupina vyžaduje schválení, ale nemá povoleno přidávání/odebírání ze skupiny samotným uživatelem, parametr **Vyžaduje schválení** se bude ignorovat i kdyby byl zvolen a okamžité schválení proběhne.
 
-!>**Varování:** Pokud je parametr **Povolit přidání/odebrání ze skupiny samotným uživatelem** není pro skupinu uživatelů vybrána, nebude skupina k uživateli přidána, i když samotná registrace proběhne úspěšně. To může vést k situaci, kdy uživatel není přidán do žádné skupiny a nemůže se přihlásit do zaheslované sekce (registrace je úspěšná a není hlášena žádná chyba, ale přihlášení není možné).
+!>**Upozornění:** V případě, že parametr **Povolit přidávání/odebírání ze skupiny samotným uživatelům** není u skupiny uživatelů zvolen, skupina se uživateli nepřidá, i když samotná registrace proběhne úspěšně. Následkem může být stav, kdy se uživateli nepřidá žádná skupina a nebude schopen přihlásit se do zaheslované sekce (registrace proběhne úspěšně a neohlásí žádnou chybu, ale přihlášení nebude možné).
 
-### Potvrzení e-mailové adresy
+### Potvrzení email adresy
 
-Může nastat situace, kdy je uživatel požádán, aby nejprve ověřil svůj e-mail pomocí odkazu zaslaného na tento e-mail. Bez ověření se nebude moci přihlásit. Tato situace nastane, pokud:
+Může nastat situace, kdy uživatel bude vyzván k tomu, aby nejprve ověřil svůj email pomocí poslaného odkazu na tento email. Bez ověření nebude schopen přihlásit se. Tato situace nastává v případě, že:
 
-1. registrační formulář MÁ vybranou možnost **Vyžadovat potvrzení e-mailové adresy**
+1. registrační formulář MÁ zvolenou možnost **Vyžadovat potvrzení e-mailové adresy**
 
-2. skupiny uživatelů ve formuláři NEMAJÍ vybranou možnost **Vyžaduje schválení**
+2. uživatelské skupiny ve formuláři NEMAJÍ zvolenou možnost **Vyžaduje schválení**
 
-3. skupiny uživatelů ve formuláři HAVE vybraná možnost **Povolit přidání/odebrání ze skupiny samotným uživatelem**
+3. uživatelské skupiny ve formuláři MAJÍ zvolenou možnost **Povolit přidávání/odebírání ze skupiny samotným uživatelům**
 
-Pokud jsou tyto požadavky splněny, bude uživateli na jeho e-mailovou adresu zaslán e-mail s odkazem, na který musí kliknout pro ověření. Po úspěšném ověření se uživatel bude moci přihlásit do zaheslované sekce a obdrží také e-mail o úspěšné registraci obsahující přihlašovací jméno uživatele, nikoli však heslo.
+Pokud jsou tyto požadavky splněny, na uvedenou email adresu uživatele bude zaslán email s odkazem, na kterou bude muset kliknout pro ověření. Po úspěšném ověření se uživatel bude umět přihlásit do zaheslované sekce a také obdrží email o úspěšné registraci, který bude obsahovat uživatelovo přihlašovací jméno, ale ne heslo.
 
-!>**Varování:** Pokud je parametr **Povolit přidání/odebrání ze skupiny samotným uživatelem** není pro skupinu uživatelů vybrána, nebude skupina k uživateli přidána, i když samotná registrace proběhne úspěšně. To může vést k situaci, kdy uživatel není přidán do žádné skupiny a nemůže se přihlásit do zaheslované sekce (registrace je úspěšná a není hlášena žádná chyba, ale přihlášení není možné).
+!>**Upozornění:** V případě, že parametr **Povolit přidávání/odebírání ze skupiny samotným uživatelům** není u skupiny uživatelů zvolen, skupina se uživateli nepřidá, i když samotná registrace proběhne úspěšně. Následkem může být stav, kdy se uživateli nepřidá žádná skupina a nebude schopen přihlásit se do zaheslované sekce (registrace proběhne úspěšně a neohlásí žádnou chybu, ale přihlášení nebude možné).
 
-### Schválení správcem
+### Schválení administrátorem
 
-Mohou nastat situace, kdy musí být uživatel před přidáním do skupiny uživatelů schválen. V takovém případě se nebude moci přihlásit, dokud ho správce neschválí. Tato situace nastane, pokud:
+Může nastat situace, kdy uživatel musí být schválen předtím, než bude přidán do skupiny uživatelů. V takovém případě se nebude moci přihlásit do momentu, než jej administrátor schválí. Tato situace nastává v případě, že:
 
-1. parametr **Vyžadovat potvrzení e-mailové adresy** bude mít nějakou hodnotu. Schválení skupiny má vyšší prioritu, takže schválení e-mailem bude ignorováno.
+1. parametr **Vyžadovat potvrzení e-mailové adresy** bude mít jakoukoli hodnotu. Schválení skupiny má větší prioritu, takže schválení emailu bude ignorováno
 
-2. skupiny uživatelů ve formuláři HAVE vybraná možnost **Vyžaduje schválení**
+2. uživatelské skupiny ve formuláři MAJÍ zvolenou možnost **Vyžaduje schválení**
 
-3. skupiny uživatelů ve formuláři HAVE vybraná možnost **Povolit přidání/odebrání ze skupiny samotným uživatelem**
+3. uživatelské skupiny ve formuláři MAJÍ zvolenou možnost **Povolit přidávání/odebírání ze skupiny samotným uživatelům**
 
-Schválení registrace uživatele (schválení přidání do skupiny uživatelů) se provádí v aplikaci **Seznam uživatelů**.
+Schvalování registrace uživatele (schválení přidání do skupiny uživatelů) se děje v sekci **Seznam uživatelů**.
 
 ![](user-list-page.png)
 
-Schválení lze provést:
-- pomocí tlačítka ![](user-list-page-approve_1.png ":no-zoom") na panelu nástrojů, kde budou schváleni uživatelé ve zvýrazněných řádcích. Po tomto schválení se uživatel bude moci přihlásit do zaheslované sekce a obdrží také e-mail o úspěšné registraci obsahující přihlašovací jméno uživatele.
-- pomocí tlačítka ![](user-list-page-approve_2.png ":no-zoom") na panelu nástrojů, kde se uživatelé ve zvýrazněných řádcích a jejich hesla změní na náhodně vygenerovaná. Po tomto ověření se uživatel bude moci přihlásit do zaheslované sekce a obdrží také e-mail o úspěšné registraci obsahující přihlašovací jméno uživatele a nově VYGENEROVANÉ heslo.
+Schvalování lze provést:
+- pomocí tlačítka ![](user-list-page-approve_1.png ":no-zoom") v nástrojové liště, kde uživatelé v označených řádcích budou schválen. Po tomto schválení se uživatel bude moci přihlásit do zaheslované sekce a také obdrží email o úspěšné registraci, který bude obsahovat uživatelovo přihlašovací jméno.
+- pomocí tlačítka ![](user-list-page-approve_2.png ":no-zoom") v nástrojové liště, kde uživatelé v označených řádcích a bude jim změněno heslo na náhodně vygenerované. Po tomto ověření se uživatel bude umět přihlásit do zaheslované sekce a také obdrží email o úspěšné registraci, který bude obsahovat uživatelovo přihlašovací jméno a nově VYGENEROVANÉ heslo.
 
-!>**Varování:** Pokud skupina uživatelů vyžaduje schválení, ale uživatel nemá povoleno přidávání/odebírání ze skupiny, parametr **Vyžaduje schválení** bude ignorován, i když je vybrán, a typ schválení bude proveden v závislosti na hodnotě parametru **Vyžadovat potvrzení e-mailové adresy**.
+!>**Upozornění:** V případě, že uživatelská skupina vyžaduje schválení, ale nemá povoleno přidávání/odebírání ze skupiny samotným uživatelem, parametr **Vyžaduje schválení** se bude ignorovat i kdyby byl zvolen a proběhne typ schválení v závislosti na hodnotě parametru **Vyžadovat potvrzení e-mailové adresy**.

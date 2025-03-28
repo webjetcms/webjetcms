@@ -1,48 +1,48 @@
-# Štítky
+# Značky
 
-Pomocí značek (původní název **skupiny perex**) nebo anglicky `hashtag` můžete na webové stránce označit klíčová slova. V aplikaci Zprávy můžete filtrovat zprávy podle značek.
+Pomocí značek (původní název **perex skupiny**) nebo anglicky `hashtag` můžete označit klíčová slova ve web stránce. V aplikaci novinky lze použít filtrování novinek podle značek.
 
-Pro přístup k položce nabídky Webové stránky - značky je třeba mít právo **Webové stránky - Značky**, jinak se položka nabídky nezobrazí.
+Pro přístup ke jménu položce Web stránky - značky potřebujete mít právo **Web stránky - Značky**, jinak se menu položka nezobrazí.
 
 ![](perex-groups.png)
 
 ## Vytváření značek
 
-Editor pro vytváření značek je jednoduchý a obsahuje pouze 2 karty.
+Editor pro vytvoření značek je jednoduchý a obsahuje pouze 2 karty.
 
-### Základní karta
+### Karta Základní
 
 Karta obsahuje následující pole:
-- **Název skupiny**, je vyžadován jedinečný název značky.
-- **Zobrazit pro**, nastavené na omezení zobrazení značek pouze na určité adresáře webových stránek.
+- **Název skupiny**, unikátní název značky, je povinen.
+- **Zobrazit pro**, nastavení omezení zobrazení značek pouze pro určité adresáře web stránek.
 
 ![](perex-groups_tab-basic.png)
 
 ### Karta Překlady
 
-Karta Překlady se používá pro **Volitelně** definování názvu značky pro každou jazykovou mutaci. Pokud jsou definovány, použijí se na webové stránce místo hodnoty **Název skupiny**.
+Karta překlady slouží k **volitelné** zadefinování názvu značky pro jednotlivé jazykové mutace. Pokud jsou definovány použijí se ve web stránce namísto hodnoty **Název skupiny**.
 
 ![](perex-groups_tab-translates.png)
 
 ### Karta Volitelná pole
 
-Karta **Volitelná pole** obsahuje volně použitelná pole. Další informace o jejich konfiguraci naleznete v dokumentaci. [volitelná pole](../../frontend/webpages/customfields/README.md).
+Karta **Volitelná pole** obsahuje volně použitelná pole. Více informací k jejich konfiguraci naleznete v dokumentaci [volitelná pole](../../frontend/webpages/customfields/README.md).
 
 ![](perex-fields_tab.png)
 
-## Webové stránky
+## Web stránky
 
-Značky se zobrazují v editoru stránky v listu Perex, kde je lze snadno přiřadit webové stránce:
+Značky se zobrazují v editoru stránek v listu Perex, kde je lze jednoduše webové stránce přiřadit:
 
 ![](webpage-perex-groups.png)
 
-Značky se ve výchozím nastavení zobrazují jako zaškrtávací políčka, ale pokud je definováno více než 30 značek, zobrazí se pro přehlednost jako více výběrových polí. Hodnotu 30 lze změnit v proměnné conf. `perexGroupsRenderAsSelect`.
+Značky se standardně zobrazují jako zaškrtávací pole, pokud je ale definováno více než 30 značek, zobrazí se z důvodu přehlednosti jako vícenásobné výběrové pole. Hodnota 30 lze změnit v konf. proměnné `perexGroupsRenderAsSelect`.
 
-!> **Varování:** název značky (skupina perex) se liší v závislosti na zvoleném jazyce. Pokud taková jazyková mutace existuje, zobrazí se. Pokud ne, zobrazí se hodnota z pole **Název skupiny**.
+!> **Upozornění:** název značky (perex skupiny) se mění v závislosti na zvoleném jazyku. Pokud taková jazyková mutace existuje, zobrazí se. Pokud ne, zobrazí se hodnota z pole **Název skupiny**.
 
 ### Použití
 
-Značky můžete použít například v seznamu novinek. Příklad šablony zpravodaje, která zobrazuje název diskusní skupiny a nastavuje styl CSS podle ID skupiny. `color-ID` pro nastavení barvy skupiny perex. Automaticky použije jazykovou variantu značky (je-li definována) podle jazyka stránky:
+Značky můžete použít například v seznamu novinek. Ukázka šablony novinek, která zobrazí jméno perex skupiny dané novinky a podle ID skupiny nastaví CSS styl `color-ID` pro nastavení barvy perex skupiny. Automaticky podle jazyka stránky použije jazykovou variantu značky (je-li definována):
 
 ```velocity
 <section class="md-news-subpage">

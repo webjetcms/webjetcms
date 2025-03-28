@@ -1,73 +1,73 @@
 # Šablony
 
-Šablony se vytvářejí v administrátorské oblasti Web JET v sekci Šablony kliknutím na nabídku Seznam šablon.
+Šablony se vytvářejí v admin části Web JET v sekci Šablony po kliknutí na menu Seznam šablon.
 
 ## Seznam šablon
 
 ![](templates.png)
 
-Sloupec Počet použití zobrazuje počet stránek, které šablonu používají. Pokud je to 0 stránek, můžete šablonu odstranit. Pokud chcete odstranit šablonu, která je použita na některých stránkách, použijte funkci Sloučit šablony (pole Sloučit tuto šablonu do na kartě Šablona v editoru). Tímto způsobem se všechny stránky a složky používající aktuálně upravovanou šablonu změní na vybranou šablonu.
+Sloupec počet použití zobrazuje počet stránek, které danou šablonu používají. Pokud je to 0 stránek, můžete šablonu vymazat. Chcete-li vymazat šablonu, která je použita na některých stránkách, použijte funkci sloučení šablon (pole Sloučit tuto šablonu do v kartě Šablona v editoru). Takto všechny stránky a složky, používající aktuálně editovanou šablonu budou změněny na zvolenou šablonu.
 
-## Editor šablon
+## Editor šablony
 
 ![](templates-edit.png)
 
-### Základní karta
+### Karta základní
 
-- Skupina šablon - přiřazení šablony k [skupiny šablon](template-groups.md).
-- Šablona HTML určuje, která šablona JSP/HTML se má použít (šablona HTML musí být uložena ve složce `/templates` a mají příponu `jsp` nebo `html`).
-- Typ editoru stránky - určuje, jaký typ editoru stránky je použit, pro složité webové stránky se obvykle používá. [Page Builder](../page-builder/README.md). Ve výchozím nastavení se hodnota nastavená ve skupině šablon dědí.
-- Název instalace - při zobrazení šablony je možné změnit název instalace, což ovlivní verze použitých aplikací - umožňuje použít ve složce pro šablonu speciálně upravenou aplikaci. `/components/MENO_INSTALACIE/aplikacia/`.
-- Vypnout ochranu proti spamu - vypněte ochranu proti spamu, pokud je stránka v této šabloně načtena pomocí služby REST nebo pokud se jedná o stránku používanou pro hromadné zasílání e-mailů.
+- Skupina šablon - přiřazení šablony do [skupiny šablon](template-groups.md).
+- HTML šablona definuje jaká JSP/HTML šablona se použije (HTML šablona musí být uložena ve složce `/templates` a mít příponu `jsp` nebo `html`).
+- Typ editoru stránek - definuje jaký typ editoru stránek se použije, pro komplexní web stránky se typicky používá [Page Builder](../page-builder/README.md). Ve výchozím nastavení se dědí hodnota nastavená ve skupině šablon.
+- Jméno instalace - při zobrazení šablony lze změnit jméno instalace, což ovlivňuje použité verze aplikací - umožňuje pro šablonu použít specificky upravenou aplikaci ve složce `/components/MENO_INSTALACIE/aplikacia/`.
+- Vypnout spam ochranu - spam ochranu vypněte, pokud se stránka v této šabloně načítá pomocí REST služby, případně pokud se jedná o stránku použitou pro hromadný email.
 
 ### Karta Styl
 
-- Hlavní styl CSS - seznam odkazů na soubor CSS, který šablona používá. Výše uvedené CSS se také použije k získání seznamu stylů CSS pro výběr v editoru stránky.
-- Sekundární styl CSS - další styl CSS, který se nepoužívá v nabídce Styly v editoru stránky.
-- Kód HTML umožňuje definovat další kód HTML, který se vloží na konec stránky (nebo na místo definované v šabloně HTML).
+- Hlavní CSS styl - seznam odkazů na CSS soubor, které šablona používá. Uvedený CSS se použije i pro získání seznamu CSS stylů pro výběr v editoru stránek.
+- Druhořadý CSS styl - doplňkový CSS styl, nepoužije se pro výběrové menu Styly v editoru stránek.
+- HTML kód umožňuje definovat dodatečný HTML kód, který se vloží na konec stránky (respektive na místo definované v HTML šabloně).
 
-Soubory CSS lze zadat každý na nový řádek nebo oddělit čárkou.
+CSS soubory lze zadávat každý na nový řádek nebo oddělené čárkou.
 
-Editor stránek v oblasti administrace automaticky vyhledá soubor `/templates/template-name/dist/css/editor.css` který se načte spolu se stylem CSS šablony. V souboru `editor.css` můžete nadefinovat určité vlastnosti, které se budou používat pouze v editoru.
+Editor stránek v admin části automaticky hledá soubor `/templates/template-name/dist/css/editor.css` který načte spolu s CSS stylem šablony. V souboru `editor.css` můžete předefinovat určité vlastnosti, které mají být použity pouze v editoru.
 
-### Šablona karty
+### Karta Šablona
 
-- Přiřazení webových stránek používaných jako záhlaví, zápatí atd.
+- Přiřazení web stránek použitých jako hlavička, patička atp.
 
 ![](disp_process.png)
 
-V šabloně html se na zadaná místa vloží webové stránky definující záhlaví, zápatí a nabídku a vytvoří se šablona. Do šablony se poté vloží navigační panel a vlastní text webové stránky, čímž se vytvoří konečná webová stránka odeslaná do internetového prohlížeče návštěvníka.
+Do html šablony se na určená místa vloží web stránky definující hlavičku, patičku a menu, čímž vznikne šablona. Do šablony se následně vloží navigační lišta a samotný text web stránky, čímž vznikne výsledná web stránka zaslaná do prohlížeče internetu návštěvníka.
 
-- Sloučit tuto šablonu do - umožňuje nahradit aktuálně zobrazenou šablonu šablonou vybranou v poli výběru na existujících stránkách a složkách. Chcete-li se vyhnout nekonzistenci, použijte tuto funkci před odstraněním šablony.
+- Sloučit tuto šablonu do - umožňuje nahradit právě zobrazenou šablonu zvolenou ve výběrovém poli ve stávajících stránkách a složkách. Aby nedošlo k nekonzistenci použijte tuto funkci před smazáním šablony.
 
 ### Karta Přístup
 
-Umožňuje definovat složky, pro které se zobrazí šablona pro výběr při úpravě webové stránky.
+Umožňuje definovat složky, pro které se šablona bude zobrazovat pro výběr při editaci web stránky.
 
 ### Karta Složky
 
-Pro existující šablonu zobrazí seznam složek, které mají zobrazenou šablonu nastavenou jako výchozí šablonu pro vytvoření nové webové stránky.
+U stávající šablony zobrazuje seznam složek, které mají nastavenou zobrazenou šablonu jako výchozí šablonu pro vytvoření nové webové stránky.
 
-### Karta Webové stránky
+### Karta Web stránky
 
-Pro existující šablonu zobrazí seznam webových stránek, které šablonu používají.
+U stávající šablony zobrazuje seznam web stránek, které šablonu používají.
 
 ## Jazykové mutace
 
-Pokud provozujete webové stránky ve více jazycích, není nutné vytvářet samostatné šablony pro každý jazyk. Doporučujeme použít možnost [nastavení jazyka pro složku webové stránky](../../redactor/webpages/group.md#šablona-karty).
+Pokud provozujete web stránku ve více jazykových mutacích není třeba vytvářet samostatné šablony pro každou jazykovou mutaci. Doporučujeme využít možnosti [nastavení jazyka pro složku web stránky](../../redactor/webpages/group.md#karta-šablona).
 
-Po nastavení jazyka složky WebJET automaticky vyhledá jazykové verze souvisejících záhlaví, zápatí a nabídek v šabloně. Pokud má šablona záhlaví pojmenované "výchozí záhlaví" nebo "výchozí záhlaví EN", bude WebJET při zobrazení stránky s nastaveným jazykem EN automaticky vyhledávat stránku s "výchozím záhlavím EN".
+Po nastavení jazyka složky WebJET automaticky vyhledá i jazykové mutace přiřazených hlaviček, patiček a menu v šabloně. Pokud má šablona nastavenou hlavičku s názvem "default hlavička" nebo "SK-default hlavička" automaticky při zobrazení stránky s nastaveným jazykem EN WebJET vyhledá stránku "EN-default hlavička".
 
-V šabloně tedy máte výchozí jazyk a výchozí záhlaví/zápatí/menu stránky. Nastavíte anglickou složku ve webových stránkách na angličtinu a WebJET bude při zobrazení stránky vyhledávat příslušné EN verze záhlaví/zápatí/stránek menu.
+V šabloně máte tedy výchozí jazyk a výchozí stránku záhlaví/patičky/menu. Složce English ve web stránkách nastavíte anglický jazyk a WebJET při zobrazení stránky bude hledat příslušné EN verze stránek pro hlavičky/patičky/menu.
 
-## Displej specifický pro zařízení
+## Zobrazení pro specifické zařízení
 
-WebJET podporuje možnost přizpůsobení šablony pro konkrétní zařízení. Ve výchozím nastavení je to `phone, tablet, pc` podle připojeného zařízení, ale může být ovlivněna parametrem URL. `?forceBrowserDetector=blind` např. pro optimalizovanou šablonu pro zrakově postižené.
+WebJET podporuje možnost úpravy šablony pro specifické zařízení. To je standardně `phone, tablet, pc` dle připojeného zařízení, lze jej ale ovlivnit pomocí URL parametru `?forceBrowserDetector=blind` Např. pro optimalizovanou šablonu pro slabozraké.
 
-Typ zařízení se na serveru zjišťuje pomocí hlavičky HTTP. `User-Agent`. Telefon je detekován, když je nalezen výraz `iphone`, nebo `mobile` a zároveň výraz `android`. Tablet jako `ipad||tablet||kindle` nebo pokud obsahuje `android` a neobsahuje `mobile`.
+Typ zařízení se detekuje na serveru podle HTTP hlavičky `User-Agent`. Telefon se detekuje při nalezení výrazu `iphone`, nebo `mobile` a současně výrazu `android`. Tablet jako `ipad||tablet||kindle` nebo pokud obsahuje `android` a neobsahuje `mobile`.
 
-Při zobrazení webové stránky v telefonu se vyhledá nastavená šablona webové stránky s výrazem `device=phone`. Pokud má stránka šablonu `Homepage` je vyhledána šablona `Homepage device=phone`. Pokud existuje, použije se.
+Při zobrazení web stránky na telefonu se hledá nastavená šablona pro web stránku s výrazem `device=phone`. Pokud má stránka šablonu `Homepage` vyhledá se šablona `Homepage device=phone`. Pokud existuje, použije se.
 
-V této optimalizované šabloně můžete použít jinou stránku záhlaví nebo jiný soubor šablony HTML.
+V takto optimalizované šabloně můžete použít jinou stránku v hlavičce nebo jiný HTML soubor šablony.
 
-Podobně se automaticky vyhledávají záhlaví/zápatí webových stránek, pokud je na stránce nastaveno. `Default header` je automaticky prohledáván `Default header device=phone`. Pokud existuje, použije se. Nemusíte tedy vytvářet samostatné šablony, stačí vytvořit vhodnou webovou stránku s upraveným záhlavím/zápatím.
+Podobně automaticky se postupuje i pro hledání web stránek hlaviček/patiček, je-li nastavena stránka `Default header` automaticky se vyhledá `Default header device=phone`. Pokud existuje, použije se. Nemusíte tak vytvářet samostatné šablony, stačí vytvořit vhodnou web stránku s upravenou hlavičkou/patičkou.

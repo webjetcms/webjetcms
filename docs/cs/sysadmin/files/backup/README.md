@@ -1,11 +1,11 @@
 # Zálohování systému
 
-Aplikace slouží k vytvoření archivu ZIP jednotlivých složek souborového systému WebJET. Můžete si zvolit, které složky mají být do archivu ZIP zahrnuty a ve které složce má být výsledný archiv ZIP vytvořen. Nevytváří se záloha databáze, tu je třeba vytvořit pomocí nástrojů pro zálohování databáze.
+Aplikace slouží k vytvoření ZIP archiv jednotlivých složek souborového systému WebJET. Můžete zvolit, které složky se do ZIP archivu mají zahrnout a do které složky se má vytvořit výsledný ZIP archiv. Nevytváří se záloha databáze, tu je třeba vytvořit nástroji pro zálohování databází.
 
-!> **Varování:** Množství dat ve vybraných složkách může být velké a soubor ZIP nemusí být vygenerován správně (omezení je na soubor o velikosti 2 GB). V případě potřeby můžete vytvářet zálohy po částech (jednotlivých složkách).
+!> **Upozornění:** Objem dat ve zvolených složkách může být velký a ZIP soubor se nemusí vygenerovat správně (omezení je na 2GB soubor). V případě potřeby můžete vytvářet zálohy po částech (jednotlivých složkách).
 
 ![](backup.png)
 
-Tento proces může trvat několik desítek minut v závislosti na množství dat ve vybraných složkách. Počkejte na dokončení celého procesu. Během této doby byste měli v okně vidět informace o počtu již vygenerovaných stránek a celkovém počtu stránek.
+Tento proces může trvat několik desítek minut podle objemu dat ve zvolených složkách. Čekejte, až celý proces skončí. Během toho by se vám v okně měla zobrazovat informace o počtu již vygenerovaných stránek ao celkovém počtu stránek.
 
-Výsledkem je archiv zip vytvořený v zadané složce.
+Výsledkem je zip archiv vytvořený v zadané složce.

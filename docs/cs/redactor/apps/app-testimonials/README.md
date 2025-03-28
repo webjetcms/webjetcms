@@ -1,6 +1,6 @@
 # Doporučení
 
-Vložte na své stránky aplikaci zobrazující doporučení vašich zákazníků. Aplikace zvýší důvěryhodnost vašich stránek a ujistí potenciální zákazníky o kvalitě vašich služeb.
+Vložte si do stránky aplikaci zobrazující doporučení vašich zákazníků. Aplikace zvýší důvěryhodnost Vaší stránky a potencionálního zákazníka ujistí o kvalitě Vašich služeb.
 
 ## Nastavení aplikace
 
@@ -8,9 +8,9 @@ Vložte na své stránky aplikaci zobrazující doporučení vašich zákazník�
 
 V této části lze nastavit:
 - Styl
-- Zobrazit fotografie
-- Zobrazit názvy
-- Barva názvu
+- Zobrazovat fotografie
+- Zobrazovat jména
+- Barva jména
 - Barva textu
 - Barva pozadí
 
@@ -18,7 +18,7 @@ V této části lze nastavit:
 
 ### Položky
 
-Tato část slouží k přidání nebo odebrání položky: Při přidávání můžete vyplnit název, text, přesměrování. Chcete-li položku odebrat, klikněte na červený křížek.
+V této části je přidat nebo odebrat položku: Při přidání lze vyplnit jméno, text, přesměrování. Odebrání položky lze kliknutím na červený křížek.
 
 ![](editor-items.png)
 

@@ -1,51 +1,51 @@
-# Funkce WebJET v jazyce JavaScript
+# WebJET JavaScript funkce
 
-WebJET zapouzdřuje rozhraní API knihoven používaných v souboru webjet.js. Cílem není používat volání API knihoven přímo, ale zapouzdřit tato volání prostřednictvím našich funkcí. To nám umožní případně nahradit použitou knihovnu, aniž bychom měnili API.
+WebJET v souboru webjet.js zapouzdřuje API použitých knihoven. Cílem je, aby se nepoužívaly přímo API volání z knihoven, ale zapouzdřené volání přes naše funkce. Umožní nám to beze změny API případně vyměnit použitou knihovnu.
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-- [Funkce WebJET v jazyce JavaScript](#Funkce-webjet-javascript)
-  - [Oznámení](#oznámení)
+- [WebJET JavaScript funkce](#webjet-javascript-funkce)
+  - [Notifikace](#notifikace)
   - [Potvrzení akce](#potvrzení-akce)
   - [Získání hodnoty](#získání-hodnoty)
   - [Formátování data a času](#formátování-data-a-času)
   - [Formátování čísel](#formátování-čísel)
-  - [Dialog Iframe](#dialog-iframe)
-  - [Dialog pro výběr souboru/odkazu](#dialog-pro-výběr-odkazu-na-soubor)
-  - [Udržování připojení k serveru (opakování)](#udržování-spojení-se-serverem-refresher)
-  - [Navigační panel](#navigační-panel)
-  - [Karty v záhlaví](#karty-v-záhlaví)
+  - [Iframe dialog](#iframe-dialog)
+  - [Dialog pro výběr souboru/odkazu](#dialog-pro-výběr-souboruodkazu)
+  - [Udržování spojení se serverem (refresher)](#udržování-spojení-se-serverem-refresher)
+  - [Navigační lišta](#navigační-lišta)
+  - [Karty v hlavičce](#karty-v-hlavičce)
   - [Kontrola práv](#kontrola-práv)
   - [Markdown parser](#markdown-parser)
-  - [Trvalé uživatelské nastavení](#nastavení-trvalého-uživatele)
-    - [Použití na frontend](#použití-na-frontend)
-    - [Použití na backendu](#použití-na-backendu)
+  - [Perzistentní nastavení uživatele](#perzistentní-nastavení-uživatele)
+    - [Použití na frontendu](#použití-na-frontendu)
+    - [Použití na backendu](#použití-na-backende)
   - [Animace načítání](#animace-načítání)
-  - [Další funkce](#další-funkce)
+  - [Ostatní funkce](#ostatní-funkce)
 
 <!-- /code_chunk_output -->
 
-## Oznámení
+## Notifikace
 
-Pro oznámení používáme knihovnu [toastr](https://github.com/CodeSeven/toastr), jsou připraveny následující funkce JS:
+Pro notifikace používáme knihovnu [toastr](https://github.com/CodeSeven/toastr), připraveny jsou následující JS funkce:
 
-`WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null)` - zobrazí oznámení o přípitku (ekvivalentní `window.alert`), parametry:
-- `type` (String) - typ zobrazovaného oznámení, možnosti: `success, info, warning, error`
-- `title` (String) - název zobrazeného oznámení
-- `text` (String) - text zobrazeného oznámení, nepovinné
-- `timeout` (int) - doba, po které bude oznámení skryto, nepovinné, hodnota 0 znamená, že oznámení bude zobrazeno, dokud jej uživatel nezavře.
-- `buttons` (json) - pole tlačítek zobrazených pod textem oznámení
-- `appendToExisting` (boolean) - po nastavení na `true` je text přidaný ke stávajícímu oznámení stejného typu. Pokud ještě neexistuje, vytvoří se nové oznámení.
-- `containerId` (String) - CSS ID kontejneru, do kterého bude oznámení vloženo.
+`WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null)` - zobrazí toast notifikaci (ekvivalent `window.alert`), parametry:
+- `type` (String) - typ zobrazené notifikace, možnosti: `success, info, warning, error`
+- `title` (String) - titulek zobrazené notifikace
+- `text` (String) - text zobrazené notifikace, nepovinné
+- `timeout` (int) - čas, po kterém se notifikace schová, nepovinné, hodnota 0 znamená, že se notifikace bude zobrazovat, dokud ji uživatel nezavře
+- `buttons` (json) - pole tlačítek zobrazených pod textem notifikace
+- `appendToExisting` (boolean) - po nastavení na `true` je text přidán do existující notifikace stejného typu. Pokud ještě neexistuje, vytvoří se nová notifikace.
+- `containerId` (String) - CSS ID kontejneru, do kterého bude notifikace vložena.
 
-K dispozici jsou také zkrácené verze, které doporučujeme používat:
+Připraveny jsou i zkrácené verze, doporučujeme používat ty:
 - `WJ.notifySuccess(title, text, timeOut=0, buttons=null)`
 - `WJ.notifyInfo(title, text, timeOut=0, buttons=null)`
 - `WJ.notifyWarning(title, text, timeOut=0, buttons=null)`
 - `WJ.notifyError(title, text, timeOut=0, buttons=null)`
 
-Požadovaný je parametr `title`, ostatní jsou nepovinné.
+Povinný je parametr `title`, ostatní jsou nepovinné.
 
 ![](../datatables-editor/notify.png)
 
@@ -62,9 +62,9 @@ WJ.notifyError("Vyberte adresár", null, 5000);
 WJ.notifyError('Nepodarilo sa to', 'Skúste to <strong>neskôr</strong>');
 ```
 
-V tabulce dat můžete odeslat [oznámení serveru](../datatables-editor/notify.md).
+V datatabulce můžete posílat [notifikace ze serveru](../datatables-editor/notify.md).
 
-Pokud potřebujete zobrazit tlačítko, zadejte jej jako pole JSON:
+Pokud potřebujete zobrazit tlačítko zadáte jej jako JSON pole:
 
 ```javascript
 [
@@ -78,17 +78,17 @@ Pokud potřebujete zobrazit tlačítko, zadejte jej jako pole JSON:
 ]
 ```
 
-Hodnota v `click` je nastaven přímo na `onclick` atribut tlačítka, neměl by obsahovat znak ", doporučujeme volat pouze příslušnou JS funkci.
+Hodnota v `click` se nastaví přímo na `onclick` atribute tlačítka, nesmí obsahovat znak ", doporučujeme jen volat vhodnou JS funkci.
 
 ## Potvrzení akce
 
-Potvrzení akce (ekvivalentní `window.confirm` kde po kliknutí na OK/Potvrdit mohu provést vybranou akci) je připravena funkce JS `WJ.confirm(options)`. V `options` objekt může mít následující parametry:
-- `title` (String) - název zobrazené otázky
+Pro potvrzení akce (ekvivalent `window.confirm` kde kliknutím na OK/Potvrdit můžu provést zvolenou akci) je připravena JS funkce `WJ.confirm(options)`. V `options` objektu mohou být následující parametry:
+- `title` (String) - titulek zobrazené otázky
 - `message` (String) - text zobrazené otázky
-- `btnCancelText` (String) - text zobrazený na tlačítku zrušit (výchozí Cancel)
-- `btnOkText` (String) - text zobrazený na tlačítku pro potvrzení akce (ve výchozím nastavení Confirm)
-- `success` (funkce) - funkce, která se provede po potvrzení akce.
-- `cancel` (funkce) - funkce, která se provede po zrušení akce.
+- `btnCancelText` (String) - text zobrazený na tlačítku pro zrušení (výchozí Zrušit)
+- `btnOkText` (String) - text zobrazený na tlačítku pro potvrzení akce (výchozí Potvrdit)
+- `success` (funkce) - funkce, která se vykoná po potvrzení akce
+- `cancel` (funkce) - funkce, která se vykoná po zrušení akce
 
 Příklady použití:
 
@@ -103,7 +103,7 @@ WJ.confirm({
 
 ## Získání hodnoty
 
-Pro získání hodnoty (ekvivalentní `window.prompt` kde je nutné zadat hodnotu do dialogu) je připravena funkce `WJ.propmpt(options)`. V `options` objektu je možné zadat stejné hodnoty jako u objektu [potvrzení akce](#potvrzení-akce).
+Pro získání hodnoty (ekvivalent `window.prompt` kde je do dialogu třeba zadat hodnotu) je připravena funkce `WJ.propmpt(options)`. V `options` objektu lze zadat stejné hodnoty jako pro [potvrzení akce](#potvrzení-akce).
 
 Příklad použití:
 
@@ -118,48 +118,48 @@ WJ.confirm({
 
 ## Formátování data a času
 
-Pro jednotné formátování data a času jsou k dispozici následující funkce:
-- `WJ.formatDate(timestamp)` - zformátuje zadaný `timestamp` jako datum
-- `WJ.formatDateTime(timestamp)` - zformátuje zadaný `timestamp` jako datum a čas (hodiny:minuty)
-- `WJ.formatDateTimeSeconds(timestamp)` - zformátuje zadaný `timestamp` jako datum a čas včetně sekund
-- `WJ.formatTime(timestamp)` - zformátuje zadaný `timestamp` jako čas (hodiny:minuty)
-- `WJ.formatTimeSeconds(timestamp)` - zformátuje zadaný `timestamp` jako čas včetně sekund
+Pro unifikované formátování data a času jsou dostupné následující funkce:
+- `WJ.formatDate(timestamp)` - naformátuje zadaný `timestamp` jako datum
+- `WJ.formatDateTime(timestamp)` - naformátuje zadaný `timestamp` jako datum a čas (hodiny:minuty)
+- `WJ.formatDateTimeSeconds(timestamp)` - naformátuje zadaný `timestamp` jako datum a čas včetně sekund
+- `WJ.formatTime(timestamp)` - naformátuje zadaný `timestamp` jako čas (hodiny:minuty)
+- `WJ.formatTimeSeconds(timestamp)` - naformátuje zadaný `timestamp` jako čas včetně vteřin
 
 ## Formátování čísel
 
-Pro jednotné formátování čísel jsou k dispozici následující funkce:
-- `WJ.formatPrice(price)` - zformátuje zadané číslo jako nabídku zaokrouhlenou na 2 desetinná místa, příklad: `WJ.formatPrice(1089) - 1 089,00`.
+Pro unifikované formátování čísel jsou dostupné následující funkce:
+- `WJ.formatPrice(price)` - naformátuje zadané číslo jako menu zaokrouhlenou na 2 desetinná místa, příklad: `WJ.formatPrice(1089) - 1 089,00`.
 
-## Dialog Iframe
+## Iframe dialog
 
-Použití volání `WJ.openIframeModal(options)` je možné otevřít dialogové okno s iframe zadané adresy URL. Neotevře se `popup` okno, ale dialogové okno přímo na stránce. V `options` objekt může mít následující parametry:
-- `url` = adresa URL vloženého rámce iframe
+Pomocí volání `WJ.openIframeModal(options)` je možné otevřít dialogové okno s iframe zadané URL adresy. Neotevírá se tak `popup` okno, ale dialogové okno přímo ve stránce. V `options` objektu mohou být následující parametry:
+- `url` = URL adresa vloženého iframe
 - `width` = šířka okna
-- `height` = výška vloženého iframe (modal bude o jednu hlavičku a patičku vyšší).
+- `height` = výška vloženého iframe (modal bude o hlavičku a patičku vyšší)
 - `title` = titulek okna
-- `buttonTitleKey` = překladový klíč textu na primárním tlačítku pro uložení (ve výchozím nastavení je klíč `button.submit` - Potvrzení)
-- `closeButtonPosition` = poloha tlačítka pro zavření okna
-  - `prázdna hodnota` - Ikona X v záhlaví okna
-  - `close-button-over` - ikona X v záhlaví, ale nad obsahem okna (nevytvoří samostatný řádek).
-  - přidáním `nopadding`, např. `closeButtonPosition: "close-button-over nopadding"` horní odrážka v záhlaví je také odstraněna.
-- `okclick` = zpětné volání po kliknutí na potvrzovací tlačítko, neobsahuje žádné parametry, v implementaci zpětného volání je třeba vytáhnout hodnotu z iframe.
-- `onload` = zpětné volání po načtení okna, jako parametr obdrží `event.detail` obsahující objekt `window` s odkazem na okno v iframe.
+- `buttonTitleKey` = překladový klíč textu na primárním tlačítku pro uložení (výchozí klíč `button.submit` - Potvrdit)
+- `closeButtonPosition` = pozice tlačítka pro zavření okna
+  - `prázdna hodnota` - ikona X v hlavičce okna
+  - `close-button-over` - ikona X v hlavičce ale přes obsah okna (nevytváří samostatný řádek)
+  - přidáním `nopadding`, neboli například. `closeButtonPosition: "close-button-over nopadding"` se zruší i horní odsazení v hlavičce
+- `okclick` = callback po kliknutí na tlačítko potvrdit, neobsahuje žádné parametry, hodnotu z iframe je třeba si vytáhnout v implementaci callbacku
+- `onload` = callback po načtení okna, jak parametr dostane `event.detail` obsahující objekt `window` s odkazem na okno v iframu
 
-Dialogové okno má vlastní tlačítko pro zavření, v případě potřeby lze použít volání API. `WJ.closeIframeModal()` zavřít okno.
+Dialogové okno má vlastní tlačítko pro zavření, v případě potřeby lze využít API volání `WJ.closeIframeModal()` pro zavření okna.
 
-Pro okna obsahující datovou tabulku existuje funkce `openIframeModalDatatable(options)` který nastavuje funkce `okclick` a `onload` pro volání uložení a správné zavření okna po uložení záznamu v tabulce dat. Nastavená výška se automaticky zmenší podle velikosti okna.
+Pro okna obsahující datatabulku existuje funkce `openIframeModalDatatable(options)` která nastavuje funkce `okclick` a `onload` pro volání uložení a korektní zavření okna po uložení záznamu v data tabulce. Nastavená výška je automaticky snížena podle velikosti okna.
 
 **Poznámky k implementaci**
 
-Kód HTML dialogu je staticky vložen do souboru [iframe.pug](../../../../src/main/webapp/admin/v9/views/modals/iframe.pug) a odkaz na stránku v [layout.pug](../../../../src/main/webapp/admin/v9/views/partials/layout.pug). Rám iframe je tak opakovaně používán pro různé dialogy. V proměnné `modalIframe` je odkaz na instanci dialogu.
+HTML kód dialogu je staticky vložen v souboru [iframe.pug](../../../../src/main/webapp/admin/v9/views/modals/iframe.pug) a linkované do stránky v [layout.pug](../../../../src/main/webapp/admin/v9/views/partials/layout.pug). Iframe se tedy opakovaně používá pro různé dialogy. V proměnné `modalIframe` je odkaz na instanci dialogu.
 
-Problematické bylo použití dialogu v editoru datových tabulek, který je sám o sobě dialogem. Modal-backdrop neměl nastavený příslušný z-index a nacházel se za oknem editoru, takže byl špatně umístěn (nepřekrýval editor). Proto jsme při otevření iframe dialogu nastavili. `.modal-backdrop` Třída CSS `modalIframeShown` který správně nastaví `z-index` na prvcích pozadí.
+Problémové bylo použití dialogu v datatables editoru, který sám o sobě je dialog. Modal-backdrop neměl nastaven vhodný z-index a byl za oknem editoru, čili nekorektně poziciovaný (nepřekryl editor). Při otevření iframe dialogu proto nastavujeme na elementu `.modal-backdrop` CSS třídu `modalIframeShown`, která korektně nastavuje `z-index` na backdrop elementu.
 
 ## Dialog pro výběr souboru/odkazu
 
-Snadné použití zobrazení dialogového okna pro výběr odkazu na soubor/obrázek/stránku (otevřít) `elfinder` dialogového okna) lze použít funkce:
-- `WJ.openElFinder(options)` - otevře dialogové okno s nastavením, které se používá pro dialogové okno Iframe (kromě url, která se nastaví automaticky).
-- `WJ.openElFinderButton(button)` - po kliknutí na tlačítko otevře dialogové okno. `button`. V rodičovském prvku `div.input-group` automaticky vyhledá vstupní pole formuláře a pomocí něj získá aktuální hodnotu a po výběru ji nastaví. Podle prvku `label.col-form-label` nastaví titulek okna.
+Pro snadné použití zobrazení dialogového okna výběru souboru/obrázku/odkazu na stránku (otevření `elfinder` dialogového okna) lze použít funkce:
+- `WJ.openElFinder(options)` - otevře dialogové okno se zadanými nastaveními jak jsou použity pro Iframe dialog (kromě url, které je automaticky nastaveno).
+- `WJ.openElFinderButton(button)` - otevře dialogové okno po kliknutí na tlačítko `button`. V rodičovském elementu `div.input-group` automaticky vyhledá formulářové vstupní pole a to použije pro získání aktuální hodnoty a její nastavení po výběru. Podle elementu `label.col-form-label` nastaví titulek okna.
 
 Příklad použití `WJ.openElFinder`:
 
@@ -175,7 +175,7 @@ WJ.openElFinder({
 });
 ```
 
-Příklad kódu HTML pro použití `onclick="WJ.openElFinderButton(this);"`:
+Příklad HTML kódu pro použití `onclick="WJ.openElFinderButton(this);"`:
 
 ```html
 <div class="input-group">
@@ -193,26 +193,26 @@ Příklad kódu HTML pro použití `onclick="WJ.openElFinderButton(this);"`:
 </div>
 ```
 
-## Udržování připojení k serveru (opakování)
+## Udržování spojení se serverem (refresher)
 
-Aby nedošlo k vypršení přihlášení uživatele (např. při dlouhodobé editaci webové stránky), je služba REST volána v minutových intervalech. `/admin/rest/refresher`. Udržuje relaci a také kontroluje nové zprávy pro správce. Pokud se objeví nové zprávy, zobrazí se vyskakovací okno.
+Aby nedocházelo k vypršení přihlášení uživatele (např. při dlouhé editaci web stránky) je v minutovém intervalu volána REST služba `/admin/rest/refresher`. Ta udrží session a zároveň kontroluje nové zprávy pro administrátora. Pokud existují nové zprávy zobrazí vyskakovací okno.
 
-K dispozici jsou následující funkce:
-- `keepSession()` - inicializační funkce, která spustí časovač volání služby REST.
-- `keepSessionShowLogoffMessage()` - zobrazí chybovou zprávu při přerušení spojení se serverem a zajistí, aby se zpráva nezobrazovala vícekrát. Po 5 minutách dojde k přesměrování na přihlášení.
-- `keepSessionShowTokenMessage(errorMessage)` - zobrazí chybovou zprávu pro nesprávný token CSRF a zajistí, aby se zpráva nezobrazovala vícekrát.
+Dostupné jsou následující funkce:
+- `keepSession()` - inicializační funkce, která spustí časovač volání REST služby.
+- `keepSessionShowLogoffMessage()` - zobrazí chybové hlášení při přerušení spojení se serverem, zajistí, aby se hlášení nezobrazilo vícekrát. Po 5 minutách přesměruje na přihlášení.
+- `keepSessionShowTokenMessage(errorMessage)` - zobrazí chybové hlášení při nesprávném CSRF tokenu, zajistí, aby se hlášení nezobrazilo vícekrát.
 
 **Poznámky k implementaci**
 
-Chybová hlášení se zobrazují prostřednictvím knihovny toastr v samostatném kontejneru. `toast-container-logoff` v horní části obrazovky. Používají `window` objekty na ochranu proti vícenásobnému hlášení.
+Chybová hlášení jsou zobrazena přes knihovnu toastr v samostatném kontejneru `toast-container-logoff` v horní části obrazovky. Používají `window` objekty pro ochranu před více násobným zobrazením hlášení.
 
 Inicializace časovače je spuštěna z [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) voláním funkce `WJ.keepSession();`.
 
-Ochrana pro tokeny CSRF a připojení k serveru je nastavena navíc k časovači v položce [head.pug](../../../../src/main/webapp/admin/v9/views/partials/head.pug) v nastavení ajaxového volání pomocí funkce `$.ajaxSetup`. Pro chybu HTTP se stavem 401 se volá funkce `WJ.keepSessionShowLogoffMessage()`, pro funkci error 403 `WJ.keepSessionShowTokenMessage(errorMessage)`.
+Ochrana pro CSRF tokeny a spojení se serverem je kromě časovače nastavena i v [head.pug](../../../../src/main/webapp/admin/v9/views/partials/head.pug) v nastavení ajax volání pomocí funkce `$.ajaxSetup`. Pro HTTP chybu se stavem 401 je volaná funkce `WJ.keepSessionShowLogoffMessage()`, pro chybu 403 funkce `WJ.keepSessionShowTokenMessage(errorMessage)`.
 
-## Navigační panel
+## Navigační lišta
 
-Navigační panel, typicky s filtrem nebo zpětnou vazbou, můžete vygenerovat zavoláním funkce JS. `JS.breadcrumb`, který jako parametr obdrží konfigurační objekt JSON ve formátu:
+Navigační lištu typicky s filrem, nebo návratem zpět, vygenerujete voláním JS funkce `JS.breadcrumb`, ta jako parametr dostává konfigurační JSON objekt ve formátu:
 
 ```javascript
 {
@@ -236,24 +236,24 @@ Navigační panel, typicky s filtrem nebo zpětnou vazbou, můžete vygenerovat 
 }
 ```
 
-Kde:
-- `id` - jedinečný identifikátor
-- `tabs` - pole zobrazených položek navigačního panelu
-  - `url` - adresa stránky po kliknutí na položku.
+kde:
+- `id` - unikátní identifikátor
+- `tabs` - pole zobrazených položek navigační lišty
+  - `url` - adresa stránky po kliknutí na položku
   - `title` - název položky
-  - `active` - (nepovinné) pokud false, zobrazí se jako neaktivní možnost - používá se pro podstránky aplikace, kde první položka odkazuje na domovskou/hlavní stránku aplikace.
-- `backlink` - (nepovinné) odkaz na předchozí stránku (používá se v položce `master-detail` zobrazení, např. v detailu formuláře odkaz na seznam formulářů).
-- `showInIframe` - (nepovinné), pokud je nastaveno na `true`, nebo je na kartách atribut s hodnotou `title: '{filter}'` záhlaví se zobrazuje také v `iframe` prvek - obvykle ve vlastnostech aplikace v editoru stránky
+  - `active` - (volitelné) je-li false zobrazí se jako neaktivní možnost - používá se pro pod-stránky aplikace kde první položka odkazuje na úvodní/hlavní stránku aplikace
+- `backlink` - (volitelné) odkaz na předchozí stránku (používá se v `master-detail` zobrazení, například. v detailu formuláře odkaz na seznam formulářů)
+- `showInIframe` - (volitelné) pokud je nastaveno na `true`, nebo v kartách existuje atribut s hodnotou `title: '{filter}'` zobrazí se hlavička iv `iframe` elemente - typicky ve vlastnostech aplikace v editoru stránek
 
-Současně nadpis položky, která jako první nemá atribut `active: false` je nastaven jako název webové stránky (atribut `title` html kód stránky).
+Zároveň titulek položky, která první nemá atribut `active: false` se nastaví jako titulek web stránky (atribut `title` html kódu stránky).
 
-**Výběr jazyka displeje**
+**Zobrazení výběru jazyka**
 
-V některých případech je nutné zobrazit data v datové tabulce podle zvoleného jazyka (nikoli podle jazyka aktuálně přihlášeného správce). Příkladem může být aplikace GDPR->Cookie Manager, kde jsou jednotlivé `cookies` můžete nastavit popisy pro různé jazyky.
+V některých případech je třeba zobrazit údaje v datatabulce podle vybraného jazyka (ne podle jazyka aktuálně přihlášeného administrátora). Příkladem je aplikace GDPR->Cookie Manažer, kde se jednotlivým `cookies` může nastavovat popis pro různé jazyky.
 
 ![](breadcrumb-language.png)
 
-Navigační panel umožňuje vložit výběr jazyka přímo do něj pomocí makra. `{LANGUAGE-SELECT}`:
+Navigační lišta umožňuje vložit výběr jazyka přímo do ní pomocí makra `{LANGUAGE-SELECT}`:
 
 ```javascript
 WJ.breadcrumb({
@@ -277,7 +277,7 @@ WJ.breadcrumb({
 })
 ```
 
-do navigačního panelu se dynamicky vloží výběrové pole se seznamem jazyků s `id=breadcrumbLanguageSelect`. Na změnu jazyka pak můžete reagovat nastavením adres URL pro služby REST:
+do navigační lišty je takto dynamicky vloženo výběrové pole se seznamem jazyků s `id=breadcrumbLanguageSelect`. Následně můžete reagovat na změnu jazyka nastavením URL adres pro REST služby:
 
 ```javascript
 $("#breadcrumbLanguageSelect").change(function() {
@@ -290,7 +290,7 @@ $("#breadcrumbLanguageSelect").change(function() {
 });
 ```
 
-Výběr jazyka můžete také vložit přímo do panelu nástrojů tabulky, například vložit jej jako první položku před tlačítko přidat záznam:
+Výběr jazyka můžete vložit také přímo do nástrojové lišty tabulky, příklad vložení jako první položky před tlačítko pro přidání záznamu:
 
 ```javascript
 let select = $("div.breadcrumb-language-select").first();
@@ -307,7 +307,7 @@ $("#cookiesDataTable_wrapper .dt-header-row .row .col-auto .dt-buttons div.bread
 });
 ```
 
-V rozhraní REST získáte jazyk pomocí parametru URL. `breadcrumbLanguage`:
+V REST rozhraní získáte jazyk pomocí získání URL parametru `breadcrumbLanguage`:
 
 ```java
 @Override
@@ -333,7 +333,7 @@ public CookieManagerBean getOneItem(long id) {
 
 **Vložení značky pro externí filtr**
 
-Pokud potřebujete mít na navigačním panelu externí filtr, můžete použít značku jako titulek. `{TEXT}`. Pokud titulek začíná znakem `{` je vložen text zabalený do kontejneru DIV. Ten pak lze použít k přesunu [externí filtr](../datatables/README.md#externí-filtr) například v aplikaci GDPR/Vyhledávání.
+Pokud v navigační liště potřebujete mít externí filtr je možné použít jako titulek značku `{TEXT}`. Pokud titulek začíná na znak `{` vloží se text obalený do DIV kontejneru. To je následně možné použít pro přesun [externího filtru](../datatables/README.md#externí-filtr) jako je např. v aplikaci GDPR/Vyhledávání.
 
 ![](../../redactor/apps/gdpr/search-dataTable.png)
 
@@ -380,11 +380,11 @@ Pokud potřebujete mít na navigačním panelu externí filtr, můžete použít
 </div>
 ```
 
-Pro [zvýraznění položky nabídky](../../custom-apps/admin-menu-item/README.md#frontend) v `master-detail` stránky mohou používat funkci `WJ.selectMenuItem(href)`.
+Pro [zvýraznění menu položky](../../custom-apps/admin-menu-item/README.md#frontend) v `master-detail` stránkách lze použít funkci `WJ.selectMenuItem(href)`.
 
-## Karty v záhlaví
+## Karty v hlavičce
 
-Ve výchozím nastavení se navigační karty zobrazují v záhlaví jako navigační položky druhé úrovně. V některých případech (např. v sekci webových stránek) se však používají k filtrování seznamu webových stránek (Aktivní, Neschválené, Systémové...). Můžete použít tzv. `WJ.headerTabs(config)` k jejich generování:
+V hlavičce se standardně zobrazují navigační karty jako položky navigace druhé úrovně. V některých případech (např. v sekci web stránky) se ale používají k filtrování seznamu web stránek (Aktivní, Neschválené, Systémové...). Můžete použít funkci `WJ.headerTabs(config)` pro jejich vygenerování:
 
 ```JavaScript
 WJ.headerTabs({
@@ -402,29 +402,29 @@ WJ.headerTabs({
 
 ## Kontrola práv
 
-Při zobrazení webové stránky se vygeneruje objekt. `window.nopermsJavascript` se seznamem práv, která uživatel nemá povolena. Nikdy nepoužívejte toto pole přímo, ke kontrole práv použijte volání API:
-- `WJ.hasPermission(permission)` - návraty `true` pokud má aktuálně přihlášený uživatel právo `permission`. V opačném případě vrátí false.
+Při zobrazení web stránky je vygenerovaný objekt `window.nopermsJavascript` se seznamem práv, které uživatel nemá povoleno. Toto pole nikdy nepoužívejte přímo, pro kontrolu práv použijte API volání:
+- `WJ.hasPermission(permission)` - vrátí `true`, pokud aktuálně přihlášený uživatel má povoleno právo `permission`. Jinak vrátí false.
 
 ## Markdown parser
 
-Funkce `parseMarkdown(markdownText, options)` umožňuje převést základní formát Markdown do kódu HTML. Podporovány jsou následující značky:
-- `#, ##, ###` - nadpisy 1-3 (`h1-h3`)
+Funkce `parseMarkdown(markdownText, options)` umožňuje konvertovat základní Markdown formát na HTML kód. Podporovány jsou následující značky:
+- `#, ##, ###` - nadpis 1-3 (`h1-h3`)
 - `> text` - značka `blockquote`
 - `**text**` - tučné písmo
 - `*text*` - kurzíva
 - `![obrazok.png](alt) ` - obrázek s alternativním textem
-- `[stranka.html](nazov) ` - odkaz na jinou stránku (vyžaduje nastavení ` options { link: true }`)
-- `- odrazka` - nečíslovaný seznam
-- `` \`text\` `` - blok kódu v textu, zabalený do `<span class="code-inline">`
-- `` \`\`\`text\`\`\` `` - blok kódu na více řádcích, zabalený do `<div class="code">`
+- `[stranka.html](nazov) ` - odkaz na jinou stránku (vyžaduje nastavit ` options { link: true }`)
+- `- odrazka` - ne-číslovaný seznam
+- `` \`text\` `` - blok kódu v textu, obalené do `<span class="code-inline">`
+- `` \`\`\`text\`\`\` `` - blok kódu na více řádků, obalené do `<div class="code">`
 - `![](obrazok.png) ` - obrázek
 
 Funkce obsahuje parametry:
 - `markdownText` - text ve formátu Markdown
 - `options` - volitelná nastavení
-  - `link` - ve výchozím nastavení se odkazy do generovaného kódu HTML nevkládají, nastavením na hodnotu `true` je zapnuto vkládání odkazů
-  - `badge` - nastavením na hodnotu `true` první slovo před znakem pomlčky v nečíslovaném seznamu bude zabaleno do znaku `<span class="badge bg-secondary">`
-  - `imgSrcPrefix` - URL adresa předpony pro obrázek (název domény), pokud je obrázek načten z jiné domény, použije se stejná předpona pro odkazy.
+  - `link` - ve výchozím nastavení se do generovaného HTML kódu nevkládají odkazy, nastavením na `true` se vkládání odkazů zapne
+  - `badge` - nastavením na `true` bude první slovo před znakem pomlčka v ne-číslovaném seznamu obalené do `<span class="badge bg-secondary">`
+  - `imgSrcPrefix` - URL adresa prefixu pro obrázek (doménové jméno) pokud se obrázek čte z jiné domény, stejný prefix se použije i pro odkazy
 
 Příklad použití:
 
@@ -432,19 +432,19 @@ Příklad použití:
 let tooltipText = WJ.parseMarkdown("Meno priečinka v URL adrese web stránok.\nZadajte **prázdnu hodnotu** pre automatické nastavenie podľa **názvu priečinku**.");
 ```
 
-## Trvalé uživatelské nastavení
+## Perzistentní nastavení uživatele
 
-Pokud potřebujete uložit některá uživatelská nastavení, můžete použít `window.localStorage` objekt. Bude však uložen pouze v prohlížeči. Pokud potřebujete, aby nastavení uživatele bylo ve všech prohlížečích stejné nebo aby bylo k dispozici na serveru, musíte použít objekt `UserDetails.adminSettings`, které jsou uloženy v databázové tabulce `user_settings_admin`. Jsou uloženy ve formátu klíč/hodnota, přičemž hodnota je často objekt JSON.
+Pokud potřebujete ukládat některá nastavení uživatele můžete použít `window.localStorage` objekt. Ten ale zůstane uložen jen v prohlížeči. Pokud potřebujete nastavení pro uživatele mít stejné ve všech prohlížečích, nebo je mít dostupné i na serveru je třeba využít možnosti `UserDetails.adminSettings`, které se ukládají do databázové tabulky `user_settings_admin`. Uloženy jsou ve formátu klíč/hodnota, kde hodnota často bývá JSON objekt.
 
-K dispozici jsou rozhraní API pro zpracování v jazyce JavaScript i na straně serveru.
+Pro použití je dostupné API pro JavaScript i pro serverové zpracování.
 
-!>**Oznámení**: neukládejte velké objekty do nastavení, nastavení je vloženo do kódu HTML administrace a velké objekty by neúměrně zvýšily objem přenášených dat.
+!>**Upozornění**: do nastavení neukládejte velké objekty, nastavení jsou vkládána do HTML kódu administrace a velké objekty by neúměrně zvětšovaly objem přenášených dat.
 
-### Použití na frontend
+### Použití na frontendu
 
-Pro práci je k dispozici rozhraní API:
+Pro práci je dostupné API:
 - `WJ.getAdminSetting(key)` - vrátí řetězec nastavení uživatele se zadaným klíčem.
-- `WJ.setAdminSetting(key, value)` - uloží zadanou hodnotu se zadaným klíčem do uživatelského nastavení.
+- `WJ.setAdminSetting(key, value)` - uloží zadanou hodnotu se zadaným klíčem do nastavení uživatele.
 
 Příklad použití:
 
@@ -486,14 +486,14 @@ export class JstreeSettings {
 
 ### Použití na backendu
 
-Třídu lze použít na backendu `AdminSettingsService` k získání údajů:
+Na backendu lze použít třídu `AdminSettingsService` pro získání údajů:
 
 ```java
 AdminSettingsService ass = new AdminSettingsService(user);
 boolean showPages = ass.getJsonBooleanValue("jstreeSettings_web-pages-list", "showPages");
 ```
 
-Ukládání dat zajišťuje služba REST `/admin/rest/admin-settings/`:
+Ukládání dat zajišťuje REST služba `/admin/rest/admin-settings/`:
 
 ```java
 @RestController
@@ -513,7 +513,7 @@ public class AdminSettingsRestController {
 
 ## Animace načítání
 
-Pokud načítání stránky trvá déle (např. načítání grafů ve statistikách), je možné zobrazit animaci načítání. Pro zobrazení a skrytí animace je možné použít funkce v kódu JavaScriptu:
+Pokud zobrazení stránky trvá déle (např. načtení grafů ve statistice) je možné zobrazit animaci načítání. V JavaScript kódu lze využít funkce pro zobrazení a schování animace:
 
 ```javascript
 //show loader
@@ -525,7 +525,7 @@ WJ.showLoader(null, "#pills-dt-datatableInit-index > div.panel-body");
 WJ.hideLoader();
 ```
 
-Pokud potřebujete blok během nahrávání skrýt, můžete nastavit jeho třídu CSS. `hide-while-loading`. Prvek se automaticky skryje, pokud je zobrazena nahrávací animace, a poté se zobrazí, když je skrytý.
+Pokud potřebujete skrýt během nahrávání určitý blok můžete mu nastavit CSS třídu `hide-while-loading`. Element se automaticky schová pokud bude zobrazena animace nahrávání a následně po jejím schování se zobrazí.
 
 ```html
 <div id="graphsDiv" class="hide-while-loading">
@@ -533,21 +533,21 @@ Pokud potřebujete blok během nahrávání skrýt, můžete nastavit jeho tří
 </div>
 ```
 
-## Další funkce
+## Ostatní funkce
 
-- `WJ.showHelpWindow(link)` - Vyvolání způsobí zobrazení okna nápovědy. Hodnota otevřeného odkazu je získána z parametru `link` nebo z `window.helpLink`.
-- `WJ.changeDomain(select)` - Vyvolá akci změny pro vybranou doménu. Používá se v záhlaví okna při instalaci více domén s externími soubory. V tomto režimu jsou soubory i data aplikace (např. bannery, skripty) vázány na vybranou doménu.
-- `WJ.translate(key, ...params)` - Funkce na [překlad klíče do textu](jstranslate.md).
-- `WJ.openPopupDialog(url, width, height)` - Otevře vyskakovací okno se zadanou adresou URL a zadanou velikostí okna, ale doporučujeme použít funkci [WJ.openIframeModal](#dialog-iframe) pokud je to možné
-- `WJ.urlAddPath(url, pathAppend)` - Přidá cestu k (zbytkové) adrese URL, zkontroluje, zda v adrese URL není cesta. `?param` - Např. `WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')` bude vytvořen `/admin/rest/tree/list?click=groups`.
-- `WJ.urlAddParam(url, paramName, paramValue)` - Přidá parametr do adresy URL. Zkontroluje, zda se v adrese URL již nachází parametr, a přidá ? nebo &, hodnotu `paramValue` kóduje pomocí `encodeURIComponent`.
-- `WJ.urlUpdateParam(url, paramName, paramValue)` - Aktualizuje zadaný parametr v adrese URL.
-- `urlGetParam(name, queryString=null)` - získá hodnotu parametru v adrese URL. Pokud není zadána žádná hodnota `queryString` se získá z `window.location.search`.
-- `WJ.setJsonProperty(obj, path, value)` - Nastaví (JSON) hodnotu v objektu podle zadaného názvu, akceptuje také vnořené objekty typu `editorFields.groupCopyDetails` (pokud `editorFields` ještě neexistuje, vytvoří se).
-- `WJ.getJsonProperty(obj, path)` - Získá (JSON) hodnotu v objektu podle zadaného názvu, akceptuje také vnořené objekty typu `editorFields.groupCopyDetails`.
-- `WJ.dispatchEvent(name, detail)` - Zvyšuje událost na `window` objekt zadaný názvem `name`. JSON objekt `detail` přidává jako `e.detail` objektu ke spuštěné události. Událost musí být vyslechnuta voláním typu `window.addEventListener("WJ.DTE.close", function() { console.log("HAHA, yes"); });`
-- `WJ.htmlToText(htmlCode)` - Převede zadaný kód HTML na prostý text. Vytvoří skrytý `DIV` prvek, kterému nastaví kód HTML a poté z něj získá prostý text.
-- `WJ.initTooltip($element)` - Inicializuje na zadaném prvku (nebo kolekci) jQuery `tooltip` s podporou MarkDown.
-- `WJ.escapeHtml(string)` - Nahradí nebezpečné znaky v kódu HTML entitami pro jejich bezpečné vypsání.
-- `WJ.base64encode(text)` - zakódované algoritmem `base64` zadaný text s podporou znaků v `utf-8`.
-- `WJ.base64decode(encodedText)` - dekódováno algoritmem `base64` zadaný text s podporou znaků v `utf-8`.
+- `WJ.showHelpWindow(link)` - Volání způsobí zobrazení okna s pomocníkem. Hodnota otevřeného odkazu se získá z parametru `link` nebo z `window.helpLink`.
+- `WJ.changeDomain(select)` - Vyvolá akci změny zvolené domény. Používá se v hlavičce okna při multidomain instalaci s externími soubory. V takovém režimu jsou ke zvolené doméně vázány soubory ale i data aplikací (např. bannery, skripty).
+- `WJ.translate(key, ...params)` - Funkce na [překlad klíče na text](jstranslate.md).
+- `WJ.openPopupDialog(url, width, height)` - Otevře vyskakovací okno se zadaným URL a zadanou velikostí okna, doporučujeme ale využít [WJ.openIframeModal](#iframe-dialog) pokud je to možné
+- `WJ.urlAddPath(url, pathAppend)` - Přidá do (rest) URL cestu, kontroluje, zda v URL není `?param` - Např. `WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')` vznikne `/admin/rest/tree/list?click=groups`.
+- `WJ.urlAddParam(url, paramName, paramValue)` - Přidá do URL parametr. Kontroluje, zda v URL už nějaký parametr je, a podle toho přidá ? nebo &, hodnotu `paramValue` zakóduje pomocí `encodeURIComponent`.
+- `WJ.urlUpdateParam(url, paramName, paramValue)` - Aktualizuje zadaný parametr v URL adrese.
+- `urlGetParam(name, queryString=null)` - získá hodnotu parametru v URL adrese. Pokud není zadaná hodnota `queryString` získá se z `window.location.search`.
+- `WJ.setJsonProperty(obj, path, value)` - Nastaví (JSON) hodnotu v objektu podle zadaného jména, akceptuje i vnořené objekty typu `editorFields.groupCopyDetails` (pokud `editorFields` zatím neexistuje, vytvoří jej).
+- `WJ.getJsonProperty(obj, path)` - Získá (JSON) hodnotu v objektu podle zadaného jména, akceptuje i vnořené objekty typu `editorFields.groupCopyDetails`.
+- `WJ.dispatchEvent(name, detail)` - Vyvolá událost na `window` objektu zadanou s názvem `name`. JSON objekt `detail` přidá jako `e.detail` objekt do vyvolané události. Na událost je třeba poslouchat voláním typu `window.addEventListener("WJ.DTE.close", function() { console.log("HAHA, yes"); });`
+- `WJ.htmlToText(htmlCode)` - Převede zadaný HTML kód na čistý text. Interně vytvoří skrytý `DIV` element, kterému nastaví HTML kód a následně z něj získá čistý text.
+- `WJ.initTooltip($element)` - Inicializuje na zadaném jQuery elementu (nebo kolekci) `tooltip` s MarkDown podporou.
+- `WJ.escapeHtml(string)` - Nahradí nebezpečné znaky v HTML kódu za entity pro jejich bezpečné vypsání.
+- `WJ.base64encode(text)` - zakóduje algoritmem `base64` zadaný text s podporou znaků v `utf-8`.
+- `WJ.base64decode(encodedText)` - dekóduje algoritmem `base64` zadaný text s podporou znaků v `utf-8`.

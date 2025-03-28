@@ -1,17 +1,17 @@
-# Tlačítko To se mi líbí na Facebooku
+# Facebook Like tlačítko
 
-Tlačítko "To se mi líbí/sdílet" na Facebooku umožňuje nastavit "To se mi líbí" nebo sdílet obsah stránky s přáteli návštěvníka stránky.
+Facebook Like/share tlačítko umožňuje nastavit "Líbí se mi" nebo sdílet obsah stránky s přáteli návštěvníka stránky.
 
 ## Nastavení aplikace
 
-- **Způsob oblíbenosti**: Zvolte preferovaný způsob oblíbenosti:
-  - Stejně jako celý web
-  - Stejně jako aktuálně zobrazená stránka (každá stránka zvlášť)
-- **Šířka**: Zadejte šířku, která se má zobrazit, například `980`.
-- **Rozložení**: Vyberte typ rozložení:
+- **Způsob lajkování**: Vyberte preferovaný způsob lajkování:
+  - Lajkovat celý web
+  - Lajkovat aktuálně zobrazenou stránku (každou stránku zvlášť)
+- **Šířka**: Zadejte šířku pro zobrazení, například `980`.
+- **Rozvržení**: Vyberte typ rozvržení:
   - Standardní
   - Krátké
-- **Typ akce**: Vyberte typ akce, kterou chcete provést:
+- **Typ akce**: Zvolte typ akce, kterou chcete provést:
   - Líbí se mi
   - Doporučit
 

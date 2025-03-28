@@ -1,39 +1,39 @@
 # Automatizované testování
 
-Pro automatizované testování E2E se používá framework. [CodeceptJS](https://codecept.io). Testy jsou napsány v jazyce JavaScript a prakticky řídí prohlížeč, ve kterém je test spuštěn. Více informací o tom, proč jsme zvolili tento framework, najdete v části [Playwright + CodeceptJS](#dramaturg--codeceptjs).
+Pro automatizované E2E testování je používán framework [CodeceptJS](https://codecept.io). Testy se píší v JavaScriptu a prakticky ovládají prohlížeč, ve kterém test probíhá. Více informací proč jsme zvolili tento framework je v sekci [Playwright + CodeceptJS](#playwright--codeceptjs).
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
 - [Automatizované testování](#automatizované-testování)
   - [Instalace](#instalace)
-  - [Zahájení testování](#zahájení-testování)
-    - [Uživatelské rozhraní Codecept](#kódové-rozhraní-ui)
-    - [Generování sestav HTML](#generování-html-sestav)
-  - [Playwright + CodeceptJS](#dramaturg--codeceptjs)
-    - [Konfigurace](#Konfigurace)
+  - [Spuštění testování](#spuštění-testování)
+    - [Codecept UI](#codecept-ui)
+    - [Generování HTML reportu](#generování-html-reportu)
+  - [Playwright + CodeceptJS](#playwright--codeceptjs)
+    - [Konfigurace](#konfigurace)
   - [Psaní testů](#psaní-testů)
     - [Lokátory](#lokátory)
-    - [V rámci](#v-rámci)
-    - [Playwright metody](#dramaturgické-metody)
-    - [Další funkce WebJET](#další-funkce-webjetu)
+    - [Within](#within)
+    - [Playwright metody](#playwright-metody)
+    - [WebJET doplňkové funkce](#webjet-doplňkové-funkce)
     - [Čekání na dokončení](#čekání-na-dokončení)
-    - [Pause](#pauza)
-    - [Přihlášení](#přihlášení)
-    - [Knihovna Assert](#knihovna-assert)
-    - [Stránka objekty](#objekty-na-stránce)
+    - [Pause](#pause)
+    - [Přihlašování](#přihlašování)
+    - [Assert knihovna](#assert-knihovna)
+    - [Page objekty](#page-objekty)
     - [Detekce prohlížeče](#detekce-prohlížeče)
-  - [Odnětí práva](#odnětí-práva)
+  - [Odebrání práva](#odebrání-práva)
   - [Vizuální testování](#vizuální-testování)
-  - [Best practices](#osvědčené-postupy)
-    - [Nomenklatura](#nomenklatura)
+  - [Best practices](#best-practices)
+    - [Názvosloví](#názvosloví)
     - [Testovací data](#testovací-data)
     - [Selektory](#selektory)
     - [Časování](#časování)
     - [Délka scénáře](#délka-scénáře)
-    - [Ladění](#ladění)
-  - [Odstranění databáze](#odstranění-databáze)
-  - [Testování služeb REST](#testovací-služby)
+    - [Debugování](#debugování)
+  - [Smazání databáze](#smazání-databáze)
+  - [Testování REST služeb](#testování-rest-služeb)
 
 <!-- /code_chunk_output -->
 
@@ -44,7 +44,7 @@ cd src/test/webapp/
 npm install
 ```
 
-!>**Varování:** Před spuštěním testování je třeba zkompilovat JS/CSS administrátorskou část WebJETu:
+!>**Upozornění:** před spuštěním testování je třeba zkompilovat JS/CSS admin části WebJETu:
 
 ```shell
 cd src/main/webapp/admin/v9/
@@ -58,11 +58,11 @@ a spustit aplikační server:
 gradlew appRun
 ```
 
-Doporučuji spustit každý z výše uvedených příkazů v samostatném terminálu (nabídka Terminál->Nový terminál). Mezi spuštěnými terminály můžete přepínat v nabídce `Terminal`.
+každý z uvedených příkazů vám doporučuji spustit v samostatném Terminálu (menu Terminal->New Terminal). Mezi spuštěnými terminály si můžete přepínat v okně `Terminal`.
 
-## Zahájení testování
+## Spuštění testování
 
-Chcete-li zahájit testování, použijte následující příkazy:
+Testování spustíte pomocí následujících příkazů:
 
 ````shell
 cd src/test/webapp/
@@ -77,7 +77,7 @@ npm run pause tests/components/gallery_test.js
 npm run current
 ````
 
-Pro spuštění ve Firefoxu použijte předponu `ff:` před názvem:
+Pro spuštění v prohlížeči firefox použijte prefix `ff:` před názvem:
 
 ```shell
 npm run ff:all
@@ -85,45 +85,45 @@ npm run ff:pause tests/components/gallery_test.js
 npm run ff:current
 ```
 
-Spuštění na jiné adrese URL s vypnutým zobrazením a prohlížečem `firefox`:
+Spuštění na jiné URL s vypnutým zobrazením prohlížeče a prohlížečem `firefox`:
 
 ```shell
 CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npm run all
 ```
 
-**Poznámka:** ve Firefoxu jsme měli problémy s rychlostí testů. Proto jsme pro tento prohlížeč v souboru `codecept.conf.js` nastaví proměnnou `autodeayEnabled` na hodnotu `true` a doplněk je aktivován `autodelay`. Ten zpožďuje provádění funkcí `amOnPage,click,forceClick` přibližně 200 ms před a 300 ms po vyvolání příkazu. Zjistili jsme také podivné chování prohlížeče, který pokud není na popředí, testy z ničeho nic přestanou fungovat a zobrazují nesmyslné chyby. Při jednorázovém spuštění testu se test vždy provedl správně. Přičítáme to určité optimalizaci provádění kódu JavaScriptu v prohlížeči, pokud není aktivní. Při spuštění s nezobrazeným prohlížečem je vše v pořádku, proto vždy použijte nastavení pro spuštění všech testů `CODECEPT_SHOW=false`.
+**Poznámka:** v prohlížeči Firefox jsme měli problémy s rychlostí testů. Proto se pro tento prohlížeč v souboru `codecept.conf.js` nastaví proměnná `autodeayEnabled` na hodnotu `true` a aktivuje se doplněk `autodelay`. Ten zpožďuje provedení funkcí `amOnPage,click,forceClick` o 200ms před a 300ms po zavolání příkazu. Také jsme identifikovali zvláštní chování prohlížeče, který pokud není na popředí tak testy z ničeho nic přestanou fungovat a zobrazuje nesmyslné chyby. Při jednorázovém spuštění testu se vždy test provedl korektně. Přisuzujeme to nějaké optimalizaci provádění JavaScript kódu v prohlížeči, když není aktivní. Při spuštění s nezobrazením prohlížeče je vše v pořádku, proto pro spuštění všech testů vždy používejte nastavení `CODECEPT_SHOW=false`.
 
-### Uživatelské rozhraní Codecept
+### Codecept UI
 
-Codecept nabízí v beta verzi uživatelské rozhraní pro zobrazení testování, které spustíte pomocí příkazu:
+Codecept nabízí v beta verzi UI pro zobrazení testování, spustíte jej příkazem:
 
 ```shell
 npm run codeceptjs:ui
 ```
 
-a poté otevřete stránku v prohlížeči `http://localhost:3001`.
+a následně v prohlížeči otevřete stránku `http://localhost:3001`.
 
-### Generování sestav HTML
+### Generování HTML reportu
 
 **Mochawesome**
 
-V npm je nastavena [zásuvný modul pro generování sestav HTML](https://codecept.io/reports/#html). Vytvoříte ji spuštěním příkazu:
+V npm je nastaven [plugin pro generování HTML reportů](https://codecept.io/reports/#html). Vygenerujete jej spuštěním příkazu:
 
 ```shell
 npm run codeceptjs --reporter mochawesome
 ```
 
-a do adresáře /build/test/report se vygeneruje HTML report s výsledkem testu. V případě neúspěšných testů se také vytvoří snímek obrazovky. Nastavení se nachází v [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) v sekci `mocha`.
+a do adresáře /build/test/report se vygeneruje HTML report s výsledkem testu. Pro neúspěšné testy se vytvoří i fotka obrazovky. Nastavení je v [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) v sekci `mocha`.
 
 **Allure**
 
-Zprávu lze vygenerovat také prostřednictvím [allure](allure.md) provedením testu:
+Report lze generovat i přes [Allure](allure.md) spuštěním testu:
 
 ```shell
 npm run codeceptjs --plugins allure
 ```
 
-Po dokončení testu můžete zobrazit výsledky spuštěním příkazu `allure` serveru:
+Po dokončení testu můžete zobrazit výsledky spuštěním `allure` serveru:
 
 ```shell
 allure serve ../../../build/test
@@ -131,40 +131,40 @@ allure serve ../../../build/test
 
 ## Playwright + CodeceptJS
 
-Pro testování se používá [Playwright](https://github.com/microsoft/playwright/tree/master/docs) a [CodeceptJS](https://codecept.io/basics/).
+K testování se používá [Playwright](https://github.com/microsoft/playwright/tree/master/docs) a [CodeceptJS](https://codecept.io/basics/).
 
 Proč Playwright?
 
-- jedná se o 3. generaci testovacího frameworku (1. generace Selenium, 2. generace Puppeteer, 3. generace Playwright).
-- Microsoft koupil autory `Puppeteer` a vyvíjejí program Playwright, takže mají zkušenosti s tím.
-- Podporováno `chromium, firefox, webkit` (2021 Květnová aktualizace systému Windows přepne prohlížeč Edge na jádro Chromium)
-- dokáže emulovat rozlišení, uživatelského agenta, DPI.
+- je to 3. generace testovacího frameworku (1. generace Selenium, 2. generace Puppeteer, 3. generace Playwright)
+- Microsoft koupil autory `Puppeteer` frameworku a oni vyvíjejí Playwright, takže mají zkušenost
+- podporuje `chromium, firefox, webkit` (2021 květnová aktualizace Windows přepne Edge na chromium jádro)
+- umí emulovat rozlišení, user agenta, DPI
 
 Proč CodeceptJS?
 
-- Playwright stejne jako`Puppeteer` je komunikační (nízkoúrovňový) protokol pro ovládání prohlížeče (jeho automatizace).
-- CodeceptJS je testovací framework, který mimo jiné umí používat Playwright.
-- testovací kód je napsán v jazyce JavaScript
-- kód testů je velmi [srozumitelné](https://codecept.io/playwright/#setup)
-- má pokročilé možnosti [Lokátory](https://codecept.io/locators/#css-and-xpath) - vyhledávání prvků podle textu, css, xpath
-- má adresu [GRAFICKÉ UŽIVATELSKÉ ROZHRANÍ](https://codecept.io/ui/) (zatím netestováno) pro zápis a zobrazení výsledků testů
+- Playwright stejně jako `Puppeteer` je komunikační (low level) protokol pro ovládání prohlížeče (jeho automatizaci)
+- CodeceptJS je testovací framework, který mimo jiné umí používat Playwright
+- testovací kód se píše v JavaScriptu
+- kód testů je velmi [srozumitelný](https://codecept.io/playwright/#setup)
+- má pokročilé možnosti [Lokátorů](https://codecept.io/locators/#css-and-xpath) - hledání elementů podle textu, css, xpath
+- má [GUI](https://codecept.io/ui/) (dosud nevyzkoušeno) pro psaní a zobrazení výsledku testů
 
 ### Konfigurace
 
-Základní konfigurace je v souboru `codecept.conf.js`. Důležité vlastnosti:
-- `url` (http://iwcm.interway.sk) - adresa (doména) serveru. Tuto hodnotu můžete změnit pomocí `--override` parametr a přepnout testování z prostředí DEV do prostředí TEST/PROD.
-- `output` (../../../build/test) - adresář, do kterého se vygeneruje snímek obrazovky v případě neúspěšného testu (výchozí hodnota je `build/test` v kořenovém adresáři)
-- `browser` (chromium) - zvolený prohlížeč pro spuštění testů, může být `chromium, firefox, webkit`
-- `emulate` (komentář) - [Emulace](https://github.com/Microsoft/playwright/blob/master/src/deviceDescriptors.ts) zařízení
-- `screenshotOnFail` - povolí/zakáže vytváření snímků obrazovky v případě neúspěšného testu.
+Základní konfigurace je v souboru `codecept.conf.js`. Důležité atributy:
+- `url` (http://iwcm.interway.sk) - adresa (doména) serveru. Ten můžete změnit přes `--override` parametr a přepnout testování z DEV na TEST/PROD prostředí.
+- `output` (../../../build/test) - adresář do kterého se vám vygeneruje fotka obrazovky v případě neúspěšného testu (výchozí na `build/test` v kořenovém adresáři)
+- `browser` (chromium) - zvolený prohlížeč ke spuštění testů, může být `chromium, firefox, webkit`
+- `emulate` (zakomentovaně) - [emulace](https://github.com/Microsoft/playwright/blob/master/src/deviceDescriptors.ts) zařízení
+- `screenshotOnFail` - zapne/vypne vytváření screenshotů v případě neúspěšného testu
 
 ## Psaní testů
 
-Testy se vytvářejí v podadresářích tests, kde jsou rozděleny podle jednotlivých modulů/aplikací WebJETu. Jsou napsány v jazyce JavaScript, takže můžete využít všech možností, které JavaScript nabízí.
+Testy se vytvářejí v pod adresářích tests, kde jsou děleny podle jednotlivých modulů/aplikací WebJETu. Jsou psané v jazyce JavaScript, takže je možné využívat všech možností, které vám JavaScript nabízí.
 
-Příklad složitějšího testu pro testování přihlášení [src/test/webapp/tests/admin/login.js](../../../../src/test/webapp/tests/admin/login.js):
+Příklad komplexnějšího testu na otestování přihlášení [src/test/webapp/tests/admin/login.js](../../../../src/test/webapp/tests/admin/login.js):
 
-!>**Varování:** na `Feature` zadejte hodnotu ve formátu `adresár.podadresár.meno-súboru` pro správné zobrazení testů ve stromové struktuře a snadné dohledání souboru podle `Feature` v souboru protokolu.
+!>**Upozornění:** do `Feature` zápisu zadávejte hodnotu ve formátu `adresár.podadresár.meno-súboru` pro korektní zobrazení testů ve stromové struktuře a snadné dohledání souboru podle vypsaného `Feature` v log souboru.
 
 ```javascript
 Feature('admin.login');
@@ -213,11 +213,11 @@ Scenario('uspesne prihlasenie', ({I}) => {
 });
 ```
 
-Všimněte si, že v ukázce záměrně používám různé lokátory/selektory (název pole, text/nápis, selektor CSS). To je jedna z výhod CodeceptJS. Více o možnostech lokátorů se dozvíte v [Dokumentace](https://codecept.io/locators/#css-and-xpath).
+Všimněte si, že v ukázce schválně používám různé lokátory/selektory (jméno fieldu, text/label, CSS selector). To je jedna z výhod CodeceptJS. Více o možnostech Lokátorů je v [dokumentaci](https://codecept.io/locators/#css-and-xpath).
 
 ### Lokátory
 
-Selektory, které vybírají prvek na stránce, jsou dobře popsány v části [oficiální dokumentace](https://codecept.io/locators/).
+Lokátory (selectory), které vybírají element na stránce jsou dobře popsány v [oficiální dokumentaci](https://codecept.io/locators/).
 
 ```
 {permalink: /'foo'} matches <div id="foo">
@@ -227,9 +227,9 @@ Selektory, které vybírají prvek na stránce, jsou dobře popsány v části [
 {class: 'foo'} matches <div class="foo">
 ```
 
-### V rámci
+### Within
 
-Použití zápisu `within` můžete omezit prvek, na který se použijí následující příkazy:
+Pomocí zápisu `within` můžete omezit prvek, na který se použijí následující příkazy:
 
 ```javascript
 within("div.breadcrumb-language-select", () => {
@@ -238,7 +238,7 @@ within("div.breadcrumb-language-select", () => {
 });
 ```
 
-zároveň většina příkazů umožňuje zapsat k příkazu selektor, výše uvedené lze zapsat také jako:
+zároveň většina příkazů umožňuje zapsat i selektor do příkazu, výše uvedené lze zapsat i jako:
 
 ```javascript
   I.click("Slovenský jazyk", "div.breadcrumb-language-select");
@@ -247,94 +247,94 @@ zároveň většina příkazů umožňuje zapsat k příkazu selektor, výše uv
 
 ### Playwright metody
 
-V [oficiální dokumentace](https://codecept.io/helpers/Playwright/) je seznam všech možností `I` objekt. Krátké odkazy:
+V [oficiální dokumentaci](https://codecept.io/helpers/Playwright/) je seznam všech možností `I` objektu. Krátké odkazy:
 - [pressKey](https://codecept.io/helpers/Playwright/#presskey)
-- [klikněte na](https://codecept.io/helpers/Playwright/#click)
-- [forceClick](https://codecept.io/helpers/Playwright/#forceclick) - nucené kliknutí bez čekání na událost, musí být použito na vlastní `checkboxy` (jinak se tam zasekne)
-- [viz](https://codecept.io/helpers/Playwright/#see) / [dontSee](https://codecept.io/helpers/Playwright/#dontsee)
-- [vizElement](https://codecept.io/helpers/TestCafe/#seeelement) / [dontSeeElement](https://codecept.io/helpers/Detox/#dontseeelement)
+- [click](https://codecept.io/helpers/Playwright/#click)
+- [forceClick](https://codecept.io/helpers/Playwright/#forceclick) - vynucené kliknutí bez čekání na událost, je třeba použít na custom `checkboxy` (jinak se tam zacyklí)
+- [see](https://codecept.io/helpers/Playwright/#see) / [dontSee](https://codecept.io/helpers/Playwright/#dontsee)
+- [seeElement](https://codecept.io/helpers/TestCafe/#seeelement) / [dontSeeElement](https://codecept.io/helpers/Detox/#dontseeelement)
 - [fillField](https://codecept.io/helpers/Playwright/#fillfield)
 - [selectOption](https://codecept.io/helpers/Playwright/#selectoption)
-- [čekat](https://codecept.io/helpers/Playwright/#wait)
+- [wait](https://codecept.io/helpers/Playwright/#wait)
 - [selectOption](https://codecept.io/helpers/Playwright/#selectoption)
 - [executeScript](https://codecept.io/helpers/Playwright/#executescript)
 - [saveScreenshot](https://codecept.io/helpers/Playwright/#savescreenshot)
 
-### Další funkce WebJET
+### WebJET doplňkové funkce
 
-Přidali jsme několik užitečných funkcí pro WebJET:
-- [I.formatDateTime(časové razítko)](../../../../src/test/webapp/steps_file.js) - zformátuje časovou značku na datum a čas pomocí knihovny moment
-- [I.seeAndClick(selektor)](../../../../src/test/webapp/steps_file.js) - počká, až se prvek zobrazí, a pak na něj klikne.
-- [await I.clickIfVisible(selektor)](../../../../src/test/webapp/custom_helper.js) - pokud je prvek zobrazen, klikněte na něj, pokud není zobrazen, krok přeskočte (nevyhazujte chybu).
-- [I.verifyDisabled(selektor)](../../../../src/test/webapp/custom_helper.js) - ověří, zda je pole neaktivní
-- [I.wjSetDefaultWindowSize()](../../../../src/test/webapp/steps_file.js) - nastaví výchozí velikost okna po jeho změně, je volán automaticky i po přihlášení v přihlašovací sekvenci v sekvenci [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js)
+Pro WebJET jsme doplnili několik užitečných funkcí:
+- [I.formatDateTime(timestamp)](../../../../src/test/webapp/steps_file.js) - naformátuje timestamp na datum a čas s využitím moment knihovny
+- [I.seeAndClick(selector)](../../../../src/test/webapp/steps_file.js) - počká na zobrazení elementu a následně na něj klikne
+- [await I.clickIfVisible(selector)](../../../../src/test/webapp/custom_helper.js) - je-li daný element zobrazen klikne na něj, pokud zobrazený není přeskočí krok (nevyhodí chybu)
+- [I.verifyDisabled(selector)](../../../../src/test/webapp/custom_helper.js) - ověří, zda dané pole je neaktivní
+- [I.wjSetDefaultWindowSize()](../../../../src/test/webapp/steps_file.js) - nastaví výchozí velikost okna po jeho změně, je voláno automaticky i po přihlášení v přihlašovací sekvenci v [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js)
 - [Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)](../../../../src/test/webapp/codecept.conf.js) - provede [vizuální srovnání](#vizuální-testování)
-- `I.waitForTime(time)` - čekání do zadaného času (časové razítko).
+- `I.waitForTime(time)` - čekání do zadaného času (timestamp).
 - `I.toastrClose()` - zavření okna `toastr` oznámení.
-- `clickCss(name, parent=null)` - provede kliknutí stejně jako `I.click` Ale `name` považován za selektor CSS - provedení je rychlejší, není třeba používat obtékání, aby se `{css: name}`.
-- `forceClickCss(name, parent=null)` - provede kliknutí stejně jako `I.forceClick` Ale `name` považován za selektor CSS - provedení je rychlejší, není třeba používat obtékání, aby se `{css: name}`.
+- `clickCss(name, parent=null)` - provede kliknutí stejně jako `I.click` ale `name` považuje za CSS selektor - provedení je rychlejší, není třeba použít obalení do `{css: name}`.
+- `forceClickCss(name, parent=null)` - provede kliknutí stejně jako `I.forceClick` ale `name` považuje za CSS selektor - provedení je rychlejší, není třeba použít obalení do `{css: name}`.
 
-Pro tabulku dat jsme připravili speciální funkce. Jsou implementovány v [DT.js](../../../../src/test/webapp/pages/DT.js):
-- `DT.waitForLoader(name)` - čeká na zobrazení a následné skrytí informace "Zpracování" v datové tabulce. Používá se jako `DT.waitForLoader("#forms-list_processing");`
-- `DT.filter(name, value, type=null)` - nastaví hodnotu `value` ve sloupci textového filtru `name` DATATabulky. Pokud je atribut zadán také `type` nastaví typ vyhledávání (např. Začíná v, Končí v, Rovná se).
-- `DT.filterSelect(name, value)` - nastaví hodnotu `value` do výběrového pole sloupcového filtru `name` DATATabulky. Používá se jako `DT.filterSelect('cookieClass', 'Neklasifikované');`
-- `async I.getDataTableColumns(dataTableName)` - vrací objekt DATA s definicí datové tabulky, který se používá při automatickém testování datových tabulek.
-- `async getDataTableId(dataTableName)` - vrací ID datového souboru, volá funkci JS `dataTable.DATA.id`
-- [async I.getTotalRows()](../../../../src/test/webapp/custom_helper.js) - vrací celkový počet záznamů v datové tabulce
-- `DT.deleteAll(name = "datatableInit")` - vymaže aktuálně zobrazené záznamy, vždy použijte příkaz `DT.filter` pro filtrování potřebných údajů.
+Pro datatabulku máme připraveny speciální funkce. Jsou implementovány v [ZN.js](../../../../src/test/webapp/pages/DT.js):
+- `DT.waitForLoader(name)` - čeká na zobrazení a následné schování informace "Zpracovávám" v datatabulce. Používá se jako `DT.waitForLoader("#forms-list_processing");`
+- `DT.filter(name, value, type=null)` - nastaví hodnotu `value` do textového filtru sloupce `name` datatabulky. Je-li zadán i atribut `type` nastaví se typ hledání (např. Začíná na, Končí na, Rovná se).
+- `DT.filterSelect(name, value)` - nastaví hodnotu `value` do výběrového pole (select) filtru sloupce `name` datatabulky. Používá se jako `DT.filterSelect('cookieClass', 'Neklasifikované');`
+- `async I.getDataTableColumns(dataTableName)` - vrátí objekt DATA s definicí datatabulky, používá se v automatickém testování datatabulky
+- `async getDataTableId(dataTableName)` - vrátí ID datatabulky, volá JS funkci `dataTable.DATA.id`
+- [async I.getTotalRows()](../../../../src/test/webapp/custom_helper.js) - vrátí celkový počet záznamů v datatabulce
+- `DT.deleteAll(name = "datatableInit")` - smaže aktuálně zobrazené záznamy, před použitím vždy použijte `DT.filter` pro filtrování potřebných údajů.
 
-Pro Datatable Editor implementovaný v [DTE.js](../../../../src/test/webapp/pages/DTE.js):
-- `DTE.waitForLoader(name)` - čekající na skrytí `loadera` v editoru (uložit záznam)
-- `DTE.waitForEditor(name)` - čeká na zobrazení editoru, pokud je definován název, použije se datová tabulka s daným názvem, ve výchozím nastavení `datatableInit`
-- `DTE.selectOption.(name, text)` - vybere hodnotu ve výběrovém poli (správným způsobem zobrazením možností a následným kliknutím na možnost).
-- `DTE.save(name)` - klikne na tlačítko Uložit v editoru, pokud je definován název, použije se ve výchozím nastavení datová tabulka s daným názvem. `datatableInit`
-- `DTE.cancel(name)` - klikne na tlačítko zavřít editor, pokud je definován název, použije se datová tabulka s daným názvem, ve výchozím nastavení `datatableInit`
-- `DTE.fillField(name, value)` - vyplní standardní pole, na rozdíl od volání `I.fillField` je možné `name` parametr pro přímé zadání názvu pole v definici backend/json.
-- `DTE.fillQuill(name, value)` - vyplní hodnotu v poli types `QUILL`.
-- `DTE.fillCkeditor(htmlCode)` - nastaví kód HTML na aktuálně zobrazený CKEditor.
-- `DTE.fillCleditor(parentSelector, value)` - zadává text do WYSIWYG `cleditor`. Hodnota `parentSelector` - odkaz na prvek, ve kterém je `cleditor` se nachází (např. `#forum`), `value` - hodnota k vyplnění. **Varování:** zatím nezná diakritiku, protože se používá `type` příkaz. Pro datovou tabulku je také možné provést následující příkaz [automatizovaný test](datatable.md).
-- `DTE.appendField(name, value)` - přidá text do pole v editoru, řeší problém s použitím `I.appendField` což není v editoru vždy správně provedeno.
+Pro Datatable Editor implementováno v [DTE.js](../../../../src/test/webapp/pages/DTE.js):
+- `DTE.waitForLoader(name)` - čeká na schování `loadera` v editoru (uložení záznamu)
+- `DTE.waitForEditor(name)` - čeká na zobrazení editoru, je-li definováno jméno, použije se datatabulka s daným jménem, ve výchozím nastavení `datatableInit`
+- `DTE.selectOption.(name, text)` - vybere hodnotu v select boxu (korektním způsobem zobrazením možností a následným kliknutím na možnost)
+- `DTE.save(name)` - klikne na tlačítko Uložit v editoru, je-li definováno jméno, použije se datatabulka s daným jménem, ve výchozím nastavení `datatableInit`
+- `DTE.cancel(name)` - klikne na tlačítko zavření editoru, je-li definováno jméno, použije se datatabulka s daným jménem, ve výchozím nastavení `datatableInit`
+- `DTE.fillField(name, value)` - vyplní standardní pole, na rozdíl od volání `I.fillField` je možné do `name` parametru zadat přímo jméno pole na backendu/json definici.
+- `DTE.fillQuill(name, value)` - vyplní hodnotu do pole typy `QUILL`.
+- `DTE.fillCkeditor(htmlCode)` - nastaví HTML kód do aktuálně zobrazeného CKEditoru.
+- `DTE.fillCleditor(parentSelector, value)` - zadá text do WYSIWYG `cleditor`. Hodnota `parentSelector` - odkaz na element ve kterém se `cleditor` nachází (např. `#forum`), `value` - hodnota k vyplnění. **Upozornění:** neví to zatím diakritiku z důvodu použití `type` příkazu. Pro datatabulku lze provést i [automatizovaný test](datatable.md).
+- `DTE.appendField(name, value)` - doplní text to pole v editoru, řeší problém s použitím `I.appendField`, které se v editoru neprovede vždy správně.
 
-Pro JsTree (stromová struktura):
-- `I.jstreeClick(name)` - klikne na vybraný text v jstree (důležité použít zejména na webových stránkách, kde je odkaz se stejným názvem jako adresář také v seznamu stránek).
-- `I.createFolderStructure(randomNumber)` - připraví stromovou strukturu adresářů a dva podadresáře pro testování.
-- `I.deleteFolderStructure(randomNumber)` - odstraní stromovou strukturu adresáře a dvou podadresářů připravených pomocí funkce `I.createFolder`
+Pro JsTree (stromovou strukturu):
+- `I.jstreeClick(name)` - klikne na zvolený text v jstree (důležité použít hlavně ve web stránkách kde je linka se stejným jménem jako adresář i v seznamu stránek)
+- `I.createFolderStructure(randomNumber)` - připraví stromovou strukturu adresáře a dva pod adresářů k testování
+- `I.deleteFolderStructure(randomNumber)` - smaže stromovou strukturu adresáře a dvou podadresářů připravených přes `I.createFolder`
 
 ```javascript
 //povodne ZLE riesenie s I.wait
 I.click("Pridať");
 ```
-- `I.jstreeNavigate(pathArray)` - v terénu `pathArray` je možné definovat názvy jednotlivých uzlů ve stromové struktuře, na které funkce postupně kliká, např. `I.jstreeNavigate( [ "English", "Contact" ] );`.
+- `I.jstreeNavigate(pathArray)` - v poli `pathArray` je možné definovat jména jednotlivých uzlů ve stromové struktuře, na které funkce postupně klikne např. `I.jstreeNavigate( [ "English", "Contact" ] );`.
 
-K ověření hodnot v tabulce můžete použít funkce:
-- `DT.checkTableCell(name, row, col, value)` - ověří hodnotu v zadané tabulce (ID tabulky). `value` v zadaném řádku `row` a sloupec `col`. Řádky a sloupce začínají číslem 1.
-- `DT.checkTableRow(name, row, values)` - ověřuje v zadané tabulce (ID tabulky) v zadaném řádku `row` hodnoty v poli `values`. Řádky začínají číslem 1. Například. `DT.checkTableRow("statsDataTable", 1, ["13", "2 022", "30", "533", "229", "1"]);`.
+Pro ověření hodnot v tabulce můžete použít funkce:
+- `DT.checkTableCell(name, row, col, value)` - ověří v zadané tabulce (ID tabulky) hodnotu `value` v zadaném řádku `row` a sloupci `col`. Řádky a sloupce začínají číslem 1.
+- `DT.checkTableRow(name, row, values)` - ověří v zadané tabulce (ID tabulky) v zadaném řádku `row` hodnoty v poli `values`. Řádky začínají číslem 1. Např. `DT.checkTableRow("statsDataTable", 1, ["13", "2 022", "30", "533", "229", "1"]);`.
 
-Funkce implementované v `Document` zařízení:
+Funkce implementovány v `Document` objektu:
 - `switchDomain(domain)` - přepne doménu na zadanou hodnotu.
 - `setConfigValue(name, value)` - nastaví konfigurační proměnnou se zadaným názvem a hodnotou.
-- `resetPageBuilderMode()` - odstraní zapamatovaný režim editoru (standardní/PageBuilder).
-- `notifyClose` - se uzavře `toastr` oznámení.
-- `notifyCheckAndClose(text)` - ověřuje text v `toastr` a zavře jej.
+- `resetPageBuilderMode()` - smaže zapamatovaný režim editoru (standardní/PageBuilder).
+- `notifyClose` - zavře `toastr` notifikaci.
+- `notifyCheckAndClose(text)` - ověří text v `toastr` oznámení a zavře ji.
 - `editorComponentOpen()` - otevře nastavení aplikace v editoru stránek (okno `editor_component.jsp`).
-- `editorComponentOk()` - kliknutím na tlačítko OK uložíte nastavení aplikace.
-- `scrollTo(selector)` - posune obsah okna na zadaný prvek.
+- `editorComponentOk()` - klikne na tlačítko OK pro uložení nastavení aplikace.
+- `scrollTo(selector)` - posune obsah okna na zadaný element.
 
-V `Document` objekt obsahuje také funkce pro vytváření [snímky obrazovky](screenshots.md).
+V `Document` objektu jsou také funkce pro vytváření [fotek obrazovky](screenshots.md).
 
-Testování e-mailů pomocí [tempmail.plus](https://tempmail.plus) existuje objekt `TempMail`:
+Pro testování emailů pomocí [tempmail.plus](https://tempmail.plus) existuje objekt `TempMail`:
 - `login(name, emailDomain = "fexpost.com")` - přihlášení a nastavení účtu
-- `openLatestEmail()` - otevře nejnovější e-mail
-- `closeEmail()` - zavře otevřený e-mail a vrátí se do seznamu e-mailů.
-- `destroyInbox()` - odstraní všechny e-maily ve složce Doručená pošta
+- `openLatestEmail()` - otevře nejnovější email
+- `closeEmail()` - zavře otevřený email a vrátí se na seznam emailů
+- `destroyInbox()` - smaže všechny emaily ve schránce
 
 ### Čekání na dokončení
 
-Obecně se nedoporučuje používat `I.wait` s pevně stanovenou dobou. Čekací doba se může lišit na místním počítači a v potrubí CI/CD. Pevná doba navíc může zbytečně prodloužit dobu potřebnou k provedení testu.
+Obecně se nedoporučuje používat `I.wait` s fixní dobou. Čas potřebný k čekání může být odlišný na lokálním počítači a v CI/CD pipeline. Navíc fixní doba může zbytečně prodlužovat dobu potřebnou k provedení testu.
 
-Doporučujeme používat metody [waitFor\*](https://codecept.io/helpers/TestCafe/#waitforelement) zejména `waitForElement`, `waitForText`, `waitForVisible` a `waitToHide`.
+Doporučujeme použít metody [waitFor\*](https://codecept.io/helpers/TestCafe/#waitforelement) a to hlavně `waitForElement`, `waitForText`, `waitForVisible` a `waitToHide`.
 
-Je vhodnější používat hlavně `waitForText` kde můžeme účinně nahradit `I.wait` a následné `I.see` pro jeden příkaz:
+Výhodné je použití hlavně `waitForText` kde můžeme efektivně nahradit `I.wait` a následné `I.see` za jeden příkaz:
 
 ```javascript
 //povodne ZLE riesenie s I.wait
@@ -349,7 +349,7 @@ I.waitForText("test-adresar-" + randomNumber, 10, container);
 
 ### Pause
 
-Pokud někde v testovacím kódu vložíte příkaz `pause()`, provádění testů se zastaví a zobrazí se interaktivní konzola v Terminálu, kde můžete spouštět příkazy. Tímto způsobem si můžete připravit kroky testu a poté jednoduše zkopírovat příkazy do souboru JS testu.
+Pokud do kódu testu někde dáte příkaz `pause()`, tak se zastaví provádění testů a v Terminálu se vám zobrazí interaktivní konzole, ve které umíte spouštět příkazy. Takto dokážete připravit kroky testu a následně jednoduše příkazy zkopírovat do JS souboru s testem.
 
 ```shell
  ...
@@ -362,11 +362,11 @@ Pokud někde v testovacím kódu vložíte příkaz `pause()`, provádění test
  I.
 ```
 
-Dvojím stisknutím klávesy TAB se zobrazí nápověda (seznam možných příkazů). Ty můžete zadat a sledovat, co se v prohlížeči stane. Stisknutím klávesy Enter se test posune na další příkaz. Zadání adresy `exit` bude interaktivní terminál ukončen a test bude pokračovat automatizovaně dále.
+pomocí 2x stisku TAB klávesy se vám zobrazí nápověda (seznam možných příkazů). Ty můžete zadávat a sledovat, co se děje v prohlížeči. Stisknutím Enter klávesy se test posune na další příkaz. Zadáním `exit` se ukončí interaktivní terminál a test bude pokračovat automatizovaně dále.
 
-### Přihlášení
+### Přihlašování
 
-V souboru [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) je definováno také přihlášení pomocí rozšíření [autologin](https://codecept.io/plugins/#autologin):
+V souboru [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) je definováno i přihlašování přes rozšíření [autologin](https://codecept.io/plugins/#autologin):
 
 ```javascript
 autoLogin: {
@@ -390,9 +390,9 @@ autoLogin: {
 }
 ```
 
-Je možné definovat více uživatelů (opakováním atributu admin), např. registrovaného uživatele, správce s omezenými právy atd.
+Je možné definovat více uživatelů (opakovat atribut admin). registrovaného uživatele, administrátora s omezenými právy a podobně.
 
-Přihlašovací údaje lze do testů vložit pomocí `Before` funkce:
+Přihlášení lze do testů vkládat pomocí `Before` funkce:
 
 ```javascript
 Feature('gallery');
@@ -408,9 +408,9 @@ Scenario('zoznam fotografii', ({I}) => {
 });
 ```
 
-### Knihovna Assert
+### Assert knihovna
 
-K dispozici je rozšíření [codeceptjs-chai](https://www.npmjs.com/package/codeceptjs-chai) pro volání funkcí assert:
+Dostupné je rozšíření [codeceptjs-chai](https://www.npmjs.com/package/codeceptjs-chai) pro volání assert funkcí:
 
 Základní použití:
 
@@ -443,7 +443,7 @@ I.assertAbove(2, 1, 'Target data not above the given value');
 I.assertAbove(1, 2, 'Target data not below the given value');
 ```
 
-V případě potřeby můžete také použít [assert](https://www.npmjs.com/package/assert) knihovna. Příkladem použití je test [gallery.js](../../../../src/test/webapp/tests/apps/gallery.js):
+Pokud je třeba, můžete využít i [assert](https://www.npmjs.com/package/assert) knihovnu. Příklad použití je v testu [gallery.js](../../../../src/test/webapp/tests/apps/gallery/gallery.js):
 
 ```javascript
 const assert = require('assert');
@@ -451,9 +451,9 @@ const assert = require('assert');
 assert.equal(+inputValueH, +area.h);
 ```
 
-### Stránka objekty
+### Page objekty
 
-K vytvoření univerzálních testovacích scénářů slouží komponenta `Pages` do kterého jsou objekty stránky generovány prostřednictvím `npx codeceptjs gpo`, objekt stránky je vytvořen pomocí `Dependency Injection` (podobně jako Angular).
+Pro vytvoření univerzálních testovacích scénářů je složka `Pages` do které se generují Page objekty přes příkaz `npx codeceptjs gpo`, vytvoří se page objekt pomocí `Dependency Injection` (podobně jako v Angular).
 
 ```javascript
 const { I } = inject();
@@ -464,7 +464,7 @@ module.exports = {
 }
 ```
 
-Abyste ji mohli používat v testech, musíte ji zaregistrovat v položce `codecept.conf.js`.
+K tomu abychom ho uměli používat v testech je třeba ho zaregistrovat v `codecept.conf.js`.
 
 ```javascript
 exports.config = {
@@ -475,7 +475,7 @@ exports.config = {
 }
 ```
 
-Poté ji můžeme vložit do našeho testovacího scénáře.
+Následně jej umíme vložit do našeho testovacího scénáře.
 
 ```javascript
 Scenario('test-scenario', ({I, PageObject}) => {
@@ -483,7 +483,7 @@ Scenario('test-scenario', ({I, PageObject}) => {
 })
 ```
 
-Objekty je možné do testů vkládat také dynamicky prostřednictvím `injectDependencies({})`.
+Je možné vložit objekty do testů i dynamicky přes `injectDependencies({})`.
 
 ```javascript
 Scenario('test-scenario', ({I, PageObject}) => {
@@ -494,7 +494,7 @@ Scenario('test-scenario', ({I, PageObject}) => {
 
 ### Detekce prohlížeče
 
-Pokud se vaše testy chovají ve Firefoxu nebo Chromu jinak, je možné v testech použít funkce validace prohlížeče.
+Pokud se vám testy chovají rozdílně v prohlížeči Firefox nebo Chromium je možné v testech použít funkce pro ověření použitého prohlížeče.
 
 ```javascript
 if (Browser.isChromium()) {
@@ -514,11 +514,11 @@ if (Browser.isFirefox()) {
 }
 ```
 
-## Odnětí práva
+## Odebrání práva
 
-Voláním adresy stránky s parametrem `removePerm` je možné přihlášenému uživateli odebrat zadané právo za běhu (bez uložení změn v právech), pokud přihlašovací jméno uživatele začíná písmeny `tester`. Je možné otestovat zobrazení stránky bez zadaného oprávnění a ověřit zabezpečení volání služby REST.
+Voláním adresy stránky s parametrem `removePerm` je možné za běhu odebrat zadané právo přihlášenému uživateli (bez uložení změn v právech), pokud přihlašovací jméno uživatele začíná na `tester`. Je tak možné testovat zobrazení stránky bez zadaného práva a ověřit tak bezpečnost volání REST služeb.
 
-Odvolání práva se provádí pomocí funkce `DT.checkPerms(perms, url)` v [DT.js](../../../../src/test/webapp/pages/DT.js). Vyžaduje zadání práva a adresy stránky, na které se právo testuje. Testo ověří zobrazení oznámení `Prístup k tejto stránke je zamietnutý`. Nepovinný parametr `datatableId` představuje ID/název tabulky na stránce (je nutné zadat, pokud je na stránce více datových tabulek).
+Odebrání práva je implementováno ve funkci `DT.checkPerms(perms, url)` v [ZN.js](../../../../src/test/webapp/pages/DT.js). Vyžaduje zadat právo a adresu stránky na které se právo testuje. Testo ověřuje zobrazení notifikace `Prístup k tejto stránke je zamietnutý`. Volitelný parametr `datatableId` reprezentuje ID/jméno tabulky ve stránce (je třeba zadat pokud je ve stránce více datatabulek).
 
 Příklad použití:
 
@@ -533,9 +533,9 @@ Scenario('zoznam stranok', ({ I, DT }) => {
 });
 ```
 
-K parametru `removePerm` je také možné zadat více práv oddělených čárkou.
+Do parametru `removePerm` je možné zadat i více práv oddělených čárkou.
 
-U datových tabulek je také možné nastavit práva na [jednotlivá tlačítka](../datatables/README.md#tlačítka-podle-práv) (přidat, upravit, duplikovat, odstranit). Můžete také otestovat jednotlivě zakázaná práva. Chcete-li však ověřit práva na backendu, musíte otestovat také službu REST. Přidáním výrazu `forceShowButton` k parametru `removePerm` pro uživatele s přihlašovacím jménem začínajícím na `tester` se zobrazí tlačítka v datové tabulce. Je tedy možné otestovat zobrazení chybového hlášení ze služby REST (že záznam nelze přidat/upravit/smazat). Příklad je v `webpage-perms.js`:
+U datatabulek lze nastavovat i práva na [jednotlivá tlačítka](../datatables/README.md#tlačítka-podle-práv) (přidat, editovat, duplikovat, smazat). Testovat tak můžete i jednotlivě vypnutá práva. Pro ověření práv na backendu je ale třeba testovat i REST službu. Přidáním výrazu `forceShowButton` do parametru `removePerm` u uživatele s přihlašovacím jménem začínajícím na `tester` se tlačítka v datatabulce zobrazí. Je tak možné otestovat zobrazení chybového hlášení z REST služby (že skutečně záznam nelze přidat/editovat/smazat). Příklad je ve `webpage-perms.js`:
 
 ```javascript
 Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
@@ -584,18 +584,18 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
 
 **Technické informace:**
 
-Odnětí práva se provádí ve formě [ThymeleafAdminController.removePermissionFromCurrentUser](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java). Po zadání parametru URL `removePerm` jsou upravena práva aktuálně přihlášeného uživatele, včetně kontextu Spring.
+Odebrání práva je implementováno v [ThymeleafAdminController.removePermissionFromCurrentUser](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java). Při zadání URL parametru `removePerm` jsou upravena práva aktuálně přihlášeného uživatele včetně Spring kontextu.
 
 ## Vizuální testování
 
-Funkce vizuálního testování by měla být použita k ověření zobrazení, která nelze ověřit textovým testováním (např. správná poloha nabídky výběru). Používá se [plugin pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper) který dokáže porovnat referenční snímek obrazovky s aktuálním a také zvýraznit změny.
+Funkci vizuálního testování je třeba použít k ověření zobrazení, které nelze ověřit testováním textu (např. korektní pozice výběrového menu). Využit je [plugin pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper), který umí porovnat referenční fotku obrazovky s aktuální a zároveň umí zvýraznit změny.
 
-Pro zjednodušení použití jsme připravili funkci `Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)` která zajistí, aby byly podniknuty nezbytné kroky. Má parametry:
-- `selector` - `selector` prvek, ze kterého má být snímek pořízen (není pořízen z celé obrazovky, ale pouze ze zadaného prvku).
-- `screenshotFileName` - název souboru obrázku, bude automaticky porovnán se stejným názvem obrázku v adresáři. `src/test/webapp/screenshots/base`. Pro název souboru použijte předponu `autotest-` pro lepší sledování vytvořeného obrazu
-- `width` (nepovinné) - šířka okna prohlížeče
-- `height` (nepovinné) - výška okna prohlížeče
-- `tolerance` (nepovinné) - míra tolerance rozdílů oproti referenčnímu obrazu (0-100)
+Pro zjednodušení použití jsme připravili funkci `Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)`, která zajistí potřebné kroky. Má parametry:
+- `selector` - `selector` elementu, ze kterého se má pořídit snímek (nedělá se z celé obrazovky, ale jen ze zadaného elementu)
+- `screenshotFileName` - jméno souboru snímku, automaticky se porovná se stejným jménem obrázku v adresáři `src/test/webapp/screenshots/base`. Pro jméno souboru použití prefix `autotest-` pro lepší dohledání pořízeného snímku
+- `width` (volitelné) - šířka okna prohlížeče
+- `height` (volitelné) - výška okna prohlížeče
+- `tolerance` (volitelné) - míra tolerance rozdílů vůči referenčnímu obrázku (0-100)
 
 Příklad použití:
 
@@ -603,40 +603,40 @@ Příklad použití:
 await Document.compareScreenshotElement("#insertScriptTable_wrapper", "autotest-insert-script-settings.png", 1280, 270);
 ```
 
-Při prvním spuštění pravděpodobně nebude k dispozici referenční obrázek. Test však vytvoří aktuální obraz a uloží jej do adresáře `build/test` (proto doporučujeme název obrázku předřadit před autotest-, aby bylo možné obrázek snadno najít mezi snímky obrazovky s chybami z testování). Pokud chcete obrázek použít jako referenci, zkopírujte jej do složky `src/test/webapp/screenshots/base`. Při dalším spuštění se pak referenční obrázek porovná s webovou stránkou.
+Při prvním spuštění pravděpodobně nebude existovat referenční obrázek. Test ale pořídí aktuální snímek a uloží jej do adresáře `build/test` (proto doporučujeme jméno obrázku přefixovat textem autotest- aby se obrázek dal snadno najít mezi screenshoty chyb z testování). Chcete-li obrázek použít jako referenční zkopírujte jej do adresáře `src/test/webapp/screenshots/base`. Následně při dalším spuštění bude porovnán referenční obrázek s web stránkou.
 
-Identifikované rozdíly jsou generovány do obrázků v adresáři `src/test/webapp/screenshots/diff` pro snadné ověření chyb. Test také vyhlásí chybu jako každý jiný testovací scénář, pokud jsou zjištěny rozdíly.
+Identifikované rozdíly jsou generovány do obrázků v adresáři `src/test/webapp/screenshots/diff` pro snadné ověření chyby. Test zároveň při identifikování rozdílů vyhlásí chybu jako jakýkoli jiný testovací scénář.
 
-Příklad chyby zobrazení (špatná pozice výběrové nabídky) - referenční základní obrázek:
+Příklad chyby zobrazení (špatná pozice výběrového menu) - referenční base obrázek:
 
 ![](autotest-insert-script-settings.png)
 
-nesprávné zobrazení na stránce:
+chybné zobrazení ve stránce:
 
 ![](autotest-insert-script-settings-error.png)
 
-výsledné srovnání se zvýrazněním rozdílové oblasti (růžová barva):
+výsledné srovnání se zvýrazněním rozdílné oblasti (růžová barva):
 
 ![](autotest-insert-script-settings-diff.png)
 
 **Poznámky k implementaci**
 
-Porovnávání obrázků je obsaženo ve funkci `Document.compareScreenshotElement` zavedené v `Document.js`. Při změně velikosti okna provede změnu velikosti a po vytvoření snímku obrazovky vrátí okno na výchozí velikost voláním funkce `I.wjSetDefaultWindowSize()` (tento příkaz se také volá po každém přihlášení kvůli konzistenci).
+Porovnání obrázků je zapouzdřeno do funkce `Document.compareScreenshotElement` implementované v `Document.js`. Při zadání velikosti okna provede změnu velikosti a po vytvoření screenshotu vrátí okno do výchozí velikosti voláním funkce `I.wjSetDefaultWindowSize()` (tato je pro konzistenci volána i po každém přihlášení).
 
 ## Best practices
 
-Pro úspěšné a opakované provádění testů doporučujeme následující body:
+Pro úspěšné a opakované spouštění testů doporučujeme dodržet následující body:
 
-### Nomenklatura
+### Názvosloví
 
-- začínáte scénář funkcí `Feature('xxx');` kde xxx je název testovacího souboru. Pokud dojde k chybě, můžete snadno najít příslušný testovací soubor.
+- scénář začínáte funkcí `Feature('xxx');` kde jako xxx použijte jméno souboru s testem. Pokud nastane chyba snadno tak vyhledáte příslušný soubor s testem.
 
 ### Testovací data
 
-- připravit a odstranit testovací data
-- všechny vytvořené objekty musí obsahovat text `autotest` pro identifikaci objektů vytvořených automatizovaným testem
-- doporučujeme použít volání `I.getRandomText()` k získání jedinečné přípony, což je použití, které se objevuje např. ve slovech [group-internal.js](../../../../src/test/webapp/tests/webpages/group-internal.js) kde jsou definovány a vyplněny proměnné `Before` funkce
-- je ideální, pokud testovací data vytvoříte v samostatném scénáři a v samostatném scénáři je také odstraníte. Pokud tedy test selže, dojde k odstranění dat i tak.
+- připravte a smažte si testovací data
+- všechny vytvořené objekty musí obsahovat text `autotest` pro identifikování objektů vytvořených automatizovaným testem
+- doporučujeme použít volání `I.getRandomText()` pro získání unikátního suffixu, použití vidět například. v [group-internal.js](../../../../src/test/webapp/tests/webpages/group-internal.js) kde jsou definovány proměnné a jsou naplněny v `Before` funkci
+- je ideální, pokud testovací data vytvoříte v samostatném scénáři a také je smažete v samostatném scénáři. Pokud tedy padne některý test, tak smazání dat se provede stejně.
 
 ```javascript
 var auto_name, auto_folder_internal, auto_folder_public, sub_folder_public;
@@ -657,9 +657,9 @@ Before(({ I, login }) => {
 
 ### Selektory
 
-Je důležité používat správné selektory, text/element se může na stránce objevit vícekrát a test pak náhodně spadne. Používejte připravené funkce, jako např. `I.jstreeClick(name)` pro stromovou strukturu a funkce začínající na DT./DTE. pro datovou tabulku a editor, např. `DTE.selectOption(name, text)` nebo `DT.filterSelect(name, value)`.
+Je důležité používat korektní selektory, text/element se může ve stránce nacházet vícekrát a následně test náhodně padá. Používejte připravené funkce jako `I.jstreeClick(name)` pro stromovou strukturu a funkce začínající na DT./DTE. pro datatabulku a editor Např. `DTE.selectOption(name, text)` nebo `DT.filterSelect(name, value)`.
 
-Doporučujeme vyzkoušet selektor v JS konzole prohlížeče například pomocí jQuery:
+Doporučujeme si selektor vyzkoušet v JS konzoli prohlížeče s využitím jQuery, například:
 
 ```javascript
 //tlacidlo na pridanie zaznamu
@@ -675,9 +675,9 @@ $("div.tree-col .btn.btn-sm.buttons-create.btn-success.buttons-divider")
 
 ### Časování
 
-Načasování provedení je velmi důležité, na jiném počítači nebo serveru může test probíhat jinou rychlostí. Je nutné správně počkat na dokončení asynchronních volání na server. Stejně tak může být problémem čekání na otevření dialogového okna, uložení dat apod.
+Časování provádění je velmi důležité, na jiném počítači nebo na serveru může test běžet jinou rychlostí. Je třeba korektně čekat na dokončení asynchronních volání na server. Podobně může být problém s čekáním na otevření dialogového okna, uložení dat a podobně.
 
-Nepoužívejte pevný typ času `I.wait(1)` ale použijte volání `I.waitFor...` nebo naše `DT.waitFor...`. Více v sekci [Čekání na dokončení](#čekání-na-dokončení) a [Další funkce WebJET](#další-funkce-webjetu).
+Nepoužívejte fixní čas typu `I.wait(1)` ale používejte volání `I.waitFor...` nebo naše `DT.waitFor...`. Více je v sekci [Čekání na dokončení](#čekání-na-dokončení) a [WebJET doplňkové funkce](#webjet-doplňkové-funkce).
 
 Typické příklady:
 
@@ -694,23 +694,23 @@ DTE.waitForEditor
 DTE.waitForLoader
 ```
 
-**Každé volání**, `I.click('Uložiť');` musí čekat na uložení prostřednictvím `DTE.waitForLoader`.
+**Každé volání**, `I.click('Uložiť');` musí čekat na uložení přes `DTE.waitForLoader`.
 
 ### Délka scénáře
 
-Snažte se jednotlivé scénáře zkrátit, nespojujte nesouvisející části do jednoho scénáře. Můžete si však připravit testovací data a znovu je použít ve více scénářích (ušetříte tak čas při vytváření a mazání dat mezi scénáři).
+Pokuste se mít jednotlivé scénáře krátké, nespojujte nesouvisející části do jednoho scénáře. Můžete si ale připravit testovací data a ta znovu použít ve více scénářích (ušetří se tak čas vytváření a mazání dat mezi scénáři).
 
-Skript lze spustit také samostatně pomocí `--grep` parametr viz [Zahájení testování](#zahájení-testování).
+Scénář lze spouštět i samostatně použitím `--grep` parametru viz [Spuštění testování](#spuštění-testování).
 
-### Ladění
+### Debugování
 
-Test můžete spustit s parametrem `-p pauseOnFail` pokud dojde k chybě, automaticky se zobrazí interaktivní konzola. V ní můžete zkontrolovat stav prohlížeče a případně vyzkoušet opravný příkaz, který pak můžete převést do testu.
+Test můžete spustit s parametrem `-p pauseOnFail`, pokud nastane chyba automaticky se zobrazí interaktivní konzole. V ní můžete ověřit stav prohlížeče a případně vyzkoušet opravný příkaz, který následně promítnete i do testu.
 
-Z tohoto důvodu nepoužívejte `After` ve scénáři, protože bude provedena před vyvoláním interaktivní konzoly po chybě a okno prohlížeče již nebude ve stejném stavu.
+Z tohoto důvodu nepoužívejte `After` funkci ve scénáři, protože ta se provede před vyvoláním interaktivní konzole po chybě a okno prohlížeče již nebude ve stejném stavu.
 
-## Odstranění databáze
+## Smazání databáze
 
-Databáze se s používáním testů rozrůstá, protože adresáře i webové stránky jsou po smazání přesunuty do koše. Je důležité tato data z databáze jednou za čtvrt roku vymazat. Můžete použít následující příkaz SQL:
+Databáze používáním testů roste, jelikož adresáře i web stránky se po smazání přesunou do koše. Je důležité tyto údaje z databáze jednou za kvartál smazat. Můžete použít následující SQL příkaz:
 
 ```sql
 DELETE FROM emails_campain WHERE subject LIKE '%-autotest%';
@@ -744,9 +744,15 @@ DELETE FROM media WHERE media_fk_id NOT IN (259) AND (media_title_sk LIKE '%auto
 OPTIMIZE TABLE media;
 ```
 
-## Testování služeb REST
+Chcete-li plošně změnit hesla v testovací databázi použijte:
 
-CodeceptJS také podporuje [testování služeb REST](https://codecept.io/helpers/REST/). Nastavení je v `codecept.conf.js`:
+```sql
+UPDATE users SET password='bcrypt:...', password_salt='bcrypt:...' WHERE user_id>1 AND login NOT IN ('user_sha512', 'user_bcrypt');
+```
+
+## Testování REST služeb
+
+CodeceptJS podporuje také [testování REST služeb](https://codecept.io/helpers/REST/). Nastavení je v `codecept.conf.js`:
 
 ```javascript
 exports.config = {
@@ -761,7 +767,7 @@ exports.config = {
 }
 ```
 
-Příklad volání služby REST a testování vráceného stavu, přihlášení a objektu JSON:
+Příklad volání REST služeb a testování vráceného stavu, přihlášení a JSON objektu:
 
 ```javascript
 Before(({ I }) => {

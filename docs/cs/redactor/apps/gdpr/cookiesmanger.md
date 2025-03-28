@@ -1,23 +1,23 @@
-# Správce souborů cookie
+# Cookies manažer
 
-Modul GDPR umožňuje spravovat soubory cookie a jejich klasifikace, které se návštěvníkům webu zobrazují v liště souborů cookie. To znamená, že se na liště souborů cookie zobrazí informace o tom, jaké soubory cookie jsou na webu shromažďovány, a návštěvníci mají možnost vypnout shromažďování určitých klasifikací souborů cookie.
+Modul GDPR umožnuje správu cookies a jejich klasifikací, které se zobrazují návštěvníkům webu v cookies liště. Znamená to, že se na cookies liště budou nacházet informace o tom, jaké cookies se na webstránkách sbírají a umožnit návštěvníkům možnost vypnutí sbírání některých klasifikací cookies.
 
 ![](cookiemanager-datatable.png)
 
-V levé horní části stránky jsou tlačítka pro přidání/úpravu/duplikaci/odstranění souborů cookie, export souborů cookie do souboru Excel a import souborů cookie ze souboru Excel.
+V lehké horní části stránky se nacházejí tlačítka pro přidání/úpravu/duplikování/mazání cookies, export cookies do excel souboru a import cookies z excel souboru.
 
-## Definování souborů cookie v různých jazycích
+## Definování cookies v různých jazycích
 
-Při vytváření a úpravách souborů cookie je možné definovat hodnotu textového pole "Účel" v různých jazycích SK/CZ/EN/DE atd. Pokud je soubor cookie vytvořen ve slovenštině, hodnota textového pole "Účel" se ve výchozím nastavení přenese do ostatních jazyků. Pokud se však hodnota textového pole "Účel" po přepnutí do češtiny změní, zůstane tato hodnota definována pouze pro tento jazyk a hodnota textového pole "Účel" v ostatních jazycích nebude ovlivněna. Tímto způsobem lze pro každý jazyk zvlášť definovat jinou hodnotu textového pole "Účel". Jazyk lze změnit pomocí voliče v levém horním rohu stránky vedle jejího názvu.
+Při tvorbě a editaci cookies lze zadefinovat hodnotu textového pole "Účel" v různých jazykových mutacích SK/CZ/EN/DE atp. Pokud se cookie vytvoří ve Slovenském jazyce, hodnota pole "Účel" se ve výchozím nastavení přenese i do ostatních jazyků. Ale pokud se hodnota pole "Účel" změní po přepnutí do Českého jazyka, tato hodnota zůstane definována pouze pro daný jazyk a hodnotu pole "Účel" v jiných jazycích to neovlivní. Takto lze definovat odlišnou hodnotu textového pole "Účel" pro každý jazyk zvlášť. Jazyk lze změnit selektorem v levé horní části stránky vedle názvu stránky.
 
 ![](cookiemanager-jazykovy-selector.png)
 
-## Definování souborů cookie v různých doménách
+## Definování cookies v různých doménách
 
-Vytvořený soubor cookie se zobrazí pouze pro doménu, ve které byl vytvořen. Chcete-li vytvořit stejný soubor cookie nebo stejný soubor cookie s různými hodnotami ve více doménách, bude nutné je definovat pro každou doménu zvlášť. Doménu lze změnit pomocí voliče domén umístěného v levém horním rohu stránky.
+Vytvořená cookies se bude zobrazovat pouze pro doménu ve které byla vytvořena. Pro vytvoření stejné cookies nebo stejné s jinými hodnotami ve více doménách bude nutné jejich definování pro každou doménu zvlášť. Doménu lze změnit pomocí doménového selektoru, který se nachází v levém horním rohu stránky.
 
-## Potvrzení shromažďování souborů cookie návštěvníkem webových stránek
+## Potvrzení sbírání cookies návštěvníkům webové stránky
 
-Volba návštěvníka webových stránek, zda chce shromažďovat nebo neshromažďovat určité klasifikace souborů cookie, bude dále uložena a spravována modulem Skripty.
+Zvolený výběr návštěvníka webové stránky o sbírání/nesbírání některých klasifikací cookies bude dále ukládán a správován pomocí modulu Skripty.
 
 ![](cookiemanager-domenovy-selector.png)

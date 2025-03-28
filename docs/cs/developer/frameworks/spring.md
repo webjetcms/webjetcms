@@ -2,17 +2,17 @@
 
 ## EclipseLink JPA
 
-Na začátku je důležité poznamenat, že (z historických důvodů) používáme rámec pro mapování entit DB [EclipseLink JPA](https://www.eclipse.org/eclipselink/). Implementuje standard JPA a je plně integrován se Spring DATA.
+Na úvod je důležité upozornit, že k mapování DB entit používáme (z historických důvodů) framework [EclipseLink JPA](https://www.eclipse.org/eclipselink/). Ten implementuje standard JPA, je plně integrován se Spring DATA.
 
-Jako základ pro použití doporučujeme přečíst si:
-- [Baeldung: Definování entit JPA](https://www.baeldung.com/jpa-entities)
-- [Úvod do JPA](https://www.tutorialspoint.com/jpa/jpa_introduction.htm)
-- [Úvod do rozhraní Java Persistence API](https://docs.oracle.com/javaee/6/tutorial/doc/bnbpz.html)
+Jako základ použití doporučujeme přečíst:
+- [Baeldung: Defining JPA Entities](https://www.baeldung.com/jpa-entities)
+- [JPA introduction](https://www.tutorialspoint.com/jpa/jpa_introduction.htm)
+- [Introduction to the Java Persistence API](https://docs.oracle.com/javaee/6/tutorial/doc/bnbpz.html)
 
-V systému WebJET platí následující pravidla:
-- Atributy musí být objekty, tj. Integer, Long (nikoli primitivní typy int, long). Důvodem je vyhledávání "Podle příkladu" prostřednictvím úložišť, kde není možné nastavit NULL pro primitivní typy.
+Ve WebJETu platí následující pravidla:
+- Atributy musí být objekty, tedy Integer, Long (ne primitivní typy int, long). Je to z důvodu vyhledávání "By Example" přes repozitáře, kde pro primitivní typy nelze nastavit NULL.
 - Primární klíč musí být typu Long
-- Pro sloupce s automatickým navýšením lze použít strategii IDENTITY s nastaveným názvem sekvence pro Oracle (typicky S\_meno\_tables).
+- Pro autoincrement sloupce lze použít strategii IDENTITY s nastaveným jménem sekvence pro Oracle (typicky S\_jméno\_tabulky)
 
   ```Java
   @Id
@@ -20,26 +20,26 @@ V systému WebJET platí následující pravidla:
   private Long id;
   ```
 
-- Můžete se také setkat se starším použitím zápisu pomocí anotací třídy PkeyGenerator `@GeneratedValue` a `@TableGenerator`, která je však ve WebJET 2021 již zastaralá a neměla by se používat.
-- Příkladem entity JPA je třída [AuditNotifyEntity](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyEntity.java).
+- Můžete se setkat i se starším použitím zápisu přes třídu PkeyGenerator anotacemi `@GeneratedValue` a `@TableGenerator`, to už je ale ve WebJET 2021 deprecated a nemělo by se používat.
+- Příkladem JPA entity je třída [AuditNotifyEntity](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyEntity.java).
 
-Všimněte si také poznámek `@Getter` a `@Setter`, které pocházejí z projektu [Lombook](https://projectlombok.org) a zajistit automatické generování metod getter a setter.
+Všimněte si také anotace `@Getter` a `@Setter`, ty pocházejí z projektu [Lombook](https://projectlombok.org) a zajišťují automatické generování getter a setter metod.
 
 ## Spring DATA
 
-[Spring DATA JPA](https://spring.io/projects/spring-data-jpa) poskytuje zjednodušené mapování mezi databází SQL a entitami jazyka Java. Funguje "kouzelným" způsobem vytváření prázdných metod, kde podle názvu metody Spring DATA sám vytvoří podmínky SQL a realizuje načtení dat.
+[Spring DATA JPA](https://spring.io/projects/spring-data-jpa) zjednodušeně poskytuje mapování mezi SQL databází a Java entitami. Funguje to „zázračným“ způsobem vytvořením prázdných metod, kde podle názvu metody Spring DATA samy vytvoří SQL podmínky a implementuje získání dat.
 
-Jako základ pro použití doporučujeme přečíst si:
-- [Úvod do Spring Data JPA](https://www.baeldung.com/the-persistence-layer-with-spring-data-jpa)
+Jako základ použití doporučujeme přečíst:
+- [Introduction to Spring Data JPA](https://www.baeldung.com/the-persistence-layer-with-spring-data-jpa)
 - [Spring Data Annotations](https://www.baeldung.com/spring-data-annotations)
-- Celý výukový program Baeldung [Výukový kurz perzistence jara](https://www.baeldung.com/persistence-with-spring-series) kde najdete mnoho příkladů
-- [Úložiště JPA - Vytváření dotazů](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods.query-creation)
+- Respektive celý Baeldung tutoriál [Spring Persistence Tutorial](https://www.baeldung.com/persistence-with-spring-series) kde najdete mnoho příkladů
+- [JPA Repositories - Query Creation](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods.query-creation)
 
-Příkladem úložiště Spring DATA je třída [FormsRepository](../../../src/main/java/sk/iway/iwcm/components/forms/FormsRepository.java) kde je uveden příklad několika metod vyhledávání podle atributů.
+Příkladem Spring DATA repozitáře je třída [FormsRepository](../../../src/main/java/sk/iway/iwcm/components/forms/FormsRepository.java) kde je ukázka více metod vyhledávání podle atributů.
 
 ### Ukázky kódu
 
-Speciální aktualizace sloupce v databázi podle podmínek a `IN` podmínky. Je vyžadována anotace `@Transactional` Také `@Modifying` (protože nejsou vráceny žádné záznamy).
+Speciální aktualizace sloupce v databázi podle podmínek a `IN` podmínky. Potřebná je anotace `@Transactional` i `@Modifying` (jelikož se nevracejí žádné záznamy).
 
 ```java
 @Repository
@@ -53,12 +53,12 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
 ## Spring REST
 
-Používání stránek [Spring REST](https://spring.io/guides/tutorials/rest/) můžete snadno vytvářet služby REST.
+Pomocí [Spring REST](https://spring.io/guides/tutorials/rest/) můžete snadno vytvářet REST služby.
 
-Jako základ pro použití doporučujeme přečíst si:
-- [Vytvoření rozhraní REST API pomocí Spring a Java Config](https://www.baeldung.com/building-a-restful-web-service-with-spring-and-java-based-configuration#controller), stačí si přečíst od 5. Kontrolor
-- Nebo spíše celý titulní Baeldung [Výukový program REST s jarem](https://www.baeldung.com/rest-with-spring-series)
+Jako základ použití doporučujeme přečíst:
+- [Build a REST API with Spring and Java Config](https://www.baeldung.com/building-a-restful-web-service-with-spring-and-java-based-configuration#controller), stačí číst až od 5. The Controller
+- Respektive celý Baeldung tituriál [REST with Spring Tutorial](https://www.baeldung.com/rest-with-spring-series)
 
-Ve WebJET pro datové tabulky je vytváření služeb REST zjednodušeno a popsáno v části [samostatná dokumentace](../datatables/restcontroller.md). Stačí tedy rozšířit třídu `DatatableRestControllerV2`.
+Ve WebJETu pro datatabulky je tvorba REST služeb zjednodušená a popsaná v [samostatné dokumentaci](../datatables/restcontroller.md). Stačí vám tedy rozšířit třídu `DatatableRestControllerV2`.
 
-Nejzákladnější příklad je ve třídě [RedirectRestController](../../../src/main/java/sk/iway/iwcm/components/redirects/RedirectRestController.java) kde si všimnete poznámky `@PreAuthorize` pro kontrolu práv. Metody `editItem` a `insertItem` jsou implementovány pouze proto, že ve sloupci datum poslední změny nastavují aktuální datum a čas. Pokud nepotřebujete dělat nic zvláštního, nemusíte implementovat ani tyto 2 metody. Vše ostatní se provádí automaticky v úložišti Spring DATA a v nadtřídě DatatableRestControllerV2.
+Nejzákladnější příklad je ve třídě [RedirectRestController](../../../src/main/java/sk/iway/iwcm/components/redirects/RedirectRestController.java) kde si všimnete anotace `@PreAuthorize` pro kontrolu práv. Metody `editItem` a `insertItem` jsou implementovány pouze z důvodu, že nastavují aktuální datum a čas do sloupce s datem poslední změny. Pokud nepotřebujete provádět nic speciálního ani tyto 2 metody nepotřebujete implementovat. Vše se jinak děje automaticky ve Spring DATA repozitáři a supertřídě DatatableRestControllerV2.

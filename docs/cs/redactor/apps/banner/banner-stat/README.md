@@ -1,23 +1,23 @@
-# Statistiky bannerů
+# Statistika bannerů
 
-Aplikace Statistiky bannerů zobrazuje přehled 10 nejlepších bannerů za zvolené období. Výchozím obdobím je poslední měsíc. Toto období lze změnit pomocí filtru data v záhlaví stránky.
+Aplikace Statistika bannerů zobrazuje přehled Top 10 bannerů za zvolené období. Výchozí období je poslední měsíc. Toto období lze změnit pomocí datového filtru v hlavičce stránky.
 
 ![](header.png)
 
-Aplikace obsahuje datovou tabulku 10 nejlepších bannerů a 2 sloupcové grafy zobrazující statistiky "Nejčastějších zobrazení banneru" a "Nejčastějších kliknutí na banner". Při změně rozsahu dat pomocí filtru v záhlaví stránky se datová tabulka i oba grafy aktualizují.
+Aplikace obsahuje datatabulku Top 10 bannerů i 2 čárové grafy, zobrazující "Top statistika vidění bannerů" a "Top statistika kliknutí bannerů". Při změně datumového rozsahu pomocí filtru v hlavičce stránky se aktualizuje datatabulka i obě grafy.
 
 ![](stat-table.png)
 
-Hodnota ve sloupci "Název" zobrazené tabulky je klikatelný odkaz, který vás přesměruje na detail banneru.
+Hodnota ve sloupci "Název" zobrazené tabulky je klikatelný link, který Vás přesměruje na detail daného banneru.
 
-## Detail transparentu
+## Detail banneru
 
-Detail banneru je podsekcí aplikace "Statistiky banneru" a zobrazuje také datovou tabulku a 2 řádkové grafy. Rozdíl je v tom, že datová tabulka zobrazuje pouze aktuálně zobrazený banner a sloupcové grafy zobrazují statistiky kliknutí a zobrazení pouze pro tento banner.
+Detail banneru je podsekce aplikace "Statistika bannerů" a také zobrazuje datatabulku a 2 čárové grafy. Rozdíl je v tom, že datatabulka zobrazuje pouze právě prohlížený banner a čárové grafy statistiku kliknutí a vidění také pouze pro tento banner.
 
-Tato podsekce obsahuje také filtr data v záhlaví stránky, který se chová stejně jako v bannerové statistice s tím rozdílem, že základním rozsahem není poslední měsíc, ale přebírá se nastavený rozsah z bannerové statistiky.
+I tato podsekce obsahuje datový filtr v hlavičce stránky, který se chová stejně jako u statistiky bannerů, s tím rozdílem, že základní rozsah není poslední měsíc, ale převezme se nastavený rozsah ze statitiky bannerů.
 
 ![](detail-table.png)
 
-I v tomto případě je hodnota sloupce "Název" klikatelným odkazem. Po kliknutí budete přesměrováni na stránku "Seznam bannerů", kde se otevře editor banneru.
+I v tomto případě je hodnota sloupce "Název" klikatelný link. Po kliknutí budete přesměrováni na stránku "Seznamu bannerů" kde se otevře editor daného banneru.
 
 ![](editor.png)

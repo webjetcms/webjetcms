@@ -1,54 +1,54 @@
 # Export a import
 
-Datové tabulky umožňují export a import dat v záhlaví:
+Datatabulky poskytují v hlavičce možnost exportu a importu dat:
 
 ![](export-dialog.png)
 
-- Umožňuje export do **Excel(xlsx) a přímý tisk na tiskárně**
-- Soubor je pojmenován podle aktuálního `title` a automaticky se přidá aktuální datum a čas.
-- Exportem můžete získat **maximálně 50 000 záznamů**. Pokud potřebujete exportovat více záznamů, použijte vícenásobný export pomocí filtrování. Maximální počet záznamů lze zvýšit nastavením proměnné conf. `datatablesExportMaxRows`.
-- Při exportu je v prvním řádku připraven seznam sloupců, **import proto není citlivý na pořadí sloupců**.
-- Pro **výběrová pole** (select/digits) s **exportovat textovou hodnotu** a při importu se rekonstruuje zpět na ID. To umožňuje mít **různá ID vázaných záznamů** mezi prostředími (např. ID šablony webové stránky), pokud se název shoduje, je záznam správně spárován. V důsledku toho je v exportu místo hodnoty ID také lidsky čitelný text.
-- Import umožňuje **importovat data jako nová** (pro přidání do databáze) nebo **porovnat existující data podle vybraného sloupce** (např. název, adresa URL atd.). Při porovnávání nejprve vyhledá záznam v databázi a poté jej aktualizuje. Pokud neexistuje, vytvoří nový záznam.
-- Importováno z formátu **xlsx**.
+- Umožňuje export do **Excelu(xlsx) a přímý tisk na tiskárnu**
+- Souboru se nastaví jméno podle aktuálního `title` stránky a automaticky se doplní aktuální datum a čas.
+- Exportem se najednou dá získat **maximálně 50 000 záznamů**. Při potřebě exportovat více záznamů použijte vícenásobné exportování s využitím filtrování. Maximální počet záznamů lze zvýšit nastavením konf. proměnné `datatablesExportMaxRows`.
+- Při exportu se v prvním řádku připraví seznam sloupců, **import následně není citlivý na pořadí sloupců**.
+- Pro **výběrová pole** (select/číselníky) se **exportuje textová hodnota** a při importu se zpět rekonstruuje na ID. Umožňuje to mít **rozdílné ID navázaných záznamů** mezi prostředími (např. ID šablony pro web stránku), pokud se shoduje jméno, korektně se záznam spáruje. V exportu je následně i lidsky srozumitelný text namísto ID hodnoty.
+- Import umožňuje **importovat data jako nová** (doplní se do databáze) nebo **párovat existující data podle zvoleného sloupce** (např. jméno, URL adresa a podobně). Při párování nejprve pohledá záznam v databázi a následně jej aktualizuje. Pokud neexistuje, vytvoří nový záznam.
+- Importuje se z formátu **xlsx**.
 
 ## Export dat
 
-Klikněte na ikonu Export ![](export-icon.png ":no-zoom") otevře dialogové okno, ve kterém se název exportního souboru automaticky nastaví podle aktuální stránky a data a času. Můžete si vybrat, zda chcete exportovat ve formátu Excel (xlsx), nebo tabulku vytisknout.
+Po klepnutí na ikonu Exportovat ![](export-icon.png ":no-zoom") se otevře dialogové okno ve kterém se automaticky nastaví jméno souboru exportu podle aktuální stránky a data a času. Zvolit je možnost exportu ve formátu Excel (xlsx), nebo tisk tabulky.
 
-Na kartě Upřesnit tabulky se stránkováním serveru lze nastavit typ exportovaných dat. **aktuální stránka/všechny, filtrované/všechny řádky, třídění**. U tabulky s klientským stránkováním se zobrazí pouze možnost aktuální/všechny stránky.
+V kartě Pokročilé je u tabulky se serverovým stránkováním možné nastavit typ exportovaných dat **aktuální strana/všechny, filtrované/všechny řádky, řazení**. U tabulky s klientským stránkováním se zobrazí pouze možnost aktuální/všechny stránky.
 
 ![](export-dialog-advanced.png)
 
-Kliknutím na tlačítko Export se vytvoří `xlsx` stáhnout soubor, nebo v případě možnosti Tisk se zobrazí standardní okno tisku.
+Po klepnutí na tlačítko Exportovat se vytvoří `xlsx` soubor ke stažení, nebo v případě možnosti Tisk se zobrazí standardní okno tisku.
 
-Při exportu do formátu Excel se **export sloupců podle editoru**, nikoliv podle zobrazených sloupců. Je to proto, aby bylo možné záznamy dodatečně importovat. První řádek souboru aplikace Excel obsahuje názvy sloupců, ale také jejich kódové označení ve formátu `Pekný názov|kodovyNazov`. Například u uživatelů se sloupec Jméno používá jak v osobních údajích, tak v kontaktních údajích. Bez kódového názvu bychom při importu nebyli schopni přesně spárovat sloupec se správným polem v editoru.
+Při exportu ve formátu Excel se **exportují sloupce podle editoru**, ne podle zobrazených sloupců. Je tomu tak proto, aby záznamy následně bylo možné importovat. V prvním řádku Excel souboru se nacházejí názvy sloupce ale i jeho kódové jméno ve formátu `Pekný názov|kodovyNazov`. Např. v uživatelích je použit sloupec Jméno iv osobních údajích, iv kontaktních údajích. Bez kódového názvu bychom sloupec při importu neuměli přesně spárovat na správné pole v editoru.
 
 ![](excel.png)
 
 ## Import dat
 
-Klikněte na ikonu Importovat ![](import-icon.png ":no-zoom") otevře dialogové okno pro import z formátu Excel (xlsx). V nastavení importu můžete vybrat:
-- Přidat jako nové záznamy - záznamy se importují jako nové, sloupec ID se ignoruje. Při importu může dojít k chybě, pokud dojde k duplicitnímu omezení (např. přihlašovací jméno v seznamu uživatelů, které musí být jedinečné).
-- Aktualizovat existující záznamy - tato možnost zobrazí výběrové pole **Podle sloupce**, ve kterém můžete vybrat sloupec, na jehož základě budou data aktualizována. Při importu bude databáze obsahovat **identické záznamy (může existovat více než jeden záznam)**, pokud je například importován podle Příjmení nebo jiného sloupce, který není jedinečný) a ty se aktualizují podle údajů v Excelu. Pokud se v databázi nenajde žádný záznam podle zadaného sloupce, bude se **vytvoří jako nový záznam**.
-- Importovat pouze nové záznamy - v poli **Podle sloupce** vyberte sloupec, podle kterého se identifikuje existence záznamu. Importují se pouze záznamy, které nejsou nalezeny podle zadaného sloupce.
+Po klepnutí na ikonu Importovat ![](import-icon.png ":no-zoom") se otevře dialogové okno pro import z Excel (xlsx) formátu. V nastavení importu lze zvolit:
+- Přidat jako nové záznamy - záznamy se importují jako nové, sloupec ID se ignoruje. Při importu může nastat chyba, pokud vznikne omezení duplicity (např. přihlašovací jméno v seznamu uživatelů, které musí být jedinečné).
+- Aktualizovat stávající záznamy - u této možnosti se zobrazí výběrové pole **Podle sloupce**, ve kterém je možné vybrat sloupec, na jehož základě se budou data aktualizovat. Při importu se v databázi najdou **shodné záznamy (může jich být více**, pokud se např. importuje podle Příjmení nebo jiného sloupce, který není jedinečný) a ty se aktualizují podle údajů v Excelu. Pokud se nenajde záznam v databázi podle zadaného sloupce, tak se **vytvoří jako nový záznam**.
+- Importovat pouze nové záznamy - v poli **Podle sloupce** vyberte sloupec, podle kterého se identifikuje existence záznamu. Importují se pouze záznamy, které se podle zadaného sloupce nenajdou.
 
 ![](import-dialog.png)
 
-Kliknutím na tlačítko Import spustíte import z vybraného souboru aplikace Excel.
+Klepnutím na tlačítko Importovat se spustí import z vybraného Excel souboru.
 
-Většina tabulek umožňuje při aktualizaci existujícího záznamu **importovat sloupce po částech**. V aplikaci Excel můžete odstranit sloupce, které chcete v databázi zachovat. Následně se při importu do stávajících záznamů přenesou pouze změny ze zachovaných sloupců v aplikaci Excel.
+Většina tabulek při aktualizaci stávajícího záznamu umožňuje **importovat sloupce dílčí**. V Excelu můžete smazat sloupce, které chcete v databázi zachovat beze změny. Následně při importu se ve stávajících záznamech přenesou jen změny z ponechaných sloupců v Excelu.
 
-### Přeskočení chybných záznamů
+### Přeskočit vadné záznamy
 
-Import nabízí možnost vynechat chybné záznamy. Pokud je tato možnost **Vypnuto** a importovaná data obsahují chybu, import se přeruší a zobrazí se chybové hlášení. Nevýhoda je při importu velkého počtu záznamů, kdy jedna chyba přeruší import dalších záznamů.
+Import nabízí možnost přeskočení vadných záznamů. Pokud je tato možnost **vypnuta**, a importovaná data obsahují chybu, import se přeruší a bude zobrazeno chybové hlášení. Nevýhoda je při importování velkého množství záznamů, kde jedna chyba přeruší importování dalších záznamů.
 
-Všechny shodné záznamy před chybným záznamem byly uloženy.
+Všechny vyhovující záznamy před chybným záznamem byly uloženy.
 
 ![](import_error.png)
 
-Pokud je tato možnost **Povoleno**, import se při zjištění chyby nezastaví, ale pokračuje. V oznámení se zobrazí hodnoty chyby a číslo řádku:
+Pokud je tato možnost **zapnuta**, import se při nalezené chybě nezastaví, ale pokračuje dále. Chybné hodnoty is číslem řádku se zobrazí v oznámení:
 
 ![](import_err_notification.png)
 
-Je možné zobrazit více oznámení, protože data jsou zpracovávána v dávkách - jsou odesílána postupně v 25 záznamech, pro každý z nich lze zobrazit chybové hlášení. Další technické informace naleznete v [Převod z aplikace Excel](../../developer/datatables/export-import.md#převod-z-Excelu).
+Notifikací se může zobrazit více, jelikož data se zpracovávají po částech - odesílají se postupně po 25 záznamech, pro každý se může zobrazit chybové hlášení. Více technických informací naleznete v sekci [Konverze z Excelu](../../developer/datatables/export-import.md#konverze-z-excelu).

@@ -1,36 +1,37 @@
-# Datové tabulky
+# Datatables
 
-Knihovna [datatables.net](http://datatables.net) je pokročilá tabulka s připojením ke službám REST.
+Knihovna [datatables.net](http://datatables.net) je pokročilá tabulka s napojením na REST služby.
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-- [Datové tabulky](#datové-tabulky)
-  - [Základní inicializace ve spolupráci se Spring REST](#základní-inicializace-ve-spolupráci-s-pružinovým-odpočinkem)
+- [Datatables](#datatables)
+  - [Základní inicializace v spolupráce s Spring REST](#základní-inicializace-v-spolupráce-s-spring-rest)
   - [Možnosti konfigurace](#možnosti-konfigurace)
     - [Nastavení sloupců](#nastavení-sloupců)
-    - [Zobrazení kódu HTML](#zobrazit-html-kód)
-  - [Přidání/odebrání tlačítek](#přidání-nebo-odebrání-tlačítek)
-  - [Tlačítko pro provedení akce serveru](#tlačítko-pro-provedení-akce-serveru)
+    - [Zobrazení HTML kódu](#zobrazení-html-kódu)
+  - [Přidání/odebrání tlačítek](#přidání-odebrání-tlačítek)
+  - [Tlačítko pro provedení serverové akce](#tlačítko-pro-provedení-serverové-akce)
   - [Tlačítka podle práv](#tlačítka-podle-práv)
-  - [Stylování řádků](#stylování-řádků)
+  - [Stylování řádku](#stylování-řádku)
   - [Stavové ikony](#stavové-ikony)
   - [Zobrazení dat na základě práv](#zobrazení-dat-na-základě-práv)
-  - [Uspořádání](#Uspořádání)
-  - [Vyhledávání](#Vyhledávání)
+  - [Uspořádání](#uspořádání)
+  - [Vyhledávání](#vyhledávání)
   - [Externí filtr](#externí-filtr)
   - [Export/import](#exportimport)
-  - [Volání API](#volání-api)
+  - [API volání](#api-volání)
   - [Ukázky kódu](#ukázky-kódu)
-    - [Naslouchání události obnovení tabulky:](#naslouchání-události-obnovení-tabulky)
+    - [Poslech události obnovení tabulky](#poslech-události-obnovení-tabulky)
+    - [Změna hodnot výběrového pole](#změna-hodnot-výběrového-pole)
 
 <!-- /code_chunk_output -->
 
-## Základní inicializace ve spolupráci se Spring REST
+## Základní inicializace v spolupráce s Spring REST
 
-Implementace datových tabulek WebJET se konfiguruje pomocí sloupců objektu JSON. Tento objekt obsahuje definice sloupců pro datovou tabulku i editor datových tabulek. K inicializaci tabulky se pak použije konstruktor WJ.DataTable.
+WebJET implementace datatables se konfiguruje pomocí JSON objektu columns. V tomto objektu je definice sloupců pro datatabulku i pro datatables editor. Konstruktorem WJ.DataTable se následně tabulka inicializuje.
 
-Doporučujeme však vždy vygenerovat objekt sloupců z [Anotace entit v jazyce Java](../datatables-editor/datatable-columns.md).
+Doporučujeme ale vždy generovat columns objekt z [anotací Java entity](../datatables-editor/datatable-columns.md).
 
 Základní příklad:
 
@@ -127,45 +128,45 @@ script.
 Možnosti konfigurace (`options`):
 
 Minimální konfigurace:
-- `url {string}` Adresa URL koncového bodu služby REST pro načtení dat. K této adrese URL datový soubor přidá adresu `/all` načíst všechna data (pokud není nastavena možnost noAll), `findByColumns` pro vyhledávání nebo `/editor` pro ukládání dat.
-- `columns {json}` definice sloupců, ideálně z [Anotace Java](../datatables-editor/datatable-columns.md).
+- `url {string}` URL adresa endpointu REST služby pro získání dat. K této URL si datatable přidá `/all` pro získání všech dat (není-li nastavena možnost noAll), `findByColumns` pro vyhledávání, případně `/editor` pro uložení dat.
+- `columns {json}` definice sloupců, ideální z [Java anotací](../datatables-editor/datatable-columns.md).
 
-**Další možnosti:**
+**Ostatní možnosti:**
 
-- `serverSide {boolean}` v hodnotě `true` očekává použití stránkování a řazení na serveru pomocí volání služeb REST s hodnotou `false` provede lokální stránkování a řazení nad původně načtenými daty.
-- `tabs {json}` Definice [karty pro redaktora](../datatables-editor/README.md#karty-v-editoru).
-- `id {string}` jedinečný identifikátor datové tabulky, pokud není zadán, použije se hodnota `datatableInit`. Zvláště potřebné, pokud máte na jedné webové stránce více datových tabulek.
-- `editorId {string}` jedinečný identifikátor editoru, pokud není zadán, použije se hodnota `id`. Zvláště potřebné, pokud máte na jedné webové stránce více datových tabulek.
-- `onXhr {function}` Funkce JavaScriptu, která je volána po [načítání dat](https://datatables.net/reference/event/xhr) ve formě `function ( TABLE, e, settings, json, xhr ) {}`.
-- `onPreXhr(TABLE, e, settings, data) {function}` Funkce JavaScriptu, která se volá [před načtením dat](https://datatables.net/reference/event/preXhr), umožňuje přidávat parametry k odesílaným datům. Ty se zadávají s předponou `fixed_` aby se odlišily od standardních parametrů datových souborů. Příklad: `onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }`.
-- `onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}`: Funkce JavaScriptu, která se vyvolá po kliknutí na odkaz pro úpravu záznamu. Jako parametry obdrží: `TABLE` - instance datové tabulky, `row` - objekt jQuery řádku, na který bylo kliknuto, `dataAfterFetch` - když je funkce zapnutá `fetchOnEdit` json data načtená po obnovení, `dataBeforeFetch` původní data řádku JSON pro volání k jejich obnovení. Standardní editor pak můžete otevřít voláním `TABLE.wjEdit(row);`. Příkladem použití je [web-pages-list.pug](../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
-- `fetchOnCreate {boolean}` pokud je nastavena na hodnotu true, bude před vytvořením nového záznamu provedeno volání REST s hodnotou -1 pro získání dat nového objektu. Hodnoty se nastavují voláním `EDITOR.setJson(json)` zavedené v `$.fn.dataTable.Editor.prototype.setJson` v případě `initCreate`.
-- `fetchOnEdit {boolean}` pokud je nastavena na hodnotu true, bude před úpravou záznamu provedeno volání REST pro načtení aktuálních dat upravovaného záznamu. Při použití datové tabulky, například pro webovou stránku, je záznam aktualizován ze serveru před otevřením editoru, takže v editoru bude vždy otevřena nejnovější verze. Implementováno prostřednictvím funkce JS `refreshRow` a zákaznické tlačítko `$.fn.dataTable.ext.buttons.editRefresh` nahradit standardní tlačítko `edit`.
-- `idAutoOpener {boolean}` umožňuje nastavení na `false` deaktivovat [automatické otevření editoru](../libraries/datatable-opener.md) pomocí parametru URL a vložením pole ID do záhlaví tabulky.
-- `hideTable {boolean}` po nastavení na `true` se datová tabulka na stránce nezobrazí (bude skryta).
-- `jsonField {function}` definice pole [typu json](../datatables-editor/field-json.md#použití-specifických-objektů-json).
-- `order {array}` Výchozí [způsob uspořádání](#Uspořádání) tabulky.
-- `paging {boolean}` false zakáže stránkování datových souborů (zobrazí se všechna vrácená data ze serveru, možnost nastavení velikosti stránky se nezobrazí).
-- `nestedModal {boolean}` pokud je nastaveno na true, jedná se o datovou tabulku vloženou jako pole v editoru - [vnořená datová tabulka](../datatables-editor/field-datatable.md), vnořená tabulka má přidanou třídu CSS `DTE_nested_modal`.
-- `noAll {boolean}` ve výchozím nastavení přidá do sady url `/all` získat všechna data nastavením `noAll` na adrese `false` s `/all` nebude přidán, ale nebude fungovat ani vyhledávání.
-- `initialData {variable}` data pro počáteční zobrazení (bez nutnosti volat službu REST), viz dokumentace k nástroji [optimalizace rychlosti zobrazení](../apps/webpages/README.md) seznam webových stránek. Technicky vzato, pokud je tento objekt nastaven, při prvním volání služby REST se použijí zadaná data.
-- `initialData.forceData {boolean}` po nastavení na `true` počáteční data se používají bez ohledu na jejich velikost, obvykle se používá, když jsou počáteční data prázdným objektem, protože jsou následně získána jiným způsobem. Pro načtení prázdných dat lze použít funkci `initialData:  dtWJ.getEmptyData(true)`.
-- `hideButtons {string}` čárkou oddělený seznam názvů tlačítek, která se mají v datové tabulce automaticky skrýt (nezobrazit), např. `create,edit,duplicate,remove,import,celledit`.
-- `removeColumns {string}` čárkou oddělený seznam sloupců, které se nemají zobrazovat, i když jsou v definici (například pokud datovou tabulku zobrazujete na více místech a nepotřebujete všechny sloupce). Například. `whenToPublish,datePublished`.
-- `forceVisibleColumns` seznam sloupců oddělených čárkou, které se zobrazí (přepíše sloupce nastavené uživatelem), obvykle se používá ve vnořené datové tabulce, kde je třeba zobrazit pouze některé sloupce.
-- `updateColumnsFunction` název funkce JavaScriptu, která bude použita k úpravě seznamu sloupců. Typicky se používá ve vnořené datové tabulce, kde je třeba přidat/upravit zobrazené sloupce (viz ukázka níže).
-- `perms` sady [práva na zobrazení tlačítek](#tlačítka-podle-práv) přidávat, upravovat, duplikovat a mazat data.
-- `lastExportColumnName` pokud je zadán, zobrazí v dialogovém okně exportu možnost exportovat dosud neexportovaná data (použitá ve formulářích). Hodnota představuje název sloupce, který má být přidán jako `NULL` podmínka výběru dat (musí být správně implementována ve službě REST).
-- `byIdExportColumnName` pokud je zadán v dialogovém okně exportu, umožňuje export podle vybraných řádků. Hodnota je název sloupce v databázi s hodnotou ID (typicky id, používané ve formulářích). Filtrování je třeba implementovat jako `predicates.add(root.get("id").in(idsList));` ve službě REST.
-- `editorButtons` pole tlačítek, která se zobrazí v editoru. Příklad: `editorButtons: [ {title: "Uložiť", action: function() { this.submit(); } }, { title: ...} ]`. Používá rozhraní API pro Editor datových tabulek.
+- `serverSide {boolean}` při hodnotě `true` očekává použití stránkování a uspořádání na serveru voláním REST služeb, při hodnotě `false` provádí stránkování a uspořádání lokálně nad prvotně získanými daty.
+- `tabs {json}` definice [karet pro editor](../datatables-editor/README.md#karty-v-editoru).
+- `id {string}` jednoznačný identifikátor datatabulky, pokud není zadán použije se hodnota `datatableInit`. Potřebné hlavně pokud máte v jedné web stránce více datatabulky.
+- `editorId {string}` jednoznačný identifikátor editoru, pokud není zadán použije se hodnota `id`. Potřebné hlavně pokud máte v jedné web stránce více datatabulky.
+- `onXhr {function}` JavaScript funkce, která se zavolá po [načtení dat](https://datatables.net/reference/event/xhr) ve formě `function ( TABLE, e, settings, json, xhr ) {}`.
+- `onPreXhr(TABLE, e, settings, data) {function}` JavaScript funkce, která se zavolá [před načtením dat](https://datatables.net/reference/event/preXhr), umožňuje přidat do odesílaných dat parametry. Ty se zadávají s prefixem `fixed_` aby šli odlišit od standardních parametrů datatabulky. Příklad: `onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }`.
+- `onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}`: JavaScript funkce, která se zavolá po kliknutí na odkaz editace záznamu. Jako parametry dostane: `TABLE` - instance datatabulky, `row` - jQuery objekt řádku na který se kliklo, `dataAfterFetch` - při zapnuté funkci `fetchOnEdit` json data získaná po jejich obnově, `dataBeforeFetch` původní JSON data řádku pro voláním jejich obnovení. Standardní editor otevřete následně voláním `TABLE.wjEdit(row);`. Příklad použití je ve [web-pages-list.pug](../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
+- `fetchOnCreate {boolean}` po nastavení na true bude před vytvořením nového záznamu provedeno REST volání s hodnotou -1 pro získání dat nového objektu. Hodnoty se nastaví voláním `EDITOR.setJson(json)` implementováno v `$.fn.dataTable.Editor.prototype.setJson` v eventu `initCreate`.
+- `fetchOnEdit {boolean}` po nastavení na true bude před editací záznamu provedeno REST volání pro získání aktuálních dat editovaného záznamu. Při použití datatabulky např. pro web stránky se před otevřením editoru aktualizuje daný záznam ze serveru a do editoru se tedy otevře vždy nejnovější verze. Implementováno přes JS funkci `refreshRow` a zákaznické tlačítko `$.fn.dataTable.ext.buttons.editRefresh` kterým se nahradí standardní tlačítko `edit`.
+- `idAutoOpener {boolean}` umožňuje nastavením na `false` deaktivovat [automatické otevírání editoru](../libraries/datatable-opener.md) podle URL parametru a vložení pole pro zadání ID do hlavičky tabulky.
+- `hideTable {boolean}` po nastavení na `true` se datatabulka nezobrazí ve stránce (bude skrytá).
+- `jsonField {function}` definice pro pole [typu json](../datatables-editor/field-json.md#použití-specifických-json-objektů).
+- `order {array}` výchozí [způsob uspořádání](#uspořádání) tabulky.
+- `paging {boolean}` false vypne stránkování datatabulky (zobrazí se všechna vrácená data ze serveru, nezobrazí se možnost nastavení velikosti stránky).
+- `nestedModal {boolean}` pokud je nastaveno na true, jedná se o datatabulku vloženou jako pole v editoru - [vnořená datatabulka](../datatables-editor/field-datatable.md), vnořená tabulka má přidanou CSS třídu `DTE_nested_modal`.
+- `noAll {boolean}` ve výchozím nastavení k nastavené url přidá `/all` pro získání všech dat, nastavením `noAll` na `false` se `/all` nepřidá, nebude ale funkční ani vyhledávání.
+- `initialData {variable}` data pro prvotní zobrazení (bez potřeby volání REST služby), viz dokumentace k [optimalizaci rychlosti zobrazení](../apps/webpages/README.md) seznamu web stránek. Technicky je-li nastaven tento objekt tak při prvním zobrazení se nevolá REST služba ale se použijí zadaná data.
+- `initialData.forceData {boolean}` po nastavení na `true` se použijí iniciální data bez ohledu na jejich velikost, používá se typicky když iniciální data jsou prázdný objekt, protože se následně získají jiným způsobem. Pro získání prázdných dat můžete použít funkci `initialData:  dtWJ.getEmptyData(true)`.
+- `hideButtons {string}` čárkou oddělený seznam jmen tlačítek, která se mají automaticky v datatabulce schovat (nezobrazit). `create,edit,duplicate,remove,import,celledit`.
+- `removeColumns {string}` čárkou oddělen seznam sloupců, které se nemají zobrazit, i když jsou v definici (pokud např. zobrazujete datatabulku na více místech a nepotřebujete všechny sloupce). Např. `whenToPublish,datePublished`.
+- `forceVisibleColumns` čárkou oddělený seznam sloupců které se zobrazí (přepíší nastavené sloupce uživatelem), používá se typicky ve vnořené datatabulce, kde je třeba zobrazit jen některé sloupce.
+- `updateColumnsFunction` jméno JavaScript funkce, která se použije pro úpravu seznamu sloupců. Používá se typicky ve vnořené datatabulce, kde je třeba doplnit/upravit zobrazené sloupce (viz ukázka níže).
+- `perms` nastaví [práva pro zobrazení tlačítek](#tlačítka-podle-práv) pro přidání, editaci, duplikování a mazání údajů
+- `lastExportColumnName` pokud je zadané zobrazí v exportním dialogu možnost exportovat zatím neexportované údaje (používá se ve formulářích). Hodnota reprezentuje jméno sloupce, který se přidává jako `NULL` podmínka do výběru dat (je třeba korektně implementovat v REST službě).
+- `byIdExportColumnName` pokud je zadáno v exportním dialogu povolí export podle zvolených řádků. Hodnota je jméno sloupce v databázi s ID hodnotou (typicky id, používá se ve formulářích). Filtrování je třeba implementovat jako `predicates.add(root.get("id").in(idsList));` v REST službě.
+- `editorButtons` pole tlačítek, která se zobrazí v editoru. Příklad `editorButtons: [ {title: "Uložiť", action: function() { this.submit(); } }, { title: ...} ]`. Využívá API pro Datatables Editor.
 - `createButtons` pole tlačítek pro přidání nového záznamu, formát stejný jako pro `editorButtons`.
-- `keyboardSave {boolean}` - nastavením na hodnotu `false` zakázat možnost uložit položku v editoru pomocí klávesové zkratky. `CTRL+S/CMS+S`.
-- `stateSave {boolean}` - nastavením na hodnotu `false` zakázat možnost zapamatovat si pořadí sloupců a rozvržení tabulky v prohlížeči.
-- `customFieldsUpdateColumns {boolean}` - nastavením na hodnotu `true` je v získávání [volitelná pole](../datatables-editor/customfields.md) také aktualizovat názvy sloupců v tabulce a v nastavení zobrazených sloupců (ve výchozím nastavení na hodnotu `false` volitelné názvy polí se aktualizují pouze v editoru).
-- `customFieldsUpdateColumnsPreserveVisibility {boolean}` - nastavením na hodnotu `true` nastavení zobrazení sloupce pro režim je pro uživatele zachováno. `customFieldsUpdateColumns`. Lze ji použít pouze v případě, že se sloupce datové tabulky během zobrazení nemění. Například v sekci Překladové klíče se data nemění, lze ji nastavit na hodnotu `true`, ale v sekci Číselníky se při změně číselníku mění i sloupce, tato volba zde není použitelná.
-- `autoHeight {boolean}` - ve výchozím nastavení tabulka vypočítá svou výšku tak, aby maximálně využila prostor v okně. Nastavením na hodnotu `false` výška tabulky bude odpovídat obsahu (počtu řádků).
-- `editorLocking {boolean}` - ve výchozím nastavení tabulka volá notifikační službu, když více uživatelů upravuje stejný záznam, pokud je tato možnost nastavena na hodnotu `false`.
-- `updateEditorAfterSave {boolean}` - nastavením na hodnotu `true` obsah editoru se po uložení dat aktualizuje (pokud editor zůstane otevřený).
+- `keyboardSave {boolean}` - nastavením na hodnotu `false` deaktivujete možnost uložit záznam v editoru klávesovou zkratkou `CTRL+S/CMS+S`.
+- `stateSave {boolean}` - nastavením na hodnotu `false` deaktivujete možnost pamatování pořadí sloupců a uspořádání tabulky v prohlížeči.
+- `customFieldsUpdateColumns {boolean}` - nastavením na hodnotu `true` se při získání [volitelných polí](../datatables-editor/customfields.md) aktualizují také názvy sloupců v tabulce a v nastavení zobrazených sloupců (výchozí hodnota `false` se názvy volitelných pole aktualizují pouze v editoru).
+- `customFieldsUpdateColumnsPreserveVisibility {boolean}` - nastavením na hodnotu `true` se pro uživatele zachová nastavení zobrazení sloupců pro režim `customFieldsUpdateColumns`. Lze použít pouze v případě, kdy pro datatabulku nejsou měněny sloupce během zobrazení. Např. v sekci Překladové klíče se data nemění, lze nastavit na `true`, ale v sekci Číselníky se mění i sloupce při změně číselníku, tam tato možnost není použitelná.
+- `autoHeight {boolean}` - ve výchozím nastavení tabulka počítá svou výšku aby maximálně využila prostor okna. Nastavením na hodnotu `false` bude mít tabulka výšku podle obsahu (počtu řádků).
+- `editorLocking {boolean}` - ve výchozím nastavení tabulka volá službu notifikace při editaci stejného záznamu více uživateli, pokud je toto nechtěné nastavte na hodnotu `false`.
+- `updateEditorAfterSave {boolean}` - nastavením na `true` se aktualizuje obsah editoru po uložení dat (pokud editor zůstává otevřený).
 
 ```javascript
 let columns = [
@@ -214,9 +215,9 @@ let columns = [
     }
 ```
 
-**Zahájení vyhledávání:**
+**Inicializování vyhledávání:**
 
-Mohou nastat případy, kdy je třeba při zobrazení tabulky okamžitě inicializovat (zapamatované) vyhledávání. Toho se využívá v aplikaci Statistiky, která si pamatuje rozsah nastavených dat od-do. Kritéria vyhledávání se použijí již při prvním volání služby REST. Tato možnost se nastavuje pomocí objektu JSON v souboru `options.defaultSearch`. Obsahuje seznam selektorů s hodnotou, která se použije na filtr před prvním voláním služby REST, např.:
+Mohou existovat případy, kdy při zobrazení tabulky potřebujete ihned inicializovat i (zapamatované) vyhledávání. Používá se to v aplikaci Statistika, která si pamatuje rozsah nastavených dat od-do. Již při prvním volání REST služby jsou aplikována vyhledávací kritéria. Možnost se nastavuje JSON objektem v `options.defaultSearch`. Obsahuje seznam selektorů s hodnotou, které se aplikují do filtru před prvním voláním REST služby, např.:
 
 ```json
 {
@@ -225,7 +226,7 @@ Mohou nastat případy, kdy je třeba při zobrazení tabulky okamžitě inicial
 }
 ```
 
-Příklad použití při zapamatování v `sessionStorage` prohlížeč:
+Příklad použití se zapamatováním v `sessionStorage` prohlížeče:
 
 ```javascript
 //inicializacia datatabulky
@@ -301,23 +302,23 @@ export function getSearchCriteria() {
 ### Nastavení sloupců
 
 `renderFormat`:
-- `dt-format-selector` - zaškrtávací políčko pro označení řádku, měl by být jako první sloupec.
-- `dt-format-none` - sloupec nebude mít v záhlaví žádné možnosti.
-- `dt-format-text, dt-format-text-wrap` - standardní text, `escapuje` Kód HTML
+- `dt-format-selector` - zaškrtávací pole pro označení řádku, mělo by být jako první sloupec
+- `dt-format-none` - sloupec nebude mít žádné možnosti v hlavičce
+- `dt-format-text, dt-format-text-wrap` - standardní text, `escapuje` HTML kód
 - `dt-format-select` - výběrové pole
-- `dt-format-checkbox` - Typ HTML `checkbox`
+- `dt-format-checkbox` - HTML typ `checkbox`
 - `dt-format-boolean-true, dt-format-boolean-yes, dt-format-boolean-one` - `true/false` možnosti
-- `dt-format-number, dt-format-percentage` - zobrazit čísla
+- `dt-format-number, dt-format-percentage` - zobrazení čísla
 - `dt-format-number--decimal, dt-format-percentage--decimal`
-- `dt-format-number--text` - zobrazí zaokrouhlené číslo, vyšší číslo vypíše v textové podobě, např. `10 tis.` místo `10000`
+- `dt-format-number--text` - zobrazí zaokrouhlené číslo, při vyšším čísle vypíše v textové podobě. `10 tis.` místo `10000`
 - `dt-format-filesize` - formátování velikosti souboru jako `10,24 kB`
 - `dt-format-date, dt-format-date-time, dt-format-date--text, dt-format-date-time--text` - datum/čas, filtr zobrazí od-do
 - `dt-format-link` - zobrazí text jako odkaz, možnost použít `renderFormatLinkTemplate`
-- `dt-format-image` - zobrazí malý náhled obrázku a odkaz na jeho plné zobrazení, pod obrázkem je text odkazu na obrázek.
-- `dt-format-mail` - zobrazit text jako e-mailový odkaz
-- `dt-row-edit` - umožňuje editaci řádků
+- `dt-format-image` - zobrazí malý náhled obrázku a odkaz na jeho plné zobrazení, pod obrázkem je text linky na obrázek.
+- `dt-format-mail` - zobrazí text jako email odkaz
+- `dt-row-edit` - umožní editaci řádku
 
-Pokud potřebujete, aby měl sloupec určitou (maximální) šířku, musíte ji nastavit pomocí CSS na obou řádcích v záhlaví pomocí stylu CSS. `max-width`. Příklad:
+Pokud potřebujete aby sloupec měl specifickou (maximální) šířku je třeba tuto nastavit pomocí CSS na oba řádky v hlavičce pomocí CSS stylu `max-width`. Příklad:
 
 ```css
 .datatableInit {
@@ -330,11 +331,11 @@ Pokud potřebujete, aby měl sloupec určitou (maximální) šířku, musíte ji
 }
 ```
 
-Nastavení `max-width` zajišťuje nastavení šířky sloupce. Datová tabulka vypočítá zbývající šířky. Pozor, pokud text přesáhne zadanou šířku, zdrží ostatní sloupce v tabulce sám, pak se šířka záhlaví a tabulky neshodují, je nutné v případě potřeby upravit šířku tabulky na dané buňce `overflow` Nemovitost. Potřebný styl CSS můžete do buňky přidat nastavením atributu `className` v anotaci.
+Nastavení `max-width` zajistí nastavení šířky sloupce. Datatabulka dopočítá zbývající šířky. Pozor, pokud text přesahuje zadanou šířku oddálí v samotné tabulce další sloupce, pak nesedí šířka hlavičky a tabulky, je třeba případně na dané buňce nastavit `overflow` vlastnost. Buňce můžete přidat potřebný CSS styl nastavením atributu `className` v anotaci.
 
-### Zobrazení kódu HTML
+### Zobrazení HTML kódu
 
-Datovatelné ve výchozím nastavení `escapuje` HTML do entit, aby se zabránilo nechtěnému spuštění kódu HTML. Pokud potřebujete v buňce zobrazit kód HTML, je možné v atributu anotace nastavit, aby se v buňce zobrazoval kód HTML. `className` Styl CSS `allow-html`, který umožňuje spuštění kódu HTML v buňce. Při jeho používání však buďte opatrní, aby nemohlo dojít k chybě typu XSS.
+Datatabulka ve výchozím nastavení `escapuje` HTML znaky do entit, aby nedošlo k nechtěnému provedení HTML kódu. Pokud v buňce potřebujete zobrazit HTML kód lze v anotaci nastavit v atributu `className` CSS styl `allow-html`, který povolí provedení HTML kódu v buňce. Dávejte ale na toto použití pozor, aby se nemohla nastat chyba typu XSS.
 
 ```java
     @DataTableColumn(
@@ -347,7 +348,7 @@ Datovatelné ve výchozím nastavení `escapuje` HTML do entit, aby se zabránil
 
 ## Přidání/odebrání tlačítek
 
-Prostřednictvím rozhraní API je možné v `toolbare` odebrat/přidat tlačítka:
+Přes API je možné v `toolbare` odebrat/přidat tlačítka:
 
 ```javascript
 //odstranenie tlacitka (kazde tlacitko ma atribut dt-dtbtn podla ktoreho viete zistit jeho meno)
@@ -396,26 +397,26 @@ $('.btn-gallery-size').wrapAll('<div class="btn-group-wrapper buttons-divider-bo
 galleryTable.showButton("export");
 ```
 
-V `init` lze použít následující volání:
-- `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - Tlačítko je aktivní pouze v případě, že je vybrán alespoň jeden řádek.
-- `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - tlačítko je aktivní pouze v případě, že není vybrán žádný řádek
-- `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - tlačítko je aktivní, pouze pokud je vybrán přesně jeden řádek.
+V `init` funkci lze použít následující volání:
+- `$.fn.dataTable.Buttons.showIfRowSelected(this, dt);` - tlačítko je aktivní pouze pokud je označen alespoň jeden řádek
+- `$.fn.dataTable.Buttons.showIfRowUnselected(this, dt);` - tlačítko je aktivní pouze pokud není označen žádný řádek
+- `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` - tlačítko je aktivní pouze pokud je označen přesně jeden řádek
 
-## Tlačítko pro provedení akce serveru
+## Tlačítko pro provedení serverové akce
 
-Datová tabulka nabízí možnost přidat tlačítko pro provedení akce serveru (např. otočení obrázku, odstranění všech záznamů).
+Datatabulka nabízí možnost přidat tlačítko pro provedení serverové akce (např. rotace obrázku, smazání všech záznamů).
 
-Funkce JS `nejakaTable.executeAction(action, doNotCheckEmptySelection, confirmText, noteText, customData = null, forceIds = null)` má parametry:
-- `action` (String) - název akce, která má být odeslána na server k provedení.
-- `doNotCheckEmptySelection` (true) - nastavením na `true` nekontroluje, zda jsou vybrány nějaké řádky, a do služby REST je odeslána hodnota -1 jako ID vybraného řádku. To je užitečné pro tlačítka, která nepotřebují mít vybrané řádky, např. obnovit všechny záznamy atd.
-- `confirmText` (String) - pokud je zadáno, zobrazí se před provedením akce potvrzení (např. Are you sure you want to ...?).
-- `noteText` (řetězec) - doplňkový text zobrazený nad tlačítky pro potvrzení akce (např. operace může trvat několik minut).
-- `customData` - objekt přidaný do volání služby REST jako parametr `customData` (např. další údaje potřebné pro správné provedení akce).
-- `forceIds` - číslo nebo pole čísel s hodnotou ID záznamu, pro který má být akce provedena. Používá se v případě, kdy je třeba kliknutím na ikonu stavu spustit akci (aniž by bylo nutné vybrat řádek).
+JS funkce `nejakaTable.executeAction(action, doNotCheckEmptySelection, confirmText, noteText, customData = null, forceIds = null)` má parametry:
+- `action` (String) - jméno akce, která se odešle na server k provedení.
+- `doNotCheckEmptySelection` (true) - nastavením na `true` se neprovede kontrola, zda jsou zvoleny nějaké řádky a do REST služby se jako ID zvoleného řádku pošle hodnota -1. Vhodné to je na tlačítka, která nepotřebují mít zvolené řádky, například. Obnovit všechny záznamy a podobně.
+- `confirmText` (String) - je-li zadáno zobrazí se před provedením akce potvrzení (např. Jste si jisti, že chcete ...?).
+- `noteText` (String) - doplňkový text zobrazený nad tlačítky pro potvrzení provedení akce (např. Operace může trvat několik minut).
+- `customData` - objekt přidaný do volání REST služby jako parametr `customData` (např. dodatečné údaje potřebné pro korektní provedení akce).
+- `forceIds` - číslo nebo pole čísel s hodnotou ID záznamu pro který se má akce provést. Využíváno pokud potřebujete kliknutím na stavovou ikonu vyvolat akci (bez potřeby označení řádku).
 
-Na serveru je provedeno volání služby REST. `/action/rotate` implementované v metodě [DatatableRestControllerV2.processAction](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Seznam vybraných řádků (jejich ID) je odeslán službě REST, která je zpracována v metodě DatatablesRestControllerV2.action.
+Na serveru se v REST službě provede volání `/action/rotate` implementováno v metodě [DatatableRestControllerV2.processAction](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). REST službě se pošle seznam vybraných řádků (jejich ID), což se zpracuje v metodě DatatablesRestControllerV2.action.
 
-**Příklad použití** - přidáno tlačítko `toolbaru` nad datovou tabulkou s výzvou k akci:
+**Příklad použití** - přidáno tlačítko do `toolbaru` nad datatabulkou s voláním akce:
 
 ```javascript
 cacheObjectsTable.button().add(3, {
@@ -433,7 +434,7 @@ cacheObjectsTable.button().add(3, {
 });
 ```
 
-Tlačítko také s kontrolou, že je vybrán nějaký řádek (v možnosti init):
+Tlačítko is kontrolou, že je zvolen nějaký řádek (v init option):
 
 ```javascript
 galleryTable.button().add(buttonCounter++, {
@@ -457,11 +458,11 @@ galleryTable.button().add(buttonCounter++, {
 
 Akce vyvolá následující události:
 - `WJ.DT.executeAction` - po úspěšném provedení akce.
-- `WJ.DT.executeActionCancel` - po neúspěšném provedení akce nebo po kliknutí na tlačítko Zrušit pro potvrzení akce.
+- `WJ.DT.executeActionCancel` - po neúspěšném provedení akce, nebo kliknutí na tlačítko Zrušit při potvrzení akce.
 
 ## Tlačítka podle práv
 
-Pokud potřebujete zobrazovat tlačítka podle práv (např. tlačítko Přidat pouze v případě, že uživatel má určité právo), je možné přidat atribut do konfigurace datové tabulky. `perms`:
+Pokud potřebujete zobrazovat tlačítka podle práv (např. tlačítko Přidat jen pokud má uživatel určité právo) je možné do konfigurace datatabulky přidat atribut `perms`:
 
 ```javascript
 webpagesDatatable = WJ.DataTable({
@@ -476,11 +477,11 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
-definice v `perms` objekt definuje specifické právo na jméno pro každou operaci vytvoření (`create`), editace (`edit`), duplikace (`duplicate`) a vymazání (`remove`) záznamu.
+definice v `perms` objektu definuje konkrétní jméno práva pro jednotlivé operace vytvoření (`create`), editace (`edit`), duplikování (`duplicate`) a smazání (`remove`) záznamu.
 
-Při nastavení práv se přestanou zobrazovat tlačítka na panelu nástrojů a nezobrazí se ani tlačítko pro uložení/přidání/odstranění v dialogovém okně editoru (tlačítka se skryjí, když je zobrazeno okno editoru).
+Nastavení práv přestane zobrazovat tlačítka v nástrojové liště a zároveň nebudou zobrazovat tlačítko pro uložení/přidání/smazání záznamu v dialogovém okně editoru (tlačítka se schovají při zobrazení okna editoru).
 
-Tabulka poskytuje rozhraní API pro ověření práva jako `TABLE.hasPermission(action)`:
+Tabulka poskytuje API pro ověření práva jako `TABLE.hasPermission(action)`:
 
 ```javascript
 if (webpagesDatatable.hasPermission("create")) {
@@ -488,13 +489,13 @@ if (webpagesDatatable.hasPermission("create")) {
 }
 ```
 
-!>**Varování:** nespoléhejte se pouze na kontrolu práv na frontendu, práva je třeba kontrolovat také ve službě REST nebo ve třídě služby. Můžete použít metody [beforeSave nebo beforeDelete](restcontroller.md#zabránění-vymazání---editace-záznamu.).
+!>**Upozornění:** nespoléhejte se jen na kontrolu práv na frontendu, práva je třeba kontrolovat iv REST službě nebo v service třídě. Využít můžete metody [beforeSave nebo beforeDelete](restcontroller.md#zabránění-smazání--editace-záznamu).
 
-## Stylování řádků
+## Stylování řádku
 
-Někdy je nutné nastavit styl CSS pro celý řádek (např. tučné písmo pro hlavní stránku nebo červené pro nedostupnou stránku). K přenosu těchto dodatečných údajů používáme přenos vnořených atributů prostřednictvím objektu [EditorFields](../datatables-editor/datatable-columns.md#vnořené-atributy). Vytvořili jsme třídu [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) která má metodu `addRowClass(String addClass)` přidat na řádek třídu CSS.
+Někdy je třeba nastavit CSS styl celého řádku (např. tučné písmo pro hlavní stránku, nebo červené pro nedostupnou). Pro přenos těchto doplňkových údajů využíváme přenos vnořených atributů přes objekt [EditorFields](../datatables-editor/datatable-columns.md#vnořené-atributy). Vytvořili jsme třídu [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), která má metodu `addRowClass(String addClass)` pro přidání CSS třídy na řádku.
 
-Příkladem použití je [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java):
+Příklad použití je v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java):
 
 ```java
 ...
@@ -512,15 +513,15 @@ public class DocEditorFields extends BaseEditorFields {
 }
 ```
 
-K dispozici jsou následující styly řádků CSS:
-- `is-disabled` - představuje neaktivní položku, která je zobrazena červeně.
-- `is-disapproved` - představuje neschválenou položku, vyznačenou červeně.
-- `is-default-page` - představuje hlavní webovou stránku adresáře, která je zobrazena tučně.
-- `is-not-public` - představuje neveřejnou položku, vyznačenou červeně.
+Dostupné jsou následující CSS styly řádku:
+- `is-disabled` - reprezentuje neaktivní položku, zobrazené červeným písmem.
+- `is-disapproved` - reprezentuje neschválenou položku, zobrazené červeným písmem.
+- `is-default-page` - reprezentuje hlavní web stránku adresáře, zobrazené tučným písmem.
+- `is-not-public` - reprezentuje neveřejnou položku, zobrazené červeným písmem.
 
-Nastavení stylu řádků CSS je implementováno v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) pomocí možnosti `rowCallback` konstruktor datového souboru. Ověřuje existenci vlastnosti `data.editorFields.rowClass` a pokud existuje, použije tuto hodnotu na řádek.
+Nastavení CSS stylu řádku je implementováno v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) pomocí možnosti `rowCallback` konstruktoru datatabulky. Ověřuje existenci property `data.editorFields.rowClass` a pokud existuje tak hodnotu aplikuje na řádek.
 
-Styl řádku můžete nastavit také v kódu JavaScriptu (např. na základě atributů) pomocí příkazu `onRowCallback`. Řádky tak můžete snadno označit jako neaktivní pomocí stylu CSS. `is-not-public`.
+Nastavení stylu řádku můžete provést iv JavaScript kódu (např. na základě atributů) pomocí volby `onRowCallback`. Můžete tak snadno označit řádky jako neaktivní CSS stylem `is-not-public`.
 
 ```javascript
 domainRedirectTable = WJ.DataTable({
@@ -536,11 +537,11 @@ domainRedirectTable = WJ.DataTable({
 
 ## Stavové ikony
 
-Někdy je nutné zobrazit stavové ikony záznamu (např. na webových stránkách ikony Nezobrazeno v nabídce, Přesměrovaná stránka atd.). K přenosu těchto dodatečných údajů používáme přenos vnořených atributů prostřednictvím objektu [EditorFields](../datatables-editor/datatable-columns.md#vnořené-atributy). Vytvořili jsme třídu [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) která má metodu `addStatusIcon(String className)`. Ikony jsou od FontAwesome.
+Někdy je třeba zobrazit stavové ikony záznamu (např. ve web stránkách ikony Nezobrazené v menu, Přesměrovaná stránka a podobně). Pro přenos těchto doplňkových údajů využíváme přenos vnořených atributů přes objekt [EditorFields](../datatables-editor/datatable-columns.md#vnořené-atributy). Vytvořili jsme třídu [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), která má metodu `addStatusIcon(String className)`. Ikony jsou ze sady FontAwesome.
 
 ![](../../redactor/webpages/status-icons.png)
 
-Příkladem použití je [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java). Je nutné definovat atribut `statusIcons` s `@DataTableColumn` anotace pro zobrazení sloupce. Zobrazí se jako výběrové pole, v `options` doporučujeme definovat ikonu a popisný text. Stejně jako `value` jsou přenášeny podmínky vyhledávání (viz níže):
+Příklad použití je v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java). Je třeba definovat atribut `statusIcons` s `@DataTableColumn` anotací, aby se sloupec zobrazil. Je zobrazen jako výběrové pole, do `options` atributu doporučujeme definovat ikonu a popisný text. Jak `value` se přenášejí vyhledávací podmínky (viz níže):
 
 ```java
 ...
@@ -576,7 +577,7 @@ public class DocEditorFields extends BaseEditorFields {
 }
 ```
 
-pokud potřebujete do stavových ikon něco programově přidat (v případě webových stránek je to odkaz na zobrazení stránky), můžete stavové ikony upravit přímo v kódu (v tomto případě neimplementujte metodu `getStatusIcons`):
+pokud potřebujete programově něco co stavových ikon doplnit (v případě web stránek se jedná o odkaz na zobrazení stránky), můžete upravit stavové ikony přímo v kódu (v tom případě neimplementujte metodu `getStatusIcons`):
 
 ```java
     public void fromDocDetails(DocDetails doc) {
@@ -598,17 +599,17 @@ pokud potřebujete do stavových ikon něco programově přidat (v případě we
     }
 ```
 
-Vyhledávání po výběru možnosti filtru je implementováno v aplikaci `DatatableRestControllerV2.addSpecSearchStatusIcons` a je automaticky vyvolán při volání `addSpecSearch` (pokud tuto metodu rozšiřujete, musíte ji volat implicitně), úložiště musí rozšiřovat `JpaSpecificationExecutor`. V současné době jsou podporovány následující možnosti vyhledávání:
-- `property:true` - hodnota atributu `property` Je `true`
-- `property:false` - hodnota atributu `property` Je `false`
-- `property:notEmpty` - hodnota atributu `property` není prázdný
-- `property:empty` - hodnota atributu `property` je prázdný (null nebo '')
+Vyhledávání po zvolení možnosti filtru je implementováno v `DatatableRestControllerV2.addSpecSearchStatusIcons` a zavolá se automaticky při volání `addSpecSearch` (pokud tuto metodu rozšiřujete, musíte to volat implicitně), repozitář musí rozšiřovat `JpaSpecificationExecutor`. Aktuálně jsou podporovány následující možnosti vyhledávání:
+- `property:true` - hodnota atributu `property` je `true`
+- `property:false` - hodnota atributu `property` je `false`
+- `property:notEmpty` - hodnota atributu `property` není prázdná
+- `property:empty` - hodnota atributu `property` je prázdná (null nebo '')
 - `property:%text%` - hodnota atributu `property` obsahuje zadaný text (`like` vyhledávání)
 - `property:!%text%` - hodnota atributu `property` neobsahuje zadaný text (`not like` vyhledávání)
 
 ## Zobrazení dat na základě práv
 
-V definici sloupců je možné nastavit požadované právo pro zobrazení sloupce v datové tabulce nebo v editoru pomocí atributu `perms`. Příklad v souboru [redirect.pug](../../../src/main/webapp/admin/v9/views/pages/settings/redirect.pug):
+V columns definici je možné nastavit požadované právo pro zobrazení daného sloupce v datatabulce nebo v editoru pomocí atributu `perms`. Příklad v souboru [redirect.pug](../../../src/main/webapp/admin/v9/views/pages/settings/redirect.pug):
 
 ```javascript
 {
@@ -626,11 +627,11 @@ V definici sloupců je možné nastavit požadované právo pro zobrazení sloup
 },
 ```
 
-WebJET generuje pole JS v kódu HTML při zobrazení stránky. `nopermsJavascript` který obsahuje seznam modulů, k nimž uživatel nemá práva. Generuje se také styl CSS s třídami `.noperms-menomodulu` se sadou `display: none`.
+WebJET při zobrazení stránky vygeneruje do HTML kódu JS pole `nopermsJavascript` ve kterém je seznam modulů, na které uživatel nemá práva. Stejně tak se vygeneruje i CSS styl s třídami `.noperms-menomodulu` s nastaveným `display: none`.
 
 ## Uspořádání
 
-Datatable podporuje nastavení řazení podle atributu [záruku:](https://datatables.net/reference/option/order). To lze převést jako `option` při inicializaci tabulky. Ale kvůli parsování pugjs/thymeleaf není možné zapsat výraz přímo. `[[0, 'asc']]` protože Thymeleaf ji provede. Je nutné připravit pole rozvržení oklikou přes proměnnou a push:
+Datatable podporuje nastavení uspořádání atributem [order:](https://datatables.net/reference/option/order). Tento lze přenášet jako `option` při inicializaci tabulky. Z důvodu pugjs/thymeleaf parsingu ale nelze zapsat přímo výraz `[[0, 'asc']]`, protože ho Thymeleaf provede. Je třeba pole uspořádání připravit oklikou přes proměnnou a push:
 
 ```javascript
 var order = [];
@@ -643,21 +644,21 @@ configurationDatatable = WJ.DataTable({
 });
 ```
 
-takže parser Thymeleaf je "oklamán" a pole layout je správně definováno.
+tak se "oklame" Thymeleaf parser a pole pro uspořádání se korektně definuje.
 
 ## Vyhledávání
 
-**Filtrování značek HTML**
+**Filtrování HTML značek**
 
-Datovatelné na **místní vyhledávání** (neplatí pro vyhledávání na serveru) ve výchozím nastavení filtruje značky HTML a vyhledává pouze v textu (ignoruje obsah značek HTML). To je nežádoucí stav pro pole typu `textarea` kde se zadává kód HTML (např. kód skriptu v aplikaci Skripty). V důsledku toho vyhledávání nenajde výraz v kódu HTML.
+Datatabulka při **lokálním vyhledávání** (neaplikuje se na serverové vyhledávání) ve výchozím nastavení filtruje HTML značky a vyhledává pouze v textu (obsah HTML značek ignoruje). To je nežádoucí stav pro pole typu `textarea` kde se HTML kód zadává (např. kód skriptu v aplikaci Skripty). Následně vyhledávání výraz v HTML kódu nenajde.
 
-Do souboru index.js je přidán typ vyhledávání html-input, který nefiltruje značky HTML. `$.fn.dataTableExt.ofnSearch['html-input'] = function(value)...`. V `columnDefs` je automaticky nastaven pro sloupce se stylem CSS `dt-format-text-wrap` (nastaveno automaticky pomocí anotace `DataTableColumnType.TEXTAREA`) nebo `html-input`.
+Do index.js je doplněn vyhledávací typ html-input, který nefiltruje HTML značky `$.fn.dataTableExt.ofnSearch['html-input'] = function(value)...`. V `columnDefs` je automaticky nastaven pro sloupce s CSS stylem `dt-format-text-wrap` (nastaveno automaticky anotací `DataTableColumnType.TEXTAREA`) nebo `html-input`.
 
 ## Externí filtr
 
-Kromě zobrazení filtrů v záhlaví každého sloupce tabulky můžete přidat samostatné pole filtru kdekoli v kódu HTML stránky. Příkladem je [Odstranění záznamů v databázi](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug) kde je filtr přesunut přímo do záhlaví stránky k nadpisu.
+Kromě zobrazení filtrů v záhlaví každého sloupce tabulky je možné přidat samostatné filtrovací pole na libovolné místo v HTML kódu stránky. Příkladem je [Mazání záznamů v databázi](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug) kde je filtr přesunut přímo do hlavičky stránky k nadpisu.
 
-V souboru pug je třeba připravit základní strukturu HTML vytvořením kontejneru div s ID `TABLEID_extfilter`. Vyhledává prvky div s třídou CSS `dt-extfilter-title-FIELD` do kterého se vloží název sloupce a `dt-extfilter-FIELD` do kterého je vyhledávací pole vloženo.
+V pug souboru je třeba připravit základní HTML strukturu vytvořením div kontejneru s ID `TABLEID_extfilter`. V něm se vyhledají div elementy s CSS třídou `dt-extfilter-title-FIELD` do kterého se vloží název sloupce a `dt-extfilter-FIELD` do kterého se vloží vyhledávací pole.
 
 ```
 div#dateDependentEntriesTable_extfilter
@@ -666,26 +667,26 @@ div#dateDependentEntriesTable_extfilter
         div.col-auto.dt-extfilter.dt-extfilter-from
 ```
 
-!>**Varování:** v prvku pro vyhledávací pole je třída CSS `.dt-extfilter` Také `.dt-extfilter-FIELD`, je třeba použít obě. Podle třídy CSS `.dt-extfilter` prvek se nachází po kliknutí na lupu v atributu data. `data-column-index` je uloženo pořadové číslo sloupce.
+!>**Upozornění:** v elementu pro vyhledávací pole je CSS třída `.dt-extfilter` i `.dt-extfilter-FIELD`, je třeba použít obě. Podle CSS třídy `.dt-extfilter` se vyhledá element po kliknutí na lupu, v data atributu `data-column-index` je uloženo pořadové číslo sloupce.
 
-Pokud chcete filtr přesunout do záhlaví stránky, můžete jej jednoduše přesunout pomocí jQuery, jako v případě [database-delete.pug](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
+Chcete-li přesunout filtr do hlavičky stránky, můžete jej jednoduše přesunout pomocí jQuery jako je v [database-delete.pug](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
 
-**Poznámky k implementaci**
+**Poznámky k implementaci:**
 
-Kliknutím na ikonu lupy se zadaný text filtru přenese do datového filtru a uloží se do objektu. `TABLE.DATA.columns[inputIndex].searchVal`. Tato funkce je k dispozici pro volání AJAX. Ve funkci `datatable2SpringData` pak se hledají hodnoty `.searchVal` pro externí filtr, a pokud jsou nastaveny, jsou přidány do parametrů vyhledávání pro požadavek AJAX.
+Interně kliknutím na ikonu lupy se přenese zadaný text filtru do filtru datatabulky a uloží se i do objektu `TABLE.DATA.columns[inputIndex].searchVal`. Tento je dostupný pro AJAX volání. Ve funkci `datatable2SpringData` se následně prohledávají hodnoty `.searchVal` pro externí filtr a pokud jsou nastaveny přidají se do parametrů vyhledávání pro AJAX požadavek.
 
-Toto řešení bylo zvoleno z důvodu předvyužití existujícího kódu pro výpočet hledané hodnoty (zejména pro data), zároveň sloupce využívající externí filtr mohou mít nastaven atribut `filter=false` v `@DatatableColumn anotácii`.
+Takové řešení bylo zvoleno z důvodu pre-použití existujícího kódu pro výpočet hodnoty vyhledávání (hlavně pro data), zároveň sloupce používající externí filtr mohou mít nastavený atribut `filter=false` v `@DatatableColumn anotácii`.
 
 ## Export/import
 
-Implementoval systém pro import a export dat mezi datovými tabulkami. Pro každou datovou tabulku po jejím vytvoření a nastavení ověřte funkčnost importu a exportu. Ověřte také všechny možnosti importu, včetně porovnávání podle sloupců. Pokud nechcete používat export/import, vypněte tlačítka pomocí kódu (datatableInstance je název instance datové tabulky):
+Implementovaný systém pro import a export dat mezi datatabulkami. Pro každou datatabulku po jejím vytvoření a nastavení ověřte funkčnost importu a exportu. Ověřte také všechny možnosti importu, včetně párování na základě sloupce. Pokud export/import nechcete použít vypněte tlačítka kódem (datatableInstance je jméno instance datatabulky):
 
 ```javascript
 datatableInstance.hideButton("import");
 datatableInstance.hideButton("export");
 ```
 
-Pokud potřebujete vynechat některý sloupec z exportu, stačí jej nastavit/přidat do položky `columns` atribut `className` hodnota `not-export`:
+Pokud potřebujete z exportu vynechat některý sloupec stačí nastavit/přidat do `columns` atributu `className` hodnotu `not-export`:
 
 ```java
 @DataTableColumn(
@@ -696,9 +697,9 @@ Pokud potřebujete vynechat některý sloupec z exportu, stačí jej nastavit/p�
 private String fieldName;
 ```
 
-Další informace naleznete v dokumentaci k [Vývojář](export-import.md) nebo pro [editora](../../redactor/datatables/export-import.md).
+Více informací je v dokumentaci pro [vývojáře](export-import.md) nebo pro [redaktora](../../redactor/datatables/export-import.md).
 
-## Volání API
+## API volání
 
 ```javascript
 //zoznam selectnutych riadkov
@@ -739,13 +740,43 @@ TABLE.calculateAutoPageLength(updateLengthSelect)
 
 ## Ukázky kódu
 
-### Naslouchání události obnovení tabulky:
+### Poslech události obnovení tabulky
 
-Klikněte na tlačítko `reload` spustí událost `WJ.DTE.forceReload` kterému můžete naslouchat a např. aktualizovat stromovou strukturu:
+Klepnutí na tlačítko `reload` vyvolá událost `WJ.DTE.forceReload` na který můžete poslouchat a např. aktualizovat stromovou strukturu:
 
 ```javascript
 window.addEventListener('WJ.DTE.forceReload', (e) => {
     //console.log("FORCE RELOAD listener, e=", e);
     $('#SomStromcek').jstree(true).refresh();
 }, false);
+```
+
+### Změna hodnot výběrového pole
+
+Pokud potřebujete dynamicky měnit možnosti výběrového pole `select` je třeba kromě změny `option` objektů nastavit i atribut `_editor_val`, který se použije jako zvolená hodnota. Příklad je pro vnořenou datatabulku, kde bylo třeba na základě hodnoty načíst možnosti do výběrového pole.
+
+```javascript
+var documentItemsEventsBinded = false;
+window.addEventListener("WJ.DTE.opened", function(e) {
+    if ("datatableFieldDTE_Field_documentItems"===e.detail.id) {
+        let select = document.getElementById("DTE_Field_adressId");
+        //reset options
+        select.options.length=0
+        $.ajax({
+            url: "/admin/rest/apps/appname/list/" + $("#DTE_Field_customerId").val(),
+            success: function(data) {
+                if (data) {
+                    $.each(data, function (i, item) {
+                        let option = new Option(item.label, item.value);
+                        //this value is important, DT use this value instead of option.value
+                        option._editor_val = item.value;
+                        select.add(option);
+                    });
+                    //refresh selectpicker
+                    $(select).selectpicker('refresh');
+                }
+            }
+        });
+    }
+});
 ```

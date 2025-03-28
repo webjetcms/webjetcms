@@ -2,13 +2,13 @@
 
 ## Úvod
 
-Aplikace AB testování umožňuje provádět AB testování verze webu. Kliknutím na tlačítko Uložit jako AB test je možné vytvořit verzi B stránky. Vytvoří se kopie stránky s upravenou adresou URL, ve které můžete testovat verzi B stránky. WebJET pak automaticky zajistí, aby se verze A a B stránky zobrazovaly na původní adrese URL v definovaném poměru. Návštěvník tedy stále vidí původní adresu URL, ale místo verze A se mu automaticky zobrazí verze B stránky.
+Aplikace AB testování vám umožňuje provést AB testování verze stránek. Je možné vytvořit B verzi stránky kliknutím na tlačítko Uložit jako AB test. Vytvoří se kopie stránky s upravenou URL adresou, ve které můžete testovat B verzi stránky. WebJET následně automaticky zajistí zobrazování A a B verze stránky na původní URL adrese v definovaném poměru. Návštěvník tedy stále vidí původní URL, ale místo A verze se mu automaticky zobrazí B verze stránky.
 
 ## Co je AB testování
 
-- porovnání jedné významné změny
+- srovnání jedné zásadní změny
 - měříme konverzi akce
-- doporučený dostatečný vzorek alespoň 1000 návštěvníků/obrázků.
+- doporučený dostatečný vzorek minimálně 1000 návštěvníků/zobrazení
 - `split` test = testování komplexní změny
 
 ![](how-it-works.png)
@@ -16,69 +16,69 @@ Aplikace AB testování umožňuje provádět AB testování verze webu. Kliknut
 **Výhody:**
 
 - test je jednoduchý a rychlý
-- identifikuje pro nás důležité objekty
+- určí nám důležité objekty
 - je snadno měřitelný
 
 **Nevýhody:**
 
-- může často zklamat
-- je nutné správně navrhnout, co testujeme a jaký by měl být výsledek.
-- velkou změnu budeme testovat krok za krokem po delší dobu.
+- často může zklamat
+- je třeba správně navrhnout co testujeme a co má být výsledek
+- velkou změnu budeme po krocích testovat déle
 
 ## Jak připravit test
 
-Připravte hypotézu, která by měla zlepšit stav
+Připravte si hypotézu, která by měla zlepšit stav
 
-- využívat statistiky (vysoká míra výpadku).
+- využijte statistiku (stránka s vysokým odchodem)
 - brainstorming
-- Průzkum
+- průzkum
 
 **Co je vhodné testovat:**
 
-- záhlaví (stránky, tlačítka)
-  - stručný vs. popisný
-  - orientace na funkci nebo užitek
-- Obrázky
-  - usmívající se lidé vs. fotografie produktu
-  - barevné provedení, velikost
+- titulek (stránky, tlačítka)
+  - výstižný vs popisný
+  - orientovaný na vlastnost nebo benefit
+- obrázky
+  - usměvaví lidé vs foto produktu
+  - barevnost, velikost
   - video
 - text stránky
   - pod nadpisy, zvýraznění slov
-  - odrážky vs. odstavce
-  - výhody vs. funkce
-- barva
-  - tlačítka, odkazy, nadpisy
+  - odrážky vs odstavce
+  - benefity vs funkce
+- barevnost
+  - tlačítek, odkazů, nadpisů
 - formuláře
   - počet polí
-  - povinné vs. nepovinné
-  - rozdělení do více kroků
-- `CTA` prvky (prvky, na které návštěvník klikne a provede akci).
-  - text, barva, poloha, způsob působení
-- změnit rozložení objektů
+  - povinné vs nepovinné
+  - rozdělení na více kroků
+- `CTA` prvky (prvky na které návštěvník kliká pro provedení akce)
+  - text, barva, pozice, způsob provedení akce
+- změna rozložení objektů
 - použitelnost
   - co bude lepší?
 - nezapomeňme na stránku po konverzi
-  - získejme od návštěvníka více informací
+  - získejme od návštěvníka více
   - sociální ikony, newsletter
   - bonusová nabídka
 
 ## Vytvoření testu
 
-Chcete-li vytvořit verzi B stránky, vyberte původní verzi stránky a klikněte na ikonu . <i class="ti ti-a-b" ></i> Uložit jako test AB. Poté vytvoříte kopii stránky, která bude zobrazovat ikonu ve sloupci Stav. <i class="ti ti-a-b" ></i>. Ve verzi B můžete upravit text stránky a otestovat dopad změn.
+B verzi stránky vytvoříte označením originální verze stránky a kliknutím na ikonu <i class="ti ti-a-b" ></i> Uložit jako AB test. Následně se vám vytvoří kopie stránky, která ve sloupci Stav bude zobrazovat ikonu <i class="ti ti-a-b" ></i>. V B verzi můžete upravit text stránky, kterým budete testovat dopad změn.
 
 ![](datatable.png)
 
-Je také možné otestovat tzv. `split` Testy. Návštěvník se vygeneruje při prvním přístupu `cookie` který určuje, jaká verze stránky se mu zobrazí. Pokud je vygenerována verze B, všechny následující stránky, které mají verzi B, se také zobrazí ve verzi B. Návštěvník tak může přecházet mezi více stránkami verze B.
+Lze také testovat tzv. `split` testy. Návštěvníkovi se při prvním přístupu vygeneruje `cookie` která určuje jaká verze stránky se mu zobrazí. Pokud se vygeneruje B verze, tak i všechny následující stránky které mají B verzi se zobrazí v B verzi. Návštěvník tak může přecházet mezi více stránkami B verze.
 
-V aplikaci AB Testing je možné nastavit poměr mezi verzí A a B, technické názvy URL. `suffixu` a název souboru cookie, platnost souboru cookie a především zapnutí a vypnutí testování AB.
+V aplikaci AB testování lze nastavit poměr mezi A a B verzí, technické názvy URL `suffixu` a názvu cookie, platnost cookie a hlavně se AB testování zapíná a vypíná.
 
 ## Měření výsledků
 
 - měříme stránku/akci po konverzi
-- split test umožní verzi B děkovné stránky
-- před testem si ujasněme, co budeme měřit a jak to budeme měřit.
-- i snížení konverze je úspěchem testu
+- split test umožní B verze děkovné stránky
+- před testem si ujasněme co a jak změříme
+- i snížení konverze je úspěch testu
 
-V aplikaci AB Testing se v tabulce zobrazí seznam webů, které mají verzi B, s možností zobrazit graf porovnání verzí. Pokud nemáte poměr verzí AB 50:50, WebJET také automaticky provede přepočet poměru návštěv jednotlivých verzí, aby bylo možné čísla porovnat.
+V aplikaci AB testování se v tabulce zobrazuje seznam stránek které mají B verzi s možností zobrazení grafu porovnání verzí. Pokud nemáte poměr AB verze 50:50 WebJET automaticky provede i poměrový přepočet návštěv jednotlivých verzí, aby se dala čísla porovnat.
 
 ![](stat-percent.png)

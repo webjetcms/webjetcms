@@ -1,21 +1,21 @@
 # Historie
 
-Na kartě Historie jsou zobrazeny publikované historické verze webové stránky a **aktuální verze ve vývoji (dosud nezveřejněné)**. Při publikování rozpracované verze jsou dočasné/pracovní verze stránky z historie odstraněny a v historii je ponechána publikovaná verze.
+V kartě Historie se zobrazují publikované historické verze web stránky a **aktuálně rozpracované (ještě nepublikované) verze**. Při publikování rozpracované verze se z historie smažou dočasné/pracovní verze stránky a v historii se ponechá publikovaná verze.
 
-Plánované verze (budoucí) mají ve sloupci **Bude zveřejněno** datum, kdy bude/byla verze zveřejněna. Pokud máte stránku naplánovanou ke zveřejnění a chcete ji zrušit, stačí ji smazat.
+Plánované verze (budoucí) mají ve sloupci **Bude publikováno** zobrazené datum, kdy daná verze bude/byla publikována. Pokud máte naplánovanou stránku pro publikování a chcete ji zrušit stačí ji smazat.
 
-Stránky s nastavenou možností **Zveřejnit stránku po tomto datu** zobrazit datum ve sloupci **Bude vypnuta**. V tomto okamžiku bude veřejné zobrazení webové stránky zakázáno (stránka bude pro veřejnost nedostupná). Pokud potřebujete vypnutí zrušit, musíte upravit verzi a zrušit naplánované vypnutí opětovným uložením.
+Stránky, které mají nastavenou možnost **Odveřejnit stránku po tomto datu** zobrazují datum ve sloupci **Bude vypnuto**. V daném čase se vypne veřejné zobrazování web stránky (stránka nebude pro veřejnost dostupná). Pokud potřebujete vypnutí stránky zrušit, je třeba upravit danou verzi a plánované vypnutí zrušit jejím znovu uložením.
 
 Tučným písmem je zvýrazněna aktuálně zveřejněná verze stránky.
 
-Sloupce s počátečním a koncovým datem zobrazují údaje nastavené na kartě Perex editoru stránky.
+Sloupce datum začátku a datum konce zobrazují nastavená data v kartě Perex v editoru stránek.
 
-V případě schválení/odmítnutí stránky se zobrazí také jméno uživatele, který verzi schválil nebo odmítl.
+V případě schvalování/zamítnutí stránky se zobrazuje i jméno uživatele, který danou verzi schválil, nebo zamítl.
 
 ![](history.png)
 
-Výběrem řádku a kliknutím na ikonu lze provádět akce:
-- ![](history-btn-edit.png ":no-zoom") - Upravit stránku - vybraná verze se načte z historie do editoru. Umožňuje znovu publikovat starší verzi stránky.
-- ![](history-btn-remove.png ":no-zoom") - Smazat - odstraní stránku z historie, lze použít pouze pro stránky s plánovaným publikováním (mají vyplněné datum). **Bude zveřejněno**).
-- ![](history-btn-preview.png ":no-zoom") - Zobrazit stránku - zobrazí vybranou webovou stránku z historie. Upozorňujeme, že v historii je uložen text stránky, pokud se změní šablona (např. v zápatí stránky), neprojeví se to v zobrazení.
-- ![](history-btn-compare.png ":no-zoom") - Porovnání stránky - zobrazí se nové okno rozdělené na dvě části s obsahem aktuální a nové verze stránky. Obě části jsou vzájemně synchronizovány, takže se při prohlížení obsahu pohybují současně. V okně pro porovnání máte také možnost zvýraznit změny uložené verze z historie oproti aktuální zveřejněné verzi webové stránky. To provedete klepnutím na odkaz "Zvýraznit rozdíly" v horní části okna.
+Zvolením řádku a kliknutím na ikonu lze provést akce:
+- ![](history-btn-edit.png ":no-zoom") - Editovat stránku - zvolená verze se načte z historie do editoru. Umožňuje vám nově publikovat starší verzi stránky.
+- ![](history-btn-remove.png ":no-zoom") - Smazat - smaže stránku z historie, lze použít pouze na stránky s naplánovaným publikováním (mají vyplněné datum v **Bude publikováno**).
+- ![](history-btn-preview.png ":no-zoom") - Zobrazit stránku - zobrazí zvolenou web stránku z historie. Upozorňujeme, že v historii se ukládá text stránky, pokud dojde ke změně šablony (např. v patičce stránky) toto nebude reflektováno při zobrazení.
+- ![](history-btn-compare.png ":no-zoom") - Porovnat stránku - zobrazí se vám nové okno, které je rozděleno na dvě části s obsahem aktuální a nové verze stránky. Obě části jsou vzájemně synchronizovány, takže se vám při prohlížení obsahu pohybují současně. V okně srovnání máte také možnost zvýraznit změny uložené verze z historie vůči aktuální publikované verzi web stránky. Tato operace se provede po kliknutí na odkaz "Zvýraznit rozdíly" v horní části okna.

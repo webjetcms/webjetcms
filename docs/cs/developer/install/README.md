@@ -1,23 +1,23 @@
-# Instalace a uvedení do provozu
+# Instalace a spuštění
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-- [Instalace a uvedení do provozu](#instalace-a-uvedení-do-provozu)
-  - [Webpack sestavuje soubory JS, CSS a PUG](#Webpack-build-js-css-a-pug-soubory)
-  - [Sestavení tříd jazyka Java a spuštění aplikace Tomcat](#sestavit-třídy-java-a-spustit-tomcat)
-  - [Nastavení souboru hosts](#nastavení-souboru-hosts)
+- [Instalace a spuštění](#instalace-a-spuštění)
+  - [Webpack build JS, CSS a PUG souborů](#webpack-build-js-css-a-pug-souborů)
+  - [Build Java tříd a spuštění Tomcatu](#build-java-tříd-a-spuštění-tomcatu)
+  - [Nastavení hosts souboru](#nastavení-hosts-souboru)
   - [Testování](#testování)
 
 <!-- /code_chunk_output -->
 
-Pokud ji ještě nemáte, nainstalujte si [Kód VS s doporučenými závislostmi a rozšířeními](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - sledujte pouze instalační část rozšíření, následující kapitoly `Pull` projektu z SVN a nastavení Tomcatu se vás již netýká.
+Pokud ještě nemáte, nainstalujte si [VS Code s doporučenými závislostmi a rozšířeními](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - postupujte pouze po část instalace rozšíření, následné kapitoly `Pull` projektu z SVN a nastavení Tomcat-u se vás už netýká.
 
-V projektu používáme [lombok](https://projectlombok.org), nainstalujte rozšíření do vývojového prostředí - na webové stránce klikněte na položku nabídky `Install` a postupujte podle pokynů v části IDE.
+V projektu používáme [lombok](https://projectlombok.org), nainstalujte si rozšíření do vašeho vývojového prostředí - na web stránce klikněte na menu položku `Install` av sekci IDEs postupuje podle návodu.
 
-## Webpack sestavuje soubory JS, CSS a PUG
+## Webpack build JS, CSS a PUG souborů
 
-Soubory pro správu jsou kompilovány ze zdrojových kódů pomocí aplikace Webpack. `js/scss/pug` soubory. Počáteční instalaci spusťte v novém terminálu:
+Soubory pro administraci jsou sestavovány přes webpack ze zdrojových `js/scss/pug` souborů. Pro prvotní instalaci spusťte v novém terminálu:
 
 ```shell
 cd src/main/webapp/admin/v9
@@ -25,23 +25,23 @@ npm install
 npm run prod
 ```
 
-kompletní přeinstalace se provádí příkazem (pro uzel `v17+` je také zapotřebí parametr `--legacy-peer-deps`):
+kompletní reinstalaci provedete příkazem (pro node `v17+` je zapotřebí i parametr `--legacy-peer-deps`):
 
 ```shell
 rm -rf node_modules
 npm install
 ```
 
-ten nainstaluje potřebné knihovny, licencuje `Datatables Editor` a zkompiluje produkční verzi.
+ten nainstaluje potřebné knihovny, licenci na `Datatables Editor` a sestaví produkční verzi.
 
-Poté můžete začít **režim dev** čímž se automaticky **webpack sleduje změny** v `js/scss/pug` soubory a sestavy `dist` Adresář:
+Následně můžete spustit **dev režim**, při kterém automaticky **webpack sleduje změny** v `js/scss/pug` souborech a builduje `dist` adresář:
 
 ```shell
 cd src/main/webapp/admin/v9
 npm run watch
 ```
 
-NEBO můžete použít `gradle task`:
+NEBO můžete využít `gradle task`:
 
 ```shell
 #kontinualny watch zmien v suboroch a buildovanie dist adresara
@@ -50,30 +50,30 @@ gradlew npmwatch
 gradlew npmbuild
 ```
 
-**Výrobní verze** generujete prostřednictvím:
+**Produkční verzi** vygenerujete přes:
 
 ```shell
 cd src/main/webapp/admin/v9
 npm run prod
 ```
 
-## Sestavení tříd jazyka Java a spuštění aplikace Tomcat
+## Build Java tříd a spuštění Tomcatu
 
-Sestavení projektu:
+Kompilace projektu:
 
 ```shell
 gradlew compileJava - kompilacia projektu
 ```
 
-včetně obnovení závislostí (WebJET z artefaktu):
+včetně refreshu dependencies (WebJET z artifactory):
 
 ```shell
 gradlew compileJava --refresh-dependencies --info
 ```
 
-Spusťte/zastavte Tomcat, vytvořte archiv WAR:
+Spuštění / zastavení Tomcatu, vytvoření WAR archivu:
 
-!>**Varování:** před spuštěním gradle appRun jednou sestavte adresář dist se soubory HTML/CSS pomocí gradle npmbuild nebo spusťte npm run watch ze src/main/webapp/admin/v9 v samostatném terminálu.
+!>**Upozornění:** před spuštěním gradle appRun buildněte jednorázově dist adresář HTML/CSS souborů přes příkaz gradle npmbuild, nebo mějte v samostatném terminálu puštěný z adresáře src/main/webapp/admin/v9 příkaz npm run watch.
 
 ```shell
 gradlew appRun
@@ -81,7 +81,7 @@ gradlew appStop
 gradlew war
 ```
 
-Zobrazení všech závislostí knihovny JAR:
+Zobrazení všech závislostí JAR knihoven:
 
 ```shell
 gradlew -q dependencies --configuration runtimeClasspath
@@ -94,33 +94,33 @@ Aktualizace gradle wrapper
 ```
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="Přehrávač videí YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-## Nastavení souboru hosts
+## Nastavení hosts souboru
 
-WebJET je licencován podle domény. Chcete-li pracovat lokálně, musíte přidat řádek do souboru hosts (ve Windows je to c:\windows\system32\drivers\etc\hosts):
+WebJET je licencován podle domén. Pro lokální práci je třeba do hosts souboru (na windows je to c:\windows\system32\drivers\etc\hosts) přidat řádek:
 
 ```
 127.0.0.1   iwcm.interway.sk
 ```
 
-!>**Varování:** na adrese `Windows` musíte soubor upravit s právy správce.
+!>**Upozornění:** na `Windows` je třeba soubor editovat s admin právy.
 
-WebJET bude po spuštění k dispozici lokálně jako http://iwcm.interway.sk/admin/.
+WebJET bude po spuštění dostupný lokálně jako http://iwcm.interway.sk/admin/.
 
 ## Testování
 
-Pro testování se používá [Playwright](https://github.com/microsoft/playwright/tree/master/docs) a [CodeceptJS](https://codecept.io/basics/).
+K testování se používá [Playwright](https://github.com/microsoft/playwright/tree/master/docs) a [CodeceptJS](https://codecept.io/basics/).
 
-Počáteční instalace:
+Prvotní instalace:
 
 ```shell
 cd src/test/webapp/
 npm install
 ```
 
-Spusťte všechny testy:
+Spuštění všech testů:
 
 ```shell
 cd src/test/webapp/

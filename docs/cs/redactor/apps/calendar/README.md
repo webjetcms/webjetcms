@@ -1,37 +1,37 @@
-# Kalendář akcí
+# Kalendář událostí
 
 ## Seznam událostí
 
-Kalendář událostí umožňuje zaznamenávat a zobrazovat různé události, o kterých chcete návštěvníky webu informovat.
+Kalendář událostí umožňuje evidovat a zobrazovat různé akce, o kterých chcete informovat návštěvníky web sídla.
 
 ![](calendar-datatable.png)
 
-Zadané události se zobrazí v aplikaci kalendáře na webové stránce:
+Zadané události se zobrazí v aplikaci kalendář na webové stránce:
 
 ![](webpage.png)
 
 ## Základní
 
-Na kartě Základní jsou uvedeny základní informace o události. Vyžadován je pouze název. Začátek a konec události se automaticky předvyplní podle aktuálního dne.
+V kartě Základní se vyplňují základní informace o události. Povinný je pouze název. Začátek a konec události se automatický předvyplní podle aktuálního dne.
 
 ![](calendar-editor-basic.png)
 
 ## Popis
 
-Karta obsahuje editor, ve kterém můžete zadat popis události, připojit k textu obrázky a aplikace.
+Karta obsahuje editor, ve kterém můžete zadat popis události, přiložit do textu obrázky a aplikace.
 
 ![](calendar-editor-description.png)
 
 ## Pokročilé
 
-Na kartě Upřesnit můžete nastavit podrobnější informace o událostech. Obsahuje také [volitelná pole](../../../frontend/webpages/customfields/README.md) "Info 1" až "Info 5".
+V kartě pokročilé můžete nastavit podrobnější informace o událostí. Obsahuje také [volitelná pole](../../../frontend/webpages/customfields/README.md) "Info 1" až "Info 5".
 
-Důležitá je také volba typu akce. Pokud vybraný typ události vyžaduje schválení, bude před zobrazením události na webové stránce odeslán e-mail s žádostí o schválení.
+Důležitý je také výběr typu události. Pokud zvolený typ události vyžaduje schválení, odešle se email se žádostí o schválení před zobrazením události na webové stránce.
 
 ![](calendar-editor-advanced.png)
 
-## Oznámení
+## Notifikace
 
-Na kartě Oznámení můžete nastavit zasílání oznámení skupině uživatelů předem nastavený počet hodin před začátkem události.
+Karta notifikace umožňuje nastavit odeslání notifikace na skupinu uživatelů v přednastavený počet hodin před začátkem události.
 
 ![](calendar-editor-notification.png)

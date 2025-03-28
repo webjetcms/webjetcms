@@ -1,38 +1,38 @@
 # Mapa
 
-Vloží do stránky interaktivní mapu (Google Maps nebo Open Street Map) podle zadaných souřadnic GPS nebo adresy. Chcete-li používat mapy Google, musíte mít zakoupený klíč API od společnosti Google nastavený v konfigurační proměnné googleMapsApiKey.
+Vloží do stránky interaktivní mapu (Google maps nebo Open Street Map) podle zadaných GPS souřadnic nebo adresy. Pro použití Google maps je třeba mít zakoupený API klíč od Google nastavený v konf. proměnné googleMapsApiKey.
 
 ## Nastavení aplikace
 
 ### Adresa
 
-V této části můžete nastavit atributy polohy:
+V této části lze nastavit polohopisné atributy:
 - Adresa
-- Zeměpisná šířka, zeměpisná délka
+- Zeměpisná šířka, Zeměpisná délka
 
-Je povinné zadat buď adresu, nebo zeměpisnou šířku a délku. Polohu lze nastavit kliknutím na mapu a zadáním bodu. V tomto kroku se na mapě zobrazí špendlík a přepíší se hodnoty zeměpisné šířky a délky.
+Je povinno nastavit buď adresu nebo zeměpisnou šířku a zeměpisnou délku. Místo lze nastavit kliknutím na mapu upřesněním bodu. Tímto krokem se na mapě zobrazí pin a přepíší hodnoty Zeměpisné šířky a zeměpisné délky.
 
 ![](editor-address.png)
 
 ### Nastavení
 
-V této části můžete nastavit rozměrové a vizuální atributy:
+V této části lze nastavit rozměrové a vizuální atributy:
 - Šířka mapy (v procentech)
 - Výška mapy (v procentech)
 
-Po zaškrtnutí políčka chci zadat přesnou velikost:
+Po zaškrtnutí pole Chci zadat přesnou velikost:
 - Šířka mapy (v pixelech)
 - Výška mapy (v pixelech)
-- Zoom (rozsah 0 - 21)
-- Umožnit přístup
-- Zobrazení ovládacích prvků na mapě
+- Přiblížení (v rozmezí 0 - 21)
+- Povolit přibližování
+- Zobrazit ovládací prvky na mapě
 - Zobrazit adresu
 - Popis
 - Odsazení shora
-- Odsazení vlevo
-- Povolit blízký popis
+- Odsazení sleva
+- Povolit zavření popisu
 
-Po změně atributů je možné zobrazit náhled pomocí tlačítka
+Po změně atributů lze zobrazit náhled pomocí tlačítka
 
 ![](editor-settings.png)
 

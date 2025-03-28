@@ -1,34 +1,34 @@
 # Nastavení vodoznaku
 
-Vložení vodoznaku vyžaduje následující nastavení serveru:
-- Knihovna dostupná na serveru [ImageMagick](https://imagemagick.org/script/download.php) specifické příkazy `convert` a `composite`.
-- Nastavení konfigurační proměnné `imageMagickDir` do instalačního adresáře `ImageMagick` (typicky `/usr/bin`).
-- Povolení vkládání vodoznaku nastavením konfigurační proměnné `galleryEnableWatermarking` na hodnotu `true`.
+Vkládání vodoznaku vyžaduje následující nastavení serveru:
+- Na serveru dostupná knihovna [ImageMagick](https://imagemagick.org/script/download.php) konkrétní příkazy `convert` a `composite`.
+- Nastavená konfigurační proměnná `imageMagickDir` na adresář s instalací `ImageMagick` (typicky `/usr/bin`).
+- Povolené vkládání vodoznaku nastavením konfigurační proměnné `galleryEnableWatermarking` na hodnotu `true`.
 
-Teprve po splnění nastavení serveru se do obrázku začne vkládat nastavený vodoznak.
+Teprve po splnění nastavení serveru se začne vkládat nastavený vodoznak do obrázku.
 
 ![](watermark-applied.png)
 
-Podporovány jsou následující formáty obrázků s vodoznakem:
-- `png` - obrázek je vložen do nahraného obrázku bez změny velikosti, takže je třeba nastavit vhodnou velikost vodoznaku (všimněte si, že fotogalerie obsahuje malý i velký obrázek a do obou bude vložen vodoznak stejné velikosti).
-- `svg` - vodoznak je vložen do obrázku se správným měřítkem velikosti podle velikosti nahraného obrázku. Velikost vodoznaku se nastavuje v konfigurační proměnné `galleryWatermarkSvgSizePercent` (standardně 5 %) a `galleryWatermarkSvgMinHeight` (standardně 30 bodů). Velikost vodoznaku se proto automaticky přizpůsobí velikosti obrázku. Ukázka [vodoznak svg](watermark.svg).
+Podporovány jsou následující formáty obrázků vodoznaku:
+- `png` - obrázek je vložen do nahraného obrázku beze změny velikosti, je proto třeba vhodně nastavit velikost vodoznaku (uvědomte si, že fotogalerie obsahuje malý i velký obrázek a do obou bude vložen vodoznak stejné velikosti).
+- `svg` - vodoznak je do obrázku vkládán s korektním škálováním velikosti podle velikosti nahraného obrázku. Velikost vodoznaku se nastavuje v konfigurační proměnné `galleryWatermarkSvgSizePercent` (standardně 5 procent) a `galleryWatermarkSvgMinHeight` (standardně 30 bodů). Velikost vodoznaku se tedy automaticky přizpůsobí velikosti obrázku. Ukázkový [svg vodoznak](watermark.svg).
 
-!>**Varování:** Všimněte si, že v galerii není vodoznak vložen do původního obrázku, a to z důvodu možnosti opětovného generování stávajících obrázků (např. změna velikosti nebo vodoznaku). Původní obrázek je k dispozici s předponou `o_` a lze je tedy tímto způsobem veřejně získat. Pokud nutně potřebujete mít vodoznak na všech obrázcích, musíte nastavit automatické použití vodoznaku po nahrání obrázku nastavením proměnné conf. `galleryWatermarkApplyOnUpload` na hodnotu `true`.
+!>**Upozornění:** uvědomte si, že v galerii se vodoznak nevkládá do originálního obrázku, je to tak z důvodu možnosti přegenerování stávajících obrázků (např. změna velikosti nebo změna vodoznaku). Originální obrázek je dostupný s prefixem `o_` a tedy je možné jej takto veřejně získat. Pokud nutně potřebujete mít vodoznak ve všech obrázcích je třeba nastavit automatické aplikování vodoznaku po nahrání obrázku nastavením konf. proměnné `galleryWatermarkApplyOnUpload` na hodnotu `true`.
 
-## Automatické použití vodoznaku po nahrání obrázku
+## Automatické aplikování vodoznaku po nahrání obrázku
 
-Nastavením konfigurační proměnné můžete povolit automatické označování fotografií vodoznakem při jejich nahrávání do WebJETu. `galleryWatermarkApplyOnUpload` na adrese `true`. Vodoznak je vložen do nahrané fotografie, aby se zabránilo duplicitnímu vložení při změně velikosti fotografie apod.
+Automatické vkládání vodoznaku do fotek při jejich nahrání do WebJETu zapnete nastavením konfigurační proměnné `galleryWatermarkApplyOnUpload` na `true`. Vodoznak se vkládá do nahrané fotky, aby nenastávala následovně duplicita jeho vložení při změně velikosti fotky a podobně.
 
-Výjimky, pro které se vodoznak při nahrávání souboru nepoužije, lze definovat v konfigurační proměnné. `galleryWatermarkApplyOnUploadExceptions` (ve výchozím nastavení nastaveno na logo,nowatermark,system), kde jsou výrazy, které se při nalezení v cestě k obrázku (název obrázku nebo adresáře) nepoužijí.
+Výjimky, pro které se vodoznak při nahrání souboru neaplikuje lze definovat v konfigurační proměnné `galleryWatermarkApplyOnUploadExceptions` (standardně nastaveno na logo,nowatermark,system) kde jsou výrazy, které když se najdou v cestě k obrázku (jméno obrázku nebo název adresáře), tak se vodoznak neaplikuje.
 
-Vodoznak je v tomto režimu stejný pro celý web (není možné zadat různé vodoznaky), v případě instalace na více domén je možné nastavit obrázek pro každou doménu. Nastavuje se v konfigurační proměnné `galleryWatermarkApplyOnUploadDir` (výchozí /templates/{INSTALL_NAME}/assets/watermark/) - adresář, kam se umisťují obrázky pro automatické označení vodoznakem při nahrávání obrázku. Název obrázku musí být `default.png`, u multidomén je možné mít pro každou doménu jiný ve tvaru `domena.png` (např. `www.interway.sk.png`).
+Vodoznak se při tomto režimu vkládá stejný pro celý web (nelze specifikovat různé vodoznaky), pro multidomain instalaci lze nastavit obrázek pro každou doménu. Nastavuje se v konfigurační proměnné `galleryWatermarkApplyOnUploadDir` (výchozí /templates/{INSTALL_NAME}/assets/watermark/) - adresář kde jsou umístěny obrázky pro automatický vodotisk při nahrání obrázku. Název obrázku musí být `default.png`, u multidomain je možnost mít pro každou doménu jiný, ve tvaru `domena.png` (Např. `www.interway.sk.png`).
 
-Polohu vodoznaku nastavíte v konfigurační proměnné `galleryWatermarkGravity` (přednastaveno na střed). Možnosti podle světových stran v angličtině: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast`. Průsvitnost tlaku vody můžete nastavit v proměnné `galleryWatermarkSaturation` - nastaví průhlednost vodoznaku ve výsledném obrázku. Číslo 0-100, 0 znamená plnou průhlednost, 100 znamená neprůhlednost.
+Pozici vodoznaku nastavujete v konfigurační proměnné `galleryWatermarkGravity` (přednastaveno na Center). Možnosti podle světových stran v angličtině: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast`. Průsvitnost vodoznaku můžete nastavit v proměnné `galleryWatermarkSaturation` - nastavuje transparentnost vodotisku ve výsledném obrázku. Číslo 0-100, 0 znamená úplnou průsvitnost, 100 neprůsvitnost.
 
 ## Možné konfigurační proměnné
 
-- `galleryEnableWatermarking` (ve výchozím nastavení true) - Vypne/zapne vodoznak pro obrázky. Vodoznak může výrazně zpomalit import velkých obrázků kvůli rekurzivnímu vyhledávání nastavení vodoznaku.
-- `galleryWatermarkSaturation` (výchozí 70) - nastavuje průhlednost vodoznaku ve výsledném obrázku. Číslo 0-100, 0 znamená plnou průhlednost, 100 znamená neprůhlednost.
-- `galleryWatermarkGravity` (výchozí Střed) - Poloha vodoznaku ve výsledném obrázku. Možnosti podle světových stran v angličtině: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast`.
-- `galleryWatermarkApplyOnUpload` (ve výchozím nastavení false) - Při nastavení na `true` aktivuje automatickou aplikaci vodoznaku při nahrávání obrázků, takže vodoznak se použije i na původní obrázky v galerii.
-- `galleryWatermarkApplyOnUploadDir` (výchozí /templates/{INSTALL_NAME}/assets/watermark/) - Adresář, kam se umisťují obrázky pro automatické označení vodoznakem při nahrávání obrázku. Název obrázku musí být `default.png`, u multidomén je možné mít pro každou doménu jiný ve tvaru `domena.png` (např. `www.interway.sk.png`).
+- `galleryEnableWatermarking` (výchozí true) - Vypne / zapne vodoznak pro obrázky. Vodoznak může výrazně zpomalovat velké importy obrázků kvůli rekurzivnímu hledání nastavení vodoznaku.
+- `galleryWatermarkSaturation` (výchozí 70) - nastavuje transparentnost vodoznaku ve výsledném obrázku. Číslo 0-100, 0 znamená úplnou průsvitnost, 100 neprůsvitnost.
+- `galleryWatermarkGravity` (výchozí Center) - Pozice vodoznaku ve výsledném obrázku. Možnosti podle světových stran v angličtině: `NorthWest, North, NorthEast, West, Center, East, SouthWest, South, SouthEast`.
+- `galleryWatermarkApplyOnUpload` (výchozí false) - Po nastavení na `true` aktivuje automatické aplikování vodotisku při nahrání obrázků, vodoznak se tedy aplikuje i na originální obrázky v galerii.
+- `galleryWatermarkApplyOnUploadDir` (výchozí /templates/{INSTALL_NAME}/assets/watermark/) - Adresář kde jsou umístěny obrázky pro automatický vodotisk při nahrání obrázku. Název obrázku musí být `default.png`, u multidomain je možnost mít pro každou doménu jiný, ve tvaru `domena.png` (Např. `www.interway.sk.png`).

@@ -1,70 +1,70 @@
-# Import a export webových stránek
+# Import a export web stránek
 
-Export webových stránek exportuje webové stránky včetně jejich textu, stromové struktury a vložených obrázků a souborů. Umožňuje snadný přenos obsahu mezi více instancemi systému WebJET CMS, např. mezi produkčním a testovacím prostředím. Při importu se zobrazí okno, ve kterém se porovnávají jednotlivé stránky, s možností výběru skutečně importovaných stránek. Data tak můžete před importem zkontrolovat a potvrdit.
+Export webových stránek exportuje webové stránky včetně jejich textu, stromové struktury a vložených obrázků a souborů. Umožňuje snadno přenášet obsah mezi více instancemi WebJET CMS. mezi produkčním a testovacím prostředím. Při importu je zobrazeno okno, ve kterém jsou porovnány jednotlivé stránky s možností volby stránek, které se skutečně naimportují. Umíte tak zkontrolovat a potvrdit údaje před jejich importem.
 
-Pokud připravujete nový web, můžete si předem připravit stromovou strukturu webu a importovat ji do systému WebJET CMS.
+Pokud připravujete nové web sídlo, můžete předem připravit stromovou strukturu web sídla a tu naimportovat do WebJET CMS.
 
 ![](import-export-window.png)
 
-## Exportování webových stránek
+## Exportování web stránek
 
-Nejprve se ujistěte, že se nacházíte v adresáři, který chcete exportovat. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte, až se zobrazí okno. Pro standardní export obsahu vyberte v tomto okně možnost **Export webových stránek do archivu ZIP (xml)** a spustit export ve vybrané větvi stromu stránek tlačítkem s textem **OK**.
+Nejprve se ujistěte, zda se nacházíte v adresáři, který chcete exportovat. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte na zobrazení okna. Pro standardní export obsahu zvolte v tomto okně možnost **Exportovat web stránky do ZIP archivu (xml)** a spusťte export ve zvolené větvi stromu stránek tlačítko s textem **OK**.
 
-Výstup by měl vypadat podobně jako na následujícím obrázku. Na samém konci výstupu se zobrazí odkaz na soubor ZIP ke stažení. Nabízený soubor stáhnete do svého počítače. Tento soubor pak budete moci použít k importu v jiném prostředí systému WebJET CMS.
+Výstup by měl vypadat podobně jako na následujícím obrázku. Úplně na konci výstupu se zobrazí odkaz na ZIP soubor ke stažení. Nabídnutý soubor si stáhnete na váš počítač. Tento soubor budete moci následně použít k importu na jiném prostředí CMS WebJET.
 
 ![](exported-window.png)
 
-## Import webových stránek z archivu ZIP
+## Importování web stránek ze ZIP archivu
 
-Nejprve se ujistěte, že se nacházíte v adresáři, do kterého chcete import použít. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte, až se zobrazí okno. V okně vyberte možnost **Import webových stránek z archivu ZIP (xml)** a stiskněte tlačítko s textem **OK**. Budete vyzváni k nahrání souboru ZIP, který by měl být ve stejném stavu, v jakém byl exportován prostřednictvím nástroje. **Export webových stránek do archivu ZIP (xml)**. Jakékoli experimentování s jeho obsahem může vést k nesprávnému fungování importu s následkem poškození výsledného obsahu webových stránek.
+Nejprve se ujistěte, zda se nacházíte v adresáři, do kterého chcete import aplikovat. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte na zobrazení okna. V okně zvolte možnost **Importovat web stránky ze ZIP archivu (xml)** a stiskněte tlačítko s textem **OK**. Budete vyzváni k nahrání ZIP souboru, který by měl být ve stejném stavu jako když byl vyexportován přes možnost **Exportovat web stránky do ZIP archivu (xml)**. Jakékoli experimentování s jeho obsahem může mít za následek nesprávné fungování importu s důsledkem poškození výsledného obsahu web sídla.
 
-Máte také možnost vybrat hodnotu **Synchronizace stránek podle** rozhodnout, který parametr bude použit pro kontrolu, zda stránka již existuje, nebo ne. Máte na výběr z následujících možností:
-- **Název stránky nebo adresa URL**, je považována za existující, pokud je její název nebo adresa URL totožná s jinou existující stránkou.
-- **Adresy URL**, je považována za existující, pokud se shoduje v adrese URL s jinou existující stránkou.
-- **Žádné**, nezáleží na stránce, ona bude **se vždy považují za nové**, takže můžete přidávat duplikáty stávajících stránek.
-- **Nepovinné pole A** / **Nepovinné pole B** / **Nepovinné pole C**, máte možnost porovnávat stránky podle konkrétních zadaných hodnot, jako např. [speciálně vygenerované ID](../../frontend/webpages/customfields/README.md#jedinečný-identifikátor). Pokud na začátku vytváření webové stránky nastavíte možnost Jedinečný identifikátor, dostane každá stránka jedinečný srovnávací řetězec.
+Máte také možnost zvolit hodnotu **Synchronizovat stránky podle**, kterou rozhodnete, podle jakého parametru se bude kontrolovat, zda stránka již existuje nebo ne. Na výběr máte možnosti:
+- **Názvu stránky nebo URL adresy**, považuje se za existující, pokud se shoduje v názvu nebo URL adrese s jinou existující stránkou
+- **URL adresy**, považuje se existující, pokud se shoduje v URL adrese s jinou existující stránkou
+- **Žádné**, nezáleží na stránce, ta se bude **vždy považovat za novou**, tedy můžete přidat duplikáty stávajících stránek
+- **Volitelné pole A** / **Volitelné pole B** / **Volitelné pole C**, máte možnost porovnávat stránky podle vámi zadaných specifických hodnot jako například [speciálně vygenerovaného ID](../../frontend/webpages/customfields/README.md#unikátní-identifikátor). Nastavíte-li na začátku vytváření web stránek možnost Unikátní identifikátor každá stránka získá unikátní srovnávací řetězec.
 
 ![](import-zip-window.png)
 
-Po nahrání souboru zip a potvrzení vložení klikněte na tlačítko s textem **OK** počkat, až systém soubor zpracuje, dokud se nezobrazí. **srovnávací tabulka pro import**.
+Po nahrání zip souboru a potvrzení vložení tlačítko s textem **OK** počkejte, ať systém soubor zpracuje, dokud vám nezobrazí **srovnávací tabulku pro import**.
 
 ### Srovnávací tabulka pro import
 
-V tabulce jsou nejprve uvedeny webové stránky, poté soubory a následně další údaje modulu, pokud byly v exportu přítomny. Tabulka obsahuje 4 sloupce:
-- **Vzdálená adresa** - název stránky/souboru v souboru ZIP.
-- **Stav** - informace o tom, zda stejný objekt již existuje v cílovém úložišti.
-- **Synchronizace** - zaškrtávací políčko, které definuje synchronizaci pouze s určitými položkami v seznamu.
-- **Místní adresa** - název a umístění stránky/souboru v cílovém úložišti (ve WebJETu, do kterého importuji).
+V tabulce se nacházejí pod sebou postupně nejprve Web stránky, poté Soubory, které jsou následovány dalšími daty modulů, pokud byly v exportu nějaké přítomny. Tabulka obsahuje 4 sloupce:
+- **Vzdálená adresa** – název stránky/souboru v ZIP souboru
+- **Stav** – informace o tom, zda již stejný objekt v cílovém úložišti existuje
+- **Synchronizovat** – zaškrtávací políčko, které vymezuje synchronizaci pouze na konkrétní položky ze seznamu
+- **Lokální adresa** – název a umístění stránky/souboru na cílovém úložišti (ve WebJETu, do kterého importuji)
 
-Nad tabulkou jsou dvě zaškrtávací políčka:
-- **Vytvoření chybějících šablon**
-- **Vytvoření chybějících skupin uživatelů**
+Nad tabulkou se nacházejí dvě zaškrtávací pole:
+- **Vytvořit chybějící šablony**
+- **Vytvořit chybějící skupiny uživatelů**
 
-!> Jejich zaškrtnutí nechávám na zvážení, ale doporučuje se je mít zaškrtnuté.
+!> Jejich zaškrtnutí nechávám ke zvážení, doporučeno je však ponechat jejich zaškrtnutí.
 
-**Statistické záhlaví**
+**Statistická hlavička**
 
-Záhlaví stránky obsahuje přehled statistik importu. Zobrazuje přehled o tom, kolik složek/stránek/souborů ... bylo vybráno k synchronizaci. Tyto statistiky jsou aktualizovány při každé změně. Záhlaví také nabízí několik užitečných tlačítek, jako např:
-- ![](selectAllBtn.png ":no-zoom"), označí v tabulce všechny dostupné možnosti
-- ![](deselectAllBtn.png ":no-zoom"), zruší zaškrtnutí všech dostupných možností v tabulce.
-- ![](closeAllFoldersBtn.png ":no-zoom"), skryje všechny webové stránky patřící do složky v tabulce.
-- ![](openAllFoldersBtn.png ":no-zoom"), odhalí (zobrazí) všechny webové stránky patřící do složky v tabulce.
+HLavička stránky obsahuje přehled statistik importování. Zobrazuje přehled, kolik složek / stránek / souborů ... bylo zvoleno k synchronizaci. Tyto statistiky se aktualizují v při každé změně. Hlavička nabízí také několik užitečných tlačítek jako:
+- ![](selectAllBtn.png ":no-zoom"), označí všechny dostupné možnosti v tabulce
+- ![](deselectAllBtn.png ":no-zoom"), od-značí všechny dostupné možnosti v tabulce
+- ![](closeAllFoldersBtn.png ":no-zoom"), skryje všechny web stránky patřící složce v tabulce
+- ![](openAllFoldersBtn.png ":no-zoom"), odkryje (ukáže) všechny web stránky patřící složce v tabulce
 
-Po projití celého seznamu a zaškrtnutí políček u položek, které chcete synchronizovat, můžete kliknout na tlačítko . **Synchronizace** v dolní části okna. Tím se data synchronizují, nový obsah se zveřejní na webových stránkách a původní soubory se přepíší novými.
+Po projetí celého seznamu a po zvolení zaškrtávacích políček na položkách, které chcete synchronizovat můžete kliknout tlačítko **Synchronizovat** ve spodní části okna. Tím pádem se provede synchronizace dat, web stránkám se vy-publikuje nový obsah, původní soubory budou přepsány novými.
 
 ![](imported-zip-window.png)
 
-Použité obrázky a soubory se také exportují na webovou stránku. Pokud je na stránce použita aplikace Banner, Galerie nebo Anketa, jsou exportována také základní data těchto aplikací. Můžete vybrat možnosti importu dat pro danou aplikaci.
+K webové stránce se exportují i použité obrázky a soubory. Pokud je ve stránce použita aplikace Bannerový systém, Galerie nebo Anketa, exportují se i základní data těchto aplikací. Můžete zvolit možnosti importu dat pro danou aplikaci.
 
-## Import struktury ze souboru aplikace Excel
+## Import struktury z Excel souboru
 
-Před importem se ujistěte, že se nacházíte v adresáři, do kterého chcete import použít. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte, až se zobrazí okno. V okně vyberte možnost **Import struktury ze souboru aplikace Excel** a stiskněte tlačítko s textem **OK**. Zobrazí se nastavení importu, které vás vyzve k zadání. `XLS` struktura souboru. Nezapomeňte, že **soubor musí být typu XLS**. Nemůže být typu `XLSX` ani `XLSM` pouze XLS. K dispozici jsou i další možnosti importu:
-- ID složky, kam importovat soubory, tato možnost bude přednastavena podle dříve vybrané složky, ale lze ji změnit (změnit cílovou složku).
-- Nastavení priority podle úrovně - priorita rozložení se nastavuje podle vnoření do stromové struktury, čím je stránka hlouběji, tím vyšší je číslo priority. Význam to má při vyhledávání a řazení výsledků podle priority, takže stránky nižší úrovně jsou ve výsledcích vyhledávání dříve - předpokládá se, že stránka sekce je důležitější než její podstránka.
-- Stáhnout existující stránku ze serveru - u vytvořených stránek je možné stáhnout text z existujícího webu. Je také možné zadat počáteční a koncový ořezový kód HTML, podle kterého se ve staženém kódu HTML identifikuje vlastní text stránky. Stahuje se pouze samotný text bez obrázků a připojených souborů.
+Před importem se ujistěte, zda se nacházíte v adresáři, do kterého chcete import aplikovat. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte na zobrazení okna. V okně zvolte možnost **Importovat strukturu z Excel souboru** a stiskněte tlačítko s textem **OK**. Zobrazí se Vám nastavení importu, které Vás vyzve k zadání `XLS` souboru se strukturou. Nezapomeňte, že **souboru musí být typu XLS**. Nemůže být typu `XLSX` ani `XLSM` pouze právě XLS. Dostupné jsou i další možnosti importu:
+- ID složky, kde se na-importují soubory, tato možnost bude přednastavena podle dříve zvolené složky, ale stále se dá změnit (změnit cílovou složku)
+- Nastavit prioritu podle úrovně - priorita uspořádání se nastaví podle vnoření ve stromové struktuře, čím je stránka hlouběji, tím bude mít větší číslo priority. Význam to má při vyhledávání a uspořádání výsledků podle priority, aby stránky na nižší úrovni byly spíše ve výsledcích vyhledávání – předpokládá se, že stránka sekce je významnější než její pod-stránka.
+- Stáhnout existující stránku ze serveru - pro vytvořené stránky lze stáhnout text ze stávajícího web sídla. Je možné zadat i počáteční a koncový HTML kód oříznutí, podle kterého se ve staženém HTML kódu identifikuje samotný text stránky. Stahuje se jen samotný text bez obrázků a přiložených souborů.
 
 ![](import-excel-window.png)
 
-Po nahrání souboru a případné úpravě nastavení importu se proces spustí stisknutím tlačítka s textem **OK**. Podle struktury v souboru Excel se naimportuje adresářová struktura a v každém adresáři se vytvoří prázdné stránky se stejným názvem jako název adresáře.Jednotlivé vytvořené stránky (včetně celé adresy ve struktuře) se postupně vypisují. Vyčkejte, dokud se celý proces nedokončí a nezobrazí se zpráva o dokončení importu.
+Po nahrání souboru a případně úpravě nastavení importu se proces spustí stisknutím tlačítka s textem **OK**. Podle struktury v Excel souboru se na-importuje adresářová struktura a vytvoří se prázdné stránky v každém adresáře s názvem stejným jako název adresáře. Postupně budou vypsány jednotlivé vytvořené stránky (is celou adresou ve struktuře). Čekejte, dokud celý proces neskončí a nebude vypsáno hlášení o ukončení importu.
 
 ![](imported-excel-window.png)

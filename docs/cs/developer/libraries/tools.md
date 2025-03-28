@@ -2,11 +2,11 @@
 
 Balíček statických pomocných funkcí.
 
-`Verzia 1.1.0`, [Seznam změn](#seznam-změn)
+`Verzia 1.1.0`, [Changelog](#changelog)
 
-### Popis operace:
+### Popis fungování:
 
-Balíček slouží jako malá knihovna, která obsahuje statické funkce ošetřující různé situace v kódu a jejich použití záleží na programátorovi a konkrétní situaci.
+Balíček slouží jako malá knihovna, která obsahuje statické funkce ošetřující různé situace v kódu a jejich použití je na programátorovi a konkrétní situaci.
 
 ## Použití:
 
@@ -14,32 +14,33 @@ Balíček slouží jako malá knihovna, která obsahuje statické funkce ošetř
 import {Tools} from 'tools/tools';
 ```
 
-!>**Varování:** Balíček není v systému implementován globálně, takže je třeba jej přidat všude, kde se používá.
+!>**Upozornění:** Balíček není implementován v systému globálně, proto je třeba jej přidat všude, kde se používá.
 
-Volání funkcí se provádí kdekoli v **WebJET** Soubory Javascript nebo `<script>` html značky pomocí volání:
+Volání funkcí se zajišťuje kdekoli ve **WebJET** Javascript souborech nebo `<script>` html značkách za pomoci volání:
 
 ```javascript
 Tools.funkcia(parametre);
 ```
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
-| [Systém](#systém)                   | [Řetězec](#řetězec)                       | [DOM](#home)                                     | [Test](#test)                     | [Další](#další)     |
+| [System](#systém)                   | [String](#string)                       | [DŮM](#dům)                                     | [Test](#test)                     | [Other](#other)     |
 | ----------------------------------- | --------------------------------------- | ----------------------------------------------- | --------------------------------- | ------------------- |
-| [isDevMode()](#isdevmode)           | [removeDiacritics()](#removeiacritics) | [getCssValue()](#getcssvalue)                   | [isNumeric()](#isnumeric)         | [uuidv4()](#uuidv4) |
-| [log()](#Přihlásit-se)                       | [deklinace()](#deklinace)             | [getNextHighestZIndex()](#getnexthighestzindex) | [empty()](#prázdný)                 | [kopírovat()](#kopírovat)     |
-| [getUrlQuery()](#geturlquery)       | [multiReplace()](#multireplace)         | | [isArray()](#isarray)             |
-| [updateUrlQuery()](#updateurlquery) | | | [isObject()](#isobject)           |
-| [exec()](#exec)                     | | | [isNull()](#isnull)               |
-| | | | [isJQuery()](#isjquery)           |
-| | | | [isString()](#isstring)           |
-| | | | [isNumber()](#isnumber)           |
-| | | | [isBoolean()](#isboolean)         |
-| | | | [isFunction()](#isfunction)       |
-| | | | [isHTMLElement()](#ishtmlelement) |
-| | | | [elementExist()](#prvky)   |
+| [isDevMode()](#isdevmode)           | [removeDiacritics()](#removediacritics) | [getCssValue()](#getcssvalue)                   | [isNumeric()](#isnumeric)         | [uuidv4()](#uuidv4) |
+| [log()](#log)                       | [declension()](#declension)             | [getNextHighestZIndex()](#getnexthighestzindex) | [empty()](#empty)                 | [copy()](#copy)     |
+| [getUrlQuery()](#geturlquery)       | [multiReplace()](#multireplace)         |                                                 | [isArray()](#isarray)             |
+| [updateUrlQuery()](#updateurlquery) |                                         |                                                 | [isObject()](#isobject)           |
+| [exec()](#exec)                     |                                         |                                                 | [isNull()](#isnull)               |
+|                                     |                                         |                                                 | [isJQuery()](#isjquery)           |
+|                                     |                                         |                                                 | [isString()](#isstring)           |
+|                                     |                                         |                                                 | [isNumber()](#isnumber)           |
+|                                     |                                         |                                                 | [isBoolean()](#isboolean)         |
+|                                     |                                         |                                                 | [isFunction()](#isfunction)       |
+|                                     |                                         |                                                 | [isHTMLElement()](#ishtmlelement) |
+
+ | | | | [elementExist()](#elementexist)   |
 
 ***
 
@@ -47,7 +48,7 @@ Tools.funkcia(parametre);
 
 #### `isDevMode()`
 
-Ověří, zda se nacházíme ve vývojovém prostředí. Pokud ano, funkce vrátí **TRUE** pokud ne, vrátí se **FALSE**. Hodnota je k dispozici také v `window` pod klíčem `isDev` (`window.isDev`).
+Ověří, zda se nacházíme v developerském prostředí. Pokud ano, funkce vrátí **TRUE** pokud ne tak vrátí **FALSE**. Hodnota je zároveň zpřístupněna i ve `window` pod klíčem `isDev` (`window.isDev`).
 
 ```javascript
 /**
@@ -63,7 +64,7 @@ Tools.isDevMode();
 
 #### `log()`
 
-Přihlašování v prostředí DEV. Alternativa k `console.log` ale ve výrobě se neobjevuje.
+Vypisování logů v DEV prostředí. Alternativa ke `console.log` ale nezobrazuje se na produkci.
 
 ```javascript
 /**
@@ -83,7 +84,7 @@ Tools.log('error', 'Nejaká error hláška', 'Alebo ďalší text');
 
 #### `getUrlQuery()`
 
-zpracuje dotaz GET z adresy za otazníkem a vrátí objekt s hodnotami `{kľúč : hodnota}`. Zpracovává také dotaz umístěný za atributem #hash.
+Vyparsuje z adresy GET query za otazníkem a vrátí objekt s hodnotami `{kľúč : hodnota}`. Ošetřuje také query umístěnou za #hash atributem.
 
 ```javascript
 /**
@@ -101,7 +102,7 @@ Tools.getUrlQuery(fullDecode = false);
 
 #### `updateUrlQuery()`
 
-Aktualizuje vyhledávací dotaz url se vstupními hodnotami. Pokud pole `excludeKeys` nalezeny názvy klíčů, nebudou při aktualizaci přidány. Nastavení prázdné hodnoty pomocí `queryValue` způsobí odstranění parametru z adresy URL.
+Aktualizuje url search query vstupními hodnotami. Pokud se v poli `excludeKeys` nacházejí názvy klíčů, tyto nebudou v aktualizaci přidány. Nastavení prázdné hodnoty pomocí `queryValue` způsobí odstranění parametru z URL adresy.
 
 ```javascript
 /**
@@ -121,7 +122,7 @@ Tools.updateUrlQuery(queryKey, queryValue, excludeKeys = []);
 
 #### `exec()`
 
-Zpracovává provedení zpětného volání, aby se zabránilo fatální chybě, pokud zpětné volání nebylo správně definováno.
+Ošetřuje spuštění callbacku, aby se zabránilo fatal erroru pokud by nebyl callback definován správně.
 
 ```javascript
 /**
@@ -137,11 +138,11 @@ Tools.exec(callback, ...args);
 
 ***
 
-### Řetězec
+### String
 
 #### `removeDiacritics()`
 
-Nahradí všechny znaky s diakritikou ze vstupního textu znaky anglické abecedy. K dispozici máme také volitelný argument pro vložení znaku nebo řetězce, který nahradí všechny mezery ve vstupním textu.
+Nahradí ze vstupního textu všechny znaky s diakritikou za znaky anglické abecedy. Zároveň máme k dispozici volitelný argument vložení znaku nebo řetězce, kterým budou ve vstupním textu nahrazeny všechny mezery.
 
 ```javascript
 /**
@@ -159,7 +160,7 @@ Tools.removeDiacritics(text, replaceSpaceWithChar = '');
 
 #### `declension()`
 
-Hláskování slov na základě celého čísla. Funguje i při zadávání záporného čísla.
+Skloňování slov na základě celého čísla. Funguje i při zadání záporného čísla.
 
 ```javascript
 /**
@@ -195,7 +196,7 @@ Tools.declension(numberValue, declensionArray);
 
 #### `multiReplace()`
 
-Umožňuje nahradit definované hodnoty více různými částmi vstupního řetězce.
+Umožní nahradit více různých částí vstupního řetězce za definované hodnoty.
 
 ```javascript
 /**
@@ -219,7 +220,7 @@ Tools.multiReplace(str, mapObj, ignoreCaseSensitive = false);
 
 ***
 
-### DOM
+### DŮM
 
 #### `getCssValue()`
 
@@ -241,7 +242,7 @@ Tools.getCssValue(element, propertyName);
 
 #### `getNextHighestZIndex()`
 
-Pokud potřebujeme pomocí Javascriptu nastavit nejvyšší dostupnou hodnotu pro prvek `z-index`, můžeme voláním funkce zjistit novou nejvyšší hodnotu.
+Pokud potřebujeme pomocí Javascriptu nastavit nějakému elementu úplně nejvyšší dostupný `z-index`, tak si tento nový nejvyšší můžeme zjistit zavoláním dané funkce.
 
 ```javascript
 /**
@@ -261,7 +262,7 @@ Tools.getNextHighestZIndex(context = document);
 
 #### `empty()`
 
-Testuje zadanou vstupní hodnotu, zda je prázdná. Je možné zadat více vstupních hodnot najednou oddělených čárkou, a pokud je alespoň jedna z nich prázdná, metoda vrátí TRUE.
+Otestuje zadanou vstupní hodnotu, zda je prázdná. Je možné vložit i více vstupních hodnot současně oddělených čárkou a je-li alespoň jedna prázdná, tak metoda vrátí TRUE.
 
 ```javascript
 /**
@@ -325,9 +326,9 @@ Tools.empty(value);
 
 #### `isNumeric()`
 
-Ověří, zda je vstupní hodnota číselná. Zda je to číslo, zda je typu číslo nebo řetězec.
+Ověří, zda je vstupní hodnota numerická. Ať se jedná o číslo, ať už se jedná o typ number nebo string.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -345,9 +346,9 @@ Tools.isNumeric(value);
 
 #### `isArray()`
 
-Testuje, zda je vstupní hodnota typu Array.
+Otestuje, zda je vstupní hodnota typu Array.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -365,9 +366,9 @@ Tools.isArray(value);
 
 #### `isObject()`
 
-Testuje, zda je vstupní hodnota typu Object.
+Otestuje, zda je vstupní hodnota typu Object.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -385,9 +386,9 @@ Tools.isObject(value);
 
 #### `isNull()`
 
-Testuje, zda je vstupní hodnota nulová.
+Otestuje, zda je vstupní hodnota null.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -405,9 +406,9 @@ Tools.isNull(value);
 
 #### `isJQuery()`
 
-Testuje, zda je vstupní hodnota objektem jQuery.
+Otestuje, zda je vstupní hodnota object jQuery.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -425,9 +426,9 @@ Tools.isJQuery(value);
 
 #### `isString()`
 
-Testuje, zda je vstupní hodnota řetězec.
+Otestuje, zda je vstupní hodnota string.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -445,9 +446,9 @@ Tools.isString(value);
 
 #### `isNumber()`
 
-Testuje, zda je vstupní hodnota číslo.
+Otestuje, zda je vstupní hodnota number.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -465,9 +466,9 @@ Tools.isNumber(value);
 
 #### `isBoolean()`
 
-Testuje, zda je vstupní hodnota boolean.
+Otestuje, zda je vstupní hodnota boolean.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -485,9 +486,9 @@ Tools.isBoolean(value);
 
 #### `isFunction()`
 
-Testuje, zda vstupní hodnota je funkce.
+Otestuje, zda je vstupní hodnota function.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -505,9 +506,9 @@ Tools.isFunction(value);
 
 #### `isHTMLElement()`
 
-Testuje, zda je vstupní hodnota prvkem HTMLElement.
+Otestuje, zda je vstupní hodnota HTMLElement.
 
-Je také možné zadat více vstupních hodnot najednou oddělených čárkou.
+Je možné vložit i více vstupních hodnot současně oddělených čárkou.
 
 ```javascript
 /**
@@ -524,7 +525,7 @@ Tools.isHTMLElement(value);
 
 #### `elementExist()`
 
-Zkontroluje, zda prvek existuje na základě jeho selektoru css. Pokud neexistuje, metoda naslouchá, a pokud existuje, zavolá metodu `existCallback`. Maximální čekací doba na prvek je 25 sekund. Poté je poslech přerušen a je provedeno volání `notExistCallback`
+Zkontroluje, zda existuje element na základě jeho css selektoru. Pokud neexistuje, tak metoda poslouchá a v případě jeho vytvoření zavolá `existCallback`. Na element se čeká maximálně 25 sekund. Potom se poslech přeruší a zavolá se `notExistCallback`
 
 ```javascript
 /**
@@ -546,11 +547,11 @@ Tools.elementExist(selector, existCallback, notExistCallback = null, options);
 
 ***
 
-### Další
+### Other
 
 #### uuidv4()
 
-Generuje náhodný řetězec univerzálního jedinečného identifikátoru verze 4 (UUID-4) podle specifikace RFC 4122.
+Vygeneruje náhodný UUID-4 (Universally Unique Identifier version 4) řetězec podle specifikace RFC 4122.
 
 ```javascript
 /**
@@ -565,9 +566,9 @@ Tools.uuidv4();
 
 ***
 
-#### kopírovat()
+#### copy()
 
-Vytvoří kopii vstupu. Tím se zabrání odkazům na objekty.
+Vytvoří kopii vstupu. Zabrání tak objektovým referencím.
 
 ```javascript
 /**
@@ -586,22 +587,22 @@ Tools.copy(value);
 
 ***
 
-## Seznam změn
+## Changelog
 
 Verze 1.1.0
 
-- [x] Upravená funkčnost metod is\*
+- [x] Upravená funkcionalita is\* metod
 - [x] Přidány nové metody
 
 Verze 1.0.0
 
-- [x] Přidat verzování
-- [x] Správná gramatika
+- [x] Přidat verzi
+- [x] Opravit gramatiku
 
 ***
 
-**[Todo list]**
+**[Toto dopis]**
 
 Verze 2.0.0
 
-- [ ] Rozdělte kategorie do samostatných tříd
+- [ ] Oddělit kategorie do samostatných tříd

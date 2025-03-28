@@ -1,16 +1,16 @@
 # 'JsTree Document Opener'
 
-Rozšiřování knihovny
+Rozšiřující knihovna
 
 ***
 
-**Závislosti**
+**Dependencies (závislosti)**
 
-- [Nástroje](tools.md)
+- [Tools](tools.md)
 
 ***
 
-Knihovna umožňuje automatizovanou manipulaci (otevírání) uzlů stromu generovaných knihovnou jsTree a otevření dokumentu na základě jeho ID v knihovně dataTables.
+Knihovna umožňuje automatizovanou manipulaci (otevírání) s uzly stromu, který generuje knihovna jsTree a otevírání dokumentu na základě jeho ID v knihovně dataTables.
 
 Rozšiřuje třídu `AbstractJsTreeOpener`
 
@@ -24,7 +24,7 @@ export class JsTreeDocumentOpener extends AbstractJsTreeOpener {}
 
 ## Vytvoření instance:
 
-**WebJET** vytvoří instanci v souboru [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** vytváří instanci v souboru [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
 
 ```javascript
 import JsTreeDocumentOpener from "./libs/js-tree-document-opener/js-tree-document-opener";
@@ -34,9 +34,9 @@ window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 
 **Použití:**
 
-### Iniciace:
+### Inicializace:
 
-V ideálním případě se inicializace provede vždy, když se inicializuje strom jstree voláním metody [init()](#init)
+Inicializaci provedeme ideálně vždy, když je inicializován jstree zavoláním metody [init()](#init)
 
 ```javascript
 window.jsTreeDocumentOpener.init();
@@ -55,38 +55,38 @@ window.jstree = somStromcek.jstree({
 });
 ```
 
-Metoda [init()](#init) zajistit: <a id="init-algo" />
-- Parsuje z url prohlížeče pomocí [Tools.getUrlQuery()](tools.md#geturlquery) vyhledávací dotaz za otazníkem
-- Odstraní klíč z vypreparovaného objektu `docid` pokud jsme ji nezměnili dříve pomocí [idKeyName](#idkeyname)
-- Hodnota z `docid` prasnice se setrem [id](#id)
-- Setter [id](#id) uvede třídu do nového stavu a ověří platnost vstupu: <a id="id-algo" />
-  - Pokud je vstup neplatný, prostředí DEV vypíše zprávu o neplatném vstupu a přeruší provádění.
-    - Třída se přepne do stavu `Not Ready & Iddle`, čekající na výzvu zadavatele [id](#id)
-  - Pokud je vstup platný, je odeslán požadavek na rozhraní API, jehož výchozí adresu lze změnit pomocí příkazu [apiUrl](#apiurl)
-    - Přijatá data jsou uložena ve třídě, aby s nimi bylo možné pracovat.
-    - Třída se přepne do stavu `Ready & Iddle` a čeká na zavolání [next()](#další) nebo [id](#id)
+Metoda [init()](#init) zajistí: <a id="init-algo" />
+- Vyparsuje z url adresy prohlížeče pomocí [Tools.getUrlQuery()](tools.md#geturlquery) search query za otazníkem
+- Vybere z vyparsovaného objektu klíč `docid` pokud jsme ho před tím nezměnili pomocí [idKeyName](#idkeyname)
+- Hodnotu z `docid` setne pomocí setteru [id](#id)
+- Setter [id](#id) resetuje třídu do new stavu a ověří vstup: <a id="id-algo" />
+  - Pokud je vstup nevalidní, tak v DEV prostředí vypíše hlášku o nevalidním vstupu a přeruší se provedení
+    - Třída se přepne do stavu `Not Ready & Iddle`, čeká na zavolání setteru [id](#id)
+  - Pokud je vstup validní provede se request na API, jehož defaultní adresu můžeme změnit pomocí [apiUrl](#apiurl)
+    - Uloží se přijatá data do třídy aby se s nimi mohlo pracovat
+    - Třída se přepne do stavu `Ready & Iddle` a čeká na zavolání [next()](#next) nebo [id](#id)
 
 ***
 
 ### Otevírání uzlů stromu:
 
-Otevírání uzlů stromu se provádí voláním metody [next()](#další):
+Otevírání uzlů stromu se provádí voláním metody [next()](#next):
 
 ```javascript
 window.jsTreeDocumentOpener.next();
 ```
 
-Wo **WebJET** v souboru probíhá volání [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js)
+Wo **WebJET** probíhá volání v souboru [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js)
 
-1. Po prořezání stromu `/listener: loaded.jstree`
+1. Po vyrederování stromu `/listener: loaded.jstree`
 
-2. Po otevření (*otevřený uzel*) uzlu `/listener: after_open.jstree`
+2. Po otevření (*open node*) uzlu `/listener: after_open.jstree`
 
-3. Po výběru (*vybrat uzel*) uzlu `/listener: select_node.jstree`
+3. Po vyjmutí (*select node*) uzlu `/listener: select_node.jstree`
 
 ***
 
-!>**Varování:** V případě, že chceme externě nastavit [id](#id) je dobré použít metodu před [loaded()](#Převzato-z) ve kterém můžeme volat [next()](#další) a testovat [notFound](#notfound).
+!>**Upozornění:** V případě, že chceme externě nastavovat [id](#id) je dobré před tím použít metodu [loaded()](#loaded), ve které můžeme volat [next()](#next) a testovat [notFound](#notfound).
 
 ```javascript
 /** @type {JsTreeDocumentOpener} jstdo */
@@ -101,23 +101,23 @@ const jstdo = window.jsTreeDocumentOpener.loaded((result, docId, selfClass) => {
 jstdo.id = 4;
 ```
 
-Problémem implementace bylo čekání na načtení stromové struktury a synchronizaci datové tabulky. Původní implementace používala události `this.dataTable.on('draw.dt', (evt, settings) => ` který nebyl vhodný pro použití při přepínání karet Složky, Systém a Koš, protože datová tabulka se načetla ihned po přepnutí karty.
+Problémem při implementaci bylo čekání na načtení stromové struktury a synchronizace datatabulky. Původní implementace používala události `this.dataTable.on('draw.dt', (evt, settings) => `, což ale nebylo vhodné pro použití při přepínání karet Složky, Systém a Koš, protože tam docházelo ihned k načtení datatabulky po přepnutí karty.
 
-Kód používá funkci `setInterval` s počítáním volání ve funkci `waitForDatatableRowLoaded` a čekání na nezobrazení `div.dt-processing:visible`. Pokud se nezobrazí, počítá další 3 intervaly nezobrazení a poté pokračuje ve vyhledávání webové stránky. Podobně je řešeno i načítání stromové struktury, čekání je implementováno ve funkci `waitForJsTreeLoaded`. Funkce jsou implementovány přímo v `abstract-js-tree-opener.js`.
+Kód používá funkci `setInterval` s počítáním volání ve funkci `waitForDatatableRowLoaded` a čekáním na nezobrazení `div.dt-processing:visible`. Když není zobrazeno, počítá ještě 3 intervaly nezobrazení a následně pokračuje v hledání web stránky. Podobně je řešeno i načítání stromové struktury, čekání je implementováno ve funkci `waitForJsTreeLoaded`. Funkce jsou implementovány přímo v `abstract-js-tree-opener.js`.
 
-Vyhledávání je komplikované také kvůli stránkování a rozdílům mezi stránkováním na klientovi a serveru. V obou případech prochází postupně každou stránku a hledá prvek se zadaným ID. Pokud je nalezen, otevře editor.
+Hledání je také komplikované z důvodu stránkování a rozdílů mezi klientským a serverovým stránkováním. V obou případech postupně prochází jednotlivé stránky a hledá element se zadaným ID. Je-li nalezeno otevře editor.
 
-Pokud jako `docid` zadaná hodnota parametru `-1` simulované kliknutí na tlačítko Přidat otevře nový editor.
+Pokud je jako `docid` parametr zadaná hodnota `-1` vyvolá se otevření nového editoru simulovaným kliknutím na tlačítko Přidat.
 
 Při kombinaci zadaného parametru `groupid` jsou možné následující situace:
-- je zadán kladný výsledek `docid` - parametr `groupid` je ignorován, adresář se otevře podle adresáře zadané webové stránky.
-- je zadáno `docid=-1`, parametr `groupid` slouží k otevření adresářové struktury a následně k otevření nové webové stránky.
+- je zadané kladné `docid` - parametr `groupid` je ignorován, adresář se otevře podle adresáře zadané web stránky
+- je zadáno `docid=-1`, parametr `groupid` se použije pro otevření adresářové struktury a následně se vyvolá otevření nové web stránky
 
 ***
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
 | Metody | Gettery | Settery |
 | --------------------------------- | --------------------- | ----------------------- |
@@ -129,11 +129,11 @@ Při kombinaci zadaného parametru `groupid` jsou možné následující situace
 
 ***
 
-### Podrobný popis funkcí
+### Detailní popis funkcí
 
 #### init()
 
-vyvolá inicializaci, která poskytuje [následující postup](#init-algo)
+Vyvolá inicializaci, která zajistí [tento následující postup](#init-algo)
 
 ```javascript
 /**
@@ -148,7 +148,7 @@ window.jsTreeDocumentOpener.init();
 
 #### next()
 
-Otevře další uzel v pořadí. Pokud v seznamu již žádný další uzel neexistuje, otevře dokument dataTable s naším ID.
+Otevře následující nodě v pořadí. Pokud již neexistuje v seznamu žádný další node, otevře dataTable dokument s naším ID.
 
 ```javascript
 /**
@@ -164,7 +164,7 @@ window.jsTreeDocumentOpener.next();
 
 #### loaded()
 
-Nastaví zpětné volání, které se provede po vytvoření nového [id](#id) a přijímání dat.
+Nastaví callback, který se provede po zadání nového [id](#id) a přijetí dat.
 
 ```javascript
 /**
@@ -180,7 +180,7 @@ window.jsTreeDocumentOpener.loaded(callback);
 
 #### inputDataFrom()
 
-Připojí zadaný vstup, který musí být vložen jako objekt jQuery `$('.input-css-trieda')`. Vstup zajišťuje zadání nového ID
+Připojí zadaný input, který musí být vložen jako jQuery objekt `$('.input-css-trieda')`. Input zajišťuje zadání nového ID
 
 ```javascript
 /**
@@ -199,7 +199,7 @@ window.jsTreeDocumentOpener.inputDataFrom(openerInput, withNotifyCallback);
 
 #### setInputValue()
 
-Pokud byl připojen pomocí [inputDataFrom()](#vstupní-data-z) můžeme nastavit hodnotu vstupu odkudkoli.
+Pokud byl připojen pomocí [inputDataFrom()](#inputdatafrom) input, tak danému inputu můžeme odkudkoli nastavit hodnotu.
 
 ```javascript
 /**
@@ -216,9 +216,9 @@ window.jsTreeDocumentOpener.setInputValue(value);
 
 #### id
 
-Nastavte nové ID dokumentu. Toto ID bude odesláno prostřednictvím rozhraní API a bude také použito k otevření dokumentu po úspěšném otevření příslušných uzlů stromu.
+Nastavení nového ID dokumentu. Toto ID bude odesláno přes API a zároveň bude použito k otevření dokumentu po úspěšném otevření příslušných uzlů stromu.
 
-[Klikněte pro více informací o tom, co dělá setter id](#id-algo)
+[Klik pro více info, co setter id dělá](#id-algo)
 
 ```javascript
 /**
@@ -237,7 +237,7 @@ window.jsTreeDocumentOpener.docId = value;
 
 #### apiUrl
 
-Nastavení nové url adresy API
+Nastavení nové API url
 
 ```javascript
 /**
@@ -257,7 +257,7 @@ window.jsTreeDocumentOpener.apiUrl = value;
 
 #### idKeyName
 
-Nový název klíče dotazu URl, který bude obsahovat ID dokumentu.
+Nový název URl query klíče, ve kterém se bude nacházet ID dokumentu.
 
 ```javascript
 /**
@@ -274,9 +274,9 @@ window.jsTreeDocumentOpener.idKeyName = value;
 
 #### notFound
 
-Slouží k určení, zda po přijetí dat existuje ve stromu jsTree uzel, který chceme otevřít jako první. Pokud takový uzel neexistuje (nebyl nalezen), vrátí se hodnota TRUE. Pokud takový uzel existuje (byl nalezen), vrací se hodnota FALSE.
+Slouží ke zjištění, zda po přijetí dat, existuje v jsTree uzel, který chceme otevřít jako první. Pokud takový uzel neexistuje (nebyl nalezen / not found), tak se nám vrátí hodnota TRUE. Pokud takový uzel existuje (byl nalezen / found), tak se nám vrátí hodnota FALSE.
 
-Ideální použití tohoto getteru je uvnitř metody [loaded()](#Převzato-z)
+Ideální použití tohoto gettera je uvnitř metody [loaded()](#loaded)
 
 ```javascript
 /**

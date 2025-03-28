@@ -1,14 +1,14 @@
-# Aplikace Spring MVC
+# Spring MVC aplikace
 
-Ukázková aplikace na veřejném webu s využitím šablon Spring MVC a Thymeleaf.
+Ukázková aplikace ve veřejné webové stránce s použitím Spring MVC a Thymeleaf šablon.
 
 ![](list.png)
 
 ## Backend
 
-Vytvořená třída musí rozšiřovat třídu `WebjetComponentAbstract` a zároveň připojit anotaci `@WebjetComponent`. Tím se zajistí nastavení Spring `@Component` anotace a spuštění aplikace prostřednictvím `!INCLUDE()!` příkaz na webové stránce.
+Vytvořená třída musí rozšiřovat třídu `WebjetComponentAbstract` a zároveň obsahovat anotaci `@WebjetComponent`. To zajistí nastavení Spring `@Component` anotace a provedení aplikace přes `!INCLUDE()!` příkaz ve web stránce.
 
-Jednotlivé metody `view, edit, add, saveForm` jsou volány na základě shody parametrů URL, např. metoda `edit` se volá přidáním parametru URL `?edit=true`. Použití anotace `@DefaultHandler` metoda, která se provede, pokud není nalezena žádná jiná shoda parametrů URL. Název metody může být libovolný, nemusí být ze zadaného seznamu, stačí existence parametru URL se stejným názvem.
+Jednotlivé metody `view, edit, add, saveForm` jsou volány na základě shody URL parametru, například. metoda `edit` se zavolá přidáním URL parametru `?edit=true`. Pomocí anotace `@DefaultHandler` se určí metoda, která se provede, pokud není nalezena jiná shoda URL parametru. Jméno metody může být libovolné, nemusí být s uvedeného seznamu, stačí existence URL parametru se stejným jménem.
 
 Příklad:
 
@@ -149,9 +149,9 @@ public class ContactApp extends WebjetComponentAbstract {
 }
 ```
 
-### Ověřování
+### Validace
 
-Použití anotace `@Valid` a `@ModelAttribute` lze provádět validaci atributů entit. Výsledek je uložen v objektu `BindingResult result`:
+Pomocí anotace `@Valid` a `@ModelAttribute` je možné provést validaci atributů entity. Výsledek se uloží do objektu `BindingResult result`:
 
 ```java
 public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
@@ -165,17 +165,17 @@ public String saveForm(@Valid @ModelAttribute("entity") ContactEntity entity, Bi
 }
 ```
 
-### Vložení aplikace do webové stránky
+### Vložení aplikace do web stránky
 
-Aplikace se vkládá na veřejnou webovou stránku stejným způsobem jako jakákoli jiná standardní aplikace pomocí značky `!INCLUDE()!`. Zadaný název musí odpovídat anotaci `@WebjetComponent` ve třídě. Název musí být jedinečný, proto je nutné nastavit název třídy s úplnou cestou, např. `@WebjetComponent("sk.iway.basecms.contact.ContactApp")`.
+Aplikace se do veřejné web stránky vkládá stejně jako jiná standardní aplikace pomocí značky `!INCLUDE()!`. Zadané jméno se musí shodovat s anotací `@WebjetComponent` ve třídě. Jméno musí být unikátní, proto je třeba nastavit název třídy s celou cestou. `@WebjetComponent("sk.iway.basecms.contact.ContactApp")`.
 
 ```html
 !INCLUDE(sk.iway.basecms.contact.ContactApp, country="sk")!
 ```
 
-### Použití parametrů aplikace
+### Používání parametrů aplikace
 
-Každá aplikace může v `!INCLUDE()!` obsahovat parametry, v našem příkladu je to parametr `country`. Automaticky se přenáší do atributu `country` ve třídě `ContactApp`.
+Každá aplikace může v `!INCLUDE()!` značce obsahovat parametry, v našem příkladu se jedná o parametr `country`. Ten se automaticky přenese do atributu `country` ve třídě `ContactApp`.
 
 ```html
 !INCLUDE(sk.iway.basecms.contact.ContactApp, country="sk")!
@@ -194,22 +194,22 @@ Podporovány jsou následující datové typy:
 String, BigDecimal, Boolean, Integer, Double, Float, boolean, int, double, float
 ```
 
-Zobrazení aplikace v seznamu aplikací a nastavení jejích parametrů viz. [Zobrazení v seznamu aplikací](../appstore/README.md)
+Zobrazení aplikace v seznamu aplikací a nastavení jejích parametrů je v kapitole [Zobrazení v seznamu aplikací](../appstore/README.md)
 
 ## Frontend
 
 Pro zobrazení lze použít následující typy souborů:
-- `JSP` - soubor má příponu `.jsp`
-- `Freemarker` - soubor má příponu `.ftl`
-- `Thymeleaf` - soubor má příponu `.html`
+- `JSP` - soubor má koncovku `.jsp`
+- `Freemarker` - soubor má koncovku `.ftl`
+- `Thymeleaf` - soubor má koncovku `.html`
 
-U nových aplikací doporučujeme striktně používat [Thymeleaf](../../developer/frameworks/thymeleaf.md). Všimněte si, že v `ContactApp` metody vracejí cestu bez přípony (např. `return "/apps/contact/mvc/edit"`), WebJET automaticky vyhledá soubor podle výše uvedeného seznamu a použije první nalezený. Můžete tak snadno změnit technologii použitou na frontend, aniž byste museli měnit backend.
+Pro nové aplikace doporučujeme striktně používat [Thymeleaf](../../developer/frameworks/thymeleaf.md). Všimněte si, že v `ContactApp` metody vracejí cestu bez přípony (např. `return "/apps/contact/mvc/edit"`), WebJET automaticky hledá soubor podle uvedeného seznamu a použije první, který najde. Můžete tak snadno měnit technologii použitou na frontendu beze změny backendu.
 
-Pro `Thymeleaf` objekty jsou automaticky vloženy do modelu `request a session` které lze použít např. jako. `${request.getAttribute('ninja').page.urlPath}`.
+Pro `Thymeleaf` jsou automaticky do modelu vloženy objekty `request a session`, které lze použít jako nap. `${request.getAttribute('ninja').page.urlPath}`.
 
-### Zobrazit seznam společností
+### Zobrazení seznamu firem
 
-Seznam společností v souboru `src/main/webapp/apps/contact/mvc/list.html` používá [iterace seznamu](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#using-theach) společnosti ve standardní tabulce HTML:
+Seznam firem v souboru `src/main/webapp/apps/contact/mvc/list.html` využívá [iteraci seznamu](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#using-theach) firem ve standardní HTML tabulce:
 
 ![](list.png)
 
@@ -239,9 +239,9 @@ Seznam společností v souboru `src/main/webapp/apps/contact/mvc/list.html` pou�
 </div>
 ```
 
-### Úprava společnosti
+### Editace firmy
 
-Soubor `src/main/webapp/apps/contact/mvc/edit.html` pro úpravu společnosti se používá také pro přidání nové společnosti. Používá standardní možnosti pro [formuláře v Spring](https://spring.io/guides/gs/handling-form-submission/). V horní části se zobrazuje [výpis chybových hlášení](https://www.baeldung.com/spring-thymeleaf-error-messages) v případě chyby validace (např. nezadaný název společnosti nebo neshodný formát poštovního směrovacího čísla).
+Soubor `src/main/webapp/apps/contact/mvc/edit.html` pro editaci firmy je použit také pro přidání nové firmy. Využívá standardní možnosti pro [formuláře ve Springu](https://spring.io/guides/gs/handling-form-submission/). Ve vrchní části zobrazuje [výpis chybových zpráv](https://www.baeldung.com/spring-thymeleaf-error-messages) v případě validační chyby (např. nezadané jméno firmy nebo nevhovující formát PSČ).
 
 ![](edit.png)
 
@@ -300,17 +300,17 @@ Soubor `src/main/webapp/apps/contact/mvc/edit.html` pro úpravu společnosti se 
 </form>
 ```
 
-### Zobrazení chyb validace
+### Zobrazení validačních chyb
 
-Chyby ověření jsou podmíněně zobrazeny v bloku `<div data-th-if="${error!=null}" class="alert alert-danger">`. V příkladu jsou zobrazeny v jednoduchém seznamu, ale je také možné použít zobrazení chyb pro [jednotlivá pole](https://www.baeldung.com/spring-thymeleaf-error-messages).
+Validační chyby jsou podmíněně zobrazeny v bloku `<div data-th-if="${error!=null}" class="alert alert-danger">`. V ukázce se zobrazují v jednoduchém seznamu, je ale možné použít i zobrazení chyby při [jednotlivých polích](https://www.baeldung.com/spring-thymeleaf-error-messages).
 
 ![](validation.png)
 
-### Automatické vyhledávání souborů
+### Automatické hledání souboru
 
-Pokud třída rozšiřuje třídu `WebjetComponentAbstract`, vložená položka aplikace může obsahovat parametr `viewFolder`, který nám umožňuje zadat podadresář, ve kterém se mají hledat soubory k zobrazení.
+Pokud třída rozšiřuje třídu `WebjetComponentAbstract`, zápis vložené aplikace může obsahovat parametr `viewFolder`, díky kterému umíme určit podadresář, kde se mají hledat soubory pro zobrazení.
 
-Pokud metoda vrátí `/components/contact/edit` a parametr je zadán `viewFolder`, WebJET automaticky vloží odkaz `installName` a hodnota v `viewFolder`:
+V případě, že metoda vrátí `/components/contact/edit` a je zadaný parametr `viewFolder`, WebJET automaticky do linky vloží `installName` a hodnotu ve `viewFolder`:
 
 ```java
 /components/{installName}/contact/{viewFolder}/edit.html
@@ -330,7 +330,7 @@ Příklad:
 ```java
 !INCLUDE(sk.iway.basecms.contact.ContactApp, viewFolder="subfolder", country="sk")!
 ```
-- v tomto případě se použije třída \`\`en.iway.basecms.contact.ContactApp\`\`,
-- metoda s anotací se volá `@DefaultHandler` který vrátí `return "/apps/contact/mvc/list";`,
-- Vyhledávání WebJET `/components/{installName}/contact/subfolder/list.html`, nebo `/components/contact/subfolder/list.html`
-- vloží výsledný kód HTML do stránky.
+- v tomto případě se použije třída \`\`cs.iway.basecms.contact.ContactApp\`\`\`,
+- zavolá se metoda s anotací `@DefaultHandler`, která vrátí `return "/apps/contact/mvc/list";`,
+- WebJET vyhledá `/components/{installName}/contact/subfolder/list.html`, nebo `/components/contact/subfolder/list.html`
+- výsledný HTML kód vloží do stránky.

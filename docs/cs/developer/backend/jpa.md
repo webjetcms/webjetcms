@@ -1,14 +1,14 @@
 # Práce s JPA
 
-Naše postřehy a pokyny týkající se společného parlamentního shromáždění.
+Naše postřehy a návody k JPA.
 
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
-## Dědění v entitách JPA
+## Dědění v JPA entitách
 
-Pokud dvě nebo více tabulek obsahují větší počet stejných sloupců, které nechceme deklarovat vícekrát, můžeme použít dědičnost. Příkladem je tabulka `documents` a `documents_history` které mají většinu sloupců shodných, ale chceme s nimi pracovat jako se dvěma nezávislými entitami.
+V případě, že dvě nebo více tabulek obsahují větší množství stejných sloupců, které nechceme deklarovat vícenásobně, můžeme použít dědění (Inheritance). Příklad je tabulka `documents` a `documents_history`, které mají většinu sloupců shodných, ale chceme s nimi pracovat jako se dvěma nezávislými entitami.
 
-Vytvoříme nadřazenou třídu, do které budeme ukládat společné sloupce (můžeme ji pojmenovat například basic). Tato třída musí obsahovat anotaci `@MappedSuperclass` (dědičnost pomocí anotace `@Inheritance` není pro tento typ dědictví vhodný).
+Vytvoříme rodičovskou třídu, ve které budeme uchovávat společné sloupce (můžeme ji pojmenovat například basic). Tato třída musí obsahovat anotaci `@MappedSuperclass` (dědění pomoci anotace `@Inheritance` není pro tento typ dědění vhodná).
 
 ```java
 @MappedSuperclass
@@ -16,7 +16,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 {
 ```
 
-Je důležité, abychom v rodičovské třídě nepoužívali žádné anotace Lombok, protože `@Getter / @Setter` takže všechny metody je třeba napsat ručně. JPA není uzpůsoben pro takovou dědičnost metod, která by při chybě způsobila pád kódu. `NoSuchMethodError (Ljava/lang/String;)V`. Třídy, které dědí od takové třídy s anotací `@MappedSuperclass` nepotřebují žádné úpravy ani poznámky kromě rozšíření. Metody nadřazené třídy lze přepsat.
+Důležité je abychom v rodičovské třídě nepoužili žádné Lombok anotace jako `@Getter / @Setter` takže všechny metody je třeba napsat ručně. JPA není na takové dědění metod přizpůsoben, což by způsobilo pád kódu na chybě. `NoSuchMethodError (Ljava/lang/String;)V`. Třídy které dědí od takové třídy s anotací `@MappedSuperclass` nepotřebují kromě rozšíření žádné jiné úpravy nebo anotace. Metody rodičovské třídy lze přepsat.
 
 ```java
 @Entity

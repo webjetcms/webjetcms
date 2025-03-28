@@ -1,6 +1,6 @@
-# Nahrazení textu
+# Nahrazování textů
 
-Text stránky vytvořené přímo v editoru WebJET může obsahovat speciální značky, které se při zobrazení webové stránky aktualizují:
+Text stránky vytvořené přímo v editoru WebJET může obsahovat speciální značky, které se při zobrazení web stránky aktualizují:
 
 ## Datum a čas
 
@@ -115,7 +115,7 @@ Text stránky vytvořené přímo v editoru WebJET může obsahovat speciální 
 
 ## Přihlášený uživatel
 
-Údaje o přihlášeném uživateli (pokud je část webové stránky přístupná pouze pod heslem). Tyto hodnoty lze použít k předvyplnění hodnot polí formuláře. Pokud není přihlášen žádný uživatel, budou hodnoty všech značek prázdné.
+Údaje o přihlášeném uživateli (pokud existuje sekce web sídla, která je dostupná pouze pod heslem). Hodnoty lze použít k před vyplnění hodnot formulářových polí. Pokud není přihlášen žádný uživatel, hodnoty všech značek budou prázdný znak.
 
 ```html
 <table width="100%" class="ramikTable">

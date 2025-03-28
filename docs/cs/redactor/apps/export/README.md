@@ -1,19 +1,19 @@
 # Export dat
 
-Aplikace Export dat umožňuje exportovat zprávy/webové stránky z WebJET CMS v různých formátech JSON nebo XML/RSS. Export lze použít v externích webových/mobilních aplikacích.
+Aplikace Export dat, umožňuje vytvořit export novinek/web stránek z WebJET CMS v různých formátech JSON nebo XML/RSS. Export lze použít v externích web/mobilních aplikacích.
 
 ![](exportDat-datatable.png)
 
-Při vytváření/duplikaci nového exportu je nutné vyplnit povinné pole "URL adresa", které definuje adresu, na níž bude export dostupný.
+Při vytváření/duplikování nového exportu je třeba vyplnit povinné pole "URL adresa", které definuje adresu, na které bude export dostupný.
 
-Ostatní pole jsou podobná těm, která se používají při vkládání seznamu novinek do webové stránky. Nastavují filtrování a uspořádání exportovaného seznamu dat.
+Ostatní pole jsou podobná jako při vkládání seznamu novinek do web stránky. Nastavují filtrování a uspořádání seznamu exportovaných dat.
 
 ![](exportDat-editor.png)
 
-Data lze exportovat v následujících formátech:
+Data lze exportovat ve formátech:
 - JSON
-- XML (formát pro čtečku RSS)
-- `ud-ofngovcz` - exportní formát pro `Úradní desku` v [OpenData Česká republika](https://ofn.gov.cz/úřední-desky/2021-07-20/) Formát JSON. Při použití je nutné definovat překladové klíče v jazyce CZ. `components.ud-ofngovcz.url` s adresou URL stránky a `components.ud-ofngovcz.ico` s identifikačním číslem města. Hodnota pole Agenda se přebírá ze značky (skupina perex), přílohy ze stránky média.
+- XML (formát pro RSS čtečku)
+- `ud-ofngovcz` - export ve formátu pro `Úradní desku` v [OpenData ČR](https://ofn.gov.cz/úřední-desky/2021-07-20/) JSON formátu. Při použití je třeba definovat překladové klíče v CZ jazyce `components.ud-ofngovcz.url` s URL adresou stránky a `components.ud-ofngovcz.ico` s IČO města. Hodnota pro pole Agenda se bere ze značky (perex skupiny), přílohy z médií stránky.
 
 Ukázka exportu ve formátu json:
 
@@ -113,7 +113,7 @@ Ukázka exportu ve formátu json:
 ]
 ```
 
-Ukázka exportu ve formátu XML (formát pro čtečku RSS):
+Ukázka exportu ve formátu XML (formát pro RSS čtečku):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -151,11 +151,11 @@ Ukázka exportu ve formátu XML (formát pro čtečku RSS):
 
 ## Vlastní formát exportu
 
-Pokud potřebujete exportovat data v jiném formátu, stačí vytvořit soubor. `/components/INSTALL_NAME/export/meno.jsp` Kde: `INSTALL_NAME` je název vaší instalace (konf. proměnná `installName`). Doporučujeme vycházet ze stávajících souborů JSP a pouze upravit potřebné hodnoty klíčů.
+Pokud potřebujete data exportovat v jiném formátu stačí vytvořit soubor `/components/INSTALL_NAME/export/meno.jsp` kde `INSTALL_NAME` je jméno vaší instalace (konf. proměnná `installName`). Doporučujeme vycházet ze stávajících JSP souborů a jen upravit potřebné hodnoty klíčů.
 
 Vytvořený soubor se automaticky nabídne jako možnost typu exportu.
 
-Pro soubory JSP, které obsahují v názvu `rss` nebo `xml` (nebo pokud exportní adresa URL končí na) je nastavena hlavička HTTP `Content-Type` na adrese `text/xml`, pro ostatní případy se nastaví `application/json`. V případě potřeby však můžete hned na začátku nastavit konkrétní hodnotu v souboru JSP voláním:
+Pro JSP soubory, které v názvu obsahují `rss` nebo `xml` (nebo pokud URL adresa exportu končí na) se nastaví HTTP hlavička `Content-Type` na `text/xml`, pro ostatní případy se nastaví `application/json`. V případě potřeby ale můžete v JSP souboru nastavit hned na začátku specifickou hodnotu voláním:
 
 ```java
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "application/ld+json");

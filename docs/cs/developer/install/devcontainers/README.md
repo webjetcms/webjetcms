@@ -1,86 +1,86 @@
 # Development Containers
 
-[Development Containers](https://containers.dev) (devconatiners) je metoda vývoje v kontejnerech. Grafické rozhraní vývojového prostředí běží na vašem počítači, ale jeho `backend` a úplné spuštění kódu v kontejnerech.
+[Development Containers](https://containers.dev) (devconatiners) je způsob vývoje v kontejnerech. GUI vývojového prostředí běží na vašem počítači, ale jeho `backend` a kompletní spouštění kódu v kontejnerech.
 
 ![](architecture-containers.png)
 
-V současné době je podporována v [Kód VS](https://code.visualstudio.com/docs/devcontainers/containers), podpora pro [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050).
+Aktuálně je podporováno ve [VS Code](https://code.visualstudio.com/docs/devcontainers/containers), připravována je podpora pro [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050).
 
-## Výhody používání devcontainerů
+## Výhody použití devcontainers
 
-Hlavní výhody používání devcontainerů jsou:
-- Vyžaduje pouze, aby byl na počítači nainstalován Docker (nemusíte mít nainstalovanou Javu, NodeJS atd.).
-- Zjednodušuje celkovou instalaci prostředí v počítači vývojáře.
-- Sjednocuje prostředí mezi vývojáři - kontejner je nainstalován s přesnou verzí Javy, NodeJS a dalších nástrojů jako například v produkčním prostředí.
+Hlavní výhody použití devcontainers jsou:
+- Na počítači vyžaduje pouze instalaci Docker (nepotřebujete mít instalovanou Javu, NodeJS atd.).
+- Zjednodušuje celkovou instalaci prostředí na počítači vývojáře.
+- Unifikuje prostředí mezi vývojáři - v kontejneru je instalována přesná verze jevy, NodeJS a dalších nástrojů. na produkčním prostředí.
 
-Je proto vhodný zejména pro následující scénáře:
-- Pracujete na více projektech, z nichž každý používá jinou verzi Javy, NodeJS a je obtížné koordinovat verze na vašem počítači.
-- Občas se stane, že potřebujete pracovat na zastaralém projektu, který využívá technologie, jež již nejsou podporovány a je obtížné je v počítači udržovat.
-- Potřebujete projekt rychle spustit, otestovat, ověřit a otestovat.
+Je to tedy vhodné hlavně pro následující scénáře:
+- Pracujete na více projektech, každý používá jinou verzi Java, NodeJS a je obtížné koordinovat verze na vašem počítači.
+- Občas potřebujete pracovat na zastaralém projektu, kde se používají již nepodporované technologie a je těžké je držet na vašem počítači.
+- Projekt potřebujete rychle spustit/vyzkoušet/ověřit/otestovat.
 
-Vývoj má samozřejmě i své nevýhody - běh v kontejneru je o něco pomalejší, zejména práce se souborovým systémem. Instalace `node_modules` je výrazně pomalejší (ale obvykle jej provádíte jen zřídka) a spuštění systému WebJET CMS je asi o 20 % pomalejší. Podobně `git commit/push` trvá o několik sekund déle.
+Samozřejmě vývoj má i nevýhody – běh v kontejneru je o něco pomalejší, hlavně práce se souborovým systémem. Instalace `node_modules` je výrazně pomalejší (ale provádíte ji typicky zřídka) a start WebJET CMS je pomalejší o cca 20%. Podobně `git commit/push` trvá několik sekund déle.
 
-Při spuštění projektu v kontejneru jsou standardní porty HTTP 80,443,8080 namapovány na místní počítač, takže ve výchozím nastavení uvidíte WebJET spuštěný z kontejneru v prohlížeči stejně, jako kdybyste projekt spouštěli na vlastním počítači.
+Po spuštění projektu v kontejneru jsou mapovány standardní HTTP porty 80,443,8080 na lokální počítač, takže spuštěný WebJET z kontejneru zobrazíte standardně ve vašem prohlížeči stejně, jako byste projekt spustili na vašem počítači.
 
-Informace o vypuštění z kontejneru jsou uvedeny vlevo dole, kde je modrý text. `Dev Container: meno`.
+Informaci o spuštění z kontejneru je vidět vlevo dole kde je modrý text `Dev Container: meno`.
 
 ![](browser.png)
 
-## Použití kontejnerů devcontainers
+## Používání devcontainers
 
-Používání devcontainerů je snadné, v IDE můžete přepínat mezi lokální prací a prací v kontejneru, souborový systém je sdílený.
+Používání devcontainers je snadné, v IDE se umíte přepínat mezi prací lokálně a prací v kontejneru, souborový systém je sdílený.
 
 <!-- tabs:start -->
 
-#### **Kód VS**
+#### **VS Code**
 
-Pro VS Code je třeba nainstalovat rozšíření `ms-vscode-remote.remote-containers`. Po instalaci se v levém dolním rohu zobrazí modrá ikona. `><` přepínat mezi místním vývojem a vývojem v kontejneru. Kliknutím zobrazíte možnost `Reopen in Container` otevřít vývojové prostředí z kontejneru a naopak. `Reopen Folder Locally` otevřít místní verzi, pokud se nacházíte v kontejneru.
+Pro VS Code je třeba instalovat rozšíření `ms-vscode-remote.remote-containers`. Po instalaci se vám v levém dolním rohu zobrazí modrá ikona `><` k přepnutí mezi lokálním vývojem a vývojem v kontejneru. Klepnutím se zobrazí možnost `Reopen in Container` pro otevření vývojového prostředí z kontejneru a naopak `Reopen Folder Locally` pro otevření lokální verze pokud jste v kontejneru.
 
-Na levém panelu nástrojů se zobrazí ikona `Remote Explorer` kde se zobrazí seznam kontejnerů, které můžete v případě potřeby odstranit a znovu vytvořit.
+V levé nástrojové liště se zobrazuje ikona `Remote Explorer` kde se vám zobrazí seznam kontejnerů, který můžete v případě potřeby smazat a vytvořit nově.
 
-Po spuštění ověřte nainstalovaná rozšíření, měli byste být vyzváni k instalaci doporučených rozšíření. Můžete je zkontrolovat kliknutím v levém postranním panelu na položku `Extensions` a zadáním výrazu `@recommended` ve vyhledávání. V části `Workspace recommendations` se zobrazí seznam doporučených rozšíření a možnost jejich instalace.
+Po spuštění ověřte nainstalovaná rozšíření, měla by se vám zobrazit výzva k instalaci doporučených rozšíření. Zkontrolovat je můžete kliknutím v levé liště na `Extensions` a zadáním výrazu `@recommended` do vyhledávání. V sekci `Workspace recommendations` se vám zobrazí seznam doporučených rozšíření is možností jejich instalace.
 
 ![](extensions.png)
 
-Při prvním otevření projektu se mohou zobrazit chyby kompilace. `Mapper` ale stačí třídu otevřít, provést změnu (mezera, odstranit mezeru) a soubor uložit a chyba bude odstraněna.
+Při prvním otevření projektu se vám mohou zobrazit chyby kompilace `Mapper` tříd, stačí ale třídu otevřít, provést změnu (mezera, smazání mezery) a uložit soubor a chyba se opraví.
 
 #### **IntelliJ**
 
-Podpora pro [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050) se připravuje, tato část bude doplněna později.
+Podpora pro [IntelliJ](https://youtrack.jetbrains.com/issue/IDEA-292050) je připravována, tato sekce bude doplněna později.
 
 <!-- tabs:end -->
 
 ## Nastavení
 
-Pro [optimální provoz kontejnerů devcontainers](https://code.visualstudio.com/remote/advancedcontainers/improve-performance) Je třeba provést nastavení nástroje Docker a dalších nástrojů.
+Pro [optimální běh devcontainers](https://code.visualstudio.com/remote/advancedcontainers/improve-performance) je třeba provést nastavení Docker a dalších nástrojů.
 
 <!-- tabs:start -->
 
 #### **Windows**
 
-V případě systému Windows není pro zrychlení běhu potřeba žádné speciální nastavení nástroje Docker, ale informace si můžete ověřit na výše uvedeném odkazu. Může však nastat problém s různými [nastavení konce řádků mezi systémy Windows/Linux](https://code.visualstudio.com/docs/devcontainers/tips-and-tricks#_resolving-git-line-ending-issues-in-containers-resulting-in-many-modified-files).
+Pro Windows nejsou potřebná speciální nastavení Docker pro urychlení běhu, můžete ale ověřit informace na výše uvedeném odkazu. Může ale vzniknout problém s rozdílným [nastavením konce řádků mezi Windows/Linux](https://code.visualstudio.com/docs/devcontainers/tips-and-tricks#_resolving-git-line-ending-issues-in-containers-resulting-in-many-modified-files).
 
-#### **macOS**
+#### **MacOS**
 
-Pro systém macOS je třeba optimalizovat nastavení nástroje Docker pro. [rychlejší práce s diskem](https://www.docker.com/blog/speed-boost-achievement-unlocked-on-docker-desktop-4-6-for-mac/). Klikněte na ikonu Docker na panelu nabídek a vyberte možnost `Settings`, v tabulkách `General` vyberte možnost `VirtioFS` v sekci `Choose file sharing implementation for your containers`. Grafy `Advanced` vyberte možnost `Allow the default Docker socket to be used` a klikněte na `Apply & Restart`.
+Pro MacOS je třeba optimalizovat nastavení Docker pro [rychlejší práci s diskem](https://www.docker.com/blog/speed-boost-achievement-unlocked-on-docker-desktop-4-6-for-mac/). Klepněte na ikonu Docker v menu liště a zvolte možnost `Settings`, v kartě `General` zvolte možnost `VirtioFS` v sekci `Choose file sharing implementation for your containers`. V kartě `Advanced` zvolte možnost `Allow the default Docker socket to be used` a klepněte na tlačítko `Apply & Restart`.
 
 ![](docker-settings.png)
 
 <!-- tabs:end -->
 
-V kontejneru můžete použít záznam DNS `host.docker.internal` k připojení k počítači (např. k místnímu databázovému serveru).
+V kontejneru můžete použít DNS záznam `host.docker.internal` pro napojení se na váš počítač (např. na váš lokální databázový server).
 
-## Klíče Gitlab/SSH
+## Gitlab/SSH klíče
 
-Aby připojení k serveru gitlab pomocí klíčů SSH fungovalo i v kontejneru, je třeba nakonfigurovat. [sdílení klíčů](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) přes `ssh-agent` mezi počítačem a kontejnerem. Technicky vzato byste mohli klíč SSH zkopírovat přímo do složky. `/home/vscode/.ssh` ale není to ideální řešení.
+Aby vám iv kontejneru fungovalo připojení na gitlab server s použitím SSH klíčů je třeba nastavit [sdílení klíčů](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) pomocí `ssh-agent` mezi vaším počítačem a kontejnerem. Technicky byste mohli zkopírovat přímo SSH klíč do složky `/home/vscode/.ssh`, to ale není ideální řešení.
 
-Nejprve je třeba spustit ssh-agenta (jednorázová operace):
+Nejprve je třeba spustit ssh-agent (jednorázová operace):
 
 <!-- tabs:start -->
 
 #### **Windows**
 
-Spustit `local Administrator PowerShell` a zadejte následující příkazy:
+Spusťte `local Administrator PowerShell` a zadejte následující příkazy:
 
 ```sh
 # Make sure you're running as an Administrator
@@ -89,33 +89,33 @@ Start-Service ssh-agent
 Get-Service ssh-agent
 ```
 
-#### **macOS**
+#### **MacOS**
 
-V systému macOS je agent SSH spuštěn ve výchozím nastavení, mělo by stačit přidat klíče SSH podle následujícího postupu.
+V MacOS je SSH agent spuštěn standardně, mělo by stačit přidat SSH klíče jak je uvedeno níže.
 
 <!-- tabs:end -->
 
-A pak přidejte klíče SSH do `ssh-agent` příkaz:
+A následně přidejte vaše SSH klíče do `ssh-agent` příkazem:
 
 ```sh
 ssh-add $HOME/.ssh/id_rsa
 ```
 
-Chcete-li zobrazit seznam přidaných klíčů, použijte příkaz:
+Seznam přidaných klíčů zobrazíte příkazem:
 
 ```sh
 ssh-add -l
 ```
 
-Tuto informaci pak můžete ověřit v kontejnerovém terminálu.
+To můžete následně ověřit iv terminálu kontejneru.
 
-Po restartování devcontainers byste se měli být schopni připojit ke git/gitlab stejně jako na svém počítači. Výše uvedená nastavení jsou také ve skriptu `.devcontainer/localInit.sh` který se spustí před každým spuštěním kontejneru, takže tyto příkazy nemusíte provádět ručně.
+Po restartu devcontainers by vám mělo fungovat připojení na git/gitlab stejně jako na vašem počítači. Uvedená nastavení jsou také ve skriptu `.devcontainer/localInit.sh`, který se provede před každým spuštěním kontejneru, takže tyto příkazy nepotřebujete provádět manuálně.
 
-Pokud máte problém s připojením k serveru git, můžete vždy přepnout na místní verzi a `pull/push` operace se provádí lokálně.
+Pokud byste měli problém s připojením na git server, vždy se můžete přepnout na lokální verzi a `pull/push` operaci provést lokálně.
 
-## Spuštění Automatizovaného prohlížeče testů
+## Spuštění prohlížeče automatizovaných testů
 
-Pokud potřebujete zobrazit prohlížeč pro automatické testy, musíte nastavit. [Předávání XServer/X11](https://www.oddbird.net/2022/11/30/headed-playwright-in-docker/) (správce oken pro Linux) v počítači.
+Pokud potřebujete vidět prohlížeč pro automatizované testy je třeba nastavit [přeposílání XServer/X11](https://www.oddbird.net/2022/11/30/headed-playwright-in-docker/) (manažer oken pro Linux) na váš počítač.
 
 ![](autotest.png)
 
@@ -123,35 +123,35 @@ Pokud potřebujete zobrazit prohlížeč pro automatické testy, musíte nastavi
 
 #### **Windows**
 
-V systému Windows je `XServer` podporované v rámci `Windows Subsystem for Linux/WSL` a měla by být ve výchozím nastavení k dispozici v systému Windows 10 i 11. `WSL` přes nabídku Start a zadejte následující příkaz:
+Na Windows je `XServer` podporován vrámci `Windows Subsystem for Linux/WSL` a měl by být standardně dostupný na Windows 10 i 11. Pro ověření spusťte `WSL` přes start menu a zadejte následující příkaz:
 
 ```sh
 ls -a -w 1 /mnt/wslg
 ```
 
-ve výpisu by se měla zobrazit hodnota `.X11-unix`. Pokud ne, přejděte do obchodu a stáhněte si [aktuální verze WSL](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
+ve výpisu byste měli vidět hodnotu `.X11-unix`. Pokud ne, přejděte do obchodu a stáhněte [aktuální verzi WSL](https://www.microsoft.com/store/productId/9P9TQF7MRM4R).
 
-Bohužel v konfiguraci je rozdíl mezi systémy Windows a macOS, v souboru `.devcontainer/devcontainer.json` upravit hodnotu `"DISPLAY": "host.docker.internal:0"` na adrese `"DISPLAY": ":0"`.
+Bohužel v konfiguraci je rozdíl mezi Windows a MacOS, v souboru `.devcontainer/devcontainer.json` upravte hodnotu `"DISPLAY": "host.docker.internal:0"` na `"DISPLAY": ":0"`.
 
-#### **macOS**
+#### **MacOS**
 
-V systému macOS je třeba nejprve nainstalovat [XQuartz](https://www.xquartz.org). Po instalaci a restartu přejděte do aplikace `XQuartz` na `Preferences -> Security` a zaškrtněte možnost `Allow connections from network clients`.
+Pro MacOS je nejprve třeba nainstalovat [XQuartz](https://www.xquartz.org). Po instalaci a restartu přejděte v aplikaci `XQuartz` do `Preferences -> Security` a zaškrtněte možnost `Allow connections from network clients`.
 
 ![](xquartz-settings.png)
 
-Restartujte počítač a poté zadejte příkaz do terminálu:
+Restartujte znovu počítač a následně zadejte v terminálu příkaz:
 
 ```sh
 xhost +localhost
 ```
 
-umožnit připojení k `XQuartz` z místního počítače. Nastavení `xhost +localhost` je také ve scénáři `.devcontainer/localInit.sh`, která se provádí před každým spuštěním kontejneru, abyste na ni nezapomněli.
+pro povolení připojení na `XQuartz` z lokálního počítače. Nastavení `xhost +localhost` je také ve skriptu `.devcontainer/localInit.sh`, který se provede před každým spuštěním kontejneru, abyste na to nezapomněli.
 
 <!-- tabs:end -->
 
-Po nastavení se zobrazí okno kontejnerového systému Linux přímo v počítači. Technicky lze v tomto režimu spustit jakoukoli aplikaci s grafickým uživatelským rozhraním nainstalovanou v kontejneru.
+Po nastavení se vám bude zobrazovat okno z kontejnerizovaného Linux přímo na vašem počítači. Technicky umíte v tomto režimu spustit jakoukoli GUI aplikaci instalovanou v kontejneru.
 
-Při prvním spuštění testů se může objevit chyba, že není nainstalován. `playwright`, v kontejnerovém terminálu spusťte příkazy pro instalaci:
+Při prvním spuštění testů se možná zobrazí chyba, že není nainstalován `playwright`, v terminálu kontejneru spusťte příkazy pro jeho instalaci:
 
 ```sh
 npx playwright install
@@ -160,7 +160,7 @@ npx playwright install-deps
 
 ## Ukázkové soubory
 
-Následuje seznam ukázkových souborů, které můžete použít jako základ pro svůj projekt. Všechny jsou umístěny ve složce `.devcontainer`:
+Následuje seznam ukázkových souborů, které můžete použít jako základ pro váš projekt. Všechny se nacházejí ve složce `.devcontainer`:
 
 `devcontainer.json` - samotná konfigurace `devcontainer`:
 
@@ -225,7 +225,7 @@ Následuje seznam ukázkových souborů, které můžete použít jako základ p
 }
 ```
 
-`localInit.sh` - Skript je spuštěn na místním počítači před vytvořením kontejneru:
+`localInit.sh` - skript se spouští na lokálním počítači před vytvořením kontejneru:
 
 ```sh
 #!/bin/sh
@@ -238,7 +238,7 @@ ssh-add $HOME/.ssh/id_rsa
 ssh-add -l
 ```
 
-`postCreateCommand.sh` - skript je spuštěn po vytvoření kontejneru již uvnitř kontejneru, což umožňuje instalaci dalších programů:
+`postCreateCommand.sh` - skript se spustí po vytvoření kontejneru již v jeho nitru, umožňuje instalovat dodatečné programy:
 
 ```sh
 #!/bin/sh
@@ -247,7 +247,7 @@ sudo apt install iputils-ping
 sudo apt -y install imagemagick
 ```
 
-`postStartCommand.sh` - skript se spustí při každém spuštění kontejneru, protože pomalý překlad `.local` domény přidané do `/etc/hosts` potřebné záznamy DNS:
+`postStartCommand.sh` - skript se provede při každém spuštění kontejneru, z důvodu pomalého překladu `.local` domén přidává do `/etc/hosts` potřebné DNS záznamy:
 
 ```sh
 #!/bin/sh

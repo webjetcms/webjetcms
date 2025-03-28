@@ -1,59 +1,59 @@
-# Jak funguje odesílání e-mailů
+# Jak funguje odesílání emailů
 
-Odesílání e-mailových kampaní probíhá na pozadí tzv. `Sender`. Funguje to takto:
-- Z databáze (tabulka `emails`), bude vybráno 50 e-mailů k odeslání.
-- Z vybraných e-mailů bude vybrán náhodný e-mail.
-- Při výběru náhodného e-mailu se kontrolují limity domény, pokud vybraný e-mail nelze odeslat, vyhledá se jiný.
-- Pokud vybraný vzorek 50 e-mailů obsahuje všechny e-maily se stejnou doménou (např. `gmail.com` nebo firemní domény), můžete zjistit, že kvůli omezením domény **ze vzorku 50 e-mailů nelze vybrat žádný vhodný**.
-- Pro vybraný e-mail se zvýší počítadlo pokusů o odeslání a datum odeslání se nastaví na aktuální datum a čas (i když e-mail ještě nebyl odeslán, což snižuje pravděpodobnost duplicitního odeslání e-mailu v případě sdružené instalace).
-- Pokud počet odeslání překročí maximální počet pokusů, je e-mail označen jako nesprávný (hodnota `retry` v tabulce bude mít hodnotu `-1`).
-- Webová stránka s textem a designem e-mailu je stažena prostřednictvím protokolu HTTP.
-- Pokud je příjemce z databáze registrovaných uživatelů v systému WebJET CMS, je uživatel při stahování webové stránky přihlášen. Tímto způsobem je možné použít [značky pro vkládání uživatelských dat](../campaings/README.md#Základní).
-- Pokud příjemce není z databáze registrovaných uživatelů, pouze [základní značky](../campaings/README.md#Základní).
-- Pokud je v těle e-mailu aplikace, může v těle vygenerovat text. `SENDER: DO NOT SEND THIS EMAIL`, v takovém případě se e-mail neodešle a bude označen jako úspěšně odeslaný. Toho lze využít v případě, že aplikace kontroluje nastavení uživatele - např. má zájem pouze o zaslání nabídky na byt 3+1, ale vy jej aktuálně nemáte v nabídce.
-- Tělo e-mailu bude doplněno obrázky a přílohami.
-- Tělo e-mailu bude aktualizováno pomocí značky pro sledování kliknutí na odkaz v e-mailu.
-- K tělu e-mailu bude připojen obrázek, který umožní sledovat otevření e-mailu.
-- E-mail bude odeslán.
-- Z odpovědi serveru SMTP se vyhodnotí, zda byl e-mail úspěšně odeslán (kromě stavového kódu je možné v proměnné conf. nastavit další chybové odpovědi `dmailBadEmailSmtpReplyStatuses`)
-- Pokud je odeslání neúspěšné, datum odeslání e-mailu se v databázi vymaže a odesílání se zastaví na dobu nastavenou v proměnné conf. `dmailSleepTimeAfterException`.
+Odesílání emailů kampaně provádí na pozadí tzv. `Sender`. Ten pracuje následujícím způsobem:
+- Z databáze (tabulka `emails`) se vybere 50 emailů k odeslání.
+- Z vybraných emailů se vybere náhodný email.
+- Při výběru náhodného emailu se kontrolují doménové limity, pokud vybraný email nelze odeslat hledá se jiný.
+- Pokud vybraný vzorek 50 emailů obsahuje všechny se stejnou doménou (např. `gmail.com` nebo vaši firemní doménu) může nastat situace, že kvůli doménovým limitům se **nedá ze vzorku 50 emailů žádný vhodný vybrat**.
+- Pro vybraný email se zvýší počítadlo pokusů odeslání a nastaví se datum odeslání na aktuální datum a čas (i když email ještě není odeslán, snižuje to ale pravděpodobnost duplicitního odeslání emailu v případě clusterové instalace).
+- Pokud počet odeslání přesahuje maximální počet pokusů email se označí jako nesprávný (hodnota `retry` v tabulce bude mít hodnotu `-1`).
+- Přes HTTP protokol se stáhne web stránka s textem a designem emailu.
+- Pokud je příjemce z databáze registrovaných uživatelů ve WebJET CMS daný uživatel se při stahování web stránky přihlásí. Ve stránce je tak možné využívat [značky pro vložení údajů uživatele](../campaings/README.md#základní).
+- Pokud příjemce není z databáze registrovaných uživatelů nahradí se pouze [základní značky](../campaings/README.md#základní).
+- Pokud je v těle emailu aplikace může do těla vygenerovat text `SENDER: DO NOT SEND THIS EMAIL`, v takovém případě se email neodešle a označí se za úspěšně odeslán. To lze použít v případě, že aplikace kontroluje nastavení uživatele - například. má zájem dostávat jen nabídku na 3-pokojový byt, který ale aktuálně nemáte v nabídce.
+- K tělu emailu se přiloží obrázky a přílohy.
+- Tělo emailu se doplní o značku pro sledování kliknutí na odkaz v emailu.
+- Do těla emailu se přiloží obrázek pro sledování otevření emailu.
+- Email se odešle.
+- Z odpovědi SMTP serveru se vyhodnotí, zda je email odeslán úspěšně (kromě stavového kódu lze nastavit doplňkové chybové odpovědi v konf. proměnné `dmailBadEmailSmtpReplyStatuses`)
+- Pokud je odeslání neúspěšné smaže se v databázi datum odeslání emailu a odesílání se zastaví na čas nastavený v konf. proměnné `dmailSleepTimeAfterException`.
 
 ## Správné nastavení
 
-Pro správné odeslání hromadného e-mailu je nutné mít správně nakonfigurovaný e-mailový server:
-- Nastavení [DKIM](https://www.dkim.org) klíče domény s platnými [SPF](https://sk.wikipedia.org/wiki/Sender_Policy_Framework) záznamu. Doporučujeme používat pro zasílání [Amazon SES](../../../../install/config/README.md#nastavení-amazon-ses) a `DKIM` automaticky nastaví také `SPF`.
-- Nastavení [DMARC](https://dmarc.org) záznam. V systému DNS vytvořte nový `TXT` záznam pro doménu `_dmarc.vasadomena.sk` s hodnotou alespoň `v=DMARC1; p=none; sp=none`.
+Pro korektně odeslaný hromadný email je třeba mít správně nastavený emailový server:
+- Nastaveno [DKIM](https://www.dkim.org) klíče domény s platným [SPF](https://sk.wikipedia.org/wiki/Sender_Policy_Framework) záznamem. Doporučujeme použít k odesílání [Amazon SES](../../../../install/config/README.md#nastavení-amazon-ses) a `DKIM` nastavit tam, automaticky se nastaví i `SPF`.
+- Nastaven [DMARC](https://dmarc.org) záznam. V DNS vytvořte nový `TXT` záznam pro doménu `_dmarc.vasadomena.sk` s hodnotou minimálně `v=DMARC1; p=none; sp=none`.
 
 ## Proč odeslání trvá dlouho
 
-Pokud máte pocit, že nahrávání trvá příliš dlouho, jsou možné tyto příčiny:
-- Odesílání funguje jako úloha na pozadí, inicializovaná při spuštění serveru. Odesílá e-maily pravidelně každých 1000 ms (nastaveno v konfigurační proměnné `dmailWaitTimeout`). Tato hodnota představuje čekací dobu mezi provedením odeslání, to znamená, že po odeslání e-mailu se za nastavený počet ms začne odesílat znovu. Pokud nastavíte hodnotu 333, neznamená to, že se odešlou 3 e-maily za sekundu (to by celý proces odesílání trval 0 ms, což rozhodně není realita).
-- Odesílání e-mailů je **blokování** pokud během intervalu nastaveného pomocí proměnné conf. `dmailWaitTimeout` chybí odeslat e-mail, bude interval přeskočen a bude odeslán v dalším intervalu.
-- Omezení domény - pro lepší doručení jsou zkontrolovány [omezení počtu a rychlosti doručování e-mailů do určité domény.](../domain-limits/README.md). Pokud kampaň obsahuje mnoho e-mailů se stejnou doménou (např. gmail.com nebo vaše firemní doména), dojde ke zpoždění při odesílání. Pokud vaše firemní doména neomezuje počet e-mailů, přidejte ji k limitům domény a nastavte vysoký počet e-mailů na časový interval.
-- Výkonnost databáze - jak bylo uvedeno výše, při odesílání se z databáze vybere náhodný vzorek e-mailů k odeslání, ze kterého se vybere e-mail. Pokud je v databázi tabulka `emails` obsahuje mnoho záznamů, může tento výběr trvat dlouho, což zpomaluje odesílání. V Nastavení->Odstranění dat->E-maily můžete odstranit staré informace o odeslaných e-mailech, což sníží zatížení databáze.
-- Rychlost serveru - jak bylo uvedeno výše, každý e-mail se stahuje jako webová stránka prostřednictvím místního připojení HTTP. Pokud je server nedostatečně výkonný, dochází i k prodlevám při tomto stahování. Výkon v době odesílání kampaně si můžete ověřit podle sekce Přehled v aplikaci Sledování serveru. V ideálním případě se e-mail stahuje lokálně přímo z aplikačního serveru, aniž by procházel celou infrastrukturou (firewall, load balancer...). Můžete použít konf. proměnnou `natUrlTranslate` pomocí kterého můžete nastavit překlad adres (např. `https://www.domena.sk/|http://localhost:8080/`).
+Pokud se vám zdá, že odesílání trvá příliš dlouho, toto jsou možné důvody:
+- Odesílání pracuje jako úloha na pozadí, inicializuje se při startu serveru. E-mail odesílá pravidelně každých 1000ms (nastavuje se v konf. proměnné `dmailWaitTimeout`). Tato hodnota je čekání mezi provedeními odeslání, čili po odeslání emailu se znovu spustí odesílání za nastavený počet ms. Pokud nastavíte hodnotu 333 neznamená to, že se odešlou 3 emaily za sekundu (to by celý proces odesílání musel trvat 0ms, což jistě není realita).
+- Odesílání emailů je **blokující**, pokud se během intervalu nastaveného přes konf. proměnnou `dmailWaitTimeout` nestihne email odeslat, interval se přeskočí a bude se odesílat v dalším intervalu.
+- Doménové limity - pro lepší doručení se kontroluje [limit počtu a rychlosti doručení emailu na konkrétní doménu](../domain-limits/README.md). Pokud kampaň obsahuje mnoho emailů stejné domény (např. gmail.com nebo vaší firemní domény) bude docházet ke zpoždění odeslání. Pokud vaše firemní doméně nelimituje počet emailů přidejte ji k doménovým limitům a nastavte vysoký počet emailů za časový úsek.
+- Výkon databáze - jak je uvedeno výše, při odesílání se z databáze vybírá náhodný vzorek emailů k odeslání, ze kterého se vybere email. Pokud databázová tabulka `emails` obsahuje mnoho záznamů může tento výběr trvat delší dobu, což zpomaluje odesílání. Můžete v aplikaci Nastavení->Mazání dat->E-maily smazat staré informace o odeslaných emailech, což sníží zatížení databáze.
+- Rychlost serveru - jak je uvedeno výše, každý email se stahuje jako web stránka lokálním HTTP spojením. Pokud má server nedostatečný výkon dochází i při tomto stahování ke zdržení. Můžete sledovat v sekci Přehled aplikaci Monitorování serveru pro ověření výkonu v době odesílání kampaně. Ideální je, když se email stahuje lokálně přímo z aplikačního serveru bez průchodu celou infrastrukturou (firewall, load balancer...). Můžete využít konf. proměnnou `natUrlTranslate` přes kterou umíte nastavit překlad adres (např. `https://www.domena.sk/|http://localhost:8080/`).
 
-Rychlost odesílání ovlivňují následující konfigurační proměnné:
-- `dmailWaitTimeout` - interval spouštění odesílání e-mailů v milisekundách. Po změně je nutné restartovat server (výchozí hodnota 1000).
-- `dmailMaxRetryCount` - maximální počet opakování odeslání e-mailu v případě, že během odesílání dojde k chybě (výchozí hodnota 5).
-- `dmailSleepTimeAfterException` - Interval čekání v ms po chybě odeslání, např. pokud server SMTP přestane odpovídat (výchozí 20000),
-- `dmailBadEmailSmtpReplyStatuses` - seznam čárkami oddělených výrazů vrácených ze serveru SMTP, pro které se e-mail nepokusí znovu odeslat (výchozí: Neplatné adresy,Adresa příjemce odmítnuta,Špatná adresa příjemce,Místní adresa obsahuje řídicí znaky nebo bílé znaky,Doména končí tečkou v řetězci,Doména obsahuje nepovolený znak v řetězci).
-- `dmailDisableInlineImages` - umožňuje zakázat připojování obrázků k e-mailu, což zvýší rychlost odesílání a zmenší velikost e-mailu. Nevýhodou je, že příjemce musí potvrdit, že obrázky byly načteny ze serveru. Pokud máte instalaci na více doménách, můžete nastavit výjimky pro připojování obrázků k e-mailu pomocí konfigurační proměnné. `dmailWhitelistImageDomains` (pro nastavené domény jsou obrázky přiloženy).
+Následující konfigurační proměnné ovlivňují rychlost odesílání:
+- `dmailWaitTimeout` - interval spouštění odeslání emailu v milisekundách. Po změně je nutné restartovat server (výchozí 1000).
+- `dmailMaxRetryCount` - maximální počet opakování odeslání emailu dojde-li k chybě při odesílání (výchozí 5).
+- `dmailSleepTimeAfterException` - interval čekání v ms po chybě odesílání, např. pokud SMTP server přestane odpovídat (výchozí 20000),
+- `dmailBadEmailSmtpReplyStatuses` - seznam čárkou oddělených výrazů vrácených ze SMTP serveru pro které se email nebude znovu pokoušet odeslat (výchozí: Invalid Addresses,Recipient address rejected,Bad recipient address,Local address contains control or whitespace,Domain ends with dot in string,Domain contains illegal character.
+- `dmailDisableInlineImages` - umožňuje vypnout přikládání obrázků do emailu, což zvýší rychlost odeslání a sníží velikost emailu. Nevýhodou je, že příjemce musí potvrdit načtení obrázků ze serveru. Pokud máte více doménovou instalaci můžete výjimky pro přikládání obrázků do emailu nastavit přes konf. proměnnou `dmailWhitelistImageDomains` (pro nastavené domény se obrázky přiloží).
 
-Další nastavitelné konfigurační proměnné:
-- `useSMTPServer` - povolí/zakáže odesílání všech e-mailů ze serveru (ve výchozím nastavení `true`).
-- `disableDMailSender` - zakáže pouze odesílání hromadných e-mailů (ve výchozím nastavení `false`).
-- `senderRunOnNode` - pokud používáte cluster více aplikačních serverů, můžete nastavit seznam názvů oddělených čárkou. `nodu` ze kterého budou odesílány hromadné e-maily. Poznámka: pokud jsou e-maily odesílány z více `nodov` Mohou být odeslány duplicitní e-maily.
-- `dmailTrackopenGif` - virtuální cesta k obrázku, která označuje, že e-mail byl otevřen (ve výchozím nastavení `/components/dmail/trackopen.gif`).
-- `dmailStatParam` - název parametru URL pro statistiku kliknutí (výchozí hodnota `webjetDmsp`).
-- `replaceExternalLinks` - pokud je nastavena na `true` externí odkazy budou také nahrazeny přesměrováním přes server, na kterém je spuštěn hromadný e-mail pro statistiky sledování (ve výchozím nastavení `false`).
+Další konf. proměnné, které lze nastavit:
+- `useSMTPServer` - povoluje/úplně vypíná odesílání všech emailů ze serveru (výchozí `true`).
+- `disableDMailSender` - vypne jen odesílání hromadných emailů (výchozí `false`).
+- `senderRunOnNode` - pokud používáte cluster více aplikačních serverů umožňuje nastavit čárkou oddělený seznam jmen `nodu`, ze kterého budou odesílány hromadné emaily. Upozornění: jsou-li emaily odesílány z více `nodov` může dojít k duplicitnímu odeslání emailu.
+- `dmailTrackopenGif` - virtuální cesta k obrázku, která indikuje otevření emailu (výchozí `/components/dmail/trackopen.gif`).
+- `dmailStatParam` - název URL parametru pro statistiku kliknutí (výchozí `webjetDmsp`).
+- `replaceExternalLinks` - pokud je nastaveno na `true` budou se nahrazovat i externí odkazy přesměrováním přes server kde je spuštěn hromadný email pro sledování statistiky (výchozí `false`).
 
-## Nastavení zrychlení
+## Nastavení pro zrychlení
 
-Pokud potřebujete zrychlit odesílání, můžete provést následující kroky:
-- Zvýšení limitů domén, doporučujeme nastavit vyšší limity domén. `gmail.com` a doménou vaší společnosti.
-- Upravit podle `dmailWaitTimeout` na hodnotu `500`, což zvýší rychlost volání pro odeslání e-mailu kvůli blokování (viz výše). To neznamená, že e-mail bude odeslán každých 500 ms.
-- Pokud databáze obsahuje velké množství neplatných e-mailů, snižte. `dmailSleepTimeAfterException`. **Varování:** &#x70;okud váš server SMTP skutečně vypadne, budou e-maily velmi rychle označeny jako odeslané, protože počet `dmailMaxRetryCount`.
-- Sada `natUrlTranslate` pro přímé stahování textu e-mailu z místního aplikačního serveru. Pokud máte instalaci s více doménami, může nastat problém s výběrem správné domény. Doporučujeme v `hosts` v souboru serveru nastavíte všechny domény na IP adresu 127.0.0.1, v takovém případě nastavíte pouze přesměrování portů z 80 na 8080 (nebo jakýkoli port, na kterém běží místní aplikační server).
-- Minimalizujte obrázky a přílohy. Ty zvyšují zatížení serveru a objem e-mailu. Případně nastavte konfigurační proměnnou `dmailDisableInlineImages` na adrese `false` zakázat připojování obrázků přímo do těla e-mailu.
-- Pokud máte cluster, můžete povolit paralelní odesílání z více uzlů, ale tím se zvyšuje riziko, že příjemci bude odesláno více duplicitních e-mailů. Seznam uzlů, ze kterých se e-mail odesílá, se nastavuje v proměnné conf. `senderRunOnNode`.
+Pokud potřebujete urychlit odesílání můžete postupovat následovně:
+- Zvyšte doménové limity, doporučujeme nastavit vyšší limity na domény `gmail.com` a vaši firemní doménu.
+- Upravte `dmailWaitTimeout` na hodnotu `500`, což zvýší rychlost volání odeslání emailu, z důvodu blokování (viz výše). To ale neznamená, že se email odešle každých 500ms.
+- Pokud databáze obsahuje mnoho neplatných emailů snižte `dmailSleepTimeAfterException`. **Upozornění:**, pokud skutečně nastane výpadek vašeho SMTP serveru, tak se emaily velmi rychle označí jako odeslané, protože přeteče počet `dmailMaxRetryCount`.
+- Nastavte `natUrlTranslate` pro přímé stahování textu emailu z lokálního aplikačního serveru. Máte-li více doménovou instalaci může nastat problém s výběrem správné domény. Doporučujeme v `hosts` souboru na serveru nastavit všechny domény na IP adresu 127.0.0.1, v takovém případě nastavíte pouze přesměrování portu z 80 na 8080 (nebo na jakém portu máte spuštěn lokální aplikační server).
+- Minimalizujte obrázky a přílohy. Ty zvyšují zátěž na server a objem emailu. Případně nastavte konf. proměnnou `dmailDisableInlineImages` na `false` pro vypnutí přikládání obrázků přímo do těla emailu.
+- Máte-li cluster můžete povolit odesílání z více nodů paralelně, zvyšuje se ale riziko více duplicitního odeslání emailu příjemci. Seznam nodů, ze kterých se email odesílá se nastavuje v konf. proměnné `senderRunOnNode`.

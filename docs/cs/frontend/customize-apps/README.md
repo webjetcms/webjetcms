@@ -1,11 +1,11 @@
 # Přizpůsobení aplikací
 
-Pokud potřebujete upravit existující aplikaci (např. banner), nikdy to nedělejte přímo v původním souboru JSP, protože vaše změny mohou být při aktualizaci přepsány.
+Pokud potřebujete modifikovat existující aplikaci (např. banner), nikdy to nedělejte přímo v originálním JSP souboru, protože při aktualizaci se mohou vaše změny přepsat.
 
-Úprava souboru `/components/search/search.jsp`, nejprve vytvořte kopii souboru s názvem `/components/INSTALL_NAME/search/search.jsp`.
+Chcete-li modifikovat soubor `/components/search/search.jsp`, vytvořte si nejprve kopii souboru s názvem `/components/INSTALL_NAME/search/search.jsp`.
 
-Hodnota `INSTALL_NAME` je název instalace, v konfiguraci v položce s názvem `installName`. V souboru můžete provádět změny, aniž byste se museli obávat přepsání souboru při aktualizaci. Na stránce může zůstat `!INCLUDE(...)!` původní aplikace, WebJET provede automatickou výměnu cesty:
+Hodnota `INSTALL_NAME` je jméno instalace, v konfiguraci v položce s názvem `installName`. V takto vytvořeném souboru můžete vytvářet modifikace bez obav z přepsání souboru při aktualizaci. Ve stránce může zůstat `!INCLUDE(...)!` původní aplikace, WebJET provede automatické nahrazení cesty:
 - `/components/INSTALL_NAME/search/search.jsp`
 - `/components/search/search.jsp`
 
-Vyhledání správného souboru se provede automaticky. Bude použit první nalezený soubor podle zadaného pořadí.
+Vyhledání správného souboru proběhne automaticky. Použije se první nalezený podle uvedeného pořadí.
