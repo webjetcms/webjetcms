@@ -62,6 +62,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Presunúť všetky `Converter` triedy ako napr. `DocDetailsNotNullConverter` do samostatného `package` kde nebudú iné entity aby bolo možné tento `Converter` použiť aj v projektoch kde je použitý samostatný `JPA`.
 - [ ] +Pridať možnosť nastaviť meno HTTP hlavičky pre `x-forwarded-for` a určiť, ktorá z IP adries sa použije (prvá VS posledná).
 - [ ] +Datatabuľky - pridať možnosť usporiadania podľa viacerých stĺpcov kliknutím s klávesou `SHIFT`.
+- [ ] +Datatabuľky - pridať možnosť `hideOnDuplicate` pre karty v editore, nezabudnúť aj na triedu `DataTableTab` aby to išlo nastaviť aj v anotácii.
 
 ## 2024
 
