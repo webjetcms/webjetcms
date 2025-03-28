@@ -245,6 +245,7 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
                 "sk.iway.iwcm.components.quiz.jpa",
                 "sk.iway.iwcm.components.reservation",
                 "sk.iway.iwcm.components.todo",
+                "sk.iway.iwcm.components.users.userdetail",
                 "sk.iway.iwcm.dmail",
                 "sk.iway.iwcm.doc",
                 "sk.iway.iwcm.editor",

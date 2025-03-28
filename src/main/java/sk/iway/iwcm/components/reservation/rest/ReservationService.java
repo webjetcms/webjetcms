@@ -230,7 +230,6 @@ public class ReservationService {
         //Validate if still can add our reservation (due to number limitation)
         if((maxOverlapCount + 1) > reservationObject.getMaxReservations()) {
             //We have too many reservations in same time
-
             if(isImporting || Tools.isTrue(reservation.getEditorFields().getAllowOverbooking())) {
                 //IF we are importing OR user is ok with this, we can add reservation
             } else {
