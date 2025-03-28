@@ -27,7 +27,10 @@ if (window != window.top) {
 
 window.initSubmenuTabsClick = function() {
     //handle tabs click - we need also to execute link so it cant be BS tabs
-    $(".ly-submenu .md-tabs li").on("click", "a", function(e) {
+    var $tabs = $(".ly-submenu .md-tabs li");
+    if ($tabs.hasClass("binded")) return;
+    $tabs.addClass("binded");
+    $tabs.on("click", "a", function(e) {
         let $this = $(this);
         let isActive = $this.hasClass("active");
         let href = $this.attr("href");
