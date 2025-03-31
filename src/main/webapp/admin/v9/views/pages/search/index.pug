@@ -256,7 +256,9 @@ block content
                 }
 
                 // REFRESH data
-                getData();
+                setTimeout(() => {
+                    getData();
+                }, 100)
             }
 
             function getData() {

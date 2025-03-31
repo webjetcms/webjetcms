@@ -5,7 +5,12 @@ Before(({ I, login, DT }) => {
     DT.addContext("calendar", "#calendarEventsDataTable_wrapper");
 });
 
-Scenario('testovanie app - Kalendar news', async ({ I, DTE, Document, Apps }) => {
+Scenario('testovanie app - Kalendar news', async ({ I, DT, DTE, Document, Apps }) => {
+    I.say('Retriving perex id for test');
+    I.amOnPage('/admin/v9/webpages/perex/');
+    DT.filterEquals('perexGroupName', 'Import perex');
+    const perexId = await I.grabTextFrom('td.dt-select-td');
+
     Apps.insertApp('Kalendár noviniek', '#components-calendarnews-title');
 
     const defaultParams = {
@@ -31,7 +36,7 @@ Scenario('testovanie app - Kalendar news', async ({ I, DTE, Document, Apps }) =>
     const changedParams = {
         groupIds: '24',
         expandGroupIds: 'true',
-        perexGroup: '1032'
+        perexGroup: perexId
     };
 
     I.clickCss("#editorAppDTE_Field_groupIds button");
