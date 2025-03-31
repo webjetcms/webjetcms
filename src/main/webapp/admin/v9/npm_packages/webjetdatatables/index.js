@@ -1165,7 +1165,7 @@ export const dataTableInit = options => {
                 remove: {
                     button: WJ.translate('button.delete'),
                     title: '<clas="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.delete') + '</h5></div><div class="col-sm-8"></div></div>',
-                    submit: '<i class="ti ti-check"></i> ' + WJ.translate('button.delete'),
+                    submit: '<i class="ti ti-trash"></i> ' + WJ.translate('button.delete'),
                     confirm: {
                         _: '<div class="form-group row"><div class="col-sm-7 offset-sm-4"><h5>' + WJ.translate('datatables.prompt.delete.files.js') + '</h5></div></div>',
                         1: '<div class="form-group row"><div class="col-sm-7 offset-sm-4"><h5>' + WJ.translate('datatables.prompt.delete.file.js') + '</h5></div></div>'
@@ -1854,7 +1854,7 @@ export const dataTableInit = options => {
                                     EDITOR
                                     .edit( TABLE.rows( {selected: true} ).indexes(), {
                                         title: '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
-                                        buttons: '<i class="ti ti-check"></i> ' + WJ.translate('button.duplicate')
+                                        buttons: '<i class="ti ti-copy"></i> ' + WJ.translate('button.duplicate')
                                     } )
                                     .mode( 'create' );
                                     $("#"+EDITOR.TABLE.DATA.id+"_modal").attr("data-action", "duplicate");
@@ -3253,9 +3253,10 @@ export const dataTableInit = options => {
 
     TABLE.wjCreate = function () {
         //console.log("wjCreate");
-        EDITOR.create(
-            '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
-            DATA.createButtons
+        EDITOR.create({
+                title: '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
+                buttons: DATA.createButtons
+            }
         );
     }
 
@@ -3369,11 +3370,18 @@ export const dataTableInit = options => {
         if ("edit"===action) {
             var selectedRows = TABLE.rows({ selected: true }).data();
             if (selectedRows.length<2) {
-                //title vypiseme len pri editacii jedneho zaznamu
-                let title = dtWJ.getTitle(EDITOR);
-                if (title != null && title != "") {
-                    $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(WJ.translate('button.edit')+": "+title);
-                }
+                //data-action is set after this, we must do this in timeout
+                setTimeout(()=> {
+                    //title vypiseme len pri editacii jedneho zaznamu
+                    let title = dtWJ.getTitle(EDITOR);
+                    if (title != null && title != "") {
+                        let dataAction = $("#"+TABLE.DATA.id+"_modal").attr("data-action");
+                        let mainTitleKey = "button.edit";
+                        if ("duplicate"===dataAction) mainTitleKey = "button.duplicate";
+
+                        $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(WJ.translate(mainTitleKey)+": "+title);
+                    }
+                }, 100);
             }
         }
         if ("remove"===action) {
