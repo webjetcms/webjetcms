@@ -26,6 +26,7 @@
 - Bezpečnosť - aktualizovaná knižnica `Swagger UI` na verziu `5.20.0`, doplnené výnimky v `dependency-check-suppressions.xml`.
 - Aktualizácia - doplnené mazanie nepotrebných súborov pri aktualizácii rozbalenej verzie (#57657-4).
 - Multiweb - doplnená kontrola `ID` domény pri registrácii návštevníka web sídla (#57657-4).
+- Používatelia - pridaná možnosť vybrať aj Koreňový priečinok v právach používateľa v sekcii Nahrávanie súborov do adresárov (54273-60).
 
 ## 2025.0
 

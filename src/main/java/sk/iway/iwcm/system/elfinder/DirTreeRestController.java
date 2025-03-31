@@ -34,27 +34,41 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
         if ("-1".equals(parentPath)) parentPath = "/";
 
         boolean isRoot = "/".equals(parentPath);
-
         Identity user = getUser();
 
-        List<IwcmFile> files;
-        if (isRoot || user.isFolderWritable(parentPath)) {
-            IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));
-            files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -> {
-                if (file.isFile()) return false;
+        List<DirTreeItem> items;
 
-                //System.out.println("path="+file.getVirtualPath()+" isRoot="+isRoot+" isJarPackaging="+file.isJarPackaging());
-                if (isRoot==false && file.isJarPackaging()) return false;
-
-                if (user.isFolderWritable(file.getVirtualPath())==false) return false;
-
-                return true;
-            })));
+        String click = getRequest().getParameter("click");
+        if ("-1".equals(item.getId()) && isRoot && click != null && click.contains("-root") && user.isFolderWritable("/")) {
+            //show Root folder for first call (id is sent as -1 instead of / for first request)
+            DirTreeItem rootItem = new DirTreeItem(new IwcmFile(Tools.getRealPath("/")));
+            rootItem.setId("/");
+            rootItem.setText(getProp().getText("stat_settings.group_id"));
+            rootItem.setIcon("ti ti-home");
+            rootItem.getState().setLoaded(true);
+            rootItem.getState().setOpened(true);
+            items = new ArrayList<>();
+            items.add(rootItem);
         } else {
-            files = new ArrayList<>();
-        }
+            List<IwcmFile> files;
+            if (isRoot || user.isFolderWritable(parentPath)) {
+                IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));
+                files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -> {
+                    if (file.isFile()) return false;
 
-        List<DirTreeItem> items = files.stream().map(f -> new DirTreeItem(f)).collect(Collectors.toList());
+                    //System.out.println("path="+file.getVirtualPath()+" isRoot="+isRoot+" isJarPackaging="+file.isJarPackaging());
+                    if (isRoot==false && file.isJarPackaging()) return false;
+
+                    if (user.isFolderWritable(file.getVirtualPath())==false) return false;
+
+                    return true;
+                })));
+            } else {
+                files = new ArrayList<>();
+            }
+
+            items = files.stream().map(f -> new DirTreeItem(f)).collect(Collectors.toList());
+        }
 
         result.put("result", true);
         result.put("items", items);

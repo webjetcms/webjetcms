@@ -91,7 +91,7 @@ public class UserDetailsEditorFields extends BaseEditorFields {
     })
     private List<GroupsApproveEntity> groupsApprove;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="user.writableFolders.label", tab = "rightsTab", hidden = true, className = "dt-tree-dir-array", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="user.writableFolders.label", tab = "rightsTab", hidden = true, className = "dt-tree-dir-array-root", editor = {
         @DataTableColumnEditor(attr = {
             @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "user.menu.writableFolders"),
             @DataTableColumnEditorAttr(key = "data-dt-json-addbutton", value = "useredit.addGroup")
