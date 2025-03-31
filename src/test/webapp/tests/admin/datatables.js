@@ -373,3 +373,51 @@ Scenario("conditional tabs", ({ I, DT, DTE }) => {
     I.dontSeeElement(locate("#pills-dt-editor-campaingsDataTable li a").withText("Otvorenia"));
 
 });
+
+Scenario("verify DT title prefix", ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/inquiry/admin/");
+    DT.waitForLoader();
+
+    var titleSelector = "#inquiryDataTable_modal div.DTE_Header h5.modal-title";
+    var footerSelector = "#inquiryDataTable_modal div.DTE_Footer button.btn-primary";
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("inquiryDataTable");
+    I.waitForText("Pridať", 10, titleSelector);
+    I.waitForText("Pridať", 10, footerSelector);
+    I.seeElement(footerSelector + " i.ti-check");
+    DTE.cancel();
+
+    //edit
+    I.forceClick(locate('tr[id=2]').find('.dt-select-td'));
+    I.clickCss("button.buttons-edit");
+    DTE.waitForEditor("inquiryDataTable");
+    I.waitForText("Upraviť: Koľko očí má pes?", 10, titleSelector);
+    I.waitForText("Uložiť", 10, footerSelector);
+    I.seeElement(footerSelector + " i.ti-check");
+    DTE.cancel();
+
+    //duplicate
+    I.clickCss("button.btn-duplicate");
+    DTE.waitForEditor("inquiryDataTable");
+    I.waitForText("Duplikovať: Koľko očí má pes?", 10, titleSelector);
+    I.waitForText("Duplikovať", 10, "#inquiryDataTable_modal ");
+    I.waitForText("Duplikovať", 10, footerSelector);
+    I.seeElement(footerSelector + " i.ti-copy");
+    DTE.cancel();
+
+    I.say("verify again create");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("inquiryDataTable");
+    I.waitForText("Pridať", 10, titleSelector);
+    I.waitForText("Pridať", 10, footerSelector);
+    I.seeElement(footerSelector + " i.ti-check");
+    DTE.cancel();
+
+    I.say("Verify delete");
+    I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("inquiryDataTable");
+    I.waitForText("Zmazať", 10, titleSelector);
+    I.waitForText("Zmazať", 10, footerSelector);
+    I.seeElement(footerSelector + " i.ti-trash");
+    DTE.cancel();
+});

@@ -1212,6 +1212,12 @@ div.DTED.show[data-action=duplicate] {
     }
 }
 
+div.DTED.show[data-action=remove] {
+    div.DTE_Header {
+        padding-bottom: 7px;
+    }
+}
+
 //tootip MD format
 div.tooltip.show {
     opacity: unset;

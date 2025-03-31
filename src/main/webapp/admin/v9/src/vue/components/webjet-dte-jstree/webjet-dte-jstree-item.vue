@@ -31,13 +31,12 @@
             return {
                 jsonData: null,
                 readyToOpen: false,
-                toggleIdButton: null,
                 group: null
             }
         },
         watch: {
             readyToOpen(oldVal, newVal) {
-                !newVal ? $(`#${this.toggleIdButton}`).html('Zatvoriť okno') : $(`#${this.toggleIdButton}`).html('Upraviť');
+
             }
         },
         created() {
