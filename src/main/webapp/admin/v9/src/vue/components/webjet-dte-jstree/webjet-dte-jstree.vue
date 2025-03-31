@@ -48,14 +48,13 @@
             return {
                 jsonData: null,
                 readyToOpen: false,
-                toggleIdButton: null,
                 group: null,
                 addButtonText: WJ.translate("button.add")
             }
         },
         watch: {
             readyToOpen(oldVal, newVal) {
-                !newVal ? $(`#${this.toggleIdButton}`).html('Zatvoriť okno') : $(`#${this.toggleIdButton}`).html('Upraviť');
+
             }
         },
         created() {
