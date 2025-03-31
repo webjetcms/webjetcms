@@ -10,6 +10,8 @@ Zdrojový kód šablóny môžete získať vo [WebJET CMS github repozitári](ht
 
 Použitie je rovnaké ako pri [Bare šablóne](../template-bare/README.md#použitie-vo-webjet-cms), rozdiel je samozrejme v názvoch - všade nahraďte ```bare``` za ```creative```. Priečinok so šablónou je ```src/main/webapp/templates/creative/bootstrap-creative/```, použité cesty v šablóne a skupine šablón začínajú na ```/templates/creative/bootstrap-creative/```.
 
+![](editor-webpage.png)
+
 ### Skupina šablón
 
 Postupujte podľa návodu pre Bare šablónu s upravenou cestou ```/templates/creative/bootstrap-creative/```.
