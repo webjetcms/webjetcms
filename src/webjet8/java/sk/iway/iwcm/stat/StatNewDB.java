@@ -488,7 +488,7 @@ public class StatNewDB
 
 	/**
 	 * Vytvori tabulku stat_views_X_Y (ak treba)
-	 * @param db_conn
+	 * @param tableName
 	 * @param suffix - suffix tabulky, alebo null (vytvori sa suffix pre aktualny mesiac)
 	 */
 	public static void createStatTable(String tableName, String suffix)
@@ -1386,8 +1386,8 @@ public class StatNewDB
 	 * Vrati statistiku podla tyzdnov za dane obdobie a adresar
 	 * @param from
 	 * @param to
-	 * @param rootGroupId
 	 * @param groupIds
+	 * @param withoutBots
 	 * @return
 	 */
 	public static List<Column> getWeekViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
@@ -1526,8 +1526,8 @@ public class StatNewDB
 	 *
 	 * @param from
 	 * @param to
-	 * @param rootGroupId
 	 * @param groupIds
+	 * @param withoutBots
 	 * @return
 	 */
 	public static List<Column> getDayViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
@@ -1694,8 +1694,8 @@ public class StatNewDB
 	 *
 	 * @param from
 	 * @param to
-	 * @param rootGroupId
 	 * @param groupIds
+	 * @param withoutBots
 	 * @return
 	 */
 	public static List<Column> getHours(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
@@ -1838,8 +1838,8 @@ public class StatNewDB
 	 *
 	 * @param from
 	 * @param to
-	 * @param rootGroupId
 	 * @param groupIds - id adresarov oddelenych ciarkou
+	 * @param withoutBots
 	 * @return
 	 */
 	public static List<Column> getMonthViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
@@ -1995,7 +1995,8 @@ public class StatNewDB
 	 *
 	 * @param from
 	 * @param to
-	 * @param maxResults
+	 * @param maxRows
+	 * @param groupIdsQuery
 	 * @return
 	 */
 	public static List<Column> getStatReferer(java.util.Date from, java.util.Date to, int maxRows, String groupIdsQuery)
@@ -2109,8 +2110,8 @@ public class StatNewDB
 	 *
 	 * @param from
 	 * @param to
-	 * @param rootGroupId
 	 * @param groupIds
+	 * @param withoutBots
 	 * @return
 	 */
 	public static int getUniqueUsersFromStatViews(java.util.Date from, java.util.Date to, String groupIds, boolean withoutBots)
@@ -2285,7 +2286,7 @@ public class StatNewDB
 	 * Vygeneruje pre zvolenu rootGroupID tabulku videni, sedeni, roznych userov za zvolene obdobie
 	 *
 	 * @param backInterval - pocet mesiacov spat, za ktore sa ma vygenerovat statistika
-	 * @param rootGroupId
+	 * @param docId
 	 * @return
 	 */
 	public static List<Column> getMonthViewsForDoc(int backInterval, int docId)

@@ -42,8 +42,8 @@ public class RelatedPagesDB
 	/**
 	 * Vrati List typu DocDetails s pribuznymi strankami pre zadanu skupinu (perexGroupId),
 	 * ak je parentDocId > 0, tak sa prislusna stranka nebude zobrazovat na stranke (odstrani sa odkaz sam na seba)
-	 * @param perexGroupName - nazov perex skupiny
-	 * @param rootGroupId 	 - ID skupiny, z ktorej sa zobrazia odkazy na stranke (napr. iba stranky v priecinku Novinky)
+	 * @param perexGroupIds  - ID perex skupiny
+	 * @param rootGroupIds 	 - ID skupin, z ktorej sa zobrazia odkazy na stranke (napr. iba stranky v priecinku Novinky)
 	 * @param actualDocId 	 - docid stranky na ktorej sa zobrazuje komponenta
 	 * @param checkDuplicity - kontrola na duplicitu pri multigroup clankoch
 	 * @return

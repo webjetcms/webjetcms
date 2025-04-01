@@ -93,7 +93,6 @@ import sk.iway.spirit.MediaDB;
  *@Title WebJET
  *@Company Interway s.r.o. (www.interway.sk)
  *@Copyright Interway s.r.o. (c) 2001-2002
- *@author unascribed
  *@version 1.0
  *@created Nedeďż˝e, 2003, mďż˝j 18
  *@modified $Date: 2004/03/12 10:16:32 $
@@ -1016,11 +1015,7 @@ public class GalleryDB
 
 	/**
 	 * Ulozi informacie o obrazku do DB, vrati id obrazku
-	 *
-	 *@param gBean
-	 *           The feature to be added to the Image attribute
-	 *@param request
-	 *           The feature to be added to the Image attribute
+	 * @param request
 	 */
 	public static int setImage(HttpServletRequest request)
 	{
@@ -1229,8 +1224,6 @@ public class GalleryDB
 	 * Ulozi do tabulky gallery_dimension novy zaznam pre galeriu.
 	 *
 	 * @param 	dir	Nazov virtualneho adresara, v ktorom bude galeria ulozena napr. /images/gallery/new
-	 * @author kmarton
-	 *
 	 * @return	Vrati identifikator galerie, ktora bola prave ulozena do tabulky. Ak uz taka galeria existuje, vrati jeho id. Ak nastal nejaky problem s DB, vrati -1.
 	 */
 	public static int setGallery(String dir)
@@ -2230,14 +2223,10 @@ public class GalleryDB
 	}
 
 	/**
-	 * Zo zadanďż˝ho obrďż˝zku na serveri pripravi nahladovy a normalny obrazok
+	 * Zo zadaneho obrazku na serveri pripravi nahladovy a normalny obrazok
 	 *
-	 *@param realPath
-	 *           cesta k obrazku na serveri
-	 *@param dir
-	 *           cesta k adresaru s nastavenim velkosti obrazkov galerie
-	 *@param request
-	 *           Description of the Parameter
+	 *@param realPath cesta k obrazku na serveri
+	 *@param dir cesta k adresaru s nastavenim velkosti obrazkov galerie
 	 */
 	public static void resizePicture(String realPath, String dir)
 	{
@@ -2387,8 +2376,9 @@ public class GalleryDB
 	 * fyzicka zmena velkosti obrazka
 	 *
 	 * @param dims
-	 * @param realPath
+	 * @param realPathOrig
 	 * @param out
+	 * @param prop
 	 */
 	public static boolean resizePictureEdit(Dimension[] dims, String realPathOrig, PrintWriter out, Prop prop)
 	{
@@ -2511,7 +2501,7 @@ public class GalleryDB
 	}
 
 	private static boolean existImageMagickCompositeCommand()
-	{	
+	{
 		String filename = System.getProperty("os.name").toLowerCase().contains("win") ? "magick.exe" : "composite";
 		return new IwcmFile(Constants.getString("imageMagickDir"), filename).exists();
 	}
@@ -3183,8 +3173,7 @@ public class GalleryDB
 	}
 
 	/**
-	 * @param runtimeFile
-	 * @return
+	 * @return - image magick runtime file by current Operating System
 	 */
 	public static String getRuntimeFile()
 	{
@@ -3392,7 +3381,6 @@ public class GalleryDB
 
 	/**
 	 * Vrati atribut perex_group obrazka s identifikatorom imageId v String tvare, cize nieco ako ,45,12,13, kde cisla su identifikatory perex skupin
-	 * @author kmarton
 	 *
 	 * @param imageId	identifikator obrazka, pre ktory chceme zistit jeho perex skupiny. Musi byt vacsi ako 0.
 	 * @return
@@ -3404,8 +3392,6 @@ public class GalleryDB
 
 	/**
 	 * Nastavi atribut perex_group podla perexGroupString obrazku s identifikatorom imageId
-	 * @author kmarton
-	 *
 	 * @param perexGroupString		retazec v tvare ,perexGroupId,perexGroupId,perexGroupId... nieco ako ,15,16,7,
 	 * @param imageId					identifikator obrazku, ktoremu chceme nastavit pozadovany perexGroupString
 	 */
@@ -3426,8 +3412,6 @@ public class GalleryDB
 	/**
 	 * Prida existujucemu obrazku s identifikatorom taggedImageInt identifikator perex skupiny tagPerexGroupId.
 	 * Obsahuje kontrolu, ci uz obrazok perexGroupu nahodou neobsahuje. Ak ano, tak ju nepridava.
-	 *
-	 * @author kmarton
 	 *
 	 * @param 	taggedImageInt	Identifikator obrazka, ktoremu sa doplni perex skupina
 	 * @param 	tagPerexGroupId	Identifikator perex skupiny, ktora sa doplni k uz existujucim perex skupina obrazka
@@ -3455,8 +3439,6 @@ public class GalleryDB
 	/**
 	 * Odoberie existujucemu obrazku s identifikatorom taggedImageInt identifikator perex skupiny tagPerexGroupId.
 	 * Ak obrazok danu perex skupinu neobsahuje, nevykona sa nic a vrati sa true.
-	 *
-	 * @author kmarton
 	 *
 	 * @param 	taggedImageInt	Identifikator obrazka, ktoremu sa odoberie perex skupina
 	 * @param 	tagPerexGroupId	Identifikator perex skupiny, ktora sa odoberie z uz existujucich perex skupina obrazka
@@ -3680,8 +3662,6 @@ public class GalleryDB
 	/**
 	 * Matoda, ktora zmeni urcitu vlastnost obrazka, ak obrazok neexistuje, vytvori novy s pozadovanymi hodnotami
 	 *
-	 * @author kmarton
-	 *
 	 * @param imageId	identifikator obrazka, ktoreho vlastnosti chceme zmenit
 	 * @param item		vlastnost obrazka, ktoru chceme zmenit prepisanim starej hodnoty na novu value
 	 * @param value	hodnota, ktoru chceme zapisat do vlastnosti item obrazka
@@ -3725,8 +3705,6 @@ public class GalleryDB
 
 	/**
 	 * Matoda, ktora zmeni urcitu vlastnost galerie
-	 *
-	 * @author kmarton
 	 *
 	 * @param path	identifikator galerie - cesta k jej priecinku, ktorej vlastnosti chceme zmenit
 	 * @param item		vlastnost galerie, ktoru chceme zmenit prepisanim starej hodnoty na novu value
@@ -3775,7 +3753,6 @@ public class GalleryDB
 	 * @param item		polozka, vlastnost, ktoru chceme zistit
 	 * @param lng		jazyk
 	 *
-	 *	@author kmarton
 	 * @return
 	 */
 	public static String getDescriptionLng(int imageId, String item, String lng)
@@ -3814,8 +3791,6 @@ public class GalleryDB
 	 *
 	 * Metoda vrati informacie o galerie presnejsie jej nazov, id, perex, datum vytvorenia, pocet videni a autorovi
 	 *
-	 * @author kmarton
-	 *
 	 * @param galleryPath	cesta k priecinku fotogalerie, podla ktorej sa identifikuje
 	 * @param dimensionId	ID galerie, zhodne s dimension_id - pokial je mensie ako 1, tak vyhlada podla galleryPath
 	 * @return vrati bean GalleryDimension naplneny informaciami
@@ -3844,8 +3819,6 @@ public class GalleryDB
 
 	/**
 	 * Metoda vrati informacie o count poslednych galeriach
-	 *
-	 * @author kmarton
 	 *
 	 * @param count pocet fotogalerii, ktore sa ma vratit
 	 * @return vrati List GalleryDimension naplneny informaciami
@@ -4272,7 +4245,7 @@ public class GalleryDB
 
 	/**
 	 * pokus o ziskanie datumu vytvorenia JPG fotky z EXIF metadat
-	 * @param waitForBytes
+	 * @param file
 	 * @return - v pripade ze nenejade, vrati aktualny datum/cas
 	 */
 	public static Date getExifDateOriginal(IwcmFile file)
@@ -4560,7 +4533,6 @@ public class GalleryDB
 	 * @param path cesta ku galerii (napr /images/gallery/nejakaGaleria)
 	 * @return true ak sa podari zmazat vsetky media a vratane podadresarov, inak false
 	 * @throws IllegalArgumentException if path is empty or null
-	 * @author mhalas
 	 */
 	public static boolean deleteGallery(String path)
 	{
@@ -4603,7 +4575,6 @@ public class GalleryDB
 	/**
 	 * Vrati relative path to root adresar galerie
 	 * @return
-	 * @author mhalas
 	 */
 	public static String getGalleryRootFolder()
 	{
@@ -4613,7 +4584,6 @@ public class GalleryDB
 	/**
 	 * Vymaze gallery bean z DB aj fyzicky subory vo vsetkych velkostiach
 	 * @param b
-	 * @author mhalas
 	 */
 	private static void removeImage(GalleryBean b)
 	{
@@ -4674,7 +4644,6 @@ public class GalleryDB
 	/**
 	 * V databaze nastavi rozmer a rezim zmeny velkosti podadresarom podla nastaveneho adresara
 	 * @param dir
-	 * @param recursive
 	 */
 	public static void updateDirectoryDimToSubfolders(String dir) {
 		Dimension[] dims = getDimension(dir, true);

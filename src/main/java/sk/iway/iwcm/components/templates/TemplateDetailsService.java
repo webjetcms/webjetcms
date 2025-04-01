@@ -127,7 +127,7 @@ public class TemplateDetailsService {
      * /templates/INSTALL_NAME
      * /templates/DOMAIN_ALIAS/ - pre tieto vrati cestu aj s DOMAIN_ALIAS
      *
-     * @param installName - hodnota installName zadana v editore sablony
+     * @param installNameParam - hodnota installName zadana v editore sablony
      * @param templatesGroupId - ID skupiny sablon (alebo null)
      * @param searchTerm - zadany hladany vyraz (autocomplete filter)
      * @return

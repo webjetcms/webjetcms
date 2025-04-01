@@ -13,7 +13,7 @@ import org.springframework.data.repository.NoRepositoryBean;
  * Repozitar pre pracu s tabulkami obsahujucich domain_id, ktore oddeluje zaznamy v tabulke podla domeny
  * dokumentacia k pouzitiu v docs/developer/datatables/domainid.md, vsetko zabezpecuje DatatableRestControllerV2,
  * staci ak vas repozitar extenduje tuto triedu, priklad:
- * public interface QuestionsAnswersRepository extends DomainIdRepository<QuestionsAnswersEntity, Long> {
+ * public interface QuestionsAnswersRepository extends DomainIdRepository&lt;QuestionsAnswersEntity, Long&gt; {
  */
 @NoRepositoryBean
 public interface DomainIdRepository<T, ID> extends JpaRepository<T, ID>, JpaSpecificationExecutor<T> {

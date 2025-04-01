@@ -89,7 +89,7 @@ public class DateTools
 	/**
 	 * Vrati polnoc ktora bude dnes
 	 *
-	 * @param calendar
+	 * @param cal
 	 * @return calendar
 	 */
 	public static Calendar midnightToday(Calendar cal)
@@ -116,7 +116,7 @@ public class DateTools
 	/**
 	 * Vrati polnoc ktorou vybraty den zacinal x dni dozadu
 	 *
-	 * @param calendar
+	 * @param cal
 	 * @return calendar
 	 */
 	public static Calendar midnightDaysBefore(int daysBefore, Calendar cal)
@@ -206,7 +206,7 @@ public class DateTools
 	/**
 	 * Vrati hodinu dnesneho dna
 	 *
-	 * @param calendar
+	 * @param cal
 	 * @return calendar
 	 */
 	public static Calendar hourOfDay(Calendar cal, int hour)
@@ -247,7 +247,7 @@ public class DateTools
 	/**
 	 * Vrati x dni dopredu, pri zapornom znamienku dni dozadu
 	 *
-	 * @param calendar
+	 * @param cal
 	 * @return calendar
 	 */
 	public static Calendar getDaysAfter(int daysAfter, Calendar cal)
@@ -390,7 +390,7 @@ public class DateTools
 	/**
 	 * Vrati skratene nazvy dni pre dany Locale
 	 *
-	 * @param day
+	 * @param datum
 	 * @param locale
 	 * @return
 	 */
@@ -406,7 +406,7 @@ public class DateTools
 	/**
 	 * Vrati nazvy dni pre dany Locale
 	 *
-	 * @param day
+	 * @param datum
 	 * @param locale
 	 * @return
 	 */
@@ -566,7 +566,7 @@ public class DateTools
         Calendar start = Calendar.getInstance();
         start.setTime(dateFrom);
 		hourOfDay(start, 12);
-			
+
         Calendar end = Calendar.getInstance();
         end.setTime(dateTo);
 		hourOfDay(end, 12);
@@ -629,7 +629,7 @@ public class DateTools
 		cal.setTime(date);
 
 		cal.add(Calendar.MONTH, monthShift);
-		
+
 		setMidnight(cal);
 		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
 		return cal;

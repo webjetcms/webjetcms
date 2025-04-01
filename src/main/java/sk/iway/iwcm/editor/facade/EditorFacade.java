@@ -360,7 +360,6 @@ public class EditorFacade {
 	 * Duplikuje media pri duplikovani web stranky
 	 * @param oldDocId
 	 * @param newDocId
-	 * @return
 	 */
 	public void duplicateMedia(Integer oldDocId, Integer newDocId) {
 		// zduplikuj aj media

@@ -149,7 +149,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	/**
 	 * metoda pre ziskanie entity s rovnakou hodnotou v stlci propertyName ako hodnota v obj
 	 * @param propertyName
-	 * @param obj
+	 * @param original
 	 * @return
 	 * @throws IllegalAccessException
 	 * @throws NoSuchMethodException
@@ -374,7 +374,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
-	 * Convert URL/request parameters to Map<String paramName, String paramValue>
+	 * Convert URL/request parameters to Map&lt;String paramName, String paramValue&gt;
 	 * @param request
 	 * @return
 	 */
@@ -594,7 +594,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * Check item perms, it's called with every save/delete/getOne action
 	 * @param entity - current entity
 	 * @param id - entity ID
-	 * @param errors
 	 * @return false if permissions is not allowed
 	 */
 	public boolean checkItemPerms(T entity, Long id) {
@@ -678,7 +677,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * napr. zmazanie suborov z disku, ulozenie do archivu,
 	 * alebo obnovu cache objektov
 	 * @param entity
-	 * @return
+	 * @param id
 	 */
 	public void afterDelete(T entity, long id) {
 
@@ -851,7 +850,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	/**
 	 * Vytvori zoznam predikatov pre vyhladavanie
 	 * @param properties - ocisteny zoznam params o atributy, ktore sa nechachadzaju v T
-	 * @param example - kompletny zoznam request parametrov, vratane pagingu
+	 * @param params - kompletny zoznam request parametrov, vratane pagingu
+	 * @param entity - entita, ktora sa ma hladat
 	 * @return
 	 */
 	protected Specification<T> getSearchConditions(Map<String, String> properties, Map<String, String> params, T entity) {
@@ -1480,7 +1480,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
-	 * @param errors
+	 * @param errorKey
 	 */
 	@SuppressWarnings("all")
 	public void throwError(String errorKey) {

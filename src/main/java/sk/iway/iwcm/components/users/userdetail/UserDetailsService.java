@@ -360,8 +360,7 @@ public class UserDetailsService {
 
     /**
      * Set into session userGrousps of this user.
-     * @param session
-     * @param userId
+     * @param entity
      */
     public void setBeforeSaveUserGroups(UserDetailsEntity entity) {
         Long  userId = entity.getId();
@@ -443,8 +442,8 @@ public class UserDetailsService {
 
     /**
      * Update currently logged user, if it's same as saved user
+     * @param form
      * @param user
-     * @param admin
      * @param request
      */
     public boolean updateSelf(UserDetailsBasic form, Identity user, HttpServletRequest request) {

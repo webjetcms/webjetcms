@@ -555,7 +555,6 @@ public class CloudToolsForCore {
 	 * @param lng jazyk do ktoreho sa ma prekladat
 	 * @param ef editorform
 	 * @return EditorForm s prelozenymi textami pre cloudove kluce
-	 * @author mhalas
 	 */
 	public static EditorForm translate(String lng, EditorForm ef, GroupDetails localGroup)
 	{

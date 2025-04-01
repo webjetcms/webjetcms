@@ -144,56 +144,6 @@ public class WebJETProxySelector extends ProxySelector
 		}
 	}
 
-	/**
-	 * Nastavi proxy pre Apache Commons HttpClient v3
-	 * @param client
-	 */
-	/*public static void setProxyForHttpClient(HttpClient client, String url)
-	{
-		try
-		{
-			String proxyHost = Constants.getString("proxyHost");
-			if (Tools.isEmpty(proxyHost)) return;
-
-			int proxyPort = Constants.getInt("proxyPort");
-			String proxyHostsException = Constants.getString("proxyHostsException");
-			String proxyUser = Constants.getString("proxyUser");
-			String proxyPassword = Constants.getString("proxyPassword");
-
-			Logger.debug(WebJETProxySelector.class, "Setting proxy for http client, url="+url);
-			if (Tools.isNotEmpty(proxyHostsException))
-			{
-				//ziskanie samotnej domeny z http://server.domena/nieco
-				if (url.indexOf("://")!=-1) url = url.substring(url.indexOf("://")+3);
-				if (url.indexOf("/")!=-1) url = url.substring(0, url.indexOf("/"));
-				//odstranenie portu
-				if (url.indexOf(":")!=-1) url = url.substring(0, url.indexOf(":"));
-
-				Logger.debug(WebJETProxySelector.class, "Testing "+(","+proxyHostsException+",")+" vs "+(","+url+","));
-
-				if ( (","+proxyHostsException+",").indexOf(","+url+",")!=-1 )
-				{
-					Logger.debug(WebJETProxySelector.class, "Returning noproxy");
-					return;
-				}
-			}
-
-			Logger.debug(WebJETProxySelector.class, "Returning proxy="+proxyHost+":"+proxyPort+" user="+proxyUser+" pass="+proxyPassword);
-			if (Tools.isNotEmpty(proxyUser))
-			{
-				client.getState().setProxyCredentials(new AuthScope(proxyHost, proxyPort), new UsernamePasswordCredentials(proxyUser, proxyPassword));
-			}
-			else
-			{
-				client.getHostConfiguration().setProxy(proxyHost, proxyPort);
-			}
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-	}*/
-
 	@Override
 	public java.util.List<Proxy> select(URI uri)
 	{

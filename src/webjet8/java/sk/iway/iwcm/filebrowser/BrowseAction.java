@@ -53,7 +53,6 @@ public class BrowseAction
 	 *@param  dirL     Description of the Parameter
 	 *@param  fileL    Description of the Parameter
 	 *@param  webRoot  Description of the Parameter
-	 *@param  filter   Description of the Parameter
 	 *@param  onlySafeFiles - ak je true, listuju sa len bezpecne subory (teda nie CVS adresare a podobne)
 	 */
 	public static void fillLists(String root, List<FileDirBean> dirL, List<FileDirBean> fileL, String webRoot, boolean onlySafeFiles, HttpServletRequest request)

@@ -39,7 +39,7 @@ public class EventTypeDetails
    /**
     *  Sets the {3} attribute of the EventTypeDetails object
     *
-    *@param  type_id  The new {3} value
+    *@param  typeId
     */
    public void setTypeId(int typeId)
    {

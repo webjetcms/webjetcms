@@ -43,7 +43,7 @@ public class EventTypeDB
 
    /**
     *  vymazem typ (!iba ak ho nepouziva nijaky event (tabulka calendar)!)
-    *  typ nesmie byt zakladnym typom (type_id <= 5)
+    *  typ nesmie byt zakladnym typom (type_id &lt;= 5)
     *
     *@param  typeId   Description of the Parameter
     *@param  request  Description of the Parameter
@@ -136,9 +136,8 @@ public class EventTypeDB
    /**
     *  add/update noveho typu
     *
-    *@param  form     Description of the Parameter
-    *@param  request  Description of the Parameter
-    *@return          0 ... OK, inak chyba
+    *@param  eventType
+    *@return 0 ... OK, inak chyba
     */
    public static int updateType(EventTypeDetails eventType)
    {

@@ -12,7 +12,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import sk.iway.iwcm.editor.UploadFileAction;
 
 /**
- * Upload image into CKEditor by drag&drop
+ * Upload image into CKEditor by drag/drop
  */
 @Controller
 public class EditorUpload {

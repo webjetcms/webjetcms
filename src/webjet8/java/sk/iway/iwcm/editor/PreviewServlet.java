@@ -43,9 +43,8 @@ public class PreviewServlet extends HttpServlet {
     /**
      *  Description of the Method
      *
-     *@return                       Description of the Return Value
-     *@exception  IOException       Description of the Exception
-     *@exception  ServletException  Description of the Exception
+     * @exception  IOException       Description of the Exception
+     * @exception  ServletException  Description of the Exception
      * @param  request               Description of the Parameter
      * @param  response              Description of the Parameter
      */

@@ -251,7 +251,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
     /**
      * Vrati meno tabulky (fk_table_name), kde pre kladne docId z requestu
-     * je to documents a pre novu web stranku (docId<1) vrati documents_temp
+     * je to documents a pre novu web stranku (docId&lt;1) vrati documents_temp
      * @return
      */
     public String getTableName() {

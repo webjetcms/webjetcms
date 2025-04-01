@@ -546,7 +546,7 @@ public class ProxyDB
 
 	/**
 	 * Odstrani z HTML kodu vsetky vyskyty medzi start a end (napr. nejaky TD element), napr.:
-	 * html = removeElements(html, "<TD Class=\"ms-vb-icon\">", "</TD>");
+	 * html = removeElements(html, "&lt;TD Class=\"ms-vb-icon\"&gt;", "&lt;/TD&gt;");
 	 * @param htmlCode
 	 * @param startHtml
 	 * @param endHtml

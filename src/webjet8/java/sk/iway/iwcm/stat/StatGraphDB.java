@@ -68,7 +68,7 @@ public class StatGraphDB
 	/**
 	 *  Gets the countryTimeData attribute of the StatDB object
 	 *
-	 *@param  max_size  Description of the Parameter
+	 *@param  maxRows  Description of the Parameter
 	 *@param  from      Description of the Parameter
 	 *@param  to        Description of the Parameter
 	 *@return           The countryTimeData value
@@ -199,7 +199,7 @@ public class StatGraphDB
 	/**
 	 *  Gets the browserTimeData attribute of the StatDB object
 	 *
-	 *@param  max_size  Description of the Parameter
+	 *@param  maxRows  Description of the Parameter
 	 *@param  from      Description of the Parameter
 	 *@param  to        Description of the Parameter
 	 *@return           The browserTimeData value
@@ -315,7 +315,7 @@ public class StatGraphDB
 	/**
 	 *  Gets the InquiryTimeData attribute of the StatDB object
 	 *
-	 *@param  max_size  Description of the Parameter
+	 *@param  maxRows  Description of the Parameter
 	 *@param  from      Description of the Parameter
 	 *@param  to        Description of the Parameter
 	 *@param questionId

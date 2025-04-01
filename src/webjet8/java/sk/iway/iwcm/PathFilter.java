@@ -1362,7 +1362,6 @@ public class PathFilter implements Filter
 
 	/**
 	 * Skontroluje, ci je mozne pristupit k verejnej casti webu, nie admin casti
-	 * @author kmarton
 	 *
 	 * @param request
 	 * @return

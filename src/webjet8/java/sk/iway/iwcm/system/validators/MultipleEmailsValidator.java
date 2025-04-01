@@ -14,9 +14,9 @@ import sk.iway.iwcm.system.annotations.validations.MultipleEmails;
 /**
  * Validator for email strings. It checks if the string contains valid email addresses.
  *
- * @param checkUnsubscribed - if true, it checks if the email is not in the list of unsubscribed emails
- * @param checkDuplicity - if true, it checks if the email is not in the list of emails already in the string
- * @param canByEmpty - if true, the string can be empty
+ * param checkUnsubscribed - if true, it checks if the email is not in the list of unsubscribed emails
+ * param checkDuplicity - if true, it checks if the email is not in the list of emails already in the string
+ * param canByEmpty - if true, the string can be empty
  *
  * Example of usage:
  *  ",,," - it's NOT valid, there is not a single good email

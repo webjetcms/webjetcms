@@ -78,8 +78,7 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
     /**
      * Verify, that value is in options, if not, add it
      * @param options
-     * @param paramName
-     * @param componentRequest
+     * @param value
      */
     public List<OptionDto> addCurrentValueToOptions(List<OptionDto> options, String value) {
         if (value == null) return options;

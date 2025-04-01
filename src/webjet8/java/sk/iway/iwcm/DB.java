@@ -47,7 +47,7 @@ public class DB
 
 	/**
 	 * Overi, ci je mozne v danom DB stlpci pouzit HTML kod, ak nie, tak sa pri citani rovno escapnu specialne znaky
-	 * ako < alebo > aby nebolo mozne vykonat XSS utok
+	 * ako &lt; alebo &gt; aby nebolo mozne vykonat XSS utok
 	 * https://thoughts-on-java.org/jpa-21-how-to-implement-type-converter/
 	 * @param fieldName
 	 * @return

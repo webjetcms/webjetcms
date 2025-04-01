@@ -29,10 +29,10 @@ public class DmailService {
 
     // Private constructor to hide the implicit public one
     private DmailService() {}
-    
+
     /**
      * Returns ID of campaign. If campaign is not saved yet, returns -ID of current user used as temporary ID for nested tables
-     * @param entity
+     * @param campaing
      * @param user
      * @return
      */
@@ -158,7 +158,7 @@ public class DmailService {
      * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
      * @param campaign
      * @param loggedUserId
-     * @param entity
+     * @param email
      */
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity email) {
 

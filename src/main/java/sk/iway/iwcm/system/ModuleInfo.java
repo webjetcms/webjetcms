@@ -172,7 +172,7 @@ public class ModuleInfo
 		return path;
 	}
 	/**
-	 * @param fileCheck The fileCheck to set.
+	 * @param path
 	 */
 	public void setPath(String path)
 	{

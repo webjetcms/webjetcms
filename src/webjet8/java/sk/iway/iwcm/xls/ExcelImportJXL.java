@@ -617,7 +617,8 @@ public class ExcelImportJXL
 		return(headerNamesOriginal[pos]);
 	}
 	/** vrati Date pre zadanu bunku
-	 * @param cell
+	 * @param row
+	 * @param name
 	 * @return
 	 */
 	public Date getDateValue(Cell[] row, String name) throws Exception

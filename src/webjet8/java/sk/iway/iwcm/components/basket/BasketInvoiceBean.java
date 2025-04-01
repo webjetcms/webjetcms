@@ -223,7 +223,7 @@ public class BasketInvoiceBean implements Serializable
 
 
 	/**
-	 * ------- getters & setters
+	 * ------- getters / setters
 	 *
 	 *
 	 */

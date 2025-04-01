@@ -487,7 +487,7 @@ public class AtrBean implements Serializable
    /**
     *  Sets the valueInt attribute of the AtrBean object
     *
-    *@param  valueInt  The new valueInt value
+    *@param  valueNumber  The new valueNumber value
     */
    public void setValueNumber(double valueNumber)
    {
@@ -574,7 +574,7 @@ public class AtrBean implements Serializable
 
    /**
     * vygeneruje HTML podobu atributu
-    * @param onWebPage HTML kod pre webovu stranku
+    * @param lang - jazyk web stranky
     * @return
     */
    public String getHtml(String lang)

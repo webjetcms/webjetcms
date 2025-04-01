@@ -99,7 +99,7 @@ public class ActionContextJavaScriptResolution implements Resolution
 
 	/**
 	 * Compose HTML snippet with messages based on standard properties enveloping used by Stripes
-	 * <html:messages/> tag.
+	 * &lt;html:messages/&gt; tag.
 	 * @param messages
 	 * @param request
 	 * @return
@@ -139,7 +139,7 @@ public class ActionContextJavaScriptResolution implements Resolution
 
 	/**
 	 * Compose HTML snippet with messages based on standard properties enveloping used by Stripes
-	 * <html:messages/> tag.
+	 * &lt;html:messages/&gt; tag.
 	 * @param errors
 	 * @param request
 	 * @return
