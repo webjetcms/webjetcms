@@ -250,10 +250,18 @@ public class SimpleQuery
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<Integer> forListInteger(String sql, Object... parameters)
 	{
-		return (List<Integer>)forList(sql, parameters);
+		List<Number> data = forListNumber(sql, parameters);
+		if (data == null) return null;
+
+		List<Integer> toBeReturned = new ArrayList<Integer>();
+		for (Number number : data)
+		{
+			if (number != null)
+				toBeReturned.add(number.intValue());
+		}
+		return toBeReturned;
 	}
 
 	@SuppressWarnings("unchecked")

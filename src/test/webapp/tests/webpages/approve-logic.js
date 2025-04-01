@@ -885,3 +885,50 @@ async function updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlTe
         I.dontSee("Žiadosť o schválenie web stránky dostal: Tester2 Playwright2");
     }
 }
+
+async function verifyPageInTrashIsNotApprovable(docId, historyId, I, DT, DTE) {
+
+    I.relogin("admin"); //tester3 doesnt have access to trash
+
+    I.say("Verify test page exists and it's in trash");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
+    DTE.waitForEditor();
+    I.click("#pills-dt-datatableInit-basic-tab");
+    I.seeInField("#editorAppDTE_Field_editorFields-groupDetails input.form-control", "/System/Kôš");
+    let title = await I.grabValueFrom("#DTE_Field_title");
+    DTE.cancel();
+
+    I.relogin("tester3");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+
+    let waitingTabCount = await I.grabNumberOfVisibleElements("#pills-waiting-tab");
+    if (waitingTabCount>0) {
+        I.click("#pills-waiting-tab");
+        DT.waitForLoader();
+        DT.waitForLoader();
+        I.wait(1);
+        I.dontSee(title, "#datatableInit_wrapper div.dt-scroll-body");
+        pause();
+    }
+
+    I.say("Check email link");
+    I.amOnPage("/admin/approve.jsp?docid="+docId+"&historyid="+historyId);
+    I.switchTo("#approveFormId");
+    I.waitForText("Stránka je v koši", 10, "span.error");
+    I.switchTo();
+}
+
+Scenario("webpage or group in trash - should not be able to approve it", async ({ I, DT, DTE }) => {
+    //122645
+
+    I.say("Testing page in subfolder: /System/Kôš/Approve folder in trash");
+    await verifyPageInTrashIsNotApprovable(122645, 207548, I, DT, DTE);
+
+    I.say("Testing page directly in Trash folder: Approve page in trash");
+    await verifyPageInTrashIsNotApprovable(122646, 207549, I, DT, DTE);
+});
+
+Scenario("logoff 2", ({I}) => {
+    I.switchTo();
+    I.logout();
+});

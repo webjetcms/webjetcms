@@ -64,6 +64,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Datatabuľky - pridať možnosť usporiadania podľa viacerých stĺpcov kliknutím s klávesou `SHIFT`.
 - [ ] +Datatabuľky - pridať možnosť `hideOnDuplicate` pre karty v editore, nezabudnúť aj na triedu `DataTableTab` aby to išlo nastaviť aj v anotácii.
 - [ ] +Prieskumník - do Média tejto stránky pridať možnosť presunúť sa do rodičovského priečinka.
+- [ ] +Konfigurácia - v prípade `cluster` inštalácie doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy). Pôvodne to riešilo výberové pole `applyToAllClusterNodes`.
 
 ## 2024
 

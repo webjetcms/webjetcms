@@ -515,6 +515,23 @@ Scenario("BUG - do not allow to edit disabled fields", async ({I, DTE}) => {
 
 });
 
+Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
+     I.amOnPage("/admin/v9/users/user-list/?id=19");
+     DTE.waitForEditor();
+     I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-vue-jstree-add");
+     I.waitForElement("#custom-modal-id", 10);
+     I.waitForText("Koreňový priečinok", 10, "#custom-modal-id a.jstree-anchor");
+     I.waitForText("WEB-INF", 10, "#custom-modal-id a.jstree-anchor");
+     I.waitForText("components", 10, "#custom-modal-id a.jstree-anchor");
+
+     I.click("Koreňový priečinok", "#custom-modal-id a.jstree-anchor");
+     I.waitForInvisible("#custom-modal-id", 10);
+     let value = await I.grabValueFrom(".DTE_Field_Name_editorFields\\.writableFolders input.form-control");
+     I.assertEqual(value, "/");
+     DTE.cancel();
+});
+
 //TODO: dalsie testy, overenie jednotlivych kariet, overenie prihlasenia vytvoreneho pouzivatela
 
 //TODO: test vnorenej datatabulky schvalovania
