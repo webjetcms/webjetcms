@@ -113,7 +113,11 @@ public class ComplexQuery
 			Logger.debug(ComplexQuery.class, "list: Executed query: "+sql);
 			while (rs.next())
 			{
-				result.add(mapper.map(rs));
+				T resultObject = mapper.map(rs);
+				if (resultObject != null)
+				{
+					result.add(resultObject);
+				}
 			}
 			rs.close();
 			ps.close();

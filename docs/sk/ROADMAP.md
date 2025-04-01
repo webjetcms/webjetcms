@@ -59,6 +59,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Prieskumník - nastaviť vlastnosti priečinka (indexovanie, práva) podľa rodičovského (rekurzívne) pri prvom otvorení, ak priečinok nemá nastavenia v databáze.
 - [ ] +Pre pole typu `DataTableColumnType.JSON`, konkrétne `className = "dt-tree-page-null"` pridať možnosť definovať koreňový priečinok.
 - [ ] +Presunúť všetky `Converter` triedy ako napr. `DocDetailsNotNullConverter` do samostatného `package` kde nebudú iné entity aby bolo možné tento `Converter` použiť aj v projektoch kde je použitý samostatný `JPA`.
+- [ ] +Konfigurácia - v prípade `cluster` inštalácie doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy). Pôvodne to riešilo výberové pole `applyToAllClusterNodes`.
 
 ## 2024
 
