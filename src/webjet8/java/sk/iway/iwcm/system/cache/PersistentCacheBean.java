@@ -14,7 +14,7 @@ import java.util.Date;
 
 
 /**
- * PersistentCacheBean.java - >>>POPIS MA<<<<
+ * PersistentCacheBean.java
  *
  * @author $Author: jeeff $
  * @version $Revision: 1.3 $

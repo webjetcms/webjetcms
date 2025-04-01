@@ -51,7 +51,7 @@ public class UploadFileAction {
 	}
 
 	/**
-	 * Save image that was drag&drop inside opened web page editor (uploadType=ckeditor).
+	 * Save image that was drag/drop inside opened web page editor (uploadType=ckeditor).
 	 * @param request
 	 * @param response
 	 * @param multipartFile

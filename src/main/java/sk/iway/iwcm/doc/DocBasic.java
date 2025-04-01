@@ -899,7 +899,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * na menu, v akej je zapisana.
 	 *
 	 * @param request
-	 * @param userCurrency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(double, String)}
+	 * @param userCurrency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(BigDecimal, String)}
 	 * @return BigDecimal cena
 	 */
 	public BigDecimal getLocalPrice(HttpServletRequest request, String userCurrency)
@@ -924,7 +924,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	/**
 	 * Vypocita cenu aj s DPH v zadanej mene
 	 * @param request
-	 * @param currency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(double, String)}
+	 * @param currency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(BigDecimal, String)}
 	 * @return BigDecimal cena
 	 */
 	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency)
@@ -1520,9 +1520,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * nova je taka, ktora nema historiu starsiu ako zadany pocet dni
 	 * zmenena je taka, kde doslo za zadany pocet dni k zmene
 	 *
-	 * @param docId - id stranky
-	 * @param minDaysNotChanged - pocet dni, pocas ktorych nesmelo dojst k zmene
-	 * @param maxDaysTestChanged - maximalny pocet dni, ktore sa testuju na zmenu (ak v tomto rozsahu nie je ziadna zmena, je dokument bezo zmeny)
 	 * @return 0=bez zmeny, 1=nova, 2=zmenena
 	 */
 	@JsonIgnore
@@ -1530,6 +1527,17 @@ public class DocBasic implements DocGroupInterface, Serializable
 	{
 		return(DocDB.getPageNewChangedStatus(getDocId(), 1, 7));
 	}
+
+	/**
+	 * Zistenie ci stranku mozeme povazovat za novu, zmenenu alebo nemodifikovanu
+	 *
+	 * nova je taka, ktora nema historiu starsiu ako zadany pocet dni
+	 * zmenena je taka, kde doslo za zadany pocet dni k zmene
+	 *
+	 * @param minDaysNotChanged - pocet dni, pocas ktorych nesmelo dojst k zmene
+	 * @param maxDaysTestChanged - maximalny pocet dni, ktore sa testuju na zmenu (ak v tomto rozsahu nie je ziadna zmena, je dokument bezo zmeny)
+	 * @return 0=bez zmeny, 1=nova, 2=zmenena
+	 */
 	@JsonIgnore
 	public int getPageNewChangedStatus(int minDaysNotChanged, int maxDaysTestChanged)
 	{
@@ -1739,7 +1747,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	/**
 	 * Vrati cestu spojenu s GroupDetails.getFullPath, pouziva sa vo WJ9 Datatable
-	 * @return
 	 */
 	@Transient
 	@DataTableColumn(

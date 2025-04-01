@@ -1682,8 +1682,6 @@ public class UpdateDatabase
 	/**
 	 * Funkcia, ktora vsetky vyskyty browserId v existujuich tabulkach zvysi o konstantu 1 500 000, nad ktorou identifikujeme neprihlasenych pouzivatelov
 	 * kvoli integrite statistickych zaznamov, ovplyvnuje tabulku stat_from a stat_views
-	 *
-	 * @author kmarton
 	 */
 	public static void fixBrowserId()
 	{

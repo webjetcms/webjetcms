@@ -63,7 +63,7 @@ public class ReservationService {
     /**
      * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
      * Check this validation requirements :
-     * 1. Reservation time from is < reservation time to (interval must have 1 minute at least)
+     * 1. Reservation time from is &lt; reservation time to (interval must have 1 minute at least)
      * 2. Reservation time interval inutes) set in reservation object
      * 3. If reservation range reservationTimeFrom-reservationTimeTo fits inside of reservationObject range reservationTimeFrom-reservationTimeTo
      *    (check it separately for every day in date range dateFrom-DateTo because reservation object range can be different for every day in week)
@@ -153,7 +153,7 @@ public class ReservationService {
     /**
      * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
      * Check this validation requirements :
-     * 1. Reservation date from is <= than reservation date to (if from = to reservation is for 1 day)
+     * 1. Reservation date from is &lt;= than reservation date to (if from = to reservation is for 1 day)
      * 2. Reservation date from/to are'nt in past
      * 3. Reservation overlapping validity, reservation can overlap with other reservations BUT max number of overlaps is set
      *    by reservation object (we count ONLY already approved reservations)
@@ -268,7 +268,7 @@ public class ReservationService {
      * Get reservation object "email accepter" and send mail to notify accepter about new waiting reservation for this reservation object.
      * Email includes link to this reservation waiting for approve.
      * @param reservation
-     * @param reservationObject
+     * @param request
      */
     public void sendAcceptationEmail(ReservationEntity reservation, HttpServletRequest request) {
         ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();
@@ -323,9 +323,8 @@ public class ReservationService {
      * (false, reservation was rejected),
      * (null, reservation status was reset and reservation is waiting for approve)
      * @param reservation approved reservation
-     * @param reservationObject reservation object that reservation is trying reserve
      * @param request HttpServletRequest instance
-     * @param loggedUserName full name of actually logged user who change reservation accepted status
+     * @param loggedUser actually logged user who change reservation accepted status
      */
     public void sendConfirmationEmail(ReservationEntity reservation, HttpServletRequest request, Identity loggedUser) {
         if(reservation == null) return;
@@ -459,7 +458,7 @@ public class ReservationService {
 
     /**
      * Validate if interval s1-e1 and interval s2-e2 are overlapping using logical formula.
-     * Used formula ((s1 <= e2) && (s2 <= e1)), return true if they are overlapping.
+     * Used formula ((s1 &lt;= e2) &amp;&amp; (s2 &lt;= e1)), return true if they are overlapping.
      * Intervals are overlapping even if one start when second ends (08:00-09:00 and 09:00-10:00).
      * IF function is used to compare date values (intervals) representing TIME we want all the values to share same yyyy-mm-dd part and for this reason
      * with input param "prepareDates" set to true, every date part of value will be set to 2000-01-01, so we can compare times.
@@ -978,7 +977,6 @@ public class ReservationService {
     /**
      * Check if reservation was changed - compare it with DB version.
      * @param entityToCheck
-     * @param reservationObject
      * @param rr
      * @return
      */

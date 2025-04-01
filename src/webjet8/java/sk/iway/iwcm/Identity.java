@@ -174,7 +174,7 @@ public class Identity extends UserDetails
 	/**
 	 * Vrati true, ak ma pouzivatel dane pravo, prava je mozne zadat aj vo formate:
 	 * menuFbrowser|menuForms - pouzije sa ALEBO
-	 * menuFbrowser&menuForms - pouzije sa A
+	 * menuFbrowser&amp;menuForms - pouzije sa A
 	 * @param name
 	 * @return
 	 */

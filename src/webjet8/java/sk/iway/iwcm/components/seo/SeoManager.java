@@ -705,11 +705,9 @@ public class SeoManager
 	 *
 	 * @param from				dateTime, od ktoreho sa zapocitavaju vyhladavania
 	 * @param to				dateTime, do ktoreho sa zapocitavaju vyhladavania
-	 * @param typeDate		typ grafu, ak je 0 vyhladava vo vsetkych vyhladavaniach, ak 1 tak sa obmedzuje danym casom
-	 * @param viewsTitle		legenda ku grafu
-	 * @param size				pocet klucovych slov
-	 * @param addToQuery		retazec, ktory sa ma pridat ku sql query na zaklade filtrovania servera, z ktoreho sa uskutocnilo
-	 * 							vyhladavanie - moze byt pridane filtrovanie podla servera a aj podla docId
+	 * @param serverName
+	 * @param searchDocId
+	 * @param groupIdsQuery		retazec, ktory sa ma pridat ku sql query na zaklade filtrovania servera, z ktoreho sa uskutocnilo
 	 *
 	 * @return 					mnozinu udajov, ktore su potrebne na vytvorenie stlpcoveho grafu zobrazujuceho pocet vyhladavani
 	 * 							klucovych slov (meno a pocet vyhladavani)
@@ -854,7 +852,7 @@ public class SeoManager
 	/**
 	 * Funkcia, ktora vrati List, v ktorom budu ulozene dvojice: nazov klucoveho slova a pocet vyskytov na stranke resp. skupiny stranok
 	 *
-	 * @param searchDodId	Identifikator stranky, na ktorej zisti vyskyt klucovych slov
+	 * @param searchDocId	Identifikator stranky, na ktorej zisti vyskyt klucovych slov
 	 * @param groupIdsQuery	Retazec, ktory sa pridava na koniec query, zisti vyskyt klucovych slov v skupine stranok
 
 	 * @return 					Vrati List, v ktorom budu ulozene dvojice: nazov klucoveho slova a pocet vyskytov na stranke resp. skupiny stranok

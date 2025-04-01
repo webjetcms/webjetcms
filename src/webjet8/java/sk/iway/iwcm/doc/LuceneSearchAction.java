@@ -86,7 +86,6 @@ public class LuceneSearchAction
 	/**
 	 *
 	 * @param request
-	 * @param language ISO kod jazyka v ktorom chceme hladat
 	 * @return
 	 */
 	public static String search(HttpServletRequest request)
@@ -1228,8 +1227,7 @@ public class LuceneSearchAction
 	/**
 	 * Prida parametre do PreparedStatementu
 	 * @param request
-	 * @param ps
-	 * @param counter
+	 * @param query
 	 * @return
 	 * @throws SQLException
 	 */

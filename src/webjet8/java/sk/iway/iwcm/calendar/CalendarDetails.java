@@ -155,7 +155,7 @@ public class CalendarDetails
 	/**
 	 *  Sets the type attribute of the CalendarDetails object
 	 *
-	 *@param  type  The new type value
+	 *@param  typeId  The new type value
 	 */
 	public void setTypeId(int typeId)
 	{
@@ -367,5 +367,5 @@ public class CalendarDetails
 	public void setDomainId(int domainId) {
 		this.domainId = domainId;
 	}
-	
+
 }

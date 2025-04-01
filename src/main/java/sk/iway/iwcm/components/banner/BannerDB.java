@@ -540,7 +540,6 @@ public class BannerDB
      * @param bannerIndex
 	  * @param campaignBanner - hodnota kampanoveho bannera ziskaneho z parametra
      * @return
-     *@author		$Author: prau $(prau)
      */
 	public static BannerBean getNextBanner(String groups, HttpSession session, List<String> bannerList, String bannerIndex, Cookie[] cookie, String campaignBanner)
 	{
@@ -2011,7 +2010,6 @@ public class BannerDB
 	 * @param banners
 	 * @param cookie
 	 * @return
-	 *@author		$Author: prau $(prau)
 	 */
 	public static List<BannerBean> getVisitorCookieGroup(List<BannerBean> banners, Cookie[] cookie)
 	{

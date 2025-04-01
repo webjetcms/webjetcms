@@ -47,11 +47,11 @@ public class EventForm extends ActionForm
 	private boolean notifySendSMS;
 	private String lng = Constants.getString("defaultLanguage");
 	private int creatorId;
-	private int approve; 
+	private int approve;
 	private boolean suggest;
 	private String approveCheckBox;
-	private int domainId; 
-	
+	private int domainId;
+
 	/**
 	 *  Description of the Method
 	 *
@@ -177,7 +177,7 @@ public class EventForm extends ActionForm
 	/**
 	 *  Sets the type attribute of the EventForm object
 	 *
-	 *@param  type  The new type value
+	 *@param  typeId  The new type value
 	 */
 	public void setTypeId(int typeId)
 	{
@@ -360,5 +360,5 @@ public class EventForm extends ActionForm
 	public void setDomainId(int domainId) {
 		this.domainId = domainId;
 	}
-	
+
 }

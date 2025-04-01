@@ -30,8 +30,7 @@ public class EmailUnsubscribedController {
 
     /**
      * Unsubscribe email from mailing list. Used as one click unsubscribe action (link) in email header List-Unsubscribe.
-     * @param emailId
-     * @param hash
+     * @param request
      */
     @RequestMapping(path={"/rest/dmail/unsubscribe"})
 	public String unsubscribeEmail(HttpServletRequest request)

@@ -345,7 +345,7 @@ public class TranslationKeyService {
      * Method will check is user have rights to delete entered entity. If yes, entity will be deleted. If no, throw IllegalArgumentException.
 
      * @param user actualy logged user
-     * @param translationKey translation key entity we want to delete
+     * @param key translation key entity we want to delete
      * @param lng language variant of translation key we want delete
      * @return number of deleted entities
      */

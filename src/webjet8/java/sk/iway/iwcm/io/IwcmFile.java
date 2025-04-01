@@ -422,7 +422,6 @@ public class IwcmFile
 	 * Vrati virtualnu cestu k suboru, bez mena suboru
 	 * doplnene 5.2. 2009 - kmarton - kvoli rekurzivnej kontrole pouzitia suborov, vo funkcii priamo pouzite "/" ako file
 	 * separator kvoli tomu, ze predtym to prechadza cez getVirtualPath a tam su vsetky "\" nahradzane "/" ako cesta v prehliadacoch
-	 * @author kmarton
 	 * @return String  napr. ak je virtualna path /templates/webjet/temp_2.jsp, tak funkcia vrati /templates/webjet
 	 * 					 ak je to adresar napr. /templates/webjet/, vrati /templates
 	 */

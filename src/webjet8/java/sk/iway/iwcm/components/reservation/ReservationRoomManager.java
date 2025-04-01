@@ -168,7 +168,7 @@ public class ReservationRoomManager
 	 * Pozicia max reservation v tabulke rezervacii
 	 *
 	 * @param reservationObjectList
-	 * @param reservationObjectId
+	 * @param reservationObjectOrder
 	 * @return
 	 */
 	public int getMaxReservationPosition(List<ReservationObjectBean> reservationObjectList, int reservationObjectOrder)

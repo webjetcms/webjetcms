@@ -181,7 +181,7 @@ public class EditorService {
 	/**
 	 * Ulozi DocDetials do databazy vratane vsetkych akcii spojenych s ulozenim web stranky (schvalovanie, nastavenie adresara...)
 	 * @param editedDoc
-	 * @return historyId alebo hodnotu < 1 ak nastala chyba
+	 * @return historyId alebo hodnotu &lt; 1 ak nastala chyba
 	 */
 	public int saveEditedDoc(DocDetails editedDoc) {
 		DebugTimer dt = new DebugTimer("EditorService.saveEditedDoc");
@@ -1144,7 +1144,7 @@ public class EditorService {
 
 	/**
 	 * Vrati mapu CSS stylov pre roletku vyberu stylu v editore
-	 * @param baseCssPath
+	 * @param doc
 	 * @return
 	 */
 	public static List<Map<String, String>> getCssListJson(DocBasic doc) {

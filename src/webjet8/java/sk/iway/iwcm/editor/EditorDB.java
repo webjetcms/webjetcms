@@ -520,7 +520,7 @@ public class EditorDB
 	 * Ulozi EditorForm do databazy vratane vsetkych akcii spojenych s ulozenim web stranky (schvalovanie, nastavenie adresara...)
 	 * @param my_form
 	 * @param request
-	 * @return historyId alebo hodnotu < 1 ak nastala chyba
+	 * @return historyId alebo hodnotu &lt; 1 ak nastala chyba
 	 */
 	public static int saveEditorForm(EditorForm my_form, HttpServletRequest request)
 	{
@@ -2328,7 +2328,7 @@ public class EditorDB
 	/**
 	 * aktualizuje zoznam uzivatelov ktory edituju stranku s docId
 	 * @param docId
-	 * @return
+	 * @param user
 	 */
 	public static void updateUserAccessList(int docId, UserDetails user)
 	{

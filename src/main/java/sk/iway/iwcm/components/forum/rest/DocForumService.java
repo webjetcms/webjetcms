@@ -812,7 +812,6 @@ public class DocForumService {
 	 *
 	 * @param uploadFile - file to upload
 	 * @param request
-	 * @param response
 	 * @return - path to file (forward)
 	 */
 	public static String uploadForumFile(CommonsMultipartFile uploadFile, HttpServletRequest request) {

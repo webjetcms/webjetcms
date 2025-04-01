@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 
 /**
- *  InsertScriptBean.java - >>>POPIS MA<<<<
+ *  InsertScriptBean.java
  *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)

@@ -82,7 +82,7 @@ public class RatingService {
 
 	/**
 	 * Ulozi rating do databazy a vrati TRUE, ak je vsetko OK
-	 * @param rBean - rating, ktory sa ulozi do DB
+	 * @param entity - rating, ktory sa ulozi do DB
 	 * @return
 	 */
 	public static boolean saveRating(RatingEntity entity) {
@@ -91,7 +91,7 @@ public class RatingService {
 
 	/**
 	 * Ulozi rating do databazy a vrati TRUE, ak je vsetko OK
-	 * @param rBean - rating, ktory sa ulozi do DB
+	 * @param entity - rating, ktory sa ulozi do DB
 	 * @return
 	 */
 	public static boolean saveRating(RatingEntity entity, HttpServletRequest request) {
@@ -138,9 +138,9 @@ public class RatingService {
 	 * @param ratingId - ID ratingu v DB
 	 * @return
 	 */
-	public static RatingEntity getRaitingById(long raitingId) {
+	public static RatingEntity getRaitingById(long ratingId) {
 		RatingRepository ratingRepository = Tools.getSpringBean("ratingRepository", RatingRepository.class);
-		Optional<RatingEntity> entityOpt = ratingRepository.findById(raitingId);
+		Optional<RatingEntity> entityOpt = ratingRepository.findById(ratingId);
 		if(entityOpt.isPresent()) return entityOpt.get();
 		return null;
 	}
@@ -201,7 +201,7 @@ public class RatingService {
 
 	/**
 	 * Vrati pocet zaznamov pre zvolene kriterium, ak za krit. nezada, vrati pocet vsetkych
-	 * @param colName - nazov stlpca, nad ktorym sa vykona COUNT
+	 * @param countCol - nazov stlpca, nad ktorym sa vykona COUNT
 	 * @param whereCol - nazov stlpca, ktory je kriteriom pre WHERE (typ int), ak je NULL, WHERE sa nevykona
 	 * @param whereValue - int hodnota pre WHERE
 	 * @return

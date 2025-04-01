@@ -318,7 +318,6 @@ public class BasketDB
 	 *
 	 * @param req - HttpServletRequest
 	 * @return
-	 * @author		$Author: $(prau)
 	 * @Ticket 		Number: #16989 WJ Cloud - Rozšírenie košíka o počet položiek na sklade
 	 */
 	public static boolean canAddItem(HttpServletRequest req)
@@ -646,7 +645,6 @@ public class BasketDB
 	 * MBO: moze sa poslat parameter lng, vtedy hlada [nazov][lng], ak nenajde, hlada [nazov]
 	 *
 	 * @return
-	 * @author		$Author: $(prau)
 	 * @Ticket 		Number: #15137
 	 */
 	public static List<DocDetails> getModeOfTransports(String... lng)
@@ -762,7 +760,6 @@ public class BasketDB
 	 *
 	 * @param doc
 	 * @return
-	 * @author		$Author: $(prau)
 	 */
 	public static synchronized int getCountInRepository(DocDetails doc)
 	{

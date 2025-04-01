@@ -35,7 +35,7 @@ public class DictionaryForm extends ActionForm
 	}
 	/**
 	 * Konstruktor
-	 * @param banner
+	 * @param dictionary
 	 */
 	public DictionaryForm(DictionaryBean dictionary)
 	{

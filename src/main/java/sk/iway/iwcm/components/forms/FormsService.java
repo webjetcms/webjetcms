@@ -230,10 +230,10 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
     }
 
     /**
-     * Vyhlada (serverov) v udajoch formularu (jednotlive zaznamy formularu)
-     * @param searchList
-     * @param dateRange
+     * Vyhlada (serverovo) v udajoch formularu (jednotlive zaznamy formularu)
      * @param formName
+     * @param user
+     * @param params
      * @param pageable
      * @return
      */

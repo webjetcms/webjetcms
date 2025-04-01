@@ -48,18 +48,15 @@ public class CustomAnalyzer extends StopwordAnalyzerBase
 	  useful for searching. */
 
 	  /** Builds an analyzer with the given stop words.
-	   * @param matchVersion Lucene version to match See {@link
-	   * <a href="#version">above</a>}
+	   * @param matchVersion Lucene version to match See {@link <a href="#version">above</a>}
 	   * @param stopWords stop words */
 	  private  CustomAnalyzer(Version matchVersion, Set<?> stopWords) {
 	    super(matchVersion, stopWords);
 	    //replaceInvalidAcronym = matchVersion.onOrAfter(Version.LUCENE_31);
 	  }
 
-	  /** Builds an analyzer with the default stop words ({@link
-	   * #STOP_WORDS_SET}).
-	   * @param matchVersion Lucene version to match See {@link
-	   * <a href="#version">above</a>}
+	  /** Builds an analyzer with the default stop words.
+	   * @param matchVersion Lucene version to match
 	   */
 	  public CustomAnalyzer(Version matchVersion,String language) {
 	    this(matchVersion, FulltextSearch.stopwords(language));

@@ -33,7 +33,7 @@ public class IndexSearcherBuilder
 
 	/**
 	 * Vytvori IndexSearcher
-	 * @param indexed
+	 * @param langauge
 	 * @return
 	 */
 	@SuppressWarnings("deprecation")
@@ -111,7 +111,7 @@ public class IndexSearcherBuilder
 	}
 	/**
 	 * Zatvori IndexSearcher
-	 * @param indexed
+	 * @param language
 	 */
 	public static void close(String language)
 	{

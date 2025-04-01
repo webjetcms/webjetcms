@@ -465,7 +465,6 @@ public class UrlRedirectDB
 	/**
 	 * Vrati rozne domeny, ktore uz existuju v tabulke
 	 *
-	 *	@author kmarton
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -562,8 +561,6 @@ public class UrlRedirectDB
 
 	/**
 	 * Metoda, ktora zmeni vsetky domeny s nazvom oldDomain na newDomain
-	 *
-	 * @author kmarton
 	 *
 	 * @param oldDomain	stary nazov domeny, ktoru chceme zmenit
 	 * @param newDomain	novy nazov domeny, ktorou sa nahradia vsetky presmerovania so starou domenou oldDomain

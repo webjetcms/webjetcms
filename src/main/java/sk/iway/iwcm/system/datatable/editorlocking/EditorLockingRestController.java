@@ -89,7 +89,6 @@ public class EditorLockingRestController {
 	 * @param entityId
 	 * @param tableUniqueId
      * @param request
-	 * @return
 	 */
     @GetMapping({ "/close/{entityId}/{tableUniqueId}" })
     public void removeEdit(

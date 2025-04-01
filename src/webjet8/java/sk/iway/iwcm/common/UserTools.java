@@ -327,7 +327,7 @@ public class UserTools {
 	 * Vrati hash-tabulku s poctom pouzivatelov pre jednotlivu skupinu: key =
 	 * group_id, value = pocet pouzivatelov
 	 *
-	 * @return Map<Integer, Integer>
+	 * @return Map&lt;Integer, Integer&gt;
 	 */
 	public static Map<Integer, Integer> numberOfUsersInGroups()
 	{

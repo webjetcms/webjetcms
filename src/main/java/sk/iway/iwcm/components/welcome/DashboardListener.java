@@ -48,8 +48,7 @@ public class DashboardListener {
      * Pripravi data pre overview/welcome obrazovku, zatial taketo skarede natvrdo
      * riesenie
      *
-     * @param model
-     * @param request
+     * @param event
      */
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='dashboard'")
     protected void setOverviewData(final WebjetEvent<ThymeleafEvent> event) {

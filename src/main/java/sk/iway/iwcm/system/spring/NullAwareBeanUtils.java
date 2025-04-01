@@ -21,7 +21,6 @@ public class NullAwareBeanUtils {
      * Copies properties from one object to another
      * @param source
      * @destination
-     * @return
      */
     public static void copyProperties(Object source, Object destination, String... ignoreProperties){
         List<String> alwaysCopy = null;

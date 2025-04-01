@@ -57,8 +57,8 @@ public final class ElectronicPayments
 	 *
 	 * It throws an exception in case such a payment type is not configured correctly.
 	 *
-	 * @param paymentType String
-	 * @return {@link PaymentMethodInformation}
+	 * @param type String
+	 * @return {@link PaymentInformation}
 	 */
 	public static PaymentInformation getPaymentInformation(PaymentType type)
 	{

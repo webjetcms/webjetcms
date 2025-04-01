@@ -228,7 +228,7 @@ public class ZipInputStream extends sk.iway.iwcm.system.zip.InflaterInputStream 
 	 * @exception IOException
 	 *               if an I/O error has occurred
 	 * @exception IllegalArgumentException
-	 *               if n < 0
+	 *               if n &lt; 0
 	 */
 	@Override
 	public long skip(long n) throws IOException

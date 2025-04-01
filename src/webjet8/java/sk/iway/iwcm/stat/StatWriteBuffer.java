@@ -66,7 +66,7 @@ public class StatWriteBuffer
 	 *
 	 * <b>NOTE: insert and update must share the same number of parameters for this method to work correctly</b>
 	 *
-	 * @param SEE add(String, String, Object...)
+	 * @see add(String, String, Object...)
 	 */
 	public static void addUpdateInsertPair(String update, String insert, String table, Object...parameters)
 	{

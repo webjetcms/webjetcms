@@ -612,7 +612,7 @@ public class ImportStructureExcel extends ExcelImportJXL
 
 	/**
 	 * Spoji adresare smerom hore, ak mam pristup na vsetky podadresare nejakeho adresara spoji to do jedneho
-	 * @param groups - zoznam ID adresarov
+	 * @param groupsStr - zoznam ID adresarov
 	 * @return
 	 */
 	public static String collapseGroupsUp(String groupsStr)

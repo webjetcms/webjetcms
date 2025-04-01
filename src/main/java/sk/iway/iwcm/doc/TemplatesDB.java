@@ -47,7 +47,7 @@ public class TemplatesDB extends DB
    /**
     *  Gets the instance attribute of the TemplatesDB class
     *
-    *@param  force_refresh   Description of the Parameter
+    *@param  forceRefresh   Description of the Parameter
     *@return                 The instance value
     */
    public static TemplatesDB getInstance(boolean forceRefresh)

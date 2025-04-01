@@ -87,7 +87,7 @@ public class FileArchivatorInsertLater
     }
 
     /**
-	 * zamena obsahu suborov dirPath+fileName <-> oldFileBean.getFilePath()+oldFileBean.getFileName()
+	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
 	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
 	 */
 	public static String renameFile(FileArchivatorBean scheduledBean)

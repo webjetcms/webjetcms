@@ -616,7 +616,6 @@ public class MenuService {
      * Vrati zoznam VSETKYCH prav pre editaciu pouzivatela (vsetky prava)
      * Je to tu v MenuService nestastne, ale kedze sa robi viac operacii (zmena ikon, skupiny)
      * tak sa mi to zdalo lepsie
-     * @param allModules
      * @return
      */
     public static List<JsTreeItem> getAllPermissions() {

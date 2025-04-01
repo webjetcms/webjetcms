@@ -16,7 +16,7 @@ public class AnalyticsHelper {
     /**
      * Vyparsuje konfiguraciu
      * @param config String jeden alebo viac parov url:Trieda oddelenych ';' kde url je zaciatok vyhovujucej url a Trieda je cela cesta k triede implementujucej sk.iway.iwcm.analytics.Tracker, napr. '/files/filearchiv/:sk.iway.iwcm.components.file_archiv.FileArchivTracker'
-     * @return vrati rozparsovanu konfiguraciu List<Pair<String, String>> alebo null
+     * @return vrati rozparsovanu konfiguraciu List&lt;Pair&lt;String, String&gt;&gt; alebo null
      */
     public static List<Pair<String, String>> parseConfig(String config) {
         if(Tools.isNotEmpty(config)) {

@@ -978,7 +978,7 @@ public class WebpagesService {
 	 * Vrati DocDetails (ako docDB.getBasicDocDetails) zo zadanej URL adresy
 	 * Ta moze byt v tvare:
 	 * http://domena.sk/adresar/stranka.html?nejakyParameter=aaa
-	 * http://domena.sk/showdoc.do?docid=xxx&nejakyParameter=aaa
+	 * http://domena.sk/showdoc.do?docid=xxx&amp;nejakyParameter=aaa
 	 * /adresar/stranka.html
 	 * /showdoc.do?docid=xxx
 	 * @param url

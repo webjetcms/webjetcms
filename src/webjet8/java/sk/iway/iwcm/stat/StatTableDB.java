@@ -49,7 +49,7 @@ public class StatTableDB {
 	/**
 	 *  statistika pristupov podla krajin usporiadana podla views
 	 *
-	 *@param  max_size  Description of the Parameter
+	 *@param  maxRows  Description of the Parameter
 	 *@param  from      Description of the Parameter
 	 *@param  to        Description of the Parameter
 	 *@return           The country value

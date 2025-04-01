@@ -218,7 +218,6 @@ public class DomainRedirectDB
 	}
 
 	/**
-	 * @author Marián Halaš
 	 * @return Map of redirects where key is redirect_from and value is ID of redirect in DB
 	 * if there are no entries in DB, returns empty map
 	 */
@@ -243,7 +242,6 @@ public class DomainRedirectDB
 	}
 
 	/**
-	 * @author Marián Halaš
 	 * @param domain
 	 * @param path
 	 * @param params

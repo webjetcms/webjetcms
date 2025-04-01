@@ -727,8 +727,6 @@ public class XmlUtils {
 	 * @param el		Element, v ktorom sa nachadza dany tag
 	 *
 	 * @return	Vrati text, ktory sa nachadza v danom retazci. Ak nastane hocijaka chyba, vrati prazdny retazec.
-	 *
-	 * @author kmarton
 	 */
 	public static String getTextFromNode(String tagName, Element el)
 	{

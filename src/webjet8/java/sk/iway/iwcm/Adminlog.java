@@ -297,7 +297,6 @@ public class Adminlog
 	 * @param description - popis zmeny
 	 * @param subId1 - custom int typ1 (napr. primarny kluc objektu, ktoreho sa tyka zmena - docid, forumid,...)
 	 * @param subId2 - custom int typ2
-	 * @param anonymous -
 	 */
 	public static void addAnonymously(int logType, String description, int subId1, int subId2) {
 		RequestBean requestBeanAnonym = new RequestBean();
@@ -582,8 +581,8 @@ public class Adminlog
 
 	/**
 	 * Vrati zoznam zmenenych atributov POJO objektu
-	 * @param o1
-	 * @param o1Original
+	 * @param newObj
+	 * @param originalObj
 	 * @return
 	 */
 	public static String getPojoZmeny(Object newObj, Object originalObj)

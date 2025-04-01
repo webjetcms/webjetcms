@@ -20,7 +20,7 @@ import sk.iway.iwcm.ebanking.MoneyLongConverter;
 
 
 /**
- *  FileHistoryBean.java - >>>POPIS MA<<<<
+ *  FileHistoryBean.java
  *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)
@@ -40,7 +40,7 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 
 	@Id
 	@GeneratedValue(generator="WJGen_file_history")
-	@TableGenerator(name="WJGen_file_history",pkColumnValue="file_history")	
+	@TableGenerator(name="WJGen_file_history",pkColumnValue="file_history")
 	@Column(name="file_history_id")
 	private int fileHistoryId;
 	@Column(name="file_url")
@@ -56,29 +56,29 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 	String historyPath;
 	@Column(name="ip_address")
 	String ipAddress;
-	
+
 	public int getFileHistoryId()
 	{
 		return fileHistoryId;
 	}
-	
+
 	public void setFileHistoryId(int fileHistoryId)
 	{
 		this.fileHistoryId = fileHistoryId;
 	}
-	
+
 	@Override
 	public void setId(int id)
 	{
 		setFileHistoryId(id);
 	}
-	
+
 	@Override
 	public int getId()
 	{
 		return getFileHistoryId();
 	}
-	
+
 	public String getFileUrl()
 	{
 		if (fileUrl != null) fileUrl = Tools.replace(fileUrl, "//", "/");
@@ -119,7 +119,7 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 	{
 		this.deleted = deleted;
 	}
-	
+
 	public String getHistoryPath()
 	{
 		return historyPath;
@@ -129,7 +129,7 @@ public class FileHistoryBean extends ActiveRecord implements Serializable
 	{
 		this.historyPath = historyPath;
 	}
-	
+
 	public String getIpAddress()
 	{
 		return ipAddress;

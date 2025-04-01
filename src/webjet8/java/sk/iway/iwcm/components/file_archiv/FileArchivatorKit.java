@@ -103,7 +103,7 @@ public class FileArchivatorKit
 
 	/** Vrati unikatne meno suboru
 	 *
-	 * @param file - subor
+	 * @param fileNameParam - subor
 	 * @param directoryPath - cesta k suboru
 	 * @param preferredDate - null / preferovany datum
 	 */
@@ -252,7 +252,6 @@ public class FileArchivatorKit
 	 * Method is called when we are replacing existing file without creating new version in history
 	 * @param newFab
 	 * @param oldId
-	 * @param userId
 	 * @param req
 	 * @return
 	 */
@@ -298,7 +297,7 @@ public class FileArchivatorKit
 
 
 	/**
-	 * zamena obsahu suborov dirPath+fileName <-> oldFileBean.getFilePath()+oldFileBean.getFileName()
+	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
 	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
 	 */
 	public static boolean renameFile(String dirPath, String fileName, FileArchivatorBean oldFileBean)

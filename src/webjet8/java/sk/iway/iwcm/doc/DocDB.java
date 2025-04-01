@@ -3699,7 +3699,6 @@ public class DocDB extends DB
 	/**
 	 * Skonvertuje nazov skupiny na id
 	 *
-	 * @author kmarton
 	 * @param perexGroupName meno skupiny, ktorej chceme ziskat identifikator
 	 *
 	 * @return -1 ak sa take meno nenaslo, inak vrati identifikator skupiny
@@ -6172,7 +6171,7 @@ public class DocDB extends DB
 
 
 	/**
-	 * Upravi poradie stranok v adresari po zmene stranky cez drag&drop, vsetky za touto strankou precisluje
+	 * Upravi poradie stranok v adresari po zmene stranky cez drag/drop, vsetky za touto strankou precisluje
 	 * @param editorForm
 	 * @param position
 	 */

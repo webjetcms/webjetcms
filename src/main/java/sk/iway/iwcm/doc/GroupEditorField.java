@@ -209,7 +209,7 @@ public class GroupEditorField extends BaseEditorFields {
      *
      * je to z toho dovodu, ze GroupDetails je cachovane a potom sa nam menili cachovane zaznamy
      *
-     * @param group
+     * @param groupOriginal
      * @return
      */
     public GroupDetails fromGroupDetails(GroupDetails groupOriginal) {

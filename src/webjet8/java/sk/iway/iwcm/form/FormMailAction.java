@@ -103,11 +103,8 @@ public class FormMailAction extends HttpServlet
 	 *
 	 *@param  request               Description of the Parameter
 	 *@param  response              Description of the Parameter
-	 *@return                       Description of the Return Value
 	 *@exception  IOException       Description of the Exception
 	 *@exception  ServletException  Description of the Exception */
-
-
 	protected static void execute(
 			HttpServletRequest request,
 			HttpServletResponse response)

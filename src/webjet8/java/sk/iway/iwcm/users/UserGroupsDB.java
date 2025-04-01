@@ -475,7 +475,7 @@ public class UserGroupsDB extends DB
     /**
      * Vrati list ID skupin z pouzivatela odfiltrovanych podla typu skupiny (userGroupTypeId)
      * @param ids - ciarkou oddeleny zoznam ID skupin (ziskanych z user.getUserGroupIds())
-     * @param userGroupTypeId - filter skupin, alebo < 1 pre vsetky
+     * @param userGroupTypeId - filter skupin, alebo &lt; 1 pre vsetky
      * @return
      */
     public List<Integer> getUserGroupIdsList(String ids, int userGroupTypeId)

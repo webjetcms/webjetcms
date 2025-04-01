@@ -130,7 +130,7 @@ public class DomainThrottle
 
 	/**
 	 * dummy impl of getting domain from email address
-	 * @param string
+	 * @param address
 	 * @return
 	 */
 	public static String getDomainFromEmail(String address)
