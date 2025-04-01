@@ -139,6 +139,43 @@ public class QADB
 	}
 
 	/**
+	 * Načíta skupiny otázok do listu.
+	 *
+	 * @return List<LabelValueDetails> so zoznamom unikátnych skupín otázok
+	 */
+	public static List<LabelValueDetails> getQAGroups(HttpServletRequest request) {
+		List<LabelValueDetails> aList = new ArrayList<>();
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			db_conn = DBPool.getConnection(DBPool.getDBName(request));
+			ps = db_conn.prepareStatement("SELECT DISTINCT group_name FROM questions_answers WHERE " + CloudToolsForCore.getDomainIdSqlWhere(false) + " ORDER BY group_name ASC");
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				LabelValueDetails lvd = new LabelValueDetails();
+				lvd.setLabel(DB.getDbString(rs, "group_name"));
+				lvd.setValue(DB.getDbString(rs, "group_name"));
+				aList.add(lvd);
+			}
+		} catch (Exception ex) {
+			sk.iway.iwcm.Logger.error(ex);
+		} finally {
+			try {
+				if (rs != null) rs.close();
+				if (ps != null) ps.close();
+				if (db_conn != null) db_conn.close();
+			} catch (Exception ex2) {
+				sk.iway.iwcm.Logger.error(ex2);
+			}
+		}
+
+		return aList;
+	}
+
+	/**
 	 * Vrati zoznam otazok a odpovedi v danej skupine
 	 * @param groupName - nazov skupiny
 	 * @param onlyForWeb - ak true, iba tie co su urcene na web

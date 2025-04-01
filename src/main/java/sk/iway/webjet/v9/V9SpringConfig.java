@@ -122,7 +122,12 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appmedia",
     "sk.iway.iwcm.components.carouselslider",
     "sk.iway.iwcm.components.sitemap",
-    "sk.iway.iwcm.components.appsocialicon"
+    "sk.iway.iwcm.components.appsocialicon",
+    "sk.iway.iwcm.components.qa",
+    "sk.iway.iwcm.components.appimpressslideshow",
+    "sk.iway.iwcm.components.rating",
+    "sk.iway.iwcm.components.relatedpages",
+    "sk.iway.iwcm.components.restaurant_menu"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

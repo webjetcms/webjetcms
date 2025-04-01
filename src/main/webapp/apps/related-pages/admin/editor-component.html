@@ -1,0 +1,27 @@
+<script>
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const handleChange = function () {
+				const id = $(this).attr("id");
+				const isChecked = $(this).is(":checked");
+				if (isChecked) {
+					if (id === "DTE_Field_titleName_2") {
+						setFieldsVisibility([], ["customName"]);
+					} else if (
+						id === "DTE_Field_titleName_0" ||
+						id === "DTE_Field_titleName_1"
+					) {
+						setFieldsVisibility(["customName"], []);
+					}
+				}
+			};
+			$("#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2").on("change",handleChange);
+			$("#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2").change();
+		});
+	}
+</script>
