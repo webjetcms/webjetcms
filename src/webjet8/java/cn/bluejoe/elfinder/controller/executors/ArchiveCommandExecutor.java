@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.zip.ZipException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -87,9 +88,22 @@ public class ArchiveCommandExecutor extends AbstractJsonCommandExecutor
 					FsItemEx fsi = firstItem;
 					if(fsi.isFolder())
 					{
-						zipDirectory(fsi.getPath(), fsi.getParent().getPath() + "/" + name + ".zip", false);
-						zipFilePath = new FsItemEx(fsi.getParent(), name + ".zip");
-						added.add(zipFilePath);
+						try {
+							zipDirectory(fsi.getPath(), fsi.getParent().getPath() + "/" + name + ".zip", false);
+							zipFilePath = new FsItemEx(fsi.getParent(), name + ".zip");
+							added.add(zipFilePath);
+						} catch (ZipException e) {
+							if (e.getMessage() != null && e.getMessage().contains("ZIP file must have at least one entry"))
+							{
+								json.put("error", prop.getText("components.elfinder.commands.archive.error.empty"));
+							}
+							else
+							{
+								json.put("error", prop.getText("components.elfinder.commands.archive.error.exception", e.getLocalizedMessage()));
+							}
+						} catch (IOException e) {
+							json.put("error", prop.getText("components.elfinder.commands.archive.error.exception", e.getLocalizedMessage()));
+						}
 					}
 				}
 				// zipovanie viacerych suborov/adresarov
