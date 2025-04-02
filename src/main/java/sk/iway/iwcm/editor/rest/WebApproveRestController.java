@@ -162,7 +162,7 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
         }
 
         //remove pages which current version is in Trash
-        predicates.add(builder.not(root.get("historyId").in(skipHistoryId)));
+        if (skipHistoryId.isEmpty()==false) predicates.add(builder.not(root.get("id").in(skipHistoryId)));
 
         return predicates;
     }

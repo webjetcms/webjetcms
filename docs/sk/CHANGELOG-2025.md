@@ -153,10 +153,11 @@ Vo verzii **2025.0** sme priniesli vylepšený **dizajn administrácie**, ktorý
   ![](redactor/webpages/domain-select.png)
 
 **Preorganizované menu položky**:
-  - **SEO** presunuté do sekcie **Prehľady**.
-  - **GDPR a Skripty** presunuté do sekcie **Šablóny**.
-  - **Galéria** je teraz v sekcii **Súbory**.
-  - Niektoré názvy položiek boli upravené, aby lepšie vystihovali ich funkciu.
+
+- **SEO** presunuté do sekcie **Prehľady**.
+- **GDPR a Skripty** presunuté do sekcie **Šablóny**.
+- **Galéria** je teraz v sekcii **Súbory**.
+- Niektoré názvy položiek boli upravené, aby lepšie vystihovali ich funkciu.
 
 ### Web stránky
 
