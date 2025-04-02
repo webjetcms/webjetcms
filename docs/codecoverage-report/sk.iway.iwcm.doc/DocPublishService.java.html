@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocPublishService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocPublishService.java</span></div><h1>DocPublishService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocPublishService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocPublishService.java</span></div><h1>DocPublishService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,39 +50,45 @@ public class DocPublishService {
 			//If publicableDocs is null, read pages to public -&gt; could happen if Service was crated before Webjet was initialized
 <span class="fc bfc" id="L51" title="All 2 branches covered.">			if(publicableDocs == null) refreshPagesToPublish();</span>
 
-<span class="fc" id="L53">			List&lt;DocBasic&gt; stillWaitingPublishList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L54">			long now = Tools.getNow();</span>
+<span class="fc" id="L53">			long now = Tools.getNow();</span>
 
-<span class="pc bpc" id="L56" title="2 of 4 branches missed.">			if (publicableDocs != null &amp;&amp; publicableDocs.size() &gt; 0) {</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">				for (DocBasic pdoc : publicableDocs) {</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">					if (pdoc instanceof DocHistory) {</span>
-<span class="fc" id="L59">						DocHistory doc = (DocHistory) pdoc;</span>
+<span class="fc" id="L55">			ArrayList&lt;DocHistory&gt; copyDHtoD = new ArrayList&lt;&gt;(); // specify which pForm-s to copy from documents_history to documents</span>
+<span class="fc" id="L56">			ArrayList&lt;DocDetails&gt; removeAfterEndList = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L58" title="2 of 4 branches missed.">			if (publicableDocs != null &amp;&amp; publicableDocs.size() &gt; 0) {</span>
+				//use good old for loop to avoid ConcurrentModificationException
+<span class="fc bfc" id="L60" title="All 2 branches covered.">				for (DocBasic pdoc : publicableDocs) {</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">					if (pdoc instanceof DocHistory) {</span>
+<span class="fc" id="L62">						DocHistory doc = (DocHistory) pdoc;</span>
 						//Is ready to by published
-<span class="pc bpc" id="L61" title="2 of 6 branches missed.">						if(Tools.isTrue(doc.getPublicable()) &amp;&amp; (doc.getPublishStart() &gt; 0) &amp;&amp; (now &gt;= doc.getPublishStart())) {</span>
-<span class="fc" id="L62">							copyDHistory(doc, docDB);</span>
-<span class="fc" id="L63">							continue;</span>
+<span class="pc bpc" id="L64" title="2 of 6 branches missed.">						if(Tools.isTrue(doc.getPublicable()) &amp;&amp; (doc.getPublishStart() &gt; 0) &amp;&amp; (now &gt;= doc.getPublishStart())) {</span>
+<span class="fc" id="L65">							copyDHtoD.add(doc);</span>
+<span class="fc" id="L66">							continue;</span>
 						}
 					}
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">					if (pdoc instanceof DocDetails) {</span>
-<span class="fc" id="L68">						DocDetails doc = (DocDetails) pdoc;</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">					if (pdoc instanceof DocDetails) {</span>
+<span class="fc" id="L71">						DocDetails doc = (DocDetails) pdoc;</span>
 						//Is ready to be disabled
-<span class="pc bpc" id="L70" title="3 of 8 branches missed.">						if (doc.isPublicable()==false &amp;&amp; doc.isDisableAfterEnd() &amp;&amp; (doc.getPublishEnd()&gt;0) &amp;&amp; (now &gt;= doc.getPublishEnd())) {</span>
-<span class="fc" id="L71">							disableAfterEnd(doc);</span>
-<span class="fc" id="L72">							continue;</span>
+<span class="pc bpc" id="L73" title="3 of 8 branches missed.">						if (doc.isPublicable()==false &amp;&amp; doc.isDisableAfterEnd() &amp;&amp; (doc.getPublishEnd()&gt;0) &amp;&amp; (now &gt;= doc.getPublishEnd())) {</span>
+<span class="fc" id="L74">							removeAfterEndList.add(doc);</span>
+<span class="fc" id="L75">							continue;</span>
 						}
 					}
+<span class="fc" id="L78">				}</span>
 
-					//Neither
-					//STILL WAITING -&gt; not ready
-<span class="fc" id="L78">					stillWaitingPublishList.add(pdoc);</span>
-<span class="fc" id="L79">				}</span>
+				//execute changes
+<span class="fc bfc" id="L81" title="All 2 branches covered.">				for (DocHistory doc : copyDHtoD) {</span>
+<span class="fc" id="L82">					copyDHistory(doc, docDB);</span>
+<span class="fc" id="L83">				}</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">				for (DocDetails doc : removeAfterEndList) {</span>
+<span class="fc" id="L85">					disableAfterEnd(doc);</span>
+<span class="fc" id="L86">				}</span>
 
-				//SWAP lists
-<span class="fc" id="L82">				publicableDocs = stillWaitingPublishList;</span>
+				//publicableDocs is refreshed in DocDB.updateInternalCache call
 			}
 		}
-<span class="fc" id="L85">	}</span>
+<span class="fc" id="L91">	}</span>
 
 	/**
 	 * copy data from table documents_history to table documents
@@ -90,103 +96,103 @@ public class DocPublishService {
 	 * @param docDB
 	 */
 	private synchronized void copyDHistory(DocHistory docHistory, DocDB docDB) {
-<span class="fc" id="L93">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L99">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="fc" id="L95">		DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);</span>
+<span class="fc" id="L101">		DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);</span>
 
-<span class="fc" id="L97">		Logger.debug(this,&quot;Publishing from historyId: &quot; + docDetails.getHistoryId() + &quot; docId: &quot; + docDetails.getDocId());</span>
+<span class="fc" id="L103">		Logger.debug(this,&quot;Publishing from historyId: &quot; + docDetails.getHistoryId() + &quot; docId: &quot; + docDetails.getDocId());</span>
 
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;</span>
-<span class="fc" id="L100">		Optional&lt;List&lt;Integer&gt;&gt; historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());</span>
-<span class="pc bpc" id="L101" title="1 of 2 branches missed.">		String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(&quot;,&quot;)) : null;</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">		boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;</span>
+<span class="fc" id="L106">		Optional&lt;List&lt;Integer&gt;&gt; historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">		String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(&quot;,&quot;)) : null;</span>
 
-<span class="pc bpc" id="L103" title="2 of 4 branches missed.">		if (historyIds == null || publicable == false) {</span>
+<span class="pc bpc" id="L109" title="2 of 4 branches missed.">		if (historyIds == null || publicable == false) {</span>
 			//asi sme cluster a uz to niekto aktualizoval
-<span class="nc" id="L105">			return;</span>
+<span class="nc" id="L111">			return;</span>
 		}
 
-<span class="fc" id="L108">		dhr.updateActualAndSyncStatus(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), &quot;,&quot;));</span>
+<span class="fc" id="L114">		dhr.updateActualAndSyncStatus(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), &quot;,&quot;));</span>
 
 		//updatni zaznam v history, zrus publicable a nastav actual
-<span class="fc" id="L111">		dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());</span>
+<span class="fc" id="L117">		dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());</span>
 
-<span class="fc" id="L113">		Logger.println(this,&quot;pForm.getPublishStart()=&quot; + docDetails.getPublishStart());</span>
+<span class="fc" id="L119">		Logger.println(this,&quot;pForm.getPublishStart()=&quot; + docDetails.getPublishStart());</span>
 
 		///Now is available
-<span class="fc" id="L116">		docDetails.setAvailable(true);</span>
-<span class="fc" id="L117">		docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );</span>
+<span class="fc" id="L122">		docDetails.setAvailable(true);</span>
+<span class="fc" id="L123">		docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );</span>
 
-<span class="fc" id="L119">		GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());</span>
-<span class="pc bpc" id="L120" title="2 of 4 branches missed.">		if (group != null &amp;&amp; group.isInternal() == false)</span>
-<span class="fc" id="L121">			docDetails.setFileName( groupsDB.getGroupNamePath(docDetails.getGroupId()) );</span>
-<span class="nc" id="L122">		else docDetails.setFileName(null);</span>
+<span class="fc" id="L125">		GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());</span>
+<span class="pc bpc" id="L126" title="2 of 4 branches missed.">		if (group != null &amp;&amp; group.isInternal() == false)</span>
+<span class="fc" id="L127">			docDetails.setFileName( groupsDB.getGroupNamePath(docDetails.getGroupId()) );</span>
+<span class="nc" id="L128">		else docDetails.setFileName(null);</span>
 
 		//Set root groups
-<span class="fc" id="L125">		int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);</span>
-<span class="fc" id="L126">		docDetails.setRootGroupL1(rootGroups[0]);</span>
-<span class="fc" id="L127">		docDetails.setRootGroupL2(rootGroups[1]);</span>
-<span class="fc" id="L128">		docDetails.setRootGroupL3(rootGroups[2]);</span>
+<span class="fc" id="L131">		int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);</span>
+<span class="fc" id="L132">		docDetails.setRootGroupL1(rootGroups[0]);</span>
+<span class="fc" id="L133">		docDetails.setRootGroupL2(rootGroups[1]);</span>
+<span class="fc" id="L134">		docDetails.setRootGroupL3(rootGroups[2]);</span>
 
 		///Set publish after start to false
-<span class="fc" id="L131">		docDetails.setPublishAfterStart(false);</span>
+<span class="fc" id="L137">		docDetails.setPublishAfterStart(false);</span>
 
 		//Before save add audit param that signalize that webpage was published
-<span class="fc" id="L134">		RequestBean.addAuditValue(&quot;publishStatus&quot;, &quot;Webpage was published&quot;);</span>
+<span class="fc" id="L140">		RequestBean.addAuditValue(&quot;publishStatus&quot;, &quot;Webpage was published&quot;);</span>
 
 		//Perform update
-<span class="fc" id="L137">		ddr.save(docDetails);</span>
+<span class="fc" id="L143">		ddr.save(docDetails);</span>
 
 		// vypublikovanie slave clankov z historie (multikategorie)
-<span class="fc" id="L140">		DocDetails masterDocDetails = null;</span>
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">		for(Integer docId : MultigroupMappingDB.getSlaveDocIds(docDetails.getDocId()))</span>
+<span class="fc" id="L146">		DocDetails masterDocDetails = null;</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		for(Integer docId : MultigroupMappingDB.getSlaveDocIds(docDetails.getDocId()))</span>
 		{
-<span class="nc bnc" id="L143" title="All 2 branches missed.">			if (masterDocDetails == null) masterDocDetails = docDB.getDoc(docDetails.getDocId(), -1, false);</span>
-<span class="nc" id="L144">			DocDetails slaveDoc = docDB.getBasicDocDetails(docId, false);</span>
-<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (slaveDoc != null) {</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (masterDocDetails == null) masterDocDetails = docDB.getDoc(docDetails.getDocId(), -1, false);</span>
+<span class="nc" id="L150">			DocDetails slaveDoc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if (slaveDoc != null) {</span>
 				//teraz zmenme hodnoty pre master doc a ulozme do DB
-<span class="nc" id="L147">				masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());</span>
-<span class="nc" id="L148">				masterDocDetails.setExternalLink(slaveDoc.getExternalLink());</span>
-<span class="nc" id="L149">				masterDocDetails.setDocId(docId);</span>
-<span class="nc" id="L150">				masterDocDetails.setGroupId(slaveDoc.getGroupId());</span>
-<span class="nc" id="L151">				DocDB.saveDoc(masterDocDetails);</span>
+<span class="nc" id="L153">				masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());</span>
+<span class="nc" id="L154">				masterDocDetails.setExternalLink(slaveDoc.getExternalLink());</span>
+<span class="nc" id="L155">				masterDocDetails.setDocId(docId);</span>
+<span class="nc" id="L156">				masterDocDetails.setGroupId(slaveDoc.getGroupId());</span>
+<span class="nc" id="L157">				DocDB.saveDoc(masterDocDetails);</span>
 			}
 
-<span class="nc" id="L154">		}</span>
+<span class="nc" id="L160">		}</span>
 
 		//prekopirovanie poznamky pre redaktorov k stranke
-<span class="fc" id="L157">		DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, docDetails.getHistoryId());</span>
-<span class="pc bpc" id="L158" title="1 of 2 branches missed.">		if(historyNote != null) {</span>
-<span class="nc" id="L159">			DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(docDetails.getDocId(), -1);</span>
-<span class="nc bnc" id="L160" title="All 2 branches missed.">			if(publishedNote == null)</span>
-<span class="nc" id="L161">				publishedNote = new DocNoteBean();</span>
+<span class="fc" id="L163">		DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, docDetails.getHistoryId());</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">		if(historyNote != null) {</span>
+<span class="nc" id="L165">			DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(docDetails.getDocId(), -1);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if(publishedNote == null)</span>
+<span class="nc" id="L167">				publishedNote = new DocNoteBean();</span>
 
-<span class="nc" id="L163">			publishedNote.setDocId(docDetails.getDocId());</span>
-<span class="nc" id="L164">			publishedNote.setHistoryId(-1);</span>
-<span class="nc" id="L165">			publishedNote.setNote(historyNote.getNote());</span>
-<span class="nc" id="L166">			publishedNote.setUserId(historyNote.getUserId());</span>
-<span class="nc" id="L167">			publishedNote.setCreated(historyNote.getCreated());</span>
-<span class="nc" id="L168">			publishedNote.save();</span>
+<span class="nc" id="L169">			publishedNote.setDocId(docDetails.getDocId());</span>
+<span class="nc" id="L170">			publishedNote.setHistoryId(-1);</span>
+<span class="nc" id="L171">			publishedNote.setNote(historyNote.getNote());</span>
+<span class="nc" id="L172">			publishedNote.setUserId(historyNote.getUserId());</span>
+<span class="nc" id="L173">			publishedNote.setCreated(historyNote.getCreated());</span>
+<span class="nc" id="L174">			publishedNote.save();</span>
 		}
 
-<span class="pc bpc" id="L171" title="1 of 2 branches missed.">		if( Constants.getBoolean(&quot;webpagesNotifyAutorOnPublish&quot;) == true ) sendMailToPageAuthor(docHistory, docDB);</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">		if( Constants.getBoolean(&quot;webpagesNotifyAutorOnPublish&quot;) == true ) sendMailToPageAuthor(docHistory, docDB);</span>
 
-<span class="fc" id="L173">		DocDB.getInstance().updateInternalCaches(docDetails.getDocId());</span>
+<span class="fc" id="L179">		DocDB.getInstance().updateInternalCaches(docDetails.getDocId());</span>
 
 		//refresh sablony sa vykona iba ak je stranka v System adresari
-<span class="pc bpc" id="L176" title="4 of 8 branches missed.">		if(docDetails.getFullPath().startsWith(&quot;/System&quot;) || docDetails.getGroupId() == Constants.getInt(&quot;tempGroupId&quot;) || docDetails.getGroupId() == Constants.getInt(&quot;menuGroupId&quot;) || docDetails.getGroupId() == Constants.getInt(&quot;headerFooterGroupId&quot;))</span>
+<span class="pc bpc" id="L182" title="4 of 8 branches missed.">		if(docDetails.getFullPath().startsWith(&quot;/System&quot;) || docDetails.getGroupId() == Constants.getInt(&quot;tempGroupId&quot;) || docDetails.getGroupId() == Constants.getInt(&quot;menuGroupId&quot;) || docDetails.getGroupId() == Constants.getInt(&quot;headerFooterGroupId&quot;))</span>
 		{
-<span class="nc" id="L178">			TemplatesDB.getInstance(true);</span>
+<span class="nc" id="L184">			TemplatesDB.getInstance(true);</span>
 		}
-<span class="fc" id="L180">	}</span>
+<span class="fc" id="L186">	}</span>
 
     /**
 	 * Disable page after unpublish/end time
 	 * @param doc
 	 */
 	private synchronized void disableAfterEnd(DocDetails doc) {
-<span class="fc" id="L187">		ddr.updateAvailableAndDisabledAfterEnd(false, false, doc.getDocId());</span>
-<span class="fc" id="L188">		DocDB.getInstance().updateInternalCaches(doc.getDocId());</span>
-<span class="fc" id="L189">	}</span>
+<span class="fc" id="L193">		ddr.updateAvailableAndDisabledAfterEnd(false, false, doc.getDocId());</span>
+<span class="fc" id="L194">		DocDB.getInstance().updateInternalCaches(doc.getDocId());</span>
+<span class="fc" id="L195">	}</span>
 
 	/**
 	 * Send email to page author about page publication
@@ -194,56 +200,59 @@ public class DocPublishService {
 	 * @param docDB
 	 */
 	private void sendMailToPageAuthor(DocHistory docHistory, DocDB docDB) {
-<span class="fc" id="L197">		UserDetails user = UsersDB.getUser(docHistory.getAuthorId());</span>
+<span class="fc" id="L203">		UserDetails user = UsersDB.getUser(docHistory.getAuthorId());</span>
 
-<span class="fc" id="L199">		Prop prop = Prop.getInstance();</span>
-<span class="fc" id="L200">		String subject = prop.getText(&quot;webpage.publishable.email.subject&quot;);</span>
-<span class="fc" id="L201">		String publishableDateTime = Tools.formatDateTime(docHistory.getPublishStart());</span>
-<span class="fc" id="L202">		String webpageLink = &quot;&lt;a href=\&quot;&quot; +  docDB.getDocLink(docHistory.getDocId(), null, true, null) + &quot;\&quot;&gt;&quot; + docHistory.getTitle() + &quot;&lt;/a&gt;&quot;;</span>
-<span class="fc" id="L203">		String body = prop.getText(&quot;webpage.publishable.email.body&quot;, docHistory.getTitle(), &quot;&quot;+docHistory.getDocId(), publishableDateTime, webpageLink, &quot;&quot;+docHistory.getHistoryId());</span>
+<span class="fc" id="L205">		Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L206">		String subject = prop.getText(&quot;webpage.publishable.email.subject&quot;);</span>
+<span class="fc" id="L207">		String publishableDateTime = Tools.formatDateTime(docHistory.getPublishStart());</span>
+<span class="fc" id="L208">		String webpageLink = &quot;&lt;a href=\&quot;&quot; +  docDB.getDocLink(docHistory.getDocId(), null, true, null) + &quot;\&quot;&gt;&quot; + docHistory.getTitle() + &quot;&lt;/a&gt;&quot;;</span>
+<span class="fc" id="L209">		String body = prop.getText(&quot;webpage.publishable.email.body&quot;, docHistory.getTitle(), &quot;&quot;+docHistory.getDocId(), publishableDateTime, webpageLink, &quot;&quot;+docHistory.getHistoryId());</span>
 
-<span class="fc" id="L205">		SendMail.send(user.getFullName(), user.getEmail(), user.getEmail(), subject, body);</span>
-<span class="fc" id="L206">	}</span>
+<span class="fc" id="L211">		SendMail.send(user.getFullName(), user.getEmail(), user.getEmail(), subject, body);</span>
+<span class="fc" id="L212">	}</span>
 
 	/**
 	 * Read pages waiting for publishing or to be disabled
 	 */
 	public void refreshPagesToPublish() {
-<span class="pc bpc" id="L212" title="1 of 2 branches missed.">		if(InitServlet.isWebjetInitialized() == true) {</span>
-<span class="fc" id="L213">			DebugTimer dt = new DebugTimer(&quot;readPagesToPublic&quot;);</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">		if(InitServlet.isWebjetInitialized() == true) {</span>
+<span class="fc" id="L219">			DebugTimer dt = new DebugTimer(&quot;readPagesToPublic&quot;);</span>
 
-<span class="fc" id="L215">			prepareRepositories();</span>
+<span class="fc" id="L221">			prepareRepositories();</span>
 
-			//Clear list
-<span class="fc" id="L218">			List&lt;DocBasic&gt; publicableDocsLocal = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L223" title="2 of 4 branches missed.">			if (dhr != null &amp;&amp; ddr != null) {</span>
 
-			//Get all pages that are publicable (publicable = true) and are not awaiting to approve (awaitingApprove = null or awaitingApprove = &quot;&quot;)
-<span class="fc" id="L221">			List&lt;DocHistory&gt; publicableHistoryDocs = dhr.getPublicableThatAreNotAwaitingToApprove().orElse(new ArrayList&lt;&gt;());</span>
-<span class="fc" id="L222">			publicableDocsLocal.addAll( publicableHistoryDocs );</span>
+				//Clear list
+<span class="fc" id="L226">				List&lt;DocBasic&gt; publicableDocsLocal = new ArrayList&lt;&gt;();</span>
 
-			//Add pages where disable_after_end = true
-<span class="fc" id="L225">			publicableDocsLocal.addAll( ddr.findAllByDisableAfterEndTrue() );</span>
+				//Get all pages that are publicable (publicable = true) and are not awaiting to approve (awaitingApprove = null or awaitingApprove = &quot;&quot;)
+<span class="fc" id="L229">				List&lt;DocHistory&gt; publicableHistoryDocs = dhr.getPublicableThatAreNotAwaitingToApprove().orElse(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L230">				publicableDocsLocal.addAll( publicableHistoryDocs );</span>
 
-			//filter pages in trash - boolean isInTrash = groupsDB.isInTrash(docDetails.getGroupId());
-<span class="fc" id="L228">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">			publicableDocsLocal = publicableDocsLocal.stream().filter(doc -&gt; groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());</span>
+				//Add pages where disable_after_end = true
+<span class="fc" id="L233">				publicableDocsLocal.addAll( ddr.findAllByDisableAfterEndTrue() );</span>
 
-<span class="fc" id="L231">			publicableDocs = publicableDocsLocal;</span>
+				//filter pages in trash - boolean isInTrash = groupsDB.isInTrash(docDetails.getGroupId());
+<span class="fc" id="L236">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">				publicableDocsLocal = publicableDocsLocal.stream().filter(doc -&gt; groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());</span>
 
-<span class="fc" id="L233">			dt.diff(&quot;done&quot;);</span>
+<span class="fc" id="L239">				publicableDocs = publicableDocsLocal;</span>
+
+<span class="fc" id="L241">				dt.diff(&quot;done, size=&quot;+publicableDocs.size());</span>
+			}
 		}
-<span class="fc" id="L235">	}</span>
+<span class="fc" id="L244">	}</span>
 
 	protected List&lt;DocBasic&gt; getPublicableDocs() {
-<span class="fc" id="L238">		return publicableDocs;</span>
+<span class="fc" id="L247">		return publicableDocs;</span>
 	}
 
 	/**
 	 * Setup Spring DATA repositories
 	 */
 	private void prepareRepositories() {
-<span class="fc bfc" id="L245" title="All 2 branches covered.">		if(dhr == null) dhr = Tools.getSpringBean(&quot;docHistoryRepository&quot;, DocHistoryRepository.class);</span>
-<span class="fc bfc" id="L246" title="All 2 branches covered.">		if(ddr == null) ddr = Tools.getSpringBean(&quot;docDetailsRepository&quot;, DocDetailsRepository.class);</span>
-<span class="fc" id="L247">	}</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">		if(dhr == null) dhr = Tools.getSpringBean(&quot;docHistoryRepository&quot;, DocHistoryRepository.class);</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">		if(ddr == null) ddr = Tools.getSpringBean(&quot;docDetailsRepository&quot;, DocDetailsRepository.class);</span>
+<span class="fc" id="L256">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

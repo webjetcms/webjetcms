@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationStatService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationStatService.java</span></div><h1>ReservationStatService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationStatService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationStatService.java</span></div><h1>ReservationStatService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.calendar.Month;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -22,19 +23,19 @@ import sk.iway.iwcm.components.reservation.jpa.ReservationStatDTO;
 
 @Service
 public class ReservationStatService {
-    
+
     private ReservationStatService() {}
 
-<span class="fc" id="L28">    private static final BigDecimal HOUR_IN_MILLIS = new BigDecimal(1000 * 60 * 60);</span>
+<span class="fc" id="L29">    private static final BigDecimal HOUR_IN_MILLIS = new BigDecimal(1000 * 60 * 60);</span>
 
-<span class="fc" id="L30">    public enum ReservationType {</span>
-<span class="fc" id="L31">        HOURS,</span>
-<span class="fc" id="L32">        DAYS;</span>
+<span class="fc" id="L31">    public enum ReservationType {</span>
+<span class="fc" id="L32">        HOURS,</span>
+<span class="fc" id="L33">        DAYS;</span>
 
         public static ReservationType getReservationType(String reservationType) {
-<span class="pc bpc" id="L35" title="1 of 4 branches missed.">            if(Tools.isEmpty(reservationType) == false &amp;&amp; &quot;typeDays&quot;.equals(reservationType))</span>
-<span class="fc" id="L36">                return ReservationType.DAYS;</span>
-<span class="fc" id="L37">            return ReservationType.HOURS;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            if(&quot;typeDays&quot;.equals(reservationType))</span>
+<span class="fc" id="L37">                return ReservationType.DAYS;</span>
+<span class="fc" id="L38">            return ReservationType.HOURS;</span>
         }
     }
 
@@ -46,14 +47,14 @@ public class ReservationStatService {
         @SuppressWarnings(&quot;unused&quot;)
         private String category;
 
-<span class="fc" id="L49">        public DoublePieChartData(Integer valueA, BigDecimal valueB, String category) {</span>
-<span class="fc" id="L50">            this.valueA = valueA;</span>
-<span class="fc" id="L51">            this.valueB = valueB;</span>
-<span class="fc" id="L52">            this.category = category;</span>
-<span class="fc" id="L53">        }</span>
+<span class="fc" id="L50">        public DoublePieChartData(Integer valueA, BigDecimal valueB, String category) {</span>
+<span class="fc" id="L51">            this.valueA = valueA;</span>
+<span class="fc" id="L52">            this.valueB = valueB;</span>
+<span class="fc" id="L53">            this.category = category;</span>
+<span class="fc" id="L54">        }</span>
 
-<span class="fc" id="L55">        public void incrementA() { this.valueA++; }</span>
-<span class="fc" id="L56">        public void addToB(BigDecimal value) { this.valueB = this.valueB.add(value); }</span>
+<span class="fc" id="L56">        public void incrementA() { this.valueA++; }</span>
+<span class="fc" id="L57">        public void addToB(BigDecimal value) { this.valueB = this.valueB.add(value); }</span>
     }
 
     @Getter
@@ -62,14 +63,14 @@ public class ReservationStatService {
         BigDecimal value;
         Date dayDate;
 
-<span class="fc" id="L65">        public LineChartData(BigDecimal value, Date dayDate) {</span>
-<span class="fc" id="L66">            this.value = value;</span>
-<span class="fc" id="L67">            this.dayDate = dayDate;</span>
-<span class="fc" id="L68">        }</span>
+<span class="fc" id="L66">        public LineChartData(BigDecimal value, Date dayDate) {</span>
+<span class="fc" id="L67">            this.value = value;</span>
+<span class="fc" id="L68">            this.dayDate = dayDate;</span>
+<span class="fc" id="L69">        }</span>
 
-<span class="fc" id="L70">        public void addToValue(BigDecimal addValue) { this.value = this.value.add(addValue); }</span>
+<span class="fc" id="L71">        public void addToValue(BigDecimal addValue) { this.value = this.value.add(addValue); }</span>
     }
-    
+
     /**
      * Return table data for the given month and reservation type -&gt; for reservation stat page
      * @param serachDate - text in format yyyy-MM
@@ -78,62 +79,62 @@ public class ReservationStatService {
      * @return
      */
     public static List&lt;ReservationStatDTO&gt; getTableData(String serachDate, String reservationTypeSting, ReservationRepository reservationRepository) {
-<span class="fc" id="L81">        ReservationType reservationType = ReservationType.getReservationType(reservationTypeSting);</span>
-<span class="fc" id="L82">        Date[] dateRange = getDateRange(serachDate);</span>
+<span class="fc" id="L82">        ReservationType reservationType = ReservationType.getReservationType(reservationTypeSting);</span>
+<span class="fc" id="L83">        Date[] dateRange = getDateRange(serachDate);</span>
 
         //Get all reservations for the given month, domain and they MUST be accepted
-<span class="fc" id="L85">        List&lt;ReservationEntity&gt; filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());</span>
-        
+<span class="fc" id="L86">        List&lt;ReservationEntity&gt; filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());</span>
+
         //Group reservations by reservation object id AND creatorId
         // !! if creatorId is null or -1 (no logged user) -&gt; group by reservation object id AND email
-<span class="fc" id="L89">        Map&lt;String, ReservationStatDTO&gt; reservationsStatMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L90">        Map&lt;String, ReservationStatDTO&gt; reservationsStatMap = new HashMap&lt;&gt;();</span>
 
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
-<span class="fc" id="L92">            String key = &quot;&quot;;</span>
-<span class="pc bpc" id="L93" title="1 of 4 branches missed.">            if(re.getUserId() != null &amp;&amp; re.getUserId() &gt; 0) {</span>
-<span class="fc" id="L94">                key = re.getReservationObjectId() + &quot;_&quot; + re.getUserId();</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
+<span class="fc" id="L93">            String key = &quot;&quot;;</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">            if(re.getUserId() != null &amp;&amp; re.getUserId() &gt; 0) {</span>
+<span class="fc" id="L95">                key = re.getReservationObjectId() + &quot;_&quot; + re.getUserId();</span>
             } else {
-<span class="fc" id="L96">                key = re.getReservationObjectId() + &quot;_&quot; + re.getEmail();</span>
+<span class="fc" id="L97">                key = re.getReservationObjectId() + &quot;_&quot; + re.getEmail();</span>
             }
 
-<span class="fc" id="L99">            ReservationStatDTO rs = reservationsStatMap.get(key);</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">            if(rs == null) {</span>
+<span class="fc" id="L100">            ReservationStatDTO rs = reservationsStatMap.get(key);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            if(rs == null) {</span>
                 //Combination not in map yet
-<span class="fc" id="L102">                rs = new ReservationStatDTO();</span>
-<span class="fc" id="L103">                rs.setUserName(re.getName() + &quot; &quot; + re.getSurname());</span>
-<span class="fc" id="L104">                rs.setReservationObjectName( re.getReservationObjectForReservation().getName() );</span>
-<span class="fc" id="L105">                rs.setTotalPrice( BigDecimal.ZERO );</span>
-<span class="fc" id="L106">                rs.setTotalReservedHours( BigDecimal.ZERO );</span>
-<span class="fc" id="L107">                rs.setNumberOfReservedDays(0);</span>
-<span class="fc" id="L108">                rs.setNumberOfReservations(0);</span>
+<span class="fc" id="L103">                rs = new ReservationStatDTO();</span>
+<span class="fc" id="L104">                rs.setUserName(re.getName() + &quot; &quot; + re.getSurname());</span>
+<span class="fc" id="L105">                rs.setReservationObjectName( re.getReservationObjectForReservation().getName() );</span>
+<span class="fc" id="L106">                rs.setTotalPrice( BigDecimal.ZERO );</span>
+<span class="fc" id="L107">                rs.setTotalReservedHours( BigDecimal.ZERO );</span>
+<span class="fc" id="L108">                rs.setNumberOfReservedDays(0);</span>
+<span class="fc" id="L109">                rs.setNumberOfReservations(0);</span>
             }
 
             //Combination already in map
-<span class="fc" id="L112">            rs.setTotalPrice( rs.getTotalPrice().add( re.getPrice() ) );</span>
-            
-            //Number of reservations -&gt; count +1 every time
-<span class="fc" id="L115">            rs.setNumberOfReservations( rs.getNumberOfReservations() + 1 );</span>
-            
-            //Number of reserved days -&gt; one reservation can be for multiple days
-<span class="fc" id="L118">            int daysInterval = getDayDiff(re.getDateFrom(), re.getDateTo());</span>
-<span class="fc" id="L119">            rs.setNumberOfReservedDays( rs.getNumberOfReservedDays() + daysInterval );</span>
+<span class="fc" id="L113">            rs.setTotalPrice( rs.getTotalPrice().add( re.getPrice() ) );</span>
 
-<span class="fc bfc" id="L121" title="All 2 branches covered.">            if(ReservationType.HOURS.equals(reservationType) == true) {</span>
+            //Number of reservations -&gt; count +1 every time
+<span class="fc" id="L116">            rs.setNumberOfReservations( rs.getNumberOfReservations() + 1 );</span>
+
+            //Number of reserved days -&gt; one reservation can be for multiple days
+<span class="fc" id="L119">            int daysInterval = getDayDiff(re.getDateFrom(), re.getDateTo());</span>
+<span class="fc" id="L120">            rs.setNumberOfReservedDays( rs.getNumberOfReservedDays() + daysInterval );</span>
+
+<span class="fc bfc" id="L122" title="All 2 branches covered.">            if(ReservationType.HOURS.equals(reservationType)) {</span>
                 //Number of total reserved hours -&gt; it's time range * reserved days
-<span class="fc" id="L123">                rs.setTotalReservedHours( rs.getTotalReservedHours().add( computeHoursInterval(re, daysInterval) ) );</span>
+<span class="fc" id="L124">                rs.setTotalReservedHours( rs.getTotalReservedHours().add( computeHoursInterval(re, daysInterval) ) );</span>
             }
 
-<span class="fc" id="L126">            reservationsStatMap.put(key, rs); </span>
-<span class="fc" id="L127">        }</span>
-    
-<span class="fc bfc" id="L129" title="All 2 branches covered.">        for(ReservationStatDTO rs : reservationsStatMap.values()) {</span>
-<span class="fc bfc" id="L130" title="All 2 branches covered.">            if(ReservationType.HOURS.equals(reservationType) == true)</span>
-<span class="fc" id="L131">                rs.setAverageTimePerDay( divide(rs.getTotalReservedHours(), rs.getNumberOfReservedDays(), 2) );</span>
+<span class="fc" id="L127">            reservationsStatMap.put(key, rs);</span>
+<span class="fc" id="L128">        }</span>
 
-<span class="fc" id="L133">            rs.setAverageIntervalInDays( divide(rs.getNumberOfReservedDays(), rs.getNumberOfReservations(), 2) );</span>
-<span class="fc" id="L134">        }</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">        for(ReservationStatDTO rs : reservationsStatMap.values()) {</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            if(ReservationType.HOURS.equals(reservationType))</span>
+<span class="fc" id="L132">                rs.setAverageTimePerDay( divide(rs.getTotalReservedHours(), rs.getNumberOfReservedDays(), 2) );</span>
 
-<span class="fc" id="L136">        return new ArrayList&lt;&gt;(reservationsStatMap.values());</span>
+<span class="fc" id="L134">            rs.setAverageIntervalInDays( divide(rs.getNumberOfReservedDays(), rs.getNumberOfReservations(), 2) );</span>
+<span class="fc" id="L135">        }</span>
+
+<span class="fc" id="L137">        return new ArrayList&lt;&gt;(reservationsStatMap.values());</span>
     }
 
     /**
@@ -145,48 +146,48 @@ public class ReservationStatService {
      * @return
      */
     public static List&lt;DoublePieChartData&gt; getPieChartData(String serachDate, String reservationTypeSting, String wantedValue, ReservationRepository reservationRepository) {
-<span class="fc" id="L148">        ReservationType reservationType = ReservationType.getReservationType(reservationTypeSting);</span>
-<span class="fc" id="L149">        Date[] dateRange = getDateRange(serachDate);</span>
+<span class="fc" id="L149">        ReservationType reservationType = ReservationType.getReservationType(reservationTypeSting);</span>
+<span class="fc" id="L150">        Date[] dateRange = getDateRange(serachDate);</span>
 
         //Get all reservations for the given month, domain and they MUST be accepted
-<span class="fc" id="L152">        List&lt;ReservationEntity&gt; filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L153">        List&lt;ReservationEntity&gt; filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());</span>
 
         //Supported values for wantedValue -&gt; users, objects
-<span class="pc bpc" id="L155" title="1 of 4 branches missed.">        if(&quot;users&quot;.equals(wantedValue) == false &amp;&amp; &quot;objects&quot;.equals(wantedValue) == false) return new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L156" title="1 of 4 branches missed.">        if(&quot;users&quot;.equals(wantedValue) == false &amp;&amp; &quot;objects&quot;.equals(wantedValue) == false) return new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L157">        Map&lt;String, DoublePieChartData&gt; map = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L158" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
-<span class="fc" id="L159">            String key = &quot;&quot;;</span>
-<span class="fc" id="L160">            DoublePieChartData cd = new DoublePieChartData(0, BigDecimal.ZERO, &quot;&quot;);</span>
-<span class="fc bfc" id="L161" title="All 2 branches covered.">            if(&quot;users&quot;.equals(wantedValue) == true) {</span>
-<span class="fc bfc" id="L162" title="All 2 branches covered.">                key = re.getUserId() &gt; 0 ? re.getUserId().toString() : re.getEmail();</span>
-<span class="fc" id="L163">                cd = map.get(key);</span>
+<span class="fc" id="L158">        Map&lt;String, DoublePieChartData&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
+<span class="fc" id="L160">            String key = &quot;&quot;;</span>
+<span class="fc" id="L161">            DoublePieChartData cd = new DoublePieChartData(0, BigDecimal.ZERO, &quot;&quot;);</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            if(&quot;users&quot;.equals(wantedValue)) {</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">                key = re.getUserId() &gt; 0 ? re.getUserId().toString() : re.getEmail();</span>
+<span class="fc" id="L164">                cd = map.get(key);</span>
 
-<span class="fc bfc" id="L165" title="All 2 branches covered.">                if(cd == null) {</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">                    String label = re.getUserId() &gt; 0 ? re.getName() + &quot; &quot; + re.getSurname() + &quot; (id:&quot; + re.getUserId() + &quot;)&quot; : re.getName() + &quot; &quot; + re.getSurname() + &quot; (email:&quot; + re.getEmail() + &quot;)&quot;;</span>
-<span class="fc" id="L167">                    cd = new DoublePieChartData(1, BigDecimal.ZERO, label);</span>
-<span class="fc" id="L168">                } else cd.incrementA();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">                if(cd == null) {</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">                    String label = re.getUserId() &gt; 0 ? re.getName() + &quot; &quot; + re.getSurname() + &quot; (id:&quot; + re.getUserId() + &quot;)&quot; : re.getName() + &quot; &quot; + re.getSurname() + &quot; (email:&quot; + re.getEmail() + &quot;)&quot;;</span>
+<span class="fc" id="L168">                    cd = new DoublePieChartData(1, BigDecimal.ZERO, label);</span>
+<span class="fc" id="L169">                } else cd.incrementA();</span>
 
 
-<span class="pc bpc" id="L171" title="1 of 2 branches missed.">            } else if(&quot;objects&quot;.equals(wantedValue) == true) {</span>
-<span class="fc" id="L172">                key = re.getReservationObjectId().toString();</span>
-<span class="fc" id="L173">                cd = map.get(key);</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            } else if(&quot;objects&quot;.equals(wantedValue)) {</span>
+<span class="fc" id="L173">                key = re.getReservationObjectId().toString();</span>
+<span class="fc" id="L174">                cd = map.get(key);</span>
 
-<span class="fc bfc" id="L175" title="All 2 branches covered.">                if(cd == null) {</span>
-<span class="fc" id="L176">                    cd = new DoublePieChartData(1, BigDecimal.ZERO, re.getReservationObjectForReservation().getName());</span>
-<span class="fc" id="L177">                } else cd.incrementA();</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">                if(cd == null) {</span>
+<span class="fc" id="L177">                    cd = new DoublePieChartData(1, BigDecimal.ZERO, re.getReservationObjectForReservation().getName());</span>
+<span class="fc" id="L178">                } else cd.incrementA();</span>
             }
 
             //Set value B -&gt; HOURS
-<span class="fc" id="L181">            int daysInterval = getDayDiff(re.getDateFrom(), re.getDateTo());</span>
-<span class="fc bfc" id="L182" title="All 2 branches covered.">            if(ReservationType.HOURS.equals(reservationType) == true)</span>
-<span class="fc" id="L183">                cd.addToB( computeHoursInterval(re, daysInterval) );</span>
-<span class="fc" id="L184">            else cd.addToB( new BigDecimal(daysInterval) );</span>
+<span class="fc" id="L182">            int daysInterval = getDayDiff(re.getDateFrom(), re.getDateTo());</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">            if(ReservationType.HOURS.equals(reservationType))</span>
+<span class="fc" id="L184">                cd.addToB( computeHoursInterval(re, daysInterval) );</span>
+<span class="fc" id="L185">            else cd.addToB( new BigDecimal(daysInterval) );</span>
 
-<span class="fc" id="L186">            map.put(key, cd);</span>
-<span class="fc" id="L187">        }</span>
+<span class="fc" id="L187">            map.put(key, cd);</span>
+<span class="fc" id="L188">        }</span>
 
-<span class="fc" id="L189">        return new ArrayList&lt;&gt;(map.values());</span>
+<span class="fc" id="L190">        return new ArrayList&lt;&gt;(map.values());</span>
     }
 
     /**
@@ -197,65 +198,42 @@ public class ReservationStatService {
      * @return
      */
     public static Map&lt;String, List&lt;LineChartData&gt;&gt; getLineChartData(String serachDate, String reservationTypeSting, ReservationRepository reservationRepository) {
-<span class="fc" id="L200">        ReservationType reservationType = ReservationType.getReservationType(reservationTypeSting);</span>
-<span class="fc" id="L201">        Date[] dateRange = getDateRange(serachDate);</span>
-<span class="fc" id="L202">        int dayDiff = getDayDiff(dateRange[0], dateRange[1]);</span>
+<span class="fc" id="L201">        ReservationType reservationType = ReservationType.getReservationType(reservationTypeSting);</span>
+<span class="fc" id="L202">        Date[] dateRange = getDateRange(serachDate);</span>
+<span class="fc" id="L203">        int dayDiff = getDayDiff(dateRange[0], dateRange[1]);</span>
 
         //Get all reservations for the given month, domain and they MUST be accepted
-<span class="fc" id="L205">        List&lt;ReservationEntity&gt; filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L206">        List&lt;ReservationEntity&gt; filteredReservations = reservationRepository.findByDateAndType(dateRange[1], dateRange[0], ReservationType.DAYS.equals(reservationType), CloudToolsForCore.getDomainId());</span>
 
         //Prepare empty map for each reservation object
-<span class="fc" id="L208">        Map&lt;String, List&lt;LineChartData&gt;&gt; map = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L209" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
-<span class="fc" id="L210">            String key = re.getReservationObjectName();</span>
-<span class="fc bfc" id="L211" title="All 2 branches covered.">            if(map.get(key) == null) {</span>
-<span class="fc" id="L212">                map.put(key, getInitializeList(dateRange[0], dayDiff));</span>
+<span class="fc" id="L209">        Map&lt;String, List&lt;LineChartData&gt;&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
+<span class="fc" id="L211">            String key = re.getReservationObjectName();</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if(map.get(key) == null) {</span>
+<span class="fc" id="L213">                map.put(key, getInitializeList(dateRange[0], dayDiff));</span>
             }
-<span class="fc" id="L214">        }</span>
+<span class="fc" id="L215">        }</span>
 
         //Fill map with data
-<span class="fc bfc" id="L217" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
-<span class="fc" id="L218">            String key = re.getReservationObjectName();</span>
-<span class="fc" id="L219">            List&lt;LineChartData&gt; reservationData = map.get(key);</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        for(ReservationEntity re : filteredReservations) {</span>
+<span class="fc" id="L219">            String key = re.getReservationObjectName();</span>
+<span class="fc" id="L220">            List&lt;LineChartData&gt; reservationData = map.get(key);</span>
 
-<span class="fc" id="L221">            long timeDiff = timePartDiff(re.getDateFrom(), re.getDateTo());</span>
-<span class="fc" id="L222">            BigDecimal hours = divide(timeDiff, HOUR_IN_MILLIS, 2);</span>
+<span class="fc" id="L222">            long timeDiff = DateTools.timePartDiff(re.getDateFrom(), re.getDateTo());</span>
+<span class="fc" id="L223">            BigDecimal hours = divide(timeDiff, HOUR_IN_MILLIS, 2);</span>
 
-<span class="fc" id="L224">            int firstReservationDay = getDayOfMonth(re.getDateFrom());</span>
-<span class="fc" id="L225">            int reservationRangeDiff = getDayDiff(re.getDateFrom(), re.getDateTo());</span>
-<span class="fc bfc" id="L226" title="All 2 branches covered.">            for(int i = firstReservationDay; i &lt; (firstReservationDay + reservationRangeDiff); i++) {</span>
-<span class="fc bfc" id="L227" title="All 2 branches covered.">                if(ReservationType.HOURS.equals(reservationType) == true)</span>
-<span class="fc" id="L228">                    reservationData.get(i-1).addToValue(hours);</span>
-<span class="fc" id="L229">                else reservationData.get(i-1).addToValue(BigDecimal.ONE);</span>
+<span class="fc" id="L225">            int firstReservationDay = getDayOfMonth(re.getDateFrom());</span>
+<span class="fc" id="L226">            int reservationRangeDiff = getDayDiff(re.getDateFrom(), re.getDateTo());</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">            for(int i = firstReservationDay; i &lt; (firstReservationDay + reservationRangeDiff); i++) {</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">                if(ReservationType.HOURS.equals(reservationType))</span>
+<span class="fc" id="L229">                    reservationData.get(i-1).addToValue(hours);</span>
+<span class="fc" id="L230">                else reservationData.get(i-1).addToValue(BigDecimal.ONE);</span>
             }
 
-<span class="fc" id="L232">            map.put(key, reservationData);</span>
-<span class="fc" id="L233">        }</span>
+<span class="fc" id="L233">            map.put(key, reservationData);</span>
+<span class="fc" id="L234">        }</span>
 
-<span class="fc" id="L235">        return map;</span>
-    }
-
-    /**
-     * Return in milliseconds time difference between two TIME parts of the given dates (date part is ignored)
-     * @param from
-     * @param to
-     * @return
-     */
-    private static long timePartDiff(Date from, Date to) {
-<span class="fc" id="L245">        Calendar cal1 = Calendar.getInstance();</span>
-<span class="fc" id="L246">        cal1.setTime(from);</span>
-<span class="fc" id="L247">        cal1.set(Calendar.YEAR, 2000);</span>
-<span class="fc" id="L248">        cal1.set(Calendar.MONTH, 0);</span>
-<span class="fc" id="L249">        cal1.set(Calendar.DAY_OF_MONTH, 1);</span>
-
-<span class="fc" id="L251">        Calendar cal2 = Calendar.getInstance();</span>
-<span class="fc" id="L252">        cal2.setTime(to);</span>
-<span class="fc" id="L253">        cal2.set(Calendar.YEAR, 2000);</span>
-<span class="fc" id="L254">        cal2.set(Calendar.MONTH, 0);</span>
-<span class="fc" id="L255">        cal2.set(Calendar.DAY_OF_MONTH, 1);</span>
-
-        //Time diff in milliseconds for ONE DAY
-<span class="fc" id="L258">        return cal2.getTimeInMillis() - cal1.getTimeInMillis();</span>
+<span class="fc" id="L236">        return map;</span>
     }
 
     /**
@@ -267,13 +245,13 @@ public class ReservationStatService {
      */
     private static BigDecimal computeHoursInterval(ReservationEntity re, int daysInterval) {
         //Time diff in milliseconds for ONE DAY
-<span class="fc" id="L270">        long timeDiff = timePartDiff(re.getDateFrom(), re.getDateTo());</span>
-        
+<span class="fc" id="L248">        long timeDiff = DateTools.timePartDiff(re.getDateFrom(), re.getDateTo());</span>
+
         //Time diff in milliseconds for WHOLE reservation -&gt; timeDiff * daysInterval
-<span class="fc" id="L273">        long wholeDiff = timeDiff * daysInterval;</span>
+<span class="fc" id="L251">        long wholeDiff = timeDiff * daysInterval;</span>
 
         //Divide by 1000 * 60 * 60 to get hours -&gt; round to 2 decimal places
-<span class="fc" id="L276">        return divide(wholeDiff, HOUR_IN_MILLIS, 2);</span>
+<span class="fc" id="L254">        return divide(wholeDiff, HOUR_IN_MILLIS, 2);</span>
     }
 
     /**
@@ -284,7 +262,7 @@ public class ReservationStatService {
      * @return
      */
     private static BigDecimal divide(Number dividend, Number divisor, int scale) {
-<span class="fc" id="L287">        return new BigDecimal(dividend.toString()).divide(new BigDecimal(divisor.toString()), scale, RoundingMode.HALF_EVEN);</span>
+<span class="fc" id="L265">        return new BigDecimal(dividend.toString()).divide(new BigDecimal(divisor.toString()), scale, RoundingMode.HALF_EVEN);</span>
     }
 
     /**
@@ -296,21 +274,21 @@ public class ReservationStatService {
     private static Date[] getDateRange(String searchDate) {
         int year;
         int month;
-<span class="pc bpc" id="L299" title="1 of 4 branches missed.">        if(Tools.isEmpty(searchDate) == false &amp;&amp; searchDate.matches(&quot;\\d{4}-\\d{2}&quot;)) {</span>
-<span class="fc" id="L300">            String[] dateParts = searchDate.split(&quot;-&quot;);</span>
-<span class="fc" id="L301">            year = Integer.parseInt(dateParts[0]);</span>
-<span class="fc" id="L302">            month = Integer.parseInt(dateParts[1]) - 1; //-1 because Calendar month starts  with 0</span>
-<span class="fc" id="L303">        } else {</span>
-<span class="fc" id="L304">            Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L305">            cal.setTime(new Date());</span>
-<span class="fc" id="L306">            year = cal.get(Calendar.YEAR);</span>
-<span class="fc" id="L307">            month = cal.get(Calendar.MONTH);</span>
+<span class="pc bpc" id="L277" title="1 of 4 branches missed.">        if(Tools.isNotEmpty(searchDate) &amp;&amp; searchDate.matches(ReservationService.REGEX_YYYY_MM)) {</span>
+<span class="fc" id="L278">            String[] dateParts = searchDate.split(&quot;-&quot;);</span>
+<span class="fc" id="L279">            year = Integer.parseInt(dateParts[0]);</span>
+<span class="fc" id="L280">            month = Integer.parseInt(dateParts[1]) - 1; //-1 because Calendar month starts  with 0</span>
+<span class="fc" id="L281">        } else {</span>
+<span class="fc" id="L282">            Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L283">            cal.setTime(new Date());</span>
+<span class="fc" id="L284">            year = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L285">            month = cal.get(Calendar.MONTH);</span>
         }
 
         //Get datetime range for the given month and year
-<span class="fc" id="L311">        Month monthInstance = new Month(year, month);</span>
+<span class="fc" id="L289">        Month monthInstance = new Month(year, month);</span>
 
-<span class="fc" id="L313">        return new Date[]{monthInstance.getStartDate(), monthInstance.getEndDate()};</span>
+<span class="fc" id="L291">        return new Date[]{monthInstance.getStartDate(), monthInstance.getEndDate()};</span>
     }
 
     /**
@@ -320,11 +298,11 @@ public class ReservationStatService {
      * @return
      */
     private static int getDayDiff(Date starDate, Date endDate) {
-<span class="fc" id="L323">        Calendar cal1 = Calendar.getInstance();</span>
-<span class="fc" id="L324">        cal1.setTime(starDate);</span>
-<span class="fc" id="L325">        Calendar cal2 = Calendar.getInstance();</span>
-<span class="fc" id="L326">        cal2.setTime(endDate);</span>
-<span class="fc" id="L327">        return cal2.get(Calendar.DAY_OF_MONTH) - cal1.get(Calendar.DAY_OF_MONTH) + 1;</span>
+<span class="fc" id="L301">        Calendar cal1 = Calendar.getInstance();</span>
+<span class="fc" id="L302">        cal1.setTime(starDate);</span>
+<span class="fc" id="L303">        Calendar cal2 = Calendar.getInstance();</span>
+<span class="fc" id="L304">        cal2.setTime(endDate);</span>
+<span class="fc" id="L305">        return cal2.get(Calendar.DAY_OF_MONTH) - cal1.get(Calendar.DAY_OF_MONTH) + 1;</span>
     }
 
     /**
@@ -333,21 +311,21 @@ public class ReservationStatService {
      * @return
      */
     private static int getDayOfMonth(Date date) {
-<span class="fc" id="L336">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L337">        cal.setTime(date);</span>
-<span class="fc" id="L338">        return cal.get(Calendar.DAY_OF_MONTH);</span>
+<span class="fc" id="L314">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L315">        cal.setTime(date);</span>
+<span class="fc" id="L316">        return cal.get(Calendar.DAY_OF_MONTH);</span>
     }
 
     private static List&lt;LineChartData&gt; getInitializeList(Date startDate, int dayDiff) {
-<span class="fc" id="L342">        List&lt;LineChartData&gt; lineChartData = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L343">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L344">        cal.setTime(startDate);</span>
-<span class="fc bfc" id="L345" title="All 2 branches covered.">        for(int i = 0; i &lt; dayDiff; i++) {</span>
-<span class="fc" id="L346">            lineChartData.add(new LineChartData(BigDecimal.ZERO, cal.getTime()));</span>
-<span class="fc" id="L347">            cal.add(Calendar.DAY_OF_MONTH, 1);</span>
+<span class="fc" id="L320">        List&lt;LineChartData&gt; lineChartData = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L321">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L322">        cal.setTime(startDate);</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        for(int i = 0; i &lt; dayDiff; i++) {</span>
+<span class="fc" id="L324">            lineChartData.add(new LineChartData(BigDecimal.ZERO, cal.getTime()));</span>
+<span class="fc" id="L325">            cal.add(Calendar.DAY_OF_MONTH, 1);</span>
         }
 
-<span class="fc" id="L350">        return lineChartData;</span>
+<span class="fc" id="L328">        return lineChartData;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductListService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.rest</a> &gt; <span class="el_source">ProductListService.java</span></div><h1>ProductListService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.rest;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.json.JSONObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+
+public class ProductListService {
+
+    private ProductListService() { /*private constructor to hide the implicit public one*/ }
+
+<span class="fc" id="L38">    public enum AddingStatus {</span>
+<span class="fc" id="L39">        SUCCESS, ALREADY_EXIST, ERROR</span>
+    }
+
+    private static Specification&lt;DocDetails&gt; hasGroupIdIn(List&lt;Integer&gt; groupIds) {
+<span class="fc" id="L43">        return (Root&lt;DocDetails&gt; root, CriteriaQuery&lt;?&gt; query, CriteriaBuilder criteriaBuilder) -&gt; {</span>
+<span class="fc" id="L44">            return root.get(&quot;groupId&quot;).in(groupIds);</span>
+        };
+    }
+
+    private static Specification&lt;DocDetails&gt; fieldStartsWithDigit(String fieldName) {
+<span class="fc" id="L49">        return (Root&lt;DocDetails&gt; root, CriteriaQuery&lt;?&gt; query, CriteriaBuilder criteriaBuilder) -&gt; {</span>
+<span class="fc" id="L50">            Path&lt;String&gt; fieldPath = root.get(fieldName);</span>
+            // Create predicates for each digit using a loop
+<span class="fc" id="L52">            List&lt;Predicate&gt; digitPredicates = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            for (int i = 0; i &lt;= 9; i++) {</span>
+<span class="fc" id="L54">                digitPredicates.add(criteriaBuilder.like(fieldPath, i + &quot;%&quot;));</span>
+            }
+
+            // Combine all predicates with OR
+<span class="fc" id="L58">            Predicate startsWithDigit = criteriaBuilder.or(digitPredicates.toArray(new Predicate[0]));</span>
+<span class="fc" id="L59">            return startsWithDigit;</span>
+        };
+    }
+
+    public static DatatablePageImpl&lt;DocDetails&gt; getAllItems(GetAllItemsDocOptions options) {
+<span class="fc" id="L64">        List&lt;Integer&gt; groupIds = getGroupTreeIds( options.getGroupId(), options.getDocDetailsRepository() );</span>
+        //So no error will be returned about wrong sql query
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if(groupIds.isEmpty()) return new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+
+<span class="fc" id="L68">        String priceField = Constants.getString(&quot;basketPriceField&quot;);</span>
+
+<span class="fc" id="L70">        Specification&lt;DocDetails&gt; spec = Specification.where(hasGroupIdIn(groupIds))</span>
+<span class="fc" id="L71">                                                      .and(fieldStartsWithDigit(priceField));</span>
+<span class="fc" id="L72">        Page&lt;DocDetails&gt; page = options.getDocDetailsRepository().findAll(spec, options.getPageable());</span>
+
+<span class="fc" id="L74">        String currentCurrency =  Constants.getString(&quot;basketProductCurrency&quot;);</span>
+
+        String wantedCurrency;
+        //Safety check
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if(isCurrencySupported(options.getRequest().getParameter(&quot;currency&quot;)) == false) wantedCurrency = currentCurrency;</span>
+<span class="fc" id="L79">        else wantedCurrency = options.getRequest().getParameter(&quot;currency&quot;);</span>
+
+<span class="fc" id="L81">        DatatablePageImpl&lt;DocDetails&gt; pageImpl = WebpagesService.preparePage(page, options);</span>
+<span class="fc" id="L82">        pageImpl.get().forEach(doc -&gt; {</span>
+            //Set currency
+<span class="fc" id="L84">            doc.setFieldI(currentCurrency);</span>
+
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">            if(currentCurrency.equals(wantedCurrency)) {</span>
+<span class="fc" id="L87">                doc.setFieldH( doc.getPriceVat().toString() );</span>
+<span class="fc" id="L88">                doc.setFieldK( doc.getPrice().toString() );</span>
+            } else {
+<span class="nc" id="L90">                doc.setFieldH( doc.getLocalPriceVat(options.getRequest(), wantedCurrency).toString() );</span>
+<span class="nc" id="L91">                doc.setFieldK( doc.getLocalPrice(options.getRequest(), wantedCurrency).toString() );</span>
+            }
+<span class="fc" id="L93">        });</span>
+
+<span class="fc" id="L95">        return pageImpl;</span>
+    }
+
+    public static List&lt;Integer&gt; getGroupTreeIds(int rootGroupId, DocDetailsRepository repo) {
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if(rootGroupId &lt; 1) {</span>
+            //Get default option
+<span class="fc" id="L101">            List&lt;LabelValueInteger&gt; allOptions = getListOfProductsGroups(repo);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">            if(allOptions.isEmpty()) return new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L104">            rootGroupId = allOptions.get(0).getValue();</span>
+        }
+
+<span class="fc" id="L107">        List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L108">        List&lt;GroupDetails&gt; groupsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for(GroupDetails group : groupsTree) { groupIds.add(group.getGroupId()); }</span>
+<span class="fc" id="L110">        return groupIds;</span>
+    }
+
+    public static AddingStatus addProductGroup(Identity currentUser, String customData, EditorFacade editorFacade) {
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if(!currentUser.isEnabledItem(&quot;cmp_basket&quot;)) return AddingStatus.ERROR;</span>
+
+<span class="fc" id="L116">        int groupId = -1;</span>
+<span class="fc" id="L117">        String newGroupName = &quot;&quot;;</span>
+<span class="pc bpc" id="L118" title="2 of 4 branches missed.">        if(customData != null &amp;&amp; !customData.isEmpty()) {</span>
+            try {
+<span class="fc" id="L120">                JSONObject jsonObject = new JSONObject(customData);</span>
+<span class="fc" id="L121">                groupId = Tools.getIntValue((String) jsonObject.get(&quot;groupId&quot;), -1);</span>
+<span class="fc" id="L122">                newGroupName = (String) jsonObject.get(&quot;newGroupName&quot;);</span>
+<span class="nc" id="L123">            } catch (Exception ex) {</span>
+<span class="nc" id="L124">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L125">                return AddingStatus.ERROR;</span>
+<span class="fc" id="L126">            }</span>
+        }
+
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">        if(Tools.isEmpty(newGroupName) || groupId &lt; 1) return AddingStatus.ERROR;</span>
+
+        //Check if this product category (for this parent) already exist - case insensitive
+<span class="fc" id="L132">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L133">        List&lt;GroupDetails&gt; childGroups = groupsDB.getGroups(groupId);</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        for(GroupDetails childGroup : childGroups)</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">            if(childGroup.getGroupName().equalsIgnoreCase(newGroupName)) return AddingStatus.ALREADY_EXIST;</span>
+
+        //All is ok, create group
+<span class="fc" id="L138">        GroupDetails newGroup = createGroup(newGroupName, currentUser.getLogin(), GroupsDB.getInstance().getGroup(groupId));</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (newGroup != null) {</span>
+<span class="fc" id="L140">            createGroupNewsDoc(editorFacade, newGroup.getGroupId(), newGroup.getGroupName(), currentUser.getUserId());</span>
+<span class="fc" id="L141">            return AddingStatus.SUCCESS;</span>
+        }
+<span class="nc" id="L143">        return AddingStatus.ERROR;</span>
+    }
+
+    private static GroupDetails createGroup(String groupName, String userLogin, GroupDetails parentGroup) {
+        //Check if group already exist
+<span class="fc" id="L148">        GroupDetails newGroup = GroupsDB.getInstance().getGroup(userLogin, parentGroup.getGroupId());</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        if(newGroup != null) return null;</span>
+
+        //Create new root group
+<span class="fc" id="L152">        newGroup = new GroupDetails();</span>
+<span class="fc" id="L153">        newGroup.setParentGroupId( parentGroup.getGroupId() );</span>
+<span class="fc" id="L154">        newGroup.setGroupName( groupName );</span>
+<span class="fc" id="L155">        newGroup.setTempId( parentGroup.getTempId() );</span>
+<span class="fc" id="L156">        newGroup.setDomainName( parentGroup.getDomainName() );</span>
+<span class="fc" id="L157">        GroupsDB.getInstance().setGroup(newGroup);</span>
+<span class="fc" id="L158">        return newGroup;</span>
+    }
+
+    private static void createGroupNewsDoc(EditorFacade editorFacade, int rootGroupId, String docTitle, int authorId) {
+<span class="fc" id="L162">        DocDetails groupDoc = editorFacade.getDocForEditor(-1, -1, rootGroupId);</span>
+
+        //Set doc
+<span class="fc" id="L165">        groupDoc.setTitle(docTitle);</span>
+<span class="fc" id="L166">        groupDoc.setNavbar(docTitle);</span>
+<span class="fc" id="L167">        groupDoc.setData(&quot;&quot;);</span>
+<span class="fc" id="L168">		groupDoc.setAuthorId(authorId);</span>
+<span class="fc" id="L169">		groupDoc.setAvailable(true);</span>
+<span class="fc" id="L170">		groupDoc.setSearchable(true);</span>
+<span class="fc" id="L171">		groupDoc.setCacheable(false);</span>
+<span class="fc" id="L172">        groupDoc.setPerexGroup(new String[]{&quot;5&quot;}); //5 - kategoria</span>
+<span class="fc" id="L173">        groupDoc.setData(</span>
+            &quot;&lt;section&gt;\r\n&quot; + //
+            &quot;!INCLUDE(/components/eshop/shop/modules/md-category-header.jsp)!\r\n&quot; + //
+            &quot;\r\n&quot; + //
+            &quot;!INCLUDE(/components/eshop/shop/modules/md-subcategory-selector.jsp)!\r\n&quot; + //
+            &quot;&lt;/section&gt;\r\n&quot; + //
+            &quot;\r\n&quot; + //
+            &quot;!INCLUDE(/components/eshop/shop/modules/md-product-list.jsp)!&quot;
+        );
+
+        //Save doc
+<span class="fc" id="L184">        editorFacade.save(groupDoc);</span>
+<span class="fc" id="L185">    }</span>
+
+    public static List&lt;LabelValueInteger&gt; getListOfProductsGroups(DocDetailsRepository docDetailsRepository) {
+<span class="fc" id="L188">        List&lt;LabelValueInteger&gt; groupsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L189">        List&lt;GroupDetails&gt; correctGroups = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L191">        List&lt;Integer&gt; groupIds = docDetailsRepository.getDistGroupIdsByDataLike(&quot;%!INCLUDE(/components/eshop/%&quot;, &quot;%!INCLUDE(/components/basket/%&quot;, &quot;%product-list.jsp%&quot;, &quot;%products.jsp%&quot;);</span>
+<span class="pc bpc" id="L192" title="2 of 4 branches missed.">        if(groupIds == null || groupIds.isEmpty()) return groupsList;</span>
+
+<span class="fc" id="L194">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L195">        String domainName = CloudToolsForCore.getDomainName();</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        for(Integer groupId : groupIds) {</span>
+<span class="fc" id="L197">            GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">            if (group == null) continue;</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">            if (group.getFullPath().startsWith(&quot;/System&quot;)) continue;</span>
+            //Only current domain and not deleted groups
+<span class="pc bpc" id="L201" title="1 of 4 branches missed.">            if(Tools.isNotEmpty(group.getDomainName()) &amp;&amp; domainName.equals(group.getDomainName())==false) continue;</span>
+
+<span class="fc" id="L203">            correctGroups.add(group);</span>
+<span class="fc" id="L204">        }</span>
+
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">        if(correctGroups.isEmpty()) return groupsList;</span>
+
+        //Sort it, then push it into map
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        for(GroupDetails group : GroupsService.sortItIntoTree(correctGroups)) groupsList.add( new LabelValueInteger(group.getFullPath(), group.getGroupId()) );</span>
+
+<span class="fc" id="L211">        return groupsList;</span>
+    }
+
+    public static boolean isCurrencySupported(String currency) {
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        if(Tools.isEmpty(currency) == true) return false;</span>
+<span class="fc" id="L216">        List&lt;String&gt; supportedCurrencies = Arrays.asList( Constants.getString(&quot;supportedCurrencies&quot;).split(&quot;,&quot;) );</span>
+<span class="fc" id="L217">        return supportedCurrencies.contains(currency);</span>
+    }
+
+    public static List&lt;LabelValue&gt; getListOfSupportedCurrencies() {
+<span class="fc" id="L221">        List&lt;String&gt; supportedCurrencies = Arrays.asList( Constants.getString(&quot;supportedCurrencies&quot;).split(&quot;,&quot;) );</span>
+<span class="fc" id="L222">        Collections.sort(supportedCurrencies);</span>
+
+<span class="fc" id="L224">        List&lt;LabelValue&gt; groupsList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        for (String curr: supportedCurrencies)</span>
+<span class="fc" id="L226">            groupsList.add( new LabelValue(curr, curr) );</span>
+
+<span class="fc" id="L228">        return groupsList;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApproveService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">ApproveService.java</span></div><h1>ApproveService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApproveService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">ApproveService.java</span></div><h1>ApproveService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -133,7 +133,7 @@ public class ApproveService {
 <span class="fc bfc" id="L133" title="All 2 branches covered.">				if(groupApprover.getUserId() == currentUser.getUserId()) {</span>
 					//Yes, currentUser is group approver
 
-<span class="fc bfc" id="L136" title="All 2 branches covered.">                    if(mode == UsersDB.APPROVE_LEVEL2) isLevel2Approver = true;</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">                    if(mode == UsersDB.APPROVE_LEVEL2) isLevel2Approver = true;</span>
 					//
 <span class="fc bfc" id="L138" title="All 2 branches covered.">					else if(mode == UsersDB.APPROVE_APPROVE) isApprover = true;</span>
 					//
@@ -195,10 +195,10 @@ public class ApproveService {
 <span class="fc" id="L195">				approveByTable.clear();</span>
 <span class="fc" id="L196">				selfApproved = true;</span>
 				//Mark as self approved
-<span class="fc bfc" id="L198" title="All 2 branches covered.">				if (approveByTableLevel2.isEmpty()==false) {</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">				if (approveByTableLevel2.isEmpty()==false) {</span>
 					//simulate level2 in approveByTable (it's the same process)
-<span class="fc" id="L200">					approveByTable.putAll(approveByTableLevel2);</span>
-<span class="fc" id="L201">					selfApproved = false;</span>
+<span class="nc" id="L200">					approveByTable.putAll(approveByTableLevel2);</span>
+<span class="nc" id="L201">					selfApproved = false;</span>
 				}
 			} else {
 				/**
@@ -223,83 +223,83 @@ public class ApproveService {
 	public boolean approveAction(DocHistoryRepository docHistoryRepo, EditorService editorService) {
 
 		//Get and check historyId
-<span class="fc" id="L226">		int historyId = Tools.getIntValue(request.getParameter(&quot;historyid&quot;), -1);</span>
-<span class="pc bpc" id="L227" title="1 of 2 branches missed.">		if(historyId == -1) {</span>
+<span class="nc" id="L226">		int historyId = Tools.getIntValue(request.getParameter(&quot;historyid&quot;), -1);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if(historyId == -1) {</span>
 <span class="nc" id="L228">			request.setAttribute(&quot;message&quot;, &quot;History ID cant be empty&quot;);</span>
 <span class="nc" id="L229">			return false;</span>
 		}
 
-<span class="fc" id="L232">		Optional&lt;DocHistory&gt; docHistoryOpt = docHistoryRepo.findById(Long.valueOf(historyId));</span>
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">		if(!docHistoryOpt.isPresent()) {</span>
+<span class="nc" id="L232">		Optional&lt;DocHistory&gt; docHistoryOpt = docHistoryRepo.findById(Long.valueOf(historyId));</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if(!docHistoryOpt.isPresent()) {</span>
 <span class="nc" id="L234">			request.setAttribute(&quot;message&quot;, &quot;History record by givven historyId not found&quot;);</span>
 <span class="nc" id="L235">			return false;</span>
 		}
-<span class="fc" id="L237">		DocHistory docHistory = docHistoryOpt.get();</span>
+<span class="nc" id="L237">		DocHistory docHistory = docHistoryOpt.get();</span>
 
 		//Load approve tables, this step will show us if current user can approve/dis-approve docHistory uppon certain docDetails
-<span class="fc" id="L240">		loadApproveTables(docHistory.getGroupId());</span>
+<span class="nc" id="L240">		loadApproveTables(docHistory.getGroupId());</span>
 
-<span class="pc bpc" id="L242" title="1 of 4 branches missed.">		if(needApprove()==false || selfApproved) {</span>
+<span class="nc bnc" id="L242" title="All 4 branches missed.">		if(needApprove()==false || selfApproved) {</span>
 			//Doc, do not need approve OR
 			//current user IS self approver, can approve or reject insert/update action
 
 			//Approve - CREATE / UPDATE
-<span class="fc bfc" id="L247" title="All 2 branches covered.">			if (request.getParameter(&quot;zamietni&quot;) == null) {</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (request.getParameter(&quot;zamietni&quot;) == null) {</span>
 
 				//Cancel waiting docHistory (aka waiting webpage update)
-<span class="fc" id="L250">				editorService.approveDocHistory(docHistory);</span>
+<span class="nc" id="L250">				editorService.approveDocHistory(docHistory);</span>
 
 				//Send notification emails
-<span class="fc" id="L253">				sendWebpageApproveNotification(true, docHistory);</span>
+<span class="nc" id="L253">				sendWebpageApproveNotification(true, docHistory);</span>
 
 				//SET this as APPROVE indicator
-<span class="fc" id="L256">				request.setAttribute(&quot;approved&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L256">				request.setAttribute(&quot;approved&quot;, &quot;true&quot;);</span>
 			} else { //Reject - CREATE / UPDATE
 
 				//Cancel waiting docHistory (aka waiting webpage update)
-<span class="fc" id="L260">				docHistoryRepo.rejectDocHistory(&quot;&quot;, currentUser.getUserId(), historyId);</span>
+<span class="nc" id="L260">				docHistoryRepo.rejectDocHistory(&quot;&quot;, currentUser.getUserId(), historyId);</span>
 
 				//Send notification emails
-<span class="fc" id="L263">				sendWebpageApproveNotification(false, docHistory);</span>
+<span class="nc" id="L263">				sendWebpageApproveNotification(false, docHistory);</span>
 
 				//SET this as REJECT indicator
-<span class="fc" id="L266">				request.setAttribute(&quot;rejected&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L266">				request.setAttribute(&quot;rejected&quot;, &quot;true&quot;);</span>
 			}
 
-<span class="fc" id="L269">			return true;</span>
-<span class="pc bpc" id="L270" title="1 of 2 branches missed.">		} else if (approveByTableLevel2.isEmpty()==false) {</span>
+<span class="nc" id="L269">			return true;</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		} else if (approveByTableLevel2.isEmpty()==false) {</span>
 			//if there are also level2 approvers update approvers ID and send notifications
-<span class="fc" id="L272">			docHistory.setAwaitingApprove(&quot;,&quot; + getApproveUserIds() + &quot;,&quot;);</span>
-<span class="fc" id="L273">			docHistoryRepo.save(docHistory);</span>
+<span class="nc" id="L272">			docHistory.setAwaitingApprove(&quot;,&quot; + getApproveUserIds() + &quot;,&quot;);</span>
+<span class="nc" id="L273">			docHistoryRepo.save(docHistory);</span>
 
-<span class="fc" id="L275">			Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L275">			Identity user = UsersDB.getCurrentUser(request);</span>
 
 			//posli mail schvalovatelovi level2
-<span class="fc" id="L278">			String notes = request.getParameter(&quot;notes&quot;);</span>
-<span class="pc bpc" id="L279" title="1 of 2 branches missed.">			if (Tools.isEmpty(notes)) notes = prop.getText(&quot;components.reservation.reservation_list.accept&quot;);</span>
-<span class="fc" id="L280">			notes = prop.getText(&quot;approve.page.approvedToNextLevel.comment&quot;, user.getFullName(), notes);</span>
+<span class="nc" id="L278">			String notes = request.getParameter(&quot;notes&quot;);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">			if (Tools.isEmpty(notes)) notes = prop.getText(&quot;components.reservation.reservation_list.accept&quot;);</span>
+<span class="nc" id="L280">			notes = prop.getText(&quot;approve.page.approvedToNextLevel.comment&quot;, user.getFullName(), notes);</span>
 
-<span class="fc" id="L282">			String approverNames = getApproveUserNames();</span>
+<span class="nc" id="L282">			String approverNames = getApproveUserNames();</span>
 
-<span class="fc" id="L284">			sendWebpageApproveRequestEmail(docHistory, historyId, currentUser.getUserId(), notes);</span>
-<span class="fc" id="L285">			request.setAttribute(&quot;approvedToNextLevel&quot;, prop.getText(&quot;approve.page.approvedToNextLevel&quot;, approverNames));</span>
+<span class="nc" id="L284">			sendWebpageApproveRequestEmail(docHistory, historyId, currentUser.getUserId(), notes);</span>
+<span class="nc" id="L285">			request.setAttribute(&quot;approvedToNextLevel&quot;, prop.getText(&quot;approve.page.approvedToNextLevel&quot;, approverNames));</span>
 
 			//posli info email autorovi
-<span class="fc" id="L288">			String subject = prop.getText(&quot;approve.page.approvedToNextLevel.editorSubject&quot;, docHistory.getTitle());</span>
+<span class="nc" id="L288">			String subject = prop.getText(&quot;approve.page.approvedToNextLevel.editorSubject&quot;, docHistory.getTitle());</span>
 
-<span class="fc" id="L290">			String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot;+docHistory.getDocId()+&quot;&amp;historyid=&quot; + historyId;</span>
+<span class="nc" id="L290">			String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot;+docHistory.getDocId()+&quot;&amp;historyid=&quot; + historyId;</span>
 
-<span class="fc" id="L292">			StringBuilder message = new StringBuilder(prop.getText(&quot;approve.page.approvedToNextLevel.editorText&quot;, docHistory.getTitle(), approverNames)).append(&quot;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L293">			message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot;).append(groupsDB.getGroupNamePath(docHistory.getGroupId())).append(&quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L294">			message.append(prop.getText(&quot;approve.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L295">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L296">			message.append(notes).append(&quot;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L297">			UserDetails author = UsersDB.getUserCached(docHistory.getAuthorId());</span>
-<span class="pc bpc" id="L298" title="2 of 4 branches missed.">			if (author != null &amp;&amp; Tools.isEmail(author.getEmail())) {</span>
-<span class="fc" id="L299">				SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);</span>
+<span class="nc" id="L292">			StringBuilder message = new StringBuilder(prop.getText(&quot;approve.page.approvedToNextLevel.editorText&quot;, docHistory.getTitle(), approverNames)).append(&quot;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L293">			message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot;).append(groupsDB.getGroupNamePath(docHistory.getGroupId())).append(&quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L294">			message.append(prop.getText(&quot;approve.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L295">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L296">			message.append(notes).append(&quot;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L297">			UserDetails author = UsersDB.getUserCached(docHistory.getAuthorId());</span>
+<span class="nc bnc" id="L298" title="All 4 branches missed.">			if (author != null &amp;&amp; Tools.isEmail(author.getEmail())) {</span>
+<span class="nc" id="L299">				SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);</span>
 			}
 
-<span class="fc" id="L302">			return true;</span>
+<span class="nc" id="L302">			return true;</span>
 		} else {
 			//Doc NEED's approve, BUT current user is NOT selfApprover, so he can't approve this shit
 
@@ -321,42 +321,42 @@ public class ApproveService {
 
 
 		//Get and check historyId, MUST by set
-<span class="fc" id="L324">		int historyId = Tools.getIntValue(request.getParameter(&quot;historyid&quot;), -1);</span>
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">		if(historyId == -1) {</span>
+<span class="nc" id="L324">		int historyId = Tools.getIntValue(request.getParameter(&quot;historyid&quot;), -1);</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		if(historyId == -1) {</span>
 <span class="nc" id="L326">			request.setAttribute(&quot;message&quot;, &quot;History ID cant be empty&quot;);</span>
 <span class="nc" id="L327">			return false;</span>
 		}
 
 		//Check DocHistory for set historyId
-<span class="fc" id="L331">		Optional&lt;DocHistory&gt; docHistoryOpt = docHistoryRepo.findById(Long.valueOf(historyId));</span>
-<span class="pc bpc" id="L332" title="1 of 2 branches missed.">		if(!docHistoryOpt.isPresent()) {</span>
+<span class="nc" id="L331">		Optional&lt;DocHistory&gt; docHistoryOpt = docHistoryRepo.findById(Long.valueOf(historyId));</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">		if(!docHistoryOpt.isPresent()) {</span>
 <span class="nc" id="L333">			request.setAttribute(&quot;message&quot;, &quot;History record by givven historyId not found&quot;);</span>
 <span class="nc" id="L334">			return false;</span>
 		}
-<span class="fc" id="L336">		DocHistory docHistory = docHistoryOpt.get();</span>
+<span class="nc" id="L336">		DocHistory docHistory = docHistoryOpt.get();</span>
 
 		//Load approve tables, this step will show us if current user can approve/reject docHistory uppon certain docDetails
-<span class="fc" id="L339">		loadApproveTables(docHistory.getGroupId());</span>
+<span class="nc" id="L339">		loadApproveTables(docHistory.getGroupId());</span>
 
 		//Reject DELETE action
-<span class="fc bfc" id="L342" title="All 2 branches covered.">		if (request.getParameter(&quot;zamietni&quot;) != null) {</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">		if (request.getParameter(&quot;zamietni&quot;) != null) {</span>
 
-<span class="pc bpc" id="L344" title="3 of 4 branches missed.">			if(!needApprove() || selfApproved) {</span>
+<span class="nc bnc" id="L344" title="All 4 branches missed.">			if(!needApprove() || selfApproved) {</span>
 
 				//Set page as available, only in case that the are NO other delete request's
 
-<span class="fc" id="L348">				docDetailsRepo.updateAvailableStatus(true, docHistory.getDocId());</span>
+<span class="nc" id="L348">				docDetailsRepo.updateAvailableStatus(true, docHistory.getDocId());</span>
 
 				//vymaz z historie
-<span class="fc" id="L351">				docHistoryRepo.deleteById(Long.valueOf(historyId));</span>
+<span class="nc" id="L351">				docHistoryRepo.deleteById(Long.valueOf(historyId));</span>
 
 				//Send mails
-<span class="fc" id="L354">				sendWebpageApproveDelNotification(false, docHistory);</span>
+<span class="nc" id="L354">				sendWebpageApproveDelNotification(false, docHistory);</span>
 
 				//SET this as Reject SUCCESS indicator
-<span class="fc" id="L357">				request.setAttribute(&quot;rejected&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L357">				request.setAttribute(&quot;rejected&quot;, &quot;true&quot;);</span>
 
-<span class="fc" id="L359">				return true;</span>
+<span class="nc" id="L359">				return true;</span>
 			} else {
 				//DOC need's approve BUT current user is NOT selfApprover, so he can't approve this shit
 
@@ -366,59 +366,59 @@ public class ApproveService {
 		} else {
 			//Approve DELETE action
 
-<span class="fc bfc" id="L369" title="All 2 branches covered.">			if (needApproveLevel2()) {</span>
-<span class="fc" id="L370">				String level2approvers = &quot;,&quot; + getApproveUserIds() + &quot;,&quot;;</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">			if (needApproveLevel2()) {</span>
+<span class="nc" id="L370">				String level2approvers = &quot;,&quot; + getApproveUserIds() + &quot;,&quot;;</span>
 				//if approvers are not level2 update hitory to level2 approvers and send notifications
-<span class="pc bpc" id="L372" title="1 of 2 branches missed.">				if (level2approvers.equals(docHistory.getAwaitingApprove())==false) {</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">				if (level2approvers.equals(docHistory.getAwaitingApprove())==false) {</span>
 					//aktualizuj ID schvalovatela
-<span class="fc" id="L374">					docHistory.setAwaitingApprove(level2approvers);</span>
-<span class="fc" id="L375">					docHistoryRepo.save(docHistory);</span>
+<span class="nc" id="L374">					docHistory.setAwaitingApprove(level2approvers);</span>
+<span class="nc" id="L375">					docHistoryRepo.save(docHistory);</span>
 
-<span class="fc" id="L377">					Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L377">					Identity user = UsersDB.getCurrentUser(request);</span>
 
 					//posli mail schvalovatelovi level2
-<span class="fc" id="L380">					String notes = request.getParameter(&quot;notes&quot;);</span>
-<span class="pc bpc" id="L381" title="1 of 2 branches missed.">					if (Tools.isEmpty(notes)) notes = prop.getText(&quot;components.reservation.reservation_list.accept&quot;);</span>
-<span class="fc" id="L382">					notes = prop.getText(&quot;approve.page.approvedToNextLevel.comment&quot;, user.getFullName(), notes);</span>
+<span class="nc" id="L380">					String notes = request.getParameter(&quot;notes&quot;);</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">					if (Tools.isEmpty(notes)) notes = prop.getText(&quot;components.reservation.reservation_list.accept&quot;);</span>
+<span class="nc" id="L382">					notes = prop.getText(&quot;approve.page.approvedToNextLevel.comment&quot;, user.getFullName(), notes);</span>
 
-<span class="fc" id="L384">					String approverNames = getApproveUserNames();</span>
+<span class="nc" id="L384">					String approverNames = getApproveUserNames();</span>
 
-<span class="fc" id="L386">					sendWebpageApproveDelRequestEmail(docHistory, historyId, historyId);</span>
-<span class="fc" id="L387">					request.setAttribute(&quot;approvedToNextLevel&quot;, prop.getText(&quot;approve.page.approvedToNextLevel&quot;, approverNames));</span>
+<span class="nc" id="L386">					sendWebpageApproveDelRequestEmail(docHistory, historyId, historyId);</span>
+<span class="nc" id="L387">					request.setAttribute(&quot;approvedToNextLevel&quot;, prop.getText(&quot;approve.page.approvedToNextLevel&quot;, approverNames));</span>
 
 					//posli info email autorovi
-<span class="fc" id="L390">					String subject = prop.getText(&quot;approve.delete.subject&quot;) + &quot; &quot; + docHistory.getTitle();</span>
+<span class="nc" id="L390">					String subject = prop.getText(&quot;approve.delete.subject&quot;) + &quot; &quot; + docHistory.getTitle();</span>
 
-<span class="fc" id="L392">					String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot;+docHistory.getDocId()+&quot;&amp;historyid=&quot; + historyId;</span>
+<span class="nc" id="L392">					String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot;+docHistory.getDocId()+&quot;&amp;historyid=&quot; + historyId;</span>
 
-<span class="fc" id="L394">					StringBuilder message = new StringBuilder(prop.getText(&quot;approve.page.approvedToNextLevel.editorText&quot;, docHistory.getTitle(), approverNames)).append(&quot;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L395">					message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot;).append(groupsDB.getGroupNamePath(docHistory.getGroupId())).append(&quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L396">					message.append(prop.getText(&quot;approve.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L397">					message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L398">					message.append(notes).append(&quot;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L399">					UserDetails author = UsersDB.getUserCached(docHistory.getAuthorId());</span>
-<span class="pc bpc" id="L400" title="2 of 4 branches missed.">					if (author != null &amp;&amp; Tools.isEmail(author.getEmail())) {</span>
-<span class="fc" id="L401">						SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);</span>
+<span class="nc" id="L394">					StringBuilder message = new StringBuilder(prop.getText(&quot;approve.page.approvedToNextLevel.editorText&quot;, docHistory.getTitle(), approverNames)).append(&quot;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L395">					message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot;).append(groupsDB.getGroupNamePath(docHistory.getGroupId())).append(&quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L396">					message.append(prop.getText(&quot;approve.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L397">					message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L398">					message.append(notes).append(&quot;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L399">					UserDetails author = UsersDB.getUserCached(docHistory.getAuthorId());</span>
+<span class="nc bnc" id="L400" title="All 4 branches missed.">					if (author != null &amp;&amp; Tools.isEmail(author.getEmail())) {</span>
+<span class="nc" id="L401">						SendMail.send(user.getFullName(), user.getEmail(), author.getEmail(), subject, message.toString(), request);</span>
 					}
 
-<span class="fc" id="L404">					return true;</span>
+<span class="nc" id="L404">					return true;</span>
 				}
 			}
 
 			//Perrmisions and approves are tested inside customDeleteWebpage
-<span class="fc" id="L409">			String result = editorService.deleteWebpageLogic(docHistory.getDocId(), this, true);</span>
+<span class="nc" id="L409">			String result = editorService.deleteWebpageLogic(docHistory.getDocId(), this, true);</span>
 
-<span class="pc bpc" id="L411" title="1 of 2 branches missed.">			if(&quot;success&quot;.equals(result)) {</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">			if(&quot;success&quot;.equals(result)) {</span>
 				//SET this as Approve SUCCESS indicator
-<span class="fc" id="L413">				request.setAttribute(&quot;approved&quot;, &quot;approved&quot;);</span>
+<span class="nc" id="L413">				request.setAttribute(&quot;approved&quot;, &quot;approved&quot;);</span>
 
 				//Send mails
-<span class="fc" id="L416">				sendWebpageApproveDelNotification(true, docHistory);</span>
+<span class="nc" id="L416">				sendWebpageApproveDelNotification(true, docHistory);</span>
 			} else
 				//SET this as Approve FAIL indicator
 <span class="nc" id="L419">				request.setAttribute(&quot;approveFail&quot;, &quot;approveFail&quot;);</span>
 
-<span class="fc" id="L421">			return true;</span>
+<span class="nc" id="L421">			return true;</span>
 		}
 	}
 
@@ -433,7 +433,7 @@ public class ApproveService {
     }
 
 	public boolean needApproveLevel2() {
-<span class="pc bpc" id="L436" title="1 of 4 branches missed.">        return approveByTableLevel2 != null &amp;&amp; approveByTableLevel2.isEmpty() == false;</span>
+<span class="nc bnc" id="L436" title="All 4 branches missed.">        return approveByTableLevel2 != null &amp;&amp; approveByTableLevel2.isEmpty() == false;</span>
     }
 
 	/**
@@ -441,7 +441,7 @@ public class ApproveService {
 	 * @return
 	 */
 	public boolean needNotification() {
-<span class="pc bpc" id="L444" title="1 of 4 branches missed.">		return notifyTable != null &amp;&amp; notifyTable.isEmpty() == false;</span>
+<span class="pc bpc" id="L444" title="2 of 4 branches missed.">		return notifyTable != null &amp;&amp; notifyTable.isEmpty() == false;</span>
 	}
 
 	/**
@@ -482,13 +482,13 @@ public class ApproveService {
 	}
 
 	public String getApproveUserNames() {
-<span class="fc" id="L485">		StringBuilder approveEmails = new StringBuilder();</span>
-<span class="fc bfc" id="L486" title="All 2 branches covered.">		for (UserDetails approveUser : approveByTable.values()) {</span>
-<span class="pc bpc" id="L487" title="1 of 2 branches missed.">			if(approveEmails.length() &gt; 0) approveEmails.append(&quot;,&quot;);</span>
-<span class="fc" id="L488">			approveEmails.append(approveUser.getFullName());</span>
-<span class="fc" id="L489">		}</span>
+<span class="nc" id="L485">		StringBuilder approveEmails = new StringBuilder();</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">		for (UserDetails approveUser : approveByTable.values()) {</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">			if(approveEmails.length() &gt; 0) approveEmails.append(&quot;,&quot;);</span>
+<span class="nc" id="L488">			approveEmails.append(approveUser.getFullName());</span>
+<span class="nc" id="L489">		}</span>
 
-<span class="fc" id="L491">		return approveEmails.toString();</span>
+<span class="nc" id="L491">		return approveEmails.toString();</span>
 	}
 
 
@@ -505,9 +505,9 @@ public class ApproveService {
 <span class="fc" id="L505">		}</span>
 
 		//Add author email
-<span class="fc bfc" id="L508" title="All 2 branches covered.">		if (Tools.isEmail(authorEmail)) {</span>
-<span class="pc bpc" id="L509" title="1 of 2 branches missed.">			if(notifyEmails.length() &gt; 0) notifyEmails.append(&quot;,&quot;);</span>
-<span class="fc" id="L510">			notifyEmails.append(authorEmail);</span>
+<span class="pc bpc" id="L508" title="1 of 2 branches missed.">		if (Tools.isEmail(authorEmail)) {</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">			if(notifyEmails.length() &gt; 0) notifyEmails.append(&quot;,&quot;);</span>
+<span class="nc" id="L510">			notifyEmails.append(authorEmail);</span>
 		}
 
 <span class="fc" id="L513">		return notifyEmails.toString();</span>
@@ -566,7 +566,7 @@ public class ApproveService {
 <span class="fc" id="L566">		message.append(prop.getText(&quot;approve.url&quot;)).append(&quot;:&lt;br&gt;\n&quot;);</span>
 <span class="fc" id="L567">		message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
 
-<span class="fc bfc" id="L569" title="All 2 branches covered.">		if (Tools.isNotEmpty(comment)) { message.append(comment).append(&quot;&lt;br&gt;&lt;br&gt;\n\n&quot;); }</span>
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(comment)) { message.append(comment).append(&quot;&lt;br&gt;&lt;br&gt;\n\n&quot;); }</span>
 
 <span class="fc" id="L571">		message.append(senderUser.getFullName()).append(&quot; &amp;lt;&quot;).append(senderUser.getEmail()).append(&quot;&amp;gt;&quot;);</span>
 
@@ -652,37 +652,37 @@ public class ApproveService {
 	 */
 	private void sendWebpageApproveNotification(boolean isApproved, DocHistory docHistory) {
 		//If there is no one to notify, return
-<span class="fc bfc" id="L655" title="All 2 branches covered.">		if(!needNotification()) return;</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">		if(!needNotification()) return;</span>
 
-<span class="fc bfc" id="L657" title="All 2 branches covered.">		if(isApproved) {</span>
+<span class="nc bnc" id="L657" title="All 2 branches missed.">		if(isApproved) {</span>
 			//DocHistory Create/Edit action - APPROVED
 
-<span class="fc" id="L660">			String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + docHistory.getDocId();</span>
-<span class="fc" id="L661">			StringBuilder message = new StringBuilder(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.ok.webPage&quot;)).append(&quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L662">			message.append( docHistory.getTitle() ).append( &quot;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L663">			message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot;).append( groupsDB.getGroupNamePath(docHistory.getGroupId()) ).append( &quot;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L664">			message.append(&quot;&lt;font color='green'&gt;&quot;).append(prop.getText(&quot;approve.ok&quot;)).append(&quot;&lt;/font&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L665">			message.append(prop.getText(&quot;approve.url&quot;)).append( &quot;:&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L666">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
-<span class="fc" id="L667">			message.append(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.reject.notes&quot;) ).append( &quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L668">			message.append( Tools.getStringValue(request.getParameter(&quot;notes&quot;), &quot;&quot;) );</span>
-<span class="fc" id="L669">			String subject = prop.getText(&quot;approve.ok.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
-<span class="fc" id="L670">			SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);</span>
-<span class="fc" id="L671">		} else {</span>
+<span class="nc" id="L660">			String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + docHistory.getDocId();</span>
+<span class="nc" id="L661">			StringBuilder message = new StringBuilder(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.ok.webPage&quot;)).append(&quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L662">			message.append( docHistory.getTitle() ).append( &quot;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L663">			message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot;).append( groupsDB.getGroupNamePath(docHistory.getGroupId()) ).append( &quot;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L664">			message.append(&quot;&lt;font color='green'&gt;&quot;).append(prop.getText(&quot;approve.ok&quot;)).append(&quot;&lt;/font&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L665">			message.append(prop.getText(&quot;approve.url&quot;)).append( &quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L666">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot;).append(url).append(&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n\n&quot;);</span>
+<span class="nc" id="L667">			message.append(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.reject.notes&quot;) ).append( &quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L668">			message.append( Tools.getStringValue(request.getParameter(&quot;notes&quot;), &quot;&quot;) );</span>
+<span class="nc" id="L669">			String subject = prop.getText(&quot;approve.ok.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
+<span class="nc" id="L670">			SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);</span>
+<span class="nc" id="L671">		} else {</span>
 			//DocHistory Create/Edit action - REJECTED
 
-<span class="fc" id="L674">			String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + docHistory.getDocId() + &quot;&amp;historyid=&quot; + docHistory.getHistoryId();</span>
-<span class="fc" id="L675">			StringBuilder message = new StringBuilder(&quot;&lt;font color='red'&gt;&quot;).append(prop.getText(&quot;approve.reject&quot;)).append(&quot;:&lt;/font&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L676">			message.append( docHistory.getTitle() ).append( &quot;&lt;br&gt;&quot;);</span>
-<span class="fc" id="L677">			message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot; ).append( groupsDB.getGroupNamePath(docHistory.getGroupId()) ).append( &quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L678">			message.append(prop.getText(&quot;approve.url&quot;) ).append( &quot;:&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L679">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot; ).append( url ).append( &quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L680">			message.append(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.reject.notes&quot;) ).append( &quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L681">			message.append( Tools.getStringValue(request.getParameter(&quot;notes&quot;), &quot;&quot;) );</span>
-<span class="fc" id="L682">			String subject = prop.getText(&quot;approve.reject.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
-<span class="fc" id="L683">			SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);</span>
+<span class="nc" id="L674">			String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + docHistory.getDocId() + &quot;&amp;historyid=&quot; + docHistory.getHistoryId();</span>
+<span class="nc" id="L675">			StringBuilder message = new StringBuilder(&quot;&lt;font color='red'&gt;&quot;).append(prop.getText(&quot;approve.reject&quot;)).append(&quot;:&lt;/font&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L676">			message.append( docHistory.getTitle() ).append( &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L677">			message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot; ).append( groupsDB.getGroupNamePath(docHistory.getGroupId()) ).append( &quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L678">			message.append(prop.getText(&quot;approve.url&quot;) ).append( &quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L679">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot; ).append( url ).append( &quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L680">			message.append(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.reject.notes&quot;) ).append( &quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L681">			message.append( Tools.getStringValue(request.getParameter(&quot;notes&quot;), &quot;&quot;) );</span>
+<span class="nc" id="L682">			String subject = prop.getText(&quot;approve.reject.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
+<span class="nc" id="L683">			SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);</span>
 		}
-<span class="fc" id="L685">	}</span>
+<span class="nc" id="L685">	}</span>
 
 	/**
 	 * Send email with notification about status (Approved / Reject) of requested web page delete to all notify users + author of change
@@ -691,33 +691,33 @@ public class ApproveService {
 	 */
 	private void sendWebpageApproveDelNotification(boolean isApproved, DocHistory docHistory) {
 		//If there is no one to notify, return
-<span class="fc bfc" id="L694" title="All 2 branches covered.">		if(!needNotification()) return;</span>
+<span class="nc bnc" id="L694" title="All 2 branches missed.">		if(!needNotification()) return;</span>
 
 		StringBuilder message;
 		String subject;
-<span class="fc" id="L698">		String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + docHistory.getDocId();</span>
+<span class="nc" id="L698">		String url = Tools.getBaseHref(request) + &quot;/showdoc.do?docid=&quot; + docHistory.getDocId();</span>
 
-<span class="fc bfc" id="L700" title="All 2 branches covered.">		if(isApproved) {</span>
+<span class="nc bnc" id="L700" title="All 2 branches missed.">		if(isApproved) {</span>
 			//DocHistory Delete action - APPROVED
-<span class="fc" id="L702">			message = new StringBuilder(&quot;&lt;font color='green'&gt;&quot;).append(prop.getText(&quot;approve.del.approved&quot;) ).append( &quot;:&lt;/font&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L703">			subject = prop.getText(&quot;approve.del.approve.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
+<span class="nc" id="L702">			message = new StringBuilder(&quot;&lt;font color='green'&gt;&quot;).append(prop.getText(&quot;approve.del.approved&quot;) ).append( &quot;:&lt;/font&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L703">			subject = prop.getText(&quot;approve.del.approve.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
 		} else {
 			//DocHistory Delete action - REJECT
-<span class="fc" id="L706">			message = new StringBuilder(&quot;&lt;font color='red'&gt;&quot;).append(prop.getText(&quot;approve.del.reject&quot;) ).append( &quot;:&lt;/font&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L707">			subject = prop.getText(&quot;approve.del.reject.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
+<span class="nc" id="L706">			message = new StringBuilder(&quot;&lt;font color='red'&gt;&quot;).append(prop.getText(&quot;approve.del.reject&quot;) ).append( &quot;:&lt;/font&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L707">			subject = prop.getText(&quot;approve.del.reject.subject&quot;) + &quot;: &quot; + docHistory.getTitle();</span>
 		}
 
-<span class="fc" id="L710">		message.append( docHistory.getTitle() ).append( &quot;&lt;br&gt;&quot;);</span>
-<span class="fc" id="L711">		message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot; ).append( groupsDB.getGroupNamePath(docHistory.getGroupId()) ).append( &quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L710">		message.append( docHistory.getTitle() ).append( &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L711">		message.append(prop.getText(&quot;approve.dir&quot;)).append(&quot;: &quot; ).append( groupsDB.getGroupNamePath(docHistory.getGroupId()) ).append( &quot;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
 
-<span class="fc bfc" id="L713" title="All 2 branches covered.">		if(!isApproved) {</span>
-<span class="fc" id="L714">			message.append(prop.getText(&quot;approve.url&quot;) ).append( &quot;:&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L715">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot; ).append( url ).append( &quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">		if(!isApproved) {</span>
+<span class="nc" id="L714">			message.append(prop.getText(&quot;approve.url&quot;) ).append( &quot;:&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L715">			message.append(&quot;&lt;a href='&quot;).append(url).append(&quot;'&gt;&quot; ).append( url ).append( &quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;\n&quot;);</span>
 		}
 
-<span class="fc" id="L718">		message.append(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.reject.notes&quot;) ).append( &quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
-<span class="fc" id="L719">		message.append( Tools.getStringValue(request.getParameter(&quot;notes&quot;), &quot;&quot;) );</span>
-<span class="fc" id="L720">		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);</span>
-<span class="fc" id="L721">	}</span>
+<span class="nc" id="L718">		message.append(&quot;&lt;b&gt;&quot;).append(prop.getText(&quot;approve.reject.notes&quot;) ).append( &quot;:&lt;/b&gt;&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L719">		message.append( Tools.getStringValue(request.getParameter(&quot;notes&quot;), &quot;&quot;) );</span>
+<span class="nc" id="L720">		SendMail.send(currentUser.getFullName(), currentUser.getEmail(), getEmailsToNotify(docHistory.getUserDetails().getEmail()), subject, message.toString(), request);</span>
+<span class="nc" id="L721">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

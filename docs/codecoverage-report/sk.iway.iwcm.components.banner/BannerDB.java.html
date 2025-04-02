@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner</a> &gt; <span class="el_source">BannerDB.java</span></div><h1>BannerDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.banner;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner</a> &gt; <span class="el_source">BannerDB.java</span></div><h1>BannerDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.banner;
 
 import static sk.iway.iwcm.components.banner.model.BannerStatViews.FIELD_INSERT_DATE;
 
@@ -159,10 +159,10 @@ public class BannerDB
 <span class="nc" id="L159">			c.setObject(cacheKey, banners, cacheTime);</span>
 		}
 
-<span class="pc bpc" id="L162" title="1 of 2 branches missed.">		if (orderBy != null)</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">		if (orderBy != null)</span>
 		{
-<span class="nc" id="L164">			JpaComparator&lt;BannerBean&gt; comparator = new JpaComparator&lt;&gt;(BannerBean.class, orderBy, true);</span>
-<span class="nc" id="L165">			comparator.orderList(banners);</span>
+<span class="fc" id="L164">			JpaComparator&lt;BannerBean&gt; comparator = new JpaComparator&lt;&gt;(BannerBean.class, orderBy, true);</span>
+<span class="fc" id="L165">			comparator.orderList(banners);</span>
 		}
 
 		//Filter banners by docId/groupId
@@ -664,40 +664,40 @@ public class BannerDB
 	 */
 	public static BannerBean getPriorityBanner(String groups, String campaignBanner)
 	{
-<span class="nc" id="L667">		List&lt;BannerBean&gt; bannersOK = getOnlyAvailable(getBanners(groups, &quot;id&quot;, campaignBanner), campaignBanner);</span>
+<span class="fc" id="L667">		List&lt;BannerBean&gt; bannersOK = getOnlyAvailable(getBanners(groups, &quot;id&quot;, campaignBanner), campaignBanner);</span>
 		BannerBean banBean;
-<span class="nc" id="L669">		int index = 0;</span>
-<span class="nc" id="L670">		int prioritySum = 0;</span>
-<span class="nc" id="L671">		int prioritySumTemp = 0;</span>
+<span class="fc" id="L669">		int index = 0;</span>
+<span class="fc" id="L670">		int prioritySum = 0;</span>
+<span class="fc" id="L671">		int prioritySumTemp = 0;</span>
 
 		//Logger.println(BannerDB.class,&quot;banners: &quot;+banners.size());
 
-<span class="nc bnc" id="L675" title="All 4 branches missed.">		if (bannersOK != null &amp;&amp; bannersOK.size() &gt; 0)</span>
+<span class="pc bpc" id="L675" title="2 of 4 branches missed.">		if (bannersOK != null &amp;&amp; bannersOK.size() &gt; 0)</span>
 		{
 			//urobim sumu vah vsetkych bannerov
-<span class="nc bnc" id="L678" title="All 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
+<span class="fc bfc" id="L678" title="All 2 branches covered.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
 			{
-<span class="nc" id="L680">				banBean = bannersOK.get(i);</span>
-<span class="nc" id="L681">				prioritySum += Tools.getIntValue(banBean.getPriority());</span>
+<span class="fc" id="L680">				banBean = bannersOK.get(i);</span>
+<span class="fc" id="L681">				prioritySum += Tools.getIntValue(banBean.getPriority());</span>
 			}
 
 			//vygeneruj nahodne cislo od 0 do prioritySum
-<span class="nc" id="L685">			index = random.nextInt(prioritySum);	//((int) (Math.random() * (prioritySum)));</span>
+<span class="fc" id="L685">			index = random.nextInt(prioritySum);	//((int) (Math.random() * (prioritySum)));</span>
 
-<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (index &gt; prioritySum)</span>
+<span class="pc bpc" id="L687" title="1 of 2 branches missed.">			if (index &gt; prioritySum)</span>
 			{
 <span class="nc" id="L689">				index = prioritySum;</span>
 			}
 
 			//vyberam podla nahodneho indexu banner zo zoznamu bannersOK
-<span class="nc bnc" id="L693" title="All 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
+<span class="pc bpc" id="L693" title="1 of 2 branches missed.">			for (int i=0; i&lt;bannersOK.size(); i++)</span>
 			{
-<span class="nc" id="L695">				banBean = bannersOK.get(i);</span>
-<span class="nc" id="L696">				prioritySumTemp += Tools.getIntValue(banBean.getPriority());</span>
+<span class="fc" id="L695">				banBean = bannersOK.get(i);</span>
+<span class="fc" id="L696">				prioritySumTemp += Tools.getIntValue(banBean.getPriority());</span>
 
-<span class="nc bnc" id="L698" title="All 2 branches missed.">				if (prioritySumTemp &gt;= index)</span>
+<span class="pc bpc" id="L698" title="1 of 2 branches missed.">				if (prioritySumTemp &gt;= index)</span>
 				{
-<span class="nc" id="L700">					return(banBean);</span>
+<span class="fc" id="L700">					return(banBean);</span>
 				}
 			}
 		}
@@ -2097,7 +2097,7 @@ public class BannerDB
 
 <span class="fc" id="L2098">		Set&lt;BannerBean&gt; hs = new HashSet&lt;&gt;();</span>
 <span class="fc" id="L2099">		List&lt;GroupDetails&gt; parentGroups = null;</span>
-<span class="pc bpc" id="L2100" title="1 of 2 branches missed.">		if (groupId &gt; 0) parentGroups = GroupsDB.getParentGroupsCached(groupId);</span>
+<span class="fc bfc" id="L2100" title="All 2 branches covered.">		if (groupId &gt; 0) parentGroups = GroupsDB.getParentGroupsCached(groupId);</span>
 
 <span class="fc bfc" id="L2102" title="All 2 branches covered.">		for(BannerBean bb : bannerList)</span>
 		{

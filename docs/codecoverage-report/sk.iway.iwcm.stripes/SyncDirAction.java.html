@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncDirAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">SyncDirAction.java</span></div><h1>SyncDirAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncDirAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">SyncDirAction.java</span></div><h1>SyncDirAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
 
 import java.beans.XMLDecoder;
 import java.io.BufferedOutputStream;
@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,7 +15,6 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONArray;
@@ -79,6 +80,7 @@ import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.spirit.MediaDB;
 import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaGroupBean;
 
 /**
  *  SyncDirAction.java - synchronizacia adresara a web stranok zo vzdialeneho servera
@@ -91,33 +93,38 @@ import sk.iway.spirit.model.Media;
  *@created      Date: 8.11.2007 13:37:13
  *@modified     $Date: 2010/02/09 09:02:04 $
  */
-<span class="fc" id="L94">public class SyncDirAction extends WebJETActionBean</span>
+<span class="fc" id="L96">public class SyncDirAction extends WebJETActionBean</span>
 {
-<span class="fc" id="L96">	private static org.slf4j.Logger log = LoggerFactory.getLogger(SyncDirAction.class);</span>
+<span class="fc" id="L98">	private static org.slf4j.Logger log = LoggerFactory.getLogger(SyncDirAction.class);</span>
 
 	private int localGroupId;
 	private int remoteGroupId;
 	private String localDomain;
 
-<span class="fc" id="L102">	private List&lt;GroupDetails&gt; remoteGroups = null;</span>
-<span class="fc" id="L103">	private List&lt;DocDetails&gt; remoteDocs = null;</span>
-<span class="fc" id="L104">	private List&lt;TemplateDetails&gt; remoteTemps = null;</span>
-<span class="fc" id="L105">	private List&lt;UserGroupDetails&gt; remoteUserGroups = null;</span>
-<span class="fc" id="L106">	private List&lt;PerexGroupBean&gt; remotePerexGroups = null;</span>
-<span class="fc" id="L107">	private List&lt;Media&gt; remoteMedia = null;</span>
-<span class="fc" id="L108">	private Content remoteContent = null;</span>
+	private GroupDetails localSrcGroup;
 
-<span class="fc" id="L110">	private String remoteRootPath = null;</span>
-<span class="fc" id="L111">	private GroupDetails localRootGroup = null;</span>
+<span class="fc" id="L106">	private List&lt;GroupDetails&gt; remoteGroups = null;</span>
+<span class="fc" id="L107">	private List&lt;DocDetails&gt; remoteDocs = null;</span>
+<span class="fc" id="L108">	private List&lt;TemplateDetails&gt; remoteTemps = null;</span>
+<span class="fc" id="L109">	private List&lt;UserGroupDetails&gt; remoteUserGroups = null;</span>
+<span class="fc" id="L110">	private List&lt;PerexGroupBean&gt; remotePerexGroups = null;</span>
+<span class="fc" id="L111">	private List&lt;Media&gt; remoteMedia = null;</span>
+<span class="fc" id="L112">	private Content remoteContent = null;</span>
 
-<span class="fc" id="L113">	private boolean createMissingTemplates = true;</span>
-<span class="fc" id="L114">	private boolean createMissingUserGroups = true;</span>
+<span class="fc" id="L114">	private String remoteRootPath = null;</span>
+<span class="fc" id="L115">	private GroupDetails localRootGroup = null;</span>
 
-<span class="fc" id="L116">	private String syncDir = null; // if null use remoteServer else use local files for sync</span>
+<span class="fc" id="L117">	private boolean createMissingTemplates = true;</span>
+<span class="fc" id="L118">	private boolean createMissingUserGroups = true;</span>
 
-<span class="fc" id="L118">	private Map&lt;Integer, DocNoteBean&gt; remoteNotesMap = null;</span>
+<span class="fc" id="L120">	private String syncDir = null; // if null use remoteServer else use local files for sync</span>
 
-<span class="fc" id="L120">	private List&lt;String&gt; errorMessages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L122">	private Map&lt;Integer, DocNoteBean&gt; remoteNotesMap = null;</span>
+
+<span class="fc" id="L124">	private List&lt;String&gt; errorMessages = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L126">	private String compareBy = null;</span>
+<span class="fc" id="L127">	private Map&lt;Integer, Integer&gt; remoteToLocalMediaGroups = null;</span>
 
 	/**
 	 * Nacita data zo vzdialeneho servera
@@ -125,30 +132,128 @@ import sk.iway.spirit.model.Media;
 	 */
 	public Resolution btnLoadData()
 	{
+<span class="fc" id="L135">		SyncDirWriterService.printStatusMsg(&quot;components.syncDirAction.title&quot;, true, getContext(), getRequest());</span>
+
 		//aby sa nam vymazala cache (ak je pouzita)
-<span class="fc" id="L129">		remoteGroups = null;</span>
-<span class="fc" id="L130">		remoteDocs = null;</span>
-<span class="fc" id="L131">		Logger.debug(SyncDirAction.class, &quot;btnLoadData Reading remote groups&quot;);</span>
+<span class="fc" id="L138">		remoteGroups = null;</span>
+<span class="fc" id="L139">		remoteDocs = null;</span>
+<span class="fc" id="L140">		remoteToLocalMediaGroups = null;</span>
+<span class="fc" id="L141">		Logger.debug(SyncDirAction.class, &quot;btnLoadData Reading remote groups&quot;);</span>
 
 		try
 		{
-<span class="fc" id="L135">			remoteGroups = getRemoteGroups();</span>
-<span class="fc" id="L136">			remoteDocs = getRemoteDocs();</span>
-		}
-<span class="nc" id="L138">		catch (Exception e)</span>
-		{
-<span class="nc" id="L140">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L141">		}</span>
+<span class="fc" id="L145">			SyncDirWriterService.printStatusMsg(&quot;components.syncDirAction.prepare_groups&quot;, false, getContext(), getRequest());</span>
+<span class="fc" id="L146">			remoteGroups = getRemoteGroups();</span>
 
-<span class="fc" id="L143">		Logger.debug(SyncDirAction.class, &quot;btnLoadData Remote groups=&quot;+remoteGroups);</span>
-<span class="pc bpc" id="L144" title="2 of 4 branches missed.">		if (remoteGroups == null || remoteDocs == null)</span>
-		{
-<span class="nc" id="L146">			context.getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;components.sync.errorReadingZipFile&quot;, getErrorMessagesHtml()));</span>
+<span class="fc" id="L148">			SyncDirWriterService.printStatusMsg(&quot;components.syncDirAction.prepare_docs&quot;, false,  getContext(), getRequest());</span>
+<span class="fc" id="L149">			remoteDocs = getRemoteDocs();</span>
 		}
-<span class="fc" id="L148">		remoteContent = getRemoteContent();</span>
+<span class="nc" id="L151">		catch (Exception e)</span>
+		{
+<span class="nc" id="L153">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L154">		}</span>
 
-<span class="fc" id="L150">		return new ForwardResolution(&quot;/components/maybeError.jsp&quot;);</span>
+<span class="fc" id="L156">		SyncDirWriterService.printStatusMsg(&quot;components.syncDirAction.prepare_content&quot;, false,  getContext(), getRequest());</span>
+<span class="fc" id="L157">		Logger.debug(SyncDirAction.class, &quot;btnLoadData Remote groups=&quot;+remoteGroups);</span>
+<span class="pc bpc" id="L158" title="2 of 4 branches missed.">		if (remoteGroups == null || remoteDocs == null)</span>
+		{
+<span class="nc" id="L160">			context.getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;components.sync.errorReadingZipFile&quot;, getErrorMessagesHtml()));</span>
+		}
+<span class="fc" id="L162">		remoteContent = getRemoteContent();</span>
+
+<span class="fc" id="L164">		return new ForwardResolution(&quot;/components/maybeError.jsp&quot;);</span>
 	}
+
+	private void foldersSync(HttpServletRequest request, PrintWriter writer) {
+		//
+<span class="fc" id="L169">		Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc" id="L171">		SyncDirWriterService.prepareProgress(prop.getText(&quot;components.syncDirAction.progress.syncingFolders&quot;), &quot;folderSyncCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingFolder&quot;) + &quot;: - / -&quot;, writer);</span>
+
+<span class="fc" id="L173">		Map&lt;String, String&gt; selectedGroupsMap = SyncDirWriterService.getOptionsMap(&quot;group_&quot;, request);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">		if(selectedGroupsMap.size() &lt; 1) return;</span>
+
+<span class="fc" id="L176">		int groupsToPrepareCount = 0;</span>
+<span class="fc" id="L177">		int preparedGroupsCount = 1;</span>
+<span class="fc" id="L178">		List&lt;GroupDetails&gt; remoteGroupsToSync = getRemoteGroups();</span>
+
+		//Count groups to sync
+<span class="fc" id="L181">		groupsToPrepareCount = (int) remoteGroupsToSync.stream()</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">			.filter(remoteGroup -&gt; selectedGroupsMap.get(&quot;group_&quot; + remoteGroup.getGroupId()) != null)</span>
+<span class="fc" id="L183">			.count();</span>
+
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">		for (GroupDetails remoteGroup : remoteGroupsToSync)</span>
+		{
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">			if (selectedGroupsMap.get(&quot;group_&quot; + remoteGroup.getGroupId()) != null)</span>
+			{
+<span class="fc" id="L190">				SyncDirWriterService.updateProgress(&quot;folderSyncCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingFolder&quot;) + &quot;: &quot; + preparedGroupsCount + &quot; / &quot; + groupsToPrepareCount, writer);</span>
+<span class="fc" id="L191">				preparedGroupsCount++;</span>
+
+<span class="fc" id="L193">				createLocalGroup(remoteGroup);</span>
+			}
+<span class="fc" id="L195">		}</span>
+<span class="fc" id="L196">	}</span>
+
+	private List&lt;Integer&gt; pagesSync(HttpServletRequest request, PrintWriter writer) {
+<span class="fc" id="L199">		Prop prop = Prop.getInstance(request);</span>
+		//
+<span class="fc" id="L201">		SyncDirWriterService.prepareProgress(prop.getText(&quot;components.syncDirAction.progress.syncingDocs&quot;), &quot;webPageSyncCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingDoc&quot;) + &quot;: - / -&quot;, writer);</span>
+
+<span class="fc" id="L203">		List&lt;Integer&gt; historyIds = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L204">		Map&lt;String, String&gt; selectedDocsMap = SyncDirWriterService.getOptionsMap(&quot;doc_&quot;, request);</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">		if(selectedDocsMap.size() &lt; 1) return historyIds;</span>
+
+<span class="fc" id="L207">		List&lt;DocDetails&gt; remoteDocToSync = getRemoteDocs();</span>
+<span class="fc" id="L208">		int pagesToPrepareCount = 0;</span>
+<span class="fc" id="L209">		int preparedPagesCount = 1;</span>
+
+		//Count pages to prepare
+<span class="fc" id="L212">		pagesToPrepareCount = (int) remoteDocToSync.stream()</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">			.filter(remoteDoc -&gt; selectedDocsMap.get(&quot;doc_&quot; + remoteDoc.getDocId()) != null)</span>
+<span class="fc" id="L214">			.count();</span>
+
+
+<span class="fc bfc" id="L217" title="All 2 branches covered.">		for (DocDetails remoteDoc : remoteDocToSync)</span>
+		{
+<span class="fc bfc" id="L219" title="All 2 branches covered.">			if (selectedDocsMap.get(&quot;doc_&quot; + remoteDoc.getDocId()) != null)</span>
+			{
+<span class="fc" id="L221">				SyncDirWriterService.updateProgress(&quot;webPageSyncCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingDoc&quot;) + &quot;: &quot; + preparedPagesCount + &quot; / &quot; + pagesToPrepareCount, writer);</span>
+<span class="fc" id="L222">				preparedPagesCount++;</span>
+
+<span class="fc" id="L224">				int historyId = createLocalDoc(remoteDoc);</span>
+<span class="fc" id="L225">				historyIds.add(historyId);</span>
+			}
+<span class="fc" id="L227">		}</span>
+
+<span class="fc" id="L229">		return historyIds;</span>
+	}
+
+	private void importingFiles(Content content, HttpServletRequest request, PrintWriter writer) {
+<span class="fc" id="L233">		Prop prop = Prop.getInstance(request);</span>
+		//
+<span class="fc" id="L235">		SyncDirWriterService.prepareProgress(prop.getText(&quot;components.syncDirAction.progress.syncingFiles&quot;), &quot;filesImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingFile&quot;) + &quot;: - / -&quot;, writer);</span>
+
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">		if(content == null) return;</span>
+
+<span class="fc" id="L239">		Map&lt;String, String&gt; selectedFilesMap = SyncDirWriterService.getOptionsMap(&quot;file_&quot;, request);</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">		if(selectedFilesMap.size() &lt; 1) return;</span>
+
+<span class="nc" id="L242">		int importedFilesCount = 1;</span>
+<span class="nc" id="L243">		Iterable&lt;Numbered&lt;Content.File&gt;&gt; filesToImport = Numbered.list(content.getFiles());</span>
+<span class="nc" id="L244">		int filesToImportCount = SyncDirWriterService.getCountToHandle(selectedFilesMap, filesToImport, &quot;file_&quot;);</span>
+
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		for (Numbered&lt;Content.File&gt; file : filesToImport)</span>
+		{
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			if (selectedFilesMap.get(&quot;file_&quot; + file.number) != null)</span>
+			{
+<span class="nc" id="L250">				SyncDirWriterService.updateProgress(&quot;filesImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingFile&quot;) + &quot;: &quot; + importedFilesCount + &quot; / &quot; + filesToImportCount, writer);</span>
+<span class="nc" id="L251">				importedFilesCount++;</span>
+
+<span class="nc" id="L253">				createLocalContentFile(file.item);</span>
+			}
+<span class="nc" id="L255">		}</span>
+<span class="nc" id="L256">	}</span>
 
 	/**
 	 * Vykonanie synchronizacie adresarov a stranok z remote servera na local
@@ -156,92 +261,74 @@ import sk.iway.spirit.model.Media;
 	 */
 	public Resolution btnSync()
 	{
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">		if (isAdminLogged()==false) return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">		if (isAdminLogged()==false) return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
 
 		try
 		{
-<span class="fc" id="L163">			HttpServletRequest request = context.getRequest();</span>
+<span class="fc" id="L268">			HttpServletResponse response = getContext().getResponse();</span>
+<span class="fc" id="L269">        	PrintWriter writer = response.getWriter();</span>
+
+<span class="fc" id="L271">			HttpServletRequest request = context.getRequest();</span>
 			//UPOZORNENIE: ziadnym sposobom nemodifikovat remote objekty!
 			// ak je to nutne je potrebne nasledne vratit povodne hodnoty
 
-<span class="fc" id="L167">			GroupDetails localGroup = getLocalRootGroup();</span>
-<span class="pc bpc" id="L168" title="2 of 4 branches missed.">			if (localGroup != null &amp;&amp; Tools.isNotEmpty(localGroup.getDomainName()))</span>
+<span class="fc" id="L275">			GroupDetails localGroup = getLocalRootGroup();</span>
+<span class="pc bpc" id="L276" title="2 of 4 branches missed.">			if (localGroup != null &amp;&amp; Tools.isNotEmpty(localGroup.getDomainName()))</span>
 			{
-<span class="fc" id="L170">				setLocalDomain(localGroup.getDomainName());</span>
+<span class="fc" id="L278">				setLocalDomain(localGroup.getDomainName());</span>
 			}
 
-			//sync adresarov
-<span class="fc" id="L174">			List&lt;Integer&gt; historyGroupsIds = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L175">			Date start = new Date();</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">			for (GroupDetails remoteGroup : getRemoteGroups())</span>
-			{
-<span class="pc bpc" id="L178" title="2 of 4 branches missed.">				if (request.getParameter(&quot;group_&quot; + remoteGroup.getGroupId()) != null || request.getAttribute(&quot;syncAll&quot;) != null)</span>
-				{
-<span class="nc" id="L180">					createLocalGroup(remoteGroup);</span>
-				}
-<span class="fc" id="L182">			}</span>
-<span class="fc" id="L183">			historyGroupsIds = getNewGroups(start);</span>
+			//FOLDER SYNC
+<span class="fc" id="L282">			List&lt;Integer&gt; historyGroupsIds = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L283">			Date start = new Date();</span>
+<span class="fc" id="L284">			foldersSync(request, writer);</span>
+<span class="fc" id="L285">			historyGroupsIds = getNewGroups(start);</span>
 
-<span class="fc" id="L185">			List&lt;Integer&gt; historyIds = new ArrayList&lt;&gt;();</span>
-			//sync stranok
-<span class="fc bfc" id="L187" title="All 2 branches covered.">			for (DocDetails remoteDoc : getRemoteDocs())</span>
-			{
-<span class="pc bpc" id="L189" title="1 of 4 branches missed.">				if (request.getParameter(&quot;doc_&quot; + remoteDoc.getDocId()) != null || request.getAttribute(&quot;syncAll&quot;) != null)</span>
-				{
-<span class="fc" id="L191">					int historyId = createLocalDoc(remoteDoc);</span>
-<span class="fc" id="L192">					historyIds.add(historyId);</span>
-				}
-<span class="fc" id="L194">			}</span>
-<span class="fc" id="L195">			saveRollbackJson(historyIds, historyGroupsIds);</span>
+			//prepare mediaGroups mapping
+<span class="fc" id="L288">			remoteToLocalMediaGroups = prepareRemoteToLocalMediaGroupMap();</span>
 
-<span class="fc" id="L197">			Content content = getRemoteContent();</span>
+			//WEB PAGE SYNC
+<span class="fc" id="L291">			List&lt;Integer&gt; historyIds = pagesSync(request, writer);</span>
+<span class="fc" id="L292">			saveRollbackJson(historyIds, historyGroupsIds);</span>
 
-			// import suborov
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">			if (content != null)</span>
-			{
-<span class="fc bfc" id="L202" title="All 2 branches covered.">				for (Numbered&lt;Content.File&gt; file : Numbered.list(content.getFiles()))</span>
-				{
-<span class="pc bpc" id="L204" title="2 of 4 branches missed.">					if (null != request.getParameter(&quot;file_&quot; + file.number) || request.getAttribute(&quot;syncAll&quot;) != null)</span>
-					{
-<span class="nc" id="L206">						createLocalContentFile(file.item);</span>
-					}
-<span class="fc" id="L208">				}</span>
-			}
+			//FILE IMPORT
+<span class="fc" id="L295">			Content content = getRemoteContent();</span>
+<span class="fc" id="L296">			importingFiles(content, request, writer);</span>
 
 			// import komponentov
-<span class="fc" id="L212">			BannerImporter.importBanners(request, content);</span>
-<span class="fc" id="L213">			InquiryImporter.importInquiries(request, content);</span>
-<span class="fc" id="L214">			GalleryImporter.importGalleries(request, content);</span>
+<span class="fc" id="L299">			BannerImporter.importBanners(request, content, writer);</span>
+<span class="fc" id="L300">			InquiryImporter.importInquiries(request, content, writer);</span>
+<span class="fc" id="L301">			GalleryImporter.importGalleries(request, content, writer);</span>
 		}
-<span class="nc" id="L216">		catch (Exception ex)</span>
+<span class="nc" id="L303">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L218">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L219">			getRequest().setAttribute(&quot;errorText&quot;, &quot;ERROR: &quot;+ex.getMessage());</span>
-<span class="fc" id="L220">		}</span>
+<span class="nc" id="L305">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L306">			getRequest().setAttribute(&quot;errorText&quot;, &quot;ERROR: &quot;+ex.getMessage());</span>
+<span class="fc" id="L307">		}</span>
 
-<span class="pc bpc" id="L222" title="2 of 4 branches missed.">		if (remoteGroups == null || remoteDocs == null)</span>
+<span class="pc bpc" id="L309" title="2 of 4 branches missed.">		if (remoteGroups == null || remoteDocs == null)</span>
 		{
-<span class="nc" id="L224">			context.getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;components.sync.errorReadingZipFile&quot;, getErrorMessagesHtml()));</span>
+<span class="nc" id="L311">			context.getRequest().setAttribute(&quot;errorText&quot;, Prop.getInstance(getRequest()).getText(&quot;components.sync.errorReadingZipFile&quot;, getErrorMessagesHtml()));</span>
 		}
 
-<span class="fc" id="L227">		return new ForwardResolution(&quot;/components/maybeError.jsp&quot;);</span>
+<span class="fc" id="L314">		return new ForwardResolution(&quot;/components/maybeError.jsp&quot;);</span>
 	}
 
 	private String getErrorMessagesHtml()
 	{
-<span class="nc" id="L232">		StringBuilder html = new StringBuilder();</span>
+<span class="nc" id="L319">		StringBuilder html = new StringBuilder();</span>
 
-<span class="nc bnc" id="L234" title="All 2 branches missed.">		if (errorMessages.size()&gt;0)</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		if (errorMessages.size()&gt;0)</span>
 		{
-<span class="nc" id="L236">			html.append(&quot;&lt;ul&gt;\n&quot;);</span>
-<span class="nc bnc" id="L237" title="All 2 branches missed.">			for (String error : errorMessages)</span>
+<span class="nc" id="L323">			html.append(&quot;&lt;ul&gt;\n&quot;);</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">			for (String error : errorMessages)</span>
 			{
-<span class="nc" id="L239">				html.append(&quot;&lt;li&gt;&quot;).append(error).append(&quot;&lt;/li&gt;\n&quot;);</span>
-<span class="nc" id="L240">			}</span>
-<span class="nc" id="L241">			html.append(&quot;&lt;/ul&gt;\n&quot;);</span>
+<span class="nc" id="L326">				html.append(&quot;&lt;li&gt;&quot;).append(error).append(&quot;&lt;/li&gt;\n&quot;);</span>
+<span class="nc" id="L327">			}</span>
+<span class="nc" id="L328">			html.append(&quot;&lt;/ul&gt;\n&quot;);</span>
 		}
 
-<span class="nc" id="L244">		return html.toString();</span>
+<span class="nc" id="L331">		return html.toString();</span>
 	}
 
 
@@ -252,117 +339,117 @@ import sk.iway.spirit.model.Media;
 	 */
 	private boolean createLocalGroup(GroupDetails remoteGroup)
 	{
-<span class="nc" id="L255">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L256">		String localPath = getLocalPath(remoteGroup);</span>
-<span class="nc" id="L257">		GroupDetails localGroup = groupsDB.getGroupByPath(localPath);</span>
-<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (localGroup == null)</span>
+<span class="fc" id="L342">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L343">		String localPath = getLocalPath(remoteGroup);</span>
+<span class="fc" id="L344">		GroupDetails localGroup = groupsDB.getGroupByPath(localPath);</span>
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">		if (localGroup == null)</span>
 		{
 			//treba ulozit, ziskaj parenta
-<span class="nc" id="L261">			int i = localPath.lastIndexOf('/');</span>
-<span class="nc bnc" id="L262" title="All 2 branches missed.">			if (i&gt;0)</span>
+<span class="nc" id="L348">			int i = localPath.lastIndexOf('/');</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			if (i&gt;0)</span>
 			{
-<span class="nc" id="L264">				String localParentPath = localPath.substring(0, i);</span>
-<span class="nc" id="L265">				Logger.debug(SyncDirAction.class, &quot;localPath: &quot;+localPath+&quot; localParentPath: &quot;+localParentPath+&quot; remotePath: &quot;+remoteGroup.getFullPath());</span>
-<span class="nc" id="L266">				GroupDetails localParentGroup = groupsDB.getCreateGroup(localParentPath);</span>
-<span class="nc bnc" id="L267" title="All 2 branches missed.">				if (localParentGroup!=null)</span>
+<span class="nc" id="L351">				String localParentPath = localPath.substring(0, i);</span>
+<span class="nc" id="L352">				Logger.debug(SyncDirAction.class, &quot;localPath: &quot;+localPath+&quot; localParentPath: &quot;+localParentPath+&quot; remotePath: &quot;+remoteGroup.getFullPath());</span>
+<span class="nc" id="L353">				GroupDetails localParentGroup = groupsDB.getCreateGroup(localParentPath);</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (localParentGroup!=null)</span>
 				{
 					//uprav mapovanie user group skupin
-<span class="nc" id="L270">					String localUserGroups = convertUserGroupIdsToLocal(remoteGroup);</span>
-<span class="nc bnc" id="L271" title="All 2 branches missed.">					if (localUserGroups==null) return false;</span>
+<span class="nc" id="L357">					String localUserGroups = convertUserGroupIdsToLocal(remoteGroup);</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">					if (localUserGroups==null) return false;</span>
 
-<span class="nc" id="L273">					int oGroupId = remoteGroup.getGroupId();</span>
-<span class="nc" id="L274">					int oParentGroupId = remoteGroup.getParentGroupId();</span>
-<span class="nc" id="L275">					int oTempId = remoteGroup.getTempId();</span>
-<span class="nc" id="L276">					String oUserGroups = remoteGroup.getPasswordProtected();</span>
-<span class="nc" id="L277">					String oFullPath = remoteGroup.getFullPath();</span>
-<span class="nc" id="L278">					String oNavbar = null;</span>
-<span class="nc" id="L279">					String oDomain = remoteGroup.getDomainName();</span>
-<span class="nc" id="L280">					int oDefaultDocId = remoteGroup.getDefaultDocId();</span>
+<span class="nc" id="L360">					int oGroupId = remoteGroup.getGroupId();</span>
+<span class="nc" id="L361">					int oParentGroupId = remoteGroup.getParentGroupId();</span>
+<span class="nc" id="L362">					int oTempId = remoteGroup.getTempId();</span>
+<span class="nc" id="L363">					String oUserGroups = remoteGroup.getPasswordProtected();</span>
+<span class="nc" id="L364">					String oFullPath = remoteGroup.getFullPath();</span>
+<span class="nc" id="L365">					String oNavbar = null;</span>
+<span class="nc" id="L366">					String oDomain = remoteGroup.getDomainName();</span>
+<span class="nc" id="L367">					int oDefaultDocId = remoteGroup.getDefaultDocId();</span>
 
-<span class="nc" id="L282">					remoteGroup.setGroupId(-1);</span>
-<span class="nc" id="L283">					remoteGroup.setParentGroupId(localParentGroup.getGroupId());</span>
-<span class="nc bnc" id="L284" title="All 2 branches missed.">					if (remoteGroup.getNavbarName().indexOf(&quot;href=&quot;)!=-1)</span>
+<span class="nc" id="L369">					remoteGroup.setGroupId(-1);</span>
+<span class="nc" id="L370">					remoteGroup.setParentGroupId(localParentGroup.getGroupId());</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">					if (remoteGroup.getNavbarName().indexOf(&quot;href=&quot;)!=-1)</span>
 					{
 						//uz prenasame navbarName, kvoli spetnej kompatibilite ale mame tento backfix
-<span class="nc" id="L287">						oNavbar = remoteGroup.getNavbar();</span>
-<span class="nc" id="L288">						remoteGroup.setNavbar(SearchTools.htmlToPlain(oNavbar));</span>
+<span class="nc" id="L374">						oNavbar = remoteGroup.getNavbar();</span>
+<span class="nc" id="L375">						remoteGroup.setNavbar(SearchTools.htmlToPlain(oNavbar));</span>
 					}
-<span class="nc" id="L290">					remoteGroup.setDefaultDocId(-1);</span>
+<span class="nc" id="L377">					remoteGroup.setDefaultDocId(-1);</span>
 
-<span class="nc" id="L292">					remoteGroup.setTempId(localRootGroup.getTempId());</span>
-<span class="nc bnc" id="L293" title="All 2 branches missed.">					if (createMissingTemplates)</span>
+<span class="nc" id="L379">					remoteGroup.setTempId(localRootGroup.getTempId());</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">					if (createMissingTemplates)</span>
 					{
 						//uprav mapovanie sablon
-<span class="nc" id="L296">						int localTempId = getCreateTemplate(oTempId);</span>
-<span class="nc" id="L297">						Logger.debug(SyncDirAction.class, &quot;Setting localTempId to:&quot;+localTempId+&quot; for group &quot;+remoteGroup.getGroupIdName());</span>
-<span class="nc bnc" id="L298" title="All 2 branches missed.">						if (localTempId&gt;0) remoteGroup.setTempId(localTempId);</span>
+<span class="nc" id="L383">						int localTempId = getCreateTemplate(oTempId);</span>
+<span class="nc" id="L384">						Logger.debug(SyncDirAction.class, &quot;Setting localTempId to:&quot;+localTempId+&quot; for group &quot;+remoteGroup.getGroupIdName());</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">						if (localTempId&gt;0) remoteGroup.setTempId(localTempId);</span>
 					}
-<span class="nc" id="L300">					remoteGroup.setPasswordProtected(localUserGroups);</span>
-<span class="nc bnc" id="L301" title="All 2 branches missed.">					if(Tools.isNotEmpty(localDomain))</span>
-<span class="nc" id="L302">						remoteGroup.setDomainName(localDomain);</span>
+<span class="nc" id="L387">					remoteGroup.setPasswordProtected(localUserGroups);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					if(Tools.isNotEmpty(localDomain))</span>
+<span class="nc" id="L389">						remoteGroup.setDomainName(localDomain);</span>
 
-<span class="nc bnc" id="L304" title="All 2 branches missed.">					if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">					if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
 					{
-<span class="nc" id="L306">						String lng = getLocalLng();</span>
-<span class="nc bnc" id="L307" title="All 2 branches missed.">						if (Tools.isNotEmpty(lng))</span>
+<span class="nc" id="L393">						String lng = getLocalLng();</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">						if (Tools.isNotEmpty(lng))</span>
 						{
-<span class="nc" id="L309">							Logger.debug(getClass(), &quot;Cloud, translating to: &quot; + lng);</span>
-<span class="nc" id="L310">							remoteGroup.setGroupName(CloudToolsForCore.translate(lng, remoteGroup.getGroupName()));</span>
-<span class="nc" id="L311">							remoteGroup.setNavbar(SearchTools.htmlToPlain(CloudToolsForCore.translate(lng, remoteGroup.getNavbar())));</span>
-<span class="nc" id="L312">							remoteGroup.setUrlDirName(CloudToolsForCore.translate(lng, remoteGroup.getGroupName()));</span>
+<span class="nc" id="L396">							Logger.debug(getClass(), &quot;Cloud, translating to: &quot; + lng);</span>
+<span class="nc" id="L397">							remoteGroup.setGroupName(CloudToolsForCore.translate(lng, remoteGroup.getGroupName()));</span>
+<span class="nc" id="L398">							remoteGroup.setNavbar(SearchTools.htmlToPlain(CloudToolsForCore.translate(lng, remoteGroup.getNavbar())));</span>
+<span class="nc" id="L399">							remoteGroup.setUrlDirName(CloudToolsForCore.translate(lng, remoteGroup.getGroupName()));</span>
 						}
 					}
 
-<span class="nc" id="L316">					groupsDB.setGroup(remoteGroup);</span>
+<span class="nc" id="L403">					groupsDB.setGroup(remoteGroup);</span>
 
 					//vrat do povodneho stavu
-<span class="nc" id="L319">					remoteGroup.setGroupId(oGroupId);</span>
-<span class="nc" id="L320">					remoteGroup.setParentGroupId(oParentGroupId);</span>
-<span class="nc" id="L321">					remoteGroup.setTempId(oTempId);</span>
-<span class="nc" id="L322">					remoteGroup.setPasswordProtected(oUserGroups);</span>
-<span class="nc" id="L323">					remoteGroup.setFullPath(oFullPath);</span>
-<span class="nc bnc" id="L324" title="All 2 branches missed.">					if (oNavbar != null) remoteGroup.setNavbar(oNavbar);</span>
-<span class="nc" id="L325">					remoteGroup.setDomainName(oDomain);</span>
-<span class="nc" id="L326">					remoteGroup.setDefaultDocId(oDefaultDocId);</span>
+<span class="nc" id="L406">					remoteGroup.setGroupId(oGroupId);</span>
+<span class="nc" id="L407">					remoteGroup.setParentGroupId(oParentGroupId);</span>
+<span class="nc" id="L408">					remoteGroup.setTempId(oTempId);</span>
+<span class="nc" id="L409">					remoteGroup.setPasswordProtected(oUserGroups);</span>
+<span class="nc" id="L410">					remoteGroup.setFullPath(oFullPath);</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">					if (oNavbar != null) remoteGroup.setNavbar(oNavbar);</span>
+<span class="nc" id="L412">					remoteGroup.setDomainName(oDomain);</span>
+<span class="nc" id="L413">					remoteGroup.setDefaultDocId(oDefaultDocId);</span>
 
-<span class="nc" id="L328">					return true;</span>
+<span class="nc" id="L415">					return true;</span>
 				}
 			}
-<span class="nc" id="L331">		}</span>
+<span class="nc" id="L418">		}</span>
 		else
 		{
 			//chceme prepisat data, toto musi zostat zachovane
-<span class="nc" id="L335">			int groupId = localGroup.getGroupId();</span>
-<span class="nc" id="L336">			int parentGroupId = localGroup.getParentGroupId();</span>
-<span class="nc" id="L337">			int defaultDocId = localGroup.getDefaultDocId();</span>
-<span class="nc" id="L338">			int tempId = localGroup.getTempId();</span>
-<span class="nc" id="L339">			String domainName = localGroup.getDomainName();</span>
-<span class="nc" id="L340">			String userGroups = localGroup.getPasswordProtected();</span>
+<span class="fc" id="L422">			int groupId = localGroup.getGroupId();</span>
+<span class="fc" id="L423">			int parentGroupId = localGroup.getParentGroupId();</span>
+<span class="fc" id="L424">			int defaultDocId = localGroup.getDefaultDocId();</span>
+<span class="fc" id="L425">			int tempId = localGroup.getTempId();</span>
+<span class="fc" id="L426">			String domainName = localGroup.getDomainName();</span>
+<span class="fc" id="L427">			String userGroups = localGroup.getPasswordProtected();</span>
 			try
 			{
 			    //skopiruj data
-<span class="nc" id="L344">				BeanUtils.copyProperties(localGroup, remoteGroup);</span>
+<span class="fc" id="L431">				BeanUtils.copyProperties(localGroup, remoteGroup);</span>
 
 				//obnov zachovane data
-<span class="nc" id="L347">				localGroup.setGroupId(groupId);</span>
-<span class="nc" id="L348">				localGroup.setParentGroupId(parentGroupId);</span>
-<span class="nc" id="L349">				localGroup.setDefaultDocId(defaultDocId);</span>
-<span class="nc bnc" id="L350" title="All 2 branches missed.">                if (createMissingTemplates) localGroup.setTempId(getCreateTemplate(remoteGroup.getTempId()));</span>
-<span class="nc" id="L351">                else localGroup.setTempId(tempId);</span>
-<span class="nc" id="L352">                localGroup.setDomainName(domainName);</span>
+<span class="fc" id="L434">				localGroup.setGroupId(groupId);</span>
+<span class="fc" id="L435">				localGroup.setParentGroupId(parentGroupId);</span>
+<span class="fc" id="L436">				localGroup.setDefaultDocId(defaultDocId);</span>
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">                if (createMissingTemplates) localGroup.setTempId(getCreateTemplate(remoteGroup.getTempId()));</span>
+<span class="nc" id="L438">                else localGroup.setTempId(tempId);</span>
+<span class="fc" id="L439">                localGroup.setDomainName(domainName);</span>
 
-<span class="nc" id="L354">                String localUserGroups = convertUserGroupIdsToLocal(remoteGroup);</span>
-<span class="nc bnc" id="L355" title="All 2 branches missed.">                if (localUserGroups!=null) localGroup.setPasswordProtected(localUserGroups);</span>
-<span class="nc" id="L356">				else localGroup.setPasswordProtected(userGroups);</span>
+<span class="fc" id="L441">                String localUserGroups = convertUserGroupIdsToLocal(remoteGroup);</span>
+<span class="pc bpc" id="L442" title="1 of 2 branches missed.">                if (localUserGroups!=null) localGroup.setPasswordProtected(localUserGroups);</span>
+<span class="nc" id="L443">				else localGroup.setPasswordProtected(userGroups);</span>
 
-<span class="nc" id="L358">				groupsDB.setGroup(localGroup);</span>
+<span class="fc" id="L445">				groupsDB.setGroup(localGroup);</span>
 			}
-<span class="nc" id="L360">			catch (Exception ex)</span>
+<span class="nc" id="L447">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L362">			    sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L363">			}</span>
+<span class="nc" id="L449">			    sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L450">			}</span>
 		}
-<span class="nc" id="L365">		return false;</span>
+<span class="fc" id="L452">		return false;</span>
 	}
 
     /**
@@ -372,37 +459,37 @@ import sk.iway.spirit.model.Media;
      */
 	private String convertUserGroupIdsToLocal(GroupDetails remoteGroup)
     {
-<span class="nc" id="L375">        StringBuilder localUserGroups = null;</span>
-<span class="nc bnc" id="L376" title="All 4 branches missed.">        if (Tools.isNotEmpty(remoteGroup.getPasswordProtected()) &amp;&amp; createMissingUserGroups)</span>
+<span class="fc" id="L462">        StringBuilder localUserGroups = null;</span>
+<span class="pc bpc" id="L463" title="3 of 4 branches missed.">        if (Tools.isNotEmpty(remoteGroup.getPasswordProtected()) &amp;&amp; createMissingUserGroups)</span>
         {
-<span class="nc" id="L378">            StringTokenizer st = new StringTokenizer(remoteGroup.getPasswordProtected(), &quot;,&quot;);</span>
-<span class="nc bnc" id="L379" title="All 2 branches missed.">            while (st.hasMoreTokens())</span>
+<span class="nc" id="L465">            StringTokenizer st = new StringTokenizer(remoteGroup.getPasswordProtected(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">            while (st.hasMoreTokens())</span>
             {
-<span class="nc" id="L381">                int remoteUserGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L382" title="All 2 branches missed.">                if (remoteUserGroupId&gt;0)</span>
+<span class="nc" id="L468">                int remoteUserGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">                if (remoteUserGroupId&gt;0)</span>
                 {
-<span class="nc" id="L384">                    String remoteUserGroupName = getRemoteUserGroupName(remoteUserGroupId);</span>
-<span class="nc bnc" id="L385" title="All 2 branches missed.">                    if (Tools.isEmpty(remoteUserGroupName))</span>
+<span class="nc" id="L471">                    String remoteUserGroupName = getRemoteUserGroupName(remoteUserGroupId);</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">                    if (Tools.isEmpty(remoteUserGroupName))</span>
                     {
-<span class="nc" id="L387">                        context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote user group &quot;+remoteUserGroupId);</span>
-<span class="nc" id="L388">                        Logger.debug(SyncDirAction.class, &quot;Neexistuje remote user group &quot;+remoteUserGroupId);</span>
-<span class="nc" id="L389">                        return null;</span>
+<span class="nc" id="L474">                        context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote user group &quot;+remoteUserGroupId);</span>
+<span class="nc" id="L475">                        Logger.debug(SyncDirAction.class, &quot;Neexistuje remote user group &quot;+remoteUserGroupId);</span>
+<span class="nc" id="L476">                        return null;</span>
                     }
-<span class="nc" id="L391">                    int localUserGroupId = getCreateUserGroup(remoteUserGroupId);</span>
-<span class="nc bnc" id="L392" title="All 2 branches missed.">                    if (localUserGroupId&lt;1)</span>
+<span class="nc" id="L478">                    int localUserGroupId = getCreateUserGroup(remoteUserGroupId);</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">                    if (localUserGroupId&lt;1)</span>
                     {
-<span class="nc" id="L394">                        context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje pouzivatelska skupina &quot;+remoteUserGroupName);</span>
-<span class="nc" id="L395">                        Logger.debug(SyncDirAction.class, &quot;Neexistuje pouzivatelska skupina &quot;+remoteUserGroupName);</span>
-<span class="nc" id="L396">                        return null;</span>
+<span class="nc" id="L481">                        context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje pouzivatelska skupina &quot;+remoteUserGroupName);</span>
+<span class="nc" id="L482">                        Logger.debug(SyncDirAction.class, &quot;Neexistuje pouzivatelska skupina &quot;+remoteUserGroupName);</span>
+<span class="nc" id="L483">                        return null;</span>
                     }
-<span class="nc bnc" id="L398" title="All 2 branches missed.">                    if (localUserGroups==null) localUserGroups = new StringBuilder(Integer.toString(localUserGroupId));</span>
-<span class="nc" id="L399">                    else localUserGroups.append(&quot;,&quot;).append(localUserGroupId);</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">                    if (localUserGroups==null) localUserGroups = new StringBuilder(Integer.toString(localUserGroupId));</span>
+<span class="nc" id="L486">                    else localUserGroups.append(&quot;,&quot;).append(localUserGroupId);</span>
                 }
-<span class="nc" id="L401">            }</span>
+<span class="nc" id="L488">            }</span>
         }
-<span class="nc bnc" id="L403" title="All 2 branches missed.">		if (localUserGroups==null) return &quot;&quot;;</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">		if (localUserGroups==null) return &quot;&quot;;</span>
 
-<span class="nc" id="L405">		return localUserGroups.toString();</span>
+<span class="nc" id="L492">		return localUserGroups.toString();</span>
 	 }
 
 	 /**
@@ -412,24 +499,24 @@ import sk.iway.spirit.model.Media;
 	  */
 	 private String convertGroupIdsToLocalFilter(String groupIds) {
 		//ak export neobsahuje skupiny, tak vrat povodne
-<span class="nc bnc" id="L415" title="All 2 branches missed.">		if (Tools.isEmpty(groupIds)) return groupIds;</span>
+<span class="nc bnc" id="L502" title="All 2 branches missed.">		if (Tools.isEmpty(groupIds)) return groupIds;</span>
 
-<span class="nc" id="L417">		StringBuilder localGroups = new StringBuilder();</span>
+<span class="nc" id="L504">		StringBuilder localGroups = new StringBuilder();</span>
 		try {
-<span class="nc" id="L419">			int[] ids = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
-<span class="nc bnc" id="L420" title="All 2 branches missed.">			for (int remoteGroupId : ids) {</span>
-<span class="nc" id="L421">				GroupDetails localGroup = getLocalGroup(remoteGroupId);</span>
-<span class="nc bnc" id="L422" title="All 2 branches missed.">				if (localGroup != null) {</span>
-<span class="nc bnc" id="L423" title="All 2 branches missed.">					if (localGroups.length()&gt;0) localGroups.append(&quot;,&quot;);</span>
-<span class="nc" id="L424">					localGroups.append(String.valueOf(localGroup.getGroupId()));</span>
+<span class="nc" id="L506">			int[] ids = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">			for (int remoteGroupId : ids) {</span>
+<span class="nc" id="L508">				GroupDetails localGroup = getLocalGroup(remoteGroupId);</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">				if (localGroup != null) {</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">					if (localGroups.length()&gt;0) localGroups.append(&quot;,&quot;);</span>
+<span class="nc" id="L511">					localGroups.append(String.valueOf(localGroup.getGroupId()));</span>
 				}
 			}
-<span class="nc" id="L427">		} catch (Exception ex) {</span>
-<span class="nc" id="L428">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L514">		} catch (Exception ex) {</span>
+<span class="nc" id="L515">			sk.iway.iwcm.Logger.error(ex);</span>
 			//ak to padlo, nastav povodne
-<span class="nc bnc" id="L430" title="All 2 branches missed.">			if (Tools.isEmpty(localGroups)) localGroups.append(groupIds);</span>
-<span class="nc" id="L431">		}</span>
-<span class="nc" id="L432">		return localGroups.toString();</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">			if (Tools.isEmpty(localGroups)) localGroups.append(groupIds);</span>
+<span class="nc" id="L518">		}</span>
+<span class="nc" id="L519">		return localGroups.toString();</span>
 	 }
 
 	 /**
@@ -438,44 +525,44 @@ import sk.iway.spirit.model.Media;
      * @return
      */
 		private String convertPerexGroupIdsToLocal(String perexGroupIds) {
-<span class="fc" id="L441">			StringBuilder localPerexGroups = new StringBuilder();</span>
+<span class="fc" id="L528">			StringBuilder localPerexGroups = new StringBuilder();</span>
 			try {
-<span class="fc" id="L443">				List&lt;PerexGroupBean&gt; perexGroups = getRemotePerexGroups();</span>
+<span class="fc" id="L530">				List&lt;PerexGroupBean&gt; perexGroups = getRemotePerexGroups();</span>
 				//ak export neobsahuje perex grupy, tak vrat povodne
-<span class="pc bpc" id="L445" title="2 of 4 branches missed.">				if (perexGroups == null || perexGroups.size()&lt;1) return perexGroupIds;</span>
+<span class="pc bpc" id="L532" title="2 of 4 branches missed.">				if (perexGroups == null || perexGroups.size()&lt;1) return perexGroupIds;</span>
 
-<span class="pc bpc" id="L447" title="3 of 4 branches missed.">				if (Tools.isNotEmpty(perexGroupIds) &amp;&amp; createMissingUserGroups) {</span>
-<span class="nc" id="L448">					StringTokenizer st = new StringTokenizer(perexGroupIds, &quot;,&quot;);</span>
-<span class="nc bnc" id="L449" title="All 2 branches missed.">					while (st.hasMoreTokens()) {</span>
+<span class="pc bpc" id="L534" title="1 of 4 branches missed.">				if (Tools.isNotEmpty(perexGroupIds) &amp;&amp; createMissingUserGroups) {</span>
+<span class="fc" id="L535">					StringTokenizer st = new StringTokenizer(perexGroupIds, &quot;,&quot;);</span>
+<span class="fc bfc" id="L536" title="All 2 branches covered.">					while (st.hasMoreTokens()) {</span>
 
-<span class="nc" id="L451">						int remotePerexGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L452" title="All 2 branches missed.">						if (remotePerexGroupId &gt; 0) {</span>
-<span class="nc" id="L453">							String remotePerexGroupName = getRemotePerexGroupName(remotePerexGroupId);</span>
-<span class="nc bnc" id="L454" title="All 2 branches missed.">							if (Tools.isEmpty(remotePerexGroupName)) {</span>
-<span class="nc" id="L455">								context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote perex group &quot; + remotePerexGroupId);</span>
-<span class="nc" id="L456">								Logger.debug(SyncDirAction.class, &quot;Neexistuje remote perex group &quot; + remotePerexGroupId);</span>
-<span class="nc" id="L457">								continue;</span>
+<span class="fc" id="L538">						int remotePerexGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="pc bpc" id="L539" title="1 of 2 branches missed.">						if (remotePerexGroupId &gt; 0) {</span>
+<span class="fc" id="L540">							String remotePerexGroupName = getRemotePerexGroupName(remotePerexGroupId);</span>
+<span class="pc bpc" id="L541" title="1 of 2 branches missed.">							if (Tools.isEmpty(remotePerexGroupName)) {</span>
+<span class="nc" id="L542">								context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote perex group &quot; + remotePerexGroupId);</span>
+<span class="nc" id="L543">								Logger.debug(SyncDirAction.class, &quot;Neexistuje remote perex group &quot; + remotePerexGroupId);</span>
+<span class="nc" id="L544">								continue;</span>
 							}
 
-<span class="nc" id="L460">							int localPerexGroupId = getCreatePerexGroup(remotePerexGroupId);</span>
-<span class="nc bnc" id="L461" title="All 2 branches missed.">							if (localPerexGroupId &lt; 1) {</span>
-<span class="nc" id="L462">								context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje perex skupina &quot; + remotePerexGroupName);</span>
-<span class="nc" id="L463">								Logger.debug(SyncDirAction.class, &quot;Neexistuje perex skupina &quot; + remotePerexGroupName);</span>
+<span class="fc" id="L547">							int localPerexGroupId = getCreatePerexGroup(remotePerexGroupId);</span>
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">							if (localPerexGroupId &lt; 1) {</span>
+<span class="nc" id="L549">								context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje perex skupina &quot; + remotePerexGroupName);</span>
+<span class="nc" id="L550">								Logger.debug(SyncDirAction.class, &quot;Neexistuje perex skupina &quot; + remotePerexGroupName);</span>
 								//ak sa nepodarilo vytvorit, ponechaj povodne IDecko
-<span class="nc" id="L465">								localPerexGroupId = remotePerexGroupId;</span>
+<span class="nc" id="L552">								localPerexGroupId = remotePerexGroupId;</span>
 							}
 
-<span class="nc bnc" id="L468" title="All 2 branches missed.">							if (localPerexGroups.length()&gt;0) localPerexGroups.append(&quot;,&quot;);</span>
-<span class="nc" id="L469">							localPerexGroups.append(Integer.toString(localPerexGroupId));</span>
+<span class="pc bpc" id="L555" title="1 of 2 branches missed.">							if (localPerexGroups.length()&gt;0) localPerexGroups.append(&quot;,&quot;);</span>
+<span class="fc" id="L556">							localPerexGroups.append(Integer.toString(localPerexGroupId));</span>
 						}
-<span class="nc" id="L471">					}</span>
+<span class="fc" id="L558">					}</span>
 				}
-<span class="nc" id="L473">			} catch (Exception ex) {</span>
-<span class="nc" id="L474">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L560">			} catch (Exception ex) {</span>
+<span class="nc" id="L561">				sk.iway.iwcm.Logger.error(ex);</span>
 				//ak to padlo, nastav povodne
-<span class="nc bnc" id="L476" title="All 2 branches missed.">				if (Tools.isEmpty(localPerexGroups)) localPerexGroups.append(perexGroupIds);</span>
-<span class="fc" id="L477">			}</span>
-<span class="fc" id="L478">			return localPerexGroups.toString();</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">				if (Tools.isEmpty(localPerexGroups)) localPerexGroups.append(perexGroupIds);</span>
+<span class="fc" id="L564">			}</span>
+<span class="fc" id="L565">			return localPerexGroups.toString();</span>
 		}
 
 	/**
@@ -485,183 +572,202 @@ import sk.iway.spirit.model.Media;
 	 */
 	private int createLocalDoc(DocDetails remoteDoc)
 	{
-<span class="fc" id="L488">		Logger.debug(SyncDirAction.class, &quot;createLocalDoc, remoteDoc=&quot;+remoteDoc.getDocId()+&quot; title=&quot;+remoteDoc.getTitle());</span>
+<span class="fc" id="L575">		Logger.debug(SyncDirAction.class, &quot;createLocalDoc, remoteDoc=&quot;+remoteDoc.getDocId()+&quot; title=&quot;+remoteDoc.getTitle());</span>
 
-<span class="fc" id="L490">		GroupDetails localGroup = getLocalGroup(remoteDoc.getGroupId());</span>
-<span class="pc bpc" id="L491" title="1 of 2 branches missed.">		if (localGroup==null)</span>
+<span class="fc" id="L577">		GroupDetails localGroup = getLocalGroup(remoteDoc.getGroupId());</span>
+<span class="pc bpc" id="L578" title="1 of 2 branches missed.">		if (localGroup==null)</span>
 		{
 			//asi nezaskrtol, ze sa ma syncnut aj adresar
-<span class="nc" id="L494">			createLocalGroup(getRemoteGroup(remoteDoc.getGroupId()));</span>
-<span class="nc" id="L495">			localGroup = getLocalGroup(remoteDoc.getGroupId());</span>
+<span class="nc" id="L581">			createLocalGroup(getRemoteGroup(remoteDoc.getGroupId()));</span>
+<span class="nc" id="L582">			localGroup = getLocalGroup(remoteDoc.getGroupId());</span>
 		}
-<span class="pc bpc" id="L497" title="1 of 2 branches missed.">		if (localGroup!=null)</span>
+<span class="pc bpc" id="L584" title="1 of 2 branches missed.">		if (localGroup!=null)</span>
 		{
 			//najdi lokalnu verziu
-<span class="fc" id="L500">			DocDetails localDoc = getLocalDoc(remoteDoc);</span>
+<span class="fc" id="L587">			DocDetails localDoc = getLocalDoc(remoteDoc);</span>
 
 			//uprav mapovanie sablon!!!
-<span class="fc" id="L503">			int localTempId = getCreateTemplate(remoteDoc.getTempId());</span>
-<span class="pc bpc" id="L504" title="1 of 2 branches missed.">			if (localTempId&lt;1) return -1;</span>
+<span class="fc" id="L590">			int localTempId = getCreateTemplate(remoteDoc.getTempId());</span>
+<span class="pc bpc" id="L591" title="1 of 2 branches missed.">			if (localTempId&lt;1) return -1;</span>
 
 			//uprav mapovanie user group skupin
-<span class="fc" id="L507">			StringBuilder localUserGroups = null;</span>
-<span class="pc bpc" id="L508" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(remoteDoc.getPasswordProtected()))</span>
+<span class="fc" id="L594">			StringBuilder localUserGroups = null;</span>
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(remoteDoc.getPasswordProtected()))</span>
 			{
-<span class="nc" id="L510">				StringTokenizer st = new StringTokenizer(remoteDoc.getPasswordProtected(), &quot;,&quot;);</span>
-<span class="nc bnc" id="L511" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="nc" id="L597">				StringTokenizer st = new StringTokenizer(remoteDoc.getPasswordProtected(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L598" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L513">					int remoteUserGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L514" title="All 2 branches missed.">					if (remoteUserGroupId&gt;0)</span>
+<span class="nc" id="L600">					int remoteUserGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L601" title="All 2 branches missed.">					if (remoteUserGroupId&gt;0)</span>
 					{
-<span class="nc" id="L516">						int localUserGroupId = getCreateUserGroup(remoteUserGroupId);</span>
-<span class="nc bnc" id="L517" title="All 2 branches missed.">						if (localUserGroupId&lt;1)</span>
+<span class="nc" id="L603">						int localUserGroupId = getCreateUserGroup(remoteUserGroupId);</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">						if (localUserGroupId&lt;1)</span>
 						{
-<span class="nc" id="L519">							return -1;</span>
+<span class="nc" id="L606">							return -1;</span>
 						}
-<span class="nc bnc" id="L521" title="All 2 branches missed.">						if (localUserGroups==null) localUserGroups = new StringBuilder(Integer.toString(localUserGroupId));</span>
-<span class="nc" id="L522">						else localUserGroups.append(&quot;,&quot;).append(localUserGroupId);</span>
+<span class="nc bnc" id="L608" title="All 2 branches missed.">						if (localUserGroups==null) localUserGroups = new StringBuilder(Integer.toString(localUserGroupId));</span>
+<span class="nc" id="L609">						else localUserGroups.append(&quot;,&quot;).append(localUserGroupId);</span>
 					}
-<span class="nc" id="L524">				}</span>
+<span class="nc" id="L611">				}</span>
 			}
 
-<span class="fc" id="L527">			EditorForm ef = new EditorForm(remoteDoc);</span>
+<span class="fc" id="L614">			EditorForm ef = new EditorForm(remoteDoc);</span>
 
-<span class="fc" id="L529">			Logger.debug(SyncDirAction.class, &quot;createLocalDoc: IN=&quot;+Constants.getInstallName()+&quot; is Cloud=&quot;+(&quot;cloud&quot;.equals(Constants.getInstallName())));</span>
-<span class="pc bpc" id="L530" title="1 of 2 branches missed.">			if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="fc" id="L616">			Logger.debug(SyncDirAction.class, &quot;createLocalDoc: IN=&quot;+Constants.getInstallName()+&quot; is Cloud=&quot;+(&quot;cloud&quot;.equals(Constants.getInstallName())));</span>
+<span class="pc bpc" id="L617" title="1 of 2 branches missed.">			if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
 			{
-<span class="nc" id="L532">				String lng = getLocalLng();</span>
-<span class="nc" id="L533">				Logger.debug(SyncDirAction.class, &quot;createLocalDoc: lng=&quot;+lng);</span>
-<span class="nc bnc" id="L534" title="All 2 branches missed.">				if (Tools.isNotEmpty(lng))</span>
+<span class="nc" id="L619">				String lng = getLocalLng();</span>
+<span class="nc" id="L620">				Logger.debug(SyncDirAction.class, &quot;createLocalDoc: lng=&quot;+lng);</span>
+<span class="nc bnc" id="L621" title="All 2 branches missed.">				if (Tools.isNotEmpty(lng))</span>
 				{
-<span class="nc" id="L536">					Logger.debug(getClass(), &quot;Cloud, translating remote docid &quot;+ remoteDoc.getDocId() +&quot; title: &quot;+ remoteDoc.getTitle() +&quot; to: &quot; + lng);</span>
-<span class="nc" id="L537">					ef = CloudToolsForCore.translate(lng, ef, localGroup);</span>
+<span class="nc" id="L623">					Logger.debug(getClass(), &quot;Cloud, translating remote docid &quot;+ remoteDoc.getDocId() +&quot; title: &quot;+ remoteDoc.getTitle() +&quot; to: &quot; + lng);</span>
+<span class="nc" id="L624">					ef = CloudToolsForCore.translate(lng, ef, localGroup);</span>
 				}
 			}
 
-<span class="pc bpc" id="L541" title="1 of 2 branches missed.">			if (localDoc != null) ef.setDocId(localDoc.getDocId());</span>
-<span class="fc" id="L542">			else ef.setDocId(-1);</span>
+<span class="fc bfc" id="L628" title="All 2 branches covered.">			if (localDoc != null) ef.setDocId(localDoc.getDocId());</span>
+<span class="fc" id="L629">			else ef.setDocId(-1);</span>
 
-<span class="fc" id="L544">			ef.setData(fixGroupIdsInContent(ef.getData()));</span>
+<span class="fc" id="L631">			ef.setData(fixGroupIdsInContent(ef.getData()));</span>
+<span class="fc" id="L632">			ef.setData(fixMediaGroupIdsInContent(ef.getData()));</span>
 
-<span class="fc" id="L546">			ef.setGroupId(localGroup.getGroupId());</span>
-<span class="fc" id="L547">			ef.setPublish(&quot;1&quot;);</span>
-<span class="fc" id="L548">			ef.setTempId(localTempId);</span>
-<span class="fc" id="L549">			ef.setPasswordProtectedString(Tools.toString(localUserGroups));</span>
-<span class="fc" id="L550">			ef.setPerexGroupString(convertPerexGroupIdsToLocal(remoteDoc.getPerexGroupIdsString()));</span>
+<span class="fc" id="L634">			ef.setGroupId(localGroup.getGroupId());</span>
+<span class="fc" id="L635">			ef.setPublish(&quot;1&quot;);</span>
+<span class="fc" id="L636">			ef.setTempId(localTempId);</span>
+<span class="fc" id="L637">			ef.setPasswordProtectedString(Tools.toString(localUserGroups));</span>
+<span class="fc" id="L638">			ef.setPerexGroupString(convertPerexGroupIdsToLocal(remoteDoc.getPerexGroupIdsString()));</span>
 
-<span class="fc" id="L552">			Identity user = UsersDB.getCurrentUser(getContext());</span>
-<span class="fc" id="L553">			ef.setAuthorId(user.getUserId());</span>
+<span class="fc" id="L640">			Identity user = UsersDB.getCurrentUser(getContext());</span>
+<span class="fc" id="L641">			ef.setAuthorId(user.getUserId());</span>
 
 			//nastavime poznamku pre redaktora
-<span class="fc" id="L556">			DocNoteBean note = getRemoteDocsNotes().get(remoteDoc.getDocId());</span>
-<span class="pc bpc" id="L557" title="1 of 2 branches missed.">			if(note!=null)</span>
+<span class="fc" id="L644">			DocNoteBean note = getRemoteDocsNotes().get(remoteDoc.getDocId());</span>
+<span class="pc bpc" id="L645" title="1 of 2 branches missed.">			if(note!=null)</span>
 			{
-<span class="nc" id="L559">				ef.setNote(note.getNote());</span>
+<span class="nc" id="L647">				ef.setNote(note.getNote());</span>
 			}
 
-<span class="fc" id="L562">			int docid = EditorDB.saveEditorForm(ef, context.getRequest());</span>
+<span class="fc" id="L650">			int docid = EditorDB.saveEditorForm(ef, context.getRequest());</span>
 
-<span class="fc" id="L564">			EditorDB.cleanSessionData(context.getRequest());</span>
+<span class="fc" id="L652">			EditorDB.cleanSessionData(context.getRequest());</span>
 
 			//skontroluj, ci remoteDoc nie je nejake default doc a nastav na local group
-<span class="fc" id="L567">			fixDefaultDocId(remoteDoc, ef.getDocId());</span>
+<span class="fc" id="L655">			fixDefaultDocId(remoteDoc, ef.getDocId());</span>
 
-			//syncni media
-<span class="fc" id="L570">			List&lt;Media&gt; media = getRemoteMedia();</span>
-<span class="pc bpc" id="L571" title="1 of 2 branches missed.">			if (media != null)</span>
-			{
-				//toto su media co uz mam
-<span class="fc" id="L574">				List&lt;Media&gt; mediaLocal = MediaDB.getMedia(getSession(), &quot;documents&quot;, ef.getDocId(), null, 0, false);</span>
-				//toto je set medii ktore som prepisal z remote, ostatne budem musiet premazat
-<span class="fc" id="L576">				Set&lt;String&gt; mediaLinks = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L657">			syncMedia(remoteDoc, ef);</span>
 
-<span class="fc" id="L578">				MediaDB mediaDB = new MediaDB();</span>
-<span class="fc bfc" id="L579" title="All 2 branches covered.">				for (Media m : media)</span>
-				{
-<span class="pc bpc" id="L581" title="2 of 4 branches missed.">					if (m.getMediaFkId()!=null &amp;&amp; m.getMediaFkId().intValue()==remoteDoc.getDocId())</span>
-					{
-<span class="nc" id="L583">						Media mLocal = getMediaByLink(mediaLocal, m.getMediaLink());</span>
-<span class="nc bnc" id="L584" title="All 2 branches missed.">						if (mLocal == null) mLocal = new Media();</span>
-
-<span class="nc" id="L586">						mLocal.setMediaFkId(Integer.valueOf(ef.getDocId()));</span>
-<span class="nc" id="L587">						mLocal.setMediaFkTableName(m.getMediaFkTableName());</span>
-<span class="nc" id="L588">						mLocal.setMediaTitleSk(m.getMediaTitleSk());</span>
-<span class="nc" id="L589">						mLocal.setMediaTitleCz(m.getMediaTitleCz());</span>
-<span class="nc" id="L590">						mLocal.setMediaTitleEn(m.getMediaTitleEn());</span>
-<span class="nc" id="L591">						mLocal.setMediaTitleDe(m.getMediaTitleDe());</span>
-<span class="nc" id="L592">						mLocal.setMediaLink(m.getMediaLink());</span>
-<span class="nc" id="L593">						mLocal.setMediaThumbLink(m.getMediaThumbLink());</span>
-<span class="nc" id="L594">						mLocal.setMediaGroup(m.getMediaGroup());</span>
-<span class="nc" id="L595">						mLocal.setMediaInfoSk(m.getMediaInfoSk());</span>
-<span class="nc" id="L596">						mLocal.setMediaInfoCz(m.getMediaInfoCz());</span>
-<span class="nc" id="L597">						mLocal.setMediaInfoEn(m.getMediaInfoEn());</span>
-<span class="nc" id="L598">						mLocal.setMediaInfoDe(m.getMediaInfoDe());</span>
-<span class="nc" id="L599">						mLocal.setMediaSortOrder(m.getMediaSortOrder());</span>
-<span class="nc" id="L600">						mLocal.setLastUpdate(m.getLastUpdate());</span>
-
-<span class="nc" id="L602">						Logger.debug(SyncDirAction.class, &quot;Saving media: &quot;+mLocal.getMediaId()+&quot; title=&quot;+mLocal.getMediaTitleSk()+&quot; link=&quot;+mLocal.getMediaLink());</span>
-<span class="nc" id="L603">						mediaDB.save(mLocal);</span>
-
-<span class="nc" id="L605">						mediaLinks.add(m.getMediaLink());</span>
-					}
-<span class="fc" id="L607">				}</span>
-
-				//pomaz media, ktore neboli aktualizovane
-<span class="pc bpc" id="L610" title="1 of 2 branches missed.">				for (Media mLocal : mediaLocal)</span>
-				{
-<span class="nc bnc" id="L612" title="All 2 branches missed.">					if (mediaLinks.contains(mLocal.getMediaLink())) continue;</span>
-
-<span class="nc" id="L614">					Logger.debug(SyncDirAction.class, &quot;Deleting media: &quot;+mLocal.getMediaId()+&quot; title=&quot;+mLocal.getMediaTitleSk()+&quot; link=&quot;+mLocal.getMediaLink());</span>
-<span class="nc" id="L615">					mediaDB.delete(mLocal);</span>
-<span class="nc" id="L616">				}</span>
-			}
-
-
-<span class="fc" id="L620">			return docid;</span>
+<span class="fc" id="L659">			return docid;</span>
 		}
-<span class="nc" id="L622">		return -1;</span>
+<span class="nc" id="L661">		return -1;</span>
 	}
+
+	private void syncMedia(DocDetails remoteDoc, EditorForm ef) {
+		//syncni media
+<span class="fc" id="L666">		List&lt;Media&gt; media = getRemoteMedia();</span>
+<span class="pc bpc" id="L667" title="1 of 2 branches missed.">		if (media != null)</span>
+		{
+			//toto su media co uz mam
+<span class="fc" id="L670">			List&lt;Media&gt; mediaLocal = MediaDB.getMedia(getSession(), &quot;documents&quot;, ef.getDocId(), null, 0, false);</span>
+			//toto je set medii ktore som prepisal z remote, ostatne budem musiet premazat
+<span class="fc" id="L672">			Set&lt;String&gt; mediaLinks = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L674">			MediaDB mediaDB = new MediaDB();</span>
+<span class="fc bfc" id="L675" title="All 2 branches covered.">			for (Media m : media)</span>
+			{
+<span class="pc bpc" id="L677" title="2 of 4 branches missed.">				if (m.getMediaFkId()!=null &amp;&amp; m.getMediaFkId().intValue()==remoteDoc.getDocId())</span>
+				{
+<span class="nc" id="L679">					Media mLocal = getMediaByLink(mediaLocal, m.getMediaLink());</span>
+<span class="nc bnc" id="L680" title="All 2 branches missed.">					if (mLocal == null) mLocal = new Media();</span>
+
+<span class="nc" id="L682">					mLocal.setMediaFkId(Integer.valueOf(ef.getDocId()));</span>
+<span class="nc" id="L683">					mLocal.setMediaFkTableName(m.getMediaFkTableName());</span>
+<span class="nc" id="L684">					mLocal.setMediaTitleSk(m.getMediaTitleSk());</span>
+<span class="nc" id="L685">					mLocal.setMediaTitleCz(m.getMediaTitleCz());</span>
+<span class="nc" id="L686">					mLocal.setMediaTitleEn(m.getMediaTitleEn());</span>
+<span class="nc" id="L687">					mLocal.setMediaTitleDe(m.getMediaTitleDe());</span>
+<span class="nc" id="L688">					mLocal.setMediaLink(m.getMediaLink());</span>
+<span class="nc" id="L689">					mLocal.setMediaThumbLink(m.getMediaThumbLink());</span>
+<span class="nc" id="L690">					mLocal.setMediaGroup(m.getMediaGroup());</span>
+<span class="nc" id="L691">					mLocal.setMediaInfoSk(m.getMediaInfoSk());</span>
+<span class="nc" id="L692">					mLocal.setMediaInfoCz(m.getMediaInfoCz());</span>
+<span class="nc" id="L693">					mLocal.setMediaInfoEn(m.getMediaInfoEn());</span>
+<span class="nc" id="L694">					mLocal.setMediaInfoDe(m.getMediaInfoDe());</span>
+<span class="nc" id="L695">					mLocal.setMediaSortOrder(m.getMediaSortOrder());</span>
+<span class="nc" id="L696">					mLocal.setLastUpdate(m.getLastUpdate());</span>
+
+					//set groups list from m to mLocal - iterate list and find local media group by mediaGroupName
+<span class="nc bnc" id="L699" title="All 4 branches missed.">					if (m.getGroups() != null &amp;&amp; m.getGroups().size() &gt; 0)</span>
+					{
+<span class="nc" id="L701">						List &lt;MediaGroupBean&gt; mediaGroups = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L702" title="All 2 branches missed.">						for (MediaGroupBean remoteGroup : m.getGroups())</span>
+						{
+<span class="nc" id="L704">							MediaGroupBean localMediaGroup = MediaDB.getGroup(remoteGroup.getMediaGroupName());</span>
+
+							//not mapped? why? it should be mapped with prepareRemoteToLocalMediaGroupMap()
+<span class="nc bnc" id="L707" title="All 2 branches missed.">							if (localMediaGroup == null) continue;</span>
+<span class="nc" id="L708">							mediaGroups.add(localMediaGroup);</span>
+<span class="nc" id="L709">						}</span>
+<span class="nc" id="L710">						mLocal.setGroups(mediaGroups);</span>
+					}
+
+<span class="nc" id="L713">					Logger.debug(SyncDirAction.class, &quot;Saving media: &quot;+mLocal.getMediaId()+&quot; title=&quot;+mLocal.getMediaTitleSk()+&quot; link=&quot;+mLocal.getMediaLink());</span>
+<span class="nc" id="L714">					mediaDB.save(mLocal);</span>
+
+<span class="nc" id="L716">					mediaLinks.add(m.getMediaLink());</span>
+				}
+<span class="fc" id="L718">			}</span>
+
+			//pomaz media, ktore neboli aktualizovane
+<span class="pc bpc" id="L721" title="1 of 2 branches missed.">			for (Media mLocal : mediaLocal)</span>
+			{
+<span class="nc bnc" id="L723" title="All 2 branches missed.">				if (mediaLinks.contains(mLocal.getMediaLink())) continue;</span>
+
+<span class="nc" id="L725">				Logger.debug(SyncDirAction.class, &quot;Deleting media: &quot;+mLocal.getMediaId()+&quot; title=&quot;+mLocal.getMediaTitleSk()+&quot; link=&quot;+mLocal.getMediaLink());</span>
+<span class="nc" id="L726">				mediaDB.delete(mLocal);</span>
+<span class="nc" id="L727">			}</span>
+		}
+<span class="fc" id="L729">	}</span>
 
 	private Media getMediaByLink(List&lt;Media&gt; media, String mediaLink)
 	{
-<span class="nc bnc" id="L627" title="All 2 branches missed.">		for (Media m : media)</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">		for (Media m : media)</span>
 		{
-<span class="nc bnc" id="L629" title="All 2 branches missed.">			if (m.getMediaLink().equals(mediaLink)) return m;</span>
-<span class="nc" id="L630">		}</span>
-<span class="nc" id="L631">		return null;</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">			if (m.getMediaLink().equals(mediaLink)) return m;</span>
+<span class="nc" id="L736">		}</span>
+<span class="nc" id="L737">		return null;</span>
 	}
 
 	private void fixDefaultDocId(DocDetails remoteDoc, int localDocId)
 	{
-<span class="fc bfc" id="L636" title="All 2 branches covered.">		for (GroupDetails remoteGroup : getRemoteGroups())</span>
+<span class="fc bfc" id="L742" title="All 2 branches covered.">		for (GroupDetails remoteGroup : getRemoteGroups())</span>
 		{
-<span class="pc bpc" id="L638" title="2 of 4 branches missed.">			if (remoteGroup != null &amp;&amp; remoteGroup.getDefaultDocId()==remoteDoc.getDocId())</span>
+<span class="pc bpc" id="L744" title="1 of 4 branches missed.">			if (remoteGroup != null &amp;&amp; remoteGroup.getDefaultDocId()==remoteDoc.getDocId())</span>
 			{
-<span class="nc" id="L640">				GroupDetails localGroup = getLocalGroup(remoteGroup);</span>
-<span class="nc bnc" id="L641" title="All 2 branches missed.">				if (localGroup != null)</span>
+<span class="fc" id="L746">				GroupDetails localGroup = getLocalGroup(remoteGroup);</span>
+<span class="pc bpc" id="L747" title="1 of 2 branches missed.">				if (localGroup != null)</span>
 				{
-<span class="nc" id="L643">					localGroup.setDefaultDocId(localDocId);</span>
-<span class="nc" id="L644">					GroupsDB.getInstance().setGroup(localGroup);</span>
+<span class="fc" id="L749">					localGroup.setDefaultDocId(localDocId);</span>
+<span class="fc" id="L750">					GroupsDB.getInstance().setGroup(localGroup);</span>
 				}
 			}
-<span class="fc" id="L647">		}</span>
-<span class="fc" id="L648">	}</span>
+<span class="fc" id="L753">		}</span>
+<span class="fc" id="L754">	}</span>
 
 	private boolean createLocalContentFile(Content.File remoteFile)
 	{
-<span class="nc" id="L652">		String tempPath = Tools.getRealPath(syncDir + &quot;/content/&quot; + remoteFile.getZipPath());</span>
-<span class="nc" id="L653">		String localPath = Tools.getRealPath(remoteFile.getVirtualPath());</span>
-<span class="nc" id="L654">		IwcmFile tempFile = new IwcmFile(tempPath);</span>
-<span class="nc" id="L655">		IwcmFile localFile = new IwcmFile(localPath);</span>
+<span class="nc" id="L758">		String tempPath = Tools.getRealPath(syncDir + &quot;/content/&quot; + remoteFile.getZipPath());</span>
+<span class="nc" id="L759">		String localPath = Tools.getRealPath(remoteFile.getVirtualPath());</span>
+<span class="nc" id="L760">		IwcmFile tempFile = new IwcmFile(tempPath);</span>
+<span class="nc" id="L761">		IwcmFile localFile = new IwcmFile(localPath);</span>
 		try
 		{
-<span class="nc" id="L658">			FileTools.copyFile(tempFile, localFile);</span>
-<span class="nc" id="L659">			localFile.setLastModified(remoteFile.getTime());</span>
-<span class="nc" id="L660">			return true;</span>
+<span class="nc" id="L764">			FileTools.copyFile(tempFile, localFile);</span>
+<span class="nc" id="L765">			localFile.setLastModified(remoteFile.getTime());</span>
+<span class="nc" id="L766">			return true;</span>
 		}
-<span class="nc" id="L662">		catch (Exception ex)</span>
+<span class="nc" id="L768">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L664">			return false;</span>
+<span class="nc" id="L770">			return false;</span>
 		}
 	}
 
@@ -673,75 +779,75 @@ import sk.iway.spirit.model.Media;
 	 */
 	public int getCreateTemplate(int remoteTempId)
 	{
-<span class="pc bpc" id="L676" title="1 of 2 branches missed.">		if (createMissingTemplates==false) return localRootGroup.getTempId();</span>
+<span class="pc bpc" id="L782" title="1 of 2 branches missed.">		if (createMissingTemplates==false) return localRootGroup.getTempId();</span>
 
-<span class="fc" id="L678">		TemplateDetails remoteTemp = getRemoteTemp(remoteTempId);</span>
-<span class="pc bpc" id="L679" title="1 of 2 branches missed.">		if (remoteTemp==null)</span>
+<span class="fc" id="L784">		TemplateDetails remoteTemp = getRemoteTemp(remoteTempId);</span>
+<span class="pc bpc" id="L785" title="1 of 2 branches missed.">		if (remoteTemp==null)</span>
 		{
-<span class="nc" id="L681">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote sablona pre tempId=&quot;+remoteTempId);</span>
-<span class="nc" id="L682">			Logger.debug(SyncDirAction.class, &quot;Neexistuje remote sablona pre tempId=&quot;+remoteTempId);</span>
-<span class="nc" id="L683">			return -1;</span>
+<span class="nc" id="L787">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote sablona pre tempId=&quot;+remoteTempId);</span>
+<span class="nc" id="L788">			Logger.debug(SyncDirAction.class, &quot;Neexistuje remote sablona pre tempId=&quot;+remoteTempId);</span>
+<span class="nc" id="L789">			return -1;</span>
 		}
-<span class="fc" id="L685">		int localTempId = getLocalTempId(remoteTemp.getTempName());</span>
-<span class="pc bpc" id="L686" title="3 of 4 branches missed.">		if (localTempId &lt; 1 &amp;&amp; createMissingTemplates)</span>
+<span class="fc" id="L791">		int localTempId = getLocalTempId(remoteTemp.getTempName());</span>
+<span class="pc bpc" id="L792" title="3 of 4 branches missed.">		if (localTempId &lt; 1 &amp;&amp; createMissingTemplates)</span>
 		{
-<span class="nc" id="L688">			int oTempId = remoteTemp.getTempId();</span>
-<span class="nc" id="L689">			String oTempName = remoteTemp.getTempName();</span>
-<span class="nc" id="L690">			String oTempLng = remoteTemp.getLng();</span>
-<span class="nc" id="L691">			int oTempHeaderDocId = remoteTemp.getHeaderDocId();</span>
-<span class="nc" id="L692">			int oTempFooterDocId = remoteTemp.getFooterDocId();</span>
-<span class="nc" id="L693">			int oTempMenuDocId = remoteTemp.getMenuDocId();</span>
-<span class="nc" id="L694">			String oAvailableGroups = remoteTemp.getAvailableGroups();</span>
+<span class="nc" id="L794">			int oTempId = remoteTemp.getTempId();</span>
+<span class="nc" id="L795">			String oTempName = remoteTemp.getTempName();</span>
+<span class="nc" id="L796">			String oTempLng = remoteTemp.getLng();</span>
+<span class="nc" id="L797">			int oTempHeaderDocId = remoteTemp.getHeaderDocId();</span>
+<span class="nc" id="L798">			int oTempFooterDocId = remoteTemp.getFooterDocId();</span>
+<span class="nc" id="L799">			int oTempMenuDocId = remoteTemp.getMenuDocId();</span>
+<span class="nc" id="L800">			String oAvailableGroups = remoteTemp.getAvailableGroups();</span>
 
-<span class="nc bnc" id="L696" title="All 2 branches missed.">			if(remoteDocs == null) getRemoteDocs();</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">			if(remoteDocs == null) getRemoteDocs();</span>
 
 			//DocDetails header = selectFirst(remoteDocs,having(on(DocDetails.class).getDocId(),equalTo(remoteTemp.getHeaderDocId())));
-<span class="nc bnc" id="L699" title="All 2 branches missed.">			DocDetails header = remoteDocs.stream().filter(d -&gt; d.getDocId() == remoteTemp.getHeaderDocId()).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L805" title="All 2 branches missed.">			DocDetails header = remoteDocs.stream().filter(d -&gt; d.getDocId() == remoteTemp.getHeaderDocId()).findFirst().orElse(null);</span>
 			//DocDetails footer = selectFirst(remoteDocs,having(on(DocDetails.class).getDocId(),equalTo(remoteTemp.getFooterDocId())));
-<span class="nc bnc" id="L701" title="All 2 branches missed.">			DocDetails footer = remoteDocs.stream().filter(d -&gt; d.getDocId() == remoteTemp.getFooterDocId()).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L807" title="All 2 branches missed.">			DocDetails footer = remoteDocs.stream().filter(d -&gt; d.getDocId() == remoteTemp.getFooterDocId()).findFirst().orElse(null);</span>
 			//DocDetails menu = selectFirst(remoteDocs,having(on(DocDetails.class).getDocId(),equalTo(remoteTemp.getMenuDocId())));
-<span class="nc bnc" id="L703" title="All 2 branches missed.">			DocDetails menu = remoteDocs.stream().filter(d -&gt; d.getDocId() == remoteTemp.getMenuDocId()).findFirst().orElse(null);</span>
+<span class="nc bnc" id="L809" title="All 2 branches missed.">			DocDetails menu = remoteDocs.stream().filter(d -&gt; d.getDocId() == remoteTemp.getMenuDocId()).findFirst().orElse(null);</span>
 
 			//save them to global /System
-<span class="nc" id="L706">			int globalHeaderFooterGroupId = Constants.getInt(&quot;headerFooterGroupId&quot;);</span>
-<span class="nc" id="L707">			int globalMenuGroupId = Constants.getInt(&quot;menuGroupId&quot;);</span>
-<span class="nc bnc" id="L708" title="All 2 branches missed.">			if(header!=null) remoteTemp.setHeaderDocId(createLocalDoc(header, globalHeaderFooterGroupId));</span>
-<span class="nc bnc" id="L709" title="All 2 branches missed.">			if(footer!=null) remoteTemp.setFooterDocId(createLocalDoc(footer, globalHeaderFooterGroupId));</span>
-<span class="nc bnc" id="L710" title="All 2 branches missed.">			if(menu != null) remoteTemp.setMenuDocId(createLocalDoc(menu, globalMenuGroupId));</span>
+<span class="nc" id="L812">			int globalHeaderFooterGroupId = Constants.getInt(&quot;headerFooterGroupId&quot;);</span>
+<span class="nc" id="L813">			int globalMenuGroupId = Constants.getInt(&quot;menuGroupId&quot;);</span>
+<span class="nc bnc" id="L814" title="All 2 branches missed.">			if(header!=null) remoteTemp.setHeaderDocId(createLocalDoc(header, globalHeaderFooterGroupId));</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">			if(footer!=null) remoteTemp.setFooterDocId(createLocalDoc(footer, globalHeaderFooterGroupId));</span>
+<span class="nc bnc" id="L816" title="All 2 branches missed.">			if(menu != null) remoteTemp.setMenuDocId(createLocalDoc(menu, globalMenuGroupId));</span>
 
-<span class="nc bnc" id="L712" title="All 2 branches missed.">			if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="nc bnc" id="L818" title="All 2 branches missed.">			if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
 			{
-<span class="nc" id="L714">				String lng = getLocalLng();</span>
-<span class="nc bnc" id="L715" title="All 2 branches missed.">				if (Tools.isNotEmpty(lng))</span>
+<span class="nc" id="L820">				String lng = getLocalLng();</span>
+<span class="nc bnc" id="L821" title="All 2 branches missed.">				if (Tools.isNotEmpty(lng))</span>
 				{
-<span class="nc" id="L717">					remoteTemp.setTempName(oTempName + &quot;-&quot;+lng);</span>
-<span class="nc" id="L718">					remoteTemp.setLng(lng);</span>
+<span class="nc" id="L823">					remoteTemp.setTempName(oTempName + &quot;-&quot;+lng);</span>
+<span class="nc" id="L824">					remoteTemp.setLng(lng);</span>
 				}
 			}
 
-<span class="nc" id="L722">			remoteTemp.setTempId(-1);</span>
+<span class="nc" id="L828">			remoteTemp.setTempId(-1);</span>
 
 			//replace available groups for local groups
-<span class="nc" id="L725">			remoteTemp.setAvailableGroups(convertGroupIdsToLocalFilter(remoteTemp.getAvailableGroups()));</span>
+<span class="nc" id="L831">			remoteTemp.setAvailableGroups(convertGroupIdsToLocalFilter(remoteTemp.getAvailableGroups()));</span>
 
-<span class="nc" id="L727">			TemplatesDB.getInstance().saveTemplate(remoteTemp);</span>
-<span class="nc" id="L728">			localTempId = remoteTemp.getTempId();</span>
+<span class="nc" id="L833">			TemplatesDB.getInstance().saveTemplate(remoteTemp);</span>
+<span class="nc" id="L834">			localTempId = remoteTemp.getTempId();</span>
 
-<span class="nc" id="L730">			remoteTemp.setTempId(oTempId);</span>
-<span class="nc" id="L731">			remoteTemp.setTempName(oTempName);</span>
-<span class="nc" id="L732">			remoteTemp.setLng(oTempLng);</span>
-<span class="nc" id="L733">			remoteTemp.setHeaderDocId(oTempHeaderDocId);</span>
-<span class="nc" id="L734">			remoteTemp.setFooterDocId(oTempFooterDocId);</span>
-<span class="nc" id="L735">			remoteTemp.setMenuDocId(oTempMenuDocId);</span>
-<span class="nc" id="L736">			remoteTemp.setAvailableGroups(oAvailableGroups);</span>
+<span class="nc" id="L836">			remoteTemp.setTempId(oTempId);</span>
+<span class="nc" id="L837">			remoteTemp.setTempName(oTempName);</span>
+<span class="nc" id="L838">			remoteTemp.setLng(oTempLng);</span>
+<span class="nc" id="L839">			remoteTemp.setHeaderDocId(oTempHeaderDocId);</span>
+<span class="nc" id="L840">			remoteTemp.setFooterDocId(oTempFooterDocId);</span>
+<span class="nc" id="L841">			remoteTemp.setMenuDocId(oTempMenuDocId);</span>
+<span class="nc" id="L842">			remoteTemp.setAvailableGroups(oAvailableGroups);</span>
 		}
-<span class="pc bpc" id="L738" title="1 of 2 branches missed.">		if (localTempId &lt; 1)</span>
+<span class="pc bpc" id="L844" title="1 of 2 branches missed.">		if (localTempId &lt; 1)</span>
 		{
-<span class="nc" id="L740">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje lokálna šablóna &quot;+remoteTemp.getTempName());</span>
-<span class="nc" id="L741">			Logger.debug(SyncDirAction.class, &quot;Neexistuje local sablona &quot;+remoteTemp.getTempName());</span>
-<span class="nc" id="L742">			return -1;</span>
+<span class="nc" id="L846">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje lokálna šablóna &quot;+remoteTemp.getTempName());</span>
+<span class="nc" id="L847">			Logger.debug(SyncDirAction.class, &quot;Neexistuje local sablona &quot;+remoteTemp.getTempName());</span>
+<span class="nc" id="L848">			return -1;</span>
 		}
-<span class="fc" id="L744">		return localTempId;</span>
+<span class="fc" id="L850">		return localTempId;</span>
 	}
 
 	/**
@@ -754,24 +860,24 @@ import sk.iway.spirit.model.Media;
 	 */
 	private int createLocalDoc(DocDetails doc, int forceLocalGroupId)
 	{
-<span class="nc" id="L757">		int docid = new SimpleQuery().forInt(&quot;Select doc_id from documents where group_id = ? and title = ?&quot;, forceLocalGroupId,doc.getTitle());</span>
-<span class="nc bnc" id="L758" title="All 2 branches missed.">		if(docid &lt;= 0)</span>
+<span class="nc" id="L863">		int docid = new SimpleQuery().forInt(&quot;Select doc_id from documents where group_id = ? and title = ?&quot;, forceLocalGroupId,doc.getTitle());</span>
+<span class="nc bnc" id="L864" title="All 2 branches missed.">		if(docid &lt;= 0)</span>
 		{
-<span class="nc" id="L760">			int oGroupId = doc.getGroupId();</span>
-<span class="nc" id="L761">			doc.setGroupId(forceLocalGroupId);</span>
-<span class="nc" id="L762">			docid = createLocalDoc(doc);</span>
-<span class="nc" id="L763">			doc.setGroupId(oGroupId);</span>
+<span class="nc" id="L866">			int oGroupId = doc.getGroupId();</span>
+<span class="nc" id="L867">			doc.setGroupId(forceLocalGroupId);</span>
+<span class="nc" id="L868">			docid = createLocalDoc(doc);</span>
+<span class="nc" id="L869">			doc.setGroupId(oGroupId);</span>
 		}
-<span class="nc" id="L765">		return docid;</span>
+<span class="nc" id="L871">		return docid;</span>
 	}
 
 	private Content getRemoteContent()
 	{
-<span class="fc bfc" id="L770" title="All 2 branches covered.">		if (null == remoteContent)</span>
+<span class="fc bfc" id="L876" title="All 2 branches covered.">		if (null == remoteContent)</span>
 		{
-<span class="fc" id="L772">			remoteContent = (Content) getLocalFile(&quot;content.xml&quot;);</span>
+<span class="fc" id="L878">			remoteContent = (Content) getLocalFile(&quot;content.xml&quot;);</span>
 		}
-<span class="fc" id="L774">		return remoteContent;</span>
+<span class="fc" id="L880">		return remoteContent;</span>
 	}
 
 	/**
@@ -782,38 +888,38 @@ import sk.iway.spirit.model.Media;
 	 */
 	public List&lt;ContentFileBean&gt; getRemoteContentFiles()
 	{
-<span class="fc" id="L785">		List&lt;ContentFileBean&gt; fileBeans = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L786">		Content content = getRemoteContent();</span>
-<span class="pc bpc" id="L787" title="1 of 2 branches missed.">		if (null == content) return fileBeans;</span>
+<span class="fc" id="L891">		List&lt;ContentFileBean&gt; fileBeans = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L892">		Content content = getRemoteContent();</span>
+<span class="pc bpc" id="L893" title="1 of 2 branches missed.">		if (null == content) return fileBeans;</span>
 
-<span class="fc bfc" id="L789" title="All 2 branches covered.">		for (Numbered&lt;Content.File&gt; numFile : Numbered.list(content.getFiles()))</span>
+<span class="fc bfc" id="L895" title="All 2 branches covered.">		for (Numbered&lt;Content.File&gt; numFile : Numbered.list(content.getFiles()))</span>
 		{
-<span class="fc" id="L791">			Content.File file = numFile.item;</span>
-<span class="fc" id="L792">			String path = file.getVirtualPath();</span>
-<span class="fc" id="L793">			int status = ContentFileBean.STATUS_MISSING;</span>
-<span class="fc" id="L794">			String localPath = Tools.getRealPath(path);</span>
-<span class="fc" id="L795">			IwcmFile localFile = new IwcmFile(localPath);</span>
-<span class="pc bpc" id="L796" title="1 of 2 branches missed.">			if (localFile.exists())</span>
+<span class="fc" id="L897">			Content.File file = numFile.item;</span>
+<span class="fc" id="L898">			String path = file.getVirtualPath();</span>
+<span class="fc" id="L899">			int status = ContentFileBean.STATUS_MISSING;</span>
+<span class="fc" id="L900">			String localPath = Tools.getRealPath(path);</span>
+<span class="fc" id="L901">			IwcmFile localFile = new IwcmFile(localPath);</span>
+<span class="pc bpc" id="L902" title="1 of 2 branches missed.">			if (localFile.exists())</span>
 			{
-<span class="fc" id="L798">				long remoteTime = file.getTime();</span>
-<span class="fc" id="L799">				long localTime = localFile.lastModified();</span>
-<span class="pc bpc" id="L800" title="1 of 2 branches missed.">				if (remoteTime &gt; localTime)</span>
+<span class="fc" id="L904">				long remoteTime = file.getTime();</span>
+<span class="fc" id="L905">				long localTime = localFile.lastModified();</span>
+<span class="pc bpc" id="L906" title="1 of 2 branches missed.">				if (remoteTime &gt; localTime)</span>
 				{
-<span class="nc" id="L802">					status = ContentFileBean.STATUS_NEWER;</span>
+<span class="nc" id="L908">					status = ContentFileBean.STATUS_NEWER;</span>
 				}
-<span class="pc bpc" id="L804" title="1 of 2 branches missed.">				else if (remoteTime &lt; localTime)</span>
+<span class="pc bpc" id="L910" title="1 of 2 branches missed.">				else if (remoteTime &lt; localTime)</span>
 				{
-<span class="nc" id="L806">					status = ContentFileBean.STATUS_OLDER;</span>
+<span class="fc" id="L912">					status = ContentFileBean.STATUS_OLDER;</span>
 				}
 				else
 				{
-<span class="pc bpc" id="L810" title="1 of 2 branches missed.">					status = (localFile.length() == file.getSize()) ? ContentFileBean.STATUS_CURRENT_SAME : ContentFileBean.STATUS_CURRENT_DIFFERENT;</span>
+<span class="nc bnc" id="L916" title="All 2 branches missed.">					status = (localFile.length() == file.getSize()) ? ContentFileBean.STATUS_CURRENT_SAME : ContentFileBean.STATUS_CURRENT_DIFFERENT;</span>
 				}
 			}
-<span class="fc" id="L813">			ContentFileBean fileBean = new ContentFileBean(numFile.number, path, status);</span>
-<span class="fc" id="L814">			fileBeans.add(fileBean);</span>
-<span class="fc" id="L815">		}</span>
-<span class="fc" id="L816">		return fileBeans;</span>
+<span class="fc" id="L919">			ContentFileBean fileBean = new ContentFileBean(numFile.number, path, status);</span>
+<span class="fc" id="L920">			fileBeans.add(fileBean);</span>
+<span class="fc" id="L921">		}</span>
+<span class="fc" id="L922">		return fileBeans;</span>
 	}
 
 	/**
@@ -823,7 +929,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public List&lt;ContentBannerBean&gt; getRemoteContentBanners()
 	{
-<span class="fc" id="L826">		return BannerImporter.getBanners(getRemoteContent());</span>
+<span class="fc" id="L932">		return BannerImporter.getBanners(getRemoteContent());</span>
 	}
 
 	/**
@@ -833,7 +939,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public List&lt;ContentInquiryBean&gt; getRemoteContentInquiries()
 	{
-<span class="fc" id="L836">		return InquiryImporter.getInquiries(getRemoteContent(), context.getRequest());</span>
+<span class="fc" id="L942">		return InquiryImporter.getInquiries(getRemoteContent(), context.getRequest());</span>
 	}
 
 	/**
@@ -843,7 +949,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public List&lt;ContentGalleryBean.Info&gt; getRemoteContentGalleryInfos()
 	{
-<span class="fc" id="L846">		return GalleryImporter.getGalleryInfos(getRemoteContent());</span>
+<span class="fc" id="L952">		return GalleryImporter.getGalleryInfos(getRemoteContent());</span>
 	}
 
 	/**
@@ -853,7 +959,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public List&lt;ContentGalleryBean.Image&gt; getRemoteContentGalleryImages()
 	{
-<span class="nc" id="L856">		return GalleryImporter.getGalleryImages(getRemoteContent(), context.getRequest());</span>
+<span class="nc" id="L962">		return GalleryImporter.getGalleryImages(getRemoteContent(), context.getRequest());</span>
 	}
 
 	/**
@@ -863,13 +969,12 @@ import sk.iway.spirit.model.Media;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;GroupDetails&gt; getRemoteGroups()
 	{
-<span class="fc" id="L866">		Logger.debug(SyncDirAction.class, &quot;getRemoteGroups, remoteGroups=&quot;+remoteGroups+&quot; syncDir=&quot;+syncDir);</span>
-<span class="pc bpc" id="L867" title="1 of 4 branches missed.">		if (remoteGroups==null &amp;&amp; remoteGroupId&gt;0)</span>
+<span class="pc bpc" id="L972" title="1 of 4 branches missed.">		if (remoteGroups==null &amp;&amp; remoteGroupId&gt;0)</span>
 		{
-<span class="fc" id="L869">			remoteGroups = (List&lt;GroupDetails&gt;) getLocalFile(&quot;groups.xml&quot;);</span>
+<span class="fc" id="L974">			remoteGroups = (List&lt;GroupDetails&gt;) getLocalFile(&quot;groups.xml&quot;);</span>
 		}
 
-<span class="fc" id="L872">		return remoteGroups;</span>
+<span class="fc" id="L977">		return remoteGroups;</span>
 	}
 
 	/**
@@ -879,14 +984,14 @@ import sk.iway.spirit.model.Media;
 	 */
 	public GroupDetails getRemoteGroup(int remoteGroupId)
 	{
-<span class="pc bpc" id="L882" title="1 of 2 branches missed.">		for (GroupDetails remoteGroup : getRemoteGroups())</span>
+<span class="pc bpc" id="L987" title="1 of 2 branches missed.">		for (GroupDetails remoteGroup : getRemoteGroups())</span>
 		{
-<span class="pc bpc" id="L884" title="1 of 2 branches missed.">			if (remoteGroup.getGroupId()==remoteGroupId)</span>
+<span class="pc bpc" id="L989" title="1 of 2 branches missed.">			if (remoteGroup.getGroupId()==remoteGroupId)</span>
 			{
-<span class="fc" id="L886">				return remoteGroup;</span>
+<span class="fc" id="L991">				return remoteGroup;</span>
 			}
-<span class="nc" id="L888">		}</span>
-<span class="nc" id="L889">		return null;</span>
+<span class="nc" id="L993">		}</span>
+<span class="nc" id="L994">		return null;</span>
 	}
 
 	/**
@@ -896,17 +1001,17 @@ import sk.iway.spirit.model.Media;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;DocDetails&gt; getRemoteDocs()
 	{
-<span class="pc bpc" id="L899" title="1 of 4 branches missed.">		if (remoteDocs==null &amp;&amp; remoteGroupId&gt;0)</span>
+<span class="pc bpc" id="L1004" title="1 of 4 branches missed.">		if (remoteDocs==null &amp;&amp; remoteGroupId&gt;0)</span>
 		{
-<span class="fc" id="L901">			remoteDocs = (List&lt;DocDetails&gt;) getLocalFile(&quot;docs.xml&quot;);</span>
+<span class="fc" id="L1006">			remoteDocs = (List&lt;DocDetails&gt;) getLocalFile(&quot;docs.xml&quot;);</span>
 		}
 		/**
 		 * musime to zosortovat tak aby prve boli hlavne stranky priecinkov
 		 * inak mozu nastat problemy pri generovani virtualPath pri cloud prekladoch
 		 * ticket 15053
 		 */
-<span class="fc" id="L908">		sortByMainPages();</span>
-<span class="fc" id="L909">		return remoteDocs;</span>
+<span class="fc" id="L1013">		sortByMainPages();</span>
+<span class="fc" id="L1014">		return remoteDocs;</span>
 
 	}
 
@@ -918,40 +1023,40 @@ import sk.iway.spirit.model.Media;
 	 */
 	private void sortByMainPages()
 	{
-<span class="pc bpc" id="L921" title="2 of 4 branches missed.">		if (remoteDocs == null || remoteGroups == null) return;</span>
+<span class="pc bpc" id="L1026" title="1 of 4 branches missed.">		if (remoteDocs == null || remoteGroups == null) return;</span>
 
-<span class="fc" id="L923">		Set&lt;Integer&gt; mainPages = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L924" title="All 2 branches covered.">		for(GroupDetails gd : remoteGroups)</span>
+<span class="fc" id="L1028">		Set&lt;Integer&gt; mainPages = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L1029" title="All 2 branches covered.">		for(GroupDetails gd : remoteGroups)</span>
 		{
-<span class="fc" id="L926">			mainPages.add(gd.getDefaultDocId());</span>
-<span class="fc" id="L927">		}</span>
-<span class="fc" id="L928">		Logger.debug(getClass(), &quot;main pages docids : &quot; + Arrays.toString(mainPages.toArray()));</span>
-<span class="fc" id="L929">		final Set&lt;Integer&gt; finalMainPages = mainPages;</span>
+<span class="fc" id="L1031">			mainPages.add(gd.getDefaultDocId());</span>
+<span class="fc" id="L1032">		}</span>
+		//Logger.debug(getClass(), &quot;main pages docids : &quot; + Arrays.toString(mainPages.toArray()));
+<span class="fc" id="L1034">		final Set&lt;Integer&gt; finalMainPages = mainPages;</span>
 
 		//Logger.debug(getClass(), &quot;docids before sort: &quot; + Arrays.toString(Lambda.convert(remoteDocs, new PropertyExtractor(&quot;docId&quot;)).toArray()));
 
-<span class="fc" id="L933">		Collections.sort(remoteDocs, new Comparator&lt;DocDetails&gt;(){</span>
+<span class="fc" id="L1038">		Collections.sort(remoteDocs, new Comparator&lt;DocDetails&gt;(){</span>
 			@Override
 			public int compare(DocDetails o1, DocDetails o2)
 			{
-<span class="pc bpc" id="L937" title="1 of 4 branches missed.">				if(finalMainPages.contains(o1.getDocId()) &amp;&amp; finalMainPages.contains(o2.getDocId())) return 0;</span>
-<span class="pc bpc" id="L938" title="1 of 4 branches missed.">				if(finalMainPages.contains(o1.getDocId()) &amp;&amp; !finalMainPages.contains(o2.getDocId())) return -1;</span>
-<span class="pc bpc" id="L939" title="2 of 4 branches missed.">				if(!finalMainPages.contains(o1.getDocId()) &amp;&amp; finalMainPages.contains(o2.getDocId())) return 1;</span>
-<span class="nc" id="L940">				return o1.getSortPriority() - o2.getSortPriority();</span>
+<span class="pc bpc" id="L1042" title="1 of 4 branches missed.">				if(finalMainPages.contains(o1.getDocId()) &amp;&amp; finalMainPages.contains(o2.getDocId())) return 0;</span>
+<span class="pc bpc" id="L1043" title="1 of 4 branches missed.">				if(finalMainPages.contains(o1.getDocId()) &amp;&amp; !finalMainPages.contains(o2.getDocId())) return -1;</span>
+<span class="pc bpc" id="L1044" title="2 of 4 branches missed.">				if(!finalMainPages.contains(o1.getDocId()) &amp;&amp; finalMainPages.contains(o2.getDocId())) return 1;</span>
+<span class="nc" id="L1045">				return o1.getSortPriority() - o2.getSortPriority();</span>
 			}
 		});
 
 		//Logger.debug(getClass(), &quot;docids after sort: &quot; + Arrays.toString(Lambda.convert(remoteDocs, new PropertyExtractor(&quot;docId&quot;)).toArray()));
-<span class="fc" id="L945">	}</span>
+<span class="fc" id="L1050">	}</span>
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;Media&gt; getRemoteMedia()
 	{
-<span class="pc bpc" id="L950" title="1 of 2 branches missed.">		if (remoteMedia==null)</span>
+<span class="fc bfc" id="L1055" title="All 2 branches covered.">		if (remoteMedia==null)</span>
 		{
-<span class="fc" id="L952">			remoteMedia = (List&lt;Media&gt;) getLocalFile(&quot;media.xml&quot;);</span>
+<span class="fc" id="L1057">			remoteMedia = (List&lt;Media&gt;) getLocalFile(&quot;media.xml&quot;);</span>
 		}
-<span class="fc" id="L954">		return remoteMedia;</span>
+<span class="fc" id="L1059">		return remoteMedia;</span>
 	}
 
 	/**
@@ -960,16 +1065,16 @@ import sk.iway.spirit.model.Media;
 	 */
 	public String getRemoteRootPath()
 	{
-<span class="fc bfc" id="L963" title="All 2 branches covered.">		if (remoteRootPath == null)</span>
+<span class="fc bfc" id="L1068" title="All 2 branches covered.">		if (remoteRootPath == null)</span>
 		{
-<span class="pc bpc" id="L965" title="1 of 2 branches missed.">			if (getRemoteGroups().size()&gt;0)</span>
+<span class="pc bpc" id="L1070" title="1 of 2 branches missed.">			if (getRemoteGroups().size()&gt;0)</span>
 			{
-<span class="fc" id="L967">				remoteRootPath = getRemoteGroups().get(0).getFullPath();</span>
+<span class="fc" id="L1072">				remoteRootPath = getRemoteGroups().get(0).getFullPath();</span>
 				//int i = remoteRootPath.lastIndexOf('/');
 				//if (i&gt;0) remoteRootPath = remoteRootPath.substring(0, i);
 			}
 		}
-<span class="fc" id="L972">		return remoteRootPath;</span>
+<span class="fc" id="L1077">		return remoteRootPath;</span>
 	}
 
 	/**
@@ -979,28 +1084,28 @@ import sk.iway.spirit.model.Media;
 	 */
 	public String getLocalPath(GroupDetails remoteGroup)
 	{
-<span class="fc" id="L982">		Logger.debug(SyncDirAction.class, &quot;getLocalPath, rgfp=&quot;+remoteGroup.getFullPath()+&quot; root=&quot;+getRemoteRootPath());</span>
+		//Logger.debug(SyncDirAction.class, &quot;getLocalPath, rgfp=&quot;+remoteGroup.getFullPath()+&quot; root=&quot;+getRemoteRootPath());
 
-<span class="fc" id="L984">		String basePath = remoteGroup.getFullPath().substring(getRemoteRootPath().length());</span>
-<span class="pc bpc" id="L985" title="1 of 2 branches missed.">		if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="fc" id="L1089">		String basePath = remoteGroup.getFullPath().substring(getRemoteRootPath().length());</span>
+<span class="pc bpc" id="L1090" title="1 of 2 branches missed.">		if(&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
 		{
-<span class="nc" id="L987">			String lng = getLocalLng();</span>
-<span class="nc bnc" id="L988" title="All 6 branches missed.">			if (Tools.isNotEmpty(lng) &amp;&amp; basePath.length()&gt;1 &amp;&amp; basePath.startsWith(&quot;/System&quot;)==false)</span>
+<span class="nc" id="L1092">			String lng = getLocalLng();</span>
+<span class="nc bnc" id="L1093" title="All 6 branches missed.">			if (Tools.isNotEmpty(lng) &amp;&amp; basePath.length()&gt;1 &amp;&amp; basePath.startsWith(&quot;/System&quot;)==false)</span>
 			{
-<span class="nc" id="L990">				String[] exploded = Tools.getTokens(basePath, &quot;/&quot;);</span>
-<span class="nc" id="L991">				StringBuilder translated = new StringBuilder();</span>
-<span class="nc bnc" id="L992" title="All 2 branches missed.">				for (String str : exploded)</span>
+<span class="nc" id="L1095">				String[] exploded = Tools.getTokens(basePath, &quot;/&quot;);</span>
+<span class="nc" id="L1096">				StringBuilder translated = new StringBuilder();</span>
+<span class="nc bnc" id="L1097" title="All 2 branches missed.">				for (String str : exploded)</span>
 				{
 					//basePath = CloudToolsForCore.translate(lng, basePath);
-<span class="nc" id="L995">					translated.append('/');</span>
-<span class="nc" id="L996">					translated.append(CloudToolsForCore.translate(lng, str));</span>
+<span class="nc" id="L1100">					translated.append('/');</span>
+<span class="nc" id="L1101">					translated.append(CloudToolsForCore.translate(lng, str));</span>
 				}
-<span class="nc" id="L998">				basePath = translated.toString();</span>
-<span class="nc" id="L999">				Logger.debug(getClass(), &quot;translating basePath to: &quot; + basePath);</span>
+<span class="nc" id="L1103">				basePath = translated.toString();</span>
+<span class="nc" id="L1104">				Logger.debug(getClass(), &quot;translating basePath to: &quot; + basePath);</span>
 			}
 		}
-<span class="fc" id="L1002">		String localPath = getLocalRootGroup().getFullPath()+basePath; //TODO: preklad?</span>
-<span class="fc" id="L1003">		return localPath;</span>
+<span class="fc" id="L1107">		String localPath = getLocalRootGroup().getFullPath()+basePath; //TODO: preklad?</span>
+<span class="fc" id="L1108">		return localPath;</span>
 	}
 
 	/**
@@ -1010,9 +1115,9 @@ import sk.iway.spirit.model.Media;
 	 */
 	public GroupDetails getLocalGroup(int remoteGroupId)
 	{
-<span class="fc" id="L1013">		GroupDetails remoteGroup = getRemoteGroup(remoteGroupId);</span>
-<span class="pc bpc" id="L1014" title="1 of 2 branches missed.">		if (remoteGroup!=null) return getLocalGroup(remoteGroup);</span>
-<span class="nc" id="L1015">		return null;</span>
+<span class="fc" id="L1118">		GroupDetails remoteGroup = getRemoteGroup(remoteGroupId);</span>
+<span class="pc bpc" id="L1119" title="1 of 2 branches missed.">		if (remoteGroup!=null) return getLocalGroup(remoteGroup);</span>
+<span class="nc" id="L1120">		return null;</span>
 	}
 
 	/**
@@ -1022,15 +1127,15 @@ import sk.iway.spirit.model.Media;
 	 */
 	public GroupDetails getLocalGroup(GroupDetails remoteGroup)
 	{
-<span class="fc" id="L1025">		String localPath = getLocalPath(remoteGroup);</span>
+<span class="fc" id="L1130">		String localPath = getLocalPath(remoteGroup);</span>
 		try
 		{
-<span class="fc" id="L1028">			return GroupsDB.getInstance().getGroupByPath(localPath);</span>
+<span class="fc" id="L1133">			return GroupsDB.getInstance().getGroupByPath(localPath);</span>
 		}
-<span class="nc" id="L1030">		catch (ConcurrentModificationException ex)</span>
+<span class="nc" id="L1135">		catch (ConcurrentModificationException ex)</span>
 		{
-<span class="nc" id="L1032">			GroupsDB groupsDB = GroupsDB.getInstance(true);</span>
-<span class="nc" id="L1033">			return groupsDB.getGroupByPath(localPath);</span>
+<span class="nc" id="L1137">			GroupsDB groupsDB = GroupsDB.getInstance(true);</span>
+<span class="nc" id="L1138">			return groupsDB.getGroupByPath(localPath);</span>
 		}
 	}
 
@@ -1041,7 +1146,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public GroupDetails getLocalGroup(String localPath)
 	{
-<span class="fc" id="L1044">		return GroupsDB.getInstance().getGroupByPath(localPath);</span>
+<span class="fc" id="L1149">		return GroupsDB.getInstance().getGroupByPathAndDomain(localPath, localSrcGroup.getDomainName());</span>
 	}
 
 	/**
@@ -1050,11 +1155,11 @@ import sk.iway.spirit.model.Media;
 	 */
 	public GroupDetails getLocalRootGroup()
 	{
-<span class="fc bfc" id="L1053" title="All 2 branches covered.">		if (localRootGroup == null)</span>
+<span class="fc bfc" id="L1158" title="All 2 branches covered.">		if (localRootGroup == null)</span>
 		{
-<span class="fc" id="L1055">			localRootGroup = GroupsDB.getInstance().getGroup(getLocalGroupId());</span>
+<span class="fc" id="L1160">			localRootGroup = GroupsDB.getInstance().getGroup(getLocalGroupId());</span>
 		}
-<span class="fc" id="L1057">		return localRootGroup;</span>
+<span class="fc" id="L1162">		return localRootGroup;</span>
 	}
 
 	/**
@@ -1064,21 +1169,39 @@ import sk.iway.spirit.model.Media;
 	 */
 	public DocDetails getLocalDoc(DocDetails remoteDoc)
 	{
-<span class="fc" id="L1067">		GroupDetails localGroup = getLocalGroup(remoteDoc.getGroupId());</span>
-<span class="pc bpc" id="L1068" title="1 of 2 branches missed.">		if (localGroup!=null)</span>
+<span class="fc" id="L1172">		GroupDetails localGroup = getLocalGroup(remoteDoc.getGroupId());</span>
+<span class="pc bpc" id="L1173" title="1 of 2 branches missed.">		if (localGroup!=null)</span>
 		{
 			//najdi local doc
-<span class="fc" id="L1071">			DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L1072">			List&lt;DocDetails&gt; localDocs = docDB.getBasicDocDetailsByGroup(localGroup.getGroupId(), DocDB.ORDER_PRIORITY);</span>
-<span class="fc bfc" id="L1073" title="All 2 branches covered.">			for (DocDetails doc : localDocs)</span>
+<span class="fc" id="L1176">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1177">			List&lt;DocDetails&gt; localDocs = docDB.getBasicDocDetailsByGroup(localGroup.getGroupId(), DocDB.ORDER_PRIORITY);</span>
+<span class="fc bfc" id="L1178" title="All 2 branches covered.">			for (DocDetails doc : localDocs)</span>
 			{
-<span class="pc bpc" id="L1075" title="3 of 8 branches missed.">				if (doc.getTitle().equals(remoteDoc.getTitle()) || (Tools.isNotEmpty(remoteDoc.getVirtualPath()) &amp;&amp; Tools.isNotEmpty(doc.getVirtualPath()) &amp;&amp; doc.getVirtualPath().equals(remoteDoc.getVirtualPath()) ))</span>
+<span class="fc bfc" id="L1180" title="All 2 branches covered.">				if (comapreDocs(doc, remoteDoc))</span>
 				{
-<span class="fc" id="L1077">					return(doc);</span>
+<span class="fc" id="L1182">					return(doc);</span>
 				}
-<span class="fc" id="L1079">			}</span>
+<span class="fc" id="L1184">			}</span>
 		}
-<span class="fc" id="L1081">		return null;</span>
+<span class="fc" id="L1186">		return null;</span>
+	}
+
+	private boolean comapreDocs(DocDetails doc, DocDetails remoteDoc) {
+<span class="pc bpc" id="L1190" title="1 of 2 branches missed.">		if(&quot;url&quot;.equals(this.compareBy)) {</span>
+<span class="nc bnc" id="L1191" title="All 6 branches missed.">			return (Tools.isNotEmpty(remoteDoc.getVirtualPath()) &amp;&amp; Tools.isNotEmpty(doc.getVirtualPath()) &amp;&amp; doc.getVirtualPath().equals(remoteDoc.getVirtualPath()));</span>
+<span class="pc bpc" id="L1192" title="1 of 2 branches missed.">		} else if(&quot;none&quot;.equals(this.compareBy)) {</span>
+			// allways return false - aka allways create new doc
+<span class="nc" id="L1194">			return false;</span>
+<span class="pc bpc" id="L1195" title="1 of 2 branches missed.">		} else if(&quot;fieldA&quot;.equals(this.compareBy)) {</span>
+<span class="nc" id="L1196">			return doc.getFieldA().equals(remoteDoc.getFieldA());</span>
+<span class="pc bpc" id="L1197" title="1 of 2 branches missed.">		} else if(&quot;fieldB&quot;.equals(this.compareBy)) {</span>
+<span class="nc" id="L1198">			return doc.getFieldB().equals(remoteDoc.getFieldB());</span>
+<span class="pc bpc" id="L1199" title="1 of 2 branches missed.">		} else if(&quot;fieldC&quot;.equals(this.compareBy)) {</span>
+<span class="nc" id="L1200">			return doc.getFieldC().equals(remoteDoc.getFieldC());</span>
+		} else {
+			// nameOrUrl / null / or anything else - default
+<span class="pc bpc" id="L1203" title="3 of 8 branches missed.">			return (doc.getTitle().equals(remoteDoc.getTitle()) || (Tools.isNotEmpty(remoteDoc.getVirtualPath()) &amp;&amp; Tools.isNotEmpty(doc.getVirtualPath()) &amp;&amp; doc.getVirtualPath().equals(remoteDoc.getVirtualPath()) ));</span>
+		}
 	}
 
 	/**
@@ -1088,8 +1211,8 @@ import sk.iway.spirit.model.Media;
 	 */
 	public String getRemoteTempName(int remoteTempId)
 	{
-<span class="nc" id="L1091">		TemplateDetails temp = getRemoteTemp(remoteTempId);</span>
-<span class="nc bnc" id="L1092" title="All 2 branches missed.">		return (null == temp) ? null : temp.getTempName();</span>
+<span class="nc" id="L1214">		TemplateDetails temp = getRemoteTemp(remoteTempId);</span>
+<span class="nc bnc" id="L1215" title="All 2 branches missed.">		return (null == temp) ? null : temp.getTempName();</span>
 	}
 
 	/**
@@ -1099,11 +1222,11 @@ import sk.iway.spirit.model.Media;
 	 */
 	public TemplateDetails getRemoteTemp(int remoteTempId)
 	{
-<span class="pc bpc" id="L1102" title="1 of 2 branches missed.">		for (TemplateDetails temp : getRemoteTemps())</span>
+<span class="pc bpc" id="L1225" title="1 of 2 branches missed.">		for (TemplateDetails temp : getRemoteTemps())</span>
 		{
-<span class="pc bpc" id="L1104" title="1 of 2 branches missed.">			if (temp.getTempId()==remoteTempId) return temp;</span>
-<span class="nc" id="L1105">		}</span>
-<span class="nc" id="L1106">		return null;</span>
+<span class="pc bpc" id="L1227" title="1 of 2 branches missed.">			if (temp.getTempId()==remoteTempId) return temp;</span>
+<span class="nc" id="L1228">		}</span>
+<span class="nc" id="L1229">		return null;</span>
 	}
 
 	/**
@@ -1113,9 +1236,9 @@ import sk.iway.spirit.model.Media;
 	 */
 	public String getLocalTempName(int localTempId)
 	{
-<span class="nc" id="L1116">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(localTempId);</span>
-<span class="nc bnc" id="L1117" title="All 2 branches missed.">		if (temp!=null) return temp.getTempName();</span>
-<span class="nc" id="L1118">		return null;</span>
+<span class="nc" id="L1239">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(localTempId);</span>
+<span class="nc bnc" id="L1240" title="All 2 branches missed.">		if (temp!=null) return temp.getTempName();</span>
+<span class="nc" id="L1241">		return null;</span>
 	}
 
 	/**
@@ -1125,18 +1248,18 @@ import sk.iway.spirit.model.Media;
 	 */
 	public int getLocalTempId(String tempName)
 	{
-<span class="pc bpc" id="L1128" title="1 of 2 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="pc bpc" id="L1251" title="1 of 2 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
 		{
-<span class="nc" id="L1130">			String lng = getLocalLng();</span>
-<span class="nc bnc" id="L1131" title="All 2 branches missed.">			if (Tools.isNotEmpty(lng))</span>
+<span class="nc" id="L1253">			String lng = getLocalLng();</span>
+<span class="nc bnc" id="L1254" title="All 2 branches missed.">			if (Tools.isNotEmpty(lng))</span>
 			{
-<span class="nc" id="L1133">				tempName = tempName + &quot;-&quot;+lng;</span>
+<span class="nc" id="L1256">				tempName = tempName + &quot;-&quot;+lng;</span>
 			}
 		}
 
-<span class="fc" id="L1137">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempName);</span>
-<span class="pc bpc" id="L1138" title="1 of 2 branches missed.">		if (temp!=null) return temp.getTempId();</span>
-<span class="nc" id="L1139">		return -1;</span>
+<span class="fc" id="L1260">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempName);</span>
+<span class="pc bpc" id="L1261" title="1 of 2 branches missed.">		if (temp!=null) return temp.getTempId();</span>
+<span class="nc" id="L1262">		return -1;</span>
 	}
 
 	/**
@@ -1146,40 +1269,40 @@ import sk.iway.spirit.model.Media;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;TemplateDetails&gt; getRemoteTemps()
 	{
-<span class="pc bpc" id="L1149" title="1 of 2 branches missed.">		if (remoteTemps == null)</span>
+<span class="fc bfc" id="L1272" title="All 2 branches covered.">		if (remoteTemps == null)</span>
 		{
-<span class="fc" id="L1151">			remoteTemps = (List&lt;TemplateDetails&gt;) getLocalFile(&quot;temps.xml&quot;);</span>
+<span class="fc" id="L1274">			remoteTemps = (List&lt;TemplateDetails&gt;) getLocalFile(&quot;temps.xml&quot;);</span>
 		}
-<span class="fc" id="L1153">		return remoteTemps;</span>
+<span class="fc" id="L1276">		return remoteTemps;</span>
 	}
 
 	private int getCreateUserGroup(int remoteUserGroupId)
 	{
-<span class="nc" id="L1158">		UserGroupDetails remoteUserGroup = getRemoteUserGroup(remoteUserGroupId);</span>
-<span class="nc bnc" id="L1159" title="All 2 branches missed.">		if (remoteUserGroup==null)</span>
+<span class="nc" id="L1281">		UserGroupDetails remoteUserGroup = getRemoteUserGroup(remoteUserGroupId);</span>
+<span class="nc bnc" id="L1282" title="All 2 branches missed.">		if (remoteUserGroup==null)</span>
 		{
-<span class="nc" id="L1161">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote pouzivatelska skupina pre userGroupId=&quot;+remoteUserGroupId);</span>
-<span class="nc" id="L1162">			Logger.debug(SyncDirAction.class, &quot;Neexistuje remote pouzivatelska skupina pre userGroupId=&quot;+remoteUserGroupId);</span>
-<span class="nc" id="L1163">			return -1;</span>
+<span class="nc" id="L1284">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote pouzivatelska skupina pre userGroupId=&quot;+remoteUserGroupId);</span>
+<span class="nc" id="L1285">			Logger.debug(SyncDirAction.class, &quot;Neexistuje remote pouzivatelska skupina pre userGroupId=&quot;+remoteUserGroupId);</span>
+<span class="nc" id="L1286">			return -1;</span>
 		}
-<span class="nc" id="L1165">		int localUserGroupId = getLocalUserGroupId(remoteUserGroup.getUserGroupName());</span>
-<span class="nc bnc" id="L1166" title="All 4 branches missed.">		if (localUserGroupId &lt; 1 &amp;&amp; createMissingUserGroups)</span>
+<span class="nc" id="L1288">		int localUserGroupId = getLocalUserGroupId(remoteUserGroup.getUserGroupName());</span>
+<span class="nc bnc" id="L1289" title="All 4 branches missed.">		if (localUserGroupId &lt; 1 &amp;&amp; createMissingUserGroups)</span>
 		{
-<span class="nc" id="L1168">			int oUserGroupId = remoteUserGroup.getUserGroupId();</span>
+<span class="nc" id="L1291">			int oUserGroupId = remoteUserGroup.getUserGroupId();</span>
 
-<span class="nc" id="L1170">			remoteUserGroup.setUserGroupId(-1);</span>
-<span class="nc" id="L1171">			UserGroupsDB.saveUserGroup(remoteUserGroup);</span>
-<span class="nc" id="L1172">			localUserGroupId = remoteUserGroup.getUserGroupId();</span>
+<span class="nc" id="L1293">			remoteUserGroup.setUserGroupId(-1);</span>
+<span class="nc" id="L1294">			UserGroupsDB.saveUserGroup(remoteUserGroup);</span>
+<span class="nc" id="L1295">			localUserGroupId = remoteUserGroup.getUserGroupId();</span>
 
-<span class="nc" id="L1174">			remoteUserGroup.setUserGroupId(oUserGroupId);</span>
+<span class="nc" id="L1297">			remoteUserGroup.setUserGroupId(oUserGroupId);</span>
 		}
-<span class="nc bnc" id="L1176" title="All 2 branches missed.">		if (localUserGroupId &lt; 1)</span>
+<span class="nc bnc" id="L1299" title="All 2 branches missed.">		if (localUserGroupId &lt; 1)</span>
 		{
-<span class="nc" id="L1178">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje lokálna používateľská skupina &quot;+remoteUserGroup.getUserGroupName());</span>
-<span class="nc" id="L1179">			Logger.debug(SyncDirAction.class, &quot;Neexistuje lokálna používateľská skupina &quot;+remoteUserGroup.getUserGroupName());</span>
-<span class="nc" id="L1180">			return -1;</span>
+<span class="nc" id="L1301">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje lokálna používateľská skupina &quot;+remoteUserGroup.getUserGroupName());</span>
+<span class="nc" id="L1302">			Logger.debug(SyncDirAction.class, &quot;Neexistuje lokálna používateľská skupina &quot;+remoteUserGroup.getUserGroupName());</span>
+<span class="nc" id="L1303">			return -1;</span>
 		}
-<span class="nc" id="L1182">		return localUserGroupId;</span>
+<span class="nc" id="L1305">		return localUserGroupId;</span>
 	}
 
 	/**
@@ -1189,8 +1312,8 @@ import sk.iway.spirit.model.Media;
 	 */
 	public String getRemoteUserGroupName(int remoteUserGroupId)
 	{
-<span class="nc" id="L1192">		UserGroupDetails ugd = getRemoteUserGroup(remoteUserGroupId);</span>
-<span class="nc bnc" id="L1193" title="All 2 branches missed.">		return (null == ugd) ? null : ugd.getUserGroupName();</span>
+<span class="nc" id="L1315">		UserGroupDetails ugd = getRemoteUserGroup(remoteUserGroupId);</span>
+<span class="nc bnc" id="L1316" title="All 2 branches missed.">		return (null == ugd) ? null : ugd.getUserGroupName();</span>
 	}
 
 	/**
@@ -1200,11 +1323,11 @@ import sk.iway.spirit.model.Media;
 	 */
 	public UserGroupDetails getRemoteUserGroup(int remoteUserGroupId)
 	{
-<span class="nc bnc" id="L1203" title="All 2 branches missed.">		for (UserGroupDetails ugd : getRemoteUserGroups())</span>
+<span class="nc bnc" id="L1326" title="All 2 branches missed.">		for (UserGroupDetails ugd : getRemoteUserGroups())</span>
 		{
-<span class="nc bnc" id="L1205" title="All 2 branches missed.">			if (ugd.getUserGroupId()==remoteUserGroupId) return ugd;</span>
-<span class="nc" id="L1206">		}</span>
-<span class="nc" id="L1207">		return null;</span>
+<span class="nc bnc" id="L1328" title="All 2 branches missed.">			if (ugd.getUserGroupId()==remoteUserGroupId) return ugd;</span>
+<span class="nc" id="L1329">		}</span>
+<span class="nc" id="L1330">		return null;</span>
 	}
 
 	/**
@@ -1214,8 +1337,8 @@ import sk.iway.spirit.model.Media;
 	 */
 	public int getLocalUserGroupId(String userGroupName)
 	{
-<span class="nc" id="L1217">		UserGroupDetails ugd = getLocalUserGroup(userGroupName);</span>
-<span class="nc bnc" id="L1218" title="All 2 branches missed.">		return (null == ugd) ? -1 : ugd.getUserGroupId();</span>
+<span class="nc" id="L1340">		UserGroupDetails ugd = getLocalUserGroup(userGroupName);</span>
+<span class="nc bnc" id="L1341" title="All 2 branches missed.">		return (null == ugd) ? -1 : ugd.getUserGroupId();</span>
 	}
 
 	/**
@@ -1225,7 +1348,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public UserGroupDetails getLocalUserGroup(String userGroupName)
 	{
-<span class="nc" id="L1228">		return UserGroupsDB.getInstance().getUserGroup(userGroupName);</span>
+<span class="nc" id="L1351">		return UserGroupsDB.getInstance().getUserGroup(userGroupName);</span>
 	}
 
 	/**
@@ -1235,7 +1358,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public UserGroupDetails getLocalUserGroup(int localUserGroupId)
 	{
-<span class="nc" id="L1238">		return UserGroupsDB.getInstance().getUserGroup(localUserGroupId);</span>
+<span class="nc" id="L1361">		return UserGroupsDB.getInstance().getUserGroup(localUserGroupId);</span>
 	}
 
 	/**
@@ -1245,48 +1368,48 @@ import sk.iway.spirit.model.Media;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;UserGroupDetails&gt; getRemoteUserGroups()
 	{
-<span class="nc bnc" id="L1248" title="All 2 branches missed.">		if (remoteUserGroups == null)</span>
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">		if (remoteUserGroups == null)</span>
 		{
-<span class="nc" id="L1250">			remoteUserGroups = (List&lt;UserGroupDetails&gt;) getLocalFile(&quot;usergroups.xml&quot;);</span>
+<span class="nc" id="L1373">			remoteUserGroups = (List&lt;UserGroupDetails&gt;) getLocalFile(&quot;usergroups.xml&quot;);</span>
 		}
-<span class="nc" id="L1252">		return remoteUserGroups;</span>
+<span class="nc" id="L1375">		return remoteUserGroups;</span>
 	}
 
 
 	private int getCreatePerexGroup(int remotePerexGroupId)
 	{
-<span class="nc" id="L1258">		PerexGroupBean remotePerexGroup = getRemotePerexGroup(remotePerexGroupId);</span>
-<span class="nc bnc" id="L1259" title="All 2 branches missed.">		if (remotePerexGroup==null)</span>
+<span class="fc" id="L1381">		PerexGroupBean remotePerexGroup = getRemotePerexGroup(remotePerexGroupId);</span>
+<span class="pc bpc" id="L1382" title="1 of 2 branches missed.">		if (remotePerexGroup==null)</span>
 		{
-<span class="nc" id="L1261">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote perex skupina pre perexGroupId=&quot;+remotePerexGroupId);</span>
-<span class="nc" id="L1262">			Logger.debug(SyncDirAction.class, &quot;Neexistuje remote perex skupina pre perexGroupId=&quot;+remotePerexGroupId);</span>
-<span class="nc" id="L1263">			return -1;</span>
+<span class="nc" id="L1384">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje remote perex skupina pre perexGroupId=&quot;+remotePerexGroupId);</span>
+<span class="nc" id="L1385">			Logger.debug(SyncDirAction.class, &quot;Neexistuje remote perex skupina pre perexGroupId=&quot;+remotePerexGroupId);</span>
+<span class="nc" id="L1386">			return -1;</span>
 		}
-<span class="nc" id="L1265">		int localPerexGroupId = getLocalPerexGroupId(remotePerexGroup.getPerexGroupName());</span>
-<span class="nc bnc" id="L1266" title="All 4 branches missed.">		if (localPerexGroupId &lt; 1 &amp;&amp; createMissingUserGroups)</span>
+<span class="fc" id="L1388">		int localPerexGroupId = getLocalPerexGroupId(remotePerexGroup.getPerexGroupName());</span>
+<span class="pc bpc" id="L1389" title="2 of 4 branches missed.">		if (localPerexGroupId &lt; 1 &amp;&amp; createMissingUserGroups)</span>
 		{
 			//premigrovat ID adresarov, POZOR: v groups.xml mame len exportovane skupiny, takze to nevie setnut prava na ine skupiny ako exportovane
-<span class="nc" id="L1269">			StringBuilder availableGroups = new StringBuilder(&quot;&quot;);</span>
-<span class="nc bnc" id="L1270" title="All 2 branches missed.">			if (Tools.isNotEmpty(remotePerexGroup.getAvailableGroups())) {</span>
-<span class="nc" id="L1271">				int[] remoteGroupIds = Tools.getTokensInt(remotePerexGroup.getAvailableGroups(), &quot;,&quot;);</span>
-<span class="nc bnc" id="L1272" title="All 2 branches missed.">				for (int groupId : remoteGroupIds) {</span>
-<span class="nc" id="L1273">					GroupDetails group = getLocalGroup(groupId);</span>
-<span class="nc bnc" id="L1274" title="All 2 branches missed.">					if (group != null) {</span>
-<span class="nc bnc" id="L1275" title="All 2 branches missed.">						if (Tools.isNotEmpty(availableGroups)) availableGroups.append(&quot;,&quot;);</span>
-<span class="nc" id="L1276">						availableGroups.append(String.valueOf(group.getGroupId()));</span>
+<span class="fc" id="L1392">			StringBuilder availableGroups = new StringBuilder(&quot;&quot;);</span>
+<span class="pc bpc" id="L1393" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(remotePerexGroup.getAvailableGroups())) {</span>
+<span class="nc" id="L1394">				int[] remoteGroupIds = Tools.getTokensInt(remotePerexGroup.getAvailableGroups(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L1395" title="All 2 branches missed.">				for (int groupId : remoteGroupIds) {</span>
+<span class="nc" id="L1396">					GroupDetails group = getLocalGroup(groupId);</span>
+<span class="nc bnc" id="L1397" title="All 2 branches missed.">					if (group != null) {</span>
+<span class="nc bnc" id="L1398" title="All 2 branches missed.">						if (Tools.isNotEmpty(availableGroups)) availableGroups.append(&quot;,&quot;);</span>
+<span class="nc" id="L1399">						availableGroups.append(String.valueOf(group.getGroupId()));</span>
 					}
 				}
 			}
-<span class="nc" id="L1280">			DocDB.getInstance().savePerexGroup(remotePerexGroup.getPerexGroupName(), -1, availableGroups.toString(), null);</span>
-<span class="nc" id="L1281">			localPerexGroupId = getLocalPerexGroupId(remotePerexGroup.getPerexGroupName());</span>
+<span class="fc" id="L1403">			DocDB.getInstance().savePerexGroup(remotePerexGroup.getPerexGroupName(), -1, availableGroups.toString(), null);</span>
+<span class="fc" id="L1404">			localPerexGroupId = getLocalPerexGroupId(remotePerexGroup.getPerexGroupName());</span>
 		}
-<span class="nc bnc" id="L1283" title="All 2 branches missed.">		if (localPerexGroupId &lt; 1)</span>
+<span class="pc bpc" id="L1406" title="1 of 2 branches missed.">		if (localPerexGroupId &lt; 1)</span>
 		{
-<span class="nc" id="L1285">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje lokálna perex skupina &quot;+remotePerexGroup.getPerexGroupName());</span>
-<span class="nc" id="L1286">			Logger.debug(SyncDirAction.class, &quot;Neexistuje lokálna perex skupina &quot;+remotePerexGroup.getPerexGroupName());</span>
-<span class="nc" id="L1287">			return -1;</span>
+<span class="nc" id="L1408">			context.getRequest().setAttribute(&quot;errorText&quot;, &quot;Neexistuje lokálna perex skupina &quot;+remotePerexGroup.getPerexGroupName());</span>
+<span class="nc" id="L1409">			Logger.debug(SyncDirAction.class, &quot;Neexistuje lokálna perex skupina &quot;+remotePerexGroup.getPerexGroupName());</span>
+<span class="nc" id="L1410">			return -1;</span>
 		}
-<span class="nc" id="L1289">		return localPerexGroupId;</span>
+<span class="fc" id="L1412">		return localPerexGroupId;</span>
 	}
 
 	/**
@@ -1296,8 +1419,8 @@ import sk.iway.spirit.model.Media;
 	 */
 	public String getRemotePerexGroupName(int remotePerexGroupId)
 	{
-<span class="nc" id="L1299">		PerexGroupBean pgb = getRemotePerexGroup(remotePerexGroupId);</span>
-<span class="nc bnc" id="L1300" title="All 2 branches missed.">		return (null == pgb) ? null : pgb.getPerexGroupName();</span>
+<span class="fc" id="L1422">		PerexGroupBean pgb = getRemotePerexGroup(remotePerexGroupId);</span>
+<span class="pc bpc" id="L1423" title="1 of 2 branches missed.">		return (null == pgb) ? null : pgb.getPerexGroupName();</span>
 	}
 
 	/**
@@ -1307,11 +1430,11 @@ import sk.iway.spirit.model.Media;
 	 */
 	public PerexGroupBean getRemotePerexGroup(int remotePerexGroupId)
 	{
-<span class="nc bnc" id="L1310" title="All 2 branches missed.">		for (PerexGroupBean pgd : getRemotePerexGroups())</span>
+<span class="pc bpc" id="L1433" title="1 of 2 branches missed.">		for (PerexGroupBean pgd : getRemotePerexGroups())</span>
 		{
-<span class="nc bnc" id="L1312" title="All 2 branches missed.">			if (pgd.getPerexGroupId()==remotePerexGroupId) return pgd;</span>
-<span class="nc" id="L1313">		}</span>
-<span class="nc" id="L1314">		return null;</span>
+<span class="fc bfc" id="L1435" title="All 2 branches covered.">			if (pgd.getPerexGroupId()==remotePerexGroupId) return pgd;</span>
+<span class="fc" id="L1436">		}</span>
+<span class="nc" id="L1437">		return null;</span>
 	}
 
 	/**
@@ -1321,8 +1444,8 @@ import sk.iway.spirit.model.Media;
 	 */
 	public int getLocalPerexGroupId(String perexGroupName)
 	{
-<span class="nc" id="L1324">		PerexGroupBean pgd = getLocalPerexGroup(perexGroupName);</span>
-<span class="nc bnc" id="L1325" title="All 2 branches missed.">		return (null == pgd) ? -1 : pgd.getPerexGroupId();</span>
+<span class="fc" id="L1447">		PerexGroupBean pgd = getLocalPerexGroup(perexGroupName);</span>
+<span class="fc bfc" id="L1448" title="All 2 branches covered.">		return (null == pgd) ? -1 : pgd.getPerexGroupId();</span>
 	}
 
 	/**
@@ -1332,7 +1455,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public PerexGroupBean getLocalPerexGroup(String perexGroupName)
 	{
-<span class="nc" id="L1335">		return DocDB.getInstance().getPerexGroupByName(perexGroupName);</span>
+<span class="fc" id="L1458">		return DocDB.getInstance().getPerexGroupByName(perexGroupName);</span>
 	}
 
 	/**
@@ -1342,7 +1465,7 @@ import sk.iway.spirit.model.Media;
 	 */
 	public PerexGroupBean getLocalPerexGroup(int localPerexGroupId)
 	{
-<span class="nc" id="L1345">		return DocDB.getInstance().getPerexGroup(localPerexGroupId, null);</span>
+<span class="nc" id="L1468">		return DocDB.getInstance().getPerexGroup(localPerexGroupId, null);</span>
 	}
 
 
@@ -1353,78 +1476,89 @@ import sk.iway.spirit.model.Media;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;PerexGroupBean&gt; getRemotePerexGroups()
 	{
-<span class="pc bpc" id="L1356" title="1 of 2 branches missed.">		if (remotePerexGroups == null)</span>
+<span class="fc bfc" id="L1479" title="All 2 branches covered.">		if (remotePerexGroups == null)</span>
 		{
-<span class="fc" id="L1358">			remotePerexGroups = (List&lt;PerexGroupBean&gt;) getLocalFile(&quot;perexgroups.xml&quot;);</span>
+<span class="fc" id="L1481">			remotePerexGroups = (List&lt;PerexGroupBean&gt;) getLocalFile(&quot;perexgroups.xml&quot;);</span>
 		}
-<span class="fc" id="L1360">		return remotePerexGroups;</span>
+<span class="fc" id="L1483">		return remotePerexGroups;</span>
 	}
 
 	@Override
 	public ActionBeanContext getContext()
 	{
-<span class="fc" id="L1366">		return context;</span>
+<span class="fc" id="L1489">		return context;</span>
 	}
 	@Override
 	public void setContext(ActionBeanContext context)
 	{
-<span class="fc" id="L1371">		super.setContext(context);</span>
+<span class="fc" id="L1494">		super.setContext(context);</span>
 
-<span class="fc" id="L1373">		Identity user = getUser();</span>
-<span class="pc bpc" id="L1374" title="1 of 2 branches missed.">		if (user != null)</span>
+<span class="fc" id="L1496">		Identity user = getUser();</span>
+<span class="pc bpc" id="L1497" title="1 of 2 branches missed.">		if (user != null)</span>
 		{
 			// ak je true synchrozujeme s xml subormi v syncdir a nastavime fake loginy, ktore sa ale nikde nepouzije, su tam len kvoli valid a pod.
-<span class="pc bpc" id="L1377" title="1 of 2 branches missed.">			if (Tools.isNotEmpty( context.getRequest().getParameter(&quot;syncDir&quot;)))</span>
+<span class="pc bpc" id="L1500" title="1 of 2 branches missed.">			if (Tools.isNotEmpty( context.getRequest().getParameter(&quot;syncDir&quot;)))</span>
 			{
-<span class="fc" id="L1379">				setSyncDir(context.getRequest().getParameter(&quot;syncDir&quot;));</span>
+<span class="fc" id="L1502">				setSyncDir(context.getRequest().getParameter(&quot;syncDir&quot;));</span>
 			}
 		}
-<span class="fc" id="L1382">	}</span>
+
+		//Set comapreBy
+<span class="fc" id="L1507">		this.compareBy = context.getRequest().getParameter(&quot;compareBy&quot;);</span>
+<span class="pc bpc" id="L1508" title="1 of 2 branches missed.">		if(this.compareBy == null) this.compareBy = &quot;nameOrUrl&quot;;</span>
+<span class="fc" id="L1509">	}</span>
 
 	public void setSyncDir(String syncDir)
 	{
-<span class="fc" id="L1386">		this.syncDir = syncDir;</span>
-<span class="fc" id="L1387">	}</span>
+<span class="fc" id="L1513">		this.syncDir = syncDir;</span>
+<span class="fc" id="L1514">	}</span>
 
 	public int getLocalGroupId()
 	{
-<span class="fc" id="L1391">		return localGroupId;</span>
+<span class="fc" id="L1518">		return localGroupId;</span>
 	}
 
 	public void setLocalGroupId(int localGroupId)
 	{
-<span class="fc" id="L1396">		this.localGroupId = localGroupId;</span>
-<span class="fc" id="L1397">	}</span>
+<span class="fc" id="L1523">		this.localGroupId = localGroupId;</span>
+
+<span class="fc" id="L1525">		this.localSrcGroup = GroupsDB.getInstance().getGroup(localGroupId);</span>
+<span class="fc" id="L1526">	}</span>
+
+	public GroupDetails getLocalSrcGroup()
+	{
+<span class="nc" id="L1530">		return localSrcGroup;</span>
+	}
 
 	public int getRemoteGroupId()
 	{
-<span class="fc" id="L1401">		return remoteGroupId;</span>
+<span class="fc" id="L1535">		return remoteGroupId;</span>
 	}
 
 	public void setRemoteGroupId(int remoteGroupId)
 	{
-<span class="fc" id="L1406">		this.remoteGroupId = remoteGroupId;</span>
-<span class="fc" id="L1407">	}</span>
+<span class="fc" id="L1540">		this.remoteGroupId = remoteGroupId;</span>
+<span class="fc" id="L1541">	}</span>
 
 	public boolean isCreateMissingTemplates()
 	{
-<span class="fc" id="L1411">		return createMissingTemplates;</span>
+<span class="fc" id="L1545">		return createMissingTemplates;</span>
 	}
 
 	public void setCreateMissingTemplates(boolean createMissingTemplates)
 	{
-<span class="fc" id="L1416">		this.createMissingTemplates = createMissingTemplates;</span>
-<span class="fc" id="L1417">	}</span>
+<span class="fc" id="L1550">		this.createMissingTemplates = createMissingTemplates;</span>
+<span class="fc" id="L1551">	}</span>
 
 	public boolean isCreateMissingUserGroups()
 	{
-<span class="fc" id="L1421">		return createMissingUserGroups;</span>
+<span class="fc" id="L1555">		return createMissingUserGroups;</span>
 	}
 
 	public void setCreateMissingUserGroups(boolean createMissingUserGroups)
 	{
-<span class="fc" id="L1426">		this.createMissingUserGroups = createMissingUserGroups;</span>
-<span class="fc" id="L1427">	}</span>
+<span class="fc" id="L1560">		this.createMissingUserGroups = createMissingUserGroups;</span>
+<span class="fc" id="L1561">	}</span>
 
 	/**
 	 * Vrati dekodovany objekt z XML suboru.
@@ -1434,71 +1568,71 @@ import sk.iway.spirit.model.Media;
 	 */
 	private Object getLocalFile(String filename)
 	{
-<span class="fc" id="L1437">		InputStream inputStream = null;</span>
-<span class="fc" id="L1438">		InputStream inputStream2 = null;</span>
+<span class="fc" id="L1571">		InputStream inputStream = null;</span>
+<span class="fc" id="L1572">		InputStream inputStream2 = null;</span>
 		try
 		{
-<span class="fc" id="L1441">			String realPath = Tools.getRealPath(syncDir) + java.io.File.separatorChar + filename;</span>
-<span class="fc" id="L1442">			Logger.debug(SyncDirAction.class, &quot;Reading local file: &quot;+realPath);</span>
-<span class="fc" id="L1443">			inputStream = new IwcmInputStream(realPath);</span>
-<span class="fc" id="L1444">			inputStream2 = checkXmlForAttack(inputStream);</span>
-<span class="fc" id="L1445">			XMLDecoder decoder = new XMLDecoder(inputStream2, null, new WarningListener());</span>
-<span class="fc" id="L1446">			Object o = decoder.readObject();</span>
-<span class="fc" id="L1447">			decoder.close();</span>
+<span class="fc" id="L1575">			String realPath = Tools.getRealPath(syncDir) + java.io.File.separatorChar + filename;</span>
+<span class="fc" id="L1576">			Logger.debug(SyncDirAction.class, &quot;Reading local file: &quot;+realPath);</span>
+<span class="fc" id="L1577">			inputStream = new IwcmInputStream(realPath);</span>
+<span class="fc" id="L1578">			inputStream2 = checkXmlForAttack(inputStream);</span>
+<span class="fc" id="L1579">			XMLDecoder decoder = new XMLDecoder(inputStream2, null, new WarningListener());</span>
+<span class="fc" id="L1580">			Object o = decoder.readObject();</span>
+<span class="fc" id="L1581">			decoder.close();</span>
 			//Logger.debug(SyncDirAction.class, &quot;readed, o=&quot;+o);
-<span class="fc" id="L1449">			return o;</span>
+<span class="fc" id="L1583">			return o;</span>
 		}
-<span class="nc" id="L1451">		catch (IOException|IndexOutOfBoundsException ex)</span>
+<span class="nc" id="L1585">		catch (IOException|IndexOutOfBoundsException ex)</span>
 		{
-<span class="nc" id="L1453">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1454">			errorMessages.add(ex.getMessage());</span>
+<span class="nc" id="L1587">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1588">			errorMessages.add(ex.getMessage());</span>
 		}
 		finally {
-<span class="pc bpc" id="L1457" title="1 of 2 branches missed.">			if (inputStream != null) {</span>
-<span class="pc" id="L1458">				try { inputStream.close(); } catch (Exception ex) {}</span>
+<span class="pc bpc" id="L1591" title="1 of 2 branches missed.">			if (inputStream != null) {</span>
+<span class="pc" id="L1592">				try { inputStream.close(); } catch (Exception ex) {}</span>
 			}
-<span class="pc bpc" id="L1460" title="1 of 2 branches missed.">			if (inputStream2 != null) {</span>
-<span class="pc" id="L1461">				try { inputStream2.close(); } catch (Exception ex) {}</span>
+<span class="pc bpc" id="L1594" title="1 of 2 branches missed.">			if (inputStream2 != null) {</span>
+<span class="pc" id="L1595">				try { inputStream2.close(); } catch (Exception ex) {}</span>
 			}
 		}
-<span class="nc" id="L1464">		return null;</span>
+<span class="nc" id="L1598">		return null;</span>
 	}
 
 	public void cleanFiles()
 	{
-<span class="nc bnc" id="L1469" title="All 2 branches missed.">		if (!Tools.isEmpty(syncDir))</span>
+<span class="nc bnc" id="L1603" title="All 2 branches missed.">		if (!Tools.isEmpty(syncDir))</span>
 		{
-<span class="nc" id="L1471">			Content content = getRemoteContent();</span>
-<span class="nc bnc" id="L1472" title="All 4 branches missed.">			if (content!=null &amp;&amp; content.getFiles()!=null) {</span>
-<span class="nc" id="L1473">				String tmpDir = Tools.getRealPath(syncDir);</span>
-<span class="nc bnc" id="L1474" title="All 2 branches missed.">				for (Content.File file : content.getFiles())</span>
+<span class="nc" id="L1605">			Content content = getRemoteContent();</span>
+<span class="nc bnc" id="L1606" title="All 4 branches missed.">			if (content!=null &amp;&amp; content.getFiles()!=null) {</span>
+<span class="nc" id="L1607">				String tmpDir = Tools.getRealPath(syncDir);</span>
+<span class="nc bnc" id="L1608" title="All 2 branches missed.">				for (Content.File file : content.getFiles())</span>
 				{
-<span class="nc" id="L1476">					new IwcmFile(tmpDir + java.io.File.separatorChar + &quot;/content/&quot; + file.getZipPath().replace(&quot;/&quot;, File.separator)).delete();</span>
-<span class="nc" id="L1477">				}</span>
-<span class="nc" id="L1478">				new IwcmFile(tmpDir + java.io.File.separatorChar + &quot;/content&quot;).delete();</span>
-<span class="nc bnc" id="L1479" title="All 2 branches missed.">				for (String filename : new String[]{ &quot;docs.xml&quot;, &quot;groups.xml&quot;, &quot;temps.xml&quot;, &quot;perexgroups.xml&quot;, &quot;usergroups.xml&quot;, &quot;content.xml&quot; })</span>
+<span class="nc" id="L1610">					new IwcmFile(tmpDir + java.io.File.separatorChar + &quot;/content/&quot; + file.getZipPath().replace(&quot;/&quot;, File.separator)).delete();</span>
+<span class="nc" id="L1611">				}</span>
+<span class="nc" id="L1612">				new IwcmFile(tmpDir + java.io.File.separatorChar + &quot;/content&quot;).delete();</span>
+<span class="nc bnc" id="L1613" title="All 2 branches missed.">				for (String filename : new String[]{ &quot;docs.xml&quot;, &quot;groups.xml&quot;, &quot;temps.xml&quot;, &quot;perexgroups.xml&quot;, &quot;usergroups.xml&quot;, &quot;content.xml&quot; })</span>
 				{
-<span class="nc" id="L1481">					new IwcmFile(tmpDir + java.io.File.separatorChar + filename).delete();</span>
+<span class="nc" id="L1615">					new IwcmFile(tmpDir + java.io.File.separatorChar + filename).delete();</span>
 				}
-<span class="nc" id="L1483">				new IwcmFile(tmpDir).delete();</span>
+<span class="nc" id="L1617">				new IwcmFile(tmpDir).delete();</span>
 			}
 		}
-<span class="nc" id="L1486">	}</span>
+<span class="nc" id="L1620">	}</span>
 
 	private Identity getUser()
 	{
-<span class="fc" id="L1490">		return (Identity) context.getRequest().getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L1624">		return (Identity) context.getRequest().getSession().getAttribute(Constants.USER_KEY);</span>
 	}
 
 	public String getLocalDomain()
 	{
-<span class="nc" id="L1495">		return localDomain;</span>
+<span class="nc" id="L1629">		return localDomain;</span>
 	}
 
 	public void setLocalDomain(String localDomain)
 	{
-<span class="fc" id="L1500">		this.localDomain = localDomain;</span>
-<span class="fc" id="L1501">	}</span>
+<span class="fc" id="L1634">		this.localDomain = localDomain;</span>
+<span class="fc" id="L1635">	}</span>
 
 	/**
 	 * Jednoduche premapovanie ID adresarov na nove hodnoty v lokalnom systeme
@@ -1506,51 +1640,99 @@ import sk.iway.spirit.model.Media;
 	 */
 	private String fixGroupIdsInContent(String htmlCode)
 	{
-<span class="fc" id="L1509">		int start = htmlCode.indexOf(&quot;groupIds=&quot;);</span>
-<span class="pc bpc" id="L1510" title="1 of 2 branches missed.">		if (start==-1) return htmlCode;</span>
+<span class="fc" id="L1643">		int start = htmlCode.indexOf(&quot;groupIds=&quot;);</span>
+<span class="pc bpc" id="L1644" title="1 of 2 branches missed.">		if (start==-1) return htmlCode;</span>
 
 		//prehladame hodnoty groupIds= a nahradime ich za novy vyraz
-<span class="nc" id="L1513">		Matcher matcher = Pattern.compile(&quot;!INCLUDE\\(/components/[^)]*groupIds=(['\&quot;&amp;quot;+1234567890]*)[^)]*\\)!&quot;).matcher(htmlCode);</span>
-<span class="nc bnc" id="L1514" title="All 2 branches missed.">		while (matcher.find())</span>
+<span class="nc" id="L1647">		Matcher matcher = Pattern.compile(&quot;!INCLUDE\\(/components/[^)]*groupIds=(['\&quot;&amp;quot;+1234567890]*)[^)]*\\)!&quot;).matcher(htmlCode);</span>
+<span class="nc bnc" id="L1648" title="All 2 branches missed.">		while (matcher.find())</span>
 		{
-<span class="nc" id="L1516">		 	Logger.debug(SyncDirAction.class, &quot;Mam:&quot;);</span>
-<span class="nc" id="L1517">		 	Logger.debug(SyncDirAction.class, matcher.group());</span>
-<span class="nc" id="L1518">		 	Logger.debug(SyncDirAction.class, matcher.group(1));</span>
-<span class="nc" id="L1519">			String groupIds = matcher.group(1);</span>
-<span class="nc" id="L1520">			Logger.debug(SyncDirAction.class, &quot;groupIds=&quot;+groupIds);</span>
-<span class="nc" id="L1521">			String groupIdsOrig = groupIds;</span>
-<span class="nc" id="L1522">			groupIds = Tools.replace(groupIds, &quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
-<span class="nc" id="L1523">			groupIds = groupIds.replace('&quot;', ' ');</span>
-<span class="nc" id="L1524">			groupIds = groupIds.replace('\'', ' ');</span>
-<span class="nc" id="L1525">			groupIds = groupIds.trim();</span>
-<span class="nc" id="L1526">			int[] groupIdsArr = Tools.getTokensInt(groupIds, &quot;+&quot;);</span>
-<span class="nc" id="L1527">			StringBuilder newGroupIds = new StringBuilder();</span>
-<span class="nc bnc" id="L1528" title="All 2 branches missed.">			for (int groupId : groupIdsArr)</span>
+<span class="nc" id="L1650">		 	Logger.debug(SyncDirAction.class, &quot;Mam:&quot;);</span>
+<span class="nc" id="L1651">		 	Logger.debug(SyncDirAction.class, matcher.group());</span>
+<span class="nc" id="L1652">		 	Logger.debug(SyncDirAction.class, matcher.group(1));</span>
+<span class="nc" id="L1653">			String groupIds = matcher.group(1);</span>
+<span class="nc" id="L1654">			Logger.debug(SyncDirAction.class, &quot;groupIds=&quot;+groupIds);</span>
+<span class="nc" id="L1655">			String groupIdsOrig = groupIds;</span>
+<span class="nc" id="L1656">			groupIds = Tools.replace(groupIds, &quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="nc" id="L1657">			groupIds = groupIds.replace('&quot;', ' ');</span>
+<span class="nc" id="L1658">			groupIds = groupIds.replace('\'', ' ');</span>
+<span class="nc" id="L1659">			groupIds = groupIds.trim();</span>
+<span class="nc" id="L1660">			int[] groupIdsArr = Tools.getTokensInt(groupIds, &quot;+&quot;);</span>
+<span class="nc" id="L1661">			StringBuilder newGroupIds = new StringBuilder();</span>
+<span class="nc bnc" id="L1662" title="All 2 branches missed.">			for (int groupId : groupIdsArr)</span>
 			{
-<span class="nc" id="L1530">				int localId = groupId;</span>
-<span class="nc" id="L1531">				GroupDetails localGroup = getLocalGroup(groupId);</span>
-<span class="nc bnc" id="L1532" title="All 2 branches missed.">				if (localGroup != null) localId = localGroup.getGroupId();</span>
-<span class="nc bnc" id="L1533" title="All 2 branches missed.">				if (newGroupIds.length()&gt;0) newGroupIds.append('+');</span>
-<span class="nc" id="L1534">				newGroupIds.append(localId);</span>
+<span class="nc" id="L1664">				int localId = groupId;</span>
+<span class="nc" id="L1665">				GroupDetails localGroup = getLocalGroup(groupId);</span>
+<span class="nc bnc" id="L1666" title="All 2 branches missed.">				if (localGroup != null) localId = localGroup.getGroupId();</span>
+<span class="nc bnc" id="L1667" title="All 2 branches missed.">				if (newGroupIds.length()&gt;0) newGroupIds.append('+');</span>
+<span class="nc" id="L1668">				newGroupIds.append(localId);</span>
 			}
 
-<span class="nc bnc" id="L1537" title="All 4 branches missed.">			if (Tools.isEmpty(groupIdsOrig) || Tools.isEmpty(newGroupIds.toString())) continue;</span>
+<span class="nc bnc" id="L1671" title="All 4 branches missed.">			if (Tools.isEmpty(groupIdsOrig) || Tools.isEmpty(newGroupIds.toString())) continue;</span>
 
-<span class="nc" id="L1539">			Logger.debug(SyncDirAction.class, &quot;replacing to:&quot;+newGroupIds.toString());</span>
-<span class="nc" id="L1540">			Logger.debug(SyncDirAction.class, &quot;test:&quot;+&quot;groupIds=&quot;+groupIdsOrig+&quot;,&quot;);</span>
+<span class="nc" id="L1673">			Logger.debug(SyncDirAction.class, &quot;replacing to:&quot;+newGroupIds.toString());</span>
+<span class="nc" id="L1674">			Logger.debug(SyncDirAction.class, &quot;test:&quot;+&quot;groupIds=&quot;+groupIdsOrig+&quot;,&quot;);</span>
 
-<span class="nc bnc" id="L1542" title="All 4 branches missed.">			if (groupIdsOrig.charAt(0)=='&quot;' || groupIdsOrig.charAt(0)=='\'')</span>
+<span class="nc bnc" id="L1676" title="All 4 branches missed.">			if (groupIdsOrig.charAt(0)=='&quot;' || groupIdsOrig.charAt(0)=='\'')</span>
 			{
-<span class="nc" id="L1544">				newGroupIds.insert(0, groupIdsOrig.charAt(0));</span>
-<span class="nc" id="L1545">				newGroupIds.append(groupIdsOrig.charAt(0));</span>
+<span class="nc" id="L1678">				newGroupIds.insert(0, groupIdsOrig.charAt(0));</span>
+<span class="nc" id="L1679">				newGroupIds.append(groupIdsOrig.charAt(0));</span>
 			}
 
-<span class="nc" id="L1548">			htmlCode = Tools.replace(htmlCode, &quot;groupIds=&quot;+groupIdsOrig+&quot;,&quot;, &quot;groupIds=&quot;+newGroupIds.toString()+&quot;,&quot;);</span>
-<span class="nc" id="L1549">			htmlCode = Tools.replace(htmlCode, &quot;groupIds=&quot;+groupIdsOrig+&quot;)&quot;, &quot;groupIds=&quot;+newGroupIds.toString()+&quot;)&quot;);</span>
-<span class="nc" id="L1550">			htmlCode = Tools.replace(htmlCode, &quot;groupIds=&quot;+groupIdsOrig+&quot; &quot;, &quot;groupIds=&quot;+newGroupIds.toString()+&quot; &quot;);</span>
-<span class="nc" id="L1551">		}</span>
+<span class="nc" id="L1682">			htmlCode = Tools.replace(htmlCode, &quot;groupIds=&quot;+groupIdsOrig+&quot;,&quot;, &quot;groupIds=&quot;+newGroupIds.toString()+&quot;,&quot;);</span>
+<span class="nc" id="L1683">			htmlCode = Tools.replace(htmlCode, &quot;groupIds=&quot;+groupIdsOrig+&quot;)&quot;, &quot;groupIds=&quot;+newGroupIds.toString()+&quot;)&quot;);</span>
+<span class="nc" id="L1684">			htmlCode = Tools.replace(htmlCode, &quot;groupIds=&quot;+groupIdsOrig+&quot; &quot;, &quot;groupIds=&quot;+newGroupIds.toString()+&quot; &quot;);</span>
+<span class="nc" id="L1685">		}</span>
 
-<span class="nc" id="L1553">		return htmlCode;</span>
+<span class="nc" id="L1687">		return htmlCode;</span>
+	}
+
+	private String fixMediaGroupIdsInContent(String htmlCode)
+	{
+<span class="fc" id="L1692">		int start = htmlCode.indexOf(&quot;/components/media/media&quot;);</span>
+<span class="pc bpc" id="L1693" title="1 of 2 branches missed.">		if (start==-1) return htmlCode;</span>
+
+		//prehladame hodnoty groupIds= a nahradime ich za novy vyraz
+<span class="nc" id="L1696">		Matcher matcher = Pattern.compile(&quot;!INCLUDE\\(/components/media/media[^)]*groups=(['\&quot;&amp;quot;+1234567890]*)[^)]*\\)!&quot;).matcher(htmlCode);</span>
+<span class="nc bnc" id="L1697" title="All 2 branches missed.">		while (matcher.find())</span>
+		{
+<span class="nc" id="L1699">		 	Logger.debug(SyncDirAction.class, &quot;Mam:&quot;);</span>
+<span class="nc" id="L1700">		 	Logger.debug(SyncDirAction.class, matcher.group());</span>
+<span class="nc" id="L1701">		 	Logger.debug(SyncDirAction.class, matcher.group(1));</span>
+<span class="nc" id="L1702">			String mediaGroupIds = matcher.group(1);</span>
+<span class="nc" id="L1703">			Logger.debug(SyncDirAction.class, &quot;mediaGroupIds=&quot;+mediaGroupIds);</span>
+<span class="nc" id="L1704">			String groupIdsOrig = mediaGroupIds;</span>
+<span class="nc" id="L1705">			mediaGroupIds = Tools.replace(mediaGroupIds, &quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="nc" id="L1706">			mediaGroupIds = mediaGroupIds.replace('&quot;', ' ');</span>
+<span class="nc" id="L1707">			mediaGroupIds = mediaGroupIds.replace('\'', ' ');</span>
+<span class="nc" id="L1708">			mediaGroupIds = mediaGroupIds.trim();</span>
+<span class="nc" id="L1709">			int[] mediaGroupIdsArr = Tools.getTokensInt(mediaGroupIds, &quot;+&quot;);</span>
+<span class="nc" id="L1710">			StringBuilder newMediaGroupIds = new StringBuilder();</span>
+<span class="nc bnc" id="L1711" title="All 2 branches missed.">			for (int remoteMediaGroupId : mediaGroupIdsArr)</span>
+			{
+<span class="nc" id="L1713">				Integer localMediaGroupId = remoteToLocalMediaGroups.get(remoteMediaGroupId);</span>
+<span class="nc bnc" id="L1714" title="All 2 branches missed.">				if (localMediaGroupId == null) localMediaGroupId = remoteMediaGroupId;</span>
+
+<span class="nc bnc" id="L1716" title="All 2 branches missed.">				if (newMediaGroupIds.length()&gt;0) newMediaGroupIds.append('+');</span>
+<span class="nc" id="L1717">				newMediaGroupIds.append(localMediaGroupId);</span>
+			}
+
+<span class="nc bnc" id="L1720" title="All 4 branches missed.">			if (Tools.isEmpty(groupIdsOrig) || Tools.isEmpty(newMediaGroupIds.toString())) continue;</span>
+
+<span class="nc" id="L1722">			Logger.debug(SyncDirAction.class, &quot;replacing mediaGroup to:&quot;+newMediaGroupIds.toString()+&quot; original=&quot;+groupIdsOrig+&quot;;&quot;);</span>
+
+<span class="nc bnc" id="L1724" title="All 4 branches missed.">			if (groupIdsOrig.charAt(0)=='&quot;' || groupIdsOrig.charAt(0)=='\'')</span>
+			{
+<span class="nc" id="L1726">				newMediaGroupIds.insert(0, groupIdsOrig.charAt(0));</span>
+<span class="nc" id="L1727">				newMediaGroupIds.append(groupIdsOrig.charAt(0));</span>
+			}
+
+<span class="nc" id="L1730">			htmlCode = Tools.replace(htmlCode, &quot;groups=&quot;+groupIdsOrig+&quot;,&quot;, &quot;groups=&quot;+newMediaGroupIds.toString()+&quot;,&quot;);</span>
+<span class="nc" id="L1731">			htmlCode = Tools.replace(htmlCode, &quot;groups=&quot;+groupIdsOrig+&quot;)&quot;, &quot;groups=&quot;+newMediaGroupIds.toString()+&quot;)&quot;);</span>
+<span class="nc" id="L1732">			htmlCode = Tools.replace(htmlCode, &quot;groups=&quot;+groupIdsOrig+&quot; &quot;, &quot;groups=&quot;+newMediaGroupIds.toString()+&quot; &quot;);</span>
+<span class="nc" id="L1733">		}</span>
+
+<span class="nc" id="L1735">		return htmlCode;</span>
 	}
 
 	/**
@@ -1559,179 +1741,224 @@ import sk.iway.spirit.model.Media;
 	 */
 	private String getLocalLng()
 	{
-<span class="nc" id="L1562">		String lng = getRequest().getParameter(&quot;language&quot;);</span>
+<span class="nc" id="L1744">		String lng = getRequest().getParameter(&quot;language&quot;);</span>
 
-<span class="nc bnc" id="L1564" title="All 2 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="nc bnc" id="L1746" title="All 2 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
 		{
-<span class="nc bnc" id="L1566" title="All 6 branches missed.">			if (&quot;sk&quot;.equals(lng) || &quot;cz&quot;.equals(lng) || &quot;de&quot;.equals(lng))</span>
+<span class="nc bnc" id="L1748" title="All 6 branches missed.">			if (&quot;sk&quot;.equals(lng) || &quot;cz&quot;.equals(lng) || &quot;de&quot;.equals(lng))</span>
 			{
-<span class="nc" id="L1568">				return lng;</span>
+<span class="nc" id="L1750">				return lng;</span>
 			}
-<span class="nc" id="L1570">			return null;</span>
+<span class="nc" id="L1752">			return null;</span>
 		}
 
-<span class="nc" id="L1573">		return lng;</span>
+<span class="nc" id="L1755">		return lng;</span>
 	}
 
 	private void saveRollbackJson(List&lt;Integer&gt; historyIds, List&lt;Integer&gt; historyGroupsIds)
 	{
-<span class="fc" id="L1578">		String archivePath = &quot;/files/protected/backup/&quot;; //NOSONAR</span>
-<span class="fc" id="L1579">		String archiveName = localGroupId + &quot;_&quot; + new SimpleDateFormat(&quot;dd-MM-yyyy_HH-mm-ss&quot;).format(new Date())+&quot;.json&quot;;</span>
-<span class="fc" id="L1580">		BufferedOutputStream output = null;</span>
+<span class="fc" id="L1760">		String archivePath = &quot;/files/protected/backup/&quot;; //NOSONAR</span>
+<span class="fc" id="L1761">		String archiveName = localGroupId + &quot;_&quot; + new SimpleDateFormat(&quot;dd-MM-yyyy_HH-mm-ss&quot;).format(new Date())+&quot;.json&quot;;</span>
+<span class="fc" id="L1762">		BufferedOutputStream output = null;</span>
 		try
 		{
-<span class="fc" id="L1583">			JSONArray docs = new JSONArray();</span>
-<span class="fc bfc" id="L1584" title="All 2 branches covered.">			for(Integer id : historyIds)</span>
+<span class="fc" id="L1765">			JSONArray docs = new JSONArray();</span>
+<span class="fc bfc" id="L1766" title="All 2 branches covered.">			for(Integer id : historyIds)</span>
 			{
-<span class="fc" id="L1586">				JSONObject item = new JSONObject();</span>
-<span class="fc" id="L1587">				item.put(&quot;historyId&quot;,  id);</span>
-<span class="fc" id="L1588">			   docs.put(item);</span>
-<span class="fc" id="L1589">			}</span>
+<span class="fc" id="L1768">				JSONObject item = new JSONObject();</span>
+<span class="fc" id="L1769">				item.put(&quot;historyId&quot;,  id);</span>
+<span class="fc" id="L1770">			   docs.put(item);</span>
+<span class="fc" id="L1771">			}</span>
 
-<span class="fc" id="L1591">			JSONArray groups = new JSONArray();</span>
-<span class="pc bpc" id="L1592" title="1 of 2 branches missed.">			for(Integer id : historyGroupsIds)</span>
+<span class="fc" id="L1773">			JSONArray groups = new JSONArray();</span>
+<span class="pc bpc" id="L1774" title="1 of 2 branches missed.">			for(Integer id : historyGroupsIds)</span>
 			{
-<span class="nc" id="L1594">				JSONObject item = new JSONObject();</span>
-<span class="nc" id="L1595">				item.put(&quot;historyGroupId&quot;,  id);</span>
-<span class="nc" id="L1596">				groups.put(item);</span>
-<span class="nc" id="L1597">			}</span>
+<span class="nc" id="L1776">				JSONObject item = new JSONObject();</span>
+<span class="nc" id="L1777">				item.put(&quot;historyGroupId&quot;,  id);</span>
+<span class="nc" id="L1778">				groups.put(item);</span>
+<span class="nc" id="L1779">			}</span>
 
-<span class="fc" id="L1599">			JSONObject result = new JSONObject();</span>
-<span class="fc" id="L1600">			result.put(&quot;docs&quot;, docs);</span>
-<span class="fc" id="L1601">			result.put(&quot;groups&quot;, groups);</span>
+<span class="fc" id="L1781">			JSONObject result = new JSONObject();</span>
+<span class="fc" id="L1782">			result.put(&quot;docs&quot;, docs);</span>
+<span class="fc" id="L1783">			result.put(&quot;groups&quot;, groups);</span>
 
-<span class="fc" id="L1603">			IwcmFile dir = IwcmFile.fromVirtualPath(archivePath);</span>
-<span class="fc" id="L1604">			Logger.debug(SyncDirAction.class, &quot;Archive directory: &quot;+dir.getAbsolutePath()+&quot; exists: &quot;+dir.exists());</span>
-<span class="pc bpc" id="L1605" title="1 of 2 branches missed.">			if(!dir.exists())</span>
+<span class="fc" id="L1785">			IwcmFile dir = IwcmFile.fromVirtualPath(archivePath);</span>
+<span class="fc" id="L1786">			Logger.debug(SyncDirAction.class, &quot;Archive directory: &quot;+dir.getAbsolutePath()+&quot; exists: &quot;+dir.exists());</span>
+<span class="pc bpc" id="L1787" title="1 of 2 branches missed.">			if(!dir.exists())</span>
 			{
-<span class="nc" id="L1607">				Logger.debug(SyncDirAction.class, &quot;Creating directory: &quot;+dir.getAbsolutePath());</span>
-<span class="nc" id="L1608">				dir.mkdirs();</span>
+<span class="nc" id="L1789">				Logger.debug(SyncDirAction.class, &quot;Creating directory: &quot;+dir.getAbsolutePath());</span>
+<span class="nc" id="L1790">				dir.mkdirs();</span>
 			}
 
-<span class="fc" id="L1611">			output = new BufferedOutputStream(new IwcmOutputStream(new IwcmFile(PathFilter.getRealPath(archivePath), archiveName)));</span>
-<span class="fc" id="L1612">			output.write(result.toString(3).getBytes(StandardCharsets.UTF_8));</span>
-<span class="fc" id="L1613">			output.close();</span>
-<span class="fc" id="L1614">			output = null;</span>
+<span class="fc" id="L1793">			output = new BufferedOutputStream(new IwcmOutputStream(new IwcmFile(PathFilter.getRealPath(archivePath), archiveName)));</span>
+<span class="fc" id="L1794">			output.write(result.toString(3).getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L1795">			output.close();</span>
+<span class="fc" id="L1796">			output = null;</span>
 		}
-<span class="nc" id="L1616">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L1798">		catch(Exception e)	{sk.iway.iwcm.Logger.error(e);}</span>
 		finally
 		{
-<span class="pc bpc" id="L1619" title="1 of 2 branches missed.">			if(output!=null)</span>
+<span class="pc bpc" id="L1801" title="1 of 2 branches missed.">			if(output!=null)</span>
 			{
-<span class="nc" id="L1621">				try						{output.close();}</span>
-<span class="nc" id="L1622">				catch (Exception ex)	{sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L1803">				try						{output.close();}</span>
+<span class="nc" id="L1804">				catch (Exception ex)	{sk.iway.iwcm.Logger.error(ex);}</span>
 			}
 		}
-<span class="fc" id="L1625">	}</span>
+<span class="fc" id="L1807">	}</span>
 
 	private List&lt;Integer&gt; getNewGroups(Date start)
 	{
-<span class="fc" id="L1629">		List&lt;Integer&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1811">		List&lt;Integer&gt; result = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L1631">		Connection db_conn = null;</span>
-<span class="fc" id="L1632">		PreparedStatement ps = null;</span>
-<span class="fc" id="L1633">		ResultSet rs = null;</span>
+<span class="fc" id="L1813">		Connection db_conn = null;</span>
+<span class="fc" id="L1814">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1815">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L1636">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L1637">			ps = db_conn.prepareStatement(&quot;SELECT schedule_id FROM groups_scheduler WHERE save_date &gt;= ?&quot;);</span>
-<span class="fc" id="L1638">			ps.setTimestamp(1, new Timestamp(start.getTime()));</span>
-<span class="fc" id="L1639">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L1640" title="1 of 2 branches missed.">			while (rs.next())</span>
+<span class="fc" id="L1818">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1819">			ps = db_conn.prepareStatement(&quot;SELECT schedule_id FROM groups_scheduler WHERE save_date &gt;= ?&quot;);</span>
+<span class="fc" id="L1820">			ps.setTimestamp(1, new Timestamp(start.getTime()));</span>
+<span class="fc" id="L1821">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1822" title="1 of 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L1642">				result.add(rs.getInt(&quot;schedule_id&quot;));</span>
+<span class="nc" id="L1824">				result.add(rs.getInt(&quot;schedule_id&quot;));</span>
 			}
-<span class="fc" id="L1644">			rs.close();</span>
-<span class="fc" id="L1645">			ps.close();</span>
-<span class="fc" id="L1646">			db_conn.close();</span>
-<span class="fc" id="L1647">			rs = null;</span>
-<span class="fc" id="L1648">			ps = null;</span>
-<span class="fc" id="L1649">			db_conn = null;</span>
+<span class="fc" id="L1826">			rs.close();</span>
+<span class="fc" id="L1827">			ps.close();</span>
+<span class="fc" id="L1828">			db_conn.close();</span>
+<span class="fc" id="L1829">			rs = null;</span>
+<span class="fc" id="L1830">			ps = null;</span>
+<span class="fc" id="L1831">			db_conn = null;</span>
 		}
-<span class="nc" id="L1651">		catch (Exception ex)</span>
+<span class="nc" id="L1833">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1653">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1835">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1659" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1660">					rs.close();</span>
-<span class="pc bpc" id="L1661" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1662">					ps.close();</span>
-<span class="pc bpc" id="L1663" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1664">					db_conn.close();</span>
+<span class="pc bpc" id="L1841" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1842">					rs.close();</span>
+<span class="pc bpc" id="L1843" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1844">					ps.close();</span>
+<span class="pc bpc" id="L1845" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1846">					db_conn.close();</span>
 			}
-<span class="nc" id="L1666">			catch (Exception ex2)</span>
+<span class="nc" id="L1848">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1668">			}</span>
+<span class="fc" id="L1850">			}</span>
 		}
 
-<span class="fc" id="L1671">		return result;</span>
+<span class="fc" id="L1853">		return result;</span>
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public Map&lt;Integer, DocNoteBean&gt; getRemoteDocsNotes()
 	{
-<span class="pc bpc" id="L1677" title="1 of 2 branches missed.">		if (remoteNotesMap==null)</span>
+<span class="pc bpc" id="L1859" title="1 of 2 branches missed.">		if (remoteNotesMap==null)</span>
 		{
-<span class="fc" id="L1679">			remoteNotesMap = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L1680">			List&lt;DocNoteBean&gt; remoteNotes = (List&lt;DocNoteBean&gt;) getLocalFile(&quot;notes.xml&quot;);</span>
+<span class="fc" id="L1861">			remoteNotesMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L1862">			List&lt;DocNoteBean&gt; remoteNotes = (List&lt;DocNoteBean&gt;) getLocalFile(&quot;notes.xml&quot;);</span>
 
-<span class="pc bpc" id="L1682" title="1 of 2 branches missed.">			if (remoteNotes != null)</span>
+<span class="pc bpc" id="L1864" title="1 of 2 branches missed.">			if (remoteNotes != null)</span>
 			{
-<span class="fc bfc" id="L1684" title="All 2 branches covered.">				for (DocNoteBean note : remoteNotes)</span>
+<span class="fc bfc" id="L1866" title="All 2 branches covered.">				for (DocNoteBean note : remoteNotes)</span>
 				{
-<span class="fc" id="L1686">					remoteNotesMap.put(note.getDocId(), note);</span>
-<span class="fc" id="L1687">				}</span>
+<span class="fc" id="L1868">					remoteNotesMap.put(note.getDocId(), note);</span>
+<span class="fc" id="L1869">				}</span>
 			}
 		}
 
-<span class="fc" id="L1691">		return remoteNotesMap;</span>
+<span class="fc" id="L1873">		return remoteNotesMap;</span>
 	}
 
 	// [#37105 - Druhy nalez z penetracnycch testov] - uloha #0
 	public static InputStream checkXmlForAttack(InputStream inputStream) throws IOException {
-<span class="fc" id="L1696">		String xmlDecoderAllowedClasses = Constants.getString(&quot;XMLDecoderAllowedClasses&quot;, &quot;&quot;);</span>
-<span class="fc" id="L1697">		List&lt;String&gt; allowedClasses = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L1698" title="All 2 branches covered.">		for (String className : Tools.getTokens(xmlDecoderAllowedClasses, &quot;,&quot;)) {</span>
-<span class="fc" id="L1699">			className = className.trim();</span>
+<span class="fc" id="L1878">		String xmlDecoderAllowedClasses = Constants.getString(&quot;XMLDecoderAllowedClasses&quot;, &quot;&quot;);</span>
+<span class="fc" id="L1879">		List&lt;String&gt; allowedClasses = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1880" title="All 2 branches covered.">		for (String className : Tools.getTokens(xmlDecoderAllowedClasses, &quot;,&quot;)) {</span>
+<span class="fc" id="L1881">			className = className.trim();</span>
 			//toto nemozeme povolit, nie je na to dovod
-<span class="pc bpc" id="L1701" title="1 of 2 branches missed.">			if (className.contains(&quot;java.lang.Runtime&quot;)) continue;</span>
+<span class="pc bpc" id="L1883" title="1 of 2 branches missed.">			if (className.contains(&quot;java.lang.Runtime&quot;)) continue;</span>
 
-<span class="fc" id="L1703">			allowedClasses.add(className);</span>
+<span class="fc" id="L1885">			allowedClasses.add(className);</span>
 		}
 
-<span class="fc" id="L1706">		ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="fc" id="L1707">		org.apache.commons.io.IOUtils.copy(inputStream, baos);</span>
+<span class="fc" id="L1888">		ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L1889">		org.apache.commons.io.IOUtils.copy(inputStream, baos);</span>
 
-<span class="pc" id="L1709">		try { inputStream.close(); } catch (IOException ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+<span class="pc" id="L1891">		try { inputStream.close(); } catch (IOException ex) { sk.iway.iwcm.Logger.error(ex); }</span>
 
-<span class="fc" id="L1711">		byte[] bytes = baos.toByteArray();</span>
+<span class="fc" id="L1893">		byte[] bytes = baos.toByteArray();</span>
 
-<span class="fc" id="L1713">		final String xml = new String(bytes, StandardCharsets.UTF_8);</span>
-<span class="fc" id="L1714">		final String regex = &quot;class=\&quot;[\\w\\.]*\&quot;&quot;;</span>
-<span class="fc" id="L1715">		final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);</span>
-<span class="fc" id="L1716">		final Matcher matcher = pattern.matcher(xml);</span>
+<span class="fc" id="L1895">		final String xml = new String(bytes, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L1896">		final String regex = &quot;class=\&quot;[\\w\\.]*\&quot;&quot;;</span>
+<span class="fc" id="L1897">		final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);</span>
+<span class="fc" id="L1898">		final Matcher matcher = pattern.matcher(xml);</span>
 
-<span class="fc" id="L1718">		final Set&lt;String&gt; classes = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L1719" title="All 2 branches covered.">		while (matcher.find()) {</span>
-<span class="fc" id="L1720">			String match = matcher.group(0);</span>
-<span class="fc" id="L1721">			match = Tools.replace(match, &quot;\&quot;&quot;, &quot;&quot;);</span>
-<span class="fc" id="L1722">			match = Tools.replace(match, &quot;class=&quot;, &quot;&quot;);</span>
+<span class="fc" id="L1900">		final Set&lt;String&gt; classes = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L1901" title="All 2 branches covered.">		while (matcher.find()) {</span>
+<span class="fc" id="L1902">			String match = matcher.group(0);</span>
+<span class="fc" id="L1903">			match = Tools.replace(match, &quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L1904">			match = Tools.replace(match, &quot;class=&quot;, &quot;&quot;);</span>
 			//musi to obsahovat nejaky package, v autoupdate v TB sme mali HTML kod sablon a tam bolo class=&quot;meno&quot; vramci HTML kodu
-<span class="pc bpc" id="L1724" title="1 of 2 branches missed.">			if (match.contains(&quot;.&quot;)) classes.add(match);</span>
-<span class="fc" id="L1725">		}</span>
+<span class="pc bpc" id="L1906" title="1 of 2 branches missed.">			if (match.contains(&quot;.&quot;)) classes.add(match);</span>
+<span class="fc" id="L1907">		}</span>
 
-<span class="pc bpc" id="L1727" title="1 of 2 branches missed.">		if (!allowedClasses.containsAll(classes)) {</span>
-<span class="nc bnc" id="L1728" title="All 2 branches missed.">			List&lt;String&gt; notAllowedClasses = classes.stream().filter(c -&gt; !allowedClasses.contains(c)).collect(Collectors.toList());</span>
-<span class="nc" id="L1729">			String message = String.format(&quot;XMLDecoder - not allowed classes found: %s&quot;, Tools.join(notAllowedClasses, &quot;, &quot;));</span>
-<span class="nc" id="L1730">			log.debug(message);</span>
-<span class="nc" id="L1731">			throw new IOException(message);</span>
+<span class="pc bpc" id="L1909" title="1 of 2 branches missed.">		if (!allowedClasses.containsAll(classes)) {</span>
+<span class="nc bnc" id="L1910" title="All 2 branches missed.">			List&lt;String&gt; notAllowedClasses = classes.stream().filter(c -&gt; !allowedClasses.contains(c)).collect(Collectors.toList());</span>
+<span class="nc" id="L1911">			String message = String.format(&quot;XMLDecoder - not allowed classes found: %s&quot;, Tools.join(notAllowedClasses, &quot;, &quot;));</span>
+<span class="nc" id="L1912">			log.debug(message);</span>
+<span class="nc" id="L1913">			throw new IOException(message);</span>
 		}
 
-<span class="fc" id="L1734">		return new ByteArrayInputStream(bytes);</span>
+<span class="fc" id="L1916">		return new ByteArrayInputStream(bytes);</span>
+	}
+
+	/**
+	 * Prepare map of MEDIA groups and create local MediaGroups if not exists
+	 */
+	private Map&lt;Integer, Integer&gt; prepareRemoteToLocalMediaGroupMap() {
+<span class="fc" id="L1923">		Map&lt;Integer, Integer&gt; remoteToLocalMediaGroupMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L1925">		List&lt;Media&gt; media = getRemoteMedia();</span>
+<span class="pc bpc" id="L1926" title="1 of 2 branches missed.">		if (media != null)</span>
+		{
+<span class="fc bfc" id="L1928" title="All 2 branches covered.">			for (Media m : media)</span>
+			{
+<span class="fc bfc" id="L1930" title="All 2 branches covered.">				for (MediaGroupBean remoteGroup : m.getGroups()) {</span>
+<span class="fc bfc" id="L1931" title="All 2 branches covered.">					if (remoteToLocalMediaGroupMap.get(remoteGroup.getMediaGroupId()) != null) {</span>
+<span class="fc" id="L1932">						continue;</span>
+					}
+
+<span class="fc" id="L1935">					MediaGroupBean localMediaGroup = MediaDB.getGroup(remoteGroup.getMediaGroupName());</span>
+<span class="pc bpc" id="L1936" title="1 of 2 branches missed.">					if (localMediaGroup == null) {</span>
+<span class="nc" id="L1937">						localMediaGroup = new MediaGroupBean();</span>
+<span class="nc" id="L1938">						localMediaGroup.setMediaGroupName(remoteGroup.getMediaGroupName());</span>
+
+						//try to map availableGroups
+<span class="nc bnc" id="L1941" title="All 2 branches missed.">						if (Tools.isNotEmpty(remoteGroup.getAvailableGroups())) {</span>
+<span class="nc" id="L1942">							int[] remoteGroupIds = Tools.getTokensInt(remoteGroup.getAvailableGroups(), &quot;,&quot;);</span>
+<span class="nc" id="L1943">							StringBuilder availableGroups = new StringBuilder();</span>
+<span class="nc bnc" id="L1944" title="All 2 branches missed.">							for (int remoteGroupId : remoteGroupIds) {</span>
+<span class="nc" id="L1945">								GroupDetails localGroup = getLocalGroup(remoteGroupId);</span>
+<span class="nc bnc" id="L1946" title="All 2 branches missed.">								if (localGroup != null) {</span>
+<span class="nc bnc" id="L1947" title="All 2 branches missed.">									if (availableGroups.length() &gt; 0) availableGroups.append(&quot;,&quot;);</span>
+<span class="nc" id="L1948">									availableGroups.append(String.valueOf(localGroup.getGroupId()));</span>
+								}
+							}
+<span class="nc" id="L1951">							localMediaGroup.setAvailableGroups(availableGroups.toString());</span>
+						}
+
+<span class="nc" id="L1954">						localMediaGroup.save();</span>
+					}
+<span class="fc" id="L1956">					remoteToLocalMediaGroupMap.put(remoteGroup.getMediaGroupId(), localMediaGroup.getMediaGroupId());</span>
+<span class="fc" id="L1957">				}</span>
+<span class="fc" id="L1958">			}</span>
+		}
+
+<span class="fc" id="L1961">		return remoteToLocalMediaGroupMap;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

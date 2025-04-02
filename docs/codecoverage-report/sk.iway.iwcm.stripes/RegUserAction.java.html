@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegUserAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">RegUserAction.java</span></div><h1>RegUserAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegUserAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">RegUserAction.java</span></div><h1>RegUserAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
 
 import java.awt.Dimension;
 import java.io.File;
@@ -416,7 +416,7 @@ import sk.iway.iwcm.users.UsersDB;
 		{
 <span class="fc" id="L417">			db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L419">			ps = db_conn.prepareStatement(&quot;SELECT user_id, password FROM  users WHERE email=? AND is_admin=&quot;+DB.getBooleanSql(true)+&quot; ORDER BY user_id ASC&quot;);</span>
+<span class="fc" id="L419">			ps = db_conn.prepareStatement(&quot;SELECT user_id, password FROM  users WHERE email=? AND is_admin=&quot;+DB.getBooleanSql(true)+UsersDB.getDomainIdSqlWhere(true)+ &quot; ORDER BY user_id ASC&quot;);</span>
 <span class="fc" id="L420">			ps.setString(1, infoemail);</span>
 <span class="fc" id="L421">			rs = ps.executeQuery();</span>
 <span class="pc bpc" id="L422" title="1 of 2 branches missed.">			if (rs.next())</span>
@@ -655,8 +655,8 @@ import sk.iway.iwcm.users.UsersDB;
                 try
                 {
 <span class="fc" id="L657">                    sk.iway.Password pass = new sk.iway.Password();</span>
-<span class="fc" id="L658">					String passwordHashDB = (new SimpleQuery()).forString(&quot;SELECT password FROM users WHERE user_id = ?&quot;, this.usr.getUserId());</span>
-<span class="fc" id="L659">					String passwordSaltDB = (new SimpleQuery()).forString(&quot;SELECT password_salt FROM users WHERE user_id = ?&quot;, this.usr.getUserId());</span>
+<span class="fc" id="L658">					String passwordHashDB = (new SimpleQuery()).forString(&quot;SELECT password FROM users WHERE user_id = ?&quot;+UsersDB.getDomainIdSqlWhere(true), this.usr.getUserId());</span>
+<span class="fc" id="L659">					String passwordSaltDB = (new SimpleQuery()).forString(&quot;SELECT password_salt FROM users WHERE user_id = ?&quot;+UsersDB.getDomainIdSqlWhere(true), this.usr.getUserId());</span>
 <span class="pc bpc" id="L660" title="1 of 2 branches missed.">                    if (!this.usr.isInUserGroup(Constants.getInt(&quot;socialMediaUserGroupId&quot;,-1))) {</span>
 <span class="fc bfc" id="L661" title="All 2 branches covered.">						if (Tools.isEmpty(this.usr.getOldPassword())) {</span>
 <span class="fc" id="L662">							errors.add(&quot;user.oldPassword&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.oldPassword&quot;)));</span>
@@ -759,7 +759,7 @@ import sk.iway.iwcm.users.UsersDB;
 
 <span class="fc" id="L760">			String sql = &quot;SELECT user_id FROM  users WHERE login=?&quot;;</span>
 <span class="pc bpc" id="L761" title="1 of 2 branches missed.">			if (emailUnique) sql = &quot;SELECT user_id FROM  users WHERE (login=? OR email=?)&quot;;</span>
-<span class="fc bfc" id="L762" title="All 2 branches covered.">			if (usr.getUserId()&gt;0) sql +=&quot; AND user_id&lt;&gt;?&quot;;</span>
+<span class="fc bfc" id="L762" title="All 2 branches covered.">			if (usr.getUserId()&gt;0) sql +=&quot; AND user_id&lt;&gt;?&quot;+UsersDB.getDomainIdSqlWhere(true);</span>
 <span class="fc" id="L763">			ps = db_conn.prepareStatement(sql);</span>
 <span class="fc" id="L764">			ps.setString(psCounter++, usr.getLogin());</span>
 <span class="pc bpc" id="L765" title="1 of 2 branches missed.">			if (emailUnique) ps.setString(psCounter++, usr.getEmail());</span>

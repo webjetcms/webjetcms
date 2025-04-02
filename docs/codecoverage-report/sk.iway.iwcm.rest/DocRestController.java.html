@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.rest</a> &gt; <span class="el_source">DocRestController.java</span></div><h1>DocRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.rest</a> &gt; <span class="el_source">DocRestController.java</span></div><h1>DocRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.rest;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -52,33 +52,33 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	@RequestMapping(path={&quot;/rest/documents/{param}/**&quot;}, method=RequestMethod.GET)
 	public DocDetails getDoc(HttpServletRequest request, @PathVariable String param)
-	{		
-<span class="nc bnc" id="L56" title="All 2 branches missed.">		if(!isIpAddressAllowed(request))</span>
+	{
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">		if(!isIpAddressAllowed(request))</span>
 <span class="nc" id="L57">			return null;</span>
-		
-<span class="nc" id="L59">		int docId = getDocId(param, (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE), request);</span>
-		
-<span class="nc" id="L61">		DocDetails result = DocDB.getInstance().getDoc(docId);</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (result != null)</span>
-		{
-<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (result.isAvailable()==false) return null;</span>
 
-<span class="nc" id="L66">			GroupDetails group = GroupsDB.getInstance().getGroup(result.getGroupId());</span>
-<span class="nc bnc" id="L67" title="All 4 branches missed.">			if (group == null || group.isInternal()) return null;</span>
+<span class="fc" id="L59">		int docId = getDocId(param, (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE), request);</span>
+
+<span class="fc" id="L61">		DocDetails result = DocDB.getInstance().getDoc(docId);</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (result != null)</span>
+		{
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">			if (result.isAvailable()==false) return null;</span>
+
+<span class="fc" id="L66">			GroupDetails group = GroupsDB.getInstance().getGroup(result.getGroupId());</span>
+<span class="pc bpc" id="L67" title="2 of 4 branches missed.">			if (group == null || group.isInternal()) return null;</span>
 
 			//kontrola prav
-<span class="nc" id="L70">			Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (DocDB.canAccess(result, user, true) == false)</span>
+<span class="fc" id="L70">			Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">			if (DocDB.canAccess(result, user, true) == false)</span>
 			{
 <span class="nc" id="L73">				return null;</span>
 			}
 		}
-<span class="nc" id="L76">		return result;</span>
+<span class="fc" id="L76">		return result;</span>
 	}
-	
+
 	/**
 	 * param je bud docId, alebo prva cast url stranky
-	 * 
+	 *
 	 * @param param - URL adresa stranky alebo docId
 	 * @param calledUrl - cele volane URL rest sluzby
 	 * @return - normovane docId
@@ -86,12 +86,12 @@ import sk.iway.iwcm.users.UsersDB;
 	private int getDocId(String param, String calledUrl, HttpServletRequest request)
 	{
 		int docId;
-<span class="nc" id="L89">		String restOfTheUrl = calledUrl.substring( (&quot;/rest/documents/&quot;+param).length() );</span>
+<span class="fc" id="L89">		String restOfTheUrl = calledUrl.substring( (&quot;/rest/documents/&quot;+param).length() );</span>
 		//String restOfTheUrl = calledUrl.replace(&quot;/rest/documents/&quot;+param, &quot;&quot;);
-		
-<span class="nc bnc" id="L92" title="All 4 branches missed.">		if(Tools.isEmpty(restOfTheUrl) || restOfTheUrl.equals(&quot;/&quot;))</span>
+
+<span class="pc bpc" id="L92" title="3 of 4 branches missed.">		if(Tools.isEmpty(restOfTheUrl) || restOfTheUrl.equals(&quot;/&quot;))</span>
 		{
-<span class="nc" id="L94">			docId = Tools.getIntValue(param, -1);</span>
+<span class="fc" id="L94">			docId = Tools.getIntValue(param, -1);</span>
 		}
 		else
 		{
@@ -100,8 +100,8 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L100">				docUrl += '/';</span>
 <span class="nc" id="L101">			docId = DocDB.getDocIdFromURL(docUrl.replace(&quot;-html&quot;, &quot;.html&quot;), DocDB.getDomain(request));</span>
 		}
-		
-<span class="nc" id="L104">		return docId;</span>
+
+<span class="fc" id="L104">		return docId;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

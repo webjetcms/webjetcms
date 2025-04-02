@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetupActionsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.setup</a> &gt; <span class="el_source">SetupActionsService.java</span></div><h1>SetupActionsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.setup;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SetupActionsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.setup</a> &gt; <span class="el_source">SetupActionsService.java</span></div><h1>SetupActionsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.setup;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -439,32 +439,29 @@ public class SetupActionsService {
 <span class="nc" id="L439">		StringBuilder poolman = new StringBuilder(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\r\n&quot;)</span>
 <span class="nc" id="L440">				.append(&quot;\r\n&quot;)</span>
 <span class="nc" id="L441">				.append(&quot;&lt;poolman&gt;\r\n&quot;)</span>
-<span class="nc" id="L442">				.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L443">				.append(&quot;  &lt;management-mode&gt;local&lt;/management-mode&gt;\r\n&quot;)</span>
-<span class="nc" id="L444">				.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L445">				.append(&quot;  &lt;datasource&gt;\r\n&quot;)</span>
-<span class="nc" id="L446">				.append(&quot;      &lt;dbname&gt;iwcm&lt;/dbname&gt;\r\n&quot;)</span>
-<span class="nc" id="L447">				.append(&quot;      &lt;driver&gt;&quot;).append(sForm.getDbDriver()).append(&quot;&lt;/driver&gt;\r\n&quot;);</span>
+<span class="nc" id="L442">				.append(&quot;  &lt;datasource&gt;\r\n&quot;)</span>
+<span class="nc" id="L443">				.append(&quot;      &lt;dbname&gt;iwcm&lt;/dbname&gt;\r\n&quot;)</span>
+<span class="nc" id="L444">				.append(&quot;      &lt;driver&gt;&quot;).append(sForm.getDbDriver()).append(&quot;&lt;/driver&gt;\r\n&quot;);</span>
 
-<span class="nc" id="L449">		poolman.append(&quot;      &lt;url&gt;&quot;).append(getDBURLString(sForm)).append(&quot;&lt;/url&gt;\r\n&quot;);</span>
+<span class="nc" id="L446">		poolman.append(&quot;      &lt;url&gt;&quot;).append(getDBURLString(sForm)).append(&quot;&lt;/url&gt;\r\n&quot;);</span>
 
-<span class="nc" id="L451">		poolman.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L452">				.append(&quot;      &lt;username&gt;&quot;+sForm.getDbUsername()+&quot;&lt;/username&gt;\r\n&quot;)</span>
-<span class="nc" id="L453">				.append(&quot;      &lt;password&gt;&quot;+sForm.getDbPassword()+&quot;&lt;/password&gt;\r\n&quot;)</span>
-<span class="nc" id="L454">				.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L455">				.append(&quot;      &lt;initialConnections&gt;2&lt;/initialConnections&gt;\r\n&quot;)</span>
-<span class="nc" id="L456">				.append(&quot;      &lt;minimumSize&gt;0&lt;/minimumSize&gt;\r\n&quot;)</span>
-<span class="nc" id="L457">				.append(&quot;      &lt;maximumSize&gt;60&lt;/maximumSize&gt;\r\n&quot;)</span>
+<span class="nc" id="L448">		poolman.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L449">				.append(&quot;      &lt;username&gt;&quot;+sForm.getDbUsername()+&quot;&lt;/username&gt;\r\n&quot;)</span>
+<span class="nc" id="L450">				.append(&quot;      &lt;password&gt;&quot;+sForm.getDbPassword()+&quot;&lt;/password&gt;\r\n&quot;)</span>
+<span class="nc" id="L451">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L452">				.append(&quot;      &lt;initialConnections&gt;2&lt;/initialConnections&gt;\r\n&quot;)</span>
+<span class="nc" id="L453">				.append(&quot;      &lt;minimumSize&gt;0&lt;/minimumSize&gt;\r\n&quot;)</span>
+<span class="nc" id="L454">				.append(&quot;      &lt;maximumSize&gt;60&lt;/maximumSize&gt;\r\n&quot;)</span>
+<span class="nc" id="L455">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L456">				.append(&quot;      &lt;connectionTimeout&gt;600&lt;/connectionTimeout&gt;\r\n&quot;)</span>
+<span class="nc" id="L457">				.append(&quot;      &lt;userTimeout&gt;120&lt;/userTimeout&gt;\r\n&quot;)</span>
 <span class="nc" id="L458">				.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L459">				.append(&quot;      &lt;connectionTimeout&gt;600&lt;/connectionTimeout&gt;\r\n&quot;)</span>
-<span class="nc" id="L460">				.append(&quot;      &lt;userTimeout&gt;120&lt;/userTimeout&gt;\r\n&quot;)</span>
-<span class="nc" id="L461">				.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L462">				.append(&quot;  &lt;/datasource&gt;\r\n&quot;)</span>
-<span class="nc" id="L463">				.append(&quot;\r\n&quot;)</span>
-<span class="nc" id="L464">				.append(&quot;&lt;/poolman&gt;\r\n&quot;);</span>
+<span class="nc" id="L459">				.append(&quot;  &lt;/datasource&gt;\r\n&quot;)</span>
+<span class="nc" id="L460">				.append(&quot;\r\n&quot;)</span>
+<span class="nc" id="L461">				.append(&quot;&lt;/poolman&gt;\r\n&quot;);</span>
 
-<span class="nc" id="L466">		FileTools.saveFileContent(&quot;/WEB-INF/classes/poolman.xml&quot;, poolman.toString());</span>
-<span class="nc" id="L467">	}</span>
+<span class="nc" id="L463">		FileTools.saveFileContent(&quot;/WEB-INF/classes/poolman.xml&quot;, poolman.toString());</span>
+<span class="nc" id="L464">	}</span>
 
 	/**
 	 * Pripravi URL string pre connection (bez username a password)
@@ -472,30 +469,30 @@ public class SetupActionsService {
 	 * @return
 	 */
 	private static String getDBURLString(SetupFormBean sForm) {
-<span class="nc" id="L475">		String url = null;</span>
-<span class="nc" id="L476">		String port = &quot;&quot;;</span>
-<span class="nc bnc" id="L477" title="All 2 branches missed.">		if (Tools.isNotEmpty(sForm.getDbPort()))</span>
-<span class="nc" id="L478">			port = &quot;:&quot;+sForm.getDbPort();</span>
+<span class="nc" id="L472">		String url = null;</span>
+<span class="nc" id="L473">		String port = &quot;&quot;;</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		if (Tools.isNotEmpty(sForm.getDbPort()))</span>
+<span class="nc" id="L475">			port = &quot;:&quot;+sForm.getDbPort();</span>
 
-<span class="nc bnc" id="L480" title="All 2 branches missed.">		if (&quot;com.mysql.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
-<span class="nc" id="L481">			url = &quot;jdbc:mysql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
-<span class="nc bnc" id="L482" title="All 2 branches missed.">		} else if (&quot;org.mariadb.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
-<span class="nc" id="L483">			url = &quot;jdbc:mariadb://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
-<span class="nc bnc" id="L484" title="All 2 branches missed.">		} else if (&quot;net.sourceforge.jtds.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
-<span class="nc" id="L485">			url = &quot;jdbc:jtds:sqlserver://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;;&quot;+sForm.getDbParameters();</span>
-<span class="nc bnc" id="L486" title="All 2 branches missed.">		} else if (&quot;oracle.jdbc.driver.OracleDriver&quot;.equals(sForm.getDbDriver())) {</span>
-<span class="nc" id="L487">			url = &quot;jdbc:oracle:thin:@&quot;+sForm.getDbDomain()+port;</span>
-<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbName()))</span>
-<span class="nc" id="L489">				url += &quot;:&quot;+sForm.getDbName();</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">		if (&quot;com.mysql.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L478">			url = &quot;jdbc:mysql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">		} else if (&quot;org.mariadb.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L480">			url = &quot;jdbc:mariadb://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">		} else if (&quot;net.sourceforge.jtds.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L482">			url = &quot;jdbc:jtds:sqlserver://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;;&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">		} else if (&quot;oracle.jdbc.driver.OracleDriver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L484">			url = &quot;jdbc:oracle:thin:@&quot;+sForm.getDbDomain()+port;</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbName()))</span>
+<span class="nc" id="L486">				url += &quot;:&quot;+sForm.getDbName();</span>
 
-<span class="nc bnc" id="L491" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbParameters()))</span>
-<span class="nc" id="L492">				url += &quot;/&quot;+sForm.getDbParameters();</span>
-<span class="nc bnc" id="L493" title="All 2 branches missed.">		} else if (&quot;org.postgresql.Driver&quot;.equals(sForm.getDbDriver())) {</span>
-<span class="nc" id="L494">			String params = &quot;currentSchema=webjet_cms&quot;;</span>
-<span class="nc bnc" id="L495" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbParameters())) params = sForm.getDbParameters();</span>
-<span class="nc" id="L496">			url = &quot;jdbc:postgresql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+params;</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbParameters()))</span>
+<span class="nc" id="L489">				url += &quot;/&quot;+sForm.getDbParameters();</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">		} else if (&quot;org.postgresql.Driver&quot;.equals(sForm.getDbDriver())) {</span>
+<span class="nc" id="L491">			String params = &quot;currentSchema=webjet_cms&quot;;</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">			if (Tools.isNotEmpty(sForm.getDbParameters())) params = sForm.getDbParameters();</span>
+<span class="nc" id="L493">			url = &quot;jdbc:postgresql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+params;</span>
 		}
-<span class="nc" id="L498">		return(url);</span>
+<span class="nc" id="L495">		return(url);</span>
 	}
 
 	/**
@@ -506,44 +503,44 @@ public class SetupActionsService {
 	 * @throws SQLException
 	 */
 	private static void saveConf(String name, String value, Connection db_conn) throws SQLException {
-<span class="nc" id="L509">		PreparedStatement ps = db_conn.prepareStatement(&quot;DELETE FROM &quot;+ConfDB.CONF_TABLE_NAME+&quot; WHERE name=?&quot;);</span>
-<span class="nc" id="L510">		ps.setString(1, name);</span>
-<span class="nc" id="L511">		ps.execute();</span>
-<span class="nc" id="L512">		ps.close();</span>
+<span class="nc" id="L506">		PreparedStatement ps = db_conn.prepareStatement(&quot;DELETE FROM &quot;+ConfDB.CONF_TABLE_NAME+&quot; WHERE name=?&quot;);</span>
+<span class="nc" id="L507">		ps.setString(1, name);</span>
+<span class="nc" id="L508">		ps.execute();</span>
+<span class="nc" id="L509">		ps.close();</span>
 
-<span class="nc" id="L514">		ps = db_conn.prepareStatement(&quot;INSERT INTO &quot;+ConfDB.CONF_TABLE_NAME+&quot; (name, value) VALUES (?, ?)&quot;);</span>
-<span class="nc" id="L515">		ps.setString(1, name);</span>
-<span class="nc" id="L516">		ps.setString(2, value);</span>
-<span class="nc" id="L517">		ps.execute();</span>
-<span class="nc" id="L518">		ps.close();</span>
-<span class="nc" id="L519">	}</span>
+<span class="nc" id="L511">		ps = db_conn.prepareStatement(&quot;INSERT INTO &quot;+ConfDB.CONF_TABLE_NAME+&quot; (name, value) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L512">		ps.setString(1, name);</span>
+<span class="nc" id="L513">		ps.setString(2, value);</span>
+<span class="nc" id="L514">		ps.execute();</span>
+<span class="nc" id="L515">		ps.close();</span>
+<span class="nc" id="L516">	}</span>
 
 	private static void setModel(Model model, SetupFormBean setupForm, Boolean disableLanguageSelect, boolean isSave) {
 		//Informing FE what key to use, when creating page
-<span class="nc bnc" id="L523" title="All 2 branches missed.">		if(isSave)</span>
+<span class="nc bnc" id="L520" title="All 2 branches missed.">		if(isSave)</span>
 			// page /admin/setup/setup
-<span class="nc" id="L525">			model.addAttribute(&quot;isSetupSave&quot;, true);</span>
+<span class="nc" id="L522">			model.addAttribute(&quot;isSetupSave&quot;, true);</span>
 		else
 		// page /admin/setup/setup_saved
-<span class="nc" id="L528">			model.addAttribute(&quot;isSetup&quot;, true);</span>
+<span class="nc" id="L525">			model.addAttribute(&quot;isSetup&quot;, true);</span>
 
 		//Object that will be used in filling setup form
-<span class="nc bnc" id="L531" title="All 2 branches missed.">		if(setupForm != null) model.addAttribute(&quot;setupForm&quot;, setupForm);</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">		if(setupForm != null) model.addAttribute(&quot;setupForm&quot;, setupForm);</span>
 		//Style file content for page
-<span class="nc" id="L533">		model.addAttribute(&quot;cmpCss&quot;, FileTools.readFileContent(&quot;/components/cmp.css&quot;));</span>
+<span class="nc" id="L530">		model.addAttribute(&quot;cmpCss&quot;, FileTools.readFileContent(&quot;/components/cmp.css&quot;));</span>
 		//If true, user will not see select to change language
-<span class="nc" id="L535">		model.addAttribute(&quot;disableLng&quot;, disableLanguageSelect);</span>
-<span class="nc" id="L536">	}</span>
+<span class="nc" id="L532">		model.addAttribute(&quot;disableLng&quot;, disableLanguageSelect);</span>
+<span class="nc" id="L533">	}</span>
 
 	private static void setModelWithErr(Model model, SetupFormBean setupForm, Boolean conErr, String conErrMsg, String createErrMsg) {
-<span class="nc" id="L539">		setModel(model, setupForm, true, false);</span>
+<span class="nc" id="L536">		setModel(model, setupForm, true, false);</span>
 
 		//Will show con error msg in page
-<span class="nc" id="L542">		model.addAttribute(&quot;dbConnFail&quot;, conErr);</span>
+<span class="nc" id="L539">		model.addAttribute(&quot;dbConnFail&quot;, conErr);</span>
 		//This is content of con err msg
-<span class="nc" id="L544">		model.addAttribute(&quot;dbErrMsg&quot;, conErrMsg);</span>
+<span class="nc" id="L541">		model.addAttribute(&quot;dbErrMsg&quot;, conErrMsg);</span>
 		//Separe crate rr message, will be shown if != null
-<span class="nc" id="L546">		model.addAttribute(&quot;dbCreateErrMsg&quot;, createErrMsg);</span>
-<span class="nc" id="L547">	}</span>
+<span class="nc" id="L543">		model.addAttribute(&quot;dbCreateErrMsg&quot;, createErrMsg);</span>
+<span class="nc" id="L544">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

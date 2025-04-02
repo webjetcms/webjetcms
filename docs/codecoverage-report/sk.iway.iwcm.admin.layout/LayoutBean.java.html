@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LayoutBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.layout</a> &gt; <span class="el_source">LayoutBean.java</span></div><h1>LayoutBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.layout;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LayoutBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.layout</a> &gt; <span class="el_source">LayoutBean.java</span></div><h1>LayoutBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.layout;
 
 import java.util.List;
 
@@ -7,16 +7,18 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+import sk.iway.iwcm.system.stripes.CSRF;
 
 /**
  * LayoutBean - drzi atributy pre model
  */
 @Getter
 @Setter
-<span class="fc" id="L19">public class LayoutBean {</span>
+<span class="fc" id="L21">public class LayoutBean {</span>
 
     private Identity user;
     private HeaderBean header;
@@ -35,41 +37,41 @@ import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
     public String getConstant(String name)
     {
-<span class="fc" id="L38">        return Constants.getString(name);</span>
+<span class="fc" id="L40">        return Constants.getString(name);</span>
     }
 
     public String getConstant(String name, String defaultValue)
     {
-<span class="nc" id="L43">        return Constants.getString(name, defaultValue);</span>
+<span class="nc" id="L45">        return Constants.getString(name, defaultValue);</span>
     }
 
     public int getConstantInt(String name)
     {
-<span class="fc" id="L48">        return Constants.getInt(name);</span>
+<span class="fc" id="L50">        return Constants.getInt(name);</span>
     }
 
     public int getConstantInt(String name, int defaultValue)
     {
-<span class="fc" id="L53">        return Constants.getInt(name, defaultValue);</span>
+<span class="fc" id="L55">        return Constants.getInt(name, defaultValue);</span>
     }
 
     public boolean getConstantBoolean(String name)
     {
-<span class="fc" id="L58">        return Constants.getBoolean(name);</span>
+<span class="fc" id="L60">        return Constants.getBoolean(name);</span>
     }
 
     public String getDataTableColumns(String className) throws JsonProcessingException {
-<span class="fc" id="L62">        String json = new DataTableColumnsFactory(className).getColumnsJson();</span>
-<span class="fc" id="L63">        return json;</span>
+<span class="fc" id="L64">        String json = new DataTableColumnsFactory(className).getColumnsJson();</span>
+<span class="fc" id="L65">        return json;</span>
     }
 
     public String getDataTableTabs(String className) throws JsonProcessingException {
-<span class="nc" id="L67">        String json = new DataTableColumnsFactory(className).getTabsJson();</span>
-<span class="nc" id="L68">        return json;</span>
+<span class="nc" id="L69">        String json = new DataTableColumnsFactory(className).getTabsJson();</span>
+<span class="nc" id="L70">        return json;</span>
     }
 
     public String getUserDto() throws JsonProcessingException {
-<span class="fc" id="L72">        return JsonTools.objectToJSON(new UserDto(getUser()));</span>
+<span class="fc" id="L74">        return JsonTools.objectToJSON(new UserDto(getUser()));</span>
     }
 
     /**
@@ -78,7 +80,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
      * @return
      */
     public boolean hasPermission(String permission) {
-<span class="fc" id="L81">        return user.isEnabledItem(permission);</span>
+<span class="fc" id="L83">        return user.isEnabledItem(permission);</span>
     }
 
     /**
@@ -87,9 +89,25 @@ import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
      */
     public static boolean isPerexGroupsRenderAsSelect() {
         //ak existuje viac ako 30 perex skupin renderuj to ako multiselect
-<span class="fc" id="L90">        int count = DocDB.getInstance().getPerexGroups().size();</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (count &gt; Constants.getInt(&quot;perexGroupsRenderAsSelect&quot;)) return true;</span>
-<span class="fc" id="L92">        return false;</span>
+<span class="fc" id="L92">        int count = DocDB.getInstance().getPerexGroups().size();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (count &gt; Constants.getInt(&quot;perexGroupsRenderAsSelect&quot;)) return true;</span>
+<span class="fc" id="L94">        return false;</span>
+    }
+
+    /**
+     * Returns CSRF token parameter name
+     * @return
+     */
+    public String getCsrfParameterName() {
+<span class="fc" id="L102">        return CSRF.getParameterName();</span>
+    }
+
+    /**
+     * Return true for cloud/multiweb/multitenant instalation
+     * @return
+     */
+    public boolean isTypeCloud() {
+<span class="fc" id="L110">        return InitServlet.isTypeCloud();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

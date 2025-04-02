@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AutoCompleteTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">AutoCompleteTag.java</span></div><h1>AutoCompleteTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AutoCompleteTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">AutoCompleteTag.java</span></div><h1>AutoCompleteTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
 
 import static sk.iway.iwcm.Tools.isInteger;
 import static sk.iway.iwcm.Tools.isNotEmpty;
@@ -63,9 +63,9 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 {
 
 	public AutoCompleteTag()
-<span class="fc" id="L66">	{</span>
-<span class="fc" id="L67">		getAttributes().put(&quot;type&quot;, &quot;text&quot;);</span>
-<span class="fc" id="L68">	}</span>
+<span class="nc" id="L66">	{</span>
+<span class="nc" id="L67">		getAttributes().put(&quot;type&quot;, &quot;text&quot;);</span>
+<span class="nc" id="L68">	}</span>
 
 	String onOptionSelect;
 	String urlParams;
@@ -98,24 +98,24 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 
 	public String getValue()
 	{
-<span class="fc bfc" id="L101" title="All 2 branches covered.">		if (value == null) return &quot;&quot;;</span>
-<span class="fc" id="L102">		return value;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (value == null) return &quot;&quot;;</span>
+<span class="nc" id="L102">		return value;</span>
 	}
 
 	public void setValue(String value)
 	{
-<span class="fc" id="L107">		this.value = value;</span>
-<span class="fc" id="L108">	}</span>
+<span class="nc" id="L107">		this.value = value;</span>
+<span class="nc" id="L108">	}</span>
 
 	public String getUrl()
 	{
-<span class="fc" id="L112">		return url;</span>
+<span class="nc" id="L112">		return url;</span>
 	}
 
 	public void setUrl(String url)
 	{
-<span class="fc" id="L117">		this.url = url;</span>
-<span class="fc" id="L118">	}</span>
+<span class="nc" id="L117">		this.url = url;</span>
+<span class="nc" id="L118">	}</span>
 
 	public String getOnOptionSelect()
 	{
@@ -125,8 +125,8 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 
 	public void setOnOptionSelect(String onOptionSelect)
 	{
-<span class="fc" id="L128">		this.onOptionSelect = onOptionSelect;</span>
-<span class="fc" id="L129">	}</span>
+<span class="nc" id="L128">		this.onOptionSelect = onOptionSelect;</span>
+<span class="nc" id="L129">	}</span>
 
 	public String getUrlParams()
 	{
@@ -145,32 +145,32 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 	@Override
 	public int doEndInputTag() throws JspException
 	{
-<span class="fc" id="L148">		getAttributes().put(&quot;value&quot;, getValue());</span>
-<span class="fc" id="L149">		getAttributes().put(&quot;maxLength&quot;, maxLength);</span>
-<span class="fc" id="L150">		getAttributes().put(&quot;placeholder&quot;, getPlaceholder());</span>
+<span class="nc" id="L148">		getAttributes().put(&quot;value&quot;, getValue());</span>
+<span class="nc" id="L149">		getAttributes().put(&quot;maxLength&quot;, maxLength);</span>
+<span class="nc" id="L150">		getAttributes().put(&quot;placeholder&quot;, getPlaceholder());</span>
 		try
 		{
-<span class="fc" id="L153">			JspWriter out = pageContext.getOut();</span>
-<span class="fc" id="L154">			HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
-<span class="fc" id="L155">			set(&quot;autocomplete&quot;, &quot;off&quot;);</span>
+<span class="nc" id="L153">			JspWriter out = pageContext.getOut();</span>
+<span class="nc" id="L154">			HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
+<span class="nc" id="L155">			set(&quot;autocomplete&quot;, &quot;off&quot;);</span>
 			//najskor sa muzi sapisat input tag, az potom ostatne JS (aby existoval ked ma)
-<span class="fc" id="L157">			writeSingletonTag(out, &quot;input&quot;);</span>
+<span class="nc" id="L157">			writeSingletonTag(out, &quot;input&quot;);</span>
 
-<span class="fc" id="L159">			insertAjaxSupport(out, request);</span>
+<span class="nc" id="L159">			insertAjaxSupport(out, request);</span>
 			//unpacked autocomplete is bugged, doesn't work properly (fires off JS error), insert packed version
-<span class="fc" id="L161">			insertUIcore(out,request);</span>
-<span class="fc" id="L162">			insertAutoComplete(out, request);</span>
+<span class="nc" id="L161">			insertUIcore(out,request);</span>
+<span class="nc" id="L162">			insertAutoComplete(out, request);</span>
 			//out.println(jsText());
-<span class="fc" id="L164">			ReadWriteScriptBean bean = new ReadWriteScriptBean(&quot;text/javascript&quot;, null, null, null, null, jsBody(), null, null, &quot;AutoCompleteTag.java&quot;);</span>
+<span class="nc" id="L164">			ReadWriteScriptBean bean = new ReadWriteScriptBean(&quot;text/javascript&quot;, null, null, null, null, jsBody(), null, null, &quot;AutoCompleteTag.java&quot;);</span>
 			//out.println(&quot;&lt;script type='text/javascript' src='/components/_common/javascript/ajax_support.js'&gt;&lt;/script&gt;&quot;);
-<span class="fc" id="L166">			ReadWriteScriptTag.addScriptFromClass( bean, request, out);</span>
+<span class="nc" id="L166">			ReadWriteScriptTag.addScriptFromClass( bean, request, out);</span>
 		}
 <span class="nc" id="L168">		catch (IOException e)</span>
 		{
 <span class="nc" id="L170">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L171">		}</span>
+<span class="nc" id="L171">		}</span>
 
-<span class="fc" id="L173">		return EVAL_PAGE;</span>
+<span class="nc" id="L173">		return EVAL_PAGE;</span>
 	}
 
 	/**
@@ -178,9 +178,9 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 	 */
 	private void insertUIcore(JspWriter out, HttpServletRequest request) throws IOException
 	{
-<span class="fc" id="L181">		boolean coreInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-core-Inserted&quot;)) );</span>
-<span class="fc" id="L182">		request.setAttribute(&quot;jQueryUI-core-Inserted&quot;, &quot;true&quot;);</span>
-<span class="pc bpc" id="L183" title="1 of 2 branches missed.">		if(!coreInserted)</span>
+<span class="nc" id="L181">		boolean coreInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-core-Inserted&quot;)) );</span>
+<span class="nc" id="L182">		request.setAttribute(&quot;jQueryUI-core-Inserted&quot;, &quot;true&quot;);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if(!coreInserted)</span>
 		{
 <span class="nc" id="L185">			ReadWriteScriptBean bean = null;</span>
 <span class="nc bnc" id="L186" title="All 2 branches missed.">			if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()))</span>
@@ -197,32 +197,32 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 
 <span class="nc" id="L198">			ReadWriteScriptTag.addScriptFromClass( bean, request, out);</span>
 		}
-<span class="fc" id="L200">	}</span>
+<span class="nc" id="L200">	}</span>
 
 	/**
 	 * Make sure those scripts are present once and only once on a page.
 	 */
 	private void insertAutoComplete(JspWriter out, HttpServletRequest request) throws IOException
 	{
-<span class="pc bpc" id="L207" title="2 of 6 branches missed.">		if (request.getAttribute(&quot;autocompleteInserted&quot;) == null &amp;&amp; request.getAttribute(&quot;jQueryUI-autocomplete-Inserted&quot;) == null &amp;&amp; request.getAttribute(&quot;jQueryUI-all-Inserted&quot;) == null)</span>
+<span class="nc bnc" id="L207" title="All 6 branches missed.">		if (request.getAttribute(&quot;autocompleteInserted&quot;) == null &amp;&amp; request.getAttribute(&quot;jQueryUI-autocomplete-Inserted&quot;) == null &amp;&amp; request.getAttribute(&quot;jQueryUI-all-Inserted&quot;) == null)</span>
 		{
 <span class="nc" id="L209">			ReadWriteScriptBean bean = new ReadWriteScriptBean(&quot;text/javascript&quot;, &quot;/components/_common/javascript/jqui/jquery-ui-autocomplete.min.js&quot;, null, null, null, null, null, null, &quot;AutoCompleteTag.java&quot;, null, null);</span>
 <span class="nc" id="L210">			ReadWriteScriptTag.addScriptFromClass( bean, request, out);</span>
 			//out.println(&quot;&lt;script type='text/javascript' src='/components/_common/javascript/jqui/jquery-ui-autocomplete.min.js' &gt;&lt;/script&gt;&quot;);
 		}
-<span class="fc" id="L213">		request.setAttribute(&quot;autocompleteInserted&quot;, true);</span>
-<span class="fc" id="L214">	}</span>
+<span class="nc" id="L213">		request.setAttribute(&quot;autocompleteInserted&quot;, true);</span>
+<span class="nc" id="L214">	}</span>
 
 	private void insertAjaxSupport(JspWriter out, HttpServletRequest request) throws IOException
 	{
-<span class="fc bfc" id="L218" title="All 2 branches covered.">		if (request.getAttribute(&quot;ajaxSupportInserted&quot;) == null)</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		if (request.getAttribute(&quot;ajaxSupportInserted&quot;) == null)</span>
 		{
-<span class="fc" id="L220">			ReadWriteScriptBean bean = new ReadWriteScriptBean(&quot;text/javascript&quot;, &quot;/components/_common/javascript/ajax_support.js&quot;, null, null, null, null, null, null, &quot;AutoCompleteTag.java&quot;, null, null);</span>
+<span class="nc" id="L220">			ReadWriteScriptBean bean = new ReadWriteScriptBean(&quot;text/javascript&quot;, &quot;/components/_common/javascript/ajax_support.js&quot;, null, null, null, null, null, null, &quot;AutoCompleteTag.java&quot;, null, null);</span>
 			//out.println(&quot;&lt;script type='text/javascript' src='/components/_common/javascript/ajax_support.js'&gt;&lt;/script&gt;&quot;);
-<span class="fc" id="L222">			ReadWriteScriptTag.addScriptFromClass( bean, request, out);</span>
+<span class="nc" id="L222">			ReadWriteScriptTag.addScriptFromClass( bean, request, out);</span>
 		}
-<span class="fc" id="L224">		request.setAttribute(&quot;ajaxSupportInserted&quot;, true);</span>
-<span class="fc" id="L225">	}</span>
+<span class="nc" id="L224">		request.setAttribute(&quot;ajaxSupportInserted&quot;, true);</span>
+<span class="nc" id="L225">	}</span>
 
 	/**
 	 * Utilitises ajax_support.js to create a chained call leading in subscribing a
@@ -253,25 +253,25 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 
 	private String jsBody()
 	{
-<span class="fc" id="L256">		StringBuilder code = new StringBuilder().</span>
+<span class="nc" id="L256">		StringBuilder code = new StringBuilder().</span>
 		//append(&quot;&lt;script type='text/javascript'&gt;\n&quot;).
-<span class="fc" id="L258">		append(&quot;new AutoCompleter('#&quot;).</span>
-<span class="fc" id="L259">		append(getId()).</span>
-<span class="fc" id="L260">		append(&quot;').setUrl('&quot;).</span>
-<span class="fc" id="L261">		append(getUrl()).</span>
-<span class="fc" id="L262">		append(&quot;')&quot;);</span>
-<span class="pc bpc" id="L263" title="1 of 2 branches missed.">		if (isNotEmpty(urlParams))</span>
+<span class="nc" id="L258">		append(&quot;new AutoCompleter('#&quot;).</span>
+<span class="nc" id="L259">		append(getId()).</span>
+<span class="nc" id="L260">		append(&quot;').setUrl('&quot;).</span>
+<span class="nc" id="L261">		append(getUrl()).</span>
+<span class="nc" id="L262">		append(&quot;')&quot;);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (isNotEmpty(urlParams))</span>
 <span class="nc" id="L264">			code.append(&quot;.setParams('&quot;).append(urlParams).append(&quot;')&quot;);</span>
-<span class="pc bpc" id="L265" title="1 of 2 branches missed.">		if (isNotEmpty(onOptionSelect))</span>
-<span class="fc" id="L266">			code.append(&quot;.setOnOptionSelect('&quot;).append(onOptionSelect).append(&quot;')&quot;);</span>
-<span class="pc bpc" id="L267" title="1 of 2 branches missed.">		if (isInteger(maxRows))</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">		if (isNotEmpty(onOptionSelect))</span>
+<span class="nc" id="L266">			code.append(&quot;.setOnOptionSelect('&quot;).append(onOptionSelect).append(&quot;')&quot;);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if (isInteger(maxRows))</span>
 <span class="nc" id="L268">			code.append(&quot;.setMaxRows(&quot;).append(maxRows).append(')');</span>
-<span class="pc bpc" id="L269" title="1 of 2 branches missed.">		if (isInteger(minLength))</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (isInteger(minLength))</span>
 <span class="nc" id="L270">			code.append(&quot;.setMinLength(&quot;).append(minLength).append(')');</span>
 
-<span class="fc" id="L272">		code.append(&quot;.transform()\n&quot;);//.append(&quot;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L272">		code.append(&quot;.transform()\n&quot;);//.append(&quot;&lt;/script&gt;&quot;);</span>
 
-<span class="fc" id="L274">		return code.toString();</span>
+<span class="nc" id="L274">		return code.toString();</span>
 	}
 
 	//----------------------TO SHUT UP STRIPES COMPLAINTS--------------------
@@ -284,15 +284,15 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 	@Override
 	protected void registerWithParentForm() throws StripesJspException {
 		//
-<span class="fc" id="L287">	}</span>
+<span class="nc" id="L287">	}</span>
 	@Override
 	protected void loadErrors() throws StripesJspException {
 		//
-<span class="fc" id="L291">	}</span>
+<span class="nc" id="L291">	}</span>
 	@Override
 	public int doStartInputTag() throws JspException
 	{
-<span class="fc" id="L295">		return EVAL_BODY_BUFFERED;</span>
+<span class="nc" id="L295">		return EVAL_BODY_BUFFERED;</span>
 	}
 	@Override
 <span class="nc" id="L298">	public void doInitBody() throws JspException{/*nothing*/}</span>
@@ -301,7 +301,7 @@ public class AutoCompleteTag extends InputTagSupport implements BodyTag
 
 	public String getPlaceholder()
 	{
-<span class="fc" id="L304">		return placeholder;</span>
+<span class="nc" id="L304">		return placeholder;</span>
 	}
 
 	public void setPlaceholder(String placeholder)

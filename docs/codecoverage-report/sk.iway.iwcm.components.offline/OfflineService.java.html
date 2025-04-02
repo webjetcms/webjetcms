@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OfflineService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.offline</a> &gt; <span class="el_source">OfflineService.java</span></div><h1>OfflineService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.offline;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OfflineService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.offline</a> &gt; <span class="el_source">OfflineService.java</span></div><h1>OfflineService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.offline;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -370,7 +370,7 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 					//linka na inu vizualnu podobu, preskoc
 <span class="nc" id="L371">					continue;</span>
 				}
-<span class="pc bpc" id="L373" title="2 of 4 branches missed.">				if (downloadedUrls.get(link)==null &amp;&amp; link.startsWith(&quot;/admin&quot;)==false)</span>
+<span class="pc bpc" id="L373" title="1 of 4 branches missed.">				if (downloadedUrls.get(link)==null &amp;&amp; link.startsWith(&quot;/admin&quot;)==false)</span>
 				{
 					//este to nie je stiahnute, treba stiahnut
 <span class="fc" id="L376">					newLink = lvd.getValue();</span>
@@ -695,23 +695,23 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 <span class="fc" id="L695">					DocDB docDB = DocDB.getInstance();</span>
 
 <span class="fc" id="L697">					int docId = docDB.getVirtualPathDocId(link);</span>
-<span class="pc bpc" id="L698" title="1 of 2 branches missed.">					if (docId &gt; 0)</span>
+<span class="fc bfc" id="L698" title="All 2 branches covered.">					if (docId &gt; 0)</span>
 					{
-<span class="nc" id="L700">						String newLink = getFileName(&quot;showdoc.do?docid=&quot;+docId);</span>
-<span class="nc" id="L701">						Logger.debug(OfflineAction.class, &quot;Replacing link: link=&quot;+link+&quot; newLink=&quot;+newLink);</span>
-<span class="nc" id="L702">						data = replaceLink(data, link, newLink);</span>
-<span class="nc bnc" id="L703" title="All 2 branches missed.">						if (downloadedUrls.containsKey(link)==false)</span>
+<span class="fc" id="L700">						String newLink = getFileName(&quot;showdoc.do?docid=&quot;+docId);</span>
+<span class="fc" id="L701">						Logger.debug(OfflineAction.class, &quot;Replacing link: link=&quot;+link+&quot; newLink=&quot;+newLink);</span>
+<span class="fc" id="L702">						data = replaceLink(data, link, newLink);</span>
+<span class="fc bfc" id="L703" title="All 2 branches covered.">						if (downloadedUrls.containsKey(link)==false)</span>
 						{
 							//needDownloadUrlsList.add(new LabelValueDetails(link, newLink));
 
 							//je to linka na normalne docId, to nemusim stahovat, stiahne sa automaticky (ako vsetky ostatne docid)
-<span class="nc" id="L708">							downloadedUrls.put(link, newLink);</span>
-<span class="nc" id="L709">							Logger.println(OfflineAction.class,&quot;link DIRECT: &quot; + link + &quot; new:&quot;+newLink);</span>
+<span class="fc" id="L708">							downloadedUrls.put(link, newLink);</span>
+<span class="fc" id="L709">							Logger.println(OfflineAction.class,&quot;link DIRECT: &quot; + link + &quot; new:&quot;+newLink);</span>
 						}
-<span class="nc" id="L711">						isLinkDirect = true;</span>
+<span class="fc" id="L711">						isLinkDirect = true;</span>
 					}
 
-<span class="pc bpc" id="L714" title="1 of 2 branches missed.">					if (isLinkDirect == false)</span>
+<span class="fc bfc" id="L714" title="All 2 branches covered.">					if (isLinkDirect == false)</span>
 					{
 						//ziskaj docid
 <span class="fc" id="L717">						int start = link.indexOf(&quot;docid=&quot;);</span>
@@ -772,7 +772,7 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 							}
 
 <span class="nc" id="L774">						}</span>
-<span class="pc bpc" id="L775" title="1 of 6 branches missed.">						else if (link.toLowerCase().startsWith(&quot;javascript&quot;)==false &amp;&amp; &quot;/&quot;.equals(link)==false &amp;&amp; link.startsWith(&quot;www.&quot;)==false)</span>
+<span class="pc bpc" id="L775" title="2 of 6 branches missed.">						else if (link.toLowerCase().startsWith(&quot;javascript&quot;)==false &amp;&amp; &quot;/&quot;.equals(link)==false &amp;&amp; link.startsWith(&quot;www.&quot;)==false)</span>
 						{
 							//ak to nie je ani javascript ani / (lebo sa potom nahradza &lt;/html&gt; ani www.nieco
 

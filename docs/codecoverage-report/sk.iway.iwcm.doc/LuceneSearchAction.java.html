@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LuceneSearchAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">LuceneSearchAction.java</span></div><h1>LuceneSearchAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LuceneSearchAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">LuceneSearchAction.java</span></div><h1>LuceneSearchAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 
 import static sk.iway.iwcm.doc.SearchAction.getInputParamMode;
@@ -91,78 +91,78 @@ public class LuceneSearchAction
 	 */
 	public static String search(HttpServletRequest request)
 	{
-<span class="nc" id="L94">		DebugTimer dt = new DebugTimer(&quot;LuceneSearchAction&quot;);</span>
+<span class="fc" id="L94">		DebugTimer dt = new DebugTimer(&quot;LuceneSearchAction&quot;);</span>
 
-<span class="nc" id="L96">		request.removeAttribute(&quot;aList&quot;);</span>
-<span class="nc" id="L97">		request.removeAttribute(&quot;totalResults&quot;);</span>
+<span class="fc" id="L96">		request.removeAttribute(&quot;aList&quot;);</span>
+<span class="fc" id="L97">		request.removeAttribute(&quot;totalResults&quot;);</span>
 
-<span class="nc" id="L99">		String language =  PageLng.getUserLng(request);</span>
-<span class="nc" id="L100">		HttpSession session = request.getSession();</span>
-<span class="nc" id="L101">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
-<span class="nc" id="L102">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L99">		String language =  PageLng.getUserLng(request);</span>
+<span class="fc" id="L100">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L101">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L102">		DocDB docDB = DocDB.getInstance();</span>
 
-<span class="nc" id="L104">		String forward = &quot;success&quot;;</span>
-<span class="nc" id="L105">		String error = &quot;error&quot;;</span>
+<span class="fc" id="L104">		String forward = &quot;success&quot;;</span>
+<span class="fc" id="L105">		String error = &quot;error&quot;;</span>
 
-<span class="nc" id="L107">		boolean english = false;</span>
-<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (request.getParameter(&quot;lng&quot;) != null)</span>
+<span class="fc" id="L107">		boolean english = false;</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">		if (request.getParameter(&quot;lng&quot;) != null)</span>
 		{
 <span class="nc" id="L110">			english = true;</span>
 <span class="nc" id="L111">			forward = &quot;english&quot;;</span>
 		}
-<span class="nc" id="L113">		String pForward = request.getParameter(&quot;forward&quot;);</span>
-<span class="nc bnc" id="L114" title="All 4 branches missed.">		if (pForward != null &amp;&amp; pForward.endsWith(&quot;.jsp&quot;))</span>
+<span class="fc" id="L113">		String pForward = request.getParameter(&quot;forward&quot;);</span>
+<span class="pc bpc" id="L114" title="3 of 4 branches missed.">		if (pForward != null &amp;&amp; pForward.endsWith(&quot;.jsp&quot;))</span>
 		{
 <span class="nc" id="L116">			forward = &quot;/templates/&quot; + pForward;</span>
 		}
-<span class="nc" id="L118">		String searchGroupsParam = getParamAttribute(&quot;rootGroup&quot;, request,Integer.toString(Constants.getInt(&quot;rootGroupId&quot;)));</span>
-<span class="nc" id="L119">		searchGroupsParam = searchGroupsParam.replace('+', ',');</span>
-<span class="nc" id="L120">		String[] groupIdParams = request.getParameterValues(&quot;groupId&quot;);</span>
-<span class="nc bnc" id="L121" title="All 4 branches missed.">		if (groupIdParams != null &amp;&amp; groupIdParams.length&gt;0)</span>
+<span class="fc" id="L118">		String searchGroupsParam = getParamAttribute(&quot;rootGroup&quot;, request,Integer.toString(Constants.getInt(&quot;rootGroupId&quot;)));</span>
+<span class="fc" id="L119">		searchGroupsParam = searchGroupsParam.replace('+', ',');</span>
+<span class="fc" id="L120">		String[] groupIdParams = request.getParameterValues(&quot;groupId&quot;);</span>
+<span class="pc bpc" id="L121" title="3 of 4 branches missed.">		if (groupIdParams != null &amp;&amp; groupIdParams.length&gt;0)</span>
 		{
 <span class="nc" id="L123">			searchGroupsParam = StringUtils.join(groupIdParams,',');</span>
 		}
 
-<span class="nc" id="L126">		PageParams pageParams = new PageParams(request);</span>
-<span class="nc" id="L127">		boolean searchAlsoProtectedPages = pageParams.getBooleanValue(&quot;searchAlsoProtectedPages&quot;, false);</span>
+<span class="fc" id="L126">		PageParams pageParams = new PageParams(request);</span>
+<span class="fc" id="L127">		boolean searchAlsoProtectedPages = pageParams.getBooleanValue(&quot;searchAlsoProtectedPages&quot;, false);</span>
 
-<span class="nc" id="L129">		StringBuilder searchFileNameQuery = null;</span>
+<span class="fc" id="L129">		StringBuilder searchFileNameQuery = null;</span>
 
-<span class="nc" id="L131">		StringTokenizer st = new StringTokenizer(searchGroupsParam, &quot;,+; &quot;);</span>
-<span class="nc" id="L132">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L131">		StringTokenizer st = new StringTokenizer(searchGroupsParam, &quot;,+; &quot;);</span>
+<span class="fc" id="L132">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
 		GroupDetails group;
 		//tu si poznacim zadane root groups a tie nebudem neskor povazovat za internal folders
-<span class="nc" id="L135">		Map&lt;Integer, Integer&gt; rootGroupIdsTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L135">		Map&lt;Integer, Integer&gt; rootGroupIdsTable = new Hashtable&lt;&gt;();</span>
 
-<span class="nc" id="L137">		List&lt;DocDetails&gt; docsInGroups = null; //vsetky stranky v zadanych adresaroch</span>
-<span class="nc" id="L138">		List&lt;GroupDetails&gt; searchGroupsArray = null;</span>
-<span class="nc" id="L139">		List&lt;String&gt; searchGroupNamePaths = null;</span>
-<span class="nc" id="L140">		DebugTimer dtt = new DebugTimer(&quot;LuceneSearchAction DUPLICITY&quot;);</span>
+<span class="fc" id="L137">		List&lt;DocDetails&gt; docsInGroups = null; //vsetky stranky v zadanych adresaroch</span>
+<span class="fc" id="L138">		List&lt;GroupDetails&gt; searchGroupsArray = null;</span>
+<span class="fc" id="L139">		List&lt;String&gt; searchGroupNamePaths = null;</span>
+<span class="fc" id="L140">		DebugTimer dtt = new DebugTimer(&quot;LuceneSearchAction DUPLICITY&quot;);</span>
 		//ak je TRUE, tak chcem kontrolovat duplicitu pre multikategorie
-<span class="nc" id="L142">		boolean checkDuplicity = pageParams.getBooleanValue(&quot;checkDuplicity&quot;, false);</span>
-<span class="nc bnc" id="L143" title="All 2 branches missed.">		while (st.hasMoreTokens())</span>
+<span class="fc" id="L142">		boolean checkDuplicity = pageParams.getBooleanValue(&quot;checkDuplicity&quot;, false);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
 		{
 			try
 			{
 				//schvalne je tu Integer.parseInt aby to pripadne padlo na exception
-<span class="nc" id="L148">				int searchRootGroupId = Integer.parseInt(st.nextToken());</span>
+<span class="fc" id="L148">				int searchRootGroupId = Integer.parseInt(st.nextToken());</span>
 
-<span class="nc" id="L150">				rootGroupIdsTable.put(Integer.valueOf(searchRootGroupId), Integer.valueOf(1));</span>
+<span class="fc" id="L150">				rootGroupIdsTable.put(Integer.valueOf(searchRootGroupId), Integer.valueOf(1));</span>
 
 				//v stlpci file_name mame ulozenu cestu k adresaru, nieco ako /Slovensky/InterWay/Produkty/Nejaky Produkt/
 				//nad tym limitujeme adresare (interne adresare to maju v databaze prazdne)
 
-<span class="nc" id="L155">				GroupDetails fileNameGrp = groupsDB.getGroup(searchRootGroupId);</span>
-<span class="nc bnc" id="L156" title="All 2 branches missed.">				if (fileNameGrp != null)</span>
+<span class="fc" id="L155">				GroupDetails fileNameGrp = groupsDB.getGroup(searchRootGroupId);</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">				if (fileNameGrp != null)</span>
 				{
-<span class="nc bnc" id="L158" title="All 2 branches missed.">					if (searchFileNameQuery == null) searchFileNameQuery = new StringBuilder(&quot;file_name:\&quot;&quot;).append(DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId()))).append(&quot;\&quot;&quot;);</span>
-<span class="nc" id="L159">					else searchFileNameQuery.append(&quot; OR file_name:\&quot;&quot;+DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId()))).append(&quot;\&quot;&quot;);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">					if (searchFileNameQuery == null) searchFileNameQuery = new StringBuilder(&quot;file_name:\&quot;&quot;).append(DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId()))).append(&quot;\&quot;&quot;);</span>
+<span class="fc" id="L159">					else searchFileNameQuery.append(&quot; OR file_name:\&quot;&quot;+DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId()))).append(&quot;\&quot;&quot;);</span>
 
-<span class="nc bnc" id="L161" title="All 2 branches missed.">					if(searchGroupNamePaths == null) searchGroupNamePaths = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L162">					searchGroupNamePaths.add(DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId())));</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">					if(searchGroupNamePaths == null) searchGroupNamePaths = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L162">					searchGroupNamePaths.add(DB.removeSlashes(groupsDB.getGroupNamePath(fileNameGrp.getGroupId())));</span>
 				}
 
-<span class="nc bnc" id="L165" title="All 2 branches missed.">				if(checkDuplicity)</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">				if(checkDuplicity)</span>
 				{
 <span class="nc" id="L167">					searchGroupsArray = groupsDB.getGroupsTree(searchRootGroupId, true, false);</span>
 <span class="nc bnc" id="L168" title="All 2 branches missed.">					for (GroupDetails searchGroup : searchGroupsArray)</span>
@@ -179,11 +179,11 @@ public class LuceneSearchAction
 <span class="nc" id="L179">			catch (Exception ex)</span>
 			{
 <span class="nc" id="L181">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L182">			}</span>
+<span class="pc" id="L182">			}</span>
 		}
-<span class="nc" id="L184">		dtt.diff(&quot;after get all docs&quot;);</span>
-<span class="nc" id="L185">		List&lt;Integer&gt; docIdsNotIn = null;</span>
-<span class="nc bnc" id="L186" title="All 2 branches missed.">		if(checkDuplicity)</span>
+<span class="fc" id="L184">		dtt.diff(&quot;after get all docs&quot;);</span>
+<span class="fc" id="L185">		List&lt;Integer&gt; docIdsNotIn = null;</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">		if(checkDuplicity)</span>
 		{
 <span class="nc" id="L188">			docIdsNotIn = new ArrayList&lt;&gt;();</span>
 <span class="nc" id="L189">			List&lt;Integer&gt; slavesMasterForDoc = null;</span>
@@ -243,25 +243,25 @@ public class LuceneSearchAction
 				}
 			}
 		}
-<span class="nc" id="L246">		dtt.diff(&quot;after docIdsNotIn&quot;);</span>
+<span class="fc" id="L246">		dtt.diff(&quot;after docIdsNotIn&quot;);</span>
 
-<span class="nc" id="L248">		int perPage = 10;</span>
+<span class="fc" id="L248">		int perPage = 10;</span>
 		try
 		{
-<span class="nc bnc" id="L251" title="All 2 branches missed.">			if (getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;) != null)</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">			if (getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;) != null)</span>
 			{
-<span class="nc" id="L253">				perPage = Integer.parseInt(getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;));</span>
+<span class="fc" id="L253">				perPage = Integer.parseInt(getParamAttribute(&quot;perpage&quot;, request, &quot;10&quot;));</span>
 			}
 		}
 <span class="nc" id="L256">		catch (Exception ex)</span>
 		{
 <span class="nc" id="L258">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L259">		}</span>
-<span class="nc" id="L260">		String rq = request.getParameter(&quot;index&quot;);</span>
+<span class="fc" id="L259">		}</span>
+<span class="fc" id="L260">		String rq = request.getParameter(&quot;index&quot;);</span>
 		int index;
-<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (rq == null)</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">		if (rq == null)</span>
 		{
-<span class="nc" id="L264">			index = 0;</span>
+<span class="fc" id="L264">			index = 0;</span>
 		}
 		else
 		{
@@ -276,612 +276,655 @@ public class LuceneSearchAction
 <span class="nc" id="L276">			}</span>
 		}
 
-<span class="nc" id="L279">		String words = request.getParameter(&quot;words&quot;);</span>
-<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (Tools.isEmpty(words))</span>
+<span class="fc" id="L279">		String words = request.getParameter(&quot;words&quot;);</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">		if (Tools.isEmpty(words))</span>
 		{
 <span class="nc" id="L282">			words = (String)request.getAttribute(&quot;words&quot;);</span>
 <span class="nc bnc" id="L283" title="All 2 branches missed.">		   if (words == null) words = &quot;&quot;;</span>
 		}
 
-<span class="nc" id="L286">		request.removeAttribute(&quot;words&quot;);</span>
+<span class="fc" id="L286">		request.removeAttribute(&quot;words&quot;);</span>
 
-<span class="nc" id="L288">		String text = request.getParameter(&quot;text&quot;);</span>
-<span class="nc bnc" id="L289" title="All 2 branches missed.">		if (Tools.isNotEmpty(text))</span>
+<span class="fc" id="L288">		String text = request.getParameter(&quot;text&quot;);</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(text))</span>
 		{
 <span class="nc" id="L291">			words = text;</span>
 		}
 
 		//aby sme vedeli vnutit slovo pre vyhladavanie
-<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (Tools.isNotEmpty((String)request.getAttribute(&quot;forceWords&quot;)))</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">		if (Tools.isNotEmpty((String)request.getAttribute(&quot;forceWords&quot;)))</span>
 		{
 <span class="nc" id="L297">			words = (String)request.getAttribute(&quot;forceWords&quot;);</span>
 		}
 
 		String pom;
-<span class="nc" id="L301">		words = words.replaceAll(&quot;[\&quot;',:();.]&quot;,&quot; &quot;).trim();</span>
+<span class="fc" id="L301">		words = words.replaceAll(&quot;[\&quot;',:();.]&quot;,&quot; &quot;).trim();</span>
 
 
 		//	otestuj, ci su zadane fields parametre
-<span class="nc" id="L305">		boolean hasInputParams = hasInputParams(request);</span>
+<span class="fc" id="L305">		boolean hasInputParams = hasInputParams(request);</span>
 
-<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (&quot;***&quot;.equals((String)request.getAttribute(&quot;forceWords&quot;))) //NOSONAR</span>
+<span class="pc bpc" id="L307" title="1 of 2 branches missed.">		if (&quot;***&quot;.equals((String)request.getAttribute(&quot;forceWords&quot;))) //NOSONAR</span>
 		{
 <span class="nc" id="L309">			words = &quot;&quot;;</span>
 <span class="nc" id="L310">			hasInputParams = true;</span>
 		}
 
-<span class="nc" id="L313">		request.removeAttribute(&quot;forceWords&quot;);</span>
+<span class="fc" id="L313">		request.removeAttribute(&quot;forceWords&quot;);</span>
 
 		// odstranenie jedno - dvoj znakovych slov
-<span class="nc" id="L316">		StringTokenizer sTok = new StringTokenizer(words);</span>
-<span class="nc" id="L317">		words = &quot;&quot;;</span>
-<span class="nc" id="L318">		StringBuilder wordsBuilder = new StringBuilder();</span>
-<span class="nc bnc" id="L319" title="All 2 branches missed.">		while (sTok.hasMoreElements())</span>
+<span class="fc" id="L316">		StringTokenizer sTok = new StringTokenizer(words);</span>
+<span class="fc" id="L317">		words = &quot;&quot;;</span>
+<span class="fc" id="L318">		StringBuilder wordsBuilder = new StringBuilder();</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">		while (sTok.hasMoreElements())</span>
 		{
-<span class="nc" id="L321">			pom = sTok.nextToken();</span>
-<span class="nc bnc" id="L322" title="All 2 branches missed.">			if (pom.length() &gt; 2)</span>
+<span class="fc" id="L321">			pom = sTok.nextToken();</span>
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">			if (pom.length() &gt; 2)</span>
 			{
-<span class="nc" id="L324">				pom = pom.trim();</span>
-<span class="nc" id="L325">				pom = Lemmas.get(language, pom);</span>
-<span class="nc" id="L326">				wordsBuilder.append(&quot; +&quot;).append(pom);</span>
+<span class="fc" id="L324">				pom = pom.trim();</span>
+<span class="fc" id="L325">				pom = Lemmas.get(language, pom);</span>
+<span class="fc" id="L326">				wordsBuilder.append(&quot; +&quot;).append(pom);</span>
 			}
 		}
-<span class="nc" id="L329">		words = wordsBuilder.toString().trim();</span>
+<span class="fc" id="L329">		words = wordsBuilder.toString().trim();</span>
 
 		//ochrana proti DOS utoku &amp;&amp;
 		//prazdne vyhladavanie
 
-<span class="nc bnc" id="L334" title="All 4 branches missed.">		if (isDOS(request) || isEmptySearch(request,words,hasInputParams))</span>
+<span class="pc bpc" id="L334" title="2 of 4 branches missed.">		if (isDOS(request) || isEmptySearch(request,words,hasInputParams))</span>
 		{
 <span class="nc" id="L336">			return forward;</span>
 		}
 
 		String sesWord;
-<span class="nc" id="L340">		sesWord = (String) request.getAttribute(&quot;words&quot;);</span>
-<span class="nc bnc" id="L341" title="All 2 branches missed.">		if (sesWord == null)</span>
+<span class="fc" id="L340">		sesWord = (String) request.getAttribute(&quot;words&quot;);</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		if (sesWord == null)</span>
 		{
-<span class="nc" id="L343">			sesWord = &quot;&quot;;</span>
+<span class="fc" id="L343">			sesWord = &quot;&quot;;</span>
 		}
 		List&lt;SearchDetails&gt; searchResults;
-<span class="nc" id="L346">		int aListCount = 0;</span>
-<span class="nc" id="L347">		int totalResults = 0;</span>
-<span class="nc" id="L348">		StringBuilder luceneQuery = new StringBuilder();</span>
+<span class="fc" id="L346">		int aListCount = 0;</span>
+<span class="fc" id="L347">		int totalResults = 0;</span>
+<span class="fc" id="L348">		StringBuilder luceneQuery = new StringBuilder();</span>
 		//kvoli zvyrazneniu slov potrebujeme len hodnotu vo words (inak nam zvyraznuje aj hodnoty z file_name, password_protected atd)
-<span class="nc" id="L350">		String queryHighlight = null;</span>
+<span class="fc" id="L350">		String queryHighlight = null;</span>
 		try
 		{
-<span class="nc" id="L353">			luceneQuery.append(&quot;(((title:($) OR title:($*)) OR (headings:($) OR headings:($*)) OR (data:($) OR data:($*)))&quot;);</span>
-<span class="nc" id="L354">			queryHighlight = &quot;(((title:($) OR title:($*)) OR (headings:($) OR headings:($*)) OR (data:($) OR data:($*))))&quot;;</span>
-<span class="nc" id="L355">			luceneQuery.append(&quot;) &quot;);</span>
+<span class="fc" id="L353">			luceneQuery.append(&quot;(((title:($) OR title:($*)) OR (headings:($) OR headings:($*)) OR (data:($) OR data:($*)))&quot;);</span>
+<span class="fc" id="L354">			queryHighlight = &quot;(((title:($) OR title:($*)) OR (headings:($) OR headings:($*)) OR (data:($) OR data:($*))))&quot;;</span>
+<span class="fc" id="L355">			luceneQuery.append(&quot;) &quot;);</span>
 
-<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (words.length()==0)</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">			if (words.length()==0)</span>
 			{
 <span class="nc" id="L359">				luceneQuery.delete(0, luceneQuery.length());</span>
 <span class="nc" id="L360">				luceneQuery.append(&quot;NOT title:&quot;).append(LuceneUtils.EMPTY);</span>
 			}
 
-<span class="nc bnc" id="L363" title="All 2 branches missed.">			if (Tools.isNotEmpty(searchFileNameQuery))</span>
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(searchFileNameQuery))</span>
 			{
 				//v stlpce file_name mame ulozenu cestu k adresaru, nieco ako /Slovensky/InterWay/Produkty/Nejaky Produkt/
 				//nad tym limitujeme adresare
-<span class="nc" id="L367">				luceneQuery.append(&quot; AND (&quot;).append(searchFileNameQuery).append(&quot;) &quot;);</span>
+<span class="fc" id="L367">				luceneQuery.append(&quot; AND (&quot;).append(searchFileNameQuery).append(&quot;) &quot;);</span>
 			}
 
-<span class="nc bnc" id="L370" title="All 4 branches missed.">			if (user == null &amp;&amp; searchAlsoProtectedPages==false)</span>
+<span class="pc bpc" id="L370" title="3 of 4 branches missed.">			if (user == null &amp;&amp; searchAlsoProtectedPages==false)</span>
 			{
 <span class="nc" id="L372">				luceneQuery.append(&quot; AND (password_protected:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR password_protected:0) &quot;);</span>
 			}
-<span class="nc bnc" id="L374" title="All 4 branches missed.">			else if (user != null &amp;&amp; searchAlsoProtectedPages==false)</span>
+<span class="pc bpc" id="L374" title="2 of 4 branches missed.">			else if (user != null &amp;&amp; searchAlsoProtectedPages==false)</span>
 			{
 				//skupiny pre web stranky
-<span class="nc" id="L377">				StringBuilder sqlProtected = new StringBuilder(&quot; AND (password_protected:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR password_protected:0&quot;);</span>
-<span class="nc" id="L378">				StringTokenizer stu = new StringTokenizer(user.getUserGroupsIds(), &quot;,&quot;);</span>
-<span class="nc bnc" id="L379" title="All 2 branches missed.">				while (stu.hasMoreTokens())</span>
+<span class="fc" id="L377">				StringBuilder sqlProtected = new StringBuilder(&quot; AND (password_protected:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR password_protected:0&quot;);</span>
+<span class="fc" id="L378">				StringTokenizer stu = new StringTokenizer(user.getUserGroupsIds(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">				while (stu.hasMoreTokens())</span>
 				{
-<span class="nc" id="L381">					int groupId = Tools.getIntValue(stu.nextToken(), -1);</span>
-<span class="nc bnc" id="L382" title="All 2 branches missed.">					if (groupId &gt; 0)</span>
+<span class="fc" id="L381">					int groupId = Tools.getIntValue(stu.nextToken(), -1);</span>
+<span class="pc bpc" id="L382" title="1 of 2 branches missed.">					if (groupId &gt; 0)</span>
 					{
-<span class="nc" id="L384">						sqlProtected.append(&quot; OR password_protected:&quot;).append(groupId);</span>
+<span class="fc" id="L384">						sqlProtected.append(&quot; OR password_protected:&quot;).append(groupId);</span>
 					}
-<span class="nc" id="L386">				}</span>
-<span class="nc" id="L387">				sqlProtected.append(&quot;) &quot;);</span>
-<span class="nc" id="L388">				luceneQuery.append(sqlProtected.toString());</span>
+<span class="fc" id="L386">				}</span>
+<span class="fc" id="L387">				sqlProtected.append(&quot;) &quot;);</span>
+<span class="fc" id="L388">				luceneQuery.append(sqlProtected.toString());</span>
 			}
 
-			//dodatocne parametre
-<span class="nc" id="L392">			luceneQuery.append(addInputParamsLucene(request));</span>
+			//multidomain
+<span class="fc" id="L392">			String domainName = DocDB.getDomain(request);</span>
+			/* this will require to uncomment indexing in Documents and also full reindexing
+			if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {
+				//we must filter by domain using root_group_l1
+				String domainName = DocDB.getDomain(request);
+				if (Tools.isNotEmpty(domainName)) {
+					List&lt;Integer&gt; rootGroupIds = new ArrayList&lt;&gt;();
 
-<span class="nc bnc" id="L394" title="All 6 branches missed.">			if(luceneQuery.toString().indexOf(&quot;publish_start&quot;) == -1 &amp;&amp; luceneQuery.toString().indexOf(&quot;publish_end&quot;) == -1 &amp;&amp; Constants.getBoolean(&quot;showOnlyActualPublishedDoc&quot;))</span>
+					List&lt;GroupDetails&gt; rootGroups = GroupsDB.getRootGroups();
+					for (GroupDetails rootGroup : rootGroups) {
+						if (domainName.equals(rootGroup.getDomainName())) {
+							//add ID to list
+							rootGroupIds.add(rootGroup.getGroupId());
+						}
+					}
+
+					//add ids into Lucene query as AND root_group_l1:(1 OR 2 OR 3)
+					if (rootGroupIds.size() &gt; 0) {
+						for (int i = 0; i &lt; rootGroupIds.size(); i++) {
+							if (i == 0) {
+								luceneQuery.append(&quot; AND root_group_l1:(&quot;).append(rootGroupIds.get(i));
+							} else {
+								luceneQuery.append(&quot; OR &quot;).append(rootGroupIds.get(i));
+							}
+						}
+						luceneQuery.append(&quot;) &quot;);
+					}
+				}
+			}*/
+
+			//dodatocne parametre
+<span class="fc" id="L423">			luceneQuery.append(addInputParamsLucene(request));</span>
+
+<span class="pc bpc" id="L425" title="3 of 6 branches missed.">			if(luceneQuery.toString().indexOf(&quot;publish_start&quot;) == -1 &amp;&amp; luceneQuery.toString().indexOf(&quot;publish_end&quot;) == -1 &amp;&amp; Constants.getBoolean(&quot;showOnlyActualPublishedDoc&quot;))</span>
 			{
-<span class="nc" id="L396">				Date now = new Date();</span>
-<span class="nc" id="L397">				luceneQuery.append(&quot; AND (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR publish_start:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO &quot;).append(DateTools.dateToString(now, Resolution.MINUTE)).append(&quot;]) &quot;)</span>
-<span class="nc" id="L398">				           .append(&quot; AND (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR publish_end:[&quot;).append(DateTools.dateToString(now, Resolution.MINUTE)).append(&quot; TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) &quot;);</span>
+<span class="nc" id="L427">				Date now = new Date();</span>
+<span class="nc" id="L428">				luceneQuery.append(&quot; AND (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR publish_start:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO &quot;).append(DateTools.dateToString(now, Resolution.MINUTE)).append(&quot;]) &quot;)</span>
+<span class="nc" id="L429">				           .append(&quot; AND (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; OR publish_end:[&quot;).append(DateTools.dateToString(now, Resolution.MINUTE)).append(&quot; TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) &quot;);</span>
 			}
 
 			// text to find
-<span class="nc" id="L402">			Logger.debug(LuceneSearchAction.class,&quot;words: &quot; + words);</span>
+<span class="fc" id="L433">			Logger.debug(LuceneSearchAction.class,&quot;words: &quot; + words);</span>
 
-<span class="nc" id="L404">			String query = luceneQuery.toString();</span>
+<span class="fc" id="L435">			String query = luceneQuery.toString();</span>
 
-<span class="nc" id="L406">			query = setParameters(request, words, query);</span>
-<span class="nc" id="L407">			queryHighlight = setParameters(request, words, queryHighlight);</span>
+<span class="fc" id="L437">			query = setParameters(request, words, query);</span>
+<span class="fc" id="L438">			queryHighlight = setParameters(request, words, queryHighlight);</span>
 
-<span class="nc" id="L409">			Logger.println(LuceneSearchAction.class,&quot;search Lucene Query =&quot;+query);</span>
-<span class="nc" id="L410">			dt.diff(&quot;mam query&quot;);</span>
+<span class="fc" id="L440">			Logger.println(LuceneSearchAction.class,&quot;search Lucene Query =&quot;+query);</span>
+<span class="fc" id="L441">			dt.diff(&quot;mam query&quot;);</span>
 
-<span class="nc" id="L412">			searchResults = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L443">			searchResults = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L414">			Documents indexed = new Documents(language);</span>
+<span class="fc" id="L445">			Documents indexed = new Documents(language);</span>
 
-<span class="nc" id="L416">			dt.diff(&quot;mam indexed&quot;);</span>
+<span class="fc" id="L447">			dt.diff(&quot;mam indexed&quot;);</span>
 
-<span class="nc" id="L418">			String[] places = pageParams.getValue(&quot;places&quot;,&quot;documents&quot;).split(&quot;\\+&quot;);</span>
+<span class="fc" id="L449">			String[] places = pageParams.getValue(&quot;places&quot;,&quot;documents&quot;).split(&quot;\\+&quot;);</span>
 
 
 			/* update the query to include other places */
 
-<span class="nc" id="L423">			boolean searchInTickets = ArrayUtils.contains(places,&quot;tickets&quot;);</span>
-<span class="nc" id="L424">			boolean searchInForums = ArrayUtils.contains(places,&quot;forums&quot;);</span>
+<span class="fc" id="L454">			boolean searchInTickets = ArrayUtils.contains(places,&quot;tickets&quot;);</span>
+<span class="fc" id="L455">			boolean searchInForums = ArrayUtils.contains(places,&quot;forums&quot;);</span>
 
-<span class="nc bnc" id="L426" title="All 6 branches missed.">			if (searchInTickets || searchInForums &amp;&amp; Tools.isNotEmpty(words)){</span>
-<span class="nc" id="L427">				query = &quot;(&quot; + query + &quot; AND type:documents ) &quot;;</span>
-<span class="nc bnc" id="L428" title="All 2 branches missed.">				if (searchInTickets)</span>
+<span class="pc bpc" id="L457" title="4 of 6 branches missed.">			if (searchInTickets || searchInForums &amp;&amp; Tools.isNotEmpty(words)){</span>
+<span class="nc" id="L458">				query = &quot;(&quot; + query + &quot; AND type:documents ) &quot;;</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">				if (searchInTickets)</span>
 				{
-<span class="nc" id="L430">					query += String.format(&quot; OR (type:tickets AND (data:%s) ) &quot;,words);</span>
+<span class="nc" id="L461">					query += String.format(&quot; OR (type:tickets AND (data:%s) ) &quot;,words);</span>
 				}
-<span class="nc bnc" id="L432" title="All 2 branches missed.">				if (searchInForums)</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">				if (searchInForums)</span>
 				{
-<span class="nc" id="L434">					query += String.format(&quot; OR (type:forums AND (data:%s) ) &quot;,words);</span>
+<span class="nc" id="L465">					query += String.format(&quot; OR (type:forums AND (data:%s) ) &quot;,words);</span>
 				}
-<span class="nc" id="L436">				Logger.debug(LuceneSearchAction.class,&quot;Updated search Lucene Query =&quot;+query);</span>
+<span class="nc" id="L467">				Logger.debug(LuceneSearchAction.class,&quot;Updated search Lucene Query =&quot;+query);</span>
 			}
 
-<span class="nc" id="L439">			dt.diff(&quot;before luceneSearchQuery&quot;);</span>
-<span class="nc" id="L440">			LuceneQuery luceneSearchQuery = new LuceneQuery(language);</span>
-<span class="nc" id="L441">			dt.diff(&quot;after luceneSearchQuery&quot;);</span>
+<span class="fc" id="L470">			dt.diff(&quot;before luceneSearchQuery&quot;);</span>
+<span class="fc" id="L471">			LuceneQuery luceneSearchQuery = new LuceneQuery(language);</span>
+<span class="fc" id="L472">			dt.diff(&quot;after luceneSearchQuery&quot;);</span>
 
-<span class="nc" id="L443">			luceneSearchQuery.setSort(buildSortExpression(request));</span>
+<span class="fc" id="L474">			luceneSearchQuery.setSort(buildSortExpression(request));</span>
 
-<span class="nc" id="L445">			dt.diff(&quot;after set sort&quot;);</span>
+<span class="fc" id="L476">			dt.diff(&quot;after set sort&quot;);</span>
 
-<span class="nc" id="L447">			List&lt;Document&gt; documents = luceneSearchQuery.documents(query);</span>
+<span class="fc" id="L478">			List&lt;Document&gt; documents = luceneSearchQuery.documents(query);</span>
 
-<span class="nc" id="L449">			dt.diff(&quot;after documents&quot;);</span>
+<span class="fc" id="L480">			dt.diff(&quot;after documents&quot;);</span>
 
-<span class="nc" id="L451">			totalResults = documents.size();</span>
+<span class="fc" id="L482">			totalResults = documents.size();</span>
 
-<span class="nc" id="L453">			dt.diff(&quot;after size&quot;);</span>
+<span class="fc" id="L484">			dt.diff(&quot;after size&quot;);</span>
 
-<span class="nc" id="L455">			String textToFind = getTextToFind(request);</span>
+<span class="fc" id="L486">			String textToFind = getTextToFind(request);</span>
 
-<span class="nc" id="L457">			dt.diff(&quot;after ttf&quot;);</span>
+<span class="fc" id="L488">			dt.diff(&quot;after ttf&quot;);</span>
 
-<span class="nc bnc" id="L459" title="All 2 branches missed.">			if (totalResults == 0 )</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">			if (totalResults == 0 )</span>
 			{
 				/* proximity search */
-<span class="nc" id="L462">				query = setParameters(request, (words+&quot;~0.8&quot;).replace(&quot; &quot;,&quot;~0.8 &quot;), query);</span>
-<span class="nc" id="L463">				luceneSearchQuery = new LuceneQuery(indexed);</span>
-<span class="nc" id="L464">				luceneSearchQuery.setSort(buildSortExpression(request));</span>
+<span class="fc" id="L493">				query = setParameters(request, (words+&quot;~0.8&quot;).replace(&quot; &quot;,&quot;~0.8 &quot;), query);</span>
+<span class="fc" id="L494">				luceneSearchQuery = new LuceneQuery(indexed);</span>
+<span class="fc" id="L495">				luceneSearchQuery.setSort(buildSortExpression(request));</span>
 
-<span class="nc" id="L466">				documents = luceneSearchQuery.documents(query);</span>
-<span class="nc" id="L467">				totalResults = documents.size();</span>
+<span class="fc" id="L497">				documents = luceneSearchQuery.documents(query);</span>
+<span class="fc" id="L498">				totalResults = documents.size();</span>
 
-<span class="nc" id="L469">				String[] suggestions = FulltextSearch.suggestSimilar(textToFind,language);</span>
-<span class="nc bnc" id="L470" title="All 4 branches missed.">				if (suggestions != null &amp;&amp; suggestions.length &gt;0 )</span>
+<span class="fc" id="L500">				String[] suggestions = FulltextSearch.suggestSimilar(textToFind,language);</span>
+<span class="pc bpc" id="L501" title="3 of 4 branches missed.">				if (suggestions != null &amp;&amp; suggestions.length &gt;0 )</span>
 				{
-<span class="nc" id="L472">					request.setAttribute(&quot;suggestion&quot;,suggestions[0]);</span>
+<span class="nc" id="L503">					request.setAttribute(&quot;suggestion&quot;,suggestions[0]);</span>
 				}
 
-<span class="nc" id="L475">				dt.diff(&quot;after totalResults == 0&quot;);</span>
+<span class="fc" id="L506">				dt.diff(&quot;after totalResults == 0&quot;);</span>
 			}
 
 			//ak mame nejake duplicity, dame ich prec
-<span class="nc bnc" id="L479" title="All 4 branches missed.">			if(docIdsNotIn != null &amp;&amp; documents.size() &gt; 0)</span>
+<span class="pc bpc" id="L510" title="3 of 4 branches missed.">			if(docIdsNotIn != null &amp;&amp; documents.size() &gt; 0)</span>
 			{
-<span class="nc" id="L481">				List&lt;Document&gt; documentsTmp = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L512">				List&lt;Document&gt; documentsTmp = new ArrayList&lt;&gt;();</span>
 				Integer doc_id;
-<span class="nc bnc" id="L483" title="All 2 branches missed.">				for(Document luceneDocument : documents)</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">				for(Document luceneDocument : documents)</span>
 				{
-<span class="nc" id="L485">					doc_id = Integer.valueOf(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue());</span>
-<span class="nc bnc" id="L486" title="All 2 branches missed.">					if(!docIdsNotIn.contains(doc_id))</span>
-<span class="nc" id="L487">						documentsTmp.add(luceneDocument);</span>
-<span class="nc" id="L488">				}</span>
-<span class="nc" id="L489">				documents = new ArrayList&lt;&gt;(documentsTmp);</span>
-<span class="nc" id="L490">				totalResults = documents.size();</span>
+<span class="nc" id="L516">					doc_id = Integer.valueOf(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue());</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">					if(!docIdsNotIn.contains(doc_id))</span>
+<span class="nc" id="L518">						documentsTmp.add(luceneDocument);</span>
+<span class="nc" id="L519">				}</span>
+<span class="nc" id="L520">				documents = new ArrayList&lt;&gt;(documentsTmp);</span>
+<span class="nc" id="L521">				totalResults = documents.size();</span>
 
-<span class="nc" id="L492">				dt.diff(&quot;after remove duplicity&quot;);</span>
+<span class="nc" id="L523">				dt.diff(&quot;after remove duplicity&quot;);</span>
 			}
 
 			//odstranim zo stranok tie ktore maju available, alebo serachable na false
-<span class="nc bnc" id="L496" title="All 2 branches missed.">			if(documents.size() &gt; 0)</span>
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">			if(documents.size() &gt; 0)</span>
 			{
-<span class="nc" id="L498">				List&lt;Document&gt; documentsTmp = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L499">				String type = null;</span>
-<span class="nc" id="L500">				DocDetails actualDoc = null;</span>
-<span class="nc" id="L501">				Set&lt;String&gt; forumAlreadyHasUrl = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L529">				List&lt;Document&gt; documentsTmp = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L530">				String type = null;</span>
+<span class="nc" id="L531">				DocDetails actualDoc = null;</span>
+<span class="nc" id="L532">				Set&lt;String&gt; forumAlreadyHasUrl = new HashSet&lt;&gt;();</span>
 
-<span class="nc" id="L503">				String docGroupNamePath = null;</span>
-<span class="nc" id="L504">				boolean namePathMatch = false;</span>
+<span class="nc" id="L534">				String docGroupNamePath = null;</span>
+<span class="nc" id="L535">				boolean namePathMatch = false;</span>
 
-<span class="nc bnc" id="L506" title="All 2 branches missed.">				for(Document luceneDocument : documents)</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">				for(Document luceneDocument : documents)</span>
 				{
 					//#15422 - lucene nevie vyhladavat ako startsWith, preto sa to musi riesit filtrovanie na zaklade groupId takto
-<span class="nc" id="L509">					docGroupNamePath = DB.removeSlashes(groupsDB.getGroupNamePath(docDB.getBasicDocDetails(Tools.getIntValue(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue(),0),true).getGroupId()));</span>
-<span class="nc bnc" id="L510" title="All 2 branches missed.">					if(searchGroupNamePaths != null)</span>
+<span class="nc" id="L540">					docGroupNamePath = DB.removeSlashes(groupsDB.getGroupNamePath(docDB.getBasicDocDetails(Tools.getIntValue(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue(),0),true).getGroupId()));</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">					if(searchGroupNamePaths != null)</span>
 					{
-<span class="nc" id="L512">						namePathMatch = false;</span>
-<span class="nc bnc" id="L513" title="All 2 branches missed.">						for(String searchNamePath : searchGroupNamePaths)</span>
-<span class="nc bnc" id="L514" title="All 2 branches missed.">							if(docGroupNamePath.startsWith(searchNamePath)) namePathMatch = true;</span>
+<span class="nc" id="L543">						namePathMatch = false;</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">						for(String searchNamePath : searchGroupNamePaths)</span>
+<span class="nc bnc" id="L545" title="All 2 branches missed.">							if(docGroupNamePath.startsWith(searchNamePath)) namePathMatch = true;</span>
 
 						//nesedi nam virtual path - preskakujem
-<span class="nc bnc" id="L517" title="All 2 branches missed.">						if(namePathMatch == false) continue;</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">						if(namePathMatch == false) continue;</span>
 					}
 
-<span class="nc" id="L520">					type = luceneDocument.getFieldable(&quot;type&quot;).stringValue();</span>
-<span class="nc bnc" id="L521" title="All 4 branches missed.">					if(&quot;documents&quot;.equals(type) || &quot;forums&quot;.equals(type))</span>
+<span class="nc" id="L551">					type = luceneDocument.getFieldable(&quot;type&quot;).stringValue();</span>
+<span class="nc bnc" id="L552" title="All 4 branches missed.">					if(&quot;documents&quot;.equals(type) || &quot;forums&quot;.equals(type))</span>
 					{
-<span class="nc" id="L523">						actualDoc = docDB.getBasicDocDetails(Tools.getIntValue(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue(), 0), false);</span>
-<span class="nc bnc" id="L524" title="All 6 branches missed.">						if(actualDoc != null &amp;&amp; actualDoc.isAvailable() &amp;&amp; actualDoc.isSearchable())</span>
+<span class="nc" id="L554">						actualDoc = docDB.getBasicDocDetails(Tools.getIntValue(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue(), 0), false);</span>
+<span class="nc bnc" id="L555" title="All 6 branches missed.">						if(actualDoc != null &amp;&amp; actualDoc.isAvailable() &amp;&amp; actualDoc.isSearchable())</span>
 						{
-<span class="nc bnc" id="L526" title="All 2 branches missed.">							if (&quot;forums&quot;.equals(type))</span>
+<span class="nc bnc" id="L557" title="All 2 branches missed.">							if (&quot;forums&quot;.equals(type))</span>
 							{
 								//aby sa nam vo vysledku neobjavili rovnake prispevky viac krat (duplicita)
-<span class="nc" id="L529">								String url = luceneDocument.getFieldable(&quot;url&quot;).stringValue();</span>
-<span class="nc bnc" id="L530" title="All 2 branches missed.">								if (forumAlreadyHasUrl.contains(url)) continue;</span>
-<span class="nc" id="L531">								forumAlreadyHasUrl.add(url);</span>
+<span class="nc" id="L560">								String url = luceneDocument.getFieldable(&quot;url&quot;).stringValue();</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">								if (forumAlreadyHasUrl.contains(url)) continue;</span>
+<span class="nc" id="L562">								forumAlreadyHasUrl.add(url);</span>
 							}
-<span class="nc" id="L533">							documentsTmp.add(luceneDocument);</span>
+<span class="nc" id="L564">							documentsTmp.add(luceneDocument);</span>
 						}
 					}
 					else
 					{
-<span class="nc" id="L538">						documentsTmp.add(luceneDocument);</span>
+<span class="nc" id="L569">						documentsTmp.add(luceneDocument);</span>
 					}
-<span class="nc" id="L540">				}</span>
-<span class="nc" id="L541">				documents = new ArrayList&lt;&gt;(documentsTmp);</span>
-<span class="nc" id="L542">				totalResults = documents.size();</span>
+<span class="nc" id="L571">				}</span>
+<span class="nc" id="L572">				documents = new ArrayList&lt;&gt;(documentsTmp);</span>
+<span class="nc" id="L573">				totalResults = documents.size();</span>
 			}
 
-<span class="nc" id="L545">			dt.diff(&quot;after execute&quot;);</span>
+<span class="fc" id="L576">			dt.diff(&quot;after execute&quot;);</span>
 
-<span class="nc" id="L547">			Set&lt;String&gt; unfilteredFileExtensions = null;</span>
-<span class="nc bnc" id="L548" title="All 2 branches missed.">			String extensions = Tools.isEmpty(request.getParameter(&quot;unfilteredFileExtensions&quot;)) ? request</span>
-<span class="nc bnc" id="L549" title="All 2 branches missed.">						.getAttribute(&quot;unfilteredFileExtensions&quot;)!=null ? request</span>
-<span class="nc" id="L550">									.getAttribute(&quot;unfilteredFileExtensions&quot;).toString():null: request.getParameter(&quot;unfilteredFileExtensions&quot;);</span>
+<span class="fc" id="L578">			Set&lt;String&gt; unfilteredFileExtensions = null;</span>
+<span class="pc bpc" id="L579" title="1 of 2 branches missed.">			String extensions = Tools.isEmpty(request.getParameter(&quot;unfilteredFileExtensions&quot;)) ? request</span>
+<span class="pc bpc" id="L580" title="1 of 2 branches missed.">						.getAttribute(&quot;unfilteredFileExtensions&quot;)!=null ? request</span>
+<span class="pc" id="L581">									.getAttribute(&quot;unfilteredFileExtensions&quot;).toString():null: request.getParameter(&quot;unfilteredFileExtensions&quot;);</span>
 
-<span class="nc bnc" id="L552" title="All 4 branches missed.">			if (extensions!=null &amp;&amp; Tools.isNotEmpty(extensions))</span>
+<span class="pc bpc" id="L583" title="3 of 4 branches missed.">			if (extensions!=null &amp;&amp; Tools.isNotEmpty(extensions))</span>
 			{
-<span class="nc" id="L554">				unfilteredFileExtensions = new HashSet&lt;&gt;(Arrays.asList(extensions.split(&quot;;&quot;)));</span>
+<span class="nc" id="L585">				unfilteredFileExtensions = new HashSet&lt;&gt;(Arrays.asList(extensions.split(&quot;;&quot;)));</span>
 			}
 
 
-<span class="nc bnc" id="L558" title="All 2 branches missed.">			if (Tools.isNotEmpty(request.getParameter(&quot;page&quot;))){</span>
-<span class="nc" id="L559">				int page =Integer.parseInt(request.getParameter(&quot;page&quot;));</span>
-<span class="nc" id="L560">				index = (page-1) * perPage;</span>
+<span class="pc bpc" id="L589" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(request.getParameter(&quot;page&quot;))){</span>
+<span class="nc" id="L590">				int page =Integer.parseInt(request.getParameter(&quot;page&quot;));</span>
+<span class="nc" id="L591">				index = (page-1) * perPage;</span>
 			}
 
-<span class="nc" id="L563">			int i = index;</span>
+<span class="fc" id="L594">			int i = index;</span>
 
-<span class="nc" id="L565">			SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter(&quot;&lt;strong&gt;&quot;,&quot;&lt;/strong&gt;&quot;);</span>
-<span class="nc" id="L566">			LuceneQuery luceneSearchQueryHighlight = null;</span>
-<span class="nc bnc" id="L567" title="All 2 branches missed.">			if(Tools.isNotEmpty(queryHighlight))</span>
+<span class="fc" id="L596">			SimpleHTMLFormatter htmlFormatter = new SimpleHTMLFormatter(&quot;&lt;strong&gt;&quot;,&quot;&lt;/strong&gt;&quot;);</span>
+<span class="fc" id="L597">			LuceneQuery luceneSearchQueryHighlight = null;</span>
+<span class="pc bpc" id="L598" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(queryHighlight))</span>
 			{
-<span class="nc" id="L569">				luceneSearchQueryHighlight = new LuceneQuery(language);</span>
-<span class="nc" id="L570">				luceneSearchQueryHighlight.documents(queryHighlight);</span>
+<span class="fc" id="L600">				luceneSearchQueryHighlight = new LuceneQuery(language);</span>
+<span class="fc" id="L601">				luceneSearchQueryHighlight.documents(queryHighlight);</span>
 			}
 
-<span class="nc bnc" id="L573" title="All 2 branches missed.">			Logger.println(LuceneSearchAction.class, &quot;queryHighlight(getParsedQuery): &quot;+(luceneSearchQueryHighlight != null ? luceneSearchQueryHighlight.getParsedQuery() : luceneSearchQuery.getParsedQuery()));</span>
-<span class="nc bnc" id="L574" title="All 2 branches missed.">			Highlighter highlighter = new Highlighter(htmlFormatter, new QueryScorer(luceneSearchQueryHighlight != null ? luceneSearchQueryHighlight.getParsedQuery() : luceneSearchQuery.getParsedQuery()));</span>
-<span class="nc" id="L575">			highlighter.setTextFragmenter(new SimpleFragmenter(300));</span>
-<span class="nc" id="L576">			String ttf = SearchAction.getTextToFind(request);</span>
+<span class="pc bpc" id="L604" title="1 of 2 branches missed.">			Logger.println(LuceneSearchAction.class, &quot;queryHighlight(getParsedQuery): &quot;+(luceneSearchQueryHighlight != null ? luceneSearchQueryHighlight.getParsedQuery() : luceneSearchQuery.getParsedQuery()));</span>
+<span class="pc bpc" id="L605" title="1 of 2 branches missed.">			Highlighter highlighter = new Highlighter(htmlFormatter, new QueryScorer(luceneSearchQueryHighlight != null ? luceneSearchQueryHighlight.getParsedQuery() : luceneSearchQuery.getParsedQuery()));</span>
+<span class="fc" id="L606">			highlighter.setTextFragmenter(new SimpleFragmenter(300));</span>
+<span class="fc" id="L607">			String ttf = SearchAction.getTextToFind(request);</span>
 
-<span class="nc bnc" id="L578" title="All 4 branches missed.">			while (searchResults.size()&lt;perPage &amp;&amp; i&lt;documents.size())</span>
+<span class="pc bpc" id="L609" title="2 of 4 branches missed.">			while (searchResults.size()&lt;perPage &amp;&amp; i&lt;documents.size())</span>
 			{
 				String link;
-<span class="nc" id="L581">				dt.diff(&quot;NEXT &quot;+aListCount);</span>
-<span class="nc" id="L582">				aListCount++;</span>
-<span class="nc bnc" id="L583" title="All 2 branches missed.">				if (aListCount == (perPage + 1))</span>
+<span class="nc" id="L612">				dt.diff(&quot;NEXT &quot;+aListCount);</span>
+<span class="nc" id="L613">				aListCount++;</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">				if (aListCount == (perPage + 1))</span>
 				{
-<span class="nc" id="L585">					Logger.debug(LuceneSearchAction.class,&quot;aListCount=&quot;+aListCount+&quot; perPage=&quot;+perPage);</span>
-<span class="nc" id="L586">					continue;</span>
+<span class="nc" id="L616">					Logger.debug(LuceneSearchAction.class,&quot;aListCount=&quot;+aListCount+&quot; perPage=&quot;+perPage);</span>
+<span class="nc" id="L617">					continue;</span>
 				}
 
-<span class="nc" id="L589">            	Document luceneDocument = documents.get(i);</span>
-<span class="nc" id="L590">				i++;</span>
-<span class="nc" id="L591">				String externalLink = &quot;&quot;;</span>
-<span class="nc" id="L592">				String type = luceneDocument.getFieldable(&quot;type&quot;).stringValue();</span>
+<span class="nc" id="L620">            	Document luceneDocument = documents.get(i);</span>
+<span class="nc" id="L621">				i++;</span>
+<span class="nc" id="L622">				String externalLink = &quot;&quot;;</span>
+<span class="nc" id="L623">				String type = luceneDocument.getFieldable(&quot;type&quot;).stringValue();</span>
 
-<span class="nc" id="L594">				SearchDetails qDet= new SearchDetails();</span>
+<span class="nc" id="L625">				SearchDetails qDet= new SearchDetails();</span>
 
-<span class="nc bnc" id="L596" title="All 4 branches missed.">				if (&quot;documents&quot;.equals(type) || &quot;forums&quot;.equals(type))</span>
+<span class="nc bnc" id="L627" title="All 4 branches missed.">				if (&quot;documents&quot;.equals(type) || &quot;forums&quot;.equals(type))</span>
 				{
-<span class="nc" id="L598">					qDet.setDocId(Tools.getIntValue(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue(), 4));</span>
+<span class="nc" id="L629">					qDet.setDocId(Tools.getIntValue(luceneDocument.getFieldable(&quot;doc_id&quot;).stringValue(), 4));</span>
 
-<span class="nc" id="L600">					DocDetails actualDoc = docDB.getBasicDocDetails(qDet.getDocId(), false);</span>
-<span class="nc bnc" id="L601" title="All 2 branches missed.">					if (actualDoc == null)</span>
+<span class="nc" id="L631">					DocDetails actualDoc = docDB.getBasicDocDetails(qDet.getDocId(), false);</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">					if (actualDoc == null)</span>
 					{
-<span class="nc" id="L603">						continue;</span>
+<span class="nc" id="L634">						totalResults--;</span>
+<span class="nc" id="L635">						continue;</span>
 					}
 
-<span class="nc" id="L606">					qDet.setTitle(actualDoc.getTitle());</span>
-<span class="nc" id="L607">					qDet.setNavbar(actualDoc.getNavbar());</span>
-<span class="nc" id="L608">					qDet.setExternalLink(actualDoc.getExternalLink());</span>
-<span class="nc" id="L609">					externalLink = qDet.getExternalLink();</span>
-<span class="nc" id="L610">					qDet.setGroupId(actualDoc.getGroupId());</span>
-<span class="nc" id="L611">					qDet.setVirtualPath(actualDoc.getVirtualPath());</span>
-<span class="nc" id="L612">					qDet.setAvailable(true);</span>
-<span class="nc" id="L613">					qDet.setSearchable(true);</span>
-<span class="nc" id="L614">					qDet.setShowInMenu(actualDoc.isShowInMenu());</span>
-<span class="nc" id="L615">					qDet.setSortPriority(actualDoc.getSortPriority());</span>
-<span class="nc" id="L616">					qDet.setPasswordProtected(actualDoc.getPasswordProtected());</span>
-<span class="nc" id="L617">					qDet.setTempId(actualDoc.getTempId());</span>
-<span class="nc" id="L618">					qDet.setDateCreated(actualDoc.getDateCreated());</span>
-<span class="nc" id="L619">					qDet.setFieldA(actualDoc.getFieldA());</span>
-<span class="nc" id="L620">					qDet.setFieldB(actualDoc.getFieldB());</span>
-<span class="nc" id="L621">					qDet.setFieldC(actualDoc.getFieldC());</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">					if (Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
+					{
+						//verify domain name
+<span class="nc" id="L641">						GroupDetails docGroupDetails = groupsDB.getGroup(actualDoc.getGroupId());</span>
+<span class="nc bnc" id="L642" title="All 4 branches missed.">						if (Tools.isNotEmpty(domainName) &amp;&amp; domainName.equals(docGroupDetails.getDomainName())==false)</span>
+						{
+<span class="nc" id="L644">							totalResults--;</span>
+<span class="nc" id="L645">							continue;</span>
+						}
+					}
+
+<span class="nc" id="L649">					qDet.setTitle(actualDoc.getTitle());</span>
+<span class="nc" id="L650">					qDet.setNavbar(actualDoc.getNavbar());</span>
+<span class="nc" id="L651">					qDet.setExternalLink(actualDoc.getExternalLink());</span>
+<span class="nc" id="L652">					externalLink = qDet.getExternalLink();</span>
+<span class="nc" id="L653">					qDet.setGroupId(actualDoc.getGroupId());</span>
+<span class="nc" id="L654">					qDet.setVirtualPath(actualDoc.getVirtualPath());</span>
+<span class="nc" id="L655">					qDet.setAvailable(true);</span>
+<span class="nc" id="L656">					qDet.setSearchable(true);</span>
+<span class="nc" id="L657">					qDet.setShowInMenu(actualDoc.isShowInMenu());</span>
+<span class="nc" id="L658">					qDet.setSortPriority(actualDoc.getSortPriority());</span>
+<span class="nc" id="L659">					qDet.setPasswordProtected(actualDoc.getPasswordProtected());</span>
+<span class="nc" id="L660">					qDet.setTempId(actualDoc.getTempId());</span>
+<span class="nc" id="L661">					qDet.setDateCreated(actualDoc.getDateCreated());</span>
+<span class="nc" id="L662">					qDet.setFieldA(actualDoc.getFieldA());</span>
+<span class="nc" id="L663">					qDet.setFieldB(actualDoc.getFieldB());</span>
+<span class="nc" id="L664">					qDet.setFieldC(actualDoc.getFieldC());</span>
 				}
 
-<span class="nc bnc" id="L624" title="All 2 branches missed.">				if (&quot;forums&quot;.equals(type))</span>
+<span class="nc bnc" id="L667" title="All 2 branches missed.">				if (&quot;forums&quot;.equals(type))</span>
 				{
-<span class="nc" id="L626">					qDet.setTitle(luceneDocument.getFieldable(&quot;title&quot;).stringValue());</span>
-<span class="nc" id="L627">					qDet.setDateCreated(LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;question_date&quot;).stringValue()).getTime());</span>
+<span class="nc" id="L669">					qDet.setTitle(luceneDocument.getFieldable(&quot;title&quot;).stringValue());</span>
+<span class="nc" id="L670">					qDet.setDateCreated(LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;question_date&quot;).stringValue()).getTime());</span>
 					//qDet.setPublishStart(LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;question_date&quot;).stringValue()).getTime());
 					//qDet.setPublishEnd(LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;question_date&quot;).stringValue()).getTime());
 				}
 
-<span class="nc bnc" id="L632" title="All 2 branches missed.">				if (Tools.isEmpty(qDet.getExternalLink()))</span>
+<span class="nc bnc" id="L675" title="All 2 branches missed.">				if (Tools.isEmpty(qDet.getExternalLink()))</span>
 				{
-<span class="nc" id="L634">					externalLink = qDet.getExternalLink();</span>
-<span class="nc" id="L635">					qDet.setDoc_id(4);</span>
+<span class="nc" id="L677">					externalLink = qDet.getExternalLink();</span>
+<span class="nc" id="L678">					qDet.setDoc_id(4);</span>
 				}
 
-<span class="nc bnc" id="L638" title="All 4 branches missed.">				if (unfilteredFileExtensions != null &amp;&amp; !unfilteredFileExtensions.isEmpty())</span>
+<span class="nc bnc" id="L681" title="All 4 branches missed.">				if (unfilteredFileExtensions != null &amp;&amp; !unfilteredFileExtensions.isEmpty())</span>
 				{
 
-<span class="nc bnc" id="L641" title="All 4 branches missed.">					if (Tools.isEmpty(externalLink) &amp;&amp; !&quot;html&quot;.equals(extensions) )</span>
+<span class="nc bnc" id="L684" title="All 4 branches missed.">					if (Tools.isEmpty(externalLink) &amp;&amp; !&quot;html&quot;.equals(extensions) )</span>
 					{
-<span class="nc" id="L643">						totalResults--;</span>
-<span class="nc" id="L644">						aListCount--;</span>
-<span class="nc" id="L645">						continue;</span>
+<span class="nc" id="L686">						totalResults--;</span>
+<span class="nc" id="L687">						aListCount--;</span>
+<span class="nc" id="L688">						continue;</span>
 					}
 
-<span class="nc bnc" id="L648" title="All 2 branches missed.">					if (!Tools.isEmpty(externalLink))</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">					if (!Tools.isEmpty(externalLink))</span>
 					{
-<span class="nc" id="L650">						int extensionIndex = externalLink.lastIndexOf('.');</span>
-<span class="nc bnc" id="L651" title="All 2 branches missed.">						if (extensionIndex &gt; 0)</span>
+<span class="nc" id="L693">						int extensionIndex = externalLink.lastIndexOf('.');</span>
+<span class="nc bnc" id="L694" title="All 2 branches missed.">						if (extensionIndex &gt; 0)</span>
 						{
-<span class="nc bnc" id="L653" title="All 2 branches missed.">							if (!unfilteredFileExtensions.contains(externalLink.substring(extensionIndex+1)))</span>
+<span class="nc bnc" id="L696" title="All 2 branches missed.">							if (!unfilteredFileExtensions.contains(externalLink.substring(extensionIndex+1)))</span>
 							{
-<span class="nc" id="L655">								totalResults--;</span>
-<span class="nc" id="L656">								aListCount--;</span>
-<span class="nc" id="L657">								continue;</span>
+<span class="nc" id="L698">								totalResults--;</span>
+<span class="nc" id="L699">								aListCount--;</span>
+<span class="nc" id="L700">								continue;</span>
 							}
 						}
 					}
 				}
 
-<span class="nc bnc" id="L663" title="All 4 branches missed.">				if (&quot;tickets&quot;.equals(type) || &quot;forums&quot;.equals(type))</span>
+<span class="nc bnc" id="L706" title="All 4 branches missed.">				if (&quot;tickets&quot;.equals(type) || &quot;forums&quot;.equals(type))</span>
 				{
-<span class="nc" id="L665">					externalLink = luceneDocument.getFieldable(&quot;url&quot;).stringValue();</span>
+<span class="nc" id="L708">					externalLink = luceneDocument.getFieldable(&quot;url&quot;).stringValue();</span>
 				}
 
-<span class="nc" id="L668">				qDet.setExternalLink(externalLink);</span>
+<span class="nc" id="L711">				qDet.setExternalLink(externalLink);</span>
 				//toto nepotrebujeme, nizsie to prepiseme snippetom qDet.setData(luceneDocument.getFieldable(&quot;data&quot;).stringValue());
 
-<span class="nc" id="L671">				Fieldable docId = luceneDocument.getFieldable(&quot;doc_id&quot;);</span>
-<span class="nc bnc" id="L672" title="All 2 branches missed.">				if (docId!=null)</span>
+<span class="nc" id="L714">				Fieldable docId = luceneDocument.getFieldable(&quot;doc_id&quot;);</span>
+<span class="nc bnc" id="L715" title="All 2 branches missed.">				if (docId!=null)</span>
 				{
-<span class="nc" id="L674">					qDet.setDoc_id(Integer.parseInt(docId.stringValue()));</span>
+<span class="nc" id="L717">					qDet.setDoc_id(Integer.parseInt(docId.stringValue()));</span>
 				}
 
-<span class="nc" id="L677">				qDet.setDataOriginal(luceneDocument.getFieldable(&quot;data&quot;).stringValue());</span>
-<span class="nc" id="L678">				String snippet = null;</span>
+<span class="nc" id="L720">				qDet.setDataOriginal(luceneDocument.getFieldable(&quot;data&quot;).stringValue());</span>
+<span class="nc" id="L721">				String snippet = null;</span>
 
-<span class="nc bnc" id="L680" title="All 2 branches missed.">				if (SearchAction.shouldDoQuickSnippet(qDet, request)==false)</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">				if (SearchAction.shouldDoQuickSnippet(qDet, request)==false)</span>
 				{
-<span class="nc" id="L682">					Analyzer analyzer = AnalyzerFactory.getAnalyzer(Version.LUCENE_31, &quot;sk&quot;);</span>
-<span class="nc" id="L683">					TokenStream tokenStream = TokenSources.getTokenStream(luceneDocument, &quot;data&quot;, analyzer);</span>
-<span class="nc" id="L684">					String[] snippets = highlighter.getBestFragments(tokenStream, qDet.getDataOriginal(), 4);</span>
-<span class="nc bnc" id="L685" title="All 4 branches missed.">					if (snippets != null &amp;&amp; snippets.length&gt;0)</span>
+<span class="nc" id="L725">					Analyzer analyzer = AnalyzerFactory.getAnalyzer(Version.LUCENE_31, &quot;sk&quot;);</span>
+<span class="nc" id="L726">					TokenStream tokenStream = TokenSources.getTokenStream(luceneDocument, &quot;data&quot;, analyzer);</span>
+<span class="nc" id="L727">					String[] snippets = highlighter.getBestFragments(tokenStream, qDet.getDataOriginal(), 4);</span>
+<span class="nc bnc" id="L728" title="All 4 branches missed.">					if (snippets != null &amp;&amp; snippets.length&gt;0)</span>
 					{
-<span class="nc bnc" id="L687" title="All 2 branches missed.">						for (String s : snippets)</span>
+<span class="nc bnc" id="L730" title="All 2 branches missed.">						for (String s : snippets)</span>
 						{
-<span class="nc bnc" id="L689" title="All 2 branches missed.">							if (Tools.isEmpty(snippet)) snippet = s;</span>
-<span class="nc" id="L690">							else snippet += &quot;... ...&quot; + s; //NOSONAR</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">							if (Tools.isEmpty(snippet)) snippet = s;</span>
+<span class="nc" id="L733">							else snippet += &quot;... ...&quot; + s; //NOSONAR</span>
 						}
 					}
-<span class="nc" id="L693">					tokenStream.close();</span>
-<span class="nc" id="L694">					analyzer.close();</span>
+<span class="nc" id="L736">					tokenStream.close();</span>
+<span class="nc" id="L737">					analyzer.close();</span>
 				}
 
-<span class="nc" id="L697">				SearchSnippet searchSnippet = new SearchSnippet(qDet, ttf, request);</span>
-<span class="nc bnc" id="L698" title="All 2 branches missed.">				if (snippet == null) snippet = searchSnippet.getSnippet();</span>
-<span class="nc bnc" id="L699" title="All 2 branches missed.">				if (snippet != null)	qDet.setData(&quot;...&quot;+snippet+&quot;...&quot;);</span>
-<span class="nc" id="L700">				else qDet.setData(&quot;&quot;);</span>
+<span class="nc" id="L740">				SearchSnippet searchSnippet = new SearchSnippet(qDet, ttf, request);</span>
+<span class="nc bnc" id="L741" title="All 2 branches missed.">				if (snippet == null) snippet = searchSnippet.getSnippet();</span>
+<span class="nc bnc" id="L742" title="All 2 branches missed.">				if (snippet != null)	qDet.setData(&quot;...&quot;+snippet+&quot;...&quot;);</span>
+<span class="nc" id="L743">				else qDet.setData(&quot;&quot;);</span>
 
 
-<span class="nc" id="L703">				dt.diff(&quot;after getDocDetails: docId=&quot; + qDet.getDocId() + &quot; title=&quot; + qDet.getTitle() + &quot; path=&quot; + qDet.getVirtualPath());</span>
+<span class="nc" id="L746">				dt.diff(&quot;after getDocDetails: docId=&quot; + qDet.getDocId() + &quot; title=&quot; + qDet.getTitle() + &quot; path=&quot; + qDet.getVirtualPath());</span>
 				//vymazeme mu data, ak by sa nieco pototo aby sa nezobrazila cela stranka
 
-<span class="nc" id="L706">				group = groupsDB.getGroup(qDet.getGroupId());</span>
+<span class="nc" id="L749">				group = groupsDB.getGroup(qDet.getGroupId());</span>
 				//nastav prava stranke (aby sa dalo detekovat vo vysledkoch a zobrazit napr. obrazok zamku)
-<span class="nc bnc" id="L708" title="All 6 branches missed.">				if (Tools.isEmpty(qDet.getPasswordProtected()) &amp;&amp; group!=null &amp;&amp; Tools.isNotEmpty(group.getPasswordProtected()))</span>
+<span class="nc bnc" id="L751" title="All 6 branches missed.">				if (Tools.isEmpty(qDet.getPasswordProtected()) &amp;&amp; group!=null &amp;&amp; Tools.isNotEmpty(group.getPasswordProtected()))</span>
 				{
-<span class="nc" id="L710">					qDet.setPasswordProtected(group.getPasswordProtected());</span>
+<span class="nc" id="L753">					qDet.setPasswordProtected(group.getPasswordProtected());</span>
 				}
 
 				//dokumenty v internal foldroch neprehladavame (okrem root groups)
-<span class="nc bnc" id="L714" title="All 2 branches missed.">				if (group != null)</span>
+<span class="nc bnc" id="L757" title="All 2 branches missed.">				if (group != null)</span>
 				{
-<span class="nc bnc" id="L716" title="All 4 branches missed.">					if (rootGroupIdsTable.get(Integer.valueOf(group.getGroupId()))==null &amp;&amp; group.isInternal())</span>
+<span class="nc bnc" id="L759" title="All 4 branches missed.">					if (rootGroupIdsTable.get(Integer.valueOf(group.getGroupId()))==null &amp;&amp; group.isInternal())</span>
 					{
-<span class="nc" id="L718">						Logger.debug(LuceneSearchAction.class, &quot;preskakujem interny adresar: &quot;+group.getGroupIdName());</span>
-<span class="nc" id="L719">						aListCount--;</span>
-<span class="nc" id="L720">						continue;</span>
+<span class="nc" id="L761">						Logger.debug(LuceneSearchAction.class, &quot;preskakujem interny adresar: &quot;+group.getGroupIdName());</span>
+<span class="nc" id="L762">						aListCount--;</span>
+<span class="nc" id="L763">						continue;</span>
 					}
-<span class="nc" id="L722">					link = groupsDB.getNavbar(group.getGroupId());</span>
+<span class="nc" id="L765">					link = groupsDB.getNavbar(group.getGroupId());</span>
 				}
 				else
 				{
 					//group uz neexistuje...
-<span class="nc" id="L727">					link = null;</span>
+<span class="nc" id="L770">					link = null;</span>
 				}
 				try
 				{
-<span class="nc bnc" id="L731" title="All 2 branches missed.">					if (qDet.getExternalLink().startsWith(&quot;/files/&quot;))</span>
+<span class="nc bnc" id="L774" title="All 2 branches missed.">					if (qDet.getExternalLink().startsWith(&quot;/files/&quot;))</span>
 					{
 						//skip protected folder
-<span class="nc bnc" id="L734" title="All 4 branches missed.">						if (qDet.getExternalLink()!=null &amp;&amp; qDet.getExternalLink().startsWith(&quot;/files/protected&quot;)) continue;</span>
+<span class="nc bnc" id="L777" title="All 4 branches missed.">						if (qDet.getExternalLink()!=null &amp;&amp; qDet.getExternalLink().startsWith(&quot;/files/protected&quot;)) continue;</span>
 
 						//navbar pre subory generujem bez moznosti kliknutia na odkaz
-<span class="nc" id="L737">						String[] fileLink = MultiDomainFilter.fixDomainPaths(qDet.getExternalLink(), request).split(&quot;\\/&quot;);</span>
-<span class="nc" id="L738">						link = &quot;&quot;;</span>
-<span class="nc bnc" id="L739" title="All 2 branches missed.">						for (int p=0; p&lt;fileLink.length-1; p++)</span>
+<span class="nc" id="L780">						String[] fileLink = MultiDomainFilter.fixDomainPaths(qDet.getExternalLink(), request).split(&quot;\\/&quot;);</span>
+<span class="nc" id="L781">						link = &quot;&quot;;</span>
+<span class="nc bnc" id="L782" title="All 2 branches missed.">						for (int p=0; p&lt;fileLink.length-1; p++)</span>
 						{
-<span class="nc" id="L741">							String part = fileLink[p];</span>
-<span class="nc bnc" id="L742" title="All 2 branches missed.">							if (Tools.isEmpty(link)) link = part;</span>
-<span class="nc" id="L743">							else link += &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot;+part; //NOSONAR</span>
+<span class="nc" id="L784">							String part = fileLink[p];</span>
+<span class="nc bnc" id="L785" title="All 2 branches missed.">							if (Tools.isEmpty(link)) link = part;</span>
+<span class="nc" id="L786">							else link += &quot; &quot;+Constants.getString(&quot;navbarSeparator&quot;)+&quot; &quot;+part; //NOSONAR</span>
 						}
 						//skontroluj ci subor skutocne existuje
-<span class="nc bnc" id="L746" title="All 2 branches missed.">						if (request.getAttribute(&quot;searchDontCheckFile&quot;)==null)</span>
+<span class="nc bnc" id="L789" title="All 2 branches missed.">						if (request.getAttribute(&quot;searchDontCheckFile&quot;)==null)</span>
 						{
-<span class="nc" id="L748">							IwcmFile iwf = new IwcmFile(Tools.getRealPath(qDet.getExternalLink()));</span>
-<span class="nc bnc" id="L749" title="All 2 branches missed.">							if (iwf.exists()==false)</span>
+<span class="nc" id="L791">							IwcmFile iwf = new IwcmFile(Tools.getRealPath(qDet.getExternalLink()));</span>
+<span class="nc bnc" id="L792" title="All 2 branches missed.">							if (iwf.exists()==false)</span>
 							{
-<span class="nc" id="L751">								Logger.debug(LuceneSearchAction.class, &quot;Subor &quot;+qDet.getExternalLink()+&quot; neexistuje, preskakujem&quot;);</span>
-<span class="nc" id="L752">								totalResults--;</span>
-<span class="nc" id="L753">								continue;</span>
+<span class="nc" id="L794">								Logger.debug(LuceneSearchAction.class, &quot;Subor &quot;+qDet.getExternalLink()+&quot; neexistuje, preskakujem&quot;);</span>
+<span class="nc" id="L795">								totalResults--;</span>
+<span class="nc" id="L796">								continue;</span>
 							}
 						}
 					}
 				}
-<span class="nc" id="L758">				catch (Exception e)</span>
+<span class="nc" id="L801">				catch (Exception e)</span>
 				{
-<span class="nc" id="L760">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L761">				}</span>
+<span class="nc" id="L803">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L804">				}</span>
 
-<span class="nc bnc" id="L763" title="All 2 branches missed.">				if (link == null)</span>
+<span class="nc bnc" id="L806" title="All 2 branches missed.">				if (link == null)</span>
 				{
-<span class="nc" id="L765">					qDet.setLink(&quot;&quot;);</span>
+<span class="nc" id="L808">					qDet.setLink(&quot;&quot;);</span>
 				}
 				else
 				{
-<span class="nc" id="L769">					qDet.setLink(link);</span>
+<span class="nc" id="L812">					qDet.setLink(link);</span>
 				}
 
-<span class="nc bnc" id="L772" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;publish_start&quot;) != null)</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;publish_start&quot;) != null)</span>
 				{
-<span class="nc" id="L774">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;publish_start&quot;).stringValue());</span>
-<span class="nc bnc" id="L775" title="All 2 branches missed.">					if (date != null) qDet.setPublishStart(date.getTime());</span>
+<span class="nc" id="L817">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;publish_start&quot;).stringValue());</span>
+<span class="nc bnc" id="L818" title="All 2 branches missed.">					if (date != null) qDet.setPublishStart(date.getTime());</span>
 				}
-<span class="nc bnc" id="L777" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;publish_end&quot;) != null)</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;publish_end&quot;) != null)</span>
 				{
-<span class="nc" id="L779">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;publish_end&quot;).stringValue());</span>
-<span class="nc bnc" id="L780" title="All 2 branches missed.">					if (date != null) qDet.setPublishEnd(date.getTime());</span>
+<span class="nc" id="L822">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;publish_end&quot;).stringValue());</span>
+<span class="nc bnc" id="L823" title="All 2 branches missed.">					if (date != null) qDet.setPublishEnd(date.getTime());</span>
 				}
-<span class="nc bnc" id="L782" title="All 2 branches missed.">				if(luceneDocument.getFieldable(&quot;question_date&quot;)!= null)</span>
+<span class="nc bnc" id="L825" title="All 2 branches missed.">				if(luceneDocument.getFieldable(&quot;question_date&quot;)!= null)</span>
 				{
-<span class="nc" id="L784">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;question_date&quot;).stringValue());</span>
-<span class="nc bnc" id="L785" title="All 2 branches missed.">					if (date != null) qDet.setPublishStart(date.getTime());</span>
+<span class="nc" id="L827">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;question_date&quot;).stringValue());</span>
+<span class="nc bnc" id="L828" title="All 2 branches missed.">					if (date != null) qDet.setPublishStart(date.getTime());</span>
 				}
-<span class="nc bnc" id="L787" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;author_id&quot;) != null)	qDet.setAuthorId(Tools.getIntValue(luceneDocument.getFieldable(&quot;author_id&quot;).stringValue(), -1));</span>
+<span class="nc bnc" id="L830" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;author_id&quot;) != null)	qDet.setAuthorId(Tools.getIntValue(luceneDocument.getFieldable(&quot;author_id&quot;).stringValue(), -1));</span>
 				//nemame v indexe hodnotu if (luceneDocument.getFieldable(&quot;html_head&quot;) != null)	qDet.setHtmlHead(luceneDocument.getFieldable(&quot;html_head&quot;).stringValue());
-<span class="nc bnc" id="L789" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;html_data&quot;) != null)	qDet.setHtmlHead(luceneDocument.getFieldable(&quot;html_data&quot;).stringValue());</span>
-<span class="nc bnc" id="L790" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;perex_place&quot;) != null)	qDet.setPerexPlace(luceneDocument.getFieldable(&quot;perex_place&quot;).stringValue());</span>
-<span class="nc bnc" id="L791" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;perex_image&quot;) != null)	qDet.setPerexImage(luceneDocument.getFieldable(&quot;perex_image&quot;).stringValue());</span>
-<span class="nc bnc" id="L792" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;event_date&quot;) != null)</span>
+<span class="nc bnc" id="L832" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;html_data&quot;) != null)	qDet.setHtmlHead(luceneDocument.getFieldable(&quot;html_data&quot;).stringValue());</span>
+<span class="nc bnc" id="L833" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;perex_place&quot;) != null)	qDet.setPerexPlace(luceneDocument.getFieldable(&quot;perex_place&quot;).stringValue());</span>
+<span class="nc bnc" id="L834" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;perex_image&quot;) != null)	qDet.setPerexImage(luceneDocument.getFieldable(&quot;perex_image&quot;).stringValue());</span>
+<span class="nc bnc" id="L835" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;event_date&quot;) != null)</span>
 				{
-<span class="nc" id="L794">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;event_date&quot;).stringValue());</span>
-<span class="nc bnc" id="L795" title="All 2 branches missed.">					if (date != null) qDet.setEventDate(date.getTime());</span>
+<span class="nc" id="L837">					Date date = LuceneUtils.luceneDateToDate(luceneDocument.getFieldable(&quot;event_date&quot;).stringValue());</span>
+<span class="nc bnc" id="L838" title="All 2 branches missed.">					if (date != null) qDet.setEventDate(date.getTime());</span>
 				}
 
-<span class="nc bnc" id="L798" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_d&quot;) != null)	qDet.setFieldD(luceneDocument.getFieldable(&quot;field_d&quot;).stringValue());</span>
-<span class="nc bnc" id="L799" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_e&quot;) != null)	qDet.setFieldE(luceneDocument.getFieldable(&quot;field_e&quot;).stringValue());</span>
-<span class="nc bnc" id="L800" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_f&quot;) != null)	qDet.setFieldF(luceneDocument.getFieldable(&quot;field_f&quot;).stringValue());</span>
-<span class="nc bnc" id="L801" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_g&quot;) != null)	qDet.setFieldG(luceneDocument.getFieldable(&quot;field_g&quot;).stringValue());</span>
-<span class="nc bnc" id="L802" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_h&quot;) != null)	qDet.setFieldH(luceneDocument.getFieldable(&quot;field_h&quot;).stringValue());</span>
-<span class="nc bnc" id="L803" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_i&quot;) != null)	qDet.setFieldI(luceneDocument.getFieldable(&quot;field_i&quot;).stringValue());</span>
-<span class="nc bnc" id="L804" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_j&quot;) != null)	qDet.setFieldJ(luceneDocument.getFieldable(&quot;field_j&quot;).stringValue());</span>
-<span class="nc bnc" id="L805" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_k&quot;) != null)	qDet.setFieldK(luceneDocument.getFieldable(&quot;field_k&quot;).stringValue());</span>
-<span class="nc bnc" id="L806" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_l&quot;) != null)	qDet.setFieldL(luceneDocument.getFieldable(&quot;field_l&quot;).stringValue());</span>
+<span class="nc bnc" id="L841" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_d&quot;) != null)	qDet.setFieldD(luceneDocument.getFieldable(&quot;field_d&quot;).stringValue());</span>
+<span class="nc bnc" id="L842" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_e&quot;) != null)	qDet.setFieldE(luceneDocument.getFieldable(&quot;field_e&quot;).stringValue());</span>
+<span class="nc bnc" id="L843" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_f&quot;) != null)	qDet.setFieldF(luceneDocument.getFieldable(&quot;field_f&quot;).stringValue());</span>
+<span class="nc bnc" id="L844" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_g&quot;) != null)	qDet.setFieldG(luceneDocument.getFieldable(&quot;field_g&quot;).stringValue());</span>
+<span class="nc bnc" id="L845" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_h&quot;) != null)	qDet.setFieldH(luceneDocument.getFieldable(&quot;field_h&quot;).stringValue());</span>
+<span class="nc bnc" id="L846" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_i&quot;) != null)	qDet.setFieldI(luceneDocument.getFieldable(&quot;field_i&quot;).stringValue());</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_j&quot;) != null)	qDet.setFieldJ(luceneDocument.getFieldable(&quot;field_j&quot;).stringValue());</span>
+<span class="nc bnc" id="L848" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_k&quot;) != null)	qDet.setFieldK(luceneDocument.getFieldable(&quot;field_k&quot;).stringValue());</span>
+<span class="nc bnc" id="L849" title="All 2 branches missed.">				if (luceneDocument.getFieldable(&quot;field_l&quot;) != null)	qDet.setFieldL(luceneDocument.getFieldable(&quot;field_l&quot;).stringValue());</span>
 
-<span class="nc" id="L808">				dt.diff(&quot;after snippet&quot;);</span>
+<span class="nc" id="L851">				dt.diff(&quot;after snippet&quot;);</span>
 
-<span class="nc" id="L810">				searchResults.add(qDet);</span>
-<span class="nc" id="L811">			}</span>
-<span class="nc" id="L812">			dt.diff(&quot;done&quot;);</span>
+<span class="nc" id="L853">				searchResults.add(qDet);</span>
+<span class="nc" id="L854">			}</span>
+<span class="fc" id="L855">			dt.diff(&quot;done&quot;);</span>
 		}
-<span class="nc" id="L814">		catch (Exception e)</span>
+<span class="nc" id="L857">		catch (Exception e)</span>
 		{
-<span class="nc" id="L816">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L817">			request.setAttribute(&quot;err_msg&quot;, &quot;Chyba pri práci s databázou...&quot; + e.getMessage());</span>
-<span class="nc" id="L818">			return (error);</span>
-<span class="nc" id="L819">		}</span>
+<span class="nc" id="L859">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L860">			request.setAttribute(&quot;err_msg&quot;, &quot;Chyba pri práci s databázou...&quot; + e.getMessage());</span>
+<span class="nc" id="L861">			return (error);</span>
+<span class="fc" id="L862">		}</span>
 
-<span class="nc" id="L821">		request.setAttribute(&quot;words&quot;, words);</span>
-<span class="nc" id="L822">		request.setAttribute(&quot;aList&quot;, searchResults);</span>
-<span class="nc bnc" id="L823" title="All 2 branches missed.">		if (searchResults.isEmpty())</span>
+<span class="fc" id="L864">		request.setAttribute(&quot;words&quot;, words);</span>
+<span class="fc" id="L865">		request.setAttribute(&quot;aList&quot;, searchResults);</span>
+<span class="pc bpc" id="L866" title="1 of 2 branches missed.">		if (searchResults.isEmpty())</span>
 		{
-<span class="nc" id="L825">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L826">			request.setAttribute(&quot;notfound&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L827">			return (forward);</span>
+<span class="fc" id="L868">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L869">			request.setAttribute(&quot;notfound&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L870">			return (forward);</span>
 		}
-<span class="nc" id="L829">		String paramsLink = &quot;&quot;;</span>
-<span class="nc" id="L830">		StringBuilder paramsLinkBuilder = new StringBuilder();</span>
-<span class="nc" id="L831">		Enumeration&lt;String&gt; e = request.getParameterNames();</span>
+<span class="nc" id="L872">		String paramsLink = &quot;&quot;;</span>
+<span class="nc" id="L873">		StringBuilder paramsLinkBuilder = new StringBuilder();</span>
+<span class="nc" id="L874">		Enumeration&lt;String&gt; e = request.getParameterNames();</span>
 		String name;
-<span class="nc bnc" id="L833" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+<span class="nc bnc" id="L876" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
 		{
-<span class="nc" id="L835">			name = e.nextElement();</span>
-<span class="nc bnc" id="L836" title="All 4 branches missed.">			if (&quot;index&quot;.equals(name) || &quot;docid&quot;.equals(name)) continue;</span>
+<span class="nc" id="L878">			name = e.nextElement();</span>
+<span class="nc bnc" id="L879" title="All 4 branches missed.">			if (&quot;index&quot;.equals(name) || &quot;docid&quot;.equals(name)) continue;</span>
 
-<span class="nc" id="L838">			String[] values = request.getParameterValues(name);</span>
-<span class="nc bnc" id="L839" title="All 2 branches missed.">		   for (int v=0; v&lt;values.length; v++)</span>
+<span class="nc" id="L881">			String[] values = request.getParameterValues(name);</span>
+<span class="nc bnc" id="L882" title="All 2 branches missed.">		   for (int v=0; v&lt;values.length; v++)</span>
 		   {
-<span class="nc" id="L841">		   	paramsLinkBuilder.append(&quot;&amp;amp;&quot;).append(name).append('=').append(Tools.URLEncode(values[v]));</span>
+<span class="nc" id="L884">		   	paramsLinkBuilder.append(&quot;&amp;amp;&quot;).append(name).append('=').append(Tools.URLEncode(values[v]));</span>
 		   }
-<span class="nc" id="L843">		}</span>
-<span class="nc" id="L844">		paramsLink = paramsLinkBuilder.toString();</span>
-<span class="nc" id="L845">		request.setAttribute(&quot;paramsLink&quot;, paramsLink);</span>
+<span class="nc" id="L886">		}</span>
+<span class="nc" id="L887">		paramsLink = paramsLinkBuilder.toString();</span>
+<span class="nc" id="L888">		request.setAttribute(&quot;paramsLink&quot;, paramsLink);</span>
 
 		//vypocitaj celkove pocty
-<span class="nc" id="L848">		request.setAttribute(&quot;fromIndex&quot;, Integer.toString(index + 1));</span>
-<span class="nc" id="L849">		int toIndex = index + searchResults.size();</span>
-<span class="nc" id="L850">		request.setAttribute(&quot;toIndex&quot;, Integer.toString(toIndex));</span>
-<span class="nc" id="L851">		Logger.debug(LuceneSearchAction.class, &quot;totalResults=&quot;+totalResults);</span>
-<span class="nc" id="L852">		request.setAttribute(&quot;totalResults&quot;, Integer.toString(totalResults));</span>
+<span class="nc" id="L891">		request.setAttribute(&quot;fromIndex&quot;, Integer.toString(index + 1));</span>
+<span class="nc" id="L892">		int toIndex = index + searchResults.size();</span>
+<span class="nc" id="L893">		request.setAttribute(&quot;toIndex&quot;, Integer.toString(toIndex));</span>
+<span class="nc" id="L894">		Logger.debug(LuceneSearchAction.class, &quot;totalResults=&quot;+totalResults);</span>
+<span class="nc" id="L895">		request.setAttribute(&quot;totalResults&quot;, Integer.toString(totalResults));</span>
 
 		// vytvor pages
-<span class="nc" id="L855">		SearchAction.preparePages(request, perPage, index, totalResults, paramsLink,&quot;lucene_search.do&quot;);</span>
+<span class="nc" id="L898">		SearchAction.preparePages(request, perPage, index, totalResults, paramsLink,&quot;lucene_search.do&quot;);</span>
 
-<span class="nc bnc" id="L857" title="All 2 branches missed.">		if (totalResults &gt; toIndex)</span>
+<span class="nc bnc" id="L900" title="All 2 branches missed.">		if (totalResults &gt; toIndex)</span>
 		{
-<span class="nc bnc" id="L859" title="All 2 branches missed.">			if (!english)</span>
+<span class="nc bnc" id="L902" title="All 2 branches missed.">			if (!english)</span>
 			{
-<span class="nc" id="L861">				request.setAttribute(&quot;next&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index + perPage) + paramsLink + &quot;\&quot;&gt; ďalej &amp;gt;&amp;gt;&amp;gt; &lt;/a&gt;&quot;);</span>
+<span class="nc" id="L904">				request.setAttribute(&quot;next&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index + perPage) + paramsLink + &quot;\&quot;&gt; ďalej &amp;gt;&amp;gt;&amp;gt; &lt;/a&gt;&quot;);</span>
 			}
 			else
 			{
-<span class="nc" id="L865">				request.setAttribute(&quot;next&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index + perPage) + paramsLink + &quot;\&quot;&gt; Next &amp;gt;&amp;gt;&amp;gt; &lt;/a&gt;&quot;);</span>
+<span class="nc" id="L908">				request.setAttribute(&quot;next&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index + perPage) + paramsLink + &quot;\&quot;&gt; Next &amp;gt;&amp;gt;&amp;gt; &lt;/a&gt;&quot;);</span>
 			}
 
-<span class="nc" id="L868">			request.setAttribute(&quot;nextHref&quot;, &quot;lucene_search.do?index=&quot; + (index + perPage) + paramsLink);</span>
+<span class="nc" id="L911">			request.setAttribute(&quot;nextHref&quot;, &quot;lucene_search.do?index=&quot; + (index + perPage) + paramsLink);</span>
 		}
 		else
 		{
 			//request.setAttribute(&quot;next&quot;, NEXT);
 		}
-<span class="nc bnc" id="L874" title="All 2 branches missed.">		if (index != 0)</span>
+<span class="nc bnc" id="L917" title="All 2 branches missed.">		if (index != 0)</span>
 		{
-<span class="nc bnc" id="L876" title="All 2 branches missed.">			if (!english)</span>
+<span class="nc bnc" id="L919" title="All 2 branches missed.">			if (!english)</span>
 			{
-<span class="nc" id="L878">				request.setAttribute(&quot;prev&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index - perPage) + paramsLink + &quot;\&quot;&gt; &amp;lt;&amp;lt;&amp;lt; Späť &lt;/a&gt;&quot;);</span>
+<span class="nc" id="L921">				request.setAttribute(&quot;prev&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index - perPage) + paramsLink + &quot;\&quot;&gt; &amp;lt;&amp;lt;&amp;lt; Späť &lt;/a&gt;&quot;);</span>
 			}
 			else
 			{
-<span class="nc" id="L882">				request.setAttribute(&quot;prev&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index - perPage) + paramsLink + &quot;\&quot;&gt; &amp;lt;&amp;lt;&amp;lt; Back &lt;/a&gt;&quot;);</span>
+<span class="nc" id="L925">				request.setAttribute(&quot;prev&quot;, &quot;&lt;a href=\&quot;lucene_search.do?index=&quot; + (index - perPage) + paramsLink + &quot;\&quot;&gt; &amp;lt;&amp;lt;&amp;lt; Back &lt;/a&gt;&quot;);</span>
 			}
-<span class="nc" id="L884">			request.setAttribute(&quot;prevHref&quot;, &quot;lucene_search.do?index=&quot; + (index - perPage)	+ paramsLink);</span>
+<span class="nc" id="L927">			request.setAttribute(&quot;prevHref&quot;, &quot;lucene_search.do?index=&quot; + (index - perPage)	+ paramsLink);</span>
 		}
 		else
 		{
@@ -889,14 +932,14 @@ public class LuceneSearchAction
 		}
 
 
-<span class="nc" id="L892">		request.setAttribute(&quot;numberOfPages&quot;,(int)Math.ceil((double)totalResults/(double)perPage) );</span>
+<span class="nc" id="L935">		request.setAttribute(&quot;numberOfPages&quot;,(int)Math.ceil((double)totalResults/(double)perPage) );</span>
 
-<span class="nc" id="L894">		String searchTerm = request.getParameter(&quot;words&quot;);</span>
-<span class="nc bnc" id="L895" title="All 2 branches missed.">		if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter(&quot;text&quot;);</span>
-<span class="nc bnc" id="L896" title="All 2 branches missed.">		if (Tools.isNotEmpty(searchTerm))</span>
+<span class="nc" id="L937">		String searchTerm = request.getParameter(&quot;words&quot;);</span>
+<span class="nc bnc" id="L938" title="All 2 branches missed.">		if (Tools.isEmpty(searchTerm)) searchTerm = request.getParameter(&quot;text&quot;);</span>
+<span class="nc bnc" id="L939" title="All 2 branches missed.">		if (Tools.isNotEmpty(searchTerm))</span>
 		{
-<span class="nc" id="L898">			StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1), request);</span>
-<span class="nc" id="L899">		}return (forward);</span>
+<span class="nc" id="L941">			StatDB.addStatSearchLocal(searchTerm, Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1), request);</span>
+<span class="nc" id="L942">		}return (forward);</span>
 	}
 
 	/**
@@ -908,24 +951,24 @@ public class LuceneSearchAction
 	 */
 	private static String setParameters(HttpServletRequest request, String words, String query)
 	{
-<span class="nc bnc" id="L911" title="All 2 branches missed.">		if (words.length()&gt;0)</span>
+<span class="pc bpc" id="L954" title="1 of 2 branches missed.">		if (words.length()&gt;0)</span>
 		{
 			/*replacement for match against title AND data */
 
-<span class="nc" id="L915">			String parsedWords = words;</span>
+<span class="fc" id="L958">			String parsedWords = words;</span>
 			//ak mame viac slov je potrebne pridat * za kazde slovo
-<span class="nc" id="L917">			String withAsterisk = parsedWords.replace(&quot; &quot;,&quot;* &quot;);</span>
+<span class="fc" id="L960">			String withAsterisk = parsedWords.replace(&quot; &quot;,&quot;* &quot;);</span>
 
-<span class="nc" id="L919">			query = setNextParameter(query,parsedWords);</span>
-<span class="nc" id="L920">			query = setNextParameter(query,withAsterisk);</span>
-<span class="nc" id="L921">			query = setNextParameter(query,parsedWords);</span>
-<span class="nc" id="L922">			query = setNextParameter(query,withAsterisk);</span>
-<span class="nc" id="L923">			query = setNextParameter(query,parsedWords);</span>
-<span class="nc" id="L924">			query = setNextParameter(query,withAsterisk);</span>
+<span class="fc" id="L962">			query = setNextParameter(query,parsedWords);</span>
+<span class="fc" id="L963">			query = setNextParameter(query,withAsterisk);</span>
+<span class="fc" id="L964">			query = setNextParameter(query,parsedWords);</span>
+<span class="fc" id="L965">			query = setNextParameter(query,withAsterisk);</span>
+<span class="fc" id="L966">			query = setNextParameter(query,parsedWords);</span>
+<span class="fc" id="L967">			query = setNextParameter(query,withAsterisk);</span>
 		}
 
-<span class="nc" id="L927">		query = addInputParamsLucene(request, query);</span>
-<span class="nc" id="L928">		return query;</span>
+<span class="fc" id="L970">		query = addInputParamsLucene(request, query);</span>
+<span class="fc" id="L971">		return query;</span>
 	}
 
 	/**
@@ -933,15 +976,15 @@ public class LuceneSearchAction
 	 */
 	private static boolean isEmptySearch(HttpServletRequest request, String words,boolean hasInputParams)
 	{
-<span class="nc bnc" id="L936" title="All 4 branches missed.">		if (words.length() == 0 &amp;&amp; !hasInputParams)</span>
+<span class="pc bpc" id="L979" title="3 of 4 branches missed.">		if (words.length() == 0 &amp;&amp; !hasInputParams)</span>
 		{
 			//nemame co vyhladavat
-<span class="nc" id="L939">			request.setAttribute(&quot;aList&quot;, new ArrayList&lt;SearchDetails&gt;());</span>
-<span class="nc" id="L940">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L941">			request.setAttribute(&quot;emptyrequest&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L942">			return (true);</span>
+<span class="nc" id="L982">			request.setAttribute(&quot;aList&quot;, new ArrayList&lt;SearchDetails&gt;());</span>
+<span class="nc" id="L983">			request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L984">			request.setAttribute(&quot;emptyrequest&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L985">			return (true);</span>
 		}
-<span class="nc" id="L944">		return false;</span>
+<span class="fc" id="L987">		return false;</span>
 	}
 
 	/**
@@ -950,26 +993,26 @@ public class LuceneSearchAction
 	 */
 	private static boolean isDOS(HttpServletRequest request)
 	{
-<span class="nc bnc" id="L953" title="All 6 branches missed.">		if (request.getAttribute(&quot;disableSearchSpamProtection&quot;)==null &amp;&amp; request.getAttribute(&quot;forceWords&quot;)==null &amp;&amp; request.getParameter(&quot;index&quot;)==null) //len ak ide o samotne vyhladavanie, nie o zobrazenie dalsej stranky vyhladavania</span>
+<span class="pc bpc" id="L996" title="3 of 6 branches missed.">		if (request.getAttribute(&quot;disableSearchSpamProtection&quot;)==null &amp;&amp; request.getAttribute(&quot;forceWords&quot;)==null &amp;&amp; request.getParameter(&quot;index&quot;)==null) //len ak ide o samotne vyhladavanie, nie o zobrazenie dalsej stranky vyhladavania</span>
 		{
-<span class="nc" id="L955">			long wait=0;</span>
-<span class="nc bnc" id="L956" title="All 2 branches missed.">			if ((wait=SpamProtection.getWaitTimeout(&quot;search&quot;, request)) != 0)</span>
+<span class="fc" id="L998">			long wait=0;</span>
+<span class="pc bpc" id="L999" title="1 of 2 branches missed.">			if ((wait=SpamProtection.getWaitTimeout(&quot;search&quot;, request)) != 0)</span>
 			{
 				//prekrocil sa hodinovy limit
-<span class="nc" id="L959">				request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L960">				request.setAttribute(&quot;crossHourlyLimit&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L961">				request.setAttribute(&quot;wait&quot;, (wait/60/1000));</span>
-<span class="nc" id="L962">				return true;</span>
+<span class="nc" id="L1002">				request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1003">				request.setAttribute(&quot;crossHourlyLimit&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1004">				request.setAttribute(&quot;wait&quot;, (wait/60/1000));</span>
+<span class="nc" id="L1005">				return true;</span>
 			}
-<span class="nc bnc" id="L964" title="All 2 branches missed.">			if (!SpamProtection.canPost(&quot;search&quot;, &quot;&quot;, request))</span>
+<span class="pc bpc" id="L1007" title="1 of 2 branches missed.">			if (!SpamProtection.canPost(&quot;search&quot;, &quot;&quot;, request))</span>
 			{
 				//prekrocil sa cas medzi dvoma prehladavaniami
-<span class="nc" id="L967">				request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L968">				request.setAttribute(&quot;crossTimeout&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L969">				return true;</span>
+<span class="nc" id="L1010">				request.setAttribute(&quot;wrong&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1011">				request.setAttribute(&quot;crossTimeout&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1012">				return true;</span>
 			}
 		}
-<span class="nc" id="L972">		return false;</span>
+<span class="fc" id="L1015">		return false;</span>
 	}
 
 	/**
@@ -977,209 +1020,209 @@ public class LuceneSearchAction
 	 */
 	private static Sort buildSortExpression(HttpServletRequest request)
 	{
-<span class="nc" id="L980">		String order_var = &quot;ASC&quot;;</span>
-<span class="nc" id="L981">		String order = getParamAttribute(&quot;order&quot;, request, &quot;asc&quot;);</span>
-<span class="nc" id="L982">		String orderType = getParamAttribute(&quot;orderType&quot;, request, &quot;sort_priority&quot;);</span>
-<span class="nc" id="L983">		List&lt;String&gt; sort = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1023">		String order_var = &quot;ASC&quot;;</span>
+<span class="fc" id="L1024">		String order = getParamAttribute(&quot;order&quot;, request, &quot;asc&quot;);</span>
+<span class="fc" id="L1025">		String orderType = getParamAttribute(&quot;orderType&quot;, request, &quot;sort_priority&quot;);</span>
+<span class="fc" id="L1026">		List&lt;String&gt; sort = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L985" title="All 2 branches missed.">		if (&quot;desc&quot;.equalsIgnoreCase(order))</span>
+<span class="pc bpc" id="L1028" title="1 of 2 branches missed.">		if (&quot;desc&quot;.equalsIgnoreCase(order))</span>
 		{
-<span class="nc" id="L987">			order_var = &quot;DESC&quot;;</span>
+<span class="nc" id="L1030">			order_var = &quot;DESC&quot;;</span>
 		}
-<span class="nc bnc" id="L989" title="All 2 branches missed.">		if (&quot;asc&quot;.equalsIgnoreCase(order))</span>
+<span class="pc bpc" id="L1032" title="1 of 2 branches missed.">		if (&quot;asc&quot;.equalsIgnoreCase(order))</span>
 		{
-<span class="nc" id="L991">			order_var = &quot;ASC&quot;;</span>
+<span class="fc" id="L1034">			order_var = &quot;ASC&quot;;</span>
 		}
-<span class="nc bnc" id="L993" title="All 2 branches missed.">		if (&quot;lastUpdate&quot;.equalsIgnoreCase(orderType))</span>
+<span class="pc bpc" id="L1036" title="1 of 2 branches missed.">		if (&quot;lastUpdate&quot;.equalsIgnoreCase(orderType))</span>
 		{
-<span class="nc" id="L995">			orderType = &quot;date_created&quot;;</span>
+<span class="nc" id="L1038">			orderType = &quot;date_created&quot;;</span>
 		}
-<span class="nc bnc" id="L997" title="All 2 branches missed.">		else if (&quot;sortPriority&quot;.equalsIgnoreCase(orderType))</span>
+<span class="pc bpc" id="L1040" title="1 of 2 branches missed.">		else if (&quot;sortPriority&quot;.equalsIgnoreCase(orderType))</span>
 		{
-<span class="nc" id="L999">			orderType = &quot;sort_priority&quot;;</span>
+<span class="fc" id="L1042">			orderType = &quot;sort_priority&quot;;</span>
 		}
-<span class="nc bnc" id="L1001" title="All 2 branches missed.">		else if (&quot;title&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1044" title="All 2 branches missed.">		else if (&quot;title&quot;.equalsIgnoreCase(orderType))</span>
 		{
-<span class="nc" id="L1003">			orderType = &quot;title&quot;;</span>
+<span class="nc" id="L1046">			orderType = &quot;title&quot;;</span>
 		}
-<span class="nc bnc" id="L1005" title="All 2 branches missed.">		else if (&quot;publishStart&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1048" title="All 2 branches missed.">		else if (&quot;publishStart&quot;.equalsIgnoreCase(orderType))</span>
 		{
-<span class="nc" id="L1007">			orderType = &quot;publish_start&quot;;</span>
+<span class="nc" id="L1050">			orderType = &quot;publish_start&quot;;</span>
 		}
-<span class="nc bnc" id="L1009" title="All 2 branches missed.">		else if (&quot;saveDate&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">		else if (&quot;saveDate&quot;.equalsIgnoreCase(orderType))</span>
 		{
-<span class="nc" id="L1011">			orderType = &quot;date_created&quot;;</span>
+<span class="nc" id="L1054">			orderType = &quot;date_created&quot;;</span>
 		}
-<span class="nc bnc" id="L1013" title="All 2 branches missed.">		else if (&quot;score&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1056" title="All 2 branches missed.">		else if (&quot;score&quot;.equalsIgnoreCase(orderType))</span>
 		{
-<span class="nc" id="L1015">			orderType = &quot;score&quot;;</span>
+<span class="nc" id="L1058">			orderType = &quot;score&quot;;</span>
 		}
-<span class="nc" id="L1017">		sort.add(orderType);</span>
+<span class="fc" id="L1060">		sort.add(orderType);</span>
 
 		//dalsie order by
-<span class="nc bnc" id="L1020" title="All 2 branches missed.">		for (int i=2; i&lt;=5; i++)</span>
+<span class="fc bfc" id="L1063" title="All 2 branches covered.">		for (int i=2; i&lt;=5; i++)</span>
 		{
-<span class="nc" id="L1022">			orderType = getParamAttribute(&quot;orderType&quot;+i, request, null);</span>
-<span class="nc bnc" id="L1023" title="All 2 branches missed.">			if (Tools.isNotEmpty(orderType))</span>
+<span class="fc" id="L1065">			orderType = getParamAttribute(&quot;orderType&quot;+i, request, null);</span>
+<span class="pc bpc" id="L1066" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(orderType))</span>
 			{
-<span class="nc" id="L1025">				order_var = &quot;ASC&quot;;</span>
-<span class="nc" id="L1026">				order = getParamAttribute(&quot;order&quot;+i, request, &quot;asc&quot;);</span>
-<span class="nc bnc" id="L1027" title="All 2 branches missed.">				if (&quot;desc&quot;.equalsIgnoreCase(order))</span>
+<span class="nc" id="L1068">				order_var = &quot;ASC&quot;;</span>
+<span class="nc" id="L1069">				order = getParamAttribute(&quot;order&quot;+i, request, &quot;asc&quot;);</span>
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">				if (&quot;desc&quot;.equalsIgnoreCase(order))</span>
 				{
-<span class="nc" id="L1029">					order_var = &quot;DESC&quot;;</span>
+<span class="nc" id="L1072">					order_var = &quot;DESC&quot;;</span>
 				}
 
-<span class="nc bnc" id="L1032" title="All 2 branches missed.">				if (&quot;lastUpdate&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">				if (&quot;lastUpdate&quot;.equalsIgnoreCase(orderType))</span>
 				{
-<span class="nc" id="L1034">					orderType = &quot;date_created&quot;;</span>
+<span class="nc" id="L1077">					orderType = &quot;date_created&quot;;</span>
 				}
-<span class="nc bnc" id="L1036" title="All 2 branches missed.">				else if (&quot;sortPriority&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1079" title="All 2 branches missed.">				else if (&quot;sortPriority&quot;.equalsIgnoreCase(orderType))</span>
 				{
-<span class="nc" id="L1038">					orderType = &quot;sort_priority&quot;;</span>
+<span class="nc" id="L1081">					orderType = &quot;sort_priority&quot;;</span>
 				}
-<span class="nc bnc" id="L1040" title="All 2 branches missed.">				else if (&quot;title&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1083" title="All 2 branches missed.">				else if (&quot;title&quot;.equalsIgnoreCase(orderType))</span>
 				{
-<span class="nc" id="L1042">					orderType = &quot;title&quot;;</span>
+<span class="nc" id="L1085">					orderType = &quot;title&quot;;</span>
 				}
-<span class="nc bnc" id="L1044" title="All 2 branches missed.">				else if (&quot;publishStart&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1087" title="All 2 branches missed.">				else if (&quot;publishStart&quot;.equalsIgnoreCase(orderType))</span>
 				{
-<span class="nc" id="L1046">					orderType = &quot;publish_start&quot;;</span>
+<span class="nc" id="L1089">					orderType = &quot;publish_start&quot;;</span>
 				}
-<span class="nc bnc" id="L1048" title="All 2 branches missed.">				else if (&quot;score&quot;.equalsIgnoreCase(orderType))</span>
+<span class="nc bnc" id="L1091" title="All 2 branches missed.">				else if (&quot;score&quot;.equalsIgnoreCase(orderType))</span>
 				{
-<span class="nc" id="L1050">					orderType = &quot;score&quot;;</span>
+<span class="nc" id="L1093">					orderType = &quot;score&quot;;</span>
 				}
 
-<span class="nc" id="L1053">				sort.add(orderType);</span>
+<span class="nc" id="L1096">				sort.add(orderType);</span>
 			}
 		}
 
-<span class="nc" id="L1057">		final boolean reverse = order_var.equals(&quot;DESC&quot;);</span>
+<span class="fc" id="L1100">		final boolean reverse = order_var.equals(&quot;DESC&quot;);</span>
 		@SuppressWarnings({&quot;unchecked&quot;, &quot;rawtypes&quot;})
-<span class="nc" id="L1059">		Collection&lt;SortField&gt; sortFields = CollectionUtils.collect(sort, new Transformer()</span>
-<span class="nc" id="L1060">		{</span>
+<span class="fc" id="L1102">		Collection&lt;SortField&gt; sortFields = CollectionUtils.collect(sort, new Transformer()</span>
+<span class="fc" id="L1103">		{</span>
 			@Override
 			public Object transform(Object obj)
 			{
-<span class="nc" id="L1064">				String field = (String) obj;</span>
-<span class="nc bnc" id="L1065" title="All 2 branches missed.">				if (&quot;sort_priority&quot;.equals(field))</span>
+<span class="fc" id="L1107">				String field = (String) obj;</span>
+<span class="pc bpc" id="L1108" title="1 of 2 branches missed.">				if (&quot;sort_priority&quot;.equals(field))</span>
 				{
-<span class="nc" id="L1067">					return new SortField(field,SortField.INT,reverse);</span>
+<span class="fc" id="L1110">					return new SortField(field,SortField.INT,reverse);</span>
 				}
-<span class="nc bnc" id="L1069" title="All 2 branches missed.">				else if (&quot;score&quot;.equals(field))</span>
+<span class="nc bnc" id="L1112" title="All 2 branches missed.">				else if (&quot;score&quot;.equals(field))</span>
 				{
-<span class="nc" id="L1071">					return SortField.FIELD_SCORE;</span>
+<span class="nc" id="L1114">					return SortField.FIELD_SCORE;</span>
 				}
-<span class="nc" id="L1073">				return new SortField(field,SortField.STRING,reverse);</span>
+<span class="nc" id="L1116">				return new SortField(field,SortField.STRING,reverse);</span>
 			}
 		});
-<span class="nc" id="L1076">		sortFields.add(new SortField(null,SortField.SCORE,false));</span>
+<span class="fc" id="L1119">		sortFields.add(new SortField(null,SortField.SCORE,false));</span>
 
-<span class="nc" id="L1078">		return new Sort(sortFields.toArray(new SortField[sortFields.size()]));</span>
+<span class="fc" id="L1121">		return new Sort(sortFields.toArray(new SortField[sortFields.size()]));</span>
 	}
 
 	public static String addInputParamsLucene(HttpServletRequest request)
 	{
-<span class="nc" id="L1083">		String[] checkInputParams = SearchTools.getCheckInputParams();</span>
-<span class="nc" id="L1084">		StringBuilder ret = new StringBuilder();</span>
-<span class="nc" id="L1085">		int len = checkInputParams.length;</span>
+<span class="fc" id="L1126">		String[] checkInputParams = SearchTools.getCheckInputParams();</span>
+<span class="fc" id="L1127">		StringBuilder ret = new StringBuilder();</span>
+<span class="fc" id="L1128">		int len = checkInputParams.length;</span>
 		int i;
 		String param;
 
 		//	pridanie publish_start a publish_end parametrov nerobime ak je nejaky rozumny dateText
-<span class="nc" id="L1090">		String dateText = getParamAttributeUnsafe(&quot;dateText&quot;, request, null);</span>
-<span class="nc" id="L1091">		boolean checkPublishDates = false;</span>
-<span class="nc bnc" id="L1092" title="All 4 branches missed.">		if (dateText == null || &quot;custom&quot;.equals(dateText))</span>
+<span class="fc" id="L1133">		String dateText = getParamAttributeUnsafe(&quot;dateText&quot;, request, null);</span>
+<span class="fc" id="L1134">		boolean checkPublishDates = false;</span>
+<span class="pc bpc" id="L1135" title="3 of 4 branches missed.">		if (dateText == null || &quot;custom&quot;.equals(dateText))</span>
 		{
-<span class="nc" id="L1094">			checkPublishDates = true;</span>
+<span class="fc" id="L1137">			checkPublishDates = true;</span>
 		}
 
-<span class="nc bnc" id="L1097" title="All 2 branches missed.">		for (i=0; i&lt;len; i++)</span>
+<span class="fc bfc" id="L1140" title="All 2 branches covered.">		for (i=0; i&lt;len; i++)</span>
 		{
-<span class="nc" id="L1099">			param = getParamAttributeUnsafe(checkInputParams[i], request, null);</span>
-<span class="nc bnc" id="L1100" title="All 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
+<span class="fc" id="L1142">			param = getParamAttributeUnsafe(checkInputParams[i], request, null);</span>
+<span class="pc bpc" id="L1143" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
 			{
-<span class="nc bnc" id="L1102" title="All 2 branches missed.">				if (checkInputParams[i].equals(&quot;publish_start&quot;))</span>
+<span class="nc bnc" id="L1145" title="All 2 branches missed.">				if (checkInputParams[i].equals(&quot;publish_start&quot;))</span>
 				{
-<span class="nc bnc" id="L1104" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1147" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1106">						ret.append(&quot; AND ( ( NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;] ) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
+<span class="nc" id="L1149">						ret.append(&quot; AND ( ( NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;] ) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
 					}
 				}
-<span class="nc bnc" id="L1109" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_lt&quot;))</span>
+<span class="nc bnc" id="L1152" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_lt&quot;))</span>
 				{
-<span class="nc bnc" id="L1111" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1154" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1113">						ret.append(&quot; AND ( ( NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) ) &quot;);</span>
+<span class="nc" id="L1156">						ret.append(&quot; AND ( ( NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) ) &quot;);</span>
 					}
 				}
-<span class="nc bnc" id="L1116" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_gt&quot;))</span>
+<span class="nc bnc" id="L1159" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_gt&quot;))</span>
 				{
-<span class="nc bnc" id="L1118" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1161" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1120">						ret.append(&quot; AND ( ( NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
+<span class="nc" id="L1163">						ret.append(&quot; AND ( ( NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
 					}
 				}
-<span class="nc bnc" id="L1123" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end&quot;))</span>
+<span class="nc bnc" id="L1166" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end&quot;))</span>
 				{
-<span class="nc bnc" id="L1125" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1168" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1127">						ret.append(&quot; AND ( ( NOT publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $ ]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) ) &quot;);</span>
+<span class="nc" id="L1170">						ret.append(&quot; AND ( ( NOT publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $ ]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) ) &quot;);</span>
 					}
 				}
-<span class="nc bnc" id="L1130" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_gt&quot;))</span>
+<span class="nc bnc" id="L1173" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_gt&quot;))</span>
 				{
-<span class="nc bnc" id="L1132" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1134">						ret.append(&quot; AND ( (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
+<span class="nc" id="L1177">						ret.append(&quot; AND ( (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
 					}
 				}
-<span class="nc bnc" id="L1137" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_lt&quot;))</span>
+<span class="nc bnc" id="L1180" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_lt&quot;))</span>
 				{
-<span class="nc bnc" id="L1139" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1182" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1141">						ret.append(&quot; AND ( (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $&quot;).append(&quot;]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $&quot;).append(&quot;]) ) &quot;);</span>
+<span class="nc" id="L1184">						ret.append(&quot; AND ( (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $&quot;).append(&quot;]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $&quot;).append(&quot;]) ) &quot;);</span>
 					}
 				}
-<span class="nc bnc" id="L1144" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;temp_id&quot;))</span>
+<span class="nc bnc" id="L1187" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;temp_id&quot;))</span>
 				{
-<span class="nc" id="L1146">					ret.append(&quot; AND &quot; + checkInputParams[i] + &quot;:$ &quot;);</span>
+<span class="nc" id="L1189">					ret.append(&quot; AND &quot; + checkInputParams[i] + &quot;:$ &quot;);</span>
 				}
-<span class="nc bnc" id="L1148" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;keyword&quot;))</span>
+<span class="nc bnc" id="L1191" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;keyword&quot;))</span>
 				{
-<span class="nc" id="L1150">					DocDB docDB = DocDB.getInstance();</span>
-<span class="nc" id="L1151">					PerexGroupBean pgb = docDB.getPerexGroup(-1, param);</span>
-<span class="nc bnc" id="L1152" title="All 2 branches missed.">					if (pgb != null) ret.append(&quot; AND ( perex_group:&quot;).append(pgb.getPerexGroupName()).append(&quot; ) &quot;);</span>
-<span class="nc" id="L1153">				}</span>
+<span class="nc" id="L1193">					DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L1194">					PerexGroupBean pgb = docDB.getPerexGroup(-1, param);</span>
+<span class="nc bnc" id="L1195" title="All 2 branches missed.">					if (pgb != null) ret.append(&quot; AND ( perex_group:&quot;).append(pgb.getPerexGroupName()).append(&quot; ) &quot;);</span>
+<span class="nc" id="L1196">				}</span>
 				else
 				{
 					//ak mame viac slov rozdel po slovach
-<span class="nc" id="L1157">					StringTokenizer st = new StringTokenizer(param);</span>
-<span class="nc bnc" id="L1158" title="All 4 branches missed.">					if (st.countTokens()&lt;2 || param.startsWith(&quot;\&quot;&quot;))</span>
+<span class="nc" id="L1200">					StringTokenizer st = new StringTokenizer(param);</span>
+<span class="nc bnc" id="L1201" title="All 4 branches missed.">					if (st.countTokens()&lt;2 || param.startsWith(&quot;\&quot;&quot;))</span>
 					{
-<span class="nc" id="L1160">						ret.append(&quot; AND &quot; + checkInputParams[i] + &quot;:$&quot;);</span>
+<span class="nc" id="L1203">						ret.append(&quot; AND &quot; + checkInputParams[i] + &quot;:$&quot;);</span>
 					}
 					else
 					{
-<span class="nc" id="L1164">						String mode = getInputParamMode(checkInputParams[i], request);</span>
-<span class="nc" id="L1165">						ret.append(&quot; AND (&quot;);</span>
-<span class="nc bnc" id="L1166" title="All 2 branches missed.">						while (st.hasMoreTokens())</span>
+<span class="nc" id="L1207">						String mode = getInputParamMode(checkInputParams[i], request);</span>
+<span class="nc" id="L1208">						ret.append(&quot; AND (&quot;);</span>
+<span class="nc bnc" id="L1209" title="All 2 branches missed.">						while (st.hasMoreTokens())</span>
 						{
-<span class="nc" id="L1168">							st.nextToken();</span>
-<span class="nc" id="L1169">							ret.append(checkInputParams[i]).append(&quot;:$ &quot;);</span>
-<span class="nc bnc" id="L1170" title="All 2 branches missed.">							if (st.hasMoreTokens()) ret.append(mode).append(' ');</span>
+<span class="nc" id="L1211">							st.nextToken();</span>
+<span class="nc" id="L1212">							ret.append(checkInputParams[i]).append(&quot;:$ &quot;);</span>
+<span class="nc bnc" id="L1213" title="All 2 branches missed.">							if (st.hasMoreTokens()) ret.append(mode).append(' ');</span>
 						}
-<span class="nc" id="L1172">						ret.append(&quot;) &quot;);</span>
+<span class="nc" id="L1215">						ret.append(&quot;) &quot;);</span>
 					}
 				}
 			}
 		}
 		//	textove vyjadrenie dateText = &quot;today,lastWeek,lastMonth&quot;;
-<span class="nc bnc" id="L1178" title="All 4 branches missed.">		if (checkPublishDates==false &amp;&amp; Tools.isNotEmpty(dateText))</span>
+<span class="pc bpc" id="L1221" title="3 of 4 branches missed.">		if (checkPublishDates==false &amp;&amp; Tools.isNotEmpty(dateText))</span>
 		{
-<span class="nc" id="L1180">			ret.append(&quot; AND ( (NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) AND ( (NOT publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end;[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
+<span class="nc" id="L1223">			ret.append(&quot; AND ( (NOT publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_start:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) OR (publish_start:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) AND ( (NOT publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND publish_end;[&quot;).append(LuceneUtils.DATE_MIN).append(&quot; TO $]) OR (publish_end:&quot;).append(LuceneUtils.EMPTY).append(&quot; AND date_created:[$ TO &quot;).append(LuceneUtils.DATE_MAX).append(&quot;]) ) &quot;);</span>
 		}
-<span class="nc" id="L1182">		return(ret).toString();</span>
+<span class="fc" id="L1225">		return(ret).toString();</span>
 	}
 
 	/**
@@ -1192,139 +1235,139 @@ public class LuceneSearchAction
 	 */
 	public static String addInputParamsLucene(HttpServletRequest request, String query)
 	{
-<span class="nc" id="L1195">		String[] checkInputParams = SearchTools.getCheckInputParams();</span>
-<span class="nc" id="L1196">		int len = SearchTools.getCheckInputParams().length;</span>
+<span class="fc" id="L1238">		String[] checkInputParams = SearchTools.getCheckInputParams();</span>
+<span class="fc" id="L1239">		int len = SearchTools.getCheckInputParams().length;</span>
 		int i;
 		String param;
 
 		//pridanie publish_start a publish_end parametrov nerobime ak je nejaky rozumny dateText
-<span class="nc" id="L1201">		String dateText = getParamAttributeUnsafe(&quot;dateText&quot;, request, null);</span>
-<span class="nc" id="L1202">		boolean checkPublishDates = false;</span>
-<span class="nc bnc" id="L1203" title="All 4 branches missed.">		if (dateText == null || &quot;custom&quot;.equals(dateText))</span>
+<span class="fc" id="L1244">		String dateText = getParamAttributeUnsafe(&quot;dateText&quot;, request, null);</span>
+<span class="fc" id="L1245">		boolean checkPublishDates = false;</span>
+<span class="pc bpc" id="L1246" title="3 of 4 branches missed.">		if (dateText == null || &quot;custom&quot;.equals(dateText))</span>
 		{
-<span class="nc" id="L1205">			checkPublishDates = true;</span>
+<span class="fc" id="L1248">			checkPublishDates = true;</span>
 		}
 		//SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyyMMdd&quot;);
-<span class="nc" id="L1208">		SimpleDateFormat parser =  new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
-<span class="nc bnc" id="L1209" title="All 2 branches missed.">		for (i=0; i&lt;len; i++)</span>
+<span class="fc" id="L1251">		SimpleDateFormat parser =  new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="fc bfc" id="L1252" title="All 2 branches covered.">		for (i=0; i&lt;len; i++)</span>
 		{
-<span class="nc" id="L1211">			param = getParamAttributeUnsafe(checkInputParams[i], request, null);</span>
-<span class="nc bnc" id="L1212" title="All 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
+<span class="fc" id="L1254">			param = getParamAttributeUnsafe(checkInputParams[i], request, null);</span>
+<span class="pc bpc" id="L1255" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(param))</span>
 			{
-<span class="nc" id="L1214">				Logger.debug(LuceneSearchAction.class, &quot;addPram &quot;+checkInputParams[i]+&quot;=&quot;+param);</span>
-<span class="nc bnc" id="L1215" title="All 2 branches missed.">				if (checkInputParams[i].equals(&quot;publish_start&quot;))</span>
+<span class="nc" id="L1257">				Logger.debug(LuceneSearchAction.class, &quot;addPram &quot;+checkInputParams[i]+&quot;=&quot;+param);</span>
+<span class="nc bnc" id="L1258" title="All 2 branches missed.">				if (checkInputParams[i].equals(&quot;publish_start&quot;))</span>
 				{
-<span class="nc bnc" id="L1217" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1260" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1219">						long d = LuceneUtils.getTimestamp(param,parser);</span>
-<span class="nc" id="L1220">						query = setNextParameter(query,new Date(d));</span>
-<span class="nc" id="L1221">						query = setNextParameter(query,new Date(d));</span>
-<span class="nc" id="L1222">					}</span>
+<span class="nc" id="L1262">						long d = LuceneUtils.getTimestamp(param,parser);</span>
+<span class="nc" id="L1263">						query = setNextParameter(query,new Date(d));</span>
+<span class="nc" id="L1264">						query = setNextParameter(query,new Date(d));</span>
+<span class="nc" id="L1265">					}</span>
 				}
-<span class="nc bnc" id="L1224" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_lt&quot;))</span>
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_lt&quot;))</span>
 				{
-<span class="nc bnc" id="L1226" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1269" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1228">						long d = LuceneUtils.getTimestamp(param,parser);</span>
-<span class="nc" id="L1229">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1230">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1231">					}</span>
+<span class="nc" id="L1271">						long d = LuceneUtils.getTimestamp(param,parser);</span>
+<span class="nc" id="L1272">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1273">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1274">					}</span>
 				}
-<span class="nc bnc" id="L1233" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_gt&quot;))</span>
+<span class="nc bnc" id="L1276" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_start_gt&quot;))</span>
 				{
-<span class="nc bnc" id="L1235" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1278" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1237">						long d = LuceneUtils.getTimestamp(param,parser);</span>
-<span class="nc" id="L1238">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1239">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1240">					}</span>
+<span class="nc" id="L1280">						long d = LuceneUtils.getTimestamp(param,parser);</span>
+<span class="nc" id="L1281">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1282">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1283">					}</span>
 				}
-<span class="nc bnc" id="L1242" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end&quot;))</span>
+<span class="nc bnc" id="L1285" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end&quot;))</span>
 				{
-<span class="nc bnc" id="L1244" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1287" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1246">						long d = LuceneUtils.getTimestamp(param,parser);</span>
-<span class="nc" id="L1247">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1248">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1249">					}</span>
+<span class="nc" id="L1289">						long d = LuceneUtils.getTimestamp(param,parser);</span>
+<span class="nc" id="L1290">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1291">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1292">					}</span>
 				}
-<span class="nc bnc" id="L1251" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_gt&quot;))</span>
+<span class="nc bnc" id="L1294" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_gt&quot;))</span>
 				{
-<span class="nc bnc" id="L1253" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1296" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1255">						long d = LuceneUtils.getTimestamp(param,parser);</span>
-<span class="nc" id="L1256">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1257">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1258">					}</span>
+<span class="nc" id="L1298">						long d = LuceneUtils.getTimestamp(param,parser);</span>
+<span class="nc" id="L1299">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1300">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1301">					}</span>
 				}
-<span class="nc bnc" id="L1260" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_lt&quot;))</span>
+<span class="nc bnc" id="L1303" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;publish_end_lt&quot;))</span>
 				{
-<span class="nc bnc" id="L1262" title="All 2 branches missed.">					if (checkPublishDates)</span>
+<span class="nc bnc" id="L1305" title="All 2 branches missed.">					if (checkPublishDates)</span>
 					{
-<span class="nc" id="L1264">						long d = LuceneUtils.getTimestamp(param,parser);</span>
-<span class="nc" id="L1265">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1266">						query = setNextParameter(query, new Date(d));</span>
-<span class="nc" id="L1267">					}</span>
+<span class="nc" id="L1307">						long d = LuceneUtils.getTimestamp(param,parser);</span>
+<span class="nc" id="L1308">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1309">						query = setNextParameter(query, new Date(d));</span>
+<span class="nc" id="L1310">					}</span>
 				}
-<span class="nc bnc" id="L1269" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;temp_id&quot;))</span>
+<span class="nc bnc" id="L1312" title="All 2 branches missed.">				else if (checkInputParams[i].equals(&quot;temp_id&quot;))</span>
 				{
-<span class="nc" id="L1271">					query = setNextParameter(query,Tools.getIntValue(param, 0));</span>
+<span class="nc" id="L1314">					query = setNextParameter(query,Tools.getIntValue(param, 0));</span>
 				}
 				else
 				{
-<span class="nc" id="L1275">					StringTokenizer st = new StringTokenizer(param);</span>
-<span class="nc bnc" id="L1276" title="All 4 branches missed.">					if (st.countTokens()&lt;2 || param.startsWith(&quot;\&quot;&quot;))</span>
+<span class="nc" id="L1318">					StringTokenizer st = new StringTokenizer(param);</span>
+<span class="nc bnc" id="L1319" title="All 4 branches missed.">					if (st.countTokens()&lt;2 || param.startsWith(&quot;\&quot;&quot;))</span>
 					{
-<span class="nc" id="L1278">						query = setNextParameter(query,Tools.replace(param, &quot;\&quot;&quot;, &quot;&quot;));</span>
+<span class="nc" id="L1321">						query = setNextParameter(query,Tools.replace(param, &quot;\&quot;&quot;, &quot;&quot;));</span>
 					}
 					else
 					{
-<span class="nc bnc" id="L1282" title="All 2 branches missed.">						while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L1325" title="All 2 branches missed.">						while (st.hasMoreTokens())</span>
 						{
-<span class="nc" id="L1284">							query = setNextParameter(query, st.nextToken());</span>
+<span class="nc" id="L1327">							query = setNextParameter(query, st.nextToken());</span>
 						}
 					}
 				}
 			}
 		}
 		//	textove vyjadrenie dateText = &quot;today,lastWeek,lastMonth&quot;;
-<span class="nc bnc" id="L1291" title="All 4 branches missed.">		if (checkPublishDates==false &amp;&amp; Tools.isNotEmpty(dateText))</span>
+<span class="pc bpc" id="L1334" title="3 of 4 branches missed.">		if (checkPublishDates==false &amp;&amp; Tools.isNotEmpty(dateText))</span>
 		{
-<span class="nc" id="L1293">			Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L1294">			long dEnd = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), &quot;23:59&quot;);</span>
-<span class="nc bnc" id="L1295" title="All 2 branches missed.">			if (&quot;lastWeek&quot;.equals(dateText))</span>
+<span class="nc" id="L1336">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1337">			long dEnd = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), &quot;23:59&quot;);</span>
+<span class="nc bnc" id="L1338" title="All 2 branches missed.">			if (&quot;lastWeek&quot;.equals(dateText))</span>
 			{
-<span class="nc" id="L1297">				cal.add(Calendar.WEEK_OF_YEAR, -1);</span>
+<span class="nc" id="L1340">				cal.add(Calendar.WEEK_OF_YEAR, -1);</span>
 			}
-<span class="nc bnc" id="L1299" title="All 2 branches missed.">			else if (&quot;lastMonth&quot;.equals(dateText))</span>
+<span class="nc bnc" id="L1342" title="All 2 branches missed.">			else if (&quot;lastMonth&quot;.equals(dateText))</span>
 			{
-<span class="nc" id="L1301">				cal.add(Calendar.MONTH, -1);</span>
+<span class="nc" id="L1344">				cal.add(Calendar.MONTH, -1);</span>
 			}
-<span class="nc" id="L1303">			long dStart = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), &quot;0:00&quot;);</span>
-<span class="nc" id="L1304">			setNextParameter(query,new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));</span>
-<span class="nc" id="L1305">			setNextParameter(query, new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));</span>
-<span class="nc" id="L1306">			setNextParameter(query, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));</span>
-<span class="nc" id="L1307">			setNextParameter(query, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));</span>
+<span class="nc" id="L1346">			long dStart = DB.getTimestamp(Tools.formatDate(cal.getTimeInMillis()), &quot;0:00&quot;);</span>
+<span class="nc" id="L1347">			setNextParameter(query,new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));</span>
+<span class="nc" id="L1348">			setNextParameter(query, new Timestamp(DB.getTimestampNotBeforeAfterYear(dStart, 1970, 3000)));</span>
+<span class="nc" id="L1349">			setNextParameter(query, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));</span>
+<span class="nc" id="L1350">			setNextParameter(query, new Timestamp(DB.getTimestampNotBeforeAfterYear(dEnd, 1970, 3000)));</span>
 		}
-<span class="nc" id="L1309">		return query;</span>
+<span class="fc" id="L1352">		return query;</span>
 	}
 
 	public static String setNextParameter(String query,Object value)
 	{
-<span class="nc bnc" id="L1314" title="All 2 branches missed.">		if (value instanceof Timestamp)</span>
+<span class="pc bpc" id="L1357" title="1 of 2 branches missed.">		if (value instanceof Timestamp)</span>
 		{
-<span class="nc" id="L1316">			return query.replaceFirst(&quot;\\$&quot;,LuceneUtils.timestampToLucene(((Timestamp)value).getTime()));</span>
+<span class="nc" id="L1359">			return query.replaceFirst(&quot;\\$&quot;,LuceneUtils.timestampToLucene(((Timestamp)value).getTime()));</span>
 		}
-<span class="nc bnc" id="L1318" title="All 2 branches missed.">		if (value instanceof java.util.Date)</span>
+<span class="pc bpc" id="L1361" title="1 of 2 branches missed.">		if (value instanceof java.util.Date)</span>
 		{
-<span class="nc" id="L1320">			return query.replaceFirst(&quot;\\$&quot;,LuceneUtils.timestampToLucene(((java.util.Date)value).getTime()));</span>
+<span class="nc" id="L1363">			return query.replaceFirst(&quot;\\$&quot;,LuceneUtils.timestampToLucene(((java.util.Date)value).getTime()));</span>
 		}
-<span class="nc" id="L1322">		return query.replaceFirst(&quot;\\$&quot;, value.toString());</span>
+<span class="fc" id="L1365">		return query.replaceFirst(&quot;\\$&quot;, value.toString());</span>
 	}
 
 	public static  String setNextParameter(String query,int value)
 	{
-<span class="nc" id="L1327">		return query.replaceFirst(&quot;\\$&quot;, Integer.toString(value));</span>
+<span class="nc" id="L1370">		return query.replaceFirst(&quot;\\$&quot;, Integer.toString(value));</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

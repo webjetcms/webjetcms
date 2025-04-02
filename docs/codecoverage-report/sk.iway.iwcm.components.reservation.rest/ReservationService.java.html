@@ -1,19 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationService.java</span></div><h1>ReservationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationService.java</span></div><h1>ReservationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -33,6 +37,11 @@ import sk.iway.iwcm.users.UsersDB;
 
 public class ReservationService {
 
+    public static final String FE_DATEPICKER_FORMAT = &quot;yyyy-MM-dd&quot;;
+    public static final String FE_MONTHPICKER_FORMAT = &quot;yyyy-MM&quot;;
+    public static final String REGEX_YYYY_MM_DD = &quot;\\d{4}-\\d{2}-\\d{2}&quot;;
+    public static final String REGEX_YYYY_MM = &quot;\\d{4}-\\d{2}&quot;;
+
     private final String emailAllDay;
     private final String emailDateFrom;
     private final String emailDateTo;
@@ -40,16 +49,16 @@ public class ReservationService {
     private final String emailNext3;
 
     public ReservationService() {
-<span class="nc" id="L43">        this(Prop.getInstance());</span>
-<span class="nc" id="L44">    }</span>
+<span class="nc" id="L52">        this(Prop.getInstance());</span>
+<span class="nc" id="L53">    }</span>
 
-<span class="fc" id="L46">    public ReservationService(Prop prop) {</span>
-<span class="fc" id="L47">        emailAllDay = prop.getText(&quot;reservation.reservations.email_for_all_day&quot;);</span>
-<span class="fc" id="L48">        emailDateFrom = prop.getText(&quot;reservation.reservations.email_date_from&quot;);</span>
-<span class="fc" id="L49">        emailDateTo = prop.getText(&quot;reservation.reservations.email_date_to&quot;);</span>
-<span class="fc" id="L50">        emailNext2 = prop.getText(&quot;components.reservation.mail.next2&quot;);</span>
-<span class="fc" id="L51">        emailNext3 = prop.getText(&quot;components.reservation.mail.next3&quot;);</span>
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L55">    public ReservationService(Prop prop) {</span>
+<span class="fc" id="L56">        emailAllDay = prop.getText(&quot;reservation.reservations.email_for_all_day&quot;);</span>
+<span class="fc" id="L57">        emailDateFrom = prop.getText(&quot;reservation.reservations.email_date_from&quot;);</span>
+<span class="fc" id="L58">        emailDateTo = prop.getText(&quot;reservation.reservations.email_date_to&quot;);</span>
+<span class="fc" id="L59">        emailNext2 = prop.getText(&quot;components.reservation.mail.next2&quot;);</span>
+<span class="fc" id="L60">        emailNext3 = prop.getText(&quot;components.reservation.mail.next3&quot;);</span>
+<span class="fc" id="L61">    }</span>
 
     /**
      * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
@@ -66,79 +75,79 @@ public class ReservationService {
     public String checkReservationTimeRangeValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject) {
 
         //Compute day range (how many days we want reservate)
-<span class="fc" id="L69">        long diffD = reservation.getDateTo().getTime() - reservation.getDateFrom().getTime();</span>
-<span class="fc" id="L70">        long reservationDaysRange = TimeUnit.DAYS.convert(diffD, TimeUnit.MILLISECONDS) + 1;</span>
+<span class="fc" id="L78">        long diffD = reservation.getDateTo().getTime() - reservation.getDateFrom().getTime();</span>
+<span class="fc" id="L79">        long reservationDaysRange = TimeUnit.DAYS.convert(diffD, TimeUnit.MILLISECONDS) + 1;</span>
 
         //In case that date range is &gt;= than 7, we must check every dayOfWeek
-<span class="fc" id="L73">        boolean checkEveryDayOfWeek = false;</span>
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if(reservationDaysRange &gt;= 7) checkEveryDayOfWeek = true;</span>
+<span class="fc" id="L82">        boolean checkEveryDayOfWeek = false;</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if(reservationDaysRange &gt;= 7) checkEveryDayOfWeek = true;</span>
 
         //Get days of week during our reservation
-<span class="fc" id="L77">        List&lt;Integer&gt; daysOfWeek = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if(checkEveryDayOfWeek) {</span>
-<span class="nc" id="L79">            daysOfWeek.add(1);</span>
-<span class="nc" id="L80">            daysOfWeek.add(2);</span>
-<span class="nc" id="L81">            daysOfWeek.add(3);</span>
-<span class="nc" id="L82">            daysOfWeek.add(4);</span>
-<span class="nc" id="L83">            daysOfWeek.add(5);</span>
-<span class="nc" id="L84">            daysOfWeek.add(6);</span>
-<span class="nc" id="L85">            daysOfWeek.add(7);</span>
+<span class="fc" id="L86">        List&lt;Integer&gt; daysOfWeek = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if(checkEveryDayOfWeek) {</span>
+<span class="nc" id="L88">            daysOfWeek.add(1);</span>
+<span class="nc" id="L89">            daysOfWeek.add(2);</span>
+<span class="nc" id="L90">            daysOfWeek.add(3);</span>
+<span class="nc" id="L91">            daysOfWeek.add(4);</span>
+<span class="nc" id="L92">            daysOfWeek.add(5);</span>
+<span class="nc" id="L93">            daysOfWeek.add(6);</span>
+<span class="nc" id="L94">            daysOfWeek.add(7);</span>
         } else { //Compute day o week
-<span class="fc bfc" id="L87" title="All 2 branches covered.">            for(int i = 0; i &lt; reservationDaysRange; i++) {</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            for(int i = 0; i &lt; reservationDaysRange; i++) {</span>
                 //We need day of week (but stupid Calendar start from Sunday = 1, Monday = 2 ... Saturday = 7 )
-<span class="fc" id="L89">                Calendar cld = Calendar.getInstance();</span>
-<span class="fc" id="L90">                cld.setTime(reservation.getDateFrom());</span>
+<span class="fc" id="L98">                Calendar cld = Calendar.getInstance();</span>
+<span class="fc" id="L99">                cld.setTime(reservation.getDateFrom());</span>
                 //We adding days because we need loop date range and get dayOfWeek for every of them
-<span class="fc" id="L92">                cld.add(Calendar.DAY_OF_MONTH, i);</span>
-<span class="fc" id="L93">                int dayOfweek = cld.get(Calendar.DAY_OF_WEEK);</span>
+<span class="fc" id="L101">                cld.add(Calendar.DAY_OF_MONTH, i);</span>
+<span class="fc" id="L102">                int dayOfweek = cld.get(Calendar.DAY_OF_WEEK);</span>
                 //Format day of week to our standart where Monday = 1, Tuesday = 2 ... Sunday = 7
-<span class="fc bfc" id="L95" title="All 2 branches covered.">                dayOfweek = (dayOfweek - 1) == 0 ? 7 : (dayOfweek - 1);</span>
-<span class="fc" id="L96">                daysOfWeek.add(dayOfweek);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                dayOfweek = (dayOfweek - 1) == 0 ? 7 : (dayOfweek - 1);</span>
+<span class="fc" id="L105">                daysOfWeek.add(dayOfweek);</span>
             }
         }
 
         //Validate reservation time values (if we want compare times, date values must have set yyyy-mm-dd at same value &quot;2000-01-01&quot;)
-<span class="fc" id="L101">        Date reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateFrom());</span>
-<span class="fc" id="L102">        Date reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateTo());</span>
+<span class="fc" id="L110">        Date reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateFrom());</span>
+<span class="fc" id="L111">        Date reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateTo());</span>
 
         //Validate time range if have correct values from-to
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        if(reservationTimeFrom.getTime() &gt;= reservationTimeTo.getTime()) return &quot;reservation.reservations.time_range_in_bad_order.js&quot;;</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if(reservationTimeFrom.getTime() &gt;= reservationTimeTo.getTime()) return &quot;reservation.reservations.time_range_in_bad_order.js&quot;;</span>
 
         //Validate if time range is big enough (because reservation object has set a minimum time range set)
         //Only if reservation object cant be reserve only for whole day
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-<span class="fc" id="L110">            long diffT = reservationTimeTo.getTime() - reservationTimeFrom.getTime();</span>
-<span class="fc" id="L111">            long reservationTimesRange = TimeUnit.MILLISECONDS.toMinutes(diffT);</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if(reservationTimesRange &lt; reservationObject.getTimeUnit()) return &quot;reservation.reservations.time_range_to_short.js&quot;;</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
+<span class="fc" id="L119">            long diffT = reservationTimeTo.getTime() - reservationTimeFrom.getTime();</span>
+<span class="fc" id="L120">            long reservationTimesRange = TimeUnit.MILLISECONDS.toMinutes(diffT);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if(reservationTimesRange &lt; reservationObject.getTimeUnit()) return &quot;reservation.reservations.time_range_to_short.js&quot;;</span>
         }
 
-<span class="fc bfc" id="L115" title="All 2 branches covered.">        for(Integer dayOfWeek : daysOfWeek) {</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        for(Integer dayOfWeek : daysOfWeek) {</span>
             //First set default reservation object times range
-<span class="fc" id="L117">            Date objectTimeFrom = reservationObject.getReservationTimeFrom();</span>
-<span class="fc" id="L118">            Date objectTimeTo = reservationObject.getReservationTimeTo();</span>
+<span class="fc" id="L126">            Date objectTimeFrom = reservationObject.getReservationTimeFrom();</span>
+<span class="fc" id="L127">            Date objectTimeTo = reservationObject.getReservationTimeTo();</span>
 
             //Loop reservationObjectTimes and check if our dayOfWeek have special reservation time
-<span class="fc bfc" id="L121" title="All 2 branches covered.">            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {</span>
-<span class="fc bfc" id="L122" title="All 2 branches covered.">                if(objectTime.getDay().equals(dayOfWeek)) {</span>
-<span class="fc" id="L123">                    objectTimeFrom = objectTime.getTimeFrom();</span>
-<span class="fc" id="L124">                    objectTimeTo = objectTime.getTimeTo();</span>
-<span class="fc" id="L125">                    break;</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">                if(objectTime.getDay().equals(dayOfWeek)) {</span>
+<span class="fc" id="L132">                    objectTimeFrom = objectTime.getTimeFrom();</span>
+<span class="fc" id="L133">                    objectTimeTo = objectTime.getTimeTo();</span>
+<span class="fc" id="L134">                    break;</span>
                 }
-<span class="fc" id="L127">            }</span>
+<span class="fc" id="L136">            }</span>
 
             //Now we have reservation object time range for specific day of week
             //We must check if &quot;reservation&quot; time range is inside &quot;reservation object&quot; time range
-<span class="fc bfc" id="L131" title="All 2 branches covered.">            if((objectTimeFrom.getTime() &lt;= reservationTimeFrom.getTime())</span>
-<span class="pc bpc" id="L132" title="1 of 2 branches missed.">            &amp;&amp; (objectTimeTo.getTime() &gt;= reservationTimeTo.getTime())) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            if((objectTimeFrom.getTime() &lt;= reservationTimeFrom.getTime())</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            &amp;&amp; (objectTimeTo.getTime() &gt;= reservationTimeTo.getTime())) {</span>
                 //&quot;reservation&quot; time range IS inside &quot;reservation object&quot; time range
             } else {
                 //&quot;reservation&quot; time range IS NOT inside &quot;reservation object&quot; time range
-<span class="fc" id="L136">                return &quot;reservation.reservations.time_range_validity_error.js&quot;;</span>
+<span class="fc" id="L145">                return &quot;reservation.reservations.time_range_validity_error.js&quot;;</span>
             }
-<span class="fc" id="L138">        }</span>
+<span class="fc" id="L147">        }</span>
 
         //No problem found so return null
-<span class="fc" id="L141">        return null;</span>
+<span class="fc" id="L150">        return null;</span>
     }
 
     /**
@@ -154,47 +163,38 @@ public class ReservationService {
      * @return If any of this validations are violated, text key with belonging error message is returned.
      *         Otherwise return null;
      */
-    public String checkReservationOverlappingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject, ReservationRepository rr) {
-
+    public String checkReservationOverlappingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject, ReservationRepository rr, boolean isImporting) {
         //validate date range
-<span class="pc bpc" id="L160" title="1 of 4 branches missed.">        switch (DateTools.validateRange(reservation.getDateFrom(), reservation.getDateTo(), false) ){</span>
-<span class="nc" id="L161">            case -1: return &quot;datatable.error.fieldErrorMessage&quot;;</span>
-<span class="fc" id="L162">            case 1 :return &quot;reservation.reservations.range_in_past.js&quot;;</span>
-<span class="fc" id="L163">            case 2: return &quot;reservation.reservations.date_range_in_bad_order.js&quot;;</span>
-            default:
-                break;
+<span class="fc" id="L168">        int result = DateTools.validateRange(reservation.getDateFrom(), reservation.getDateTo(), false, Tools.isFalse(reservationObject.getReservationForAllDay()));</span>
+<span class="fc bfc" id="L169" title="All 6 branches covered.">        if(result == 1 &amp;&amp; (isImporting || Tools.isTrue(reservation.getEditorFields().getAllowHistorySave()))) {</span>
+            //Range is in past BUT we are importing - so it's allowed
+        } else {
+<span class="pc bpc" id="L172" title="1 of 4 branches missed.">            switch (result){</span>
+<span class="nc" id="L173">                case -1: return &quot;datatable.error.fieldErrorMessage&quot;;</span>
+<span class="fc" id="L174">                case 1 :return &quot;reservation.reservations.range_in_past.js&quot;;</span>
+<span class="fc" id="L175">                case 2: return &quot;reservation.reservations.date_range_in_bad_order.js&quot;;</span>
+                default:
+                    break;
+            }
         }
 
-<span class="fc" id="L168">        Date reservationDateFrom = setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0);</span>
-        //Need set dateTo to edge of date (because we want all reservations, from whole day)
-<span class="fc" id="L170">        Date reservationDateTo = setTimeOfDate(reservation.getDateTo(), 23, 59, 59, 0);</span>
-
-        //Potentially overlapping reservations, days are overlapping BUT time does not have overlap
+        //Potentially overlapping reservations
         // !! We are finding only ACCEPTED reservations
-        //We dont count reservations is they are rejected or still waiting for acceptance
-<span class="fc" id="L175">        List&lt;ReservationEntity&gt; potentiallyOverlappingReservations =</span>
-<span class="fc" id="L176">            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObject.getId(), CloudToolsForCore.getDomainId(), reservationDateTo, reservationDateFrom);</span>
+        //We dont count reservations if they are rejected or still waiting for acceptance
+<span class="fc" id="L184">        List&lt;ReservationEntity&gt; potentiallyOverlappingReservations =</span>
+<span class="fc" id="L185">            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObject.getId(), CloudToolsForCore.getDomainId(), reservation.getDateTo(), reservation.getDateFrom());</span>
 
         //When we do EDIT on reservation, we must remove this reservation from list
-<span class="fc" id="L179">        Long reservationId = reservation.getId();</span>
-<span class="pc bpc" id="L180" title="1 of 6 branches missed.">        if(reservationId != null &amp;&amp; reservationId &gt; 0 &amp;&amp; potentiallyOverlappingReservations != null)</span>
-<span class="pc bnc" id="L181" title="All 2 branches missed.">            potentiallyOverlappingReservations.removeIf(item -&gt; item.getId().equals(reservationId) == true );</span>
+<span class="fc" id="L188">        Long reservationId = reservation.getId();</span>
+<span class="pc bpc" id="L189" title="1 of 6 branches missed.">        if(reservationId != null &amp;&amp; reservationId &gt; 0 &amp;&amp; potentiallyOverlappingReservations != null)</span>
+<span class="fc" id="L190">            potentiallyOverlappingReservations.removeIf(item -&gt; item.getId().equals(reservationId));</span>
 
         //Now check if even time interval overlaps
-<span class="fc" id="L184">        List&lt;ReservationEntity&gt; overlappingReservations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L193">        List&lt;ReservationEntity&gt; overlappingReservations = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L186" title="1 of 4 branches missed.">        if(potentiallyOverlappingReservations != null &amp;&amp; potentiallyOverlappingReservations.isEmpty() == false) {</span>
-            //Get reservation time in correct format (if we want compare times, date values must have set yyyy-mm-dd at same value &quot;2000-01-01&quot;)
-<span class="fc" id="L188">            Date reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateFrom());</span>
-<span class="fc" id="L189">            Date reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateTo());</span>
-
-<span class="fc bfc" id="L191" title="All 2 branches covered.">            for(ReservationEntity overlapReservation : potentiallyOverlappingReservations) {</span>
-                //Need to convert date to same format where date is set to 2000-01-01 and time is untouched
-                //This way we can compare times (time saved in DB already has this format)
-<span class="fc" id="L194">                Date overlapFrom = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateFrom());</span>
-<span class="fc" id="L195">                Date overlapTo = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateTo());</span>
-
-<span class="fc bfc" id="L197" title="All 2 branches covered.">                if(checkOverlap(reservationTimeFrom, reservationTimeTo, overlapFrom, overlapTo, true))</span>
+<span class="pc bpc" id="L195" title="1 of 4 branches missed.">        if(potentiallyOverlappingReservations != null &amp;&amp; potentiallyOverlappingReservations.isEmpty() == false) {</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            for(ReservationEntity overlapReservation : potentiallyOverlappingReservations) {</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">                if(checkOverlap(reservation.getDateFrom(), reservation.getDateTo(), overlapReservation.getDateFrom(), overlapReservation.getDateTo(), Tools.isFalse(reservationObject.getReservationForAllDay())))</span>
 <span class="fc" id="L198">                    overlappingReservations.add(overlapReservation);</span>
 <span class="fc" id="L199">            }</span>
         }
@@ -204,36 +204,42 @@ public class ReservationService {
          * we still must figure out if they are overlapping each other. Reason is we need compute max number of overlaps
          * in same time. Reason is because every &quot;reservationObject&quot; has it own set max number of reservations in same time.
         */
+<span class="fc" id="L207">        int maxOverlapCount = 0;</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        for(int i = 0; i &lt; overlappingReservations.size(); i++) {</span>
+<span class="fc" id="L209">            int overlapCount = 0;</span>
+<span class="fc" id="L210">            ReservationEntity re1 = overlappingReservations.get(i);</span>
 
-<span class="fc" id="L208">        int maxOverlapCount = 0;</span>
-<span class="fc bfc" id="L209" title="All 2 branches covered.">        for(int i = 0; i &lt; overlappingReservations.size(); i++) {</span>
-<span class="fc" id="L210">            int overlapCount = 0;</span>
-<span class="fc" id="L211">            ReservationEntity re1 = overlappingReservations.get(i);</span>
-
-<span class="fc bfc" id="L213" title="All 2 branches covered.">            for(int j = 0; j &lt; overlappingReservations.size(); j++) {</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            for(int j = 0; j &lt; overlappingReservations.size(); j++) {</span>
                 //Do not compare with same entity
-<span class="fc bfc" id="L215" title="All 2 branches covered.">                if(i == j) continue;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">                if(i == j) continue;</span>
 
-<span class="fc" id="L217">                ReservationEntity re2 = overlappingReservations.get(j);</span>
+<span class="fc" id="L216">                ReservationEntity re2 = overlappingReservations.get(j);</span>
 
-<span class="fc bfc" id="L219" title="All 2 branches covered.">                if(checkOverlap(re1.getDateFrom(), re1.getDateTo(), re2.getDateFrom(), re2.getDateTo(), true))</span>
-<span class="fc" id="L220">                    overlapCount++;</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">                if(checkOverlap(re1.getDateFrom(), re1.getDateTo(), re2.getDateFrom(), re2.getDateTo(), Tools.isFalse(reservationObject.getReservationForAllDay())))</span>
+<span class="fc" id="L219">                    overlapCount++;</span>
             }
 
             //Save max overlap count
-<span class="fc bfc" id="L224" title="All 2 branches covered.">            maxOverlapCount = maxOverlapCount &gt; overlapCount ? maxOverlapCount : overlapCount;</span>
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">            maxOverlapCount = maxOverlapCount &gt; overlapCount ? maxOverlapCount : overlapCount;</span>
         }
 
         //+1 because 1 overlap means that there are 2 reservation in same time (2 overlaps means 3 reservation in same time etc)
-<span class="fc bfc" id="L228" title="All 2 branches covered.">        if(overlappingReservations.isEmpty() == false) maxOverlapCount++;</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if(overlappingReservations.isEmpty() == false) maxOverlapCount++;</span>
 
         //+1 because we want add new reservation (+1 our new reservation)
         //Validate if still can add our reservation (due to number limitation)
-<span class="fc bfc" id="L232" title="All 2 branches covered.">        if((maxOverlapCount + 1) &gt; reservationObject.getMaxReservations())</span>
-<span class="fc" id="L233">            return &quot;reservation.reservations.max_reservations_error.js&quot;;</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">        if((maxOverlapCount + 1) &gt; reservationObject.getMaxReservations()) {</span>
+            //We have too many reservations in same time
+<span class="fc bfc" id="L233" title="All 4 branches covered.">            if(isImporting || Tools.isTrue(reservation.getEditorFields().getAllowOverbooking())) {</span>
+                //IF we are importing OR user is ok with this, we can add reservation
+            } else {
+                //Not allowed
+<span class="fc" id="L237">                return &quot;reservation.reservations.max_reservations_error.js&quot;;</span>
+            }
+        }
 
         //No problem found so return null
-<span class="fc" id="L236">        return null;</span>
+<span class="fc" id="L242">        return null;</span>
     }
 
     /**
@@ -243,32 +249,20 @@ public class ReservationService {
      * @param reservation
      * @param isReservationForAllDay
      */
-    public void prepareReservationToValidation(ReservationEntity reservation, boolean isReservationForAllDay) {
+    public void prepareReservationToValidation(ReservationEntity reservation, boolean isReservationForAllDay) throws IllegalArgumentException {
         //Check of values
-<span class="pc bpc" id="L248" title="3 of 6 branches missed.">        if(reservation.getDateFrom() == null || reservation.getDateTo() == null || reservation.getEditorFields() == null)</span>
-<span class="nc" id="L249">            throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
+<span class="pc bpc" id="L254" title="3 of 6 branches missed.">        if(reservation.getDateFrom() == null || reservation.getDateTo() == null || reservation.getEditorFields() == null)</span>
+<span class="nc" id="L255">            throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
 
-        //If reservation object is set for all day (it means we do not select reservation time)
-<span class="pc bpc" id="L252" title="1 of 2 branches missed.">        if(isReservationForAllDay) {</span>
-            //In case of &quot;for all day&quot;, use only date range and time params set to 0
-<span class="nc" id="L254">            reservation.setDateFrom(setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0));</span>
-<span class="nc" id="L255">            reservation.setDateTo(setTimeOfDate(reservation.getDateTo(), 0, 0, 0, 0));</span>
-        } else {
-            //Check of values
-<span class="pc bpc" id="L258" title="2 of 4 branches missed.">            if(reservation.getEditorFields().getReservationTimeFrom() == null || reservation.getEditorFields().getReservationTimeTo() == null)</span>
-<span class="nc" id="L259">                throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
+<span class="pc bpc" id="L257" title="2 of 6 branches missed.">        if(isReservationForAllDay == false &amp;&amp; (reservation.getEditorFields().getReservationTimeFrom() == null || reservation.getEditorFields().getReservationTimeTo() == null))</span>
+<span class="nc" id="L258">            throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
 
-            //If reservation ISNT for all day, set reservation date as combination of selected date and time
-<span class="fc" id="L262">            Date dateTimeFrom = DefaultTimeValueConverter.combineDateWithTime(reservation.getDateFrom(), reservation.getEditorFields().getReservationTimeFrom());</span>
-<span class="fc" id="L263">            Date dateTimeTo = DefaultTimeValueConverter.combineDateWithTime(reservation.getDateTo(), reservation.getEditorFields().getReservationTimeTo());</span>
+<span class="pc bpc" id="L260" title="2 of 6 branches missed.">        if(isReservationForAllDay == true &amp;&amp; (reservation.getEditorFields().getArrivingTime() == null || reservation.getEditorFields().getDepartureTime() == null))</span>
+<span class="nc" id="L261">            throwError(&quot;html_area.insert_image.error_occured&quot;);</span>
 
-            //Need to add 1 second, help with time compare
-<span class="fc" id="L266">            dateTimeFrom = new Date(dateTimeFrom.getTime() + 1000);</span>
-
-<span class="fc" id="L268">            reservation.setDateFrom(dateTimeFrom);</span>
-<span class="fc" id="L269">            reservation.setDateTo(dateTimeTo);</span>
-        }
-<span class="fc" id="L271">    }</span>
+        //Prepare dates
+<span class="fc" id="L264">        ReservationService.prepareDates(reservation, isReservationForAllDay);</span>
+<span class="fc" id="L265">    }</span>
 
     /**
      * Get reservation object &quot;email accepter&quot; and send mail to notify accepter about new waiting reservation for this reservation object.
@@ -277,51 +271,51 @@ public class ReservationService {
      * @param reservationObject
      */
     public void sendAcceptationEmail(ReservationEntity reservation, HttpServletRequest request) {
-<span class="nc" id="L280">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
-<span class="nc bnc" id="L281" title="All 4 branches missed.">        if(reservation == null || reservationObject == null) return;</span>
+<span class="nc" id="L274">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
+<span class="nc bnc" id="L275" title="All 4 branches missed.">        if(reservation == null || reservationObject == null) return;</span>
         //Validate recipient email
-<span class="nc" id="L283">        String recipientEmail = reservationObject.getEmailAccepter();</span>
+<span class="nc" id="L277">        String recipientEmail = reservationObject.getEmailAccepter();</span>
         try {
-<span class="nc" id="L285">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
-<span class="nc" id="L286">            emailAddr.validate();</span>
-<span class="nc" id="L287">        } catch (AddressException ex) {</span>
-<span class="nc" id="L288">            return;</span>
-<span class="nc" id="L289">        }</span>
+<span class="nc" id="L279">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
+<span class="nc" id="L280">            emailAddr.validate();</span>
+<span class="nc" id="L281">        } catch (AddressException ex) {</span>
+<span class="nc" id="L282">            return;</span>
+<span class="nc" id="L283">        }</span>
 
-<span class="nc" id="L291">        Prop prop = Prop.getInstance(request);</span>
-<span class="nc" id="L292">		String senderName = notNull(reservation.getName()) + &quot; &quot; + notNull(reservation.getSurname());</span>
-<span class="nc" id="L293">		String senderEmail = notNull(reservation.getEmail());</span>
-<span class="nc" id="L294">		String reservationObjectName = notNull(reservationObject.getName());</span>
-<span class="nc" id="L295">		String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
-<span class="nc" id="L296">		String dateTo = Tools.formatDate(reservation.getDateTo());</span>
-<span class="nc" id="L297">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
-<span class="nc" id="L298">		String timeTo = Tools.formatTime(reservation.getDateTo());</span>
-<span class="nc" id="L299">		String subject = prop.getText(&quot;components.reservation.mail.title&quot;) + senderName + &quot; - &quot; + reservationObjectName;</span>
-<span class="nc" id="L300">		String phoneNumber = notNull(reservation.getPhoneNumber());</span>
+<span class="nc" id="L285">        Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L286">		String senderName = notNull(reservation.getName()) + &quot; &quot; + notNull(reservation.getSurname());</span>
+<span class="nc" id="L287">		String senderEmail = notNull(reservation.getEmail());</span>
+<span class="nc" id="L288">		String reservationObjectName = notNull(reservationObject.getName());</span>
+<span class="nc" id="L289">		String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
+<span class="nc" id="L290">		String dateTo = Tools.formatDate(reservation.getDateTo());</span>
+<span class="nc" id="L291">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
+<span class="nc" id="L292">		String timeTo = Tools.formatTime(reservation.getDateTo());</span>
+<span class="nc" id="L293">		String subject = prop.getText(&quot;components.reservation.mail.title&quot;) + senderName + &quot; - &quot; + reservationObjectName;</span>
+<span class="nc" id="L294">		String phoneNumber = notNull(reservation.getPhoneNumber());</span>
 
-<span class="nc" id="L302">        StringBuilder message = new StringBuilder();</span>
-<span class="nc" id="L303">        message.append(prop.getText(&quot;components.reservation.mail.greeting&quot;)).append(&quot;&lt;br /&gt;&lt;br /&gt;&quot;).append(senderName);</span>
-<span class="nc" id="L304">        message.append(&quot; (&quot;).append(prop.getText(&quot;user.phone&quot;)).append(senderName).append(&quot; )&quot;).append(phoneNumber).append(&quot; &quot;);</span>
-<span class="nc" id="L305">        message.append(prop.getText(&quot;components.reservation.mail.next&quot;)).append(&quot; &lt;b&gt;&quot;).append(reservationObjectName).append(&quot;&lt;/b&gt; &quot;);</span>
+<span class="nc" id="L296">        StringBuilder message = new StringBuilder();</span>
+<span class="nc" id="L297">        message.append(prop.getText(&quot;components.reservation.mail.greeting&quot;)).append(&quot;&lt;br /&gt;&lt;br /&gt;&quot;).append(senderName);</span>
+<span class="nc" id="L298">        message.append(&quot; (&quot;).append(prop.getText(&quot;user.phone&quot;)).append(senderName).append(&quot; )&quot;).append(phoneNumber).append(&quot; &quot;);</span>
+<span class="nc" id="L299">        message.append(prop.getText(&quot;components.reservation.mail.next&quot;)).append(&quot; &lt;b&gt;&quot;).append(reservationObjectName).append(&quot;&lt;/b&gt; &quot;);</span>
 
-<span class="nc bnc" id="L307" title="All 2 branches missed.">        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc" id="L308">            message.append(emailAllDay).append(&quot; &quot;);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
+<span class="nc" id="L302">            message.append(emailAllDay).append(&quot; &quot;);</span>
         }
 
-<span class="nc" id="L311">        message.append(emailDateFrom).append(&quot; &quot;).append(dateFrom).append(&quot; &quot;);</span>
-<span class="nc" id="L312">        message.append(emailDateTo).append(&quot; &quot;).append(dateTo).append(&quot; &quot;);</span>
+<span class="nc" id="L305">        message.append(emailDateFrom).append(&quot; &quot;).append(dateFrom).append(&quot; &quot;);</span>
+<span class="nc" id="L306">        message.append(emailDateTo).append(&quot; &quot;).append(dateTo).append(&quot; &quot;);</span>
 
-<span class="nc bnc" id="L314" title="All 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc" id="L315">            message.append(emailNext2).append(&quot; &quot;).append(timeFrom).append(&quot; &quot;);</span>
-<span class="nc" id="L316">            message.append(emailNext3).append(&quot; &quot;).append(timeTo).append(&quot; &quot;);</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
+<span class="nc" id="L309">            message.append(emailNext2).append(&quot; &quot;).append(timeFrom).append(&quot; &quot;);</span>
+<span class="nc" id="L310">            message.append(emailNext3).append(&quot; &quot;).append(timeTo).append(&quot; &quot;);</span>
         }
 
-<span class="nc" id="L319">        message.append(prop.getText(&quot;components.reservation.mail.next4&quot;)).append(&quot;&lt;br/&gt; &quot;).append(reservation.getPurpose()).append(&quot; &lt;br /&gt;&lt;br /&gt;&quot;);</span>
-<span class="nc" id="L320">        message.append(prop.getText(&quot;components.reservation.mail.next5&quot;)).append(&quot; &lt;a href=\&quot;&quot;).append(Tools.getBaseHref(request)).append(&quot;/apps/reservation/admin/#dt-filter-id=&quot;).append(reservation.getId()).append(&quot;\&quot;&gt;&quot;);</span>
-<span class="nc" id="L321">        message.append(prop.getText(&quot;components.reservation.mail.accept&quot;)).append(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L313">        message.append(prop.getText(&quot;components.reservation.mail.next4&quot;)).append(&quot;&lt;br/&gt; &quot;).append(reservation.getPurpose()).append(&quot; &lt;br /&gt;&lt;br /&gt;&quot;);</span>
+<span class="nc" id="L314">        message.append(prop.getText(&quot;components.reservation.mail.next5&quot;)).append(&quot; &lt;a href=\&quot;&quot;).append(Tools.getBaseHref(request)).append(&quot;/apps/reservation/admin/#dt-filter-id=&quot;).append(reservation.getId()).append(&quot;\&quot;&gt;&quot;);</span>
+<span class="nc" id="L315">        message.append(prop.getText(&quot;components.reservation.mail.accept&quot;)).append(&quot;&lt;/a&gt;&quot;);</span>
 
-<span class="nc" id="L323">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message.toString(), null);</span>
-<span class="nc" id="L324">    }</span>
+<span class="nc" id="L317">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message.toString(), null);</span>
+<span class="nc" id="L318">    }</span>
 
     /**
      * Send confirmation email to email address set in reservation. Email subject and text is based on reservation &quot;accepted&quot; value where :
@@ -333,64 +327,52 @@ public class ReservationService {
      * @param request HttpServletRequest instance
      * @param loggedUserName full name of actually logged user who change reservation accepted status
      */
-    public void sendConfirmationEmail(ReservationEntity reservation, HttpServletRequest request, String loggedUserName) {
-<span class="nc" id="L337">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
-<span class="nc bnc" id="L338" title="All 4 branches missed.">        if(reservation == null || reservationObject == null) return;</span>
+    public void sendConfirmationEmail(ReservationEntity reservation, HttpServletRequest request, Identity loggedUser) {
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">        if(reservation == null) return;</span>
+<span class="fc" id="L332">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if(reservationObject == null) return;</span>
         //Validate recipient email
-<span class="nc" id="L340">        String recipientEmail = reservation.getEmail();</span>
+<span class="fc" id="L335">        String recipientEmail = reservation.getEmail();</span>
         try {
-<span class="nc" id="L342">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
-<span class="nc" id="L343">            emailAddr.validate();</span>
-<span class="nc" id="L344">        } catch (AddressException ex) {</span>
-<span class="nc" id="L345">            return;</span>
-<span class="nc" id="L346">        }</span>
+<span class="fc" id="L337">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
+<span class="fc" id="L338">            emailAddr.validate();</span>
+<span class="nc" id="L339">        } catch (AddressException ex) {</span>
+<span class="nc" id="L340">            return;</span>
+<span class="fc" id="L341">        }</span>
 
-<span class="nc" id="L348">        Prop prop = Prop.getInstance(request);</span>
-<span class="nc" id="L349">        String recipientName = notNull(reservation.getName() + &quot; &quot; + reservation.getSurname());</span>
-<span class="nc" id="L350">        String reservationObjectName = notNull(reservationObject.getName());</span>
-<span class="nc" id="L351">		String senderName = notNull(reservation.getName() + reservation.getSurname());</span>
-<span class="nc" id="L352">		String senderEmail = &quot;no-reply@&quot;+Tools.getBaseHref(request).replace(&quot;https://&quot;, &quot;&quot;).replace(&quot;http://&quot;, &quot;&quot;).replace(&quot;www.&quot;, &quot;&quot;);</span>
-<span class="nc" id="L353">        String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
-<span class="nc" id="L354">		String dateTo = Tools.formatDate(reservation.getDateTo());</span>
-<span class="nc" id="L355">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
-<span class="nc" id="L356">        String timeTo = Tools.formatTime(reservation.getDateTo());</span>
-<span class="nc" id="L357">		String subject = &quot;&quot;;</span>
-<span class="nc" id="L358">        String status = &quot;&quot;;</span>
-<span class="nc" id="L359">        String endOfEmail = &quot;.&quot;;</span>
-<span class="nc" id="L360">        Boolean approved = reservation.getAccepted();</span>
+<span class="fc" id="L343">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L344">        String recipientName = notNull(reservation.getName() + &quot; &quot; + reservation.getSurname());</span>
+<span class="fc" id="L345">		String senderName = SendMail.getDefaultSenderName(&quot;reservation&quot;, loggedUser.getFullName());</span>
+<span class="fc" id="L346">		String senderEmail = SendMail.getDefaultSenderEmail(&quot;reservation&quot;, loggedUser.getEmail());</span>
+<span class="fc" id="L347">		String subject = &quot;&quot;;</span>
+<span class="fc" id="L348">        String status = &quot;&quot;;</span>
+<span class="fc" id="L349">        String endOfEmail = &quot;.&quot;;</span>
+<span class="fc" id="L350">        Boolean approved = reservation.getAccepted();</span>
 
-<span class="nc bnc" id="L362" title="All 2 branches missed.">        if(approved == null) {</span>
-<span class="nc" id="L363">            subject = prop.getText(&quot;reservation.reservations.email_subject_reset&quot;);</span>
-<span class="nc" id="L364">            status = prop.getText(&quot;reservation.reservations.email_was_reset&quot;);</span>
-<span class="nc" id="L365">            endOfEmail = prop.getText(&quot;reservation.reservations.reset_end_of_email&quot;);</span>
-<span class="nc bnc" id="L366" title="All 2 branches missed.">        } else if(Tools.isTrue(approved)) {</span>
-<span class="nc" id="L367">            subject = prop.getText(&quot;reservation.reservations.email_subject_accepted&quot;);</span>
-<span class="nc" id="L368">            status = prop.getText(&quot;reservation.reservations.email_was_accepted&quot;);</span>
-<span class="nc bnc" id="L369" title="All 2 branches missed.">        } else if(Tools.isFalse(approved)) {</span>
-<span class="nc" id="L370">            subject =  prop.getText(&quot;reservation.reservations.email_subject_rejected&quot;);</span>
-<span class="nc" id="L371">            status = prop.getText(&quot;reservation.reservations.email_was_rejected&quot;);</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">        if(approved == null) {</span>
+<span class="fc" id="L353">            subject = prop.getText(&quot;reservation.reservations.email_subject_reset&quot;);</span>
+<span class="fc" id="L354">            status = prop.getText(&quot;reservation.reservations.email_was_reset&quot;);</span>
+<span class="fc" id="L355">            endOfEmail = prop.getText(&quot;reservation.reservations.reset_end_of_email&quot;);</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">        } else if(Tools.isTrue(approved)) {</span>
+<span class="fc" id="L357">            subject = prop.getText(&quot;reservation.reservations.email_subject_accepted&quot;);</span>
+<span class="fc" id="L358">            status = prop.getText(&quot;reservation.reservations.email_was_accepted&quot;);</span>
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">        } else if(Tools.isFalse(approved)) {</span>
+<span class="fc" id="L360">            subject =  prop.getText(&quot;reservation.reservations.email_subject_rejected&quot;);</span>
+<span class="fc" id="L361">            status = prop.getText(&quot;reservation.reservations.email_was_rejected&quot;);</span>
         }
 
-<span class="nc" id="L374">        StringBuilder message = new StringBuilder();</span>
-<span class="nc" id="L375">        message.append(prop.getText(&quot;reservation.reservations.email_greeting&quot;)).append(&quot; &quot;).append(recipientName).append(&quot;,&lt;br&gt;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L376">        message.append(prop.getText(&quot;reservation.reservations.email_your_reservation&quot;)).append(&quot; &lt;b&gt;&quot;).append(reservationObjectName).append(&quot;&lt;/b&gt; &quot;);</span>
+<span class="fc" id="L364">        StringBuilder message = new StringBuilder();</span>
+<span class="fc" id="L365">        message.append(prop.getText(&quot;reservation.reservations.email_greeting&quot;)).append(&quot; &quot;).append(recipientName).append(&quot;,&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L366">        message.append(getReservationSpecForEmail(reservation, reservationObject, prop.getText(&quot;reservation.reservations.email_your_reservation&quot;)));</span>
+<span class="fc" id="L367">        message.append(&quot;&lt;b&gt;&quot;).append(status).append(&quot;&lt;b/&gt; : &quot;).append(loggedUser.getFullName()).append(&quot; &quot;).append(endOfEmail);</span>
 
-<span class="nc bnc" id="L378" title="All 2 branches missed.">        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc" id="L379">            message.append(emailAllDay).append(&quot; &quot;);</span>
+<span class="fc" id="L369">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message.toString(), null);</span>
+
+<span class="fc bfc" id="L371" title="All 2 branches covered.">        if(Tools.isTrue(approved)) {</span>
+            //Send notification emails
+<span class="fc" id="L373">            sendNotifEmails(reservationObject.getNotifEmails(), senderName, senderEmail, getReservationSpecForEmail(reservation, reservationObject, prop.getText(&quot;components.reservation.reservation_object.notify_body&quot;)), prop);</span>
         }
-
-<span class="nc" id="L382">        message.append(emailDateFrom).append(&quot; &quot;).append(dateFrom).append(&quot; &quot;);</span>
-<span class="nc" id="L383">        message.append(emailDateTo).append(&quot; &quot;).append(dateTo).append(&quot; &quot;);</span>
-
-<span class="nc bnc" id="L385" title="All 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc" id="L386">            message.append(emailNext2).append(&quot; &quot;).append(timeFrom).append(&quot; &quot;);</span>
-<span class="nc" id="L387">            message.append(emailNext3).append(&quot; &quot;).append(timeTo).append(&quot; &quot;);</span>
-        }
-
-<span class="nc" id="L390">        message.append(&quot;&lt;b&gt;&quot;).append(status).append(&quot;&lt;b/&gt; : &quot;).append(loggedUserName).append(&quot; &quot;).append(endOfEmail);</span>
-
-<span class="nc" id="L392">		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message.toString(), null);</span>
-<span class="nc" id="L393">	}</span>
+<span class="fc" id="L375">	}</span>
 
     /**
      * Send email to recipient (who created reservation) about created reservation. Email includes reservation details + info if reservation is approved or awaiting for acceptation.
@@ -399,70 +381,77 @@ public class ReservationService {
      * @param request - HttpServletRequest instance
      */
     public void sendCreatedReservationEmail(ReservationEntity reservation, HttpServletRequest request) {
-<span class="fc" id="L402">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
-<span class="pc bpc" id="L403" title="2 of 4 branches missed.">        if(reservation == null || reservationObject == null) return;</span>
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">        if(reservation == null) return;</span>
+<span class="fc" id="L385">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">        if(reservationObject == null) return;</span>
+
         //Validate recipient email
-<span class="fc" id="L405">        String recipientEmail = reservation.getEmail();</span>
+<span class="fc" id="L389">        String recipientEmail = reservation.getEmail();</span>
         try {
-<span class="fc" id="L407">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
-<span class="fc" id="L408">            emailAddr.validate();</span>
-<span class="nc" id="L409">        } catch (AddressException ex) {</span>
-<span class="nc" id="L410">            return;</span>
-<span class="fc" id="L411">        }</span>
+<span class="fc" id="L391">            InternetAddress emailAddr = new InternetAddress(recipientEmail);</span>
+<span class="fc" id="L392">            emailAddr.validate();</span>
+<span class="nc" id="L393">        } catch (AddressException ex) {</span>
+<span class="nc" id="L394">            return;</span>
+<span class="fc" id="L395">        }</span>
 
-<span class="fc" id="L413">        Prop prop = Prop.getInstance(request);</span>
-<span class="fc" id="L414">        String recipientName = notNull(reservation.getName() + &quot; &quot; + reservation.getSurname());</span>
-<span class="fc" id="L415">        String reservationObjectName = notNull(reservationObject.getName());</span>
-<span class="fc" id="L416">		String senderName = notNull(reservation.getName() + reservation.getSurname());</span>
-<span class="fc" id="L417">		String senderEmail = &quot;no-reply@&quot;+Tools.getBaseHref(request).replace(&quot;https://&quot;, &quot;&quot;).replace(&quot;http://&quot;, &quot;&quot;).replace(&quot;www.&quot;, &quot;&quot;);</span>
-<span class="fc" id="L418">        String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
-<span class="fc" id="L419">		String dateTo = Tools.formatDate(reservation.getDateTo());</span>
-<span class="fc" id="L420">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
-<span class="fc" id="L421">        String timeTo = Tools.formatTime(reservation.getDateTo());</span>
+<span class="fc" id="L397">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L398">        String recipientName = notNull(reservation.getName() + &quot; &quot; + reservation.getSurname());</span>
+<span class="fc" id="L399">		String senderName = SendMail.getDefaultSenderName(&quot;reservation&quot;, notNull(reservation.getName() + reservation.getSurname()));</span>
+<span class="fc" id="L400">		String senderEmail = SendMail.getDefaultSenderEmail(&quot;reservation&quot;, null);</span>
 
-<span class="fc" id="L423">        StringBuilder message = new StringBuilder();</span>
-<span class="fc" id="L424">        message.append(prop.getText(&quot;reservation.reservations.email_greeting&quot;)).append(&quot; &quot;).append(recipientName).append(&quot;,&lt;br&gt;&lt;br&gt;&quot;);</span>
-<span class="fc" id="L425">        message.append(prop.getText(&quot;reservation.reservations.email_your_reservation&quot;)).append(&quot; &lt;b&gt;&quot;).append(reservationObjectName).append(&quot;&lt;/b&gt; &quot;);</span>
+<span class="fc" id="L402">        StringBuilder message = new StringBuilder();</span>
+<span class="fc" id="L403">        message.append(prop.getText(&quot;reservation.reservations.email_greeting&quot;)).append(&quot; &quot;).append(recipientName).append(&quot;,&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L404">        message.append(getReservationSpecForEmail(reservation, reservationObject, prop.getText(&quot;reservation.reservations.email_your_reservation&quot;)));</span>
 
-<span class="pc bpc" id="L427" title="1 of 2 branches missed.">        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc" id="L428">            message.append(emailAllDay).append(&quot; &quot;);</span>
-        }
-
-<span class="fc" id="L431">        message.append(emailDateFrom).append(&quot; &quot;).append(dateFrom).append(&quot; &quot;);</span>
-<span class="fc" id="L432">        message.append(emailDateTo).append(&quot; &quot;).append(dateTo).append(&quot; &quot;);</span>
-
-<span class="pc bpc" id="L434" title="1 of 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-<span class="fc" id="L435">            message.append(emailNext2).append(&quot; &quot;).append(timeFrom).append(&quot; &quot;);</span>
-<span class="fc" id="L436">            message.append(emailNext3).append(&quot; &quot;).append(timeTo).append(&quot; &quot;);</span>
-        }
-
-<span class="pc bpc" id="L439" title="4 of 6 branches missed.">        if(reservationObject != null &amp;&amp; Tools.isTrue(reservationObject.getMustAccepted()) &amp;&amp; reservation.getAccepted() == null) {</span>
-<span class="nc" id="L440">            message.append(prop.getText(&quot;components.reservation.was_created_and_waiting&quot;));</span>
+<span class="fc bfc" id="L406" title="All 4 branches covered.">        if(Tools.isTrue(reservationObject.getMustAccepted()) &amp;&amp; reservation.getAccepted() == null) {</span>
+<span class="fc" id="L407">            message.append(prop.getText(&quot;components.reservation.was_created_and_waiting&quot;));</span>
         } else {
-<span class="fc" id="L442">            message.append(prop.getText(&quot;components.reservation.was_created&quot;));</span>
+<span class="fc" id="L409">            message.append(prop.getText(&quot;components.reservation.was_created&quot;));</span>
+
+            //Send notification emails
+<span class="fc" id="L412">            sendNotifEmails(reservationObject.getNotifEmails(), senderName, senderEmail, getReservationSpecForEmail(reservation, reservationObject, prop.getText(&quot;components.reservation.reservation_object.notify_body&quot;)), prop);</span>
         }
 
-<span class="fc" id="L445">        SendMail.send(senderName, senderEmail, recipientEmail, null, null, prop.getText(&quot;components.reservation.saved_reservation_subject&quot;), message.toString(), null);</span>
-<span class="fc" id="L446">    }</span>
+<span class="fc" id="L415">        SendMail.send(senderName, senderEmail, recipientEmail, null, null, prop.getText(&quot;components.reservation.saved_reservation_subject&quot;), message.toString(), null);</span>
+<span class="fc" id="L416">    }</span>
 
-    /**
-     * Take input date and set his time part hh:mm:ss:ms using input params. If input date is null, null will be returned.
-     * @param date input date to be edit
-     * @param hours number of hours we want to set into date
-     * @param minutes number of minutes we want to set into date
-     * @param seconds number of seconds we want to set into date
-     * @param milliseconds number of milliseconds we want to set into date
-     * @return date where date part is same as input but time part is set based on input params
-     */
-    public static Date setTimeOfDate(Date date, int hours, int minutes, int seconds, int milliseconds) {
-<span class="fc bfc" id="L458" title="All 2 branches covered.">        if(date == null) return null;</span>
-<span class="fc" id="L459">        Calendar newDate = Calendar.getInstance();</span>
-<span class="fc" id="L460">        newDate.setTime(date);</span>
-<span class="fc" id="L461">        newDate.set(Calendar.HOUR_OF_DAY, hours);</span>
-<span class="fc" id="L462">        newDate.set(Calendar.MINUTE, minutes);</span>
-<span class="fc" id="L463">        newDate.set(Calendar.SECOND, seconds);</span>
-<span class="fc" id="L464">        newDate.set(Calendar.MILLISECOND, milliseconds);</span>
-<span class="fc" id="L465">        return newDate.getTime();</span>
+    private void sendNotifEmails(String notifEmails, String senderName, String senderEmail, String specs, Prop prop) {
+<span class="pc bpc" id="L419" title="1 of 2 branches missed.">        if(Tools.isEmpty(notifEmails)) return;</span>
+
+<span class="nc" id="L421">        String[] emails = Tools.getTokens(notifEmails.trim(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">        for(String recipientEmail : emails) {</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">            if(Tools.isEmail(recipientEmail))  {</span>
+<span class="nc" id="L424">                StringBuilder message = new StringBuilder();</span>
+<span class="nc" id="L425">                message.append(prop.getText(&quot;reservation.reservations.email_greeting&quot;)).append(&quot;,&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L426">                message.append(specs).append(&quot;.&quot;);</span>
+
+<span class="nc" id="L428">                SendMail.send(senderName, senderEmail, recipientEmail, null, null, prop.getText(&quot;components.reservation.saved_reservation_subject&quot;), message.toString(), null);</span>
+            }
+        }
+<span class="nc" id="L431">    }</span>
+
+    private String getReservationSpecForEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject, String startMsg) {
+<span class="fc" id="L434">        String reservationObjectName = notNull(reservationObject.getName());</span>
+<span class="fc" id="L435">        String dateFrom = Tools.formatDate(reservation.getDateFrom());</span>
+<span class="fc" id="L436">        String dateTo = Tools.formatDate(reservation.getDateTo());</span>
+<span class="fc" id="L437">        String timeFrom = Tools.formatTime(reservation.getDateFrom());</span>
+<span class="fc" id="L438">        String timeTo = Tools.formatTime(reservation.getDateTo());</span>
+
+<span class="fc" id="L440">        StringBuilder specs = new StringBuilder();</span>
+<span class="fc" id="L441">        specs.append(startMsg).append(&quot; &lt;b&gt;&quot;).append(reservationObjectName).append(&quot;&lt;/b&gt; &quot;);</span>
+
+<span class="fc bfc" id="L443" title="All 2 branches covered.">        if(Tools.isTrue(reservationObject.getReservationForAllDay()))</span>
+<span class="fc" id="L444">            specs.append(emailAllDay).append(&quot; &quot;);</span>
+
+<span class="fc" id="L446">        specs.append(emailDateFrom).append(&quot; &quot;).append(dateFrom).append(&quot; &quot;);</span>
+<span class="fc" id="L447">        specs.append(emailDateTo).append(&quot; &quot;).append(dateTo).append(&quot; &quot;);</span>
+
+<span class="fc bfc" id="L449" title="All 2 branches covered.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
+<span class="fc" id="L450">            specs.append(emailNext2).append(&quot; &quot;).append(timeFrom).append(&quot; &quot;);</span>
+<span class="fc" id="L451">            specs.append(emailNext3).append(&quot; &quot;).append(timeTo).append(&quot; &quot;);</span>
+        }
+
+<span class="fc" id="L454">        return specs.toString();</span>
     }
 
     //Now validate if date range s1-e1 and range s2-e2 overlaps
@@ -482,14 +471,14 @@ public class ReservationService {
      * @return true - if interval are overlapping, otherwise false
      */
     public boolean checkOverlap(Date s1, Date e1, Date s2, Date e2, Boolean prepareDates) {
-<span class="fc bfc" id="L485" title="All 2 branches covered.">        if(Tools.isTrue(prepareDates)) {</span>
-<span class="fc" id="L486">            s1 = DefaultTimeValueConverter.getValidTimeValue(s1);</span>
-<span class="fc" id="L487">            e1 = DefaultTimeValueConverter.getValidTimeValue(e1);</span>
-<span class="fc" id="L488">            s2 = DefaultTimeValueConverter.getValidTimeValue(s2);</span>
-<span class="fc" id="L489">            e2 = DefaultTimeValueConverter.getValidTimeValue(e2);</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">        if(Tools.isTrue(prepareDates)) {</span>
+<span class="fc" id="L475">            s1 = DefaultTimeValueConverter.getValidTimeValue(s1);</span>
+<span class="fc" id="L476">            e1 = DefaultTimeValueConverter.getValidTimeValue(e1);</span>
+<span class="fc" id="L477">            s2 = DefaultTimeValueConverter.getValidTimeValue(s2);</span>
+<span class="fc" id="L478">            e2 = DefaultTimeValueConverter.getValidTimeValue(e2);</span>
         }
 
-<span class="fc bfc" id="L492" title="All 6 branches covered.">        return ((s1.getTime() &lt;= e2.getTime()) &amp;&amp; (s2.getTime() &lt;= e1.getTime())) == true ? true : false;</span>
+<span class="fc bfc" id="L481" title="All 4 branches covered.">        return ((s1.getTime() &lt;= e2.getTime()) &amp;&amp; (s2.getTime() &lt;= e1.getTime()));</span>
     }
 
     /**
@@ -498,8 +487,8 @@ public class ReservationService {
      * @return not null string
      */
     private String notNull(String s) {
-<span class="pc bpc" id="L501" title="1 of 2 branches missed.">		if (s == null) return &quot;&quot;;</span>
-<span class="fc" id="L502">		return s;</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">		if (s == null) return &quot;&quot;;</span>
+<span class="fc" id="L491">		return s;</span>
 	}
 
     /**
@@ -507,9 +496,9 @@ public class ReservationService {
      * @param errorTextKey translate key of error message
      */
     public void throwError(String errorTextKey) {
-<span class="fc" id="L510">        Prop prop = Prop.getInstance();</span>
-<span class="fc" id="L511">        String message = prop.getText(errorTextKey);</span>
-<span class="fc" id="L512">        throw new IllegalArgumentException(message);</span>
+<span class="fc" id="L499">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L500">        String message = prop.getText(errorTextKey);</span>
+<span class="fc" id="L501">        throw new IllegalArgumentException(message);</span>
     }
 
     /**
@@ -520,9 +509,9 @@ public class ReservationService {
      * @return
      */
     public static BigDecimal calculateReservationPrice(ReservationEntity entity, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
-<span class="pc bpc" id="L523" title="1 of 2 branches missed.">        if(entity == null) return new BigDecimal(-1);</span>
-<span class="pc bpc" id="L524" title="1 of 2 branches missed.">        if(entity.getEditorFields() == null) return new BigDecimal(-1);</span>
-<span class="fc" id="L525">        return calculateReservationPrice(entity.getDateFrom(), entity.getDateTo(), entity.getEditorFields().getReservationTimeFrom(), entity.getEditorFields().getReservationTimeTo(), entity.getReservationObjectId(), userIdToPay, ror, ropr);</span>
+<span class="pc bpc" id="L512" title="1 of 2 branches missed.">        if(entity == null) return new BigDecimal(-1);</span>
+<span class="pc bpc" id="L513" title="1 of 2 branches missed.">        if(entity.getEditorFields() == null) return new BigDecimal(-1);</span>
+<span class="fc" id="L514">        return calculateReservationPrice(entity.getDateFrom(), entity.getDateTo(), entity.getEditorFields().getReservationTimeFrom(), entity.getEditorFields().getReservationTimeTo(), entity.getReservationObjectId(), userIdToPay, ror, ropr);</span>
     }
 
     /**
@@ -537,7 +526,11 @@ public class ReservationService {
      * @return
      */
     public static BigDecimal calculateReservationPrice (Date dateFrom, Date dateTo, Date timeFrom, Date timeTo, Long objectId, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
-<span class="fc" id="L540">        return calculateReservationPrice(dateFrom.getTime(), dateTo.getTime(), timeFrom.getTime(), timeTo.getTime(), objectId, userIdToPay, ror, ropr);</span>
+<span class="pc bpc" id="L529" title="1 of 2 branches missed.">        Long dateFromL = dateFrom == null ? null : dateFrom.getTime();</span>
+<span class="pc bpc" id="L530" title="1 of 2 branches missed.">        Long dateToL = dateTo == null ? null : dateTo.getTime();</span>
+<span class="fc bfc" id="L531" title="All 2 branches covered.">        Long timeFromL = timeFrom == null ? null : timeFrom.getTime();</span>
+<span class="fc bfc" id="L532" title="All 2 branches covered.">        Long timeToL = timeTo == null ? null : timeTo.getTime();</span>
+<span class="fc" id="L533">        return calculateReservationPrice(dateFromL, dateToL, timeFromL, timeToL, objectId, userIdToPay, ror, ropr);</span>
     }
 
     /**
@@ -552,45 +545,62 @@ public class ReservationService {
      * @return
      */
     public static BigDecimal calculateReservationPrice (Long dateFrom, Long dateTo, Long timeFrom, Long timeTo, Long objectId, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
-<span class="pc bpc" id="L555" title="3 of 6 branches missed.">        if(dateFrom == null || dateTo == null || objectId == null) return new BigDecimal(-1);</span>
+<span class="fc" id="L548">        Map&lt;String, BigDecimal&gt; prices = getMapOfPrices(dateFrom, dateTo, timeFrom, timeTo, objectId, userIdToPay, ror, ropr);</span>
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">        if(prices == null) return new BigDecimal(-1);</span>
+        //
+<span class="fc" id="L551">        return prices.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+    }
+
+    public static Map&lt;String, BigDecimal&gt; getMapOfPrices(Long dateFrom, Long dateTo, Long timeFrom, Long timeTo, Long objectId, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
+<span class="pc bpc" id="L555" title="3 of 6 branches missed.">        if(dateFrom == null || dateTo == null || objectId == null) return null;</span>
 <span class="fc" id="L556">        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);</span>
-<span class="pc bpc" id="L557" title="5 of 6 branches missed.">        if(Tools.isTrue(reservationObject.getReservationForAllDay()) &amp;&amp; (timeFrom == null || timeTo == null)) return new BigDecimal(-1);</span>
+<span class="pc bpc" id="L557" title="2 of 6 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay()) &amp;&amp; (timeFrom == null || timeTo == null)) return null;</span>
 
 <span class="fc" id="L559">        List&lt;ReservationObjectPriceEntity&gt; prices = ropr.findAllByObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqual(objectId, CloudToolsForCore.getDomainId(), new Date(dateTo), new Date(dateFrom));</span>
-<span class="fc" id="L560">        BigDecimal price = new BigDecimal(0);</span>
 
-<span class="fc" id="L562">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L563">        cal.setTimeInMillis(dateFrom);</span>
-<span class="fc" id="L564">        cal.set(Calendar.HOUR_OF_DAY, 12); //Set it to middle of day</span>
-<span class="fc bfc" id="L565" title="All 2 branches covered.">        while(cal.getTimeInMillis() &lt; ReservationService.setTimeOfDate(new Date(dateTo), 23, 59, 0, 0).getTime()) {</span>
-<span class="fc" id="L566">            BigDecimal specialPrice = null;</span>
-<span class="fc bfc" id="L567" title="All 2 branches covered.">            for(ReservationObjectPriceEntity priceEntity : prices) {</span>
-<span class="pc bpc" id="L568" title="1 of 4 branches missed.">                if(priceEntity.getDateFrom().before(cal.getTime()) &amp;&amp; priceEntity.getDateTo().after(cal.getTime())) {</span>
-<span class="fc" id="L569">                    specialPrice = priceEntity.getPrice();</span>
-<span class="fc" id="L570">                    break;</span>
+<span class="fc" id="L561">        dateTo = DateTools.setTimePart(new Date(dateTo), 23, 59, 0, 0).getTime();</span>
+
+<span class="fc" id="L563">        Map&lt;String, BigDecimal&gt; mapOfPrices = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L565">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L566">        cal.setTimeInMillis(dateFrom);</span>
+<span class="fc" id="L567">        cal.set(Calendar.HOUR_OF_DAY, 12); //Set it to middle of day</span>
+<span class="fc bfc" id="L568" title="All 2 branches covered.">        while(cal.getTimeInMillis() &lt; dateTo) {</span>
+<span class="fc" id="L569">            BigDecimal specialPrice = null;</span>
+<span class="fc bfc" id="L570" title="All 2 branches covered.">            for(ReservationObjectPriceEntity priceEntity : prices) {</span>
+<span class="pc bpc" id="L571" title="1 of 4 branches missed.">                if(priceEntity.getDateFrom().before(cal.getTime()) &amp;&amp; priceEntity.getDateTo().after(cal.getTime())) {</span>
+<span class="fc" id="L572">                    specialPrice = priceEntity.getPrice();</span>
+<span class="fc" id="L573">                    break;</span>
                 }
-<span class="fc" id="L572">            }</span>
-<span class="pc bpc" id="L573" title="1 of 2 branches missed.">            if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc bnc" id="L574" title="All 2 branches missed.">                if(specialPrice != null) price = price.add(specialPrice);</span>
-<span class="nc" id="L575">                else price = price.add(reservationObject.getPriceForDay());</span>
+<span class="fc" id="L575">            }</span>
+
+<span class="fc" id="L577">            String dayId = getDateId(cal, Tools.isFalse(reservationObject.getReservationForAllDay()));</span>
+
+            //add day - move in range
+<span class="fc" id="L580">            cal.add(Calendar.DAY_OF_MONTH, 1);</span>
+
+<span class="fc bfc" id="L582" title="All 2 branches covered.">            if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
+                //This condition will skip 1 last day, this day user do not pay because he is leaving
+<span class="fc bfc" id="L584" title="All 2 branches covered.">                if(cal.getTimeInMillis() &lt; dateTo) {</span>
+<span class="fc bfc" id="L585" title="All 2 branches covered.">                    if(specialPrice != null) mapOfPrices.put(dayId, specialPrice);</span>
+<span class="fc" id="L586">                    else mapOfPrices.put(dayId, reservationObject.getPriceForDay());</span>
+                }
             } else {
                 //Unit of time which is charged - IN MINUTES
-<span class="fc" id="L578">                BigDecimal timeUnit = new BigDecimal( reservationObject.getTimeUnit() );</span>
-<span class="fc" id="L579">                BigDecimal defaultPriceForTimeUnit = reservationObject.getPriceForHour();</span>
-<span class="fc" id="L580">                BigDecimal reservedTimeEveryDay = new BigDecimal( (timeTo - timeFrom + 1000) / (60 * 1000) );</span>
-<span class="fc bfc" id="L581" title="All 2 branches covered.">                if(specialPrice != null) {</span>
-<span class="fc" id="L582">                    price = price.add( (reservedTimeEveryDay.divide(timeUnit, 2, RoundingMode.HALF_EVEN)).multiply(specialPrice) );</span>
+<span class="fc" id="L590">                BigDecimal timeUnit = new BigDecimal( reservationObject.getTimeUnit() );</span>
+<span class="fc" id="L591">                BigDecimal defaultPriceForTimeUnit = reservationObject.getPriceForHour();</span>
+<span class="fc" id="L592">                BigDecimal reservedTimeEveryDay = new BigDecimal( (timeTo - timeFrom + 1000) / (60 * 1000) );</span>
+<span class="fc bfc" id="L593" title="All 2 branches covered.">                if(specialPrice != null) {</span>
+<span class="fc" id="L594">                    mapOfPrices.put(dayId, (reservedTimeEveryDay.divide(timeUnit, 2, RoundingMode.HALF_EVEN)).multiply(specialPrice) );</span>
                 } else {
-<span class="fc" id="L584">                    price = price.add( (reservedTimeEveryDay.divide(timeUnit, 2, RoundingMode.HALF_EVEN)).multiply(defaultPriceForTimeUnit) );</span>
+<span class="fc" id="L596">                    mapOfPrices.put(dayId, (reservedTimeEveryDay.divide(timeUnit, 2, RoundingMode.HALF_EVEN)).multiply(defaultPriceForTimeUnit) );</span>
                 }
             }
-            //add day - move in range
-<span class="fc" id="L588">            cal.add(Calendar.DAY_OF_MONTH, 1);</span>
-<span class="fc" id="L589">        }</span>
+<span class="fc" id="L599">        }</span>
 
         //There can be DISCOUNT for certain user groups
-<span class="fc" id="L592">        UserGroupsDB ugdb = UserGroupsDB.getInstance();</span>
-<span class="fc" id="L593">        return ugdb.calculatePrice(price, UsersDB.getUser(userIdToPay));</span>
+<span class="fc" id="L602">        UserGroupsDB ugdb = UserGroupsDB.getInstance();</span>
+<span class="fc" id="L603">        return ugdb.calculatePrices(mapOfPrices, UsersDB.getUser(userIdToPay));</span>
     }
 
     /**
@@ -603,17 +613,17 @@ public class ReservationService {
      * @return
      */
     public static boolean acceptation(ReservationEntity reservation, HttpServletRequest request) {
-<span class="fc" id="L606">        reservation.setAccepted(Boolean.TRUE);</span>
-<span class="fc" id="L607">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
-<span class="pc bpc" id="L608" title="1 of 4 branches missed.">        if(Tools.isTrue(reservationObject.getMustAccepted()) &amp;&amp; reservationObject.getEmailAccepter() != null) {</span>
-<span class="fc" id="L609">            Identity loggedUser = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L610" title="1 of 4 branches missed.">            if(loggedUser == null || loggedUser.getEmail().equals(reservationObject.getEmailAccepter()) == false) {</span>
+<span class="fc" id="L616">        reservation.setAccepted(Boolean.TRUE);</span>
+<span class="fc" id="L617">        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();</span>
+<span class="pc bpc" id="L618" title="1 of 4 branches missed.">        if(Tools.isTrue(reservationObject.getMustAccepted()) &amp;&amp; reservationObject.getEmailAccepter() != null) {</span>
+<span class="fc" id="L619">            Identity loggedUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L620" title="All 4 branches covered.">            if(loggedUser == null || loggedUser.getEmail().equals(reservationObject.getEmailAccepter()) == false) {</span>
                 //Set to null, it means waiting for acceptation
-<span class="fc" id="L612">                reservation.setAccepted(null);</span>
-<span class="fc" id="L613">                return false;</span>
+<span class="fc" id="L622">                reservation.setAccepted(null);</span>
+<span class="fc" id="L623">                return false;</span>
             }
         }
-<span class="fc" id="L616">        return true;</span>
+<span class="fc" id="L626">        return true;</span>
     }
 
     /************* MVC METHODS ***************************/
@@ -623,16 +633,37 @@ public class ReservationService {
      * This reservation objects are filtered by domainId and reservationForAllDay = false.
      * @return
      */
-    public static List&lt;LabelValueInteger&gt; getReservationObjectSelectList() {
-<span class="nc" id="L627">        ReservationObjectRepository reservationObjectRepository = Tools.getSpringBean(&quot;reservationObjectRepository&quot;, ReservationObjectRepository.class);</span>
-<span class="nc" id="L628">        List&lt;ReservationObjectEntity&gt; reservationObjects = reservationObjectRepository.findAllByDomainIdAndReservationForAllDayFalse(CloudToolsForCore.getDomainId());</span>
+    public static List&lt;LabelValueInteger&gt; getReservationObjectHoursSelectList() {
+<span class="nc" id="L637">        ReservationObjectRepository reservationObjectRepository = Tools.getSpringBean(&quot;reservationObjectRepository&quot;, ReservationObjectRepository.class);</span>
+<span class="nc" id="L638">        List&lt;ReservationObjectEntity&gt; reservationObjects = reservationObjectRepository.findAllByDomainIdAndReservationForAllDayFalse(CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L639">        return prepareSelectList(reservationObjects);</span>
+    }
 
-<span class="nc" id="L630">        List&lt;LabelValueInteger&gt; countries = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L631" title="All 2 branches missed.">        for(ReservationObjectEntity ro : reservationObjects) {</span>
-<span class="nc" id="L632">            countries.add(new LabelValueInteger(ro.getName(), ro.getId().intValue()));</span>
-<span class="nc" id="L633">        }</span>
+    public static List&lt;LabelValueInteger&gt; getReservationObjectDaysSelectList() {
+<span class="fc" id="L643">        ReservationObjectRepository reservationObjectRepository = Tools.getSpringBean(&quot;reservationObjectRepository&quot;, ReservationObjectRepository.class);</span>
+<span class="fc" id="L644">        List&lt;ReservationObjectEntity&gt; reservationObjects = reservationObjectRepository.findAllByDomainIdAndReservationForAllDayTrue(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L645">        return prepareSelectList(reservationObjects);</span>
+    }
 
-<span class="nc" id="L635">        return countries;</span>
+    private static List&lt;LabelValueInteger&gt; prepareSelectList(List&lt;ReservationObjectEntity&gt; reservationObjects) {
+<span class="fc" id="L649">        return prepareSelectList(reservationObjects, false, null);</span>
+    }
+
+    private static List&lt;LabelValueInteger&gt; prepareSelectList(List&lt;ReservationObjectEntity&gt; reservationObjects, boolean addDefaultOption, String defaultLabelKey) {
+<span class="fc" id="L653">        List&lt;LabelValueInteger&gt; reservationOptions = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L655" title="1 of 2 branches missed.">        if(addDefaultOption) {</span>
+<span class="nc" id="L656">            Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L657">            String defaultLabel = &quot;DEFAULT&quot;;</span>
+<span class="nc bnc" id="L658" title="All 2 branches missed.">            if(Tools.isNotEmpty(defaultLabelKey)) defaultLabel = prop.getText(defaultLabelKey);</span>
+<span class="nc" id="L659">            reservationOptions.add(new LabelValueInteger(defaultLabel, -1));</span>
+        }
+
+<span class="fc bfc" id="L662" title="All 2 branches covered.">        for(ReservationObjectEntity ro : reservationObjects) {</span>
+<span class="fc" id="L663">            reservationOptions.add(new LabelValueInteger(ro.getName(), ro.getId().intValue()));</span>
+<span class="fc" id="L664">        }</span>
+
+<span class="fc" id="L666">        return reservationOptions;</span>
     }
 
     /**
@@ -644,26 +675,26 @@ public class ReservationService {
       * @return
       */
     public static Long[] getReservationTimeRange(Date dateToCheck, ReservationObjectEntity reservationObject) {
-<span class="fc" id="L647">        Calendar calendar = Calendar.getInstance();</span>
-<span class="fc" id="L648">        calendar.setTime(dateToCheck);</span>
-<span class="fc" id="L649">        int dayOfweek = calendar.get(Calendar.DAY_OF_WEEK);</span>
+<span class="fc" id="L678">        Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L679">        calendar.setTime(dateToCheck);</span>
+<span class="fc" id="L680">        int dayOfweek = calendar.get(Calendar.DAY_OF_WEEK);</span>
         //Format day of week to our standart where Monday = 1, Tuesday = 2 ... Sunday = 7
-<span class="fc bfc" id="L651" title="All 2 branches covered.">        dayOfweek = (dayOfweek - 1) == 0 ? 7 : (dayOfweek - 1);</span>
+<span class="fc bfc" id="L682" title="All 2 branches covered.">        dayOfweek = (dayOfweek - 1) == 0 ? 7 : (dayOfweek - 1);</span>
 
-<span class="fc" id="L653">        ReservationObjectTimesEntity rote = null;</span>
-<span class="fc bfc" id="L654" title="All 2 branches covered.">        for(ReservationObjectTimesEntity entity : reservationObject.getReservationObjectTimeEntities()) {</span>
-<span class="fc bfc" id="L655" title="All 2 branches covered.">            if(entity.getDay() == dayOfweek) rote = entity;</span>
-<span class="fc" id="L656">        }</span>
+<span class="fc" id="L684">        ReservationObjectTimesEntity rote = null;</span>
+<span class="fc bfc" id="L685" title="All 2 branches covered.">        for(ReservationObjectTimesEntity entity : reservationObject.getReservationObjectTimeEntities()) {</span>
+<span class="fc bfc" id="L686" title="All 2 branches covered.">            if(entity.getDay() == dayOfweek) rote = entity;</span>
+<span class="fc" id="L687">        }</span>
 
-<span class="fc bfc" id="L658" title="All 2 branches covered.">        if(rote != null)</span>
-<span class="fc" id="L659">            return new Long[] {</span>
-<span class="fc" id="L660">                prepareDateHourReservation(dateToCheck, rote.getTimeFrom()),</span>
-<span class="fc" id="L661">                prepareDateHourReservation(dateToCheck, rote.getTimeTo())</span>
+<span class="fc bfc" id="L689" title="All 2 branches covered.">        if(rote != null)</span>
+<span class="fc" id="L690">            return new Long[] {</span>
+<span class="fc" id="L691">                prepareDateHourReservation(dateToCheck, rote.getTimeFrom()),</span>
+<span class="fc" id="L692">                prepareDateHourReservation(dateToCheck, rote.getTimeTo())</span>
             };
         else
-<span class="fc" id="L664">            return new Long[] {</span>
-<span class="fc" id="L665">                prepareDateHourReservation(dateToCheck, reservationObject.getReservationTimeFrom()),</span>
-<span class="fc" id="L666">                prepareDateHourReservation(dateToCheck, reservationObject.getReservationTimeTo())</span>
+<span class="fc" id="L695">            return new Long[] {</span>
+<span class="fc" id="L696">                prepareDateHourReservation(dateToCheck, reservationObject.getReservationTimeFrom()),</span>
+<span class="fc" id="L697">                prepareDateHourReservation(dateToCheck, reservationObject.getReservationTimeTo())</span>
             };
     }
 
@@ -674,17 +705,17 @@ public class ReservationService {
      * @return
      */
     private static Long prepareDateHourReservation(Date date, Date time) {
-<span class="fc" id="L677">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L678">        cal.setTime(date);</span>
+<span class="fc" id="L708">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L709">        cal.setTime(date);</span>
 
-<span class="fc" id="L680">        Calendar calTime = Calendar.getInstance();</span>
-<span class="fc" id="L681">        calTime.setTime(time);</span>
+<span class="fc" id="L711">        Calendar calTime = Calendar.getInstance();</span>
+<span class="fc" id="L712">        calTime.setTime(time);</span>
 
-<span class="fc" id="L683">        cal.set(Calendar.HOUR_OF_DAY, calTime.get(Calendar.HOUR_OF_DAY));</span>
-<span class="fc" id="L684">        cal.set(Calendar.MINUTE, 0);</span>
-<span class="fc" id="L685">        cal.set(Calendar.SECOND, 0);</span>
-<span class="fc" id="L686">        cal.set(Calendar.MILLISECOND, 0);</span>
-<span class="fc" id="L687">        return cal.getTimeInMillis();</span>
+<span class="fc" id="L714">        cal.set(Calendar.HOUR_OF_DAY, calTime.get(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L715">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L716">        cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L717">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L718">        return cal.getTimeInMillis();</span>
     }
 
     /**
@@ -694,14 +725,14 @@ public class ReservationService {
      * @return
      */
     public static List&lt;String&gt; getHoursForTable(Long from, Long to) {
-<span class="fc" id="L697">        List&lt;String&gt; hours = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L698">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L699">        cal.setTimeInMillis(from);</span>
-<span class="fc bfc" id="L700" title="All 2 branches covered.">        for(int i = 0; i &lt; ((to - from) / (60 * 60 * 1000)); i++) {</span>
-<span class="fc" id="L701">            hours.add( Tools.formatTime(cal.getTimeInMillis()) );</span>
-<span class="fc" id="L702">            cal.add(Calendar.HOUR_OF_DAY, 1);</span>
+<span class="fc" id="L728">        List&lt;String&gt; hours = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L729">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L730">        cal.setTimeInMillis(from);</span>
+<span class="fc bfc" id="L731" title="All 2 branches covered.">        for(int i = 0; i &lt; ((to - from) / (60 * 60 * 1000)); i++) {</span>
+<span class="fc" id="L732">            hours.add( Tools.formatTime(cal.getTimeInMillis()) );</span>
+<span class="fc" id="L733">            cal.add(Calendar.HOUR_OF_DAY, 1);</span>
         }
-<span class="fc" id="L704">        return hours;</span>
+<span class="fc" id="L735">        return hours;</span>
     }
 
     /**
@@ -712,15 +743,15 @@ public class ReservationService {
         private String value;
         private String cssClass;
 
-<span class="fc" id="L715">        public ReservationTableCell(String id, String value, String cssClass) {</span>
-<span class="fc" id="L716">            this.id = id;</span>
-<span class="fc" id="L717">            this.value = value;</span>
-<span class="fc" id="L718">            this.cssClass = cssClass;</span>
-<span class="fc" id="L719">        }</span>
+<span class="fc" id="L746">        public ReservationTableCell(String id, String value, String cssClass) {</span>
+<span class="fc" id="L747">            this.id = id;</span>
+<span class="fc" id="L748">            this.value = value;</span>
+<span class="fc" id="L749">            this.cssClass = cssClass;</span>
+<span class="fc" id="L750">        }</span>
 
-<span class="fc" id="L721">        public String getId() { return id; }</span>
-<span class="fc" id="L722">        public String getValue() { return value; }</span>
-<span class="fc" id="L723">        public String getCssClass() { return cssClass; }</span>
+<span class="fc" id="L752">        public String getId() { return id; }</span>
+<span class="fc" id="L753">        public String getValue() { return value; }</span>
+<span class="fc" id="L754">        public String getCssClass() { return cssClass; }</span>
     }
 
     /**
@@ -733,64 +764,237 @@ public class ReservationService {
      * @return
      */
     public static List&lt;ReservationTableCell&gt; computeReservationUsageByHours(ReservationObjectEntity roe, ReservationRepository rr, Long from, Long to, Long[] supportedRange) {
-<span class="fc" id="L736">        List&lt;ReservationTableCell&gt; tableCellsList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L737">        int hoursDiff = (int)((to - from) / (60 * 60 * 1000));</span>
+<span class="fc" id="L767">        List&lt;ReservationTableCell&gt; tableCellsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L768">        int hoursDiff = (int)((to - from) / (60 * 60 * 1000));</span>
 
-<span class="fc" id="L739">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L740">        cal.setTimeInMillis(from);</span>
-<span class="fc" id="L741">        cal.set(Calendar.MINUTE, 30); //middle of hour</span>
+<span class="fc" id="L770">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L771">        cal.setTimeInMillis(from);</span>
+<span class="fc" id="L772">        cal.set(Calendar.MINUTE, 30); //middle of hour</span>
 
-<span class="fc" id="L743">        int isThere = 0;</span>
-<span class="fc" id="L744">        List&lt;ReservationEntity&gt; reservations = rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(roe.getId(), CloudToolsForCore.getDomainId(), new Date(to), new Date(from));</span>
-<span class="fc bfc" id="L745" title="All 2 branches covered.">        for(int i = 0; i &lt; hoursDiff; i++) {</span>
+<span class="fc" id="L774">        int isThere = 0;</span>
+<span class="fc" id="L775">        List&lt;ReservationEntity&gt; reservations = rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(roe.getId(), CloudToolsForCore.getDomainId(), new Date(to), new Date(from));</span>
+<span class="fc bfc" id="L776" title="All 2 branches covered.">        for(int i = 0; i &lt; hoursDiff; i++) {</span>
             //Check if can make reservation in this time
-<span class="fc bfc" id="L747" title="All 4 branches covered.">            if(cal.getTimeInMillis() &lt; supportedRange[0] || cal.getTimeInMillis() &gt; supportedRange[1])  {</span>
-<span class="fc" id="L748">                tableCellsList.add(</span>
-<span class="fc" id="L749">                    new ReservationTableCell(roe.getId() + &quot;_&quot; + cal.get(Calendar.HOUR_OF_DAY), &quot;&quot;, &quot;unsupported&quot;)</span>
+<span class="fc bfc" id="L778" title="All 4 branches covered.">            if(cal.getTimeInMillis() &lt; supportedRange[0] || cal.getTimeInMillis() &gt; supportedRange[1])  {</span>
+<span class="fc" id="L779">                tableCellsList.add(</span>
+<span class="fc" id="L780">                    new ReservationTableCell(roe.getId() + &quot;_&quot; + cal.get(Calendar.HOUR_OF_DAY), &quot;&quot;, &quot;unsupported&quot;)</span>
                 );
-<span class="fc" id="L751">                cal.add(Calendar.HOUR_OF_DAY, 1);</span>
-<span class="fc" id="L752">                continue;</span>
+<span class="fc" id="L782">                cal.add(Calendar.HOUR_OF_DAY, 1);</span>
+<span class="fc" id="L783">                continue;</span>
             }
 
-<span class="fc bfc" id="L755" title="All 2 branches covered.">            for(ReservationEntity re : reservations) {</span>
-<span class="pc bpc" id="L756" title="1 of 4 branches missed.">                if(re.getDateFrom().getTime() &lt;= cal.getTimeInMillis() &amp;&amp; re.getDateTo().getTime() &gt;= cal.getTimeInMillis()) {</span>
-<span class="fc" id="L757">                    isThere++;</span>
+<span class="fc bfc" id="L786" title="All 2 branches covered.">            for(ReservationEntity re : reservations) {</span>
+<span class="pc bpc" id="L787" title="1 of 4 branches missed.">                if(re.getDateFrom().getTime() &lt;= cal.getTimeInMillis() &amp;&amp; re.getDateTo().getTime() &gt;= cal.getTimeInMillis()) {</span>
+<span class="fc" id="L788">                    isThere++;</span>
                 }
-<span class="fc" id="L759">            }</span>
+<span class="fc" id="L790">            }</span>
 
-<span class="fc" id="L761">            boolean isActive = true;</span>
-<span class="fc bfc" id="L762" title="All 2 branches covered.">            if( (cal.getTimeInMillis() - 30*60*1000) &lt; System.currentTimeMillis() ) isActive = false; //Minus 30 minutes, so it's start of hour</span>
-<span class="fc bfc" id="L763" title="All 2 branches covered.">            if(isThere &gt;= roe.getMaxReservations()) isActive = false;</span>
-<span class="fc" id="L764">            tableCellsList.add(</span>
-<span class="fc bfc" id="L765" title="All 2 branches covered.">                new ReservationTableCell(roe.getId() + &quot;_&quot; + cal.get(Calendar.HOUR_OF_DAY), isThere + &quot;/&quot; + roe.getMaxReservations(), (isActive == false ? &quot;full&quot; : &quot;free&quot;))</span>
+<span class="fc" id="L792">            boolean isActive = true;</span>
+<span class="fc bfc" id="L793" title="All 2 branches covered.">            if( (cal.getTimeInMillis() - 30*60*1000) &lt; System.currentTimeMillis() ) isActive = false; //Minus 30 minutes, so it's start of hour</span>
+<span class="fc bfc" id="L794" title="All 2 branches covered.">            if(isThere &gt;= roe.getMaxReservations()) isActive = false;</span>
+<span class="fc" id="L795">            tableCellsList.add(</span>
+<span class="fc bfc" id="L796" title="All 2 branches covered.">                new ReservationTableCell(roe.getId() + &quot;_&quot; + cal.get(Calendar.HOUR_OF_DAY), isThere + &quot;/&quot; + roe.getMaxReservations(), (isActive == false ? &quot;full&quot; : &quot;free&quot;))</span>
             );
 
-<span class="fc" id="L768">            isThere = 0;</span>
-<span class="fc" id="L769">            cal.add(Calendar.HOUR_OF_DAY, 1);</span>
+<span class="fc" id="L799">            isThere = 0;</span>
+<span class="fc" id="L800">            cal.add(Calendar.HOUR_OF_DAY, 1);</span>
         }
 
-<span class="fc" id="L772">        return tableCellsList;</span>
+<span class="fc" id="L803">        return tableCellsList;</span>
     }
 
+    /**
+     * Get user id of user who should pay for reservation.
+     * @param email
+     * @param reservationId
+     * @param rr
+     * @param request
+     * @return
+     */
     public static int getUserToPay(String email, Long reservationId, ReservationRepository rr, HttpServletRequest request) {
-
-<span class="fc bfc" id="L777" title="All 4 branches covered.">        if (reservationId != null &amp;&amp; reservationId.longValue() &gt; 0L) {</span>
+<span class="fc bfc" id="L815" title="All 4 branches covered.">        if (reservationId != null &amp;&amp; reservationId.longValue() &gt; 0L) {</span>
             //Check if reservation exist -&gt; if yes return userId of reservation
-<span class="fc" id="L779">            ReservationEntity reservation = rr.findFirstByIdAndDomainId(reservationId, CloudToolsForCore.getDomainId()).orElse(null);</span>
-<span class="pc bpc" id="L780" title="1 of 2 branches missed.">            if(reservation != null) return reservation.getUserId();</span>
+<span class="fc" id="L817">            ReservationEntity reservation = rr.findFirstByIdAndDomainId(reservationId, CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="fc bfc" id="L818" title="All 2 branches covered.">            if(reservation != null) return reservation.getUserId();</span>
         }
 
         //Get user id -&gt; of logged user
-<span class="fc" id="L784">        int userId = Tools.getUserId(request);</span>
-<span class="fc bfc" id="L785" title="All 2 branches covered.">        if (userId &gt; 0) return userId;</span>
+<span class="fc" id="L822">        int userId = Tools.getUserId(request);</span>
+<span class="fc bfc" id="L823" title="All 2 branches covered.">        if (userId &gt; 0) return userId;</span>
 
-<span class="fc bfc" id="L787" title="All 2 branches covered.">        if(Tools.isEmail(email)) {</span>
+<span class="fc bfc" id="L825" title="All 2 branches covered.">        if(Tools.isEmail(email)) {</span>
             //If user is NOT logged, try to find user by email
-<span class="fc" id="L789">            UserDetails userToPay = UsersDB.getUserByEmail(email);</span>
-<span class="pc bpc" id="L790" title="1 of 2 branches missed.">            if (userToPay != null) return userToPay.getUserId();</span>
+<span class="fc" id="L827">            UserDetails userToPay = UsersDB.getUserByEmail(email);</span>
+<span class="pc bpc" id="L828" title="1 of 2 branches missed.">            if (userToPay != null) return userToPay.getUserId();</span>
         }
 
-<span class="fc" id="L793">        return -1;</span>
+<span class="fc" id="L831">        return -1;</span>
+    }
+
+    /**
+     * Get reservation date from string. If string is empty or do not match regex, return current date.
+     * @param reservationDateString
+     * @param formatString
+     * @return
+     */
+    public static Date getReservationDate(String reservationDateString, String formatString) {
+<span class="fc" id="L841">        String regex = &quot;&quot;;</span>
+<span class="fc bfc" id="L842" title="All 2 branches covered.">        if(FE_MONTHPICKER_FORMAT.equals(formatString)) {</span>
+<span class="fc" id="L843">            regex = REGEX_YYYY_MM;</span>
+<span class="pc bpc" id="L844" title="1 of 2 branches missed.">        } else if(FE_DATEPICKER_FORMAT.equals(formatString)) {</span>
+<span class="fc" id="L845">            regex = REGEX_YYYY_MM_DD;</span>
+        }
+
+        Date reservationDate;
+<span class="fc bfc" id="L849" title="All 2 branches covered.">        if(Tools.isEmpty(reservationDateString)) {</span>
+<span class="fc" id="L850">            reservationDate = new Date();</span>
+        } else {
+<span class="fc bfc" id="L852" title="All 2 branches covered.">            if(reservationDateString.matches(regex)) {</span>
+<span class="fc" id="L853">                reservationDate = Tools.getDateFromString(reservationDateString, formatString);</span>
+            } else {
+<span class="fc" id="L855">                reservationDate = new Date();</span>
+            }
+        }
+<span class="fc" id="L858">        return reservationDate;</span>
+    }
+
+    /**
+     * Get dateId from date object. If addHourToId is true, add hour to dateId.
+     * @param date
+     * @param addHourToId
+     * @return yyyy-MM-dd or yyyy-MM-ddTHH
+     */
+    public static String getDateId(Date date, boolean addHourToId) {
+<span class="fc" id="L868">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L869">        cal.setTime(date);</span>
+<span class="fc" id="L870">        return getDateId(cal, addHourToId);</span>
+    }
+
+    /**
+     * Get dateId from date object. If addHourToId is true, add hour to dateId.
+     * @param cal
+     * @param addHourToId
+     * @return yyyy-MM-dd or yyyy-MM-ddTHH
+     */
+    public static String getDateId(Calendar cal, boolean addHourToId) {
+<span class="fc" id="L880">        String dateId = cal.get(Calendar.YEAR) + &quot;-&quot;;</span>
+
+<span class="fc bfc" id="L882" title="All 2 branches covered.">        dateId += ( cal.get(Calendar.MONTH) + 1) &lt; 10 ? &quot;0&quot; + (cal.get(Calendar.MONTH) + 1) : (cal.get(Calendar.MONTH) + 1);</span>
+<span class="fc" id="L883">        dateId += &quot;-&quot;;</span>
+
+<span class="fc bfc" id="L885" title="All 2 branches covered.">        dateId += cal.get(Calendar.DAY_OF_MONTH) &lt; 10 ? &quot;0&quot; + cal.get(Calendar.DAY_OF_MONTH) : cal.get(Calendar.DAY_OF_MONTH);</span>
+
+<span class="fc bfc" id="L887" title="All 2 branches covered.">        if(addHourToId) {</span>
+<span class="fc" id="L888">            dateId += &quot;T&quot;;</span>
+<span class="pc bpc" id="L889" title="1 of 2 branches missed.">            dateId += cal.get(Calendar.HOUR_OF_DAY) &lt; 10 ? &quot;0&quot; + cal.get(Calendar.HOUR_OF_DAY) : cal.get(Calendar.HOUR_OF_DAY);</span>
+        }
+
+<span class="fc" id="L892">        return dateId;</span>
+    }
+
+    /**
+     * Compute reservation usage by days aka how many reservations are exist for selected reservation object in selected date range (each day in range).
+     * @param selectedReservationId
+     * @param startDate
+     * @param endDate
+     * @param rr
+     * @return Map where key is dateId and value is number of reservations in this day.
+     */
+    public static Map&lt;String, Integer&gt; computeReservationUsageByDays(Long selectedReservationId, Date startDate, Date endDate, ReservationRepository rr) {
+<span class="fc" id="L904">        List&lt;ReservationEntity&gt; reservations = rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(selectedReservationId, CloudToolsForCore.getDomainId(), endDate, startDate);</span>
+
+<span class="fc" id="L906">        Map&lt;String, Integer&gt; reservationCountMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc bfc" id="L908" title="All 2 branches covered.">        for(ReservationEntity re : reservations) {</span>
+<span class="fc" id="L909">            Date reservationFrom = re.getDateFrom();</span>
+<span class="fc" id="L910">            Date reservationTo = re.getDateTo();</span>
+
+<span class="fc" id="L912">            Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L913">            cal.setTime(reservationFrom);</span>
+
+<span class="fc bfc" id="L915" title="All 2 branches covered.">            while(cal.getTime().before(reservationTo)) {</span>
+<span class="fc" id="L916">                String dateId = ReservationService.getDateId(cal.getTime(), false);</span>
+<span class="fc bfc" id="L917" title="All 2 branches covered.">                if(reservationCountMap.containsKey(dateId)) {</span>
+<span class="fc" id="L918">                    reservationCountMap.put(dateId, reservationCountMap.get(dateId) + 1);</span>
+                } else {
+<span class="fc" id="L920">                    reservationCountMap.put(dateId, 1);</span>
+                }
+
+<span class="fc" id="L923">                cal.add(Calendar.DAY_OF_YEAR, 1);</span>
+<span class="fc" id="L924">            }</span>
+<span class="fc" id="L925">        }</span>
+
+<span class="fc" id="L927">        return reservationCountMap;</span>
+    }
+
+    public static void prepareDates(ReservationEntity entity, boolean isReservationForAllDay) {
+<span class="fc bfc" id="L931" title="All 2 branches covered.">        if(isReservationForAllDay) {</span>
+            //Reservation for whole day
+<span class="fc" id="L933">            entity.setDateFrom(DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getArrivingTime()));</span>
+<span class="fc" id="L934">            entity.setDateTo(DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getDepartureTime()));</span>
+        } else {
+<span class="fc" id="L936">            entity.setDateFrom(DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()));</span>
+<span class="fc" id="L937">            entity.setDateTo(DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()));</span>
+
+            //Need to add 1 second, help with time compare
+<span class="fc" id="L940">            entity.setDateFrom(new Date(entity.getDateFrom().getTime() + 1000));</span>
+        }
+<span class="fc" id="L942">    }</span>
+
+    /**
+     * Get arrival time for reservation. Arrival time is obtained from constant reservationAllDayStartTime.
+     * @param entity
+     * @return Date with time set to reservationAllDayStartTime OR null if constant has wrong format.
+     */
+    public static Date getArrivalTime(ReservationEntity entity) {
+<span class="fc" id="L950">        String arrivalTimeStr = Constants.getString(&quot;reservationAllDayStartTime&quot;);</span>
+<span class="pc bpc" id="L951" title="1 of 2 branches missed.">        if(arrivalTimeStr.matches(&quot;\\d{2}:\\d{2}&quot;)) {</span>
+<span class="fc" id="L952">            int hour = Integer.parseInt(arrivalTimeStr.split(&quot;:&quot;)[0]);</span>
+<span class="fc" id="L953">            int minute = Integer.parseInt(arrivalTimeStr.split(&quot;:&quot;)[1]);</span>
+<span class="fc" id="L954">            return DateTools.setTimePart(entity.getDateFrom(), hour, minute, 0, 0);</span>
+        } else {
+<span class="nc" id="L956">            Logger.error(ReservationService.class, &quot;Value of constant reservationAllDayStartTime has wrong format. Must be HH:MM&quot;);</span>
+<span class="nc" id="L957">            return null;</span>
+        }
+    }
+
+    /**
+     * Get departure time for reservation. Departure time is obtained from constant reservationAllDayEndTime.
+     * @param entity
+     * @return Date with time set to reservationAllDayEndTime OR null if constant has wrong format.
+     */
+    public static Date getDepartureTime(ReservationEntity entity) {
+<span class="fc" id="L967">        String departureTimeStr = Constants.getString(&quot;reservationAllDayEndTime&quot;);</span>
+<span class="pc bpc" id="L968" title="1 of 2 branches missed.">        if(departureTimeStr.matches(&quot;\\d{2}:\\d{2}&quot;)) {</span>
+<span class="fc" id="L969">            int hour = Integer.parseInt(departureTimeStr.split(&quot;:&quot;)[0]);</span>
+<span class="fc" id="L970">            int minute = Integer.parseInt(departureTimeStr.split(&quot;:&quot;)[1]);</span>
+<span class="fc" id="L971">            return DateTools.setTimePart(entity.getDateTo(), hour, minute, 00, 0);</span>
+        } else {
+<span class="nc" id="L973">            Logger.error(ReservationService.class, &quot;Value of constant reservationAllDayEndTime has wrong format. Must be HH:MM&quot;);</span>
+<span class="nc" id="L974">            return null;</span>
+        }
+    }
+
+    /**
+     * Check if reservation was changed - compare it with DB version.
+     * @param entityToCheck
+     * @param reservationObject
+     * @param rr
+     * @return
+     */
+    public static boolean wasReservationChanged(ReservationEntity entityToCheck, ReservationRepository rr) {
+<span class="fc" id="L986">        Long id = entityToCheck.getId();</span>
+<span class="pc bpc" id="L987" title="2 of 4 branches missed.">        if(id == null || id &lt; 1) return true;</span>
+
+<span class="fc" id="L989">        ReservationEntity dbVersion = rr.findById(id).orElse(null);</span>
+<span class="pc bpc" id="L990" title="1 of 2 branches missed.">        if(dbVersion == null) return true;</span>
+
+        //now compare values
+<span class="pc bpc" id="L993" title="1 of 2 branches missed.">        if(entityToCheck.getReservationObjectId().equals( dbVersion.getReservationObjectId()) == false) return true;</span>
+<span class="fc bfc" id="L994" title="All 2 branches covered.">        if(entityToCheck.getDateFrom().equals( dbVersion.getDateFrom()) == false) return true;</span>
+<span class="pc bpc" id="L995" title="1 of 2 branches missed.">        if(entityToCheck.getDateTo().equals( dbVersion.getDateTo()) == false) return true;</span>
+
+<span class="fc" id="L997">        return false;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

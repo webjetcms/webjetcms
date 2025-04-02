@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryService.java</span></div><h1>GalleryService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+
+import java.io.IOException;
+
+import cn.bluejoe.elfinder.controller.executor.FsItemEx;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.gallery.GalleryDB;
+
+public class GalleryService {
+
+    private GalleryService() {}
+
+    /**
+     * Create or update gallery entity after file move into new folder
+     * @param src
+     * @param dst
+     * @throws IOException
+     */
+    public static void createOrUpdateGalleryEntity(FsItemEx src, FsItemEx dst) throws IOException {
+
+<span class="nc" id="L25">        String srcPath = src.getPath();</span>
+<span class="nc" id="L26">        String destPath = dst.getPath();</span>
+
+<span class="nc bnc" id="L28" title="All 4 branches missed.">        if (FileTools.isImage(srcPath)==false &amp;&amp; FileTools.isImage(destPath)==false) return;</span>
+
+<span class="nc" id="L30">        int i = srcPath.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc" id="L31">        String srcDir = srcPath.substring(0, i);</span>
+<span class="nc" id="L32">        String fileName = srcPath.substring(i + 1);</span>
+
+<span class="nc" id="L34">        i = destPath.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc" id="L35">        String destDir = destPath.substring(0, i);</span>
+<span class="nc" id="L36">        String destFileName = destPath.substring(i + 1);</span>
+
+<span class="nc" id="L38">        GalleryRepository gr = Tools.getSpringBean(&quot;galleryRepository&quot;, GalleryRepository.class);</span>
+
+        //GET gallery entity
+<span class="nc" id="L41">        GalleryEntity srcEntity = gr.findByImagePathAndImageNameAndDomainId(srcDir, fileName, CloudToolsForCore.getDomainId());</span>
+
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if(srcEntity != null) {</span>
+            //Entity allready exist, change only dir to destDir
+<span class="nc" id="L45">            srcEntity.setImagePath(destDir);</span>
+<span class="nc" id="L46">            srcEntity.setImageName(destFileName);</span>
+<span class="nc" id="L47">            gr.save(srcEntity);</span>
+        } else {
+<span class="nc" id="L49">            String galleryPath = Constants.getString(&quot;imagesRootDir&quot;) + &quot;/&quot; + Constants.getString(&quot;galleryDirName&quot;) + &quot;/&quot;;</span>
+
+            //Gallery entity not exist, create new ONLY IF destination is gallery
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            if(destPath.startsWith(galleryPath)) {</span>
+<span class="nc" id="L53">                GalleryDB.setImage(destDir, destFileName);</span>
+            }
+        }
+<span class="nc" id="L56">    }</span>
+
+    private static String getPixabayCacheKey(String imageName) {
+<span class="fc" id="L59">        return &quot;pixabay_image_source_&quot; + imageName;</span>
+    }
+
+    /**
+     * Save URL of downloaded image from PixaBay for later use
+     * @param imageName
+     * @param url
+     */
+    public static void savePixabayImageUrl(String imageName, String url) {
+<span class="fc" id="L68">        Cache c = Cache.getInstance();</span>
+        //Save into cache image source
+<span class="fc" id="L70">        c.setObject(getPixabayCacheKey(imageName), url, 10);</span>
+<span class="fc" id="L71">    }</span>
+
+    /**
+     * Get URL of downloaded image from PixaBay OR NULL if not found, and remove it from cache
+     * @param imageName
+     * @return
+     */
+    public static String getPixabayImageUrl(String imageName, boolean removeFromCache) {
+<span class="fc" id="L79">        Cache c = Cache.getInstance();</span>
+<span class="fc" id="L80">        String key = getPixabayCacheKey(imageName);</span>
+<span class="fc" id="L81">        String imageUrl = c.getObject(key, String.class);</span>
+<span class="fc bfc" id="L82" title="All 4 branches covered.">        if (removeFromCache &amp;&amp; imageUrl != null) c.removeObject(key);</span>
+<span class="fc" id="L83">        return imageUrl;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

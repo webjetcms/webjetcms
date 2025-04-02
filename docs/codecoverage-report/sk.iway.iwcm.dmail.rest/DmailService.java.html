@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DmailService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.rest</a> &gt; <span class="el_source">DmailService.java</span></div><h1>DmailService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.rest;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.dmail.DmailUtil;
+import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
+import sk.iway.iwcm.dmail.jpa.EmailsEntity;
+import sk.iway.iwcm.dmail.jpa.EmailsRepository;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
+
+public class DmailService {
+
+    // Private constructor to hide the implicit public one
+    private DmailService() {}
+    
+    /**
+     * Returns ID of campaign. If campaign is not saved yet, returns -ID of current user used as temporary ID for nested tables
+     * @param entity
+     * @param user
+     * @return
+     */
+    public static final Long getCampaignId(CampaingsEntity campaing, UserDetails user) {
+<span class="fc bfc" id="L40" title="All 6 branches covered.">        if (campaing != null &amp;&amp; campaing.getId() != null &amp;&amp; campaing.getId().longValue()&gt;0) return campaing.getId();</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (user == null) return 0L;</span>
+<span class="fc" id="L42">        return Long.valueOf(-user.getUserId());</span>
+    }
+
+    //Add emails which belongs to certain user group and campain
+    public static void addEmails(List&lt;Integer&gt; groupsAdded, CampaingsEntity campaing, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository, HttpServletRequest request) {
+<span class="fc" id="L47">        Identity user = UsersDB.getCurrentUser(request);</span>
+
+        //Now get all emails under campain actualy in DB - we need it to prevent duplicity
+<span class="fc" id="L50">        Map&lt;String, Integer&gt; emailsTable = new Hashtable&lt;&gt;();</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (String email : emailsRepository.getAllCampainEmails( DmailService.getCampaignId(campaing, user), CloudToolsForCore.getDomainId()) ) {</span>
+<span class="fc" id="L52">            emailsTable.put(email.toLowerCase(), emailsTable.size() + 1);</span>
+<span class="fc" id="L53">        }</span>
+
+        //Get all emails under selected user groups
+<span class="fc" id="L56">        List&lt;String&gt; recpientEmails = UserDetailsController.getUserEmailsByUserGroupsIds(userDetailsRepository, groupsAdded);</span>
+
+        //Get all unsubscribed emails
+<span class="fc" id="L59">        Set&lt;String&gt; unsubscribedEmails = DmailUtil.getUnsubscribedEmails();</span>
+
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        for(String recipientEmail : recpientEmails) {</span>
+            //Unsubcribed check
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">            if(unsubscribedEmails.contains(recipientEmail.toLowerCase()) == true) continue;</span>
+
+            //Check duplicity (if this emial alreadry belongs to campain)
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if(emailsTable.get(recipientEmail.toLowerCase()) != null) continue;</span>
+<span class="fc" id="L67">            else emailsTable.put(recipientEmail.toLowerCase(), emailsTable.size() + 1);</span>
+
+            //Check validity then continue
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (Tools.isEmail(recipientEmail) == true) {</span>
+                //Prepare and save email
+<span class="fc" id="L72">                EmailsEntity emailToAdd = new EmailsEntity(recipientEmail);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">                boolean prepareSuccess = prepareEmailForInsert(campaing, user == null ? 0 : user.getUserId(), emailToAdd);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                if(prepareSuccess == false) continue; //Email is not valid</span>
+
+                //Save record in DB
+<span class="fc" id="L77">                emailsRepository.save(emailToAdd);</span>
+<span class="fc" id="L78">            } else {</span>
+<span class="nc" id="L79">                return;</span>
+            }
+<span class="fc" id="L81">        }</span>
+<span class="fc" id="L82">    }</span>
+
+    //Add and/or remove emails which belongs to campain by ceratin user group
+    public static void handleEmails(int[] selectedGroups, int[] originalGroups, CampaingsEntity campaing, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository, HttpServletRequest request) {
+        /* We need compare saved groups ids and now selected group ids
+            so we can add/delete emails mapped on current domain, where reciver belongs to one of that groups*/
+<span class="fc" id="L88">        List&lt;Integer&gt; groupsRemoved = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L89">        List&lt;Integer&gt; groupsAdded = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L90">        List&lt;Integer&gt; selectedGroupsList = Arrays.stream(selectedGroups).boxed().toList();</span>
+
+        //Fn handleEmails is called only if selectedGroups != originalGroups
+<span class="pc bpc" id="L93" title="1 of 4 branches missed.">        if(selectedGroups == null || selectedGroups.length == 0) {</span>
+<span class="fc" id="L94">            groupsRemoved = Arrays.stream(originalGroups).boxed().collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L96" title="1 of 4 branches missed.">        } else if(originalGroups == null || originalGroups.length == 0) {</span>
+<span class="fc" id="L97">            groupsAdded = Arrays.stream(selectedGroups).boxed().collect(Collectors.toList());</span>
+        } else {
+            //Find of groups witch ids were removed from selected
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            for(int originalId : originalGroups) {</span>
+<span class="fc" id="L101">                boolean find = false;</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">                for(int selectedId : selectedGroups) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                    if(originalId == selectedId) {</span>
+<span class="fc" id="L104">                        find = true;</span>
+<span class="fc" id="L105">                        break;</span>
+                    }
+                }
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                if(!find) groupsRemoved.add(originalId);</span>
+            }
+
+            //Find of groups witch ids were added to selected
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            for(int selectedId : selectedGroups) {</span>
+<span class="fc" id="L113">                boolean find = false;</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">                for(int originalId : originalGroups) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                    if(selectedId == originalId) {</span>
+<span class="fc" id="L116">                        find = true;</span>
+<span class="fc" id="L117">                        break;</span>
+                    }
+                }
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                if(!find) groupsAdded.add(selectedId);</span>
+            }
+        }
+
+        //toto je zoznam userId ktore musia zostat zachovane
+        //jeden user moze byt vo viacerych user skupinach, ked odoberieme, musi zostat ak je v inej
+<span class="fc" id="L126">        Set&lt;Integer&gt; mustContainUserId = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L127">        List&lt;Integer&gt; userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, selectedGroupsList);</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        for (Integer uid : userIds) {</span>
+<span class="fc" id="L129">            mustContainUserId.add(uid);</span>
+<span class="fc" id="L130">        }</span>
+
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if(groupsRemoved.isEmpty()==false) removeEmails(groupsRemoved, mustContainUserId, campaing.getId(), emailsRepository, userDetailsRepository);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if(groupsAdded.isEmpty()==false) addEmails(groupsAdded, campaing, emailsRepository, userDetailsRepository, request);</span>
+<span class="fc" id="L134">    }</span>
+
+    /**
+     * Odstrani pouzivatelov v skupine groupsRemoved, zachova ale pouzivatelov v mustContainUserId
+     * (user moze byt vo viacerych skupinach, takze moze byt v tej co musi zostat zachovane)
+     * @param groupsRemoved
+     * @param mustContainUserId
+     * @param campainId
+     */
+    private static void removeEmails(List&lt;Integer&gt; groupsRemoved, Set&lt;Integer&gt; mustContainUserId, Long campainId, EmailsRepository emailsRepository, UserDetailsRepository userDetailsRepository) {
+
+<span class="fc" id="L145">        List&lt;Integer&gt; userIds = UserDetailsController.getUserIdsByUserGroupsIds(userDetailsRepository, groupsRemoved);</span>
+<span class="fc" id="L146">        List&lt;Integer&gt; filteredUserIds = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        for (Integer uid : userIds) {</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">            if (mustContainUserId.contains(uid)) continue;</span>
+<span class="fc" id="L150">            filteredUserIds.add(uid);</span>
+<span class="fc" id="L151">        }</span>
+
+        //Delete all emails under removed user group
+<span class="fc" id="L154">        emailsRepository.deleteCampainEmail(campainId, filteredUserIds, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L155">    }</span>
+
+    /**
+     * Pripravi entity na vlozenie do DB, nastavi udaje podla campaign a podla emailu dohlada userId v databaze pouzivatelov
+     * @param campaign
+     * @param loggedUserId
+     * @param entity
+     */
+    public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity email) {
+
+        //trimni email adresu
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (email.getRecipientEmail()!=null) email.setRecipientEmail(email.getRecipientEmail().trim());</span>
+
+        //sprav lower case
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">        if (email.getRecipientEmail()!=null) email.setRecipientEmail(email.getRecipientEmail().toLowerCase());</span>
+
+        //Get email recipient(user) using email
+<span class="fc" id="L172">        UserDetails recipient = UsersDB.getUserByEmail(email.getRecipientEmail(), 600);</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        if(recipient == null) {</span>
+<span class="fc" id="L174">            email.setRecipientUserId(-1);</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">            if(Tools.isEmpty(email.getRecipientName())) email.setRecipientName(&quot;- -&quot;);</span>
+        }
+        else {
+            //Check if user is valid
+<span class="fc bfc" id="L179" title="All 2 branches covered.">            if(UserDetailsService.isUserDisabled(recipient) == true) return false;</span>
+
+<span class="fc" id="L181">            email.setRecipientUserId(recipient.getUserId());</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">            if(Tools.isEmpty(email.getRecipientName())) email.setRecipientName(recipient.getFullName());</span>
+        }
+
+        //Set create values
+<span class="pc bpc" id="L186" title="1 of 6 branches missed.">        if (campaign == null || campaign.getId()==null || campaign.getId().longValue()&lt;1) {</span>
+<span class="fc" id="L187">            email.setCampainId((long)-loggedUserId);</span>
+<span class="fc" id="L188">            email.setUrl(&quot;&quot;);</span>
+<span class="fc" id="L189">            email.setSubject(&quot;&quot;);</span>
+<span class="fc" id="L190">            email.setSenderName(&quot;&quot;);</span>
+<span class="fc" id="L191">            email.setSenderEmail(&quot;&quot;);</span>
+<span class="fc" id="L192">            email.setCreatedByUserId(loggedUserId);</span>
+        } else {
+<span class="fc" id="L194">            email.setCampainId(campaign.getId());</span>
+<span class="fc" id="L195">            email.setUrl(campaign.getUrl());</span>
+<span class="fc" id="L196">            email.setSubject(campaign.getSubject());</span>
+<span class="fc" id="L197">            email.setSenderName(campaign.getSenderName());</span>
+<span class="fc" id="L198">            email.setSenderEmail(campaign.getSenderEmail());</span>
+<span class="fc" id="L199">            email.setCreatedByUserId(loggedUserId);</span>
+        }
+
+<span class="fc" id="L202">        email.setCreateDate(new Date());</span>
+<span class="fc" id="L203">        email.setRetry(0);</span>
+
+        //Set domainId
+<span class="fc" id="L206">        email.setDomainId( CloudToolsForCore.getDomainId() );</span>
+
+<span class="pc bpc" id="L208" title="1 of 4 branches missed.">        if (email.getId()==null || email.getId().longValue()&lt;1) {</span>
+<span class="fc" id="L209">            email.setDisabled(true);</span>
+        }
+
+<span class="fc" id="L212">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

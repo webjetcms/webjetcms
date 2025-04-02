@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigurationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.configuration</a> &gt; <span class="el_source">ConfigurationService.java</span></div><h1>ConfigurationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.configuration;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfigurationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.configuration</a> &gt; <span class="el_source">ConfigurationService.java</span></div><h1>ConfigurationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -173,6 +173,27 @@ public class ConfigurationService {
         });
 
 <span class="nc" id="L175">        return ConfDB.filterByPerms(user, keysToSort);</span>
+    }
+
+    public List&lt;ConfDetailsDto&gt; findConfDetailsBy(String propertyName, ConfDetailsDto original, Identity user) {
+
+<span class="nc" id="L180">        List&lt;ConfDetailsDto&gt; all = getAll(user);</span>
+<span class="nc" id="L181">        List&lt;ConfDetailsDto&gt; result = new ArrayList&lt;&gt;();</span>
+
+        //iterate all and filted by propertyName
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        for (ConfDetailsDto c : all) {</span>
+<span class="nc bnc" id="L185" title="All 4 branches missed.">            if (propertyName.equals(&quot;id&quot;) &amp;&amp; c.getName().equals(original.getName())) {</span>
+<span class="nc" id="L186">                result.add(c);</span>
+<span class="nc bnc" id="L187" title="All 4 branches missed.">            } else if (propertyName.equals(&quot;name&quot;) &amp;&amp; c.getName().equals(original.getName())) {</span>
+<span class="nc" id="L188">                result.add(c);</span>
+<span class="nc bnc" id="L189" title="All 4 branches missed.">            } else if (propertyName.equals(&quot;value&quot;) &amp;&amp; c.getValue().equals(original.getValue())) {</span>
+<span class="nc" id="L190">                result.add(c);</span>
+<span class="nc bnc" id="L191" title="All 4 branches missed.">            } else if (propertyName.equals(&quot;description&quot;) &amp;&amp; c.getDescription().equals(original.getDescription())) {</span>
+<span class="nc" id="L192">                result.add(c);</span>
+            }
+<span class="nc" id="L194">        }</span>
+
+<span class="nc" id="L196">        return result;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

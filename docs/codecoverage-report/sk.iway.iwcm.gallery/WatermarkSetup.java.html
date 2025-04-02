@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WatermarkSetup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">WatermarkSetup.java</span></div><h1>WatermarkSetup.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WatermarkSetup.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.gallery</a> &gt; <span class="el_source">WatermarkSetup.java</span></div><h1>WatermarkSetup.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.gallery;
 
 import static sk.iway.iwcm.Tools.isEmpty;
 
@@ -15,7 +15,7 @@ import sk.iway.iwcm.Constants;
  *@created      Date: 4.8.2010 13:44:41
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-<span class="nc" id="L18">class WatermarkSetup</span>
+<span class="fc" id="L18">class WatermarkSetup</span>
 {
 	private String watermark;
 	private String watermarkPlacement;
@@ -24,31 +24,31 @@ import sk.iway.iwcm.Constants;
 	
 	public String getWatermark()
 	{
-<span class="nc" id="L27">		return watermark;</span>
+<span class="fc" id="L27">		return watermark;</span>
 	}
 	public void setWatermark(String watermark)
 	{
-<span class="nc" id="L31">		this.watermark = watermark;</span>
-<span class="nc" id="L32">	}</span>
+<span class="fc" id="L31">		this.watermark = watermark;</span>
+<span class="fc" id="L32">	}</span>
 	public String getWatermarkPlacement()
 	{
-<span class="nc bnc" id="L35" title="All 2 branches missed.">		if (isEmpty(watermarkPlacement))</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">		if (isEmpty(watermarkPlacement))</span>
 <span class="nc" id="L36">			return Constants.getString(&quot;galleryWatermarkGravity&quot;);</span>
-<span class="nc" id="L37">		return watermarkPlacement;</span>
+<span class="fc" id="L37">		return watermarkPlacement;</span>
 	}
 	public void setWatermarkPlacement(String watermarkPlacement)
 	{
-<span class="nc" id="L41">		this.watermarkPlacement = watermarkPlacement;</span>
-<span class="nc" id="L42">	}</span>
+<span class="fc" id="L41">		this.watermarkPlacement = watermarkPlacement;</span>
+<span class="fc" id="L42">	}</span>
 	public int getWatermarkSaturation()
 	{
-<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (watermarkSaturation == 0)</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">		if (watermarkSaturation == 0)</span>
 <span class="nc" id="L46">			return Constants.getInt(&quot;galleryWatermarkSaturation&quot;);</span>
-<span class="nc" id="L47">		return watermarkSaturation;</span>
+<span class="fc" id="L47">		return watermarkSaturation;</span>
 	}
 	public void setWatermarkSaturation(int watermarkSaturation)
 	{
-<span class="nc" id="L51">		this.watermarkSaturation = watermarkSaturation;</span>
-<span class="nc" id="L52">	}</span>
+<span class="fc" id="L51">		this.watermarkSaturation = watermarkSaturation;</span>
+<span class="fc" id="L52">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

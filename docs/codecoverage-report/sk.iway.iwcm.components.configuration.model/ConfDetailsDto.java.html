@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfDetailsDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.configuration.model</a> &gt; <span class="el_source">ConfDetailsDto.java</span></div><h1>ConfDetailsDto.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.configuration.model;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfDetailsDto.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.configuration.model</a> &gt; <span class="el_source">ConfDetailsDto.java</span></div><h1>ConfDetailsDto.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.configuration.model;
 
 import java.util.Date;
 
@@ -21,7 +21,14 @@ public class ConfDetailsDto extends ConfDetails {
         renderFormat = &quot;dt-format-selector&quot;,
         title = &quot;admin.conf_editor.id&quot;,
         tab = &quot;basic&quot;,
-        filter = false
+        filter = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
+                }
+            )
+        }
     )
     private Long id;
 
@@ -31,13 +38,14 @@ public class ConfDetailsDto extends ConfDetails {
         title = &quot;admin.conf_editor.old_value&quot;,
         tab = &quot;basic&quot;,
         sortAfter = &quot;value&quot;,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap not-export&quot;,
         editor = {
             @DataTableColumnEditor(
                 type = &quot;textarea&quot;,
                 attr = {
                     @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;),
-                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
                 }
                 /*className: 'hide-on-create'*/
             )
@@ -50,19 +58,31 @@ public class ConfDetailsDto extends ConfDetails {
         inputType = DataTableColumnType.BOOLEAN,
         title=&quot;admin.conf_editor.encrypt&quot;,
         tab=&quot;basic&quot;,
-        sortAfter = &quot;value&quot;
+        sortAfter = &quot;value&quot;,
+        className = &quot;not-export&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
+                }
+            )
+        }
     )
     private boolean encrypt;
 
     @DataTableColumn(
         hidden = true,
-        inputType = DataTableColumnType.DATE,
-        renderFormat = &quot;dt-format-date-time&quot;,
+        inputType = DataTableColumnType.DATETIME,
         title = &quot;admin.conf_editor.change_from&quot;,
-        tab = &quot;advanced&quot;,
+        tab = &quot;basic&quot;,
+        sortAfter = &quot;encrypt&quot;,
+        className = &quot;not-export&quot;,
         editor = {
             @DataTableColumnEditor(
-                type = &quot;datetime&quot;
+                type = &quot;datetime&quot;,
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
+                }
             )
         }
     )
@@ -76,7 +96,8 @@ public class ConfDetailsDto extends ConfDetails {
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/settings/prepared?mode=planned&amp;name={name}&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.configuration.model.ConfPreparedEntity&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;3,desc&quot;),
-                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,import,celledit&quot;)
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
             }
         )
     })
@@ -90,14 +111,15 @@ public class ConfDetailsDto extends ConfDetails {
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/settings/prepared?mode=history&amp;name={name}&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.configuration.model.ConfPreparedEntity&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;2,desc&quot;),
-                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;)
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
             }
         )
     })
     private List&lt;ConfPreparedEntity&gt; confHistory;
 
     public ConfDetailsDto() {
-<span class="fc" id="L100">        super();</span>
-<span class="fc" id="L101">    }</span>
+<span class="fc" id="L122">        super();</span>
+<span class="fc" id="L123">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

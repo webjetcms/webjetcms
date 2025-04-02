@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.appstore</a> &gt; <span class="el_source">AppBean.java</span></div><h1>AppBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.appstore;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.appstore</a> &gt; <span class="el_source">AppBean.java</span></div><h1>AppBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.appstore;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -29,25 +29,27 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="fc" id="L29">	private List&lt;String&gt; galleryImages = null;</span>
 <span class="fc" id="L30">	private String domainName = null;</span>
 <span class="fc" id="L31">	private String itemKey = &quot;&quot;; //pouziva sa v AppManager kvoli filtracii prav</span>
+	//variant of the app, for multiple apps with same itemKey set different variant to keep them separate
+<span class="fc" id="L33">	private String variant = &quot;&quot;;</span>
     private String descKey;
-<span class="fc" id="L33">	private boolean custom = false;</span>
+<span class="fc" id="L35">	private boolean custom = false;</span>
 	private String componentPath;
 
 	public boolean isFree()
 	{
-<span class="pc bpc" id="L38" title="3 of 4 branches missed.">		if (priceEur == null || priceEur.intValue()==0) return true;</span>
+<span class="pc bpc" id="L40" title="3 of 4 branches missed.">		if (priceEur == null || priceEur.intValue()==0) return true;</span>
 
-<span class="nc" id="L40">		return false;</span>
+<span class="nc" id="L42">		return false;</span>
 	}
 
 	public String getDescriptionKey()
 	{
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (Tools.isNotEmpty(descKey)) return descKey;</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (Tools.isNotEmpty(descKey)) return descKey;</span>
 
-<span class="fc" id="L47">		int index = nameKey.lastIndexOf(&quot;.title&quot;);</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">		if (index &gt; 0) return nameKey.substring(0, index)+&quot;.desc&quot;;</span>
+<span class="fc" id="L49">		int index = nameKey.lastIndexOf(&quot;.title&quot;);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">		if (index &gt; 0) return nameKey.substring(0, index)+&quot;.desc&quot;;</span>
 
-<span class="fc" id="L50">		return nameKey+&quot;.desc&quot;;</span>
+<span class="fc" id="L52">		return nameKey+&quot;.desc&quot;;</span>
 	}
 
 	/**
@@ -56,150 +58,157 @@ import sk.iway.iwcm.io.IwcmFile;
 	 */
 	public List&lt;String&gt; getGalleryImages()
 	{
-<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (galleryImages != null) return galleryImages;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">		if (galleryImages != null) return galleryImages;</span>
 
-<span class="fc" id="L61">		List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L63">		List&lt;String&gt; images = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L63">		int lastSlash = imagePath.lastIndexOf('/');</span>
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if (lastSlash &gt; 0)</span>
+<span class="fc" id="L65">		int lastSlash = imagePath.lastIndexOf('/');</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (lastSlash &gt; 0)</span>
 		{
-<span class="fc" id="L66">			String basePath = imagePath.substring(0, lastSlash);</span>
+<span class="fc" id="L68">			String basePath = imagePath.substring(0, lastSlash);</span>
 
-<span class="fc bfc" id="L68" title="All 2 branches covered.">			for (int i=0; i&lt;10; i++)</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">			for (int i=0; i&lt;10; i++)</span>
 			{
-<span class="fc" id="L70">				String imagePathJpg = basePath+&quot;/screenshot-&quot;+i+&quot;.jpg&quot;;</span>
-<span class="fc" id="L71">				String imagePathGif = basePath+&quot;/screenshot-&quot;+i+&quot;.gif&quot;;</span>
-<span class="fc" id="L72">				String imagePathPng = basePath+&quot;/screenshot-&quot;+i+&quot;.png&quot;;</span>
-<span class="fc bfc" id="L73" title="All 2 branches covered.">				if (FileTools.isFile(imagePathJpg))</span>
+<span class="fc" id="L72">				String imagePathJpg = basePath+&quot;/screenshot-&quot;+i+&quot;.jpg&quot;;</span>
+<span class="fc" id="L73">				String imagePathGif = basePath+&quot;/screenshot-&quot;+i+&quot;.gif&quot;;</span>
+<span class="fc" id="L74">				String imagePathPng = basePath+&quot;/screenshot-&quot;+i+&quot;.png&quot;;</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">				if (FileTools.isFile(imagePathJpg))</span>
 				{
-<span class="fc" id="L75">					images.add(imagePathJpg);</span>
+<span class="fc" id="L77">					images.add(imagePathJpg);</span>
 				}
-<span class="pc bpc" id="L77" title="1 of 2 branches missed.">				else if (FileTools.isFile(imagePathGif))</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">				else if (FileTools.isFile(imagePathGif))</span>
 				{
-<span class="nc" id="L79">					images.add(imagePathGif);</span>
+<span class="nc" id="L81">					images.add(imagePathGif);</span>
 				}
-<span class="fc bfc" id="L81" title="All 2 branches covered.">				else if (FileTools.isFile(imagePathPng))</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">				else if (FileTools.isFile(imagePathPng))</span>
 				{
-<span class="fc" id="L83">					images.add(imagePathPng);</span>
+<span class="fc" id="L85">					images.add(imagePathPng);</span>
 				}
 			}
 		}
 
-<span class="fc" id="L88">		galleryImages = images;</span>
+<span class="fc" id="L90">		galleryImages = images;</span>
 
-<span class="fc" id="L90">		return images;</span>
+<span class="fc" id="L92">		return images;</span>
 	}
 
 	public String getNameKey()
 	{
-<span class="fc" id="L95">		return nameKey;</span>
+<span class="fc" id="L97">		return nameKey;</span>
 	}
 	public void setNameKey(String nameKey)
 	{
-<span class="fc" id="L99">		this.nameKey = nameKey;</span>
-<span class="fc" id="L100">	}</span>
+<span class="fc" id="L101">		this.nameKey = nameKey;</span>
+<span class="fc" id="L102">	}</span>
 	public String getComponentClickAction()
 	{
-<span class="fc" id="L103">		return componentClickAction;</span>
+<span class="fc" id="L105">		return componentClickAction;</span>
 	}
 	public void setComponentClickAction(String componentClickAction)
 	{
-<span class="fc" id="L107">		this.componentClickAction = componentClickAction;</span>
-<span class="fc" id="L108">	}</span>
+<span class="fc" id="L109">		this.componentClickAction = componentClickAction;</span>
+<span class="fc" id="L110">	}</span>
 	public String getImagePath()
 	{
-<span class="fc" id="L111">		return imagePath;</span>
+<span class="fc" id="L113">		return imagePath;</span>
 	}
 	public void setImagePath(String imagePath)
 	{
-<span class="fc" id="L115">		this.imagePath = imagePath;</span>
-<span class="fc" id="L116">	}</span>
+<span class="fc" id="L117">		this.imagePath = imagePath;</span>
+<span class="fc" id="L118">	}</span>
 	public BigDecimal getPriceEur()
 	{
-<span class="nc" id="L119">		return priceEur;</span>
+<span class="nc" id="L121">		return priceEur;</span>
 	}
 	public void setPriceEur(BigDecimal priceEur)
 	{
-<span class="nc" id="L123">		this.priceEur = priceEur;</span>
-<span class="nc" id="L124">	}</span>
+<span class="nc" id="L125">		this.priceEur = priceEur;</span>
+<span class="nc" id="L126">	}</span>
 
 	@Override
 	public String toString()
 	{
-<span class="fc" id="L129">		StringBuilder builder = new StringBuilder();</span>
-<span class="fc" id="L130">		builder.append(&quot;AppBean [nameKey=&quot;).append(nameKey)</span>
-<span class="fc" id="L131">				.append(&quot;, componentClickAction=&quot;).append(componentClickAction)</span>
-<span class="fc" id="L132">				.append(&quot;, imagePath=&quot;).append(imagePath).append(&quot;, priceEur=&quot;)</span>
-<span class="fc" id="L133">				.append(priceEur).append(&quot;, galleryImages=&quot;)</span>
-<span class="fc" id="L134">				.append(galleryImages).append(&quot;, domainName=&quot;)</span>
-<span class="fc" id="L135">				.append(domainName).append(&quot;, itemKey=&quot;).append(itemKey)</span>
-<span class="fc" id="L136">				.append(&quot;]&quot;);</span>
-<span class="fc" id="L137">		return builder.toString();</span>
+<span class="fc" id="L131">		StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L132">		builder.append(&quot;AppBean [nameKey=&quot;).append(nameKey)</span>
+<span class="fc" id="L133">				.append(&quot;, componentClickAction=&quot;).append(componentClickAction)</span>
+<span class="fc" id="L134">				.append(&quot;, imagePath=&quot;).append(imagePath).append(&quot;, priceEur=&quot;)</span>
+<span class="fc" id="L135">				.append(priceEur).append(&quot;, galleryImages=&quot;)</span>
+<span class="fc" id="L136">				.append(galleryImages).append(&quot;, domainName=&quot;)</span>
+<span class="fc" id="L137">				.append(domainName).append(&quot;, itemKey=&quot;).append(itemKey)</span>
+<span class="fc" id="L138">				.append(&quot;]&quot;);</span>
+<span class="fc" id="L139">		return builder.toString();</span>
 	}
 
 	public String getDomainName()
 	{
-<span class="fc" id="L142">		return domainName;</span>
+<span class="fc" id="L144">		return domainName;</span>
 	}
 
 	public void setDomainName(String domainName)
 	{
-<span class="fc" id="L147">		this.domainName = domainName;</span>
-<span class="fc" id="L148">	}</span>
+<span class="fc" id="L149">		this.domainName = domainName;</span>
+<span class="fc" id="L150">	}</span>
 
 	public String getItemKey()
 	{
-<span class="fc" id="L152">		return itemKey;</span>
+<span class="fc" id="L154">		return itemKey;</span>
 	}
 
 	public void setItemKey(String itemKey)
 	{
-<span class="fc" id="L157">		this.itemKey = itemKey;</span>
-<span class="fc" id="L158">	}</span>
+<span class="fc" id="L159">		this.itemKey = itemKey;</span>
+<span class="fc" id="L160">	}</span>
 
     public String getDescKey()
     {
-<span class="nc" id="L162">        return descKey;</span>
+<span class="nc" id="L164">        return descKey;</span>
     }
 
     public void setDescKey(String descKey)
     {
-<span class="fc" id="L167">        this.descKey = descKey;</span>
-<span class="fc" id="L168">    }</span>
+<span class="fc" id="L169">        this.descKey = descKey;</span>
+<span class="fc" id="L170">    }</span>
 
     public void setGalleryImages(String images)
     {
-<span class="fc bfc" id="L172" title="All 2 branches covered.">		if (images.endsWith(&quot;/&quot;)) {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">		if (images.endsWith(&quot;/&quot;)) {</span>
 			//list all images with name screenshot-X.jpg in images folder
-<span class="fc" id="L174">			IwcmFile dir = new IwcmFile(Tools.getRealPath(images));</span>
-<span class="fc" id="L175">			IwcmFile[] files = FileTools.sortFilesByName(dir.listFiles());</span>
-<span class="fc" id="L176">			this.galleryImages = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">			for (IwcmFile file : files) {</span>
-<span class="fc bfc" id="L178" title="All 2 branches covered.">				if (file.getName().startsWith(&quot;screenshot-&quot;)) {</span>
-<span class="fc" id="L179">					this.galleryImages.add(images + file.getName());</span>
+<span class="fc" id="L176">			IwcmFile dir = new IwcmFile(Tools.getRealPath(images));</span>
+<span class="fc" id="L177">			IwcmFile[] files = FileTools.sortFilesByName(dir.listFiles());</span>
+<span class="fc" id="L178">			this.galleryImages = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">			for (IwcmFile file : files) {</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">				if (file.getName().startsWith(&quot;screenshot-&quot;)) {</span>
+<span class="fc" id="L181">					this.galleryImages.add(images + file.getName());</span>
 				}
 			}
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">		} else if (Tools.isNotEmpty(images)) {</span>
-<span class="fc" id="L183">            String[] galleryImagesArr = Tools.getTokens(images, &quot;,&quot;, true);</span>
-<span class="fc" id="L184">            this.galleryImages = Arrays.asList(galleryImagesArr);</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">		} else if (Tools.isNotEmpty(images)) {</span>
+<span class="fc" id="L185">            String[] galleryImagesArr = Tools.getTokens(images, &quot;,&quot;, true);</span>
+<span class="fc" id="L186">            this.galleryImages = Arrays.asList(galleryImagesArr);</span>
         }
-<span class="fc" id="L186">    }</span>
+<span class="fc" id="L188">    }</span>
 
 	public boolean getCustom() {
-<span class="fc" id="L189">		return custom;</span>
+<span class="fc" id="L191">		return custom;</span>
 	}
 
 	public void setCustom(boolean custom) {
-<span class="fc" id="L193">		this.custom = custom;</span>
-<span class="fc" id="L194">	}</span>
+<span class="fc" id="L195">		this.custom = custom;</span>
+<span class="fc" id="L196">	}</span>
 
 	public String getComponentPath() {
-<span class="fc" id="L197">		return componentPath;</span>
+<span class="fc" id="L199">		return componentPath;</span>
 	}
 
 	public void setComponentPath(String componentPath) {
-<span class="fc" id="L201">		this.componentPath = componentPath;</span>
-<span class="fc" id="L202">	}</span>
+<span class="fc" id="L203">		this.componentPath = componentPath;</span>
+<span class="fc" id="L204">	}</span>
+
+	public String getVariant() {
+<span class="fc" id="L207">		return variant;</span>
+	}
+	public void setVariant(String variant) {
+<span class="fc" id="L210">		this.variant = variant;</span>
+<span class="fc" id="L211">	}</span>
 }
 
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

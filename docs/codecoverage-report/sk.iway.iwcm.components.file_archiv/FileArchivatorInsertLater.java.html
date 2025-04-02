@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivatorInsertLater.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivatorInsertLater.java</span></div><h1>FileArchivatorInsertLater.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivatorInsertLater.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivatorInsertLater.java</span></div><h1>FileArchivatorInsertLater.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
 
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -17,9 +17,9 @@ import java.util.List;
     {
         try
         {
-<span class="nc" id="L20">            List&lt;FileArchivatorBean&gt; filesToUpload = FileArchivatorDB.getFilesToUpload();</span>
+<span class="fc" id="L20">            List&lt;FileArchivatorBean&gt; filesToUpload = FileArchivatorDB.getFilesToUpload();</span>
 
-<span class="nc bnc" id="L22" title="All 2 branches missed.">            for(FileArchivatorBean fab : filesToUpload)</span>
+<span class="pc bpc" id="L22" title="1 of 2 branches missed.">            for(FileArchivatorBean fab : filesToUpload)</span>
             {
 <span class="nc" id="L24">                RequestBean currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
 <span class="nc bnc" id="L25" title="All 2 branches missed.">                if (currentRequestBean == null) {</span>
@@ -81,10 +81,10 @@ import java.util.List;
         }
         finally
         {
-<span class="nc" id="L84">            Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix()+&quot;getWaitingFileList&quot;);</span>
+<span class="fc" id="L84">            Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix()+&quot;getWaitingFileList&quot;);</span>
         }
-<span class="nc" id="L86">        SetCharacterEncodingFilter.unRegisterDataContext();</span>
-<span class="nc" id="L87">    }</span>
+<span class="fc" id="L86">        SetCharacterEncodingFilter.unRegisterDataContext();</span>
+<span class="fc" id="L87">    }</span>
 
     /**
 	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()

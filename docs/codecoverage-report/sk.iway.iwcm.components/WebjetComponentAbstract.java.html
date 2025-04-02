@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetComponentAbstract.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components</a> &gt; <span class="el_source">WebjetComponentAbstract.java</span></div><h1>WebjetComponentAbstract.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetComponentAbstract.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components</a> &gt; <span class="el_source">WebjetComponentAbstract.java</span></div><h1>WebjetComponentAbstract.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components;
 
 import java.util.List;
 import java.util.Map;
@@ -75,29 +75,66 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 <span class="fc" id="L76">    }</span>
 
+    /**
+     * Verify, that value is in options, if not, add it
+     * @param options
+     * @param paramName
+     * @param componentRequest
+     */
+    public List&lt;OptionDto&gt; addCurrentValueToOptions(List&lt;OptionDto&gt; options, String value) {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (value == null) return options;</span>
+<span class="fc" id="L86">        String[] values = {value};</span>
+<span class="fc" id="L87">        return addCurrentValueToOptions(options, values);</span>
+    }
+
+    /**
+     * Verify, that values are in options, if not, add it
+     * @param options
+     * @param values
+     * @return
+     */
+    public List&lt;OptionDto&gt; addCurrentValueToOptions(List&lt;OptionDto&gt; options, String[] values) {
+<span class="fc bfc" id="L97" title="All 4 branches covered.">        if (values != null &amp;&amp; values.length &gt; 0) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">            for (String value : values) {</span>
+                //iterate options and add if not found in value
+<span class="fc" id="L100">                boolean found = false;</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">                for (OptionDto option : options) {</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">                    if (option.getValue().equals(value)) {</span>
+<span class="fc" id="L103">                        found = true;</span>
+<span class="fc" id="L104">                        break;</span>
+                    }
+<span class="nc" id="L106">                }</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                if (!found) {</span>
+<span class="nc" id="L108">                    options.add(new OptionDto(value, value, null));</span>
+                }
+            }
+        }
+<span class="fc" id="L112">        return options;</span>
+    }
+
     @Override
     public String getViewFolder() {
-<span class="fc" id="L80">        return viewFolder;</span>
+<span class="fc" id="L117">        return viewFolder;</span>
     }
 
     public void setViewFolder(String viewFolder) {
-<span class="nc" id="L84">        this.viewFolder = viewFolder;</span>
-<span class="nc" id="L85">    }</span>
+<span class="nc" id="L121">        this.viewFolder = viewFolder;</span>
+<span class="nc" id="L122">    }</span>
 
     public String getDevice() {
-<span class="fc" id="L88">        return device;</span>
+<span class="fc" id="L125">        return device;</span>
     }
 
     public void setDevice(String device) {
-<span class="fc" id="L92">        this.device = device;</span>
-<span class="fc" id="L93">    }</span>
+<span class="fc" id="L129">        this.device = device;</span>
+<span class="fc" id="L130">    }</span>
 
     public Integer getCacheMinutes() {
-<span class="fc" id="L96">        return cacheMinutes;</span>
+<span class="fc" id="L133">        return cacheMinutes;</span>
     }
 
     public void setCacheMinutes(Integer cacheMinutes) {
-<span class="fc" id="L100">        this.cacheMinutes = cacheMinutes;</span>
-<span class="fc" id="L101">    }</span>
+<span class="fc" id="L137">        this.cacheMinutes = cacheMinutes;</span>
+<span class="fc" id="L138">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

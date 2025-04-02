@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoiceItemEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.jpa</a> &gt; <span class="el_source">BasketInvoiceItemEntity.java</span></div><h1>BasketInvoiceItemEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.jpa;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.Min;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.basket.BasketDB;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name=&quot;basket_item&quot;)
+@Getter
+@Setter
+<span class="fc" id="L38">public class BasketInvoiceItemEntity {</span>
+
+<span class="fc" id="L40">	@Transient</span>
+    private DocDetails doc = null;
+
+	@Id
+	@Column(name=&quot;basket_item_id&quot;)
+	@GeneratedValue(generator=&quot;WJGen_basket_item&quot;)
+    @TableGenerator(name=&quot;WJGen_basket_item&quot;, pkColumnValue=&quot;basket_item&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+	Long id;
+
+	@ManyToOne
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonBackReference(value=&quot;itemsBasketInvoice&quot;)
+	@JoinColumn(name=&quot;basket_invoice_id&quot;, insertable = false, updatable = false)
+	BasketInvoiceEntity itemsBasketInvoice;
+
+	@Column(name=&quot;basket_invoice_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    Integer invoiceId;
+
+	@Column(name=&quot;item_title&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.OPEN_EDITOR,
+		title = &quot;components.basket.item_name&quot;,
+				editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+	)
+	private String itemTitle;
+
+	@Column(name=&quot;item_price&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.NUMBER,
+		renderFormat = &quot;dt-format-number--decimal&quot;,
+		title = &quot;components.basket.price_without_DPH&quot;,
+		editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+	)
+	private BigDecimal itemPrice;
+
+	@Column(name=&quot;item_qty&quot;)
+	@DataTableColumn(
+		inputType = DataTableColumnType.NUMBER,
+		title = &quot;components.basket.count&quot;
+	)
+	@Min(1)
+	private Integer itemQty;
+
+	@Column(name=&quot;item_vat&quot;)
+	private Integer itemVat;
+
+	@Column(name=&quot;browser_id&quot;)
+	private Long browserId;
+
+	@Column(name=&quot;logged_user_id&quot;)
+	private int loggedUserId;
+
+	@Column(name=&quot;item_id&quot;)
+	private int itemId;
+
+	@Column(name=&quot;item_part_no&quot;)
+	private String itemPartNo;
+
+	@Column(name=&quot;item_note&quot;)
+	private String itemNote;
+
+	@Column(name=&quot;date_insert&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date dateInsert;
+
+	@Column(name=&quot;domain_id&quot;)
+	private int domainId;
+
+<span class="fc" id="L118">	@Transient</span>
+	@DataTableColumnNested
+	private BasketInvoiceItemEditorFields editorFields = null;
+
+	public BigDecimal getItemPriceQty() {
+<span class="fc" id="L123">		return BigDecimal.valueOf(getItemQty()).multiply(itemPrice);</span>
+	}
+
+    /**
+	 * Vrati cenu jednej polozky vratane DPH
+	 * @return
+	 */
+	public BigDecimal getItemPriceVat() {
+		//vypocet DPH (aka VAT)
+<span class="fc" id="L132">		BigDecimal vat = BigDecimal.valueOf( getItemVat() );</span>
+<span class="fc" id="L133">		vat = ( vat.divide(BigDecimal.valueOf(100)) ).add(BigDecimal.valueOf(1));</span>
+<span class="fc" id="L134">		return getItemPrice().multiply(vat);</span>
+	}
+
+	public boolean itemAlreadyPurchased() {
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">		return getId() &gt; 0;</span>
+	}
+
+	/**
+	 * Vrati cenu vratane DPH * pocet poloziek
+	 * @return
+	 */
+	public BigDecimal getItemPriceVatQty() {
+<span class="fc" id="L146">		return getItemPriceVat().multiply( BigDecimal.valueOf(getItemQty()) );</span>
+	}
+
+	public String getTitle() {
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="fc" id="L151">			return getItemTitle();</span>
+<span class="nc" id="L152">		return(getDoc().getTitle());</span>
+	}
+
+	public synchronized DocDetails getDoc() {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">		if (doc == null) {</span>
+<span class="fc" id="L157">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L158">			doc = docDB.getDoc(getItemId());</span>
+		}
+<span class="fc" id="L160">		return doc;</span>
+	}
+
+	//------------------------PREPOCITAVANIE NA LOKALNE CENY POUZIVATELA-----------------------
+	/**
+	 * Metody na prepocitavanie cien do inych mien. Metody sa vyskytuju v roznych obmenach:
+	 * getLocalPrice - vypocita cenu bez DPH
+	 * getItemLocalPriceQty - vypocita cenu bez DPH krat pocet poloziek v kosiku
+	 * getLocalPriceVat - vypocita cenu aj s DPH
+	 * getItemLocalPriceVatQty - vypocita cenu s DPH krat pocet poloziek v kosiku
+	 *
+	 * Tieto metody sa vyskytuju v dvoch obmenach - s a bez zadanej meny. Ak sa mena nezada,
+	 * vezme sa vychodzia mena pouzivatela.
+	 */
+
+	public BigDecimal getLocalPrice(HttpServletRequest request, String currency) {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="nc" id="L177">			return getItemPrice();</span>
+<span class="nc" id="L178">		return getDoc().getLocalPrice(request, currency);</span>
+	}
+
+	public BigDecimal getLocalPrice(HttpServletRequest request) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="nc" id="L183">			return getItemPrice();</span>
+<span class="nc" id="L184">		return getDoc().getLocalPrice(request);</span>
+	}
+
+	public BigDecimal getItemLocalPriceQty(HttpServletRequest request, String currency) {
+<span class="nc" id="L188">		return BigDecimal.valueOf(getItemQty()).multiply( getLocalPrice(request, currency) );</span>
+	}
+
+	public BigDecimal getItemLocalPriceQty(HttpServletRequest request) {
+<span class="nc" id="L192">		return BigDecimal.valueOf(getItemQty()).multiply( getLocalPrice(request) );</span>
+	}
+
+	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request, String currency) {
+<span class="nc" id="L196">		BigDecimal vat = BigDecimal.valueOf(getItemVat());</span>
+<span class="nc" id="L197">		vat = (vat.divide(BigDecimal.valueOf(100))).add(BigDecimal.valueOf(1));</span>
+<span class="nc" id="L198">		return vat.multiply(BigDecimal.valueOf(getItemQty())).multiply(getLocalPrice(request, currency));</span>
+	}
+
+	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency) {
+<span class="nc" id="L202">		BigDecimal vat = BigDecimal.valueOf(getItemVat());</span>
+<span class="nc" id="L203">		vat = (vat.divide(BigDecimal.valueOf(100))).add(BigDecimal.valueOf(1));</span>
+<span class="nc" id="L204">		return vat.multiply( getLocalPrice(request, currency) );</span>
+	}
+
+	public BigDecimal getLocalPriceVat(HttpServletRequest request) {
+<span class="nc" id="L208">		BigDecimal vat = BigDecimal.valueOf(getItemVat());</span>
+<span class="nc" id="L209">		vat = (vat.divide(BigDecimal.valueOf(100))).add(BigDecimal.valueOf(1));</span>
+<span class="nc" id="L210">		return vat.multiply( getLocalPrice(request) );</span>
+	}
+
+	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request) {
+<span class="nc" id="L214">		return getItemLocalPriceVatQty(request, BasketDB.getDisplayCurrency(request));</span>
+	}
+
+	public Date getDateInsert() {
+<span class="fc bfc" id="L218" title="All 2 branches covered.">		return dateInsert == null ? null : (Date) dateInsert.clone();</span>
+	}
+
+	public void setDateInsert(Date dateInsert) {
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">		this.dateInsert = dateInsert == null ? null : (Date) dateInsert.clone();</span>
+<span class="fc" id="L223">	}</span>
+
+	@Override
+	public String toString() {
+<span class="nc" id="L227">		return String.format(&quot;%dx%s&quot;, getItemQty(), getItemTitle());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

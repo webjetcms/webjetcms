@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsCalendarApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.calendar</a> &gt; <span class="el_source">NewsCalendarApp.java</span></div><h1>NewsCalendarApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.calendar;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.OptionDto;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.calendar.NewsCalendarApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.calendarnews.title&quot;,
+    descKey = &quot;components.calendarnews.desc&quot;,
+    itemKey = &quot;cmp_calendar&quot;,
+    variant = &quot;news&quot;,
+    imagePath = &quot;/components/news-calendar/editoricon.png&quot;,
+    galleryImages = &quot;/components/news-calendar/&quot;,
+    componentPath = &quot;/components/news-calendar/news_calendar.jsp&quot;
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = &quot;basic&quot;, title = &quot;components.universalComponentDialog.title&quot;, selected = true)
+})
+@Getter
+@Setter
+<span class="fc" id="L42">public class NewsCalendarApp extends WebjetComponentAbstract {</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.JSON,
+        title=&quot;components.news.groupids&quot;,
+        tab = &quot;basic&quot;,
+        sortAfter = &quot;editorFields.groupDetails&quot;,
+        className = &quot;dt-tree-group-array&quot;
+    )
+    private List&lt;GroupDetails&gt; groupIds;
+
+<span class="fc" id="L52">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;components.calendar_news.zahrnut_podadresare&quot;,
+        tab = &quot;basic&quot;
+    )
+    private boolean expandGroupIds = true;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        tab = &quot;basic&quot;,
+        title=&quot;components.news.perexGroup&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;editor.tab.filter&quot;),
+                @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+            }
+        )
+    })
+	private Integer[] perexGroup;
+
+    @Override
+    public Map&lt;String, List&lt;OptionDto&gt;&gt; getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L75">        Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L76">        List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups(componentRequest.getGroupId());</span>
+<span class="fc" id="L77">        List&lt;OptionDto&gt; perexGroupOptions = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for (PerexGroupBean pg : perexGroups) {</span>
+<span class="fc" id="L79">            perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), &quot;&quot;+pg.getPerexGroupId(), null));</span>
+<span class="fc" id="L80">        }</span>
+<span class="fc" id="L81">        options.put(&quot;perexGroup&quot;, perexGroupOptions);</span>
+<span class="fc" id="L82">        return options;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

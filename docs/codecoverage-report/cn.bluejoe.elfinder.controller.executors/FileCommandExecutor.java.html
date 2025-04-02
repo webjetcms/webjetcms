@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">FileCommandExecutor.java</span></div><h1>FileCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">FileCommandExecutor.java</span></div><h1>FileCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,15 +18,15 @@ import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.util.MimeTypesUtils;
 
-<span class="fc" id="L21">public class FileCommandExecutor extends AbstractCommandExecutor</span>
+<span class="nc" id="L21">public class FileCommandExecutor extends AbstractCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, HttpServletResponse response,
 			ServletContext servletContext) throws Exception
 	{
-<span class="fc" id="L27">		String target = request.getParameter(&quot;target&quot;);</span>
-<span class="fc" id="L28">		boolean download = &quot;1&quot;.equals(request.getParameter(&quot;download&quot;));</span>
-<span class="fc" id="L29">		FsItemEx fsi = super.findItem(fsService, target);</span>
+<span class="nc" id="L27">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="nc" id="L28">		boolean download = &quot;1&quot;.equals(request.getParameter(&quot;download&quot;));</span>
+<span class="nc" id="L29">		FsItemEx fsi = super.findItem(fsService, target);</span>
 
 		//JEEFF: preposleme priamo subor aby zbehla bezna kontrola prav
 		//uz netreba prava kontrolujeme v elfinderi priamo
@@ -34,15 +34,15 @@ import cn.bluejoe.elfinder.util.MimeTypesUtils;
 		//response.setHeader(&quot;Location&quot;, fsi.getPath());
 
 
-<span class="fc" id="L37">		String mime = fsi.getMimeType();</span>
+<span class="nc" id="L37">		String mime = fsi.getMimeType();</span>
 
-<span class="fc" id="L39">		response.setCharacterEncoding(&quot;utf-8&quot;);</span>
-<span class="fc" id="L40">		response.setContentType(mime);</span>
+<span class="nc" id="L39">		response.setCharacterEncoding(&quot;utf-8&quot;);</span>
+<span class="nc" id="L40">		response.setContentType(mime);</span>
 		//String fileUrl = getFileUrl(fileTarget);
 		//String fileUrlRelative = getFileUrl(fileTarget);
-<span class="fc" id="L43">		String fileName = fsi.getName();</span>
+<span class="nc" id="L43">		String fileName = fsi.getName();</span>
 		//fileName = new String(fileName.getBytes(&quot;utf-8&quot;), &quot;ISO8859-1&quot;);
-<span class="pc bpc" id="L45" title="2 of 4 branches missed.">		if (download || MimeTypesUtils.isUnknownType(mime))</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">		if (download || MimeTypesUtils.isUnknownType(mime))</span>
 		{
 <span class="nc" id="L47">			response.setHeader(&quot;Content-Disposition&quot;,</span>
 <span class="nc" id="L48">				&quot;attachments; &quot; + getAttachementFileName(fileName, request.getHeader(&quot;USER-AGENT&quot;)));</span>
@@ -50,8 +50,8 @@ import cn.bluejoe.elfinder.util.MimeTypesUtils;
 <span class="nc" id="L50">			response.setHeader(&quot;Content-Transfer-Encoding&quot;, &quot;binary&quot;);</span>
 		}
 
-<span class="fc" id="L53">		writeFsItemExToResponse(fsi, response);</span>
-<span class="fc" id="L54">	}</span>
+<span class="nc" id="L53">		writeFsItemExToResponse(fsi, response);</span>
+<span class="nc" id="L54">	}</span>
 
 	/**
 	 * Zapise obsah fsi do response
@@ -60,32 +60,32 @@ import cn.bluejoe.elfinder.util.MimeTypesUtils;
 	 * @throws IOException
 	 */
 	protected static void writeFsItemExToResponse(FsItemEx fsi, HttpServletResponse response) throws IOException {
-<span class="fc" id="L63">		OutputStream out = response.getOutputStream();</span>
-<span class="fc" id="L64">		InputStream is = null;</span>
-<span class="fc" id="L65">		response.setContentLength((int) fsi.getSize());</span>
+<span class="nc" id="L63">		OutputStream out = response.getOutputStream();</span>
+<span class="nc" id="L64">		InputStream is = null;</span>
+<span class="nc" id="L65">		response.setContentLength((int) fsi.getSize());</span>
 		try
 		{
 			// serve file
-<span class="fc" id="L69">			is = fsi.openInputStream();</span>
-<span class="fc" id="L70">			IOUtils.copy(is, out);</span>
-<span class="fc" id="L71">			out.flush();</span>
-<span class="fc" id="L72">			out.close();</span>
+<span class="nc" id="L69">			is = fsi.openInputStream();</span>
+<span class="nc" id="L70">			IOUtils.copy(is, out);</span>
+<span class="nc" id="L71">			out.flush();</span>
+<span class="nc" id="L72">			out.close();</span>
 		}
 		finally
 		{
-<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if (is != null)</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (is != null)</span>
 			{
 				try
 				{
-<span class="fc" id="L80">					is.close();</span>
+<span class="nc" id="L80">					is.close();</span>
 				}
 <span class="nc" id="L82">				catch (IOException e)</span>
 				{
 <span class="nc" id="L84">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L85">				}</span>
+<span class="nc" id="L85">				}</span>
 			}
 		}
-<span class="fc" id="L88">	}</span>
+<span class="nc" id="L88">	}</span>
 
 	protected static String getAttachementFileName(String fileName, String userAgent) throws UnsupportedEncodingException
 	{

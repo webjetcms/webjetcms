@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataSanitizer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.helpers</a> &gt; <span class="el_source">DataSanitizer.java</span></div><h1>DataSanitizer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.helpers;
+
+/**
+ * Replaces sensitive informations in logs and other outputs
+ */
+<span class="nc" id="L6">public class DataSanitizer {</span>
+
+    // List of keywords that are considered sensitive - they are hard coded here to protect it from modifications by configuration
+<span class="fc" id="L9">    private static final String[] sensitiveKeywords = new String[]{</span>
+            &quot;password&quot;,
+            &quot;pass&quot;,
+            &quot;passwd&quot;,
+            &quot;pwd&quot;,
+            &quot;pswd&quot;,
+            &quot;psswd&quot;,
+            &quot;heslo&quot;,
+            &quot;secret&quot;,
+            &quot;key&quot;,
+            &quot;token&quot;,
+            &quot;cert&quot;,
+            &quot;certificate&quot;
+    };
+
+    /**
+     * Test if name is sensitive
+     * @param fieldName - name of the field, eg. user_password, userPassword, pwd, logonToken etc.
+     * @return
+     */
+    public static boolean isSensitive(String fieldName) {
+<span class="fc" id="L30">        String lower = fieldName.toLowerCase();</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        for (String keyword : sensitiveKeywords) {</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            if (lower.contains(keyword)) {</span>
+<span class="fc" id="L33">                return true;</span>
+            }
+        }
+<span class="fc" id="L36">        return false;</span>
+    }
+
+    /**
+     * Replace sensitive information in value if the name is on the sensitive keywords list
+     * @param fieldName - name of the field/configuration key, eg. user_password, userPassword, pwd, logonToken etc.
+     * @param value - value to replace
+     * @return - asterisk if name is sensitive otherwise the value
+     */
+    public static String sanitizeIfNameIsSensitive(String fieldName, String value) {
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (isSensitive(fieldName)) {</span>
+<span class="fc" id="L47">            return &quot;********&quot;;</span>
+        }
+<span class="fc" id="L49">        return value;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

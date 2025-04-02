@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketItemBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketItemBean.java</span></div><h1>BasketItemBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketItemBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketItemBean.java</span></div><h1>BasketItemBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -86,7 +86,7 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public double getItemPriceQty()
 	{
-<span class="nc" id="L89">		return(getItemQty().intValue() * getItemPrice().doubleValue());</span>
+<span class="fc" id="L89">		return(getItemQty().intValue() * getItemPrice().doubleValue());</span>
 	}
 
 	/**
@@ -96,15 +96,15 @@ import sk.iway.iwcm.doc.DocDetails;
 	public double getItemPriceVat()
 	{
 		//TODO: vypocet DPH
-<span class="nc" id="L99">		double vat = getItemVat().doubleValue();</span>
-<span class="nc" id="L100">		vat = (vat / 100) + 1;</span>
+<span class="fc" id="L99">		double vat = getItemVat().doubleValue();</span>
+<span class="fc" id="L100">		vat = (vat / 100) + 1;</span>
 
-<span class="nc" id="L102">		return(getItemPrice().doubleValue() * vat);</span>
+<span class="fc" id="L102">		return(getItemPrice().doubleValue() * vat);</span>
 	}
 
 	public boolean itemAlreadyPurchased()
 	{
-<span class="nc bnc" id="L107" title="All 2 branches missed.">		return getBasketItemId() &gt; 0;</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">		return getBasketItemId() &gt; 0;</span>
 	}
 
 	/**
@@ -113,24 +113,24 @@ import sk.iway.iwcm.doc.DocDetails;
 	 */
 	public double getItemPriceVatQty()
 	{
-<span class="nc" id="L116">		return(getItemQty().intValue() * getItemPriceVat());</span>
+<span class="fc" id="L116">		return(getItemQty().intValue() * getItemPriceVat());</span>
 	}
 
 	public String getTitle()
 	{
-<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
-<span class="nc" id="L122">			return getItemTitle();</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="fc" id="L122">			return getItemTitle();</span>
 <span class="nc" id="L123">		return(getDoc().getTitle());</span>
 	}
 
 	public synchronized DocDetails getDoc()
 	{
-<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (doc == null)</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">		if (doc == null)</span>
 		{
-<span class="nc" id="L130">			DocDB docDB = DocDB.getInstance();</span>
-<span class="nc" id="L131">			doc = docDB.getDoc(getItemId());</span>
+<span class="fc" id="L130">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L131">			doc = docDB.getDoc(getItemId());</span>
 		}
-<span class="nc" id="L133">		return(doc);</span>
+<span class="fc" id="L133">		return(doc);</span>
 	}
 
 	//------------------------PREPOCITAVANIE NA LOKALNE CENY POUZIVATELA-----------------------
@@ -147,16 +147,16 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public double getLocalPrice(HttpServletRequest request, String currency)
 	{
-<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
-<span class="nc" id="L151">			return getItemPrice();</span>
-<span class="nc" id="L152">		return getDoc().getLocalPrice(request,currency);</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="fc" id="L151">			return getItemPrice();</span>
+<span class="nc" id="L152">		return getDoc().getLocalPriceDouble(request,currency);</span>
 	}
 
 	public double getLocalPrice(HttpServletRequest request)
 	{
-<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (itemAlreadyPurchased())</span>
-<span class="nc" id="L158">			return getItemPrice();</span>
-<span class="nc" id="L159">		return getDoc().getLocalPrice(request);</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">		if (itemAlreadyPurchased())</span>
+<span class="fc" id="L158">			return getItemPrice();</span>
+<span class="nc" id="L159">		return getDoc().getLocalPriceDouble(request);</span>
 	}
 
 	public double getItemLocalPriceQty(HttpServletRequest request, String currency)
@@ -166,14 +166,14 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public double getItemLocalPriceQty(HttpServletRequest request)
 	{
-<span class="nc" id="L169">		return getItemQty()*getLocalPrice(request);</span>
+<span class="fc" id="L169">		return getItemQty()*getLocalPrice(request);</span>
 	}
 
 	public double getItemLocalPriceVatQty(HttpServletRequest request, String currency)
 	{
-<span class="nc" id="L174">		double vat = getItemVat().doubleValue();</span>
-<span class="nc" id="L175">		vat = (vat / 100) + 1;</span>
-<span class="nc" id="L176">		return vat*getItemQty()*getLocalPrice(request, currency);</span>
+<span class="fc" id="L174">		double vat = getItemVat().doubleValue();</span>
+<span class="fc" id="L175">		vat = (vat / 100) + 1;</span>
+<span class="fc" id="L176">		return vat*getItemQty()*getLocalPrice(request, currency);</span>
 	}
 
 	public double getLocalPriceVat(HttpServletRequest request, String currency)
@@ -185,14 +185,14 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public double getLocalPriceVat(HttpServletRequest request)
 	{
-<span class="nc" id="L188">		double vat = getItemVat().doubleValue();</span>
-<span class="nc" id="L189">		vat = (vat / 100.0) + 1.0;</span>
-<span class="nc" id="L190">		return vat*getLocalPrice(request);</span>
+<span class="fc" id="L188">		double vat = getItemVat().doubleValue();</span>
+<span class="fc" id="L189">		vat = (vat / 100.0) + 1.0;</span>
+<span class="fc" id="L190">		return vat*getLocalPrice(request);</span>
 	}
 
 	public double getItemLocalPriceVatQty(HttpServletRequest request)
 	{
-<span class="nc" id="L195">		return getItemLocalPriceVatQty(request, BasketDB.getDisplayCurrency(request));</span>
+<span class="fc" id="L195">		return getItemLocalPriceVatQty(request, BasketDB.getDisplayCurrency(request));</span>
 	}
 
 
@@ -215,7 +215,7 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public int getBasketItemId()
 	{
-<span class="nc" id="L218">		return basketItemId;</span>
+<span class="fc" id="L218">		return basketItemId;</span>
 	}
 
 	public void setBasketItemId(int basketItemId)
@@ -230,8 +230,8 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public void setBrowserId(Long browserId)
 	{
-<span class="nc" id="L233">		this.browserId = browserId;</span>
-<span class="nc" id="L234">	}</span>
+<span class="fc" id="L233">		this.browserId = browserId;</span>
+<span class="fc" id="L234">	}</span>
 
 	public int getLoggedUserId()
 	{
@@ -240,28 +240,28 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public void setLoggedUserId(int loggedUserId)
 	{
-<span class="nc" id="L243">		this.loggedUserId = loggedUserId;</span>
-<span class="nc" id="L244">	}</span>
+<span class="fc" id="L243">		this.loggedUserId = loggedUserId;</span>
+<span class="fc" id="L244">	}</span>
 
 	public int getItemId()
 	{
-<span class="nc" id="L248">		return itemId;</span>
+<span class="fc" id="L248">		return itemId;</span>
 	}
 
 	public void setItemId(int itemId)
 	{
-<span class="nc" id="L253">		this.itemId = itemId;</span>
-<span class="nc" id="L254">	}</span>
+<span class="fc" id="L253">		this.itemId = itemId;</span>
+<span class="fc" id="L254">	}</span>
 
 	public String getItemTitle()
 	{
-<span class="nc" id="L258">		return itemTitle;</span>
+<span class="fc" id="L258">		return itemTitle;</span>
 	}
 
 	public void setItemTitle(String itemTitle)
 	{
-<span class="nc" id="L263">		this.itemTitle = itemTitle;</span>
-<span class="nc" id="L264">	}</span>
+<span class="fc" id="L263">		this.itemTitle = itemTitle;</span>
+<span class="fc" id="L264">	}</span>
 
 	public String getItemPartNo()
 	{
@@ -270,48 +270,48 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public void setItemPartNo(String itemPartNo)
 	{
-<span class="nc" id="L273">		this.itemPartNo = itemPartNo;</span>
-<span class="nc" id="L274">	}</span>
+<span class="fc" id="L273">		this.itemPartNo = itemPartNo;</span>
+<span class="fc" id="L274">	}</span>
 
 	public Double getItemPrice()
 	{
-<span class="nc" id="L278">		return itemPrice;</span>
+<span class="fc" id="L278">		return itemPrice;</span>
 	}
 
 	public void setItemPrice(Double itemPrice)
 	{
-<span class="nc" id="L283">		this.itemPrice = itemPrice;</span>
-<span class="nc" id="L284">	}</span>
+<span class="fc" id="L283">		this.itemPrice = itemPrice;</span>
+<span class="fc" id="L284">	}</span>
 
 	public Double getItemVat()
 	{
-<span class="nc" id="L288">		return itemVat;</span>
+<span class="fc" id="L288">		return itemVat;</span>
 	}
 
 	public void setItemVat(Double itemVat)
 	{
-<span class="nc" id="L293">		this.itemVat = itemVat;</span>
-<span class="nc" id="L294">	}</span>
+<span class="fc" id="L293">		this.itemVat = itemVat;</span>
+<span class="fc" id="L294">	}</span>
 
 	public Integer getItemQty()
 	{
-<span class="nc" id="L298">		return itemQty;</span>
+<span class="fc" id="L298">		return itemQty;</span>
 	}
 
 	public void setItemQty(Integer itemQty)
 	{
-<span class="nc" id="L303">		this.itemQty = itemQty;</span>
-<span class="nc" id="L304">	}</span>
+<span class="fc" id="L303">		this.itemQty = itemQty;</span>
+<span class="fc" id="L304">	}</span>
 
 	public String getItemNote()
 	{
-<span class="nc" id="L308">		return itemNote;</span>
+<span class="fc" id="L308">		return itemNote;</span>
 	}
 
 	public void setItemNote(String itemNote)
 	{
-<span class="nc" id="L313">		this.itemNote = itemNote;</span>
-<span class="nc" id="L314">	}</span>
+<span class="fc" id="L313">		this.itemNote = itemNote;</span>
+<span class="fc" id="L314">	}</span>
 
 	public Date getDateInsert()
 	{
@@ -320,8 +320,8 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public void setDateInsert(Date dateInsert)
 	{
-<span class="nc bnc" id="L323" title="All 2 branches missed.">		this.dateInsert = dateInsert == null ? null : (Date) dateInsert.clone();</span>
-<span class="nc" id="L324">	}</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">		this.dateInsert = dateInsert == null ? null : (Date) dateInsert.clone();</span>
+<span class="fc" id="L324">	}</span>
 
 	public BasketInvoiceBean getBasketInvoice()
 	{
@@ -330,14 +330,14 @@ import sk.iway.iwcm.doc.DocDetails;
 
 	public void setBasketInvoice(BasketInvoiceBean basketInvoice)
 	{
-<span class="nc" id="L333">		this.basketInvoice = basketInvoice;</span>
-<span class="nc" id="L334">	}</span>
+<span class="fc" id="L333">		this.basketInvoice = basketInvoice;</span>
+<span class="fc" id="L334">	}</span>
 
 
 	@Override
 	public String toString()
 	{
-<span class="nc" id="L340">		return String.format(&quot;%dx%s&quot;, getItemQty(), getItemTitle());</span>
+<span class="fc" id="L340">		return String.format(&quot;%dx%s&quot;, getItemQty(), getItemTitle());</span>
 	}
 
 	//public int getDomainId() {
@@ -363,8 +363,8 @@ import sk.iway.iwcm.doc.DocDetails;
 	 */
 	public void setDomainId(int domainId) {
 		//this.domainId = domainId;
-<span class="nc" id="L366">		this.domainId = CloudToolsForCore.getDomainId();</span>
-<span class="nc" id="L367">	}</span>
+<span class="fc" id="L366">		this.domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L367">	}</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

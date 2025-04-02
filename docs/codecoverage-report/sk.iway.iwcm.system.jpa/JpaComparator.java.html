@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JpaComparator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">JpaComparator.java</span></div><h1>JpaComparator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JpaComparator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">JpaComparator.java</span></div><h1>JpaComparator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.jpa;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -42,19 +42,19 @@ public class JpaComparator&lt;T&gt; implements Serializable, Comparator&lt;T&gt;
 
 	public JpaComparator(Class&lt;T&gt; clazz, String propertyName, boolean isAscending)
 	{
-<span class="nc" id="L45">		this(clazz,propertyName,isAscending,true);</span>
-<span class="nc" id="L46">	}</span>
+<span class="fc" id="L45">		this(clazz,propertyName,isAscending,true);</span>
+<span class="fc" id="L46">	}</span>
 
 	public JpaComparator(Class&lt;T&gt; clazz, String propertyName, boolean isAscending, boolean isCaseSensitive)
-<span class="nc" id="L49">	{</span>
-<span class="nc bnc" id="L50" title="All 2 branches missed.">		if(clazz.getAnnotation(Entity.class)==null)</span>
+<span class="fc" id="L49">	{</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">		if(clazz.getAnnotation(Entity.class)==null)</span>
 		{
 <span class="nc" id="L52">			throw new IllegalArgumentException(&quot;Class '&quot;+clazz.getName()+&quot;' doesn't have @javax.persistence.Entity annotation!&quot;);</span>
 		}
-<span class="nc" id="L54">		ascending = isAscending;</span>
-<span class="nc" id="L55">		caseSensitive = isCaseSensitive;</span>
-<span class="nc" id="L56">		property = propertyName;</span>
-<span class="nc" id="L57">	}</span>
+<span class="fc" id="L54">		ascending = isAscending;</span>
+<span class="fc" id="L55">		caseSensitive = isCaseSensitive;</span>
+<span class="fc" id="L56">		property = propertyName;</span>
+<span class="fc" id="L57">	}</span>
 	@Override
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public int compare(T o1, T o2) throws ClassCastException
@@ -91,8 +91,8 @@ public class JpaComparator&lt;T&gt; implements Serializable, Comparator&lt;T&gt;
 
 	public void orderList(List&lt;T&gt; listOfObjects)
 	{
-<span class="nc" id="L94">		Collections.sort(listOfObjects, this);</span>
-<span class="nc" id="L95">	}</span>
+<span class="fc" id="L94">		Collections.sort(listOfObjects, this);</span>
+<span class="fc" id="L95">	}</span>
 
    public static Object toUpperCase(Object object)
    {

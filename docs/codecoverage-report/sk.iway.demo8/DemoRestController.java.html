@@ -1,10 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DemoRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.demo8</a> &gt; <span class="el_source">DemoRestController.java</span></div><h1>DemoRestController.java</h1><pre class="source lang-java linenums">package sk.iway.demo8;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DemoRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.demo8</a> &gt; <span class="el_source">DemoRestController.java</span></div><h1>DemoRestController.java</h1><pre class="source lang-java linenums">package sk.iway.demo8;
 
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.spring.SpringSecurityConf;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -16,53 +22,86 @@ import java.util.stream.IntStream;
 import javax.servlet.http.HttpServletRequest;
 
 @RestController
-<span class="fc" id="L19">public class DemoRestController</span>
+<span class="fc" id="L25">public class DemoRestController</span>
 {
 	@GetMapping(path={&quot;/demo-test&quot;})
 	public String test(HttpServletRequest request)
 	{
-<span class="fc" id="L24">		final StringBuilder result = new StringBuilder();</span>
-<span class="fc" id="L25">		result.append(&quot;Demo OK &quot;).append(Constants.getInstallName()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L30">		final StringBuilder result = new StringBuilder();</span>
+<span class="fc" id="L31">		result.append(&quot;Demo OK &quot;).append(Constants.getInstallName()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="fc" id="L27">		result.append(&quot;docList.size=&quot;+DocDB.getInstance().getDocByGroup(4).size()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L33">		result.append(&quot;docList.size=&quot;+DocDB.getInstance().getDocByGroup(4).size()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="fc" id="L29">		result.append(&quot;Java 17 (&lt;a href=\&quot;https://www.baeldung.com/java-17-new-features\&quot;&gt;https://www.baeldung.com/java-17-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L35">		result.append(&quot;Java 17 (&lt;a href=\&quot;https://www.baeldung.com/java-17-new-features\&quot;&gt;https://www.baeldung.com/java-17-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="fc" id="L31">		IntStream random = RandomGeneratorFactory.of(&quot;Random&quot;)</span>
-<span class="fc" id="L32">				.create()</span>
-<span class="fc" id="L33">				.ints(10, 0, 100);</span>
+<span class="fc" id="L37">		IntStream random = RandomGeneratorFactory.of(&quot;Random&quot;)</span>
+<span class="fc" id="L38">				.create()</span>
+<span class="fc" id="L39">				.ints(10, 0, 100);</span>
 
-<span class="fc" id="L35">		result.append(&quot;&lt;b&gt;2.2. Enhanced Pseudo-Random Number Generators&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
-<span class="fc" id="L36">		random.forEach(i -&gt; result.append(i).append(&quot;\n&lt;br&gt;&quot;));</span>
-<span class="fc" id="L37">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L41">		result.append(&quot;&lt;b&gt;2.2. Enhanced Pseudo-Random Number Generators&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L42">		random.forEach(i -&gt; result.append(i).append(&quot;\n&lt;br&gt;&quot;));</span>
+<span class="fc" id="L43">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="fc" id="L39">		result.append(&quot;Java 16 (&lt;a href=\&quot;https://www.baeldung.com/java-16-new-features\&quot;&gt;https://www.baeldung.com/java-16-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L45">		result.append(&quot;Java 16 (&lt;a href=\&quot;https://www.baeldung.com/java-16-new-features\&quot;&gt;https://www.baeldung.com/java-16-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="fc" id="L41">		String r = &quot;&quot;;</span>
-<span class="fc" id="L42">		Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), new Class&lt;?&gt;[] { HelloWorld.class },</span>
+<span class="fc" id="L47">		String r = &quot;&quot;;</span>
+<span class="fc" id="L48">		Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), new Class&lt;?&gt;[] { HelloWorld.class },</span>
 				(prox, method, args) -&gt; {
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">					if (method.isDefault()) {</span>
-<span class="fc" id="L45">						return InvocationHandler.invokeDefault(prox, method, args);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">					if (method.isDefault()) {</span>
+<span class="fc" id="L51">						return InvocationHandler.invokeDefault(prox, method, args);</span>
 					}
 
-<span class="nc" id="L48">					return &quot;default not found&quot;;</span>
+<span class="nc" id="L54">					return &quot;default not found&quot;;</span>
 				}
 		);
 		try {
-<span class="fc" id="L52">			Method method = proxy.getClass().getMethod(&quot;hello&quot;);</span>
-<span class="fc" id="L53">			r = (String) method.invoke(proxy);</span>
-<span class="nc" id="L54">		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {</span>
-<span class="nc" id="L55">			e.printStackTrace();</span>
-<span class="fc" id="L56">		}</span>
+<span class="fc" id="L58">			Method method = proxy.getClass().getMethod(&quot;hello&quot;);</span>
+<span class="fc" id="L59">			r = (String) method.invoke(proxy);</span>
+<span class="nc" id="L60">		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L61">			e.printStackTrace();</span>
+<span class="fc" id="L62">		}</span>
 
-<span class="fc" id="L58">		result.append(&quot;&lt;b&gt;2. Invoke Default Methods From Proxy Instances&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
-<span class="fc" id="L59">		result.append(&quot;Vysledok by mal byt world, je: &quot;).append(r);</span>
-<span class="fc" id="L60">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L64">		result.append(&quot;&lt;b&gt;2. Invoke Default Methods From Proxy Instances&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L65">		result.append(&quot;Vysledok by mal byt world, je: &quot;).append(r);</span>
+<span class="fc" id="L66">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="fc" id="L62">		String name = Tools.getParameter(request, &quot;name&quot;);</span>
-<span class="fc" id="L63">		result.append(&quot;\n&lt;p class='name-request'&gt;&quot;).append(name).append(&quot;&lt;/p&gt;&quot;);</span>
+<span class="fc" id="L68">		String name = Tools.getParameter(request, &quot;name&quot;);</span>
+<span class="fc" id="L69">		result.append(&quot;\n&lt;p class='name-request'&gt;&quot;).append(name).append(&quot;&lt;/p&gt;&quot;);</span>
 
-<span class="fc" id="L65">		return result.toString();</span>
+<span class="fc" id="L71">		return result.toString();</span>
+	}
+
+	/**
+	 * Get current basic auth status. It's used in autotests api-auth.js
+	 * @return
+	 */
+	@GetMapping(path={&quot;/rest/basic-auth-enabled&quot;})
+	public String isBasicAuthEnabled()
+	{
+<span class="fc" id="L81">		return &quot;{ \&quot;result\&quot;: &quot; + SpringSecurityConf.isBasicAuthEnabled() + &quot; }&quot;;</span>
+	}
+
+	/**
+	 * Test private URL with basic auth in api-auth.js
+	 * @return
+	 */
+	@GetMapping(path={&quot;/private/rest/demo-test&quot;})
+	@PreAuthorize(value = &quot;@WebjetSecurityService.isLogged()&quot;)
+	public String testPrivateUrl()
+	{
+<span class="fc" id="L92">		return &quot;{ \&quot;result\&quot;: \&quot;Demo OK\&quot; }&quot;;</span>
+	}
+
+	/**
+	 * Test POST url referrers in api-auth.js
+	 * @param id
+	 * @return
+	 */
+	@PostMapping(value=&quot;/private/rest/demo-post&quot;, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(value = &quot;@WebjetSecurityService.isLogged()&quot;)
+	public String testPrivatePostUrl(@RequestBody DocDetails doc)
+	{
+<span class="fc" id="L104">		return &quot;{ \&quot;result\&quot;: \&quot;Demo OK\&quot;, \&quot;id\&quot;: &quot; + doc.getId() + &quot; }&quot;;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

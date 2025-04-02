@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReadWriteScriptTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">ReadWriteScriptTag.java</span></div><h1>ReadWriteScriptTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReadWriteScriptTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">ReadWriteScriptTag.java</span></div><h1>ReadWriteScriptTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -67,28 +67,28 @@ import sk.iway.iwcm.io.IwcmFile;
 
 	public static void addScriptFromClass(ReadWriteScriptBean rwdWriteBean, HttpServletRequest request, JspWriter out)
 	{
-<span class="fc" id="L70">		rwdWriteBean.getType();</span>
-<span class="fc" id="L71">		rwdWriteBean.getSrc();</span>
-<span class="fc" id="L72">		rwdWriteBean.getRel();</span>
-<span class="fc" id="L73">		rwdWriteBean.getHref();</span>
-<span class="fc" id="L74">		rwdWriteBean.getFlush();</span>
-<span class="fc" id="L75">		rwdWriteBean.getMode();</span>
-<span class="fc" id="L76">		rwdWriteBean.getMedia();</span>
-<span class="fc" id="L77">		rwdWriteBean.getCharset();</span>
-<span class="fc" id="L78">		rwdWriteBean.getId();</span>
+<span class="nc" id="L70">		rwdWriteBean.getType();</span>
+<span class="nc" id="L71">		rwdWriteBean.getSrc();</span>
+<span class="nc" id="L72">		rwdWriteBean.getRel();</span>
+<span class="nc" id="L73">		rwdWriteBean.getHref();</span>
+<span class="nc" id="L74">		rwdWriteBean.getFlush();</span>
+<span class="nc" id="L75">		rwdWriteBean.getMode();</span>
+<span class="nc" id="L76">		rwdWriteBean.getMedia();</span>
+<span class="nc" id="L77">		rwdWriteBean.getCharset();</span>
+<span class="nc" id="L78">		rwdWriteBean.getId();</span>
 
-<span class="fc" id="L80">		String mode = MODE_NONE;</span>
-<span class="pc bpc" id="L81" title="4 of 6 branches missed.">		if(request != null  &amp;&amp; request.getAttribute(MODE_ATTR_NAME) != null &amp;&amp; Tools.isNotEmpty(request.getAttribute(MODE_ATTR_NAME).toString()))</span>
+<span class="nc" id="L80">		String mode = MODE_NONE;</span>
+<span class="nc bnc" id="L81" title="All 6 branches missed.">		if(request != null  &amp;&amp; request.getAttribute(MODE_ATTR_NAME) != null &amp;&amp; Tools.isNotEmpty(request.getAttribute(MODE_ATTR_NAME).toString()))</span>
 		{
 <span class="nc" id="L83">			mode = request.getAttribute(MODE_ATTR_NAME).toString();</span>
 		}
 		//Logger.debug(ReadWriteScriptTag.class, &quot;mode: &quot; + mode);
 
 		//TODO Pozor treba zmenit aj pri primamom volani triedy pri zmene
-<span class="pc bpc" id="L88" title="1 of 4 branches missed.">		if(Tools.isNotEmpty(rwdWriteBean.getSrc()) &amp;&amp; rwdWriteBean.getSrc().toLowerCase().endsWith(&quot;.js&quot;))</span>
-<span class="fc" id="L89">			addContentFromClass(ScriptTypeEnum.JAVASCRIPT, rwdWriteBean, request, mode, out);</span>
-<span class="pc bpc" id="L90" title="3 of 6 branches missed.">		else if(rwdWriteBean.getType() != null &amp;&amp; Tools.isNotEmpty(rwdWriteBean.getType()) &amp;&amp; &quot;text/javascript&quot;.equalsIgnoreCase(rwdWriteBean.getType()))</span>
-<span class="fc" id="L91">			addContentFromClass(ScriptTypeEnum.JAVASCRIPT, rwdWriteBean, request, mode, out);</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		if(Tools.isNotEmpty(rwdWriteBean.getSrc()) &amp;&amp; rwdWriteBean.getSrc().toLowerCase().endsWith(&quot;.js&quot;))</span>
+<span class="nc" id="L89">			addContentFromClass(ScriptTypeEnum.JAVASCRIPT, rwdWriteBean, request, mode, out);</span>
+<span class="nc bnc" id="L90" title="All 6 branches missed.">		else if(rwdWriteBean.getType() != null &amp;&amp; Tools.isNotEmpty(rwdWriteBean.getType()) &amp;&amp; &quot;text/javascript&quot;.equalsIgnoreCase(rwdWriteBean.getType()))</span>
+<span class="nc" id="L91">			addContentFromClass(ScriptTypeEnum.JAVASCRIPT, rwdWriteBean, request, mode, out);</span>
 <span class="nc bnc" id="L92" title="All 4 branches missed.">		else if(Tools.isNotEmpty(rwdWriteBean.getHref()) &amp;&amp; rwdWriteBean.getHref().toLowerCase().endsWith(&quot;.css&quot;))</span>
 <span class="nc" id="L93">			addContentFromClass(ScriptTypeEnum.CSS_STYLE, rwdWriteBean, request, mode, out);</span>
 <span class="nc bnc" id="L94" title="All 6 branches missed.">		else if(rwdWriteBean.getType() != null &amp;&amp; Tools.isNotEmpty(rwdWriteBean.getType()) &amp;&amp; &quot;text/css&quot;.equalsIgnoreCase(rwdWriteBean.getType()))</span>
@@ -97,27 +97,27 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="nc" id="L97">			addContentFromClass(ScriptTypeEnum.CSS_STYLE, rwdWriteBean, request, mode, out);</span>
 		else
 <span class="nc" id="L99">			addContentFromClass(ScriptTypeEnum.UNKNOWN, rwdWriteBean, request, mode, out);</span>
-<span class="fc" id="L100">	}</span>
+<span class="nc" id="L100">	}</span>
 
 	private static void addContentFromClass(ScriptTypeEnum scriptType, ReadWriteScriptBean bean, HttpServletRequest request, String mode, JspWriter out)
 	{
-<span class="fc" id="L104">		doPrint(&quot;addContentFromClass()&quot;, bean);</span>
+<span class="nc" id="L104">		doPrint(&quot;addContentFromClass()&quot;, bean);</span>
 		//ReadWriteScriptBean rwsb = new ReadWriteScriptBean(type, src, rel, href, flush, getBodyContent(), mode, media, getJspFileName(), charset, id);
-<span class="fc" id="L106">		LinkedList&lt;ReadWriteScriptBean&gt; listRwsb = getScripts(scriptType, request, null);</span>
-<span class="fc" id="L107">		listRwsb.addLast(bean);</span>
+<span class="nc" id="L106">		LinkedList&lt;ReadWriteScriptBean&gt; listRwsb = getScripts(scriptType, request, null);</span>
+<span class="nc" id="L107">		listRwsb.addLast(bean);</span>
 		// dalej sa o vypisanie nestaram
-<span class="fc" id="L109">		request.setAttribute(scriptType.toString(), listRwsb);</span>
+<span class="nc" id="L109">		request.setAttribute(scriptType.toString(), listRwsb);</span>
 
 
 		// vypiseme a zmazeme ak mode none
-<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if(MODE_NONE.equals(mode))</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if(MODE_NONE.equals(mode))</span>
 		{
-<span class="fc" id="L115">			String flush = &quot;one_flush&quot;;</span>
+<span class="nc" id="L115">			String flush = &quot;one_flush&quot;;</span>
 			//#23413 #2 tu nema zmysel zistovat ci ideme vypisovat css alebo js pretoze je to staticka metoda a mód musi byt vopred nastaveny
-<span class="fc" id="L117">			flush(ScriptTypeEnum.CSS_STYLE, null, request, flush, mode, bean.getCharset(), bean.getId(), out, bean.getMedia());</span>
-<span class="fc" id="L118">			flush(ScriptTypeEnum.JAVASCRIPT, null, request, flush, mode, bean.getCharset(), bean.getId(), out, bean.getMedia());</span>
+<span class="nc" id="L117">			flush(ScriptTypeEnum.CSS_STYLE, null, request, flush, mode, bean.getCharset(), bean.getId(), out, bean.getMedia());</span>
+<span class="nc" id="L118">			flush(ScriptTypeEnum.JAVASCRIPT, null, request, flush, mode, bean.getCharset(), bean.getId(), out, bean.getMedia());</span>
 		}
-<span class="fc" id="L120">	}</span>
+<span class="nc" id="L120">	}</span>
 
 	//paths - adresy oddelene ciarkou (cached)
 	private static long getTimeStamp(String paths)
@@ -175,10 +175,10 @@ import sk.iway.iwcm.io.IwcmFile;
 		{
 <span class="pc bpc" id="L176" title="1 of 2 branches missed.">			if(text != null)</span>
 			{
-<span class="fc bfc" id="L178" title="All 2 branches covered.">				if(out == null)</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">				if(out == null)</span>
 <span class="fc" id="L179">					pageContext.getOut().write(text);</span>
 				else
-<span class="fc" id="L181">					out.println(text);</span>
+<span class="nc" id="L181">					out.println(text);</span>
 			}
 		}
 <span class="nc" id="L184">		catch (IOException e)</span>
@@ -224,12 +224,12 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="fc" id="L224">		doPrint(&quot;doEndTag()&quot;);</span>
 <span class="fc" id="L225">		setMode();</span>
 		//TODO Pozor treba zmenit aj pri primamom volani triedy pri zmene
-<span class="pc bpc" id="L227" title="1 of 4 branches missed.">		if(Tools.isNotEmpty(src) &amp;&amp; src.toLowerCase().endsWith(&quot;.js&quot;))</span>
+<span class="fc bfc" id="L227" title="All 4 branches covered.">		if(Tools.isNotEmpty(src) &amp;&amp; src.toLowerCase().endsWith(&quot;.js&quot;))</span>
 <span class="fc" id="L228">			addContent(ScriptTypeEnum.JAVASCRIPT);</span>
 <span class="pc bpc" id="L229" title="2 of 6 branches missed.">		else if(type != null &amp;&amp; Tools.isNotEmpty(type) &amp;&amp; &quot;text/javascript&quot;.equalsIgnoreCase(type))</span>
 <span class="fc" id="L230">			addContent(ScriptTypeEnum.JAVASCRIPT);</span>
-<span class="pc bpc" id="L231" title="3 of 4 branches missed.">		else if(Tools.isNotEmpty(href) &amp;&amp; href.toLowerCase().endsWith(&quot;.css&quot;))</span>
-<span class="nc" id="L232">            addContent(ScriptTypeEnum.CSS_STYLE);</span>
+<span class="pc bpc" id="L231" title="1 of 4 branches missed.">		else if(Tools.isNotEmpty(href) &amp;&amp; href.toLowerCase().endsWith(&quot;.css&quot;))</span>
+<span class="fc" id="L232">            addContent(ScriptTypeEnum.CSS_STYLE);</span>
 <span class="pc bpc" id="L233" title="3 of 6 branches missed.">		else if(type != null &amp;&amp; Tools.isNotEmpty(type) &amp;&amp; &quot;text/css&quot;.equalsIgnoreCase(type))</span>
         {
 <span class="pc bpc" id="L235" title="1 of 2 branches missed.">            if(&quot;base_css_link&quot;.equals(href))</span>
@@ -315,9 +315,9 @@ import sk.iway.iwcm.io.IwcmFile;
 			}
 <span class="pc bpc" id="L316" title="1 of 2 branches missed.">			else if(scriptType.equals(ScriptTypeEnum.CSS_STYLE))</span>
 			{
-<span class="pc bpc" id="L318" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(bean.getHref()))//external style</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">				if(Tools.isNotEmpty(bean.getHref()))//external style</span>
 				{
-<span class="nc bnc" id="L320" title="All 2 branches missed.">					if(MODE_COMBINED.equals(mode))</span>
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">					if(MODE_COMBINED.equals(mode))</span>
 					{
 <span class="nc" id="L322">						combined.append(bean.getHref()).append(&quot;,&quot;).append(lineSeparator);</span>
 <span class="nc" id="L323">						listBeans.remove(i);</span>
@@ -365,8 +365,8 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="fc" id="L365">				type = &quot; type=\&quot;&quot;+bean.getType()+&quot;\&quot;&quot;;</span>
 
 <span class="fc" id="L367">			String printCharset = &quot;&quot;;</span>
-<span class="pc bpc" id="L368" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(charset))</span>
-<span class="nc" id="L369">				printCharset = &quot;charset=\&quot;&quot;+charset+&quot;\&quot;&quot;;</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">			if(Tools.isNotEmpty(charset))</span>
+<span class="fc" id="L369">				printCharset = &quot;charset=\&quot;&quot;+charset+&quot;\&quot;&quot;;</span>
 
 <span class="fc" id="L371">			String printId = &quot;&quot;;</span>
 <span class="pc bpc" id="L372" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(id))</span>
@@ -389,14 +389,14 @@ import sk.iway.iwcm.io.IwcmFile;
 				else
 <span class="nc" id="L390">					linkMedia = &quot; media=\&quot;&quot;+bean.getMedia()+&quot;\&quot;&quot;;</span>
 
-<span class="pc bpc" id="L392" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(bean.getHref()))//external style</span>
+<span class="fc bfc" id="L392" title="All 2 branches covered.">				if(Tools.isNotEmpty(bean.getHref()))//external style</span>
 				{
-<span class="nc bnc" id="L394" title="All 2 branches missed.">					if(Tools.isNotEmpty(bean.getRel()))</span>
-<span class="nc" id="L395">						rel = &quot; rel=\&quot;&quot;+bean.getRel()+&quot;\&quot; &quot;;</span>
-<span class="nc bnc" id="L396" title="All 2 branches missed.">					if(MODE_COMBINED.equals(mode))</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">					if(Tools.isNotEmpty(bean.getRel()))</span>
+<span class="fc" id="L395">						rel = &quot; rel=\&quot;&quot;+bean.getRel()+&quot;\&quot; &quot;;</span>
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">					if(MODE_COMBINED.equals(mode))</span>
 <span class="nc" id="L397">						combined.append(bean.getHref()).append(&quot;,&quot;);</span>
 					else
-<span class="nc" id="L399">						write(&quot;&lt;link &quot;+type+&quot; &quot;+printId+&quot; &quot;+ linkMedia+&quot; &quot;+printCharset + &quot; &quot; + rel+&quot; href=\&quot;&quot;+bean.getHref()+&quot;\&quot;&gt;&lt;/link&gt;&quot;+getJspFileName(bean, pageContext)+&quot;\n&quot;,pageContext, out);//write(&quot;&lt;link type=\&quot;text/css\&quot;&quot;+linkMedia+&quot; &quot;+rel+&quot; href=\&quot;&quot;+bean.getHref()+&quot;\&quot;&gt;&lt;/link&gt;&quot;+getJspFileName(bean));</span>
+<span class="fc" id="L399">						write(&quot;&lt;link &quot;+type+&quot; &quot;+printId+&quot; &quot;+ linkMedia+&quot; &quot;+printCharset + &quot; &quot; + rel+&quot; href=\&quot;&quot;+bean.getHref()+&quot;\&quot;&gt;&lt;/link&gt;&quot;+getJspFileName(bean, pageContext)+&quot;\n&quot;,pageContext, out);//write(&quot;&lt;link type=\&quot;text/css\&quot;&quot;+linkMedia+&quot; &quot;+rel+&quot; href=\&quot;&quot;+bean.getHref()+&quot;\&quot;&gt;&lt;/link&gt;&quot;+getJspFileName(bean));</span>
 				}
 				else
 <span class="fc" id="L402">					write(&quot;&lt;style &quot;+type+&quot; &gt;&quot;+bean.getBody()+&quot;&lt;/style&gt;&quot;+getJspFileName(bean, pageContext)+&quot;\n&quot;,pageContext, out);</span>
@@ -414,7 +414,7 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="pc bpc" id="L414" title="1 of 2 branches missed.">		if(canRemoveAttribute)</span>
 		{
 			//zmazeme obsah atributu, aby sa mohol znovu pouzit
-<span class="fc bfc" id="L417" title="All 2 branches covered.">			if(pageContext != null)</span>
+<span class="pc bpc" id="L417" title="1 of 2 branches missed.">			if(pageContext != null)</span>
 <span class="fc" id="L418">				pageContext.getRequest().removeAttribute(scriptType.toString());</span>
 //			else
 //				Logger.debug(ReadWriteScriptTag.class, &quot;pageContext je null nemazeme&quot;);
@@ -497,7 +497,7 @@ import sk.iway.iwcm.io.IwcmFile;
 		//Logger.debug(ReadWriteScriptTag.class, &quot;getScripts()&quot;);
 <span class="fc" id="L498">		HttpServletRequest request = request2;</span>
 
-<span class="fc bfc" id="L500" title="All 2 branches covered.">		if(request == null)</span>
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">		if(request == null)</span>
 <span class="fc" id="L501">			request = (HttpServletRequest)pageContext.getRequest();</span>
 
 <span class="fc" id="L503">		LinkedList&lt;ReadWriteScriptBean&gt; rwsb = new LinkedList&lt;&gt;();</span>
@@ -528,7 +528,7 @@ import sk.iway.iwcm.io.IwcmFile;
 	{
 		//System.out.println(&quot;Method: &quot;+method+&quot; mode: &quot;+bean.getMode()+&quot; type: &quot;+bean.getType());
 		//System.out.println(bean.toString());
-<span class="fc" id="L531">	}</span>
+<span class="nc" id="L531">	}</span>
 
 	private String getJspFileName()
 	{
@@ -541,8 +541,8 @@ import sk.iway.iwcm.io.IwcmFile;
 	 */
 	private static String getJspFileName(ReadWriteScriptBean rwsb, PageContext pageContext)
 	{
-<span class="fc bfc" id="L544" title="All 2 branches covered.">		if(pageContext == null)</span>
-<span class="fc" id="L545">			return&quot;&quot;;</span>
+<span class="pc bpc" id="L544" title="1 of 2 branches missed.">		if(pageContext == null)</span>
+<span class="nc" id="L545">			return&quot;&quot;;</span>
 
 <span class="fc" id="L547">		String writePerfStat = ((HttpServletRequest)pageContext.getRequest()).getParameter(&quot;_writePerfStat&quot;);</span>
 <span class="pc bpc" id="L548" title="3 of 4 branches missed.">		if(Tools.isNotEmpty(writePerfStat) &amp;&amp; &quot;true&quot;.equals(writePerfStat))</span>
@@ -583,8 +583,8 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="nc" id="L583">		return rel;</span>
 	}
 	public void setRel(String rel) {
-<span class="nc" id="L586">		this.rel = rel;</span>
-<span class="nc" id="L587">	}</span>
+<span class="fc" id="L586">		this.rel = rel;</span>
+<span class="fc" id="L587">	}</span>
 	public String getFlush() {
 <span class="nc" id="L589">		return flush;</span>
 	}
@@ -595,8 +595,8 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="nc" id="L595">		return href;</span>
 	}
 	public void setHref(String href) {
-<span class="nc" id="L598">		this.href = href;</span>
-<span class="nc" id="L599">	}</span>
+<span class="fc" id="L598">		this.href = href;</span>
+<span class="fc" id="L599">	}</span>
 
 	public String getMode() {
 <span class="nc" id="L602">		return mode;</span>
@@ -619,8 +619,8 @@ import sk.iway.iwcm.io.IwcmFile;
 	}
 
 	public void setCharset(String charset) {
-<span class="nc" id="L622">		this.charset = charset;</span>
-<span class="nc" id="L623">	}</span>
+<span class="fc" id="L622">		this.charset = charset;</span>
+<span class="fc" id="L623">	}</span>
 
 	@Override
 	public String toString() {

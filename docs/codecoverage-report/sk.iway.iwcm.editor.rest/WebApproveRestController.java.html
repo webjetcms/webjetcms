@@ -1,8 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebApproveRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">WebApproveRestController.java</span></div><h1>WebApproveRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebApproveRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">WebApproveRestController.java</span></div><h1>WebApproveRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -18,11 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -44,96 +51,145 @@ public class WebApproveRestController extends DatatableRestControllerV2&lt;DocHi
 
     @Autowired
     public WebApproveRestController(DocHistoryRepository docHistoryRepository) {
-<span class="fc" id="L47">        super(docHistoryRepository);</span>
-<span class="fc" id="L48">        this.docHistoryRepository = docHistoryRepository;</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L54">        super(docHistoryRepository);</span>
+<span class="fc" id="L55">        this.docHistoryRepository = docHistoryRepository;</span>
+<span class="fc" id="L56">    }</span>
 
     @Override
     public Page&lt;DocHistory&gt; getAllItems(Pageable pageable) {
 
-<span class="fc" id="L54">        Page&lt;DocHistory&gt; historyList = docHistoryRepository.findAll(getToApproveConditions(getUser().getUserId()), pageable);</span>
+<span class="nc" id="L61">        Page&lt;DocHistory&gt; historyList = docHistoryRepository.findAll(getToApproveConditions(getUser().getUserId()), pageable);</span>
 
-<span class="fc" id="L56">        processFromEntity(historyList, ProcessItemAction.GETALL);</span>
+<span class="nc" id="L63">        processFromEntity(historyList, ProcessItemAction.GETALL);</span>
 
-<span class="fc" id="L58">        DatatablePageImpl&lt;DocHistory&gt; pageImpl = new DatatablePageImpl&lt;&gt;(historyList);</span>
+<span class="nc" id="L65">        DatatablePageImpl&lt;DocHistory&gt; pageImpl = new DatatablePageImpl&lt;&gt;(historyList);</span>
 
-<span class="fc" id="L60">        WebpagesService ws = new WebpagesService(-1, getUser(), getProp(), getRequest());</span>
+<span class="nc" id="L67">        WebpagesService ws = new WebpagesService(-1, getUser(), getProp(), getRequest());</span>
 
-<span class="fc" id="L62">        pageImpl.addOptions(&quot;tempId&quot;, ws.getTemplates(false), &quot;tempName&quot;, &quot;tempId&quot;, true);</span>
-<span class="fc" id="L63">        pageImpl.addOptions(&quot;menuDocId,rightMenuDocId&quot;, ws.getMenuList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L64">        pageImpl.addOptions(&quot;headerDocId,footerDocId&quot;, ws.getHeaderList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L65">        pageImpl.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L66">        pageImpl.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L67">        pageImpl.addOptions(&quot;perexGroups&quot;, ws.getPerexGroups(false), &quot;perexGroupName&quot;, &quot;perexGroupId&quot;, false);</span>
+<span class="nc" id="L69">        pageImpl.addOptions(&quot;tempId&quot;, ws.getTemplates(false), &quot;tempName&quot;, &quot;tempId&quot;, true);</span>
+<span class="nc" id="L70">        pageImpl.addOptions(&quot;menuDocId,rightMenuDocId&quot;, ws.getMenuList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="nc" id="L71">        pageImpl.addOptions(&quot;headerDocId,footerDocId&quot;, ws.getHeaderList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="nc" id="L72">        pageImpl.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="nc" id="L73">        pageImpl.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="nc" id="L74">        pageImpl.addOptions(&quot;perexGroups&quot;, ws.getPerexGroups(false), &quot;perexGroupName&quot;, &quot;perexGroupId&quot;, false);</span>
 
-<span class="fc" id="L69">        return pageImpl;</span>
+<span class="nc" id="L76">        return pageImpl;</span>
     }
 
     private static List&lt;Predicate&gt; getPredicates(int userId, Root&lt;DocHistory&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L73">        final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L80">        final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L75">        predicates.add(builder.isNotNull(root.get(&quot;awaitingApprove&quot;)));</span>
-<span class="fc" id="L76">        predicates.add(builder.like(root.get(&quot;awaitingApprove&quot;), &quot;%,&quot; + userId + &quot;,%&quot;));</span>
+<span class="fc" id="L82">        predicates.add(builder.isNotNull(root.get(&quot;awaitingApprove&quot;)));</span>
+<span class="fc" id="L83">        predicates.add(builder.like(root.get(&quot;awaitingApprove&quot;), &quot;%,&quot; + userId + &quot;,%&quot;));</span>
+
+<span class="fc" id="L85">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L86">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L87">        String trashPath = GroupsTreeService.getTrashDirPath();</span>
+<span class="fc" id="L88">        Set&lt;Integer&gt; awaitingGroupIds = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L89">        List&lt;Integer&gt; skipHistoryId = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L91">        ComplexQuery cq = new ComplexQuery();</span>
+<span class="fc" id="L92">        cq.setSql(&quot;SELECT group_id, doc_id, history_id FROM documents_history WHERE awaiting_approve LIKE ?&quot;);</span>
+<span class="fc" id="L93">        cq.setParams(&quot;%,&quot; + userId + &quot;,%&quot;);</span>
+<span class="fc" id="L94">        cq.list(new sk.iway.iwcm.database.Mapper&lt;DocDetails&gt;()</span>
+<span class="fc" id="L95">		{</span>
+			public DocDetails map(ResultSet rs) throws SQLException
+			{
+<span class="fc" id="L98">                int groupId = rs.getInt(&quot;group_id&quot;);</span>
+<span class="fc" id="L99">                int docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="fc" id="L100">                int historyId = rs.getInt(&quot;history_id&quot;);</span>
+
+<span class="fc" id="L102">                awaitingGroupIds.add(groupId);</span>
+
+                //verify current doc_id is not in trash
+<span class="fc" id="L105">                DocDetails currentDoc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                if (currentDoc == null) {</span>
+<span class="fc" id="L107">                    skipHistoryId.add(historyId);</span>
+                } else {
+<span class="fc" id="L109">                    GroupDetails docGroup = groupsDB.getGroup(currentDoc.getGroupId());</span>
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">                    if (docGroup == null || docGroup.getFullPath().contains(trashPath)) {</span>
+<span class="fc" id="L111">                        skipHistoryId.add(historyId);</span>
+                    }
+                }
+<span class="fc" id="L114">                return null;</span>
+            }
+        });
 
         //TODO: pridat do history tabulky root_group_l1 atd ako je aj v documents tabulke a testovat to podla toho
-<span class="fc" id="L79">        int domainId = CloudToolsForCore.getDomainId();</span>
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (domainId&gt;0) {</span>
+<span class="fc" id="L119">        int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (domainId&gt;0) {</span>
             //ziskaj zoznam vsetkych groupId v tejto domene
-<span class="fc" id="L82">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L83">            GroupDetails group = groupsDB.getGroup(domainId);</span>
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">            if (group != null) {</span>
-<span class="fc" id="L85">                String domainName = group.getDomainName();</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(domainName)) {</span>
-<span class="fc" id="L87">                    List&lt;Integer&gt; awaitingGroupIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT group_id FROM documents_history WHERE awaiting_approve LIKE ?&quot;, &quot;%,&quot; + userId + &quot;,%&quot;);</span>
 
-<span class="fc" id="L89">                    List&lt;Integer&gt; groupIdsInDomain = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L123">            GroupDetails group = groupsDB.getGroup(domainId);</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (group != null) {</span>
+<span class="fc" id="L125">                String domainName = group.getDomainName();</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(domainName)) {</span>
+<span class="fc" id="L127">                    List&lt;Integer&gt; groupIdsInDomain = new ArrayList&lt;&gt;();</span>
 
                     //check if group is in domain
-<span class="fc bfc" id="L92" title="All 2 branches covered.">                    for (Integer groupId : awaitingGroupIds) {</span>
-<span class="fc" id="L93">                        GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">                        if (groupDetails != null) {</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">                            if (groupDetails.getDomainName().equals(domainName)) {</span>
-<span class="fc" id="L96">                                groupIdsInDomain.add(groupId);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">                    for (Integer groupId : awaitingGroupIds) {</span>
+<span class="fc" id="L131">                        GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">                        if (groupDetails != null) {</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                            if (groupDetails.getDomainName().equals(domainName)) {</span>
+<span class="fc" id="L134">                                groupIdsInDomain.add(groupId);</span>
                             }
                         }
-<span class="fc" id="L99">                    }</span>
+<span class="fc" id="L137">                    }</span>
 
                     //we must add something non existent otherwise it will select all data
-<span class="fc bfc" id="L102" title="All 2 branches covered.">                    if (groupIdsInDomain.isEmpty()) groupIdsInDomain.add(-1);</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                    if (groupIdsInDomain.isEmpty()) groupIdsInDomain.add(-1);</span>
 
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                    if (groupIdsInDomain.size()&gt;0) {</span>
-<span class="fc" id="L105">                        predicates.add(root.get(&quot;groupId&quot;).in(groupIdsInDomain));</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">                    if (groupIdsInDomain.size()&gt;0) {</span>
+<span class="fc" id="L143">                        predicates.add(root.get(&quot;groupId&quot;).in(groupIdsInDomain));</span>
                     }
                 }
             }
         }
 
-<span class="fc" id="L111">        return predicates;</span>
+        //remove groups in trash - we must check CURRENT doc if it is in trash (in history group is not current)
+<span class="fc" id="L150">        List&lt;Integer&gt; groupIdsInTrash = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        for (Integer groupId : awaitingGroupIds) {</span>
+<span class="fc" id="L153">            GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (groupDetails != null) {</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">                if (groupDetails.getFullPath().contains(trashPath)) {</span>
+<span class="fc" id="L156">                    groupIdsInTrash.add(groupId);</span>
+                }
+            }
+<span class="fc" id="L159">        }</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (groupIdsInTrash.isEmpty()==false) {</span>
+<span class="fc" id="L161">            predicates.add(builder.not(root.get(&quot;groupId&quot;).in(groupIdsInTrash)));</span>
+        }
+
+        //remove pages which current version is in Trash
+<span class="nc" id="L165">        predicates.add(builder.not(root.get(&quot;historyId&quot;).in(skipHistoryId)));</span>
+
+<span class="nc" id="L167">        return predicates;</span>
     }
 
     public static Specification&lt;DocHistory&gt; getToApproveConditions(int userId) {
-<span class="fc" id="L115">		return (Specification&lt;DocHistory&gt;) (root, query, builder) -&gt; {</span>
-<span class="fc" id="L116">			final List&lt;Predicate&gt; predicates = getPredicates(userId, root, builder);</span>
+<span class="fc" id="L171">		return (Specification&lt;DocHistory&gt;) (root, query, builder) -&gt; {</span>
+<span class="nc" id="L172">			final List&lt;Predicate&gt; predicates = getPredicates(userId, root, builder);</span>
 
-<span class="fc" id="L118">			return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
+<span class="nc" id="L174">			return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
 		};
 	}
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;DocHistory&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L124">        predicates.addAll(getPredicates(getUser().getUserId(), root, builder));</span>
-<span class="fc" id="L125">    }</span>
+<span class="nc" id="L180">        predicates.addAll(getPredicates(getUser().getUserId(), root, builder));</span>
+<span class="nc" id="L181">    }</span>
 
     @Override
     public DocHistory processFromEntity(DocHistory entity, ProcessItemAction action, int rowCount) {
         //otoc nastavenie docId a historyId, lebo tak to pozaduje DT
-<span class="fc" id="L130">        int docId = entity.getDocId();</span>
-<span class="fc" id="L131">        entity.setDocId(entity.getHistoryId());</span>
-<span class="fc" id="L132">        entity.setHistoryId(docId);</span>
+<span class="nc" id="L186">        int docId = entity.getDocId();</span>
+<span class="nc" id="L187">        entity.setDocId(entity.getHistoryId());</span>
+<span class="nc" id="L188">        entity.setHistoryId(docId);</span>
 
-<span class="fc bfc" id="L134" title="All 2 branches covered.">        WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, getRequest(), rowCount == 1);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, getRequest(), rowCount == 1);</span>
 
-<span class="fc" id="L136">        return entity;</span>
+<span class="nc" id="L192">        return entity;</span>
     }
 
 

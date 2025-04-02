@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationObjectEditorFields.java</span></div><h1>ReservationObjectEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationObjectEditorFields.java</span></div><h1>ReservationObjectEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -365,7 +365,7 @@ import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 <span class="pc bpc" id="L365" title="1 of 2 branches missed.">        if(Tools.isTrue(addPassword))</span>
 <span class="nc" id="L366">            originalEntity.setPassword(newPassword);</span>
 
-<span class="pc bpc" id="L368" title="1 of 2 branches missed.">        if(Tools.isFalse(originalEntity.getMustAccepted()))</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">        if(Tools.isFalse(originalEntity.getMustAccepted()))</span>
 <span class="fc" id="L369">            originalEntity.setEmailAccepter(&quot;&quot;);</span>
 <span class="fc" id="L370">    }</span>
 
@@ -417,7 +417,7 @@ import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 <span class="fc" id="L417">        Date timeTo = null;</span>
 <span class="fc" id="L418">        ReservationObjectEditorFields roef = reservationObject.getEditorFields();</span>
 
-<span class="pc bpc" id="L420" title="1 of 2 branches missed.">        if(timeEntity == null) {</span>
+<span class="fc bfc" id="L420" title="All 2 branches covered.">        if(timeEntity == null) {</span>
             //If match entity if null (not saved in DB), create new entity and set needed columns
 <span class="fc" id="L422">            timeEntity = new ReservationObjectTimesEntity();</span>
 <span class="fc" id="L423">            timeEntity.setDay(day);</span>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Cache.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Cache.java</span></div><h1>Cache.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Cache.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Cache.java</span></div><h1>Cache.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -117,30 +117,28 @@ public class Cache
 <span class="fc" id="L117">		List&lt;String&gt; removeNames = new ArrayList&lt;&gt;();</span>
 		try
 		{
-<span class="fc" id="L120">			Logger.debug(Cache.class, &quot;removeCheck&quot;);</span>
-
-<span class="fc" id="L122">			Enumeration&lt;CacheBean&gt; e = objectCache.elements();</span>
-<span class="fc bfc" id="L123" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
+<span class="fc" id="L120">			Enumeration&lt;CacheBean&gt; e = objectCache.elements();</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
 			{
-<span class="fc" id="L125">				CacheBean cb = e.nextElement();</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">				if (cb.getExpiryTime() &lt; currentTime)</span>
+<span class="fc" id="L123">				CacheBean cb = e.nextElement();</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">				if (cb.getExpiryTime() &lt; currentTime)</span>
 				{
-<span class="fc" id="L128">					removeNames.add(cb.getName());</span>
+<span class="fc" id="L126">					removeNames.add(cb.getName());</span>
 				}
-<span class="fc" id="L130">			}</span>
+<span class="fc" id="L128">			}</span>
 		}
-<span class="nc" id="L132">		catch (Exception ex)</span>
+<span class="nc" id="L130">		catch (Exception ex)</span>
 		{
 
-<span class="fc" id="L135">		}</span>
+<span class="fc" id="L133">		}</span>
 
-<span class="fc" id="L137">		Iterator&lt;String&gt; iter = removeNames.iterator();</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">		while (iter.hasNext())</span>
+<span class="fc" id="L135">		Iterator&lt;String&gt; iter = removeNames.iterator();</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">		while (iter.hasNext())</span>
 		{
-<span class="fc" id="L140">			removeObject(iter.next());</span>
+<span class="fc" id="L138">			removeObject(iter.next());</span>
 		}
 
-<span class="fc" id="L143">	}</span>
+<span class="fc" id="L141">	}</span>
 
 	/**
 	 * Vymaze celu cache
@@ -150,19 +148,19 @@ public class Cache
 	{
 		try
 		{
-<span class="fc" id="L153">			Enumeration&lt;String&gt; e = objectCache.keys();</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
+<span class="fc" id="L151">			Enumeration&lt;String&gt; e = objectCache.keys();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
 			{
-<span class="fc" id="L156">				removeObject(e.nextElement());</span>
+<span class="fc" id="L154">				removeObject(e.nextElement());</span>
 			}
 		}
-<span class="nc" id="L159">		catch (Exception ex)</span>
+<span class="nc" id="L157">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L161">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L162">		}</span>
+<span class="nc" id="L159">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L160">		}</span>
 
-<span class="fc" id="L164">		objectCache = new Hashtable&lt;&gt;();</span>
-<span class="fc" id="L165">	}</span>
+<span class="fc" id="L162">		objectCache = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L163">	}</span>
 
 	/**
 	 * Vrati pocet poloziek v cache
@@ -170,7 +168,7 @@ public class Cache
 	 */
 	public int getSize()
 	{
-<span class="fc" id="L173">		return(objectCache.size());</span>
+<span class="fc" id="L171">		return(objectCache.size());</span>
 	}
 
 	/**
@@ -180,41 +178,41 @@ public class Cache
 	 */
 	public Object getObject(String name)
 	{
-<span class="fc" id="L183">		removeCheck();</span>
+<span class="fc" id="L181">		removeCheck();</span>
 
 		//Logger.println(this,&quot;Cache.getObject(&quot;+name+&quot;)&quot;);
 
-<span class="fc" id="L187">		Object object = objectCache.get(name);</span>
-<span class="fc" id="L188">		Object returnObject = null;</span>
-<span class="fc bfc" id="L189" title="All 2 branches covered.">		if (object != null)</span>
+<span class="fc" id="L185">		Object object = objectCache.get(name);</span>
+<span class="fc" id="L186">		Object returnObject = null;</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		if (object != null)</span>
 		{
-<span class="fc" id="L191">			CacheBean cb = (CacheBean)object;</span>
-<span class="fc" id="L192">			long currentTime = Tools.getNow();</span>
+<span class="fc" id="L189">			CacheBean cb = (CacheBean)object;</span>
+<span class="fc" id="L190">			long currentTime = Tools.getNow();</span>
 			//Logger.debug(this, &quot;Cache.getObject(&quot;+name+&quot;) - object found now=&quot;  + currentTime + &quot; exp=&quot; + cb.getExpiryTime() + &quot; diff=&quot;+(cb.getExpiryTime() - currentTime));
-<span class="fc bfc" id="L194" title="All 2 branches covered.">			if (cb.getExpiryTime() &gt; currentTime)</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">			if (cb.getExpiryTime() &gt; currentTime)</span>
 			{
-<span class="pc bpc" id="L196" title="1 of 4 branches missed.">				if (cb.isAllowSmartRefresh() &amp;&amp; cb.isSmartRefreshed()==false &amp;&amp;</span>
-<span class="fc bfc" id="L197" title="All 2 branches covered.">					 (cb.getExpiryTime()-(SMART_REFRESH_TIME)) &lt; System.currentTimeMillis())</span>
+<span class="pc bpc" id="L194" title="1 of 4 branches missed.">				if (cb.isAllowSmartRefresh() &amp;&amp; cb.isSmartRefreshed()==false &amp;&amp;</span>
+<span class="fc bfc" id="L195" title="All 2 branches covered.">					 (cb.getExpiryTime()-(SMART_REFRESH_TIME)) &lt; System.currentTimeMillis())</span>
 				{
 					//30 sekund pred vyprsanim vratime null
-<span class="fc" id="L200">					cb.setSmartRefreshed(true);</span>
+<span class="fc" id="L198">					cb.setSmartRefreshed(true);</span>
 
 					//Logger.debug(Cache.class, &quot;SmartRefresh: &quot;+cb.getName());
 
-<span class="fc" id="L204">					return null;</span>
+<span class="fc" id="L202">					return null;</span>
 				}
 				//Logger.debug(this, &quot;mam v cache: &quot; + name);
-<span class="fc" id="L207">				returnObject = cb.getObject();</span>
+<span class="fc" id="L205">				returnObject = cb.getObject();</span>
 			}
 			else
 			{
 				//Logger.debug(this, &quot;Removing expired object &quot;+name);
 				//vyhod objekt z cache
-<span class="fc" id="L213">				removeObject(name);</span>
+<span class="fc" id="L211">				removeObject(name);</span>
 			}
 		}
 
-<span class="fc" id="L217">		return(returnObject);</span>
+<span class="fc" id="L215">		return(returnObject);</span>
 	}
 
 	/**
@@ -226,12 +224,12 @@ public class Cache
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public &lt;R extends Object&gt; R getObject(String name, Class&lt;R&gt; type)
 	{
-<span class="fc" id="L229">		Object result = getObject(name);</span>
-<span class="pc bpc" id="L230" title="1 of 4 branches missed.">		if (result!=null &amp;&amp; type.isAssignableFrom(result.getClass()))</span>
+<span class="fc" id="L227">		Object result = getObject(name);</span>
+<span class="pc bpc" id="L228" title="1 of 4 branches missed.">		if (result!=null &amp;&amp; type.isAssignableFrom(result.getClass()))</span>
 		{
-<span class="fc" id="L232">			return (R) result;</span>
+<span class="fc" id="L230">			return (R) result;</span>
 		}
-<span class="fc" id="L234">		return null;</span>
+<span class="fc" id="L232">		return null;</span>
 	}
 
 	/**
@@ -240,7 +238,7 @@ public class Cache
 	 */
 	public Enumeration&lt;String&gt; getAllKeys()
 	{
-<span class="nc" id="L243">		return objectCache.keys();</span>
+<span class="nc" id="L241">		return objectCache.keys();</span>
 	}
 
 	/**
@@ -249,7 +247,7 @@ public class Cache
 	 */
 	public Enumeration&lt;CacheBean&gt; getAllElements()
 	{
-<span class="fc" id="L252">		return objectCache.elements();</span>
+<span class="fc" id="L250">		return objectCache.elements();</span>
 	}
 
 	/**
@@ -260,8 +258,8 @@ public class Cache
 	 */
 	public void setObject(String name, Object object, int cacheInMinutes)
 	{
-<span class="fc" id="L263">		setObjectSeconds(name, object, cacheInMinutes*60);</span>
-<span class="fc" id="L264">	}</span>
+<span class="fc" id="L261">		setObjectSeconds(name, object, cacheInMinutes*60);</span>
+<span class="fc" id="L262">	}</span>
 
 	/**
 	 * Vlozi objekt do cache, pouzije SMART Refresh
@@ -271,8 +269,8 @@ public class Cache
 	 */
 	public void setObjectSeconds(String name, Object object, int cacheInSeconds)
 	{
-<span class="fc" id="L274">		setObjectSeconds(name, object, cacheInSeconds, true);</span>
-<span class="fc" id="L275">	}</span>
+<span class="fc" id="L272">		setObjectSeconds(name, object, cacheInSeconds, true);</span>
+<span class="fc" id="L273">	}</span>
 
 	/**
 	 * Vlozi objekt do cache
@@ -284,9 +282,9 @@ public class Cache
 	 */
 	public void setObjectSeconds(String name, Object object, int cacheInSeconds, boolean allowSmartRefresh)
 	{
-<span class="fc" id="L287">		long expiryTime = Tools.getNow() + (1000 * cacheInSeconds);</span>
-<span class="fc" id="L288">		setObjectByExpiry(name, object, expiryTime, allowSmartRefresh);</span>
-<span class="fc" id="L289">	}</span>
+<span class="fc" id="L285">		long expiryTime = Tools.getNow() + (1000l * cacheInSeconds);</span>
+<span class="fc" id="L286">		setObjectByExpiry(name, object, expiryTime, allowSmartRefresh);</span>
+<span class="fc" id="L287">	}</span>
 
 	/**
 	 * Vlozi objekt do cache s nastavenym casom exspiracie
@@ -297,29 +295,29 @@ public class Cache
 	 */
 	public void setObjectByExpiry(String name, Object object, long expiryTime, boolean allowSmartRefresh)
 	{
-<span class="fc" id="L300">		CacheBean cb = new CacheBean();</span>
-<span class="fc" id="L301">		cb.setName(name);</span>
-<span class="fc" id="L302">		cb.setObject(object);</span>
-<span class="fc" id="L303">		cb.setExpiryTime(expiryTime);</span>
-<span class="fc" id="L304">		cb.setAllowSmartRefresh(allowSmartRefresh);</span>
+<span class="fc" id="L298">		CacheBean cb = new CacheBean();</span>
+<span class="fc" id="L299">		cb.setName(name);</span>
+<span class="fc" id="L300">		cb.setObject(object);</span>
+<span class="fc" id="L301">		cb.setExpiryTime(expiryTime);</span>
+<span class="fc" id="L302">		cb.setAllowSmartRefresh(allowSmartRefresh);</span>
 
-		//Logger.println(this,&quot;Cache.setObject(&quot;+name+&quot;) &quot; + Tools.getNow() + &quot; exp=&quot; + expiryTime);
+		//Logger.debug(this,&quot;Cache.setObject(&quot;+name+&quot;) &quot; + Tools.formatDateTimeSeconds(Tools.getNow()) + &quot; exp=&quot; + Tools.formatDateTimeSeconds(expiryTime));
 
 		//vloz ho do HashTabulky
-<span class="fc" id="L309">		removeObject(name);</span>
+<span class="fc" id="L307">		removeObject(name);</span>
 
-<span class="fc" id="L311">		objectCache.put(name, cb);</span>
+<span class="fc" id="L309">		objectCache.put(name, cb);</span>
 
-<span class="fc" id="L313">		synchronized (listeners)</span>
+<span class="fc" id="L311">		synchronized (listeners)</span>
 		{
-<span class="fc bfc" id="L315" title="All 2 branches covered.">			for (CacheListener theListener : listeners)</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">			for (CacheListener theListener : listeners)</span>
 			{
 				try{
-<span class="fc" id="L318">					theListener.objectAdded(cb);</span>
-<span class="pc" id="L319">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
-<span class="fc" id="L320">			}</span>
-<span class="fc" id="L321">		}</span>
-<span class="fc" id="L322">	}</span>
+<span class="fc" id="L316">					theListener.objectAdded(cb);</span>
+<span class="pc" id="L317">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="fc" id="L318">			}</span>
+<span class="fc" id="L319">		}</span>
+<span class="fc" id="L320">	}</span>
 
 	/**
 	 * Nastavi uz existujucemu objektu v cache novy cas exspiracie
@@ -327,16 +325,16 @@ public class Cache
 	 * @param expiryTime
 	 */
 	public void setObjectExpiryTime(String name, long expiryTime) {
-<span class="fc" id="L330">		CacheBean cb = objectCache.get(name);</span>
-<span class="pc bpc" id="L331" title="1 of 2 branches missed.">		if (cb != null) {</span>
-<span class="fc" id="L332">			cb.setExpiryTime(expiryTime);</span>
+<span class="fc" id="L328">		CacheBean cb = objectCache.get(name);</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">		if (cb != null) {</span>
+<span class="fc" id="L330">			cb.setExpiryTime(expiryTime);</span>
 		}
-<span class="fc" id="L334">	}</span>
+<span class="fc" id="L332">	}</span>
 
 	public void removeObject(String name)
 	{
-<span class="fc" id="L338">		removeObject(name, false);</span>
-<span class="fc" id="L339">	}</span>
+<span class="fc" id="L336">		removeObject(name, false);</span>
+<span class="fc" id="L337">	}</span>
 
 	/**
 	 * Odstrani zadany objekt z cahce. Ak je refreshCluster true odstani sa aj z ostatnych nodov clustra
@@ -346,30 +344,30 @@ public class Cache
 	public void removeObject(String name, boolean refreshCluster)
 	{
 		//najskor refresh, lebo na tomto node nemusi existovat
-<span class="fc bfc" id="L349" title="All 2 branches covered.">		if (refreshCluster)</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">		if (refreshCluster)</span>
 		{
-<span class="fc" id="L351">			ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache-&quot; + name, 250));</span>
-<span class="fc" id="L352">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache, key= &quot; + name, -1, -1);</span>
+<span class="fc" id="L349">			ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache-&quot; + name, 250));</span>
+<span class="fc" id="L350">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache, key= &quot; + name, -1, -1);</span>
 		}
 
-<span class="fc" id="L355">		Object o = objectCache.get(name);</span>
-<span class="fc bfc" id="L356" title="All 2 branches covered.">		if (o == null)</span>
-<span class="fc" id="L357">			return;</span>
+<span class="fc" id="L353">		Object o = objectCache.get(name);</span>
+<span class="fc bfc" id="L354" title="All 2 branches covered.">		if (o == null)</span>
+<span class="fc" id="L355">			return;</span>
 
-<span class="fc" id="L359">		CacheBean theBean = (CacheBean)o;</span>
+<span class="fc" id="L357">		CacheBean theBean = (CacheBean)o;</span>
 
-<span class="fc" id="L361">		synchronized (listeners)</span>
+<span class="fc" id="L359">		synchronized (listeners)</span>
 		{
-<span class="fc bfc" id="L363" title="All 2 branches covered.">			for (CacheListener theListener : listeners)</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">			for (CacheListener theListener : listeners)</span>
 			{
 				try{
-<span class="fc" id="L366">					theListener.objectRemoved(theBean);</span>
-<span class="pc" id="L367">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
-<span class="fc" id="L368">			}</span>
-<span class="fc" id="L369">		}</span>
+<span class="fc" id="L364">					theListener.objectRemoved(theBean);</span>
+<span class="pc" id="L365">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="fc" id="L366">			}</span>
+<span class="fc" id="L367">		}</span>
 
-<span class="fc" id="L371">		objectCache.remove(name);</span>
-<span class="fc" id="L372">	}</span>
+<span class="fc" id="L369">		objectCache.remove(name);</span>
+<span class="fc" id="L370">	}</span>
 
 	/**
 	 * Vymaze z cache objekty zacinajuce na dane meno
@@ -377,8 +375,8 @@ public class Cache
 	 */
 	public void removeObjectStartsWithName(String name)
 	{
-<span class="fc" id="L380">		removeObjectStartsWithName(name, false);</span>
-<span class="fc" id="L381">	}</span>
+<span class="fc" id="L378">		removeObjectStartsWithName(name, false);</span>
+<span class="fc" id="L379">	}</span>
 
 	/**
 	 * Vymaze z cache objekty zacinajuce na dane meno. Ak je refreshCluster true odstani sa aj z ostatnych nodov clustra
@@ -387,39 +385,37 @@ public class Cache
 	 */
 	public void removeObjectStartsWithName(String name, boolean refreshCluster)
 	{
-<span class="fc" id="L390">		List&lt;String&gt; removeNames = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L388">		List&lt;String&gt; removeNames = new ArrayList&lt;&gt;();</span>
 		try
 		{
-<span class="fc" id="L393">			Logger.debug(Cache.class, &quot;removeObjectStartsWithName: &quot;+name);</span>
-
-<span class="fc" id="L395">			Enumeration&lt;CacheBean&gt; e = objectCache.elements();</span>
-<span class="fc bfc" id="L396" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
+<span class="fc" id="L391">			Enumeration&lt;CacheBean&gt; e = objectCache.elements();</span>
+<span class="fc bfc" id="L392" title="All 2 branches covered.">			while (e.hasMoreElements())</span>
 			{
-<span class="fc" id="L398">				CacheBean cb = e.nextElement();</span>
-<span class="fc bfc" id="L399" title="All 2 branches covered.">				if (cb.getName().startsWith(name))</span>
+<span class="fc" id="L394">				CacheBean cb = e.nextElement();</span>
+<span class="fc bfc" id="L395" title="All 2 branches covered.">				if (cb.getName().startsWith(name))</span>
 				{
-<span class="fc" id="L401">					removeNames.add(cb.getName());</span>
+<span class="fc" id="L397">					removeNames.add(cb.getName());</span>
 				}
-<span class="fc" id="L403">			}</span>
+<span class="fc" id="L399">			}</span>
 		}
-<span class="nc" id="L405">		catch (Exception ex)</span>
+<span class="nc" id="L401">		catch (Exception ex)</span>
 		{
 
-<span class="fc" id="L408">		}</span>
+<span class="fc" id="L404">		}</span>
 
-<span class="fc bfc" id="L410" title="All 2 branches covered.">		if (refreshCluster) {</span>
-<span class="fc" id="L411">			ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache:startsWithName-&quot; + name, 250));</span>
-<span class="fc" id="L412">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache:startsWithName, key= &quot; + name, -1, -1);</span>
+<span class="fc bfc" id="L406" title="All 2 branches covered.">		if (refreshCluster) {</span>
+<span class="fc" id="L407">			ClusterDB.addRefresh(DB.prepareString(&quot;sk.iway.iwcm.Cache:startsWithName-&quot; + name, 250));</span>
+<span class="fc" id="L408">			Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Deleting cache:startsWithName, key= &quot; + name, -1, -1);</span>
 		}
 
-<span class="fc" id="L415">		removeObject(name, false);</span>
+<span class="fc" id="L411">		removeObject(name, false);</span>
 
-<span class="fc" id="L417">		Iterator&lt;String&gt; iter = removeNames.iterator();</span>
-<span class="fc bfc" id="L418" title="All 2 branches covered.">		while (iter.hasNext())</span>
+<span class="fc" id="L413">		Iterator&lt;String&gt; iter = removeNames.iterator();</span>
+<span class="fc bfc" id="L414" title="All 2 branches covered.">		while (iter.hasNext())</span>
 		{
-<span class="fc" id="L420">			removeObject(iter.next(), false);</span>
+<span class="fc" id="L416">			removeObject(iter.next(), false);</span>
 		}
-<span class="fc" id="L422">	}</span>
+<span class="fc" id="L418">	}</span>
 
 	/**
 	 * Stiahne url a ulozi ho do cache na cacheInMinutes minut. Podporuje iba GET
@@ -430,100 +426,100 @@ public class Cache
 	public String downloadUrl(String url, int cacheInMinutes)
 	{
 		//meno v cache
-<span class="nc" id="L433">		String name = &quot;downloadUrl.&quot;+url;</span>
+<span class="nc" id="L429">		String name = &quot;downloadUrl.&quot;+url;</span>
 
-<span class="nc" id="L435">		Object o = getObject(name);</span>
-<span class="nc bnc" id="L436" title="All 6 branches missed.">		if (cacheInMinutes&gt;0 &amp;&amp; o!=null &amp;&amp; o instanceof String)</span>
+<span class="nc" id="L431">		Object o = getObject(name);</span>
+<span class="nc bnc" id="L432" title="All 6 branches missed.">		if (cacheInMinutes&gt;0 &amp;&amp; o!=null &amp;&amp; o instanceof String)</span>
 		{
 			//parada, mame to v cache
-<span class="nc" id="L439">			String data = (String)o;</span>
-<span class="nc" id="L440">			return(data);</span>
+<span class="nc" id="L435">			String data = (String)o;</span>
+<span class="nc" id="L436">			return(data);</span>
 		}
 
 		//stiahni to a uloz do cache
-<span class="nc" id="L444">		String data = Tools.downloadUrl(url);</span>
-<span class="nc bnc" id="L445" title="All 6 branches missed.">		if (cacheInMinutes&gt;0 &amp;&amp; data != null &amp;&amp; data.length()&gt;0)</span>
+<span class="nc" id="L440">		String data = Tools.downloadUrl(url);</span>
+<span class="nc bnc" id="L441" title="All 6 branches missed.">		if (cacheInMinutes&gt;0 &amp;&amp; data != null &amp;&amp; data.length()&gt;0)</span>
 		{
-<span class="nc" id="L447">			setObject(name, data, cacheInMinutes);</span>
+<span class="nc" id="L443">			setObject(name, data, cacheInMinutes);</span>
 		}
 
-<span class="nc" id="L450">		return(data);</span>
+<span class="nc" id="L446">		return(data);</span>
 	}
 
 	public void onDocChange(DocDetails doc)
 	{
-<span class="fc" id="L455">		String cacheOnDocCahngeMode = Constants.getString(&quot;cacheOnDocCahngeMode&quot;);</span>
-<span class="pc bpc" id="L456" title="5 of 6 branches missed.">		if (Tools.isEmpty(cacheOnDocCahngeMode) || cacheOnDocCahngeMode.length()&lt;2 || &quot;none&quot;.equalsIgnoreCase(cacheOnDocCahngeMode)) return;</span>
+<span class="fc" id="L451">		String cacheOnDocCahngeMode = Constants.getString(&quot;cacheOnDocCahngeMode&quot;);</span>
+<span class="pc bpc" id="L452" title="5 of 6 branches missed.">		if (Tools.isEmpty(cacheOnDocCahngeMode) || cacheOnDocCahngeMode.length()&lt;2 || &quot;none&quot;.equalsIgnoreCase(cacheOnDocCahngeMode)) return;</span>
 
-<span class="nc bnc" id="L458" title="All 2 branches missed.">		if (&quot;all&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">		if (&quot;all&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
 		{
 			try
 			{
-<span class="nc" id="L462">				Logger.debug(Cache.class, &quot;onDocChange, removing ALL &quot;);</span>
-<span class="nc" id="L463">				clearAll();</span>
+<span class="nc" id="L458">				Logger.debug(Cache.class, &quot;onDocChange, removing ALL &quot;);</span>
+<span class="nc" id="L459">				clearAll();</span>
 			}
-<span class="nc" id="L465">			catch (Exception e)</span>
+<span class="nc" id="L461">			catch (Exception e)</span>
 			{
-<span class="nc" id="L467">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L468">				Cache.getInstance(true);</span>
-<span class="nc" id="L469">			}</span>
+<span class="nc" id="L463">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L464">				Cache.getInstance(true);</span>
+<span class="nc" id="L465">			}</span>
 		}
-<span class="nc bnc" id="L471" title="All 4 branches missed.">		else if (&quot;include&quot;.equalsIgnoreCase(cacheOnDocCahngeMode) || &quot;groupid&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
+<span class="nc bnc" id="L467" title="All 4 branches missed.">		else if (&quot;include&quot;.equalsIgnoreCase(cacheOnDocCahngeMode) || &quot;groupid&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
 		{
 			try
 			{
-<span class="nc" id="L475">				List&lt;String&gt; objNamesToRemove = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L471">				List&lt;String&gt; objNamesToRemove = new ArrayList&lt;&gt;();</span>
 
 				//priprav zoznam
-<span class="nc" id="L478">				Enumeration&lt;String&gt; e = objectCache.keys();</span>
-<span class="nc bnc" id="L479" title="All 2 branches missed.">				while (e.hasMoreElements())</span>
+<span class="nc" id="L474">				Enumeration&lt;String&gt; e = objectCache.keys();</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">				while (e.hasMoreElements())</span>
 				{
-<span class="nc" id="L481">					String objName = e.nextElement();</span>
+<span class="nc" id="L477">					String objName = e.nextElement();</span>
 
-<span class="nc bnc" id="L483" title="All 2 branches missed.">					if (&quot;groupid&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">					if (&quot;groupid&quot;.equalsIgnoreCase(cacheOnDocCahngeMode))</span>
 					{
-<span class="nc" id="L485">						objName = objName.toLowerCase();</span>
-<span class="nc bnc" id="L486" title="All 2 branches missed.">						if (objName.indexOf(&quot;groupid=&quot;+doc.getGroupId()+&quot;,&quot;)!=-1 ||</span>
-<span class="nc bnc" id="L487" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid=&quot;+doc.getGroupId()+&quot; &quot;)!=-1 ||</span>
-<span class="nc bnc" id="L488" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid='&quot;+doc.getGroupId()+&quot;'&quot;)!=-1 ||</span>
-<span class="nc bnc" id="L489" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid=\&quot;&quot;+doc.getGroupId()+&quot;\&quot;&quot;)!=-1</span>
+<span class="nc" id="L481">						objName = objName.toLowerCase();</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">						if (objName.indexOf(&quot;groupid=&quot;+doc.getGroupId()+&quot;,&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid=&quot;+doc.getGroupId()+&quot; &quot;)!=-1 ||</span>
+<span class="nc bnc" id="L484" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid='&quot;+doc.getGroupId()+&quot;'&quot;)!=-1 ||</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">							 objName.indexOf(&quot;groupid=\&quot;&quot;+doc.getGroupId()+&quot;\&quot;&quot;)!=-1</span>
 						)
 						{
-<span class="nc" id="L492">							objNamesToRemove.add(objName);</span>
+<span class="nc" id="L488">							objNamesToRemove.add(objName);</span>
 						}
 					}
 					else
 					{
-<span class="nc bnc" id="L497" title="All 4 branches missed.">						if (objName.indexOf(&quot;!INCLUDE&quot;)!=-1 || objName.indexOf(&quot;writeTag_&quot;)!=-1) objNamesToRemove.add(objName);</span>
+<span class="nc bnc" id="L493" title="All 4 branches missed.">						if (objName.indexOf(&quot;!INCLUDE&quot;)!=-1 || objName.indexOf(&quot;writeTag_&quot;)!=-1) objNamesToRemove.add(objName);</span>
 					}
-<span class="nc" id="L499">				}</span>
+<span class="nc" id="L495">				}</span>
 
 				//vymaz data
-<span class="nc bnc" id="L502" title="All 2 branches missed.">				for (String objName : objNamesToRemove)</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				for (String objName : objNamesToRemove)</span>
 				{
-<span class="nc" id="L504">					CacheBean c = objectCache.get(objName);</span>
-<span class="nc bnc" id="L505" title="All 2 branches missed.">					if (c == null) continue;</span>
+<span class="nc" id="L500">					CacheBean c = objectCache.get(objName);</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">					if (c == null) continue;</span>
 
-<span class="nc bnc" id="L507" title="All 2 branches missed.">					if (c.isAllowSmartRefresh())</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">					if (c.isAllowSmartRefresh())</span>
 					{
-<span class="nc" id="L509">						Logger.debug(Cache.class, &quot;onDocChange, smart removing &quot;+objName);</span>
+<span class="nc" id="L505">						Logger.debug(Cache.class, &quot;onDocChange, smart removing &quot;+objName);</span>
 						//nastav cas pre refreshnutie na aktualny+SMART refresh-sekunda aby sa najblizsie objekt refreshol
-<span class="nc" id="L511">						c.setExpiryTime(System.currentTimeMillis()+SMART_REFRESH_TIME-1000);</span>
+<span class="nc" id="L507">						c.setExpiryTime(System.currentTimeMillis()+SMART_REFRESH_TIME-1000);</span>
 					}
 					else
 					{
-<span class="nc" id="L515">						Logger.debug(Cache.class, &quot;onDocChange, removing &quot;+objName);</span>
-<span class="nc" id="L516">						removeObject(objName);</span>
+<span class="nc" id="L511">						Logger.debug(Cache.class, &quot;onDocChange, removing &quot;+objName);</span>
+<span class="nc" id="L512">						removeObject(objName);</span>
 					}
-<span class="nc" id="L518">				}</span>
+<span class="nc" id="L514">				}</span>
 			}
-<span class="nc" id="L520">			catch (Exception e)</span>
+<span class="nc" id="L516">			catch (Exception e)</span>
 			{
-<span class="nc" id="L522">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L523">				Cache.getInstance(true);</span>
-<span class="nc" id="L524">			}</span>
+<span class="nc" id="L518">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L519">				Cache.getInstance(true);</span>
+<span class="nc" id="L520">			}</span>
 		}
-<span class="nc" id="L526">	}</span>
+<span class="nc" id="L522">	}</span>
 
 	/**
 	 * Ziska timestamp exspiracie objektu z cache, vrati null, ak sa objekt v cache nenachadza (alebo cas exspiroval)
@@ -532,29 +528,29 @@ public class Cache
 	 */
 	public Long getObjectExpiryTime(String name)
 	{
-<span class="nc" id="L535">		removeCheck();</span>
+<span class="nc" id="L531">		removeCheck();</span>
 
 		//Logger.println(this,&quot;Cache.getObject(&quot;+name+&quot;)&quot;);
 
-<span class="nc" id="L539">		Object object = objectCache.get(name);</span>
-<span class="nc" id="L540">		Long returnObject = null;</span>
-<span class="nc bnc" id="L541" title="All 2 branches missed.">		if (object != null)</span>
+<span class="nc" id="L535">		Object object = objectCache.get(name);</span>
+<span class="nc" id="L536">		Long returnObject = null;</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">		if (object != null)</span>
 		{
-<span class="nc" id="L543">			CacheBean cb = (CacheBean)object;</span>
+<span class="nc" id="L539">			CacheBean cb = (CacheBean)object;</span>
 			//Logger.println(this,&quot;Cache.setObject(&quot;+name+&quot;) - object found &quot;  + Tools.getNow() + &quot; exp=&quot; + cb.getExpiryTime());
-<span class="nc bnc" id="L545" title="All 2 branches missed.">			if (cb.getExpiryTime() &gt; System.currentTimeMillis())</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">			if (cb.getExpiryTime() &gt; System.currentTimeMillis())</span>
 			{
 				//Logger.println(this,&quot;mam v cache: &quot; + name);
-<span class="nc" id="L548">				returnObject = cb.getExpiryTime();</span>
+<span class="nc" id="L544">				returnObject = cb.getExpiryTime();</span>
 			}
 			else
 			{
 				//vyhod objekt z cache
-<span class="nc" id="L553">				removeObject(name);</span>
+<span class="nc" id="L549">				removeObject(name);</span>
 			}
 		}
 
-<span class="nc" id="L557">		return(returnObject);</span>
+<span class="nc" id="L553">		return(returnObject);</span>
 	}
 
 	/**
@@ -564,10 +560,10 @@ public class Cache
 	 */
 	private String getUserPrefix(UserDetails user)
 	{
-<span class="fc" id="L567">		String loginName = &quot;notLoggedUser&quot;;</span>
-<span class="pc bpc" id="L568" title="1 of 2 branches missed.">		if (user != null) loginName = user.getLogin();</span>
+<span class="fc" id="L563">		String loginName = &quot;notLoggedUser&quot;;</span>
+<span class="pc bpc" id="L564" title="1 of 2 branches missed.">		if (user != null) loginName = user.getLogin();</span>
 
-<span class="fc" id="L570">		return &quot;usr.&quot;+loginName+&quot;.&quot;;</span>
+<span class="fc" id="L566">		return &quot;usr.&quot;+loginName+&quot;.&quot;;</span>
 	}
 
 	/**
@@ -579,8 +575,8 @@ public class Cache
 	 */
 	public void setUserObject(UserDetails user, String name, Object object, int cacheInMinutes)
 	{
-<span class="nc" id="L582">		setObjectSeconds(getUserPrefix(user) + name, object, cacheInMinutes*60);</span>
-<span class="nc" id="L583">	}</span>
+<span class="nc" id="L578">		setObjectSeconds(getUserPrefix(user) + name, object, cacheInMinutes*60);</span>
+<span class="nc" id="L579">	}</span>
 
 	/**
 	 * vrati objekt uz pretypovany (nemam rad ked musim po vrateni objekt pretypovavat :) )
@@ -592,12 +588,12 @@ public class Cache
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public &lt;R extends Object&gt; R getUserObject(UserDetails user, String name, Class&lt;R&gt; type)
 	{
-<span class="nc" id="L595">		Object result = getUserObject(user, name);</span>
-<span class="nc bnc" id="L596" title="All 4 branches missed.">		if (result!=null &amp;&amp; type.isAssignableFrom(result.getClass()))</span>
+<span class="nc" id="L591">		Object result = getUserObject(user, name);</span>
+<span class="nc bnc" id="L592" title="All 4 branches missed.">		if (result!=null &amp;&amp; type.isAssignableFrom(result.getClass()))</span>
 		{
-<span class="nc" id="L598">			return (R) result;</span>
+<span class="nc" id="L594">			return (R) result;</span>
 		}
-<span class="nc" id="L600">		return null;</span>
+<span class="nc" id="L596">		return null;</span>
 	}
 
 	/**
@@ -608,7 +604,7 @@ public class Cache
 	 */
 	public Object getUserObject(UserDetails user, String name)
 	{
-<span class="nc" id="L611">		return getObject(getUserPrefix(user)+name);</span>
+<span class="nc" id="L607">		return getObject(getUserPrefix(user)+name);</span>
 	}
 
 	/**
@@ -617,10 +613,10 @@ public class Cache
 	 */
 	public void removeUserAllUserObjects(UserDetails user)
 	{
-<span class="pc bpc" id="L620" title="1 of 2 branches missed.">		if (user != null)</span>
+<span class="pc bpc" id="L616" title="1 of 2 branches missed.">		if (user != null)</span>
 		{
-<span class="fc" id="L622">			removeObjectStartsWithName(getUserPrefix(user), true);</span>
+<span class="fc" id="L618">			removeObjectStartsWithName(getUserPrefix(user), true);</span>
 		}
-<span class="fc" id="L624">	}</span>
+<span class="fc" id="L620">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

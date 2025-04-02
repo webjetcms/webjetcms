@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news</a> &gt; <span class="el_source">NewsRestController.java</span></div><h1>NewsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news</a> &gt; <span class="el_source">NewsRestController.java</span></div><h1>NewsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,8 +24,17 @@ import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
+import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.rest.WebpagesDatatable;
+import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.users.UsersDB;
@@ -31,110 +43,174 @@ import sk.iway.iwcm.users.UsersDB;
  * Rest controller for app news, there are only support methods,
  * because for data it will use WebpagesRestController calls
  */
+@Datatable
 @RestController
 @RequestMapping(value = &quot;/admin/rest/news/news-list&quot;)
 @PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('cmp_news')&quot;)
-<span class="fc" id="L37">public class NewsRestController {</span>
+public class NewsRestController extends WebpagesDatatable {
+
+    @Autowired
+    public NewsRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+<span class="fc" id="L54">        super(docDetailsRepository, editorFacade, docAtrDefRepository);</span>
+<span class="fc" id="L55">    }</span>
+
+    @Override
+    public Page&lt;DocDetails&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L60">        GetAllItemsDocOptions options = getDefaultOptions(pageable, false);</span>
+
+<span class="fc" id="L62">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
+<span class="fc" id="L63">        groupId = getNewsGroupId(groupId);</span>
+<span class="fc" id="L64">        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));</span>
+
+<span class="fc" id="L66">        options.setGroupId(groupId);</span>
+
+        //verify perms after groupId change
+<span class="pc bpc" id="L69" title="2 of 6 branches missed.">        if (options.getGroupId()!=Constants.getInt(&quot;systemPagesRecentPages&quot;) &amp;&amp; GroupsDB.isGroupEditable(getUser(), options.getGroupId())==false &amp;&amp; GroupsDB.isGroupViewable(getUser(), options.getGroupId())==false) {</span>
+<span class="nc" id="L70">            throwError(&quot;components.jstree.access_denied__group&quot;);</span>
+        }
+
+<span class="fc" id="L73">        return WebpagesService.getAllItems(options);</span>
+    }
+
+    @Override
+    public DocDetails getOneItem(long id) {
+<span class="fc" id="L78">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
+<span class="fc" id="L79">        int historyId = Tools.getIntValue(getRequest().getParameter(&quot;historyId&quot;), -1);</span>
+
+<span class="fc" id="L81">        groupId = getNewsGroupId(groupId);</span>
+
+<span class="fc" id="L83">        List&lt;NotifyBean&gt; notifyList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L84">        DocDetails docToReturn = WebpagesService.getOneItem(id, groupId, historyId, editorFacade, docAtrDefRepository, notifyList, getRequest());</span>
+<span class="fc" id="L85">        addNotify(notifyList);</span>
+
+<span class="fc" id="L87">        return docToReturn;</span>
+    }
 
     @RequestMapping(value = &quot;/convertIdsToNamePair&quot;)
     public List&lt;LabelValue&gt; convertIdsToNamePair(@RequestParam String ids, @RequestParam(required = false) String include, HttpServletRequest request) {
 
-<span class="fc" id="L42">        List&lt;LabelValue&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L93">        List&lt;LabelValue&gt; list = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (ids.startsWith(&quot;constant:&quot;)) {</span>
-<span class="fc" id="L45">            ids = Constants.getString(ids.substring(9), &quot;&quot;);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (ids.startsWith(&quot;constant:&quot;)) {</span>
+<span class="fc" id="L96">            ids = Constants.getString(ids.substring(9), &quot;&quot;);</span>
         }
 
-<span class="pc bpc" id="L48" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(include) &amp;&amp; include.startsWith(&quot;!INCLUDE(&quot;)) {</span>
-<span class="fc" id="L49">            PageParams pp = new PageParams(include);</span>
-<span class="fc" id="L50">            int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
-<span class="pc bpc" id="L51" title="1 of 2 branches missed.">            String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
-<span class="fc" id="L52">            StringBuilder includeIds = new StringBuilder();</span>
-<span class="fc" id="L53">            StringBuilder includeIdsNames = new StringBuilder();</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">            for (int groupId : groupIds) {</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">                if (includeIds.isEmpty()==false) includeIds.append(&quot;,&quot;);</span>
-<span class="fc" id="L56">                includeIds.append(&quot;&quot;+groupId).append(append);</span>
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(include) &amp;&amp; include.startsWith(&quot;!INCLUDE(&quot;)) {</span>
+<span class="fc" id="L100">            PageParams pp = new PageParams(include);</span>
+<span class="fc" id="L101">            int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">            String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
+<span class="fc" id="L103">            StringBuilder includeIds = new StringBuilder();</span>
+<span class="fc" id="L104">            StringBuilder includeIdsNames = new StringBuilder();</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for (int groupId : groupIds) {</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                if (includeIds.isEmpty()==false) includeIds.append(&quot;,&quot;);</span>
+<span class="fc" id="L107">                includeIds.append(&quot;&quot;+groupId).append(append);</span>
 
-<span class="fc" id="L58">                GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                if (group != null) {</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">                    if (includeIdsNames.isEmpty()==false) includeIdsNames.append(&quot;, &quot;);</span>
-<span class="fc" id="L61">                    includeIdsNames.append(group.getFullPath()).append(append);</span>
+<span class="fc" id="L109">                GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">                if (group != null) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                    if (includeIdsNames.isEmpty()==false) includeIdsNames.append(&quot;, &quot;);</span>
+<span class="fc" id="L112">                    includeIdsNames.append(group.getFullPath()).append(append);</span>
                 }
             }
-<span class="fc" id="L64">            ids = includeIds.toString();</span>
-<span class="fc" id="L65">            list.add(new LabelValue(includeIdsNames.toString(), ids));</span>
-<span class="fc" id="L66">        } else {</span>
-<span class="fc" id="L67">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L68">            String currentDomain = DocDB.getDomain(request);</span>
+<span class="fc" id="L115">            ids = includeIds.toString();</span>
+<span class="fc" id="L116">            list.add(new LabelValue(includeIdsNames.toString(), ids));</span>
+<span class="fc" id="L117">        } else {</span>
+<span class="fc" id="L118">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L119">            String currentDomain = DocDB.getDomain(request);</span>
 
-<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (Tools.isEmpty(ids)) {</span>
-<span class="fc" id="L71">                Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
-<span class="fc" id="L72">                String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if (Tools.isEmpty(ids)) {</span>
+<span class="fc" id="L122">                Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L123">                String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
 
                 //we dont have any ids, try to search for NEWS include in all groups
-<span class="fc" id="L75">                List&lt;String&gt; dataList = new SimpleQuery().forListString(&quot;SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '&quot;+trashDirName+&quot;%'&quot;);</span>
-<span class="fc" id="L76">                Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L126">                List&lt;String&gt; dataList = new SimpleQuery().forListString(&quot;SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '&quot;+trashDirName+&quot;%'&quot;);</span>
+<span class="fc" id="L127">                Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
 
-<span class="fc bfc" id="L78" title="All 2 branches covered.">                for (String data : dataList) {</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">                for (String data : dataList) {</span>
 
-<span class="fc" id="L80">                    Pattern pattern = Pattern.compile(&quot;!INCLUDE\\(/components/news/(.*?)\\)!&quot;);</span>
-<span class="fc" id="L81">                    Matcher matcher = pattern.matcher(data);</span>
+<span class="fc" id="L131">                    Pattern pattern = Pattern.compile(&quot;!INCLUDE\\(/components/news/(.*?)\\)!&quot;);</span>
+<span class="fc" id="L132">                    Matcher matcher = pattern.matcher(data);</span>
 
-<span class="fc bfc" id="L83" title="All 2 branches covered.">                    while (matcher.find()) {</span>
-<span class="fc" id="L84">                        String group = matcher.group();</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">                    while (matcher.find()) {</span>
+<span class="fc" id="L135">                        String group = matcher.group();</span>
 
-<span class="fc" id="L86">                        PageParams pp = new PageParams(group);</span>
-<span class="fc" id="L87">                        int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">                        for (int groupId : groupIds) {</span>
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">                            if (groupId &gt; 0) {</span>
-<span class="fc" id="L90">                                GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">                                if (groupDetails != null) {</span>
-<span class="pc bpc" id="L92" title="1 of 4 branches missed.">                                    if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(groupDetails.getDomainName())==false) continue;</span>
+<span class="fc" id="L137">                        PageParams pp = new PageParams(group);</span>
+<span class="fc" id="L138">                        int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                        for (int groupId : groupIds) {</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">                            if (groupId &gt; 0) {</span>
+<span class="fc" id="L141">                                GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">                                if (groupDetails != null) {</span>
+<span class="pc bpc" id="L143" title="1 of 4 branches missed.">                                    if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(groupDetails.getDomainName())==false) continue;</span>
 
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                                    String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
-<span class="fc" id="L95">                                    String value = String.valueOf(groupId)+append;</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                                    String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
+<span class="fc" id="L146">                                    String value = String.valueOf(groupId)+append;</span>
 
-<span class="fc bfc" id="L97" title="All 2 branches covered.">                                    if (duplicityCheck.contains(value)==false) {</span>
-<span class="fc" id="L98">                                        list.add(new LabelValue(groupDetails.getFullPath()+append, value));</span>
-<span class="fc" id="L99">                                        duplicityCheck.add(value);</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                                    if (duplicityCheck.contains(value)==false) {</span>
+<span class="fc" id="L149">                                        list.add(new LabelValue(groupDetails.getFullPath()+append, value));</span>
+<span class="fc" id="L150">                                        duplicityCheck.add(value);</span>
                                     }
                                 }
                             }
                         }
-<span class="fc" id="L104">                    }</span>
-<span class="fc" id="L105">                }</span>
+<span class="fc" id="L155">                    }</span>
+<span class="fc" id="L156">                }</span>
 
                 //sort list using stream api by label property
-<span class="fc" id="L108">                list.sort((o1, o2) -&gt; o1.getLabel().compareTo(o2.getLabel()));</span>
-<span class="fc" id="L109">            } else {</span>
+<span class="fc" id="L159">                list.sort((o1, o2) -&gt; o1.getLabel().compareTo(o2.getLabel()));</span>
+<span class="fc" id="L160">            } else {</span>
                 //add all groups from ids
-<span class="nc" id="L111">                int[] groupIds = Tools.getTokensInt(ids, &quot;,+&quot;);</span>
+<span class="nc" id="L162">                int[] groupIds = Tools.getTokensInt(ids, &quot;,+&quot;);</span>
 
-<span class="nc bnc" id="L113" title="All 2 branches missed.">                for (int groupId : groupIds) {</span>
-<span class="nc" id="L114">                    GroupDetails group = groupsDB.getGroup(groupId);</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">                    if (group != null) {</span>
-<span class="nc bnc" id="L116" title="All 4 branches missed.">                        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(group.getDomainName())==false) continue;</span>
-<span class="nc" id="L117">                        list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                for (int groupId : groupIds) {</span>
+<span class="nc" id="L165">                    GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                    if (group != null) {</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">                        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(group.getDomainName())==false) continue;</span>
+<span class="nc" id="L168">                        list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));</span>
                     }
                 }
             }
         }
 
         //Filter folder's by PERM'S
-<span class="fc" id="L124">        Identity currentUser = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L125">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L126">        int[] editableGroups = Tools.getTokensInt(currentUser.getEditableGroups(true), &quot;,&quot;);</span>
-<span class="fc" id="L127">        int[] editablePages = Tools.getTokensInt(currentUser.getEditablePages(), &quot;,&quot;);</span>
+<span class="fc" id="L175">        Identity currentUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L176">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L177">        int[] editableGroups = Tools.getTokensInt(currentUser.getEditableGroups(true), &quot;,&quot;);</span>
+<span class="fc" id="L178">        int[] editablePages = Tools.getTokensInt(currentUser.getEditablePages(), &quot;,&quot;);</span>
 
-<span class="fc bfc" id="L129" title="All 2 branches covered.">        if(editableGroups.length &lt; 1) {</span>
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if(editablePages.length &lt; 1) return list;</span>
-<span class="nc" id="L131">            else return new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        if(editableGroups.length &lt; 1) {</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            if(editablePages.length &lt; 1) return list;</span>
+<span class="nc" id="L182">            else return new ArrayList&lt;&gt;();</span>
         } else {
-<span class="fc" id="L133">            int[] expandedEditableGroups = groupsDB.expandGroupIdsToChilds(editableGroups, true);</span>
-<span class="fc" id="L134">            return list.stream()</span>
-<span class="fc" id="L135">                    .filter(group -&gt; Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))</span>
-<span class="fc" id="L136">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L184">            int[] expandedEditableGroups = groupsDB.expandGroupIdsToChilds(editableGroups, true);</span>
+<span class="fc" id="L185">            return list.stream()</span>
+<span class="fc" id="L186">                    .filter(group -&gt; Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))</span>
+<span class="fc" id="L187">                    .collect(Collectors.toList());</span>
         }
+    }
+
+    /**
+     * Expand groupID from list of groupID's
+     * @param currentGroupId
+     * @return
+     */
+    private int getNewsGroupId(int currentGroupId) {
+<span class="fc" id="L197">        int groupId = currentGroupId;</span>
+        //news version get group ID in groupIdList parameter
+<span class="fc" id="L199">        String groupIdList = getRequest().getParameter(&quot;groupIdList&quot;);</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(groupIdList)) {</span>
+<span class="pc bpc" id="L201" title="2 of 4 branches missed.">            if (groupId &lt; 1 || groupId == Constants.getInt(&quot;rootGroupId&quot;)) {</span>
+                try {
+<span class="fc" id="L203">                    groupIdList = Tools.replace(groupIdList, &quot;*&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                    if (groupIdList.indexOf(&quot;,&quot;)!=-1) groupIdList=groupIdList.substring(0, groupIdList.indexOf(&quot;,&quot;));</span>
+
+<span class="fc" id="L206">                    int groupIdParser = Tools.getIntValue(groupIdList, -1);</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">                    if (groupIdParser &gt; 0) groupId = groupIdParser;</span>
+<span class="nc" id="L208">                } catch (Exception e) {</span>
+                    //do nothing - failsafe
+<span class="fc" id="L210">                }</span>
+            }
+        }
+<span class="fc" id="L213">        return groupId;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatablePageImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatablePageImpl.java</span></div><h1>DatatablePageImpl.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatablePageImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatablePageImpl.java</span></div><h1>DatatablePageImpl.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -100,16 +100,26 @@ public class DatatablePageImpl&lt;T&gt; extends PageImpl&lt;T&gt; {
 <span class="nc" id="L100">            addOption(field, option, option, null);</span>
 <span class="nc" id="L101">    }</span>
 
+    /**
+     * Add options from map type id:label, id will be converted to string and used as value for option
+     * @param field
+     * @param options
+     */
+    public void addOptions(String field, Map&lt;? extends Number, String&gt; options) {
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for(Map.Entry&lt;? extends Number,String&gt; entry : options.entrySet())</span>
+<span class="fc" id="L110">            addOption(field, entry.getValue(), String.valueOf(entry.getKey()), null);</span>
+<span class="fc" id="L111">    }</span>
+
     public Map&lt;String, List&lt;OptionDto&gt;&gt; getOptions() {
-<span class="fc" id="L104">        return options;</span>
+<span class="fc" id="L114">        return options;</span>
     }
 
     public List&lt;NotifyBean&gt; getNotify() {
-<span class="fc" id="L108">        return notify;</span>
+<span class="fc" id="L118">        return notify;</span>
     }
 
     public void setNotify(List&lt;NotifyBean&gt; notify) {
-<span class="fc" id="L112">        this.notify = notify;</span>
-<span class="fc" id="L113">    }</span>
+<span class="fc" id="L122">        this.notify = notify;</span>
+<span class="fc" id="L123">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

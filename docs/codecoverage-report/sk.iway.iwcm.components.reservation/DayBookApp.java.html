@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DayBookApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">DayBookApp.java</span></div><h1>DayBookApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.components.reservation.jpa.ReservationEditorFields;
+import sk.iway.iwcm.components.reservation.jpa.ReservationEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationRepository;
+import sk.iway.iwcm.components.reservation.rest.ReservationService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.annotations.DefaultHandler;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.users.UsersDB;
+
+/**
+ * App for Booking of rooms, cars, etc. for a whole day.
+ */
+@WebjetComponent(&quot;sk.iway.iwcm.components.reservation.DayBookApp&quot;)
+@WebjetAppStore(nameKey = &quot;components.reservation.day_book.title&quot;, descKey=&quot;components.reservation.day_book.desc&quot;, imagePath = &quot;ti ti-calendar-dollar text-success bg-light&quot;, galleryImages = &quot;/apps/reservation/admin/day-book-screenshot-1.png&quot;, commonSettings = true)
+@Getter
+@Setter
+public class DayBookApp extends WebjetComponentAbstract {
+
+    @JsonIgnore
+    private ReservationObjectRepository ror;
+
+    @JsonIgnore
+    private ReservationRepository rr;
+
+    @JsonIgnore
+    private ReservationObjectPriceRepository ropr;
+
+    private static final String VIEW_PATH = &quot;/apps/reservation/mvc/day-book&quot;; //NOSONAR
+    private static final String ERROR_MSG = &quot;components.reservation.reservation_app.save_error&quot;;
+
+    @Autowired
+<span class="fc" id="L72">    public DayBookApp(ReservationObjectRepository ror, ReservationRepository rr, ReservationObjectPriceRepository ropr) {</span>
+<span class="fc" id="L73">        this.ror = ror;</span>
+<span class="fc" id="L74">        this.rr = rr;</span>
+<span class="fc" id="L75">        this.ropr = ropr;</span>
+<span class="fc" id="L76">    }</span>
+
+    //Choose reservation object
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = &quot;components.reservation.time_book.reservation_object_ids&quot;, tab = &quot;basic&quot;, editor = {
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;method:sk.iway.iwcm.components.reservation.rest.ReservationService.getReservationObjectDaysSelectList&quot;, value = &quot;label:value&quot;)
+            }
+        )
+    })
+    private String reservationObjectIds;
+
+    @Override
+    public void init(HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L90">        Logger.debug(TimeBookApp.class, &quot;Init of TimeBookApp app&quot;);</span>
+<span class="fc" id="L91">    }</span>
+
+    @DefaultHandler
+	public String view(Model model, HttpServletRequest request) {
+<span class="fc" id="L95">        prepareDayBookApp(model, request, null, false);</span>
+<span class="fc" id="L96">        return VIEW_PATH;</span>
+	}
+
+    public String saveForm(@Valid @ModelAttribute(&quot;entity&quot;) ReservationEntity entity, BindingResult result, Model model, HttpServletRequest request) {
+        //result.getAllErrors() IS unmodifiable
+<span class="fc" id="L101">        List&lt;ObjectError&gt; errors = new ArrayList&lt;&gt;( result.getAllErrors() );</span>
+
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if(!Tools.isEmail(entity.getEmail())) {</span>
+<span class="nc" id="L104">            errors.add(new FieldError(&quot;entity&quot;, &quot;email&quot;, Prop.getInstance(request).getText(&quot;javax.validation.constraints.Email.message&quot;)));</span>
+        }
+
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if(Tools.isEmpty(errors)) {</span>
+<span class="fc" id="L108">            Prop prop = Prop.getInstance(request);</span>
+
+            // ITS GOOD
+<span class="fc" id="L111">            ReservationEditorFields ref1 = new ReservationEditorFields();</span>
+<span class="fc" id="L112">            ref1.setArrivingTime( ReservationService.getArrivalTime(entity) );</span>
+<span class="fc" id="L113">            ref1.setDepartureTime( ReservationService.getDepartureTime(entity) );</span>
+<span class="fc" id="L114">            entity.setEditorFields(ref1);</span>
+<span class="fc" id="L115">            ReservationService.prepareDates(entity, true);</span>
+
+            try {
+<span class="fc" id="L118">                ReservationObjectEntity roe = ror.findById(entity.getReservationObjectId()).orElse(null);</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">                if(roe == null) {</span>
+                    //Error
+<span class="nc" id="L121">                    prepareDayBookApp(model, request, entity, true);</span>
+<span class="nc" id="L122">                    model.addAttribute(&quot;customError&quot;, prop.getText(ERROR_MSG));</span>
+<span class="nc" id="L123">                    return VIEW_PATH;</span>
+                }
+
+<span class="fc" id="L126">                entity.setReservationObjectForReservation(roe);</span>
+<span class="fc" id="L127">                ReservationEditorFields ref = new ReservationEditorFields();</span>
+<span class="fc" id="L128">                ref.toReservationEntity(entity, rr, request, true, false, ProcessItemAction.CREATE);</span>
+<span class="fc" id="L129">                entity.setEditorFields(ref);</span>
+<span class="nc" id="L130">            } catch (Exception e) {</span>
+                //Error
+<span class="nc" id="L132">                prepareDayBookApp(model, request, entity, true);</span>
+<span class="nc" id="L133">                model.addAttribute(&quot;customError&quot;, e.getLocalizedMessage());</span>
+<span class="nc" id="L134">                return VIEW_PATH;</span>
+<span class="fc" id="L135">            }</span>
+
+            //Its CREATE, reservationId is by default -1
+<span class="fc" id="L138">            int userId = ReservationService.getUserToPay(entity.getEmail(), Long.valueOf(-1), rr, request);</span>
+<span class="fc" id="L139">            entity.setUserId(userId);</span>
+<span class="fc" id="L140">            entity.setPrice( ReservationService.calculateReservationPrice(entity, userId, ror, ropr) );</span>
+
+<span class="fc" id="L142">            boolean isAccepted = ReservationService.acceptation(entity, request);</span>
+<span class="fc" id="L143">            rr.save(entity);</span>
+
+            //After save send mail
+<span class="fc" id="L146">            ReservationService reservationService = new ReservationService(prop);</span>
+<span class="fc" id="L147">            reservationService.sendCreatedReservationEmail(entity, request);</span>
+
+            //Add suitable message
+<span class="fc bfc" id="L150" title="All 2 branches covered.">            if(isAccepted) {</span>
+<span class="fc" id="L151">                model.addAttribute(&quot;saveMsg&quot;, prop.getText(&quot;components.reservation.reservation_app.save_msg&quot;));</span>
+            } else {
+<span class="fc" id="L153">                model.addAttribute(&quot;saveMsg&quot;, prop.getText(&quot;components.reservation.reservation_app.save_msg_acceptation&quot;));</span>
+            }
+
+            //Successfull save
+<span class="fc" id="L157">            prepareDayBookApp(model, request, entity, false);</span>
+<span class="fc" id="L158">            return VIEW_PATH;</span>
+        }
+
+        //Error
+<span class="nc" id="L162">        prepareDayBookApp(model, request, entity, true);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        model.addAttribute(&quot;errors&quot;, Tools.isEmpty(errors) ? null : errors);</span>
+<span class="nc" id="L164">        return VIEW_PATH;</span>
+    }
+
+    private void prepareDayBookApp(Model model, HttpServletRequest request, ReservationEntity reservation, boolean keepSelection) {
+<span class="fc" id="L168">        Long selectedReservationId = setSelect(model, request);</span>
+
+<span class="fc" id="L170">        model.addAttribute(&quot;localization&quot;, PageLng.getUserLngIso( Prop.getLng(request, false) ) );</span>
+<span class="fc" id="L171">        model.addAttribute(&quot;currency&quot;, Constants.getString(&quot;basketProductCurrency&quot;) );</span>
+<span class="fc" id="L172">        model.addAttribute(&quot;reservationAllDayStartTime&quot;, Constants.getString(&quot;reservationAllDayStartTime&quot;));</span>
+<span class="fc" id="L173">        model.addAttribute(&quot;reservationAllDayEndTime&quot;, Constants.getString(&quot;reservationAllDayEndTime&quot;));</span>
+
+<span class="fc bfc" id="L175" title="All 2 branches covered.">        if(reservation == null) {</span>
+<span class="fc" id="L176">            reservation = new ReservationEntity();</span>
+<span class="fc" id="L177">            reservation.setReservationObjectId(selectedReservationId);</span>
+
+            //User pre-set infos
+<span class="fc" id="L180">            Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if(user != null) {</span>
+<span class="fc" id="L182">                reservation.setName(user.getFirstName());</span>
+<span class="fc" id="L183">                reservation.setSurname(user.getLastName());</span>
+<span class="fc" id="L184">                reservation.setEmail(user.getEmail());</span>
+            }
+<span class="pc bpc" id="L186" title="3 of 4 branches missed.">        }  else if(Tools.isNotEmpty(reservation.getActualDate()) || reservation.getDateFrom() != null) {</span>
+            //Retunrn to same date
+<span class="fc" id="L188">            Calendar cal = Calendar.getInstance();</span>
+
+            //ActualDate prevents a month shift in calendar -&gt; happens when selectwed range in only in right site of calendar (+1 month)
+            //ActualDate holds allways value of left site of calendar (actual set date)
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">            if(Tools.isNotEmpty(reservation.getActualDate())) {</span>
+<span class="fc" id="L193">                Date reservationDate = ReservationService.getReservationDate(reservation.getActualDate(), ReservationService.FE_MONTHPICKER_FORMAT);</span>
+<span class="fc" id="L194">                cal.setTime(reservationDate);</span>
+<span class="fc" id="L195">            } else {</span>
+<span class="nc" id="L196">                cal.setTime(reservation.getDateFrom());</span>
+            }
+
+<span class="fc" id="L199">            model.addAttribute(&quot;currentYear&quot;, cal.get(Calendar.YEAR));</span>
+<span class="fc" id="L200">            model.addAttribute(&quot;currentMonth&quot;, cal.get(Calendar.MONTH));</span>
+
+<span class="pc bpc" id="L202" title="3 of 4 branches missed.">            if(keepSelection &amp;&amp; reservation.getDateTo() != null) {</span>
+                //Selected range
+<span class="nc" id="L204">                model.addAttribute(&quot;selectedDateFrom&quot;, ReservationService.getDateId(reservation.getDateFrom(), false));</span>
+<span class="nc" id="L205">                model.addAttribute(&quot;selectedDateTo&quot;, ReservationService.getDateId(reservation.getDateTo(), false));</span>
+            }
+        }
+
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">        if(!keepSelection) {</span>
+            //Nullify selection values
+<span class="fc" id="L211">            reservation.setPrice(null);</span>
+<span class="fc" id="L212">            reservation.setDateFrom(null);</span>
+<span class="fc" id="L213">            reservation.setDateTo(null);</span>
+<span class="fc" id="L214">            reservation.setPurpose(null);</span>
+        }
+
+<span class="fc" id="L217">        model.addAttribute(&quot;reservationEntity&quot;, reservation);</span>
+<span class="fc" id="L218">    }</span>
+
+    private Long setSelect(Model model, HttpServletRequest request) {
+<span class="fc" id="L221">        List&lt;LabelValueInteger&gt; reservationObjectSelectOptions = new ArrayList&lt;&gt;();</span>
+        List&lt;ReservationObjectEntity&gt; reservationObjects;
+
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        if(Tools.isNotEmpty(reservationObjectIds)) {</span>
+<span class="fc" id="L225">            List&lt;Integer&gt; ids = Arrays.stream( Tools.getTokensInt(reservationObjectIds, &quot;+&quot;) ).boxed().toList();</span>
+<span class="fc" id="L226">            reservationObjects = ror.getAllDayReservationsWhereIdsIn(ids);</span>
+<span class="fc" id="L227">        } else {</span>
+            // All reservations for full day
+<span class="fc" id="L229">            reservationObjects = ror.findAllByDomainIdAndReservationForAllDayTrue(CloudToolsForCore.getDomainId());</span>
+        }
+
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        for(ReservationObjectEntity roe : reservationObjects) {</span>
+<span class="fc" id="L233">            reservationObjectSelectOptions.add(new LabelValueInteger(roe.getName(), roe.getId().intValue()));</span>
+<span class="fc" id="L234">        }</span>
+<span class="fc" id="L235">        model.addAttribute(&quot;reservationObjects&quot;, reservationObjectSelectOptions);</span>
+
+<span class="fc" id="L237">        long obtainedReservationId = Tools.getLongValue(request.getParameter(&quot;reservation-object-id&quot;), -1);</span>
+
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        if(obtainedReservationId != -1) {</span>
+<span class="nc" id="L240">            boolean isSupported = reservationObjects.stream().anyMatch(ro -&gt; ro.getId().equals(obtainedReservationId));</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            if(isSupported) {</span>
+<span class="nc" id="L242">                return obtainedReservationId;</span>
+            }
+        }
+
+        // Else return default reservation object id)
+<span class="fc" id="L247">        return reservationObjects.get(0).getId();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

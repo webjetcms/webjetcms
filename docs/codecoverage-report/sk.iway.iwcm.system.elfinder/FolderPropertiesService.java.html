@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FolderPropertiesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FolderPropertiesService.java</span></div><h1>FolderPropertiesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FolderPropertiesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FolderPropertiesService.java</span></div><h1>FolderPropertiesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -39,10 +39,10 @@ public class FolderPropertiesService {
 <span class="nc" id="L39">            throw new ResponseStatusException(HttpStatus.FORBIDDEN);</span>
 
 <span class="fc" id="L41">        fpe = repository.findByDirUrl(dir).orElse(null);</span>
-<span class="fc bfc" id="L42" title="All 2 branches covered.">        if(fpe == null) {</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if(fpe == null) {</span>
             //This URL is not in DB
-<span class="fc" id="L44">            fpe = new FolderPropertiesEntity();</span>
-<span class="fc" id="L45">            fpe.setDirUrl(dir);</span>
+<span class="nc" id="L44">            fpe = new FolderPropertiesEntity();</span>
+<span class="nc" id="L45">            fpe.setDirUrl(dir);</span>
         }
 
 <span class="fc" id="L48">        FolderPropertiesEditorFields editorFields = new FolderPropertiesEditorFields();</span>
@@ -76,39 +76,39 @@ public class FolderPropertiesService {
 <span class="fc" id="L76">    }</span>
 
     public static void copyFolderProperties(String srcPath, String newPath, HttpServletRequest request) {
-<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        if(Tools.isEmpty(srcPath) == true || Tools.isEmpty(newPath) == true)</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">        if(Tools.isEmpty(srcPath) == true || Tools.isEmpty(newPath) == true)</span>
 <span class="nc" id="L80">            return;</span>
 
-<span class="fc" id="L82">        Identity loggedUser = UsersDB.getCurrentUser(request);    </span>
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if(loggedUser.isFolderWritable(srcPath) == false) </span>
+<span class="nc" id="L82">        Identity loggedUser = UsersDB.getCurrentUser(request);    </span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if(loggedUser.isFolderWritable(srcPath) == false) </span>
 <span class="nc" id="L84">            return;</span>
 
-<span class="fc" id="L86">        FolderPropertiesRepository folderPropertiesRepository = Tools.getSpringBean(&quot;folderPropertiesRepository&quot;, FolderPropertiesRepository.class);</span>
-<span class="fc" id="L87">        FolderPropertiesEntity fromEntity = folderPropertiesRepository.findByDirUrl(srcPath).orElse(null);</span>
-<span class="fc" id="L88">        FolderPropertiesEntity toEntity = folderPropertiesRepository.findByDirUrl(newPath).orElse(null);</span>
+<span class="nc" id="L86">        FolderPropertiesRepository folderPropertiesRepository = Tools.getSpringBean(&quot;folderPropertiesRepository&quot;, FolderPropertiesRepository.class);</span>
+<span class="nc" id="L87">        FolderPropertiesEntity fromEntity = folderPropertiesRepository.findByDirUrl(srcPath).orElse(null);</span>
+<span class="nc" id="L88">        FolderPropertiesEntity toEntity = folderPropertiesRepository.findByDirUrl(newPath).orElse(null);</span>
 
-<span class="pc bpc" id="L90" title="3 of 4 branches missed.">        if(fromEntity != null &amp;&amp; toEntity != null) {</span>
+<span class="nc bnc" id="L90" title="All 4 branches missed.">        if(fromEntity != null &amp;&amp; toEntity != null) {</span>
             //SWAP values
 <span class="nc" id="L92">            toEntity.setLogonDocId(fromEntity.getLogonDocId());</span>
 <span class="nc" id="L93">            toEntity.setIndexFullText(fromEntity.isIndexFullText());</span>
 <span class="nc" id="L94">            toEntity.setPasswordProtected(fromEntity.getPasswordProtected());</span>
 
 <span class="nc" id="L96">            folderPropertiesRepository.save(toEntity);</span>
-<span class="pc bpc" id="L97" title="3 of 4 branches missed.">        } else if(fromEntity != null &amp;&amp; toEntity == null) {</span>
+<span class="nc bnc" id="L97" title="All 4 branches missed.">        } else if(fromEntity != null &amp;&amp; toEntity == null) {</span>
             //Create new entity for new path
 <span class="nc" id="L99">            fromEntity.setId(null);</span>
 <span class="nc" id="L100">            fromEntity.setDirUrl(newPath);</span>
 
 <span class="nc" id="L102">            folderPropertiesRepository.save(fromEntity);</span>
-<span class="pc bpc" id="L103" title="2 of 4 branches missed.">        } else if(fromEntity == null &amp;&amp; toEntity == null) {</span>
+<span class="nc bnc" id="L103" title="All 4 branches missed.">        } else if(fromEntity == null &amp;&amp; toEntity == null) {</span>
             //BOTH null, create empty entity for new path
-<span class="fc" id="L105">            toEntity = new FolderPropertiesEntity();</span>
-<span class="fc" id="L106">            toEntity.setDirUrl(newPath);</span>
-<span class="fc" id="L107">            toEntity.setLogonDocId(-1);</span>
+<span class="nc" id="L105">            toEntity = new FolderPropertiesEntity();</span>
+<span class="nc" id="L106">            toEntity.setDirUrl(newPath);</span>
+<span class="nc" id="L107">            toEntity.setLogonDocId(-1);</span>
 
-<span class="fc" id="L109">            folderPropertiesRepository.save(toEntity);</span>
+<span class="nc" id="L109">            folderPropertiesRepository.save(toEntity);</span>
         }
-<span class="fc" id="L111">    }</span>
+<span class="nc" id="L111">    }</span>
 
     public static void deleteFolderProperties(String path, HttpServletRequest request) {
 <span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if(Tools.isEmpty(path) == true) </span>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.rest</a> &gt; <span class="el_source">TranslationKeyService.java</span></div><h1>TranslationKeyService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.rest</a> &gt; <span class="el_source">TranslationKeyService.java</span></div><h1>TranslationKeyService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.rest;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,12 +25,14 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyComparator;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyRepository;
+import sk.iway.iwcm.doc.SearchAction;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.i18n.PropDB;
@@ -56,11 +58,11 @@ public class TranslationKeyService {
     private static final char LAST_ALPHABET = 'J';
 
     @Autowired
-<span class="fc" id="L59">    TranslationKeyService(TranslationKeyRepository translationKeyRepository, TranslationKeyComparator translationKeyComparator) {</span>
+<span class="fc" id="L61">    TranslationKeyService(TranslationKeyRepository translationKeyRepository, TranslationKeyComparator translationKeyComparator) {</span>
         //Logger.debug(TranslationKeyService.class, &quot;TranslationKeyService.constructor v2, translationKeyRepository=&quot;+translationKeyRepository+&quot; translationKeyComparator=&quot;+translationKeyComparator);
-<span class="fc" id="L61">        this.translationKeyRepository = translationKeyRepository;</span>
-<span class="fc" id="L62">        this.translationKeyComparator = translationKeyComparator;</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L63">        this.translationKeyRepository = translationKeyRepository;</span>
+<span class="fc" id="L64">        this.translationKeyComparator = translationKeyComparator;</span>
+<span class="fc" id="L65">    }</span>
 
     /**
      * Returns map of language-field combination based on languages conf. property. Eg.:
@@ -69,19 +71,19 @@ public class TranslationKeyService {
      * @return
      */
     public Map&lt;String, String&gt; getLanguageFieldCombination() {
-<span class="fc" id="L72">        Map&lt;String, String&gt; languageFieldCombination = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L74">        Map&lt;String, String&gt; languageFieldCombination = new LinkedHashMap&lt;&gt;();</span>
         //Set combination of  &quot;language shortcut&quot; and &quot;field alphabet&quot;
-<span class="fc" id="L74">        String[] lngArr = Constants.getArray(&quot;languages&quot;);</span>
-<span class="fc bfc" id="L75" title="All 2 branches covered.">        for(int i = 0; i &lt; lngArr.length; i++) {</span>
-<span class="fc" id="L76">            char fieldAlphabet = (char)(('A') + i);</span>
+<span class="fc" id="L76">        String[] lngArr = Constants.getArray(&quot;languages&quot;);</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for(int i = 0; i &lt; lngArr.length; i++) {</span>
+<span class="fc" id="L78">            char fieldAlphabet = (char)(('A') + i);</span>
 
             //Support only certain number of languages
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">            if(fieldAlphabet &gt; LAST_ALPHABET) break;</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">            if(fieldAlphabet &gt; LAST_ALPHABET) break;</span>
 
-<span class="fc" id="L81">            languageFieldCombination.put(lngArr[i], fieldAlphabet + &quot;&quot;);</span>
+<span class="fc" id="L83">            languageFieldCombination.put(lngArr[i], fieldAlphabet + &quot;&quot;);</span>
         }
 
-<span class="fc" id="L84">        return languageFieldCombination;</span>
+<span class="fc" id="L86">        return languageFieldCombination;</span>
     }
 
     /**
@@ -92,61 +94,65 @@ public class TranslationKeyService {
      *
      * @return lis of entities ready to by used as page data for Datable TranslationKeys
      */
-    private List&lt;TranslationKeyEntity&gt; getAllData(Identity user) {
+    private List&lt;TranslationKeyEntity&gt; getAllData(Identity user, String searchText) {
         //List&lt;TranslationKeyEntity&gt; defaultLngKeys = getDefaultLngKeys(request);
-<span class="fc" id="L97">        Map&lt;String, String&gt; languageFieldCombination = getLanguageFieldCombination();</span>
-<span class="fc" id="L98">        Map&lt;String, TranslationKeyEntity&gt; allDataMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L99">        Map&lt;String, String&gt; languageFieldCombination = getLanguageFieldCombination();</span>
+<span class="fc" id="L100">        Map&lt;String, TranslationKeyEntity&gt; allDataMap = new HashMap&lt;&gt;();</span>
 
         //odfiltruj zoznam podla prav
-<span class="fc" id="L101">        boolean enableAllKeys = false;</span>
-<span class="fc" id="L102">		String propertiesEnabledKeys = Constants.getStringExecuteMacro(&quot;propertiesEnabledKeys&quot;);</span>
-<span class="pc bpc" id="L103" title="1 of 4 branches missed.">        if (Tools.isEmpty(propertiesEnabledKeys) || user.isEnabledItem(&quot;prop.show_all_texts&quot;)) enableAllKeys = true;</span>
-<span class="fc" id="L104">        String[] enabledKeys = Tools.getTokens(propertiesEnabledKeys, &quot;,&quot;);</span>
+<span class="fc" id="L103">        boolean enableAllKeys = false;</span>
+<span class="fc" id="L104">		String propertiesEnabledKeys = Constants.getStringExecuteMacro(&quot;propertiesEnabledKeys&quot;);</span>
+<span class="pc bpc" id="L105" title="1 of 4 branches missed.">        if (Tools.isEmpty(propertiesEnabledKeys) || user.isEnabledItem(&quot;prop.show_all_texts&quot;)) enableAllKeys = true;</span>
+<span class="fc" id="L106">        String[] enabledKeys = Tools.getTokens(propertiesEnabledKeys, &quot;,&quot;);</span>
 
         //prejdi vsetky jazyky a napln mapu
-<span class="fc bfc" id="L107" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; lngField : languageFieldCombination.entrySet()) {</span>
-<span class="fc" id="L108">            String lng = lngField.getKey();</span>
-<span class="fc" id="L109">            String fieldAlphabet = lngField.getValue();</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; lngField : languageFieldCombination.entrySet()) {</span>
+<span class="fc" id="L110">            String lng = lngField.getKey();</span>
+<span class="fc" id="L111">            String fieldAlphabet = lngField.getValue();</span>
 
             //ziskaj prekladove texty pre jazyk
             //Logger.debug(getClass(), &quot;getRes, lng=&quot;+lng);
-<span class="fc" id="L113">            IwayProperties prop = Prop.getInstance(lng).getProperties();</span>
-<span class="fc" id="L114">            IwayProperties defaultKeys = Prop.getDefaulProperties(lng, lng, Constants.getServletContext());</span>
+<span class="fc" id="L115">            IwayProperties prop = Prop.getInstance(lng).getProperties();</span>
+<span class="fc" id="L116">            IwayProperties defaultKeys = Prop.getDefaulProperties(lng, lng, Constants.getServletContext());</span>
 
-<span class="fc bfc" id="L116" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; propEntry : prop.entrySet()) {</span>
-<span class="fc" id="L117">                String key = propEntry.getKey();</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; propEntry : prop.entrySet()) {</span>
+<span class="fc" id="L119">                String key = propEntry.getKey();</span>
 
-<span class="fc" id="L119">                String text = propEntry.getValue();</span>
-<span class="fc" id="L120">                String originalText = defaultKeys.get(key);</span>
+<span class="fc" id="L121">                String text = propEntry.getValue();</span>
+<span class="fc" id="L122">                String originalText = defaultKeys.get(key);</span>
 
-<span class="fc" id="L122">                TranslationKeyEntity entity = allDataMap.get(key);</span>
-<span class="fc bfc" id="L123" title="All 2 branches covered.">                if (entity == null) {</span>
+<span class="fc" id="L124">                TranslationKeyEntity entity = allDataMap.get(key);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                if (entity == null) {</span>
                     //prava staci kontrolovat len pri pridani, inak ak je uz pridana musi byt spravne pravo
-<span class="fc bfc" id="L125" title="All 4 branches covered.">                    if (enableAllKeys==false &amp;&amp; PropDB.isKeyVisibleToUser(user, enabledKeys, key)==false) continue;</span>
+<span class="fc bfc" id="L127" title="All 4 branches covered.">                    if (enableAllKeys==false &amp;&amp; PropDB.isKeyVisibleToUser(user, enabledKeys, key)==false) continue;</span>
 
-<span class="fc" id="L127">                    entity = new TranslationKeyEntity();</span>
-<span class="fc" id="L128">                    entity.setKey(key);</span>
+<span class="fc" id="L129">                    entity = new TranslationKeyEntity();</span>
+<span class="fc" id="L130">                    entity.setKey(key);</span>
 
-<span class="fc" id="L130">                    Date lastUpdate = getLastUpdateDate(key);</span>
-<span class="fc bfc" id="L131" title="All 2 branches covered.">                    if (lastUpdate != null) entity.setUpdateDate(lastUpdate);</span>
+<span class="fc" id="L132">                    Date lastUpdate = getLastUpdateDate(key);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                    if (lastUpdate != null) entity.setUpdateDate(lastUpdate);</span>
 
-<span class="fc" id="L133">                    allDataMap.put(key, entity);</span>
+<span class="fc" id="L135">                    allDataMap.put(key, entity);</span>
                 }
-<span class="fc" id="L135">                BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
-<span class="fc" id="L136">                bw.setPropertyValue(&quot;field&quot; + fieldAlphabet, text);</span>
-<span class="fc" id="L137">                bw.setPropertyValue(&quot;originalValue&quot;+fieldAlphabet, originalText);</span>
-<span class="fc" id="L138">            }</span>
+<span class="fc" id="L137">                BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L138">                bw.setPropertyValue(&quot;field&quot; + fieldAlphabet, text);</span>
+<span class="fc" id="L139">                bw.setPropertyValue(&quot;originalValue&quot;+fieldAlphabet, originalText);</span>
+<span class="fc" id="L140">            }</span>
 
-<span class="fc" id="L140">        }</span>
+<span class="fc" id="L142">        }</span>
 
         //sortni to podla abecedy a nastav IDecka
-<span class="fc" id="L143">        List&lt;TranslationKeyEntity&gt; allData = allDataMap.values().stream().sorted(Comparator.comparing(TranslationKeyEntity::getKey)).collect(Collectors.toList());</span>
-<span class="fc bfc" id="L144" title="All 2 branches covered.">        for (int i=0; i&lt;allData.size(); i++) {</span>
-<span class="fc" id="L145">            TranslationKeyEntity entity = allData.get(i);</span>
-<span class="fc" id="L146">            entity.setId(Long.valueOf((i+1)));</span>
+<span class="fc" id="L145">        List&lt;TranslationKeyEntity&gt; allData = allDataMap.values().stream().sorted(Comparator.comparing(TranslationKeyEntity::getKey)).collect(Collectors.toList());</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        for (int i=0; i&lt;allData.size(); i++) {</span>
+<span class="fc" id="L147">            TranslationKeyEntity entity = allData.get(i);</span>
+<span class="fc" id="L148">            entity.setId(Long.valueOf((i+1)));</span>
         }
 
-<span class="fc" id="L149">        return allData;</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if(Tools.isNotEmpty(searchText)) {</span>
+<span class="fc" id="L152">            allData = searchAllFiltering(searchText, allData);</span>
+        }
+
+<span class="fc" id="L155">        return allData;</span>
     }
 
     /**
@@ -156,11 +162,11 @@ public class TranslationKeyService {
      * @param translationKeys list of entities to sort.
      */
     private void sortTranslationKeys(Pair&lt;String, String&gt; sortPair, List&lt;TranslationKeyEntity&gt; translationKeys) {
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (sortPair.getSecond().equals(&quot;asc&quot;))</span>
-<span class="fc" id="L160">            translationKeys.sort(translationKeyComparator.getSortingComparator(sortPair.getFirst()));</span>
-<span class="nc bnc" id="L161" title="All 2 branches missed.">        else if (sortPair.getSecond().equals(&quot;desc&quot;))</span>
-<span class="nc" id="L162">            translationKeys.sort(translationKeyComparator.getSortingComparator(sortPair.getFirst()).reversed());</span>
-<span class="fc" id="L163">    }</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (sortPair.getSecond().equals(&quot;asc&quot;))</span>
+<span class="fc" id="L166">            translationKeys.sort(translationKeyComparator.getSortingComparator(sortPair.getFirst()));</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        else if (sortPair.getSecond().equals(&quot;desc&quot;))</span>
+<span class="nc" id="L168">            translationKeys.sort(translationKeyComparator.getSortingComparator(sortPair.getFirst()).reversed());</span>
+<span class="fc" id="L169">    }</span>
 
     /**
      * Return SORTED list of TranslationKeyEntities that are prepared for Datatable TranslationKey's.
@@ -168,14 +174,20 @@ public class TranslationKeyService {
      * @return List&lt;TranslationKeyEntity&gt;
      */
     private List&lt;TranslationKeyEntity&gt; getSortedTranslationKeys(HttpServletRequest request) {
-<span class="fc" id="L171">        List&lt;TranslationKeyEntity&gt; translationKeys = getAllData(UsersDB.getCurrentUser(request));</span>
-<span class="fc" id="L172">        String sort = request.getParameter(&quot;sort&quot;);</span>
-<span class="fc" id="L173">        String[] sortArray = sort.split(&quot;,&quot;);</span>
-<span class="fc" id="L174">        Pair&lt;String, String&gt; sortPair = new Pair&lt;&gt;(sortArray[0], sortArray[1]);</span>
+<span class="fc" id="L177">        String searchText = null;</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if(Tools.getBooleanValue(request.getParameter(&quot;isSearchVersion&quot;), false)) {</span>
+<span class="fc" id="L179">            searchText = Tools.getStringValue(request.getParameter(&quot;searchText&quot;), null);</span>
+        }
+<span class="fc" id="L181">        List&lt;TranslationKeyEntity&gt; translationKeys = getAllData(UsersDB.getCurrentUser(request), searchText);</span>
+<span class="fc" id="L182">        String sort = request.getParameter(&quot;sort&quot;);</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">        if (sort != null) {</span>
+<span class="fc" id="L184">            String[] sortArray = sort.split(&quot;,&quot;);</span>
+<span class="fc" id="L185">            Pair&lt;String, String&gt; sortPair = new Pair&lt;&gt;(sortArray[0], sortArray[1]);</span>
 
-<span class="fc" id="L176">        sortTranslationKeys(sortPair, translationKeys);</span>
+<span class="fc" id="L187">            sortTranslationKeys(sortPair, translationKeys);</span>
+        }
 
-<span class="fc" id="L178">        return translationKeys;</span>
+<span class="fc" id="L190">        return translationKeys;</span>
     }
 
     /**
@@ -186,13 +198,13 @@ public class TranslationKeyService {
      * @return page for Datatable TranslationKey's with sorted translation key's and set pagination.
      */
     public Page&lt;TranslationKeyEntity&gt; getTranslationKeys(HttpServletRequest request, Pageable pageable) {
-<span class="fc" id="L189">        List&lt;TranslationKeyEntity&gt; translationKeys = getSortedTranslationKeys(request);</span>
+<span class="fc" id="L201">        List&lt;TranslationKeyEntity&gt; translationKeys = getSortedTranslationKeys(request);</span>
 
-<span class="fc" id="L191">        PagedListHolder&lt;TranslationKeyEntity&gt; holder = new PagedListHolder&lt;&gt;(translationKeys);</span>
-<span class="fc" id="L192">        holder.setPageSize(pageable.getPageSize());</span>
-<span class="fc" id="L193">        holder.setPage(pageable.getPageNumber());</span>
+<span class="fc" id="L203">        PagedListHolder&lt;TranslationKeyEntity&gt; holder = new PagedListHolder&lt;&gt;(translationKeys);</span>
+<span class="fc" id="L204">        holder.setPageSize(pageable.getPageSize());</span>
+<span class="fc" id="L205">        holder.setPage(pageable.getPageNumber());</span>
 
-<span class="fc" id="L195">        return new PageImpl&lt;&gt;(holder.getPageList(), pageable, translationKeys.size());</span>
+<span class="fc" id="L207">        return new PageImpl&lt;&gt;(holder.getPageList(), pageable, translationKeys.size());</span>
     }
 
     /**
@@ -203,36 +215,36 @@ public class TranslationKeyService {
      * @return
      */
     public TranslationKeyEntity createOrEditTranslationKeySingleLanguage(Identity user, TranslationKeyEntity entity, boolean reloadPropDB) {
-<span class="pc bpc" id="L206" title="1 of 2 branches missed.">        if (PropDB.canEdit(user, entity.getKey()) == false)</span>
-<span class="nc" id="L207">            throw new IllegalArgumentException(Prop.getInstance().getText(&quot;components.translation_key.cantEditThisKey&quot;));</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">        if (PropDB.canEdit(user, entity.getKey()) == false)</span>
+<span class="nc" id="L219">            throw new IllegalArgumentException(Prop.getInstance().getText(&quot;components.translation_key.cantEditThisKey&quot;));</span>
 
-<span class="fc" id="L209">        Date updateDate = new Date();</span>
-<span class="fc" id="L210">        String key = entity.getKey();</span>
-<span class="fc" id="L211">        String lng = entity.getLng();</span>
-<span class="fc" id="L212">        String value = entity.getValue();</span>
+<span class="fc" id="L221">        Date updateDate = new Date();</span>
+<span class="fc" id="L222">        String key = entity.getKey();</span>
+<span class="fc" id="L223">        String lng = entity.getLng();</span>
+<span class="fc" id="L224">        String value = entity.getValue();</span>
 
-<span class="fc" id="L214">        TranslationKeyEntity dbEntity = translationKeyRepository.findByKeyAndLng(key, lng);</span>
-<span class="fc" id="L215">        String oldValue = null;</span>
-<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (dbEntity == null) {</span>
-<span class="fc" id="L217">            dbEntity = new TranslationKeyEntity();</span>
-<span class="fc" id="L218">            dbEntity.setKey(key);</span>
-<span class="fc" id="L219">            dbEntity.setLng(lng);</span>
+<span class="fc" id="L226">        TranslationKeyEntity dbEntity = translationKeyRepository.findByKeyAndLng(key, lng);</span>
+<span class="fc" id="L227">        String oldValue = null;</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (dbEntity == null) {</span>
+<span class="fc" id="L229">            dbEntity = new TranslationKeyEntity();</span>
+<span class="fc" id="L230">            dbEntity.setKey(key);</span>
+<span class="fc" id="L231">            dbEntity.setLng(lng);</span>
         } else {
-<span class="fc" id="L221">            oldValue = dbEntity.getValue();</span>
+<span class="fc" id="L233">            oldValue = dbEntity.getValue();</span>
         }
 
-<span class="fc" id="L224">        String newValue = PropDB.escapeUnsafeValue(user, lng, key, value);</span>
-<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if (newValue == null) newValue = &quot;&quot;;</span>
-<span class="pc bpc" id="L226" title="1 of 4 branches missed.">        if (oldValue == null || newValue.equals(oldValue)==false) {</span>
-<span class="fc" id="L227">            dbEntity.setValue(newValue);</span>
-<span class="fc" id="L228">            dbEntity.setUpdateDate(updateDate);</span>
-<span class="fc" id="L229">            translationKeyRepository.save(dbEntity);</span>
+<span class="fc" id="L236">        String newValue = PropDB.escapeUnsafeValue(user, lng, key, value);</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">        if (newValue == null) newValue = &quot;&quot;;</span>
+<span class="pc bpc" id="L238" title="1 of 4 branches missed.">        if (oldValue == null || newValue.equals(oldValue)==false) {</span>
+<span class="fc" id="L239">            dbEntity.setValue(newValue);</span>
+<span class="fc" id="L240">            dbEntity.setUpdateDate(updateDate);</span>
+<span class="fc" id="L241">            translationKeyRepository.save(dbEntity);</span>
         }
-<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (reloadPropDB) {</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        if (reloadPropDB) {</span>
             //reloadni textove kluce
-<span class="fc" id="L233">            Prop.getInstance(true);</span>
+<span class="fc" id="L245">            Prop.getInstance(true);</span>
         }
-<span class="fc" id="L235">        return dbEntity;</span>
+<span class="fc" id="L247">        return dbEntity;</span>
     }
 
     /**
@@ -250,83 +262,83 @@ public class TranslationKeyService {
      * @return same entity that was entered
      */
     public TranslationKeyEntity createOrEditTranslationKey(Identity user, TranslationKeyEntity entity, boolean isImport, String importMode, Set&lt;String&gt; importedColumns) {
-<span class="pc bpc" id="L253" title="1 of 2 branches missed.">        if (PropDB.canEdit(user, entity.getKey()) == false)</span>
-<span class="nc" id="L254">            throw new IllegalArgumentException(Prop.getInstance().getText(&quot;components.translation_key.cantEditThisKey&quot;));</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (PropDB.canEdit(user, entity.getKey()) == false)</span>
+<span class="nc" id="L266">            throw new IllegalArgumentException(Prop.getInstance().getText(&quot;components.translation_key.cantEditThisKey&quot;));</span>
 
-<span class="fc" id="L256">        Date updateDate = new Date();</span>
-<span class="fc" id="L257">        String key = entity.getKey();</span>
+<span class="fc" id="L268">        Date updateDate = new Date();</span>
+<span class="fc" id="L269">        String key = entity.getKey();</span>
 
-<span class="fc" id="L259">        BeanWrapper bw = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L271">        BeanWrapper bw = new BeanWrapperImpl(entity);</span>
 
         //There are allready some lng translations for this key
         //We must reuse ID's of allready existed entities (just update &quot;updateDate&quot; and &quot;value&quot;)
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        for(Map.Entry&lt;String, String&gt; entry : getLanguageFieldCombination().entrySet()) {</span>
-<span class="fc" id="L264">            String lng = entry.getKey();</span>
-<span class="fc" id="L265">            String field = entry.getValue();</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        for(Map.Entry&lt;String, String&gt; entry : getLanguageFieldCombination().entrySet()) {</span>
+<span class="fc" id="L276">            String lng = entry.getKey();</span>
+<span class="fc" id="L277">            String field = entry.getValue();</span>
 
             //skip language not in imported excel
-<span class="pc bpc" id="L268" title="5 of 6 branches missed.">            if (isImport &amp;&amp; importedColumns!=null &amp;&amp; importedColumns.contains(&quot;field&quot;+field)==false) continue;</span>
+<span class="pc bpc" id="L280" title="5 of 6 branches missed.">            if (isImport &amp;&amp; importedColumns!=null &amp;&amp; importedColumns.contains(&quot;field&quot;+field)==false) continue;</span>
 
-<span class="fc" id="L270">            String value = (String)bw.getPropertyValue(&quot;field&quot;+field);</span>
+<span class="fc" id="L282">            String value = (String)bw.getPropertyValue(&quot;field&quot;+field);</span>
 
-<span class="fc" id="L272">            TranslationKeyEntity dbEntity = null;</span>
-<span class="pc bpc" id="L273" title="1 of 2 branches missed.">            if (isImport) {</span>
+<span class="fc" id="L284">            TranslationKeyEntity dbEntity = null;</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">            if (isImport) {</span>
                 //pri importe pouzivame cache
-<span class="nc" id="L275">                dbEntity = getCachedEntity(key, lng);</span>
+<span class="nc" id="L287">                dbEntity = getCachedEntity(key, lng);</span>
             } else {
-<span class="fc" id="L277">                dbEntity = translationKeyRepository.findByKeyAndLng(key, lng);</span>
+<span class="fc" id="L289">                dbEntity = translationKeyRepository.findByKeyAndLng(key, lng);</span>
             }
 
             //if entity exist and we are importig ONLY NEW keys, skip
-<span class="pc bpc" id="L281" title="5 of 6 branches missed.">            if (isImport &amp;&amp; &quot;onlyNew&quot;.equals(importMode) &amp;&amp; dbEntity!=null) {</span>
-<span class="nc" id="L282">                Logger.debug(getClass(), &quot;createOrEditTranslationKey, skipping key=&quot;+key+&quot; lng=&quot;+lng+&quot; value=&quot;+value+&quot; because of importMode=onlyNew&quot;);</span>
-<span class="nc" id="L283">                continue;</span>
+<span class="pc bpc" id="L293" title="5 of 6 branches missed.">            if (isImport &amp;&amp; &quot;onlyNew&quot;.equals(importMode) &amp;&amp; dbEntity!=null) {</span>
+<span class="nc" id="L294">                Logger.debug(getClass(), &quot;createOrEditTranslationKey, skipping key=&quot;+key+&quot; lng=&quot;+lng+&quot; value=&quot;+value+&quot; because of importMode=onlyNew&quot;);</span>
+<span class="nc" id="L295">                continue;</span>
             }
 
-<span class="fc" id="L286">            String oldValue = null;</span>
-<span class="fc bfc" id="L287" title="All 2 branches covered.">            if (dbEntity == null) {</span>
+<span class="fc" id="L298">            String oldValue = null;</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">            if (dbEntity == null) {</span>
                 //ak kluc este nie je v DB a hodnota je prazdna preskoc
-<span class="fc bfc" id="L289" title="All 2 branches covered.">                if (Tools.isEmpty(value)) continue;</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">                if (Tools.isEmpty(value)) continue;</span>
 
-<span class="fc" id="L291">                dbEntity = new TranslationKeyEntity();</span>
-<span class="fc" id="L292">                dbEntity.setKey(key);</span>
-<span class="fc" id="L293">                dbEntity.setLng(lng);</span>
+<span class="fc" id="L303">                dbEntity = new TranslationKeyEntity();</span>
+<span class="fc" id="L304">                dbEntity.setKey(key);</span>
+<span class="fc" id="L305">                dbEntity.setLng(lng);</span>
             } else {
-<span class="fc" id="L295">                oldValue = dbEntity.getValue();</span>
+<span class="fc" id="L307">                oldValue = dbEntity.getValue();</span>
             }
 
-<span class="fc" id="L298">            String newValue = PropDB.escapeUnsafeValue(user, lng, key, value);</span>
-<span class="pc bpc" id="L299" title="1 of 2 branches missed.">            if (newValue == null) newValue = &quot;&quot;;</span>
+<span class="fc" id="L310">            String newValue = PropDB.escapeUnsafeValue(user, lng, key, value);</span>
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">            if (newValue == null) newValue = &quot;&quot;;</span>
             //ak obe nie su zadane preskoc (asi prazdny stlpec napr. spanielsky v exceli)
-<span class="pc bpc" id="L301" title="1 of 4 branches missed.">            if (Tools.isEmpty(oldValue) &amp;&amp; Tools.isEmpty(newValue)) continue;</span>
+<span class="pc bpc" id="L313" title="1 of 4 branches missed.">            if (Tools.isEmpty(oldValue) &amp;&amp; Tools.isEmpty(newValue)) continue;</span>
 
-<span class="fc bfc" id="L303" title="All 4 branches covered.">            if (oldValue == null || newValue.equals(oldValue)==false) {</span>
-<span class="fc" id="L304">                dbEntity.setValue(newValue);</span>
-<span class="fc" id="L305">                dbEntity.setUpdateDate(updateDate);</span>
-<span class="fc" id="L306">                translationKeyRepository.save(dbEntity);</span>
+<span class="fc bfc" id="L315" title="All 4 branches covered.">            if (oldValue == null || newValue.equals(oldValue)==false) {</span>
+<span class="fc" id="L316">                dbEntity.setValue(newValue);</span>
+<span class="fc" id="L317">                dbEntity.setUpdateDate(updateDate);</span>
+<span class="fc" id="L318">                translationKeyRepository.save(dbEntity);</span>
 
                 //auditujeme kazdy zaznam len ked to nie je import, import sa audituje v RestController v afterImportChunk
-<span class="pc bpc" id="L309" title="1 of 2 branches missed.">                if (isImport==false) Adminlog.add(Adminlog.TYPE_PROP_UPDATE, &quot;UPDATE:\nid: &quot;+dbEntity.getId()+&quot;\nprop_key: &quot;+dbEntity.getKey()+&quot;\nvalue:&quot;+newValue+&quot;\nlng:&quot;+lng, dbEntity.getId().intValue(), -1);</span>
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">                if (isImport==false) Adminlog.add(Adminlog.TYPE_PROP_UPDATE, &quot;UPDATE:\nid: &quot;+dbEntity.getId()+&quot;\nprop_key: &quot;+dbEntity.getKey()+&quot;\nvalue:&quot;+newValue+&quot;\nlng:&quot;+lng, dbEntity.getId().intValue(), -1);</span>
 
-<span class="fc bfc" id="L311" title="All 2 branches covered.">                if (oldValue==null) setCachedEntity(dbEntity.getKey(), dbEntity.getLng(), dbEntity);</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">                if (oldValue==null) setCachedEntity(dbEntity.getKey(), dbEntity.getLng(), dbEntity);</span>
             }
-<span class="fc" id="L313">        }</span>
+<span class="fc" id="L325">        }</span>
 
         //reloadni textove kluce
-<span class="pc bpc" id="L316" title="1 of 2 branches missed.">        if (isImport==false) {</span>
-<span class="fc" id="L317">            Prop.getInstance(true);</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        if (isImport==false) {</span>
+<span class="fc" id="L329">            Prop.getInstance(true);</span>
 
             //reload caches, so there will not be concurrentModificationException
-<span class="fc bfc" id="L320" title="All 2 branches covered.">            for(Map.Entry&lt;String, String&gt; entry : getLanguageFieldCombination().entrySet()) {</span>
-<span class="fc" id="L321">                String lng = entry.getKey();</span>
-<span class="fc" id="L322">                Prop.getInstance(lng);</span>
-<span class="fc" id="L323">            }</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">            for(Map.Entry&lt;String, String&gt; entry : getLanguageFieldCombination().entrySet()) {</span>
+<span class="fc" id="L333">                String lng = entry.getKey();</span>
+<span class="fc" id="L334">                Prop.getInstance(lng);</span>
+<span class="fc" id="L335">            }</span>
         }
 
         //aktualizuj date cache
-<span class="fc" id="L327">        setLastUpdateDate(key, updateDate);</span>
+<span class="fc" id="L339">        setLastUpdateDate(key, updateDate);</span>
 
-<span class="fc" id="L329">        return entity;</span>
+<span class="fc" id="L341">        return entity;</span>
     }
 
     /**
@@ -338,24 +350,24 @@ public class TranslationKeyService {
      * @return number of deleted entities
      */
     public Long delete(Identity user, String key, String lng) {
-<span class="pc bpc" id="L341" title="1 of 2 branches missed.">        if (PropDB.canEdit(user, key) == false)</span>
-<span class="nc" id="L342">            throw new IllegalArgumentException(Prop.getInstance().getText(&quot;components.translation_key.cantEditThisKey&quot;));</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">        if (PropDB.canEdit(user, key) == false)</span>
+<span class="nc" id="L354">            throw new IllegalArgumentException(Prop.getInstance().getText(&quot;components.translation_key.cantEditThisKey&quot;));</span>
 
-<span class="fc" id="L344">        setLastUpdateDate(key, null);</span>
+<span class="fc" id="L356">        setLastUpdateDate(key, null);</span>
 
-<span class="fc" id="L346">        String oldValue = Prop.getInstance(lng).getText(key);</span>
+<span class="fc" id="L358">        String oldValue = Prop.getInstance(lng).getText(key);</span>
 
-<span class="fc" id="L348">        Long id = translationKeyRepository.deleteByKeyAndLng(key, lng);</span>
+<span class="fc" id="L360">        Long id = translationKeyRepository.deleteByKeyAndLng(key, lng);</span>
 
-<span class="fc" id="L350">        int idInt = -1;</span>
-<span class="pc bpc" id="L351" title="1 of 2 branches missed.">        if (id != null) idInt = id.intValue();</span>
+<span class="fc" id="L362">        int idInt = -1;</span>
+<span class="pc bpc" id="L363" title="1 of 2 branches missed.">        if (id != null) idInt = id.intValue();</span>
 
-<span class="fc" id="L353">        Adminlog.add(Adminlog.TYPE_PROP_DELETE, &quot;DELETE:\nid: &quot;+id+&quot;\nprop_key: &quot;+key+&quot;\n:value:&quot;+oldValue+&quot;\nlng:&quot;+lng, idInt, -1);</span>
+<span class="fc" id="L365">        Adminlog.add(Adminlog.TYPE_PROP_DELETE, &quot;DELETE:\nid: &quot;+id+&quot;\nprop_key: &quot;+key+&quot;\n:value:&quot;+oldValue+&quot;\nlng:&quot;+lng, idInt, -1);</span>
 
         //reloadni textove kluce
-<span class="fc" id="L356">        Prop.getInstance(true);</span>
+<span class="fc" id="L368">        Prop.getInstance(true);</span>
 
-<span class="fc" id="L358">        return id;</span>
+<span class="fc" id="L370">        return id;</span>
     }
 
     /**
@@ -368,48 +380,55 @@ public class TranslationKeyService {
      * @return Page&lt;TranslationKeyEntity&gt;
      */
     Page&lt;TranslationKeyEntity&gt; getFilteredTranslationKeys(Map&lt;String, String&gt; searchMap, Pair&lt;String, String&gt; sortPair, Pageable pageable, HttpServletRequest request) {
-<span class="fc" id="L371">        List&lt;TranslationKeyEntity&gt; translationKeys = getAllData(UsersDB.getCurrentUser(request));</span>
-<span class="fc" id="L372">        List&lt;TranslationKeyEntity&gt; filteredTranslationKeys = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L374">        int searchMapSize = searchMap.size();</span>
-<span class="fc bfc" id="L375" title="All 2 branches covered.">        for (TranslationKeyEntity entity : translationKeys) {</span>
-<span class="fc" id="L376">            BeanWrapper beanWrapper = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L384">        String searchText = null;</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">        if(Tools.getBooleanValue(request.getParameter(&quot;isSearchVersion&quot;), false)) {</span>
+<span class="fc" id="L386">            searchText = Tools.getStringValue(request.getParameter(&quot;searchText&quot;), null);</span>
+<span class="fc" id="L387">            searchMap.remove(&quot;text&quot;);</span>
+        }
+
+<span class="fc" id="L390">        List&lt;TranslationKeyEntity&gt; translationKeys = getAllData(UsersDB.getCurrentUser(request), searchText);</span>
+<span class="fc" id="L391">        List&lt;TranslationKeyEntity&gt; filteredTranslationKeys = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L393">        int searchMapSize = searchMap.size();</span>
+<span class="fc bfc" id="L394" title="All 2 branches covered.">        for (TranslationKeyEntity entity : translationKeys) {</span>
+<span class="fc" id="L395">            BeanWrapper beanWrapper = new BeanWrapperImpl(entity);</span>
             //we are using AND between conditions, so we must count
-<span class="fc" id="L378">            int presentCount = 0;</span>
-<span class="fc bfc" id="L379" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; searchParameter : searchMap.entrySet()) {</span>
-<span class="fc bfc" id="L380" title="All 2 branches covered.">                if (searchParameter.getKey().equals(&quot;updateDate&quot;)) {</span>
-<span class="fc" id="L381">                    Pair&lt;Date, Date&gt; datePair = getCleanUpdateDateValue(searchParameter.getValue());</span>
+<span class="fc" id="L397">            int presentCount = 0;</span>
+<span class="fc bfc" id="L398" title="All 2 branches covered.">            for (Map.Entry&lt;String, String&gt; searchParameter : searchMap.entrySet()) {</span>
+<span class="fc bfc" id="L399" title="All 2 branches covered.">                if (searchParameter.getKey().equals(&quot;updateDate&quot;)) {</span>
+<span class="fc" id="L400">                    Pair&lt;Date, Date&gt; datePair = getCleanUpdateDateValue(searchParameter.getValue());</span>
 
-<span class="fc bfc" id="L383" title="All 6 branches covered.">                    if (null != entity.getUpdateDate() &amp;&amp; entity.getUpdateDate().after(datePair.first) &amp;&amp; entity.getUpdateDate().before(datePair.second)) {</span>
-<span class="fc" id="L384">                        presentCount++;</span>
+<span class="fc bfc" id="L402" title="All 6 branches covered.">                    if (null != entity.getUpdateDate() &amp;&amp; entity.getUpdateDate().after(datePair.first) &amp;&amp; entity.getUpdateDate().before(datePair.second)) {</span>
+<span class="fc" id="L403">                        presentCount++;</span>
                     }
-<span class="fc" id="L386">                } else {</span>
-<span class="fc" id="L387">                    String entityValue = (String) beanWrapper.getPropertyValue(searchParameter.getKey());</span>
+<span class="fc" id="L405">                } else {</span>
+<span class="fc" id="L406">                    String entityValue = (String) beanWrapper.getPropertyValue(searchParameter.getKey());</span>
 
-<span class="pc bpc" id="L389" title="1 of 2 branches missed.">                    if (null == entityValue) break;</span>
+<span class="pc bpc" id="L408" title="1 of 2 branches missed.">                    if (null == entityValue) break;</span>
 
-<span class="fc" id="L391">                    String value = searchParameter.getValue().toLowerCase();</span>
-<span class="fc" id="L392">                    entityValue = entityValue.toLowerCase();</span>
+<span class="fc" id="L410">                    String value = searchParameter.getValue().toLowerCase();</span>
+<span class="fc" id="L411">                    entityValue = entityValue.toLowerCase();</span>
 
-<span class="fc" id="L394">                    if (</span>
-<span class="fc bfc" id="L395" title="All 6 branches covered.">                        (value.startsWith(&quot;^&quot;) &amp;&amp; value.endsWith(&quot;$&quot;) &amp;&amp; entityValue.equals(value.substring(1, value.length()-1))) ||</span>
-<span class="fc bfc" id="L396" title="All 4 branches covered.">                        (value.startsWith(&quot;^&quot;) &amp;&amp; entityValue.startsWith(value.substring(1))) ||</span>
-<span class="fc bfc" id="L397" title="All 4 branches covered.">                        (value.endsWith(&quot;$&quot;) &amp;&amp; entityValue.endsWith(value.substring(0, value.length()-1))) ||</span>
-<span class="fc bfc" id="L398" title="All 2 branches covered.">                        (entityValue.contains(value))</span>
-<span class="fc" id="L399">                     ) presentCount++;</span>
+<span class="fc" id="L413">                    if (</span>
+<span class="fc bfc" id="L414" title="All 6 branches covered.">                        (value.startsWith(&quot;^&quot;) &amp;&amp; value.endsWith(&quot;$&quot;) &amp;&amp; entityValue.equals(value.substring(1, value.length()-1))) ||</span>
+<span class="fc bfc" id="L415" title="All 4 branches covered.">                        (value.startsWith(&quot;^&quot;) &amp;&amp; entityValue.startsWith(value.substring(1))) ||</span>
+<span class="fc bfc" id="L416" title="All 4 branches covered.">                        (value.endsWith(&quot;$&quot;) &amp;&amp; entityValue.endsWith(value.substring(0, value.length()-1))) ||</span>
+<span class="fc bfc" id="L417" title="All 2 branches covered.">                        (entityValue.contains(value))</span>
+<span class="fc" id="L418">                     ) presentCount++;</span>
                 }
-<span class="fc" id="L401">            }</span>
+<span class="fc" id="L420">            }</span>
             //we are using AND, so count must match searchMap.size
-<span class="fc bfc" id="L403" title="All 2 branches covered.">            if (presentCount==searchMapSize) filteredTranslationKeys.add(entity);</span>
-<span class="fc" id="L404">        }</span>
+<span class="fc bfc" id="L422" title="All 2 branches covered.">            if (presentCount==searchMapSize) filteredTranslationKeys.add(entity);</span>
+<span class="fc" id="L423">        }</span>
 
-<span class="fc" id="L406">        sortTranslationKeys(sortPair, filteredTranslationKeys);</span>
+<span class="fc" id="L425">        sortTranslationKeys(sortPair, filteredTranslationKeys);</span>
 
-<span class="fc" id="L408">        PagedListHolder&lt;TranslationKeyEntity&gt; holder = new PagedListHolder&lt;&gt;(filteredTranslationKeys);</span>
-<span class="fc" id="L409">        holder.setPage(pageable.getPageNumber());</span>
-<span class="fc" id="L410">        holder.setPageSize(pageable.getPageSize());</span>
+<span class="fc" id="L427">        PagedListHolder&lt;TranslationKeyEntity&gt; holder = new PagedListHolder&lt;&gt;(filteredTranslationKeys);</span>
+<span class="fc" id="L428">        holder.setPage(pageable.getPageNumber());</span>
+<span class="fc" id="L429">        holder.setPageSize(pageable.getPageSize());</span>
 
-<span class="fc" id="L412">        return new PageImpl&lt;&gt;(holder.getPageList(), pageable, filteredTranslationKeys.size());</span>
+<span class="fc" id="L431">        return new PageImpl&lt;&gt;(holder.getPageList(), pageable, filteredTranslationKeys.size());</span>
     }
 
     /**
@@ -419,7 +438,7 @@ public class TranslationKeyService {
      * @return boolean
      */
     boolean checkSearchParam(String param) {
-<span class="fc" id="L422">        return param.startsWith(&quot;search&quot;);</span>
+<span class="fc" id="L441">        return param.startsWith(&quot;search&quot;);</span>
     }
 
     /**
@@ -429,7 +448,7 @@ public class TranslationKeyService {
      * @return boolean
      */
     boolean checkSortParam(String param) {
-<span class="fc" id="L432">        return param.equals(&quot;sort&quot;);</span>
+<span class="fc" id="L451">        return param.equals(&quot;sort&quot;);</span>
     }
 
     /**
@@ -439,28 +458,28 @@ public class TranslationKeyService {
      * @return Pair&lt;Date, Date&gt;
      */
     private Pair&lt;Date, Date&gt; getCleanUpdateDateValue(String updateDate) {
-<span class="fc" id="L442">        String filteredDate = updateDate.replace(&quot;daterange:&quot;, &quot;&quot;);</span>
-<span class="fc" id="L443">        String[] stringDateArray = new String[2];</span>
-<span class="fc" id="L444">        String[] values = Tools.getTokens(filteredDate, &quot;-&quot;);</span>
+<span class="fc" id="L461">        String filteredDate = updateDate.replace(&quot;daterange:&quot;, &quot;&quot;);</span>
+<span class="fc" id="L462">        String[] stringDateArray = new String[2];</span>
+<span class="fc" id="L463">        String[] values = Tools.getTokens(filteredDate, &quot;-&quot;);</span>
 
-<span class="fc bfc" id="L446" title="All 2 branches covered.">        if (values.length==2) {</span>
-<span class="fc" id="L447">            stringDateArray = values;</span>
-<span class="pc bpc" id="L448" title="1 of 2 branches missed.">        } else if (values.length==1) {</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">        if (values.length==2) {</span>
+<span class="fc" id="L466">            stringDateArray = values;</span>
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">        } else if (values.length==1) {</span>
             //ked nemame from pride to ako: daterange:-1589666400000
-<span class="pc bpc" id="L450" title="1 of 2 branches missed.">            if (updateDate.contains(&quot;range:-&quot;)) {</span>
-<span class="nc" id="L451">                stringDateArray[0] = &quot;&quot;;</span>
-<span class="nc" id="L452">                stringDateArray[1] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">            if (updateDate.contains(&quot;range:-&quot;)) {</span>
+<span class="nc" id="L470">                stringDateArray[0] = &quot;&quot;;</span>
+<span class="nc" id="L471">                stringDateArray[1] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);</span>
             } else {
-<span class="fc" id="L454">                stringDateArray[0] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);</span>
-<span class="fc" id="L455">                stringDateArray[1] = &quot;&quot;;</span>
+<span class="fc" id="L473">                stringDateArray[0] = filteredDate.replace(&quot;-&quot;, &quot;&quot;);</span>
+<span class="fc" id="L474">                stringDateArray[1] = &quot;&quot;;</span>
             }
         }
 
-<span class="fc" id="L459">        long[] longDateArray = new long[]{Tools.getLongValue(stringDateArray[0], 0), Tools.getLongValue(stringDateArray[1], new Date().getTime())};</span>
+<span class="fc" id="L478">        long[] longDateArray = new long[]{Tools.getLongValue(stringDateArray[0], 0), Tools.getLongValue(stringDateArray[1], new Date().getTime())};</span>
 
-<span class="fc" id="L461">        Date dateFrom = new Date(longDateArray[0]);</span>
-<span class="fc" id="L462">        Date dateTo = new Date(longDateArray[1]);</span>
-<span class="fc" id="L463">        return new Pair&lt;&gt;(dateFrom, dateTo);</span>
+<span class="fc" id="L480">        Date dateFrom = new Date(longDateArray[0]);</span>
+<span class="fc" id="L481">        Date dateTo = new Date(longDateArray[1]);</span>
+<span class="fc" id="L482">        return new Pair&lt;&gt;(dateFrom, dateTo);</span>
     }
 
     /**
@@ -468,29 +487,29 @@ public class TranslationKeyService {
      *
      * @return TranslationKeyRepository
      */
-<span class="fc" id="L471">    public TranslationKeyRepository getTranslationKeyRepository() { return translationKeyRepository; }</span>
+<span class="fc" id="L490">    public TranslationKeyRepository getTranslationKeyRepository() { return translationKeyRepository; }</span>
 
     /**
      * Return cached map od key-lastUpdateDate
      * @return
      */
     private Map&lt;String, Date&gt; getUpdateDateCache() {
-<span class="fc" id="L478">        String cacheKey = &quot;TranslationKeyService.updateDateMap&quot;;</span>
-<span class="fc" id="L479">        Cache c = Cache.getInstance();</span>
+<span class="fc" id="L497">        String cacheKey = &quot;TranslationKeyService.updateDateMap&quot;;</span>
+<span class="fc" id="L498">        Cache c = Cache.getInstance();</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L481">        Map&lt;String, Date&gt; updateMap = (Map&lt;String, Date&gt;)c.getObject(cacheKey);</span>
-<span class="fc bfc" id="L482" title="All 2 branches covered.">        if (updateMap == null) {</span>
+<span class="fc" id="L500">        Map&lt;String, Date&gt; updateMap = (Map&lt;String, Date&gt;)c.getObject(cacheKey);</span>
+<span class="fc bfc" id="L501" title="All 2 branches covered.">        if (updateMap == null) {</span>
             //musime mapu naplnit z DB
-<span class="fc" id="L484">            updateMap = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L503">            updateMap = new Hashtable&lt;&gt;();</span>
 
-<span class="fc" id="L486">            List&lt;TranslationKeyEntity&gt; all = translationKeyRepository.findAllByOrderByUpdateDateAsc();</span>
-<span class="fc bfc" id="L487" title="All 2 branches covered.">            for (TranslationKeyEntity entity : all) {</span>
-<span class="fc bfc" id="L488" title="All 2 branches covered.">                if (entity.getUpdateDate()!=null) updateMap.put(entity.getKey(), entity.getUpdateDate());</span>
-<span class="fc" id="L489">            }</span>
+<span class="fc" id="L505">            List&lt;TranslationKeyEntity&gt; all = translationKeyRepository.findAllByOrderByUpdateDateAsc();</span>
+<span class="fc bfc" id="L506" title="All 2 branches covered.">            for (TranslationKeyEntity entity : all) {</span>
+<span class="fc bfc" id="L507" title="All 2 branches covered.">                if (entity.getUpdateDate()!=null) updateMap.put(entity.getKey(), entity.getUpdateDate());</span>
+<span class="fc" id="L508">            }</span>
 
-<span class="fc" id="L491">            c.setObjectSeconds(cacheKey, updateMap, 10*60, true);</span>
+<span class="fc" id="L510">            c.setObjectSeconds(cacheKey, updateMap, 10*60, true);</span>
         }
-<span class="fc" id="L493">        return updateMap;</span>
+<span class="fc" id="L512">        return updateMap;</span>
     }
 
     /**
@@ -499,14 +518,14 @@ public class TranslationKeyService {
      * @return
      */
     private Date getLastUpdateDate(String key) {
-<span class="fc" id="L502">        Map&lt;String, Date&gt; updateMap = getUpdateDateCache();</span>
-<span class="fc" id="L503">        Date d = updateMap.get(key);</span>
-<span class="pc bpc" id="L504" title="1 of 4 branches missed.">        if (d==null &amp;&amp; key.contains(&quot;&amp;&quot;)) {</span>
-<span class="nc" id="L505">            key = Tools.replace(key, &quot;&amp;lt;&quot;, &quot;&lt;&quot;);</span>
-<span class="nc" id="L506">            key = Tools.replace(key, &quot;&amp;gt;&quot;, &quot;&gt;&quot;);</span>
-<span class="nc" id="L507">            d = updateMap.get(key);</span>
+<span class="fc" id="L521">        Map&lt;String, Date&gt; updateMap = getUpdateDateCache();</span>
+<span class="fc" id="L522">        Date d = updateMap.get(key);</span>
+<span class="pc bpc" id="L523" title="1 of 4 branches missed.">        if (d==null &amp;&amp; key.contains(&quot;&amp;&quot;)) {</span>
+<span class="nc" id="L524">            key = Tools.replace(key, &quot;&amp;lt;&quot;, &quot;&lt;&quot;);</span>
+<span class="nc" id="L525">            key = Tools.replace(key, &quot;&amp;gt;&quot;, &quot;&gt;&quot;);</span>
+<span class="nc" id="L526">            d = updateMap.get(key);</span>
         }
-<span class="fc" id="L509">        return d;</span>
+<span class="fc" id="L528">        return d;</span>
     }
 
     /**
@@ -515,51 +534,51 @@ public class TranslationKeyService {
      * @param date - date OR NULL to delete key from cache
      */
     private void setLastUpdateDate(String key, Date date) {
-<span class="fc" id="L518">        Map&lt;String, Date&gt; updateMap = getUpdateDateCache();</span>
-<span class="fc bfc" id="L519" title="All 2 branches covered.">        if (date == null) updateMap.remove(key);</span>
-<span class="fc" id="L520">        else updateMap.put(key, date);</span>
-<span class="fc" id="L521">    }</span>
+<span class="fc" id="L537">        Map&lt;String, Date&gt; updateMap = getUpdateDateCache();</span>
+<span class="fc bfc" id="L538" title="All 2 branches covered.">        if (date == null) updateMap.remove(key);</span>
+<span class="fc" id="L539">        else updateMap.put(key, date);</span>
+<span class="fc" id="L540">    }</span>
 
     private TranslationKeyEntity getCachedEntity(String key, String language) {
-<span class="nc" id="L524">        return getRowIdCache().get(getRowIdKey(key, language));</span>
+<span class="nc" id="L543">        return getRowIdCache().get(getRowIdKey(key, language));</span>
     }
 
     private void setCachedEntity(String key, String language, TranslationKeyEntity entity) {
-<span class="fc" id="L528">        getRowIdCache().put(getRowIdKey(key, language), entity);</span>
-<span class="fc" id="L529">    }</span>
+<span class="fc" id="L547">        getRowIdCache().put(getRowIdKey(key, language), entity);</span>
+<span class="fc" id="L548">    }</span>
 
     /**
      * For import of large file it's faster to have local Map of all keys instead of lookup it in DB for every row
      * @return
      */
     private Map&lt;String, TranslationKeyEntity&gt; getRowIdCache() {
-<span class="fc" id="L536">        String CACHE_KEY = &quot;TranslationKeyService.rowIdCache&quot;;</span>
-<span class="fc" id="L537">        Cache c = Cache.getInstance();</span>
+<span class="fc" id="L555">        String CACHE_KEY = &quot;TranslationKeyService.rowIdCache&quot;;</span>
+<span class="fc" id="L556">        Cache c = Cache.getInstance();</span>
         @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L539">        Map&lt;String, TranslationKeyEntity&gt; rowIdMap = (Map&lt;String, TranslationKeyEntity&gt;)c.getObject(CACHE_KEY);</span>
+<span class="fc" id="L558">        Map&lt;String, TranslationKeyEntity&gt; rowIdMap = (Map&lt;String, TranslationKeyEntity&gt;)c.getObject(CACHE_KEY);</span>
 
-<span class="pc bpc" id="L541" title="3 of 4 branches missed.">        if (DatatableRestControllerV2.getLastImportedRow()!=null &amp;&amp; DatatableRestControllerV2.getLastImportedRow().intValue()==1) {</span>
+<span class="pc bpc" id="L560" title="3 of 4 branches missed.">        if (DatatableRestControllerV2.getLastImportedRow()!=null &amp;&amp; DatatableRestControllerV2.getLastImportedRow().intValue()==1) {</span>
             //reset cache on first row
-<span class="nc" id="L543">            rowIdMap = null;</span>
+<span class="nc" id="L562">            rowIdMap = null;</span>
         }
 
-<span class="fc bfc" id="L546" title="All 2 branches covered.">        if (rowIdMap != null) return rowIdMap;</span>
+<span class="fc bfc" id="L565" title="All 2 branches covered.">        if (rowIdMap != null) return rowIdMap;</span>
 
-<span class="fc" id="L548">        rowIdMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L567">        rowIdMap = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L550">        List&lt;TranslationKeyEntity&gt; allItems = translationKeyRepository.findAll();</span>
-<span class="fc bfc" id="L551" title="All 2 branches covered.">        for (TranslationKeyEntity e : allItems) {</span>
-<span class="fc" id="L552">            rowIdMap.put(getRowIdKey(e.getKey(), e.getLng()), e);</span>
+<span class="fc" id="L569">        List&lt;TranslationKeyEntity&gt; allItems = translationKeyRepository.findAll();</span>
+<span class="fc bfc" id="L570" title="All 2 branches covered.">        for (TranslationKeyEntity e : allItems) {</span>
+<span class="fc" id="L571">            rowIdMap.put(getRowIdKey(e.getKey(), e.getLng()), e);</span>
 
-<span class="fc" id="L554">        }</span>
+<span class="fc" id="L573">        }</span>
 
-<span class="fc" id="L556">        c.setObject(CACHE_KEY, rowIdMap, 10);</span>
+<span class="fc" id="L575">        c.setObject(CACHE_KEY, rowIdMap, 10);</span>
 
-<span class="fc" id="L558">        return rowIdMap;</span>
+<span class="fc" id="L577">        return rowIdMap;</span>
     }
 
     private String getRowIdKey(String key, String language) {
-<span class="fc" id="L562">        return key+&quot;=&quot;+language;</span>
+<span class="fc" id="L581">        return key+&quot;=&quot;+language;</span>
     }
 
     /**
@@ -569,21 +588,54 @@ public class TranslationKeyService {
      * @param lng
      */
     public TranslationKeyEntity saveTranslation(String key, String translation, String lng) {
-<span class="nc" id="L572">        TranslationKeyEntity entity = translationKeyRepository.findByKeyAndLng(key, lng);</span>
-<span class="nc bnc" id="L573" title="All 2 branches missed.">        if (entity == null) {</span>
-<span class="nc" id="L574">            entity = new TranslationKeyEntity();</span>
-<span class="nc" id="L575">            entity.setKey(key);</span>
+<span class="nc" id="L591">        TranslationKeyEntity entity = translationKeyRepository.findByKeyAndLng(key, lng);</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">        if (entity == null) {</span>
+<span class="nc" id="L593">            entity = new TranslationKeyEntity();</span>
+<span class="nc" id="L594">            entity.setKey(key);</span>
         }
-<span class="nc" id="L577">        entity.setUpdateDate(new Date(Tools.getNow()));</span>
-<span class="nc" id="L578">        entity.setValue(translation);</span>
-<span class="nc" id="L579">        entity.setLng(lng);</span>
-<span class="nc" id="L580">        translationKeyRepository.save(entity);</span>
+<span class="nc" id="L596">        entity.setUpdateDate(new Date(Tools.getNow()));</span>
+<span class="nc" id="L597">        entity.setValue(translation);</span>
+<span class="nc" id="L598">        entity.setLng(lng);</span>
+<span class="nc" id="L599">        translationKeyRepository.save(entity);</span>
 
         //Prop.getInstance(Constants.getServletContext(), lng, true);
-<span class="nc" id="L583">        Prop.getInstance(true);</span>
-<span class="nc" id="L584">        Prop.deleteMissingText(key, lng);</span>
+<span class="nc" id="L602">        Prop.getInstance(true);</span>
+<span class="nc" id="L603">        Prop.deleteMissingText(key, lng);</span>
 
-<span class="nc" id="L586">        return entity;</span>
+<span class="nc" id="L605">        return entity;</span>
+    }
+
+    private List&lt;TranslationKeyEntity&gt; searchAllFiltering(String text, List&lt;TranslationKeyEntity&gt; allData) {
+<span class="fc" id="L609">        List&lt;TranslationKeyEntity&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L610" title="1 of 2 branches missed.">        if(Tools.isEmpty(text)) return filtered;</span>
+
+        // Prepare search text
+<span class="fc" id="L613">        String cmpText = DB.internationalToEnglish(text.toLowerCase());</span>
+
+<span class="fc bfc" id="L615" title="All 2 branches covered.">        for(TranslationKeyEntity entity : allData) {</span>
+            // Prepare and check key
+<span class="fc" id="L617">			String cmpPropKey = DB.internationalToEnglish(entity.getKey().toLowerCase());</span>
+
+<span class="fc bfc" id="L619" title="All 2 branches covered.">            if(cmpPropKey.contains(cmpText)) {</span>
+<span class="fc" id="L620">                filtered.add(entity);</span>
+<span class="fc" id="L621">                continue;</span>
+            }
+
+            // Prepare and check every language field
+<span class="fc" id="L625">            char lastAlphabet = 'J';</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">            for (char alphabet = 'A'; alphabet &lt;= lastAlphabet; alphabet++) {</span>
+<span class="fc" id="L627">                String propValue = entity.getOriginalValue(alphabet);</span>
+<span class="fc bfc" id="L628" title="All 2 branches covered.">                if(Tools.isEmpty(propValue)) continue;</span>
+
+<span class="fc" id="L630">                String cmpPropValue = DB.internationalToEnglish(propValue.toLowerCase());</span>
+<span class="fc bfc" id="L631" title="All 2 branches covered.">                if(SearchAction.containsIgnoreHtml(cmpPropValue, cmpText)) {</span>
+<span class="fc" id="L632">                    filtered.add(entity);</span>
+<span class="fc" id="L633">                    break;</span>
+                }
+            }
+
+<span class="fc" id="L637">        }</span>
+<span class="fc" id="L638">        return filtered;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

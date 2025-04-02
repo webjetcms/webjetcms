@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatDB.java</span></div><h1>StatDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatDB.java</span></div><h1>StatDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -462,21 +462,21 @@ public class StatDB extends DB
 	 */
 	public static String getRootGroupWhere(String column, String groupIds)
 	{
-<span class="pc bpc" id="L465" title="2 of 4 branches missed.">		if (Tools.isEmpty(groupIds) || &quot;-1&quot;.equals(groupIds))</span>
+<span class="pc bpc" id="L465" title="1 of 4 branches missed.">		if (Tools.isEmpty(groupIds) || &quot;-1&quot;.equals(groupIds))</span>
 		{
 <span class="fc" id="L467">			return(&quot;&quot;);</span>
 		}
 
 		//najdi child grupy
-<span class="nc" id="L471">		int[] groupsIdArray = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
-<span class="nc" id="L472">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L473">		List&lt;GroupDetails&gt; searchGroupsArray = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L474" title="All 2 branches missed.">		for(int groupId: groupsIdArray)</span>
+<span class="fc" id="L471">		int[] groupsIdArray = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
+<span class="fc" id="L472">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L473">		List&lt;GroupDetails&gt; searchGroupsArray = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">		for(int groupId: groupsIdArray)</span>
 		{
-<span class="nc" id="L476">			searchGroupsArray.addAll(groupsDB.getGroupsTree(groupId, true, true));</span>
+<span class="fc" id="L476">			searchGroupsArray.addAll(groupsDB.getGroupsTree(groupId, true, true));</span>
 		}
 
-<span class="nc" id="L479">		return getRootGroupWhereHelp(column, searchGroupsArray);</span>
+<span class="fc" id="L479">		return getRootGroupWhereHelp(column, searchGroupsArray);</span>
 	}
 
 	/**
@@ -753,16 +753,16 @@ public class StatDB extends DB
 <span class="fc" id="L753">		Long logonTime = (Long) session.getAttribute(LOGON_TIME);</span>
 <span class="fc bfc" id="L754" title="All 2 branches covered.">		if (logonTime != null)</span>
 		{
-<span class="pc bpc" id="L756" title="2 of 4 branches missed.">			if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)) || cookiesEnabled==false)</span>
+<span class="pc bpc" id="L756" title="1 of 4 branches missed.">			if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)) || cookiesEnabled==false)</span>
 			{
 <span class="fc" id="L758">				return;</span>
 			}
 
-<span class="nc" id="L761">			long now = cal.getTime().getTime();</span>
-<span class="nc" id="L762">			int viewMinutes = (int)((now - logonTime.longValue()) / 60000);</span>
-<span class="nc" id="L763">			String sql = &quot;UPDATE stat_userlogon SET views=views+1, view_minutes=? WHERE logon_time=? AND user_id=?&quot;;</span>
-<span class="nc" id="L764">			StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, viewMinutes, new Timestamp(logonTime.longValue()), user.getUserId());</span>
-<span class="nc" id="L765">		}</span>
+<span class="fc" id="L761">			long now = cal.getTime().getTime();</span>
+<span class="fc" id="L762">			int viewMinutes = (int)((now - logonTime.longValue()) / 60000);</span>
+<span class="fc" id="L763">			String sql = &quot;UPDATE stat_userlogon SET views=views+1, view_minutes=? WHERE logon_time=? AND user_id=?&quot;;</span>
+<span class="fc" id="L764">			StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, viewMinutes, new Timestamp(logonTime.longValue()), user.getUserId());</span>
+<span class="fc" id="L765">		}</span>
 		else
 		{
 <span class="fc" id="L768">			logonTime = Long.valueOf(cal.getTime().getTime());</span>
@@ -776,9 +776,9 @@ public class StatDB extends DB
 <span class="nc" id="L776">				return;</span>
 			}
 
-<span class="pc bpc" id="L779" title="1 of 2 branches missed.">			if (cookiesEnabled) {</span>
-<span class="nc" id="L780">				sql = &quot;INSERT INTO stat_userlogon (year, week, user_id, views, logon_time, view_minutes, hostname) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
-<span class="nc" id="L781">				StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, year, week, user.getUserId(), 1, new Timestamp(logonTime.longValue()), 0, Tools.getRemoteHost(request));</span>
+<span class="fc bfc" id="L779" title="All 2 branches covered.">			if (cookiesEnabled) {</span>
+<span class="fc" id="L780">				sql = &quot;INSERT INTO stat_userlogon (year, week, user_id, views, logon_time, view_minutes, hostname) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="fc" id="L781">				StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, year, week, user.getUserId(), 1, new Timestamp(logonTime.longValue()), 0, Tools.getRemoteHost(request));</span>
 			}
 		}
 <span class="fc" id="L784">	}</span>
@@ -1048,7 +1048,7 @@ public class StatDB extends DB
 <span class="pc bpc" id="L1048" title="1 of 2 branches missed.">			if (session != null) session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
 		}
 
-<span class="pc bpc" id="L1051" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false)</span>
+<span class="fc bfc" id="L1051" title="All 2 branches covered.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false)</span>
 		{
 <span class="fc" id="L1053">			Cookie[] cookies = request.getCookies();</span>
 <span class="fc bfc" id="L1054" title="All 2 branches covered.">			if (cookies != null)</span>
@@ -1074,63 +1074,63 @@ public class StatDB extends DB
 <span class="fc" id="L1074">			return browserId;</span>
 		}
 
-<span class="nc bnc" id="L1077" title="All 2 branches missed.">		if (session != null)</span>
+<span class="pc bpc" id="L1077" title="1 of 2 branches missed.">		if (session != null)</span>
 		{
-<span class="nc" id="L1079">			Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L1079">			Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
 
 			/**
 			 * ak je to prihlaseny pouzivatel, tak sa mu priradi browserId ako konstanta + jeho userId
 			 */
-<span class="nc bnc" id="L1084" title="All 4 branches missed.">			if (user != null &amp;&amp; Constants.getBoolean(&quot;useUserIdAsBrowserId&quot;))</span>
+<span class="pc bpc" id="L1084" title="1 of 4 branches missed.">			if (user != null &amp;&amp; Constants.getBoolean(&quot;useUserIdAsBrowserId&quot;))</span>
 			{
-<span class="nc" id="L1086">				browserId = Constants.getInt(&quot;loggedUserBrowserId&quot;) + user.getUserId() + 0L;</span>
-<span class="nc" id="L1087">				session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
+<span class="fc" id="L1086">				browserId = Constants.getInt(&quot;loggedUserBrowserId&quot;) + user.getUserId() + 0L;</span>
+<span class="fc" id="L1087">				session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
 
-<span class="nc" id="L1089">				return(browserId);</span>
+<span class="fc" id="L1089">				return(browserId);</span>
 			}
 
 			/**
 			 * Teraz sa pokusime vydolovat browserId z session
 			 */
-<span class="nc bnc" id="L1095" title="All 2 branches missed.">			if (session.getAttribute(&quot;statFromBrowserId&quot;) != null)</span>
+<span class="fc bfc" id="L1095" title="All 2 branches covered.">			if (session.getAttribute(&quot;statFromBrowserId&quot;) != null)</span>
 			{
 				try
 				{
-<span class="nc" id="L1099">					browserId = ( (Long)session.getAttribute(&quot;statFromBrowserId&quot;)).longValue();</span>
+<span class="fc" id="L1099">					browserId = ( (Long)session.getAttribute(&quot;statFromBrowserId&quot;)).longValue();</span>
 
-<span class="nc bnc" id="L1101" title="All 2 branches missed.">					if (Tools.getCookieValue(request.getCookies(), &quot;statBrowserIdNew&quot;, null)!=null)</span>
+<span class="fc bfc" id="L1101" title="All 2 branches covered.">					if (Tools.getCookieValue(request.getCookies(), &quot;statBrowserIdNew&quot;, null)!=null)</span>
 					{
 						//ak uz ma cookie setnutu, tak rovno poslime, ak nema, musime dole setnut aj cookie, deje sa ked akceptuje statisticke cookie neskor
-<span class="nc" id="L1104">						return (browserId);</span>
+<span class="fc" id="L1104">						return (browserId);</span>
 					}
 				}
 <span class="nc" id="L1107">				catch (RuntimeException ex)</span>
 				{
 <span class="nc" id="L1109">					sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1110">				}</span>
+<span class="fc" id="L1110">				}</span>
 			}
 		}
 
 		/**
 		 * Iba v pripade neregistrovaneho pouzivatela, sa vyskusa, ci nema nahodou ulozene browserId v cookies
 		 */
-<span class="nc" id="L1117">		Cookie[] cookies = request.getCookies();</span>
-<span class="nc bnc" id="L1118" title="All 2 branches missed.">		if (cookies != null)</span>
+<span class="fc" id="L1117">		Cookie[] cookies = request.getCookies();</span>
+<span class="pc bpc" id="L1118" title="1 of 2 branches missed.">		if (cookies != null)</span>
 		{
-<span class="nc" id="L1120">			int cLen = cookies.length;</span>
-<span class="nc" id="L1121">			String cValue = null;</span>
+<span class="fc" id="L1120">			int cLen = cookies.length;</span>
+<span class="fc" id="L1121">			String cValue = null;</span>
 
-<span class="nc bnc" id="L1123" title="All 2 branches missed.">			for (int k = 0; k &lt; cLen; k++)</span>
+<span class="fc bfc" id="L1123" title="All 2 branches covered.">			for (int k = 0; k &lt; cLen; k++)</span>
 			{
-<span class="nc bnc" id="L1125" title="All 2 branches missed.">				if (&quot;statBrowserIdNew&quot;.equals(cookies[k].getName()))</span>
+<span class="fc bfc" id="L1125" title="All 2 branches covered.">				if (&quot;statBrowserIdNew&quot;.equals(cookies[k].getName()))</span>
 				{
-<span class="nc" id="L1127">					cValue = Tools.URLDecode(cookies[k].getValue());</span>
+<span class="fc" id="L1127">					cValue = Tools.URLDecode(cookies[k].getValue());</span>
 				}
 				//Logger.println(this,&quot;cookie Name: &quot;+cookies[k].getName()+&quot;  value: &quot;+cookies[k].getValue());
 			}
-<span class="nc bnc" id="L1131" title="All 2 branches missed.">			if (Tools.isNotEmpty(cValue))</span>
+<span class="fc bfc" id="L1131" title="All 2 branches covered.">			if (Tools.isNotEmpty(cValue))</span>
 			{
-<span class="nc" id="L1133">				browserId = Tools.getIntValue(cValue, -1);</span>
+<span class="fc" id="L1133">				browserId = Tools.getIntValue(cValue, -1);</span>
 			}
 		}
 
@@ -1140,25 +1140,25 @@ public class StatDB extends DB
 		 * a takisto pre vyhladavacie stroje. Situacia moze nastat ak sa SEO modul nasadil az po urcitej chvili
 		 * pouzivania WebJET-u a v cookies su ulozene stare hodnoty, kedze cookies exspiruje az po dvoch mesiacoch.
 		 */
-<span class="nc bnc" id="L1143" title="All 2 branches missed.">		if (browserId &lt; Constants.getInt(&quot;unloggedUserBrowserId&quot;))</span>
+<span class="fc bfc" id="L1143" title="All 2 branches covered.">		if (browserId &lt; Constants.getInt(&quot;unloggedUserBrowserId&quot;))</span>
 		{
-<span class="nc" id="L1145">			Logger.debug(StatDB.class, &quot;Generating sbid: &quot; + Tools.getRemoteIP(request)+&quot; ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
-<span class="nc" id="L1146">			browserId = Constants.getInt(&quot;unloggedUserBrowserId&quot;) + PkeyGenerator.getNextValueAsLong(&quot;stat_browser_id&quot;); // pre neregnuteho usera sa vygeneruje cislo &gt; Constants.getInt(&quot;unloggedUserBrowserId&quot;)</span>
+<span class="fc" id="L1145">			Logger.debug(StatDB.class, &quot;Generating sbid: &quot; + Tools.getRemoteIP(request)+&quot; ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
+<span class="fc" id="L1146">			browserId = Constants.getInt(&quot;unloggedUserBrowserId&quot;) + PkeyGenerator.getNextValueAsLong(&quot;stat_browser_id&quot;); // pre neregnuteho usera sa vygeneruje cislo &gt; Constants.getInt(&quot;unloggedUserBrowserId&quot;)</span>
 		}
 
-<span class="nc bnc" id="L1149" title="All 2 branches missed.">		if (response != null)</span>
+<span class="pc bpc" id="L1149" title="1 of 2 branches missed.">		if (response != null)</span>
 		{
 			//	uloz do cookies
-<span class="nc" id="L1152">			Cookie statBrowserIdNew = new Cookie(&quot;statBrowserIdNew&quot;, Long.toString(browserId));</span>
-<span class="nc" id="L1153">			statBrowserIdNew.setPath(&quot;/&quot;);</span>
-<span class="nc" id="L1154">			statBrowserIdNew.setMaxAge(60 * 24 * 3600);</span>
-<span class="nc" id="L1155">			statBrowserIdNew.setHttpOnly(true);</span>
-<span class="nc" id="L1156">			Tools.addCookie(statBrowserIdNew, response,request);</span>
+<span class="fc" id="L1152">			Cookie statBrowserIdNew = new Cookie(&quot;statBrowserIdNew&quot;, Long.toString(browserId));</span>
+<span class="fc" id="L1153">			statBrowserIdNew.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L1154">			statBrowserIdNew.setMaxAge(60 * 24 * 3600);</span>
+<span class="fc" id="L1155">			statBrowserIdNew.setHttpOnly(true);</span>
+<span class="fc" id="L1156">			Tools.addCookie(statBrowserIdNew, response,request);</span>
 		}
 
-<span class="nc bnc" id="L1159" title="All 2 branches missed.">		if (session != null) session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
+<span class="pc bpc" id="L1159" title="1 of 2 branches missed.">		if (session != null) session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
 
-<span class="nc" id="L1161">		return(browserId);</span>
+<span class="fc" id="L1161">		return(browserId);</span>
 	}
 
 	public static long getSessionId(HttpServletRequest request)
@@ -1275,7 +1275,7 @@ public class StatDB extends DB
 
 		//GDPR nemozeme sledovat statistiku, kym nam to nepovoli navstevnik
 <span class="fc" id="L1277">		boolean mustAnonymize = false;</span>
-<span class="pc bpc" id="L1278" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
+<span class="fc bfc" id="L1278" title="All 2 branches covered.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
 
 <span class="pc bpc" id="L1280" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;statEnableDocCount&quot;))</span>
 		{
@@ -1290,7 +1290,7 @@ public class StatDB extends DB
 <span class="fc" id="L1290">		long sessionId = getSessionId(request);</span>
 
 		//it's search bot, save correct browserId
-<span class="pc bpc" id="L1293" title="1 of 4 branches missed.">		if (browserId&gt;0 &amp;&amp; browserId &lt; Constants.getInt(&quot;loggedUserBrowserId&quot;)) mustAnonymize = false;</span>
+<span class="fc bfc" id="L1293" title="All 4 branches covered.">		if (browserId&gt;0 &amp;&amp; browserId &lt; Constants.getInt(&quot;loggedUserBrowserId&quot;)) mustAnonymize = false;</span>
 
 <span class="fc" id="L1295">		DocDB docDB = DocDB.getInstance();</span>
 
@@ -1461,7 +1461,7 @@ public class StatDB extends DB
 	 */
 	private static long getCurrentTime(HttpServletRequest request) {
 <span class="fc" id="L1463">		boolean mustAnonymize = false;</span>
-<span class="pc bpc" id="L1464" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
+<span class="fc bfc" id="L1464" title="All 2 branches covered.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
 <span class="fc" id="L1465">		return getCurrentTime(mustAnonymize);</span>
 	}
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.perex_groups</a> &gt; <span class="el_source">PerexGroupsRestController.java</span></div><h1>PerexGroupsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.perex_groups;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupsRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.perex_groups</a> &gt; <span class="el_source">PerexGroupsRestController.java</span></div><h1>PerexGroupsRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.perex_groups;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,29 +22,52 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
 <span class="fc" id="L22">    }</span>
 
     @Override
-    public PerexGroupsEntity processFromEntity(PerexGroupsEntity entity, ProcessItemAction action) {
-<span class="fc bfc" id="L26" title="All 4 branches covered.">        if(entity != null &amp;&amp; entity.getEditorFields() == null) {</span>
+    public PerexGroupsEntity processFromEntity(PerexGroupsEntity entity, ProcessItemAction action, int rowCount) {
+<span class="pc bpc" id="L26" title="1 of 4 branches missed.">        if(entity != null &amp;&amp; entity.getEditorFields() == null) {</span>
 <span class="fc" id="L27">            PerexGroupsEditorFields pgef = new PerexGroupsEditorFields();</span>
-<span class="fc" id="L28">            pgef.fromPerexGroupsEntity(entity);</span>
+
+            //Set &quot;volitelne polia&quot;
+<span class="fc bfc" id="L30" title="All 2 branches covered.">            if(rowCount == 1)</span>
+<span class="fc" id="L31">                pgef.setFieldsDefinition( pgef.getFields(entity, &quot;components.perex&quot;, 'F') );</span>
+
+<span class="fc" id="L33">            pgef.fromPerexGroupsEntity(entity);</span>
         }
-<span class="fc" id="L30">        return entity;</span>
+<span class="fc" id="L35">        return entity;</span>
     }
 
     @Override
     public PerexGroupsEntity processToEntity(PerexGroupsEntity entity, ProcessItemAction action) {
-<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if(entity != null) entity.getEditorFields().toPerexGroupsEntity(entity);</span>
-<span class="fc" id="L36">        return entity;</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        if(entity != null) entity.getEditorFields().toPerexGroupsEntity(entity);</span>
+<span class="nc" id="L41">        return entity;</span>
+    }
+
+    @Override
+    public PerexGroupsEntity insertItem(PerexGroupsEntity entity) {
+<span class="fc" id="L46">        return editItem(entity, -1);</span>
+    }
+
+    @Override
+    public PerexGroupsEntity editItem(PerexGroupsEntity entity, long id) {
+<span class="fc" id="L51">        return processFromEntity(PerexGroupsService.save(entity, (PerexGroupsRepository)getRepo()), ProcessItemAction.EDIT, 1);</span>
     }
 
     @Override
     public void afterDelete(PerexGroupsEntity entity, long id) {
-<span class="fc" id="L41">        DocDB.getInstance(true);</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L56">        DocDB.getInstance().getPerexGroups(true);</span>
+<span class="fc" id="L57">    }</span>
 
     @Override
     public void afterSave(PerexGroupsEntity entity, PerexGroupsEntity saved) {
-<span class="fc" id="L46">        DocDB.getInstance(true);</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L61">        DocDB.getInstance().getPerexGroups(true);</span>
+<span class="fc" id="L62">    }</span>
 
+    @Override
+    public PerexGroupsEntity getOneItem(long id) {
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if(id &lt; 1) {</span>
+<span class="fc" id="L67">            PerexGroupsEntity entity = new PerexGroupsEntity();</span>
+<span class="fc" id="L68">            return processFromEntity(entity, ProcessItemAction.GETONE, 1);</span>
+        }
+<span class="fc" id="L70">        return super.getOneItem(id);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

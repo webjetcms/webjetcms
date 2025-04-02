@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">UploadCommandExecutor.java</span></div><h1>UploadCommandExecutor.java</h1><pre class="source lang-java linenums">
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">UploadCommandExecutor.java</span></div><h1>UploadCommandExecutor.java</h1><pre class="source lang-java linenums">
 package cn.bluejoe.elfinder.controller.executors;
 
 import java.io.File;
@@ -315,9 +315,9 @@ import sk.iway.iwcm.users.UsersDB;
 
 				//wj8 - elfinder - kontrola prav pre typy suborov (#20592)
 <span class="fc" id="L317">				String uploadType = &quot;file&quot;;</span>
-<span class="fc bfc" id="L318" title="All 2 branches covered.">				if(dir.getPath().startsWith(&quot;/images&quot;)) uploadType = &quot;image&quot;;</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">				if(dir.getPath().startsWith(&quot;/images&quot;)) uploadType = &quot;image&quot;;</span>
 
-<span class="pc bpc" id="L320" title="3 of 6 branches missed.">				if (dir.getPath().startsWith(&quot;/files&quot;) || dir.getPath().startsWith(&quot;/images&quot;) || dir.getPath().startsWith(&quot;/shared&quot;))</span>
+<span class="pc bpc" id="L320" title="4 of 6 branches missed.">				if (dir.getPath().startsWith(&quot;/files&quot;) || dir.getPath().startsWith(&quot;/images&quot;) || dir.getPath().startsWith(&quot;/shared&quot;))</span>
 				{
 <span class="fc" id="L322">					fileName = DB.internationalToEnglish(fileName);</span>
 <span class="fc" id="L323">					fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
@@ -497,7 +497,7 @@ import sk.iway.iwcm.users.UsersDB;
 				}
 
 <span class="pc bpc" id="L499" title="1 of 2 branches missed.">				if (FileTools.isImage(newFileIwcm.getName())) {</span>
-<span class="fc bfc" id="L500" title="All 2 branches covered.">					if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {</span>
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">					if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {</span>
 						//we must replace o_ file because it will be used in resize process instead of new file
 <span class="fc" id="L502">						IwcmFile orig = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+&quot;/o_&quot;+fileName));</span>
 <span class="pc bpc" id="L503" title="1 of 2 branches missed.">						if (orig.exists()) {</span>
@@ -507,7 +507,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L507">						GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir.getPath()+directory);</span>
 <span class="fc" id="L508">						added.add(new FsItemEx(dir, &quot;s_&quot;+fileName));</span>
 <span class="fc" id="L509">						added.add(new FsItemEx(dir, &quot;o_&quot;+fileName));</span>
-<span class="pc bpc" id="L510" title="1 of 2 branches missed.">					} else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;)) {</span>
+<span class="pc bnc" id="L510" title="All 2 branches missed.">					} else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;)) {</span>
 <span class="nc" id="L511">						GalleryDB.setImage(dir.getPath()+directory, fileName);</span>
 					}
 

@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryRestController.java</span></div><h1>GalleryRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryRestController.java</span></div><h1>GalleryRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -12,10 +13,12 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadService;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
@@ -37,15 +40,45 @@ import sk.iway.iwcm.users.UsersDB;
 @PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('menuGallery')&quot;)
 public class GalleryRestController extends DatatableRestControllerV2&lt;GalleryEntity, Long&gt; {
 
+    private final GalleryRepository repository;
+
     @Autowired
     public GalleryRestController(GalleryRepository repository, HttpServletRequest request) {
-<span class="fc" id="L42">        super(repository);</span>
-<span class="fc" id="L43">    }</span>
+<span class="fc" id="L47">        super(repository);</span>
+<span class="fc" id="L48">        this.repository = repository;</span>
+<span class="fc" id="L49">    }</span>
 
     @Override
     public Page&lt;GalleryEntity&gt; getAllItems(Pageable pageable) {
         //getAll nie je povolene, vrati prazdne data, pouziva sa findBy podla adresara po kliknuti na stromovu strukturu
-<span class="nc" id="L48">        return new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L54">        return new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+    }
+
+    @Override
+    public GalleryEntity getOneItem(long id) {
+
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if(isImageEditor()) {</span>
+            //in ImageEditor we don't get ID, but we get imagePath and imageName, so load entity by these values
+<span class="fc" id="L62">            String imagePath = getRequest().getParameter(&quot;dir&quot;);</span>
+<span class="fc" id="L63">            String imageName = getRequest().getParameter(&quot;name&quot;);</span>
+
+<span class="fc" id="L65">            GalleryEntity entity = new GalleryEntity();</span>
+<span class="pc bpc" id="L66" title="2 of 4 branches missed.">            if(Tools.isNotEmpty(imagePath) &amp;&amp; Tools.isNotEmpty(imageName)) {</span>
+<span class="fc" id="L67">                entity = repository.findByImagePathAndImageNameAndDomainId(imagePath, imageName, CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">                if(entity == null) {</span>
+<span class="fc" id="L69">                    entity = new GalleryEntity();</span>
+<span class="fc" id="L70">                    entity.setImagePath(imagePath);</span>
+<span class="fc" id="L71">                    entity.setImageName(imageName);</span>
+<span class="fc" id="L72">                    entity.setUploadDatetime(new Date());</span>
+<span class="fc" id="L73">                    entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+                }
+            }
+
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            if(entity.getId() == null) entity.setId(Long.valueOf(-1));</span>
+<span class="fc" id="L78">            return entity;</span>
+        }
+
+<span class="fc" id="L81">        return super.getOneItem(id);</span>
     }
 
     /**
@@ -56,10 +89,9 @@ public class GalleryRestController extends DatatableRestControllerV2&lt;GalleryE
      */
     @Override
     public boolean checkAccessAllowed(HttpServletRequest request) {
-<span class="fc" id="L59">        Identity currentUser = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L60">        return currentUser.isEnabledItem(&quot;menuGallery&quot;);</span>
+<span class="fc" id="L92">        Identity currentUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L93">        return currentUser.isEnabledItem(&quot;menuGallery&quot;);</span>
     }
-
 
     /**
      * Prikladova metoda na validaciu dat odoslanych z datatables editora.
@@ -74,38 +106,38 @@ public class GalleryRestController extends DatatableRestControllerV2&lt;GalleryE
      */
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, GalleryEntity&gt; target, Identity user, Errors errors, Long id, GalleryEntity entity) {
-<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (!user.isFolderWritable(entity.getImagePath())) {</span>
-<span class="nc" id="L78">            errors.rejectValue(&quot;errorField.imagePath&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (!user.isFolderWritable(entity.getImagePath())) {</span>
+<span class="nc" id="L110">            errors.rejectValue(&quot;errorField.imagePath&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
         }
-<span class="pc bpc" id="L80" title="3 of 6 branches missed.">        if (entity.getImageName().contains(&quot;/&quot;) || entity.getImageName().contains(&quot;\\&quot;) || FileBrowserTools.hasForbiddenSymbol(entity.getImageName())) {</span>
-<span class="nc" id="L81">            errors.rejectValue(&quot;errorField.imageName&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;checkform.title.safeChars&quot;));</span>
+<span class="pc bpc" id="L112" title="3 of 6 branches missed.">        if (entity.getImageName().contains(&quot;/&quot;) || entity.getImageName().contains(&quot;\\&quot;) || FileBrowserTools.hasForbiddenSymbol(entity.getImageName())) {</span>
+<span class="nc" id="L113">            errors.rejectValue(&quot;errorField.imageName&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;checkform.title.safeChars&quot;));</span>
         }
-<span class="fc" id="L83">    }</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * Vykonanie akcie otocenia obrazka
      */
     @Override
     public boolean processAction(GalleryEntity entity, String action) {
-<span class="nc" id="L90">        String imageUrl = entity.getImagePath() + &quot;/&quot; + entity.getImageName();</span>
-<span class="nc" id="L91">        boolean isGalleryFolder = GalleryDB.isGalleryFolder(entity.getImagePath());</span>
+<span class="nc" id="L122">        String imageUrl = entity.getImagePath() + &quot;/&quot; + entity.getImageName();</span>
+<span class="nc" id="L123">        boolean isGalleryFolder = GalleryDB.isGalleryFolder(entity.getImagePath());</span>
 
-<span class="nc bnc" id="L93" title="All 2 branches missed.">        if (isGalleryFolder) imageUrl = GalleryDB.getImagePathOriginal(imageUrl);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (isGalleryFolder) imageUrl = GalleryDB.getImagePathOriginal(imageUrl);</span>
 
-<span class="nc" id="L95">        int status = -1;</span>
+<span class="nc" id="L127">        int status = -1;</span>
 
-<span class="nc" id="L97">        int rotateAngle = 0;</span>
-<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (&quot;rotateRight&quot;.equals(action)) rotateAngle = 90;</span>
-<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (&quot;rotateLeft&quot;.equals(action)) rotateAngle = 270;</span>
+<span class="nc" id="L129">        int rotateAngle = 0;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (&quot;rotateRight&quot;.equals(action)) rotateAngle = 90;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (&quot;rotateLeft&quot;.equals(action)) rotateAngle = 270;</span>
 
-<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (rotateAngle!=0) {</span>
-<span class="nc" id="L102">            status = ImageTools.rotateImage(imageUrl, rotateAngle);</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (isGalleryFolder) {</span>
-<span class="nc" id="L104">                GalleryDB.resizePicture(Tools.getRealPath(imageUrl), entity.getImagePath());</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (rotateAngle!=0) {</span>
+<span class="nc" id="L134">            status = ImageTools.rotateImage(imageUrl, rotateAngle);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (isGalleryFolder) {</span>
+<span class="nc" id="L136">                GalleryDB.resizePicture(Tools.getRealPath(imageUrl), entity.getImagePath());</span>
             }
         }
 
-<span class="nc bnc" id="L108" title="All 2 branches missed.">        return status == 0;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        return status == 0;</span>
     }
 
     /**
@@ -113,87 +145,121 @@ public class GalleryRestController extends DatatableRestControllerV2&lt;GalleryE
      */
     @Override
     public boolean beforeDelete(GalleryEntity entity) {
-<span class="fc" id="L116">        UploadService uploadService = new UploadService(entity.getImagePath() + &quot;/&quot; + entity.getImageName(), getRequest());</span>
-<span class="fc" id="L117">        uploadService.processDelete();</span>
+<span class="fc" id="L148">        UploadService uploadService = new UploadService(entity.getImagePath() + &quot;/&quot; + entity.getImageName(), getRequest());</span>
+<span class="fc" id="L149">        uploadService.processDelete();</span>
         //vratime true aj ked sa nepodari zmazat, lebo ak obrazok neexistuje tak sa neda zmazat DB zaznam a ten je podstatny
-<span class="fc" id="L119">        return true;</span>
+<span class="fc" id="L151">        return true;</span>
     }
 
     @Override
     public GalleryEntity insertItem(GalleryEntity entity) {
+
+<span class="fc" id="L157">        boolean isImageEditor = isImageEditor();</span>
+<span class="pc bpc" id="L158" title="1 of 4 branches missed.">        if(isImageEditor &amp;&amp; entity.getId() &gt; 0) {</span>
+            // ITS update
+<span class="fc" id="L160">            return editItem(entity, entity.getId());</span>
+        }
+
         //ak sa vola insert a ma nastavenu cestu k obrazku, tak sa jedna o funkciu duplikovania, obrazok musime najskor skopirovat
-<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(entity.getImageName())) {</span>
-<span class="fc" id="L126">            String originalUrl = GalleryDB.getImagePathOriginal(entity.getImagePath()+&quot;/&quot;+entity.getImageName());</span>
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">        if (!isImageEditor &amp;&amp; Tools.isNotEmpty(entity.getImageName())) {</span>
+<span class="fc" id="L165">            String originalUrl = GalleryDB.getImagePathOriginal(entity.getImagePath()+&quot;/&quot;+entity.getImageName());</span>
 
-<span class="fc" id="L128">            String name = entity.getDescriptionShortSk();</span>
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) name = entity.getDescriptionShortCz();</span>
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) name = entity.getDescriptionShortEn();</span>
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) name = entity.getDescriptionShortDe();</span>
+<span class="fc" id="L167">            String name = entity.getDescriptionShortSk();</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) name = entity.getDescriptionShortCz();</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) name = entity.getDescriptionShortEn();</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) name = entity.getDescriptionShortDe();</span>
 
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) {</span>
-<span class="nc" id="L134">                name = entity.getImageName();</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">            if (Tools.isEmpty(name)) {</span>
+<span class="nc" id="L173">                name = entity.getImageName();</span>
             } else {
                 //remove special chars and add extension
-<span class="fc" id="L137">                name = DocTools.removeChars(name, true).toLowerCase()+&quot;.&quot;+FileTools.getFileExtension(entity.getImageName());</span>
+<span class="fc" id="L176">                name = DB.internationalToEnglish(name);</span>
+<span class="fc" id="L177">                String ext = FileTools.getFileExtension(entity.getImageName());</span>
+<span class="pc bpc" id="L178" title="2 of 4 branches missed.">                if (Tools.isNotEmpty(ext) &amp;&amp; name.endsWith(&quot;.&quot;+ext)==false) name = name+&quot;.&quot;+ext;</span>
+<span class="fc" id="L179">                name = DocTools.removeCharsDir(name, true).toLowerCase();</span>
             }
 
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">            if (FileTools.isFile(entity.getImagePath()+&quot;/&quot;+name)) {</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">            if (FileTools.isFile(entity.getImagePath()+&quot;/&quot;+name)) {</span>
                 //subor uz existuje, musime zmenit nazov
-<span class="nc" id="L142">                int dot = name.lastIndexOf(&quot;.&quot;);</span>
-<span class="nc bnc" id="L143" title="All 2 branches missed.">                if (dot &gt; 0) {</span>
-<span class="nc bnc" id="L144" title="All 2 branches missed.">                    for (int i=1; i&lt;100; i++) {</span>
+<span class="nc" id="L184">                int dot = name.lastIndexOf(&quot;.&quot;);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">                if (dot &gt; 0) {</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">                    for (int i=1; i&lt;100; i++) {</span>
 
-<span class="nc" id="L146">                        String newNameTest = name.substring(0, dot) + i + name.substring(dot);</span>
-<span class="nc bnc" id="L147" title="All 2 branches missed.">                        if (FileTools.isFile(entity.getImagePath()+&quot;/&quot;+newNameTest)==false) {</span>
-<span class="nc" id="L148">                            name = newNameTest;</span>
-<span class="nc" id="L149">                            break;</span>
+<span class="nc" id="L188">                        String newNameTest = name.substring(0, dot) + i + name.substring(dot);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                        if (FileTools.isFile(entity.getImagePath()+&quot;/&quot;+newNameTest)==false) {</span>
+<span class="nc" id="L190">                            name = newNameTest;</span>
+<span class="nc" id="L191">                            break;</span>
                         }
 
                     }
                 }
             }
 
-<span class="fc" id="L156">            entity.setImageName(name);</span>
-<span class="fc" id="L157">            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(entity.getImagePath()+&quot;/&quot;+name)));</span>
+<span class="fc" id="L198">            entity.setImageName(name);</span>
+<span class="fc" id="L199">            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(entity.getImagePath()+&quot;/&quot;+name)));</span>
         }
 
-<span class="fc" id="L160">        entity.setId(null);</span>
-<span class="fc" id="L161">        GalleryEntity saved = super.insertItem(entity);</span>
+<span class="fc" id="L202">        entity.setId(null);</span>
+<span class="fc" id="L203">        GalleryEntity saved = super.insertItem(entity);</span>
 
         //resize robime az po save, inak by nam to spravilo druhy DB zaznam
-<span class="fc" id="L164">        GalleryDB.resizePicture(Tools.getRealPath(entity.getImagePath()+&quot;/&quot;+entity.getImageName()), entity.getImagePath());</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">        if(!isImageEditor) {</span>
+<span class="fc" id="L207">            GalleryDB.resizePicture(Tools.getRealPath(entity.getImagePath()+&quot;/&quot;+entity.getImageName()), entity.getImagePath());</span>
+        }
 
-<span class="fc" id="L166">        return saved;</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if (isImageEditor) {</span>
+<span class="nc" id="L211">            String name = getRequest().getParameter(&quot;name&quot;);</span>
+<span class="nc" id="L212">            String dir = getRequest().getParameter(&quot;dir&quot;);</span>
+<span class="nc bnc" id="L213" title="All 4 branches missed.">            if (Tools.isNotEmpty(dir) &amp;&amp; Tools.isNotEmpty(name)) {</span>
+                //obrazok bol premenovany, je potrebne presunut na file systeme
+<span class="nc" id="L215">                GalleryEntity original = new GalleryEntity();</span>
+<span class="nc" id="L216">                original.setImagePath(dir);</span>
+<span class="nc" id="L217">                original.setImageName(name);</span>
+<span class="nc bnc" id="L218" title="All 6 branches missed.">                if (original != null &amp;&amp; original.getImageName()!=null &amp;&amp; original.getImageName().equals(saved.getImageName())==false) {</span>
+                    //obrazok bol premenovany, je potrebne presunut na file systeme
+<span class="nc" id="L220">                    FileTools.moveFile(original.getImagePath()+&quot;/&quot;+original.getImageName(), saved.getImagePath()+&quot;/&quot;+saved.getImageName());</span>
+
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                    if (FileTools.isFile(original.getImagePath()+&quot;/o_&quot;+original.getImageName())) FileTools.moveFile(original.getImagePath()+&quot;/o_&quot;+original.getImageName(), saved.getImagePath()+&quot;/o_&quot;+saved.getImageName());</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                    if (FileTools.isFile(original.getImagePath()+&quot;/s_&quot;+original.getImageName())) FileTools.moveFile(original.getImagePath()+&quot;/s_&quot;+original.getImageName(), saved.getImagePath()+&quot;/s_&quot;+saved.getImageName());</span>
+                }
+            }
+        }
+
+<span class="fc" id="L228">        return saved;</span>
     }
 
     @Override
     public GalleryEntity editItem(GalleryEntity entity, long id) {
-<span class="fc" id="L171">        GalleryEntity original = getOne(id);</span>
-<span class="fc" id="L172">        GalleryEntity saved = super.editItem(entity, id);</span>
+<span class="fc" id="L233">        GalleryEntity original = getOne(id);</span>
+<span class="fc" id="L234">        GalleryEntity saved = super.editItem(entity, id);</span>
 
-<span class="pc bpc" id="L174" title="3 of 6 branches missed.">        if (original != null &amp;&amp; original.getImageName()!=null &amp;&amp; original.getImageName().equals(saved.getImageName())==false) {</span>
+<span class="pc bpc" id="L236" title="2 of 6 branches missed.">        if (original != null &amp;&amp; original.getImageName()!=null &amp;&amp; original.getImageName().equals(saved.getImageName())==false) {</span>
             //obrazok bol premenovany, je potrebne presunut na file systeme
-<span class="nc" id="L176">            FileTools.moveFile(original.getImagePath()+&quot;/o_&quot;+original.getImageName(), saved.getImagePath()+&quot;/o_&quot;+saved.getImageName());</span>
-<span class="nc" id="L177">            FileTools.moveFile(original.getImagePath()+&quot;/&quot;+original.getImageName(), saved.getImagePath()+&quot;/&quot;+saved.getImageName());</span>
-<span class="nc" id="L178">            FileTools.moveFile(original.getImagePath()+&quot;/s_&quot;+original.getImageName(), saved.getImagePath()+&quot;/s_&quot;+saved.getImageName());</span>
+<span class="fc" id="L238">            FileTools.moveFile(original.getImagePath()+&quot;/&quot;+original.getImageName(), saved.getImagePath()+&quot;/&quot;+saved.getImageName());</span>
+
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">            if (FileTools.isFile(original.getImagePath()+&quot;/o_&quot;+original.getImageName())) FileTools.moveFile(original.getImagePath()+&quot;/o_&quot;+original.getImageName(), saved.getImagePath()+&quot;/o_&quot;+saved.getImageName());</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">            if (FileTools.isFile(original.getImagePath()+&quot;/s_&quot;+original.getImageName())) FileTools.moveFile(original.getImagePath()+&quot;/s_&quot;+original.getImageName(), saved.getImagePath()+&quot;/s_&quot;+saved.getImageName());</span>
         }
 
-<span class="fc" id="L181">        return saved;</span>
+<span class="fc" id="L244">        return saved;</span>
     }
 
     private void setLastModified(String path, long lastModified) {
-<span class="fc" id="L185">        IwcmFile image = new IwcmFile(Tools.getRealPath(path));</span>
-<span class="pc bpc" id="L186" title="2 of 4 branches missed.">        if (image != null &amp;&amp; image.exists()) image.setLastModified(lastModified);</span>
-<span class="fc" id="L187">    }</span>
+<span class="fc" id="L248">        IwcmFile image = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="pc bpc" id="L249" title="1 of 4 branches missed.">        if (image != null &amp;&amp; image.exists()) image.setLastModified(lastModified);</span>
+<span class="fc" id="L250">    }</span>
 
     @Override
     public void afterSave(GalleryEntity entity, GalleryEntity saved) {
         //change image lastmodified to regenerate thumb image if necessary
-<span class="fc" id="L192">        long now = Tools.getNow();</span>
-<span class="fc" id="L193">        setLastModified(entity.getImagePath()+&quot;/o_&quot;+entity.getImageName(), now);</span>
-<span class="fc" id="L194">        setLastModified(entity.getImagePath()+&quot;/&quot;+entity.getImageName(), now);</span>
-<span class="fc" id="L195">        setLastModified(entity.getImagePath()+&quot;/s_&quot;+entity.getImageName(), now);</span>
-<span class="fc" id="L196">    }</span>
+<span class="fc" id="L255">        long now = Tools.getNow();</span>
+<span class="fc" id="L256">        setLastModified(entity.getImagePath()+&quot;/&quot;+entity.getImageName(), now);</span>
+<span class="fc" id="L257">        setLastModified(entity.getImagePath()+&quot;/o_&quot;+entity.getImageName(), now);</span>
+<span class="fc" id="L258">        setLastModified(entity.getImagePath()+&quot;/s_&quot;+entity.getImageName(), now);</span>
+<span class="fc" id="L259">    }</span>
 
+    private boolean isImageEditor() {
+<span class="fc" id="L262">        return Tools.getBooleanValue(getRequest().getParameter(&quot;isImageEditor&quot;), false);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoiceEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.jpa</a> &gt; <span class="el_source">BasketInvoiceEntity.java</span></div><h1>BasketInvoiceEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.jpa;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.Password;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+
+@Entity
+@Table(name=&quot;basket_invoice&quot;)
+@Getter
+@Setter
+<span class="fc" id="L36">public class BasketInvoiceEntity implements Serializable {</span>
+
+<span class="fc" id="L38">	public static final Integer INVOICE_STATUS_NEW = Integer.valueOf(1);</span>
+<span class="fc" id="L39">	public static final Integer INVOICE_STATUS_PAID = Integer.valueOf(2);</span>
+<span class="fc" id="L40">	public static final Integer INVOICE_STATUS_CANCELLED = Integer.valueOf(3);</span>
+<span class="fc" id="L41">	public static final Integer INVOICE_STATUS_PARTIALLY_PAID = Integer.valueOf(4);</span>
+<span class="fc" id="L42">	public static final Integer INVOICE_STATUS_ISSUED = Integer.valueOf(5);</span>
+<span class="fc" id="L43">	public static final Integer INVOICE_STATUS_DEPOSIT_PAID = Integer.valueOf(8);</span>
+
+    @Id
+	@Column(name=&quot;basket_invoice_id&quot;)
+	@GeneratedValue(generator=&quot;WJGen_basket_invoice&quot;)
+    @TableGenerator(name=&quot;WJGen_basket_invoice&quot;, pkColumnValue=&quot;basket_invoice&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;components.basket.invoice.number&quot;)
+	private Long id;
+
+	@Column(name=&quot;delivery_name&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title=&quot;[[#{components.basket.invoice.name}]]&quot;,
+		hiddenEditor = true
+    )
+	private String deliveryName;
+
+    @Column(name=&quot;create_date&quot;)
+	@Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE,
+        title=&quot;[[#{components.basket.invoice.date_created}]]&quot;,
+		tab = &quot;basic&quot;,
+		editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+	private Date createDate;
+
+    @Column(name=&quot;status_id&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.basket.invoice.state}]]&quot;,
+		tab = &quot;basic&quot;
+    )
+	private Integer statusId;
+
+	@Column(name=&quot;user_note&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title=&quot;[[#{components.basket.invoice.note}]]&quot;,
+		hidden = true,
+		tab = &quot;basic&quot;
+    )
+	private String userNote;
+
+	@Column(name=&quot;contact_email&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{components.qa.add_action.recipient}]]&quot;,
+		tab = &quot;notify&quot;,
+		sortAfter = &quot;editorFields.sender&quot;,
+		hidden = true
+    )
+	private String contactEmail;
+
+    @Column(name=&quot;payment_method&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.basket.invoice.payment_method}]]&quot;,
+		hiddenEditor = true,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.cash_on_delivery&quot;, value = &quot;cash_on_delivery&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.money_transfer&quot;, value = &quot;money_transfer&quot;)
+				}
+			)
+		}
+    )
+	private String paymentMethod;
+
+    @Column(name=&quot;delivery_method&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.basket.mode_of_transport}]]&quot;,
+		hiddenEditor = true,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.delivery_personally&quot;, value = &quot;[[#{components.basket.order_form.delivery_personally}]]&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.delivery_post&quot;, value = &quot;[[#{components.basket.order_form.delivery_post}]]&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.delivery_courier&quot;, value = &quot;[[#{components.basket.order_form.delivery_courier}]]&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.delivery&quot;, value = &quot;[[#{components.basket.order_form.delivery}]]&quot;)
+				}
+			)
+		}
+    )
+	private String deliveryMethod;
+
+	//@JsonManagedReference(value=&quot;itemsBasketInvoice&quot;)
+	@OneToMany(mappedBy=&quot;itemsBasketInvoice&quot;, fetch=FetchType.LAZY, cascade={CascadeType.ALL})
+	private List&lt;BasketInvoiceItemEntity&gt; basketItems;
+
+	//@JsonManagedReference(value=&quot;paymentsBasketInvoice&quot;)
+	@OneToMany(mappedBy=&quot;paymentsBasketInvoice&quot;, fetch=FetchType.LAZY, cascade={CascadeType.ALL})
+	private List&lt;BasketInvoicePaymentEntity&gt; basketPayments;
+
+<span class="fc" id="L143">	@Transient</span>
+	@DataTableColumnNested
+	private transient BasketInvoiceEditorFields editorFields = null;
+
+	@Column(name=&quot;currency&quot;)
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;components.basket.invoice.currency&quot;, hiddenEditor = true)
+	private String currency;
+
+	//Need for repository
+	@Column(name=&quot;logged_user_id&quot;)
+	private int loggedUserId;
+
+	@Column(name=&quot;domain_id&quot;)
+	private int domainId;
+
+	// @Column(name=&quot;browser_id&quot;)
+	// private Long browserId;
+
+	// @Column(name=&quot;delivery_company&quot;)
+	// private String deliveryCompany;
+
+	// @Column(name=&quot;delivery_surname&quot;)
+	// private String deliverySurName;
+	// @Column(name=&quot;delivery_street&quot;)
+	// private String deliveryStreet;
+	// @Column(name=&quot;delivery_city&quot;)
+	// private String deliveryCity;
+	// @Column(name=&quot;delivery_zip&quot;)
+	// private String deliveryZip;
+	// @Column(name=&quot;delivery_country&quot;)
+	// private String deliveryCountry;
+
+	// @Column(name=&quot;internal_invoice_id&quot;)
+	// private String internalInvoiceId;
+
+	// @Column(name=&quot;user_lng&quot;)
+	// private String userLng;
+
+	// @Column(name=&quot;contact_title&quot;)
+	// private String contactTitle;
+	// @Column(name=&quot;contact_first_name&quot;)
+	// private String contactFirstName;
+	// @Column(name=&quot;contact_last_name&quot;)
+	// private String contactLastName;
+
+	// @Column(name=&quot;contact_phone&quot;)
+	// private String contactPhone;
+	// @Column(name=&quot;contact_company&quot;)
+	// private String contactCompany;
+	// @Column(name=&quot;contact_street&quot;)
+	// private String contactStreet;
+	// @Column(name=&quot;contact_city&quot;)
+	// private String contactCity;
+	// @Column(name=&quot;contact_zip&quot;)
+	// private String contactZip;
+	// @Column(name=&quot;contact_country&quot;)
+	// private String contactCountry;
+	// @Column(name=&quot;contact_ico&quot;)
+	// private String contactIco;
+	// @Column(name=&quot;contact_icdph&quot;)
+	// private String contactIcdph;
+	// @Column(name=&quot;contact_dic&quot;)
+	// private String contactDic;
+
+	// @Column(name=&quot;field_a&quot;)
+	// private String fieldA;
+	// @Column(name=&quot;field_b&quot;)
+	// private String fieldB;
+	// @Column(name=&quot;field_c&quot;)
+	// private String fieldC;
+	// @Column(name=&quot;field_d&quot;)
+	// private String fieldD;
+	// @Column(name=&quot;field_e&quot;)
+	// private String fieldE;
+	// @Column(name=&quot;field_f&quot;)
+	// private String fieldF;
+
+	// @Column(name=&quot;html_code&quot;)
+	// @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	// private String htmlCode;
+
+	/**
+	 * Vrati celkovy pocet poloziek (vratane QTY)
+	 * @return
+	 */
+	public int getTotalItems() {
+<span class="fc" id="L229">		return getBasketItems().stream().mapToInt(item -&gt; item.getItemQty().intValue()).sum();</span>
+	}
+
+	/**
+	 * Vrati celkovu cenu poloziek vratane DPH
+	 * @return
+	 */
+	public BigDecimal getTotalPriceVat() {
+<span class="fc" id="L237">		return getBasketItems().stream().map(item -&gt; item.getItemPriceVatQty())</span>
+<span class="fc" id="L238">			.reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+	}
+
+	public BigDecimal getTotalPayedPrice() {
+<span class="fc" id="L242">		return getBasketPayments().stream().map(item -&gt; item.getPayedPrice())</span>
+<span class="fc" id="L243">			.reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+	}
+
+	public BigDecimal getTotalPriceVatIn(String currency) {
+		try {
+<span class="nc" id="L248">			String constantName = &quot;kurz_&quot; + currency + &quot;_&quot; + getCurrency();</span>
+			BigDecimal rate;
+
+			// nasli sme bezny kurz
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(constantName))) {</span>
+<span class="nc" id="L253">				rate = new BigDecimal( Constants.getString(constantName) );</span>
+<span class="nc" id="L254">				return rate.multiply( getTotalPriceVat() );</span>
+			}
+
+			// nevyslo, skusime opacnu konverziu
+<span class="nc" id="L258">			constantName = &quot;kurz_&quot; + getCurrency() + &quot;_&quot; + currency;</span>
+
+			// podobne, ako hore, ale kedze ide o opacny kurz, musime spravit
+			// 1/kurz
+<span class="nc bnc" id="L262" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(constantName))) {</span>
+<span class="nc" id="L263">				rate = new BigDecimal( Constants.getString(constantName) );</span>
+<span class="nc" id="L264">				return (BigDecimal.valueOf(1).divide(rate)).multiply( getTotalPriceVat() );</span>
+			}
+<span class="nc" id="L266">		} catch (NumberFormatException e) {</span>
+<span class="nc" id="L267">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L268">			throw new IllegalStateException(&quot;Malformed constant format for currencies &quot; + getCurrency() + &quot; and &quot; + currency);</span>
+<span class="nc" id="L269">		}</span>
+
+<span class="nc" id="L271">		return getTotalPriceVat();</span>
+	}
+
+	/**
+	 * Vypocita autorizacny token k objednavke. Ako autorizacny token
+	 * sa vezme retazec &quot;INV&quot;+id objednavky+Constants.getInstallName()
+	 *
+	 * Ak by sa tento prefix/sufix nepouzil, utocnik by ziskal pristup k {@link Password}.encrypt(ID_OBJEDNAVKY),
+	 * co by potencialne mohol vyuzit pri inych autorizacnych testoch.
+	 * @throws Exception ak sa nepodari enkrypcia
+	 */
+	public String getAuthorizationToken() {
+<span class="fc" id="L283">		return getAuthorizationToken(getBasketInvoiceId());</span>
+	}
+
+	public static String getAuthorizationToken(int invoiceId) {
+<span class="fc" id="L287">		String rawKey = new StringBuilder().append(&quot;INV&quot;).append(invoiceId).append(Constants.getInstallName()).toString();</span>
+		try {
+<span class="fc" id="L289">			return new Password().encrypt(rawKey);</span>
+<span class="nc" id="L290">		} catch (Exception e) {</span>
+<span class="nc" id="L291">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L292">			return &quot;&quot;;</span>
+		}
+	}
+
+	public int getBasketInvoiceId() {
+<span class="fc" id="L297">		return id.intValue();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

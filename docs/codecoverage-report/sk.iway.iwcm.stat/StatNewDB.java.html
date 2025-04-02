@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatNewDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatNewDB.java</span></div><h1>StatNewDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatNewDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatNewDB.java</span></div><h1>StatNewDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -180,14 +180,14 @@ public class StatNewDB
 
 	public static boolean createStatTablesFromError(String errorMessage, String suffix, String tableName)
 	{
-<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (Tools.isEmpty(errorMessage)) return false;</span>
-<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (isPartitioningAllowedFor(tableName))</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">		if (Tools.isEmpty(errorMessage)) return false;</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">		if (isPartitioningAllowedFor(tableName))</span>
 		{
 			//ORA-00942 je chybovy kod chybajucej tabulky v Oracle - samotna hlaska moze byt internacionalizovana
-<span class="nc bnc" id="L187" title="All 8 branches missed.">			if (errorMessage.contains(&quot;Invalid object name&quot;) || errorMessage.contains(&quot;doesn't exist&quot;) || errorMessage.contains(&quot;not exist&quot;) || errorMessage.contains(&quot;ORA-00942&quot;))</span>
+<span class="pc bpc" id="L187" title="6 of 8 branches missed.">			if (errorMessage.contains(&quot;Invalid object name&quot;) || errorMessage.contains(&quot;doesn't exist&quot;) || errorMessage.contains(&quot;not exist&quot;) || errorMessage.contains(&quot;ORA-00942&quot;))</span>
 			{
-<span class="nc" id="L189">				createStatTable(tableName, suffix);</span>
-<span class="nc" id="L190">				return true;</span>
+<span class="fc" id="L189">				createStatTable(tableName, suffix);</span>
+<span class="fc" id="L190">				return true;</span>
 			}
 		}
 <span class="nc" id="L193">		return false;</span>
@@ -218,16 +218,16 @@ public class StatNewDB
 	 */
 	private static String getCreateStatTableSqlCommand(String tableName, String suffix, int DB_TYPE)
 	{
-<span class="nc" id="L221">		String procedureName = Constants.getString(&quot;statTableCreateProcedureName&quot;);</span>
-<span class="nc bnc" id="L222" title="All 4 branches missed.">		if (Tools.isNotEmpty(procedureName) &amp;&amp; procedureName.length()&gt;2)</span>
+<span class="fc" id="L221">		String procedureName = Constants.getString(&quot;statTableCreateProcedureName&quot;);</span>
+<span class="pc bpc" id="L222" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(procedureName) &amp;&amp; procedureName.length()&gt;2)</span>
 		{
 <span class="nc" id="L224">			procedureName = Tools.replace(procedureName, &quot;{1}&quot;, tableName);</span>
 <span class="nc" id="L225">			procedureName = Tools.replace(procedureName, &quot;{2}&quot;, suffix);</span>
 <span class="nc" id="L226">			return procedureName;</span>
 		}
 
-<span class="nc" id="L229">		String sql = null;</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (&quot;stat_error&quot;.equals(tableName))</span>
+<span class="fc" id="L229">		String sql = null;</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">		if (&quot;stat_error&quot;.equals(tableName))</span>
 		{
 <span class="nc bnc" id="L232" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
 			{
@@ -266,7 +266,7 @@ public class StatNewDB
 				&quot;CREATE INDEX IX_ywse&quot;+suffix+&quot; ON stat_error&quot;+suffix+&quot; (year, week);&quot;;
 			}
 		}
-<span class="nc bnc" id="L269" title="All 2 branches missed.">		else if (&quot;stat_from&quot;.equals(tableName))</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">		else if (&quot;stat_from&quot;.equals(tableName))</span>
 		{
 <span class="nc bnc" id="L271" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
 			{
@@ -322,18 +322,18 @@ public class StatNewDB
 				&quot;;&quot;;
 			}
 		}
-<span class="nc bnc" id="L325" title="All 2 branches missed.">		else if (&quot;stat_searchengine&quot;.equals(tableName))</span>
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">		else if (&quot;stat_searchengine&quot;.equals(tableName))</span>
 		{
-<span class="nc bnc" id="L327" title="All 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
+<span class="pc bpc" id="L327" title="1 of 2 branches missed.">			if (DB_TYPE == Constants.DB_MYSQL)</span>
 			{
-<span class="nc" id="L329">				sql = &quot;CREATE TABLE stat_searchengine&quot;+suffix+&quot; (&quot;+</span>
+<span class="fc" id="L329">				sql = &quot;CREATE TABLE stat_searchengine&quot;+suffix+&quot; (&quot;+</span>
 				&quot;search_date datetime NOT NULL, &quot;+
 				&quot;server varchar(16) NOT NULL,&quot;+
 				&quot;query varchar(64) NOT NULL,&quot;+
 				&quot;doc_id int NOT NULL,&quot;+
 				&quot;remote_host varchar(255),&quot;+
 				&quot;group_id int(10) unsigned NOT NULL&quot;+
-<span class="nc" id="L336">				&quot;) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+<span class="fc" id="L336">				&quot;) ENGINE=&quot;+Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
 			}
 <span class="nc bnc" id="L338" title="All 4 branches missed.">			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)</span>
 			{
@@ -470,7 +470,7 @@ public class StatNewDB
 			}
 <span class="nc" id="L471">			sql += &quot;CREATE INDEX to_document_&quot;+suffix+&quot; ON stat_clicks&quot;+suffix+&quot;(document_id);&quot;;</span>
 		}
-<span class="nc bnc" id="L473" title="All 4 branches missed.">		if (DB_TYPE == Constants.DB_PGSQL &amp;&amp; sql != null) {</span>
+<span class="pc bpc" id="L473" title="3 of 4 branches missed.">		if (DB_TYPE == Constants.DB_PGSQL &amp;&amp; sql != null) {</span>
 <span class="nc" id="L474">			int i = sql.indexOf(&quot;ENGINE=&quot;);</span>
 <span class="nc bnc" id="L475" title="All 2 branches missed.">			if (i &gt; 0) sql = sql.substring(0, i);</span>
 
@@ -483,7 +483,7 @@ public class StatNewDB
 			//update datetime
 <span class="nc" id="L484">			sql = Tools.replace(sql, &quot;datetime&quot;, &quot;timestamp&quot;);</span>
 		}
-<span class="nc" id="L486">		return sql;</span>
+<span class="fc" id="L486">		return sql;</span>
 	}
 
 	/**
@@ -493,39 +493,39 @@ public class StatNewDB
 	 */
 	public static void createStatTable(String tableName, String suffix)
 	{
-<span class="nc bnc" id="L496" title="All 4 branches missed.">		if (isPartitioningAllowedFor(tableName)==false &amp;&amp; suffix == null)</span>
+<span class="pc bpc" id="L496" title="3 of 4 branches missed.">		if (isPartitioningAllowedFor(tableName)==false &amp;&amp; suffix == null)</span>
 		{
 			//podmienka na suffix==null je tu kvoli admin_db_convert.jsp kedy to este nie je nastavene
 			//ale suffix sa posiela
 <span class="nc" id="L500">			return;</span>
 		}
 
-<span class="nc bnc" id="L503" title="All 2 branches missed.">		if (suffix == null)</span>
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">		if (suffix == null)</span>
 		{
-<span class="nc" id="L505">			Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L506">			suffix = &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
+<span class="fc" id="L505">			Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L506">			suffix = &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
 		}
 
-<span class="nc" id="L509">		Logger.debug(StatNewDB.class, &quot;Creating table: &quot;+tableName+suffix);</span>
+<span class="fc" id="L509">		Logger.debug(StatNewDB.class, &quot;Creating table: &quot;+tableName+suffix);</span>
 
-<span class="nc" id="L511">		String sql = null;</span>
-<span class="nc" id="L512">		Connection db_conn = null;</span>
-<span class="nc" id="L513">		Statement ps = null;</span>
+<span class="fc" id="L511">		String sql = null;</span>
+<span class="fc" id="L512">		Connection db_conn = null;</span>
+<span class="fc" id="L513">		Statement ps = null;</span>
 		try
 		{
-<span class="nc" id="L516">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L516">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L518">			sql = getCreateStatTableSqlCommand(tableName, suffix, Constants.DB_TYPE);</span>
+<span class="fc" id="L518">			sql = getCreateStatTableSqlCommand(tableName, suffix, Constants.DB_TYPE);</span>
 
-<span class="nc bnc" id="L520" title="All 2 branches missed.">			if (Tools.isEmpty(sql)) return;</span>
+<span class="pc bpc" id="L520" title="1 of 2 branches missed.">			if (Tools.isEmpty(sql)) return;</span>
 
-<span class="nc" id="L522">			StringTokenizer st = new StringTokenizer(sql, &quot;;&quot;);</span>
-<span class="nc bnc" id="L523" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="fc" id="L522">			StringTokenizer st = new StringTokenizer(sql, &quot;;&quot;);</span>
+<span class="fc bfc" id="L523" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L525">				sql = st.nextToken().trim();</span>
-<span class="nc bnc" id="L526" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
+<span class="fc" id="L525">				sql = st.nextToken().trim();</span>
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
 				{
-<span class="nc bnc" id="L528" title="All 2 branches missed.">					if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+<span class="pc bpc" id="L528" title="1 of 2 branches missed.">					if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
 					{
 <span class="nc" id="L530">						sql = Tools.replace(sql, &quot;|&quot;, &quot;;&quot;);</span>
 <span class="nc bnc" id="L531" title="All 2 branches missed.">					   if (sql.indexOf(&quot;TRIGGER&quot;)!=-1)</span>
@@ -537,11 +537,11 @@ public class StatNewDB
 					}
 					try
 					{
-<span class="nc" id="L540">						Logger.debug(StatNewDB.class, &quot;createStatTable: &quot;+sql);</span>
+<span class="fc" id="L540">						Logger.debug(StatNewDB.class, &quot;createStatTable: &quot;+sql);</span>
 
-<span class="nc" id="L542">						ps = db_conn.createStatement();</span>
-<span class="nc" id="L543">						ps.execute(sql);</span>
-<span class="nc" id="L544">						ps.close();</span>
+<span class="fc" id="L542">						ps = db_conn.createStatement();</span>
+<span class="fc" id="L543">						ps.execute(sql);</span>
+<span class="fc" id="L544">						ps.close();</span>
 					}
 <span class="nc" id="L546">					catch (SQLException e)</span>
 					{
@@ -570,21 +570,21 @@ public class StatNewDB
 					{
 					   try
 					   {
-<span class="nc bnc" id="L573" title="All 2 branches missed.">					      if (ps!=null) ps.close();</span>
+<span class="pc bpc" id="L573" title="1 of 2 branches missed.">					      if (ps!=null) ps.close();</span>
 					   }
 <span class="nc" id="L575">					   catch (Exception ex2)</span>
 					   {
 
-<span class="nc" id="L578">					   }</span>
-<span class="nc" id="L579">					}</span>
+<span class="fc" id="L578">					   }</span>
+<span class="fc" id="L579">					}</span>
 				}
 			}
 
-<span class="nc bnc" id="L583" title="All 2 branches missed.">		   if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L584" title="All 2 branches missed.">		   if (db_conn != null) db_conn.close();</span>
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">		   if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L584" title="1 of 2 branches missed.">		   if (db_conn != null) db_conn.close();</span>
 
-<span class="nc" id="L586">		   ps = null;</span>
-<span class="nc" id="L587">		   db_conn = null;</span>
+<span class="fc" id="L586">		   ps = null;</span>
+<span class="fc" id="L587">		   db_conn = null;</span>
 		}
 <span class="nc" id="L589">		catch (SQLException e)</span>
 		{
@@ -616,15 +616,15 @@ public class StatNewDB
 		{
 		   try
 		   {
-<span class="nc bnc" id="L619" title="All 2 branches missed.">		      if (ps!=null) ps.close();</span>
-<span class="nc bnc" id="L620" title="All 2 branches missed.">		      if (db_conn!=null) db_conn.close();</span>
+<span class="pc bpc" id="L619" title="1 of 2 branches missed.">		      if (ps!=null) ps.close();</span>
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">		      if (db_conn!=null) db_conn.close();</span>
 		   }
 <span class="nc" id="L622">		   catch (Exception ex2)</span>
 		   {
 
-<span class="nc" id="L625">		   }</span>
+<span class="fc" id="L625">		   }</span>
 		}
-<span class="nc" id="L627">	}</span>
+<span class="fc" id="L627">	}</span>
 
 	/**
 	 * Vrati SQL volanie pre vypis vt_day, vt_month a vt_year pre jednotlive DB
@@ -2707,54 +2707,54 @@ public class StatNewDB
 	 */
 	public static List&lt;Column&gt; getUserStatViews(int userId, java.util.Date from, java.util.Date to, int rootGroupId)
 	{
-<span class="fc" id="L2710">		Connection db_conn = null;</span>
-<span class="fc" id="L2711">		PreparedStatement ps = null;</span>
-<span class="fc" id="L2712">		ResultSet rs = null;</span>
+<span class="nc" id="L2710">		Connection db_conn = null;</span>
+<span class="nc" id="L2711">		PreparedStatement ps = null;</span>
+<span class="nc" id="L2712">		ResultSet rs = null;</span>
 		Column col;
-<span class="fc" id="L2714">		List&lt;Column&gt; userStatViews = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2714">		List&lt;Column&gt; userStatViews = new ArrayList&lt;&gt;();</span>
 		String sql;
 
-<span class="fc" id="L2717">		String[] suffixes = StatNewDB.getTableSuffix(from.getTime(), to.getTime());</span>
-<span class="fc bfc" id="L2718" title="All 2 branches covered.">		for (int s = (suffixes.length-1); s &gt;= 0; s = s - 1)	// potrebujem opacne zoradene pole</span>
+<span class="nc" id="L2717">		String[] suffixes = StatNewDB.getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L2718" title="All 2 branches missed.">		for (int s = (suffixes.length-1); s &gt;= 0; s = s - 1)	// potrebujem opacne zoradene pole</span>
 		{
-<span class="fc" id="L2720">			sql = &quot;SELECT s.session_id AS session, documents.title AS doc, docs.title AS last_doc, groups.group_name, s.view_time &quot;;</span>
-<span class="fc" id="L2721">			sql += &quot;FROM stat_views&quot; + suffixes[s] + &quot; s&quot;;</span>
-<span class="fc" id="L2722">			sql += &quot; LEFT JOIN documents ON s.doc_id = documents.doc_id LEFT JOIN documents docs ON s.last_doc_id = docs.doc_id LEFT JOIN groups ON s.group_id = groups.group_id &quot;;</span>
-<span class="fc" id="L2723">			sql += &quot;WHERE s.browser_id = ? AND s.view_time &gt;= ? AND s.view_time &lt;= ? &quot;;</span>
-<span class="fc" id="L2724">			sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId);</span>
-<span class="fc" id="L2725">			sql += &quot; ORDER BY s.view_time DESC&quot;;</span>
+<span class="nc" id="L2720">			sql = &quot;SELECT s.session_id AS session, documents.title AS doc, docs.title AS last_doc, groups.group_name, s.view_time &quot;;</span>
+<span class="nc" id="L2721">			sql += &quot;FROM stat_views&quot; + suffixes[s] + &quot; s&quot;;</span>
+<span class="nc" id="L2722">			sql += &quot; LEFT JOIN documents ON s.doc_id = documents.doc_id LEFT JOIN documents docs ON s.last_doc_id = docs.doc_id LEFT JOIN groups ON s.group_id = groups.group_id &quot;;</span>
+<span class="nc" id="L2723">			sql += &quot;WHERE s.browser_id = ? AND s.view_time &gt;= ? AND s.view_time &lt;= ? &quot;;</span>
+<span class="nc" id="L2724">			sql += StatDB.getRootGroupWhere(&quot;s.group_id&quot;, rootGroupId);</span>
+<span class="nc" id="L2725">			sql += &quot; ORDER BY s.view_time DESC&quot;;</span>
 
-<span class="fc" id="L2727">			Logger.debug(StatNewDB.class,&quot;getUserStatViews: &quot;+sql);</span>
+<span class="nc" id="L2727">			Logger.debug(StatNewDB.class,&quot;getUserStatViews: &quot;+sql);</span>
 
 			try
 			{
-<span class="fc" id="L2731">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L2732">				ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L2733">				ps.setInt(1, userId);</span>
-<span class="fc" id="L2734">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L2735">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L2731">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L2732">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L2733">				ps.setInt(1, userId);</span>
+<span class="nc" id="L2734">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L2735">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
 
-<span class="fc" id="L2737">				rs = ps.executeQuery();</span>
+<span class="nc" id="L2737">				rs = ps.executeQuery();</span>
 				//iteruj cez riadky
 
-<span class="fc bfc" id="L2740" title="All 2 branches covered.">				while (rs.next())</span>
+<span class="nc bnc" id="L2740" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="fc" id="L2742">					col = new Column();</span>
+<span class="nc" id="L2742">					col = new Column();</span>
 
-<span class="fc" id="L2744">					col.setColumn4(String.valueOf(rs.getLong(&quot;session&quot;)));</span>
-<span class="fc" id="L2745">					col.setColumn1(rs.getString(&quot;doc&quot;));</span>
-<span class="fc" id="L2746">					col.setColumn2(rs.getString(&quot;last_doc&quot;));</span>
-<span class="fc" id="L2747">					col.setColumn3(rs.getString(&quot;group_name&quot;));</span>
-<span class="fc" id="L2748">					col.setDateColumn1(rs.getTimestamp(&quot;view_time&quot;));</span>
+<span class="nc" id="L2744">					col.setColumn4(String.valueOf(rs.getLong(&quot;session&quot;)));</span>
+<span class="nc" id="L2745">					col.setColumn1(rs.getString(&quot;doc&quot;));</span>
+<span class="nc" id="L2746">					col.setColumn2(rs.getString(&quot;last_doc&quot;));</span>
+<span class="nc" id="L2747">					col.setColumn3(rs.getString(&quot;group_name&quot;));</span>
+<span class="nc" id="L2748">					col.setDateColumn1(rs.getTimestamp(&quot;view_time&quot;));</span>
 
-<span class="fc" id="L2750">					userStatViews.add(col);</span>
+<span class="nc" id="L2750">					userStatViews.add(col);</span>
 				}
-<span class="fc" id="L2752">				rs.close();</span>
-<span class="fc" id="L2753">				ps.close();</span>
-<span class="fc" id="L2754">				db_conn.close();</span>
-<span class="fc" id="L2755">				rs = null;</span>
-<span class="fc" id="L2756">				ps = null;</span>
-<span class="fc" id="L2757">				db_conn = null;</span>
+<span class="nc" id="L2752">				rs.close();</span>
+<span class="nc" id="L2753">				ps.close();</span>
+<span class="nc" id="L2754">				db_conn.close();</span>
+<span class="nc" id="L2755">				rs = null;</span>
+<span class="nc" id="L2756">				ps = null;</span>
+<span class="nc" id="L2757">				db_conn = null;</span>
 			}
 
 <span class="nc" id="L2760">			catch (Exception ex)</span>
@@ -2765,21 +2765,21 @@ public class StatNewDB
 			{
 				try
 				{
-<span class="pc bpc" id="L2768" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc bnc" id="L2768" title="All 2 branches missed.">					if (rs != null)</span>
 <span class="nc" id="L2769">						rs.close();</span>
-<span class="pc bpc" id="L2770" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc bnc" id="L2770" title="All 2 branches missed.">					if (ps != null)</span>
 <span class="nc" id="L2771">						ps.close();</span>
-<span class="pc bpc" id="L2772" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc bnc" id="L2772" title="All 2 branches missed.">					if (db_conn != null)</span>
 <span class="nc" id="L2773">						db_conn.close();</span>
 				}
 <span class="nc" id="L2775">				catch (Exception ex2)</span>
 				{
 <span class="nc" id="L2777">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L2778">				}</span>
+<span class="nc" id="L2778">				}</span>
 			}
 		}
 
-<span class="fc" id="L2782">		return (userStatViews);</span>
+<span class="nc" id="L2782">		return (userStatViews);</span>
 	}
 
 	/**

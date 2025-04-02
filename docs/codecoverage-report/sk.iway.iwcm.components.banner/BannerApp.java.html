@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.banner</a> &gt; <span class="el_source">BannerApp.java</span></div><h1>BannerApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.banner;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.system.datatable.OptionDto;
+
+import javax.servlet.http.HttpServletRequest;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.components.banner.model.BannerGroupBean;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.banner.BannerApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.banner.title&quot;,
+    descKey = &quot;components.banner.desc&quot;,
+    itemKey= &quot;menuBanner&quot;,
+    imagePath = &quot;/components/banner/editoricon.png&quot;,
+    galleryImages = &quot;/components/banner/&quot;,
+    componentPath = &quot;/components/banner/banner.jsp&quot;,
+    customHtml = &quot;/apps/banner/admin/editor-component.html&quot;
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = &quot;basic&quot;, title = &quot;components.universalComponentDialog.title&quot;, selected = true),
+    @DataTableTab(id = &quot;advanced&quot;, title = &quot;editor.tab.advanced&quot;, content = &quot;&quot;),
+    @DataTableTab(id = &quot;componentIframeWindowTabList&quot;, title = &quot;components.banner.list_of_banners&quot;, content = &quot;&quot;),
+    @DataTableTab(id = &quot;componentIframeWindowTabStats&quot;, title = &quot;components.banner.banners_stat&quot;, content = &quot;&quot;)
+})
+@Getter
+@Setter
+<span class="fc" id="L46">public class BannerApp extends WebjetComponentAbstract {</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.banner.select_group&quot;
+    )
+    private String group;
+
+<span class="fc" id="L54">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;components.banner.active&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;)
+            },
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;&quot;, value = &quot;enabled&quot;),
+            })
+        }
+    )
+    private String status = &quot;enabled&quot;;
+
+<span class="fc" id="L70">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.RADIO,
+        title = &quot;components.banner.display_mode&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;components.banner.display_mode_1&quot;, value = &quot;1&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.banner.display_mode_2&quot;, value = &quot;2&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.banner.display_mode_3&quot;, value = &quot;3&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.banner.display_mode_4&quot;, value = &quot;4&quot;),
+                    @DataTableColumnEditorAttr(key = &quot;components.banner.display_mode_5&quot;, value = &quot;5&quot;)
+                }
+            )
+        }
+    )
+    private String displayMode = &quot;1&quot;;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;basic&quot;,
+        title=&quot;components.banner.banner_index&quot;)
+    private Integer bannerIndex;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.STATIC_TEXT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.banner.jedinecny_index&quot;
+    )
+    private String explain;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.banner.videoWrapperClass&quot;,
+        editor = {
+            @DataTableColumnEditor(attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.video.title&quot;) })
+        }
+    )
+    private String videoWrapperClass;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.banner.jumbotronVideoClass&quot;
+    )
+    private String jumbotronVideoClass;
+
+<span class="fc" id="L119">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        title = &quot;components.banner.show_in_iframe&quot;,
+        tab = &quot;advanced&quot;,
+        editor = {
+            @DataTableColumnEditor(attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;components.forum.type_iframe&quot;) })
+        }
+    )
+<span class="fc" id="L128">    private Boolean showInIframe = false;</span>
+
+<span class="fc" id="L130">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.banner.refresh_rate&quot;
+    )
+<span class="fc" id="L135">    private Integer refreshRate = 0;</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.STATIC_TEXT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.banner.refresh_rate_desc&quot;
+    )
+    private String explain2;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.banner.iframe_width&quot;)
+    private Integer iframeWidth;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.banner.iframe_height&quot;)
+    private Integer iframeHeight;
+
+<span class="fc" id="L156">    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = &quot;componentIframeWindowTabList&quot;, title=&quot;&amp;nbsp;&quot;)</span>
+    private String iframe  = &quot;/apps/banner/admin/&quot;;
+
+<span class="fc" id="L159">    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = &quot;componentIframeWindowTabStats&quot;, title=&quot;&amp;nbsp;&quot;)</span>
+    private String iframe2  = &quot;/apps/banner/admin/banner-stat/&quot;;
+
+
+    @Override
+    public Map&lt;String, List&lt;OptionDto&gt;&gt; getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L165">        Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L167">        List&lt;OptionDto&gt; groupOptions = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L169">        Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L170">        List&lt;BannerGroupBean&gt; banners = (List&lt;BannerGroupBean&gt;) BannerDB.getBannerGroupsByUserAllowedCategories(user.getUserId());</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        for (BannerGroupBean banner : banners){</span>
+<span class="fc" id="L172">            String bannerGroup = banner.getBannerGroup();</span>
+<span class="fc" id="L173">            groupOptions.add(new OptionDto(bannerGroup, bannerGroup, null));</span>
+<span class="fc" id="L174">        }</span>
+
+<span class="fc" id="L176">        options.put(&quot;group&quot;, groupOptions);</span>
+
+<span class="fc" id="L178">        return options;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

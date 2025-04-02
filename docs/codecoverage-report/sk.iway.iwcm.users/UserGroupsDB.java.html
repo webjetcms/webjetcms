@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserGroupsDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">UserGroupsDB.java</span></div><h1>UserGroupsDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserGroupsDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">UserGroupsDB.java</span></div><h1>UserGroupsDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import sk.iway.iwcm.Adminlog;
@@ -36,17 +37,17 @@ import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
  */
 public class UserGroupsDB extends DB
 {
-<span class="fc" id="L39">	private String serverName = &quot;&quot;;</span>
+<span class="fc" id="L40">	private String serverName = &quot;&quot;;</span>
 	private List&lt;UserGroupDetails&gt; userGroups;
 
 	public static UserGroupsDB getInstance()
 	{
-<span class="fc" id="L44">		return(getInstance(false));</span>
+<span class="fc" id="L45">		return(getInstance(false));</span>
 	}
 
 	public static UserGroupsDB getInstance(boolean forceRefresh)
 	{
-<span class="fc" id="L49">		return(getInstance(Constants.getServletContext(), forceRefresh, &quot;iwcm&quot;));</span>
+<span class="fc" id="L50">		return(getInstance(Constants.getServletContext(), forceRefresh, &quot;iwcm&quot;));</span>
 	}
 
 	/**
@@ -60,15 +61,15 @@ public class UserGroupsDB extends DB
 	public static UserGroupsDB getInstance(javax.servlet.ServletContext servletContext, boolean force_refresh, String serverName)
 	{
 		//try to get it from server space
-<span class="fc bfc" id="L63" title="All 2 branches covered.">		if (force_refresh == false)</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if (force_refresh == false)</span>
 		{
-<span class="fc bfc" id="L65" title="All 2 branches covered.">			if (servletContext.getAttribute(Constants.A_USER_GROUPS_DB + serverName) != null)</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">			if (servletContext.getAttribute(Constants.A_USER_GROUPS_DB + serverName) != null)</span>
 			{
 				//Logger.println(this,&quot;DocDB: getting from server space&quot;);
-<span class="fc" id="L68">				return ((UserGroupsDB) servletContext.getAttribute(Constants.A_USER_GROUPS_DB + serverName));</span>
+<span class="fc" id="L69">				return ((UserGroupsDB) servletContext.getAttribute(Constants.A_USER_GROUPS_DB + serverName));</span>
 			}
 		}
-<span class="fc" id="L71">		return (new UserGroupsDB(servletContext, serverName));</span>
+<span class="fc" id="L72">		return (new UserGroupsDB(servletContext, serverName));</span>
 	}
 
 	/**
@@ -78,76 +79,76 @@ public class UserGroupsDB extends DB
 	 *@param  serverName      Description of the Parameter
 	 */
 	private UserGroupsDB(javax.servlet.ServletContext servletContext, String serverName)
-<span class="fc" id="L81">	{</span>
-<span class="fc" id="L82">		this.serverName = serverName;</span>
+<span class="fc" id="L82">	{</span>
+<span class="fc" id="L83">		this.serverName = serverName;</span>
 
 		//save us to server space
-<span class="fc" id="L85">		reload();</span>
+<span class="fc" id="L86">		reload();</span>
 
-<span class="fc" id="L87">		servletContext.setAttribute(Constants.A_USER_GROUPS_DB + serverName, this);</span>
+<span class="fc" id="L88">		servletContext.setAttribute(Constants.A_USER_GROUPS_DB + serverName, this);</span>
 
-<span class="fc" id="L89">		ClusterDB.addRefresh(UserGroupsDB.class);</span>
-<span class="fc" id="L90">	}</span>
+<span class="fc" id="L90">		ClusterDB.addRefresh(UserGroupsDB.class);</span>
+<span class="fc" id="L91">	}</span>
 
 	/**
 	 *  Description of the Method
 	 */
 	private void reload()
 	{
-<span class="fc" id="L97">		userGroups = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L98">		Connection db_conn = null;</span>
-<span class="fc" id="L99">		PreparedStatement ps = null;</span>
-<span class="fc" id="L100">		ResultSet rs = null;</span>
+<span class="fc" id="L98">		userGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L99">		Connection db_conn = null;</span>
+<span class="fc" id="L100">		PreparedStatement ps = null;</span>
+<span class="fc" id="L101">		ResultSet rs = null;</span>
 		try
 		{
 
-<span class="fc" id="L104">			db_conn = DBPool.getConnection(serverName);</span>
-<span class="fc" id="L105">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  user_groups ORDER BY user_group_name&quot;);</span>
-<span class="fc" id="L106">			rs = ps.executeQuery();</span>
+<span class="fc" id="L105">			db_conn = DBPool.getConnection(serverName);</span>
+<span class="fc" id="L106">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  user_groups ORDER BY user_group_name&quot;);</span>
+<span class="fc" id="L107">			rs = ps.executeQuery();</span>
 			UserGroupDetails usrGroupDetails;
-<span class="fc bfc" id="L108" title="All 2 branches covered.">			while (rs.next())</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="fc" id="L110">				usrGroupDetails = new UserGroupDetails();</span>
-<span class="fc" id="L111">				usrGroupDetails.setUserGroupId(rs.getInt(&quot;user_group_id&quot;));</span>
-<span class="fc" id="L112">				usrGroupDetails.setUserGroupName(getDbString(rs, &quot;user_group_name&quot;));</span>
-<span class="fc" id="L113">				usrGroupDetails.setUserGroupType(rs.getInt(&quot;user_group_type&quot;));</span>
-<span class="fc" id="L114">				usrGroupDetails.setUserGroupComment(getDbString(rs, &quot;user_group_comment&quot;));</span>
-<span class="fc" id="L115">				usrGroupDetails.setRequireApprove(rs.getBoolean(&quot;require_approve&quot;));</span>
-<span class="fc" id="L116">				usrGroupDetails.setEmailDocId(rs.getInt(&quot;email_doc_id&quot;));</span>
-<span class="fc" id="L117">				usrGroupDetails.setAllowUserEdit(rs.getBoolean(&quot;allow_user_edit&quot;));</span>
-<span class="fc" id="L118">				usrGroupDetails.setRequireEmailVerification(rs.getBoolean(&quot;require_email_verification&quot;));</span>
-<span class="fc" id="L119">				usrGroupDetails.setPriceDiscount(rs.getInt(&quot;price_discount&quot;));</span>
+<span class="fc" id="L111">				usrGroupDetails = new UserGroupDetails();</span>
+<span class="fc" id="L112">				usrGroupDetails.setUserGroupId(rs.getInt(&quot;user_group_id&quot;));</span>
+<span class="fc" id="L113">				usrGroupDetails.setUserGroupName(getDbString(rs, &quot;user_group_name&quot;));</span>
+<span class="fc" id="L114">				usrGroupDetails.setUserGroupType(rs.getInt(&quot;user_group_type&quot;));</span>
+<span class="fc" id="L115">				usrGroupDetails.setUserGroupComment(getDbString(rs, &quot;user_group_comment&quot;));</span>
+<span class="fc" id="L116">				usrGroupDetails.setRequireApprove(rs.getBoolean(&quot;require_approve&quot;));</span>
+<span class="fc" id="L117">				usrGroupDetails.setEmailDocId(rs.getInt(&quot;email_doc_id&quot;));</span>
+<span class="fc" id="L118">				usrGroupDetails.setAllowUserEdit(rs.getBoolean(&quot;allow_user_edit&quot;));</span>
+<span class="fc" id="L119">				usrGroupDetails.setRequireEmailVerification(rs.getBoolean(&quot;require_email_verification&quot;));</span>
+<span class="fc" id="L120">				usrGroupDetails.setPriceDiscount(rs.getInt(&quot;price_discount&quot;));</span>
 
 
-<span class="fc" id="L122">				userGroups.add(usrGroupDetails);</span>
+<span class="fc" id="L123">				userGroups.add(usrGroupDetails);</span>
 			}
-<span class="fc" id="L124">			rs.close();</span>
-<span class="fc" id="L125">			ps.close();</span>
-<span class="fc" id="L126">			db_conn.close();</span>
-<span class="fc" id="L127">			rs = null;</span>
-<span class="fc" id="L128">			ps = null;</span>
-<span class="fc" id="L129">			db_conn = null;</span>
+<span class="fc" id="L125">			rs.close();</span>
+<span class="fc" id="L126">			ps.close();</span>
+<span class="fc" id="L127">			db_conn.close();</span>
+<span class="fc" id="L128">			rs = null;</span>
+<span class="fc" id="L129">			ps = null;</span>
+<span class="fc" id="L130">			db_conn = null;</span>
 		}
-<span class="nc" id="L131">		catch (Exception ex)</span>
+<span class="nc" id="L132">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L133">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L134">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L140">					rs.close();</span>
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L142">					ps.close();</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L144">					db_conn.close();</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L141">					rs.close();</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L143">					ps.close();</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L145">					db_conn.close();</span>
 			}
-<span class="nc" id="L146">			catch (Exception ex2)</span>
+<span class="nc" id="L147">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L148">			}</span>
+<span class="fc" id="L149">			}</span>
 		}
-<span class="fc" id="L150">	}</span>
+<span class="fc" id="L151">	}</span>
 
 	/**
 	 *  Gets the userGroups attribute of the UserGroupsDB object
@@ -156,23 +157,23 @@ public class UserGroupsDB extends DB
 	 */
 	public List&lt;UserGroupDetails&gt; getUserGroups()
 	{
-<span class="fc" id="L159">		return (filterMultidomainUserGroups(userGroups));</span>
+<span class="fc" id="L160">		return (filterMultidomainUserGroups(userGroups));</span>
 	}
 
 	public static List&lt;UserGroupDetails&gt; filterMultidomainUserGroups(List&lt;UserGroupDetails&gt; userGroups)
 	{
-<span class="fc" id="L164">		String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
-<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		if (Tools.isEmpty(domainAlias)) return userGroups;</span>
+<span class="fc" id="L165">		String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">		if (Tools.isEmpty(domainAlias)) return userGroups;</span>
 
-<span class="nc" id="L167">		List&lt;UserGroupDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L168" title="All 2 branches missed.">		for (UserGroupDetails ug : userGroups)</span>
+<span class="nc" id="L168">		List&lt;UserGroupDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		for (UserGroupDetails ug : userGroups)</span>
 		{
-<span class="nc bnc" id="L170" title="All 4 branches missed.">			if (ug.getUserGroupName().indexOf(&quot;(&quot;)==-1 || ug.getUserGroupName().indexOf(&quot;(&quot;+domainAlias+&quot;)&quot;)!=-1)</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">			if (ug.getUserGroupName().indexOf(&quot;(&quot;)==-1 || ug.getUserGroupName().indexOf(&quot;(&quot;+domainAlias+&quot;)&quot;)!=-1)</span>
 			{
-<span class="nc" id="L172">				filtered.add(ug);</span>
+<span class="nc" id="L173">				filtered.add(ug);</span>
 			}
-<span class="nc" id="L174">		}</span>
-<span class="nc" id="L175">		return filtered;</span>
+<span class="nc" id="L175">		}</span>
+<span class="nc" id="L176">		return filtered;</span>
 	}
 
 	/**
@@ -183,14 +184,14 @@ public class UserGroupsDB extends DB
 	 */
 	public UserGroupDetails getUserGroup(int id)
 	{
-<span class="pc bpc" id="L186" title="1 of 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="fc bfc" id="L188" title="All 2 branches covered.">			if (ugd.getUserGroupId() == id)</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">			if (ugd.getUserGroupId() == id)</span>
 			{
-<span class="fc" id="L190">				return (ugd);</span>
+<span class="fc" id="L191">				return (ugd);</span>
 			}
-<span class="fc" id="L192">		}</span>
-<span class="nc" id="L193">		return (null);</span>
+<span class="fc" id="L193">		}</span>
+<span class="nc" id="L194">		return (null);</span>
 	}
 
 	/**
@@ -200,15 +201,15 @@ public class UserGroupsDB extends DB
 	 */
 	public List&lt;UserGroupDetails&gt; getUserGroupsByTypeId(int userGroupTypeId)
 	{
-<span class="fc" id="L203">		List&lt;UserGroupDetails&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L204" title="All 2 branches covered.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="fc" id="L204">		List&lt;UserGroupDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="fc bfc" id="L206" title="All 2 branches covered.">			if (ugd.getUserGroupType() == userGroupTypeId)</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">			if (ugd.getUserGroupType() == userGroupTypeId)</span>
 			{
-<span class="fc" id="L208">				ret.add(ugd);</span>
+<span class="fc" id="L209">				ret.add(ugd);</span>
 			}
-<span class="fc" id="L210">		}</span>
-<span class="fc" id="L211">		return (ret);</span>
+<span class="fc" id="L211">		}</span>
+<span class="fc" id="L212">		return (ret);</span>
 	}
 
 
@@ -220,14 +221,14 @@ public class UserGroupsDB extends DB
 	 */
 	public UserGroupDetails getUserGroup(String groupName)
 	{
-<span class="nc bnc" id="L223" title="All 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="nc bnc" id="L225" title="All 2 branches missed.">			if (ugd.getUserGroupName().equalsIgnoreCase(groupName))</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (ugd.getUserGroupName().equalsIgnoreCase(groupName))</span>
 			{
-<span class="nc" id="L227">				return (ugd);</span>
+<span class="nc" id="L228">				return (ugd);</span>
 			}
-<span class="nc" id="L229">		}</span>
-<span class="nc" id="L230">		return (null);</span>
+<span class="nc" id="L230">		}</span>
+<span class="nc" id="L231">		return (null);</span>
 	}
 
 	/**
@@ -238,14 +239,14 @@ public class UserGroupsDB extends DB
 	 */
 	public List&lt;UserGroupDetails&gt; getUserGroups(String groupName)
 	{
-<span class="nc" id="L241">		List&lt;UserGroupDetails&gt; filterGroups = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L242">		List&lt;UserGroupDetails&gt; filterGroups = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L243" title="All 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="nc bnc" id="L245" title="All 2 branches missed.">			if (DB.internationalToEnglish(ugd.getUserGroupName().toLowerCase()).indexOf(DB.internationalToEnglish(groupName.toLowerCase())) != -1)</span>
-<span class="nc" id="L246">				filterGroups.add(ugd);</span>
-<span class="nc" id="L247">		}</span>
-<span class="nc" id="L248">		return (filterGroups);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">			if (DB.internationalToEnglish(ugd.getUserGroupName().toLowerCase()).indexOf(DB.internationalToEnglish(groupName.toLowerCase())) != -1)</span>
+<span class="nc" id="L247">				filterGroups.add(ugd);</span>
+<span class="nc" id="L248">		}</span>
+<span class="nc" id="L249">		return (filterGroups);</span>
 	}
 
 	/**
@@ -255,14 +256,14 @@ public class UserGroupsDB extends DB
 	 */
 	public String getUserGroupName(int userGroupId)
 	{
-<span class="pc bpc" id="L258" title="1 of 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="fc bfc" id="L260" title="All 2 branches covered.">			if (ugd.getUserGroupId() == userGroupId)</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">			if (ugd.getUserGroupId() == userGroupId)</span>
 			{
-<span class="fc" id="L262">				return (ugd.getUserGroupName());</span>
+<span class="fc" id="L263">				return (ugd.getUserGroupName());</span>
 			}
-<span class="fc" id="L264">		}</span>
-<span class="nc" id="L265">		return (null);</span>
+<span class="fc" id="L265">		}</span>
+<span class="nc" id="L266">		return (null);</span>
 	}
 
 	/**
@@ -272,28 +273,28 @@ public class UserGroupsDB extends DB
 	 */
 	public int getUserGroupId(String groupName)
 	{
-<span class="nc bnc" id="L275" title="All 2 branches missed.">		if (groupName.startsWith(&quot;gid:&quot;))</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">		if (groupName.startsWith(&quot;gid:&quot;))</span>
 		{
 			try
 			{
 				//skus ziskat id
-<span class="nc" id="L280">				int gid = Tools.getIntValue(groupName.substring(4, groupName.indexOf('-')).trim(), -1);</span>
-<span class="nc bnc" id="L281" title="All 2 branches missed.">				if (gid &gt; 0) return(gid);</span>
+<span class="nc" id="L281">				int gid = Tools.getIntValue(groupName.substring(4, groupName.indexOf('-')).trim(), -1);</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (gid &gt; 0) return(gid);</span>
 			}
-<span class="nc" id="L283">			catch (Exception e)</span>
+<span class="nc" id="L284">			catch (Exception e)</span>
 			{
-<span class="nc" id="L285">			}</span>
+<span class="nc" id="L286">			}</span>
 		}
 
 		//TODO: upravit na nieco rychlejsie (Hashtabulku)
-<span class="nc bnc" id="L289" title="All 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (ugd.getUserGroupName().equalsIgnoreCase(groupName))</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">			if (ugd.getUserGroupName().equalsIgnoreCase(groupName))</span>
 			{
-<span class="nc" id="L293">				return (ugd.getUserGroupId());</span>
+<span class="nc" id="L294">				return (ugd.getUserGroupId());</span>
 			}
-<span class="nc" id="L295">		}</span>
-<span class="nc" id="L296">		return (-1);</span>
+<span class="nc" id="L296">		}</span>
+<span class="nc" id="L297">		return (-1);</span>
 	}
 
 	/**
@@ -304,17 +305,17 @@ public class UserGroupsDB extends DB
 	public UserGroupDetails getUserGroupDirName(String dirName)
 	{
 		String groupName;
-<span class="pc bpc" id="L307" title="1 of 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">		for (UserGroupDetails ugd : userGroups)</span>
 		{
-<span class="fc" id="L309">			groupName = ugd.getUserGroupName();</span>
-<span class="fc" id="L310">			groupName = DocTools.removeCharsDir(groupName, false).toLowerCase();</span>
-<span class="fc" id="L311">			groupName = DB.internationalToEnglish(groupName);</span>
-<span class="fc bfc" id="L312" title="All 2 branches covered.">			if (groupName.equalsIgnoreCase(dirName))</span>
+<span class="fc" id="L310">			groupName = ugd.getUserGroupName();</span>
+<span class="fc" id="L311">			groupName = DocTools.removeCharsDir(groupName, false).toLowerCase();</span>
+<span class="fc" id="L312">			groupName = DB.internationalToEnglish(groupName);</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">			if (groupName.equalsIgnoreCase(dirName))</span>
 			{
-<span class="fc" id="L314">				return (ugd);</span>
+<span class="fc" id="L315">				return (ugd);</span>
 			}
-<span class="fc" id="L316">		}</span>
-<span class="nc" id="L317">		return (null);</span>
+<span class="fc" id="L317">		}</span>
+<span class="nc" id="L318">		return (null);</span>
 	}
 
 	/**
@@ -325,43 +326,43 @@ public class UserGroupsDB extends DB
 	 */
 	public String convertIdsToNames(String ids)
 	{
-<span class="fc bfc" id="L328" title="All 4 branches covered.">		if (ids == null || ids.length() &lt; 1)</span>
+<span class="fc bfc" id="L329" title="All 4 branches covered.">		if (ids == null || ids.length() &lt; 1)</span>
 		{
-<span class="fc" id="L330">			return (&quot;&quot;);</span>
+<span class="fc" id="L331">			return (&quot;&quot;);</span>
 		}
-<span class="fc" id="L332">		StringTokenizer st = new StringTokenizer(ids, &quot;,&quot;);</span>
-<span class="fc" id="L333">		StringBuilder ret = null;</span>
+<span class="fc" id="L333">		StringTokenizer st = new StringTokenizer(ids, &quot;,&quot;);</span>
+<span class="fc" id="L334">		StringBuilder ret = null;</span>
 		int id;
 		UserGroupDetails ugd;
 		try
 		{
-<span class="fc bfc" id="L338" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L339" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
 			{
-<span class="fc" id="L340">				id = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="pc bpc" id="L341" title="1 of 2 branches missed.">				if (id == -1) continue;</span>
-<span class="fc" id="L342">				ugd = getUserGroup(id);</span>
-<span class="pc bpc" id="L343" title="1 of 2 branches missed.">				if (ugd != null)</span>
+<span class="fc" id="L341">				id = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="pc bpc" id="L342" title="1 of 2 branches missed.">				if (id == -1) continue;</span>
+<span class="fc" id="L343">				ugd = getUserGroup(id);</span>
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">				if (ugd != null)</span>
 				{
-<span class="fc bfc" id="L345" title="All 2 branches covered.">					if (ret == null)</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">					if (ret == null)</span>
 					{
-<span class="fc" id="L347">						ret = new StringBuilder(ugd.getUserGroupName());</span>
+<span class="fc" id="L348">						ret = new StringBuilder(ugd.getUserGroupName());</span>
 					}
 					else
 					{
-<span class="fc" id="L351">						ret.append(&quot;,&quot;).append(ugd.getUserGroupName());</span>
+<span class="fc" id="L352">						ret.append(&quot;,&quot;).append(ugd.getUserGroupName());</span>
 					}
 				}
 			}
 		}
-<span class="nc" id="L356">		catch (Exception ex)</span>
+<span class="nc" id="L357">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L358">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L359">		}</span>
-<span class="pc bpc" id="L360" title="1 of 2 branches missed.">		if (ret == null)</span>
+<span class="nc" id="L359">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L360">		}</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">		if (ret == null)</span>
 		{
-<span class="nc" id="L362">			return &quot;???&quot;;</span>
+<span class="nc" id="L363">			return &quot;???&quot;;</span>
 		}
-<span class="fc" id="L364">		return (ret.toString());</span>
+<span class="fc" id="L365">		return (ret.toString());</span>
 	}
 
 	/**
@@ -371,104 +372,104 @@ public class UserGroupsDB extends DB
 	 */
 	public static boolean saveUserGroup(UserGroupDetails ugd)
 	{
-<span class="nc" id="L374">		boolean saveOK = false;</span>
-<span class="nc" id="L375">		Connection db_conn = null;</span>
-<span class="nc" id="L376">		PreparedStatement ps = null;</span>
-<span class="nc" id="L377">		ResultSet rs = null;</span>
+<span class="nc" id="L375">		boolean saveOK = false;</span>
+<span class="nc" id="L376">		Connection db_conn = null;</span>
+<span class="nc" id="L377">		PreparedStatement ps = null;</span>
+<span class="nc" id="L378">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L380">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L381">			db_conn = DBPool.getConnection();</span>
 
 
-<span class="nc" id="L383">			String sql = &quot;INSERT INTO  user_groups (user_group_name, user_group_type, user_group_comment, require_approve, email_doc_id, allow_user_edit, price_discount) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L384">			String sql = &quot;INSERT INTO  user_groups (user_group_name, user_group_type, user_group_comment, require_approve, email_doc_id, allow_user_edit, price_discount) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
 
-<span class="nc bnc" id="L385" title="All 2 branches missed.">			if (ugd.getUserGroupId()&gt;0)</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if (ugd.getUserGroupId()&gt;0)</span>
 			{
-<span class="nc" id="L387">				UserGroupDetails old = getInstance().getUserGroup(ugd.getUserGroupId());</span>
-<span class="nc" id="L388">				BeanDiff diff = new BeanDiff().setNew(ugd).setOriginal(old);</span>
+<span class="nc" id="L388">				UserGroupDetails old = getInstance().getUserGroup(ugd.getUserGroupId());</span>
+<span class="nc" id="L389">				BeanDiff diff = new BeanDiff().setNew(ugd).setOriginal(old);</span>
 
-<span class="nc" id="L390">				sql = &quot;UPDATE  user_groups SET user_group_name=?, user_group_type=?, user_group_comment=?, require_approve=?, email_doc_id=?, allow_user_edit=?, price_discount=? WHERE user_group_id=?&quot;;</span>
-<span class="nc" id="L391">				Adminlog.add(Adminlog.TYPE_USER_GROUP_UPDATE, &quot;Update user groups name= : &quot;+  ugd.getUserGroupName() + new BeanDiffPrinter(diff), ugd.getUserGroupId(), -1);</span>
-<span class="nc" id="L392">			}</span>
+<span class="nc" id="L391">				sql = &quot;UPDATE  user_groups SET user_group_name=?, user_group_type=?, user_group_comment=?, require_approve=?, email_doc_id=?, allow_user_edit=?, price_discount=? WHERE user_group_id=?&quot;;</span>
+<span class="nc" id="L392">				Adminlog.add(Adminlog.TYPE_USER_GROUP_UPDATE, &quot;Update user groups name= : &quot;+  ugd.getUserGroupName() + new BeanDiffPrinter(diff), ugd.getUserGroupId(), -1);</span>
+<span class="nc" id="L393">			}</span>
 			else
 			{
-<span class="nc" id="L395">				Adminlog.add(Adminlog.TYPE_USER_GROUP_INSERT, &quot;Insert user groups name= : &quot;+ ugd.getUserGroupName()+ &quot; type= &quot; + ugd.getUserGroupType(), -1, -1);</span>
+<span class="nc" id="L396">				Adminlog.add(Adminlog.TYPE_USER_GROUP_INSERT, &quot;Insert user groups name= : &quot;+ ugd.getUserGroupName()+ &quot; type= &quot; + ugd.getUserGroupType(), -1, -1);</span>
 			}
-<span class="nc" id="L397">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L398">			ps.setString(1, ugd.getUserGroupName());</span>
-<span class="nc" id="L399">			ps.setInt(2, ugd.getUserGroupType());</span>
-<span class="nc" id="L400">			ps.setString(3, ugd.getUserGroupComment());</span>
-<span class="nc" id="L401">			ps.setBoolean(4, ugd.isRequireApprove());</span>
-<span class="nc" id="L402">			ps.setInt(5, ugd.getEmailDocId());</span>
-<span class="nc" id="L403">			ps.setBoolean(6, ugd.isAllowUserEdit());</span>
-<span class="nc" id="L404">			ps.setInt(7, ugd.getPriceDiscount());</span>
-<span class="nc bnc" id="L405" title="All 2 branches missed.">			if (ugd.getUserGroupId()&gt;0)</span>
+<span class="nc" id="L398">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L399">			ps.setString(1, ugd.getUserGroupName());</span>
+<span class="nc" id="L400">			ps.setInt(2, ugd.getUserGroupType());</span>
+<span class="nc" id="L401">			ps.setString(3, ugd.getUserGroupComment());</span>
+<span class="nc" id="L402">			ps.setBoolean(4, ugd.isRequireApprove());</span>
+<span class="nc" id="L403">			ps.setInt(5, ugd.getEmailDocId());</span>
+<span class="nc" id="L404">			ps.setBoolean(6, ugd.isAllowUserEdit());</span>
+<span class="nc" id="L405">			ps.setInt(7, ugd.getPriceDiscount());</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">			if (ugd.getUserGroupId()&gt;0)</span>
 			{
-<span class="nc" id="L407">				ps.setInt(8, ugd.getUserGroupId());</span>
+<span class="nc" id="L408">				ps.setInt(8, ugd.getUserGroupId());</span>
 			}
-<span class="nc" id="L409">			ps.execute();</span>
-<span class="nc" id="L410">			ps.close();</span>
+<span class="nc" id="L410">			ps.execute();</span>
+<span class="nc" id="L411">			ps.close();</span>
 
 			//nastav ID skupiny
-<span class="nc bnc" id="L413" title="All 2 branches missed.">			if (ugd.getUserGroupId()&lt;1)</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">			if (ugd.getUserGroupId()&lt;1)</span>
 			{
-<span class="nc" id="L415">				ps = db_conn.prepareStatement(&quot;SELECT max(user_group_id) AS user_group_id FROM  user_groups WHERE user_group_name=?&quot;);</span>
-<span class="nc" id="L416">				ps.setString(1, ugd.getUserGroupName());</span>
-<span class="nc" id="L417">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L418" title="All 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L416">				ps = db_conn.prepareStatement(&quot;SELECT max(user_group_id) AS user_group_id FROM  user_groups WHERE user_group_name=?&quot;);</span>
+<span class="nc" id="L417">				ps.setString(1, ugd.getUserGroupName());</span>
+<span class="nc" id="L418">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="nc" id="L420">					ugd.setUserGroupId(rs.getInt(&quot;user_group_id&quot;));</span>
+<span class="nc" id="L421">					ugd.setUserGroupId(rs.getInt(&quot;user_group_id&quot;));</span>
 				}
-<span class="nc" id="L422">				rs.close();</span>
-<span class="nc" id="L423">				ps.close();</span>
+<span class="nc" id="L423">				rs.close();</span>
+<span class="nc" id="L424">				ps.close();</span>
 
-<span class="nc" id="L425">				rs = null;</span>
+<span class="nc" id="L426">				rs = null;</span>
 			}
 
-<span class="nc" id="L428">			db_conn.close();</span>
-<span class="nc" id="L429">			ps = null;</span>
-<span class="nc" id="L430">			db_conn = null;</span>
+<span class="nc" id="L429">			db_conn.close();</span>
+<span class="nc" id="L430">			ps = null;</span>
+<span class="nc" id="L431">			db_conn = null;</span>
 
-<span class="nc" id="L432">			saveOK = true;</span>
+<span class="nc" id="L433">			saveOK = true;</span>
 
-<span class="nc" id="L434">			UserGroupsDB.getInstance(true);</span>
+<span class="nc" id="L435">			UserGroupsDB.getInstance(true);</span>
 		}
-<span class="nc" id="L436">		catch (Exception ex)</span>
+<span class="nc" id="L437">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L438">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L439">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L444" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L445">					rs.close();</span>
-<span class="nc bnc" id="L446" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L447">					ps.close();</span>
-<span class="nc bnc" id="L448" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L449">					db_conn.close();</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L446">					rs.close();</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L448">					ps.close();</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L450">					db_conn.close();</span>
 			}
-<span class="nc" id="L451">			catch (Exception ex2)</span>
+<span class="nc" id="L452">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L453">			}</span>
+<span class="nc" id="L454">			}</span>
 
 		}
-<span class="nc" id="L456">		return(saveOK);</span>
+<span class="nc" id="L457">		return(saveOK);</span>
 	}
 
 	public static List&lt;PermissionGroupBean&gt; getPermissionGroupsFor(int userId)
 	{
-<span class="fc" id="L461">		List&lt;PermissionGroupBean&gt; permGroups = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L462">		List&lt;Number&gt; ids = new SimpleQuery().forListNumber(&quot;SELECT perm_group_id FROM users_in_perm_groups WHERE user_id = ?&quot;, userId);</span>
+<span class="fc" id="L462">		List&lt;PermissionGroupBean&gt; permGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L463">		List&lt;Number&gt; ids = new SimpleQuery().forListNumber(&quot;SELECT perm_group_id FROM users_in_perm_groups WHERE user_id = ?&quot;, userId);</span>
 
-<span class="fc bfc" id="L464" title="All 2 branches covered.">		for (Number id : ids)</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">		for (Number id : ids)</span>
 		{
-<span class="fc" id="L466">			PermissionGroupBean permGroup = (new PermissionGroupDB()).getById(id.intValue());</span>
-<span class="pc bpc" id="L467" title="1 of 2 branches missed.">			if (permGroup != null)</span>
-<span class="fc" id="L468">				permGroups.add(permGroup);</span>
-<span class="fc" id="L469">		}</span>
+<span class="fc" id="L467">			PermissionGroupBean permGroup = (new PermissionGroupDB()).getById(id.intValue());</span>
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">			if (permGroup != null)</span>
+<span class="fc" id="L469">				permGroups.add(permGroup);</span>
+<span class="fc" id="L470">		}</span>
 
-<span class="fc" id="L471">		return permGroups;</span>
+<span class="fc" id="L472">		return permGroups;</span>
 	}
 
     /**
@@ -479,33 +480,33 @@ public class UserGroupsDB extends DB
      */
     public List&lt;Integer&gt; getUserGroupIdsList(String ids, int userGroupTypeId)
     {
-<span class="nc" id="L482">        List&lt;Integer&gt; idsList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L483">        List&lt;Integer&gt; idsList = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L484" title="All 4 branches missed.">        if (ids == null || ids.length() &lt; 1)</span>
+<span class="nc bnc" id="L485" title="All 4 branches missed.">        if (ids == null || ids.length() &lt; 1)</span>
         {
-<span class="nc" id="L486">            return idsList;</span>
+<span class="nc" id="L487">            return idsList;</span>
         }
-<span class="nc" id="L488">        StringTokenizer st = new StringTokenizer(ids, &quot;,&quot;);</span>
+<span class="nc" id="L489">        StringTokenizer st = new StringTokenizer(ids, &quot;,&quot;);</span>
         int id;
         UserGroupDetails ugd;
         try
         {
-<span class="nc bnc" id="L493" title="All 2 branches missed.">            while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L494" title="All 2 branches missed.">            while (st.hasMoreTokens())</span>
             {
-<span class="nc" id="L495">                id = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L496" title="All 2 branches missed.">                if (id == -1) continue;</span>
-<span class="nc" id="L497">                ugd = getUserGroup(id);</span>
-<span class="nc bnc" id="L498" title="All 6 branches missed.">                if (ugd != null &amp;&amp; (userGroupTypeId&lt;1 || ugd.getUserGroupType()==userGroupTypeId))</span>
+<span class="nc" id="L496">                id = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">                if (id == -1) continue;</span>
+<span class="nc" id="L498">                ugd = getUserGroup(id);</span>
+<span class="nc bnc" id="L499" title="All 6 branches missed.">                if (ugd != null &amp;&amp; (userGroupTypeId&lt;1 || ugd.getUserGroupType()==userGroupTypeId))</span>
                 {
-<span class="nc" id="L500">                    idsList.add(ugd.getUserGroupId());</span>
+<span class="nc" id="L501">                    idsList.add(ugd.getUserGroupId());</span>
                 }
             }
         }
-<span class="nc" id="L504">        catch (Exception ex)</span>
+<span class="nc" id="L505">        catch (Exception ex)</span>
         {
-<span class="nc" id="L506">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L507">        }</span>
-<span class="nc" id="L508">        return idsList;</span>
+<span class="nc" id="L507">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L508">        }</span>
+<span class="nc" id="L509">        return idsList;</span>
     }
 
 	/**
@@ -514,52 +515,73 @@ public class UserGroupsDB extends DB
 	 * @return
 	 */
 	public boolean remove(int userGroupId) {
-<span class="nc" id="L517">		Connection db_conn = null;</span>
-<span class="nc" id="L518">		PreparedStatement ps = null;</span>
+<span class="nc" id="L518">		Connection db_conn = null;</span>
+<span class="nc" id="L519">		PreparedStatement ps = null;</span>
 		try {
-<span class="nc" id="L520">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L521">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L522">			ps = db_conn.prepareStatement(&quot;DELETE FROM  user_groups WHERE user_group_id=?&quot;);</span>
-<span class="nc" id="L523">			ps.setInt(1, userGroupId);</span>
+<span class="nc" id="L523">			ps = db_conn.prepareStatement(&quot;DELETE FROM  user_groups WHERE user_group_id=?&quot;);</span>
+<span class="nc" id="L524">			ps.setInt(1, userGroupId);</span>
 
-<span class="nc" id="L525">			ps.execute();</span>
-<span class="nc" id="L526">			ps.close();</span>
+<span class="nc" id="L526">			ps.execute();</span>
+<span class="nc" id="L527">			ps.close();</span>
 
-<span class="nc" id="L528">			return true;</span>
-<span class="nc" id="L529">		} catch (Exception e) {</span>
-<span class="nc" id="L530">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L529">			return true;</span>
+<span class="nc" id="L530">		} catch (Exception e) {</span>
+<span class="nc" id="L531">			sk.iway.iwcm.Logger.error(e);</span>
 		} finally {
 			try {
-<span class="nc bnc" id="L533" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L534">					ps.close();</span>
-<span class="nc bnc" id="L535" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L536">					db_conn.close();</span>
-<span class="nc" id="L537">			} catch (Exception ex) {</span>
-<span class="nc" id="L538">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L539">			}</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L535">					ps.close();</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L537">					db_conn.close();</span>
+<span class="nc" id="L538">			} catch (Exception ex) {</span>
+<span class="nc" id="L539">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L540">			}</span>
 		}
-<span class="nc" id="L541">		return false;</span>
+<span class="nc" id="L542">		return false;</span>
 	}
 
 	public BigDecimal calculatePrice(BigDecimal price, UserDetails user) {
-<span class="fc" id="L545">		BigDecimal newPrice = price;</span>
-<span class="fc" id="L546">		int maxPriceDiscount = 0;</span>
-<span class="fc bfc" id="L547" title="All 2 branches covered.">		if(user != null) {</span>
-<span class="fc bfc" id="L548" title="All 2 branches covered.">			for (int groupId : Tools.getTokensInt(user.getUserGroupsIds(), &quot;,&quot;)) {</span>
-<span class="fc" id="L549">				UserGroupDetails group = getUserGroup(groupId);</span>
-<span class="pc bpc" id="L550" title="1 of 4 branches missed.">				if (group != null &amp;&amp; group.getPriceDiscount() &gt; maxPriceDiscount) {</span>
-<span class="fc" id="L551">					maxPriceDiscount = group.getPriceDiscount();</span>
+<span class="fc" id="L546">		BigDecimal newPrice = price;</span>
+<span class="fc" id="L547">		int maxPriceDiscount = 0;</span>
+<span class="fc bfc" id="L548" title="All 2 branches covered.">		if(user != null) {</span>
+<span class="fc bfc" id="L549" title="All 2 branches covered.">			for (int groupId : Tools.getTokensInt(user.getUserGroupsIds(), &quot;,&quot;)) {</span>
+<span class="fc" id="L550">				UserGroupDetails group = getUserGroup(groupId);</span>
+<span class="pc bpc" id="L551" title="2 of 4 branches missed.">				if (group != null &amp;&amp; group.getPriceDiscount() &gt; maxPriceDiscount) {</span>
+<span class="fc" id="L552">					maxPriceDiscount = group.getPriceDiscount();</span>
 				}
 			}
 
-<span class="fc bfc" id="L555" title="All 2 branches covered.">			if(maxPriceDiscount == 0) newPrice = price;</span>
-<span class="pc bpc" id="L556" title="1 of 2 branches missed.">			else if(maxPriceDiscount == 100) newPrice = BigDecimal.ZERO;</span>
-<span class="fc" id="L557">			else newPrice = price.multiply(new BigDecimal(100 - maxPriceDiscount)).divide(new BigDecimal(100));</span>
+<span class="fc" id="L556">			newPrice = getPriceByDiscount(price, maxPriceDiscount);</span>
 		}
 
-<span class="fc" id="L560">		Logger.debug(UserGroupsDB.class, &quot;calculatePrice: price=&quot; + price + &quot;, newPrice=&quot; + newPrice + &quot;, maxPriceDiscount=&quot; + maxPriceDiscount + &quot;, user=&quot; + user);</span>
+<span class="fc" id="L559">		Logger.debug(UserGroupsDB.class, &quot;calculatePrice: price=&quot; + price + &quot;, newPrice=&quot; + newPrice + &quot;, maxPriceDiscount=&quot; + maxPriceDiscount + &quot;, user=&quot; + user);</span>
 
-<span class="fc" id="L562">		return newPrice;</span>
+<span class="fc" id="L561">		return newPrice;</span>
+	}
+
+	public Map&lt;String, BigDecimal&gt; calculatePrices(Map&lt;String, BigDecimal&gt; prices, UserDetails user) {
+<span class="fc" id="L565">		int maxPriceDiscount = 0;</span>
+<span class="fc bfc" id="L566" title="All 2 branches covered.">		if(user != null) {</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">			for (int groupId : Tools.getTokensInt(user.getUserGroupsIds(), &quot;,&quot;)) {</span>
+<span class="fc" id="L568">				UserGroupDetails group = getUserGroup(groupId);</span>
+<span class="pc bpc" id="L569" title="1 of 4 branches missed.">				if (group != null &amp;&amp; group.getPriceDiscount() &gt; maxPriceDiscount) {</span>
+<span class="fc" id="L570">					maxPriceDiscount = group.getPriceDiscount();</span>
+				}
+			}
+		}
+<span class="fc" id="L574">		Map&lt;String, BigDecimal&gt; discountedPrices = new java.util.HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L575" title="All 2 branches covered.">		for (Map.Entry&lt;String, BigDecimal&gt; entry : prices.entrySet()) {</span>
+<span class="fc" id="L576">			discountedPrices.put(entry.getKey(), getPriceByDiscount(entry.getValue(), maxPriceDiscount));</span>
+<span class="fc" id="L577">		}</span>
+<span class="fc" id="L578">		return discountedPrices;</span>
+	}
+
+	private BigDecimal getPriceByDiscount(BigDecimal price, int discount) {
+<span class="fc bfc" id="L582" title="All 2 branches covered.">		if(discount == 0) return price;</span>
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">		if(discount == 100) return BigDecimal.ZERO;</span>
+<span class="fc" id="L584">		return price.multiply(new BigDecimal(100 - discount)).divide(new BigDecimal(100));</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

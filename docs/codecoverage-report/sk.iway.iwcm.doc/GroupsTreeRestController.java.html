@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupsTreeRestController.java</span></div><h1>GroupsTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupsTreeRestController.java</span></div><h1>GroupsTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,82 +45,87 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
     @Override
     protected void tree(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
 <span class="fc" id="L47">        int id = item.getIdInt();</span>
-<span class="fc" id="L48">        final Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="pc bpc" id="L48" title="2 of 6 branches missed.">        if (id &lt; 1 &amp;&amp; item.getId() != null &amp;&amp; item.getId().startsWith(&quot;/&quot;)) {</span>
+            //try to get ID from path
+<span class="nc" id="L50">            GroupDetails group = GroupsDB.getInstance().getGroupByPath(item.getId());</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            if (group != null) id = group.getGroupId();</span>
+        }
+<span class="fc" id="L53">        final Identity user = UsersDB.getCurrentUser(getRequest());</span>
 
-<span class="pc bpc" id="L50" title="1 of 4 branches missed.">        if (GroupsDB.isGroupViewable(user, id)==false &amp;&amp; GroupsDB.isGroupEditable(user, id)==false) {</span>
-<span class="nc" id="L51">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L52">            result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
-<span class="nc" id="L53">            return;</span>
+<span class="pc bpc" id="L55" title="1 of 4 branches missed.">        if (GroupsDB.isGroupViewable(user, id)==false &amp;&amp; GroupsDB.isGroupEditable(user, id)==false) {</span>
+<span class="nc" id="L56">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L57">            result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
+<span class="nc" id="L58">            return;</span>
         }
 
-<span class="fc" id="L56">        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(id));</span>
+<span class="fc" id="L61">        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(id));</span>
 
-<span class="fc" id="L58">        boolean parentEditable = GroupsDB.isGroupEditable(user, id);</span>
-<span class="fc" id="L59">        boolean parentViewable = GroupsDB.isGroupViewable(user, id);</span>
+<span class="fc" id="L63">        boolean parentEditable = GroupsDB.isGroupEditable(user, id);</span>
+<span class="fc" id="L64">        boolean parentViewable = GroupsDB.isGroupViewable(user, id);</span>
 
-<span class="pc bpc" id="L61" title="1 of 4 branches missed.">        if (!parentEditable &amp;&amp; !parentViewable)</span>
+<span class="pc bpc" id="L66" title="1 of 4 branches missed.">        if (!parentEditable &amp;&amp; !parentViewable)</span>
         {
-<span class="nc" id="L63">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L64">            result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied_parenteditable_and_parentviewable_is_false&quot;));</span>
-<span class="nc" id="L65">            return;</span>
+<span class="nc" id="L68">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L69">            result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied_parenteditable_and_parentviewable_is_false&quot;));</span>
+<span class="nc" id="L70">            return;</span>
         }
 
-<span class="fc" id="L68">        boolean showPages = true;</span>
+<span class="fc" id="L73">        boolean showPages = true;</span>
 
-<span class="fc" id="L70">        String click = getRequest().getParameter(&quot;click&quot;);</span>
-<span class="pc bpc" id="L71" title="1 of 4 branches missed.">        if (click!=null &amp;&amp; click.contains(&quot;dt-tree-group&quot;)) showPages = false;</span>
+<span class="fc" id="L75">        String click = getRequest().getParameter(&quot;click&quot;);</span>
+<span class="pc bpc" id="L76" title="1 of 4 branches missed.">        if (click!=null &amp;&amp; click.contains(&quot;dt-tree-group&quot;)) showPages = false;</span>
 
-<span class="fc" id="L73">        List&lt;JsTreeItem&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L78">        List&lt;JsTreeItem&gt; items = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L75" title="1 of 8 branches missed.">        if (click != null &amp;&amp; (click.contains(&quot;dt-tree-group-root&quot;) || click.contains(&quot;dt-tree-groupid-root&quot;)) &amp;&amp; id&lt;0) {</span>
+<span class="pc bpc" id="L80" title="1 of 8 branches missed.">        if (click != null &amp;&amp; (click.contains(&quot;dt-tree-group-root&quot;) || click.contains(&quot;dt-tree-groupid-root&quot;)) &amp;&amp; id&lt;0) {</span>
             //id&lt;0=zobraz root group
-<span class="fc" id="L77">            GroupsJsTreeItem rootItem = new GroupsJsTreeItem(WebpagesService.getRootGroup(), user, false);</span>
-<span class="fc" id="L78">            rootItem.setIcon(&quot;ti ti-home&quot;);</span>
-<span class="fc" id="L79">            rootItem.getState().setLoaded(true);</span>
-<span class="fc" id="L80">            rootItem.getState().setOpened(true);</span>
-<span class="fc" id="L81">            items.add(rootItem);</span>
+<span class="fc" id="L82">            GroupsJsTreeItem rootItem = new GroupsJsTreeItem(WebpagesService.getRootGroup(), user, false);</span>
+<span class="fc" id="L83">            rootItem.setIcon(&quot;ti ti-home&quot;);</span>
+<span class="fc" id="L84">            rootItem.getState().setLoaded(true);</span>
+<span class="fc" id="L85">            rootItem.getState().setOpened(true);</span>
+<span class="fc" id="L86">            items.add(rootItem);</span>
         }
-<span class="pc bpc" id="L83" title="2 of 8 branches missed.">        if (click != null &amp;&amp; click.contains(&quot;alldomains&quot;) &amp;&amp; id&lt;0 &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+<span class="pc bpc" id="L88" title="2 of 8 branches missed.">        if (click != null &amp;&amp; click.contains(&quot;alldomains&quot;) &amp;&amp; id&lt;0 &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
             //vygeneruj zoznam vsetkych domen
-<span class="fc" id="L85">            LayoutService ls = new LayoutService(getRequest());</span>
-<span class="fc" id="L86">            List&lt;String&gt; domains = ls.getLayoutBean().getHeader().getDomains();</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">            for (String domain : domains) {</span>
-<span class="fc" id="L88">                GroupDetails domainGroup = WebpagesService.getRootGroup();</span>
-<span class="fc" id="L89">                domainGroup.setGroupName(domain);</span>
+<span class="fc" id="L90">            LayoutService ls = new LayoutService(getRequest());</span>
+<span class="fc" id="L91">            List&lt;String&gt; domains = ls.getLayoutBean().getHeader().getDomains();</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            for (String domain : domains) {</span>
+<span class="fc" id="L93">                GroupDetails domainGroup = WebpagesService.getRootGroup();</span>
+<span class="fc" id="L94">                domainGroup.setGroupName(domain);</span>
 
-<span class="fc" id="L91">                GroupsJsTreeItem rootItem = new GroupsJsTreeItem(domainGroup, user, false);</span>
-<span class="fc" id="L92">                rootItem.setIcon(&quot;ti ti-home&quot;);</span>
-<span class="fc" id="L93">                rootItem.setId(&quot;domain:&quot;+domain);</span>
-<span class="fc" id="L94">                items.add(rootItem);</span>
-<span class="fc" id="L95">            }</span>
-<span class="fc" id="L96">        } else {</span>
-<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (id&lt;0) id = 0;</span>
-<span class="fc" id="L98">            String requestedDomain = null;</span>
-<span class="pc bpc" id="L99" title="1 of 4 branches missed.">            if (click!=null &amp;&amp; click.contains(&quot;alldomains&quot;)) {</span>
-<span class="fc" id="L100">                String domain = item.getId();</span>
+<span class="fc" id="L96">                GroupsJsTreeItem rootItem = new GroupsJsTreeItem(domainGroup, user, false);</span>
+<span class="fc" id="L97">                rootItem.setIcon(&quot;ti ti-home&quot;);</span>
+<span class="fc" id="L98">                rootItem.setId(&quot;domain:&quot;+domain);</span>
+<span class="fc" id="L99">                items.add(rootItem);</span>
+<span class="fc" id="L100">            }</span>
+<span class="fc" id="L101">        } else {</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (id&lt;0) id = 0;</span>
+<span class="fc" id="L103">            String requestedDomain = null;</span>
+<span class="pc bpc" id="L104" title="1 of 4 branches missed.">            if (click!=null &amp;&amp; click.contains(&quot;alldomains&quot;)) {</span>
+<span class="fc" id="L105">                String domain = item.getId();</span>
                 //pre virtualny koren domeny posielame id ako domain:www.domena.sk, ziskaj ju a pouzi ju na filtrovanie
-<span class="pc bpc" id="L102" title="1 of 4 branches missed.">                if (domain != null &amp;&amp; domain.startsWith(&quot;domain:&quot;)) requestedDomain = domain.substring(7);</span>
+<span class="pc bpc" id="L107" title="1 of 4 branches missed.">                if (domain != null &amp;&amp; domain.startsWith(&quot;domain:&quot;)) requestedDomain = domain.substring(7);</span>
             }
-<span class="fc" id="L104">            items.addAll(groupsTreeService.getItems(user, id, showPages, click, requestedDomain, getRequest()));</span>
+<span class="fc" id="L109">            items.addAll(groupsTreeService.getItems(user, id, showPages, click, requestedDomain, getRequest()));</span>
         }
 
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) result.put(&quot;forceReloadTree&quot;, true);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) result.put(&quot;forceReloadTree&quot;, true);</span>
 
         //If user can edited only selected groups, he can't use root group (because root is everythig)
-<span class="fc bfc" id="L110" title="All 2 branches covered.">        if( Tools.isNotEmpty(user.getEditableGroups()) ) { //Cant show all groups</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">        if( Tools.isNotEmpty(user.getEditableGroups()) ) { //Cant show all groups</span>
 
             //Special case -&gt; if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RESTURN ALL ITEMS
-<span class="fc" id="L113">            String referer = getRequest().getHeader(&quot;referer&quot;);</span>
-<span class="pc bpc" id="L114" title="1 of 8 branches missed.">            if(false == (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;)) ) {</span>
+<span class="fc" id="L118">            String referer = getRequest().getHeader(&quot;referer&quot;);</span>
+<span class="pc bpc" id="L119" title="1 of 8 branches missed.">            if(false == (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;)) ) {</span>
                 //If root group is in list, remove it
-<span class="pc bpc" id="L116" title="1 of 4 branches missed.">                if(items.size()&gt;0 &amp;&amp; Integer.valueOf( items.get(0).getId() ) == 0)</span>
-<span class="fc" id="L117">                    items.remove(0);</span>
+<span class="pc bpc" id="L121" title="1 of 4 branches missed.">                if(items.size()&gt;0 &amp;&amp; Integer.valueOf( items.get(0).getId() ) == 0)</span>
+<span class="fc" id="L122">                    items.remove(0);</span>
             }
         }
 
-<span class="fc" id="L121">        result.put(&quot;result&quot;, true);</span>
-<span class="fc" id="L122">        result.put(&quot;items&quot;, items);</span>
-<span class="fc" id="L123">    }</span>
+<span class="fc" id="L126">        result.put(&quot;result&quot;, true);</span>
+<span class="fc" id="L127">        result.put(&quot;items&quot;, items);</span>
+<span class="fc" id="L128">    }</span>
 
     /**
      * Implementaacia abstraknej metody z parent controllera presunu polozky v stromovej strukture
@@ -130,132 +135,132 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
     @Override
     @PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('menuWebpages')&quot;)
     protected void move(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
-<span class="fc" id="L133">        JsTreeItem original = item.getNode().getOriginal();</span>
-<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (original == null) {</span>
-<span class="nc" id="L135">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L136">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.json_original_missing&quot;));</span>
-<span class="nc" id="L137">            return;</span>
+<span class="fc" id="L138">        JsTreeItem original = item.getNode().getOriginal();</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">        if (original == null) {</span>
+<span class="nc" id="L140">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L141">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.json_original_missing&quot;));</span>
+<span class="nc" id="L142">            return;</span>
         }
 
-<span class="fc" id="L140">        final Identity user = UsersDB.getCurrentUser(getRequest());</span>
-<span class="fc" id="L141">        String virtualPath = original.getVirtualPath();</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (original.getType() == JsTreeItemType.GROUP) {</span>
-<span class="nc" id="L143">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L145">        final Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L146">        String virtualPath = original.getVirtualPath();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if (original.getType() == JsTreeItemType.GROUP) {</span>
+<span class="nc" id="L148">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="nc" id="L145">            GroupDetails groupById = groupsDB.getGroup(Tools.getIntValue(original.getId(), 0));</span>
-<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (groupById == null) {</span>
-<span class="nc" id="L147">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L148">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.group_not_found&quot;, original.getId()));</span>
-<span class="nc" id="L149">                return;</span>
+<span class="nc" id="L150">            GroupDetails groupById = groupsDB.getGroup(Tools.getIntValue(original.getId(), 0));</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (groupById == null) {</span>
+<span class="nc" id="L152">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L153">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.group_not_found&quot;, original.getId()));</span>
+<span class="nc" id="L154">                return;</span>
             }
 
-<span class="nc" id="L152">            GroupDetails parent = groupsDB.getGroup(Tools.getIntValue(item.getParent(), 0));</span>
-<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (parent == null) {</span>
-<span class="nc" id="L154">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L155">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_not_found&quot;, item.getParent()));</span>
-<span class="nc" id="L156">                return;</span>
+<span class="nc" id="L157">            GroupDetails parent = groupsDB.getGroup(Tools.getIntValue(item.getParent(), 0));</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            if (parent == null) {</span>
+<span class="nc" id="L159">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L160">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_not_found&quot;, item.getParent()));</span>
+<span class="nc" id="L161">                return;</span>
             }
 
-<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (user.isDisabledItem(&quot;editDir&quot;)) {</span>
-<span class="nc" id="L160">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L161">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.editDir_disabled&quot;, item.getParent()));</span>
-<span class="nc" id="L162">                return;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">            if (user.isDisabledItem(&quot;editDir&quot;)) {</span>
+<span class="nc" id="L165">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L166">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.editDir_disabled&quot;, item.getParent()));</span>
+<span class="nc" id="L167">                return;</span>
             }
 
-<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (!GroupsDB.isGroupEditable(user, groupById.getGroupId())) {</span>
-<span class="nc" id="L166">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L167">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.group_not_editable&quot;, item.getParent()));</span>
-<span class="nc" id="L168">                return;</span>
-            }
-<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (!GroupsDB.isGroupEditable(user, parent.getGroupId())) {</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (!GroupsDB.isGroupEditable(user, groupById.getGroupId())) {</span>
 <span class="nc" id="L171">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L172">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_group_not_editable&quot;, item.getParent()));</span>
+<span class="nc" id="L172">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.group_not_editable&quot;, item.getParent()));</span>
 <span class="nc" id="L173">                return;</span>
             }
-
-<span class="nc" id="L176">            groupById.setParentGroupId(parent.getGroupId());</span>
-<span class="nc" id="L177">            boolean saved = groupsDB.save(groupById);</span>
-<span class="nc bnc" id="L178" title="All 2 branches missed.">            if (!saved) {</span>
-<span class="nc" id="L179">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L180">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.save_failed&quot;));</span>
-<span class="nc" id="L181">                return;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            if (!GroupsDB.isGroupEditable(user, parent.getGroupId())) {</span>
+<span class="nc" id="L176">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L177">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_group_not_editable&quot;, item.getParent()));</span>
+<span class="nc" id="L178">                return;</span>
             }
 
-<span class="nc" id="L184">            List&lt;GroupDetails&gt; groups = groupsDB.getGroups(parent.getGroupId());</span>
-<span class="nc bnc" id="L185" title="All 2 branches missed.">            List&lt;GroupDetails&gt; collect = groups.stream().filter(g -&gt; g.getGroupId() != groupById.getGroupId()).sorted(Comparator.comparing(GroupDetails::getSortPriority)).collect(Collectors.toList());</span>
+<span class="nc" id="L181">            groupById.setParentGroupId(parent.getGroupId());</span>
+<span class="nc" id="L182">            boolean saved = groupsDB.save(groupById);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            if (!saved) {</span>
+<span class="nc" id="L184">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L185">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.save_failed&quot;));</span>
+<span class="nc" id="L186">                return;</span>
+            }
 
-<span class="nc bnc" id="L187" title="All 2 branches missed.">            int sortPriority = collect.isEmpty()==false ? collect.get(0).getSortPriority() : parent.getSortPriority() * 10;</span>
-<span class="nc" id="L188">            collect.add(item.getPosition(), groupById);</span>
+<span class="nc" id="L189">            List&lt;GroupDetails&gt; groups = groupsDB.getGroups(parent.getGroupId());</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            List&lt;GroupDetails&gt; collect = groups.stream().filter(g -&gt; g.getGroupId() != groupById.getGroupId()).sorted(Comparator.comparing(GroupDetails::getSortPriority)).collect(Collectors.toList());</span>
 
-<span class="nc bnc" id="L190" title="All 2 branches missed.">            for (GroupDetails groupDetails : collect) {</span>
-<span class="nc" id="L191">                groupDetails.setSortPriority(sortPriority);</span>
-<span class="nc" id="L192">                groupsDB.save(groupDetails);</span>
-<span class="nc" id="L193">                sortPriority += 10;</span>
-<span class="nc" id="L194">            }</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">            int sortPriority = collect.isEmpty()==false ? collect.get(0).getSortPriority() : parent.getSortPriority() * 10;</span>
+<span class="nc" id="L193">            collect.add(item.getPosition(), groupById);</span>
+
+<span class="nc bnc" id="L195" title="All 2 branches missed.">            for (GroupDetails groupDetails : collect) {</span>
+<span class="nc" id="L196">                groupDetails.setSortPriority(sortPriority);</span>
+<span class="nc" id="L197">                groupsDB.save(groupDetails);</span>
+<span class="nc" id="L198">                sortPriority += Constants.getInt(&quot;sortPriorityIncrementGroup&quot;);</span>
+<span class="nc" id="L199">            }</span>
 
             // refresh
-<span class="nc" id="L197">            GroupsDB.getInstance(true);</span>
-<span class="nc" id="L198">        }</span>
+<span class="nc" id="L202">            GroupsDB.getInstance(true);</span>
+<span class="nc" id="L203">        }</span>
 
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        else if (original.getType() == JsTreeItemType.PAGE) {</span>
-<span class="fc" id="L201">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L202">            DocDB docDB = DocDB.getInstance();</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        else if (original.getType() == JsTreeItemType.PAGE) {</span>
+<span class="fc" id="L206">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L207">            DocDB docDB = DocDB.getInstance();</span>
 
-<span class="fc" id="L204">            int docId = docDB.getVirtualPathDocId(virtualPath, DocDB.getDomain(getRequest()));</span>
-<span class="fc" id="L205">            editorFacade.setIgnoreMultigroupMapping(true);</span>
-<span class="fc" id="L206">            DocDetails editorForm = editorFacade.getDocForEditor(docId, -1, -1);</span>
+<span class="fc" id="L209">            int docId = docDB.getVirtualPathDocId(virtualPath, DocDB.getDomain(getRequest()));</span>
+<span class="fc" id="L210">            editorFacade.setIgnoreMultigroupMapping(true);</span>
+<span class="fc" id="L211">            DocDetails editorForm = editorFacade.getDocForEditor(docId, -1, -1);</span>
 
-<span class="pc bpc" id="L208" title="1 of 2 branches missed.">            if (editorForm == null) {</span>
-<span class="nc" id="L209">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L210">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.doc_not_found&quot;, &quot;&quot; + docId));</span>
-<span class="nc" id="L211">                return;</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">            if (editorForm == null) {</span>
+<span class="nc" id="L214">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L215">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.doc_not_found&quot;, &quot;&quot; + docId));</span>
+<span class="nc" id="L216">                return;</span>
             }
 
-<span class="fc" id="L214">            GroupDetails parent = groupsDB.getGroup(Tools.getIntValue(item.getParent(), 0));</span>
-<span class="pc bpc" id="L215" title="1 of 2 branches missed.">            if (parent == null) {</span>
-<span class="nc" id="L216">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L217">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_not_found&quot;));</span>
-<span class="nc" id="L218">                return;</span>
+<span class="fc" id="L219">            GroupDetails parent = groupsDB.getGroup(Tools.getIntValue(item.getParent(), 0));</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            if (parent == null) {</span>
+<span class="nc" id="L221">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L222">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_not_found&quot;));</span>
+<span class="nc" id="L223">                return;</span>
             }
 
-<span class="pc bpc" id="L221" title="1 of 2 branches missed.">            if (user.isDisabledItem(&quot;addPage&quot;)) {</span>
-<span class="nc" id="L222">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L223">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.addPage_disabled&quot;));</span>
-<span class="nc" id="L224">                return;</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">            if (user.isDisabledItem(&quot;addPage&quot;)) {</span>
+<span class="nc" id="L227">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L228">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.addPage_disabled&quot;));</span>
+<span class="nc" id="L229">                return;</span>
             }
 
-<span class="pc bpc" id="L227" title="1 of 2 branches missed.">            if (!editorFacade.isPageEditable(user, editorForm, false)) {</span>
-<span class="nc" id="L228">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L229">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.doc_not_editable&quot;));</span>
-<span class="nc" id="L230">                return;</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">            if (!editorFacade.isPageEditable(user, editorForm, false)) {</span>
+<span class="nc" id="L233">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L234">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.doc_not_editable&quot;));</span>
+<span class="nc" id="L235">                return;</span>
             }
 
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            if (!GroupsDB.isGroupEditable(user, parent.getGroupId())) {</span>
-<span class="nc" id="L234">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L235">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_group_not_editable&quot;));</span>
-<span class="nc" id="L236">                return;</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">            if (!GroupsDB.isGroupEditable(user, parent.getGroupId())) {</span>
+<span class="nc" id="L239">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L240">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.parent_group_not_editable&quot;));</span>
+<span class="nc" id="L241">                return;</span>
             }
 
-<span class="fc" id="L239">            editorForm.setAuthorId(user.getUserId());</span>
-<span class="fc" id="L240">            editorForm.setGroupId(parent.getGroupId());</span>
-<span class="fc" id="L241">            editorForm.getEditorFields().setGroupDetails(parent);</span>
-<span class="fc" id="L242">            editorForm.getEditorFields().setRequestPublish(true);</span>
+<span class="fc" id="L244">            editorForm.setAuthorId(user.getUserId());</span>
+<span class="fc" id="L245">            editorForm.setGroupId(parent.getGroupId());</span>
+<span class="fc" id="L246">            editorForm.getEditorFields().setGroupDetails(parent);</span>
+<span class="fc" id="L247">            editorForm.getEditorFields().setRequestPublish(true);</span>
 
-<span class="fc" id="L244">            editorFacade.save(editorForm);</span>
-<span class="fc" id="L245">            int historyId = editorForm.getHistoryId();</span>
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">            if (historyId == 0) {</span>
-<span class="nc" id="L247">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L248">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.save_failed&quot;));</span>
-<span class="nc" id="L249">                return;</span>
+<span class="fc" id="L249">            editorFacade.save(editorForm);</span>
+<span class="fc" id="L250">            int historyId = editorForm.getHistoryId();</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">            if (historyId == 0) {</span>
+<span class="nc" id="L252">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L253">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.save_failed&quot;));</span>
+<span class="nc" id="L254">                return;</span>
             }
 
-<span class="fc" id="L252">            groupsTreeService.fixSortPriority(getRequest(), editorForm.getDocId(), parent, item.getPosition());</span>
+<span class="fc" id="L257">            groupsTreeService.fixSortPriority(getRequest(), editorForm.getDocId(), parent, item.getPosition());</span>
         }
 
-<span class="pc bpc" id="L255" title="1 of 2 branches missed.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) result.put(&quot;forceReloadTree&quot;, true);</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) result.put(&quot;forceReloadTree&quot;, true);</span>
 
-<span class="fc" id="L257">        result.put(&quot;result&quot;, true);</span>
-<span class="fc" id="L258">    }</span>
+<span class="fc" id="L262">        result.put(&quot;result&quot;, true);</span>
+<span class="fc" id="L263">    }</span>
 
     @Override
     @PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('menuWebpages')&quot;)
@@ -269,7 +274,7 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
         else {
             //GroupDetails group = (GroupDetails) item;
         }*/
-<span class="nc" id="L272">    }</span>
+<span class="nc" id="L277">    }</span>
 
     @Override
     @PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('menuWebpages')&quot;)
@@ -283,22 +288,22 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
         else {
             //GroupDetails group = (GroupDetails) item;
         }*/
-<span class="nc" id="L286">    }</span>
+<span class="nc" id="L291">    }</span>
 
     @Override
     public boolean checkAccessAllowed(HttpServletRequest request) {
         //kontrola prav
-<span class="fc" id="L291">        return true;</span>
+<span class="fc" id="L296">        return true;</span>
     }
 
     @GetMapping(&quot;/trash&quot;)
     public GroupDetails getTrashGroupDetails() {
-<span class="fc" id="L296">        return GroupsService.getTrashGroupDetails();</span>
+<span class="fc" id="L301">        return GroupsService.getTrashGroupDetails();</span>
     }
 
     @GetMapping(&quot;/system&quot;)
     public GroupDetails getSystemGroupDetails() {
-<span class="fc" id="L301">        return GroupsService.getSystemGroupDetails();</span>
+<span class="fc" id="L306">        return GroupsService.getSystemGroupDetails();</span>
     }
 
     /**
@@ -310,36 +315,7 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
      */
     @GetMapping(&quot;/defaultValue&quot;)
     public GroupDetails gerDefaultGroupTreeOptionForUser(@RequestParam(&quot;groupId&quot;) int groupId) {
-<span class="fc" id="L313">        final Identity user = UsersDB.getCurrentUser(getRequest());</span>
-<span class="fc" id="L314">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-
-        //User can edit all groups -&gt; so return group (no check needed)
-        //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
-<span class="fc" id="L318">        String referer = getRequest().getHeader(&quot;referer&quot;);</span>
-<span class="pc bpc" id="L319" title="2 of 8 branches missed.">        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;))) {</span>
-<span class="fc bfc" id="L320" title="All 2 branches covered.">            if(groupId &gt; 0) return groupsDB.findGroup(groupId);</span>
-
-<span class="fc" id="L322">            GroupDetails rootGroup = new GroupDetails();</span>
-<span class="fc" id="L323">            rootGroup.setGroupId(-1);</span>
-<span class="fc" id="L324">            return rootGroup;</span>
-        }
-
-        //Can handle default group ?
-<span class="fc" id="L328">        boolean parentEditable = GroupsDB.isGroupEditable(user, groupId);</span>
-<span class="fc" id="L329">        boolean parentViewable = GroupsDB.isGroupViewable(user, groupId);</span>
-
-        //Check if user have right for this group
-        //It cant be -1 (root group), because there is group restriction for you part of tree
-<span class="pc bpc" id="L333" title="4 of 6 branches missed.">        if( (parentEditable || parentViewable) &amp;&amp; groupId != -1) {</span>
-            //User have right for this group)
-<span class="nc" id="L335">           return groupsDB.findGroup(groupId);</span>
-        } else {
-            //Problem, user missing rights for this group ... return first permitted group
-<span class="fc" id="L338">            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(true), &quot;,&quot;);</span>
-
-            //Use first groupId
-<span class="fc" id="L341">            return groupsDB.findGroup( permittedGroups[0] );</span>
-        }
+<span class="fc" id="L318">        return GroupsTreeService.gerDefaultGroupTreeOptionForUser(groupId, getUser());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

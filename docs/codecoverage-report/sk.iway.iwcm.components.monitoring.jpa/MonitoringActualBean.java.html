@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitoringActualBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.monitoring.jpa</a> &gt; <span class="el_source">MonitoringActualBean.java</span></div><h1>MonitoringActualBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.monitoring.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MonitoringActualBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.monitoring.jpa</a> &gt; <span class="el_source">MonitoringActualBean.java</span></div><h1>MonitoringActualBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.monitoring.jpa;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -57,8 +57,10 @@ public class MonitoringActualBean {
     private String serverContry;
     private String serverLanguage;
 
+    private Integer dbTotal;
     private Integer dbActive;
     private Integer dbIdle;
+    private Integer dbWaiting;
 
     private Integer cacheItems;
     private Integer sessionsTotal;
@@ -75,98 +77,100 @@ public class MonitoringActualBean {
     private String swServerName;
     private String swServerOs;
     private String swServerOsVersion;
-    private String licenseExpirationDate; 
+    private String licenseExpirationDate;
 
-<span class="fc" id="L80">    public MonitoringActualBean() {</span>
+<span class="fc" id="L82">    public MonitoringActualBean() {</span>
         /** volne miesto na disku **/
-<span class="fc" id="L82">        File drive = new File(Tools.getRealPath(&quot;/&quot;));</span>
-<span class="fc" id="L83">        storageTotal = drive.getTotalSpace();</span>
-<span class="fc" id="L84">        storageUsable = drive.getUsableSpace();</span>
-<span class="fc" id="L85">        storageFree = drive.getFreeSpace();</span>
+<span class="fc" id="L84">        File drive = new File(Tools.getRealPath(&quot;/&quot;));</span>
+<span class="fc" id="L85">        storageTotal = drive.getTotalSpace();</span>
+<span class="fc" id="L86">        storageUsable = drive.getUsableSpace();</span>
+<span class="fc" id="L87">        storageFree = drive.getFreeSpace();</span>
 
         /** obsadenost pamate **/
-<span class="fc" id="L88">        Runtime rt = Runtime.getRuntime();</span>
-<span class="fc" id="L89">        memTotal = rt.totalMemory();</span>
-<span class="fc" id="L90">        memFree = rt.freeMemory();</span>
-<span class="fc" id="L91">        memUsed = memTotal.longValue() - memFree.longValue();</span>
-<span class="fc" id="L92">        memMax = rt.maxMemory();</span>
+<span class="fc" id="L90">        Runtime rt = Runtime.getRuntime();</span>
+<span class="fc" id="L91">        memTotal = rt.totalMemory();</span>
+<span class="fc" id="L92">        memFree = rt.freeMemory();</span>
+<span class="fc" id="L93">        memUsed = memTotal.longValue() - memFree.longValue();</span>
+<span class="fc" id="L94">        memMax = rt.maxMemory();</span>
 
-<span class="fc" id="L94">        CpuInfo cpu = new CpuInfo();</span>
-<span class="fc" id="L95">        cpuUsage = cpu.getCpuUsage();</span>
-<span class="fc" id="L96">        cpuUsageProcess = cpu.getCpuUsageProcess();</span>
-<span class="fc" id="L97">        serverCpus = cpu.getCpuCount();</span>
+<span class="fc" id="L96">        CpuInfo cpu = new CpuInfo();</span>
+<span class="fc" id="L97">        cpuUsage = cpu.getCpuUsage();</span>
+<span class="fc" id="L98">        cpuUsageProcess = cpu.getCpuUsageProcess();</span>
+<span class="fc" id="L99">        serverCpus = cpu.getCpuCount();</span>
 
         //Logger.debug(MonitoringActualBean.class, &quot;cpuUsage: &quot; + cpuUsage+&quot; processUsage=&quot;+cpuUsageProcess+&quot; cpuCount=&quot;+serverCpus);
 
         /** vseobecne informacie **/
-<span class="fc" id="L102">        serverActualTime = Tools.getNow();</span>
-<span class="fc" id="L103">        serverStartTime = InitServlet.getServerStartDatetime().getTime();</span>
-<span class="fc" id="L104">        serverRuntime = serverActualTime - serverStartTime;</span>
+<span class="fc" id="L104">        serverActualTime = Tools.getNow();</span>
+<span class="fc" id="L105">        serverStartTime = InitServlet.getServerStartDatetime().getTime();</span>
+<span class="fc" id="L106">        serverRuntime = serverActualTime - serverStartTime;</span>
 
-<span class="fc" id="L106">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if (rb != null) {</span>
-<span class="fc" id="L108">            remoteIP = rb.getRemoteIP();</span>
+<span class="fc" id="L108">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (rb != null) {</span>
+<span class="fc" id="L110">            remoteIP = rb.getRemoteIP();</span>
         }
         try {
-<span class="fc" id="L111">            serverHostname = InetAddress.getLocalHost().getHostName();</span>
-<span class="fc" id="L112">            InetAddress[] ipecky = InetAddress.getAllByName(serverHostname);</span>
-<span class="pc bpc" id="L113" title="2 of 4 branches missed.">            if (ipecky != null &amp;&amp; ipecky.length&gt;0) {</span>
+<span class="fc" id="L113">            serverHostname = InetAddress.getLocalHost().getHostName();</span>
+<span class="fc" id="L114">            InetAddress[] ipecky = InetAddress.getAllByName(serverHostname);</span>
+<span class="pc bpc" id="L115" title="2 of 4 branches missed.">            if (ipecky != null &amp;&amp; ipecky.length&gt;0) {</span>
                 int i;
-<span class="fc" id="L115">                serverIP = new String[ipecky.length];</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">                for (i = 0; i &lt; ipecky.length; i++)</span>
+<span class="fc" id="L117">                serverIP = new String[ipecky.length];</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">                for (i = 0; i &lt; ipecky.length; i++)</span>
                 {
-<span class="fc" id="L118">                    serverIP[i] = ipecky[i].getHostAddress();</span>
+<span class="fc" id="L120">                    serverIP[i] = ipecky[i].getHostAddress();</span>
                 }
             }
 
-<span class="nc" id="L122">        } catch (UnknownHostException e) {</span>
-<span class="nc" id="L123">            Logger.error(MonitoringActualBean.class, e);</span>
-<span class="fc" id="L124">        }</span>
+<span class="nc" id="L124">        } catch (UnknownHostException e) {</span>
+<span class="nc" id="L125">            Logger.error(MonitoringActualBean.class, e);</span>
+<span class="fc" id="L126">        }</span>
 
-<span class="fc" id="L126">        Locale l = Locale.getDefault();</span>
-<span class="fc" id="L127">        serverContry = l.getCountry();</span>
-<span class="fc" id="L128">        serverLanguage = l.getLanguage();</span>
+<span class="fc" id="L128">        Locale l = Locale.getDefault();</span>
+<span class="fc" id="L129">        serverContry = l.getCountry();</span>
+<span class="fc" id="L130">        serverLanguage = l.getLanguage();</span>
 
-<span class="fc" id="L130">        ConfigurableDataSource ds = null;</span>
+<span class="fc" id="L132">        ConfigurableDataSource ds = null;</span>
         try
         {
-<span class="fc" id="L133">            ds = (ConfigurableDataSource) DBPool.getInstance().getDataSource(&quot;iwcm&quot;);</span>
-<span class="fc" id="L134">            dbActive = ds.getNumActive();</span>
-<span class="fc" id="L135">            dbIdle = ds.getNumIdle();</span>
-<span class="nc" id="L136">        } catch (Exception ex) {</span>
+<span class="fc" id="L135">            ds = (ConfigurableDataSource) DBPool.getInstance().getDataSource(&quot;iwcm&quot;);</span>
+<span class="fc" id="L136">            dbTotal = ds.getNumTotal();</span>
+<span class="fc" id="L137">            dbActive = ds.getNumActive();</span>
+<span class="fc" id="L138">            dbIdle = ds.getNumIdle();</span>
+<span class="fc" id="L139">            dbWaiting = ds.getNumWaiting();</span>
+<span class="nc" id="L140">        } catch (Exception ex) {</span>
             //
-<span class="fc" id="L138">        }</span>
+<span class="fc" id="L142">        }</span>
 
-<span class="fc" id="L140">        cacheItems = Cache.getInstance().getSize();</span>
-<span class="fc" id="L141">        sessionsTotal = SessionHolder.getTotalSessions();</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if(ClusterDB.isServerRunningInClusterMode())</span>
+<span class="fc" id="L144">        cacheItems = Cache.getInstance().getSize();</span>
+<span class="fc" id="L145">        sessionsTotal = SessionHolder.getTotalSessions();</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if(ClusterDB.isServerRunningInClusterMode())</span>
         {
-<span class="fc" id="L144">            List&lt;ConfDetails&gt; confValues = ConfDB.getConfig(&quot;statSessions-&quot;);</span>
-<span class="fc" id="L145">            sessionsList = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L146" title="All 2 branches covered.">            for(ConfDetails conf: confValues)</span>
+<span class="fc" id="L148">            List&lt;ConfDetails&gt; confValues = ConfDB.getConfig(&quot;statSessions-&quot;);</span>
+<span class="fc" id="L149">            sessionsList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">            for(ConfDetails conf: confValues)</span>
             {
-<span class="fc" id="L148">                LabelValueInteger lv = new LabelValueInteger(conf.getName().substring(13), Tools.getIntValue(conf.getValue(), 0));</span>
-<span class="fc" id="L149">                sessionsList.add(lv);</span>
-<span class="fc" id="L150">            }</span>
-<span class="fc" id="L151">            clusterNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="fc" id="L152">                LabelValueInteger lv = new LabelValueInteger(conf.getName().substring(13), Tools.getIntValue(conf.getValue(), 0));</span>
+<span class="fc" id="L153">                sessionsList.add(lv);</span>
+<span class="fc" id="L154">            }</span>
+<span class="fc" id="L155">            clusterNodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
         }
 
         /** Informacie o SW **/
-<span class="fc" id="L155">        Properties props = System.getProperties();</span>
-<span class="fc" id="L156">        swRuntime = props.getProperty(&quot;java.runtime.name&quot;);</span>
-<span class="fc" id="L157">        swVmVersion = props.getProperty(&quot;java.vm.version&quot;);</span>
-<span class="fc" id="L158">        swVmName = props.getProperty(&quot;java.vm.name&quot;);</span>
-<span class="fc" id="L159">        swJavaVersion = props.getProperty(&quot;java.version&quot;);</span>
-<span class="fc" id="L160">        swJavaVendor = props.getProperty(&quot;java.vendor&quot;);</span>
-<span class="fc" id="L161">        swServerName = Constants.getServletContext().getServerInfo();</span>
-<span class="fc" id="L162">        swServerOs = props.getProperty(&quot;os.name&quot;);</span>
-<span class="fc" id="L163">        swServerOsVersion = props.getProperty(&quot;os.version&quot;);</span>
+<span class="fc" id="L159">        Properties props = System.getProperties();</span>
+<span class="fc" id="L160">        swRuntime = props.getProperty(&quot;java.runtime.name&quot;);</span>
+<span class="fc" id="L161">        swVmVersion = props.getProperty(&quot;java.vm.version&quot;);</span>
+<span class="fc" id="L162">        swVmName = props.getProperty(&quot;java.vm.name&quot;);</span>
+<span class="fc" id="L163">        swJavaVersion = props.getProperty(&quot;java.version&quot;);</span>
+<span class="fc" id="L164">        swJavaVendor = props.getProperty(&quot;java.vendor&quot;);</span>
+<span class="fc" id="L165">        swServerName = Constants.getServletContext().getServerInfo();</span>
+<span class="fc" id="L166">        swServerOs = props.getProperty(&quot;os.name&quot;);</span>
+<span class="fc" id="L167">        swServerOsVersion = props.getProperty(&quot;os.version&quot;);</span>
 
-<span class="fc" id="L165">        Long licenseExpirationTimeInMillis =  Constants.getLong(&quot;licenseExpiryDate&quot;);</span>
-<span class="pc bpc" id="L166" title="1 of 4 branches missed.">        if(licenseExpirationTimeInMillis != null &amp;&amp; licenseExpirationTimeInMillis &gt; 0L)</span>
+<span class="fc" id="L169">        Long licenseExpirationTimeInMillis =  Constants.getLong(&quot;licenseExpiryDate&quot;);</span>
+<span class="pc bpc" id="L170" title="1 of 4 branches missed.">        if(licenseExpirationTimeInMillis != null &amp;&amp; licenseExpirationTimeInMillis &gt; 0L)</span>
         {
-<span class="fc" id="L168">            licenseExpirationDate = Tools.formatDate(new Date(licenseExpirationTimeInMillis), &quot;dd.MM.yyyy&quot;);</span>
+<span class="fc" id="L172">            licenseExpirationDate = Tools.formatDate(new Date(licenseExpirationTimeInMillis), &quot;dd.MM.yyyy&quot;);</span>
         }
-<span class="fc" id="L170">    }</span>
+<span class="fc" id="L174">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

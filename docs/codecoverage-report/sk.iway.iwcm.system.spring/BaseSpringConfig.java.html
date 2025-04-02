@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BaseSpringConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">BaseSpringConfig.java</span></div><h1>BaseSpringConfig.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BaseSpringConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">BaseSpringConfig.java</span></div><h1>BaseSpringConfig.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,41 +31,40 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import freemarker.core.Configurable;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FreemarkerHelpers;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
-//@PropertySource(&quot;classpath:swagger.properties&quot;)
 @EnableSwagger2
 @EnableWebMvc
 @EnableAsync
-//@EnableJpaRepositories
-//@EnableTransactionManagement
 @ComponentScan({
     &quot;sk.iway.iwcm.system.spring.components&quot;
 })
-<span class="fc" id="L55">public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity</span>
+<span class="fc" id="L54">public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity</span>
 {
     @Autowired
     ApplicationContext applicationContext;
 
-<span class="fc" id="L60">    private static final Charset UTF8 = StandardCharsets.UTF_8;</span>
+<span class="fc" id="L59">    private static final Charset UTF8 = StandardCharsets.UTF_8;</span>
 
 //    @Value(&quot;${springfox.documentation.swagger.v2.path}&quot;)
 //    private String swagger2Endpoint;
     @Override
     public void configureSecurity(HttpSecurity http) throws Exception
     {
-<span class="fc" id="L67">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Configure security, http=&quot;+http);</span>
+<span class="fc" id="L66">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Configure security, http=&quot;+http);</span>
+<span class="fc" id="L67">        SpringAppInitializer.dtDiff(&quot;Configure security START&quot;);</span>
 
 <span class="fc" id="L69">        http</span>
 <span class="fc" id="L70">                .authorizeHttpRequests()</span>
@@ -76,27 +76,37 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
                     .loginPage(&quot;/admin/logon/&quot;)
                     .loginProcessingUrl(&quot;/admin/logon/&quot;)*/
                 ;
-<span class="fc" id="L79">    }</span>
+
+<span class="fc" id="L80">        SpringAppInitializer.dtDiff(&quot;Configure security DONE&quot;);</span>
+<span class="fc" id="L81">    }</span>
 
     @Bean
     public Docket api() {
-<span class="fc" id="L83">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Docket api()&quot;);</span>
-<span class="fc" id="L84">        return new Docket(DocumentationType.SWAGGER_2)</span>
-<span class="fc" id="L85">                .select()</span>
-<span class="fc" id="L86">                .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))</span>
-<span class="fc" id="L87">                .paths(PathSelectors.any())</span>
-<span class="fc" id="L88">                .build().apiInfo(apiInfo());</span>
+
+        Predicate&lt;String&gt; paths;
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;swaggerEnabled&quot;)) paths = PathSelectors.any();</span>
+<span class="nc" id="L88">        else paths = PathSelectors.none();</span>
+
+<span class="fc" id="L90">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Docket api()&quot;);</span>
+<span class="fc" id="L91">        SpringAppInitializer.dtDiff(&quot;Docket api() START&quot;);</span>
+
+<span class="fc" id="L93">        Docket docket = new Docket(DocumentationType.SWAGGER_2)</span>
+<span class="fc" id="L94">                .select()</span>
+<span class="fc" id="L95">                .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))</span>
+<span class="fc" id="L96">                .paths(paths)</span>
+<span class="fc" id="L97">                .build().apiInfo(apiInfo());</span>
+
+<span class="fc" id="L99">        SpringAppInitializer.dtDiff(&quot;Docket api() END&quot;);</span>
+<span class="fc" id="L100">        return docket;</span>
     }
 
     private ApiInfo apiInfo() {
-<span class="fc" id="L92">        return new ApiInfoBuilder()</span>
-<span class="fc" id="L93">                .title(&quot;WebJet API&quot;)</span>
-<span class="fc" id="L94">                .description(&quot;WebJET services&quot;)</span>
-<span class="fc" id="L95">                .version(&quot;&quot;)</span>
-<span class="fc" id="L96">                .license(&quot;&quot;)</span>
-<span class="fc" id="L97">                .licenseUrl(&quot;https://www.interway.sk/kontakt/&quot;)</span>
-<span class="fc" id="L98">                .contact(new Contact(&quot;Interway&quot;,&quot;http://www.interway.sk&quot;,&quot;web@interway.sk&quot;))</span>
-<span class="fc" id="L99">                .build();</span>
+<span class="fc" id="L104">        ApiInfo apiInfo = new ApiInfoBuilder()</span>
+<span class="fc" id="L105">                .title(&quot;WebJET API&quot;)</span>
+<span class="fc" id="L106">                .description(&quot;For more info visit https://docs.webjetcms.sk or http://github.com/webjetcms/webjetcms/&quot;)</span>
+<span class="fc" id="L107">                .version(InitServlet.getActualVersion())</span>
+<span class="fc" id="L108">                .build();</span>
+<span class="fc" id="L109">        return apiInfo;</span>
     }
 
     /**
@@ -106,73 +116,61 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
      */
     @Bean
     PageableHandlerMethodArgumentResolverCustomizer sortCustomizer() {
-<span class="fc" id="L109">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; sortCustomizer()&quot;);</span>
-<span class="fc" id="L110">        return p -&gt; p.setMaxPageSize(Integer.MAX_VALUE);</span>
+<span class="fc" id="L119">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; sortCustomizer()&quot;);</span>
+<span class="fc" id="L120">        return p -&gt; p.setMaxPageSize(Integer.MAX_VALUE);</span>
     }
 
     @Override
     public void extendMessageConverters(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters) {
-<span class="fc" id="L115">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureMessageConverters(), size=&quot;+converters.size());</span>
+<span class="fc" id="L125">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureMessageConverters(), size=&quot;+converters.size());</span>
 
-<span class="fc" id="L117">        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();</span>
-<span class="fc" id="L118">        List&lt;MediaType&gt; mediaTypes = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L119">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;plain&quot;, UTF8));</span>
-<span class="fc" id="L120">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;html&quot;, UTF8));</span>
-<span class="fc" id="L121">        mediaTypes.add(new MediaType(&quot;application&quot;, &quot;json&quot;, UTF8));</span>
-<span class="fc" id="L122">        stringConverter.setSupportedMediaTypes(mediaTypes);</span>
-<span class="fc" id="L123">        converters.add(stringConverter);</span>
+<span class="fc" id="L127">        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();</span>
+<span class="fc" id="L128">        List&lt;MediaType&gt; mediaTypes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L129">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;plain&quot;, UTF8));</span>
+<span class="fc" id="L130">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;html&quot;, UTF8));</span>
+<span class="fc" id="L131">        mediaTypes.add(new MediaType(&quot;application&quot;, &quot;json&quot;, UTF8));</span>
+<span class="fc" id="L132">        stringConverter.setSupportedMediaTypes(mediaTypes);</span>
+<span class="fc" id="L133">        converters.add(stringConverter);</span>
 
         //aby isla tlac do PDF (application/octet-stream)
-<span class="fc" id="L126">        converters.add(new ResourceHttpMessageConverter(true));</span>
-<span class="fc" id="L127">    }</span>
-
-    /*
-    JEEFF: nemozeme to mat async, lebo nam to potom robi problem na WebjetEvent - ON_START a AFTER_SAVE co sa vykonava asynchronne, co nechceme
-    async je potrebne zabezpecit v listeneri anotaciou @Async
-    dokumentacia: http://docs.webjetcms.sk/v2021/#/developer/backend/events
-
-    @Bean(name = &quot;applicationEventMulticaster&quot;)
-    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
-        SimpleApplicationEventMulticaster eventMulticaster
-                = new SimpleApplicationEventMulticaster();
-
-        eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
-        return eventMulticaster;
-    }*/
+<span class="fc" id="L136">        converters.add(new ResourceHttpMessageConverter(true));</span>
+<span class="fc" id="L137">    }</span>
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
-<span class="fc" id="L145">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; addFormatters()&quot;);</span>
+<span class="fc" id="L141">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; addFormatters()&quot;);</span>
         //super.addFormatters(registry);
-<span class="fc" id="L147">        registry.addConverter(new DateConverter());</span>
-<span class="fc" id="L148">        registry.addConverter(new LongDateTimeConverter());</span>
-<span class="fc" id="L149">    }</span>
+<span class="fc" id="L143">        registry.addConverter(new DateConverter());</span>
+<span class="fc" id="L144">        registry.addConverter(new LongDateTimeConverter());</span>
+<span class="fc" id="L145">    }</span>
 
     @Bean
     public FreeMarkerConfigurer freemarkerConfig(HttpServletRequest request) {
-<span class="fc" id="L153">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; 1 freemarkerConfig()&quot;);</span>
+<span class="fc" id="L149">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; 1 freemarkerConfig()&quot;);</span>
 
-<span class="fc" id="L155">        FreeMarkerConfigurer freeMarkerConfigurer = new FreeMarkerConfigurer();</span>
-<span class="fc" id="L156">        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L157">        map.put(&quot;request&quot;, request);</span>
+<span class="fc" id="L151">        FreeMarkerConfigurer freeMarkerConfigurer = new FreeMarkerConfigurer();</span>
+<span class="fc" id="L152">        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L153">        map.put(&quot;request&quot;, request);</span>
         // z nejakeho dovodu robi problem pri inicializacii webjetu
 //        map.put(&quot;currentUser&quot;, UsersDB.getCurrentUser(session));
-<span class="fc" id="L160">        map.put(&quot;Tools&quot;, new Tools());</span>
-<span class="fc" id="L161">        map.put(&quot;WebjetHelpers&quot;, new FreemarkerHelpers(request));</span>
-<span class="fc" id="L162">        freeMarkerConfigurer.setFreemarkerVariables(map);</span>
-<span class="fc" id="L163">        freeMarkerConfigurer.setDefaultEncoding(&quot;windows-1250&quot;);</span>
+<span class="fc" id="L156">        map.put(&quot;Tools&quot;, new Tools());</span>
+<span class="fc" id="L157">        map.put(&quot;WebjetHelpers&quot;, new FreemarkerHelpers(request));</span>
+<span class="fc" id="L158">        freeMarkerConfigurer.setFreemarkerVariables(map);</span>
+<span class="fc" id="L159">        freeMarkerConfigurer.setDefaultEncoding(&quot;windows-1250&quot;);</span>
 
 
-<span class="fc" id="L166">        Properties settings = new Properties();</span>
-<span class="fc" id="L167">        settings.put(&quot;auto_import&quot;, &quot;spring.ftl as spring&quot;);</span>
-<span class="fc" id="L168">        settings.put(Configurable.NUMBER_FORMAT_KEY, &quot;computer&quot;); // vypisanie cisiel bez medzier</span>
+<span class="fc" id="L162">        Properties settings = new Properties();</span>
+<span class="fc" id="L163">        settings.put(&quot;auto_import&quot;, &quot;spring.ftl as spring&quot;);</span>
+<span class="fc" id="L164">        settings.put(Configurable.NUMBER_FORMAT_KEY, &quot;computer&quot;); // vypisanie cisiel bez medzier</span>
 //        settings.put(&quot;template_exception_handler&quot;, getFreemarkerExceptionHandler());
 //        settings.put(&quot;url_escaping_charset&quot;, WebConstants.CHAR_SET_UTF_8);
-<span class="fc" id="L171">        freeMarkerConfigurer.setFreemarkerSettings(settings);</span>
+<span class="fc" id="L167">        freeMarkerConfigurer.setFreemarkerSettings(settings);</span>
 
         // treba prazdny string, inac neresolvuje freemarker views
-<span class="fc" id="L174">        freeMarkerConfigurer.setTemplateLoaderPath(&quot;&quot;);</span>
-<span class="fc" id="L175">        return freeMarkerConfigurer;</span>
+<span class="fc" id="L170">        freeMarkerConfigurer.setTemplateLoaderPath(&quot;&quot;);</span>
+
+<span class="fc" id="L172">        SpringAppInitializer.dtDiff(&quot;freemarkerConfig DONE&quot;);</span>
+<span class="fc" id="L173">        return freeMarkerConfigurer;</span>
     }
 
     /**
@@ -181,56 +179,9 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
      */
     @Override
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
-<span class="fc" id="L184">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureDefaultServletHandling()&quot;);</span>
-<span class="fc" id="L185">        configurer.enable();</span>
-<span class="fc" id="L186">    }</span>
-
-    /* TOTO JE POTREBNE PRE TOMCAT 7 pretoze tam nie je WebjetComponentSpringConfig
-    @Bean
-    public ViewResolver viewResolver() {
-        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
-        viewResolver.setViewClass(JstlView.class);
-        viewResolver.setPrefix(&quot;/&quot;);
-        viewResolver.setSuffix(&quot;.jsp&quot;);
-
-        return viewResolver;
-    }
-    */
-
-    /*
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-        LocalContainerEntityManagerFactoryBean em
-                = new LocalContainerEntityManagerFactoryBean();
-
-        em.setPersistenceXmlLocation(&quot;classpath:META-INF/persistence-webjet.xml&quot;);
-        em.setDataSource(dataSource());
-
-        String scanPackages = Constants.getString(&quot;jpaAddPackages&quot;);
-        em.setPackagesToScan(scanPackages);
-
-        JpaVendorAdapter vendorAdapter = new EclipseLinkJpaVendorAdapter();
-        em.setJpaVendorAdapter(vendorAdapter);
-        Properties properties = new Properties();
-        properties.setProperty(&quot;eclipselink.weaving&quot;, &quot;false&quot;);
-        em.setJpaProperties(properties);
-
-        return em;
-    }
-
-    @Bean
-    public DataSource dataSource(){
-        DataSource dataSource = DBPool.getInstance().getDataSource(&quot;iwcm&quot;);
-        return dataSource;
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory emf){
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(emf);
-
-        return transactionManager;
-    }
-    */
+<span class="fc" id="L182">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureDefaultServletHandling()&quot;);</span>
+<span class="fc" id="L183">        configurer.enable();</span>
+<span class="fc" id="L184">        SpringAppInitializer.dtDiff(&quot;configureDefaultServletHandling DONE&quot;);</span>
+<span class="fc" id="L185">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

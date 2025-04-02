@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>QuizApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.quiz</a> &gt; <span class="el_source">QuizApp.java</span></div><h1>QuizApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.quiz;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.components.quiz.jpa.QuizEntity;
+import sk.iway.iwcm.components.quiz.rest.QuizService;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.OptionDto;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.quiz.QuizApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.quiz.title&quot;,
+    descKey = &quot;components.quiz.desc&quot;,
+    itemKey = &quot;cmp_quiz&quot;,
+    imagePath = &quot;/components/quiz/editoricon.png&quot;,
+    componentPath = &quot;/components/quiz/quiz.jsp&quot;
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = &quot;basic&quot;, title = &quot;components.universalComponentDialog.title&quot;, selected = true),
+    @DataTableTab(id = &quot;componentIframeWindowTab&quot;, title = &quot;components.quiz.title&quot;, content = &quot;&quot;),
+})
+@Getter
+@Setter
+<span class="fc" id="L40">public class QuizApp extends WebjetComponentAbstract {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.quiz.editorComponent.quiz&quot;,
+        editor = @DataTableColumnEditor(
+        )
+    )
+    private Integer quizId;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.quiz.editor_component.show_all&quot;
+    )
+    private Boolean showAllAnswers;
+
+<span class="fc" id="L58">    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = &quot;componentIframeWindowTab&quot;, title=&quot;&amp;nbsp;&quot;)</span>
+    private String iframe  = &quot;/components/quiz/admin_list.jsp&quot;;
+
+    @Override
+    public Map&lt;String, List&lt;OptionDto&gt;&gt; getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L63">        Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L64">        List&lt;OptionDto&gt; groupOptions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L65">        List&lt;QuizEntity&gt; quizes = QuizService.getAll();</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (QuizEntity quiz : quizes){</span>
+<span class="fc" id="L68">            groupOptions.add(new OptionDto(quiz.getName(), String.valueOf(quiz.getId()), null));</span>
+<span class="fc" id="L69">        }</span>
+<span class="fc" id="L70">        options.put(&quot;quizId&quot;, groupOptions);</span>
+<span class="fc" id="L71">        return options;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

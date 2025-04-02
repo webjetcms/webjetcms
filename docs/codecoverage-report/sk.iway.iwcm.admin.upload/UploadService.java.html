@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.upload</a> &gt; <span class="el_source">UploadService.java</span></div><h1>UploadService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.upload;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UploadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.upload</a> &gt; <span class="el_source">UploadService.java</span></div><h1>UploadService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.upload;
 
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.FileIndexerTools;
@@ -153,7 +153,7 @@ public class UploadService {
             }
         }
 
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (GalleryDB.isGalleryFolder(dir))</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (GalleryDB.isGalleryFolder(dir))</span>
         {
             //zmaz exif aj z originalneho suboru
 <span class="fc" id="L159">            GalleryDB.stripExif(Tools.getRealPath(virtualPath));</span>
@@ -180,7 +180,7 @@ public class UploadService {
             added.add(new FsItemEx(dir, &quot;o_&quot;+fileName));
             */
 <span class="fc" id="L182">        }</span>
-<span class="nc bnc" id="L183" title="All 2 branches missed.">        else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;))</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">        else if (Constants.getBoolean(&quot;imageAlwaysCreateGalleryBean&quot;))</span>
         {
 <span class="nc" id="L185">            GalleryDB.setImage(dir, fileName);</span>
         }

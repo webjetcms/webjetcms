@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PasteCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">PasteCommandExecutor.java</span></div><h1>PasteCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PasteCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">PasteCommandExecutor.java</span></div><h1>PasteCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,53 +21,53 @@ import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
-<span class="fc" id="L24">public class PasteCommandExecutor extends AbstractJsonCommandExecutor</span>
+<span class="nc" id="L24">public class PasteCommandExecutor extends AbstractJsonCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
 			throws Exception
 	{
-<span class="fc" id="L30">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+<span class="nc" id="L30">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
 		//String src = request.getParameter(&quot;src&quot;);
-<span class="fc" id="L32">		String dst = request.getParameter(&quot;dst&quot;);</span>
-<span class="fc" id="L33">		boolean cut = &quot;1&quot;.equals(request.getParameter(&quot;cut&quot;));</span>
+<span class="nc" id="L32">		String dst = request.getParameter(&quot;dst&quot;);</span>
+<span class="nc" id="L33">		boolean cut = &quot;1&quot;.equals(request.getParameter(&quot;cut&quot;));</span>
 
-<span class="fc" id="L35">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
-<span class="fc" id="L36">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L35">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="nc" id="L36">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
 
 		//FsItemEx fsrc = super.findItem(fsService, src);
-<span class="fc" id="L39">		FsItemEx fdst = super.findItem(fsService, dst);</span>
+<span class="nc" id="L39">		FsItemEx fdst = super.findItem(fsService, dst);</span>
 
 		//skontrolujem prava na zapis do cieloveho adresara
-<span class="fc" id="L42">		Prop prop = Prop.getInstance(request);</span>
-<span class="fc" id="L43">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
-<span class="pc bpc" id="L44" title="2 of 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))</span>
+<span class="nc" id="L42">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L43">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L44" title="All 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))</span>
 		{
-<span class="fc bfc" id="L46" title="All 2 branches covered.">			for (String target : targets)</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			for (String target : targets)</span>
 			{
-<span class="fc" id="L48">				FsItemEx ftgt = super.findItem(fsService, target);</span>
-<span class="fc" id="L49">				String name = ftgt.getName();</span>
-<span class="fc" id="L50">				FsItemEx newFile = new FsItemEx(fdst, name);</span>
+<span class="nc" id="L48">				FsItemEx ftgt = super.findItem(fsService, target);</span>
+<span class="nc" id="L49">				String name = ftgt.getName();</span>
+<span class="nc" id="L50">				FsItemEx newFile = new FsItemEx(fdst, name);</span>
 
 				//JEEFF: upravene pre podporu nasho DocGroup
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
 				{
 <span class="nc" id="L55">					((IwcmDocGroupFsVolume)ftgt.getVolume()).createAndCopy(ftgt, fdst, cut);</span>
 				}
 				else
 				{
-<span class="fc" id="L59">					super.createAndCopy(ftgt, newFile, request);</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">					if (cut)</span>
+<span class="nc" id="L59">					super.createAndCopy(ftgt, newFile, request);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">					if (cut)</span>
 					{
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
 						{
 							//#20481 - po vystrihnuti/premenovani vytvori redirect
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">							if(isAllowedFolder(ftgt.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
-<span class="fc" id="L66">								createRedirect(ftgt, ftgt.getPath(), newFile.getPath(), request);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">							if(isAllowedFolder(ftgt.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
+<span class="nc" id="L66">								createRedirect(ftgt, ftgt.getPath(), newFile.getPath(), request);</span>
 
 							//ak chcem povodny vymazat, musim mat pravo na zapis aj do zdrojoveho
-<span class="fc" id="L69">							ftgt.delete();</span>
-<span class="fc" id="L70">							FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);</span>
+<span class="nc" id="L69">							ftgt.delete();</span>
+<span class="nc" id="L70">							FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);</span>
 						}
 						else
 						{
@@ -75,12 +75,12 @@ import sk.iway.iwcm.users.UsersDB;
 						}
 					}
 				}
-<span class="fc" id="L78">				added.add(newFile);</span>
+<span class="nc" id="L78">				added.add(newFile);</span>
 
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">				if (cut)</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (cut)</span>
 				{
 					//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov
-<span class="fc" id="L83">					removed.add(ftgt.getHash());</span>
+<span class="nc" id="L83">					removed.add(ftgt.getHash());</span>
 				}
 			}
 		}
@@ -90,10 +90,10 @@ import sk.iway.iwcm.users.UsersDB;
 
 		}
 
-<span class="fc" id="L93">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
+<span class="nc" id="L93">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
 		//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov
-<span class="fc" id="L95">		json.put(&quot;removed&quot;, removed.toArray());</span>
-<span class="fc" id="L96">	}</span>
+<span class="nc" id="L95">		json.put(&quot;removed&quot;, removed.toArray());</span>
+<span class="nc" id="L96">	}</span>
 
 	/**
 	 * vrati true, ak path zacina na niektory allowed adresar(adresare oddelene ciarkou)
@@ -104,14 +104,14 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	static boolean isAllowedFolder(String path, String allowed)
 	{
-<span class="pc bpc" id="L107" title="2 of 4 branches missed.">		if(Tools.isNotEmpty(allowed) &amp;&amp; Tools.isNotEmpty(path))</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">		if(Tools.isNotEmpty(allowed) &amp;&amp; Tools.isNotEmpty(path))</span>
 		{
 			//zero or more whitespace, a literal comma, zero or more whitespace
-<span class="fc" id="L110">			String[] allowedFolders = allowed.split(&quot;\\s*,\\s*&quot;);</span>
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">			for(String folder : allowedFolders)</span>
+<span class="nc" id="L110">			String[] allowedFolders = allowed.split(&quot;\\s*,\\s*&quot;);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			for(String folder : allowedFolders)</span>
 			{
-<span class="fc bfc" id="L113" title="All 2 branches covered.">				if(path.startsWith(folder))</span>
-<span class="fc" id="L114">					return true;</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">				if(path.startsWith(folder))</span>
+<span class="nc" id="L114">					return true;</span>
 			}
 		}
 <span class="nc" id="L117">		return false;</span>
@@ -127,25 +127,25 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	static void createRedirect(FsItemEx file, String originalLink, String newLink, HttpServletRequest request)
 	{
-<span class="pc bpc" id="L130" title="2 of 4 branches missed.">		if(Tools.isNotEmpty(originalLink) &amp;&amp; newLink!=null)</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">		if(Tools.isNotEmpty(originalLink) &amp;&amp; newLink!=null)</span>
 		{
-<span class="fc bfc" id="L132" title="All 2 branches covered.">			if(file.isFolder())</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if(file.isFolder())</span>
 			{
-<span class="pc bpc" id="L134" title="1 of 2 branches missed.">				for(FsItemEx child : file.listChildren())</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				for(FsItemEx child : file.listChildren())</span>
 				{
 <span class="nc" id="L136">					createRedirect(child, originalLink, newLink, request);</span>
-<span class="pc" id="L137">				}</span>
+<span class="nc" id="L137">				}</span>
 			}
 			else
 			{
 				try
 				{
 					//nahradime staru(original) cestu za novu
-<span class="fc" id="L144">					UrlRedirectDB.addRedirect(file.getPath(), newLink+file.getPath().substring(originalLink.length()), DocDB.getDomain(request), 301);</span>
+<span class="nc" id="L144">					UrlRedirectDB.addRedirect(file.getPath(), newLink+file.getPath().substring(originalLink.length()), DocDB.getDomain(request), 301);</span>
 				}
-<span class="pc" id="L146">				catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L146">				catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
 			}
 		}
-<span class="fc" id="L149">	}</span>
+<span class="nc" id="L149">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

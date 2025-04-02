@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETPerformanceProfiler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">WebJETPerformanceProfiler.java</span></div><h1>WebJETPerformanceProfiler.java</h1><pre class="source lang-java linenums">/*******************************************************************************
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETPerformanceProfiler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">WebJETPerformanceProfiler.java</span></div><h1>WebJETPerformanceProfiler.java</h1><pre class="source lang-java linenums">/*******************************************************************************
  * Copyright (c) 1998, 2010 Oracle. All rights reserved.
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 and Eclipse Distribution License v. 1.0
@@ -76,7 +76,7 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 <span class="fc" id="L76">      String sql = query.getSQLString();</span>
 <span class="fc" id="L77">      Object result = null;</span>
       try {
-<span class="fc bfc" id="L79" title="All 2 branches covered.">          if (shouldLogProfile())</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">          if (shouldLogProfile())</span>
           {
 <span class="fc" id="L81">              sb.append(&quot;JPA:&quot;);</span>
 
@@ -131,7 +131,7 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 <span class="fc" id="L131">         	 ExecutionTimeMonitor.recordSqlExecution(sql, profile.getTotalTime());</span>
           }
 <span class="fc" id="L133">          addProfile(profile);</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">          if (shouldLogProfile())</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">          if (shouldLogProfile())</span>
           {
 <span class="fc" id="L136">              long profileEndTime = System.currentTimeMillis();</span>
 <span class="fc" id="L137">              long totalTimeIncludingProfiling = profileEndTime - profileStartTime;// Try to remove the profiling time from the total time.</span>

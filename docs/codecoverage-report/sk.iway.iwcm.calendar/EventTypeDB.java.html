@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EventTypeDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">EventTypeDB.java</span></div><h1>EventTypeDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EventTypeDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.calendar</a> &gt; <span class="el_source">EventTypeDB.java</span></div><h1>EventTypeDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.calendar;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -202,36 +202,36 @@ public class EventTypeDB
 
    public static List&lt;EventTypeDetails&gt; getTypes(HttpServletRequest request)
    {
-<span class="nc" id="L205">   	return getTypes();</span>
+<span class="fc" id="L205">   	return getTypes();</span>
    }
 
    @SuppressWarnings(&quot;unchecked&quot;)
    public static List&lt;EventTypeDetails&gt; getTypes()
    {
-<span class="nc" id="L211">		List&lt;EventTypeDetails&gt; ret = null;</span>
+<span class="fc" id="L211">		List&lt;EventTypeDetails&gt; ret = null;</span>
 
-<span class="nc" id="L213">		Cache c = Cache.getInstance();</span>
-<span class="nc" id="L214">		int cacheInMinutes = Constants.getInt(&quot;EventTypeDBCacheInMinutes&quot;);</span>
-<span class="nc" id="L215">   	String cacheKey = &quot;sk.iway.iwcm.calendar.EventTypeDB.domain=&quot; + CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L213">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L214">		int cacheInMinutes = Constants.getInt(&quot;EventTypeDBCacheInMinutes&quot;);</span>
+<span class="fc" id="L215">   	String cacheKey = &quot;sk.iway.iwcm.calendar.EventTypeDB.domain=&quot; + CloudToolsForCore.getDomainId();</span>
 
-<span class="nc" id="L217">		ret = (List&lt;EventTypeDetails&gt;)c.getObject(cacheKey);</span>
-<span class="nc bnc" id="L218" title="All 2 branches missed.">		if (ret != null)</span>
-<span class="nc" id="L219">			return ret;</span>
+<span class="fc" id="L217">		ret = (List&lt;EventTypeDetails&gt;)c.getObject(cacheKey);</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">		if (ret != null)</span>
+<span class="fc" id="L219">			return ret;</span>
 		else
-<span class="nc" id="L221">			ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L221">			ret = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L223">      java.sql.Connection db_conn = null;</span>
-<span class="nc" id="L224">      PreparedStatement ps = null;</span>
-<span class="nc" id="L225">      ResultSet rs = null;</span>
+<span class="fc" id="L223">      java.sql.Connection db_conn = null;</span>
+<span class="fc" id="L224">      PreparedStatement ps = null;</span>
+<span class="fc" id="L225">      ResultSet rs = null;</span>
       try
       {
-<span class="nc" id="L228">         db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L229">         String sql = &quot;SELECT * FROM &quot;+DB_NAME+&quot; WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false)+&quot; ORDER BY type_id&quot;;</span>
-<span class="nc" id="L230">         ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L231">         rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L232" title="All 2 branches missed.">         while (rs.next())</span>
+<span class="fc" id="L228">         db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L229">         String sql = &quot;SELECT * FROM &quot;+DB_NAME+&quot; WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false)+&quot; ORDER BY type_id&quot;;</span>
+<span class="fc" id="L230">         ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L231">         rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">         while (rs.next())</span>
          {
-<span class="nc" id="L234">            ret.add(fillEventTypeDetails(rs));</span>
+<span class="fc" id="L234">            ret.add(fillEventTypeDetails(rs));</span>
          }
       }
 <span class="nc" id="L237">      catch (Exception ex)</span>
@@ -242,28 +242,28 @@ public class EventTypeDB
       {
          try
          {
-<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (rs != null)</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">            if (rs != null)</span>
             {
-<span class="nc" id="L247">               rs.close();</span>
+<span class="fc" id="L247">               rs.close();</span>
             }
-<span class="nc bnc" id="L249" title="All 2 branches missed.">            if (ps != null)</span>
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">            if (ps != null)</span>
             {
-<span class="nc" id="L251">               ps.close();</span>
+<span class="fc" id="L251">               ps.close();</span>
             }
-<span class="nc bnc" id="L253" title="All 2 branches missed.">            if (db_conn != null)</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">            if (db_conn != null)</span>
             {
-<span class="nc" id="L255">               db_conn.close();</span>
+<span class="fc" id="L255">               db_conn.close();</span>
             }
          }
 <span class="nc" id="L258">         catch (Exception ex)</span>
          {
 <span class="nc" id="L260">         	sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L261">         }</span>
+<span class="fc" id="L261">         }</span>
       }
 
-<span class="nc" id="L264">	   c.setObjectSeconds(cacheKey, ret , cacheInMinutes*60, true);</span>
+<span class="fc" id="L264">	   c.setObjectSeconds(cacheKey, ret , cacheInMinutes*60, true);</span>
 
-<span class="nc" id="L266">      return (ret);</span>
+<span class="fc" id="L266">      return (ret);</span>
    }
 
    public static String getTypeName(int typeId, HttpServletRequest request)
@@ -322,19 +322,19 @@ public class EventTypeDB
     */
    private static EventTypeDetails fillEventTypeDetails(ResultSet rs)
    {
-<span class="nc" id="L325">   	EventTypeDetails event = new EventTypeDetails();</span>
+<span class="fc" id="L325">   	EventTypeDetails event = new EventTypeDetails();</span>
    	try
 		{
-<span class="nc" id="L328">			event.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
-<span class="nc" id="L329">			event.setName(rs.getString(&quot;name&quot;));</span>
-<span class="nc" id="L330">			event.setSchvalovatelId(rs.getInt(&quot;schvalovatel_id&quot;));</span>
+<span class="fc" id="L328">			event.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="fc" id="L329">			event.setName(rs.getString(&quot;name&quot;));</span>
+<span class="fc" id="L330">			event.setSchvalovatelId(rs.getInt(&quot;schvalovatel_id&quot;));</span>
 		}
 <span class="nc" id="L332">		catch (Exception e)</span>
 		{
 <span class="nc" id="L334">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L335">		}</span>
+<span class="fc" id="L335">		}</span>
 
-<span class="nc" id="L337">		return event;</span>
+<span class="fc" id="L337">		return event;</span>
    }
 
    /**

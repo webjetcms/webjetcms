@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectTimesBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationObjectTimesBean.java</span></div><h1>ReservationObjectTimesBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectTimesBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationObjectTimesBean.java</span></div><h1>ReservationObjectTimesBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,6 +10,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ActiveRecord;
 
 /**
@@ -25,85 +28,85 @@ import sk.iway.iwcm.database.ActiveRecord;
 
 @Entity
 @Table(name=&quot;reservation_object_times&quot;)
-<span class="fc" id="L28">public class ReservationObjectTimesBean extends ActiveRecord implements Serializable</span>
+<span class="fc" id="L31">public class ReservationObjectTimesBean extends ActiveRecord implements Serializable</span>
 {
 	private static final long serialVersionUID = -1L;
-	
+
 	@Id
 	@GeneratedValue(generator=&quot;WJGen_reservation_object_times&quot;)
-	@TableGenerator(name=&quot;WJGen_reservation_object_times&quot;,pkColumnValue=&quot;reservation_object_times&quot;)	
+	@TableGenerator(name=&quot;WJGen_reservation_object_times&quot;,pkColumnValue=&quot;reservation_object_times&quot;)
 	@Column(name=&quot;object_time_id&quot;)
 	private int objectTimeId;
 	@Column(name=&quot;object_id&quot;)
 	private int objectId;
 	@Column(name=&quot;cas_od&quot;)
-	private String casOd;
+	private Date timeFrom;
 	@Column(name=&quot;cas_do&quot;)
-	private String casDo;
+	private Date timeTo;
 	@Column(name=&quot;den&quot;)
 	private int den;
 	@Column(name=&quot;domain_id&quot;)
 	private int domainId;
-	
+
 	public int getObjectTimeId()
 	{
-<span class="nc" id="L50">		return objectTimeId;</span>
+<span class="nc" id="L53">		return objectTimeId;</span>
 	}
 	public void setObjectTimeId(int objectTimeId)
 	{
-<span class="nc" id="L54">		this.objectTimeId = objectTimeId;</span>
-<span class="nc" id="L55">	}</span>
+<span class="nc" id="L57">		this.objectTimeId = objectTimeId;</span>
+<span class="nc" id="L58">	}</span>
 	public int getObjectId()
 	{
-<span class="nc" id="L58">		return objectId;</span>
+<span class="nc" id="L61">		return objectId;</span>
 	}
 	public void setObjectId(int objectId)
 	{
-<span class="nc" id="L62">		this.objectId = objectId;</span>
-<span class="nc" id="L63">	}</span>
+<span class="nc" id="L65">		this.objectId = objectId;</span>
+<span class="nc" id="L66">	}</span>
 	public int getDen()
 	{
-<span class="nc" id="L66">		return den;</span>
+<span class="nc" id="L69">		return den;</span>
 	}
 	public void setDen(int den)
 	{
-<span class="nc" id="L70">		this.den = den;</span>
-<span class="nc" id="L71">	}</span>
+<span class="nc" id="L73">		this.den = den;</span>
+<span class="nc" id="L74">	}</span>
 	public int getDomainId()
 	{
-<span class="nc" id="L74">		return domainId;</span>
+<span class="nc" id="L77">		return domainId;</span>
 	}
 	public void setDomainId(int domainId)
 	{
-<span class="nc" id="L78">		this.domainId = domainId;</span>
-<span class="nc" id="L79">	}</span>
-	
+<span class="nc" id="L81">		this.domainId = domainId;</span>
+<span class="nc" id="L82">	}</span>
+
 	@Override
 	public int getId()
 	{
-<span class="nc" id="L84">		return getObjectTimeId();</span>
+<span class="nc" id="L87">		return getObjectTimeId();</span>
 	}
 	@Override
 	public void setId(int id)
 	{
-<span class="nc" id="L89">		setObjectTimeId(id);</span>
-<span class="nc" id="L90">	}</span>
+<span class="nc" id="L92">		setObjectTimeId(id);</span>
+<span class="nc" id="L93">	}</span>
 	public String getCasOd()
 	{
-<span class="nc" id="L93">		return casOd;</span>
+<span class="nc" id="L96">		return Tools.formatTime(timeFrom);</span>
 	}
 	public void setCasOd(String casOd)
 	{
-<span class="nc" id="L97">		this.casOd = casOd;</span>
-<span class="nc" id="L98">	}</span>
+<span class="nc" id="L100">		timeFrom = new Date(DB.getTimestamp(&quot;01.01.2000&quot;, casOd));</span>
+<span class="nc" id="L101">	}</span>
 	public String getCasDo()
 	{
-<span class="nc" id="L101">		return casDo;</span>
+<span class="nc" id="L104">		return Tools.formatTime(timeTo);</span>
 	}
 	public void setCasDo(String casDo)
 	{
-<span class="nc" id="L105">		this.casDo = casDo;</span>
-<span class="nc" id="L106">	}</span>
-	
+<span class="nc" id="L108">		timeTo = new Date(DB.getTimestamp(&quot;01.01.2000&quot;, casDo));</span>
+<span class="nc" id="L109">	}</span>
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.perex_groups</a> &gt; <span class="el_source">PerexGroupsService.java</span></div><h1>PerexGroupsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.perex_groups;
+
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+
+import java.util.List;
+
+import javax.validation.ConstraintViolationException;
+
+<span class="nc" id="L18">public class PerexGroupsService {</span>
+
+    /**
+     * Get all perex groups via repo
+     * @return
+     */
+    public static List&lt;PerexGroupsEntity&gt; getPerexGroups() {
+<span class="fc" id="L25">        PerexGroupsRepository perexGroupsRepository = Tools.getSpringBean(&quot;perexGroupsRepository&quot;, PerexGroupsRepository.class);</span>
+<span class="fc" id="L26">        return perexGroupsRepository.findAllByOrderByPerexGroupNameAsc();</span>
+    }
+
+    /**
+     * Greate new perex group and save it
+     * @param groupId
+     * @param groupName
+     * @param availableGroups
+     */
+    public static PerexGroupsEntity savePerexGroup(int groupId, String groupName, String availableGroups) {
+<span class="fc" id="L36">        PerexGroupsRepository perexGroupsRepository = Tools.getSpringBean(&quot;perexGroupsRepository&quot;, PerexGroupsRepository.class);</span>
+
+        //Prepare entity
+<span class="fc" id="L39">        PerexGroupsEntity perexGroupsEntity = new PerexGroupsEntity();</span>
+<span class="fc" id="L40">        perexGroupsEntity.setId( Long.valueOf(groupId) );</span>
+<span class="fc" id="L41">        perexGroupsEntity.setPerexGroupName(groupName);</span>
+<span class="fc" id="L42">        perexGroupsEntity.setAvailableGroups(availableGroups);</span>
+
+<span class="fc" id="L44">        return save(perexGroupsEntity, perexGroupsRepository);</span>
+    }
+
+    /**
+     * Delete perex group by id
+     * @param id
+     */
+    public static void deletePerexGroup(int id) {
+<span class="nc" id="L52">        PerexGroupsRepository perexGroupsRepository = Tools.getSpringBean(&quot;perexGroupsRepository&quot;, PerexGroupsRepository.class);</span>
+<span class="nc" id="L53">        perexGroupsRepository.deleteById(Long.valueOf(id));</span>
+<span class="nc" id="L54">    }</span>
+
+    /**
+     * Create multiple perex group docs, where id (docId) is same and perexGroupId is from prerexGroupIds arr.
+     * Create number of perexGroupDocs for each perexGroupId in prerexGroupIds, IF perexGroupId is number bigger than 0.
+     * @param docId - docId
+     * @param prerexGroupIds - array of perexGroupIds
+     */
+    public static void insertPerexGroupDocs(int docId, String[] prerexGroupIds) {
+<span class="nc" id="L63">        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(&quot;perexGroupDocRepository&quot;, PerexGroupDocRepository.class);</span>
+
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        for (String perexGroupId : prerexGroupIds) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if(Tools.getIntValue(perexGroupId, -1) &gt; 0) {</span>
+                //Prepare entity
+<span class="nc" id="L68">                PerexGroupDocEntity perexGroupDocEntity = new PerexGroupDocEntity();</span>
+<span class="nc" id="L69">                perexGroupDocEntity.setDocId(Long.valueOf(docId));</span>
+<span class="nc" id="L70">                perexGroupDocEntity.setPerexGroupId(Long.valueOf(perexGroupId));</span>
+<span class="nc" id="L71">                perexGroupDocRepository.save(perexGroupDocEntity);</span>
+            }
+        }
+<span class="nc" id="L74">    }</span>
+
+    /**
+     * Delete all perex group docs by perexGroupId
+     * @param perexGroupId
+     */
+    public static void deletePerexGroupDocsByPerexGroupId(int perexGroupId)  {
+<span class="nc" id="L81">        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(&quot;perexGroupDocRepository&quot;, PerexGroupDocRepository.class);</span>
+<span class="nc" id="L82">        perexGroupDocRepository.deleteAllByPerexGroupId(Long.valueOf(perexGroupId));</span>
+<span class="nc" id="L83">    }</span>
+
+    /**
+     * Delete all perex group docs by docId
+     * @param docId
+     */
+    public static void deletePerexGroupDocsByDocId(int docId)  {
+<span class="nc" id="L90">        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(&quot;perexGroupDocRepository&quot;, PerexGroupDocRepository.class);</span>
+<span class="nc" id="L91">        perexGroupDocRepository.deleteAllByDocId(Long.valueOf(docId));</span>
+<span class="nc" id="L92">    }</span>
+
+    /**
+     * Save perex groups for doc, detects changes and update db
+     * @param docId
+     * @param perexGroupIds
+     */
+    public static void savePerexGroupsDoc(int docId, int[] perexGroupIds) {
+<span class="nc" id="L100">        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(&quot;perexGroupDocRepository&quot;, PerexGroupDocRepository.class);</span>
+
+<span class="nc" id="L102">        List&lt;PerexGroupDocEntity&gt; perexGroupDocs = perexGroupDocRepository.findAllByDocId(Long.valueOf(docId));</span>
+        //delete not found in perexGroupIds
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        for (PerexGroupDocEntity perexGroupDoc : perexGroupDocs) {</span>
+<span class="nc" id="L105">            boolean found = false;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            for (int perexGroupId : perexGroupIds) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                if (perexGroupDoc.getPerexGroupId().intValue() == perexGroupId) {</span>
+<span class="nc" id="L108">                    found = true;</span>
+<span class="nc" id="L109">                    break;</span>
+                }
+            }
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            if (!found) {</span>
+<span class="nc" id="L113">                perexGroupDocRepository.delete(perexGroupDoc);</span>
+            }
+<span class="nc" id="L115">        }</span>
+        //insert not found/new in perexGroupIds
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        for (int perexGroupId : perexGroupIds) {</span>
+<span class="nc" id="L118">            boolean found = false;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            for (PerexGroupDocEntity perexGroupDoc : perexGroupDocs) {</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">                if (perexGroupDoc.getPerexGroupId().intValue() == perexGroupId) {</span>
+<span class="nc" id="L121">                    found = true;</span>
+<span class="nc" id="L122">                    break;</span>
+                }
+<span class="nc" id="L124">            }</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (!found) {</span>
+<span class="nc" id="L126">                PerexGroupDocEntity perexGroupDocEntity = new PerexGroupDocEntity();</span>
+<span class="nc" id="L127">                perexGroupDocEntity.setDocId(Long.valueOf(docId));</span>
+<span class="nc" id="L128">                perexGroupDocEntity.setPerexGroupId(Long.valueOf(perexGroupId));</span>
+<span class="nc" id="L129">                perexGroupDocRepository.save(perexGroupDocEntity);</span>
+            }
+        }
+<span class="nc" id="L132">    }</span>
+
+    public static PerexGroupsEntity save(PerexGroupsEntity entity, PerexGroupsRepository perexGroupsRepository) {
+<span class="fc" id="L135">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L136">        String availableGroups = entity.getAvailableGroups();</span>
+<span class="pc bpc" id="L137" title="3 of 4 branches missed.">        if (InitServlet.isTypeCloud() &amp;&amp; Tools.isEmpty(availableGroups))</span>
+		{
+<span class="nc" id="L139">			availableGroups = String.valueOf(CloudToolsForCore.getDomainId());</span>
+		}
+
+<span class="fc" id="L142">        Prop prop = Prop.getInstance();</span>
+
+<span class="fc" id="L144">		PerexGroupsEntity saved = null;</span>
+<span class="fc" id="L145">		boolean found = false;</span>
+<span class="fc" id="L146">		StringBuilder ulozeneAdresare = new StringBuilder();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(entity.getPerexGroupName()))</span>
+        {
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">            if( InitServlet.isTypeCloud() ) {</span>
+                //filter available groups from only current domain
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                if(Tools.isEmpty(availableGroups)) {</span>
+<span class="nc" id="L153">                    availableGroups = CloudToolsForCore.getDomainId() + &quot;&quot;;</span>
+                } else {
+<span class="nc" id="L155">                    Logger.debug(PerexGroupsService.class, &quot; Removing availableGroups [ &quot;+availableGroups+&quot; ] from other domains&quot;);</span>
+<span class="nc" id="L156">                    GroupDetails gd = null;</span>
+<span class="nc" id="L157">                    int[] newAvailableGroupsCd = Tools.getTokensInt(availableGroups, &quot;,&quot;);</span>
+<span class="nc" id="L158">                    availableGroups = &quot;,&quot;+availableGroups+&quot;,&quot;;</span>
+<span class="nc" id="L159">                    boolean removeGroup = false;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">                    for(int avgGrup : newAvailableGroupsCd)</span>
+                    {
+<span class="nc" id="L162">                        removeGroup = false;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                        if((gd = GroupDetails.getById(avgGrup)) != null )</span>
+                        {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                            if (!gd.getDomainName().equalsIgnoreCase(CloudToolsForCore.getDomainName()))</span>
+<span class="nc" id="L166">                                removeGroup = true;  //vymazeme cislo zo zoznamu, pretoze je z inej domeny</span>
+                        }
+                        else
+<span class="nc" id="L169">                            removeGroup = true;	//je null (nepatri do ziadnej domeny) nema tu co hladat</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                        if(removeGroup)</span>
+<span class="nc" id="L172">                            availableGroups = Tools.replace(availableGroups, &quot;,&quot;+avgGrup+&quot;,&quot;, &quot;,&quot;);</span>
+                    }
+                    //odstranim pridane ciarky
+<span class="nc" id="L175">                    availableGroups = availableGroups.substring(1,availableGroups.length());</span>
+                    //ak bolo v availableGroups iba jedno cislo a bolo zmazane, neostala tam uz ziadna ciarka
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                    if(availableGroups.length() &gt; 0) availableGroups = availableGroups.substring(0,availableGroups.length()-1);</span>
+                }
+            }
+<span class="fc" id="L180">            int groupId = -1;</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            if (entity.getId() != null) {</span>
+<span class="fc" id="L182">                groupId = entity.getId().intValue();</span>
+            }
+<span class="fc" id="L184">            PerexGroupBean pg = docDB.getPerexGroup(groupId, null);</span>
+
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            for(PerexGroupBean pgBean : docDB.getPerexGroups())</span>
+            {
+                //duplicitu kontrolujem pri novej perex skupine, alebo editacii perex skupiny s ostatnymi skupinami
+<span class="pc bpc" id="L189" title="2 of 6 branches missed.">                if((pg == null || pg.getPerexGroupId() != pgBean.getPerexGroupId()) &amp;&amp; pgBean.getPerexGroupName().equalsIgnoreCase(entity.getPerexGroupName().trim()))</span>
+                {
+                    //ak naslo rovnaky nazov perex skupiny, skontrolujem este aj zhodnost skupin
+<span class="nc" id="L192">                    int[] pgBeanAvailableGroupsInt = pgBean.getAvailableGroupsInt();</span>
+<span class="nc" id="L193">                    int[] newAvailableGroups = Tools.getTokensInt(availableGroups, &quot;,&quot;);</span>
+<span class="nc" id="L194">                    GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+                    //ak je zadane pre vsetky adresare, tak je zhoda
+<span class="nc bnc" id="L197" title="All 4 branches missed.">                    if(pgBeanAvailableGroupsInt.length == 0 || newAvailableGroups.length == 0)</span>
+                    {
+<span class="nc" id="L199">                        found = true;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                        if(pgBeanAvailableGroupsInt.length == 0)</span>
+                        {
+<span class="nc" id="L202">                            ulozeneAdresare.delete(0, ulozeneAdresare.length());</span>
+<span class="nc" id="L203">                            ulozeneAdresare.append(prop.getText(&quot;editor.perex_group.vsetky&quot;));</span>
+                        }
+                        else
+                        {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">                            for(int groupIdTmp : pgBeanAvailableGroupsInt)</span>
+<span class="nc" id="L208">                                ulozeneAdresare.append(groupsDB.getPath(groupIdTmp)).append(&quot;, &quot;);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                            if(Tools.isNotEmpty(ulozeneAdresare)){</span>
+<span class="nc" id="L210">                                ulozeneAdresare = new StringBuilder(ulozeneAdresare.substring(0, ulozeneAdresare.length()-2));</span>
+                            }
+                        }
+                        break;
+                    }
+                    else
+                    {
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                        for(int groupIdTmp : pgBeanAvailableGroupsInt)</span>
+                        {
+<span class="nc bnc" id="L219" title="All 2 branches missed.">                            if(DocDB.isGroupAvailable(newAvailableGroups, groupsDB.getParentGroups(groupIdTmp)))</span>
+                            {
+<span class="nc" id="L221">                                found = true;</span>
+<span class="nc" id="L222">                                break;</span>
+                            }
+                        }
+<span class="nc bnc" id="L225" title="All 2 branches missed.">                        if(found)</span>
+                        {
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                            for(int groupIdTmp : pgBeanAvailableGroupsInt)</span>
+<span class="nc" id="L228">                                ulozeneAdresare.append(groupsDB.getPath(groupIdTmp)).append(&quot;, &quot;);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">                            if(Tools.isNotEmpty(ulozeneAdresare))</span>
+<span class="nc" id="L230">                                ulozeneAdresare = new StringBuilder(ulozeneAdresare.substring(0, ulozeneAdresare.length()-2));</span>
+                            break;
+                        }
+                    }
+
+                }
+<span class="fc" id="L236">            }</span>
+
+            //Logger.println(this,&quot;UPDATE: &quot; +groupName+ &quot;  &quot; +groupId);
+
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">            if (!found) {</span>
+<span class="fc" id="L241">                entity.setAvailableGroups(availableGroups);</span>
+<span class="fc" id="L242">                saved = perexGroupsRepository.save(entity);</span>
+<span class="fc" id="L243">                docDB.getPerexGroups(true);</span>
+            } else {
+<span class="nc" id="L245">                saved = null;</span>
+<span class="nc" id="L246">                throw new ConstraintViolationException(prop.getText(&quot;editor.perex_group.skupina_je_uz_definovana&quot;, ulozeneAdresare.toString()), null);</span>
+            }
+        }
+
+
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">		if (saved != null) {</span>
+<span class="fc" id="L252">			ClusterDB.addRefresh(PerexGroupsService.class);</span>
+		}
+
+<span class="fc" id="L255">		return saved;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

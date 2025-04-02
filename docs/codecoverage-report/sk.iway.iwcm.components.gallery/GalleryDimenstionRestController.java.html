@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDimenstionRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryDimenstionRestController.java</span></div><h1>GalleryDimenstionRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDimenstionRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryDimenstionRestController.java</span></div><h1>GalleryDimenstionRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -135,8 +135,8 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2&l
 <span class="fc" id="L135">            }</span>
         }
 
-<span class="pc bpc" id="L138" title="1 of 4 branches missed.">        if (entity.getEditorFields().isRegenerateImages() || entity.getEditorFields().isRegenerateWatermark()) {</span>
-<span class="pc bpc" id="L139" title="3 of 4 branches missed.">            boolean recursive = entity.getEditorFields().isForceResizeModeToSubgroups() || entity.getEditorFields().isForceWatermarkToSubgroups();</span>
+<span class="fc bfc" id="L138" title="All 4 branches covered.">        if (entity.getEditorFields().isRegenerateImages() || entity.getEditorFields().isRegenerateWatermark()) {</span>
+<span class="pc bpc" id="L139" title="1 of 4 branches missed.">            boolean recursive = entity.getEditorFields().isForceResizeModeToSubgroups() || entity.getEditorFields().isForceWatermarkToSubgroups();</span>
 <span class="fc" id="L140">            GalleryDB.resizePicturesInDirectory(entity.getPath(), recursive, getProp(), null);</span>
         }
 
@@ -257,7 +257,7 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2&l
 <span class="fc" id="L257">        entity.setDate(new Date());</span>
 
 <span class="fc" id="L259">        int lomka = path.lastIndexOf(&quot;/&quot;);</span>
-<span class="pc bpc" id="L260" title="2 of 4 branches missed.">        if (lomka &gt; 1 &amp;&amp; lomka &lt; path.length()) entity.setName(path.substring(lomka+1));</span>
+<span class="pc bpc" id="L260" title="1 of 4 branches missed.">        if (lomka &gt; 1 &amp;&amp; lomka &lt; path.length()) entity.setName(path.substring(lomka+1));</span>
 
 <span class="fc" id="L262">        return entity;</span>
     }

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.inquiry</a> &gt; <span class="el_source">InquiryApp.java</span></div><h1>InquiryApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.inquiry;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.inquiry.InquiryDB;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DatatableTools;
+import sk.iway.iwcm.system.datatable.OptionDto;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.inquiry.InquiryApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.inquiry.title&quot;,
+    descKey = &quot;components.inquiry.desc&quot;,
+    itemKey= &quot;cmp_inquiry&quot;,
+    imagePath = &quot;/components/inquiry/editoricon.png&quot;,
+    galleryImages = &quot;/components/inquiry/&quot;,
+    componentPath = &quot;/components/inquiry/inquiry.jsp&quot;,
+    customHtml = &quot;/apps/inquiry/admin/editor-component.html&quot;
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = &quot;basic&quot;, title = &quot;components.universalComponentDialog.title&quot;, selected = true),
+    @DataTableTab(id = &quot;styleSelectArea&quot;, title = &quot;components.roots.new.style&quot;, content = &quot;&quot;),
+    @DataTableTab(id = &quot;componentIframeWindowTabList&quot;, title = &quot;menu.inquiry&quot;, content = &quot;&quot;),
+})
+@Getter
+@Setter
+<span class="fc" id="L45">public class InquiryApp extends WebjetComponentAbstract {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.MULTISELECT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.tips.select_group&quot;
+    )
+    private String[] group;
+
+<span class="fc" id="L54">    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = &quot;basic&quot;, title=&quot;components.inquiry.imagesLength&quot;)</span>
+    private int imagesLength = 10;
+
+<span class="fc" id="L57">    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = &quot;basic&quot;, title=&quot;components.inquiry.percentageFormat&quot;, editor = {</span>
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;0&quot;, value = &quot;0&quot;),
+                @DataTableColumnEditorAttr(key = &quot;0.0&quot;, value = &quot;0.0&quot;)
+            }
+        )
+    })
+    private String percentageFormat = &quot;0&quot;;
+
+<span class="fc" id="L67">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.inquiry.orderBy&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;components.inquiry.order.answer_id&quot;, value = &quot;answer_id&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.inquiry.order.answer_text&quot;, value = &quot;answer_text&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.inquiry.order.answer_clicks&quot;, value = &quot;answer_clicks&quot;)
+            }
+        )
+    })
+    private String orderBy = &quot;answer_id&quot;;
+
+<span class="fc" id="L82">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;basic&quot;,
+        title = &quot;&amp;nbsp;&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;components.inquiry.orderAsc&quot;, value = &quot;ascending&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.inquiry.orderDesc&quot;, value = &quot;descending&quot;)
+            }
+        )
+    }
+    )
+    private String order = &quot;ascending&quot;;
+
+<span class="fc" id="L97">    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = &quot;basic&quot;, title=&quot;components.inquiry.width&quot;)</span>
+    private String width = &quot;100%&quot;;
+
+<span class="fc" id="L100">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        title = &quot;components.inquiry.random&quot;,
+        tab = &quot;basic&quot;
+    )
+<span class="fc" id="L105">    private Boolean random = true;</span>
+
+<span class="fc" id="L107">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        title = &quot;components.inquiry.display_total_clicks&quot;,
+        tab = &quot;basic&quot;
+    )
+<span class="fc" id="L112">    private Boolean totalClicks = true;;</span>
+
+<span class="fc" id="L114">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        title = &quot;components.inquiry.display_vote_results&quot;,
+        tab = &quot;basic&quot;
+    )
+<span class="fc" id="L119">    private Boolean displayVoteResults = true;</span>
+
+<span class="fc" id="L121">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = &quot;components.roots.new.style&quot;,
+        tab = &quot;styleSelectArea&quot;,
+        className = &quot;image-radio-horizontal image-radio-fullwidth&quot;
+    )
+    private String style = &quot;01&quot;;
+
+<span class="fc" id="L129">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = &quot;components.catalog.color&quot;,
+        tab = &quot;styleSelectArea&quot;,
+        className = &quot;image-radio-horizontal image-radio-fullwidth&quot;
+    )
+    private String color = &quot;01&quot;;
+
+<span class="fc" id="L137">    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = &quot;componentIframeWindowTabList&quot;, title=&quot;&amp;nbsp;&quot;)</span>
+    private String iframe  = &quot;/components/inquiry/admin_inquiry_list.jsp&quot;;
+
+    @Override
+    public Map&lt;String, List&lt;OptionDto&gt;&gt; getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L142">        Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();</span>
+
+        //group options
+<span class="fc" id="L145">        List&lt;OptionDto&gt; groupOptions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L146">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L147">        groupOptions.add(new OptionDto(prop.getText(&quot;components.inquiry.fromTemplate&quot;), &quot;fromTemplate&quot;, null));</span>
+<span class="fc" id="L148">        List&lt;LabelValueDetails&gt; groups = InquiryDB.getQuestionGroupsByUser(request);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        for (LabelValueDetails group : groups){</span>
+<span class="fc" id="L150">            groupOptions.add(new OptionDto(group.getLabel(), group.getLabel(), null));</span>
+<span class="fc" id="L151">        }</span>
+<span class="fc" id="L152">        options.put(&quot;group&quot;, addCurrentValueToOptions(groupOptions, getGroup()));</span>
+
+        //style &amp; color options
+<span class="fc" id="L155">        options.put(&quot;style&quot;, DatatableTools.getImageRadioOptions(&quot;/components/inquiry/admin-styles/&quot;));</span>
+<span class="fc" id="L156">        options.put(&quot;color&quot;, DatatableTools.getImageRadioOptions(&quot;/components/inquiry/admin-colors/&quot;));</span>
+
+<span class="fc" id="L158">        return options;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

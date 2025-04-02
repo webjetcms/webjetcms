@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatTableDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatTableDB.java</span></div><h1>StatTableDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StatTableDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stat</a> &gt; <span class="el_source">StatTableDB.java</span></div><h1>StatTableDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stat;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -457,191 +457,197 @@ public class StatTableDB {
 	 *
 	 * @return				Vrati sa zoznam stranok, ktore zodpovedaju filtrovacim parametrom, ak citanie z databazy prebehne v poriadku. Inak sa vrati prazdny zoznam.
 	 */
-	public static List&lt;Column&gt; getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url)
-	{
-<span class="fc" id="L462">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+	public static List&lt;Column&gt; getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url) {
+<span class="fc" id="L461">		return getErrorPages(max_size, from, to, url, null, null);</span>
+	}
 
-<span class="fc" id="L464">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_error&quot;, from.getTime(), to.getTime());</span>
-<span class="fc bfc" id="L465" title="All 2 branches covered.">		for (int s=(suffixes.length-1); s&gt;=0; s--)</span>
+	public static List&lt;Column&gt; getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, String errorText, String countRange)
+	{
+<span class="fc" id="L466">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L468">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_error&quot;, from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L469" title="All 2 branches covered.">		for (int s=(suffixes.length-1); s&gt;=0; s--)</span>
 		{
 
-<span class="fc" id="L468">			Connection db_conn = null;</span>
-<span class="fc" id="L469">			PreparedStatement ps = null;</span>
-<span class="fc" id="L470">			ResultSet rs = null;</span>
+<span class="fc" id="L472">			Connection db_conn = null;</span>
+<span class="fc" id="L473">			PreparedStatement ps = null;</span>
+<span class="fc" id="L474">			ResultSet rs = null;</span>
 
-<span class="fc" id="L472">			String sql = &quot;SELECT DISTINCT year, week, url, query_string, sum(count) as count FROM stat_error&quot;+suffixes[s]+&quot; &quot;;</span>
-<span class="fc" id="L473">			sql += StatDB.getYearTimeSQL(from, to, true);</span>
+<span class="fc" id="L476">			String sql = &quot;SELECT DISTINCT year, week, url, query_string, sum(count) as count FROM stat_error&quot;+suffixes[s]+&quot; &quot;;</span>
+<span class="fc" id="L477">			sql += StatDB.getYearTimeSQL(from, to, true);</span>
 
-<span class="pc bpc" id="L475" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(url))</span>
-<span class="nc" id="L476">				sql += &quot; AND url LIKE ? &quot;;</span>
+<span class="fc" id="L479">			List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L480">			sql += DB.getSqlQueryDatatable(&quot;url&quot;, url, true, params);</span>
+<span class="fc" id="L481">			sql += DB.getSqlQueryDatatable(&quot;query_string&quot;, errorText, true, params);</span>
+<span class="fc" id="L482">			sql += DB.getSqlQueryDatatable(&quot;count&quot;, countRange, true, params);</span>
 
-<span class="pc bpc" id="L478" title="2 of 4 branches missed.">			if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true)</span>
+<span class="pc bpc" id="L484" title="2 of 4 branches missed.">			if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true)</span>
 			{
-<span class="fc" id="L480">				sql += &quot; AND (domain_id=0 OR domain_id=&quot;+CloudToolsForCore.getDomainId()+&quot;) &quot;;</span>
+<span class="fc" id="L486">				sql += &quot; AND (domain_id=0 OR domain_id=&quot;+CloudToolsForCore.getDomainId()+&quot;) &quot;;</span>
 			}
 
-<span class="fc" id="L483">			sql += &quot; GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC&quot;;</span>
+<span class="fc" id="L489">			sql += &quot; GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC, url DESC, query_string DESC&quot;;</span>
 
-<span class="fc" id="L485">			Logger.debug(StatTableDB.class, &quot;getErrorPages sql:&quot;+sql);</span>
+<span class="fc" id="L491">			Logger.debug(StatTableDB.class, &quot;getErrorPages sql:&quot;+sql);</span>
 
 			try
 			{
-<span class="fc" id="L489">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L490">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L495">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L496">				ps = db_conn.prepareStatement(sql);</span>
 
-<span class="pc bpc" id="L492" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(url))</span>
-<span class="nc" id="L493">					ps.setString(1, &quot;%&quot; + url + &quot;%&quot;);</span>
+<span class="fc" id="L498">				int psCounter = 1;</span>
+<span class="fc" id="L499">				psCounter = DB.getSqlParamsDatatable(params, ps, psCounter);</span>
 
-<span class="fc" id="L495">				rs = ps.executeQuery();</span>
+<span class="fc" id="L501">				rs = ps.executeQuery();</span>
 
 				Column col;
-<span class="fc" id="L498">				int count = 0;</span>
+<span class="fc" id="L504">				int count = 0;</span>
 
-<span class="pc bpc" id="L500" title="1 of 4 branches missed.">				while (rs.next() &amp;&amp; count &lt; max_size)</span>
+<span class="pc bpc" id="L506" title="1 of 4 branches missed.">				while (rs.next() &amp;&amp; count &lt; max_size)</span>
 				{
-<span class="fc" id="L502">					col = new Column();</span>
-<span class="fc" id="L503">					col.setIntColumn1(rs.getInt(&quot;year&quot;));</span>
-<span class="fc" id="L504">					col.setIntColumn2(rs.getInt(&quot;week&quot;));</span>
-<span class="fc" id="L505">					col.setColumn3(DB.getDbString(rs, &quot;url&quot;));</span>
-<span class="fc" id="L506">					col.setColumn4(DB.getDbString(rs, &quot;query_string&quot;));</span>
-<span class="fc" id="L507">					col.setIntColumn5(rs.getInt(&quot;count&quot;));</span>
-<span class="fc" id="L508">					ret.add(col);</span>
-<span class="fc" id="L509">					count++;</span>
+<span class="fc" id="L508">					col = new Column();</span>
+<span class="fc" id="L509">					col.setIntColumn1(rs.getInt(&quot;year&quot;));</span>
+<span class="fc" id="L510">					col.setIntColumn2(rs.getInt(&quot;week&quot;));</span>
+<span class="fc" id="L511">					col.setColumn3(DB.getDbString(rs, &quot;url&quot;));</span>
+<span class="fc" id="L512">					col.setColumn4(DB.getDbString(rs, &quot;query_string&quot;));</span>
+<span class="fc" id="L513">					col.setIntColumn5(rs.getInt(&quot;count&quot;));</span>
+<span class="fc" id="L514">					ret.add(col);</span>
+<span class="fc" id="L515">					count++;</span>
 				}
 
-<span class="fc" id="L512">				rs.close();</span>
-<span class="fc" id="L513">				ps.close();</span>
-<span class="fc" id="L514">				db_conn.close();</span>
+<span class="fc" id="L518">				rs.close();</span>
+<span class="fc" id="L519">				ps.close();</span>
+<span class="fc" id="L520">				db_conn.close();</span>
 
-<span class="fc" id="L516">				rs = null;</span>
-<span class="fc" id="L517">				ps = null;</span>
-<span class="fc" id="L518">				db_conn = null;</span>
+<span class="fc" id="L522">				rs = null;</span>
+<span class="fc" id="L523">				ps = null;</span>
+<span class="fc" id="L524">				db_conn = null;</span>
 			}
-<span class="nc" id="L520">			catch (Exception ex)</span>
+<span class="nc" id="L526">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L522">				logError(ex);</span>
+<span class="nc" id="L528">				logError(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L528" title="1 of 2 branches missed.">					if (rs != null)</span>
-<span class="nc" id="L529">						rs.close();</span>
-<span class="pc bpc" id="L530" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L531">						ps.close();</span>
-<span class="pc bpc" id="L532" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L533">						db_conn.close();</span>
+<span class="pc bpc" id="L534" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L535">						rs.close();</span>
+<span class="pc bpc" id="L536" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L537">						ps.close();</span>
+<span class="pc bpc" id="L538" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L539">						db_conn.close();</span>
 				}
-<span class="nc" id="L535">				catch (Exception ex2)</span>
+<span class="nc" id="L541">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L537">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L538">				}</span>
+<span class="nc" id="L543">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L544">				}</span>
 			}
 		}
 
-<span class="fc" id="L542">		return (ret);</span>
+<span class="fc" id="L548">		return (ret);</span>
 	}
 
 	public static List&lt;Column&gt; getSearchEnginesQuery(int maxRows, java.util.Date from, java.util.Date to, String groupIdsQuery)
 	{
-<span class="pc bpc" id="L547" title="1 of 2 branches missed.">		if (groupIdsQuery == null)</span>
-<span class="nc" id="L548">			groupIdsQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L553" title="1 of 2 branches missed.">		if (groupIdsQuery == null)</span>
+<span class="nc" id="L554">			groupIdsQuery = &quot;&quot;;</span>
 
-<span class="fc" id="L550">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L556">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
 
 		String[] suffixes;
-<span class="pc bpc" id="L553" title="2 of 4 branches missed.">		if (from != null &amp;&amp; to != null) suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
-<span class="nc" id="L554">		else suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, 0, Tools.getNow());</span>
+<span class="pc bpc" id="L559" title="2 of 4 branches missed.">		if (from != null &amp;&amp; to != null) suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="nc" id="L560">		else suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, 0, Tools.getNow());</span>
 
-<span class="fc bfc" id="L556" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="fc bfc" id="L562" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
 
-<span class="fc" id="L559">			Connection db_conn = null;</span>
-<span class="fc" id="L560">			PreparedStatement ps = null;</span>
-<span class="fc" id="L561">			ResultSet rs = null;</span>
+<span class="fc" id="L565">			Connection db_conn = null;</span>
+<span class="fc" id="L566">			PreparedStatement ps = null;</span>
+<span class="fc" id="L567">			ResultSet rs = null;</span>
 
 			try
 			{
-<span class="fc" id="L565">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L566">				String sql = &quot;SELECT s.query, COUNT(s.query) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; s WHERE s.doc_id&gt;=0 &quot;;</span>
-<span class="pc bpc" id="L567" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
+<span class="fc" id="L571">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L572">				String sql = &quot;SELECT s.query, COUNT(s.query) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; s WHERE s.doc_id&gt;=0 &quot;;</span>
+<span class="pc bpc" id="L573" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
 				{
-<span class="fc" id="L569">				   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+<span class="fc" id="L575">				   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
 				}
-<span class="fc" id="L571">				sql += groupIdsQuery;</span>
+<span class="fc" id="L577">				sql += groupIdsQuery;</span>
 
-<span class="pc bpc" id="L573" title="1 of 2 branches missed.">				if (sql.toLowerCase().indexOf(&quot;group by&quot;)==-1) sql += &quot;GROUP BY s.query&quot;;</span>
+<span class="pc bpc" id="L579" title="1 of 2 branches missed.">				if (sql.toLowerCase().indexOf(&quot;group by&quot;)==-1) sql += &quot;GROUP BY s.query&quot;;</span>
 
-<span class="fc" id="L575">				ps = db_conn.prepareStatement(sql);</span>
-<span class="pc bpc" id="L576" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
+<span class="fc" id="L581">				ps = db_conn.prepareStatement(sql);</span>
+<span class="pc bpc" id="L582" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
 				{
-<span class="fc" id="L578">					ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L579">					ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L584">					ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L585">					ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
 				}
-<span class="fc" id="L581">				rs = ps.executeQuery();</span>
+<span class="fc" id="L587">				rs = ps.executeQuery();</span>
 				//iteruj cez riadky
-<span class="fc bfc" id="L583" title="All 2 branches covered.">				while (rs.next() )</span>
+<span class="fc bfc" id="L589" title="All 2 branches covered.">				while (rs.next() )</span>
 				{
-<span class="fc" id="L585">					String key = DB.getDbString(rs, &quot;query&quot;);</span>
-<span class="fc" id="L586">					Number currentValue = map.get(key);</span>
+<span class="fc" id="L591">					String key = DB.getDbString(rs, &quot;query&quot;);</span>
+<span class="fc" id="L592">					Number currentValue = map.get(key);</span>
 
-<span class="pc bpc" id="L588" title="1 of 2 branches missed.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
-<span class="nc" id="L589">					else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
-<span class="fc" id="L590">				}</span>
-<span class="fc" id="L591">				rs.close();</span>
-<span class="fc" id="L592">				ps.close();</span>
-<span class="fc" id="L593">				db_conn.close();</span>
-<span class="fc" id="L594">				rs = null;</span>
-<span class="fc" id="L595">				ps = null;</span>
-<span class="fc" id="L596">				db_conn = null;</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
+<span class="nc" id="L595">					else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
+<span class="fc" id="L596">				}</span>
+<span class="fc" id="L597">				rs.close();</span>
+<span class="fc" id="L598">				ps.close();</span>
+<span class="fc" id="L599">				db_conn.close();</span>
+<span class="fc" id="L600">				rs = null;</span>
+<span class="fc" id="L601">				ps = null;</span>
+<span class="fc" id="L602">				db_conn = null;</span>
 			}
-<span class="nc" id="L598">			catch (Exception ex)</span>
+<span class="nc" id="L604">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L600">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L606">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L606" title="1 of 2 branches missed.">					if (rs != null)</span>
-<span class="nc" id="L607">						rs.close();</span>
-<span class="pc bpc" id="L608" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L609">						ps.close();</span>
-<span class="pc bpc" id="L610" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L611">						db_conn.close();</span>
+<span class="pc bpc" id="L612" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L613">						rs.close();</span>
+<span class="pc bpc" id="L614" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L615">						ps.close();</span>
+<span class="pc bpc" id="L616" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L617">						db_conn.close();</span>
 				}
-<span class="nc" id="L613">				catch (Exception ex2)</span>
+<span class="nc" id="L619">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L615">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L616">				}</span>
+<span class="nc" id="L621">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L622">				}</span>
 			}
 		}
 
-<span class="fc" id="L620">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L626">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
 
 		//je mozne, ze tam mame viac ako max zaznamov, upracme a povazujme to za &quot;ostatne&quot;
-<span class="fc" id="L623">		map = StatDB.sortByValue(map);</span>
+<span class="fc" id="L629">		map = StatDB.sortByValue(map);</span>
 
-<span class="fc" id="L625">		Iterator&lt;Map.Entry&lt;String, Number&gt;&gt; iter = map.entrySet().iterator();</span>
+<span class="fc" id="L631">		Iterator&lt;Map.Entry&lt;String, Number&gt;&gt; iter = map.entrySet().iterator();</span>
 		Map.Entry&lt;String, Number&gt; me;
-<span class="fc" id="L627">		int i = 0;</span>
-<span class="fc bfc" id="L628" title="All 4 branches covered.">		while (iter.hasNext() &amp;&amp; i++&lt;maxRows)</span>
+<span class="fc" id="L633">		int i = 0;</span>
+<span class="fc bfc" id="L634" title="All 4 branches covered.">		while (iter.hasNext() &amp;&amp; i++&lt;maxRows)</span>
 		{
-<span class="fc" id="L630">			me = iter.next();</span>
-<span class="fc" id="L631">			String key = me.getKey();</span>
-<span class="fc" id="L632">			Number value = me.getValue();</span>
+<span class="fc" id="L636">			me = iter.next();</span>
+<span class="fc" id="L637">			String key = me.getKey();</span>
+<span class="fc" id="L638">			Number value = me.getValue();</span>
 
 			//Logger.debug(StatDB.class, &quot;getSearchEnginesQuery: key=&quot;+key+&quot; value=&quot;+value);
 
-<span class="fc" id="L636">			Column col = new Column();</span>
-<span class="fc" id="L637">			col.setColumn3(key);</span>
-<span class="fc" id="L638">			col.setColumn2(col.getColumn3());</span>
-<span class="fc" id="L639">			col.setIntColumn1(value.intValue());</span>
+<span class="fc" id="L642">			Column col = new Column();</span>
+<span class="fc" id="L643">			col.setColumn3(key);</span>
+<span class="fc" id="L644">			col.setColumn2(col.getColumn3());</span>
+<span class="fc" id="L645">			col.setIntColumn1(value.intValue());</span>
 
-<span class="fc" id="L641">			ret.add(col);</span>
-<span class="fc" id="L642">		}</span>
+<span class="fc" id="L647">			ret.add(col);</span>
+<span class="fc" id="L648">		}</span>
 
-<span class="fc" id="L644">		return (ret);</span>
+<span class="fc" id="L650">		return (ret);</span>
 
 	}
 
@@ -652,7 +658,7 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getSearchEnginesCount(int max_size, java.util.Date from, java.util.Date to, String groupIdsQuery)
 	{
-<span class="fc" id="L655">		return (StatTableDB.getSearchEnginesCount(max_size, from, to, groupIdsQuery, &quot;&quot;));</span>
+<span class="fc" id="L661">		return (StatTableDB.getSearchEnginesCount(max_size, from, to, groupIdsQuery, &quot;&quot;));</span>
 	}
 
 	/**
@@ -662,108 +668,108 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getSearchEnginesCount(int maxRows, java.util.Date from, java.util.Date to, String groupIdsQuery, String seoKeyword)
 	{
-<span class="fc" id="L665">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L671">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
 
 		String[] suffixes;
-<span class="pc bpc" id="L668" title="2 of 4 branches missed.">		if (from != null &amp;&amp; to != null) suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
-<span class="nc" id="L669">		else suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, 0, Tools.getNow());</span>
-<span class="fc bfc" id="L670" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="pc bpc" id="L674" title="2 of 4 branches missed.">		if (from != null &amp;&amp; to != null) suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="nc" id="L675">		else suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, 0, Tools.getNow());</span>
+<span class="fc bfc" id="L676" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
-<span class="fc" id="L672">			Connection db_conn = null;</span>
-<span class="fc" id="L673">			PreparedStatement ps = null;</span>
-<span class="fc" id="L674">			ResultSet rs = null;</span>
+<span class="fc" id="L678">			Connection db_conn = null;</span>
+<span class="fc" id="L679">			PreparedStatement ps = null;</span>
+<span class="fc" id="L680">			ResultSet rs = null;</span>
 
 			try
 			{
-<span class="pc bpc" id="L678" title="1 of 2 branches missed.">				if (groupIdsQuery == null)</span>
-<span class="nc" id="L679">					groupIdsQuery = &quot;&quot;;</span>
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">				if (groupIdsQuery == null)</span>
+<span class="nc" id="L685">					groupIdsQuery = &quot;&quot;;</span>
 
-<span class="fc" id="L681">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L687">				db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L683">				String sql = &quot;SELECT server, COUNT(server) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 &quot; + groupIdsQuery;</span>
+<span class="fc" id="L689">				String sql = &quot;SELECT server, COUNT(server) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 &quot; + groupIdsQuery;</span>
 
-<span class="pc bpc" id="L685" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
-<span class="fc" id="L686">				   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+<span class="pc bpc" id="L691" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
+<span class="fc" id="L692">				   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
 
-<span class="pc bpc" id="L688" title="2 of 4 branches missed.">				if (seoKeyword != null &amp;&amp; Tools.isNotEmpty(seoKeyword))</span>
-<span class="nc" id="L689">					sql += &quot; AND query = ? &quot;;</span>
+<span class="pc bpc" id="L694" title="2 of 4 branches missed.">				if (seoKeyword != null &amp;&amp; Tools.isNotEmpty(seoKeyword))</span>
+<span class="nc" id="L695">					sql += &quot; AND query = ? &quot;;</span>
 
-<span class="fc" id="L691">				sql += &quot; GROUP BY server&quot;;</span>
-<span class="fc" id="L692">				sql += &quot; ORDER BY total DESC&quot;;</span>
+<span class="fc" id="L697">				sql += &quot; GROUP BY server&quot;;</span>
+<span class="fc" id="L698">				sql += &quot; ORDER BY total DESC&quot;;</span>
 
-<span class="fc" id="L694">				ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L695">				int psCount = 1;</span>
-<span class="pc bpc" id="L696" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
+<span class="fc" id="L700">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L701">				int psCount = 1;</span>
+<span class="pc bpc" id="L702" title="2 of 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
 				{
-<span class="fc" id="L698">					ps.setTimestamp(psCount++, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L699">					ps.setTimestamp(psCount++, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L704">					ps.setTimestamp(psCount++, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L705">					ps.setTimestamp(psCount++, new Timestamp(to.getTime()));</span>
 				}
-<span class="pc bpc" id="L701" title="2 of 4 branches missed.">				if (seoKeyword != null &amp;&amp; Tools.isNotEmpty(seoKeyword))</span>
-<span class="nc" id="L702">					ps.setString(psCount++, seoKeyword);</span>
+<span class="pc bpc" id="L707" title="2 of 4 branches missed.">				if (seoKeyword != null &amp;&amp; Tools.isNotEmpty(seoKeyword))</span>
+<span class="nc" id="L708">					ps.setString(psCount++, seoKeyword);</span>
 
-<span class="fc" id="L704">				rs = ps.executeQuery();</span>
+<span class="fc" id="L710">				rs = ps.executeQuery();</span>
 				//iteruj cez riadky
-<span class="fc bfc" id="L706" title="All 2 branches covered.">				while (rs.next())</span>
+<span class="fc bfc" id="L712" title="All 2 branches covered.">				while (rs.next())</span>
 				{
-<span class="fc" id="L708">					String key = DB.prepareString(DB.getDbString(rs, &quot;server&quot;), 25);</span>
-<span class="fc" id="L709">					Number currentValue = map.get(key);</span>
+<span class="fc" id="L714">					String key = DB.prepareString(DB.getDbString(rs, &quot;server&quot;), 25);</span>
+<span class="fc" id="L715">					Number currentValue = map.get(key);</span>
 
-<span class="fc bfc" id="L711" title="All 2 branches covered.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
-<span class="fc" id="L712">					else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
-<span class="fc" id="L713">				}</span>
-<span class="fc" id="L714">				rs.close();</span>
-<span class="fc" id="L715">				ps.close();</span>
-<span class="fc" id="L716">				db_conn.close();</span>
+<span class="fc bfc" id="L717" title="All 2 branches covered.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
+<span class="fc" id="L718">					else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
+<span class="fc" id="L719">				}</span>
+<span class="fc" id="L720">				rs.close();</span>
+<span class="fc" id="L721">				ps.close();</span>
+<span class="fc" id="L722">				db_conn.close();</span>
 
-<span class="fc" id="L718">				rs = null;</span>
-<span class="fc" id="L719">				ps = null;</span>
-<span class="fc" id="L720">				db_conn = null;</span>
+<span class="fc" id="L724">				rs = null;</span>
+<span class="fc" id="L725">				ps = null;</span>
+<span class="fc" id="L726">				db_conn = null;</span>
 			}
-<span class="nc" id="L722">			catch (Exception ex)</span>
+<span class="nc" id="L728">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L724">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L730">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L730" title="1 of 2 branches missed.">					if (rs != null)</span>
-<span class="nc" id="L731">						rs.close();</span>
-<span class="pc bpc" id="L732" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L733">						ps.close();</span>
-<span class="pc bpc" id="L734" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L735">						db_conn.close();</span>
+<span class="pc bpc" id="L736" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L737">						rs.close();</span>
+<span class="pc bpc" id="L738" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L739">						ps.close();</span>
+<span class="pc bpc" id="L740" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L741">						db_conn.close();</span>
 				}
-<span class="nc" id="L737">				catch (Exception ex2)</span>
+<span class="nc" id="L743">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L739">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L740">				}</span>
+<span class="nc" id="L745">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L746">				}</span>
 			}
 		}
 
-<span class="fc" id="L744">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L750">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L746">		map = StatDB.sortByValue(map);</span>
+<span class="fc" id="L752">		map = StatDB.sortByValue(map);</span>
 
-<span class="fc" id="L748">		Iterator&lt;Map.Entry&lt;String, Number&gt;&gt; iter = map.entrySet().iterator();</span>
+<span class="fc" id="L754">		Iterator&lt;Map.Entry&lt;String, Number&gt;&gt; iter = map.entrySet().iterator();</span>
 		Map.Entry&lt;String, Number&gt; me;
-<span class="fc" id="L750">		int i = 0;</span>
-<span class="pc bpc" id="L751" title="1 of 4 branches missed.">		while (iter.hasNext() &amp;&amp; i++&lt;maxRows)</span>
+<span class="fc" id="L756">		int i = 0;</span>
+<span class="pc bpc" id="L757" title="1 of 4 branches missed.">		while (iter.hasNext() &amp;&amp; i++&lt;maxRows)</span>
 		{
-<span class="fc" id="L753">			me = iter.next();</span>
-<span class="fc" id="L754">			String key = me.getKey();</span>
-<span class="fc" id="L755">			Number value = me.getValue();</span>
+<span class="fc" id="L759">			me = iter.next();</span>
+<span class="fc" id="L760">			String key = me.getKey();</span>
+<span class="fc" id="L761">			Number value = me.getValue();</span>
 
 			//Logger.debug(StatDB.class, &quot;getSearchEnginesCount: key=&quot;+key+&quot; value=&quot;+value);
 
-<span class="fc" id="L759">			Column col = new Column();</span>
-<span class="fc" id="L760">			col.setColumn1(key);</span>
-<span class="fc" id="L761">			col.setColumn2(col.getColumn1());</span>
-<span class="fc" id="L762">			col.setIntColumn2(value.intValue());</span>
-<span class="fc" id="L763">			ret.add(col);</span>
-<span class="fc" id="L764">		}</span>
+<span class="fc" id="L765">			Column col = new Column();</span>
+<span class="fc" id="L766">			col.setColumn1(key);</span>
+<span class="fc" id="L767">			col.setColumn2(col.getColumn1());</span>
+<span class="fc" id="L768">			col.setIntColumn2(value.intValue());</span>
+<span class="fc" id="L769">			ret.add(col);</span>
+<span class="fc" id="L770">		}</span>
 
-<span class="fc" id="L766">		return (ret);</span>
+<span class="fc" id="L772">		return (ret);</span>
 	}
 
 	/**
@@ -778,80 +784,80 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getGooglePositionsList(int maxSize, java.util.Date from, java.util.Date to, int seoKeywordId)
 	{
-<span class="nc" id="L781">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L787">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L783">		Connection db_conn = null;</span>
-<span class="nc" id="L784">		PreparedStatement ps = null;</span>
-<span class="nc" id="L785">		ResultSet rs = null;</span>
+<span class="nc" id="L789">		Connection db_conn = null;</span>
+<span class="nc" id="L790">		PreparedStatement ps = null;</span>
+<span class="nc" id="L791">		ResultSet rs = null;</span>
 
 		try
 		{
-<span class="nc" id="L789">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L795">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L791">			String sql = &quot;SELECT position, search_datetime FROM seo_google_position WHERE seo_google_position_id &gt;= 0 &quot;;</span>
+<span class="nc" id="L797">			String sql = &quot;SELECT position, search_datetime FROM seo_google_position WHERE seo_google_position_id &gt;= 0 &quot;;</span>
 
-<span class="nc bnc" id="L793" title="All 4 branches missed.">			if (from != null &amp;&amp; to != null)</span>
-<span class="nc" id="L794">			   sql += &quot; AND search_datetime &gt;= ? AND search_datetime &lt;= ? &quot;;</span>
+<span class="nc bnc" id="L799" title="All 4 branches missed.">			if (from != null &amp;&amp; to != null)</span>
+<span class="nc" id="L800">			   sql += &quot; AND search_datetime &gt;= ? AND search_datetime &lt;= ? &quot;;</span>
 
-<span class="nc bnc" id="L796" title="All 2 branches missed.">			if (seoKeywordId != 0)</span>
-<span class="nc" id="L797">				sql += &quot; AND keyword_id = ? &quot;;</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">			if (seoKeywordId != 0)</span>
+<span class="nc" id="L803">				sql += &quot; AND keyword_id = ? &quot;;</span>
 
-<span class="nc" id="L799">			sql += &quot; ORDER BY search_datetime DESC&quot;;</span>
+<span class="nc" id="L805">			sql += &quot; ORDER BY search_datetime DESC&quot;;</span>
 
-<span class="nc" id="L801">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L807">			ps = db_conn.prepareStatement(sql);</span>
 
-<span class="nc" id="L803">			int psCount = 1;</span>
-<span class="nc bnc" id="L804" title="All 4 branches missed.">			if (from != null &amp;&amp; to != null)</span>
+<span class="nc" id="L809">			int psCount = 1;</span>
+<span class="nc bnc" id="L810" title="All 4 branches missed.">			if (from != null &amp;&amp; to != null)</span>
 			{
-<span class="nc" id="L806">				ps.setTimestamp(psCount++, new Timestamp(from.getTime()));</span>
-<span class="nc" id="L807">				ps.setTimestamp(psCount++, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L812">				ps.setTimestamp(psCount++, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L813">				ps.setTimestamp(psCount++, new Timestamp(to.getTime()));</span>
 			}
-<span class="nc bnc" id="L809" title="All 2 branches missed.">			if (seoKeywordId != 0)</span>
-<span class="nc" id="L810">				ps.setInt(psCount++, seoKeywordId);</span>
+<span class="nc bnc" id="L815" title="All 2 branches missed.">			if (seoKeywordId != 0)</span>
+<span class="nc" id="L816">				ps.setInt(psCount++, seoKeywordId);</span>
 
-<span class="nc" id="L812">			rs = ps.executeQuery();</span>
+<span class="nc" id="L818">			rs = ps.executeQuery();</span>
 			//iteruj cez riadky
 			Column col;
-<span class="nc" id="L815">			int count = 0;</span>
-<span class="nc bnc" id="L816" title="All 4 branches missed.">			while (rs.next() &amp;&amp; count &lt; maxSize)</span>
+<span class="nc" id="L821">			int count = 0;</span>
+<span class="nc bnc" id="L822" title="All 4 branches missed.">			while (rs.next() &amp;&amp; count &lt; maxSize)</span>
 			{
-<span class="nc" id="L818">				col = new Column();</span>
-<span class="nc" id="L819">				col.setDateColumn1(rs.getDate(&quot;search_datetime&quot;));</span>
-<span class="nc" id="L820">				col.setIntColumn1(rs.getInt(&quot;position&quot;));</span>
-<span class="nc" id="L821">				ret.add(col);</span>
-<span class="nc" id="L822">				count++;</span>
+<span class="nc" id="L824">				col = new Column();</span>
+<span class="nc" id="L825">				col.setDateColumn1(rs.getDate(&quot;search_datetime&quot;));</span>
+<span class="nc" id="L826">				col.setIntColumn1(rs.getInt(&quot;position&quot;));</span>
+<span class="nc" id="L827">				ret.add(col);</span>
+<span class="nc" id="L828">				count++;</span>
 			}
 
-<span class="nc" id="L825">			rs.close();</span>
-<span class="nc" id="L826">			ps.close();</span>
-<span class="nc" id="L827">			db_conn.close();</span>
+<span class="nc" id="L831">			rs.close();</span>
+<span class="nc" id="L832">			ps.close();</span>
+<span class="nc" id="L833">			db_conn.close();</span>
 
-<span class="nc" id="L829">			rs = null;</span>
-<span class="nc" id="L830">			ps = null;</span>
-<span class="nc" id="L831">			db_conn = null;</span>
+<span class="nc" id="L835">			rs = null;</span>
+<span class="nc" id="L836">			ps = null;</span>
+<span class="nc" id="L837">			db_conn = null;</span>
 		}
-<span class="nc" id="L833">		catch (Exception ex)</span>
+<span class="nc" id="L839">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L835">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L841">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L841" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L842">					rs.close();</span>
-<span class="nc bnc" id="L843" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L844">					ps.close();</span>
-<span class="nc bnc" id="L845" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L846">					db_conn.close();</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L848">					rs.close();</span>
+<span class="nc bnc" id="L849" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L850">					ps.close();</span>
+<span class="nc bnc" id="L851" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L852">					db_conn.close();</span>
 			}
-<span class="nc" id="L848">			catch (Exception ex2)</span>
+<span class="nc" id="L854">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L850">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L851">			}</span>
+<span class="nc" id="L856">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L857">			}</span>
 		}
 
-<span class="nc" id="L854">		return (ret);</span>
+<span class="nc" id="L860">		return (ret);</span>
 	}
 
 	/**
@@ -861,68 +867,68 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getSearchEnginesNames(int docId, java.util.Date from, java.util.Date to, String groupIdsQuery)
 	{
-<span class="nc" id="L864">		List&lt;String&gt; map = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L870">		List&lt;String&gt; map = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L866">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
-<span class="nc bnc" id="L867" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="nc" id="L872">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L873" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
-<span class="nc" id="L869">			Connection db_conn = null;</span>
-<span class="nc" id="L870">			PreparedStatement ps = null;</span>
-<span class="nc" id="L871">			ResultSet rs = null;</span>
+<span class="nc" id="L875">			Connection db_conn = null;</span>
+<span class="nc" id="L876">			PreparedStatement ps = null;</span>
+<span class="nc" id="L877">			ResultSet rs = null;</span>
 			try
 			{
-<span class="nc" id="L874">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L880">				db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L876">				String sql = &quot;SELECT DISTINCT server FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 &quot; + groupIdsQuery;</span>
+<span class="nc" id="L882">				String sql = &quot;SELECT DISTINCT server FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 &quot; + groupIdsQuery;</span>
 
-<span class="nc" id="L878">			   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+<span class="nc" id="L884">			   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
 
-<span class="nc bnc" id="L880" title="All 2 branches missed.">				if(docId!=-1)</span>
-<span class="nc" id="L881">					sql += &quot;AND doc_id = &quot;+docId;</span>
+<span class="nc bnc" id="L886" title="All 2 branches missed.">				if(docId!=-1)</span>
+<span class="nc" id="L887">					sql += &quot;AND doc_id = &quot;+docId;</span>
 
-<span class="nc" id="L883">				sql += &quot; ORDER BY server&quot;;</span>
+<span class="nc" id="L889">				sql += &quot; ORDER BY server&quot;;</span>
 
-<span class="nc" id="L885">				ps = db_conn.prepareStatement(sql);</span>
-
-
-<span class="nc" id="L888">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
-<span class="nc" id="L889">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L891">				ps = db_conn.prepareStatement(sql);</span>
 
 
-<span class="nc" id="L892">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L893" title="All 2 branches missed.">				while (rs.next())</span>
+<span class="nc" id="L894">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L895">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+
+
+<span class="nc" id="L898">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L899" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="nc" id="L895">					String server = DB.getDbString(rs, &quot;server&quot;);</span>
-<span class="nc bnc" id="L896" title="All 2 branches missed.">					if (map.contains(server)==false) map.add(server);</span>
-<span class="nc" id="L897">				}</span>
-<span class="nc" id="L898">				rs.close();</span>
-<span class="nc" id="L899">				ps.close();</span>
-<span class="nc" id="L900">				db_conn.close();</span>
-<span class="nc" id="L901">				db_conn = null;</span>
-<span class="nc" id="L902">				rs = null;</span>
-<span class="nc" id="L903">				ps = null;</span>
+<span class="nc" id="L901">					String server = DB.getDbString(rs, &quot;server&quot;);</span>
+<span class="nc bnc" id="L902" title="All 2 branches missed.">					if (map.contains(server)==false) map.add(server);</span>
+<span class="nc" id="L903">				}</span>
+<span class="nc" id="L904">				rs.close();</span>
+<span class="nc" id="L905">				ps.close();</span>
+<span class="nc" id="L906">				db_conn.close();</span>
+<span class="nc" id="L907">				db_conn = null;</span>
+<span class="nc" id="L908">				rs = null;</span>
+<span class="nc" id="L909">				ps = null;</span>
 			}
-<span class="nc" id="L905">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L911">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 			finally{
 				try{
-<span class="nc bnc" id="L908" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
-<span class="nc bnc" id="L909" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L910" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
-<span class="nc" id="L911">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc bnc" id="L914" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L915" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L916" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L917">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 			}
 		}
 
-<span class="nc" id="L915">		Collections.sort(map);</span>
+<span class="nc" id="L921">		Collections.sort(map);</span>
 
-<span class="nc" id="L917">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L918" title="All 2 branches missed.">		for (String server : map)</span>
+<span class="nc" id="L923">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L924" title="All 2 branches missed.">		for (String server : map)</span>
 		{
-<span class="nc" id="L920">			Column col = new Column();</span>
-<span class="nc" id="L921">			col.setColumn1(server);</span>
-<span class="nc" id="L922">			ret.add(col);</span>
-<span class="nc" id="L923">		}</span>
+<span class="nc" id="L926">			Column col = new Column();</span>
+<span class="nc" id="L927">			col.setColumn1(server);</span>
+<span class="nc" id="L928">			ret.add(col);</span>
+<span class="nc" id="L929">		}</span>
 
-<span class="nc" id="L925">		return (ret);</span>
+<span class="nc" id="L931">		return (ret);</span>
 	}
 	/**
 	 *  zoznam vsetkych docId a title k nim
@@ -931,90 +937,90 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getSearchDocId(java.util.Date from, java.util.Date to, String server, String groupIdsQuery)
 	{
-<span class="nc" id="L934">		groupIdsQuery = Tools.replace(groupIdsQuery, &quot;group_id&quot;, &quot;s.group_id&quot;);</span>
+<span class="nc" id="L940">		groupIdsQuery = Tools.replace(groupIdsQuery, &quot;group_id&quot;, &quot;s.group_id&quot;);</span>
 
-<span class="nc" id="L936">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L942">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
 
 		String[] suffixes;
-<span class="nc bnc" id="L939" title="All 4 branches missed.">		if (from != null &amp;&amp; to != null) suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
-<span class="nc" id="L940">		else suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, 0, Tools.getNow());</span>
+<span class="nc bnc" id="L945" title="All 4 branches missed.">		if (from != null &amp;&amp; to != null) suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="nc" id="L946">		else suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, 0, Tools.getNow());</span>
 
-<span class="nc bnc" id="L942" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="nc bnc" id="L948" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
 
-<span class="nc" id="L945">			Connection db_conn = null;</span>
-<span class="nc" id="L946">			PreparedStatement ps = null;</span>
-<span class="nc" id="L947">			ResultSet rs = null;</span>
+<span class="nc" id="L951">			Connection db_conn = null;</span>
+<span class="nc" id="L952">			PreparedStatement ps = null;</span>
+<span class="nc" id="L953">			ResultSet rs = null;</span>
 			try
 			{
-<span class="nc" id="L950">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L956">				db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L952">				String sql = &quot;SELECT DISTINCT s.doc_id, d.title FROM stat_searchengine&quot;+suffixes[s]+&quot; s, documents d WHERE s.doc_id = d.doc_id &quot; + groupIdsQuery;</span>
+<span class="nc" id="L958">				String sql = &quot;SELECT DISTINCT s.doc_id, d.title FROM stat_searchengine&quot;+suffixes[s]+&quot; s, documents d WHERE s.doc_id = d.doc_id &quot; + groupIdsQuery;</span>
 
-<span class="nc bnc" id="L954" title="All 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
+<span class="nc bnc" id="L960" title="All 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
 				{
-<span class="nc" id="L956">				   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+<span class="nc" id="L962">				   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
 				}
-<span class="nc bnc" id="L958" title="All 4 branches missed.">				if(server!=null&amp;&amp;!server.equals(&quot;&quot;))</span>
-<span class="nc" id="L959">					sql += &quot;AND s.server = ? &quot;;</span>
+<span class="nc bnc" id="L964" title="All 4 branches missed.">				if(server!=null&amp;&amp;!server.equals(&quot;&quot;))</span>
+<span class="nc" id="L965">					sql += &quot;AND s.server = ? &quot;;</span>
 
-<span class="nc" id="L961">				sql += &quot; ORDER BY d.title&quot;;</span>
+<span class="nc" id="L967">				sql += &quot; ORDER BY d.title&quot;;</span>
 
-<span class="nc" id="L963">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L969">				ps = db_conn.prepareStatement(sql);</span>
 
-<span class="nc bnc" id="L965" title="All 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
+<span class="nc bnc" id="L971" title="All 4 branches missed.">				if (from != null &amp;&amp; to != null)</span>
 				{
-<span class="nc" id="L967">					ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
-<span class="nc" id="L968">					ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L973">					ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L974">					ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
 				}
-<span class="nc bnc" id="L970" title="All 4 branches missed.">				if(server!=null&amp;&amp;!server.equals(&quot;&quot;))</span>
-<span class="nc" id="L971">					ps.setString(3, server);</span>
+<span class="nc bnc" id="L976" title="All 4 branches missed.">				if(server!=null&amp;&amp;!server.equals(&quot;&quot;))</span>
+<span class="nc" id="L977">					ps.setString(3, server);</span>
 
-<span class="nc" id="L973">				rs = ps.executeQuery();</span>
+<span class="nc" id="L979">				rs = ps.executeQuery();</span>
 				//iteruj cez riadky
-<span class="nc bnc" id="L975" title="All 2 branches missed.">				while (rs.next())</span>
+<span class="nc bnc" id="L981" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="nc" id="L977">					String key = DB.getDbString(rs, &quot;title&quot;);</span>
-<span class="nc" id="L978">					Number value = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L983">					String key = DB.getDbString(rs, &quot;title&quot;);</span>
+<span class="nc" id="L984">					Number value = rs.getInt(&quot;doc_id&quot;);</span>
 
-<span class="nc bnc" id="L980" title="All 2 branches missed.">					if (map.containsValue(value)==false) map.put(key, value);</span>
-<span class="nc" id="L981">				}</span>
-<span class="nc" id="L982">				rs.close();</span>
-<span class="nc" id="L983">				ps.close();</span>
-<span class="nc" id="L984">				db_conn.close();</span>
-<span class="nc" id="L985">				db_conn = null;</span>
-<span class="nc" id="L986">				rs = null;</span>
-<span class="nc" id="L987">				ps = null;</span>
+<span class="nc bnc" id="L986" title="All 2 branches missed.">					if (map.containsValue(value)==false) map.put(key, value);</span>
+<span class="nc" id="L987">				}</span>
+<span class="nc" id="L988">				rs.close();</span>
+<span class="nc" id="L989">				ps.close();</span>
+<span class="nc" id="L990">				db_conn.close();</span>
+<span class="nc" id="L991">				db_conn = null;</span>
+<span class="nc" id="L992">				rs = null;</span>
+<span class="nc" id="L993">				ps = null;</span>
 			}
-<span class="nc" id="L989">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L995">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 			finally{
 				try{
-<span class="nc bnc" id="L992" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
-<span class="nc bnc" id="L993" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L994" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
-<span class="nc" id="L995">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc bnc" id="L998" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L999" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L1000" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L1001">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 			}
 		}
 
-<span class="nc" id="L999">		map = StatDB.sortByKey(map);</span>
+<span class="nc" id="L1005">		map = StatDB.sortByKey(map);</span>
 
-<span class="nc" id="L1001">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1007">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L1003">		Set&lt;Map.Entry&lt;String, Number&gt;&gt; set = map.entrySet();</span>
-<span class="nc bnc" id="L1004" title="All 2 branches missed.">		for (Map.Entry&lt;String, Number&gt; me : set){</span>
-<span class="nc" id="L1005">			String key = me.getKey();</span>
-<span class="nc" id="L1006">			Number value = me.getValue();</span>
+<span class="nc" id="L1009">		Set&lt;Map.Entry&lt;String, Number&gt;&gt; set = map.entrySet();</span>
+<span class="nc bnc" id="L1010" title="All 2 branches missed.">		for (Map.Entry&lt;String, Number&gt; me : set){</span>
+<span class="nc" id="L1011">			String key = me.getKey();</span>
+<span class="nc" id="L1012">			Number value = me.getValue();</span>
 
 			//Logger.debug(StatDB.class, &quot;getSearchDocId: key=&quot;+key+&quot; value=&quot;+value);
 
-<span class="nc" id="L1010">			Column col = new Column();</span>
-<span class="nc" id="L1011">			col.setColumn2(key);</span>
-<span class="nc" id="L1012">			col.setColumn1(value.toString());</span>
-<span class="nc" id="L1013">			col.setIntColumn1(value.intValue());</span>
-<span class="nc" id="L1014">			ret.add(col);</span>
-<span class="nc" id="L1015">		}</span>
+<span class="nc" id="L1016">			Column col = new Column();</span>
+<span class="nc" id="L1017">			col.setColumn2(key);</span>
+<span class="nc" id="L1018">			col.setColumn1(value.toString());</span>
+<span class="nc" id="L1019">			col.setIntColumn1(value.intValue());</span>
+<span class="nc" id="L1020">			ret.add(col);</span>
+<span class="nc" id="L1021">		}</span>
 
-<span class="nc" id="L1017">		return (ret);</span>
+<span class="nc" id="L1023">		return (ret);</span>
 	}
 
 	/**
@@ -1024,46 +1030,46 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getDocTitleId(String groupIdsQuery)
 	{
-<span class="nc" id="L1027">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L1028">		Connection db_conn = null;</span>
-<span class="nc" id="L1029">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1030">		ResultSet rs = null;</span>
+<span class="nc" id="L1033">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1034">		Connection db_conn = null;</span>
+<span class="nc" id="L1035">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1036">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L1033">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1039">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L1035">			String sql = &quot;SELECT doc_id, title FROM documents WHERE doc_id &gt; 0&quot; + groupIdsQuery;</span>
+<span class="nc" id="L1041">			String sql = &quot;SELECT doc_id, title FROM documents WHERE doc_id &gt; 0&quot; + groupIdsQuery;</span>
 
-<span class="nc" id="L1037">			sql += &quot; ORDER BY title&quot;;</span>
+<span class="nc" id="L1043">			sql += &quot; ORDER BY title&quot;;</span>
 
-<span class="nc" id="L1039">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1045">			ps = db_conn.prepareStatement(sql);</span>
 
-<span class="nc" id="L1041">			rs = ps.executeQuery();</span>
+<span class="nc" id="L1047">			rs = ps.executeQuery();</span>
 			//iteruj cez riadky
 			Column col;
-<span class="nc bnc" id="L1044" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L1046">				col = new Column();</span>
-<span class="nc" id="L1047">				col.setColumn2(DB.getDbString(rs, &quot;title&quot;));</span>
-<span class="nc" id="L1048">				col.setColumn1(DB.getDbString(rs, &quot;doc_id&quot;));</span>
-<span class="nc" id="L1049">				ret.add(col);</span>
+<span class="nc" id="L1052">				col = new Column();</span>
+<span class="nc" id="L1053">				col.setColumn2(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L1054">				col.setColumn1(DB.getDbString(rs, &quot;doc_id&quot;));</span>
+<span class="nc" id="L1055">				ret.add(col);</span>
 			}
-<span class="nc" id="L1051">			rs.close();</span>
-<span class="nc" id="L1052">			ps.close();</span>
-<span class="nc" id="L1053">			db_conn.close();</span>
-<span class="nc" id="L1054">			db_conn = null;</span>
-<span class="nc" id="L1055">			rs = null;</span>
-<span class="nc" id="L1056">			ps = null;</span>
+<span class="nc" id="L1057">			rs.close();</span>
+<span class="nc" id="L1058">			ps.close();</span>
+<span class="nc" id="L1059">			db_conn.close();</span>
+<span class="nc" id="L1060">			db_conn = null;</span>
+<span class="nc" id="L1061">			rs = null;</span>
+<span class="nc" id="L1062">			ps = null;</span>
 		}
-<span class="nc" id="L1058">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L1064">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 		finally{
 			try{
-<span class="nc bnc" id="L1061" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
-<span class="nc bnc" id="L1062" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L1063" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
-<span class="nc" id="L1064">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc bnc" id="L1067" title="All 2 branches missed.">				if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L1068" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L1070">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 		}
-<span class="nc" id="L1066">		return (ret);</span>
+<span class="nc" id="L1072">		return (ret);</span>
 	}
 
 	/**
@@ -1073,82 +1079,82 @@ public class StatTableDB {
 	 */
 	public static List&lt;Column&gt; getQueries(java.util.Date from, java.util.Date to, String query)
 	{
-<span class="fc" id="L1076">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1082">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L1078">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
-<span class="fc bfc" id="L1079" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="fc" id="L1084">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="fc bfc" id="L1085" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
-<span class="fc" id="L1081">			Connection db_conn = null;</span>
-<span class="fc" id="L1082">			PreparedStatement ps = null;</span>
-<span class="fc" id="L1083">			ResultSet rs = null;</span>
+<span class="fc" id="L1087">			Connection db_conn = null;</span>
+<span class="fc" id="L1088">			PreparedStatement ps = null;</span>
+<span class="fc" id="L1089">			ResultSet rs = null;</span>
 			try
 			{
-<span class="fc" id="L1086">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1092">				db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L1088">				String sql = &quot;SELECT * FROM stat_searchengine&quot;+suffixes[s]+&quot; s WHERE &quot;+DB.fixAiCiCol(&quot;s.query&quot;)+&quot; = ?&quot;;</span>
-
-
-<span class="fc" id="L1091">				sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+<span class="fc" id="L1094">				String sql = &quot;SELECT * FROM stat_searchengine&quot;+suffixes[s]+&quot; s WHERE &quot;+DB.fixAiCiCol(&quot;s.query&quot;)+&quot; = ?&quot;;</span>
 
 
-<span class="fc" id="L1094">				sql += &quot;ORDER BY search_date ASC&quot;;</span>
-
-<span class="fc" id="L1096">				ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L1097">				ps.setString(1, DB.fixAiCiValue(query));</span>
-
-<span class="fc" id="L1099">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L1100">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="fc" id="L1097">				sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
 
 
-<span class="fc" id="L1103">				rs = ps.executeQuery();</span>
+<span class="fc" id="L1100">				sql += &quot;ORDER BY search_date ASC&quot;;</span>
+
+<span class="fc" id="L1102">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1103">				ps.setString(1, DB.fixAiCiValue(query));</span>
+
+<span class="fc" id="L1105">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="fc" id="L1106">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+
+
+<span class="fc" id="L1109">				rs = ps.executeQuery();</span>
 				//iteruj cez riadky
 				Column col;
-<span class="fc" id="L1106">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L1112">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
 				int docId;
-<span class="fc" id="L1108">				DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1114">				DocDB docDB = DocDB.getInstance();</span>
 				DocDetails bdd;
-<span class="fc bfc" id="L1110" title="All 2 branches covered.">				while (rs.next())</span>
+<span class="fc bfc" id="L1116" title="All 2 branches covered.">				while (rs.next())</span>
 				{
-<span class="fc" id="L1112">					col = new Column();</span>
+<span class="fc" id="L1118">					col = new Column();</span>
 
-<span class="fc" id="L1114">					docId = rs.getInt(&quot;doc_id&quot;);</span>
-<span class="fc" id="L1115">					bdd = docDB.getBasicDocDetails(docId, true);</span>
-<span class="fc" id="L1116">					col.setDateColumn1(rs.getTimestamp(&quot;search_date&quot;));</span>
-<span class="fc" id="L1117">					col.setColumn1(rs.getString(&quot;server&quot;));</span>
-<span class="fc" id="L1118">					col.setColumn2(groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+bdd.getTitle());</span>
-<span class="fc" id="L1119">					col.setColumn3(rs.getString(&quot;remote_host&quot;));</span>
+<span class="fc" id="L1120">					docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="fc" id="L1121">					bdd = docDB.getBasicDocDetails(docId, true);</span>
+<span class="fc" id="L1122">					col.setDateColumn1(rs.getTimestamp(&quot;search_date&quot;));</span>
+<span class="fc" id="L1123">					col.setColumn1(rs.getString(&quot;server&quot;));</span>
+<span class="fc" id="L1124">					col.setColumn2(groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+bdd.getTitle());</span>
+<span class="fc" id="L1125">					col.setColumn3(rs.getString(&quot;remote_host&quot;));</span>
 
-<span class="fc" id="L1121">					ret.add(col);</span>
+<span class="fc" id="L1127">					ret.add(col);</span>
 
 				}
-<span class="fc" id="L1124">				rs.close();</span>
-<span class="fc" id="L1125">				ps.close();</span>
-<span class="fc" id="L1126">				db_conn.close();</span>
-<span class="fc" id="L1127">				db_conn = null;</span>
-<span class="fc" id="L1128">				rs = null;</span>
-<span class="fc" id="L1129">				ps = null;</span>
+<span class="fc" id="L1130">				rs.close();</span>
+<span class="fc" id="L1131">				ps.close();</span>
+<span class="fc" id="L1132">				db_conn.close();</span>
+<span class="fc" id="L1133">				db_conn = null;</span>
+<span class="fc" id="L1134">				rs = null;</span>
+<span class="fc" id="L1135">				ps = null;</span>
 			}
-<span class="nc" id="L1131">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L1137">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 			finally{
 				try{
-<span class="pc bpc" id="L1134" title="1 of 2 branches missed.">					if (rs != null) rs.close();</span>
-<span class="pc bpc" id="L1135" title="1 of 2 branches missed.">					if (ps != null) ps.close();</span>
-<span class="pc bpc" id="L1136" title="1 of 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
-<span class="pc" id="L1137">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc bpc" id="L1140" title="1 of 2 branches missed.">					if (rs != null) rs.close();</span>
+<span class="pc bpc" id="L1141" title="1 of 2 branches missed.">					if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L1142" title="1 of 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L1143">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 			}
 		}
-<span class="fc" id="L1140">		return (ret);</span>
+<span class="fc" id="L1146">		return (ret);</span>
 	}
 
 	private static void logError(Exception ex) {
-<span class="nc" id="L1144">		String message = ex.getMessage();</span>
-<span class="nc bnc" id="L1145" title="All 6 branches missed.">		if (message.contains(&quot;Invalid object name&quot;) || message.contains(&quot;Invalid column name&quot;) || message.contains(&quot;ORA-00942&quot;) ||</span>
-<span class="nc bnc" id="L1146" title="All 6 branches missed.">			message.contains(&quot;Unknown column&quot;) || message.contains(&quot;doesn't exist&quot;) || ex.getLocalizedMessage().contains(&quot;doesn't exist&quot;))</span>
+<span class="nc" id="L1150">		String message = ex.getMessage();</span>
+<span class="nc bnc" id="L1151" title="All 6 branches missed.">		if (message.contains(&quot;Invalid object name&quot;) || message.contains(&quot;Invalid column name&quot;) || message.contains(&quot;ORA-00942&quot;) ||</span>
+<span class="nc bnc" id="L1152" title="All 6 branches missed.">			message.contains(&quot;Unknown column&quot;) || message.contains(&quot;doesn't exist&quot;) || ex.getLocalizedMessage().contains(&quot;doesn't exist&quot;))</span>
 		{
 			//table doesn't exists, do not log error
 		} else {
-<span class="nc" id="L1150">			Logger.error(StatTableDB.class, ex);</span>
+<span class="nc" id="L1156">			Logger.error(StatTableDB.class, ex);</span>
 		}
-<span class="nc" id="L1152">	}</span>
+<span class="nc" id="L1158">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

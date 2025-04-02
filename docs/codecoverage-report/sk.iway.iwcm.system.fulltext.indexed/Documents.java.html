@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Documents.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.indexed</a> &gt; <span class="el_source">Documents.java</span></div><h1>Documents.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.indexed;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Documents.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.indexed</a> &gt; <span class="el_source">Documents.java</span></div><h1>Documents.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.indexed;
 
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.dateToLucene;
 import static sk.iway.iwcm.system.fulltext.lucene.LuceneUtils.nvl;
@@ -176,10 +176,10 @@ public class Documents extends Indexed
 
 <span class="fc" id="L177">            String htmlData = SearchTools.htmlToPlain(rs.getString(&quot;html_data&quot;));</span>
 
-<span class="fc" id="L179">				Field headings = new Field(&quot;headings&quot;, Lemmas.get(language, parseHeadings(dataDB)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS);</span>
-<span class="fc" id="L180">				headings.setBoost(5.0f);</span>
+<span class="fc" id="L179">			Field headings = new Field(&quot;headings&quot;, Lemmas.get(language, parseHeadings(dataDB)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS);</span>
+<span class="fc" id="L180">			headings.setBoost(5.0f);</span>
 
-<span class="fc" id="L182">				document.add(headings);</span>
+<span class="fc" id="L182">			document.add(headings);</span>
 <span class="fc" id="L183">            document.add(new Field(&quot;data&quot;, nvl(data), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));</span>
 <span class="fc" id="L184">            document.add(new Field(&quot;external_link&quot;, nvl(rs.getString(&quot;external_link&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
 <span class="fc" id="L185">            document.add(new Field(&quot;date_created&quot;, nvl(dateToLucene(rs.getTimestamp(&quot;date_created&quot;))), Field.Store.YES, Field.Index.ANALYZED));</span>
@@ -202,49 +202,58 @@ public class Documents extends Indexed
 <span class="fc" id="L202">            addStringValueField(rs.getString(&quot;perex_group&quot;), &quot;perex_group&quot;, document);</span>
 <span class="fc" id="L203">            document.add(new Field(&quot;event_date&quot;, nvl(dateToLucene(rs.getTimestamp(&quot;event_date&quot;))), Field.Store.YES, Field.Index.ANALYZED));</span>
 
-<span class="fc" id="L205">            document.add(new Field(&quot;field_a&quot;, nvl(rs.getString(&quot;field_a&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
-<span class="fc" id="L206">            document.add(new Field(&quot;field_b&quot;, nvl(rs.getString(&quot;field_b&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
-<span class="fc" id="L207">            document.add(new Field(&quot;field_c&quot;, nvl(rs.getString(&quot;field_c&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
-<span class="fc" id="L208">            document.add(new Field(&quot;field_d&quot;, nvl(rs.getString(&quot;field_d&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L209">            document.add(new Field(&quot;field_e&quot;, nvl(rs.getString(&quot;field_e&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L210">            document.add(new Field(&quot;field_f&quot;, nvl(rs.getString(&quot;field_f&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L211">            document.add(new Field(&quot;field_g&quot;, nvl(rs.getString(&quot;field_g&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L212">            document.add(new Field(&quot;field_h&quot;, nvl(rs.getString(&quot;field_h&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L213">            document.add(new Field(&quot;field_i&quot;, nvl(rs.getString(&quot;field_i&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L214">            document.add(new Field(&quot;field_j&quot;, nvl(rs.getString(&quot;field_j&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L215">            document.add(new Field(&quot;field_k&quot;, nvl(rs.getString(&quot;field_k&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L216">            document.add(new Field(&quot;field_l&quot;, nvl(rs.getString(&quot;field_l&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L217">				document.add(new Field(&quot;field_m&quot;, nvl(rs.getString(&quot;field_m&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L218">				document.add(new Field(&quot;field_n&quot;, nvl(rs.getString(&quot;field_n&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L219">				document.add(new Field(&quot;field_o&quot;, nvl(rs.getString(&quot;field_o&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L220">				document.add(new Field(&quot;field_p&quot;, nvl(rs.getString(&quot;field_p&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L221">				document.add(new Field(&quot;field_q&quot;, nvl(rs.getString(&quot;field_q&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L222">				document.add(new Field(&quot;field_r&quot;, nvl(rs.getString(&quot;field_r&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L223">				document.add(new Field(&quot;field_s&quot;, nvl(rs.getString(&quot;field_s&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
-<span class="fc" id="L224">				document.add(new Field(&quot;field_t&quot;, nvl(rs.getString(&quot;field_t&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+			//this are in BasicDocDetails
+<span class="fc" id="L206">            document.add(new Field(&quot;field_a&quot;, nvl(rs.getString(&quot;field_a&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="fc" id="L207">            document.add(new Field(&quot;field_b&quot;, nvl(rs.getString(&quot;field_b&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
+<span class="fc" id="L208">            document.add(new Field(&quot;field_c&quot;, nvl(rs.getString(&quot;field_c&quot;)), Field.Store.NO, Field.Index.ANALYZED));</span>
 
-<span class="fc" id="L226">            document.add(typeField(&quot;documents&quot;));</span>
-<span class="fc" id="L227">            String url = DocDB.getInstance().getDocLink(rs.getInt(&quot;doc_id&quot;));</span>
-<span class="fc" id="L228">            document.add(urlField(url));</span>
+<span class="fc" id="L210">            document.add(new Field(&quot;field_d&quot;, nvl(rs.getString(&quot;field_d&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L211">            document.add(new Field(&quot;field_e&quot;, nvl(rs.getString(&quot;field_e&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L212">            document.add(new Field(&quot;field_f&quot;, nvl(rs.getString(&quot;field_f&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L213">            document.add(new Field(&quot;field_g&quot;, nvl(rs.getString(&quot;field_g&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L214">            document.add(new Field(&quot;field_h&quot;, nvl(rs.getString(&quot;field_h&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L215">            document.add(new Field(&quot;field_i&quot;, nvl(rs.getString(&quot;field_i&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L216">            document.add(new Field(&quot;field_j&quot;, nvl(rs.getString(&quot;field_j&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L217">            document.add(new Field(&quot;field_k&quot;, nvl(rs.getString(&quot;field_k&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L218">            document.add(new Field(&quot;field_l&quot;, nvl(rs.getString(&quot;field_l&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L219">			document.add(new Field(&quot;field_m&quot;, nvl(rs.getString(&quot;field_m&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L220">			document.add(new Field(&quot;field_n&quot;, nvl(rs.getString(&quot;field_n&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L221">			document.add(new Field(&quot;field_o&quot;, nvl(rs.getString(&quot;field_o&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L222">			document.add(new Field(&quot;field_p&quot;, nvl(rs.getString(&quot;field_p&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L223">			document.add(new Field(&quot;field_q&quot;, nvl(rs.getString(&quot;field_q&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L224">			document.add(new Field(&quot;field_r&quot;, nvl(rs.getString(&quot;field_r&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L225">			document.add(new Field(&quot;field_s&quot;, nvl(rs.getString(&quot;field_s&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L226">			document.add(new Field(&quot;field_t&quot;, nvl(rs.getString(&quot;field_t&quot;)), Field.Store.YES, Field.Index.ANALYZED));</span>
 
-<span class="fc" id="L230">            Logger.debug(Documents.class, &quot;toLuceneDocument DONE, docid=&quot;+rs.getString(&quot;doc_id&quot;));</span>
+			/* 	uncommend this when you will do some refactor which will require Lucene reindexing
+			    also uncomment multiDomainEnabled/root_group_l1 condition in LuceneSearchAction
+			document.add(new NumericField(&quot;root_group_l1&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;root_group_l1&quot;)));
+			document.add(new NumericField(&quot;root_group_l2&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;root_group_l2&quot;)));
+			document.add(new NumericField(&quot;root_group_l3&quot;, Field.Store.YES, true).setIntValue(rs.getInt(&quot;root_group_l3&quot;)));
+			*/
+
+<span class="fc" id="L235">            document.add(typeField(&quot;documents&quot;));</span>
+<span class="fc" id="L236">            String url = DocDB.getInstance().getDocLink(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="fc" id="L237">            document.add(urlField(url));</span>
+
+<span class="fc" id="L239">            Logger.debug(Documents.class, &quot;toLuceneDocument DONE, docid=&quot;+rs.getString(&quot;doc_id&quot;));</span>
         }
-<span class="nc" id="L232">        catch (Exception e)</span>
+<span class="nc" id="L241">        catch (Exception e)</span>
         {
-<span class="nc" id="L234">            sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L235">        }</span>
-<span class="fc" id="L236">        return document;</span>
+<span class="nc" id="L243">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L244">        }</span>
+<span class="fc" id="L245">        return document;</span>
     }
 
 	public static void addMultiValueField(String value, String name, Document document)
     {
-<span class="fc bfc" id="L241" title="All 2 branches covered.">        if (Tools.isNotEmpty(value))</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (Tools.isNotEmpty(value))</span>
         {
-<span class="fc bfc" id="L243" title="All 2 branches covered.">            for (String part : value.split(&quot;,&quot;))</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">            for (String part : value.split(&quot;,&quot;))</span>
             {
-<span class="fc bfc" id="L245" title="All 2 branches covered.">                if (Tools.isNotEmpty(part))</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                if (Tools.isNotEmpty(part))</span>
                 {
-<span class="fc" id="L247">                    document.add(new NumericField(name, Field.Store.YES, true).setIntValue(Integer.parseInt(part)));</span>
+<span class="fc" id="L256">                    document.add(new NumericField(name, Field.Store.YES, true).setIntValue(Integer.parseInt(part)));</span>
                 }
             }
         }
@@ -252,47 +261,47 @@ public class Documents extends Indexed
         {
             //document.add(new Field(name, LuceneUtils.EMPTY, Field.Store.YES, Field.Index.ANALYZED));
             //jeeff: nemozeme kombinovat numeric a non numeric fieldy, zle to potom hlada
-<span class="fc" id="L255">            document.add(new NumericField(name, Field.Store.YES, true).setIntValue(0));</span>
+<span class="fc" id="L264">            document.add(new NumericField(name, Field.Store.YES, true).setIntValue(0));</span>
         }
-<span class="fc" id="L257">    }</span>
+<span class="fc" id="L266">    }</span>
 
 	private static void addStringValueField(String value, String name, Document document)
     {
-<span class="fc bfc" id="L261" title="All 2 branches covered.">        if (Tools.isNotEmpty(value))</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        if (Tools.isNotEmpty(value))</span>
         {
-<span class="fc bfc" id="L263" title="All 2 branches covered.">            for (String part : value.split(&quot;,&quot;))</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">            for (String part : value.split(&quot;,&quot;))</span>
             {
-<span class="fc bfc" id="L265" title="All 2 branches covered.">                if (Tools.isNotEmpty(part))</span>
+<span class="fc bfc" id="L274" title="All 2 branches covered.">                if (Tools.isNotEmpty(part))</span>
                 {
-<span class="fc" id="L267">                    document.add(new Field(name, part, Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L276">                    document.add(new Field(name, part, Field.Store.YES, Field.Index.ANALYZED));</span>
                 }
             }
         }
         else
         {
-<span class="fc" id="L273">            document.add(new Field(name, LuceneUtils.EMPTY, Field.Store.YES, Field.Index.ANALYZED));</span>
+<span class="fc" id="L282">            document.add(new Field(name, LuceneUtils.EMPTY, Field.Store.YES, Field.Index.ANALYZED));</span>
         }
-<span class="fc" id="L275">    }</span>
+<span class="fc" id="L284">    }</span>
 
 	public static Field typeField(String indexed){
-<span class="fc" id="L278">        return new Field(&quot;type&quot;,indexed,Field.Store.YES,</span>
+<span class="fc" id="L287">        return new Field(&quot;type&quot;,indexed,Field.Store.YES,</span>
                     Field.Index.ANALYZED);
     }
 
 	public static Field urlField(String url){
-<span class="fc" id="L283">        return new Field(&quot;url&quot;,nvl(url),Field.Store.YES,</span>
+<span class="fc" id="L292">        return new Field(&quot;url&quot;,nvl(url),Field.Store.YES,</span>
                     Field.Index.NO);
     }
 
 	@Override
 	public String language()
 	{
-<span class="fc" id="L290">		return this.language;</span>
+<span class="fc" id="L299">		return this.language;</span>
 	}
 
-<span class="fc" id="L293">	private ExecutorService executor = Executors.newFixedThreadPool(5);// indexWriter umoznuje pristup max 5 vlakien naraz, opravene je to az v 4.0</span>
-<span class="fc" id="L294">	private BlockingQueue&lt;Document&gt; queue = new LinkedBlockingQueue&lt;&gt;(50);</span>
-<span class="fc" id="L295">	private WriterThread save = new WriterThread();</span>
+<span class="fc" id="L302">	private ExecutorService executor = Executors.newFixedThreadPool(5);// indexWriter umoznuje pristup max 5 vlakien naraz, opravene je to az v 4.0</span>
+<span class="fc" id="L303">	private BlockingQueue&lt;Document&gt; queue = new LinkedBlockingQueue&lt;&gt;(50);</span>
+<span class="fc" id="L304">	private WriterThread save = new WriterThread();</span>
 
 	static final class DocumentsIndexingMapper extends IndexingMapper {
 
@@ -303,32 +312,32 @@ public class Documents extends Indexed
 		 */
 		public DocumentsIndexingMapper(IndexWriter writer, Documents documents, Writer log)
 		{
-<span class="fc" id="L306">			super(writer,log);</span>
-<span class="fc" id="L307">			this.documents = documents;</span>
-<span class="fc" id="L308">			documents.save.setIndexed(documents);</span>
-<span class="fc" id="L309">			documents.save.setQueue(documents.queue);</span>
-<span class="fc" id="L310">			documents.save.setWriter(writer);</span>
-<span class="fc" id="L311">			documents.save.setLog(log);</span>
-<span class="fc" id="L312">		}</span>
+<span class="fc" id="L315">			super(writer,log);</span>
+<span class="fc" id="L316">			this.documents = documents;</span>
+<span class="fc" id="L317">			documents.save.setIndexed(documents);</span>
+<span class="fc" id="L318">			documents.save.setQueue(documents.queue);</span>
+<span class="fc" id="L319">			documents.save.setWriter(writer);</span>
+<span class="fc" id="L320">			documents.save.setLog(log);</span>
+<span class="fc" id="L321">		}</span>
 
 		@Override
 		public Void map(ResultSet rs) throws SQLException
 		{
 			try
 			{
-<span class="fc" id="L319">				final Document document = toLuceneDocument(rs, documents.language);</span>
-<span class="fc bfc" id="L320" title="All 2 branches covered.">				if (document != null) documents.queue.put(document);</span>
-<span class="fc" id="L321">				documents.executor.execute(documents.save);</span>
+<span class="fc" id="L328">				final Document document = toLuceneDocument(rs, documents.language);</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">				if (document != null) documents.queue.put(document);</span>
+<span class="fc" id="L330">				documents.executor.execute(documents.save);</span>
 			}
-<span class="nc" id="L323">			catch (SQLException|InterruptedException e)</span>
+<span class="nc" id="L332">			catch (SQLException|InterruptedException e)</span>
 			{
-<span class="nc" id="L325">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L326">			}</span>
-<span class="fc" id="L327">			return null;</span>
+<span class="nc" id="L334">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L335">			}</span>
+<span class="fc" id="L336">			return null;</span>
 		}
 	}
 
-<span class="fc" id="L331">	static final class WriterThread implements Runnable {</span>
+<span class="fc" id="L340">	static final class WriterThread implements Runnable {</span>
 
 		private IndexWriter writer;
 		private BlockingQueue&lt;Document&gt; queue;
@@ -342,8 +351,8 @@ public class Documents extends Indexed
 		 */
 		public void setIndexed(Indexed indexed)
 		{
-<span class="fc" id="L345">			this.indexed = indexed;</span>
-<span class="fc" id="L346">		}</span>
+<span class="fc" id="L354">			this.indexed = indexed;</span>
+<span class="fc" id="L355">		}</span>
 
 
 		/**
@@ -351,81 +360,81 @@ public class Documents extends Indexed
 		 */
 		public void setLog(Writer log)
 		{
-<span class="fc" id="L354">			this.log = log;</span>
-<span class="fc" id="L355">		}</span>
+<span class="fc" id="L363">			this.log = log;</span>
+<span class="fc" id="L364">		}</span>
 
 		/**
 		 * @param writer The writer to set.
 		 */
 		public void setWriter(IndexWriter writer)
 		{
-<span class="fc" id="L362">			this.writer = writer;</span>
-<span class="fc" id="L363">		}</span>
+<span class="fc" id="L371">			this.writer = writer;</span>
+<span class="fc" id="L372">		}</span>
 
 		/**
 		 * @param queue The queue to set.
 		 */
 		public void setQueue(BlockingQueue&lt;Document&gt; queue)
 		{
-<span class="fc" id="L370">			this.queue = queue;</span>
-<span class="fc" id="L371">		}</span>
+<span class="fc" id="L379">			this.queue = queue;</span>
+<span class="fc" id="L380">		}</span>
 
-<span class="fc" id="L373">		int count = 0;</span>
+<span class="fc" id="L382">		int count = 0;</span>
 		@Override
 		public void run()
 		{
 			try
 			{
-<span class="fc" id="L379">				Thread.currentThread().setName(&quot;Documents&quot;);</span>
-<span class="fc" id="L380">				Document document = queue.poll(100, TimeUnit.MILLISECONDS);</span>
-<span class="fc bfc" id="L381" title="All 2 branches covered.">				if (document != null)</span>
+<span class="fc" id="L388">				Thread.currentThread().setName(&quot;Documents&quot;);</span>
+<span class="fc" id="L389">				Document document = queue.poll(100, TimeUnit.MILLISECONDS);</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">				if (document != null)</span>
 				{
-<span class="fc" id="L383">					writer.addDocument(document);</span>
-<span class="fc" id="L384">					count++;</span>
-<span class="fc bfc" id="L385" title="All 2 branches covered.">					if (count % 100 == 0)</span>
+<span class="nc" id="L392">					writer.addDocument(document);</span>
+<span class="nc" id="L393">					count++;</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">					if (count % 100 == 0)</span>
 					{
-<span class="fc" id="L387">						FulltextSearch.log(Documents.class, &quot;Indexed &quot; + count + &quot; documents, last doc_id=&quot;+document.get(&quot;doc_id&quot;)+&quot; title=&quot;+document.get(&quot;title&quot;), log);</span>
+<span class="nc" id="L396">						FulltextSearch.log(Documents.class, &quot;Indexed &quot; + count + &quot; documents, last doc_id=&quot;+document.get(&quot;doc_id&quot;)+&quot; title=&quot;+document.get(&quot;title&quot;), log);</span>
 					}
 				}
 			}
-<span class="nc" id="L391">			catch (IOException|InterruptedException e)</span>
+<span class="nc" id="L400">			catch (IOException|InterruptedException e)</span>
 			{
-<span class="nc" id="L393">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L402">				sk.iway.iwcm.Logger.error(e);</span>
 			}
 			finally{
-<span class="fc" id="L396">				indexed.proccessed();</span>
+<span class="fc" id="L405">				indexed.proccessed();</span>
 			}
-<span class="fc" id="L398">		}</span>
+<span class="fc" id="L407">		}</span>
 	}
 
 
 	@Override
 	public IndexingMapper mapper(IndexWriter writer,Writer log)
 	{
-<span class="fc" id="L405">		return new DocumentsIndexingMapper(writer, this,log);</span>
+<span class="fc" id="L414">		return new DocumentsIndexingMapper(writer, this,log);</span>
 	}
 
 	private String pathsLikeString()
 	{
-<span class="fc" id="L410">		StringBuilder pathsLike = new StringBuilder();</span>
-<span class="pc bpc" id="L411" title="1 of 2 branches missed.">		if (paths.size() &gt; 0)</span>
+<span class="fc" id="L419">		StringBuilder pathsLike = new StringBuilder();</span>
+<span class="pc bpc" id="L420" title="1 of 2 branches missed.">		if (paths.size() &gt; 0)</span>
 		{
-<span class="fc" id="L413">			String prefix = &quot; AND ( &quot;;</span>
-<span class="fc" id="L414">			pathsLike.append(prefix);</span>
-<span class="fc bfc" id="L415" title="All 2 branches covered.">			for (String p : paths)</span>
+<span class="fc" id="L422">			String prefix = &quot; AND ( &quot;;</span>
+<span class="fc" id="L423">			pathsLike.append(prefix);</span>
+<span class="fc bfc" id="L424" title="All 2 branches covered.">			for (String p : paths)</span>
 			{
 				// not the first
-<span class="fc bfc" id="L418" title="All 2 branches covered.">				if (pathsLike.length() != prefix.length())</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">				if (pathsLike.length() != prefix.length())</span>
 				{
-<span class="fc" id="L420">					pathsLike.append(&quot; OR &quot;);</span>
+<span class="fc" id="L429">					pathsLike.append(&quot; OR &quot;);</span>
 				}
-<span class="fc" id="L422">				pathsLike.append(&quot; file_name like '&quot;);</span>
-<span class="fc" id="L423">				pathsLike.append(p);</span>
-<span class="fc" id="L424">				pathsLike.append(&quot;%'&quot;);</span>
-<span class="fc" id="L425">			}</span>
-<span class="fc" id="L426">			pathsLike.append(&quot; ) &quot;);</span>
+<span class="fc" id="L431">				pathsLike.append(&quot; file_name like '&quot;);</span>
+<span class="fc" id="L432">				pathsLike.append(p);</span>
+<span class="fc" id="L433">				pathsLike.append(&quot;%'&quot;);</span>
+<span class="fc" id="L434">			}</span>
+<span class="fc" id="L435">			pathsLike.append(&quot; ) &quot;);</span>
 		}
-<span class="fc" id="L428">		return pathsLike.toString();</span>
+<span class="fc" id="L437">		return pathsLike.toString();</span>
 	}
 
 	/* THA verzia
@@ -538,24 +547,24 @@ public class Documents extends Indexed
 	*/
 
 
-<span class="fc" id="L541">	static int  count = 0;</span>
+<span class="fc" id="L550">	static int  count = 0;</span>
 	@Override
 	public String sql()
 	{
-<span class="fc" id="L545">		return SELECTING_SQL + pathsLikeString();</span>
+<span class="fc" id="L554">		return SELECTING_SQL + pathsLikeString();</span>
 	}
 
 	@Override
 	public String name()
 	{
-<span class="fc" id="L551">		return &quot;documents&quot;;</span>
+<span class="fc" id="L560">		return &quot;documents&quot;;</span>
 	}
 
 
 	@Override
 	public int numberOfDocuments()
 	{
-<span class="fc" id="L558">		return new SimpleQuery().forInt(TOTAL_SQL + pathsLikeString());</span>
+<span class="fc" id="L567">		return new SimpleQuery().forInt(TOTAL_SQL + pathsLikeString());</span>
 	}
 
 	/*
@@ -566,8 +575,8 @@ public class Documents extends Indexed
 	@Override
 	public void close()
 	{
-<span class="fc" id="L569">		executor.shutdownNow();</span>
-<span class="fc" id="L570">	}</span>
+<span class="fc" id="L578">		executor.shutdownNow();</span>
+<span class="fc" id="L579">	}</span>
 
 	/**
 	 * Obnovi v indexe dokument
@@ -576,79 +585,79 @@ public class Documents extends Indexed
 	 */
 	public static void updateSingleDocument(int docId)
 	{
-<span class="pc bpc" id="L579" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalDocumentIndexing&quot;))</span>
+<span class="pc bpc" id="L588" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalDocumentIndexing&quot;))</span>
 		{
-<span class="fc" id="L581">			Connection db_conn = null;</span>
-<span class="fc" id="L582">			PreparedStatement ps = null;</span>
-<span class="fc" id="L583">			ResultSet rs = null;</span>
-<span class="fc" id="L584">			IndexWriter writer = null;</span>
+<span class="nc" id="L590">			Connection db_conn = null;</span>
+<span class="nc" id="L591">			PreparedStatement ps = null;</span>
+<span class="nc" id="L592">			ResultSet rs = null;</span>
+<span class="nc" id="L593">			IndexWriter writer = null;</span>
 			try
 			{
-<span class="fc" id="L587">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L588">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE doc_id = ? &quot;);</span>
-<span class="fc" id="L589">				ps.setInt(1, docId);</span>
-<span class="fc" id="L590">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L591" title="1 of 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L596">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L597">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE doc_id = ? &quot;);</span>
+<span class="nc" id="L598">				ps.setInt(1, docId);</span>
+<span class="nc" id="L599">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L600" title="All 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="fc" id="L593">					int groupId = rs.getInt(&quot;group_id&quot;);</span>
-<span class="fc" id="L594">					int tempId = rs.getInt(&quot;temp_id&quot;);</span>
-<span class="fc" id="L595">					String lng = getDocumentLanguage(groupId, tempId);</span>
+<span class="nc" id="L602">					int groupId = rs.getInt(&quot;group_id&quot;);</span>
+<span class="nc" id="L603">					int tempId = rs.getInt(&quot;temp_id&quot;);</span>
+<span class="nc" id="L604">					String lng = getDocumentLanguage(groupId, tempId);</span>
 
-<span class="fc" id="L597">					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));</span>
-<span class="fc" id="L598">					config.setOpenMode(OpenMode.APPEND);</span>
-<span class="fc" id="L599">					writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);</span>
-<span class="pc bpc" id="L600" title="1 of 6 branches missed.">					if(rs.getBoolean(&quot;available&quot;) == false || rs.getBoolean(&quot;searchable&quot;) == false || isProtectedFile(rs.getString(&quot;external_link&quot;)))</span>
+<span class="nc" id="L606">					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));</span>
+<span class="nc" id="L607">					config.setOpenMode(OpenMode.APPEND);</span>
+<span class="nc" id="L608">					writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);</span>
+<span class="nc bnc" id="L609" title="All 6 branches missed.">					if(rs.getBoolean(&quot;available&quot;) == false || rs.getBoolean(&quot;searchable&quot;) == false || isProtectedFile(rs.getString(&quot;external_link&quot;)))</span>
 					{
-<span class="fc" id="L602">						writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
+<span class="nc" id="L611">						writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
 					}
 					else
 					{
-<span class="fc" id="L606">						Document luceneDoc = toLuceneDocument(rs, lng);</span>
-<span class="pc bpc" id="L607" title="1 of 2 branches missed.">						if (luceneDoc == null) writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
-<span class="fc" id="L608">						else writer.updateDocument(new Term(&quot;doc_id&quot;, Integer.toString(docId)), luceneDoc);</span>
+<span class="nc" id="L615">						Document luceneDoc = toLuceneDocument(rs, lng);</span>
+<span class="nc bnc" id="L616" title="All 2 branches missed.">						if (luceneDoc == null) writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
+<span class="nc" id="L617">						else writer.updateDocument(new Term(&quot;doc_id&quot;, Integer.toString(docId)), luceneDoc);</span>
 					}
-<span class="fc" id="L610">					writer.commit();</span>
-<span class="fc" id="L611">					writer.close();</span>
-<span class="fc" id="L612">					writer = null;</span>
-<span class="fc" id="L613">					IndexSearcherBuilder.refresh();</span>
+<span class="nc" id="L619">					writer.commit();</span>
+<span class="nc" id="L620">					writer.close();</span>
+<span class="nc" id="L621">					writer = null;</span>
+<span class="nc" id="L622">					IndexSearcherBuilder.refresh();</span>
 				}
-<span class="fc" id="L615">				rs.close();</span>
-<span class="fc" id="L616">				ps.close();</span>
-<span class="fc" id="L617">				db_conn.close();</span>
-<span class="fc" id="L618">				rs = null;</span>
-<span class="fc" id="L619">				ps = null;</span>
-<span class="fc" id="L620">				db_conn = null;</span>
+<span class="nc" id="L624">				rs.close();</span>
+<span class="nc" id="L625">				ps.close();</span>
+<span class="nc" id="L626">				db_conn.close();</span>
+<span class="nc" id="L627">				rs = null;</span>
+<span class="nc" id="L628">				ps = null;</span>
+<span class="nc" id="L629">				db_conn = null;</span>
 			}
-<span class="fc" id="L622">			catch (Exception ex)</span>
+<span class="nc" id="L631">			catch (Exception ex)</span>
 			{
-<span class="fc" id="L624">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L633">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="fc bfc" id="L630" title="All 2 branches covered.">					if (rs != null)</span>
-<span class="fc" id="L631">						rs.close();</span>
-<span class="fc bfc" id="L632" title="All 2 branches covered.">					if (ps != null)</span>
-<span class="fc" id="L633">						ps.close();</span>
-<span class="fc bfc" id="L634" title="All 2 branches covered.">					if (db_conn != null)</span>
-<span class="fc" id="L635">						db_conn.close();</span>
+<span class="nc bnc" id="L639" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L640">						rs.close();</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L642">						ps.close();</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L644">						db_conn.close();</span>
 				}
-<span class="nc" id="L637">				catch (Exception ex2)</span>
+<span class="nc" id="L646">				catch (Exception ex2)</span>
 				{
-<span class="fc" id="L639">				}</span>
+<span class="nc" id="L648">				}</span>
 				try
 				{
-<span class="pc bpc" id="L642" title="1 of 2 branches missed.">					if (writer != null) writer.close();</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">					if (writer != null) writer.close();</span>
 				}
-<span class="nc" id="L644">				catch (Exception e)</span>
+<span class="nc" id="L653">				catch (Exception e)</span>
 				{
-<span class="fc" id="L646">				}</span>
+<span class="nc" id="L655">				}</span>
 			}
 		}
 
 
-<span class="fc" id="L651">	}</span>
+<span class="fc" id="L660">	}</span>
 
 	/**
 	 * Zmaze dokument z indexu
@@ -657,57 +666,57 @@ public class Documents extends Indexed
 	 */
 	public static void deleteSingleDocument(int docId)
 	{
-<span class="pc bpc" id="L660" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalDocumentIndexing&quot;))</span>
+<span class="pc bpc" id="L669" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;luceneIncrementalDocumentIndexing&quot;))</span>
 		{
-<span class="fc" id="L662">			Connection db_conn = null;</span>
-<span class="fc" id="L663">			PreparedStatement ps = null;</span>
-<span class="fc" id="L664">			ResultSet rs = null;</span>
+<span class="nc" id="L671">			Connection db_conn = null;</span>
+<span class="nc" id="L672">			PreparedStatement ps = null;</span>
+<span class="nc" id="L673">			ResultSet rs = null;</span>
 			try
 			{
-<span class="fc" id="L667">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L668">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE doc_id = ? &quot;);</span>
-<span class="fc" id="L669">				ps.setInt(1, docId);</span>
-<span class="fc" id="L670">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L671" title="1 of 2 branches missed.">				while (rs.next())</span>
+<span class="nc" id="L676">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L677">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE doc_id = ? &quot;);</span>
+<span class="nc" id="L678">				ps.setInt(1, docId);</span>
+<span class="nc" id="L679">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L680" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="nc" id="L673">					int tempId = GroupsDB.getInstance().getGroup(rs.getInt(&quot;group_id&quot;)).getTempId();</span>
-<span class="nc" id="L674">					String lng = TemplatesDB.getInstance().getTemplate(tempId).getLng();</span>
-<span class="nc" id="L675">					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));</span>
-<span class="nc" id="L676">					config.setOpenMode(OpenMode.APPEND);</span>
-<span class="nc" id="L677">					IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);</span>
-<span class="nc" id="L678">					writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
-<span class="nc" id="L679">					writer.commit();</span>
-<span class="nc" id="L680">					writer.close();</span>
-<span class="nc" id="L681">					IndexSearcherBuilder.refresh();</span>
-<span class="nc" id="L682">				}</span>
-<span class="fc" id="L683">				rs.close();</span>
-<span class="fc" id="L684">				ps.close();</span>
-<span class="fc" id="L685">				db_conn.close();</span>
-<span class="fc" id="L686">				rs = null;</span>
-<span class="fc" id="L687">				ps = null;</span>
-<span class="fc" id="L688">				db_conn = null;</span>
+<span class="nc" id="L682">					int tempId = GroupsDB.getInstance().getGroup(rs.getInt(&quot;group_id&quot;)).getTempId();</span>
+<span class="nc" id="L683">					String lng = TemplatesDB.getInstance().getTemplate(tempId).getLng();</span>
+<span class="nc" id="L684">					IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31, lng));</span>
+<span class="nc" id="L685">					config.setOpenMode(OpenMode.APPEND);</span>
+<span class="nc" id="L686">					IndexWriter writer = new IndexWriter(FulltextSearch.getIndexDirectory(lng), config);</span>
+<span class="nc" id="L687">					writer.deleteDocuments(new Term(&quot;doc_id&quot;, Integer.toString(docId)));</span>
+<span class="nc" id="L688">					writer.commit();</span>
+<span class="nc" id="L689">					writer.close();</span>
+<span class="nc" id="L690">					IndexSearcherBuilder.refresh();</span>
+<span class="nc" id="L691">				}</span>
+<span class="nc" id="L692">				rs.close();</span>
+<span class="nc" id="L693">				ps.close();</span>
+<span class="nc" id="L694">				db_conn.close();</span>
+<span class="nc" id="L695">				rs = null;</span>
+<span class="nc" id="L696">				ps = null;</span>
+<span class="nc" id="L697">				db_conn = null;</span>
 			}
-<span class="nc" id="L690">			catch (Exception ex)</span>
+<span class="nc" id="L699">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L692">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L701">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L698" title="1 of 2 branches missed.">					if (rs != null)</span>
-<span class="nc" id="L699">						rs.close();</span>
-<span class="pc bpc" id="L700" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L701">						ps.close();</span>
-<span class="pc bpc" id="L702" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L703">						db_conn.close();</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L708">						rs.close();</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L710">						ps.close();</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L712">						db_conn.close();</span>
 				}
-<span class="nc" id="L705">				catch (Exception ex2)</span>
+<span class="nc" id="L714">				catch (Exception ex2)</span>
 				{
-<span class="fc" id="L707">				}</span>
+<span class="nc" id="L716">				}</span>
 			}
 		}
-<span class="fc" id="L710">	}</span>
+<span class="fc" id="L719">	}</span>
 
 	/**
 	 * Vrati jazyk dokumentu pre zadane id priecinku a sablony
@@ -717,25 +726,25 @@ public class Documents extends Indexed
 	 */
 	private static String getDocumentLanguage(int groupId, int tempId)
 	{
-<span class="fc" id="L720">		GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
-<span class="fc" id="L721">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);</span>
-<span class="fc bfc" id="L722" title="All 4 branches covered.">		if (group != null &amp;&amp; Tools.isNotEmpty(group.getLng()))</span>
+<span class="fc" id="L729">		GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="fc" id="L730">		TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);</span>
+<span class="fc bfc" id="L731" title="All 4 branches covered.">		if (group != null &amp;&amp; Tools.isNotEmpty(group.getLng()))</span>
 		{
-<span class="fc" id="L724">			return group.getLng();</span>
+<span class="fc" id="L733">			return group.getLng();</span>
 		}
-<span class="pc bpc" id="L726" title="2 of 4 branches missed.">		if (temp != null &amp;&amp; Tools.isNotEmpty(temp.getLng()))</span>
+<span class="pc bpc" id="L735" title="2 of 4 branches missed.">		if (temp != null &amp;&amp; Tools.isNotEmpty(temp.getLng()))</span>
 		{
-<span class="fc" id="L728">			return temp.getLng();</span>
+<span class="fc" id="L737">			return temp.getLng();</span>
 		}
-<span class="nc" id="L730">		String defaultLanguage = Constants.getString(&quot;defaultLanguage&quot;);</span>
-<span class="nc bnc" id="L731" title="All 2 branches missed.">		if (Tools.isEmpty(defaultLanguage)) defaultLanguage = &quot;sk&quot;;</span>
+<span class="nc" id="L739">		String defaultLanguage = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="nc bnc" id="L740" title="All 2 branches missed.">		if (Tools.isEmpty(defaultLanguage)) defaultLanguage = &quot;sk&quot;;</span>
 
-<span class="nc" id="L733">		return defaultLanguage;</span>
+<span class="nc" id="L742">		return defaultLanguage;</span>
 	}
 
 	private static boolean isProtectedFile(String externalLink) {
-<span class="pc bpc" id="L737" title="1 of 4 branches missed.">		if (Tools.isNotEmpty(externalLink) &amp;&amp; externalLink.startsWith(&quot;/files/protected&quot;)) return true;</span>
-<span class="fc" id="L738">		return false;</span>
+<span class="nc bnc" id="L746" title="All 4 branches missed.">		if (Tools.isNotEmpty(externalLink) &amp;&amp; externalLink.startsWith(&quot;/files/protected&quot;)) return true;</span>
+<span class="nc" id="L747">		return false;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

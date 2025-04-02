@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorFacade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.facade</a> &gt; <span class="el_source">EditorFacade.java</span></div><h1>EditorFacade.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.facade;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditorFacade.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.facade</a> &gt; <span class="el_source">EditorFacade.java</span></div><h1>EditorFacade.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.facade;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -71,76 +71,82 @@ public class EditorFacade {
 	 * @return
 	 */
 	public DocDetails save(DocDetails entity) {
+
+<span class="pc bpc" id="L75" title="5 of 6 branches missed.">		if (entity.getSortPriority() == -1 &amp;&amp; entity.getEditorFields() != null &amp;&amp; entity.getEditorFields().getGroupDetails() != null) {</span>
+			//if sort priority is 0/empty calculate new one
+<span class="nc" id="L77">			editorService.setSortPriority(entity, entity.getEditorFields().getGroupDetails());</span>
+		}
+
 		//najskor over multigroup mapping
-<span class="fc" id="L75">		int docIdOriginal = entity.getDocId();</span>
-<span class="fc" id="L76">		int originalSortPriority = entity.getSortPriority();</span>
-<span class="fc" id="L77">		String originalVirtualPath = entity.getVirtualPath();</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">		if (isIgnoreMultigroupMapping()==false) {</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">			if (docIdOriginal &gt; 0) {</span>
-<span class="fc" id="L80">				int masterId = multigroupService.getMasterDocId(docIdOriginal);</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">				if(masterId &gt; 0) {</span>
-<span class="fc" id="L82">					entity.setDocId(masterId);</span>
+<span class="fc" id="L81">		int docIdOriginal = entity.getDocId();</span>
+<span class="fc" id="L82">		int originalSortPriority = entity.getSortPriority();</span>
+<span class="fc" id="L83">		String originalVirtualPath = entity.getVirtualPath();</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">		if (isIgnoreMultigroupMapping()==false) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">			if (docIdOriginal &gt; 0) {</span>
+<span class="fc" id="L86">				int masterId = multigroupService.getMasterDocId(docIdOriginal);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">				if(masterId &gt; 0) {</span>
+<span class="fc" id="L88">					entity.setDocId(masterId);</span>
 
-<span class="fc" id="L84">					DocDetails master = DocDB.getInstance().getDoc(masterId, -1, true);</span>
+<span class="fc" id="L90">					DocDetails master = DocDB.getInstance().getDoc(masterId, -1, true);</span>
 
-<span class="fc" id="L86">					boolean multiGroupkeepSortPriority = Constants.getBoolean(&quot;multiGroupKeepSortPriority&quot;);</span>
+<span class="fc" id="L92">					boolean multiGroupkeepSortPriority = Constants.getBoolean(&quot;multiGroupKeepSortPriority&quot;);</span>
 					//ak chcem zachovat sort priority a ukladam slave clanok, potrebujem zachovat sort priority mastra
-<span class="pc bpc" id="L88" title="2 of 4 branches missed.">					if(multiGroupkeepSortPriority &amp;&amp; entity.getDocId()&gt;0)</span>
+<span class="pc bpc" id="L94" title="2 of 4 branches missed.">					if(multiGroupkeepSortPriority &amp;&amp; entity.getDocId()&gt;0)</span>
 					{
-<span class="fc" id="L90">						entity.setSortPriority(master.getSortPriority());</span>
+<span class="fc" id="L96">						entity.setSortPriority(master.getSortPriority());</span>
 					}
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">					if (masterId != docIdOriginal) {</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">					if (masterId != docIdOriginal) {</span>
 						//set original master virtualPath because we are saving MASTER doc (see entity.setDocId(masterId)) and want to keep URL on master
-<span class="fc" id="L94">						entity.setVirtualPath(master.getVirtualPath());</span>
+<span class="fc" id="L100">						entity.setVirtualPath(master.getVirtualPath());</span>
 					}
 				}
 			}
 		}
 
 		//prenesme nazad hodnoty z editorFields do DocDetails
-<span class="fc" id="L101">		entity.getEditorFields().toDocDetails(entity);</span>
+<span class="fc" id="L107">		entity.getEditorFields().toDocDetails(entity);</span>
 
-<span class="fc" id="L103">		int historyId = editorService.saveEditedDoc(entity);</span>
-<span class="fc" id="L104">		Logger.debug(EditorFacade.class, &quot;Page saved, historyId=&quot; + historyId);</span>
+<span class="fc" id="L109">		int historyId = editorService.saveEditedDoc(entity);</span>
+<span class="fc" id="L110">		Logger.debug(EditorFacade.class, &quot;Page saved, historyId=&quot; + historyId);</span>
 
-<span class="fc" id="L106">        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId());</span>
+<span class="fc" id="L112">        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId());</span>
 
 		//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
-<span class="fc" id="L109">		GroupDetails group = entity.getGroup();</span>
-<span class="pc bpc" id="L110" title="2 of 4 branches missed.">		if (group != null &amp;&amp; group.getFullPath().startsWith(&quot;/System/&quot;))</span>
-<span class="nc" id="L111">			TemplatesDB.getInstance(true);</span>
+<span class="fc" id="L115">		GroupDetails group = entity.getGroup();</span>
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">		if (group != null &amp;&amp; group.getFullPath().startsWith(&quot;/System/&quot;))</span>
+<span class="nc" id="L117">			TemplatesDB.getInstance(true);</span>
 
 		//ak sa jedna o novu stranku je potrebne zmenit mediam hodnotu -user_id na novo ulozene docId
-<span class="fc bfc" id="L114" title="All 2 branches covered.">		if(docIdOriginal &lt; 1) {</span>
-<span class="fc" id="L115">			mediaService.assignDocIdToMedia(entity.getDocId());</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">		if(docIdOriginal &lt; 1) {</span>
+<span class="fc" id="L121">			mediaService.assignDocIdToMedia(entity.getDocId());</span>
 		}
 
 		//save attrs - MUST BE BEFORE multigroupHandleSlaves
-<span class="fc bfc" id="L119" title="All 2 branches covered.">		if (entity.getEditorFields().getAttrs() != null) {</span>
-<span class="fc" id="L120">			editorService.saveAttrs(entity, entity.getEditorFields().getAttrs(), Constants.getBoolean(&quot;attrAlwaysCleanOnSave&quot;));</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">		if (entity.getEditorFields().getAttrs() != null) {</span>
+<span class="fc" id="L126">			editorService.saveAttrs(entity, entity.getEditorFields().getAttrs(), Constants.getBoolean(&quot;attrAlwaysCleanOnSave&quot;));</span>
 		}
 
-<span class="fc bfc" id="L123" title="All 2 branches covered.">		if (isIgnoreMultigroupMapping()==false) {</span>
-<span class="fc" id="L124">			boolean multigroupRedirectSlavesToMaster = Constants.getBoolean(&quot;multigroupRedirectSlavesToMaster&quot;);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">		if (isIgnoreMultigroupMapping()==false) {</span>
+<span class="fc" id="L130">			boolean multigroupRedirectSlavesToMaster = Constants.getBoolean(&quot;multigroupRedirectSlavesToMaster&quot;);</span>
 			//Write multigroup mapping
-<span class="fc bfc" id="L126" title="All 2 branches covered.">			if (entity.getEditorFields().getGroupCopyDetails() != null) {</span>
-<span class="fc" id="L127">				entity.setSortPriority(originalSortPriority);</span>
-<span class="fc" id="L128">				entity.setVirtualPath(originalVirtualPath);</span>
-<span class="fc" id="L129">				multigroupService.multigroupHandleSlaves(entity, docIdOriginal, entity.getEditorFields().getGroupCopyDetails(), multigroupRedirectSlavesToMaster);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">			if (entity.getEditorFields().getGroupCopyDetails() != null) {</span>
+<span class="fc" id="L133">				entity.setSortPriority(originalSortPriority);</span>
+<span class="fc" id="L134">				entity.setVirtualPath(originalVirtualPath);</span>
+<span class="fc" id="L135">				multigroupService.multigroupHandleSlaves(entity, docIdOriginal, entity.getEditorFields().getGroupCopyDetails(), multigroupRedirectSlavesToMaster);</span>
 			}
 		}
 
 		//vrat aktualny zaznam z DB
-<span class="fc" id="L134">		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);</span>
-<span class="fc" id="L135">		DocEditorFields def = new DocEditorFields();</span>
-<span class="fc" id="L136">		def.fromDocDetails(savedCopy, true, true);</span>
-<span class="fc" id="L137">		savedCopy.setEditorFields(def);</span>
-<span class="fc" id="L138">		savedCopy.setHistoryId(historyId);</span>
+<span class="fc" id="L140">		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);</span>
+<span class="fc" id="L141">		DocEditorFields def = new DocEditorFields();</span>
+<span class="fc" id="L142">		def.fromDocDetails(savedCopy, true, true);</span>
+<span class="fc" id="L143">		savedCopy.setEditorFields(def);</span>
+<span class="fc" id="L144">		savedCopy.setHistoryId(historyId);</span>
 
 		//ak sme editovali multigroup stranku nastav nazad povodne docId
-<span class="fc bfc" id="L141" title="All 2 branches covered.">		if (docIdOriginal &gt; 0) savedCopy.setDocId(docIdOriginal);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">		if (docIdOriginal &gt; 0) savedCopy.setDocId(docIdOriginal);</span>
 
-<span class="fc" id="L143">		return savedCopy;</span>
+<span class="fc" id="L149">		return savedCopy;</span>
 	}
 
 	/**
@@ -149,39 +155,40 @@ public class EditorFacade {
 	 * @return
 	 */
 	public DocDetails saveAsBVariant(DocDetails entity) {
-<span class="fc" id="L152">		String virtualPath = entity.getVirtualPath();</span>
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">		if (virtualPath.contains(Constants.getString(&quot;ABTestingName&quot;))) {</span>
-<span class="nc" id="L154">			editorService.addNotify(new NotifyBean(&quot;components.abtesting.dialog_title&quot;, editorService.getProp().getText(&quot;editor.save_as_abtest.notify.isbvariant&quot;, entity.getTitle(), String.valueOf(entity.getId())), NotifyType.INFO, 5000));</span>
-<span class="nc" id="L155">			return null;</span>
+<span class="fc" id="L158">		String virtualPath = entity.getVirtualPath();</span>
+<span class="fc" id="L159">		virtualPath = Tools.replace(virtualPath, &quot;*&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">		if (virtualPath.contains(Constants.getString(&quot;ABTestingName&quot;))) {</span>
+<span class="nc" id="L161">			editorService.addNotify(new NotifyBean(&quot;components.abtesting.dialog_title&quot;, editorService.getProp().getText(&quot;editor.save_as_abtest.notify.isbvariant&quot;, entity.getTitle(), String.valueOf(entity.getId())), NotifyType.INFO, 5000));</span>
+<span class="nc" id="L162">			return null;</span>
 		}
 
 		//nastav virtual path
-<span class="fc" id="L159">		int i = virtualPath.indexOf(&quot;.&quot;);</span>
-<span class="fc" id="L160">		String variantName = Constants.getString(&quot;ABTestingName&quot;)+&quot;b&quot;;</span>
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">		if (i != -1) {</span>
-<span class="fc" id="L162">			virtualPath = virtualPath.substring(0, i) + &quot;-&quot; + variantName + virtualPath.substring(i);</span>
+<span class="fc" id="L166">		int i = virtualPath.indexOf(&quot;.&quot;);</span>
+<span class="fc" id="L167">		String variantName = Constants.getString(&quot;ABTestingName&quot;)+&quot;b&quot;;</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">		if (i != -1) {</span>
+<span class="fc" id="L169">			virtualPath = virtualPath.substring(0, i) + &quot;-&quot; + variantName + virtualPath.substring(i);</span>
 		} else {
-<span class="nc" id="L164">			virtualPath = virtualPath + variantName + &quot;.html&quot;;</span>
+<span class="nc" id="L171">			virtualPath = virtualPath + variantName + &quot;.html&quot;;</span>
 		}
 
 		//over, ci uz nahodou neexistuje stranka so zadanou URL
-<span class="fc" id="L168">		String domain = GroupsDB.getInstance().getDomain(entity.getGroupId());</span>
-<span class="fc" id="L169">		int actualDocId = DocDB.getDocIdFromURL(virtualPath, domain);</span>
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">		if (actualDocId&gt;0) {</span>
-<span class="nc" id="L171">			editorService.addNotify(new NotifyBean(&quot;components.abtesting.dialog_title&quot;, editorService.getProp().getText(&quot;editor.save_as_abtest.notify.exists&quot;, entity.getTitle(), String.valueOf(entity.getId()), String.valueOf(actualDocId)), NotifyType.INFO, 5000));</span>
-<span class="nc" id="L172">			return null;</span>
+<span class="fc" id="L175">		String domain = GroupsDB.getInstance().getDomain(entity.getGroupId());</span>
+<span class="fc" id="L176">		int actualDocId = DocDB.getDocIdFromURL(virtualPath, domain);</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">		if (actualDocId&gt;0) {</span>
+<span class="nc" id="L178">			editorService.addNotify(new NotifyBean(&quot;components.abtesting.dialog_title&quot;, editorService.getProp().getText(&quot;editor.save_as_abtest.notify.exists&quot;, entity.getTitle(), String.valueOf(entity.getId()), String.valueOf(actualDocId)), NotifyType.INFO, 5000));</span>
+<span class="nc" id="L179">			return null;</span>
 		}
 
 		//sprav kopiu entity
-<span class="fc" id="L176">		entity.setDocId(-1);</span>
-<span class="fc" id="L177">		entity.setVirtualPath(virtualPath);</span>
-<span class="fc" id="L178">		entity.setGenerateUrlFromTitle(false);</span>
-<span class="fc" id="L179">		entity.setUrlInheritGroup(false);</span>
-<span class="fc" id="L180">		entity.setShowInMenu(false);</span>
-<span class="fc" id="L181">		entity.setLoggedShowInMenu(false);</span>
-<span class="fc" id="L182">		entity.setSearchable(false);</span>
+<span class="fc" id="L183">		entity.setDocId(-1);</span>
+<span class="fc" id="L184">		entity.setVirtualPath(virtualPath);</span>
+<span class="fc" id="L185">		entity.setGenerateUrlFromTitle(false);</span>
+<span class="fc" id="L186">		entity.setUrlInheritGroup(false);</span>
+<span class="fc" id="L187">		entity.setShowInMenu(false);</span>
+<span class="fc" id="L188">		entity.setLoggedShowInMenu(false);</span>
+<span class="fc" id="L189">		entity.setSearchable(false);</span>
 
-<span class="fc" id="L184">		return save(entity);</span>
+<span class="fc" id="L191">		return save(entity);</span>
 	}
 
     /**
@@ -198,61 +205,61 @@ public class EditorFacade {
 	 */
     public DocDetails getDocForEditor(int docId, int historyId, int groupId) {
 
-<span class="fc" id="L201">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="pc bpc" id="L202" title="1 of 4 branches missed.">		if (groupId &lt; 1 &amp;&amp; docId &gt; 0) {</span>
+<span class="fc" id="L208">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="pc bpc" id="L209" title="1 of 4 branches missed.">		if (groupId &lt; 1 &amp;&amp; docId &gt; 0) {</span>
 			//try to autodetect current groupId
-<span class="fc" id="L204">			DocDetails current = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
-<span class="pc bpc" id="L205" title="2 of 4 branches missed.">			if (current != null &amp;&amp; current.getGroupId()&gt;0) groupId = current.getGroupId();</span>
+<span class="fc" id="L211">			DocDetails current = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L212" title="2 of 4 branches missed.">			if (current != null &amp;&amp; current.getGroupId()&gt;0) groupId = current.getGroupId();</span>
 		}
 
-<span class="fc" id="L208">		GroupDetails group = groupsDB.getGroup(groupId);</span>
-<span class="fc bfc" id="L209" title="All 2 branches covered.">		if (group == null) {</span>
+<span class="fc" id="L215">		GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">		if (group == null) {</span>
 			//in multithread enviroment sometimes group is not yet loaded, try to reload
-<span class="fc" id="L211">			groupsDB = GroupsDB.getInstance(true);</span>
-<span class="fc" id="L212">			group = groupsDB.getGroup(groupId);</span>
+<span class="fc" id="L218">			groupsDB = GroupsDB.getInstance(true);</span>
+<span class="fc" id="L219">			group = groupsDB.getGroup(groupId);</span>
 		}
 		//lebo pre zadane docId group ignorujeme (moze to byt 999997)
-<span class="pc bpc" id="L215" title="1 of 4 branches missed.">		if (docId &lt; 0 &amp;&amp; group == null) return null;</span>
+<span class="pc bpc" id="L222" title="1 of 4 branches missed.">		if (docId &lt; 0 &amp;&amp; group == null) return null;</span>
 
 		DocDetails editedDoc;
 
 		// vymazem docasne ulozene media (uzivatel neulozil novu stranku po
-<span class="fc" id="L220">		mediaService.deleteTempMedia();</span>
+<span class="fc" id="L227">		mediaService.deleteTempMedia();</span>
 
-<span class="pc bpc" id="L222" title="1 of 4 branches missed.">        if (docId == -1 &amp;&amp; group.getNewPageDocIdTemplate() &gt; 0) {</span>
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">        if (docId == -1 &amp;&amp; group.getNewPageDocIdTemplate() &gt; 0) {</span>
 			//je potrebne pouzit sablonu namiesto -1
-<span class="nc" id="L224">			docId = -group.getNewPageDocIdTemplate();</span>
+<span class="nc" id="L231">			docId = -group.getNewPageDocIdTemplate();</span>
 		}
 
         //sablona nemoze byt -1 (to je blank page)
-<span class="pc bpc" id="L228" title="1 of 4 branches missed.">		if (docId &lt; 0 &amp;&amp; historyId &lt; 0) {</span>
-<span class="fc" id="L229">			editedDoc = editorService.prepareNewDocForEditor(docId, group);</span>
+<span class="pc bpc" id="L235" title="1 of 4 branches missed.">		if (docId &lt; 0 &amp;&amp; historyId &lt; 0) {</span>
+<span class="fc" id="L236">			editedDoc = editorService.prepareNewDocForEditor(docId, group);</span>
 		} else {
-<span class="fc" id="L231">			editedDoc = editorService.prepareDocForEditor(docId, historyId, ignoreMultigroupMapping);</span>
+<span class="fc" id="L238">			editedDoc = editorService.prepareDocForEditor(docId, historyId, ignoreMultigroupMapping);</span>
 
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">			if(editedDoc == null) return null;</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">			if(editedDoc == null) return null;</span>
 		}
 
-<span class="fc bfc" id="L236" title="All 4 branches covered.">		if (Constants.getBoolean(&quot;editorAutoFillPublishStart&quot;) &amp;&amp; editedDoc.getPublishStartDate()==null) {</span>
-<span class="fc" id="L237">			editedDoc.setPublishStartDate(new Date(Tools.getNow()));</span>
+<span class="fc bfc" id="L243" title="All 4 branches covered.">		if (Constants.getBoolean(&quot;editorAutoFillPublishStart&quot;) &amp;&amp; editedDoc.getPublishStartDate()==null) {</span>
+<span class="fc" id="L244">			editedDoc.setPublishStartDate(new Date(Tools.getNow()));</span>
 		}
 
-<span class="pc bpc" id="L240" title="1 of 2 branches missed.">		if (request != null) {</span>
-<span class="fc" id="L241">			editedDoc.setHistoryId(historyId);</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">		if (request != null) {</span>
+<span class="fc" id="L248">			editedDoc.setHistoryId(historyId);</span>
 
-<span class="fc" id="L243">			String domainName = DocDB.getDomain(request);</span>
-<span class="fc" id="L244">			GroupDetails editorGroup = groupsDB.getGroup(editedDoc.getGroupId());</span>
+<span class="fc" id="L250">			String domainName = DocDB.getDomain(request);</span>
+<span class="fc" id="L251">			GroupDetails editorGroup = groupsDB.getGroup(editedDoc.getGroupId());</span>
 
-<span class="pc bpc" id="L246" title="2 of 4 branches missed.">			if (editorGroup != null &amp;&amp; Tools.isNotEmpty(editorGroup.getDomainName())) domainName = editorGroup.getDomainName();</span>
-<span class="fc" id="L247">			request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, domainName);</span>
+<span class="pc bpc" id="L253" title="2 of 4 branches missed.">			if (editorGroup != null &amp;&amp; Tools.isNotEmpty(editorGroup.getDomainName())) domainName = editorGroup.getDomainName();</span>
+<span class="fc" id="L254">			request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, domainName);</span>
 		}
 
-<span class="pc bpc" id="L250" title="2 of 4 branches missed.">		if (request != null &amp;&amp; ContextFilter.isRunning(request)) {</span>
+<span class="pc bpc" id="L257" title="2 of 4 branches missed.">		if (request != null &amp;&amp; ContextFilter.isRunning(request)) {</span>
 			//do editoru nahrame texty s pridanymi linkami
-<span class="nc" id="L252">			editedDoc.setData(ContextFilter.addContextPath(request.getContextPath(), editedDoc.getData()));</span>
+<span class="nc" id="L259">			editedDoc.setData(ContextFilter.addContextPath(request.getContextPath(), editedDoc.getData()));</span>
 		}
 
-<span class="fc" id="L255">        return editedDoc;</span>
+<span class="fc" id="L262">        return editedDoc;</span>
     }
 
 	/**
@@ -264,29 +271,29 @@ public class EditorFacade {
 	 */
 	public DocDetails createEmptyWebPage(GroupDetails group, String title, boolean available) {
 		DocDetails doc;
-<span class="pc bpc" id="L267" title="3 of 4 branches missed.">        if (group.getDefaultDocId()&gt;0 &amp;&amp; title==null) doc = getDocForEditor(group.getDefaultDocId(), -1, group.getGroupId());</span>
-<span class="fc" id="L268">        else doc = getDocForEditor(-1, -1, group.getGroupId());</span>
+<span class="pc bpc" id="L274" title="3 of 4 branches missed.">        if (group.getDefaultDocId()&gt;0 &amp;&amp; title==null) doc = getDocForEditor(group.getDefaultDocId(), -1, group.getGroupId());</span>
+<span class="fc" id="L275">        else doc = getDocForEditor(-1, -1, group.getGroupId());</span>
 
-<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        if (Tools.isEmpty(title)) title = group.getGroupName();</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">        if (Tools.isEmpty(title)) title = group.getGroupName();</span>
 
-<span class="fc" id="L272">        doc.setTitle(title);</span>
-<span class="fc" id="L273">        doc.setNavbar(title);</span>
+<span class="fc" id="L279">        doc.setTitle(title);</span>
+<span class="fc" id="L280">        doc.setNavbar(title);</span>
 
-<span class="fc" id="L275">		save(doc);</span>
+<span class="fc" id="L282">		save(doc);</span>
 
-<span class="fc" id="L277">        return doc;</span>
+<span class="fc" id="L284">        return doc;</span>
 	}
 
 	public boolean delete(DocDetails doc) {
-<span class="fc" id="L281">		return editorService.deleteWebpage(doc, true);</span>
+<span class="fc" id="L288">		return editorService.deleteWebpage(doc, true);</span>
 	}
 
 	public void recoverWebpageFromTrash(DocDetails doc) {
-<span class="pc bpc" id="L285" title="2 of 4 branches missed.">		if (doc != null &amp;&amp; doc.getDocId()&gt;0) editorService.recoverWebpageFromTrash(doc.getDocId());</span>
-<span class="fc" id="L286">	}</span>
+<span class="pc bpc" id="L292" title="2 of 4 branches missed.">		if (doc != null &amp;&amp; doc.getDocId()&gt;0) editorService.recoverWebpageFromTrash(doc.getDocId());</span>
+<span class="fc" id="L293">	}</span>
 
     public boolean isForceReload() {
-<span class="pc bpc" id="L289" title="1 of 4 branches missed.">        return forceReload || editorService.isForceReload();</span>
+<span class="pc bpc" id="L296" title="1 of 4 branches missed.">        return forceReload || editorService.isForceReload();</span>
     }
 
     /**
@@ -294,7 +301,7 @@ public class EditorFacade {
 	 * @return
 	 */
 	public List&lt;UserDetails&gt; getApprovers() {
-<span class="fc" id="L297">		return editorService.getApprovers();</span>
+<span class="fc" id="L304">		return editorService.getApprovers();</span>
 	}
 
 	/**
@@ -302,7 +309,7 @@ public class EditorFacade {
 	 * @return
 	 */
 	public Long getPublihStart() {
-<span class="fc" id="L305">		return editorService.getPublihStart();</span>
+<span class="fc" id="L312">		return editorService.getPublihStart();</span>
 	}
 
 	/**
@@ -310,7 +317,7 @@ public class EditorFacade {
 	 * @return
 	 */
 	public boolean isPageSavedToPublic() {
-<span class="nc" id="L313">		return editorService.isPageSavedToPublic();</span>
+<span class="nc" id="L320">		return editorService.isPageSavedToPublic();</span>
 	}
 
 	/**
@@ -318,7 +325,7 @@ public class EditorFacade {
 	 * @return
 	 */
 	public boolean isPageSavedAsWorkVersion() {
-<span class="fc" id="L321">		return editorService.isPageSavedAsWorkVersion();</span>
+<span class="fc" id="L328">		return editorService.isPageSavedAsWorkVersion();</span>
 	}
 
     /**
@@ -326,19 +333,19 @@ public class EditorFacade {
      * @return
      */
     public List&lt;NotifyBean&gt; getNotify() {
-<span class="fc" id="L329">		List&lt;NotifyBean&gt; notify = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L330" title="1 of 2 branches missed.">		if (editorService.getNotify()!=null) notify.addAll(editorService.getNotify());</span>
-<span class="fc bfc" id="L331" title="All 2 branches covered.">		if (groupsService.getNotify()!=null) notify.addAll(groupsService.getNotify());</span>
-<span class="fc" id="L332">        return notify;</span>
+<span class="fc" id="L336">		List&lt;NotifyBean&gt; notify = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">		if (editorService.getNotify()!=null) notify.addAll(editorService.getNotify());</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">		if (groupsService.getNotify()!=null) notify.addAll(groupsService.getNotify());</span>
+<span class="fc" id="L339">        return notify;</span>
     }
 
 	/**
 	 * Clears notify list
 	 */
 	public void clearNotify() {
-<span class="pc bpc" id="L339" title="1 of 2 branches missed.">		if (editorService.getNotify()!=null) editorService.getNotify().clear();</span>
-<span class="pc bpc" id="L340" title="1 of 2 branches missed.">		if (groupsService.getNotify()!=null) groupsService.getNotify().clear();</span>
-<span class="fc" id="L341">    }</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">		if (editorService.getNotify()!=null) editorService.getNotify().clear();</span>
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">		if (groupsService.getNotify()!=null) groupsService.getNotify().clear();</span>
+<span class="fc" id="L348">    }</span>
 
 	/**
 	 * Vrati zoznam vsetkych medii priradenych k zadanej web stranke
@@ -346,7 +353,7 @@ public class EditorFacade {
 	 * @return
 	 */
 	public List&lt;Media&gt; getAllMedia(Integer docId) {
-<span class="nc" id="L349">		return mediaService.getAllMedia(docId, &quot;documents&quot;);</span>
+<span class="nc" id="L356">		return mediaService.getAllMedia(docId, &quot;documents&quot;);</span>
 	}
 
 	/**
@@ -357,16 +364,16 @@ public class EditorFacade {
 	 */
 	public void duplicateMedia(Integer oldDocId, Integer newDocId) {
 		// zduplikuj aj media
-<span class="nc" id="L360">        List&lt;Media&gt; mediaList = getAllMedia(oldDocId);</span>
-<span class="nc bnc" id="L361" title="All 4 branches missed.">        if (mediaList != null &amp;&amp; mediaList.isEmpty()==false) {</span>
-<span class="nc bnc" id="L362" title="All 2 branches missed.">            for (Media m : mediaList) {</span>
-<span class="nc" id="L363">                Logger.debug(getClass(), &quot;Duplikujem medium: &quot;+m.getMediaId()+&quot; &quot;+m.getMediaTitleSk());</span>
-<span class="nc" id="L364">				m.setId(null);</span>
-<span class="nc" id="L365">				m.setMediaFkId(newDocId);</span>
-<span class="nc" id="L366">				m.save();</span>
-<span class="nc" id="L367">            }</span>
+<span class="nc" id="L367">        List&lt;Media&gt; mediaList = getAllMedia(oldDocId);</span>
+<span class="nc bnc" id="L368" title="All 4 branches missed.">        if (mediaList != null &amp;&amp; mediaList.isEmpty()==false) {</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">            for (Media m : mediaList) {</span>
+<span class="nc" id="L370">                Logger.debug(getClass(), &quot;Duplikujem medium: &quot;+m.getMediaId()+&quot; &quot;+m.getMediaTitleSk());</span>
+<span class="nc" id="L371">				m.setId(null);</span>
+<span class="nc" id="L372">				m.setMediaFkId(newDocId);</span>
+<span class="nc" id="L373">				m.save();</span>
+<span class="nc" id="L374">            }</span>
         }
-<span class="nc" id="L369">	}</span>
+<span class="nc" id="L376">	}</span>
 
 	/**
 	 * Overi, ci pouzivatel ma pravo na editaciu zadanej web stranky
@@ -376,11 +383,11 @@ public class EditorFacade {
 	 * @return
 	 */
 	public boolean isPageEditable(Identity user, DocDetails doc, boolean isDelete) {
-<span class="fc" id="L379">		return editorService.isPageEditable(user, doc, isDelete);</span>
+<span class="fc" id="L386">		return editorService.isPageEditable(user, doc, isDelete);</span>
 	}
 
 	public boolean isIgnoreMultigroupMapping() {
-<span class="fc" id="L383">		return ignoreMultigroupMapping;</span>
+<span class="fc" id="L390">		return ignoreMultigroupMapping;</span>
 	}
 
 	/**
@@ -388,8 +395,8 @@ public class EditorFacade {
 	 * @param ignoreMultigroupMapping
 	 */
 	public void setIgnoreMultigroupMapping(boolean ignoreMultigroupMapping) {
-<span class="fc" id="L391">		this.ignoreMultigroupMapping = ignoreMultigroupMapping;</span>
-<span class="fc" id="L392">	}</span>
+<span class="fc" id="L398">		this.ignoreMultigroupMapping = ignoreMultigroupMapping;</span>
+<span class="fc" id="L399">	}</span>
 
 	/**
 	 * Recover group from trash:
@@ -400,7 +407,7 @@ public class EditorFacade {
 	 * @return
 	 */
 	public boolean recoverGroupFromTrash(GroupDetails entity, Identity currentUser) {
-<span class="fc" id="L403">		return groupsService.recoverGroupFromTrash(entity, currentUser);</span>
+<span class="fc" id="L410">		return groupsService.recoverGroupFromTrash(entity, currentUser);</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

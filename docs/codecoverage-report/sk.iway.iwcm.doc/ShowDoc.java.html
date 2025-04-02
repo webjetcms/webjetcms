@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShowDoc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">ShowDoc.java</span></div><h1>ShowDoc.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ShowDoc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">ShowDoc.java</span></div><h1>ShowDoc.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import static sk.iway.iwcm.common.DocTools.testXss;
 
@@ -333,9 +333,9 @@ private static String combineCss(String cssStyle)
 <span class="fc" id="L333">       cssStyle = Tools.replace(cssStyle, &quot;\n&quot;, &quot;,&quot;);</span>
 <span class="fc" id="L334">        cssStyle = Tools.replace(cssStyle, &quot;\r&quot;, &quot;&quot;);</span>
 
-<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if (cssStyle.contains(&quot;,&quot;))</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (cssStyle.contains(&quot;,&quot;))</span>
         {
-<span class="nc" id="L338">            return &quot;/components/_common/combine.jsp?t=css&amp;f=&quot;+cssStyle+&quot;&amp;v=&quot;+CombineTag.getVersion();</span>
+<span class="fc" id="L338">            return &quot;/components/_common/combine.jsp?t=css&amp;f=&quot;+cssStyle+&quot;&amp;v=&quot;+CombineTag.getVersion();</span>
         }
 
 <span class="fc" id="L341">        return cssStyle;</span>
@@ -485,7 +485,7 @@ private static String combineCss(String cssStyle)
                 //aby sme sa nezacyklili
 <span class="fc" id="L486">                request.setAttribute(&quot;doShowdocActionCycle&quot;, doShowdocAction);</span>
 
-<span class="fc" id="L488">                request.getRequestDispatcher(doShowdocAction).forward(request, response);</span>
+<span class="fc" id="L488">                request.getRequestDispatcher(Tools.replace(doShowdocAction, &quot;.do&quot;, &quot;.struts&quot;)).forward(request, response);</span>
 <span class="fc" id="L489">                return;</span>
             }
         }
@@ -1190,9 +1190,9 @@ private static String combineCss(String cssStyle)
         //nastavujem ContentLanguage podla sablony stranky
 <span class="fc bfc" id="L1191" title="All 2 branches covered.">        String lng = Tools.isNotEmpty(group.getLng()) ? group.getLng() : temp.getLng();</span>
 <span class="fc" id="L1192">        String lngParam = Tools.getParameter(request, &quot;language&quot;);</span>
-<span class="pc bpc" id="L1193" title="1 of 2 branches missed.">        if (lngParam != null)</span>
+<span class="fc bfc" id="L1193" title="All 2 branches covered.">        if (lngParam != null)</span>
         {
-<span class="nc bnc" id="L1195" title="All 4 branches missed.">            if (lngParam.length()==2 || lngParam.length()==3) lng = lngParam;</span>
+<span class="pc bpc" id="L1195" title="3 of 4 branches missed.">            if (lngParam.length()==2 || lngParam.length()==3) lng = lngParam;</span>
         }
 
 <span class="fc" id="L1198">        PageLng.setUserLng(request, response, lng);</span>
@@ -1398,22 +1398,22 @@ private static String combineCss(String cssStyle)
                 {
                     //skontroluj, ci sablona skutocne existuje
 
-<span class="fc" id="L1401">                    forward = getForward(request, prop, tempBrowserDetector, bd, forward);</span>
-<span class="pc bpc" id="L1402" title="1 of 2 branches missed.">                    if (forward == null) return;</span>
+<span class="fc" id="L1401">                forward = getForward(request, prop, temp, tempBrowserDetector, bd, forward);</span>
+<span class="pc bpc" id="L1402" title="1 of 2 branches missed.">                if (forward == null) return;</span>
 
 <span class="fc" id="L1404">                    Logger.debug(this,&quot;forward=&quot;+forward);</span>
                 }
 
-<span class="fc bfc" id="L1407" title="All 2 branches covered.">                if (forward.startsWith(&quot;/templates&quot;)==false) {</span>
-<span class="fc" id="L1408">                    forward = &quot;/templates/&quot;+forward;</span>
+<span class="pc bpc" id="L1407" title="1 of 2 branches missed.">                if (forward.startsWith(&quot;/templates&quot;)==false) {</span>
+<span class="nc" id="L1408">                    forward = &quot;/templates/&quot;+forward;</span>
                 }
             }
 
 <span class="fc" id="L1412">            IwcmFile forwardFile = getTemplateFile(forward);</span>
-<span class="fc bfc" id="L1413" title="All 2 branches covered.">            if (!forwardFile.isFile())</span>
+<span class="pc bpc" id="L1413" title="1 of 2 branches missed.">            if (!forwardFile.isFile())</span>
             {
-<span class="fc" id="L1415">                Adminlog.add(Adminlog.TYPE_RUNTIME_ERROR, &quot;Missing template for page: &quot;+doc.getDocId()+&quot;, required template file: &quot;+forward, doc.getDocId(), doc.getTempId());</span>
-<span class="fc" id="L1416">                forward = &quot;/404.jsp&quot;;</span>
+<span class="nc" id="L1415">                Adminlog.add(Adminlog.TYPE_RUNTIME_ERROR, &quot;Missing template for page: &quot;+doc.getDocId()+&quot;, required template file: &quot;+forward, doc.getDocId(), doc.getTempId());</span>
+<span class="nc" id="L1416">                forward = &quot;/404.jsp&quot;;</span>
             }
 
 <span class="fc bfc" id="L1419" title="All 2 branches covered.">            if (forward.toLowerCase().endsWith(&quot;.html&quot;)) {</span>
@@ -1470,39 +1470,47 @@ private static String combineCss(String cssStyle)
 <span class="nc" id="L1470">        request.setAttribute(&quot;doc_data&quot;, perex);</span>
 <span class="nc" id="L1471">    }</span>
 
-    private String getForward(HttpServletRequest request, Prop prop, TemplateDetails tempBrowserDetector, BrowserDetector bd, String forward) {
+    private String getForward(HttpServletRequest request, Prop prop, TemplateDetails temp, TemplateDetails tempBrowserDetector, BrowserDetector bd, String forward) {
         try {
             //ak mame sablonu pre browserDevice, uz nehladame iny JSP subor pre forward
 <span class="pc bpc" id="L1476" title="1 of 4 branches missed.">            if (tempBrowserDetector != null &amp;&amp; tempBrowserDetector.getTempId() &gt; 0) bd = null;</span>
 
-<span class="pc bpc" id="L1478" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(Constants.getLogInstallName()))</span>
-            {
-<span class="nc" id="L1480">                File f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot; + Constants.getLogInstallName())), forward, bd);</span>
-<span class="nc bnc" id="L1481" title="All 2 branches missed.">                if (f.exists()) {</span>
-<span class="nc" id="L1482">                    Logger.debug(ShowDoc.class, &quot;___FORWARDFILE (logInstallName)=&quot;+ f.getAbsolutePath());</span>
-<span class="nc" id="L1483">                    return &quot;/templates/&quot; + Constants.getLogInstallName() + &quot;/&quot; + forward;</span>
+<span class="pc bpc" id="L1478" title="1 of 4 branches missed.">            if (temp != null &amp;&amp; Tools.isNotEmpty(temp.getTemplateInstallName())) {</span>
+<span class="fc" id="L1479">                File f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot; + temp.getTemplateInstallName())), forward, bd);</span>
+<span class="pc bpc" id="L1480" title="1 of 2 branches missed.">                if (f.exists()) {</span>
+<span class="fc" id="L1481">                    Logger.debug(ShowDoc.class, &quot;___FORWARDFILE (tempInstallName)=&quot;+ f.getAbsolutePath());</span>
+<span class="fc" id="L1482">                    return &quot;/templates/&quot; + temp.getTemplateInstallName() + &quot;/&quot; + forward;</span>
                 }
             }
 
-<span class="fc" id="L1487">            File f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot; + Constants.getInstallName())), forward, bd);</span>
-<span class="fc bfc" id="L1488" title="All 2 branches covered.">            if (f.exists()) {</span>
-<span class="fc" id="L1489">                Logger.debug(ShowDoc.class, &quot;___FORWARDFILE (installName)=&quot;+ f.getAbsolutePath());</span>
-<span class="fc" id="L1490">                return &quot;/templates/&quot; + Constants.getInstallName() + &quot;/&quot; + forward;</span>
+<span class="pc bpc" id="L1486" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(Constants.getLogInstallName()))</span>
+            {
+<span class="nc" id="L1488">                File f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot; + Constants.getLogInstallName())), forward, bd);</span>
+<span class="nc bnc" id="L1489" title="All 2 branches missed.">                if (f.exists()) {</span>
+<span class="nc" id="L1490">                    Logger.debug(ShowDoc.class, &quot;___FORWARDFILE (logInstallName)=&quot;+ f.getAbsolutePath());</span>
+<span class="nc" id="L1491">                    return &quot;/templates/&quot; + Constants.getLogInstallName() + &quot;/&quot; + forward;</span>
+                }
             }
 
-<span class="fc" id="L1493">            f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot;)), forward, bd);</span>
-<span class="pc bpc" id="L1494" title="1 of 2 branches missed.">            if (!f.exists()) {</span>
-<span class="fc" id="L1495">                StatDB.addError(request.getRequestURI() + &quot;?&quot; + request.getQueryString(), prop.getText(&quot;admin.showdoc_error_message.template&quot;) + &quot; &quot; + forward + &quot; &quot; + prop.getText(&quot;admin.showdoc_error_message.not_exists&quot;) + &quot;!&quot;);</span>
-<span class="fc" id="L1496">                Logger.error(this, prop.getText(&quot;admin.showdoc_error_message.template&quot;) + &quot; /templates/&quot; + forward + &quot; &quot; + prop.getText(&quot;admin.showdoc_error_message.not_exists=&quot;) + &quot;!&quot;);</span>
+<span class="fc" id="L1495">            File f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot; + Constants.getInstallName())), forward, bd);</span>
+<span class="pc bpc" id="L1496" title="1 of 2 branches missed.">            if (f.exists()) {</span>
+<span class="fc" id="L1497">                Logger.debug(ShowDoc.class, &quot;___FORWARDFILE (installName)=&quot;+ f.getAbsolutePath());</span>
+<span class="fc" id="L1498">                return &quot;/templates/&quot; + Constants.getInstallName() + &quot;/&quot; + forward;</span>
+            }
+
+<span class="nc" id="L1501">            f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath(&quot;/templates/&quot;)), forward, bd);</span>
+<span class="nc bnc" id="L1502" title="All 2 branches missed.">            if (!f.exists()) {</span>
+<span class="nc" id="L1503">                StatDB.addError(request.getRequestURI() + &quot;?&quot; + request.getQueryString(), prop.getText(&quot;admin.showdoc_error_message.template&quot;) + &quot; &quot; + forward + &quot; &quot; + prop.getText(&quot;admin.showdoc_error_message.not_exists&quot;) + &quot;!&quot;);</span>
+<span class="nc" id="L1504">                Logger.error(this, prop.getText(&quot;admin.showdoc_error_message.template&quot;) + &quot; /templates/&quot; + forward + &quot; &quot; + prop.getText(&quot;admin.showdoc_error_message.not_exists&quot;) + &quot;!&quot;);</span>
                 //sablona neexistuje, asi som na testovacom serveri u jeeffa...
 
-<span class="fc" id="L1499">                forward = &quot;tmp_generic.jsp&quot;;</span>
+<span class="nc" id="L1507">                forward = &quot;tmp_generic.jsp&quot;;</span>
             }
             // else zrusene, aby islo zadat forward aj s adresarom forward = f.getName();
-<span class="nc" id="L1502">        } catch (Exception e) {</span>
-<span class="nc" id="L1503">            Logger.error(ShowDoc.class, e);</span>
-<span class="fc" id="L1504">        }</span>
-<span class="fc" id="L1505">        return forward;</span>
+<span class="nc" id="L1510">        } catch (Exception e) {</span>
+<span class="nc" id="L1511">            Logger.error(ShowDoc.class, e);</span>
+<span class="nc" id="L1512">        }</span>
+<span class="nc" id="L1513">        return forward;</span>
     }
 
 
@@ -1511,76 +1519,76 @@ private static String combineCss(String cssStyle)
      */
     private static void setRequestDocData(String name, int defaultDocId, String defaultData, List&lt;DocDetails&gt; localDocsInGroup, HttpServletRequest request)
     {
-<span class="fc" id="L1514">        DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L1515">        DocDetails originalDoc = docDB.getBasicDocDetails(defaultDocId, false);</span>
+<span class="fc" id="L1522">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1523">        DocDetails originalDoc = docDB.getBasicDocDetails(defaultDocId, false);</span>
 
-<span class="pc bpc" id="L1517" title="1 of 4 branches missed.">        if (originalDoc != null &amp;&amp; localDocsInGroup != null)</span>
+<span class="pc bpc" id="L1525" title="1 of 4 branches missed.">        if (originalDoc != null &amp;&amp; localDocsInGroup != null)</span>
         {
-<span class="fc" id="L1519">            String groupLng = (String)request.getAttribute(&quot;group_lng&quot;);</span>
+<span class="fc" id="L1527">            String groupLng = (String)request.getAttribute(&quot;group_lng&quot;);</span>
 
-<span class="fc" id="L1521">            DocDetails foundDoc = null;</span>
-<span class="fc bfc" id="L1522" title="All 2 branches covered.">            if (Tools.isNotEmpty(groupLng))</span>
+<span class="fc" id="L1529">            DocDetails foundDoc = null;</span>
+<span class="fc bfc" id="L1530" title="All 2 branches covered.">            if (Tools.isNotEmpty(groupLng))</span>
             {
                 //ak je nastaveny jazyk adresara, tak najprv kontrolujem jazykovu zhodu bud ako prefix jazyk + medzera napr. &quot;EN header&quot;, alebo ako suffix pomlcka+jazyk napr. &quot;header-DE&quot;
-<span class="fc bfc" id="L1525" title="All 2 branches covered.">                for (DocDetails localDoc : localDocsInGroup)</span>
+<span class="fc bfc" id="L1533" title="All 2 branches covered.">                for (DocDetails localDoc : localDocsInGroup)</span>
                 {
-<span class="pc bpc" id="L1527" title="1 of 2 branches missed.">                    if (localDoc.getTitle().equalsIgnoreCase(groupLng+&quot; &quot;+originalDoc.getTitle()) ||</span>
-<span class="pc bpc" id="L1528" title="1 of 2 branches missed.">                            localDoc.getTitle().equalsIgnoreCase(groupLng+&quot;-&quot;+originalDoc.getTitle()) ||</span>
-<span class="pc bpc" id="L1529" title="1 of 2 branches missed.">                            localDoc.getTitle().equalsIgnoreCase(originalDoc.getTitle()+&quot;-&quot;+groupLng))</span>
+<span class="pc bpc" id="L1535" title="1 of 2 branches missed.">                    if (localDoc.getTitle().equalsIgnoreCase(groupLng+&quot; &quot;+originalDoc.getTitle()) ||</span>
+<span class="pc bpc" id="L1536" title="1 of 2 branches missed.">                            localDoc.getTitle().equalsIgnoreCase(groupLng+&quot;-&quot;+originalDoc.getTitle()) ||</span>
+<span class="pc bpc" id="L1537" title="1 of 2 branches missed.">                            localDoc.getTitle().equalsIgnoreCase(originalDoc.getTitle()+&quot;-&quot;+groupLng))</span>
                     {
-<span class="nc" id="L1531">                        foundDoc = localDoc;</span>
-<span class="nc" id="L1532">                        break;</span>
+<span class="nc" id="L1539">                        foundDoc = localDoc;</span>
+<span class="nc" id="L1540">                        break;</span>
                     }
                     //ak mame nastavenu SK-Default hlavicka, skus odstranit SK- a porovnat ako EN-Default hlavicka
-<span class="fc" id="L1535">                    String originalTitle = originalDoc.getTitle();</span>
-<span class="pc bpc" id="L1536" title="4 of 6 branches missed.">                    if (originalTitle.length()&gt;4 &amp;&amp; originalTitle.charAt(2)=='-' &amp;&amp; localDoc.getTitle().equalsIgnoreCase(groupLng+&quot;-&quot;+originalTitle.substring(3))) {</span>
-<span class="nc" id="L1537">                        foundDoc = localDoc;</span>
-<span class="nc" id="L1538">                        break;</span>
+<span class="fc" id="L1543">                    String originalTitle = originalDoc.getTitle();</span>
+<span class="pc bpc" id="L1544" title="4 of 6 branches missed.">                    if (originalTitle.length()&gt;4 &amp;&amp; originalTitle.charAt(2)=='-' &amp;&amp; localDoc.getTitle().equalsIgnoreCase(groupLng+&quot;-&quot;+originalTitle.substring(3))) {</span>
+<span class="nc" id="L1545">                        foundDoc = localDoc;</span>
+<span class="nc" id="L1546">                        break;</span>
                     }
-<span class="fc" id="L1540">                }</span>
+<span class="fc" id="L1548">                }</span>
             }
 
             //ak nie je nastaveny jazyk, postupujem ako predtym a hladam na zaklade zhody titulov stranok
-<span class="pc bpc" id="L1544" title="1 of 2 branches missed.">            if(foundDoc == null)</span>
+<span class="pc bpc" id="L1552" title="1 of 2 branches missed.">            if(foundDoc == null)</span>
             {
-<span class="fc bfc" id="L1546" title="All 2 branches covered.">                for (DocDetails localDoc : localDocsInGroup)</span>
+<span class="fc bfc" id="L1554" title="All 2 branches covered.">                for (DocDetails localDoc : localDocsInGroup)</span>
                 {
-<span class="pc bpc" id="L1548" title="1 of 4 branches missed.">                    if(localDoc.getDocId()!=defaultDocId &amp;&amp; localDoc.getTitle().equalsIgnoreCase(originalDoc.getTitle()))</span>
+<span class="pc bpc" id="L1556" title="1 of 4 branches missed.">                    if(localDoc.getDocId()!=defaultDocId &amp;&amp; localDoc.getTitle().equalsIgnoreCase(originalDoc.getTitle()))</span>
                     {
-<span class="nc" id="L1550">                        foundDoc = localDoc;</span>
-<span class="nc" id="L1551">                        break;</span>
+<span class="nc" id="L1558">                        foundDoc = localDoc;</span>
+<span class="nc" id="L1559">                        break;</span>
                     }
-<span class="fc" id="L1553">                }</span>
+<span class="fc" id="L1561">                }</span>
             }
 
-<span class="pc bpc" id="L1556" title="1 of 2 branches missed.">            if(foundDoc != null)</span>
+<span class="pc bpc" id="L1564" title="1 of 2 branches missed.">            if(foundDoc != null)</span>
             {
-<span class="nc" id="L1558">                String docData = foundDoc.getData();</span>
-<span class="nc bnc" id="L1559" title="All 2 branches missed.">                if (Tools.isEmpty(docData))</span>
+<span class="nc" id="L1566">                String docData = foundDoc.getData();</span>
+<span class="nc bnc" id="L1567" title="All 2 branches missed.">                if (Tools.isEmpty(docData))</span>
                 {
-<span class="nc" id="L1561">                    foundDoc = docDB.getDocAndAddToCacheIfNot(foundDoc.getDocId());</span>
-<span class="nc" id="L1562">                    docData = foundDoc.getData();</span>
+<span class="nc" id="L1569">                    foundDoc = docDB.getDocAndAddToCacheIfNot(foundDoc.getDocId());</span>
+<span class="nc" id="L1570">                    docData = foundDoc.getData();</span>
                 }
-<span class="nc bnc" id="L1564" title="All 4 branches missed.">                if (Tools.isNotEmpty(docData) || &quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="nc bnc" id="L1572" title="All 4 branches missed.">                if (Tools.isNotEmpty(docData) || &quot;cloud&quot;.equals(Constants.getInstallName()))</span>
                 {
                     //v cloude chceme zobrazit userovu paticku aj ked v nej zmazal text (chce ju mat prazdnu)
-<span class="nc" id="L1567">                    defaultData = docData;</span>
-<span class="nc" id="L1568">                    defaultDocId = foundDoc.getDocId();</span>
-<span class="nc" id="L1569">                    request.setAttribute(name+&quot;-docDetails&quot;, foundDoc);</span>
+<span class="nc" id="L1575">                    defaultData = docData;</span>
+<span class="nc" id="L1576">                    defaultDocId = foundDoc.getDocId();</span>
+<span class="nc" id="L1577">                    request.setAttribute(name+&quot;-docDetails&quot;, foundDoc);</span>
                 }
             }
         }
 
-<span class="fc bfc" id="L1574" title="All 2 branches covered.">        if (request.getSession().getAttribute(Constants.USER_KEY)!=null)</span>
+<span class="fc bfc" id="L1582" title="All 2 branches covered.">        if (request.getSession().getAttribute(Constants.USER_KEY)!=null)</span>
         {
             //ak je prihlaseny user setni objekt aby isla inline editacia inych objektov ako doc_data
-<span class="fc" id="L1577">            request.setAttribute(name+&quot;-docDetails&quot;, originalDoc);</span>
+<span class="fc" id="L1585">            request.setAttribute(name+&quot;-docDetails&quot;, originalDoc);</span>
         }
 
         //nastav aj hodnotu docId pre inline editaciu
-<span class="fc" id="L1581">        request.setAttribute(name, defaultData);</span>
-<span class="fc" id="L1582">        request.setAttribute(name+&quot;-docId=&quot;, defaultDocId);</span>
-<span class="fc" id="L1583">    }</span>
+<span class="fc" id="L1589">        request.setAttribute(name, defaultData);</span>
+<span class="fc" id="L1590">        request.setAttribute(name+&quot;-docId=&quot;, defaultDocId);</span>
+<span class="fc" id="L1591">    }</span>
 
 
     /**
@@ -1594,88 +1602,88 @@ private static String combineCss(String cssStyle)
     {
         try
         {
-<span class="fc" id="L1597">            HttpSession session = request.getSession();</span>
-<span class="fc" id="L1598">            Identity user = null;</span>
+<span class="fc" id="L1605">            HttpSession session = request.getSession();</span>
+<span class="fc" id="L1606">            Identity user = null;</span>
             try
             {
                 //ziskaj meno lognuteho usera
-<span class="fc bfc" id="L1602" title="All 2 branches covered.">                if (session.getAttribute(Constants.USER_KEY) != null)</span>
+<span class="fc bfc" id="L1610" title="All 2 branches covered.">                if (session.getAttribute(Constants.USER_KEY) != null)</span>
                 {
-<span class="fc" id="L1604">                    user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L1612">                    user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
                 }
             }
-<span class="nc" id="L1607">            catch (Exception ex)</span>
+<span class="nc" id="L1615">            catch (Exception ex)</span>
             {
-<span class="nc" id="L1609">                Logger.error(ShowDoc.class, ex);</span>
-<span class="fc" id="L1610">            }</span>
+<span class="nc" id="L1617">                Logger.error(ShowDoc.class, ex);</span>
+<span class="fc" id="L1618">            }</span>
 
             // ------------ HEADER
-<span class="fc" id="L1613">            String text = (String) request.getAttribute(&quot;doc_header&quot;);</span>
-<span class="pc bpc" id="L1614" title="1 of 2 branches missed.">            if (text != null)</span>
+<span class="fc" id="L1621">            String text = (String) request.getAttribute(&quot;doc_header&quot;);</span>
+<span class="pc bpc" id="L1622" title="1 of 2 branches missed.">            if (text != null)</span>
             {
-<span class="fc" id="L1616">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
+<span class="fc" id="L1624">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
             }
 
-<span class="fc" id="L1619">            request.setAttribute(&quot;doc_header&quot;, text);</span>
+<span class="fc" id="L1627">            request.setAttribute(&quot;doc_header&quot;, text);</span>
 
             // ------------------ FOOTER
-<span class="fc" id="L1622">            text = (String) request.getAttribute(&quot;doc_footer&quot;);</span>
-<span class="pc bpc" id="L1623" title="1 of 2 branches missed.">            if (text != null)</span>
-            {
-<span class="fc" id="L1625">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
-            }
-<span class="fc" id="L1627">            request.setAttribute(&quot;doc_footer&quot;, text);</span>
-
-            // ------------------ MENU
-<span class="fc" id="L1630">            text = (String) request.getAttribute(&quot;doc_menu&quot;);</span>
+<span class="fc" id="L1630">            text = (String) request.getAttribute(&quot;doc_footer&quot;);</span>
 <span class="pc bpc" id="L1631" title="1 of 2 branches missed.">            if (text != null)</span>
             {
 <span class="fc" id="L1633">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
             }
-<span class="fc" id="L1635">            request.setAttribute(&quot;doc_menu&quot;, text);</span>
+<span class="fc" id="L1635">            request.setAttribute(&quot;doc_footer&quot;, text);</span>
 
-            // ------------------ MENU RIGHT
-<span class="fc" id="L1638">            text = (String) request.getAttribute(&quot;doc_right_menu&quot;);</span>
+            // ------------------ MENU
+<span class="fc" id="L1638">            text = (String) request.getAttribute(&quot;doc_menu&quot;);</span>
 <span class="pc bpc" id="L1639" title="1 of 2 branches missed.">            if (text != null)</span>
             {
 <span class="fc" id="L1641">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
             }
-<span class="fc" id="L1643">            request.setAttribute(&quot;doc_right_menu&quot;, text);</span>
+<span class="fc" id="L1643">            request.setAttribute(&quot;doc_menu&quot;, text);</span>
 
-            // ------------------ html_data
-<span class="fc" id="L1646">            text = (String) request.getAttribute(&quot;html_data&quot;);</span>
+            // ------------------ MENU RIGHT
+<span class="fc" id="L1646">            text = (String) request.getAttribute(&quot;doc_right_menu&quot;);</span>
 <span class="pc bpc" id="L1647" title="1 of 2 branches missed.">            if (text != null)</span>
             {
 <span class="fc" id="L1649">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
             }
-<span class="fc" id="L1651">            request.setAttribute(&quot;html_data&quot;, text);</span>
+<span class="fc" id="L1651">            request.setAttribute(&quot;doc_right_menu&quot;, text);</span>
 
-            // ------------------ DOC
-<span class="fc" id="L1654">            text = (String) request.getAttribute(&quot;doc_data&quot;);</span>
+            // ------------------ html_data
+<span class="fc" id="L1654">            text = (String) request.getAttribute(&quot;html_data&quot;);</span>
 <span class="pc bpc" id="L1655" title="1 of 2 branches missed.">            if (text != null)</span>
             {
 <span class="fc" id="L1657">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
             }
+<span class="fc" id="L1659">            request.setAttribute(&quot;html_data&quot;, text);</span>
 
-<span class="fc" id="L1660">            request.setAttribute(&quot;doc_data&quot;, text);</span>
+            // ------------------ DOC
+<span class="fc" id="L1662">            text = (String) request.getAttribute(&quot;doc_data&quot;);</span>
+<span class="pc bpc" id="L1663" title="1 of 2 branches missed.">            if (text != null)</span>
+            {
+<span class="fc" id="L1665">                text = ShowDoc.updateCodes(user, text, docId, request, servletContext);</span>
+            }
+
+<span class="fc" id="L1668">            request.setAttribute(&quot;doc_data&quot;, text);</span>
         }
-<span class="nc" id="L1662">        catch (Exception ignored)</span>
+<span class="nc" id="L1670">        catch (Exception ignored)</span>
         {
             //
-<span class="fc" id="L1665">        }</span>
-<span class="fc" id="L1666">    }</span>
+<span class="fc" id="L1673">        }</span>
+<span class="fc" id="L1674">    }</span>
 
 
 
 
     private IwcmFile getTemplateFile(String template)
     {
-<span class="fc" id="L1673">        return new IwcmFile(Tools.getRealPath(template));</span>
+<span class="fc" id="L1681">        return new IwcmFile(Tools.getRealPath(template));</span>
     }
 
     public static void setActualUserHash(String hash) {
-<span class="nc" id="L1677">        ShowDoc.ACTUAL_USER_HASH = hash;</span>
-<span class="nc" id="L1678">    }</span>
+<span class="fc" id="L1685">        ShowDoc.ACTUAL_USER_HASH = hash;</span>
+<span class="fc" id="L1686">    }</span>
 
     /**
      * Test if doShowdocAction request parameter is allowed/valid
@@ -1683,10 +1691,10 @@ private static String combineCss(String cssStyle)
      * @return
      */
     public static boolean isDoShowdocActionAllowed(String doShowdocAction) {
-<span class="pc bpc" id="L1686" title="4 of 10 branches missed.">        if (doShowdocAction != null &amp;&amp; doShowdocAction.length()&gt;3 &amp;&amp; !doShowdocAction.contains(&quot;WEB-INF&quot;) &amp;&amp; doShowdocAction.endsWith(&quot;.do&quot;) &amp;&amp; !doShowdocAction.contains(&quot;/admin/&quot;)) {</span>
-<span class="fc" id="L1687">         return true;</span>
+<span class="pc bpc" id="L1694" title="4 of 10 branches missed.">        if (doShowdocAction != null &amp;&amp; doShowdocAction.length()&gt;3 &amp;&amp; !doShowdocAction.contains(&quot;WEB-INF&quot;) &amp;&amp; doShowdocAction.endsWith(&quot;.do&quot;) &amp;&amp; !doShowdocAction.contains(&quot;/admin/&quot;)) {</span>
+<span class="fc" id="L1695">         return true;</span>
         }
-<span class="fc" id="L1689">        return false;</span>
+<span class="fc" id="L1697">        return false;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

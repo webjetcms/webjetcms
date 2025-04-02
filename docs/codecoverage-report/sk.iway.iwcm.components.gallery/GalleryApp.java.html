@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryApp.java</span></div><h1>GalleryApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryApp.java</span></div><h1>GalleryApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -128,62 +128,63 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 <span class="fc" id="L128">                dir = uploadSubdir;</span>
             }
         }
-<span class="fc" id="L131">    }</span>
+<span class="fc" id="L131">        style = Constants.getString(&quot;galleryDefaultStyle&quot;);</span>
+<span class="fc" id="L132">    }</span>
 
     @Override
     public Map&lt;String, List&lt;OptionDto&gt;&gt; getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
-<span class="fc" id="L135">        Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L136">        Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();</span>
 
         //add options for style
-<span class="fc" id="L138">        List&lt;OptionDto&gt; styleOptions = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L139">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L139">        List&lt;OptionDto&gt; styleOptions = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L140">        Prop prop = Prop.getInstance(request);</span>
 
-<span class="fc" id="L141">		styleOptions.add(new OptionDto(prop.getText(&quot;components.gallery.visual_style.prettyPhoto&quot;), &quot;prettyPhoto&quot;, null));</span>
-<span class="fc" id="L142">		styleOptions.add(new OptionDto(prop.getText(&quot;components.gallery.visual_style.photoSwipe&quot;), &quot;photoSwipe&quot;, null));</span>
+<span class="fc" id="L142">		styleOptions.add(new OptionDto(prop.getText(&quot;components.gallery.visual_style.prettyPhoto&quot;), &quot;prettyPhoto&quot;, null));</span>
+<span class="fc" id="L143">		styleOptions.add(new OptionDto(prop.getText(&quot;components.gallery.visual_style.photoSwipe&quot;), &quot;photoSwipe&quot;, null));</span>
 
 		//add all JSP files from the custom gallery folder
-<span class="fc" id="L145">		IwcmFile[] files = new IwcmFile(Tools.getRealPath(&quot;/components/&quot; + Constants.getInstallName() + &quot;/gallery/&quot;)).listFiles();</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">		for (IwcmFile f : files)</span>
+<span class="fc" id="L146">		IwcmFile[] files = new IwcmFile(Tools.getRealPath(&quot;/components/&quot; + Constants.getInstallName() + &quot;/gallery/&quot;)).listFiles();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		for (IwcmFile f : files)</span>
 		{
-<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (f.getName().startsWith(&quot;gallery-&quot;)==false) continue;</span>
-<span class="nc bnc" id="L149" title="All 4 branches missed.">			if (f.getName().contains(&quot;-prettyPhoto.jsp&quot;) || f.getName().contains(&quot;-photoSwipe.jsp&quot;)) continue;</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (f.getName().startsWith(&quot;gallery-&quot;)==false) continue;</span>
+<span class="nc bnc" id="L150" title="All 4 branches missed.">			if (f.getName().contains(&quot;-prettyPhoto.jsp&quot;) || f.getName().contains(&quot;-photoSwipe.jsp&quot;)) continue;</span>
 
-			try
+            try
 			{
-<span class="nc" id="L153">				String name = f.getName().substring(&quot;gallery-&quot;.length(), f.getName().length()-4);</span>
-<span class="nc" id="L154">                addPair(name, styleOptions, prop);</span>
+<span class="nc" id="L154">				String name = f.getName().substring(&quot;gallery-&quot;.length(), f.getName().length()-4);</span>
+<span class="nc" id="L155">                addPair(name, styleOptions, prop);</span>
 			}
-<span class="nc" id="L156">			catch (Exception e)</span>
+<span class="nc" id="L157">			catch (Exception e)</span>
 			{
-<span class="nc" id="L158">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L159">			}</span>
+<span class="nc" id="L159">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L160">			}</span>
 		}
 
 		//check if the current style is in the list
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(getStyle()))</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(getStyle()))</span>
 		{
-<span class="fc" id="L165">			boolean found = false;</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">			for (OptionDto option : styleOptions)</span>
+<span class="fc" id="L166">			boolean found = false;</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">			for (OptionDto option : styleOptions)</span>
 			{
-<span class="fc bfc" id="L168" title="All 2 branches covered.">				if (option.getValue().equals(getStyle())) found = true;</span>
-<span class="fc" id="L169">			}</span>
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">			if (found == false)</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">				if (option.getValue().equals(getStyle())) found = true;</span>
+<span class="fc" id="L170">			}</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">			if (found == false)</span>
 			{
-<span class="nc" id="L172">				addPair(getStyle(), styleOptions, prop);</span>
+<span class="nc" id="L173">				addPair(getStyle(), styleOptions, prop);</span>
 			}
 		}
 
-<span class="fc" id="L176">        options.put(&quot;style&quot;, styleOptions);</span>
+<span class="fc" id="L177">        options.put(&quot;style&quot;, styleOptions);</span>
 
         //add perex groups
-<span class="fc" id="L179">        List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups(componentRequest.getGroupId());</span>
-<span class="fc" id="L180">        List&lt;OptionDto&gt; perexGroupOptions = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">        for (PerexGroupBean pg : perexGroups) {</span>
-<span class="fc" id="L182">            perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), &quot;&quot;+pg.getPerexGroupId(), null));</span>
-<span class="fc" id="L183">        }</span>
-<span class="fc" id="L184">        options.put(&quot;perexGroup&quot;, perexGroupOptions);</span>
+<span class="fc" id="L180">        List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups(componentRequest.getGroupId());</span>
+<span class="fc" id="L181">        List&lt;OptionDto&gt; perexGroupOptions = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">        for (PerexGroupBean pg : perexGroups) {</span>
+<span class="fc" id="L183">            perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), &quot;&quot;+pg.getPerexGroupId(), null));</span>
+<span class="fc" id="L184">        }</span>
+<span class="fc" id="L185">        options.put(&quot;perexGroup&quot;, perexGroupOptions);</span>
 
-<span class="fc" id="L186">        return options;</span>
+<span class="fc" id="L187">        return options;</span>
     }
 
     /**
@@ -194,11 +195,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
      */
     private void addPair(String name, List&lt;OptionDto&gt; styleOptions, Prop prop)
 	{
-<span class="nc" id="L197">		String desc = prop.getText(&quot;components.gallery.visual_style.&quot;+name);</span>
-<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (desc.startsWith(&quot;components.gallery&quot;)) desc = name;</span>
+<span class="nc" id="L198">		String desc = prop.getText(&quot;components.gallery.visual_style.&quot;+name);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		if (desc.startsWith(&quot;components.gallery&quot;)) desc = name;</span>
 
-<span class="nc" id="L200">		styleOptions.add(new OptionDto(desc, name, null));</span>
-<span class="nc" id="L201">	}</span>
+<span class="nc" id="L201">		styleOptions.add(new OptionDto(desc, name, null));</span>
+<span class="nc" id="L202">	}</span>
 
 
 }

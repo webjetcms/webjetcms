@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryTreeService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryTreeService.java</span></div><h1>GalleryTreeService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryTreeService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryTreeService.java</span></div><h1>GalleryTreeService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -13,15 +15,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
 @Service
@@ -31,10 +36,12 @@ public class GalleryTreeService {
     private final GalleryDimensionRepository repository;
     private HttpServletRequest request;
 
-<span class="fc" id="L34">    public GalleryTreeService(GalleryDimensionRepository repository, HttpServletRequest request) {</span>
-<span class="fc" id="L35">        this.repository = repository;</span>
-<span class="fc" id="L36">        this.request = request;</span>
-<span class="fc" id="L37">    }</span>
+    private static final String ADMIN_SETTINGS_KEY = &quot;jstreeSettings_gallery&quot;;
+
+<span class="fc" id="L41">    public GalleryTreeService(GalleryDimensionRepository repository, HttpServletRequest request) {</span>
+<span class="fc" id="L42">        this.repository = repository;</span>
+<span class="fc" id="L43">        this.request = request;</span>
+<span class="fc" id="L44">    }</span>
 
     /**
      * Get List of GalleryJsTreeItem for specified URL address (e.g. /images/gallery)
@@ -42,39 +49,215 @@ public class GalleryTreeService {
      * @return
      */
     public List&lt;GalleryJsTreeItem&gt; getItems(String url) {
-<span class="fc" id="L45">        IwcmFile directory = new IwcmFile(Tools.getRealPath(url));</span>
-<span class="fc" id="L46">        final String urlFinal = url;</span>
-<span class="fc" id="L47">        List&lt;IwcmFile&gt; files = Arrays.asList(directory.listFiles(file -&gt; {</span>
-<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (!file.isDirectory()) {</span>
-<span class="fc" id="L49">                return false;</span>
+
+<span class="fc" id="L53">        String dir = getRequest().getParameter(&quot;dir&quot;);</span>
+<span class="fc" id="L54">        String treeSearchValue = Tools.getStringValue(request.getParameter(&quot;treeSearchValue&quot;), null);</span>
+<span class="fc" id="L55">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+
+<span class="fc" id="L57">        List&lt;IwcmFile&gt; files = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if(Tools.isNotEmpty(treeSearchValue)) {</span>
+<span class="fc" id="L59">            files.addAll( getAllTreeFiles(url, treeSearchValue) );</span>
+        } else {
+<span class="fc" id="L61">            files = getFiles(url);</span>
+        }
+
+<span class="fc" id="L64">        List&lt;GalleryJsTreeItem&gt; items = files.stream().map(f -&gt; new GalleryJsTreeItem(f, dir, repository, user)).toList();</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if(Tools.isNotEmpty(treeSearchValue)) {</span>
+            //Filter items by item.getText
+<span class="fc" id="L68">            Set&lt;GalleryJsTreeItem&gt; filteredItems = new HashSet&lt;&gt;( filterItems(items, treeSearchValue) );</span>
+
+            //Set parent for filtered items
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            for(GalleryJsTreeItem item : items) {</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                if(dir.equals(item.getId())) {</span>
+                    //Root item
+<span class="fc" id="L74">                    item.getState().setOpened(false);</span>
+<span class="fc" id="L75">                    item.getState().setSelected(false);</span>
+<span class="fc" id="L76">                    item.setParent(&quot;#&quot;);</span>
+                } else {
+<span class="fc" id="L78">                    String parent = item.getVirtualPath().substring(0, item.getVirtualPath().lastIndexOf(&quot;/&quot;));</span>
+<span class="fc" id="L79">                    item.setParent(parent);</span>
+                }
+<span class="fc" id="L81">            }</span>
+
+            //Find parents of filtered items
+<span class="fc" id="L84">            addParents(filteredItems, items, dir);</span>
+
+            //Replace all items with filtered items (+ parents)
+<span class="fc" id="L87">            items = new ArrayList&lt;&gt;(filteredItems);</span>
+        }
+
+<span class="fc" id="L90">        items = sortFilesBasedOnUserSettings(items, user);</span>
+
+<span class="fc" id="L92">        return items;</span>
+    }
+
+    /**
+     * Loop through filteredItems and add parents to them. Use allItems as source of parents.
+     * @param filteredItems
+     * @param allItems
+     * @param dir
+     */
+    private void addParents(Set&lt;GalleryJsTreeItem&gt; filteredItems, List&lt;GalleryJsTreeItem&gt; allItems, String dir) {
+<span class="fc" id="L102">        Set&lt;GalleryJsTreeItem&gt; parentsToAdd = new HashSet&lt;&gt;();</span>
+
+        //child - entity whos parent we looking for
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for(GalleryJsTreeItem child : filteredItems) {</span>
+
+            //Loop until we find root (id == dir)
+<span class="fc" id="L108">            GalleryJsTreeItem parent = child;</span>
+            while(true) {
+                //Check if it's root
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                if(dir.equals(parent.getId())) break;</span>
+
+                //No root - find parent
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">                for(GalleryJsTreeItem potencialParent : allItems) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                    if(potencialParent.getId().equals(parent.getParent())) {</span>
+<span class="fc" id="L116">                        parentsToAdd.add(potencialParent);</span>
+<span class="fc" id="L117">                        parent = potencialParent;</span>
+<span class="fc" id="L118">                        break;</span>
+                    }
+<span class="fc" id="L120">                }</span>
             }
-<span class="fc" id="L51">            Set&lt;String&gt; blacklistedNames = getBlacklistedNames();</span>
+<span class="fc" id="L122">        }</span>
+
+<span class="fc" id="L124">        filteredItems.addAll(parentsToAdd);</span>
+<span class="fc" id="L125">    }</span>
+
+    /**
+     * Filter items by text property. Search is case insensitive and diacritics insensitive.
+     * @param items
+     * @param searchText
+     * @return
+     */
+    private List&lt;GalleryJsTreeItem&gt; filterItems(List&lt;GalleryJsTreeItem&gt; items, String searchText) {
+<span class="fc" id="L134">        String treeSearchType = Tools.getStringValue(getRequest().getParameter(&quot;treeSearchType&quot;), &quot;&quot;);</span>
+<span class="fc" id="L135">        final String wantedValueLC = DB.internationalToEnglish(searchText).toLowerCase();</span>
+
+        //Filter by serach value and search type
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if(&quot;contains&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L139">            return items.stream()</span>
+<span class="fc" id="L140">                .filter(item -&gt; DB.internationalToEnglish(item.getText()).toLowerCase().contains(wantedValueLC))</span>
+<span class="fc" id="L141">                .toList();</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        } else if(&quot;startwith&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L143">            return items.stream()</span>
+<span class="fc" id="L144">                .filter(item -&gt; DB.internationalToEnglish(item.getText()).toLowerCase().startsWith(wantedValueLC))</span>
+<span class="fc" id="L145">                .toList();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        } else if(&quot;endwith&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L147">            return items.stream()</span>
+<span class="fc" id="L148">                .filter(item -&gt; DB.internationalToEnglish(item.getText()).toLowerCase().endsWith(wantedValueLC))</span>
+<span class="fc" id="L149">                .toList();</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        } else if(&quot;equals&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L151">            return items.stream()</span>
+<span class="fc" id="L152">                .filter(item -&gt; DB.internationalToEnglish(item.getText()).equalsIgnoreCase(wantedValueLC))</span>
+<span class="fc" id="L153">                .toList();</span>
+<span class="nc" id="L154">        } else return new ArrayList&lt;&gt;();</span>
+    }
+
+    /**
+     * Get all files in directory and subdirectories.
+     * For performance reason, we are
+     * not searching in file system, we are searching only in database
+     * @param url - root directory url
+     * @param treeSearchValue - search value
+     * @return
+     */
+    private List&lt;IwcmFile&gt; getAllTreeFiles(String url, String treeSearchValue) {
+<span class="fc" id="L166">        Set&lt;String&gt; paths = new HashSet&lt;&gt;();</span>
+
+<span class="fc" id="L168">        List&lt;GalleryDimension&gt; dirs = repository.findByPathLikeAndPathLikeAndDomainId(url+&quot;%&quot;, &quot;%&quot;+treeSearchValue+&quot;%&quot;, CloudToolsForCore.getDomainId());</span>
+
+<span class="fc" id="L170">        dirs.forEach(gallery -&gt; {</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">            if (FileTools.isDirectory(gallery.getPath()) == false) return;</span>
+
+<span class="fc" id="L173">            paths.add(gallery.getPath());</span>
+
+            //append all parents files starts with url if not allready in map
+            //eg. for /images/gallery/2021/01/01/1.jpg add /images/gallery/2021/01/01, /images/gallery/2021, /images/gallery
+<span class="fc" id="L177">            String parent = gallery.getPath();</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            while(parent.contains(&quot;/&quot;)) {</span>
+<span class="fc" id="L179">                parent = parent.substring(0, parent.lastIndexOf(&quot;/&quot;));</span>
+<span class="fc bfc" id="L180" title="All 4 branches covered.">                if(paths.contains(parent) == false &amp;&amp; parent.startsWith(url)) paths.add(parent);</span>
+            }
+<span class="fc" id="L182">        });</span>
+
+        //convert paths into list of string and sort it
+<span class="fc" id="L185">        List&lt;String&gt; pathsSorted = paths.stream().sorted().collect(Collectors.toList());</span>
+
+        //convert paths into IwcmFile list
+<span class="fc" id="L188">        List&lt;IwcmFile&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for(String path : pathsSorted) {</span>
+<span class="fc" id="L190">            list.add(new IwcmFile(Tools.getRealPath(path)));</span>
+<span class="fc" id="L191">        }</span>
+
+<span class="fc" id="L193">        return list;</span>
+    }
+
+    private List&lt;IwcmFile&gt; getFiles(String url) {
+<span class="fc" id="L197">        IwcmFile directory = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="fc" id="L198">        final String urlFinal = url;</span>
+
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">        if(url == null) return Arrays.asList();</span>
+
+<span class="fc" id="L202">        return Arrays.asList(directory.listFiles(file -&gt; {</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            if (!file.isDirectory()) {</span>
+<span class="fc" id="L204">                return false;</span>
+            }
+<span class="fc" id="L206">            Set&lt;String&gt; blacklistedNames = getBlacklistedNames();</span>
             //odstran domenove aliasy z inych domen
-<span class="pc bpc" id="L53" title="3 of 4 branches missed.">            if (blacklistedNames.size()&gt;0 &amp;&amp; blacklistedNames.contains(file.getName())) return false;</span>
+<span class="pc bpc" id="L208" title="2 of 4 branches missed.">            if (blacklistedNames.isEmpty() &amp;&amp; blacklistedNames.contains(file.getName())) return false;</span>
 
             //toto chceme vzdy
-<span class="fc bfc" id="L56" title="All 2 branches covered.">            if (&quot;gallery&quot;.equals(file.getName())) return true;</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">            if (file.getVirtualPath().contains(&quot;gallery&quot;)) return true;</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            if (&quot;gallery&quot;.equals(file.getName())) return true;</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if (file.getVirtualPath().contains(&quot;gallery&quot;)) return true;</span>
 
             //ak ma /images/tento-priecinok podpriecinok gallery tiez ho pridaj (testuje sa len pre prvu uroven)
-<span class="pc bpc" id="L60" title="2 of 4 branches missed.">            if (&quot;/images&quot;.equals(urlFinal) &amp;&amp; FileTools.isDirectory(urlFinal+&quot;/&quot;+file.getName()+&quot;/gallery&quot;)) return true;</span>
+<span class="pc bpc" id="L215" title="2 of 4 branches missed.">            if (&quot;/images&quot;.equals(urlFinal) &amp;&amp; FileTools.isDirectory(urlFinal+&quot;/&quot;+file.getName()+&quot;/gallery&quot;)) return true;</span>
 
             //ak je nastaveny GalleryDimension povazuj to tiez za galeriu
-<span class="fc" id="L63">            Optional&lt;GalleryDimension&gt; gallery = repository.findFirstByPathLikeAndDomainId(urlFinal+&quot;/&quot;+file.getName()+&quot;%&quot;, CloudToolsForCore.getDomainId());</span>
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">            if (gallery.isPresent()) return true;</span>
+<span class="fc" id="L218">            Optional&lt;GalleryDimension&gt; gallery = repository.findFirstByPathLikeAndDomainId(urlFinal+&quot;/&quot;+file.getName()+&quot;%&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">            if (gallery.isPresent()) return true;</span>
 
-<span class="fc" id="L66">            return false;</span>
+<span class="fc" id="L221">            return false;</span>
         }));
 
-<span class="fc" id="L69">        files = FileTools.sortFilesByName(files);</span>
-
-<span class="fc" id="L71">        String dir = getRequest().getParameter(&quot;dir&quot;);</span>
-<span class="fc" id="L72">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
-
-<span class="fc" id="L74">        List&lt;GalleryJsTreeItem&gt; items = files.stream().map(f -&gt; new GalleryJsTreeItem(f, dir, repository, user)).collect(Collectors.toList());</span>
-
-<span class="fc" id="L76">        return items;</span>
     }
+
+    private List&lt;GalleryJsTreeItem&gt; sortFilesBasedOnUserSettings(List&lt;GalleryJsTreeItem&gt; files, Identity user) {
+<span class="fc" id="L227">        String treeSortType = getTreeSortType(user);</span>
+<span class="fc" id="L228">        boolean treeSortOrderAsc = isTreeSortOrderAsc(user);</span>
+
+        Comparator&lt;GalleryJsTreeItem&gt; comparator;
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if (&quot;lastModify&quot;.equals(treeSortType)) {</span>
+<span class="nc" id="L232">            comparator = Comparator.comparing(GalleryJsTreeItem::getLastModified);</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        } else if (&quot;createDate&quot;.equals(treeSortType)) {</span>
+<span class="nc" id="L234">            comparator = Comparator.comparing(GalleryJsTreeItem::getCreateDate);</span>
+        } else {
+            //DEFAULT OPTION -&gt; sort by &quot;title&quot;
+<span class="fc" id="L237">            comparator = Comparator.comparing(GalleryJsTreeItem::getText, String.CASE_INSENSITIVE_ORDER);</span>
+        }
+
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if (treeSortOrderAsc == false) {</span>
+<span class="fc" id="L241">            comparator = comparator.reversed();</span>
+        }
+
+<span class="fc" id="L244">        return files.stream()</span>
+<span class="fc" id="L245">                .sorted(comparator)</span>
+<span class="fc" id="L246">                .collect(Collectors.toList());</span>
+    }
+
+	private  String getTreeSortType(UserDetails user) {
+<span class="fc" id="L250">        AdminSettingsService ass = new AdminSettingsService(user);</span>
+<span class="fc" id="L251">		String sortType = ass.getJsonValue(ADMIN_SETTINGS_KEY, &quot;treeSortType&quot;);</span>
+
+<span class="pc bpc" id="L253" title="1 of 4 branches missed.">		if(sortType == null || Tools.isEmpty(sortType) == true) return &quot;priority&quot;;</span>
+<span class="fc" id="L254">		else return sortType;</span>
+	}
+
+	private boolean isTreeSortOrderAsc(UserDetails user) {
+<span class="fc" id="L258">		AdminSettingsService ass = new AdminSettingsService(user);</span>
+<span class="fc" id="L259">		return ass.getJsonBooleanValue(ADMIN_SETTINGS_KEY, &quot;treeSortOrderAsc&quot;);</span>
+	}
 
     /**
      * Black listed names are all domain aliases except current domain alias
@@ -82,23 +265,23 @@ public class GalleryTreeService {
      * @return
      */
     private Set&lt;String&gt; getBlacklistedNames() {
-<span class="fc" id="L85">        Set&lt;String&gt; blacklistedNames = new HashSet&lt;&gt;();</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
-<span class="fc" id="L87">            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));</span>
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(domainAlias)) {</span>
+<span class="fc" id="L268">        Set&lt;String&gt; blacklistedNames = new HashSet&lt;&gt;();</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+<span class="fc" id="L270">            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(domainAlias)) {</span>
                 //blacklistni ostatne aliasy
-<span class="nc" id="L90">                List&lt;ConfDetails&gt; aliases = ConstantsV9.getValuesStartsWith(&quot;multiDomainAlias:&quot;);</span>
-<span class="nc bnc" id="L91" title="All 2 branches missed.">                for (ConfDetails conf : aliases) {</span>
-<span class="nc" id="L92">                    String alias = conf.getValue();</span>
-<span class="nc bnc" id="L93" title="All 4 branches missed.">                    if (Tools.isNotEmpty(alias) &amp;&amp; alias.equals(domainAlias)==false) blacklistedNames.add(alias);</span>
-<span class="nc" id="L94">                }</span>
+<span class="nc" id="L273">                List&lt;ConfDetails&gt; aliases = ConstantsV9.getValuesStartsWith(&quot;multiDomainAlias:&quot;);</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">                for (ConfDetails conf : aliases) {</span>
+<span class="nc" id="L275">                    String alias = conf.getValue();</span>
+<span class="nc bnc" id="L276" title="All 4 branches missed.">                    if (Tools.isNotEmpty(alias) &amp;&amp; alias.equals(domainAlias)==false) blacklistedNames.add(alias);</span>
+<span class="nc" id="L277">                }</span>
             }
         }
-<span class="fc" id="L97">        return blacklistedNames;</span>
+<span class="fc" id="L280">        return blacklistedNames;</span>
     }
 
     private HttpServletRequest getRequest() {
-<span class="fc" id="L101">        return request;</span>
+<span class="fc" id="L284">        return request;</span>
     }
 
 }

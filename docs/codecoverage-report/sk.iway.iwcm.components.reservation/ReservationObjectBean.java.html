@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationObjectBean.java</span></div><h1>ReservationObjectBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationObjectBean.java</span></div><h1>ReservationObjectBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
 
 import sk.iway.iwcm.Tools;
 
@@ -13,7 +13,7 @@ import sk.iway.iwcm.Tools;
  *	@modified     $Date: 2009/04/06 12:54:09 $
  */
 
-<span class="nc" id="L16">public class ReservationObjectBean </span>
+<span class="fc" id="L16">public class ReservationObjectBean </span>
 {
 	private int reservationObjectId;
 	private String name;
@@ -24,10 +24,10 @@ import sk.iway.iwcm.Tools;
 	private String passwdRepeat;
 	private boolean changePass;
 	
-<span class="nc" id="L27">	private int maxReservations = 1;</span>
-<span class="nc" id="L28">	private int cancelTimeBefor = 0;</span>
-<span class="nc" id="L29">	private String reservationTimeFrom = &quot;00:00&quot;;</span>
-<span class="nc" id="L30">	private String reservationTimeTo = &quot;23:59&quot;;</span>
+<span class="fc" id="L27">	private int maxReservations = 1;</span>
+<span class="fc" id="L28">	private int cancelTimeBefor = 0;</span>
+<span class="fc" id="L29">	private String reservationTimeFrom = &quot;00:00&quot;;</span>
+<span class="fc" id="L30">	private String reservationTimeTo = &quot;23:59&quot;;</span>
 	
 	private double priceForDay;
 	private double priceForHour;
@@ -61,8 +61,8 @@ import sk.iway.iwcm.Tools;
 <span class="nc" id="L61">		return mustAcceptedString;</span>
 	}
 	public void setMustAcceptedString(String mustAcceptedString) {
-<span class="nc" id="L64">		this.mustAcceptedString = mustAcceptedString;</span>
-<span class="nc" id="L65">	}</span>
+<span class="fc" id="L64">		this.mustAcceptedString = mustAcceptedString;</span>
+<span class="fc" id="L65">	}</span>
 	public boolean isMustAccepted() {
 <span class="nc" id="L67">		return mustAccepted;</span>
 	}
@@ -80,20 +80,20 @@ import sk.iway.iwcm.Tools;
 <span class="nc" id="L80">		return emailAccepter;</span>
 	}
 	public void setEmailAccepter(String emailAccepter) {
-<span class="nc" id="L83">		this.emailAccepter = emailAccepter;</span>
-<span class="nc" id="L84">	}</span>
+<span class="fc" id="L83">		this.emailAccepter = emailAccepter;</span>
+<span class="fc" id="L84">	}</span>
 	public int getReservationObjectId() {
-<span class="nc" id="L86">		return reservationObjectId;</span>
+<span class="fc" id="L86">		return reservationObjectId;</span>
 	}
 	public void setReservationObjectId(int reservationObjectId) {
-<span class="nc" id="L89">		this.reservationObjectId = reservationObjectId;</span>
-<span class="nc" id="L90">	}</span>
+<span class="fc" id="L89">		this.reservationObjectId = reservationObjectId;</span>
+<span class="fc" id="L90">	}</span>
 	public String getName() {
-<span class="nc" id="L92">		return name;</span>
+<span class="fc" id="L92">		return name;</span>
 	}
 	public void setName(String name) {
-<span class="nc" id="L95">		this.name = name;</span>
-<span class="nc" id="L96">	}</span>
+<span class="fc" id="L95">		this.name = name;</span>
+<span class="fc" id="L96">	}</span>
 	@Override
 	public int hashCode()
 	{
@@ -164,101 +164,101 @@ import sk.iway.iwcm.Tools;
 	}
 	public int getMaxReservations()
 	{
-<span class="nc" id="L167">		return maxReservations;</span>
+<span class="fc" id="L167">		return maxReservations;</span>
 	}
 	public void setMaxReservations(int maxReservations)
 	{
-<span class="nc" id="L171">		this.maxReservations = maxReservations;</span>
-<span class="nc" id="L172">	}</span>
+<span class="fc" id="L171">		this.maxReservations = maxReservations;</span>
+<span class="fc" id="L172">	}</span>
 	public int getCancelTimeBefor()
 	{
 <span class="nc" id="L175">		return cancelTimeBefor;</span>
 	}
 	public void setCancelTimeBefor(int cancelTimeBefor)
 	{
-<span class="nc" id="L179">		this.cancelTimeBefor = cancelTimeBefor;</span>
-<span class="nc" id="L180">	}</span>
+<span class="fc" id="L179">		this.cancelTimeBefor = cancelTimeBefor;</span>
+<span class="fc" id="L180">	}</span>
 	public String getReservationTimeFrom()
 	{
-<span class="nc bnc" id="L183" title="All 2 branches missed.">		if(Tools.isEmpty(reservationTimeFrom)) reservationTimeFrom = &quot;00:00&quot;;</span>
-<span class="nc" id="L184">		return reservationTimeFrom;</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">		if(Tools.isEmpty(reservationTimeFrom)) reservationTimeFrom = &quot;00:00&quot;;</span>
+<span class="fc" id="L184">		return reservationTimeFrom;</span>
 	}
 	public void setReservationTimeFrom(String reservationTimeFrom)
 	{
-<span class="nc" id="L188">		this.reservationTimeFrom = reservationTimeFrom;</span>
-<span class="nc" id="L189">	}</span>
+<span class="fc" id="L188">		this.reservationTimeFrom = reservationTimeFrom;</span>
+<span class="fc" id="L189">	}</span>
 	public String getReservationTimeTo()
 	{
-<span class="nc bnc" id="L192" title="All 2 branches missed.">		if(Tools.isEmpty(reservationTimeTo)) reservationTimeTo = &quot;23:59&quot;;</span>
-<span class="nc" id="L193">		return reservationTimeTo;</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">		if(Tools.isEmpty(reservationTimeTo)) reservationTimeTo = &quot;23:59&quot;;</span>
+<span class="fc" id="L193">		return reservationTimeTo;</span>
 	}
 	public void setReservationTimeTo(String reservationTimeTo)
 	{
-<span class="nc" id="L197">		this.reservationTimeTo = reservationTimeTo;</span>
-<span class="nc" id="L198">	}</span>
+<span class="fc" id="L197">		this.reservationTimeTo = reservationTimeTo;</span>
+<span class="fc" id="L198">	}</span>
 	public double getPriceForDay()
 	{
 <span class="nc" id="L201">		return priceForDay;</span>
 	}
 	public void setPriceForDay(double priceForDay)
 	{
-<span class="nc" id="L205">		this.priceForDay = priceForDay;</span>
-<span class="nc" id="L206">	}</span>
+<span class="fc" id="L205">		this.priceForDay = priceForDay;</span>
+<span class="fc" id="L206">	}</span>
 	public double getPriceForHour()
 	{
 <span class="nc" id="L209">		return priceForHour;</span>
 	}
 	public void setPriceForHour(double priceForHour)
 	{
-<span class="nc" id="L213">		this.priceForHour = priceForHour;</span>
-<span class="nc" id="L214">	}</span>
+<span class="fc" id="L213">		this.priceForHour = priceForHour;</span>
+<span class="fc" id="L214">	}</span>
 	public String getPriceForDayString()
 	{
 <span class="nc" id="L217">		return this.priceForDayString;</span>
 	}
 	public void setPriceForDayString(double priceForDay)
 	{
-<span class="nc" id="L221">		this.priceForDayString = String.format(&quot;%.2f&quot;, priceForDay);</span>
-<span class="nc" id="L222">	}</span>
+<span class="fc" id="L221">		this.priceForDayString = String.format(&quot;%.2f&quot;, priceForDay);</span>
+<span class="fc" id="L222">	}</span>
 	public String getPriceForHourString()
 	{
 <span class="nc" id="L225">		return this.priceForHourString;</span>
 	}
 	public void setPriceForHourString(double priceForHour)
 	{
-<span class="nc" id="L229">		this.priceForHourString = String.format(&quot;%.2f&quot;, priceForHour);</span>
-<span class="nc" id="L230">	}</span>
+<span class="fc" id="L229">		this.priceForHourString = String.format(&quot;%.2f&quot;, priceForHour);</span>
+<span class="fc" id="L230">	}</span>
 	public boolean getReservationForAllDay()
 	{
-<span class="nc" id="L233">		return reservationForAllDay;</span>
+<span class="fc" id="L233">		return reservationForAllDay;</span>
 	}
 	public void setReservationForAllDay(boolean reservationForAllDay)
 	{
-<span class="nc" id="L237">		this.reservationForAllDay = reservationForAllDay;</span>
-<span class="nc" id="L238">	}</span>
+<span class="fc" id="L237">		this.reservationForAllDay = reservationForAllDay;</span>
+<span class="fc" id="L238">	}</span>
 	public String getPhotoLink()
 	{
 <span class="nc" id="L241">		return photoLink;</span>
 	}
 	public void setPhotoLink(String photoLink)
 	{
-<span class="nc" id="L245">		this.photoLink = photoLink;</span>
-<span class="nc" id="L246">	}</span>
+<span class="fc" id="L245">		this.photoLink = photoLink;</span>
+<span class="fc" id="L246">	}</span>
 	public String getDescription()
 	{
 <span class="nc" id="L249">		return description;</span>
 	}
 	public void setDescription(String description)
 	{
-<span class="nc" id="L253">		this.description = description;</span>
-<span class="nc" id="L254">	}</span>
+<span class="fc" id="L253">		this.description = description;</span>
+<span class="fc" id="L254">	}</span>
 	public String getTimeUnit()
 	{
-<span class="nc" id="L257">		return timeUnit;</span>
+<span class="fc" id="L257">		return timeUnit;</span>
 	}
 	public void setTimeUnit(String timeUnit)
 	{
-<span class="nc" id="L261">		this.timeUnit = timeUnit;</span>
-<span class="nc" id="L262">	}</span>
+<span class="fc" id="L261">		this.timeUnit = timeUnit;</span>
+<span class="fc" id="L262">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

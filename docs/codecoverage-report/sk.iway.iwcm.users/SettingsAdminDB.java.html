@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SettingsAdminDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">SettingsAdminDB.java</span></div><h1>SettingsAdminDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SettingsAdminDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.users</a> &gt; <span class="el_source">SettingsAdminDB.java</span></div><h1>SettingsAdminDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.users;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
@@ -307,8 +307,8 @@ import sk.iway.iwcm.system.ModuleInfo;
 	 */
 	public static &lt;T&gt; List&lt;T&gt; filterBeansByUserAllowedCategories(List&lt;T&gt; beans,String propertyName, List&lt;String&gt; allowedCategories)
 	{
-<span class="nc" id="L310">		List&lt;T&gt; result = null;</span>
-<span class="nc bnc" id="L311" title="All 2 branches missed.">		if(allowedCategories != null)</span>
+<span class="fc" id="L310">		List&lt;T&gt; result = null;</span>
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">		if(allowedCategories != null)</span>
 		{
 <span class="nc bnc" id="L313" title="All 2 branches missed.">			if(allowedCategories.size() &gt; 0)</span>
 			{
@@ -343,9 +343,9 @@ import sk.iway.iwcm.system.ModuleInfo;
 		}
 		else
 		{
-<span class="nc" id="L346">			result = beans;</span>
+<span class="fc" id="L346">			result = beans;</span>
 		}
-<span class="nc" id="L348">		return result;</span>
+<span class="fc" id="L348">		return result;</span>
 
 	}
 
@@ -375,8 +375,8 @@ import sk.iway.iwcm.system.ModuleInfo;
 	 */
 	public static &lt;T&gt; List&lt;T&gt; filterBeansByUserAllowedCategories(List&lt;T&gt; beans,String propertyName, UserDetails user, String cmpName)
 	{
-<span class="nc" id="L378">		List&lt;String&gt; allowedCategories = getAllowedCategories(user.getAdminSettings(), cmpName);</span>
-<span class="nc" id="L379">		return filterBeansByUserAllowedCategories(beans, propertyName, allowedCategories);</span>
+<span class="fc" id="L378">		List&lt;String&gt; allowedCategories = getAllowedCategories(user.getAdminSettings(), cmpName);</span>
+<span class="fc" id="L379">		return filterBeansByUserAllowedCategories(beans, propertyName, allowedCategories);</span>
 	}
 
 	/**

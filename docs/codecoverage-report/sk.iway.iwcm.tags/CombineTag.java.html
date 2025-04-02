@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CombineTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">CombineTag.java</span></div><h1>CombineTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CombineTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">CombineTag.java</span></div><h1>CombineTag.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
 
 import java.util.Date;
 
@@ -11,6 +11,7 @@ import javax.servlet.jsp.tagext.BodyTagSupport;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.i18n.Prop;
 
 
@@ -24,19 +25,19 @@ import sk.iway.iwcm.i18n.Prop;
  *@created      $Date: 2015/05/11 16:02:38 $
  */
 @SuppressWarnings({&quot;java:S1104&quot;, &quot;java:S3008&quot;, &quot;java:S1444&quot;})
-<span class="fc" id="L27">public final class CombineTag extends BodyTagSupport</span>
+<span class="fc" id="L28">public final class CombineTag extends BodyTagSupport</span>
 {
-<span class="fc" id="L29">	private static Date versionDateTime = new Date();</span>
+<span class="fc" id="L30">	private static Date versionDateTime = new Date();</span>
 
 	private static final long serialVersionUID = -7352999434842740830L;
 
-<span class="fc" id="L33">	public static String FILES_ADMIN_JQUERY_JS = &quot;/admin/skins/webjet8/assets/global/plugins/jquery.min.js,&quot;+</span>
+<span class="fc" id="L34">	public static String FILES_ADMIN_JQUERY_JS = &quot;/admin/skins/webjet8/assets/global/plugins/jquery.min.js,&quot;+</span>
 				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-migrate-3.3.0.min.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/plugins/jquery.browser.min.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.min.js,&quot;+
 				&quot;/components/_common/javascript/ajax_support.js&quot;;
 
-<span class="fc" id="L39">	public static String FILES_ADMIN_STANDARD_JS =</span>
+<span class="fc" id="L40">	public static String FILES_ADMIN_STANDARD_JS =</span>
 				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap/js/popper.min.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap/js/bootstrap.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/plugins/jquery-slimscroll/jquery.slimscroll.js,&quot;+
@@ -58,7 +59,7 @@ import sk.iway.iwcm.i18n.Prop;
 				&quot;/admin/skins/webjet8/assets/admin/layout/scripts/layout.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/admin/pages/scripts/components-dropdowns.js&quot;;
 
-<span class="fc" id="L61">	public static String FILES_ADMIN_STANDARD_CSS = &quot;/admin/skins/webjet8/assets/global/plugins/tabler/css/tabler-icons.min.css,&quot;+</span>
+<span class="fc" id="L62">	public static String FILES_ADMIN_STANDARD_CSS = &quot;/admin/skins/webjet8/assets/global/plugins/tabler/css/tabler-icons.min.css,&quot;+</span>
 				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap/css/bootstrap.css,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/plugins/jstree/dist/themes/default/style.min.css,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/css/datepicker3.css,&quot;+
@@ -77,251 +78,256 @@ import sk.iway.iwcm.i18n.Prop;
 				&quot;/admin/skins/webjet8/assets/global/css/datatables-editor-style.css,&quot;+
 				&quot;/admin/skins/webjet8/assets/global/css/new-webjet-style.css&quot;;
 
-<span class="fc" id="L80">	public static String FILES_ADMIN_LOGON_JS =</span>
+<span class="fc" id="L81">	public static String FILES_ADMIN_LOGON_JS =</span>
 				&quot;/admin/skins/webjet8/assets/js/zxcvbn/core/zxcvbn-ts.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/js/zxcvbn/language-common/zxcvbn-ts.js,&quot;+
 				&quot;/admin/skins/webjet8/assets/js/zxcvbn/language-en/zxcvbn-ts.js&quot;;
 
 
-<span class="fc" id="L86">	public static String FILES_ADMIN_INLINE_JS = &quot;/admin/skins/webjet8/ckeditor/dist/ckeditor.js,&quot; +</span>
+<span class="fc" id="L87">	public static String FILES_ADMIN_INLINE_JS = &quot;/admin/skins/webjet8/ckeditor/dist/ckeditor.js,&quot; +</span>
 			&quot;/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.js,&quot; +
 			&quot;/admin/webpages/page-builder/scripts/jquery.minicolors.min.js,&quot; +
 			&quot;/admin/webpages/page-builder/scripts/ninja-page-builder.js.jsp,&quot; +
 			&quot;/admin/webpages/page-builder/scripts/pagesupport.js&quot;;
 
-<span class="fc" id="L92">	public static String FILES_ADMIN_INLINE_CSS = &quot;/components/_common/admin/inline/inline.css,&quot; +</span>
+<span class="fc" id="L93">	public static String FILES_ADMIN_INLINE_CSS = &quot;/components/_common/admin/inline/inline.css,&quot; +</span>
 			&quot;/admin/webpages/page-builder/style/style.css,&quot; +
 			&quot;/admin/webpages/page-builder/style/jquery.minicolors.css,&quot; +
 			&quot;/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css,&quot; +
 			&quot;/admin/v9/dist/css/vendor-inline.style.css&quot;;
 
 	//set oznacuje schovany zoznam suborov pre kombinovanie
-<span class="fc" id="L99">	private String set = null;</span>
+<span class="fc" id="L100">	private String set = null;</span>
 	//typ kombinovaneho vystupu (js alebo css)
-<span class="fc" id="L101">	private String type = null;</span>
+<span class="fc" id="L102">	private String type = null;</span>
 
-<span class="fc" id="L103">	private String combine = null;</span>
+<span class="fc" id="L104">	private String combine = null;</span>
 
 	@Override
 	public int doEndTag() throws JspException
 	{
-<span class="fc" id="L108">		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
+<span class="fc" id="L109">		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
 
-<span class="fc" id="L110">		String lng = getLng(pageContext, request);</span>
+<span class="fc" id="L111">		TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		if (temp != null) {</span>
+<span class="fc" id="L113">			request.getSession().setAttribute(&quot;templateInstallName&quot;, temp.getTemplateInstallName());</span>
+		}
 
-<span class="fc" id="L112">		boolean combineEnabled = true;</span>
-<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
+<span class="fc" id="L116">		String lng = getLng(pageContext, request);</span>
+
+<span class="fc" id="L118">		boolean combineEnabled = true;</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
 		{
-<span class="nc" id="L115">			combineEnabled = false;</span>
-<span class="nc" id="L116">			request.getSession().setAttribute(&quot;combineEnabled&quot;, &quot;false&quot;);</span>
+<span class="nc" id="L121">			combineEnabled = false;</span>
+<span class="nc" id="L122">			request.getSession().setAttribute(&quot;combineEnabled&quot;, &quot;false&quot;);</span>
 		}
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabled&quot;)))</span>
 		{
-<span class="nc" id="L120">			combineEnabled = true;</span>
-<span class="nc" id="L121">			request.getSession().removeAttribute(&quot;combineEnabled&quot;);</span>
+<span class="nc" id="L126">			combineEnabled = true;</span>
+<span class="nc" id="L127">			request.getSession().removeAttribute(&quot;combineEnabled&quot;);</span>
 		}
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">		if (request.getSession().getAttribute(&quot;combineEnabled&quot;)!=null) combineEnabled = false;</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (request.getSession().getAttribute(&quot;combineEnabled&quot;)!=null) combineEnabled = false;</span>
 
 		//moznost nastavit len pre jeden request
-<span class="pc bpc" id="L126" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabledRequest&quot;))) combineEnabled = false;</span>
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabledRequest&quot;))) combineEnabled = true;</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">		if (&quot;false&quot;.equals(getCombine())) combineEnabled = false;</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getParameter(&quot;combineEnabledRequest&quot;))) combineEnabled = false;</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getParameter(&quot;combineEnabledRequest&quot;))) combineEnabled = true;</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">		if (&quot;false&quot;.equals(getCombine())) combineEnabled = false;</span>
 
 		try
 		{
-<span class="fc" id="L132">			StringBuilder tag = new StringBuilder();</span>
-<span class="fc" id="L133">			long v = getVersion();</span>
+<span class="fc" id="L138">			StringBuilder tag = new StringBuilder();</span>
+<span class="fc" id="L139">			long v = getVersion();</span>
 
-<span class="fc" id="L135">			String filesToCombine = getSet();</span>
+<span class="fc" id="L141">			String filesToCombine = getSet();</span>
 
-<span class="fc bfc" id="L137" title="All 2 branches covered.">			if (Tools.isEmpty(filesToCombine))</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">			if (Tools.isEmpty(filesToCombine))</span>
 			{
-<span class="fc" id="L139">				BodyContent bc = getBodyContent();</span>
-<span class="fc" id="L140">				String body = bc.getString();</span>
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(body))</span>
+<span class="fc" id="L145">				BodyContent bc = getBodyContent();</span>
+<span class="fc" id="L146">				String body = bc.getString();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(body))</span>
 				{
-<span class="fc" id="L143">					filesToCombine = body;</span>
+<span class="fc" id="L149">					filesToCombine = body;</span>
 				}
 			}
 
-<span class="fc" id="L147">			filesToCombine = removeCrLf(filesToCombine);</span>
+<span class="fc" id="L153">			filesToCombine = removeCrLf(filesToCombine);</span>
 
-<span class="fc" id="L149">			filesToCombine = Tools.replace(filesToCombine, &quot;USERLANG&quot;, Tools.replace(lng, &quot;cz&quot;, &quot;cs&quot;));</span>
+<span class="fc" id="L155">			filesToCombine = Tools.replace(filesToCombine, &quot;USERLANG&quot;, Tools.replace(lng, &quot;cz&quot;, &quot;cs&quot;));</span>
 
-<span class="fc" id="L151">			String baseCss = (String)request.getAttribute(&quot;base_css_link_nocombine&quot;);</span>
-<span class="fc" id="L152">			String cssLink = (String)request.getAttribute(&quot;css_link_nocombine&quot;);</span>
+<span class="fc" id="L157">			String baseCss = (String)request.getAttribute(&quot;base_css_link_nocombine&quot;);</span>
+<span class="fc" id="L158">			String cssLink = (String)request.getAttribute(&quot;css_link_nocombine&quot;);</span>
 
-<span class="pc bpc" id="L154" title="1 of 4 branches missed.">			if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))</span>
+<span class="pc bpc" id="L160" title="1 of 4 branches missed.">			if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))</span>
 			{
-<span class="fc" id="L156">				filesToCombine = Tools.replace(filesToCombine, &quot;base_css_link&quot;, removeCrLf(baseCss));</span>
-<span class="fc" id="L157">				filesToCombine = Tools.replace(filesToCombine, &quot;css_link&quot;, removeCrLf(cssLink));</span>
+<span class="fc" id="L162">				filesToCombine = Tools.replace(filesToCombine, &quot;base_css_link&quot;, removeCrLf(baseCss));</span>
+<span class="fc" id="L163">				filesToCombine = Tools.replace(filesToCombine, &quot;css_link&quot;, removeCrLf(cssLink));</span>
 			}
 
-<span class="fc bfc" id="L160" title="All 2 branches covered.">			if (combineEnabled)</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">			if (combineEnabled)</span>
 			{
 
 
-<span class="fc bfc" id="L164" title="All 2 branches covered.">				if (filesToCombine.startsWith(&quot;admin&quot;))</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">				if (filesToCombine.startsWith(&quot;admin&quot;))</span>
 				{
 					//zobrazenie v admin casti
-<span class="fc bfc" id="L167" title="All 2 branches covered.">					if (&quot;css&quot;.equals(getType()))</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">					if (&quot;css&quot;.equals(getType()))</span>
 					{
-<span class="fc" id="L169">						tag.append(&quot;&lt;link href=\&quot;/admin/scripts/combine.jsp?t=css&amp;amp;set=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;&quot;);</span>
+<span class="fc" id="L175">						tag.append(&quot;&lt;link href=\&quot;/admin/scripts/combine.jsp?t=css&amp;amp;set=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;&quot;);</span>
 					}
 					else
 					{
 						//MBO: ak vlozi jQuery tak to setne aj do req aby sa uz znova nedal vlozit cez Tool.insertJquery
-<span class="pc bpc" id="L174" title="1 of 4 branches missed.">						if (filesToCombine!=null &amp;&amp; filesToCombine.startsWith(&quot;adminJqueryJs&quot;))</span>
+<span class="pc bpc" id="L180" title="1 of 4 branches missed.">						if (filesToCombine!=null &amp;&amp; filesToCombine.startsWith(&quot;adminJqueryJs&quot;))</span>
 						{
-<span class="fc" id="L176">							Tools.insertJQuery(request);</span>
+<span class="fc" id="L182">							Tools.insertJQuery(request);</span>
 						}
-<span class="fc" id="L178">						tag.append(&quot;&lt;script src=\&quot;/admin/scripts/combine.jsp?t=js&amp;amp;set=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L184">						tag.append(&quot;&lt;script src=\&quot;/admin/scripts/combine.jsp?t=js&amp;amp;set=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;);</span>
 					}
 				}
 				else
 				{
 					//zobrazenie na beznej web stranke
-<span class="fc bfc" id="L184" title="All 2 branches covered.">					if (&quot;css&quot;.equals(getType()))</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">					if (&quot;css&quot;.equals(getType()))</span>
 					{
-<span class="pc bpc" id="L186" title="1 of 2 branches missed.">						if (&quot;tempCss&quot;.equals(filesToCombine))</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">						if (&quot;tempCss&quot;.equals(filesToCombine))</span>
 						{
-<span class="nc bnc" id="L188" title="All 4 branches missed.">							if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))</span>
+<span class="nc bnc" id="L194" title="All 4 branches missed.">							if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))</span>
 							{
-<span class="nc" id="L190">								filesToCombine = baseCss;</span>
-<span class="nc bnc" id="L191" title="All 2 branches missed.">								if (Tools.isEmpty(filesToCombine)) filesToCombine = cssLink;</span>
-<span class="nc bnc" id="L192" title="All 2 branches missed.">								else if (Tools.isNotEmpty(cssLink)) filesToCombine = filesToCombine + &quot;,&quot;+cssLink;</span>
+<span class="nc" id="L196">								filesToCombine = baseCss;</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">								if (Tools.isEmpty(filesToCombine)) filesToCombine = cssLink;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">								else if (Tools.isNotEmpty(cssLink)) filesToCombine = filesToCombine + &quot;,&quot;+cssLink;</span>
 							}
 						}
 
-<span class="fc" id="L196">						tag.append(&quot;&lt;link href=\&quot;/components/_common/combine.jsp?t=css&amp;amp;f=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;&quot;);</span>
+<span class="fc" id="L202">						tag.append(&quot;&lt;link href=\&quot;/components/_common/combine.jsp?t=css&amp;amp;f=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;&quot;);</span>
 					}
 					else
 					{
-<span class="fc" id="L200">						tag.append(&quot;&lt;script src=\&quot;/components/_common/combine.jsp?t=js&amp;amp;f=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L206">						tag.append(&quot;&lt;script src=\&quot;/components/_common/combine.jsp?t=js&amp;amp;f=&quot;).append(filesToCombine).append(&quot;&amp;amp;v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;&quot;);</span>
 					}
 				}
 			}
 			else
 			{
-<span class="fc" id="L206">				String[] files = Tools.getTokens( Tools.replace(getFiles(filesToCombine), &quot;USERLANG&quot;, Tools.replace(lng, &quot;cz&quot;, &quot;cs&quot;)), &quot;,\n&quot;);</span>
-<span class="fc bfc" id="L207" title="All 2 branches covered.">				for (String file : files)</span>
+<span class="fc" id="L212">				String[] files = Tools.getTokens( Tools.replace(getFiles(filesToCombine), &quot;USERLANG&quot;, Tools.replace(lng, &quot;cz&quot;, &quot;cs&quot;)), &quot;,\n&quot;);</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">				for (String file : files)</span>
 				{
-<span class="pc bpc" id="L209" title="1 of 2 branches missed.">					if (&quot;css&quot;.equals(getType()))</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">					if (&quot;css&quot;.equals(getType()))</span>
 					{
-<span class="fc" id="L211">						tag.append(&quot;&lt;link href=\&quot;&quot;).append(file).append(&quot;?v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;\n&quot;);</span>
+<span class="fc" id="L217">						tag.append(&quot;&lt;link href=\&quot;&quot;).append(file).append(&quot;?v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot;/&gt;\n&quot;);</span>
 					}
 					else
 					{
-<span class="nc" id="L215">						tag.append(&quot;&lt;script src=\&quot;&quot;).append(file).append(&quot;?v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;\n&quot;);</span>
+<span class="nc" id="L221">						tag.append(&quot;&lt;script src=\&quot;&quot;).append(file).append(&quot;?v=&quot;).append(v).append(&quot;&amp;amp;lng=&quot;).append(lng).append(&quot;\&quot; type=\&quot;text/javascript\&quot;&gt;&lt;/script&gt;\n&quot;);</span>
 					}
 				}
 			}
 
-<span class="fc" id="L220">			pageContext.getOut().write(tag.toString());</span>
+<span class="fc" id="L226">			pageContext.getOut().write(tag.toString());</span>
 		}
-<span class="nc" id="L222">		catch (Exception e)</span>
+<span class="nc" id="L228">		catch (Exception e)</span>
 		{
-<span class="nc" id="L224">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L225">		}</span>
+<span class="nc" id="L230">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L231">		}</span>
 
-<span class="fc" id="L227">		return(EVAL_PAGE);</span>
+<span class="fc" id="L233">		return(EVAL_PAGE);</span>
 	}
 
 	private String removeCrLf(String set)
 	{
-<span class="fc" id="L232">		String newSet = Tools.replace(set, &quot;\n&quot;, &quot;,&quot;);</span>
-<span class="fc" id="L233">		newSet = Tools.replace(newSet, &quot;\r&quot;, &quot;&quot;);</span>
-<span class="fc" id="L234">		newSet = Tools.replace(newSet, &quot; &quot;, &quot;&quot;);</span>
-<span class="fc" id="L235">		newSet = Tools.replace(newSet, &quot;\t&quot;, &quot;&quot;);</span>
-<span class="fc" id="L236">		newSet = Tools.replace(newSet, &quot;,,&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L238">		String newSet = Tools.replace(set, &quot;\n&quot;, &quot;,&quot;);</span>
+<span class="fc" id="L239">		newSet = Tools.replace(newSet, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L240">		newSet = Tools.replace(newSet, &quot; &quot;, &quot;&quot;);</span>
+<span class="fc" id="L241">		newSet = Tools.replace(newSet, &quot;\t&quot;, &quot;&quot;);</span>
+<span class="fc" id="L242">		newSet = Tools.replace(newSet, &quot;,,&quot;, &quot;,&quot;);</span>
 		//ked nie je pagefunctions na konci a je to vlozene cez EL tak sa spojja dve dokopy (odstrani sa enter) a vtedy sa to posaha
-<span class="fc" id="L238">		newSet = Tools.replace(newSet, &quot;page_functions.js.jsp/&quot;, &quot;page_functions.js.jsp,/&quot;);</span>
-<span class="fc" id="L239">		return newSet;</span>
+<span class="fc" id="L244">		newSet = Tools.replace(newSet, &quot;page_functions.js.jsp/&quot;, &quot;page_functions.js.jsp,/&quot;);</span>
+<span class="fc" id="L245">		return newSet;</span>
 	}
 
 	public static String getFiles(String set)
 	{
-<span class="fc" id="L244">		String files = set;</span>
+<span class="fc" id="L250">		String files = set;</span>
 
-<span class="fc bfc" id="L246" title="All 2 branches covered.">		if (&quot;adminJqueryJs&quot;.equals(set))</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">		if (&quot;adminJqueryJs&quot;.equals(set))</span>
 		{
-<span class="fc" id="L248">			files = CombineTag.FILES_ADMIN_JQUERY_JS;</span>
+<span class="fc" id="L254">			files = CombineTag.FILES_ADMIN_JQUERY_JS;</span>
 		}
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">		else if (&quot;adminJqueryJs2&quot;.equals(set))</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">		else if (&quot;adminJqueryJs2&quot;.equals(set))</span>
 		{
-<span class="nc" id="L252">			files = CombineTag.FILES_ADMIN_JQUERY_JS;</span>
+<span class="nc" id="L258">			files = CombineTag.FILES_ADMIN_JQUERY_JS;</span>
 		}
-<span class="fc bfc" id="L254" title="All 2 branches covered.">		else if (&quot;adminStandardJs&quot;.equals(set))</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">		else if (&quot;adminStandardJs&quot;.equals(set))</span>
 		{
-<span class="fc" id="L256">			files = CombineTag.FILES_ADMIN_STANDARD_JS;</span>
+<span class="fc" id="L262">			files = CombineTag.FILES_ADMIN_STANDARD_JS;</span>
 		}
-<span class="fc bfc" id="L258" title="All 2 branches covered.">		else if (&quot;adminLogonJs&quot;.equals(set))</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">		else if (&quot;adminLogonJs&quot;.equals(set))</span>
 		{
-<span class="fc" id="L260">			files = CombineTag.FILES_ADMIN_LOGON_JS;</span>
+<span class="fc" id="L266">			files = CombineTag.FILES_ADMIN_LOGON_JS;</span>
 		}
-<span class="fc bfc" id="L262" title="All 2 branches covered.">		else if (&quot;adminStandardCss&quot;.equals(set))</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">		else if (&quot;adminStandardCss&quot;.equals(set))</span>
 		{
-<span class="fc" id="L264">			files = CombineTag.FILES_ADMIN_STANDARD_CSS;</span>
+<span class="fc" id="L270">			files = CombineTag.FILES_ADMIN_STANDARD_CSS;</span>
 		}
-<span class="fc bfc" id="L266" title="All 2 branches covered.">		else if (&quot;adminStandardCssWj9&quot;.equals(set))</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">		else if (&quot;adminStandardCssWj9&quot;.equals(set))</span>
 		{
-<span class="fc" id="L268">			files = CombineTag.FILES_ADMIN_STANDARD_CSS;</span>
+<span class="fc" id="L274">			files = CombineTag.FILES_ADMIN_STANDARD_CSS;</span>
 			//files = Tools.replace(files, &quot;/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css,&quot;, &quot;/admin/skins/webjet8/assets/global/plugins/font-awesome/css/fontawesome5.min.css,&quot;);
 		}
-<span class="fc bfc" id="L271" title="All 2 branches covered.">		else if (&quot;adminInlineJs&quot;.equals(set))</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">		else if (&quot;adminInlineJs&quot;.equals(set))</span>
 		{
-<span class="fc" id="L273">			files = CombineTag.FILES_ADMIN_INLINE_JS;</span>
+<span class="fc" id="L279">			files = CombineTag.FILES_ADMIN_INLINE_JS;</span>
 		}
-<span class="fc bfc" id="L275" title="All 2 branches covered.">		else if (&quot;adminInlineCss&quot;.equals(set))</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">		else if (&quot;adminInlineCss&quot;.equals(set))</span>
 		{
-<span class="fc" id="L277">			files = CombineTag.FILES_ADMIN_INLINE_CSS;</span>
+<span class="fc" id="L283">			files = CombineTag.FILES_ADMIN_INLINE_CSS;</span>
 		}
 		else
 		{
-<span class="fc" id="L281">			String constValue = Constants.getString(&quot;combine-&quot;+set);</span>
-<span class="pc bpc" id="L282" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(constValue)) files = constValue;</span>
+<span class="fc" id="L287">			String constValue = Constants.getString(&quot;combine-&quot;+set);</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(constValue)) files = constValue;</span>
 		}
 
-<span class="fc" id="L285">		return files;</span>
+<span class="fc" id="L291">		return files;</span>
 	}
 
 
 	@Override
 	public void release()
 	{
-<span class="fc" id="L292">		super.release();</span>
-<span class="fc" id="L293">		this.set = null;</span>
-<span class="fc" id="L294">		this.type = null;</span>
-<span class="fc" id="L295">		this.combine = null;</span>
-<span class="fc" id="L296">	}</span>
+<span class="fc" id="L298">		super.release();</span>
+<span class="fc" id="L299">		this.set = null;</span>
+<span class="fc" id="L300">		this.type = null;</span>
+<span class="fc" id="L301">		this.combine = null;</span>
+<span class="fc" id="L302">	}</span>
 
 	public String getSet()
 	{
-<span class="fc" id="L300">		return set;</span>
+<span class="fc" id="L306">		return set;</span>
 	}
 
 	public void setSet(String set)
 	{
-<span class="fc" id="L305">		this.set = set;</span>
-<span class="fc" id="L306">	}</span>
+<span class="fc" id="L311">		this.set = set;</span>
+<span class="fc" id="L312">	}</span>
 
 	public String getType()
 	{
-<span class="fc" id="L310">		return type;</span>
+<span class="fc" id="L316">		return type;</span>
 	}
 
 	public void setType(String type)
 	{
-<span class="fc" id="L315">		this.type = type;</span>
-<span class="fc" id="L316">	}</span>
+<span class="fc" id="L321">		this.type = type;</span>
+<span class="fc" id="L322">	}</span>
 
 	public String getCombine() {
-<span class="fc" id="L319">		return combine;</span>
+<span class="fc" id="L325">		return combine;</span>
 	}
 
 	public void setCombine(String combine) {
-<span class="fc" id="L323">		this.combine = combine;</span>
-<span class="fc" id="L324">	}</span>
+<span class="fc" id="L329">		this.combine = combine;</span>
+<span class="fc" id="L330">	}</span>
 
 	/**
 	 * Vrati jazyk aktualne prihlaseneho usera, aby sa spravne nacitali cachovane subory (sucast parametra)
@@ -331,25 +337,25 @@ import sk.iway.iwcm.i18n.Prop;
 	 */
 	public static String getLng(PageContext pageContext, HttpServletRequest request)
 	{
-<span class="fc" id="L334">		String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
-<span class="fc bfc" id="L335" title="All 2 branches covered.">		if (pageContext.getAttribute(&quot;lng&quot;)!=null)</span>
+<span class="fc" id="L340">		String lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">		if (pageContext.getAttribute(&quot;lng&quot;)!=null)</span>
 		{
-<span class="fc" id="L337">			lng = (String)pageContext.getAttribute(&quot;lng&quot;);</span>
+<span class="fc" id="L343">			lng = (String)pageContext.getAttribute(&quot;lng&quot;);</span>
 		}
-<span class="pc bpc" id="L339" title="1 of 2 branches missed.">		else if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">		else if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
 		{
-<span class="nc" id="L341">			lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
+<span class="nc" id="L347">			lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
 		}
 		else
 		{
-<span class="fc" id="L345">			lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
-<span class="pc bpc" id="L346" title="1 of 2 branches missed.">			if (lng == null)</span>
+<span class="fc" id="L351">			lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">			if (lng == null)</span>
 			{
-<span class="nc" id="L348">				lng = PageLng.getUserLng(request); // sk.iway.iwcm.Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="nc" id="L354">				lng = PageLng.getUserLng(request); // sk.iway.iwcm.Constants.getString(&quot;defaultLanguage&quot;);</span>
 			}
 		}
-<span class="fc bfc" id="L351" title="All 2 branches covered.">		if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
-<span class="fc" id="L352">		return lng;</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">		if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
+<span class="fc" id="L358">		return lng;</span>
 	}
 
 	/**
@@ -358,17 +364,17 @@ import sk.iway.iwcm.i18n.Prop;
 	 */
 	public static long getVersion()
 	{
-<span class="fc" id="L361">		return versionDateTime.getTime();</span>
+<span class="fc" id="L367">		return versionDateTime.getTime();</span>
 	}
 
 	public static void setVersion(long version)
 	{
-<span class="fc" id="L366">		versionDateTime = new Date(version);</span>
-<span class="fc" id="L367">	}</span>
+<span class="fc" id="L372">		versionDateTime = new Date(version);</span>
+<span class="fc" id="L373">	}</span>
 
 	public static void resetVersion()
 	{
-<span class="nc" id="L371">		versionDateTime = new Date();</span>
-<span class="nc" id="L372">	}</span>
+<span class="nc" id="L377">		versionDateTime = new Date();</span>
+<span class="nc" id="L378">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoicePaymentRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.rest</a> &gt; <span class="el_source">BasketInvoicePaymentRestController.java</span></div><h1>BasketInvoicePaymentRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.rest;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.tags.CurrencyTag;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/eshop/basket-payments&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_basket')&quot;)
+@Datatable
+public class BasketInvoicePaymentRestController extends DatatableRestControllerV2&lt;BasketInvoicePaymentEntity, Long&gt; {
+
+    private final BasketInvoicePaymentsRepository basketInvoicePaymentRepository;
+    private final BasketInvoicesRepository basketInvoicesRepository;
+<span class="fc" id="L41">    private static final BigDecimal MIN_PAYED_PRICE = BigDecimal.valueOf(0.01);</span>
+
+    @Autowired
+    public BasketInvoicePaymentRestController(BasketInvoicePaymentsRepository basketInvoicePaymentRepository, BasketInvoicesRepository basketInvoicesRepository) {
+<span class="fc" id="L45">        super(basketInvoicePaymentRepository);</span>
+<span class="fc" id="L46">        this.basketInvoicePaymentRepository = basketInvoicePaymentRepository;</span>
+<span class="fc" id="L47">        this.basketInvoicesRepository = basketInvoicesRepository;</span>
+<span class="fc" id="L48">    }</span>
+
+    @Override
+    public Page&lt;BasketInvoicePaymentEntity&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L52">        long invoiceId = getInvoiceId();</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if(invoiceId &lt; 1)  return new PageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L54">        BasketInvoiceEntity invoice = basketInvoicesRepository.findFirstByIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if(invoice == null) return new PageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L56">        return basketInvoicePaymentRepository.findAllByInvoiceId(invoiceId, pageable);</span>
+    }
+
+    @Override
+    public BasketInvoicePaymentEntity getOne(@PathVariable(&quot;id&quot;) long id) {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if(id &lt; 1) {</span>
+<span class="fc" id="L62">            BasketInvoicePaymentEntity entity = new BasketInvoicePaymentEntity();</span>
+<span class="fc" id="L63">            entity.setCreateDate(new Date());</span>
+<span class="fc" id="L64">            return entity;</span>
+        } else {
+<span class="fc" id="L66">            return super.getOne(id);</span>
+        }
+    }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, BasketInvoicePaymentEntity&gt; target, Identity currentUser, Errors errors, Long id, BasketInvoicePaymentEntity entity) {
+<span class="pc bpc" id="L72" title="1 of 4 branches missed.">        if(entity.getPayedPrice() == null || entity.getPayedPrice().compareTo(MIN_PAYED_PRICE) &lt; 0)</span>
+<span class="fc" id="L73">            errors.rejectValue(&quot;errorField.payedPrice&quot;, &quot;&quot;, getProp().getText(&quot;components.basket.invoice.payments.price_err&quot;));</span>
+<span class="fc" id="L74">    }</span>
+
+    @Override
+    public void beforeSave(BasketInvoicePaymentEntity entity) {
+        long basketInvoiceId;
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">        if(entity.getId() != null &amp;&amp; entity.getId() &gt; 0) {</span>
+            //EDIT
+<span class="fc" id="L81">            basketInvoiceId = entity.getInvoiceId();</span>
+        } else {
+            //CREATE
+<span class="fc" id="L84">            basketInvoiceId = getInvoiceId();</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            if(basketInvoiceId &lt; 1) throwError(&quot;Something went wrong.&quot;);</span>
+        }
+
+<span class="fc" id="L88">        BasketInvoiceEntity invoice = basketInvoicesRepository.findFirstByIdAndDomainId(basketInvoiceId, CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if(invoice==null) {</span>
+<span class="nc" id="L90">            throwError(&quot;Something went wrong.&quot;);</span>
+<span class="nc" id="L91">            return;</span>
+        }
+
+<span class="fc" id="L94">        entity.setClosedDate(new Date());</span>
+
+        //Check for null date value
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if(entity.getCreateDate() == null) entity.setCreateDate(new Date());</span>
+
+        //Need null time part
+<span class="fc" id="L100">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L101">        cal.setTime(entity.getCreateDate());</span>
+<span class="fc" id="L102">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L103">        cal.set(Calendar.HOUR, 0);</span>
+<span class="fc" id="L104">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L105">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L106">        entity.setCreateDate(cal.getTime());</span>
+
+<span class="fc" id="L108">        BigDecimal totalPriceVat = invoice.getTotalPriceVat(); //Full price to pay</span>
+<span class="fc" id="L109">        BigDecimal totalPayedPrice = invoice.getTotalPayedPrice(); //Already payed</span>
+
+<span class="pc bpc" id="L111" title="1 of 4 branches missed.">        if(entity.getId() != null &amp;&amp; entity.getId() &gt; 0) {</span>
+            //Update
+<span class="fc" id="L113">            BasketInvoicePaymentEntity originalPayment = super.getOne(entity.getId());</span>
+            //Full price to pay (with updated price) cant be bigger than price to pay
+
+<span class="fc" id="L116">            BigDecimal priceOvervalue = totalPayedPrice.subtract(originalPayment.getPayedPrice()).add(entity.getPayedPrice());</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">            if( priceOvervalue.compareTo(totalPriceVat) &gt; 0) throwError(getProp().getText(&quot;components.basket.invoice.payments.price_over_err&quot;));</span>
+<span class="fc" id="L118">        } else {</span>
+            //Insert
+
+<span class="fc" id="L121">            BigDecimal priceOvervalue = totalPayedPrice.add(entity.getPayedPrice());</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">            if( priceOvervalue.compareTo(totalPriceVat) &gt; 0) throwError(getProp().getText(&quot;components.basket.invoice.payments.price_over_err&quot;));</span>
+
+<span class="fc" id="L124">            entity.setConfirmed(true);</span>
+<span class="fc" id="L125">            entity.setInvoiceId(basketInvoiceId);</span>
+        }
+<span class="fc" id="L127">    }</span>
+
+    @Override
+    public void afterSave(BasketInvoicePaymentEntity entity, BasketInvoicePaymentEntity saved) {
+<span class="fc" id="L131">        Optional&lt;BasketInvoiceEntity&gt; basketInvoice = basketInvoicesRepository.findById((long) entity.getInvoiceId());</span>
+
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if(basketInvoice.isPresent()) {</span>
+<span class="fc" id="L134">            BigDecimal totalPriceVat = basketInvoice.get().getTotalPriceVat();</span>
+<span class="fc" id="L135">            BigDecimal totalPayedPrice = basketInvoice.get().getTotalPayedPrice();</span>
+
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">            if(CurrencyTag.formatNumber(totalPriceVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))</span>
+<span class="nc" id="L138">                basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_PAID);</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            else if(totalPayedPrice.compareTo(BigDecimal.valueOf(0)) &gt; 0)</span>
+<span class="fc" id="L140">                basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_PARTIALLY_PAID);</span>
+            else
+<span class="nc" id="L142">                basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_NEW);</span>
+
+<span class="fc" id="L144">            basketInvoicesRepository.save(basketInvoice.get());</span>
+        }
+<span class="fc" id="L146">    }</span>
+
+    @Override
+    public void afterDelete(BasketInvoicePaymentEntity entity, long id) {
+<span class="nc" id="L150">        Optional&lt;BasketInvoiceEntity&gt; basketInvoice = basketInvoicesRepository.findById((long) entity.getInvoiceId());</span>
+
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        if(basketInvoice.isPresent()) {</span>
+<span class="nc" id="L153">            BigDecimal totalPriceVat = basketInvoice.get().getTotalPriceVat();</span>
+<span class="nc" id="L154">            BigDecimal totalPayedPrice = basketInvoice.get().getTotalPayedPrice();</span>
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">            if(CurrencyTag.formatNumber(totalPriceVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))</span>
+<span class="nc" id="L157">                basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_PAID);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">            else if(totalPayedPrice.compareTo( BigDecimal.valueOf(0) ) &gt; 0)</span>
+<span class="nc" id="L159">                basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_PARTIALLY_PAID);</span>
+            else
+<span class="nc" id="L161">                basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_NEW);</span>
+
+<span class="nc" id="L163">            basketInvoicesRepository.save(basketInvoice.get());</span>
+        }
+<span class="nc" id="L165">    }</span>
+
+    private final long getInvoiceId() {
+<span class="fc" id="L168">        return Tools.getLongValue(getRequest().getParameter(&quot;invoiceId&quot;), -1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDBTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">GalleryDBTools.java</span></div><h1>GalleryDBTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryDBTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">GalleryDBTools.java</span></div><h1>GalleryDBTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -104,105 +104,105 @@ public class GalleryDBTools {
 <span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(imageMagickDir))</span>
         {
 <span class="fc" id="L106">            File f = new File(imageMagickDir + File.separatorChar + runtimeFile);</span>
-<span class="pc bpc" id="L107" title="3 of 4 branches missed.">            if (f.exists() &amp;&amp; f.canRead())</span>
+<span class="pc bpc" id="L107" title="2 of 4 branches missed.">            if (f.exists() &amp;&amp; f.canRead())</span>
             {
-<span class="nc" id="L109">                convertExists = true;</span>
+<span class="fc" id="L109">                convertExists = true;</span>
             }
         }
 
 <span class="pc bpc" id="L113" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(imageMagickDir) &amp;&amp; convertExists)</span>
         {
 
-<span class="nc" id="L116">            return cropAndResizeImageMagick(from, cwidth, cheight, cleft, ctop, finalWidth, finalHeight, fillColor, exactFinalSize, to, imageQuality);</span>
+<span class="fc" id="L116">            return cropAndResizeImageMagick(from, cwidth, cheight, cleft, ctop, finalWidth, finalHeight, fillColor, exactFinalSize, to, imageQuality);</span>
         }
         else
         {
-<span class="fc" id="L120">            return cropAndResizeJava(from, cwidth, cheight, cleft, ctop, finalWidth, finalHeight, fillColor, exactFinalSize, to, imageQuality, ip);</span>
+<span class="nc" id="L120">            return cropAndResizeJava(from, cwidth, cheight, cleft, ctop, finalWidth, finalHeight, fillColor, exactFinalSize, to, imageQuality, ip);</span>
         }
     }
 
     private static int cropAndResizeImageMagick(IwcmFile from, int cwidth, int cheight, int cleft, int ctop, int finalWidth, int finalHeight, String fillColor, boolean exactFinalSize, IwcmFile to, int imageQuality)
     {
-<span class="nc" id="L126">        finalWidth = limitMaxSize(finalWidth);</span>
-<span class="nc" id="L127">        finalHeight = limitMaxSize(finalHeight);</span>
+<span class="fc" id="L126">        finalWidth = limitMaxSize(finalWidth);</span>
+<span class="fc" id="L127">        finalHeight = limitMaxSize(finalHeight);</span>
 
-<span class="nc" id="L129">        List&lt;String&gt; args = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L129">        List&lt;String&gt; args = new ArrayList&lt;String&gt;();</span>
 
-<span class="nc" id="L131">        args.add(&quot;&quot;); //toto sa neskor nahradi za convert prikaz v executeImageMagickCommand</span>
-<span class="nc" id="L132">        args.add(from.getAbsolutePath());</span>
-<span class="nc" id="L133">        args.add(&quot;-crop&quot;);</span>
-<span class="nc" id="L134">        args.add(cwidth+&quot;x&quot;+cheight+&quot;+&quot;+cleft+&quot;+&quot;+ctop);</span>
-<span class="nc" id="L135">        args.add(&quot;-resize&quot;);</span>
-<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (exactFinalSize) args.add(finalWidth+&quot;x&quot;+finalHeight+&quot;!&quot;);</span>
-<span class="nc" id="L137">        else  args.add(finalWidth+&quot;x&quot;+finalHeight);</span>
+<span class="fc" id="L131">        args.add(&quot;&quot;); //toto sa neskor nahradi za convert prikaz v executeImageMagickCommand</span>
+<span class="fc" id="L132">        args.add(from.getAbsolutePath());</span>
+<span class="fc" id="L133">        args.add(&quot;-crop&quot;);</span>
+<span class="fc" id="L134">        args.add(cwidth+&quot;x&quot;+cheight+&quot;+&quot;+cleft+&quot;+&quot;+ctop);</span>
+<span class="fc" id="L135">        args.add(&quot;-resize&quot;);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (exactFinalSize) args.add(finalWidth+&quot;x&quot;+finalHeight+&quot;!&quot;);</span>
+<span class="fc" id="L137">        else  args.add(finalWidth+&quot;x&quot;+finalHeight);</span>
 
-<span class="nc bnc" id="L139" title="All 4 branches missed.">        if (imageQuality &gt; 0 &amp;&amp; to.getName().toLowerCase().endsWith(&quot;.jpg&quot;))</span>
+<span class="fc bfc" id="L139" title="All 4 branches covered.">        if (imageQuality &gt; 0 &amp;&amp; to.getName().toLowerCase().endsWith(&quot;.jpg&quot;))</span>
         {
-<span class="nc" id="L141">            args.add(&quot;-quality&quot;);</span>
-<span class="nc" id="L142">            args.add(String.valueOf(imageQuality));</span>
+<span class="fc" id="L141">            args.add(&quot;-quality&quot;);</span>
+<span class="fc" id="L142">            args.add(String.valueOf(imageQuality));</span>
         }
 
-<span class="nc bnc" id="L145" title="All 2 branches missed.">        if (from.getAbsolutePath().endsWith(&quot;.gif&quot;)) args.add(&quot;+repage&quot;);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (from.getAbsolutePath().endsWith(&quot;.gif&quot;)) args.add(&quot;+repage&quot;);</span>
 
-<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (fillColor == null)</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (fillColor == null)</span>
         {
-<span class="nc" id="L149">            args.add(&quot;-strip&quot;);</span>
-<span class="nc" id="L150">            args.add(to.getAbsolutePath());</span>
+<span class="fc" id="L149">            args.add(&quot;-strip&quot;);</span>
+<span class="fc" id="L150">            args.add(to.getAbsolutePath());</span>
         }
         else
         {
-<span class="nc" id="L154">            args.add(&quot;-gravity&quot;);</span>
-<span class="nc" id="L155">            args.add(&quot;center&quot;);</span>
-<span class="nc" id="L156">            args.add(&quot;-background&quot;);</span>
-<span class="nc" id="L157">            args.add(&quot;#&quot;+fillColor);</span>
-<span class="nc" id="L158">            args.add(&quot;-extent&quot;);</span>
-<span class="nc" id="L159">            args.add(finalWidth+&quot;x&quot;+finalHeight);</span>
-<span class="nc" id="L160">            args.add(&quot;-strip&quot;);</span>
-<span class="nc" id="L161">            args.add(to.getAbsolutePath());</span>
+<span class="fc" id="L154">            args.add(&quot;-gravity&quot;);</span>
+<span class="fc" id="L155">            args.add(&quot;center&quot;);</span>
+<span class="fc" id="L156">            args.add(&quot;-background&quot;);</span>
+<span class="fc" id="L157">            args.add(&quot;#&quot;+fillColor);</span>
+<span class="fc" id="L158">            args.add(&quot;-extent&quot;);</span>
+<span class="fc" id="L159">            args.add(finalWidth+&quot;x&quot;+finalHeight);</span>
+<span class="fc" id="L160">            args.add(&quot;-strip&quot;);</span>
+<span class="fc" id="L161">            args.add(to.getAbsolutePath());</span>
         }
 
-<span class="nc" id="L164">        return GalleryDB.executeImageMagickCommand(args.toArray(new String[0]));</span>
+<span class="fc" id="L164">        return GalleryDB.executeImageMagickCommand(args.toArray(new String[0]));</span>
     }
 
     private static int cropAndResizeJava(IwcmFile from, int cwidth, int cheight, int cleft, int ctop, int finalWidth, int finalHeight, String fillColor, boolean exactFinalSize, IwcmFile to, int imageQuality, int ip)
     {
         try
         {
-<span class="fc" id="L171">            IwcmInputStream iwStream = new IwcmInputStream(from.getPath(), false);</span>
-<span class="fc" id="L172">            BufferedImage originalBufferedImage = ImageIO.read(iwStream);</span>
-<span class="fc" id="L173">            iwStream.close();</span>
+<span class="nc" id="L171">            IwcmInputStream iwStream = new IwcmInputStream(from.getPath(), false);</span>
+<span class="nc" id="L172">            BufferedImage originalBufferedImage = ImageIO.read(iwStream);</span>
+<span class="nc" id="L173">            iwStream.close();</span>
             // Logger.println(GalleryDB.class,&quot;w=&quot;+w+&quot; h=&quot;+h);
-<span class="fc" id="L175">            int scaleType = Image.SCALE_AREA_AVERAGING;</span>
-<span class="fc bfc" id="L176" title="All 2 branches covered.">            if (originalBufferedImage.getWidth() &gt; 1000)</span>
+<span class="nc" id="L175">            int scaleType = Image.SCALE_AREA_AVERAGING;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (originalBufferedImage.getWidth() &gt; 1000)</span>
             {
-<span class="fc" id="L178">                Logger.debug(GalleryDB.class, &quot;smooth resize&quot;);</span>
-<span class="fc" id="L179">                scaleType = Image.SCALE_SMOOTH;</span>
+<span class="nc" id="L178">                Logger.debug(GalleryDB.class, &quot;smooth resize&quot;);</span>
+<span class="nc" id="L179">                scaleType = Image.SCALE_SMOOTH;</span>
             }
 
-<span class="fc bfc" id="L182" title="All 2 branches covered.">            if (imageQuality &gt;= 90) scaleType = Image.SCALE_SMOOTH;</span>
-<span class="pc bpc" id="L183" title="1 of 2 branches missed.">            else if (imageQuality &gt;= 85) scaleType = Image.SCALE_AREA_AVERAGING;</span>
-<span class="fc bfc" id="L184" title="All 2 branches covered.">            else if (imageQuality &gt;= 80) scaleType = Image.SCALE_REPLICATE;</span>
-<span class="pc bpc" id="L185" title="1 of 2 branches missed.">            else if (imageQuality &gt; 0) scaleType = Image.SCALE_FAST;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            if (imageQuality &gt;= 90) scaleType = Image.SCALE_SMOOTH;</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">            else if (imageQuality &gt;= 85) scaleType = Image.SCALE_AREA_AVERAGING;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">            else if (imageQuality &gt;= 80) scaleType = Image.SCALE_REPLICATE;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            else if (imageQuality &gt; 0) scaleType = Image.SCALE_FAST;</span>
 
-<span class="pc bpc" id="L187" title="1 of 2 branches missed.">            if (originalBufferedImage.getWidth() &gt; 2000)</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (originalBufferedImage.getWidth() &gt; 2000)</span>
             {
                 // Logger.println(GalleryDB.class,&quot;smooth fast&quot;);
                 // scaleType = Image.SCALE_FAST;
             }
-<span class="fc" id="L192">            int resizeWidth = finalWidth;</span>
-<span class="fc" id="L193">            int resizeHeight = finalHeight;</span>
-<span class="fc" id="L194">            int offsetW = 0;</span>
-<span class="fc" id="L195">            int offsetH = 0;</span>
+<span class="nc" id="L192">            int resizeWidth = finalWidth;</span>
+<span class="nc" id="L193">            int resizeHeight = finalHeight;</span>
+<span class="nc" id="L194">            int offsetW = 0;</span>
+<span class="nc" id="L195">            int offsetH = 0;</span>
 
             /*** Ak 3 alebo 4, potrebujem dopocitat velkost obrazku - ostatne sa doplni bielou farbou (ip=3) alebo farbou fillColor ***/
-<span class="pc bpc" id="L198" title="1 of 4 branches missed.">            if(ip == 3 || ip == 4)</span>
+<span class="nc bnc" id="L198" title="All 4 branches missed.">            if(ip == 3 || ip == 4)</span>
             {
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                if(finalWidth &gt; finalHeight)</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">                if(finalWidth &gt; finalHeight)</span>
                 {
-<span class="fc" id="L202">                    double pomer = (double)cwidth / (double) cheight;</span>
-<span class="fc" id="L203">                    resizeWidth = (int)Math.round(finalHeight * pomer);</span>
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                    if(ip == 4) offsetW = (finalWidth - resizeWidth)/2;	//vycentrovanie obrazka</span>
-<span class="fc" id="L205">                }</span>
+<span class="nc" id="L202">                    double pomer = (double)cwidth / (double) cheight;</span>
+<span class="nc" id="L203">                    resizeWidth = (int)Math.round(finalHeight * pomer);</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">                    if(ip == 4) offsetW = (finalWidth - resizeWidth)/2;	//vycentrovanie obrazka</span>
+<span class="nc" id="L205">                }</span>
                 else
                 {
 <span class="nc" id="L208">                    double pomer = (double)cwidth / (double) cheight;</span>
@@ -211,77 +211,77 @@ public class GalleryDBTools {
                 }
             }
 
-<span class="fc" id="L214">            DebugTimer timer = new DebugTimer(&quot;ImageResize&quot;);</span>
-<span class="fc" id="L215">            timer.diff(&quot;starting: &quot; + scaleType + &quot; cleft=&quot;+cleft+&quot; ctop=&quot;+ctop+&quot; cwidth=&quot;+cwidth+&quot; cheight=&quot;+cheight);</span>
-<span class="fc" id="L216">            Image smallImage = null;</span>
+<span class="nc" id="L214">            DebugTimer timer = new DebugTimer(&quot;ImageResize&quot;);</span>
+<span class="nc" id="L215">            timer.diff(&quot;starting: &quot; + scaleType + &quot; cleft=&quot;+cleft+&quot; ctop=&quot;+ctop+&quot; cwidth=&quot;+cwidth+&quot; cheight=&quot;+cheight);</span>
+<span class="nc" id="L216">            Image smallImage = null;</span>
 
             /*** Orezanie ***/
-<span class="fc" id="L219">            smallImage = originalBufferedImage.getSubimage(cleft, ctop, cwidth, cheight);</span>
-<span class="fc" id="L220">            BufferedImage bi = new BufferedImage(cwidth, cheight, BufferedImage.TYPE_INT_RGB);</span>
-<span class="fc" id="L221">            Graphics2D g = bi.createGraphics();</span>
-<span class="fc" id="L222">            g.drawImage(smallImage, 0, 0, null);</span>
-<span class="fc" id="L223">            timer.diff(&quot;croped&quot;);</span>
+<span class="nc" id="L219">            smallImage = originalBufferedImage.getSubimage(cleft, ctop, cwidth, cheight);</span>
+<span class="nc" id="L220">            BufferedImage bi = new BufferedImage(cwidth, cheight, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L221">            Graphics2D g = bi.createGraphics();</span>
+<span class="nc" id="L222">            g.drawImage(smallImage, 0, 0, null);</span>
+<span class="nc" id="L223">            timer.diff(&quot;croped&quot;);</span>
 
             /*** Zmena velkosti obrazku ***/
-<span class="fc" id="L226">            smallImage = bi.getScaledInstance(resizeWidth, resizeHeight, scaleType);</span>
-<span class="fc" id="L227">            timer.diff(&quot;scaled&quot;);</span>
-<span class="fc" id="L228">            BufferedImage bufSmall = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_RGB);</span>
-<span class="fc" id="L229">            timer.diff(&quot;buf created&quot;);</span>
+<span class="nc" id="L226">            smallImage = bi.getScaledInstance(resizeWidth, resizeHeight, scaleType);</span>
+<span class="nc" id="L227">            timer.diff(&quot;scaled&quot;);</span>
+<span class="nc" id="L228">            BufferedImage bufSmall = new BufferedImage(finalWidth, finalHeight, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L229">            timer.diff(&quot;buf created&quot;);</span>
             // bufSmall.getGraphics().drawImage(smallImage, 0, 0, null);
-<span class="fc" id="L231">            Graphics2D graphics = bufSmall.createGraphics();</span>
-<span class="fc bfc" id="L232" title="All 2 branches covered.">            if(Tools.isNotEmpty(fillColor))	//farba vyplne</span>
+<span class="nc" id="L231">            Graphics2D graphics = bufSmall.createGraphics();</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            if(Tools.isNotEmpty(fillColor))	//farba vyplne</span>
             {
-<span class="fc" id="L234">                graphics.setPaint ( Color.decode(&quot;#&quot;+fillColor) );</span>
-<span class="fc" id="L235">                graphics.fillRect ( 0, 0, finalWidth, finalHeight );</span>
+<span class="nc" id="L234">                graphics.setPaint ( Color.decode(&quot;#&quot;+fillColor) );</span>
+<span class="nc" id="L235">                graphics.fillRect ( 0, 0, finalWidth, finalHeight );</span>
             }
             else
             {
-<span class="fc" id="L239">                graphics.setPaint ( Color.white );</span>
-<span class="fc" id="L240">                graphics.fillRect ( 0, 0, finalWidth, finalHeight );</span>
+<span class="nc" id="L239">                graphics.setPaint ( Color.white );</span>
+<span class="nc" id="L240">                graphics.fillRect ( 0, 0, finalWidth, finalHeight );</span>
             }
-<span class="fc" id="L242">            graphics.drawImage(smallImage, offsetW, offsetH, null);</span>
-<span class="fc" id="L243">            timer.diff(&quot;image drawed&quot;);</span>
-<span class="fc" id="L244">            bufSmall.getGraphics().dispose();</span>
-<span class="fc" id="L245">            timer.diff(&quot;disposed&quot;);</span>
+<span class="nc" id="L242">            graphics.drawImage(smallImage, offsetW, offsetH, null);</span>
+<span class="nc" id="L243">            timer.diff(&quot;image drawed&quot;);</span>
+<span class="nc" id="L244">            bufSmall.getGraphics().dispose();</span>
+<span class="nc" id="L245">            timer.diff(&quot;disposed&quot;);</span>
 
-<span class="fc" id="L247">            ImageWriteParam iwparam = null;</span>
+<span class="nc" id="L247">            ImageWriteParam iwparam = null;</span>
             // ImageIO.write(bufSmall, format,iwparam, fSmallImg);
             // Jimi.putImage(&quot;image/&quot; + type, image, realPathSmall);
-<span class="fc" id="L250">            ImageWriter writer = null;</span>
+<span class="nc" id="L250">            ImageWriter writer = null;</span>
 
-<span class="fc" id="L252">            String format = &quot;jpg&quot;;</span>
-<span class="fc bfc" id="L253" title="All 2 branches covered.">            if (from.getAbsolutePath().endsWith(&quot;.png&quot;))</span>
+<span class="nc" id="L252">            String format = &quot;jpg&quot;;</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">            if (from.getAbsolutePath().endsWith(&quot;.png&quot;))</span>
             {
-<span class="fc" id="L255">                format = &quot;png&quot;;</span>
+<span class="nc" id="L255">                format = &quot;png&quot;;</span>
             }
             else
             {
-<span class="fc" id="L259">                iwparam = new JPEGImageWriteParam(null);</span>
-<span class="fc" id="L260">                iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);</span>
-<span class="fc" id="L261">                iwparam.setCompressionQuality(0.85F);</span>
+<span class="nc" id="L259">                iwparam = new JPEGImageWriteParam(null);</span>
+<span class="nc" id="L260">                iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);</span>
+<span class="nc" id="L261">                iwparam.setCompressionQuality(0.85F);</span>
             }
 
-<span class="fc" id="L264">            Iterator&lt;ImageWriter&gt; iter = ImageIO.getImageWritersByFormatName(format);</span>
-<span class="pc bpc" id="L265" title="1 of 2 branches missed.">            if (iter.hasNext())</span>
+<span class="nc" id="L264">            Iterator&lt;ImageWriter&gt; iter = ImageIO.getImageWritersByFormatName(format);</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (iter.hasNext())</span>
             {
-<span class="fc" id="L267">                writer = iter.next();</span>
+<span class="nc" id="L267">                writer = iter.next();</span>
             }
-<span class="pc bpc" id="L269" title="1 of 2 branches missed.">            if (writer != null) {</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            if (writer != null) {</span>
                 // Prepare output file
-<span class="fc" id="L271">                IwcmOutputStream out = new IwcmOutputStream(to.getPath());</span>
-<span class="fc" id="L272">                ImageOutputStream ios = ImageIO.createImageOutputStream(out);</span>
-<span class="fc" id="L273">                writer.setOutput(ios);</span>
-<span class="fc" id="L274">                timer.diff(&quot;write start&quot;);</span>
+<span class="nc" id="L271">                IwcmOutputStream out = new IwcmOutputStream(to.getPath());</span>
+<span class="nc" id="L272">                ImageOutputStream ios = ImageIO.createImageOutputStream(out);</span>
+<span class="nc" id="L273">                writer.setOutput(ios);</span>
+<span class="nc" id="L274">                timer.diff(&quot;write start&quot;);</span>
                 // Write the image
-<span class="fc" id="L276">                writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
-<span class="fc" id="L277">                timer.diff(&quot;writed to file&quot;);</span>
+<span class="nc" id="L276">                writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
+<span class="nc" id="L277">                timer.diff(&quot;writed to file&quot;);</span>
                 // Cleanup
-<span class="fc" id="L279">                ios.flush();</span>
-<span class="fc" id="L280">                writer.dispose();</span>
-<span class="fc" id="L281">                ios.close();</span>
-<span class="fc" id="L282">                out.close();</span>
+<span class="nc" id="L279">                ios.flush();</span>
+<span class="nc" id="L280">                writer.dispose();</span>
+<span class="nc" id="L281">                ios.close();</span>
+<span class="nc" id="L282">                out.close();</span>
             }
-<span class="fc" id="L284">            return (0);</span>
+<span class="nc" id="L284">            return (0);</span>
         }
 <span class="nc" id="L286">        catch (javax.imageio.IIOException ex)</span>
         {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationAjaxAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationAjaxAction.java</span></div><h1>ReservationAjaxAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationAjaxAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">ReservationAjaxAction.java</span></div><h1>ReservationAjaxAction.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -38,7 +38,7 @@ import sk.iway.iwcm.users.UsersDB;
  * @created Date: 20.12.2008 14:55:51
  * @modified $Date: 2009/10/23 13:35:39 $
  */
-<span class="nc" id="L41">public class ReservationAjaxAction extends WebJETActionBean</span>
+<span class="fc" id="L41">public class ReservationAjaxAction extends WebJETActionBean</span>
 {
 	@ValidateNestedProperties({@Validate(field = &quot;reservationId&quot;, on = &quot;saveReservation&quot;),
 				@Validate(field = &quot;reservationObjectId&quot;, required = true, on = &quot;saveReservation&quot;),
@@ -66,18 +66,18 @@ import sk.iway.iwcm.users.UsersDB;
 	int reservationObjectId;
 
 	//rzapach: rozsah casov pre jednotlive zvolene dni
-<span class="nc" id="L69">	boolean chooseDays = false;</span>
-<span class="nc" id="L70">	boolean[] days = new boolean[7];</span>
-<span class="nc" id="L71">	String[] casyOd = {&quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;};</span>
-<span class="nc" id="L72">	String[] casyDo = {&quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;};</span>
-<span class="nc" id="L73">	List&lt;ReservationObjectTimesBean&gt; times = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L69">	boolean chooseDays = false;</span>
+<span class="fc" id="L70">	boolean[] days = new boolean[7];</span>
+<span class="fc" id="L71">	String[] casyOd = {&quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;, &quot;08:00&quot;};</span>
+<span class="fc" id="L72">	String[] casyDo = {&quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;, &quot;16:00&quot;};</span>
+<span class="fc" id="L73">	List&lt;ReservationObjectTimesBean&gt; times = new ArrayList&lt;&gt;();</span>
 
 	@Override
 	public void setContext(ActionBeanContext context)
 	{
-<span class="nc" id="L78">		super.setContext(context);</span>
-<span class="nc" id="L79">		reservationObjectId = Tools.getIntValue(context.getRequest().getParameter(&quot;reservationObject.reservationObjectId&quot;), -1);</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (reservationObjectId &gt; 0)</span>
+<span class="fc" id="L78">		super.setContext(context);</span>
+<span class="fc" id="L79">		reservationObjectId = Tools.getIntValue(context.getRequest().getParameter(&quot;reservationObject.reservationObjectId&quot;), -1);</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if (reservationObjectId &gt; 0)</span>
 		{
 <span class="nc" id="L82">			reservationObject = ReservationManager.getReservationObjectById(reservationObjectId);</span>
 
@@ -98,74 +98,74 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L98">		}</span>
 		else
 		{
-<span class="nc" id="L101">			reservationObject = new ReservationObjectBean();</span>
-<span class="nc" id="L102">			reservationObject.setTimeUnit(&quot;30&quot;);</span>
+<span class="fc" id="L101">			reservationObject = new ReservationObjectBean();</span>
+<span class="fc" id="L102">			reservationObject.setTimeUnit(&quot;30&quot;);</span>
 		}
-<span class="nc" id="L104">		Identity user = UsersDB.getCurrentUser(context.getRequest());</span>
-<span class="nc bnc" id="L105" title="All 4 branches missed.">		if (getReservation() == null || getReservation().getReservationId() &lt; 1)</span>
+<span class="fc" id="L104">		Identity user = UsersDB.getCurrentUser(context.getRequest());</span>
+<span class="pc bpc" id="L105" title="3 of 4 branches missed.">		if (getReservation() == null || getReservation().getReservationId() &lt; 1)</span>
 		{
-<span class="nc bnc" id="L107" title="All 2 branches missed.">			if (getReservation() == null)</span>
-<span class="nc" id="L108">				setReservation(new ReservationBean());</span>
-<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (user != null)</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">			if (getReservation() == null)</span>
+<span class="fc" id="L108">				setReservation(new ReservationBean());</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">			if (user != null)</span>
 			{
-<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (Tools.isEmpty(getReservation().getName()))</span>
-<span class="nc" id="L112">					getReservation().setName(user.getFirstName());</span>
-<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (Tools.isEmpty(getReservation().getSurname()))</span>
-<span class="nc" id="L114">					getReservation().setSurname(user.getLastName());</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (Tools.isEmpty(getReservation().getEmail()))</span>
-<span class="nc" id="L116">					getReservation().setEmail(user.getEmail());</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">				if (Tools.isEmpty(getReservation().getName()))</span>
+<span class="fc" id="L112">					getReservation().setName(user.getFirstName());</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">				if (Tools.isEmpty(getReservation().getSurname()))</span>
+<span class="fc" id="L114">					getReservation().setSurname(user.getLastName());</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">				if (Tools.isEmpty(getReservation().getEmail()))</span>
+<span class="fc" id="L116">					getReservation().setEmail(user.getEmail());</span>
 			}
-<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (getReservation().getDateFrom() == null)</span>
-<span class="nc" id="L119">				getReservation().setDateFrom(new Date());</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (getReservation().getDateTo() == null)</span>
-<span class="nc" id="L121">				getReservation().setDateTo(new Date());</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">			if (getReservation().getDateFrom() == null)</span>
+<span class="fc" id="L119">				getReservation().setDateFrom(new Date());</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">			if (getReservation().getDateTo() == null)</span>
+<span class="fc" id="L121">				getReservation().setDateTo(new Date());</span>
 		}
-<span class="nc" id="L123">	}</span>
+<span class="fc" id="L123">	}</span>
 
 	public ReservationBean getReservation()
 	{
-<span class="nc" id="L127">		return reservation;</span>
+<span class="fc" id="L127">		return reservation;</span>
 	}
 
 	public void setReservation(ReservationBean reservation)
 	{
-<span class="nc" id="L132">		this.reservation = reservation;</span>
-<span class="nc" id="L133">	}</span>
+<span class="fc" id="L132">		this.reservation = reservation;</span>
+<span class="fc" id="L133">	}</span>
 
-<span class="nc" id="L135">	private Date filterDateFrom = null;</span>
-<span class="nc" id="L136">	private Date filterDateTo = null;</span>
+<span class="fc" id="L135">	private Date filterDateFrom = null;</span>
+<span class="fc" id="L136">	private Date filterDateTo = null;</span>
 	private int filterObjectId;
 	private String filterEmail;
 
 	public int getFilterObjectId()
 	{
-<span class="nc" id="L142">		return filterObjectId;</span>
+<span class="fc" id="L142">		return filterObjectId;</span>
 	}
 
 	public void setFilterObjectId(int filterObjectId)
 	{
-<span class="nc" id="L147">		this.filterObjectId = filterObjectId;</span>
-<span class="nc" id="L148">	}</span>
+<span class="fc" id="L147">		this.filterObjectId = filterObjectId;</span>
+<span class="fc" id="L148">	}</span>
 
 	public Date getFilterDateFrom()
 	{
-<span class="nc bnc" id="L152" title="All 2 branches missed.">		return filterDateFrom == null ? null : (Date) filterDateFrom.clone();</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">		return filterDateFrom == null ? null : (Date) filterDateFrom.clone();</span>
 	}
 
 	public void setFilterDateFrom(Date filterDateFrom)
 	{
-<span class="nc bnc" id="L157" title="All 2 branches missed.">		this.filterDateFrom = filterDateFrom == null ? null : (Date) filterDateFrom.clone();</span>
-<span class="nc" id="L158">	}</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">		this.filterDateFrom = filterDateFrom == null ? null : (Date) filterDateFrom.clone();</span>
+<span class="fc" id="L158">	}</span>
 
 	public Date getFilterDateTo()
 	{
-<span class="nc bnc" id="L162" title="All 2 branches missed.">		return filterDateTo == null ? null : (Date) filterDateTo.clone();</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">		return filterDateTo == null ? null : (Date) filterDateTo.clone();</span>
 	}
 
 	public void setFilterDateTo(Date filterDateTo)
 	{
-<span class="nc bnc" id="L167" title="All 2 branches missed.">		this.filterDateTo = filterDateTo == null ? null : (Date) filterDateTo.clone();</span>
-<span class="nc" id="L168">	}</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">		this.filterDateTo = filterDateTo == null ? null : (Date) filterDateTo.clone();</span>
+<span class="fc" id="L168">	}</span>
 
 	public String getFilterEmail()
 	{
@@ -184,7 +184,7 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public List&lt;ReservationBean&gt; getAllReservations()
 	{
-<span class="nc" id="L187">		return Collections.unmodifiableList(ReservationManager.getReservations(filterDateFrom, filterDateTo, filterObjectId));</span>
+<span class="fc" id="L187">		return Collections.unmodifiableList(ReservationManager.getReservations(filterDateFrom, filterDateTo, filterObjectId));</span>
 	}
 
 	/**
@@ -195,7 +195,7 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public List&lt;ReservationObjectBean&gt; getAllReservationObjects()
 	{
-<span class="nc" id="L198">		return Collections.unmodifiableList(ReservationManager.getReservationObjects(filterEmail));</span>
+<span class="fc" id="L198">		return Collections.unmodifiableList(ReservationManager.getReservationObjects(filterEmail));</span>
 	}
 
 	/**
@@ -249,27 +249,27 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public Resolution bSaveReservation() throws ParseException
 	{
-<span class="nc" id="L252">		Prop prop = Prop.getInstance(getRequest());</span>
-<span class="nc" id="L253">		ReservationObjectBean rob = ReservationManager.getReservationObject(reservation.getReservationObjectId());</span>
-<span class="nc bnc" id="L254" title="All 2 branches missed.">		if (ReservationManager.isConflict(reservation) &gt;= rob.getMaxReservations())</span>
+<span class="fc" id="L252">		Prop prop = Prop.getInstance(getRequest());</span>
+<span class="fc" id="L253">		ReservationObjectBean rob = ReservationManager.getReservationObject(reservation.getReservationObjectId());</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">		if (ReservationManager.isConflict(reservation) &gt;= rob.getMaxReservations())</span>
 		{
 <span class="nc" id="L256">			getRequest().setAttribute(&quot;errorText&quot;,</span>
 <span class="nc" id="L257">						prop.getText(&quot;components.reservation.reservation_manager.addReservation.conflict&quot;));</span>
 <span class="nc" id="L258">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
 		}
-<span class="nc bnc" id="L260" title="All 2 branches missed.">		if (!isStartBeforeEnd())</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">		if (!isStartBeforeEnd())</span>
 		{
 <span class="nc" id="L262">			getRequest().setAttribute(&quot;errorText&quot;,</span>
 <span class="nc" id="L263">						prop.getText(&quot;components.reservation.reservation_manager.addReservation.endBeforeStart&quot;));</span>
 <span class="nc" id="L264">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
 		}
 		// otesujem ci nezadava mimo cas na to urceny
-<span class="nc" id="L267">		long compareDateStart = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + reservation.getStartTime());</span>
-<span class="nc" id="L268">		long compareDateEnd = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + reservation.getFinishTime());</span>
+<span class="fc" id="L267">		long compareDateStart = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + reservation.getStartTime());</span>
+<span class="fc" id="L268">		long compareDateEnd = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + reservation.getFinishTime());</span>
 
-<span class="nc" id="L270">		List&lt;ReservationObjectTimesBean&gt; reservationTimes = ReservationObjectTimesDB.getInstance().getByReservationObjectId(reservation.getReservationObjectId());</span>
+<span class="fc" id="L270">		List&lt;ReservationObjectTimesBean&gt; reservationTimes = ReservationObjectTimesDB.getInstance().getByReservationObjectId(reservation.getReservationObjectId());</span>
 
-<span class="nc bnc" id="L272" title="All 2 branches missed.">		if(reservationTimes.size()&gt;0)</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">		if(reservationTimes.size()&gt;0)</span>
 		{
 <span class="nc" id="L274">			Calendar calendar = Calendar.getInstance();</span>
 <span class="nc" id="L275">	      calendar.setTime(reservation.getDateFrom());</span>
@@ -306,10 +306,10 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L306">		}</span>
 		else
 		{
-<span class="nc" id="L309">			long resTimeFrom = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rob.getReservationTimeFrom());</span>
-<span class="nc" id="L310">			long resTimeTo = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rob.getReservationTimeTo());</span>
+<span class="fc" id="L309">			long resTimeFrom = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rob.getReservationTimeFrom());</span>
+<span class="fc" id="L310">			long resTimeTo = DB.getTimestamp(Tools.formatDate(Tools.getNow()) + &quot; &quot; + rob.getReservationTimeTo());</span>
 
-<span class="nc bnc" id="L312" title="All 8 branches missed.">			if (compareDateStart &lt; resTimeFrom || compareDateStart &gt; resTimeTo || compareDateEnd &lt; resTimeFrom</span>
+<span class="pc bpc" id="L312" title="4 of 8 branches missed.">			if (compareDateStart &lt; resTimeFrom || compareDateStart &gt; resTimeTo || compareDateEnd &lt; resTimeFrom</span>
 						|| compareDateEnd &gt; resTimeTo)
 			{
 <span class="nc" id="L315">				getRequest().setAttribute(</span>
@@ -320,15 +320,15 @@ import sk.iway.iwcm.users.UsersDB;
 			}
 		}
 
-<span class="nc" id="L323">		String lng = PageLng.getUserLng(getRequest());</span>
+<span class="fc" id="L323">		String lng = PageLng.getUserLng(getRequest());</span>
 
 		//20897 - pridana editacia konkretnej rezervacie
-<span class="nc bnc" id="L326" title="All 4 branches missed.">		if (reservation.getReservationId()&gt;0 &amp;&amp; isAdminLogged()==false)</span>
+<span class="pc bpc" id="L326" title="3 of 4 branches missed.">		if (reservation.getReservationId()&gt;0 &amp;&amp; isAdminLogged()==false)</span>
 <span class="nc" id="L327">			return new ForwardResolution(RESOLUTION_NOT_LOGGED);</span>
 
-<span class="nc" id="L329">		int approvalStatusChange = getReservationStatusChange(reservation);</span>
-<span class="nc" id="L330">		int saveOK = ReservationManager.addReservation(reservation, Tools.getServerName(getRequest()), prop, lng);</span>
-<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (saveOK &gt; 0)</span>
+<span class="fc" id="L329">		int approvalStatusChange = getReservationStatusChange(reservation);</span>
+<span class="fc" id="L330">		int saveOK = ReservationManager.addReservation(reservation, Tools.getServerName(getRequest()), prop, lng);</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">		if (saveOK &gt; 0)</span>
 		{
 <span class="nc bnc" id="L333" title="All 2 branches missed.">			if (saveOK == 1)</span>
 <span class="nc" id="L334">				getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.reservation.reservation_manager.addReservation.one&quot;));</span>
@@ -338,7 +338,7 @@ import sk.iway.iwcm.users.UsersDB;
 		}
 
 		//poslanie emailu zakaznikovy o zmene stavu schvalenia rezervacie
-<span class="nc bnc" id="L341" title="All 2 branches missed.">		if(approvalStatusChange&gt;0)</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		if(approvalStatusChange&gt;0)</span>
 		{
 <span class="nc bnc" id="L343" title="All 2 branches missed.">			if(approvalStatusChange==1)</span>
 <span class="nc" id="L344">				ReservationManager.sendApprovalStatusChangedEmail(reservation, true, getRequest());</span>
@@ -346,13 +346,13 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L346">				ReservationManager.sendApprovalStatusChangedEmail(reservation, false, getRequest());</span>
 		}
 
-<span class="nc bnc" id="L349" title="All 2 branches missed.">		if (getRequest().getParameter(&quot;rezobjid&quot;) != null)</span>
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">		if (getRequest().getParameter(&quot;rezobjid&quot;) != null)</span>
 		{
 <span class="nc bnc" id="L351" title="All 2 branches missed.">			if (saveOK == 0)</span>
 <span class="nc" id="L352">				getRequest().setAttribute(&quot;saveOK&quot;, &quot;0&quot;);</span>
 <span class="nc" id="L353">			return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
 		}
-<span class="nc" id="L355">		return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
+<span class="fc" id="L355">		return (new ForwardResolution(&quot;/components/reloadParentClose.jsp&quot;));</span>
 	}
 
 	/**
@@ -362,26 +362,26 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private boolean isStartBeforeEnd()
 	{
-<span class="nc" id="L365">		boolean ret = false;</span>
-<span class="nc" id="L366">		String dateFrom = &quot;&quot;;</span>
-<span class="nc" id="L367">		String dateTo = &quot;&quot;;</span>
-<span class="nc" id="L368">		DateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
-<span class="nc" id="L369">		dateFrom = formatter.format(reservation.getDateFrom());</span>
-<span class="nc" id="L370">		dateTo = formatter.format(reservation.getDateTo());</span>
-<span class="nc" id="L371">		dateFrom = dateFrom + &quot; &quot; + reservation.getStartTime();</span>
-<span class="nc" id="L372">		dateTo = dateTo + &quot; &quot; + reservation.getFinishTime();</span>
-<span class="nc" id="L373">		SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm&quot;);</span>
+<span class="fc" id="L365">		boolean ret = false;</span>
+<span class="fc" id="L366">		String dateFrom = &quot;&quot;;</span>
+<span class="fc" id="L367">		String dateTo = &quot;&quot;;</span>
+<span class="fc" id="L368">		DateFormat formatter = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+<span class="fc" id="L369">		dateFrom = formatter.format(reservation.getDateFrom());</span>
+<span class="fc" id="L370">		dateTo = formatter.format(reservation.getDateTo());</span>
+<span class="fc" id="L371">		dateFrom = dateFrom + &quot; &quot; + reservation.getStartTime();</span>
+<span class="fc" id="L372">		dateTo = dateTo + &quot; &quot; + reservation.getFinishTime();</span>
+<span class="fc" id="L373">		SimpleDateFormat sdf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm&quot;);</span>
 		try
 		{
-<span class="nc" id="L376">			Date from = sdf.parse(dateFrom);</span>
-<span class="nc" id="L377">			Date to = sdf.parse(dateTo);</span>
-<span class="nc bnc" id="L378" title="All 2 branches missed.">			ret = from.compareTo(to) &gt;= 0 ? false : true;</span>
+<span class="fc" id="L376">			Date from = sdf.parse(dateFrom);</span>
+<span class="fc" id="L377">			Date to = sdf.parse(dateTo);</span>
+<span class="pc bpc" id="L378" title="1 of 2 branches missed.">			ret = from.compareTo(to) &gt;= 0 ? false : true;</span>
 		}
 <span class="nc" id="L380">		catch (ParseException e)</span>
 		{
 <span class="nc" id="L382">			Logger.debug(getClass(), &quot;Failed to parse reservation time! &quot; + e.getMessage());</span>
-<span class="nc" id="L383">		}</span>
-<span class="nc" id="L384">		return ret;</span>
+<span class="fc" id="L383">		}</span>
+<span class="fc" id="L384">		return ret;</span>
 	}
 
 	/**
@@ -566,7 +566,7 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public Resolution bFilter()
 	{
-<span class="nc" id="L569">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+<span class="fc" id="L569">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
 	}
 
 	/**
@@ -624,12 +624,12 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private int getReservationStatusChange(ReservationBean reservation)
 	{
-<span class="nc" id="L627">		int statusChange = 0;</span>
+<span class="fc" id="L627">		int statusChange = 0;</span>
 
-<span class="nc bnc" id="L629" title="All 2 branches missed.">		if(reservation!=null)</span>
+<span class="pc bpc" id="L629" title="1 of 2 branches missed.">		if(reservation!=null)</span>
 		{
-<span class="nc" id="L631">			ReservationBean oldReservation = ReservationManager.getReservationById(reservation.getReservationId());</span>
-<span class="nc bnc" id="L632" title="All 2 branches missed.">			if(oldReservation!=null)</span>
+<span class="fc" id="L631">			ReservationBean oldReservation = ReservationManager.getReservationById(reservation.getReservationId());</span>
+<span class="pc bpc" id="L632" title="1 of 2 branches missed.">			if(oldReservation!=null)</span>
 			{
 <span class="nc bnc" id="L634" title="All 4 branches missed.">				if(!oldReservation.isAccepted() &amp;&amp; reservation.isAccepted())</span>
 <span class="nc" id="L635">					statusChange = 1;</span>
@@ -638,12 +638,12 @@ import sk.iway.iwcm.users.UsersDB;
 			}
 		}
 
-<span class="nc" id="L641">		return statusChange;</span>
+<span class="fc" id="L641">		return statusChange;</span>
 	}
 
 	public ReservationObjectBean getReservationObject()
 	{
-<span class="nc" id="L646">		return reservationObject;</span>
+<span class="fc" id="L646">		return reservationObject;</span>
 	}
 
 	public void setReservationObject(ReservationObjectBean reservationObject)

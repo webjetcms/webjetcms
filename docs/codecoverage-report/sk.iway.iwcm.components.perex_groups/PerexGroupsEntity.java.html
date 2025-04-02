@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.perex_groups</a> &gt; <span class="el_source">PerexGroupsEntity.java</span></div><h1>PerexGroupsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.perex_groups;
-
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.perex_groups</a> &gt; <span class="el_source">PerexGroupsEntity.java</span></div><h1>PerexGroupsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.perex_groups;
 
 import java.io.Serializable;
 
@@ -16,6 +15,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -28,7 +28,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PEREX_GROUP_UPDATE)
-<span class="fc" id="L31">public class PerexGroupsEntity implements Serializable{</span>
+<span class="fc" id="L31">public class PerexGroupsEntity implements Serializable {</span>
 
     @Id
     @Column(name = &quot;perex_group_id&quot;)
@@ -40,6 +40,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title=&quot;[[#{editor.perex_group_name}]]&quot;,
+        tab = &quot;basic&quot;,
         renderFormat = &quot;dt-format-text&quot;,
         editor = {
             @DataTableColumnEditor(type = &quot;text&quot;)
@@ -52,7 +53,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     @Column(name = &quot;related_pages&quot;)
     private String relatedPages;
 
-
     @Size(max = 255)
     @Column(name = &quot;available_groups&quot;)
     private String availableGroups;
@@ -60,5 +60,169 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 <span class="fc" id="L60">    @Transient</span>
     @DataTableColumnNested
 	private PerexGroupsEditorFields editorFields = null;
+
+    @Column(name = &quot;perex_group_name_sk&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.slovak}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameSk;
+
+    @Column(name = &quot;perex_group_name_cz&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.czech}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameCz;
+
+    @Column(name = &quot;perex_group_name_en&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.english}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameEn;
+
+    @Column(name = &quot;perex_group_name_de&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.deutsch}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameDe;
+
+    @Column(name = &quot;perex_group_name_pl&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.polish}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNamePl;
+
+    @Column(name = &quot;perex_group_name_ru&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.ru}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameRu;
+
+    @Column(name = &quot;perex_group_name_hu&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.hungary}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameHu;
+
+    @Column(name = &quot;perex_group_name_cho&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.chorvatsky}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameCho;
+
+    @Column(name = &quot;perex_group_name_esp&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;[[#{temp.esp}]]&quot;,
+        tab = &quot;translates&quot;
+    )
+    @Size(max = 255)
+    private String perexGroupNameEsp;
+
+    /**
+     * Get perex group name by language
+     * @param lng
+     * @return
+     */
+    public String getPerexGroupName(String lng) {
+<span class="nc" id="L151">        String name = getPerexGroupNameInternal(lng);</span>
+        //Get value by REQUIRED perexGroupName
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        if(Tools.isEmpty(name)) name = perexGroupName;</span>
+
+<span class="nc" id="L155">        return name;</span>
+    }
+
+    private String getPerexGroupNameInternal(String lng) {
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        if (Tools.isEmpty(lng)) return &quot;&quot;;</span>
+<span class="nc bnc" id="L160" title="All 10 branches missed.">        switch(lng) {</span>
+<span class="nc" id="L161">            case &quot;sk&quot;: return perexGroupNameSk;</span>
+<span class="nc" id="L162">            case &quot;cz&quot;: return perexGroupNameCz;</span>
+<span class="nc" id="L163">            case &quot;en&quot;: return perexGroupNameEn;</span>
+<span class="nc" id="L164">            case &quot;de&quot;: return perexGroupNameDe;</span>
+<span class="nc" id="L165">            case &quot;pl&quot;: return perexGroupNamePl;</span>
+<span class="nc" id="L166">            case &quot;ru&quot;: return perexGroupNameRu;</span>
+<span class="nc" id="L167">            case &quot;hu&quot;: return perexGroupNameHu;</span>
+<span class="nc" id="L168">            case &quot;cho&quot;: return perexGroupNameCho;</span>
+<span class="nc" id="L169">            case &quot;esp&quot;: return perexGroupNameEsp;</span>
+<span class="nc" id="L170">            default: return &quot;&quot;;</span>
+        }
+    }
+
+    @Column(name = &quot;field_a&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.perex.field_a&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldA;
+
+    @Column(name = &quot;field_b&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.perex.field_b&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldB;
+
+    @Column(name = &quot;field_c&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.perex.field_c&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldC;
+
+    @Column(name = &quot;field_d&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.perex.field_d&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldD;
+
+    @Column(name = &quot;field_e&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.perex.field_e&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldE;
+
+    @Column(name = &quot;field_f&quot;)
+	@DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+		title = &quot;components.perex.field_f&quot;,
+		visible = false,
+		tab = &quot;fields&quot;
+    )
+	private String fieldF;
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

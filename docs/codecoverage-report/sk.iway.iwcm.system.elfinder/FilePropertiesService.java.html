@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilePropertiesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FilePropertiesService.java</span></div><h1>FilePropertiesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilePropertiesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FilePropertiesService.java</span></div><h1>FilePropertiesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,18 +40,18 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.Column;
 
 public class FilePropertiesService {
-    
+
     private FilePropertiesService() {
         // private constructor to hide the implicit public one
     }
-    
+
     public static FilePropertiesDTO getOneItem(HttpServletRequest request, Identity user) {
 <span class="fc" id="L49">        String dirPath = request.getParameter(&quot;dirPath&quot;);</span>
 <span class="fc" id="L50">        String fileName = request.getParameter(&quot;fileName&quot;);</span>
 
 <span class="pc bpc" id="L52" title="2 of 4 branches missed.">        if(Tools.isEmpty(dirPath) || Tools.isEmpty(fileName))</span>
 <span class="nc" id="L53">            throw new ResponseStatusException(HttpStatus.FORBIDDEN);</span>
-           
+
         //Remove excessive spaces
 <span class="fc" id="L56">        dirPath = dirPath.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
 <span class="fc" id="L57">        fileName = fileName.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
@@ -59,7 +59,7 @@ public class FilePropertiesService {
         //Check perms
 <span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if(user.isFolderWritable(dirPath) == false)</span>
 <span class="nc" id="L61">            throw new ResponseStatusException(HttpStatus.FORBIDDEN);</span>
-                
+
 <span class="fc" id="L63">        FilePropertiesDTO filePropertiesDTO = new FilePropertiesDTO();</span>
 <span class="fc" id="L64">        filePropertiesDTO.setDirPath(dirPath);</span>
 <span class="fc" id="L65">        filePropertiesDTO.setFileName(fileName);</span>
@@ -171,7 +171,7 @@ public class FilePropertiesService {
 					// zmenim udaje v suboroch
 					Column col;
 <span class="nc" id="L173">					String stranka=&quot;&quot;;</span>
-<span class="nc" id="L174">					List&lt;Column&gt; zoznamUsage = FileTools.getFileUsage(oldFile);</span>
+<span class="nc" id="L174">					List&lt;Column&gt; zoznamUsage = FileTools.getFileUsage(oldFile, user);</span>
 <span class="nc bnc" id="L175" title="All 2 branches missed.">					for(int i=0;i&lt;zoznamUsage.size();i++)</span>
 					{
 <span class="nc" id="L177">						col = zoznamUsage.get(i);</span>

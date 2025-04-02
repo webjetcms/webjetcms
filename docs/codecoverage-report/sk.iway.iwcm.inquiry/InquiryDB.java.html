@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.inquiry</a> &gt; <span class="el_source">InquiryDB.java</span></div><h1>InquiryDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.inquiry;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.inquiry</a> &gt; <span class="el_source">InquiryDB.java</span></div><h1>InquiryDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.inquiry;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -33,6 +33,8 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.inquiry.jpa.InquiryUsersVoteEntity;
+import sk.iway.iwcm.components.inquiry.rest.InquiryStatService;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.helpers.BeanDiff;
@@ -57,20 +59,20 @@ public class InquiryDB
 	public static final String ORDER_BY_ANSWER_TEXT = &quot;ia.answer_text&quot;;
 	public static final String ORDER_BY_ANSWER_CLICKS = &quot;ia.answer_clicks&quot;;
 	public static final String ORDER_BY_ANSWER_ID = &quot;ia.answer_id&quot;;
-<span class="fc" id="L60">	private static Random random = new Random();</span>
+<span class="fc" id="L62">	private static Random random = new Random();</span>
 
-<span class="nc" id="L62">	protected InquiryDB() {</span>
+<span class="nc" id="L64">	protected InquiryDB() {</span>
 		//utility class
-<span class="nc" id="L64">	}</span>
+<span class="nc" id="L66">	}</span>
 
 	public static InquiryBean getLastInquiry(int imagesLength, String percentageFormat, HttpServletRequest request)
 	{
-<span class="nc" id="L68">		return (getInquiry(-1, imagesLength, percentageFormat, ORDER_BY_ANSWER_TEXT, true, request));</span>
+<span class="nc" id="L70">		return (getInquiry(-1, imagesLength, percentageFormat, ORDER_BY_ANSWER_TEXT, true, request));</span>
 	}
 
 	public static InquiryBean getLastInquiry(HttpServletRequest request)
 	{
-<span class="nc" id="L73">		return (getInquiry(-1, 10, null, ORDER_BY_ANSWER_ID, true, request));</span>
+<span class="nc" id="L75">		return (getInquiry(-1, 10, null, ORDER_BY_ANSWER_ID, true, request));</span>
 	}
 
 	/**
@@ -83,44 +85,44 @@ public class InquiryDB
 	 */
 	public static List&lt;Integer&gt; getInquiryIds(String groupNames, HttpServletRequest request, boolean all)
 	{
-<span class="fc" id="L86">		List&lt;String&gt; groups = Arrays.asList(DB.removeSlashes(groupNames).split(&quot;,\\|\\+&quot;));</span>
-<span class="fc" id="L87">		List&lt;String&gt; groupsSQL = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">		for (String group : groups)</span>
+<span class="fc" id="L88">		List&lt;String&gt; groups = Arrays.asList(DB.removeSlashes(groupNames).split(&quot;,\\|\\+&quot;));</span>
+<span class="fc" id="L89">		List&lt;String&gt; groupsSQL = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">		for (String group : groups)</span>
 		{
-<span class="fc" id="L90">			groupsSQL.add(&quot;'&quot; + group + &quot;'&quot;);</span>
-<span class="fc" id="L91">		}</span>
+<span class="fc" id="L92">			groupsSQL.add(&quot;'&quot; + group + &quot;'&quot;);</span>
+<span class="fc" id="L93">		}</span>
 
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		String sql = &quot;SELECT &quot; + (all ? &quot;question_id&quot; : &quot;max(question_id)&quot;) + &quot; AS id FROM inquiry &quot; +</span>
-<span class="fc" id="L94">			&quot;WHERE question_group IN (&quot; + StringUtils.join(groupsSQL.toArray(), &quot;, &quot;) + &quot;) &quot; +</span>
-<span class="fc" id="L95">			&quot;AND (date_from &lt; ? OR date_from IS NULL) AND (date_to &gt; ? OR date_to IS NULL) AND question_active = &quot;+DB.getBooleanSql(true)+&quot; &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
-<span class="fc" id="L96">		List&lt;Integer&gt; ids = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">		String sql = &quot;SELECT &quot; + (all ? &quot;question_id&quot; : &quot;max(question_id)&quot;) + &quot; AS id FROM inquiry &quot; +</span>
+<span class="fc" id="L96">			&quot;WHERE question_group IN (&quot; + StringUtils.join(groupsSQL.toArray(), &quot;, &quot;) + &quot;) &quot; +</span>
+<span class="fc" id="L97">			&quot;AND (date_from &lt; ? OR date_from IS NULL) AND (date_to &gt; ? OR date_to IS NULL) AND question_active = &quot;+DB.getBooleanSql(true)+&quot; &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="fc" id="L98">		List&lt;Integer&gt; ids = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L98">		Connection db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		if (null == db_conn) return ids;</span>
+<span class="fc" id="L100">		Connection db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">		if (null == db_conn) return ids;</span>
 		try
 		{
 			try
 			{
-<span class="fc" id="L104">				PreparedStatement ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L106">				PreparedStatement ps = db_conn.prepareStatement(sql);</span>
 				try
 				{
-<span class="fc" id="L107">					ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
-<span class="fc" id="L108">					ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
-<span class="fc" id="L109">					ResultSet rs = ps.executeQuery();</span>
+<span class="fc" id="L109">					ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L110">					ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L111">					ResultSet rs = ps.executeQuery();</span>
 					try
 					{
-<span class="fc bfc" id="L112" title="All 2 branches covered.">						while (rs.next())</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">						while (rs.next())</span>
 						{
-<span class="fc" id="L114">							ids.add(Integer.valueOf(rs.getInt(&quot;id&quot;)));</span>
+<span class="fc" id="L116">							ids.add(Integer.valueOf(rs.getInt(&quot;id&quot;)));</span>
 						}
-<span class="fc" id="L116">						return ids;</span>
-<span class="fc" id="L117">					} finally { rs.close(); }</span>
-<span class="fc" id="L118">				} finally { ps.close(); }</span>
-<span class="fc" id="L119">			} finally { db_conn.close(); }</span>
+<span class="fc" id="L118">						return ids;</span>
+<span class="fc" id="L119">					} finally { rs.close(); }</span>
+<span class="fc" id="L120">				} finally { ps.close(); }</span>
+<span class="fc" id="L121">			} finally { db_conn.close(); }</span>
 		}
-<span class="nc" id="L121">		catch (SQLException ex)</span>
+<span class="nc" id="L123">		catch (SQLException ex)</span>
 		{
-<span class="nc" id="L123">			return ids;</span>
+<span class="nc" id="L125">			return ids;</span>
 		}
 	}
 
@@ -144,10 +146,10 @@ public class InquiryDB
 	public static InquiryBean getInquiry(String groupNames, int imagesLength, String percentageFormat, String orderBy,
 				boolean ascending, HttpServletRequest request, boolean random)
 	{
-<span class="fc" id="L147">		List&lt;Integer&gt; questionIds = getInquiryIds(groupNames, request, random);</span>
-<span class="fc bfc" id="L148" title="All 2 branches covered.">		if (questionIds.isEmpty()) return null;</span>
-<span class="fc" id="L149">		int questionId = questionIds.get(InquiryDB.random.nextInt(questionIds.size())).intValue();</span>
-<span class="fc" id="L150">		return (getInquiry(questionId, imagesLength, percentageFormat, orderBy, ascending, request));</span>
+<span class="fc" id="L149">		List&lt;Integer&gt; questionIds = getInquiryIds(groupNames, request, random);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">		if (questionIds.isEmpty()) return null;</span>
+<span class="fc" id="L151">		int questionId = questionIds.get(InquiryDB.random.nextInt(questionIds.size())).intValue();</span>
+<span class="fc" id="L152">		return (getInquiry(questionId, imagesLength, percentageFormat, orderBy, ascending, request));</span>
 	}
 
 	/**
@@ -169,196 +171,196 @@ public class InquiryDB
 	public static InquiryBean getInquiry(int questionId, int imagesLength, String percentageFormat, String orderBy,
 				boolean ascending, HttpServletRequest request)
 	{
-<span class="fc" id="L172">		InquiryBean inquiryBean = new InquiryBean();</span>
-<span class="fc" id="L173">		String cookieName = &quot;inquiry-&quot; + questionId;</span>
-<span class="fc" id="L174">		Cookie[] cookies = request.getCookies();</span>
-<span class="fc" id="L175">		int len = 0;</span>
-<span class="pc bpc" id="L176" title="1 of 2 branches missed.">		if (cookies != null) {</span>
-<span class="fc" id="L177">			len = cookies.length;</span>
+<span class="fc" id="L174">		InquiryBean inquiryBean = new InquiryBean();</span>
+<span class="fc" id="L175">		String cookieName = &quot;inquiry-&quot; + questionId;</span>
+<span class="fc" id="L176">		Cookie[] cookies = request.getCookies();</span>
+<span class="fc" id="L177">		int len = 0;</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">		if (cookies != null) {</span>
+<span class="fc" id="L179">			len = cookies.length;</span>
 			int i;
 			Cookie cookie;
-<span class="fc bfc" id="L180" title="All 2 branches covered.">			for (i = 0; i &lt; len; i++)</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">			for (i = 0; i &lt; len; i++)</span>
 			{
-<span class="fc" id="L182">				cookie = cookies[i];</span>
-<span class="fc bfc" id="L183" title="All 2 branches covered.">				if (cookie.getName().compareTo(cookieName) == 0)</span>
+<span class="fc" id="L184">				cookie = cookies[i];</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">				if (cookie.getName().compareTo(cookieName) == 0)</span>
 				{
-<span class="fc" id="L185">					inquiryBean.setCanAnswer(&quot;no&quot;);</span>
+<span class="fc" id="L187">					inquiryBean.setCanAnswer(&quot;no&quot;);</span>
 				}
 			}
 		}
-<span class="fc" id="L189">		List&lt;AnswerForm&gt; answers = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L191">		List&lt;AnswerForm&gt; answers = new ArrayList&lt;&gt;();</span>
 		AnswerForm answerForm;
 
-<span class="fc" id="L192">		Connection db_conn = null;</span>
-<span class="fc" id="L193">		PreparedStatement ps = null;</span>
-<span class="fc" id="L194">		ResultSet rs = null;</span>
+<span class="fc" id="L194">		Connection db_conn = null;</span>
+<span class="fc" id="L195">		PreparedStatement ps = null;</span>
+<span class="fc" id="L196">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L197">			String orderType = &quot;DESC&quot;;</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">			if (ascending)	orderType = &quot;ASC&quot;;</span>
+<span class="fc" id="L199">			String orderType = &quot;DESC&quot;;</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">			if (ascending)	orderType = &quot;ASC&quot;;</span>
 			//keby nieco...
-<span class="fc" id="L200">			orderBy = orderBy.replace('\'', ' ');</span>
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">			if (orderBy.indexOf('.') == -1)</span>
+<span class="fc" id="L202">			orderBy = orderBy.replace('\'', ' ');</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">			if (orderBy.indexOf('.') == -1)</span>
 			{
-<span class="fc" id="L203">				orderBy = &quot;ia.&quot; + orderBy;</span>
+<span class="fc" id="L205">				orderBy = &quot;ia.&quot; + orderBy;</span>
 			}
-<span class="fc" id="L205">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="pc bpc" id="L206" title="1 of 2 branches missed.">			if (questionId == -1)</span>
+<span class="fc" id="L207">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">			if (questionId == -1)</span>
 			{
-<span class="nc" id="L208">				ps = db_conn.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id  &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;)+&quot; ORDER BY i.question_id DESC, &quot;</span>
+<span class="nc" id="L210">				ps = db_conn.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id  &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;)+&quot; ORDER BY i.question_id DESC, &quot;</span>
 										+ orderBy + &quot; &quot; + orderType);
 			}
 			else
 			{
-<span class="fc" id="L213">				ps = db_conn.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id AND i.question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;)+&quot; ORDER BY &quot;</span>
+<span class="fc" id="L215">				ps = db_conn.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id AND i.question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;)+&quot; ORDER BY &quot;</span>
 										+ orderBy + &quot; &quot; + orderType);
-<span class="fc" id="L215">				ps.setInt(1, questionId);</span>
+<span class="fc" id="L217">				ps.setInt(1, questionId);</span>
 			}
-<span class="fc" id="L217">			rs = ps.executeQuery();</span>
-<span class="fc bfc" id="L218" title="All 2 branches covered.">			while (rs.next())</span>
+<span class="fc" id="L219">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L220" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="fc" id="L220">				answerForm = new AnswerForm();</span>
-<span class="fc" id="L221">				answerForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
-<span class="pc bpc" id="L222" title="1 of 2 branches missed.">				if (questionId == -1)</span>
+<span class="fc" id="L222">				answerForm = new AnswerForm();</span>
+<span class="fc" id="L223">				answerForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">				if (questionId == -1)</span>
 				{
-<span class="nc" id="L224">					questionId = answerForm.getQuestionID();</span>
+<span class="nc" id="L226">					questionId = answerForm.getQuestionID();</span>
 				}
-<span class="pc bpc" id="L226" title="1 of 2 branches missed.">				if (questionId != answerForm.getQuestionID())</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">				if (questionId != answerForm.getQuestionID())</span>
 				{
 					//to je koli tomu zisteniu najnovsej ankety, selectnu sa vsetky
 					//a ak sa zmenilo questionId voci poslednemu, je to uz ina
 					//anketa
-<span class="nc" id="L231">					break;</span>
+<span class="nc" id="L233">					break;</span>
 				}
-<span class="fc" id="L233">				answerForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="fc" id="L234">				answerForm.setAnswerString(DB.getDbString(rs, &quot;answer_text&quot;));</span>
-<span class="fc" id="L235">				answerForm.setAnswerID(rs.getInt(&quot;answer_id&quot;));</span>
-<span class="fc" id="L236">				answerForm.setAnswerClicks(rs.getInt(&quot;answer_clicks&quot;));</span>
-<span class="fc" id="L237">				answerForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="fc" id="L238">				answerForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="fc" id="L239">				answerForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="fc" id="L240">				answerForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="fc" id="L241">				answerForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="fc" id="L242">				answerForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="fc" id="L243">				answerForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="fc" id="L244">				answerForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="fc" id="L245">				answerForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="fc" id="L246">				answerForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
-<span class="fc" id="L247">				answerForm.setImagePath(rs.getString(&quot;image_path&quot;));</span>
-<span class="fc" id="L248">				answerForm.setUrl(rs.getString(&quot;url&quot;));</span>
-<span class="fc" id="L249">				answers.add(answerForm);</span>
-<span class="fc" id="L250">				inquiryBean.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="fc" id="L251">				inquiryBean.setQuestion(answerForm.getQuestionString());</span>
-<span class="fc" id="L252">				inquiryBean.setTotalClicksMultiple(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="fc" id="L235">				answerForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="fc" id="L236">				answerForm.setAnswerString(DB.getDbString(rs, &quot;answer_text&quot;));</span>
+<span class="fc" id="L237">				answerForm.setAnswerID(rs.getInt(&quot;answer_id&quot;));</span>
+<span class="fc" id="L238">				answerForm.setAnswerClicks(rs.getInt(&quot;answer_clicks&quot;));</span>
+<span class="fc" id="L239">				answerForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="fc" id="L240">				answerForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="fc" id="L241">				answerForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="fc" id="L242">				answerForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="fc" id="L243">				answerForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="fc" id="L244">				answerForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="fc" id="L245">				answerForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="fc" id="L246">				answerForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="fc" id="L247">				answerForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="fc" id="L248">				answerForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="fc" id="L249">				answerForm.setImagePath(rs.getString(&quot;image_path&quot;));</span>
+<span class="fc" id="L250">				answerForm.setUrl(rs.getString(&quot;url&quot;));</span>
+<span class="fc" id="L251">				answers.add(answerForm);</span>
+<span class="fc" id="L252">				inquiryBean.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="fc" id="L253">				inquiryBean.setQuestion(answerForm.getQuestionString());</span>
+<span class="fc" id="L254">				inquiryBean.setTotalClicksMultiple(rs.getInt(&quot;total_clicks&quot;));</span>
 			}
-<span class="fc" id="L254">			rs.close();</span>
-<span class="fc" id="L255">			ps.close();</span>
-<span class="fc" id="L256">			db_conn.close();</span>
-<span class="fc" id="L257">			countPercentage(answers, percentageFormat);</span>
-<span class="fc" id="L258">			countImages(answers, imagesLength);</span>
-<span class="fc" id="L259">			inquiryBean.setAnswers(answers);</span>
+<span class="fc" id="L256">			rs.close();</span>
+<span class="fc" id="L257">			ps.close();</span>
+<span class="fc" id="L258">			db_conn.close();</span>
+<span class="fc" id="L259">			countPercentage(answers, percentageFormat);</span>
+<span class="fc" id="L260">			countImages(answers, imagesLength);</span>
+<span class="fc" id="L261">			inquiryBean.setAnswers(answers);</span>
 
-<span class="fc" id="L261">			rs = null;</span>
-<span class="fc" id="L262">			ps = null;</span>
-<span class="fc" id="L263">			db_conn = null;</span>
+<span class="fc" id="L263">			rs = null;</span>
+<span class="fc" id="L264">			ps = null;</span>
+<span class="fc" id="L265">			db_conn = null;</span>
 		}
-<span class="nc" id="L265">		catch (Exception ex)</span>
+<span class="nc" id="L267">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L267">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L269">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L273" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L274">					rs.close();</span>
-<span class="pc bpc" id="L275" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L276">					ps.close();</span>
-<span class="pc bpc" id="L277" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L278">					db_conn.close();</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L276">					rs.close();</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L278">					ps.close();</span>
+<span class="pc bpc" id="L279" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L280">					db_conn.close();</span>
 			}
-<span class="nc" id="L280">			catch (Exception ex2)</span>
+<span class="nc" id="L282">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L282">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L283">			}</span>
+<span class="nc" id="L284">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L285">			}</span>
 		}
 
-<span class="fc" id="L286">		return (inquiryBean);</span>
+<span class="fc" id="L288">		return (inquiryBean);</span>
 	}
 
 	public static List&lt;AnswerForm&gt; getAnswers(int questionID, HttpServletRequest request)
 	{
-<span class="nc" id="L291">		AnswerForm aForm = null;</span>
-<span class="nc" id="L292">		List&lt;AnswerForm&gt; aList = null;</span>
-<span class="nc bnc" id="L293" title="All 2 branches missed.">		if (questionID &gt; -1)</span>
+<span class="nc" id="L293">		AnswerForm aForm = null;</span>
+<span class="nc" id="L294">		List&lt;AnswerForm&gt; aList = null;</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (questionID &gt; -1)</span>
 		{
-<span class="nc" id="L295">			aList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L297">			aList = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L297">			Connection db_conn = null;</span>
-<span class="nc" id="L298">			PreparedStatement ps = null;</span>
-<span class="nc" id="L299">			ResultSet rs = null;</span>
+<span class="nc" id="L299">			Connection db_conn = null;</span>
+<span class="nc" id="L300">			PreparedStatement ps = null;</span>
+<span class="nc" id="L301">			ResultSet rs = null;</span>
 			try
 			{
-<span class="nc" id="L302">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L303">				ps = db_conn</span>
-<span class="nc" id="L304">							.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id AND i.question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;)+&quot; ORDER BY &quot;</span>
+<span class="nc" id="L304">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L305">				ps = db_conn</span>
+<span class="nc" id="L306">							.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id AND i.question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;)+&quot; ORDER BY &quot;</span>
 										+ ORDER_BY_ANSWER_ID + &quot; ASC&quot;);
-<span class="nc" id="L306">				ps.setInt(1, questionID);</span>
-<span class="nc" id="L307">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L308" title="All 2 branches missed.">				while (rs.next())</span>
+<span class="nc" id="L308">				ps.setInt(1, questionID);</span>
+<span class="nc" id="L309">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="nc" id="L310">					aForm = new AnswerForm();</span>
-<span class="nc" id="L311">					aForm.setAnswerID(rs.getInt(&quot;answer_id&quot;));</span>
-<span class="nc" id="L312">					aForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
-<span class="nc" id="L313">					aForm.setAnswerString(DB.getDbString(rs, &quot;answer_text&quot;));</span>
-<span class="nc" id="L314">					aForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="nc" id="L315">					aForm.setAnswerClicks(rs.getInt(&quot;answer_clicks&quot;));</span>
-<span class="nc" id="L316">					aForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="nc" id="L317">					aForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="nc" id="L318">					aForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="nc" id="L319">					aForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="nc" id="L320">					aForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L321">					aForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L322">					aForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L323">					aForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L324">					aForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="nc" id="L325">					aForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="nc" id="L326">					aForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
-<span class="nc" id="L327">					aForm.setImagePath(rs.getString(&quot;image_path&quot;));</span>
-<span class="nc" id="L328">					aForm.setUrl(rs.getString(&quot;url&quot;));</span>
-<span class="nc" id="L329">					aList.add(aForm);</span>
+<span class="nc" id="L312">					aForm = new AnswerForm();</span>
+<span class="nc" id="L313">					aForm.setAnswerID(rs.getInt(&quot;answer_id&quot;));</span>
+<span class="nc" id="L314">					aForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
+<span class="nc" id="L315">					aForm.setAnswerString(DB.getDbString(rs, &quot;answer_text&quot;));</span>
+<span class="nc" id="L316">					aForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="nc" id="L317">					aForm.setAnswerClicks(rs.getInt(&quot;answer_clicks&quot;));</span>
+<span class="nc" id="L318">					aForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="nc" id="L319">					aForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="nc" id="L320">					aForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="nc" id="L321">					aForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="nc" id="L322">					aForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L323">					aForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L324">					aForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L325">					aForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L326">					aForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="nc" id="L327">					aForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="nc" id="L328">					aForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="nc" id="L329">					aForm.setImagePath(rs.getString(&quot;image_path&quot;));</span>
+<span class="nc" id="L330">					aForm.setUrl(rs.getString(&quot;url&quot;));</span>
+<span class="nc" id="L331">					aList.add(aForm);</span>
 				}
-<span class="nc" id="L331">				rs.close();</span>
-<span class="nc" id="L332">				ps.close();</span>
-<span class="nc" id="L333">				db_conn.close();</span>
-<span class="nc" id="L334">				countPercentage(aList, null);</span>
+<span class="nc" id="L333">				rs.close();</span>
+<span class="nc" id="L334">				ps.close();</span>
+<span class="nc" id="L335">				db_conn.close();</span>
+<span class="nc" id="L336">				countPercentage(aList, null);</span>
 
-<span class="nc" id="L336">				rs = null;</span>
-<span class="nc" id="L337">				ps = null;</span>
-<span class="nc" id="L338">				db_conn = null;</span>
+<span class="nc" id="L338">				rs = null;</span>
+<span class="nc" id="L339">				ps = null;</span>
+<span class="nc" id="L340">				db_conn = null;</span>
 			}
-<span class="nc" id="L340">			catch (Exception ex)</span>
+<span class="nc" id="L342">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L342">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L344">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="nc bnc" id="L348" title="All 2 branches missed.">					if (rs != null)</span>
-<span class="nc" id="L349">						rs.close();</span>
-<span class="nc bnc" id="L350" title="All 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L351">						ps.close();</span>
-<span class="nc bnc" id="L352" title="All 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L353">						db_conn.close();</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L351">						rs.close();</span>
+<span class="nc bnc" id="L352" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L353">						ps.close();</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L355">						db_conn.close();</span>
 				}
-<span class="nc" id="L355">				catch (Exception ex2)</span>
+<span class="nc" id="L357">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L357">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L358">				}</span>
+<span class="nc" id="L359">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L360">				}</span>
 			}
 		}
-<span class="nc" id="L361">		return aList;</span>
+<span class="nc" id="L363">		return aList;</span>
 	}
 
 	/**
@@ -369,70 +371,70 @@ public class InquiryDB
 	 */
 	public static AnswerForm getAnswer(int answerID, HttpServletRequest request)
 	{
-<span class="nc" id="L372">		AnswerForm aForm = null;</span>
+<span class="nc" id="L374">		AnswerForm aForm = null;</span>
 
-<span class="nc" id="L374">		Connection db_conn = null;</span>
-<span class="nc" id="L375">		PreparedStatement ps = null;</span>
-<span class="nc" id="L376">		ResultSet rs = null;</span>
+<span class="nc" id="L376">		Connection db_conn = null;</span>
+<span class="nc" id="L377">		PreparedStatement ps = null;</span>
+<span class="nc" id="L378">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L379">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L380">			ps = db_conn</span>
-<span class="nc" id="L381">						.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id AND ia.answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;));</span>
-<span class="nc" id="L382">			ps.setInt(1, answerID);</span>
-<span class="nc" id="L383">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L384" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L381">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L382">			ps = db_conn</span>
+<span class="nc" id="L383">						.prepareStatement(&quot;SELECT i.*, ia.* FROM inquiry i, inquiry_answers ia WHERE i.question_id=ia.question_id AND ia.answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;ia&quot;));</span>
+<span class="nc" id="L384">			ps.setInt(1, answerID);</span>
+<span class="nc" id="L385">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="nc" id="L386">				aForm = new AnswerForm();</span>
-<span class="nc" id="L387">				aForm.setAnswerID(rs.getInt(&quot;answer_id&quot;));</span>
-<span class="nc" id="L388">				aForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
-<span class="nc" id="L389">				aForm.setAnswerString(DB.getDbString(rs, &quot;answer_text&quot;));</span>
-<span class="nc" id="L390">				aForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="nc" id="L391">				aForm.setAnswerClicks(rs.getInt(&quot;answer_clicks&quot;));</span>
-<span class="nc" id="L392">				aForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="nc" id="L393">				aForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="nc" id="L394">				aForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="nc" id="L395">				aForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="nc" id="L396">				aForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L397">				aForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L398">				aForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L399">				aForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L400">				aForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="nc" id="L401">				aForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="nc" id="L402">				aForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
-<span class="nc" id="L403">				aForm.setImagePath(rs.getString(&quot;image_path&quot;));</span>
-<span class="nc" id="L404">				aForm.setUrl(rs.getString(&quot;url&quot;));</span>
+<span class="nc" id="L388">				aForm = new AnswerForm();</span>
+<span class="nc" id="L389">				aForm.setAnswerID(rs.getInt(&quot;answer_id&quot;));</span>
+<span class="nc" id="L390">				aForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
+<span class="nc" id="L391">				aForm.setAnswerString(DB.getDbString(rs, &quot;answer_text&quot;));</span>
+<span class="nc" id="L392">				aForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="nc" id="L393">				aForm.setAnswerClicks(rs.getInt(&quot;answer_clicks&quot;));</span>
+<span class="nc" id="L394">				aForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="nc" id="L395">				aForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="nc" id="L396">				aForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="nc" id="L397">				aForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="nc" id="L398">				aForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L399">				aForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L400">				aForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L401">				aForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L402">				aForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="nc" id="L403">				aForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="nc" id="L404">				aForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="nc" id="L405">				aForm.setImagePath(rs.getString(&quot;image_path&quot;));</span>
+<span class="nc" id="L406">				aForm.setUrl(rs.getString(&quot;url&quot;));</span>
 
 			}
-<span class="nc" id="L407">			rs.close();</span>
-<span class="nc" id="L408">			ps.close();</span>
-<span class="nc" id="L409">			db_conn.close();</span>
-<span class="nc" id="L410">			rs = null;</span>
-<span class="nc" id="L411">			ps = null;</span>
-<span class="nc" id="L412">			db_conn = null;</span>
+<span class="nc" id="L409">			rs.close();</span>
+<span class="nc" id="L410">			ps.close();</span>
+<span class="nc" id="L411">			db_conn.close();</span>
+<span class="nc" id="L412">			rs = null;</span>
+<span class="nc" id="L413">			ps = null;</span>
+<span class="nc" id="L414">			db_conn = null;</span>
 		}
-<span class="nc" id="L414">		catch (Exception ex)</span>
+<span class="nc" id="L416">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L416">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L418">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L422" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L423">					rs.close();</span>
-<span class="nc bnc" id="L424" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L425">					ps.close();</span>
-<span class="nc bnc" id="L426" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L427">					db_conn.close();</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L425">					rs.close();</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L427">					ps.close();</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L429">					db_conn.close();</span>
 			}
-<span class="nc" id="L429">			catch (Exception ex2)</span>
+<span class="nc" id="L431">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L431">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L432">			}</span>
+<span class="nc" id="L433">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L434">			}</span>
 		}
 
-<span class="nc" id="L435">		return (aForm);</span>
+<span class="nc" id="L437">		return (aForm);</span>
 	}
 
 	/**
@@ -442,52 +444,53 @@ public class InquiryDB
 	 */
 	public static List&lt;LabelValueDetails&gt; getQuestionGroups(HttpServletRequest request)
 	{
-<span class="nc" id="L445">		List&lt;LabelValueDetails&gt; aList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L447">		List&lt;LabelValueDetails&gt; aList = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L447">		Connection db_conn = null;</span>
-<span class="nc" id="L448">		PreparedStatement ps = null;</span>
-<span class="nc" id="L449">		ResultSet rs = null;</span>
+<span class="fc" id="L449">		Connection db_conn = null;</span>
+<span class="fc" id="L450">		PreparedStatement ps = null;</span>
+<span class="fc" id="L451">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L452">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L453">			ps = db_conn.prepareStatement(&quot;SELECT DISTINCT question_group FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false)+&quot; ORDER BY question_group ASC&quot;);</span>
-<span class="nc" id="L454">			rs = ps.executeQuery();</span>
+<span class="fc" id="L454">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="fc" id="L455">			ps = db_conn.prepareStatement(&quot;SELECT DISTINCT question_group FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false)+&quot; ORDER BY question_group ASC&quot;);</span>
+<span class="fc" id="L456">			rs = ps.executeQuery();</span>
 			LabelValueDetails lvd;
-<span class="nc bnc" id="L456" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="fc bfc" id="L458" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="nc" id="L458">				lvd = new LabelValueDetails();</span>
-<span class="nc" id="L459">				lvd.setLabel(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="nc" id="L460">				aList.add(lvd);</span>
+<span class="fc" id="L460">				lvd = new LabelValueDetails();</span>
+<span class="fc" id="L461">				lvd.setLabel(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="fc" id="L462">				lvd.setValue(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="fc" id="L463">				aList.add(lvd);</span>
 			}
-<span class="nc" id="L462">			rs.close();</span>
-<span class="nc" id="L463">			ps.close();</span>
-<span class="nc" id="L464">			db_conn.close();</span>
-<span class="nc" id="L465">			rs = null;</span>
-<span class="nc" id="L466">			ps = null;</span>
-<span class="nc" id="L467">			db_conn = null;</span>
+<span class="fc" id="L465">			rs.close();</span>
+<span class="fc" id="L466">			ps.close();</span>
+<span class="fc" id="L467">			db_conn.close();</span>
+<span class="fc" id="L468">			rs = null;</span>
+<span class="fc" id="L469">			ps = null;</span>
+<span class="fc" id="L470">			db_conn = null;</span>
 		}
-<span class="nc" id="L469">		catch (Exception ex)</span>
+<span class="nc" id="L472">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L471">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L474">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L477" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L478">					rs.close();</span>
-<span class="nc bnc" id="L479" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L480">					ps.close();</span>
-<span class="nc bnc" id="L481" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L482">					db_conn.close();</span>
+<span class="pc bpc" id="L480" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L481">					rs.close();</span>
+<span class="pc bpc" id="L482" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L483">					ps.close();</span>
+<span class="pc bpc" id="L484" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L485">					db_conn.close();</span>
 			}
-<span class="nc" id="L484">			catch (Exception ex2)</span>
+<span class="nc" id="L487">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L486">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L487">			}</span>
+<span class="nc" id="L489">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L490">			}</span>
 		}
 
-<span class="nc" id="L490">		return aList;</span>
+<span class="fc" id="L493">		return aList;</span>
 	}
 
 	/**
@@ -497,9 +500,9 @@ public class InquiryDB
 	 */
 	public static List&lt;LabelValueDetails&gt; getQuestionGroupsByUser(HttpServletRequest request)
 	{
-<span class="nc" id="L500">		Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
-<span class="nc" id="L501">		List&lt;LabelValueDetails&gt; distinctGroups = SettingsAdminDB.filterBeansByUserAllowedCategories(getQuestionGroups(request), &quot;label&quot;, user, &quot;menuInquiry&quot;) ;</span>
-<span class="nc" id="L502">		return distinctGroups;</span>
+<span class="fc" id="L503">		Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L504">		List&lt;LabelValueDetails&gt; distinctGroups = SettingsAdminDB.filterBeansByUserAllowedCategories(getQuestionGroups(request), &quot;label&quot;, user, &quot;menuInquiry&quot;) ;</span>
+<span class="fc" id="L505">		return distinctGroups;</span>
 	}
 
 
@@ -510,29 +513,29 @@ public class InquiryDB
 	 */
 	private static void countPercentage(List&lt;AnswerForm&gt; answers, String format)
 	{
-<span class="fc" id="L513">		double suma = 0;</span>
+<span class="fc" id="L516">		double suma = 0;</span>
 		//vyrataj sumu
-<span class="fc bfc" id="L515" title="All 2 branches covered.">		for (AnswerForm answer : answers)</span>
+<span class="fc bfc" id="L518" title="All 2 branches covered.">		for (AnswerForm answer : answers)</span>
 		{
-<span class="fc" id="L517">			suma += answer.getAnswerClicks();</span>
-<span class="fc" id="L518">		}</span>
-<span class="pc bpc" id="L519" title="1 of 2 branches missed.">		if (format == null)</span>
-<span class="nc" id="L520">			format = &quot;0.##&quot;;</span>
-<span class="fc" id="L521">		DecimalFormat formatter = new DecimalFormat(format);</span>
-<span class="fc bfc" id="L522" title="All 2 branches covered.">		for (AnswerForm answer : answers)</span>
+<span class="fc" id="L520">			suma += answer.getAnswerClicks();</span>
+<span class="fc" id="L521">		}</span>
+<span class="pc bpc" id="L522" title="1 of 2 branches missed.">		if (format == null)</span>
+<span class="nc" id="L523">			format = &quot;0.##&quot;;</span>
+<span class="fc" id="L524">		DecimalFormat formatter = new DecimalFormat(format);</span>
+<span class="fc bfc" id="L525" title="All 2 branches covered.">		for (AnswerForm answer : answers)</span>
 		{
-<span class="pc bpc" id="L524" title="1 of 4 branches missed.">			if (answer.getAnswerClicks() &gt; 0 &amp;&amp; suma &gt; 0)</span>
+<span class="pc bpc" id="L527" title="1 of 4 branches missed.">			if (answer.getAnswerClicks() &gt; 0 &amp;&amp; suma &gt; 0)</span>
 			{
-<span class="fc" id="L526">				answer.setPercentage((100D * answer.getAnswerClicks()) / suma);</span>
-<span class="fc" id="L527">				answer.setPercentageString(formatter.format(answer.getPercentage()));</span>
+<span class="fc" id="L529">				answer.setPercentage((100D * answer.getAnswerClicks()) / suma);</span>
+<span class="fc" id="L530">				answer.setPercentageString(formatter.format(answer.getPercentage()));</span>
 			}
 			else
 			{
-<span class="fc" id="L531">				answer.setPercentage(0);</span>
-<span class="fc" id="L532">				answer.setPercentageString(formatter.format(answer.getPercentage()));</span>
+<span class="fc" id="L534">				answer.setPercentage(0);</span>
+<span class="fc" id="L535">				answer.setPercentageString(formatter.format(answer.getPercentage()));</span>
 			}
-<span class="fc" id="L534">		}</span>
-<span class="fc" id="L535">	}</span>
+<span class="fc" id="L537">		}</span>
+<span class="fc" id="L538">	}</span>
 
 	/**
 	 * nastavi pocty obrazkov pre vygenerovanie stlpceka MUSI sa volat az po
@@ -545,11 +548,11 @@ public class InquiryDB
 	private static void countImages(List&lt;AnswerForm&gt; answers, int imagesLength)
 	{
 		//vyrataj sumu
-<span class="fc bfc" id="L548" title="All 2 branches covered.">		for (AnswerForm answer : answers)</span>
+<span class="fc bfc" id="L551" title="All 2 branches covered.">		for (AnswerForm answer : answers)</span>
 		{
-<span class="fc" id="L550">			answer.setImages((int) ((imagesLength / 100D) * answer.getPercentage()));</span>
-<span class="fc" id="L551">		}</span>
-<span class="fc" id="L552">	}</span>
+<span class="fc" id="L553">			answer.setImages((int) ((imagesLength / 100D) * answer.getPercentage()));</span>
+<span class="fc" id="L554">		}</span>
+<span class="fc" id="L555">	}</span>
 
 	/**
 	 * incrementuje hodnotu(t.j. result) v odpovedi urcenej pomocou qID
@@ -560,44 +563,44 @@ public class InquiryDB
 	 */
 	public static void updateAnswer(int qID, int aID, HttpServletRequest request)
 	{
-<span class="fc" id="L563">		String sql = &quot;UPDATE inquiry_answers SET answer_clicks=answer_clicks+1 WHERE question_id=? and answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="fc" id="L566">		String sql = &quot;UPDATE inquiry_answers SET answer_clicks=answer_clicks+1 WHERE question_id=? and answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
 
-<span class="pc bpc" id="L565" title="2 of 4 branches missed.">		if ((qID &gt; -1) &amp;&amp; (aID &gt; -1))</span>
+<span class="pc bpc" id="L568" title="2 of 4 branches missed.">		if ((qID &gt; -1) &amp;&amp; (aID &gt; -1))</span>
 		{
-<span class="fc" id="L567">			Connection db_conn = null;</span>
-<span class="fc" id="L568">			PreparedStatement ps = null;</span>
+<span class="fc" id="L570">			Connection db_conn = null;</span>
+<span class="fc" id="L571">			PreparedStatement ps = null;</span>
 			try
 			{
-<span class="fc" id="L571">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="fc" id="L572">				ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L573">				ps.setInt(1, qID);</span>
-<span class="fc" id="L574">				ps.setInt(2, aID);</span>
-<span class="fc" id="L575">				ps.execute();</span>
+<span class="fc" id="L574">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="fc" id="L575">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L576">				ps.setInt(1, qID);</span>
+<span class="fc" id="L577">				ps.setInt(2, aID);</span>
+<span class="fc" id="L578">				ps.execute();</span>
 
-<span class="fc" id="L577">				ps.close();</span>
-<span class="fc" id="L578">				db_conn.close();</span>
-<span class="fc" id="L579">				ps = null;</span>
-<span class="fc" id="L580">				db_conn = null;</span>
+<span class="fc" id="L580">				ps.close();</span>
+<span class="fc" id="L581">				db_conn.close();</span>
+<span class="fc" id="L582">				ps = null;</span>
+<span class="fc" id="L583">				db_conn = null;</span>
 			}
-<span class="nc" id="L582">			catch (Exception ex)</span>
+<span class="nc" id="L585">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L584">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L587">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L590" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L591">						ps.close();</span>
-<span class="pc bpc" id="L592" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L593">						db_conn.close();</span>
+<span class="pc bpc" id="L593" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L594">						ps.close();</span>
+<span class="pc bpc" id="L595" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L596">						db_conn.close();</span>
 				}
-<span class="nc" id="L595">				catch (Exception ex2)</span>
+<span class="nc" id="L598">				catch (Exception ex2)</span>
 				{
-<span class="fc" id="L597">				}</span>
+<span class="fc" id="L600">				}</span>
 			}
 		}
-<span class="fc" id="L600">	}</span>
+<span class="fc" id="L603">	}</span>
 
 	/**
 	 * inkrementuje premennu totalClicks na zaklade qID, co definuje anketu
@@ -606,106 +609,106 @@ public class InquiryDB
 	 */
 	public static void updateTotalClicks(int qID, HttpServletRequest request)
 	{
-<span class="fc" id="L609">		String sqlTotalClicks = &quot;UPDATE inquiry SET total_clicks = total_clicks + 1 WHERE question_id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
-<span class="pc bpc" id="L610" title="1 of 2 branches missed.">		if ((qID &gt; -1))</span>
+<span class="fc" id="L612">		String sqlTotalClicks = &quot;UPDATE inquiry SET total_clicks = total_clicks + 1 WHERE question_id = ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="pc bpc" id="L613" title="1 of 2 branches missed.">		if ((qID &gt; -1))</span>
 		{
-<span class="fc" id="L612">			Connection db_conn = null;</span>
-<span class="fc" id="L613">			PreparedStatement ps = null;</span>
+<span class="fc" id="L615">			Connection db_conn = null;</span>
+<span class="fc" id="L616">			PreparedStatement ps = null;</span>
 			try
 			{
-<span class="fc" id="L616">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="fc" id="L619">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
 
-<span class="fc" id="L618">				ps = db_conn.prepareStatement(sqlTotalClicks);</span>
-<span class="fc" id="L619">				ps.setInt(1, qID);</span>
-<span class="fc" id="L620">				ps.execute();</span>
+<span class="fc" id="L621">				ps = db_conn.prepareStatement(sqlTotalClicks);</span>
+<span class="fc" id="L622">				ps.setInt(1, qID);</span>
+<span class="fc" id="L623">				ps.execute();</span>
 
-<span class="fc" id="L622">				ps.close();</span>
-<span class="fc" id="L623">				db_conn.close();</span>
-<span class="fc" id="L624">				ps = null;</span>
-<span class="fc" id="L625">				db_conn = null;</span>
+<span class="fc" id="L625">				ps.close();</span>
+<span class="fc" id="L626">				db_conn.close();</span>
+<span class="fc" id="L627">				ps = null;</span>
+<span class="fc" id="L628">				db_conn = null;</span>
 			}
-<span class="nc" id="L627">			catch (Exception ex)</span>
+<span class="nc" id="L630">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L629">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L632">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L635" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L636">						ps.close();</span>
-<span class="pc bpc" id="L637" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L638">						db_conn.close();</span>
+<span class="pc bpc" id="L638" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L639">						ps.close();</span>
+<span class="pc bpc" id="L640" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L641">						db_conn.close();</span>
 				}
-<span class="nc" id="L640">				catch (Exception ex2)</span>
+<span class="nc" id="L643">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L642">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L643">				}</span>
+<span class="nc" id="L645">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L646">				}</span>
 			}
 		}
-<span class="fc" id="L646">	}</span>
+<span class="fc" id="L649">	}</span>
 
 	public static List&lt;AnswerForm&gt; getAllInquiry(HttpServletRequest request)
 	{
-<span class="nc" id="L650">		List&lt;AnswerForm&gt; al = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L653">		List&lt;AnswerForm&gt; al = new ArrayList&lt;&gt;();</span>
 		AnswerForm icForm;
-<span class="nc" id="L652">		String sql = &quot;SELECT * FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false)+&quot; ORDER BY question_id DESC&quot;;</span>
+<span class="nc" id="L655">		String sql = &quot;SELECT * FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false)+&quot; ORDER BY question_id DESC&quot;;</span>
 
-<span class="nc" id="L654">		Connection db_conn = null;</span>
-<span class="nc" id="L655">		PreparedStatement ps = null;</span>
-<span class="nc" id="L656">		ResultSet rs = null;</span>
+<span class="nc" id="L657">		Connection db_conn = null;</span>
+<span class="nc" id="L658">		PreparedStatement ps = null;</span>
+<span class="nc" id="L659">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L659">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L660">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L661">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L662" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L662">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L663">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L664">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L664">				icForm = new AnswerForm();</span>
-<span class="nc" id="L665">				icForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="nc" id="L666">				icForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
-<span class="nc" id="L667">				icForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="nc" id="L668">				icForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="nc" id="L669">				icForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="nc" id="L670">				icForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="nc" id="L671">				icForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L672">				icForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L673">				icForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L674">				icForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L675">				icForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="nc" id="L676">				icForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="nc" id="L677">				icForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
-<span class="nc" id="L678">				al.add(icForm);</span>
+<span class="nc" id="L667">				icForm = new AnswerForm();</span>
+<span class="nc" id="L668">				icForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="nc" id="L669">				icForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
+<span class="nc" id="L670">				icForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="nc" id="L671">				icForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="nc" id="L672">				icForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="nc" id="L673">				icForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="nc" id="L674">				icForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L675">				icForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L676">				icForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L677">				icForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L678">				icForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="nc" id="L679">				icForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="nc" id="L680">				icForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="nc" id="L681">				al.add(icForm);</span>
 			}
-<span class="nc" id="L680">			rs.close();</span>
-<span class="nc" id="L681">			ps.close();</span>
-<span class="nc" id="L682">			db_conn.close();</span>
-<span class="nc" id="L683">			rs = null;</span>
-<span class="nc" id="L684">			ps = null;</span>
-<span class="nc" id="L685">			db_conn = null;</span>
+<span class="nc" id="L683">			rs.close();</span>
+<span class="nc" id="L684">			ps.close();</span>
+<span class="nc" id="L685">			db_conn.close();</span>
+<span class="nc" id="L686">			rs = null;</span>
+<span class="nc" id="L687">			ps = null;</span>
+<span class="nc" id="L688">			db_conn = null;</span>
 		}
-<span class="nc" id="L687">		catch (Exception ex)</span>
+<span class="nc" id="L690">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L689">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L692">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L695" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L696">					rs.close();</span>
-<span class="nc bnc" id="L697" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L698">					ps.close();</span>
-<span class="nc bnc" id="L699" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L700">					db_conn.close();</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L699">					rs.close();</span>
+<span class="nc bnc" id="L700" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L701">					ps.close();</span>
+<span class="nc bnc" id="L702" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L703">					db_conn.close();</span>
 			}
-<span class="nc" id="L702">			catch (Exception ex2)</span>
+<span class="nc" id="L705">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L704">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L705">			}</span>
+<span class="nc" id="L707">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L708">			}</span>
 		}
 
-<span class="nc" id="L708">		return al;</span>
+<span class="nc" id="L711">		return al;</span>
 	}
 
 	/**
@@ -718,566 +721,566 @@ public class InquiryDB
 	 */
 	public static List&lt;AnswerForm&gt; getInquiries(List&lt;String&gt; groups, String questionText)
    {
-<span class="nc" id="L721">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L724">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L723">		StringBuilder sql = new StringBuilder();</span>
-<span class="nc" id="L724">		sql.append(&quot;SELECT * FROM inquiry WHERE question_id &gt; 0 &quot;);</span>
+<span class="nc" id="L726">		StringBuilder sql = new StringBuilder();</span>
+<span class="nc" id="L727">		sql.append(&quot;SELECT * FROM inquiry WHERE question_id &gt; 0 &quot;);</span>
 
-<span class="nc" id="L726">		String groupsInSql = &quot;(&quot;;</span>
-<span class="nc" id="L727">		StringBuilder buf = new StringBuilder(groupsInSql);</span>
-<span class="nc bnc" id="L728" title="All 4 branches missed.">		if (groups != null &amp;&amp; groups.size() &gt; 0)</span>
+<span class="nc" id="L729">		String groupsInSql = &quot;(&quot;;</span>
+<span class="nc" id="L730">		StringBuilder buf = new StringBuilder(groupsInSql);</span>
+<span class="nc bnc" id="L731" title="All 4 branches missed.">		if (groups != null &amp;&amp; groups.size() &gt; 0)</span>
 		{
-<span class="nc bnc" id="L730" title="All 2 branches missed.">			for (int i = 0; i &lt; groups.size(); i++) buf.append(&quot;?, &quot;);</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">			for (int i = 0; i &lt; groups.size(); i++) buf.append(&quot;?, &quot;);</span>
 
-<span class="nc" id="L732">			groupsInSql = buf.toString();</span>
-<span class="nc" id="L733">			groupsInSql = groupsInSql.substring(0, (groupsInSql.length()-2));</span>
-<span class="nc" id="L734">			groupsInSql += &quot;)&quot;;</span>
+<span class="nc" id="L735">			groupsInSql = buf.toString();</span>
+<span class="nc" id="L736">			groupsInSql = groupsInSql.substring(0, (groupsInSql.length()-2));</span>
+<span class="nc" id="L737">			groupsInSql += &quot;)&quot;;</span>
 
 			//skupina ankety
-<span class="nc" id="L737">			sql.append(&quot; AND question_group IN &quot; + groupsInSql);</span>
+<span class="nc" id="L740">			sql.append(&quot; AND question_group IN &quot; + groupsInSql);</span>
 
-<span class="nc bnc" id="L739" title="All 2 branches missed.">			for (int i = 0; i &lt; groups.size(); i++) params.add(groups.get(i));</span>
+<span class="nc bnc" id="L742" title="All 2 branches missed.">			for (int i = 0; i &lt; groups.size(); i++) params.add(groups.get(i));</span>
 		}
 
 		//text otazky
-<span class="nc bnc" id="L743" title="All 2 branches missed.">		if (Tools.isNotEmpty(questionText))</span>
+<span class="nc bnc" id="L746" title="All 2 branches missed.">		if (Tools.isNotEmpty(questionText))</span>
 		{
-<span class="nc" id="L745">			sql.append(&quot; AND question_text LIKE ?&quot;);</span>
-<span class="nc" id="L746">			params.add(&quot;%&quot; + questionText + &quot;%&quot;);</span>
+<span class="nc" id="L748">			sql.append(&quot; AND question_text LIKE ?&quot;);</span>
+<span class="nc" id="L749">			params.add(&quot;%&quot; + questionText + &quot;%&quot;);</span>
 		}
 
-<span class="nc" id="L749">		sql.append(CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L752">		sql.append(CloudToolsForCore.getDomainIdSqlWhere(true));</span>
 
-<span class="nc" id="L751">		sql.append(&quot; ORDER BY question_id DESC&quot;);</span>
+<span class="nc" id="L754">		sql.append(&quot; ORDER BY question_id DESC&quot;);</span>
 
-<span class="nc" id="L753">      List&lt;AnswerForm&gt; inquiries = new ComplexQuery().setSql(sql.toString()).setParams(params.toArray()).list(new Mapper&lt;AnswerForm&gt;()</span>
-<span class="nc" id="L754">      {</span>
+<span class="nc" id="L756">      List&lt;AnswerForm&gt; inquiries = new ComplexQuery().setSql(sql.toString()).setParams(params.toArray()).list(new Mapper&lt;AnswerForm&gt;()</span>
+<span class="nc" id="L757">      {</span>
       	@Override
          public AnswerForm map(ResultSet rs) throws SQLException
          {
-<span class="nc" id="L758">         	AnswerForm icForm = new AnswerForm();</span>
+<span class="nc" id="L761">         	AnswerForm icForm = new AnswerForm();</span>
 
-<span class="nc" id="L760">				icForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="nc" id="L761">				icForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
-<span class="nc" id="L762">				icForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="nc" id="L763">				icForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="nc" id="L764">				icForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="nc" id="L765">				icForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="nc" id="L766">				icForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L767">				icForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L768">				icForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L769">				icForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L770">				icForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="nc" id="L771">				icForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="nc" id="L772">				icForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="nc" id="L763">				icForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="nc" id="L764">				icForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
+<span class="nc" id="L765">				icForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="nc" id="L766">				icForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="nc" id="L767">				icForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="nc" id="L768">				icForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="nc" id="L769">				icForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L770">				icForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L771">				icForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L772">				icForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L773">				icForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="nc" id="L774">				icForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="nc" id="L775">				icForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
 
-<span class="nc" id="L774">         	return icForm;</span>
+<span class="nc" id="L777">         	return icForm;</span>
          }
       });
 
-<span class="nc" id="L778">		return inquiries;</span>
+<span class="nc" id="L781">		return inquiries;</span>
 	}
 
 	public static int getNewQuestionID(HttpServletRequest request)
 	{
-<span class="nc" id="L783">		int newqID = -1;</span>
-<span class="nc" id="L784">		String sql = &quot;SELECT max(question_id) AS max FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false);</span>
+<span class="nc" id="L786">		int newqID = -1;</span>
+<span class="nc" id="L787">		String sql = &quot;SELECT max(question_id) AS max FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false);</span>
 
-<span class="nc" id="L786">		Connection db_conn = null;</span>
-<span class="nc" id="L787">		PreparedStatement ps = null;</span>
-<span class="nc" id="L788">		ResultSet rs = null;</span>
+<span class="nc" id="L789">		Connection db_conn = null;</span>
+<span class="nc" id="L790">		PreparedStatement ps = null;</span>
+<span class="nc" id="L791">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L791">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L792">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L793">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L794" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L794">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L795">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L796">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L797" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L796">				newqID = rs.getInt(&quot;max&quot;);</span>
+<span class="nc" id="L799">				newqID = rs.getInt(&quot;max&quot;);</span>
 			}
-<span class="nc" id="L798">			rs.close();</span>
-<span class="nc" id="L799">			ps.close();</span>
-<span class="nc" id="L800">			db_conn.close();</span>
-<span class="nc" id="L801">			rs = null;</span>
-<span class="nc" id="L802">			ps = null;</span>
-<span class="nc" id="L803">			db_conn = null;</span>
+<span class="nc" id="L801">			rs.close();</span>
+<span class="nc" id="L802">			ps.close();</span>
+<span class="nc" id="L803">			db_conn.close();</span>
+<span class="nc" id="L804">			rs = null;</span>
+<span class="nc" id="L805">			ps = null;</span>
+<span class="nc" id="L806">			db_conn = null;</span>
 		}
-<span class="nc" id="L805">		catch (Exception ex)</span>
+<span class="nc" id="L808">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L807">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L810">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L813" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L814">					rs.close();</span>
-<span class="nc bnc" id="L815" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L816">					ps.close();</span>
-<span class="nc bnc" id="L817" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L818">					db_conn.close();</span>
+<span class="nc bnc" id="L816" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L817">					rs.close();</span>
+<span class="nc bnc" id="L818" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L819">					ps.close();</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L821">					db_conn.close();</span>
 			}
-<span class="nc" id="L820">			catch (Exception ex2)</span>
+<span class="nc" id="L823">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L822">			}</span>
+<span class="nc" id="L825">			}</span>
 		}
 
-<span class="nc" id="L825">		newqID++;</span>
-<span class="nc" id="L826">		return newqID;</span>
+<span class="nc" id="L828">		newqID++;</span>
+<span class="nc" id="L829">		return newqID;</span>
 	}
 
 	public static void addNewAnswer(int qID, AnswerForm answer, HttpServletRequest request)
 
 	{
-<span class="nc" id="L832">		Connection db_conn = null;</span>
-<span class="nc" id="L833">		PreparedStatement ps = null;</span>
+<span class="nc" id="L835">		Connection db_conn = null;</span>
+<span class="nc" id="L836">		PreparedStatement ps = null;</span>
 		try
 		{
-<span class="nc" id="L836">			String sql_3_1 = &quot;INSERT INTO inquiry_answers(question_id, answer_text, image_path, url, answer_clicks, domain_id) VALUES(?,?,?,?,?,?)&quot;;</span>
-<span class="nc bnc" id="L837" title="All 4 branches missed.">			if ((qID &gt; -1) &amp;&amp; (answer != null))</span>
+<span class="nc" id="L839">			String sql_3_1 = &quot;INSERT INTO inquiry_answers(question_id, answer_text, image_path, url, answer_clicks, domain_id) VALUES(?,?,?,?,?,?)&quot;;</span>
+<span class="nc bnc" id="L840" title="All 4 branches missed.">			if ((qID &gt; -1) &amp;&amp; (answer != null))</span>
 			{
-<span class="nc" id="L839">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L840">				ps = db_conn.prepareStatement(sql_3_1);</span>
-<span class="nc" id="L841">				ps.setInt(1, qID);</span>
-<span class="nc" id="L842">				ps.setString(2, answer.getAnswerString());</span>
-<span class="nc" id="L843">				ps.setString(3, answer.getImagePath());</span>
-<span class="nc" id="L844">				ps.setString(4, answer.getUrl());</span>
-<span class="nc" id="L845">				ps.setInt(5, answer.getAnswerClicks());</span>
-<span class="nc" id="L846">				ps.setInt(6, CloudToolsForCore.getDomainId());</span>
-<span class="nc" id="L847">				ps.execute();</span>
-<span class="nc" id="L848">				ps.close();</span>
-<span class="nc" id="L849">				db_conn.close();</span>
+<span class="nc" id="L842">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L843">				ps = db_conn.prepareStatement(sql_3_1);</span>
+<span class="nc" id="L844">				ps.setInt(1, qID);</span>
+<span class="nc" id="L845">				ps.setString(2, answer.getAnswerString());</span>
+<span class="nc" id="L846">				ps.setString(3, answer.getImagePath());</span>
+<span class="nc" id="L847">				ps.setString(4, answer.getUrl());</span>
+<span class="nc" id="L848">				ps.setInt(5, answer.getAnswerClicks());</span>
+<span class="nc" id="L849">				ps.setInt(6, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L850">				ps.execute();</span>
+<span class="nc" id="L851">				ps.close();</span>
+<span class="nc" id="L852">				db_conn.close();</span>
 			}
 
-<span class="nc" id="L852">			ps = null;</span>
-<span class="nc" id="L853">			AnswerForm question = getQuestion(qID, request);</span>
-<span class="nc" id="L854">			Adminlog.add(Adminlog.TYPE_INQUIRY_CREATE, String.format(&quot;Pridana odpoved %s na otazku %s&quot;, answer, question.getQuestionString()), qID, -1);</span>
-<span class="nc" id="L855">			db_conn = null;</span>
+<span class="nc" id="L855">			ps = null;</span>
+<span class="nc" id="L856">			AnswerForm question = getQuestion(qID, request);</span>
+<span class="nc" id="L857">			Adminlog.add(Adminlog.TYPE_INQUIRY_CREATE, String.format(&quot;Pridana odpoved %s na otazku %s&quot;, answer, question.getQuestionString()), qID, -1);</span>
+<span class="nc" id="L858">			db_conn = null;</span>
 		}
-<span class="nc" id="L857">		catch (Exception ex)</span>
+<span class="nc" id="L860">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L859">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L862">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L865" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L866">					ps.close();</span>
-<span class="nc bnc" id="L867" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L868">					db_conn.close();</span>
+<span class="nc bnc" id="L868" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L869">					ps.close();</span>
+<span class="nc bnc" id="L870" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L871">					db_conn.close();</span>
 			}
-<span class="nc" id="L870">			catch (Exception ex2)</span>
+<span class="nc" id="L873">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L872">			}</span>
+<span class="nc" id="L875">			}</span>
 		}
-<span class="nc" id="L874">	}</span>
+<span class="nc" id="L877">	}</span>
 
 	public static void createNewQuestion(AnswerForm form, HttpServletRequest request)
 	{
-<span class="nc" id="L878">		String sql = &quot;INSERT INTO inquiry (question_text, hours, question_group, answer_text_ok, answer_text_fail, &quot;+</span>
+<span class="nc" id="L881">		String sql = &quot;INSERT INTO inquiry (question_text, hours, question_group, answer_text_ok, answer_text_fail, &quot;+</span>
 					 &quot;date_from, date_to, question_active, multiple, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
-<span class="nc" id="L880">		int max = -1;</span>
+<span class="nc" id="L883">		int max = -1;</span>
 
 
-<span class="nc" id="L883">		Connection db_conn = null;</span>
-<span class="nc" id="L884">		PreparedStatement ps = null;</span>
-<span class="nc" id="L885">		ResultSet rs = null;</span>
+<span class="nc" id="L886">		Connection db_conn = null;</span>
+<span class="nc" id="L887">		PreparedStatement ps = null;</span>
+<span class="nc" id="L888">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L888">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L889">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L890">			ps.setString(1, form.getQuestionString());</span>
-<span class="nc" id="L891">			ps.setInt(2, form.getHours());</span>
-<span class="nc" id="L892">			ps.setString(3, form.getGroup());</span>
-<span class="nc" id="L893">			ps.setString(4, form.getAnswerTextOk());</span>
-<span class="nc" id="L894">			ps.setString(5, form.getAnswerTextFail());</span>
-<span class="nc bnc" id="L895" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateFrom()))</span>
+<span class="nc" id="L891">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L892">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L893">			ps.setString(1, form.getQuestionString());</span>
+<span class="nc" id="L894">			ps.setInt(2, form.getHours());</span>
+<span class="nc" id="L895">			ps.setString(3, form.getGroup());</span>
+<span class="nc" id="L896">			ps.setString(4, form.getAnswerTextOk());</span>
+<span class="nc" id="L897">			ps.setString(5, form.getAnswerTextFail());</span>
+<span class="nc bnc" id="L898" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateFrom()))</span>
 			{
-<span class="nc" id="L897">				ps.setTimestamp(6, new Timestamp(DB.getTimestamp(form.getDateFrom(), form.getDateFromTime() )));</span>
+<span class="nc" id="L900">				ps.setTimestamp(6, new Timestamp(DB.getTimestamp(form.getDateFrom(), form.getDateFromTime() )));</span>
 			}
 			else
 			{
-<span class="nc" id="L901">				ps.setNull(6, Types.TIMESTAMP);</span>
+<span class="nc" id="L904">				ps.setNull(6, Types.TIMESTAMP);</span>
 			}
-<span class="nc bnc" id="L903" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateTo()))</span>
+<span class="nc bnc" id="L906" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateTo()))</span>
 			{
-<span class="nc" id="L905">				ps.setTimestamp(7, new Timestamp(DB.getTimestamp(form.getDateTo(), form.getDateToTime() )));</span>
+<span class="nc" id="L908">				ps.setTimestamp(7, new Timestamp(DB.getTimestamp(form.getDateTo(), form.getDateToTime() )));</span>
 			}
 			else
 			{
-<span class="nc" id="L909">				ps.setNull(7, Types.TIMESTAMP);</span>
+<span class="nc" id="L912">				ps.setNull(7, Types.TIMESTAMP);</span>
 			}
-<span class="nc" id="L911">			ps.setBoolean(8, form.isActive());</span>
-<span class="nc" id="L912">			ps.setBoolean(9, form.isMultiple());</span>
-<span class="nc" id="L913">			ps.setInt(10, CloudToolsForCore.getDomainId());</span>
-<span class="nc" id="L914">			ps.execute();</span>
-<span class="nc" id="L915">			ps.close();</span>
-<span class="nc" id="L916">			ps = db_conn.prepareStatement(&quot;SELECT max(question_id) AS max FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false));</span>
-<span class="nc" id="L917">			rs = ps.executeQuery();</span>
-<span class="nc" id="L918">			rs.next();</span>
-<span class="nc" id="L919">			max = rs.getInt(&quot;max&quot;);</span>
-<span class="nc" id="L920">			rs.close();</span>
-<span class="nc" id="L921">			ps.close();</span>
-<span class="nc" id="L922">			form.setQuestionID(max);</span>
-<span class="nc" id="L923">			db_conn.close();</span>
+<span class="nc" id="L914">			ps.setBoolean(8, form.isActive());</span>
+<span class="nc" id="L915">			ps.setBoolean(9, form.isMultiple());</span>
+<span class="nc" id="L916">			ps.setInt(10, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L917">			ps.execute();</span>
+<span class="nc" id="L918">			ps.close();</span>
+<span class="nc" id="L919">			ps = db_conn.prepareStatement(&quot;SELECT max(question_id) AS max FROM inquiry WHERE &quot;+CloudToolsForCore.getDomainIdSqlWhere(false));</span>
+<span class="nc" id="L920">			rs = ps.executeQuery();</span>
+<span class="nc" id="L921">			rs.next();</span>
+<span class="nc" id="L922">			max = rs.getInt(&quot;max&quot;);</span>
+<span class="nc" id="L923">			rs.close();</span>
+<span class="nc" id="L924">			ps.close();</span>
+<span class="nc" id="L925">			form.setQuestionID(max);</span>
+<span class="nc" id="L926">			db_conn.close();</span>
 
-<span class="nc" id="L925">			rs = null;</span>
-<span class="nc" id="L926">			ps = null;</span>
-<span class="nc" id="L927">			db_conn = null;</span>
+<span class="nc" id="L928">			rs = null;</span>
+<span class="nc" id="L929">			ps = null;</span>
+<span class="nc" id="L930">			db_conn = null;</span>
 		}
-<span class="nc" id="L929">		catch (Exception ex)</span>
+<span class="nc" id="L932">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L931">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L934">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L937" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L938">					rs.close();</span>
-<span class="nc bnc" id="L939" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L940">					ps.close();</span>
-<span class="nc bnc" id="L941" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L942">					db_conn.close();</span>
+<span class="nc bnc" id="L940" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L941">					rs.close();</span>
+<span class="nc bnc" id="L942" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L943">					ps.close();</span>
+<span class="nc bnc" id="L944" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L945">					db_conn.close();</span>
 			}
-<span class="nc" id="L944">			catch (Exception ex2)</span>
+<span class="nc" id="L947">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L946">			}</span>
+<span class="nc" id="L949">			}</span>
 		}
-<span class="nc" id="L948">		Adminlog.add(Adminlog.TYPE_INQUIRY_CREATE, &quot;Vytvorena nova anketa: &quot;+form.getQuestionString(), form.getQuestionID(), -1);</span>
-<span class="nc" id="L949">	}</span>
+<span class="nc" id="L951">		Adminlog.add(Adminlog.TYPE_INQUIRY_CREATE, &quot;Vytvorena nova anketa: &quot;+form.getQuestionString(), form.getQuestionID(), -1);</span>
+<span class="nc" id="L952">	}</span>
 
 	public static void alterQuestion(AnswerForm form, HttpServletRequest request)
 	{
 		//Logger.println(this,&quot;Alter Question: &quot; + form.getDateFrom() + &quot; to=&quot; + form.getDateTo());
-<span class="nc" id="L954">		AnswerForm question = getQuestion(form.getQuestionID(), request);</span>
-<span class="nc" id="L955">		BeanDiffPrinter diff = new BeanDiffPrinter(new BeanDiff().setOriginal(question).setNew(form));</span>
-<span class="nc" id="L956">		Adminlog.add(Adminlog.TYPE_INQUIRY_UPDATE, &quot;Zmenena anketa &quot;+form.getQuestionString()+&quot; &quot;+diff, form.getQuestionID(), -1);</span>
+<span class="nc" id="L957">		AnswerForm question = getQuestion(form.getQuestionID(), request);</span>
+<span class="nc" id="L958">		BeanDiffPrinter diff = new BeanDiffPrinter(new BeanDiff().setOriginal(question).setNew(form));</span>
+<span class="nc" id="L959">		Adminlog.add(Adminlog.TYPE_INQUIRY_UPDATE, &quot;Zmenena anketa &quot;+form.getQuestionString()+&quot; &quot;+diff, form.getQuestionID(), -1);</span>
 
 
-<span class="nc" id="L959">		String sql = &quot;UPDATE inquiry SET question_text=?, hours=?, question_group=?, answer_text_ok=?, answer_text_fail=?, &quot;+</span>
-<span class="nc" id="L960">					&quot;date_from=?, date_to=?, question_active=?, multiple= ?, total_clicks= ? WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L962">		String sql = &quot;UPDATE inquiry SET question_text=?, hours=?, question_group=?, answer_text_ok=?, answer_text_fail=?, &quot;+</span>
+<span class="nc" id="L963">					&quot;date_from=?, date_to=?, question_active=?, multiple= ?, total_clicks= ? WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
 
-<span class="nc" id="L962">		Connection db_conn = null;</span>
-<span class="nc" id="L963">		PreparedStatement ps = null;</span>
+<span class="nc" id="L965">		Connection db_conn = null;</span>
+<span class="nc" id="L966">		PreparedStatement ps = null;</span>
 		try
 		{
 
-<span class="nc" id="L967">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L968">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L969">			ps.setString(1, form.getQuestionString());</span>
-<span class="nc" id="L970">			ps.setInt(2, form.getHours());</span>
-<span class="nc" id="L971">			ps.setString(3, form.getGroup());</span>
-<span class="nc" id="L972">			ps.setString(4, form.getAnswerTextOk());</span>
-<span class="nc" id="L973">			ps.setString(5, form.getAnswerTextFail());</span>
-<span class="nc bnc" id="L974" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateFrom()))</span>
+<span class="nc" id="L970">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L971">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L972">			ps.setString(1, form.getQuestionString());</span>
+<span class="nc" id="L973">			ps.setInt(2, form.getHours());</span>
+<span class="nc" id="L974">			ps.setString(3, form.getGroup());</span>
+<span class="nc" id="L975">			ps.setString(4, form.getAnswerTextOk());</span>
+<span class="nc" id="L976">			ps.setString(5, form.getAnswerTextFail());</span>
+<span class="nc bnc" id="L977" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateFrom()))</span>
 			{
-<span class="nc" id="L976">				ps.setTimestamp(6, new Timestamp(DB.getTimestamp(form.getDateFrom(), form.getDateFromTime() )));</span>
+<span class="nc" id="L979">				ps.setTimestamp(6, new Timestamp(DB.getTimestamp(form.getDateFrom(), form.getDateFromTime() )));</span>
 			}
 			else
 			{
-<span class="nc" id="L980">				ps.setNull(6, Types.TIMESTAMP);</span>
+<span class="nc" id="L983">				ps.setNull(6, Types.TIMESTAMP);</span>
 			}
-<span class="nc bnc" id="L982" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateTo()))</span>
+<span class="nc bnc" id="L985" title="All 2 branches missed.">			if (Tools.isNotEmpty(form.getDateTo()))</span>
 			{
-<span class="nc" id="L984">				ps.setTimestamp(7, new Timestamp(DB.getTimestamp(form.getDateTo(), form.getDateToTime() )));</span>
+<span class="nc" id="L987">				ps.setTimestamp(7, new Timestamp(DB.getTimestamp(form.getDateTo(), form.getDateToTime() )));</span>
 			}
 			else
 			{
-<span class="nc" id="L988">				ps.setNull(7, Types.TIMESTAMP);</span>
+<span class="nc" id="L991">				ps.setNull(7, Types.TIMESTAMP);</span>
 			}
-<span class="nc" id="L990">			ps.setBoolean(8, form.isActive());</span>
-<span class="nc" id="L991">			ps.setBoolean(9, form.isMultiple());</span>
-<span class="nc" id="L992">			ps.setInt(10, form.getTotalClicks());</span>
-<span class="nc" id="L993">			ps.setInt(11, form.getQuestionID());</span>
-<span class="nc" id="L994">			ps.execute();</span>
-<span class="nc" id="L995">			ps.close();</span>
-<span class="nc" id="L996">			db_conn.close();</span>
-<span class="nc" id="L997">			ps = null;</span>
-<span class="nc" id="L998">			db_conn = null;</span>
+<span class="nc" id="L993">			ps.setBoolean(8, form.isActive());</span>
+<span class="nc" id="L994">			ps.setBoolean(9, form.isMultiple());</span>
+<span class="nc" id="L995">			ps.setInt(10, form.getTotalClicks());</span>
+<span class="nc" id="L996">			ps.setInt(11, form.getQuestionID());</span>
+<span class="nc" id="L997">			ps.execute();</span>
+<span class="nc" id="L998">			ps.close();</span>
+<span class="nc" id="L999">			db_conn.close();</span>
+<span class="nc" id="L1000">			ps = null;</span>
+<span class="nc" id="L1001">			db_conn = null;</span>
 		}
-<span class="nc" id="L1000">		catch (Exception ex)</span>
+<span class="nc" id="L1003">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1002">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1005">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1008" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1009">					ps.close();</span>
-<span class="nc bnc" id="L1010" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1011">					db_conn.close();</span>
+<span class="nc bnc" id="L1011" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1012">					ps.close();</span>
+<span class="nc bnc" id="L1013" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1014">					db_conn.close();</span>
 			}
-<span class="nc" id="L1013">			catch (Exception ex2)</span>
+<span class="nc" id="L1016">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1015">			}</span>
+<span class="nc" id="L1018">			}</span>
 		}
 
-<span class="nc" id="L1018">	}</span>
+<span class="nc" id="L1021">	}</span>
 
 	public static void alterAnswerString(AnswerForm answer, HttpServletRequest request)
 	{
-<span class="nc" id="L1022">		Connection db_conn = null;</span>
-<span class="nc" id="L1023">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1024">		AnswerForm answerOld = getAnswer(answer.getAnswerID(), request);</span>
+<span class="nc" id="L1025">		Connection db_conn = null;</span>
+<span class="nc" id="L1026">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1027">		AnswerForm answerOld = getAnswer(answer.getAnswerID(), request);</span>
 
-<span class="nc" id="L1026">		Adminlog.add(Adminlog.TYPE_INQUIRY_UPDATE,</span>
-<span class="nc" id="L1027">				String.format(&quot;Zmenena odpoved na anketu %s: %s =&gt; %s&quot;, answerOld.getQuestionString(), answerOld.getAnswerString(), answer.getAnswerString()),</span>
-<span class="nc" id="L1028">				answer.getAnswerID(), -1);</span>
+<span class="nc" id="L1029">		Adminlog.add(Adminlog.TYPE_INQUIRY_UPDATE,</span>
+<span class="nc" id="L1030">				String.format(&quot;Zmenena odpoved na anketu %s: %s =&gt; %s&quot;, answerOld.getQuestionString(), answerOld.getAnswerString(), answer.getAnswerString()),</span>
+<span class="nc" id="L1031">				answer.getAnswerID(), -1);</span>
 
-<span class="nc" id="L1030">		String sql = &quot;UPDATE  inquiry_answers SET answer_text=?, answer_clicks=?, image_path = ?, url= ? WHERE answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L1033">		String sql = &quot;UPDATE  inquiry_answers SET answer_text=?, answer_clicks=?, image_path = ?, url= ? WHERE answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
 		try
 		{
-<span class="nc" id="L1033">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L1034">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L1035">			ps.setString(1, answer.getAnswerString());</span>
-<span class="nc" id="L1036">			ps.setInt(2, answer.getAnswerClicks());</span>
-<span class="nc" id="L1037">			ps.setString(3, answer.getImagePath());</span>
-<span class="nc" id="L1038">			ps.setString(4, answer.getUrl());</span>
-<span class="nc" id="L1039">			ps.setInt(5, answer.getAnswerID());</span>
-<span class="nc" id="L1040">			ps.execute();</span>
-<span class="nc" id="L1041">			ps.close();</span>
-<span class="nc" id="L1042">			db_conn.close();</span>
-<span class="nc" id="L1043">			ps = null;</span>
-<span class="nc" id="L1044">			db_conn = null;</span>
+<span class="nc" id="L1036">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L1037">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1038">			ps.setString(1, answer.getAnswerString());</span>
+<span class="nc" id="L1039">			ps.setInt(2, answer.getAnswerClicks());</span>
+<span class="nc" id="L1040">			ps.setString(3, answer.getImagePath());</span>
+<span class="nc" id="L1041">			ps.setString(4, answer.getUrl());</span>
+<span class="nc" id="L1042">			ps.setInt(5, answer.getAnswerID());</span>
+<span class="nc" id="L1043">			ps.execute();</span>
+<span class="nc" id="L1044">			ps.close();</span>
+<span class="nc" id="L1045">			db_conn.close();</span>
+<span class="nc" id="L1046">			ps = null;</span>
+<span class="nc" id="L1047">			db_conn = null;</span>
 		}
-<span class="nc" id="L1046">		catch (Exception ex)</span>
+<span class="nc" id="L1049">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1048">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1051">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1054" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1055">					ps.close();</span>
-<span class="nc bnc" id="L1056" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1057">					db_conn.close();</span>
+<span class="nc bnc" id="L1057" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1058">					ps.close();</span>
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1060">					db_conn.close();</span>
 			}
-<span class="nc" id="L1059">			catch (Exception ex2)</span>
+<span class="nc" id="L1062">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1061">			}</span>
+<span class="nc" id="L1064">			}</span>
 		}
-<span class="nc" id="L1063">	}</span>
+<span class="nc" id="L1066">	}</span>
 
 	public static void deleteAnswer(int aID, HttpServletRequest request)
 	{
-<span class="nc" id="L1067">		Connection db_conn = null;</span>
-<span class="nc" id="L1068">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1069">		AnswerForm answer = getAnswer(aID, request);</span>
-<span class="nc" id="L1070">		Adminlog.add(Adminlog.TYPE_INQUIRY_DELETE,</span>
-<span class="nc" id="L1071">				String.format(&quot;Zmazana odpoved %s na anketu %s&quot;, answer.getAnswerString(), answer.getQuestionString()),</span>
+<span class="nc" id="L1070">		Connection db_conn = null;</span>
+<span class="nc" id="L1071">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1072">		AnswerForm answer = getAnswer(aID, request);</span>
+<span class="nc" id="L1073">		Adminlog.add(Adminlog.TYPE_INQUIRY_DELETE,</span>
+<span class="nc" id="L1074">				String.format(&quot;Zmazana odpoved %s na anketu %s&quot;, answer.getAnswerString(), answer.getQuestionString()),</span>
 				aID, -1);
-<span class="nc" id="L1073">		String sql = &quot;DELETE FROM inquiry_answers WHERE answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L1076">		String sql = &quot;DELETE FROM inquiry_answers WHERE answer_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
 		try
 		{
-<span class="nc" id="L1076">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L1077">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L1078">			ps.setInt(1, aID);</span>
-<span class="nc" id="L1079">			ps.execute();</span>
-<span class="nc" id="L1080">			ps.close();</span>
-<span class="nc" id="L1081">			db_conn.close();</span>
-<span class="nc" id="L1082">			ps = null;</span>
-<span class="nc" id="L1083">			db_conn = null;</span>
+<span class="nc" id="L1079">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L1080">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1081">			ps.setInt(1, aID);</span>
+<span class="nc" id="L1082">			ps.execute();</span>
+<span class="nc" id="L1083">			ps.close();</span>
+<span class="nc" id="L1084">			db_conn.close();</span>
+<span class="nc" id="L1085">			ps = null;</span>
+<span class="nc" id="L1086">			db_conn = null;</span>
 		}
-<span class="nc" id="L1085">		catch (Exception ex)</span>
+<span class="nc" id="L1088">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1087">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1090">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1093" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1094">					ps.close();</span>
-<span class="nc bnc" id="L1095" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1096">					db_conn.close();</span>
+<span class="nc bnc" id="L1096" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1097">					ps.close();</span>
+<span class="nc bnc" id="L1098" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1099">					db_conn.close();</span>
 			}
-<span class="nc" id="L1098">			catch (Exception ex2)</span>
+<span class="nc" id="L1101">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1100">			}</span>
+<span class="nc" id="L1103">			}</span>
 		}
-<span class="nc" id="L1102">	}</span>
+<span class="nc" id="L1105">	}</span>
 
 	/*
 	 * Vymaze z DB anketu a odpovede pre danu anketu
 	 */
 	public static String deleteInquiry(int questionId, HttpServletRequest request)
 	{
-<span class="nc" id="L1109">		Adminlog.add(Adminlog.TYPE_INQUIRY_DELETE, &quot;Zmazana anketa s ID: &quot;+questionId, -1, -1);</span>
-<span class="nc" id="L1110">		Connection db_conn = null;</span>
-<span class="nc" id="L1111">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1112">		String sql_question = &quot;DELETE FROM inquiry WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
-<span class="nc" id="L1113">		String sql_answer = &quot;DELETE FROM inquiry_answers WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L1112">		Adminlog.add(Adminlog.TYPE_INQUIRY_DELETE, &quot;Zmazana anketa s ID: &quot;+questionId, -1, -1);</span>
+<span class="nc" id="L1113">		Connection db_conn = null;</span>
+<span class="nc" id="L1114">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1115">		String sql_question = &quot;DELETE FROM inquiry WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="nc" id="L1116">		String sql_answer = &quot;DELETE FROM inquiry_answers WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
 		try
 		{
-<span class="nc" id="L1116">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L1117">			ps = db_conn.prepareStatement(sql_question);</span>
-<span class="nc" id="L1118">			ps.setInt(1, questionId);</span>
-<span class="nc" id="L1119">			ps.execute();</span>
-<span class="nc" id="L1120">			ps.close();</span>
-<span class="nc" id="L1121">			db_conn.close();</span>
-<span class="nc" id="L1122">			ps = null;</span>
-<span class="nc" id="L1123">			db_conn = null;</span>
+<span class="nc" id="L1119">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L1120">			ps = db_conn.prepareStatement(sql_question);</span>
+<span class="nc" id="L1121">			ps.setInt(1, questionId);</span>
+<span class="nc" id="L1122">			ps.execute();</span>
+<span class="nc" id="L1123">			ps.close();</span>
+<span class="nc" id="L1124">			db_conn.close();</span>
+<span class="nc" id="L1125">			ps = null;</span>
+<span class="nc" id="L1126">			db_conn = null;</span>
 		}
-<span class="nc" id="L1125">		catch (Exception ex)</span>
+<span class="nc" id="L1128">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1127">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1130">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1133" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1134">					ps.close();</span>
-<span class="nc bnc" id="L1135" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1136">					db_conn.close();</span>
+<span class="nc bnc" id="L1136" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1137">					ps.close();</span>
+<span class="nc bnc" id="L1138" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1139">					db_conn.close();</span>
 			}
-<span class="nc" id="L1138">			catch (Exception ex2)</span>
+<span class="nc" id="L1141">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1140">			}</span>
+<span class="nc" id="L1143">			}</span>
 		}
 
 		try
 		{
-<span class="nc" id="L1145">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L1146">			ps = db_conn.prepareStatement(sql_answer);</span>
-<span class="nc" id="L1147">			ps.setInt(1, questionId);</span>
-<span class="nc" id="L1148">			ps.execute();</span>
-<span class="nc" id="L1149">			ps.close();</span>
-<span class="nc" id="L1150">			db_conn.close();</span>
-<span class="nc" id="L1151">			ps = null;</span>
-<span class="nc" id="L1152">			db_conn = null;</span>
+<span class="nc" id="L1148">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L1149">			ps = db_conn.prepareStatement(sql_answer);</span>
+<span class="nc" id="L1150">			ps.setInt(1, questionId);</span>
+<span class="nc" id="L1151">			ps.execute();</span>
+<span class="nc" id="L1152">			ps.close();</span>
+<span class="nc" id="L1153">			db_conn.close();</span>
+<span class="nc" id="L1154">			ps = null;</span>
+<span class="nc" id="L1155">			db_conn = null;</span>
 		}
-<span class="nc" id="L1154">		catch (Exception ex)</span>
+<span class="nc" id="L1157">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1156">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1159">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1162" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1163">					ps.close();</span>
-<span class="nc bnc" id="L1164" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1165">					db_conn.close();</span>
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1166">					ps.close();</span>
+<span class="nc bnc" id="L1167" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1168">					db_conn.close();</span>
 			}
-<span class="nc" id="L1167">			catch (Exception ex2)</span>
+<span class="nc" id="L1170">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1169">			}</span>
+<span class="nc" id="L1172">			}</span>
 		}
-<span class="nc" id="L1171">		return (&quot;success&quot;);</span>
+<span class="nc" id="L1174">		return (&quot;success&quot;);</span>
 	}
 
 	public static AnswerForm getQuestion(int qID, HttpServletRequest request)
 	{
-<span class="fc" id="L1176">		Connection db_conn = null;</span>
-<span class="fc" id="L1177">		PreparedStatement ps = null;</span>
-<span class="fc" id="L1178">		ResultSet rs = null;</span>
-<span class="fc" id="L1179">		AnswerForm aForm = new AnswerForm();</span>
-<span class="fc" id="L1180">		String sql = &quot;SELECT * FROM inquiry WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="fc" id="L1179">		Connection db_conn = null;</span>
+<span class="fc" id="L1180">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1181">		ResultSet rs = null;</span>
+<span class="fc" id="L1182">		AnswerForm aForm = new AnswerForm();</span>
+<span class="fc" id="L1183">		String sql = &quot;SELECT * FROM inquiry WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
 		try
 		{
-<span class="pc bpc" id="L1183" title="1 of 2 branches missed.">			if (qID &gt; -1)</span>
+<span class="pc bpc" id="L1186" title="1 of 2 branches missed.">			if (qID &gt; -1)</span>
 			{
-<span class="fc" id="L1185">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="fc" id="L1186">				ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L1187">				ps.setInt(1, qID);</span>
-<span class="fc" id="L1188">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L1189" title="1 of 2 branches missed.">				if (rs.next())</span>
+<span class="fc" id="L1188">				db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="fc" id="L1189">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1190">				ps.setInt(1, qID);</span>
+<span class="fc" id="L1191">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1192" title="1 of 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="fc" id="L1191">					aForm.setQuestionID(qID);</span>
-<span class="fc" id="L1192">					aForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="fc" id="L1193">					aForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="fc" id="L1194">					aForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="fc" id="L1195">					aForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="fc" id="L1196">					aForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="fc" id="L1197">					aForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="fc" id="L1198">					aForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="fc" id="L1199">					aForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="fc" id="L1200">					aForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="fc" id="L1201">					aForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="fc" id="L1202">					aForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="fc" id="L1203">					aForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="fc" id="L1194">					aForm.setQuestionID(qID);</span>
+<span class="fc" id="L1195">					aForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="fc" id="L1196">					aForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="fc" id="L1197">					aForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="fc" id="L1198">					aForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="fc" id="L1199">					aForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="fc" id="L1200">					aForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="fc" id="L1201">					aForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="fc" id="L1202">					aForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="fc" id="L1203">					aForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="fc" id="L1204">					aForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="fc" id="L1205">					aForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="fc" id="L1206">					aForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
 				}
-<span class="fc" id="L1205">				rs.close();</span>
-<span class="fc" id="L1206">				ps.close();</span>
-<span class="fc" id="L1207">				db_conn.close();</span>
-<span class="fc" id="L1208">				rs = null;</span>
-<span class="fc" id="L1209">				ps = null;</span>
-<span class="fc" id="L1210">				db_conn = null;</span>
+<span class="fc" id="L1208">				rs.close();</span>
+<span class="fc" id="L1209">				ps.close();</span>
+<span class="fc" id="L1210">				db_conn.close();</span>
+<span class="fc" id="L1211">				rs = null;</span>
+<span class="fc" id="L1212">				ps = null;</span>
+<span class="fc" id="L1213">				db_conn = null;</span>
 
-<span class="fc" id="L1212">				Logger.println(InquiryDB.class,&quot;DateToTime: &quot; + aForm.getDateToTime());</span>
+<span class="fc" id="L1215">				Logger.println(InquiryDB.class,&quot;DateToTime: &quot; + aForm.getDateToTime());</span>
 			}
 		}
-<span class="nc" id="L1215">		catch (Exception ex)</span>
+<span class="nc" id="L1218">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1217">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1220">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1223" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1224">					rs.close();</span>
-<span class="pc bpc" id="L1225" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1226">					ps.close();</span>
-<span class="pc bpc" id="L1227" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1228">					db_conn.close();</span>
+<span class="pc bpc" id="L1226" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1227">					rs.close();</span>
+<span class="pc bpc" id="L1228" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1229">					ps.close();</span>
+<span class="pc bpc" id="L1230" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1231">					db_conn.close();</span>
 			}
-<span class="nc" id="L1230">			catch (Exception ex2)</span>
+<span class="nc" id="L1233">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1232">			}</span>
+<span class="fc" id="L1235">			}</span>
 		}
-<span class="fc" id="L1234">		return aForm;</span>
+<span class="fc" id="L1237">		return aForm;</span>
 	}
 
 	public static int getHoursCount(int qID, HttpServletRequest request)
 	{
-<span class="fc" id="L1239">		Connection db_conn = null;</span>
-<span class="fc" id="L1240">		PreparedStatement ps = null;</span>
-<span class="fc" id="L1241">		ResultSet rs = null;</span>
-<span class="fc" id="L1242">		String sql = &quot;SELECT hours FROM inquiry WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
-<span class="fc" id="L1243">		int result = 0;</span>
+<span class="fc" id="L1242">		Connection db_conn = null;</span>
+<span class="fc" id="L1243">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1244">		ResultSet rs = null;</span>
+<span class="fc" id="L1245">		String sql = &quot;SELECT hours FROM inquiry WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="fc" id="L1246">		int result = 0;</span>
 		try
 		{
-<span class="fc" id="L1246">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="fc" id="L1247">			ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L1248">			ps.setInt(1, qID);</span>
-<span class="fc" id="L1249">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L1250" title="1 of 2 branches missed.">			if (rs.next())</span>
+<span class="fc" id="L1249">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="fc" id="L1250">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L1251">			ps.setInt(1, qID);</span>
+<span class="fc" id="L1252">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1253" title="1 of 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="fc" id="L1252">				result = rs.getInt(&quot;hours&quot;);</span>
+<span class="fc" id="L1255">				result = rs.getInt(&quot;hours&quot;);</span>
 			}
-<span class="fc" id="L1254">			rs.close();</span>
-<span class="fc" id="L1255">			ps.close();</span>
-<span class="fc" id="L1256">			db_conn.close();</span>
-<span class="fc" id="L1257">			rs = null;</span>
-<span class="fc" id="L1258">			ps = null;</span>
-<span class="fc" id="L1259">			db_conn = null;</span>
+<span class="fc" id="L1257">			rs.close();</span>
+<span class="fc" id="L1258">			ps.close();</span>
+<span class="fc" id="L1259">			db_conn.close();</span>
+<span class="fc" id="L1260">			rs = null;</span>
+<span class="fc" id="L1261">			ps = null;</span>
+<span class="fc" id="L1262">			db_conn = null;</span>
 		}
-<span class="nc" id="L1261">		catch (Exception ex)</span>
+<span class="nc" id="L1264">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1263">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1266">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1269" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1270">					rs.close();</span>
-<span class="pc bpc" id="L1271" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1272">					ps.close();</span>
-<span class="pc bpc" id="L1273" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1274">					db_conn.close();</span>
+<span class="pc bpc" id="L1272" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1273">					rs.close();</span>
+<span class="pc bpc" id="L1274" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1275">					ps.close();</span>
+<span class="pc bpc" id="L1276" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1277">					db_conn.close();</span>
 			}
-<span class="nc" id="L1276">			catch (Exception ex2)</span>
+<span class="nc" id="L1279">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1278">			}</span>
+<span class="fc" id="L1281">			}</span>
 		}
-<span class="fc" id="L1280">		return result;</span>
+<span class="fc" id="L1283">		return result;</span>
 	}
 
 	/**
@@ -1288,268 +1291,95 @@ public class InquiryDB
 	 */
 	public static List&lt;AnswerForm&gt; getOldInquiry(String groupNames, boolean orderAscending)
 	{
-<span class="nc" id="L1291">		List&lt;AnswerForm&gt; inquirys = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L1292">		Connection db_conn = null;</span>
-<span class="nc" id="L1293">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1294">		ResultSet rs = null;</span>
+<span class="nc" id="L1294">		List&lt;AnswerForm&gt; inquirys = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1295">		Connection db_conn = null;</span>
+<span class="nc" id="L1296">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1297">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L1297">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1300">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L1299">			String sOrder = &quot;DESC&quot;;</span>
-<span class="nc bnc" id="L1300" title="All 2 branches missed.">			if (orderAscending) sOrder = &quot;ASC&quot;;</span>
+<span class="nc" id="L1302">			String sOrder = &quot;DESC&quot;;</span>
+<span class="nc bnc" id="L1303" title="All 2 branches missed.">			if (orderAscending) sOrder = &quot;ASC&quot;;</span>
 
-<span class="nc" id="L1302">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM inquiry&quot;);</span>
+<span class="nc" id="L1305">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM inquiry&quot;);</span>
 
-<span class="nc bnc" id="L1304" title="All 2 branches missed.">			if (Tools.isNotEmpty(groupNames))</span>
+<span class="nc bnc" id="L1307" title="All 2 branches missed.">			if (Tools.isNotEmpty(groupNames))</span>
 			{
-<span class="nc" id="L1306">				groupNames = DB.removeSlashes(groupNames);</span>
-<span class="nc" id="L1307">				StringTokenizer st = new StringTokenizer(groupNames, &quot;,+&quot;);</span>
-<span class="nc" id="L1308">				sql.append(&quot; WHERE question_group IN ( '&quot;).append(DB.removeSlashes(st.nextToken())).append('\'');</span>
+<span class="nc" id="L1309">				groupNames = DB.removeSlashes(groupNames);</span>
+<span class="nc" id="L1310">				StringTokenizer st = new StringTokenizer(groupNames, &quot;,+&quot;);</span>
+<span class="nc" id="L1311">				sql.append(&quot; WHERE question_group IN ( '&quot;).append(DB.removeSlashes(st.nextToken())).append('\'');</span>
 
-<span class="nc bnc" id="L1310" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L1313" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L1312">					sql.append(&quot;, '&quot;).append(st.nextToken()).append('\'');</span>
+<span class="nc" id="L1315">					sql.append(&quot;, '&quot;).append(st.nextToken()).append('\'');</span>
 				}
-<span class="nc" id="L1314">				sql.append(&quot;) &quot;);</span>
+<span class="nc" id="L1317">				sql.append(&quot;) &quot;);</span>
 
-<span class="nc" id="L1316">				sql.append(CloudToolsForCore.getDomainIdSqlWhere(true));</span>
-<span class="nc" id="L1317">			}</span>
+<span class="nc" id="L1319">				sql.append(CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="nc" id="L1320">			}</span>
 			else
 			{
-<span class="nc" id="L1320">				sql.append(&quot; WHERE &quot;).append(CloudToolsForCore.getDomainIdSqlWhere(false));</span>
+<span class="nc" id="L1323">				sql.append(&quot; WHERE &quot;).append(CloudToolsForCore.getDomainIdSqlWhere(false));</span>
 			}
 
-<span class="nc" id="L1323">			sql.append(&quot; ORDER BY date_from &quot;).append(sOrder).append(&quot;, question_id &quot;).append(sOrder);</span>
+<span class="nc" id="L1326">			sql.append(&quot; ORDER BY date_from &quot;).append(sOrder).append(&quot;, question_id &quot;).append(sOrder);</span>
 
-<span class="nc" id="L1325">			ps = db_conn.prepareStatement(sql.toString());</span>
-<span class="nc" id="L1326">			rs = ps.executeQuery();</span>
+<span class="nc" id="L1328">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L1329">			rs = ps.executeQuery();</span>
 			AnswerForm icForm;
-<span class="nc bnc" id="L1328" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc bnc" id="L1331" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L1330">				icForm = new AnswerForm();</span>
-<span class="nc" id="L1331">				icForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
-<span class="nc" id="L1332">				icForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
-<span class="nc" id="L1333">				icForm.setHours(rs.getInt(&quot;hours&quot;));</span>
-<span class="nc" id="L1334">				icForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
-<span class="nc" id="L1335">				icForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
-<span class="nc" id="L1336">				icForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
-<span class="nc" id="L1337">				icForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L1338">				icForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
-<span class="nc" id="L1339">				icForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L1340">				icForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
-<span class="nc" id="L1341">				icForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
-<span class="nc" id="L1342">				icForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
-<span class="nc" id="L1343">				icForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
+<span class="nc" id="L1333">				icForm = new AnswerForm();</span>
+<span class="nc" id="L1334">				icForm.setQuestionString(DB.getDbString(rs, &quot;question_text&quot;));</span>
+<span class="nc" id="L1335">				icForm.setQuestionID(rs.getInt(&quot;question_id&quot;));</span>
+<span class="nc" id="L1336">				icForm.setHours(rs.getInt(&quot;hours&quot;));</span>
+<span class="nc" id="L1337">				icForm.setGroup(DB.getDbString(rs, &quot;question_group&quot;));</span>
+<span class="nc" id="L1338">				icForm.setAnswerTextOk(DB.getDbString(rs, &quot;answer_text_ok&quot;));</span>
+<span class="nc" id="L1339">				icForm.setAnswerTextFail(DB.getDbString(rs, &quot;answer_text_fail&quot;));</span>
+<span class="nc" id="L1340">				icForm.setDateFrom(Tools.formatDate(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L1341">				icForm.setDateFromTime(Tools.formatTime(rs.getTimestamp(&quot;date_from&quot;)));</span>
+<span class="nc" id="L1342">				icForm.setDateTo(Tools.formatDate(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L1343">				icForm.setDateToTime(Tools.formatTime(rs.getTimestamp(&quot;date_to&quot;)));</span>
+<span class="nc" id="L1344">				icForm.setActive(rs.getBoolean(&quot;question_active&quot;));</span>
+<span class="nc" id="L1345">				icForm.setMultiple(rs.getBoolean(&quot;multiple&quot;));</span>
+<span class="nc" id="L1346">				icForm.setTotalClicks(rs.getInt(&quot;total_clicks&quot;));</span>
 				//zadisablovane tam nedame, iba take co maju neplatne datumy
-<span class="nc bnc" id="L1345" title="All 2 branches missed.">				if (icForm.isActive()==false) continue;</span>
+<span class="nc bnc" id="L1348" title="All 2 branches missed.">				if (icForm.isActive()==false) continue;</span>
 
 				//dame tam len take kde nie je platny datum, alebo datum nie je zadany
-<span class="nc bnc" id="L1348" title="All 6 branches missed.">				if (icForm.isDateValid()==false || (Tools.isEmpty(icForm.getDateFrom()) &amp;&amp; Tools.isEmpty(icForm.getDateTo())))</span>
+<span class="nc bnc" id="L1351" title="All 6 branches missed.">				if (icForm.isDateValid()==false || (Tools.isEmpty(icForm.getDateFrom()) &amp;&amp; Tools.isEmpty(icForm.getDateTo())))</span>
 				{
-<span class="nc" id="L1350">					inquirys.add(icForm);</span>
+<span class="nc" id="L1353">					inquirys.add(icForm);</span>
 				}
 			}
-<span class="nc" id="L1353">			rs.close();</span>
-<span class="nc" id="L1354">			ps.close();</span>
-<span class="nc" id="L1355">			db_conn.close();</span>
-<span class="nc" id="L1356">			rs = null;</span>
-<span class="nc" id="L1357">			ps = null;</span>
-<span class="nc" id="L1358">			db_conn = null;</span>
+<span class="nc" id="L1356">			rs.close();</span>
+<span class="nc" id="L1357">			ps.close();</span>
+<span class="nc" id="L1358">			db_conn.close();</span>
+<span class="nc" id="L1359">			rs = null;</span>
+<span class="nc" id="L1360">			ps = null;</span>
+<span class="nc" id="L1361">			db_conn = null;</span>
 		}
-<span class="nc" id="L1360">		catch (Exception ex)</span>
+<span class="nc" id="L1363">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1362">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1365">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1368" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1369">					rs.close();</span>
-<span class="nc bnc" id="L1370" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1371">					ps.close();</span>
-<span class="nc bnc" id="L1372" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1373">					db_conn.close();</span>
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1372">					rs.close();</span>
+<span class="nc bnc" id="L1373" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1374">					ps.close();</span>
+<span class="nc bnc" id="L1375" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1376">					db_conn.close();</span>
 			}
-<span class="nc" id="L1375">			catch (Exception ex2)</span>
+<span class="nc" id="L1378">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1377">			}</span>
+<span class="nc" id="L1380">			}</span>
 		}
-<span class="nc" id="L1379">		return(inquirys);</span>
-	}
-
-	/**
-	 * Do statistiky prida hlasovanie pre daneho usera
-	 * @param uvb	UserVoteBean object
-	 */
-	public static void addUserVote(UserVoteBean uvb){
-<span class="fc" id="L1387">		Connection db_conn = null;</span>
-<span class="fc" id="L1388">		PreparedStatement ps = null;</span>
-		try
-		{
-			//String sql_3_1 = &quot;INSERT INTO inquiry_users(question_id,answer_text,answer_clicks) VALUES(?,?,0)&quot;;
-<span class="pc bpc" id="L1392" title="1 of 2 branches missed.">			if (uvb != null)</span>
-			{
-<span class="fc" id="L1394">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L1395">				ps = db_conn.prepareStatement(&quot;INSERT INTO inquiry_users(user_id, question_id, answer_id, create_date, ip_address, domain_id) VALUES(?, ?, ?, ?, ?, ?)&quot;);</span>
-<span class="fc" id="L1396">				ps.setInt(1, uvb.getUserId());</span>
-<span class="fc" id="L1397">				ps.setInt(2, uvb.getQuestionId());</span>
-<span class="fc" id="L1398">				ps.setInt(3, uvb.getAnswerId());</span>
-<span class="fc" id="L1399">				ps.setTimestamp(4, new Timestamp(uvb.getCreateDate().getTime()));</span>
-<span class="fc" id="L1400">				ps.setString(5, uvb.getIp());</span>
-<span class="fc" id="L1401">				ps.setInt(6, CloudToolsForCore.getDomainId());</span>
-<span class="fc" id="L1402">				ps.execute();</span>
-<span class="fc" id="L1403">				ps.close();</span>
-<span class="fc" id="L1404">				db_conn.close();</span>
-			}
-
-<span class="fc" id="L1407">			ps = null;</span>
-<span class="fc" id="L1408">			db_conn = null;</span>
-		}
-<span class="nc" id="L1410">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L1412">			sk.iway.iwcm.Logger.error(ex);</span>
-		}
-		finally
-		{
-			try
-			{
-<span class="pc bpc" id="L1418" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1419">					ps.close();</span>
-<span class="pc bpc" id="L1420" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1421">					db_conn.close();</span>
-			}
-<span class="nc" id="L1423">			catch (Exception ex2)</span>
-			{
-<span class="fc" id="L1425">			}</span>
-		}
-<span class="fc" id="L1427">	}</span>
-	/**
-	 * Vrati statisitku k danej ankete(otazke)
-	 * @param qID	Idcko danej otazky
-	 * @return statistics Zoznam statistik pre zadanu otazku
-	 */
-	public static List&lt;UserVoteBean&gt; getUsersVote(int qID)
-	{
-<span class="nc" id="L1435">		Connection db_conn = null;</span>
-<span class="nc" id="L1436">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1437">		ResultSet rs = null;</span>
-<span class="nc" id="L1438">		UserVoteBean uvb = null;</span>
-<span class="nc" id="L1439">		List&lt;UserVoteBean&gt; statistics = new ArrayList&lt;&gt;();</span>
-		try
-		{
-<span class="nc" id="L1442">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L1443">			ps = db_conn.prepareStatement(&quot;SELECT * FROM inquiry_users WHERE question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
-<span class="nc" id="L1444">			ps.setInt(1, qID);</span>
-<span class="nc" id="L1445">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L1446" title="All 2 branches missed.">			while (rs.next())</span>
-			{
-<span class="nc" id="L1448">				uvb = new UserVoteBean();</span>
-<span class="nc" id="L1449">				uvb.setUserId(rs.getInt(&quot;user_id&quot;));</span>
-<span class="nc" id="L1450">				uvb.setAnswerId(rs.getInt(&quot;answer_id&quot;));</span>
-<span class="nc" id="L1451">				uvb.setCreateDate(rs.getTimestamp(&quot;create_date&quot;));</span>
-<span class="nc" id="L1452">				statistics.add(uvb);</span>
-			}
-<span class="nc" id="L1454">			rs.close();</span>
-<span class="nc" id="L1455">			ps.close();</span>
-<span class="nc" id="L1456">			db_conn.close();</span>
-<span class="nc" id="L1457">			rs = null;</span>
-<span class="nc" id="L1458">			ps = null;</span>
-<span class="nc" id="L1459">			db_conn = null;</span>
-		}
-<span class="nc" id="L1461">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L1463">			sk.iway.iwcm.Logger.error(ex);</span>
-		}
-		finally
-		{
-			try
-			{
-<span class="nc bnc" id="L1469" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1470">					rs.close();</span>
-<span class="nc bnc" id="L1471" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1472">					ps.close();</span>
-<span class="nc bnc" id="L1473" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1474">					db_conn.close();</span>
-			}
-<span class="nc" id="L1476">			catch (Exception ex2)</span>
-			{
-<span class="nc" id="L1478">			}</span>
-		}
-<span class="nc" id="L1480">		return statistics;</span>
-	}
-
-	/**
-	 * Vrati statisitku k danej ankete(otazke) medzi zadanymi datumami pre zadaneho usera a/alebo pre zadanu odpoved
-	 * userId:
-	 * 	-1 -&gt; len neprihlaseni pouzivatelia
-	 *		-2 -&gt; len prihlaseni pouzivatelia
-	 *		-3 -&gt; vsetci pouzivatelia
-	 * @param qID	Idcko danej otazky
-	 * @return statistics Zoznam statistik pre zadanu otazku
-	 */
-	public static List&lt;UserVoteBean&gt; getUsersVoteFromTo(String dateFrom, String dateTo, Integer userId, int qID, Integer answerId)
-	{
-<span class="nc" id="L1494">		Connection db_conn = null;</span>
-<span class="nc" id="L1495">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1496">		ResultSet rs = null;</span>
-<span class="nc" id="L1497">		UserVoteBean uvb = null;</span>
-<span class="nc" id="L1498">		List&lt;UserVoteBean&gt; statistics = new ArrayList&lt;&gt;();</span>
-		try
-		{
-<span class="nc" id="L1501">			int count = 1;</span>
-<span class="nc" id="L1502">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L1503">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM inquiry_users WHERE question_id=? AND create_date &gt;= ? AND create_date &lt;= ? &quot;);</span>
-<span class="nc bnc" id="L1504" title="All 4 branches missed.">			if(answerId != null &amp;&amp; answerId.intValue() != -1) sql.append(&quot;AND answer_id = ? &quot;);</span>
-<span class="nc bnc" id="L1505" title="All 4 branches missed.">			if(userId != null &amp;&amp; userId.intValue() &gt;= 0) sql.append(&quot;AND user_id = ? &quot;);</span>
-<span class="nc bnc" id="L1506" title="All 4 branches missed.">			if(userId != null &amp;&amp; userId.intValue() == -1) sql.append(&quot;AND user_id = -1 &quot;);	//neprihlaseni pouzivatelia</span>
-<span class="nc bnc" id="L1507" title="All 4 branches missed.">			if(userId != null &amp;&amp; userId.intValue() == -2) sql.append(&quot;AND user_id &gt;= 0 &quot;);	//prihlaseni pouzivatelia</span>
-<span class="nc" id="L1508">			sql.append(CloudToolsForCore.getDomainIdSqlWhere(true)).append(&quot; ORDER BY create_date DESC&quot;);</span>
-<span class="nc" id="L1509">			Logger.debug(null, &quot;Dopyt: &quot; + sql);</span>
-<span class="nc" id="L1510">			ps = db_conn.prepareStatement(sql.toString());</span>
-<span class="nc" id="L1511">			ps.setInt(count++, qID);</span>
-<span class="nc" id="L1512">			ps.setTimestamp(count++,new Timestamp(DB.getTimestamp(dateFrom,&quot;0:00:00&quot;)));</span>
-<span class="nc" id="L1513">			ps.setTimestamp(count++,new Timestamp(DB.getTimestamp(dateTo,&quot;23:59:59&quot;)));</span>
-<span class="nc bnc" id="L1514" title="All 4 branches missed.">			if(answerId != null &amp;&amp; answerId.intValue() != -1) ps.setInt(count++, answerId);</span>
-<span class="nc bnc" id="L1515" title="All 4 branches missed.">			if(userId != null &amp;&amp; userId.intValue() &gt;= 0) ps.setInt(count++, userId);</span>
-<span class="nc" id="L1516">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L1517" title="All 2 branches missed.">			while (rs.next())</span>
-			{
-<span class="nc" id="L1519">				uvb = new UserVoteBean();</span>
-<span class="nc" id="L1520">				uvb.setUserId(rs.getInt(&quot;user_id&quot;));</span>
-<span class="nc" id="L1521">				uvb.setAnswerId(rs.getInt(&quot;answer_id&quot;));</span>
-<span class="nc" id="L1522">				uvb.setCreateDate(rs.getTimestamp(&quot;create_date&quot;));</span>
-<span class="nc" id="L1523">				uvb.setIp(rs.getString(&quot;ip_address&quot;));</span>
-<span class="nc" id="L1524">				statistics.add(uvb);</span>
-			}
-<span class="nc" id="L1526">			rs.close();</span>
-<span class="nc" id="L1527">			ps.close();</span>
-<span class="nc" id="L1528">			db_conn.close();</span>
-<span class="nc" id="L1529">			rs = null;</span>
-<span class="nc" id="L1530">			ps = null;</span>
-<span class="nc" id="L1531">			db_conn = null;</span>
-		}
-<span class="nc" id="L1533">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L1535">			sk.iway.iwcm.Logger.error(ex);</span>
-		}
-		finally
-		{
-			try
-			{
-<span class="nc bnc" id="L1541" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1542">					rs.close();</span>
-<span class="nc bnc" id="L1543" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1544">					ps.close();</span>
-<span class="nc bnc" id="L1545" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1546">					db_conn.close();</span>
-			}
-<span class="nc" id="L1548">			catch (Exception ex2)</span>
-			{
-<span class="nc" id="L1550">			}</span>
-		}
-<span class="nc" id="L1552">		return statistics;</span>
+<span class="nc" id="L1382">		return(inquirys);</span>
 	}
 
 	/**
@@ -1559,48 +1389,48 @@ public class InquiryDB
 	 * @return najnovsi datum zahlasovania pre daneho pouzivatela
 	 */
 	public static java.util.Date getLastVoteDate(int userId, int questionId){
-<span class="fc" id="L1562">		Connection db_conn = null;</span>
-<span class="fc" id="L1563">		PreparedStatement ps = null;</span>
-<span class="fc" id="L1564">		ResultSet rs = null;</span>
-<span class="fc" id="L1565">		java.util.Date createdDate = null;</span>
+<span class="fc" id="L1392">		Connection db_conn = null;</span>
+<span class="fc" id="L1393">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1394">		ResultSet rs = null;</span>
+<span class="fc" id="L1395">		java.util.Date createdDate = null;</span>
 		try
 		{
-<span class="fc" id="L1568">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L1569">			ps = db_conn.prepareStatement(&quot;SELECT MAX(create_date) as max_value FROM inquiry_users WHERE user_id=? AND question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
-<span class="fc" id="L1570">			ps.setInt(1, userId);</span>
-<span class="fc" id="L1571">			ps.setInt(2, questionId);</span>
-<span class="fc" id="L1572">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L1573" title="1 of 2 branches missed.">			if (rs.next())</span>
+<span class="fc" id="L1398">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1399">			ps = db_conn.prepareStatement(&quot;SELECT MAX(create_date) as max_value FROM inquiry_users WHERE user_id=? AND question_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
+<span class="fc" id="L1400">			ps.setInt(1, userId);</span>
+<span class="fc" id="L1401">			ps.setInt(2, questionId);</span>
+<span class="fc" id="L1402">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L1403" title="1 of 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="fc" id="L1575">				createdDate = rs.getTimestamp(&quot;max_value&quot;);</span>
+<span class="fc" id="L1405">				createdDate = rs.getTimestamp(&quot;max_value&quot;);</span>
 			}
-<span class="fc" id="L1577">			rs.close();</span>
-<span class="fc" id="L1578">			ps.close();</span>
-<span class="fc" id="L1579">			db_conn.close();</span>
-<span class="fc" id="L1580">			rs = null;</span>
-<span class="fc" id="L1581">			ps = null;</span>
-<span class="fc" id="L1582">			db_conn = null;</span>
+<span class="fc" id="L1407">			rs.close();</span>
+<span class="fc" id="L1408">			ps.close();</span>
+<span class="fc" id="L1409">			db_conn.close();</span>
+<span class="fc" id="L1410">			rs = null;</span>
+<span class="fc" id="L1411">			ps = null;</span>
+<span class="fc" id="L1412">			db_conn = null;</span>
 		}
-<span class="nc" id="L1584">		catch (Exception ex)</span>
+<span class="nc" id="L1414">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1586">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1416">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1592" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1593">					rs.close();</span>
-<span class="pc bpc" id="L1594" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1595">					ps.close();</span>
-<span class="pc bpc" id="L1596" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1597">					db_conn.close();</span>
+<span class="pc bpc" id="L1422" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1423">					rs.close();</span>
+<span class="pc bpc" id="L1424" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1425">					ps.close();</span>
+<span class="pc bpc" id="L1426" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1427">					db_conn.close();</span>
 			}
-<span class="nc" id="L1599">			catch (Exception ex2)</span>
+<span class="nc" id="L1429">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1601">			}</span>
+<span class="fc" id="L1431">			}</span>
 		}
-<span class="fc" id="L1603">		return createdDate;</span>
+<span class="fc" id="L1433">		return createdDate;</span>
 	}
 
 	/**
@@ -1610,11 +1440,11 @@ public class InquiryDB
 	 */
 	public static Object getAllInquiryByUser(HttpServletRequest request)
 	{
-<span class="nc" id="L1613">		List&lt;LabelValueDetails&gt; groupsByUser = getQuestionGroupsByUser(request);</span>
-<span class="nc" id="L1614">		List&lt;String&gt; stringGroups = new ArrayList&lt;&gt;(groupsByUser.size());</span>
-<span class="nc bnc" id="L1615" title="All 2 branches missed.">		for(LabelValueDetails lvd : groupsByUser)</span>
-<span class="nc" id="L1616">			stringGroups.add(lvd.getLabel());</span>
-<span class="nc" id="L1617">		return getInquiries(stringGroups, &quot;&quot;);</span>
+<span class="nc" id="L1443">		List&lt;LabelValueDetails&gt; groupsByUser = getQuestionGroupsByUser(request);</span>
+<span class="nc" id="L1444">		List&lt;String&gt; stringGroups = new ArrayList&lt;&gt;(groupsByUser.size());</span>
+<span class="nc bnc" id="L1445" title="All 2 branches missed.">		for(LabelValueDetails lvd : groupsByUser)</span>
+<span class="nc" id="L1446">			stringGroups.add(lvd.getLabel());</span>
+<span class="nc" id="L1447">		return getInquiries(stringGroups, &quot;&quot;);</span>
 	}
 
 	/**
@@ -1628,147 +1458,150 @@ public class InquiryDB
 	 */
 	public static String saveAnswer(HttpServletRequest request, HttpServletResponse response) {
 
-<span class="fc" id="L1631">		final String fail = &quot;/components/inquiry/fail&quot;;</span>
-<span class="fc" id="L1632">		final String ok = &quot;/components/inquiry/ok&quot;;</span>
+<span class="fc" id="L1461">		final String fail = &quot;/components/inquiry/fail&quot;;</span>
+<span class="fc" id="L1462">		final String ok = &quot;/components/inquiry/ok&quot;;</span>
 
 		int[] aID;
-<span class="fc" id="L1635">		int questionID = Tools.getIntValue(request.getParameter(&quot;qID&quot;), -1);</span>
-<span class="fc" id="L1636">		String resultUrl = Tools.sanitizeHttpHeaderParam(request.getParameter(&quot;resultUrl&quot;));	//Vysledok ankety na inej stranke</span>
-<span class="fc" id="L1637">		Identity user = UsersDB.getCurrentUser(request);	//kvoli ukladaniu statistik hlasovania pre jednotliveho pouzivatela</span>
+<span class="fc" id="L1465">		int questionID = Tools.getIntValue(request.getParameter(&quot;qID&quot;), -1);</span>
+<span class="fc" id="L1466">		String resultUrl = Tools.sanitizeHttpHeaderParam(request.getParameter(&quot;resultUrl&quot;));	//Vysledok ankety na inej stranke</span>
+<span class="fc" id="L1467">		Identity user = UsersDB.getCurrentUser(request);	//kvoli ukladaniu statistik hlasovania pre jednotliveho pouzivatela</span>
 
-<span class="fc" id="L1639">		String la = request.getParameter(&quot;la&quot;);</span>
-<span class="pc bpc" id="L1640" title="1 of 2 branches missed.">		if (&quot;multipleAnswer&quot;.equals(la)) { // Zahlasovanie za viac moznosti</span>
-<span class="nc" id="L1641">			String[] mAnswersString = request.getParameterValues(&quot;selectedAnswers&quot;);</span>
-<span class="nc" id="L1642">			aID = new int[mAnswersString.length];</span>
+<span class="fc" id="L1469">		String la = request.getParameter(&quot;la&quot;);</span>
+<span class="pc bpc" id="L1470" title="1 of 2 branches missed.">		if (&quot;multipleAnswer&quot;.equals(la)) { // Zahlasovanie za viac moznosti</span>
+<span class="nc" id="L1471">			String[] mAnswersString = request.getParameterValues(&quot;selectedAnswers&quot;);</span>
+<span class="nc" id="L1472">			aID = new int[mAnswersString.length];</span>
 
-<span class="nc bnc" id="L1644" title="All 2 branches missed.">			for (int i = 0; i &lt; mAnswersString.length; i++) { //prekonvertovanie</span>
-<span class="nc" id="L1645">				aID[i] = Tools.getIntValue(mAnswersString[i], -1);</span>
-<span class="nc bnc" id="L1646" title="All 2 branches missed.">				if (aID[i] &lt; 0) {</span>
-<span class="nc bnc" id="L1647" title="All 2 branches missed.">					if(Tools.isNotEmpty(resultUrl))</span>
-<span class="nc" id="L1648">						return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID);</span>
+<span class="nc bnc" id="L1474" title="All 2 branches missed.">			for (int i = 0; i &lt; mAnswersString.length; i++) { //prekonvertovanie</span>
+<span class="nc" id="L1475">				aID[i] = Tools.getIntValue(mAnswersString[i], -1);</span>
+<span class="nc bnc" id="L1476" title="All 2 branches missed.">				if (aID[i] &lt; 0) {</span>
+<span class="nc bnc" id="L1477" title="All 2 branches missed.">					if(Tools.isNotEmpty(resultUrl))</span>
+<span class="nc" id="L1478">						return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID);</span>
 					else
-<span class="nc" id="L1650">						return fail;</span>
+<span class="nc" id="L1480">						return fail;</span>
 				}
 			}
-<span class="nc" id="L1653">		} else { // ak je null</span>
-<span class="fc" id="L1654">			aID = new int[]{Tools.getIntValue(request.getParameter(&quot;aID&quot;), -1)};</span>
-<span class="fc bfc" id="L1655" title="All 2 branches covered.">			if (aID[0] &lt; 0) {</span>
-<span class="pc bpc" id="L1656" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(resultUrl))</span>
-<span class="fc" id="L1657">						return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID);</span>
+<span class="nc" id="L1483">		} else { // ak je null</span>
+<span class="fc" id="L1484">			aID = new int[]{Tools.getIntValue(request.getParameter(&quot;aID&quot;), -1)};</span>
+<span class="fc bfc" id="L1485" title="All 2 branches covered.">			if (aID[0] &lt; 0) {</span>
+<span class="pc bpc" id="L1486" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(resultUrl))</span>
+<span class="fc" id="L1487">						return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID);</span>
 				else
-<span class="nc" id="L1659">					return fail;</span>
+<span class="nc" id="L1489">					return fail;</span>
 			}
 		}
 
-<span class="pc bpc" id="L1663" title="1 of 2 branches missed.">		if (questionID &lt; 0) {</span>
-<span class="nc bnc" id="L1664" title="All 2 branches missed.">			if(Tools.isNotEmpty(resultUrl))</span>
-<span class="nc" id="L1665">				return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID); //chyba</span>
+<span class="pc bpc" id="L1493" title="1 of 2 branches missed.">		if (questionID &lt; 0) {</span>
+<span class="nc bnc" id="L1494" title="All 2 branches missed.">			if(Tools.isNotEmpty(resultUrl))</span>
+<span class="nc" id="L1495">				return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID); //chyba</span>
 			else
-<span class="nc" id="L1667">				return fail;</span>
+<span class="nc" id="L1497">				return fail;</span>
 		}
 
-<span class="fc" id="L1670">		String docId = request.getParameter(&quot;docId&quot;);</span>
-<span class="fc" id="L1671">		String errorDocId = request.getParameter(&quot;errorDocId&quot;);</span>
-<span class="fc" id="L1672">		String cookieName = &quot;inquiry-&quot; + questionID;</span>
+<span class="fc" id="L1500">		String docId = request.getParameter(&quot;docId&quot;);</span>
+<span class="fc" id="L1501">		String errorDocId = request.getParameter(&quot;errorDocId&quot;);</span>
+<span class="fc" id="L1502">		String cookieName = &quot;inquiry-&quot; + questionID;</span>
 
 		//zisti ci nema cookie, ktore by nedovolilo znova kliknut
-<span class="fc" id="L1675">		Cookie[] cookies = request.getCookies();</span>
-<span class="fc" id="L1676">		int len = 0;</span>
-<span class="pc bpc" id="L1677" title="1 of 2 branches missed.">		if (cookies != null) {</span>
-<span class="fc" id="L1678">			len = cookies.length;</span>
+<span class="fc" id="L1505">		Cookie[] cookies = request.getCookies();</span>
+<span class="fc" id="L1506">		int len = 0;</span>
+<span class="pc bpc" id="L1507" title="1 of 2 branches missed.">		if (cookies != null) {</span>
+<span class="fc" id="L1508">			len = cookies.length;</span>
 			Cookie cookie;
-<span class="fc bfc" id="L1680" title="All 2 branches covered.">			for (int i = 0; i &lt; len; i++) {</span>
-<span class="fc" id="L1681">				cookie = cookies[i];</span>
-<span class="fc bfc" id="L1682" title="All 2 branches covered.">				if (cookie.getName().compareTo(cookieName) == 0) {</span>
-<span class="pc bpc" id="L1683" title="1 of 2 branches missed.">					if (errorDocId!=null)</span>
-<span class="nc" id="L1684">						return SpringUrlMapping.redirect(Tools.sanitizeHttpHeaderParam(&quot;/showdoc.do?docid=&quot; + errorDocId + &quot;&amp;qID=&quot; + questionID + &quot;&amp;aID=&quot; + aID[0]));</span>
+<span class="fc bfc" id="L1510" title="All 2 branches covered.">			for (int i = 0; i &lt; len; i++) {</span>
+<span class="fc" id="L1511">				cookie = cookies[i];</span>
+<span class="fc bfc" id="L1512" title="All 2 branches covered.">				if (cookie.getName().compareTo(cookieName) == 0) {</span>
+<span class="pc bpc" id="L1513" title="1 of 2 branches missed.">					if (errorDocId!=null)</span>
+<span class="nc" id="L1514">						return SpringUrlMapping.redirect(Tools.sanitizeHttpHeaderParam(&quot;/showdoc.do?docid=&quot; + errorDocId + &quot;&amp;qID=&quot; + questionID + &quot;&amp;aID=&quot; + aID[0]));</span>
 					else {
-<span class="fc" id="L1686">						request.setAttribute(&quot;answerForm&quot;, InquiryDB.getQuestion(questionID, request));</span>
-<span class="pc bpc" id="L1687" title="1 of 2 branches missed.">						if(Tools.isNotEmpty(resultUrl))</span>
-<span class="nc" id="L1688">							return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID);</span>
-<span class="fc" id="L1689">						else return fail;</span>
+<span class="fc" id="L1516">						request.setAttribute(&quot;answerForm&quot;, InquiryDB.getQuestion(questionID, request));</span>
+<span class="pc bpc" id="L1517" title="1 of 2 branches missed.">						if(Tools.isNotEmpty(resultUrl))</span>
+<span class="nc" id="L1518">							return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID);</span>
+<span class="fc" id="L1519">						else return fail;</span>
 					}
 				}
 			}
 		}
 
-<span class="fc" id="L1695">		Cookie cookie = new Cookie(cookieName, &quot;true&quot;);</span>
-<span class="fc" id="L1696">		cookie.setMaxAge(3600 * InquiryDB.getHoursCount(questionID, request));</span>
-<span class="fc" id="L1697">		cookie.setPath(&quot;/&quot;);</span>
+<span class="fc" id="L1525">		Cookie cookie = new Cookie(cookieName, &quot;true&quot;);</span>
+<span class="fc" id="L1526">		cookie.setMaxAge(3600 * InquiryDB.getHoursCount(questionID, request));</span>
+<span class="fc" id="L1527">		cookie.setPath(&quot;/&quot;);</span>
 
-<span class="pc bpc" id="L1699" title="1 of 2 branches missed.">		if (docId!=null) {</span>
-<span class="nc" id="L1700">			Tools.addCookie(cookie, response, request);</span>
-<span class="nc" id="L1701">			return SpringUrlMapping.redirect(Tools.sanitizeHttpHeaderParam(&quot;/showdoc.do?docid=&quot; + docId + &quot;&amp;qID=&quot; + questionID + &quot;&amp;aID=&quot; + aID[0]));</span>
+<span class="pc bpc" id="L1529" title="1 of 2 branches missed.">		if (docId!=null) {</span>
+<span class="nc" id="L1530">			Tools.addCookie(cookie, response, request);</span>
+<span class="nc" id="L1531">			return SpringUrlMapping.redirect(Tools.sanitizeHttpHeaderParam(&quot;/showdoc.do?docid=&quot; + docId + &quot;&amp;qID=&quot; + questionID + &quot;&amp;aID=&quot; + aID[0]));</span>
 		} else { //kontrola aj podla IP adresy
-<span class="pc bpc" id="L1703" title="2 of 4 branches missed.">			if(user != null &amp;&amp; user.getUserId() &gt; -1) {</span>
+<span class="pc bpc" id="L1533" title="2 of 4 branches missed.">			if(user != null &amp;&amp; user.getUserId() &gt; -1) {</span>
 				//ak je user prihlaseny
-<span class="pc bpc" id="L1705" title="1 of 2 branches missed.">				if(!canVote(user.getUserId(), questionID, request)) {</span>
-<span class="nc" id="L1706">					Tools.addCookie(cookie, response,request);</span>
+<span class="pc bpc" id="L1535" title="1 of 2 branches missed.">				if(!canVote(user.getUserId(), questionID, request)) {</span>
+<span class="nc" id="L1536">					Tools.addCookie(cookie, response,request);</span>
 					//overi, ci moze prihlaseny pouzivatel opat hlasovat
-<span class="nc" id="L1708">					request.setAttribute(&quot;answerForm&quot;, InquiryDB.getQuestion(questionID, request));</span>
-<span class="nc bnc" id="L1709" title="All 2 branches missed.">					if(Tools.isNotEmpty(resultUrl))</span>
-<span class="nc" id="L1710">						return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID); //nemoze zahlasovat</span>
-<span class="nc" id="L1711">					else return fail;</span>
+<span class="nc" id="L1538">					request.setAttribute(&quot;answerForm&quot;, InquiryDB.getQuestion(questionID, request));</span>
+<span class="nc bnc" id="L1539" title="All 2 branches missed.">					if(Tools.isNotEmpty(resultUrl))</span>
+<span class="nc" id="L1540">						return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;qID=&quot; + questionID); //nemoze zahlasovat</span>
+<span class="nc" id="L1541">					else return fail;</span>
 				}
 			}
 
-<span class="pc bpc" id="L1715" title="1 of 2 branches missed.">			if (!SpamProtection.canPost(&quot;inquiry&quot;, &quot;&quot;, request)) {</span>
-<span class="nc" id="L1716">				request.setAttribute(&quot;spam&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L1717">				request.setAttribute(&quot;answerForm&quot;, InquiryDB.getQuestion(questionID, request));</span>
-<span class="nc bnc" id="L1718" title="All 2 branches missed.">				if(Tools.isNotEmpty(resultUrl))</span>
-<span class="nc" id="L1719">					return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;spam=1&amp;qID=&quot; + questionID); //nemoze zahlasovat</span>
-<span class="nc" id="L1720">				else return fail;</span>
+<span class="pc bpc" id="L1545" title="1 of 2 branches missed.">			if (!SpamProtection.canPost(&quot;inquiry&quot;, &quot;&quot;, request)) {</span>
+<span class="nc" id="L1546">				request.setAttribute(&quot;spam&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1547">				request.setAttribute(&quot;answerForm&quot;, InquiryDB.getQuestion(questionID, request));</span>
+<span class="nc bnc" id="L1548" title="All 2 branches missed.">				if(Tools.isNotEmpty(resultUrl))</span>
+<span class="nc" id="L1549">					return SpringUrlMapping.redirect(resultUrl + &quot;?fail=1&amp;spam=1&amp;qID=&quot; + questionID); //nemoze zahlasovat</span>
+<span class="nc" id="L1550">				else return fail;</span>
 			} else
-<span class="fc" id="L1722">				Tools.addCookie(cookie, response,request);</span>
+<span class="fc" id="L1552">				Tools.addCookie(cookie, response,request);</span>
 
-<span class="fc" id="L1724">			UserVoteBean uvb = null;</span>
-<span class="fc" id="L1725">			java.util.Date date = new java.util.Date();</span>
-<span class="fc" id="L1726">			Logger.debug(null, &quot;Pred pridanim&quot;);</span>
-<span class="fc bfc" id="L1727" title="All 2 branches covered.">			for (int k = 0; k &lt; aID.length; k++) { //Hlasuje</span>
-<span class="fc" id="L1728">				InquiryDB.updateAnswer(questionID, aID[k], request);</span>
-<span class="fc" id="L1729">				uvb = new UserVoteBean();</span>
-<span class="fc" id="L1730">				Logger.debug(null, &quot;Pridavam&quot;);</span>
-<span class="pc bpc" id="L1731" title="1 of 2 branches missed.">				if(user == null)  uvb.setUserId(-1);</span>
-<span class="fc" id="L1732">				else uvb.setUserId(user.getUserId());	//prihlaseny aj neprihlaseny</span>
+<span class="fc" id="L1554">			java.util.Date date = new java.util.Date();</span>
+<span class="fc" id="L1555">			Logger.debug(null, &quot;Pred pridanim&quot;);</span>
+<span class="fc bfc" id="L1556" title="All 2 branches covered.">			for (int k = 0; k &lt; aID.length; k++) { //Hlasuje</span>
+<span class="fc" id="L1557">				InquiryDB.updateAnswer(questionID, aID[k], request);</span>
 
-<span class="fc" id="L1734">				uvb.setQuestionId(questionID);</span>
-<span class="fc" id="L1735">				uvb.setAnswerId(aID[k]);</span>
-<span class="fc" id="L1736">				uvb.setCreateDate(date);</span>
-<span class="fc" id="L1737">				uvb.setIp(request.getRemoteAddr());</span>
-<span class="fc" id="L1738">				InquiryDB.addUserVote(uvb);	//aktualizujem statistiky pre usera</span>
+<span class="fc" id="L1559">				Logger.debug(null, &quot;Pridavam InquiryUsersVoteEntity&quot;);</span>
+<span class="fc" id="L1560">				InquiryUsersVoteEntity iuve = new InquiryUsersVoteEntity();</span>
+
+<span class="pc bpc" id="L1562" title="1 of 2 branches missed.">				if(user == null)  iuve.setUserId(-1);</span>
+<span class="fc" id="L1563">				else iuve.setUserId(user.getUserId());</span>
+
+<span class="fc" id="L1565">				iuve.setQuestionId(questionID);</span>
+<span class="fc" id="L1566">				iuve.setAnswerId(aID[k]);</span>
+<span class="fc" id="L1567">				iuve.setDayDate(date);</span>
+<span class="fc" id="L1568">				iuve.setIpAddress(request.getRemoteAddr());</span>
+<span class="fc" id="L1569">				iuve.setDomainId(CloudToolsForCore.getDomainId());</span>
+
+<span class="fc" id="L1571">				InquiryStatService.saveInquiryUserVote(iuve);</span>
 			}
-<span class="fc" id="L1740">			InquiryDB.updateTotalClicks(questionID, request);	//aktualizujem pocet kliknuti</span>
+<span class="fc" id="L1573">			InquiryDB.updateTotalClicks(questionID, request);	//aktualizujem pocet kliknuti</span>
 
 			//START - po zahlasovani vymazem z cache
-<span class="fc" id="L1743">			AnswerForm inquiry = InquiryDB.getQuestion(questionID, request);</span>
-<span class="fc" id="L1744">			String group = inquiry.getGroup();</span>
-<span class="pc bpc" id="L1745" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(group)) {</span>
-<span class="fc" id="L1746">				Cache c = Cache.getInstance();</span>
-<span class="fc" id="L1747">				String cacheKey = &quot;components.inquiry.group.&quot;+group;</span>
-<span class="pc bpc" id="L1748" title="1 of 2 branches missed.">				if(c.getObject(cacheKey) != null)</span>
-<span class="nc" id="L1749">					c.removeObject(cacheKey);</span>
+<span class="fc" id="L1576">			AnswerForm inquiry = InquiryDB.getQuestion(questionID, request);</span>
+<span class="fc" id="L1577">			String group = inquiry.getGroup();</span>
+<span class="pc bpc" id="L1578" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(group)) {</span>
+<span class="fc" id="L1579">				Cache c = Cache.getInstance();</span>
+<span class="fc" id="L1580">				String cacheKey = &quot;components.inquiry.group.&quot;+group;</span>
+<span class="pc bpc" id="L1581" title="1 of 2 branches missed.">				if(c.getObject(cacheKey) != null)</span>
+<span class="nc" id="L1582">					c.removeObject(cacheKey);</span>
 			}
 			//END
 
-<span class="fc" id="L1753">			request.setAttribute(&quot;answerForm&quot;, inquiry);</span>
-<span class="pc bpc" id="L1754" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(resultUrl))</span>
-<span class="nc" id="L1755">				return SpringUrlMapping.redirect(resultUrl + &quot;?qID=&quot; + questionID); //ok</span>
-<span class="fc" id="L1756">			else return ok;</span>
+<span class="fc" id="L1586">			request.setAttribute(&quot;answerForm&quot;, inquiry);</span>
+<span class="pc bpc" id="L1587" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(resultUrl))</span>
+<span class="nc" id="L1588">				return SpringUrlMapping.redirect(resultUrl + &quot;?qID=&quot; + questionID); //ok</span>
+<span class="fc" id="L1589">			else return ok;</span>
 		}
 	}
 
 	private static boolean canVote(int userId, int questionId, HttpServletRequest request) {
-<span class="fc" id="L1761">		long wait = 3600L * 1000L * InquiryDB.getHoursCount(questionId, request); // limit v milisekundach - naastavuje</span>
+<span class="fc" id="L1594">		long wait = 3600L * 1000L * InquiryDB.getHoursCount(questionId, request); // limit v milisekundach - naastavuje</span>
 																					// sa v ankete
-<span class="fc" id="L1763">		Date createDate = InquiryDB.getLastVoteDate(userId, questionId);</span>
-<span class="pc bpc" id="L1764" title="1 of 2 branches missed.">		if (createDate == null)</span>
-<span class="nc" id="L1765">			return true; // pouzivatel este vobec nehlasoval v ankete</span>
+<span class="fc" id="L1596">		Date createDate = InquiryDB.getLastVoteDate(userId, questionId);</span>
+<span class="pc bpc" id="L1597" title="1 of 2 branches missed.">		if (createDate == null)</span>
+<span class="nc" id="L1598">			return true; // pouzivatel este vobec nehlasoval v ankete</span>
 
-<span class="fc" id="L1767">		Date nowDate = new Date();</span>
-<span class="fc" id="L1768">		long delta = (nowDate.getTime() - createDate.getTime());</span>
-<span class="pc bpc" id="L1769" title="1 of 2 branches missed.">		if (delta &lt; wait)</span>
-<span class="nc" id="L1770">			return false;</span>
-<span class="fc" id="L1771">		return true; // ak je rozdiel vacsi ako nastavena doba cakania</span>
+<span class="fc" id="L1600">		Date nowDate = new Date();</span>
+<span class="fc" id="L1601">		long delta = (nowDate.getTime() - createDate.getTime());</span>
+<span class="pc bpc" id="L1602" title="1 of 2 branches missed.">		if (delta &lt; wait)</span>
+<span class="nc" id="L1603">			return false;</span>
+<span class="fc" id="L1604">		return true; // ak je rozdiel vacsi ako nastavena doba cakania</span>
 	}
 
 }

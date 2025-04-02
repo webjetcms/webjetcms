@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplatesDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">TemplatesDB.java</span></div><h1>TemplatesDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplatesDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">TemplatesDB.java</span></div><h1>TemplatesDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import java.io.File;
 import java.sql.Connection;
@@ -179,7 +179,7 @@ public class TemplatesDB extends DB
 <span class="pc bpc" id="L179" title="1 of 2 branches missed.">				if (tmpDetails.getTemplatesGroupId()!=null) {</span>
 <span class="fc" id="L180">					tempGroupName = tempGroupsTable.get(tmpDetails.getTemplatesGroupId());</span>
 				}
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">				if (tempGroupName==null) tempGroupName = &quot;&quot;;</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">				if (tempGroupName==null) tempGroupName = &quot;&quot;;</span>
 <span class="fc" id="L183">				tmpDetails.setTemplatesGroupName(tempGroupName);</span>
 
 <span class="fc" id="L185">				tmpDetails.setInlineEditingMode(getDbString(rs, &quot;inline_editing_mode&quot;));</span>
@@ -359,7 +359,7 @@ public class TemplatesDB extends DB
 	public static File getDeviceTemplateFile(File rootDir, String forward, BrowserDetector bd)
 	{
 <span class="fc" id="L361">		File forwFile = new File(rootDir.getAbsolutePath()+File.separatorChar+forward.replace('/', File.separatorChar));</span>
-<span class="fc bfc" id="L362" title="All 2 branches covered.">		if (forwFile.exists()==false) return(forwFile);</span>
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">		if (forwFile.exists()==false) return(forwFile);</span>
 
 <span class="pc bpc" id="L364" title="1 of 4 branches missed.">		if (bd!=null &amp;&amp; bd.getBrowserDeviceType()!=null)</span>
 		{
