@@ -16,6 +16,7 @@
 		"srmeyers.git-prefix",
 		"ban.spellright",
 		"ryanluker.vscode-coverage-gutters",
+		"davidanson.vscode-markdownlint"
 	],
 
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
