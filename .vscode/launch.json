@@ -14,7 +14,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -26,7 +26,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -38,7 +38,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -50,7 +50,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -61,7 +61,7 @@
             "preLaunchTask": "appStartEshopDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms_hotfix_main",
+            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -74,7 +74,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -86,7 +86,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -97,7 +97,7 @@
             "preLaunchTask": "appStartPgSQLDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms_hotfix_main",
+            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -110,7 +110,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -120,7 +120,7 @@
             "port": 5005,
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms_hotfix_main"
+            "projectName": "webjetcms"
         },
         {
             "trace": true,
