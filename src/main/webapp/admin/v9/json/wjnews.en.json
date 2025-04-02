@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Version 2025.0",
+            "perex": "In version **2025.0** we have introduced a **new administration design** for even better clarity and user comfort. \\n\\nOne of the main changes is the move of the **second level menu** to **tabs in the page header**, which simplifies navigation. In websites, we have also **merged folder and website tabs** so that you have everything clearly in one place. If the header does not contain tabs, tables will automatically adjust and display an **extra row**.",
+            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_20250"
+        },
+        {
             "title": "Version 2024.52",
             "perex": "In version 2024.52, Web pages add the ability to set **arrangement method** and **search in tree structure**, ZIP import allows you to set the method of comparing the existing version of the page. **E-commerce** has received a new design for the list of orders and products. **Survey statistics** added, a better image editor in the explorer and improved search in the administration. **Bulk emails** have added the option **set unsubscribe confirmation**. The gallery includes a new field for **Image source URL**, which is filled in automatically when using a photo bank, **Tags** add **language mutations** and optional fields.",
             "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202452"
@@ -19,45 +24,6 @@
             "title": "Version 2024.0",
             "perex": "WebJET version 2024.0 is identical to version 2023.52",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
-        },
-        {
-            "title": "Version 2023.52",
-            "perex": "WebJET version 2023.52 contains a new version of **update with description of changes**, **structure cloning** integrated with the mirroring function (including the possibility of translations), adds the option to **restore** the website, or **the entire folder from the trash**, adds **HTML type editor** and the option to set the editor type directly for the template, **applications** can **turn on display only for selected types of devices** mobile, tablet, PC and of course improves safety and comfort of work.",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
-        },{
-            "title": "Version 2023.40",
-            "perex": "Version 2023.40 adds **search in explorer**/files, possibility to use **video banner**, improves user interface, speeds up data loading in web pages. **Banner** adds restriction settings for **display only in specified web pages and folders**. The new **HTTP headers** application allows you to set HTTP headers for specified URLs. We added **optional fields** to **Media**. Mirroring the structure supports **translation of both the web page body** and improves change detection. Redesigned applications **Server monitoring, SEO, News, Discussion**.",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202340"
-        },
-        {
-            "title": "Version 2023.18",
-            "perex": "Version 2023.18 is focused on the integration of the original version 8 code. Deprecated is the option to switch to the old version 8 parts of the code that have already been redesigned or are no longer supported have been removed.",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202318"
-        },
-        {
-            "title": "Version 2023.0",
-            "perex": "Version 2023.0 is identical to version 2022.52",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_20230"
-        },
-        {
-            "title": "Version 2022.52",
-            "perex": "WebJET version 2022.52 is focused on usability improvement, includes improvements based on user feedback. The applications Survey, defining attributes, Checking links and empty pages, Statistics, Reservations have been redesigned in a new design. The Banner application adds the possibility of using custom fields, there are many small improvements in the gallery.",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202252"
-        },
-        {
-            "title": "Version 2022.40",
-            "perex": "2022.40 aims to improve security. Contains updated Java and JavaScript libraries and scanned for vulnerabilities. It also brings a number of other changes to improve work based on feedback - remembering the last folder in web pages, remembering the order of columns and arrangement in data tables, the ability to move the window, etc. Subtly modifies the user interface design (newer set of icons, softer menu colors).",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202240"
-        },
-        {
-            "title": "Version 2022.18",
-            "perex": "2022.18 adds the integration of the PageBuilder tool into web pages, the ability to use design templates written in the Thymeleaf framework, displaying the latest news in logos, many usability improvements based on user comments, redesigned applications Forms - regular expressions, Mass email - unsubscribed emails. Added bookmarks and feedback mini-apps to the home page.",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202218"
-        },
-        {
-            "title": "Version 2022.0",
-            "perex": "2022.0 brings a security update to Java and JavaScript library dependencies.",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_20220"
         }
     ]
 }

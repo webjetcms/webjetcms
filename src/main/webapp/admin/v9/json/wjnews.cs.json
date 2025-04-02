@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verze 2025.0",
+            "perex": "Ve verzi **2025.0** jsme přinesli **nový design administrace** pro ještě lepší přehlednost a uživatelský komfort.\\n\\nJednou z hlavních změn je přesunutí **druhé úrovně menu** do **karet v hlavičce stránky**, čímž se zjednodušila navigace. Ve webových stránkách jsme také **sloučili karty složek a webových stránek**, abyste měli vše přehledně na jednom místě. Pokud hlavička neobsahuje karty, tabulky se automaticky přizpůsobí a zobrazí **řádek navíc**.",
+            "link": "http://docs.webjetcms.sk/latest/cs/CHANGELOG-2025?id=_20250"
+        },
+        {
             "title": "Verze 2024.52",
             "perex": "Ve verzi 2024.52 Web stránky přidávají možnost nastavit **způsob uspořádání** a **vyhledávat ve stromové struktuře**, import ZIP umožňuje nastavit způsob porovnání stávající verze stránky. **Elektronický obchod** dostal nový design seznamu objednávek a produktů. Přidána **statistika anket**, lepší editor obrázků v průzkumníku a vylepšené vyhledávání v administraci. V **hromadných e-mailech** přibyla možnost **nastavit potvrzení odhlášení**. Galerie obsahuje nové pole pro **URL adresu zdroje obrázku**, které je vyplněno automaticky při použití fotobanky, **Značky** přidávají **jazykové mutace** a volitelná pole.",
             "link": "http://docs.webjetcms.sk/v2024/cs/CHANGELOG-2024?id=_202452"
@@ -19,24 +24,6 @@
             "title": "Verze 2024.0",
             "perex": "WebJET verze 2024.0 je shodná s verzí 2023.52",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
-        },{
-            "title": "Verze 2023.52",
-            "perex": "WebJET verze 2023.52 obsahuje novou verzi **aktualizace s popisem změn**, **klonování struktury** integrované s funkcí zrcadlení (včetně možnosti překladů), přidává možnost **obnovit** web stránku, nebo **celá složka z koše**, přidává **editor typu HTML** a možnost nastavení typu editoru přímo pro šablonu, **aplikacím** lze **zapnout zobrazení pouze pro zvolené typy zařízení** mobil, tablet, PC a samozřejmě zlepšuje bezpečnost a komfort práce.",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
-        },{
-            "title": "Verze 2023.40",
-            "perex": "Verze 2023.40 přidává možnost **vyhledávání v průzkumníku**/souborech, možnost použít **video banner**, zlepšuje uživatelské rozhraní, zrychluje načítání dat ve web stránkách. **Banner** přidává nastavení omezení pro **zobrazení pouze v zadaných web stránkách a složkách**. Nová aplikace **HTTP hlavičky** umožňuje nastavovat HTTP hlavičky pro zadané URL adresy. **Médiím** jsme přidali **volitelná pole**. Zrcadlení struktury podporuje **překlad i těla web stránky** a zlepšuje detekci změn. Do nového designu předělané aplikace **Monitorování serveru, SEO, Novinky, Diskuse**.",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202340"
-        },
-        {
-            "title": "Verze 2023.18",
-            "perex": "Verze 2023.18 je zaměřen na integraci kódu původní verze 8. Zrušena je možnost přepnutí do staré verze 8 odstraněny jsou části kódu, které jsou již předělány do nového designu, nebo nejsou nadále podporovány.",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202318"
-        },
-        {
-            "title": "Verze 2023.0",
-            "perex": "Verze 2023.0 je shodná s verzí 2022.52",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_20230"
         }
     ]
 }
