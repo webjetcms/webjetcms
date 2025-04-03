@@ -129,6 +129,8 @@ public class ConstantsV9 {
 
 		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
 		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");
+
+		Constants.setBoolean("loggerUseAnsiColors", false, "adminlog", "If true, logger will use ANSI colors for console output");
 	}
 
 	/**

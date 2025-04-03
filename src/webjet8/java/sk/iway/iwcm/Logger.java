@@ -435,22 +435,24 @@ public class Logger
 
 	public static void info(Class<?> c, String message)
 	{
-		getLogger(c).info(message);
+		getLogger(c).info(getMessageColorWrapped(message, "INFO"));
 	}
+
 	public static void info(Class<?> c, String message, Object... params)
 	{
-		getLogger(c).info(message, params);
+		getLogger(c).info(getMessageColorWrapped(message, "INFO"), params);
 	}
 
 	public static void info(Object o, String message)
 	{
 		org.slf4j.Logger l = getLogger(o);
-		if (l.isInfoEnabled()) l.info(appendObjectName(o, message));
+		if (l.isInfoEnabled()) l.info(getMessageColorWrapped(appendObjectName(o, message), "INFO"));
 	}
+
 	public static void info(Object o, String message, Object... params)
 	{
 		org.slf4j.Logger l = getLogger(o);
-		if (l.isInfoEnabled()) l.info(appendObjectName(o, message), params);
+		if (l.isInfoEnabled()) l.info(getMessageColorWrapped(appendObjectName(o, message), "INFO"), params);
 	}
 
 	public static void debug(String message) {
@@ -460,23 +462,24 @@ public class Logger
 
 	public static void debug(Class<?> c, String message)
 	{
-		getLogger(c).debug(message);
-	}
-	public static void debug(Class<?> c, String message, Object... params)
-	{
-		getLogger(c).debug(message, params);
+		getLogger(c).debug(getMessageColorWrapped(message, "DEBUG"));
 	}
 
-	//Tato metoda sa vola typicky s name ako String, ale nejde to spravit inak kedze druha je Class<> a to nevie kompiler spravit
-   	public static void debug(Object o, String message)
+	public static void debug(Class<?> c, String message, Object... params)
+	{
+		getLogger(c).debug(getMessageColorWrapped(message, "DEBUG"), params);
+	}
+
+	public static void debug(Object o, String message)
 	{
 		org.slf4j.Logger l = getLogger(o);
-		if (l.isDebugEnabled()) l.debug(appendObjectName(o, message));
+		if (l.isDebugEnabled()) l.debug(getMessageColorWrapped(appendObjectName(o, message), "DEBUG"));
 	}
+
 	public static void debug(Object o, String message, Object... params)
 	{
 		org.slf4j.Logger l = getLogger(o);
-		if (l.isDebugEnabled()) l.debug(appendObjectName(o, message), params);
+		if (l.isDebugEnabled()) l.debug(getMessageColorWrapped(appendObjectName(o, message), "DEBUG"), params);
 	}
 
 	public static void warn(String message) {
@@ -485,31 +488,32 @@ public class Logger
 	}
 
 	public static void warn(Class<?> c, String message) {
-		getLogger(c).warn(message);
+		getLogger(c).warn(getMessageColorWrapped(message, "WARN"));
 	}
+
 	public static void warn(Class<?> c, String message, Object... params) {
-		getLogger(c).warn(message);
+		getLogger(c).warn(getMessageColorWrapped(message, "WARN"), params);
 	}
 
-	public static void warn(Object o, String message){
-		getLogger(o).warn(message);
-	}
-	public static void warn(Object o, String message, Object... params){
-		getLogger(o).warn(message);
+	public static void warn(Object o, String message) {
+		getLogger(o).warn(getMessageColorWrapped(message, "WARN"));
 	}
 
-	public static void error(Class<?> c, String message)
-	{
-		getLogger(c).error(message);
+	public static void warn(Object o, String message, Object... params) {
+		getLogger(o).warn(getMessageColorWrapped(message, "WARN"), params);
 	}
-	public static void error(Class<?> c, String message, Object... params)
-	{
-		getLogger(c).error(message, params);
+
+	public static void error(Class<?> c, String message) {
+		getLogger(c).error(getMessageColorWrapped(message, "ERROR"));
+	}
+
+	public static void error(Class<?> c, String message, Object... params) {
+		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), params);
 	}
 
 	public static void error(Throwable t) {
 		Class<?> c = Util.getCallingClass();
-		getLogger(c).error(t.getMessage(), t);
+		getLogger(c).error(getMessageColorWrapped(t.getMessage(), "ERROR"), t);
 	}
 
 	public static void error(Exception e) {
@@ -517,31 +521,30 @@ public class Logger
 		error(c, e);
 	}
 
-	public static void error(Class<?> c, Exception e)
-	{
-		getLogger(c).error(e.getMessage(), e);
+	public static void error(Class<?> c, Exception e) {
+		getLogger(c).error(getMessageColorWrapped(e.getMessage(), "ERROR"), e);
 	}
-	public static void error(Class<?> c, Exception e, String message, Object... params)
-	{
-		getLogger(c).error(message, e, params);
+
+	public static void error(Class<?> c, Exception e, String message, Object... params) {
+		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), e, params);
 	}
 
 	public static void error(Class<?> c, String message, Throwable t) {
-		getLogger(c).error(message, t);
-	}
-	public static void error(Class<?> c, String message, Throwable t, Object... params) {
-		getLogger(c).error(message, t, params);
+		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), t);
 	}
 
-	public static void error(Object o, String message)
-	{
-		org.slf4j.Logger l = getLogger(o);
-		if (l.isErrorEnabled()) l.error(appendObjectName(o, message));
+	public static void error(Class<?> c, String message, Throwable t, Object... params) {
+		getLogger(c).error(getMessageColorWrapped(message, "ERROR"), t, params);
 	}
-	public static void error(Object o, String message, Object... params)
-	{
+
+	public static void error(Object o, String message) {
 		org.slf4j.Logger l = getLogger(o);
-		if (l.isErrorEnabled()) l.error(appendObjectName(o, message), params);
+		if (l.isErrorEnabled()) l.error(getMessageColorWrapped(appendObjectName(o, message), "ERROR"));
+	}
+
+	public static void error(Object o, String message, Object... params) {
+		org.slf4j.Logger l = getLogger(o);
+		if (l.isErrorEnabled()) l.error(getMessageColorWrapped(appendObjectName(o, message), "ERROR"), params);
 	}
 
 	/**
@@ -665,5 +668,41 @@ public class Logger
 		System.out.println("RequestProperties:"); //NOSONAR
 		for (Map.Entry<String, List<String>> entry : requestProperties.entrySet())
 			System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue()); //NOSONAR
+	}
+
+	private static Boolean loggerUseAnsiColors = null;
+	private static String getMessageColorWrapped(String message, String level) {
+
+		if (loggerUseAnsiColors == null && InitServlet.isWebjetInitialized()) {
+			loggerUseAnsiColors = Constants.getBoolean("loggerUseAnsiColors");
+		}
+
+		if (loggerUseAnsiColors == null || loggerUseAnsiColors.booleanValue() == false) {
+			return message;
+		}
+
+		String ansiColorCode = getAnsiColorCode(level);
+		if (ansiColorCode == null) {
+			return message;
+		}
+		String ansiResetCode = getAnsiColorCodeReset();
+		return ansiColorCode + message + ansiResetCode;
+	}
+
+	private static String getAnsiColorCode(String level) {
+		switch (level) {
+			case "ERROR":
+				return "\u001B[31m"; // Red
+			case "WARN":
+				return "\u001B[33m"; // Yellow
+			case "DEBUG":
+				return "\u001B[34m"; // Blue
+			default:
+				return null;
+		}
+	}
+
+	private static String getAnsiColorCodeReset() {
+		return "\u001B[0m";
 	}
 }

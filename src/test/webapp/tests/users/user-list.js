@@ -18,7 +18,7 @@ Before(({ I, login }) => {
 Scenario('user-list-zakladne testy @baseTest', async ({ I, DataTables, DTE }) => {
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
-          perms: 'menuUsers',
+          perms: permEditAdminUser + "," + permEditPublicUser,
           createSteps: function(I, options) {
                DTE.save();
                I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");
@@ -53,7 +53,7 @@ Scenario('user-list-test pridania a odobratia skupin prav @baseTest', async ({ I
 
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
-          perms: 'menuUsers',
+          perms: permEditAdminUser + "," + permEditPublicUser,
           createSteps: function(I, options) {
                //tieto polia musia byt zadane a nezbehne ich autodetekcia, kedze su len v editore
                I.fillField("#DTE_Field_editorFields-login", "login-"+randomText);
@@ -131,13 +131,7 @@ Scenario('test-prava-admin-user', ({ I }) => {
 
      I.amOnPage(url + "?removePerm=" + permEditAdminUser + "," + permEditPublicUser);
 
-     I.fillField({css: "input.dt-filter-lastName"}, "Admin");
-     I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Admin", "div.dt-scroll-body tbody");
-
-     I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
-     I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Balážová", "div.dt-scroll-body tbody");
+     I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
 
      I.logout();
  });
@@ -468,7 +462,7 @@ Scenario('user-list-multiweb testy @singlethread @baseTest', async ({ I, DataTab
 
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
-          perms: 'menuUsers',
+          perms: permEditAdminUser + "," + permEditPublicUser,
           createSteps: function(I, options) {
                DTE.save();
                I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");

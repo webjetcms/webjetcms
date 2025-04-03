@@ -17,7 +17,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/groups-approve")
-@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuUsers')")
+@PreAuthorize(value = "@WebjetSecurityService.hasPermission('users.edit_admins')")
 public class GroupsApproveController extends DatatableRestControllerV2<GroupsApproveEntity, Long> {
 
     private final GroupsApproveRepository groupsApproveRepository;
