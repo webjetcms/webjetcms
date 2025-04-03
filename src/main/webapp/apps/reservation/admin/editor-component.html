@@ -1,0 +1,9 @@
+<script>
+	function appGetComponentPath(componentPath, datatable) {
+		let field = $("#DTE_Field_field").val();
+		if ("1" === field) {
+            return "/components/reservation/reservation_list.jsp"
+		}
+		return "/components/reservation/room_list.jsp";
+	}
+</script>

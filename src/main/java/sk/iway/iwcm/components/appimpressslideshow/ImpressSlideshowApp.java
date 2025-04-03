@@ -36,5 +36,5 @@ public class ImpressSlideshowApp  extends WebjetComponentAbstract{
 
     // iframe TODO add from jsp file
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "tabLink2", title="&nbsp;")
-    private String iframe  = "/components/qa/admin_list.jsp";
+    private String iframe  = "";
 }

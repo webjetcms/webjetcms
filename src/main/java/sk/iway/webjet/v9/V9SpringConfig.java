@@ -127,7 +127,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appimpressslideshow",
     "sk.iway.iwcm.components.rating",
     "sk.iway.iwcm.components.relatedpages",
-    "sk.iway.iwcm.components.restaurant_menu"
+    "sk.iway.iwcm.components.restaurant_menu",
+    "sk.iway.iwcm.components.reservation"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

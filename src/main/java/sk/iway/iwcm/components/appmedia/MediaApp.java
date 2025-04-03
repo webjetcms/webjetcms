@@ -32,7 +32,7 @@ public class MediaApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.media.editor_component.dostupne_skupiny")
     private String groups;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "editor.perex_group.selected_items", tab = "basic", className = "dt-tree-page")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.popup.docid", tab = "basic", className = "dt-tree-page")
     private DocDetails docid;
 
     @Override
