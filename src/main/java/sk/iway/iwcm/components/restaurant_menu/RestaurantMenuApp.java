@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     itemKey = "cmp_restaurant_menu",
     imagePath = "/components/restaurant_menu/editoricon.png",
     galleryImages = "/components/restaurant_menu/",
-    componentPath = "/components/restaurant_menu/related_pages.jsp") //customHtml = "/apps/restaurant_menu/admin/editor-component.html"
+    componentPath = "/components/restaurant_menu/related_pages.jsp")
 @Getter
 @Setter
 @DataTableTabs(tabs = {
