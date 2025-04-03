@@ -1064,7 +1064,7 @@ Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa r
 
 //TODO: test ukladania stranky v multi adresari, overenie, ze sa po editacii slave stranky ulozi aj master
 
-Scenario("Check editor for user with perms only for one webpage @current", ({ I, DT, DTE }) => {
+Scenario("Check editor for user with perms only for one webpage", ({ I, DT, DTE }) => {
 
     I.relogin("jtester");
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
@@ -1090,6 +1090,10 @@ Scenario("Check editor for user with perms only for one webpage @current", ({ I,
     I.see("Homepage", "div.DTE_Field_Name_tempId div.filter-option-inner-inner");
 
     DTE.cancel();
+
+    //
+    I.say("Verify domain name selector");
+    I.see(I.getDefaultDomainName(), ".js-domain-toggler .filter-option-inner-inner");
 });
 
 Scenario("logout jtester", ({ I }) => {
