@@ -65,7 +65,7 @@ if (InitServlet.isTypeCloud())
 	GroupsDB groupsDB = GroupsDB.getInstance(false);
    //GroupsDB groupsDB = GroupsDB.getInstance(sk.iway.iwcm.Constants.getServletContext(), false, DBPool.getDBName(request));
    String userEditableGroups = user.getEditableGroups();
-   if (user.isDisabledItem("menuUsers")==false) userEditableGroups = "";
+   if (user.isDisabledItem("users.edit_admins")==false) userEditableGroups = "";
 
    List<GroupDetails> groups = groupsDB.getGroupsTree(userEditableGroups);
    groups = sk.iway.iwcm.editor.service.WebpagesService.filterGroupsByCurrentDomain(groups);

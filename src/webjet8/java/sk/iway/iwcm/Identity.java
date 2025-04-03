@@ -153,6 +153,13 @@ public class Identity extends UserDetails
 		//fix starych nazvov
 		if ("menuForms".equals(fixedName)) fixedName = "cmp_form";
 
+		if ("menuUsers".equals(fixedName)) {
+			//return false if users.edit_admins || users.edit_public_users
+			if (disabledItemsTable.get("users.edit_admins") == null && disabledItemsTable.get("users.edit_public_users") == null) {
+				return false;
+			}
+			return true;
+		}
 
 		//Logger.println(this,"isDisabledItem("+name+")");
 		if (disabledItemsTable == null)

@@ -184,13 +184,6 @@ public class GroupsTreeService {
             }
         }
 
-        if (id == Constants.getInt("systemPagesMyPages")) {
-            List<DocDetails> myPages = DocDB.getMyPages(user);
-            if (myPages.size() > 0) {
-                items.addAll(myPages.stream().map(doc -> new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));
-            }
-        }
-
         if (id == Constants.getInt("systemPagesDocsToApprove")) {
             List<DocDetails> approve = docDB.getDocsForApprove(user.getUserId());
             if (approve != null && approve.size() > 0) {

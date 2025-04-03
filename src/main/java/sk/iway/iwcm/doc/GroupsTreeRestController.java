@@ -113,7 +113,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             String referer = getRequest().getHeader("referer");
             if(false == (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups")) ) {
                 //If root group is in list, remove it
-                if(items.size()>0 && Integer.valueOf( items.get(0).getId() ) == 0)
+                if(items.size()>0 && Tools.getIntValue( items.get(0).getId(), -1 ) == 0)
                     items.remove(0);
             }
         }

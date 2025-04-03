@@ -1064,9 +1064,16 @@ Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa r
 
 //TODO: test ukladania stranky v multi adresari, overenie, ze sa po editacii slave stranky ulozi aj master
 
-Scenario("Check editor for user with perms only for one webpage", ({ I, DTE }) => {
+Scenario("Check editor for user with perms only for one webpage @current", ({ I, DT, DTE }) => {
 
     I.relogin("jtester");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+
+    I.see("English", "#SomStromcek a.jstree-anchor");
+    I.see("Home", "#SomStromcek a.jstree-anchor");
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=31");
     DTE.waitForEditor();
 

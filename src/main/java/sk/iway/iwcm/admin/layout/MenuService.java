@@ -517,58 +517,41 @@ public class MenuService {
         for (ModuleInfo m : customItems) {
             if (rootItem.getGroup().equals(getGroup9(m)) == false) continue;
 
-            if (m.getItemKey().equalsIgnoreCase("menuTemplates")) {
-                //tohto subpolozky vynasame ako hlavne polozky menu
-                List<ModuleInfo> subMenus = filterNoLink(m.getSubmenus(user), user);
-                for (ModuleInfo sub : subMenus) {
-                    MenuBean children = (new MenuBean())
-                        .setGroup(rootItem.getGroup())
-                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))
-                        .setHref(getMenuLinkV9(sub))
-                        .setIcon(getIcon9(sub.getItemKey(), m.getMenuIcon()));
-
-                        List<MenuBean> thirdChildrens = new ArrayList<>();
-                        children.setChildrens(thirdChildrens);
-
-                        childrens.add(children);
-                }
-            } else {
-                MenuBean children = (new MenuBean())
-                .setGroup(rootItem.getGroup())
-                .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())))
-                .setHref(getMenuLinkV9(m))
-                .setIcon(getIcon9(m));
+            MenuBean children = (new MenuBean())
+            .setGroup(rootItem.getGroup())
+            .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())))
+            .setHref(getMenuLinkV9(m))
+            .setIcon(getIcon9(m));
 //                .setCustom(m.isCustom());
 
-                List<MenuBean> thirdChildrens = new ArrayList<>();
-                List<ModuleInfo> subMenus = filterNoLink(m.getSubmenus(user), user);
+            List<MenuBean> thirdChildrens = new ArrayList<>();
+            List<ModuleInfo> subMenus = filterNoLink(m.getSubmenus(user), user);
 
-                if (subMenus.size()==1 && children.getHref().equals(getMenuLinkV9(subMenus.get(0)))) {
-                    //v submenu je len 1 polozka a zhoduje sa s parentom, toto nebudeme renderovat
-                } else {
-                    for (ModuleInfo sub : subMenus) {
-                        MenuBean third = (new MenuBean())
-                            .setGroup(rootItem.getGroup())
-                            .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))
-                            .setHref(getMenuLinkV9(sub));
+            if (subMenus.size()==1 && children.getHref().equals(getMenuLinkV9(subMenus.get(0)))) {
+                //v submenu je len 1 polozka a zhoduje sa s parentom, toto nebudeme renderovat
+            } else {
+                for (ModuleInfo sub : subMenus) {
+                    MenuBean third = (new MenuBean())
+                        .setGroup(rootItem.getGroup())
+                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))
+                        .setHref(getMenuLinkV9(sub));
 
-                        thirdChildrens.add(third);
-                    }
+                    thirdChildrens.add(third);
                 }
-
-                if (children.getHref().contains("void()") && thirdChildrens.isEmpty()) {
-                    //ak hlavny item ma javascript:void linku a nema ziadnych childov nezobrazime
-                } else {
-                    childrens.add(children);
-                }
-
-                //if user doesnt have perms for children.href use first subitem from thirdChildrens
-                if (thirdChildrens.isEmpty() == false && Tools.isNotEmpty(m.getItemKey()) && user.isEnabledItem(m.getItemKey())==false) {
-                    children.setHref(thirdChildrens.get(0).getHref());
-                }
-
-                children.setChildrens(thirdChildrens);
             }
+
+            if (children.getHref().contains("void()") && thirdChildrens.isEmpty()) {
+                //ak hlavny item ma javascript:void linku a nema ziadnych childov nezobrazime
+            } else {
+                childrens.add(children);
+            }
+
+            //if user doesnt have perms for children.href use first subitem from thirdChildrens
+            if (thirdChildrens.isEmpty() == false && Tools.isNotEmpty(m.getItemKey()) && user.isEnabledItem(m.getItemKey())==false) {
+                children.setHref(thirdChildrens.get(0).getHref());
+            }
+
+            children.setChildrens(thirdChildrens);
         }
 
         if (rootItem.getGroup().equals("components")) {
