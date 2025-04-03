@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -201,7 +203,7 @@ public class Modules
 		modVersions.put("cmp_xml", "PEI;bf0");
 		modVersions.put("cmp_captcha", "PECI;a3c"); //zoznam slov pre captchu
 
-		modVersions.put("menuUsers", "PECDIO;f20"); //WebJET Multi-User Access - 2990 Sk, WebJET Protected Section-4990
+		//modVersions.put("menuUsers", "PECDIO;f20"); //WebJET Multi-User Access - 2990 Sk, WebJET Protected Section-4990
 		modVersions.put("menuSync", "PEI;f36"); //WebJET Synchronization - 12900
 		modVersions.put("imageEditor", "PECDIMO;f47"); //WebJET Image Editor - 4900
 
@@ -586,60 +588,27 @@ public class Modules
 		loadModule(sub);
 
 		//sablony
-		ModuleInfo templates = new ModuleInfo("menu.templates", "menuTemplates", "/admin/v9/dist/views/templates/temps-list.html", null, true, true, "/admin/v9/templates/temps-list/", modVersions.get("menu.templates"), 20).setGroup("templates").setMenuIcon("grid");
-
+		ModuleInfo templates = new ModuleInfo("menu.templates", "menuTemplates", "/admin/v9/dist/views/templates/temps-list.html", null, true, true, "/admin/v9/templates/temps-list/", modVersions.get("menu.templates"), 20);
+		templates.setGroup("templates");
+		templates.setMenuIcon("grid");
+		loadModule(templates);
 
 		sub = new ModuleInfo();
-		sub.setNameKey("components.templates.dialog_title");
-		sub.setPath("/admin/v9/dist/views/templates/temps-list.html");
-		sub.setWjVersions(modVersions.get("menu.templates"));
-		sub.setItemKey("menuTemplates");
-		sub.setUserItem(false);
-		sub.setGroup("templates");
-		setAvailable(sub);
-		templates.addSubmenu(sub);
-
-        sub = new ModuleInfo();
         sub.setNameKey("menu.group_templates");
         sub.setPath("/admin/v9/dist/views/templates/temps-groups-list.html");
         sub.setWjVersions(modVersions.get("menu.templates"));
         sub.setItemKey("menuTemplatesGroup");
         sub.setUserItem(true);
+		sub.setShowInLeftMenu(true);
         sub.setGroup("templates");
-        setAvailable(sub);
-        templates.addSubmenu(sub);
-
-		/*
-		sub = new ModuleInfo();
-		sub.setNameKey("temps_list.newTemplate");
-		sub.setPath("javascript:openPopupDialogFromLeftMenu('/admin/listtemps.do?tempid=-1');");
-		sub.setWjVersions(modVersions.get("menu.templates"));
-		sub.setUserItem(false);
-		setAvailable(sub);
-		templates.addSubmenu(sub);
-
-		sub = new ModuleInfo();
-		sub.setNameKey("admin.temp_merge.merge_stranok");
-		sub.setPath("javascript:openPopupDialogFromLeftMenu('/admin/listtemps.do?merge=1');");
-		sub.setWjVersions(modVersions.get("menu.templates"));
-		sub.setUserItem(false);
-		setAvailable(sub);
-		templates.addSubmenu(sub);
-
-		sub = new ModuleInfo();
-		sub.setNameKey("admin.temps_page_uses.pouzitie_stranok");
-		sub.setPath("/admin/temps_page_uses.jsp");
-		sub.setWjVersions(modVersions.get("menu.templates"));
-		sub.setUserItem(false);
-		setAvailable(sub);
-		templates.addSubmenu(sub);*/
-
-		loadModule(templates);
+		sub.setMenuOrder(21);
+		loadModule(sub);
 
 		//pouzivatelia
-		ModuleInfo users = new ModuleInfo("menu.users", "menuUsers", "/components/user", null, true, true, "/admin/v9/users/user-list/", modVersions.get("menu.users"), 30);
+		ModuleInfo users = new ModuleInfo("menu.users", "users.edit_admins|users.edit_public_users", "/components/user", null, false, true, "/admin/v9/users/user-list/", modVersions.get("menu.users"), 30);
 		users.setGroup("users");
 		users.setLeftMenuNameKey("menu.users");
+		users.setMenuIcon("ti ti-users");
 		loadModule(users);
 
 		//toto je tu kvoli menu, aby sa vypisala moznost Zoznam pouzivatelov
@@ -1170,7 +1139,7 @@ public class Modules
 	}
 
 	/**
-	 * Vrati zoznam modulov pre useredit.jsp
+	 * Vrati zoznam UNIKATNYCH modulov
 	 * @param prop
 	 * @return
 	 */
@@ -1178,17 +1147,19 @@ public class Modules
 	{
 		List<ModuleInfo> ret = new ArrayList<>();
 		ModuleInfo miUser;
+		Set<String> uniqueItems = new HashSet<>();
 		for (ModuleInfo mi : modules)
 		{
 			if (mi.isAvailable())
 			{
                 if (mi.isUserItem() && mi.getItemKey().length()>2) {
                     miUser = new ModuleInfo(prop.getText(mi.getNameKey()), mi.getItemKey(), mi.getPath(), mi.getRequireConstantsKey(), true, mi.isShowInLeftMenu(), mi.getLeftMenuLink(), "BPECDIO", mi.getMenuOrder());
-                    miUser.setLeftMenuNameKey(mi.getLeftMenuNameKey());
                     miUser.setLeftMenuNameKey(prop.getText(miUser.getLeftMenuNameKey()));
                     miUser.setRootModule(mi.getItemKey());
                     miUser.setGroup(mi.getGroup());
-                    ret.add(miUser);
+					if (uniqueItems.add(miUser.getItemKey())) {
+                    	ret.add(miUser);
+					}
                 }
 
 				//pridaj submenus
@@ -1200,11 +1171,12 @@ public class Modules
 						{
 							//Logger.debug(Modules.class, "Pridavam submenu " + subMi.getLeftMenuNameKey());
 							miUser = new ModuleInfo(prop.getText(subMi.getNameKey()), subMi.getItemKey(), subMi.getPath(), subMi.getRequireConstantsKey(), true, subMi.isShowInLeftMenu(), subMi.getLeftMenuLink(), "BPECDIO", subMi.getMenuOrder());
-							miUser.setLeftMenuNameKey(subMi.getLeftMenuNameKey());
 							miUser.setLeftMenuNameKey(prop.getText(mi.getLeftMenuNameKey()) + " - " + prop.getText(miUser.getLeftMenuNameKey()));
 							miUser.setRootModule(mi.getItemKey());
 							miUser.setGroup(mi.getGroup());
-							ret.add(miUser);
+							if (uniqueItems.add(miUser.getItemKey())) {
+								ret.add(miUser);
+							}
 						}
 					}
 				}

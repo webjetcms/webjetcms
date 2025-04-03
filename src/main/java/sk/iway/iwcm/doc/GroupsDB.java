@@ -3642,8 +3642,19 @@ public class GroupsDB extends DB
 	 * @param editableGroups
 	 * @return
 	 */
-	public List<String> getUserRootDomainNames(String editableGroups)
+	public List<String> getUserRootDomainNames(Identity user)
 	{
+		String editableGroups = user.getEditableGroups();
+
+		if (Tools.isNotEmpty(user.getEditablePages())) {
+			List<DocDetails> pages = DocDB.getMyPages(user);
+			for (DocDetails doc : pages) {
+				if (doc.getGroupId() > 0) {
+					editableGroups += "," + doc.getGroupId();
+				}
+			}
+		}
+
 		List<String> ret = new ArrayList<>();
 		for(GroupDetails gd : getRootGroups(editableGroups))
 		{

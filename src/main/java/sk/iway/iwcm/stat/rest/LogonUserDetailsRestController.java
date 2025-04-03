@@ -27,7 +27,7 @@ import sk.iway.iwcm.users.UsersDB;
 
 @RestController
 @RequestMapping("/admin/rest/stat/logon-user-details")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_stat&menuUsers')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('users.edit_admins|users.edit_public_users')")
 @Datatable
 public class LogonUserDetailsRestController extends DatatableRestControllerV2<LogonUserDetailsDTO, Long> {
     private static final int MAX_ROWS = 100;

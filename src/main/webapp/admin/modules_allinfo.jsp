@@ -79,7 +79,7 @@ for (ModuleInfo m : allModules)
 
 	//DEPRECATED
 	if (m.getNameKey().equals("webjet_cmp_db_browser")) continue;
-	if (m.getNameKey().equals("webjet_menu.users")) continue; //duplicity with webjet_menuUsers
+	//if (m.getNameKey().equals("webjet_menu.users")) continue; //duplicity with webjet_menuUsers
 
 
 	System.out.println("Testing: "+m.getNameKey());
