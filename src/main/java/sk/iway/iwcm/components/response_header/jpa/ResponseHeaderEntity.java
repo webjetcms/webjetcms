@@ -31,7 +31,7 @@ public class ResponseHeaderEntity {
     @Id
     @Column(name = "response_header_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_response_headers")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "url")

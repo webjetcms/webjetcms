@@ -142,9 +142,20 @@ public class DataTableColumn {
 
             if (Tools.isEmpty(title) || "&nbsp;".equals(title)) addClassName("empty-title");
         } else {
-            String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
-            title = prop.getText(titleKey);
-            if (titleKey.equals(title)) title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
+            if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.HIDDEN) {
+                //hidden field doesn't need title
+                title = "&nbsp;";
+            } else {
+                String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
+                title = prop.getText(titleKey);
+                if (titleKey.equals(title)) {
+                    if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
+                        title = prop.getText("datatables.id.js");
+                    } else {
+                        title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
+                    }
+                }
+            }
         }
 
         if (inputType.length > 0 && inputType[0] == DataTableColumnType.STATIC_TEXT) {

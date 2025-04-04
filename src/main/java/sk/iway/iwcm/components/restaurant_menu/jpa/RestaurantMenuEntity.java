@@ -38,7 +38,7 @@ public class RestaurantMenuEntity {
     @Column(name = "menu_id")
     @GeneratedValue(generator="WJGen_restaurant_menu")
 	@TableGenerator(name="WJGen_restaurant_menu",pkColumnValue="restaurant_menu")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID",orderable = false)
+    @DataTableColumn(inputType = DataTableColumnType.ID, orderable = false)
     private Long id;
 
     @Column(name = "day")

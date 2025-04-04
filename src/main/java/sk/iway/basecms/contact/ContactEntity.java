@@ -37,7 +37,7 @@ public class ContactEntity {
     @Column(name = "contact_id")
 	@GeneratedValue(generator = "WJGen_contact")
 	@TableGenerator(name = "WJGen_contact", pkColumnValue = "contact")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.contact.property.name")

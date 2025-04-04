@@ -42,7 +42,7 @@ public class GdprRegExpBean extends ActiveRecordRepository implements Serializab
 	@GeneratedValue(generator="WJGen_gdpr_regexp")
 	@TableGenerator(name="WJGen_gdpr_regexp",pkColumnValue="gdpr_regexp")
 	@Column(name="gdpr_regexp_id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="editor.cell.id")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@Column(name="regexp_name")

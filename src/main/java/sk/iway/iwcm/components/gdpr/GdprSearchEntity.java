@@ -24,9 +24,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 public class GdprSearchEntity implements Serializable{
 
     @Id
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title="[[#{editor.cell.id}]]")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @DataTableColumn(

@@ -52,7 +52,7 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
     @Id
     @Column(name = "email_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_emails")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "recipient_name")

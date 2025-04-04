@@ -28,7 +28,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.users.UserDetails;
 
 /**
- * ForumGroupEntity aka ForumEntity. We let the old historic name ForumGroupEntity, so after remade to Spring 
+ * ForumGroupEntity aka ForumEntity. We let the old historic name ForumGroupEntity, so after remade to Spring
  * it is clear what this entity is for (or what is replacing).
  */
 
@@ -39,11 +39,11 @@ import sk.iway.iwcm.users.UserDetails;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_FORUM_SAVE)
 public class ForumGroupEntity implements Serializable {
-    
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_forum")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab="advanced", hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab="advanced", hidden = true)
     private Long id;
 
     //Is active or not
@@ -54,9 +54,9 @@ public class ForumGroupEntity implements Serializable {
         tab="advanced",
         hidden = true,
         editor = @DataTableColumnEditor(
-            attr = { 
+            attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "[[#{components.forum.admin.basicInfo}]]"),
-                @DataTableColumnEditorAttr(key = "disabled", value = "disabled") 
+                @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
             }
         )
     )
@@ -116,28 +116,28 @@ public class ForumGroupEntity implements Serializable {
     //Permissions
     @Transient
     @DataTableColumn(
-        inputType = DataTableColumnType.CHECKBOX, 
-        title = "components.forum.user_groups_for_addmessage", 
+        inputType = DataTableColumnType.CHECKBOX,
+        title = "components.forum.user_groups_for_addmessage",
         tab = "advanced",
         hidden = true,
         editor = {
             @DataTableColumnEditor(attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "user.permissions"),
-                @DataTableColumnEditorAttr(key = "unselectedValue", value = "") 
-            }) 
+                @DataTableColumnEditorAttr(key = "unselectedValue", value = "")
+            })
         }
     )
     private Integer[] addMessagePerms;
 
     @Transient
     @DataTableColumn(
-        inputType = DataTableColumnType.CHECKBOX, 
-        title = "components.forum.adminGroups", 
+        inputType = DataTableColumnType.CHECKBOX,
+        title = "components.forum.adminGroups",
         tab = "advanced",
         hidden = true,
         editor = {
-            @DataTableColumnEditor(attr = @DataTableColumnEditorAttr(key = "unselectedValue", value = "") ) 
+            @DataTableColumnEditor(attr = @DataTableColumnEditorAttr(key = "unselectedValue", value = "") )
         }
     )
     private Integer[] adminPerms;
@@ -149,14 +149,14 @@ public class ForumGroupEntity implements Serializable {
         tab="advanced",
         hidden = true,
         editor = @DataTableColumnEditor(
-            attr = { 
+            attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "[[#{components.forum.admin.availability}]]")
             }
         )
     )
     private Boolean active;
-    
+
     @Column(name = "date_from")
     @Temporal(TemporalType.TIMESTAMP)
 	@DataTableColumn(
@@ -186,7 +186,7 @@ public class ForumGroupEntity implements Serializable {
     )
     @Min(value = 0)
     private Integer hoursAfterLastMessage;
-        
+
     //Dont show them, just need their values during saving
     @Column(name = "doc_id")
     @DataTableColumn(
@@ -222,9 +222,9 @@ public class ForumGroupEntity implements Serializable {
 	public boolean canPostMessage(UserDetails user) {
 		if (Tools.isEmpty(getAddmessageGroups())) return true;
 		if (user == null) return(false);
-		
+
 		String ids = getAddmessageGroups();
-		if(Tools.isNotEmpty(ids)) 
+		if(Tools.isNotEmpty(ids))
 		{
 			StringTokenizer st = new StringTokenizer(ids,",+");
 			while(st.hasMoreTokens())
@@ -246,7 +246,7 @@ public class ForumGroupEntity implements Serializable {
 
 		if (user == null) return(false);
         if (user.isAdmin()) return true;
-		
+
         String ids = getAdminGroups();
 		if(Tools.isNotEmpty(ids))  {
 			StringTokenizer st = new StringTokenizer(ids,",+");

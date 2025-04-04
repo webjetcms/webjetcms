@@ -25,11 +25,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_INQUIRY)
 public class InquiryUsersVoteEntity implements Serializable {
-    
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_inquiry_users")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "user_id")

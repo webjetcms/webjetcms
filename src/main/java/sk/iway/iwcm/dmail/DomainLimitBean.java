@@ -47,7 +47,7 @@ public class DomainLimitBean extends ActiveRecord implements Serializable
 	@GeneratedValue(generator="WJGen_domain_limits")
 	@TableGenerator(name="WJGen_domain_limits",pkColumnValue="domain_limit_id")
 	@Column(name="domain_limit_id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private int id;
 
 	@Column(name="domain")

@@ -10,11 +10,7 @@ import java.util.Date;
 
 public class CacheDto {
 
-    @DataTableColumn(
-        inputType = {DataTableColumnType.ID},
-        title = "[[#{components.memory_cleanup.cache_objects.id}]]",
-        filter = false
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID, filter = false)
     private Long id;
 
     @DataTableColumn(

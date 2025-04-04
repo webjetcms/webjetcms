@@ -23,7 +23,7 @@ public class LogFileBean {
     //Source file
     private File file;
 
-	@DataTableColumn(inputType = DataTableColumnType.ID, title = "ID", hidden = true)
+	@DataTableColumn(inputType = DataTableColumnType.ID, hidden = true)
 	private Long id;
 
     @DataTableColumn(

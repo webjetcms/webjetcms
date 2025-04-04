@@ -46,7 +46,7 @@ public class UnsubscribedEntity extends ActiveRecordRepository {
     @Id
     @Column(name = "emails_unsubscribed_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_emails_unsubscribed")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab="basic")
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab="basic")
     private Long id;
 
     @Column(name = "email")

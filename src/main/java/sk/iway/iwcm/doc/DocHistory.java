@@ -45,7 +45,7 @@ public class DocHistory extends DocBasic {
     @Id
 	@Column(name = "history_id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY, generator="S_documents_history")
-	@DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	protected Long id;
 
     @Column(name = "doc_id")

@@ -34,7 +34,7 @@ public class BasketInvoicePaymentEntity implements Serializable {
     @Id
 	@Column(name="payment_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator="S_basket_invoice_payments")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @ManyToOne

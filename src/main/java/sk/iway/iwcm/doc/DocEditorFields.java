@@ -150,7 +150,7 @@ public class DocEditorFields extends BaseEditorFields {
 
     //true - verejne publikovat
     //false - ulozit pracovnu verziu do historie
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title="",tab="basic",hidden = true)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN,tab="basic",hidden = true)
     boolean requestPublish=true;
 
     //nastavuje rezim editora podla skupiny sablon

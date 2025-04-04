@@ -33,7 +33,7 @@ public class DictionaryBean extends ActiveRecord implements Serializable
 	@GeneratedValue(generator="WJGen_dictionary")
 	@TableGenerator(name="WJGen_dictionary", pkColumnValue="dictionary")
 	@Column(name="dictionary_id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private int dictionaryId;
 
 	@Column(name="dictionary_group")

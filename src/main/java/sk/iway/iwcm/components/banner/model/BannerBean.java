@@ -61,7 +61,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 	@Column(name = "banner_id")
 	@GeneratedValue(generator = "WJGen_banner_banners")
 	@TableGenerator(name = "WJGen_banner_banners", pkColumnValue = "banner_banners")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 		//Field is invisible and used only for need of CHARTS

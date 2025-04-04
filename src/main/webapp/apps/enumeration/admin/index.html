@@ -20,29 +20,9 @@
             .appendTo(ul);
     }
 
-    WJ.breadcrumb({
-        id: "enumeration-data",
-        tabs: [
-            {
-                url: '/apps/enumeration/admin/',
-                title: '[[#{components.enumerations.list}]]',
-                active: true
-            },
-            {
-                url: '#enumerationType',
-                title: '{filter}',
-                active: false
-            }
-        ]
-    });
-
     window.domReady.add(function () {
         let url = "/admin/rest/enumeration/enumeration-data";
         let enumTypes = {};
-
-        //presun filter do hlavicky
-        $("#pills-enumerationType-tab").html("");
-        $("div#enumerationType_extfilter").appendTo("#pills-enumerationType-tab");
 
         //SET enumeration type select filter
         $.ajax({url: url + "/enum-types", success: function(json) {
@@ -70,6 +50,12 @@
                         fetchOnCreate: true,
                         fetchOnEdit: true
                     });
+
+                    //move #enumerationType_extfilter into .dt-buttons
+                    $("#enumerationType_extfilter .buttons-select").prependTo("#enumerationDataDataTable_wrapper .dt-buttons");
+                    $("#enumerationDataDataTable_wrapper .dt-buttons div.bootstrap-select").addClass("form-select");
+                    var bsButton = $("#enumerationDataDataTable_wrapper .dt-buttons div.bootstrap-select button.dropdown-toggle");
+                    bsButton.attr("class", "btn dropdown-toggle btn-light");
 
                     enumerationDataDataTable.EDITOR.on('open', function (e, mode, action) {
                         var enumTypeSelectValue = $('#enumerationTypeFilterSelect').val();
@@ -130,12 +116,9 @@
     });
     </script>
 
-    <div id="enumerationType_extfilter">
-        <div class="row datatableInit">
-            <div class="col-auto">
-                <select id="enumerationTypeFilterSelect">
-                </select>
-            </div>
+    <div id="enumerationType_extfilter" style="display: none;">
+        <div class="btn btn-sm buttons-select">
+            <select id="enumerationTypeFilterSelect"></select>
         </div>
     </div>
 

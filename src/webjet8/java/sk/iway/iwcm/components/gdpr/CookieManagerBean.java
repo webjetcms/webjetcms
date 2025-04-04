@@ -45,9 +45,7 @@ public class CookieManagerBean extends ActiveRecord implements Serializable
 	@GeneratedValue(generator="WJGen_cookies")
 	@TableGenerator(name="WJGen_cookies",pkColumnValue="cookies")
 	@Column(name="cookie_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title = "editor.cell.id")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private int cookieId;
 
     @Column(name="cookie_name")

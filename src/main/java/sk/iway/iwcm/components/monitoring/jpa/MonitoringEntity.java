@@ -26,7 +26,7 @@ public class MonitoringEntity {
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY, generator="S_monitoring")
 	@Column(name = "monitoring_id")
-	@DataTableColumn(inputType = DataTableColumnType.ID, renderFormat = "dt-format-selector")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
     @Column(name = "date_insert")

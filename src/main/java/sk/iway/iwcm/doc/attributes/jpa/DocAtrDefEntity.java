@@ -45,7 +45,7 @@ public class DocAtrDefEntity extends ActiveRecordRepository {
     @Id
     @Column(name = "atr_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_doc_atr_def")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "atr_name")

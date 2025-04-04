@@ -34,7 +34,7 @@ public class MediaGroupBean extends ActiveRecordRepository implements Serializab
 	@GeneratedValue(generator="WJGen_MediaGroup")
 	@TableGenerator(name="WJGen_MediaGroup",pkColumnValue="MediaGroup")
 	@Column(name = "media_group_id")
-	@DataTableColumn(inputType = DataTableColumnType.ID, renderFormat = "dt-format-selector", title = "editor.cell.id")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@NotBlank

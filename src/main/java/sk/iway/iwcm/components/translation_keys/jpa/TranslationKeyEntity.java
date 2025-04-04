@@ -33,7 +33,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 public class TranslationKeyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_webjet_properties")
-    @DataTableColumn(inputType = {DataTableColumnType.ID}, className = "not-export", filter = false)
+    @DataTableColumn(inputType = DataTableColumnType.ID, className = "not-export", filter = false)
     private Long id;
 
     @Column(name = "prop_key")

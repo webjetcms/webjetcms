@@ -34,17 +34,17 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESERVATION_PRICE)
 public class ReservationObjectPriceEntity implements Serializable {
-    
+
     @Id
     @GeneratedValue(generator = "WJGen_reservation_object_price")
     @TableGenerator(name = "WJGen_reservation_object_price", pkColumnValue = "reservation_object_price")
     @Column(name = "object_price_id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "object_id")
     @DataTableColumn(
-        inputType = DataTableColumnType.NUMBER, 
+        inputType = DataTableColumnType.NUMBER,
         title = "reservation.reservation_object_price.reservation_object_id",
         editor = {
             @DataTableColumnEditor(
@@ -59,21 +59,21 @@ public class ReservationObjectPriceEntity implements Serializable {
     @Column(name = "datum_od")
     @NotNull
     @DataTableColumn(
-        inputType = DataTableColumnType.DATE, 
+        inputType = DataTableColumnType.DATE,
         title="components.reservation.reservation_list.date_from2")
     private Date dateFrom;
 
     @Column(name = "datum_do")
     @NotNull
     @DataTableColumn(
-        inputType = DataTableColumnType.DATE, 
+        inputType = DataTableColumnType.DATE,
         title="components.reservation.reservation_list.date_to2")
     private Date dateTo;
 
     @Column(name = "cena")
     @NotNull
     @DataTableColumn(
-        inputType = DataTableColumnType.NUMBER, 
+        inputType = DataTableColumnType.NUMBER,
         title = "reservation.reservation_object_price.price")
     private BigDecimal price;
 

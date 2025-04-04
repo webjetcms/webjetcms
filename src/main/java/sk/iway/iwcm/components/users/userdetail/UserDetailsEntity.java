@@ -241,17 +241,11 @@ public class UserDetailsEntity extends UserDetailsBasic {
     // private String disabledItems;
 
     @Column(name = "forum_rank")
-    @DataTableColumn(
-        inputType = DataTableColumnType.HIDDEN,
-        hidden = true
-    )
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
     private Integer forumRank;
 
     @Column(name = "rating_rank")
-    @DataTableColumn(
-        inputType = DataTableColumnType.HIDDEN,
-        hidden = true
-    )
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
     private Integer ratingRank;
 
 //    private String authorizeHash;

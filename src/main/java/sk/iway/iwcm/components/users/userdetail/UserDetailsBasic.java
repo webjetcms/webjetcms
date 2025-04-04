@@ -34,8 +34,6 @@ public class UserDetailsBasic extends ActiveRecordRepository {
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_users")
     @DataTableColumn(
             inputType = DataTableColumnType.ID,
-            title = "[[#{components.users.id}]]",
-            renderFormat = "dt-format-selector",
             sortAfter = "FIRST"
     )
     private Long id;

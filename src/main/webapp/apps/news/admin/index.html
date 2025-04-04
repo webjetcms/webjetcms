@@ -7,22 +7,6 @@
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "newsBreadcrumb",
-            tabs: [
-                {
-                    url: '/apps/news/admin/',
-                    title: '[[#{components.filter}]]',
-                    active: true
-                },
-                {
-                    url: '#newsGroup',
-                    title: '{filter}',
-                    active: false
-                }
-            ]
-        });
-
         function setGroupIdFilterSelect(data) {
             //Get object, select
             let filterSelect = document.getElementById('groupIdFilterSelect');
@@ -43,10 +27,6 @@
             $("#groupIdFilterSelect").selectpicker('refresh');
         }
 
-        //move filter to top navbar
-        $("#pills-newsGroup-tab").html("");
-        $("div#groupId_extfilter").appendTo("#pills-newsGroup-tab");
-
         let urlGroupIdFilter = "/admin/rest/news/news-list/convertIdsToNamePair?ids=constant:"+idsConstantName;
         let data = {};
         var includeParameter = WJ.urlGetParam("include");
@@ -61,8 +41,6 @@
             success: function (data) {
 
                 //console.log("mam data:", data);
-
-                setGroupIdFilterSelect(data);
 
                 let url = "/admin/rest/news/news-list";
 
@@ -79,7 +57,7 @@
                     var order = [];
                     order.push([4, 'desc']);
 
-                    url = WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val());
+                    url = WJ.urlAddParam(url, "groupIdList", data[0].value);
 
                     let wpdInstance = new module.WebPagesDatatable({
                         url: url,
@@ -89,12 +67,15 @@
                         newPageTitleKey: "apps.news.newsTitle.js",
                     });
                     newsDataTable = wpdInstance.createDatatable();
-                });
 
-                $("#groupIdFilterSelect").on("change", function() {
-                    var value = this.value;
-                    newsDataTable.setAjaxUrl(WJ.urlUpdateParam( newsDataTable.getAjaxUrl() , "groupIdList", this.value));
-                    newsDataTable.ajax.reload();
+                    $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupIdFilterSelect"></select></div>');
+                    setGroupIdFilterSelect(data);
+
+                    $("#groupIdFilterSelect").on("change", function() {
+                        var value = this.value;
+                        newsDataTable.setAjaxUrl(WJ.urlUpdateParam( newsDataTable.getAjaxUrl() , "groupIdList", this.value));
+                        newsDataTable.ajax.reload();
+                    });
                 });
             }
 
@@ -102,22 +83,5 @@
 
     });
 </script>
-
-<style type="text/css">
-    #pills-newsGroup-tab .bootstrap-select,
-    #pills-newsGroup-tab .bootstrap-select button {
-        min-width: 220px;
-        width: auto;
-    }
-</style>
-
-<div id="groupId_extfilter">
-    <div class="row datatableInit">
-        <div class="col-auto">
-            <select id="groupIdFilterSelect">
-            </select>
-        </div>
-    </div>
-</div>
 
 <table id="newsDataTable" class="datatableInit table"></table>

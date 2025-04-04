@@ -56,11 +56,7 @@ public class PermissionGroupBean extends ActiveRecordRepository implements Seria
 	@GeneratedValue(generator="WJGen_user_perm_groups")
 	@TableGenerator(name="WJGen_user_perm_groups",pkColumnValue="user_perm_groups")
 	@Column(name="group_id")
-	@DataTableColumn(
-		inputType = DataTableColumnType.ID,
-		title = "[[#{components.users.id}]]",
-		renderFormat = "dt-format-selector"
-	)
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@Column(name="group_title")

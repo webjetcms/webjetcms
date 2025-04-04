@@ -33,7 +33,7 @@ public class InquiryAnswerEntity extends ActiveRecordRepository implements Seria
     @Id
     @Column(name = "answer_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_inquiry_answers")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     @Accessors(chain = false)
     private Long id;
 

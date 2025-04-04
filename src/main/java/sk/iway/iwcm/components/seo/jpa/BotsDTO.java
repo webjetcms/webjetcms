@@ -25,9 +25,8 @@ public class BotsDTO {
         this.dayDate = dayDate;
     }
 
-    @DataTableColumn(
-        inputType = DataTableColumnType.NUMBER,
-        title="ID"
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER,
+        title="datatables.id.js"
     )
 	private Integer botId;
 
@@ -57,4 +56,4 @@ public class BotsDTO {
         title="components.seo.last_visit"
     )
 	private Date dayDate;
-} 
+}

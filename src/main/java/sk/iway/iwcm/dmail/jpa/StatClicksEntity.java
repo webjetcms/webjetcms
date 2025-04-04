@@ -34,7 +34,7 @@ public class StatClicksEntity extends ActiveRecordRepository implements Serializ
     @Id
     @Column(name = "click_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_emails_stat_click")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(table="emails", name="recipient_name")

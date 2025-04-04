@@ -15,11 +15,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 public class ConfPrefixDto extends ConfDetails {
 
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        renderFormat = "dt-format-selector",
-        title = "admin.conf_editor.id"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @DataTableColumn(

@@ -44,7 +44,7 @@ public class CampaingsEntity implements Serializable {
     @Id
     @Column(name = "emails_campain_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_emails_campain")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab = "main")
     private Long id;
 
     @Column(name = "subject")

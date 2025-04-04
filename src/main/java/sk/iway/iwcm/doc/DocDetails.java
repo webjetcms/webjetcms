@@ -81,7 +81,7 @@ public class DocDetails extends DocBasic {
 	@Id
 	@Column(name = "doc_id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY, generator="S_documents")
-	@DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	protected Long id;
 
 	@Column(name = "root_group_l1")

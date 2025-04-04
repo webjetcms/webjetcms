@@ -29,11 +29,7 @@ public class ConfPreparedEntity {
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_webjet_conf_prepared")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        renderFormat = "dt-format-selector",
-        title = "admin.conf_editor.id"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     /*planovane a historicke nechceme vediet editovat @NotBlank
