@@ -18,8 +18,6 @@ public class ConfDetailsDto extends ConfDetails {
 
 	@DataTableColumn(
         inputType = DataTableColumnType.ID,
-        renderFormat = "dt-format-selector",
-        title = "admin.conf_editor.id",
         tab = "basic",
         filter = false,
         editor = {

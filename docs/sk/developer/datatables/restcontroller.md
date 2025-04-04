@@ -691,7 +691,7 @@ public class ContactPlaceEntity {
     @Id
     @GeneratedValue(generator = "WJGen_ContactPlace")
     @TableGenerator(name = "WJGen_ContactPlace", pkColumnValue = "ContactPlace")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @JoinColumn(name = "CATEGORY_ID")

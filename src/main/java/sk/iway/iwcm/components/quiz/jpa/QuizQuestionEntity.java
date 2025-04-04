@@ -40,11 +40,11 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QUIZ)
 public class QuizQuestionEntity implements Serializable {
-    
+
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_quiz_questions")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "question")
@@ -83,7 +83,7 @@ public class QuizQuestionEntity implements Serializable {
 	private Integer rightAnswer;
 
     @Column(name = "image_url")
-    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, 
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER,
         title = "components.quiz.result.imageUrl",
 		className = "image",
 		renderFormat = "dt-format-image"
@@ -93,7 +93,7 @@ public class QuizQuestionEntity implements Serializable {
     private String imageUrl;
 
     @Column(name = "sort_order")
-    @DataTableColumn( 
+    @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
         title = "components.quiz.position",
         editor = {

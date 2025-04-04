@@ -47,7 +47,7 @@ public class UserGroupsEntity {
     @Id
 	@Column(name = "user_group_id")
     @GeneratedValue(strategy=GenerationType.IDENTITY, generator = "S_user_groups")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "[[#{editor.cell.id}]]")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
     @Size(max = 255)

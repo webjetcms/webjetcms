@@ -58,10 +58,7 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 	@GeneratedValue(generator="WJGen_url_redirect")
 	@TableGenerator(name="WJGen_url_redirect",pkColumnValue="url_redirect")
 	@Column(name="url_redirect_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title = "components.redirect.label.id"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long urlRedirectId;
 
 	@Column(name="insert_date")

@@ -23,10 +23,7 @@ import static sk.iway.iwcm.Tools.isEmpty;
  * @modified $Date: 2004/08/16 06:26:11 $
  */
 public class CronTask {
-	@DataTableColumn(
-			inputType = {DataTableColumnType.ID},
-			title = "[[#{components.cron_task.id}]]"
-	)
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@DataTableColumn(

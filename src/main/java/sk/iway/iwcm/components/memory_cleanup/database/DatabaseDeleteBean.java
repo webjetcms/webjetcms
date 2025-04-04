@@ -23,11 +23,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class DatabaseDeleteBean {
 
-    @DataTableColumn(
-            inputType = DataTableColumnType.ID,
-            title = "components.memory_cleanup.id",
-            filter = false
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID, filter = false)
     private Long id;
 
     @DataTableColumn(

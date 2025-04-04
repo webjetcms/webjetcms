@@ -9,10 +9,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class LinkCheckDto {
 
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title= "ID"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
 
