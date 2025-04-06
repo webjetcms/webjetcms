@@ -44,7 +44,7 @@ public class BasketInvoiceItemEntity {
 	@Column(name="basket_item_id")
 	@GeneratedValue(generator="WJGen_basket_item")
     @TableGenerator(name="WJGen_basket_item", pkColumnValue="basket_item")
-	@DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	Long id;
 
 	@ManyToOne

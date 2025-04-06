@@ -24,7 +24,7 @@ public class GooglePositionEntity {
 
     @Id
     @Column(name = "seo_google_position_id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "keyword_id")

@@ -29,7 +29,7 @@ public class CalendarTypesEntity implements Serializable {
     @Id
     @Column(name = "type_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_calendar_types")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "name")

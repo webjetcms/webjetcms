@@ -57,7 +57,7 @@ public class Media extends ActiveRecordRepository implements Serializable
 	@GeneratedValue(generator="WJGen_media")
 	@TableGenerator(name="WJGen_media",pkColumnValue="media")
 	@Column(name="media_id")
-	@DataTableColumn(inputType = DataTableColumnType.ID, title = "editor.cell.id")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@NotBlank
@@ -478,7 +478,7 @@ public class Media extends ActiveRecordRepository implements Serializable
 		this.fieldF = fieldF;
 	}
 
-	
+
 }
 
 

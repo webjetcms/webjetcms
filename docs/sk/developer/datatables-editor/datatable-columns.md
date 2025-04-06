@@ -16,10 +16,10 @@ Anotácia ```@DataTableColumn``` má rovnaké vlastnosti ako [pôvodný columns 
 
 ```java
 //TranslationKeyDto
-@DataTableColumn(inputType = {DataTableColumnType.ID})
+@DataTableColumn(inputType = DataTableColumnType.ID)
 private Integer id;
 
-@DataTableColumn(inputType = {DataTableColumnType.OPEN_EDITOR})
+@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR)
 private String key;
 
 @DataTableColumn(renderFormat = "dt-format-text-wrap", editor = {

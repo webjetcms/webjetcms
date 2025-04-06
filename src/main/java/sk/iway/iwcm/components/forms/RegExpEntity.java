@@ -29,7 +29,7 @@ public class RegExpEntity implements Serializable {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY, generator="S_webjet_form_regular_exp")
     @Column(name = "id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "title")

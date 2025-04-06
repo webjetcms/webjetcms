@@ -46,10 +46,7 @@ public class TemplatesGroupBean extends ActiveRecordRepository implements Serial
     @Column(name = "templates_group_id")
     @GeneratedValue(generator = "WJGen_templates_group")
     @TableGenerator(name = "WJGen_templates_group", pkColumnValue = "templates_group")
-    @DataTableColumn(
-            inputType = {DataTableColumnType.ID},
-            title = "components.template_groups.id"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long templatesGroupId;
 
     @Column(name = "name")

@@ -22,7 +22,7 @@ public class LogLevelBean {
         this.logLevel = logLevel.toUpperCase();
     }
 
-	@DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@DataTableColumn(

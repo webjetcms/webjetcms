@@ -49,7 +49,7 @@ public class ReservationObjectEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_reservation_object")
     @Column(name = "reservation_object_id")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "name")
