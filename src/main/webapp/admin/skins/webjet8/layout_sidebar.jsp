@@ -345,7 +345,7 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 			<%
 				if (InitServlet.isTypeCloud()==false && Constants.getBoolean("enableStaticFilesExternalDir"))
 				{
-					List<String> userDomains = GroupsDB.getInstance().getUserRootDomainNames(UsersDB.getCurrentUser(request).getEditableGroups());
+					List<String> userDomains = GroupsDB.getInstance().getUserRootDomainNames(UsersDB.getCurrentUser(request));
 					request.setAttribute("userDomains", userDomains);
 					request.setAttribute("actualDomain", DocDB.getDomain(request));
 					%>

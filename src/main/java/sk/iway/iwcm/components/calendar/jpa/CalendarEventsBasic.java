@@ -25,7 +25,7 @@ public class CalendarEventsBasic implements Serializable {
     @Id
     @Column(name = "calendar_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_calendar")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "title")

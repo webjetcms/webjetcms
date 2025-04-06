@@ -21,11 +21,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 public class FileHistoryEntity {
-    
+
     @Id
     @Column(name = "file_history_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_file_history")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "file_url")

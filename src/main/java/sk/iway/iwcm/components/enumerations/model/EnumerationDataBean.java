@@ -48,10 +48,7 @@ public class EnumerationDataBean extends ActiveRecordRepository implements Seria
     @GeneratedValue(generator = "WJGen_enumeration_data")
     @TableGenerator(name = "WJGen_enumeration_data", pkColumnValue = "enumeration_data")
     @Column(name = "enumeration_data_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title="ID"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column (name = "sort_priority")

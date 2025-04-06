@@ -27,9 +27,9 @@
 
         vueMonitoringApp.config.globalProperties.$printToPdf = '[[#{components.monitoring.print_to_pdf}]]';
         vueMonitoringApp.config.globalProperties.$emptySpaceOnDisk = '[[#{components.monitoring.empty_space_on_disc}]]';
-        vueMonitoringApp.config.globalProperties.$usedMemory = '[[#{components.monitoring.used_memory}]]';
-        vueMonitoringApp.config.globalProperties.$freeMemory = '[[#{components.monitoring.free_memory}]]';
-        vueMonitoringApp.config.globalProperties.$totalMemory = '[[#{components.monitoring.total_memory}]]';
+        vueMonitoringApp.config.globalProperties.$usedMemory = '[[#{components.monitoring.used_memory.js}]]';
+        vueMonitoringApp.config.globalProperties.$freeMemory = '[[#{components.monitoring.free_memory.js}]]';
+        vueMonitoringApp.config.globalProperties.$totalMemory = '[[#{components.monitoring.total_memory.js}]]';
         vueMonitoringApp.config.globalProperties.$occupancyMemory = '[[#{components.monitoring.memory_occupancy}]]';
         vueMonitoringApp.config.globalProperties.$cpuLoad = '[[#{components.monitoring.cpu_load}]]';
         vueMonitoringApp.config.globalProperties.$serverCpus = '[[#{components.monitoring.server_cpus}]]';

@@ -34,8 +34,7 @@ public class TemplateDetails {
 
     @DataTableColumn(
         data = "tempId",
-        inputType = {DataTableColumnType.ID},
-        title = "templates.temps-list.id"
+        inputType = DataTableColumnType.ID
     )
     private int tempId;
 

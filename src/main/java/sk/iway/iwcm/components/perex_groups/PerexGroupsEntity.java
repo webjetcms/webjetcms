@@ -33,7 +33,7 @@ public class PerexGroupsEntity implements Serializable {
     @Id
     @Column(name = "perex_group_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_perex_groups")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "perex_group_name")
