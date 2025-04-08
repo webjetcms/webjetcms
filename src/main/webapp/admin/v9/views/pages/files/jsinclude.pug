@@ -466,7 +466,7 @@ script.
     }
 
     function computeAvailableSpaceHeight() {
-        let tabsHeight = $(".md-tabs").outerHeight();
+        let tabsHeight = $(".tabbable-elfinder .md-tabs").outerHeight();
         if (typeof tabsHeight == "undefined") tabsHeight = 0;
         let availableSpace = parseInt( $(".ly-content").outerHeight() ) - parseInt( tabsHeight );
 

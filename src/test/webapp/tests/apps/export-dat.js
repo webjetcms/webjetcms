@@ -11,15 +11,15 @@ Scenario('Export dat zakladne testy @baseTest', async ({I, DataTables}) => {
         dataTable: 'exportDatDataTable',
         perms: 'cmp_export',
         createSteps: function(I, options) {
-            I.click("#pills-dt-exportDatDataTable-filter-tab");
+            I.clickCss("#pills-dt-exportDatDataTable-filter-tab");
             I.click(".btn-vue-jstree-add");
             I.click("test");
-            I.click("#pills-dt-exportDatDataTable-basic-tab");
+            I.clickCss("#pills-dt-exportDatDataTable-basic-tab");
         },
         editSteps: function(I, options) {
-            I.click("#pills-dt-exportDatDataTable-filter-tab");
+            I.clickCss("#pills-dt-exportDatDataTable-filter-tab");
             I.see("/test");
-            I.click("#pills-dt-exportDatDataTable-basic-tab");
+            I.clickCss("#pills-dt-exportDatDataTable-basic-tab");
         },
         editSearchSteps: function(I, options) {
         },

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationRestController.java</span></div><h1>ReservationRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationRestController.java</span></div><h1>ReservationRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -109,267 +109,181 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
             //Check if reservation object ID is set
 <span class="pc bpc" id="L110" title="1 of 2 branches missed.">            if(entity.getReservationObjectId() != null) {</span>
 <span class="fc" id="L111">                entity.setReservationObjectForReservation( ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId()).orElse(null) );</span>
-<span class="fc" id="L112">                entity.getEditorFields().toReservationEntity(entity, reservationRepository, getRequest(), false);</span>
+<span class="fc" id="L112">                entity.getEditorFields().toReservationEntity(entity, reservationRepository, getRequest(), false, isImporting(), action);</span>
 <span class="nc" id="L113">            } else throwError(&quot;&quot;);</span>
         }
 
 <span class="fc" id="L116">        return entity;</span>
     }
 
-    @RequestMapping(path={&quot;/reservation-object/{objectId}&quot;})
-    public ReservationObjectEntity getReservationObject(@PathVariable Long objectId) {
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if(objectId != null) {</span>
-            //Get reservation object
-<span class="fc" id="L123">            ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);</span>
-
-            //First set default values
-<span class="fc" id="L126">            String defaultTimeRangeString = getTimeStringRange(reservationObject.getReservationTimeFrom(), reservationObject.getReservationTimeTo());</span>
-<span class="fc" id="L127">            HashMap&lt;Integer, String&gt; objectTimesInfo = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">            for(int day = 1; day &lt;= 7; day++)</span>
-<span class="fc" id="L129">                objectTimesInfo.put(day, defaultTimeRangeString);</span>
-
-<span class="fc bfc" id="L131" title="All 2 branches covered.">            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {</span>
-                //Key (Integer) is day of week 1,2 ... 7
-                //Value (String) is combination timeFrom + &quot;-&quot; + timeTo (HH:mm format)
-<span class="fc" id="L134">                String timeRangeString = getTimeStringRange(objectTime.getTimeFrom(), objectTime.getTimeTo());</span>
-<span class="fc" id="L135">                objectTimesInfo.put(objectTime.getDay(), timeRangeString);</span>
-<span class="fc" id="L136">            }</span>
-
-<span class="fc" id="L138">            reservationObject.setObjectTimesInfo(objectTimesInfo);</span>
-
-<span class="fc" id="L140">            return reservationObject;</span>
-<span class="nc" id="L141">        } else throwError(&quot;&quot;);</span>
-<span class="nc" id="L142">        return null;</span>
-    }
-
-
-    @RequestMapping(
-        value=&quot;/check-reservation-validity&quot;,
-        params={&quot;date-from&quot;, &quot;date-to&quot;, &quot;time-from&quot;, &quot;time-to&quot;, &quot;object-id&quot;, &quot;reservation-id&quot;})
-    public String checkReservationValidity(
-        @RequestParam(&quot;date-from&quot;) Long dateFrom,
-        @RequestParam(&quot;date-to&quot;) Long dateTo,
-        @RequestParam(&quot;time-from&quot;) Long timeFrom,
-        @RequestParam(&quot;time-to&quot;) Long timeTo,
-        @RequestParam(&quot;object-id&quot;) Long objectId,
-        @RequestParam(&quot;reservation-id&quot;) Long reservationId) {
-
-<span class="fc" id="L157">        String unexpectedError = getProp().getText(&quot;html_area.insert_image.error_occured&quot;);</span>
-
-<span class="pc bpc" id="L159" title="5 of 10 branches missed.">        if(dateFrom == null || dateTo == null || timeFrom == null || timeTo == null || objectId == null)</span>
-<span class="nc" id="L160">            return unexpectedError;</span>
-
-        //Get reservation object
-<span class="fc" id="L163">        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);</span>
-        //We need keep data as fresh for validation, so get joined object times from DB
-<span class="fc" id="L165">        reservationObject.setReservationObjectTimeEntities( rotr.findAllByObjectIdAndDomainId(reservationObject.getId(), CloudToolsForCore.getDomainId()) );</span>
-
-        //Create reservation entity (just for test purpose)
-<span class="fc" id="L168">        ReservationEntity reservation = new ReservationEntity();</span>
-
-        //Set reservation
-<span class="fc" id="L171">        reservation.setDateFrom(new Date(dateFrom));</span>
-<span class="fc" id="L172">        reservation.setDateTo(new Date(dateTo));</span>
-<span class="fc" id="L173">        reservation.setId(reservationId);</span>
-<span class="fc" id="L174">        ReservationEditorFields ef = new ReservationEditorFields();</span>
-<span class="fc" id="L175">        ef.setReservationTimeFrom(DefaultTimeValueConverter.getValidTimeValue(new Date(timeFrom)));</span>
-<span class="fc" id="L176">        ef.setReservationTimeTo(DefaultTimeValueConverter.getValidTimeValue(new Date(timeTo)));</span>
-<span class="fc" id="L177">        reservation.setEditorFields(ef);</span>
-
-<span class="fc" id="L179">        ReservationService reservationService = new ReservationService(getProp());</span>
-
-        //Prepare entity
-<span class="fc" id="L182">        reservationService.prepareReservationToValidation(reservation, Tools.isTrue(reservationObject.getReservationForAllDay()));</span>
-
-<span class="fc" id="L184">        String error = null;</span>
-<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-<span class="fc" id="L186">            error = reservationService.checkReservationTimeRangeValidity(reservation, reservationObject);</span>
-<span class="fc bfc" id="L187" title="All 2 branches covered.">            if(error != null) return error;</span>
-        }
-
-<span class="fc" id="L190">        error = reservationService.checkReservationOverlappingValidity(reservation, reservationObject, reservationRepository);</span>
-<span class="fc bfc" id="L191" title="All 2 branches covered.">        if(error != null) return error;</span>
-
-<span class="fc" id="L193">        return null;</span>
-    }
-
-    private String getTimeStringRange(Date start, Date end) {
-<span class="pc bpc" id="L197" title="2 of 4 branches missed.">        if(start == null || end == null) return &quot;&quot;;</span>
-<span class="fc" id="L198">        return new SimpleDateFormat(&quot;HH:mm&quot;).format(start) + &quot; - &quot; + new SimpleDateFormat(&quot;HH:mm&quot;).format(end);</span>
-    }
-
     @Override
     public boolean processAction(ReservationEntity entity, String action) {
 
-<span class="fc" id="L204">        String unexpectedError = getProp().getText(&quot;html_area.insert_image.error_occured&quot;);</span>
-<span class="fc" id="L205">        String errorTitle = getProp().getText(&quot;reservation.reservations.password_for_delete.error_title&quot;);</span>
-<span class="fc" id="L206">        String acceptanceTitle = getProp().getText(&quot;reservation.reservations.acceptance_notification&quot;);</span>
+<span class="fc" id="L122">        String unexpectedError = getProp().getText(&quot;html_area.insert_image.error_occured&quot;);</span>
+<span class="fc" id="L123">        String errorTitle = getProp().getText(&quot;reservation.reservations.password_for_delete.error_title&quot;);</span>
+<span class="fc" id="L124">        String acceptanceTitle = getProp().getText(&quot;reservation.reservations.acceptance_notification&quot;);</span>
 
 
-<span class="fc" id="L209">        Identity loggedUser = UsersDB.getCurrentUser(getRequest());</span>
-<span class="fc" id="L210">        Long objectId = entity.getReservationObjectId();</span>
+<span class="fc" id="L127">        Identity loggedUser = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L128">        Long objectId = entity.getReservationObjectId();</span>
 
         //We are doing new delete process so clean passwords from session
-<span class="fc bfc" id="L213" title="All 2 branches covered.">        if(action.equals(&quot;prepareVerify&quot;)) {</span>
-<span class="fc" id="L214">            getRequest().getSession().removeAttribute(SESSION_ATRIBUTE_NAME);</span>
-<span class="fc" id="L215">            return true;</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">        if(action.equals(&quot;prepareVerify&quot;)) {</span>
+<span class="fc" id="L132">            getRequest().getSession().removeAttribute(SESSION_ATRIBUTE_NAME);</span>
+<span class="fc" id="L133">            return true;</span>
         }
 
         //Save combination password - reservationObjectId into session
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if(action.equals(&quot;verify&quot;)) {</span>
-<span class="fc" id="L220">            String customData = getRequest().getParameter(&quot;customData&quot;);</span>
-<span class="pc bpc" id="L221" title="2 of 4 branches missed.">            if(customData != null &amp;&amp; !customData.isEmpty()) {</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        if(action.equals(&quot;verify&quot;)) {</span>
+<span class="fc" id="L138">            String customData = getRequest().getParameter(&quot;customData&quot;);</span>
+<span class="pc bpc" id="L139" title="2 of 4 branches missed.">            if(customData != null &amp;&amp; !customData.isEmpty()) {</span>
                 try {
                     @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L224">                    Map&lt;Long, String&gt; deletePasswords = (Map&lt;Long, String&gt;)getRequest().getSession().getAttribute(SESSION_ATRIBUTE_NAME);</span>
-<span class="fc bfc" id="L225" title="All 2 branches covered.">                    if(deletePasswords == null) deletePasswords = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L142">                    Map&lt;Long, String&gt; deletePasswords = (Map&lt;Long, String&gt;)getRequest().getSession().getAttribute(SESSION_ATRIBUTE_NAME);</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">                    if(deletePasswords == null) deletePasswords = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L227">                    JSONObject jsonObject = new JSONObject(customData);</span>
-<span class="fc" id="L228">                    deletePasswords.put(jsonObject.getLong(RESERVATION_OBJECT_ID), (String)jsonObject.get(&quot;password&quot;));</span>
+<span class="fc" id="L145">                    JSONObject jsonObject = new JSONObject(customData);</span>
+<span class="fc" id="L146">                    deletePasswords.put(jsonObject.getLong(RESERVATION_OBJECT_ID), (String)jsonObject.get(&quot;password&quot;));</span>
 
-<span class="fc" id="L230">                    getRequest().getSession().setAttribute(SESSION_ATRIBUTE_NAME, deletePasswords);</span>
-<span class="nc" id="L231">                } catch (Exception err){</span>
-<span class="nc" id="L232">                    addNotify(new NotifyBean(errorTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L233">                    return true;</span>
-<span class="fc" id="L234">                }</span>
+<span class="fc" id="L148">                    getRequest().getSession().setAttribute(SESSION_ATRIBUTE_NAME, deletePasswords);</span>
+<span class="nc" id="L149">                } catch (Exception err){</span>
+<span class="nc" id="L150">                    addNotify(new NotifyBean(errorTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L151">                    return true;</span>
+<span class="fc" id="L152">                }</span>
             }
-<span class="fc" id="L236">            return true;</span>
+<span class="fc" id="L154">            return true;</span>
         }
 
         //Check id
-<span class="nc bnc" id="L240" title="All 2 branches missed.">        if(objectId == null) {</span>
-<span class="nc" id="L241">            addNotify(new NotifyBean(acceptanceTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L242">            return true;</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if(objectId == null) {</span>
+<span class="nc" id="L159">            addNotify(new NotifyBean(acceptanceTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L160">            return true;</span>
         }
 
-<span class="nc" id="L245">        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId()).orElse(null);</span>
-<span class="nc" id="L246">        String objectAccepterEmail = reservationObject.getEmailAccepter();</span>
+<span class="fc" id="L163">        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="fc" id="L164">        String objectAccepterEmail = reservationObject.getEmailAccepter();</span>
 
         //Check if reservation needs acceptation
-<span class="nc bnc" id="L249" title="All 2 branches missed.">        if(Tools.isTrue(reservationObject.getMustAccepted())) {</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if(Tools.isTrue(reservationObject.getMustAccepted())) {</span>
             //This reservation needs acceptation, check if accepter email is set
-<span class="nc bnc" id="L251" title="All 4 branches missed.">            if(objectAccepterEmail == null || objectAccepterEmail.isEmpty()) {</span>
+<span class="pc bpc" id="L169" title="2 of 4 branches missed.">            if(objectAccepterEmail == null || objectAccepterEmail.isEmpty()) {</span>
                 //Error because there is no accepter email
-<span class="nc" id="L253">                addNotify(new NotifyBean(acceptanceTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L254">                return true;</span>
+<span class="nc" id="L171">                addNotify(new NotifyBean(acceptanceTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L172">                return true;</span>
             }
 
             //Check if logged user have right to approve/reject reservation upon reservationObject
-<span class="nc bnc" id="L258" title="All 2 branches missed.">            if(!loggedUser.getEmail().equals(reservationObject.getEmailAccepter())) {</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">            if(!loggedUser.getEmail().equals(reservationObject.getEmailAccepter())) {</span>
                 //Error because logged user can't accept/reject reservation
-<span class="nc" id="L260">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.no_right&quot;) + &quot; &lt;strong&gt;&quot; +  reservationObject.getName() + &quot;&lt;/strong&gt;&quot;, NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L261">                return true;</span>
+<span class="nc" id="L178">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.no_right&quot;) + &quot; &lt;strong&gt;&quot; +  reservationObject.getName() + &quot;&lt;/strong&gt;&quot;, NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L179">                return true;</span>
             }
         }
 
-<span class="nc" id="L265">        ReservationService reservationService = new ReservationService(getProp());</span>
-<span class="nc bnc" id="L266" title="All 2 branches missed.">        if(&quot;approve&quot;.equals(action)) {</span>
+<span class="fc" id="L183">        ReservationService reservationService = new ReservationService(getProp());</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        if(&quot;approve&quot;.equals(action)) {</span>
             //Is this status already set ?
-<span class="nc bnc" id="L268" title="All 2 branches missed.">            if(Tools.isTrue(entity.getAccepted())) {</span>
-<span class="nc" id="L269">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_accepted_succ&quot;), NotifyType.SUCCESS, 15000));</span>
-<span class="nc" id="L270">                return true;</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">            if(Tools.isTrue(entity.getAccepted())) {</span>
+<span class="nc" id="L187">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_accepted_succ&quot;), NotifyType.SUCCESS, 15000));</span>
+<span class="nc" id="L188">                return true;</span>
             }
 
             //FIRST check if reservation is still valid !!
 
-<span class="nc bnc" id="L275" title="All 2 branches missed.">            if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-<span class="nc" id="L276">                String error = reservationService.checkReservationTimeRangeValidity(entity, reservationObject);</span>
-<span class="nc bnc" id="L277" title="All 2 branches missed.">                if(error != null) {</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">            if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
+<span class="fc" id="L194">                String error = reservationService.checkReservationTimeRangeValidity(entity, reservationObject);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">                if(error != null) {</span>
                     //REJECT reservation auto
-<span class="nc" id="L279">                    entity.setAccepted(Boolean.FALSE);</span>
+<span class="nc" id="L197">                    entity.setAccepted(Boolean.FALSE);</span>
 
                     //Send email
-<span class="nc" id="L282">                    reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());</span>
+<span class="nc" id="L200">                    reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);</span>
 
                     //Save changes entity
-<span class="nc" id="L285">                    reservationRepository.save(entity);</span>
-<span class="nc" id="L286">                    addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error), NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L287">                    return true;</span>
+<span class="nc" id="L203">                    reservationRepository.save(entity);</span>
+<span class="nc" id="L204">                    addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error), NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L205">                    return true;</span>
                 }
             }
 
-<span class="nc" id="L291">            String error2 = reservationService.checkReservationOverlappingValidity(entity, reservationObject, reservationRepository);</span>
-<span class="nc bnc" id="L292" title="All 2 branches missed.">            if(error2 != null) {</span>
+<span class="fc" id="L209">            String error2 = reservationService.checkReservationOverlappingValidity(entity, reservationObject, reservationRepository, false);</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">            if(error2 != null) {</span>
                 //REJECT entity auto
-<span class="nc" id="L294">                entity.setAccepted(Boolean.FALSE);</span>
+<span class="nc" id="L212">                entity.setAccepted(Boolean.FALSE);</span>
 
                 //Send email
-<span class="nc" id="L297">                reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());</span>
+<span class="nc" id="L215">                reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);</span>
 
                 //Save changes entity
-<span class="nc" id="L300">                reservationRepository.save(entity);</span>
-<span class="nc" id="L301">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error2), NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L302">                return true;</span>
+<span class="nc" id="L218">                reservationRepository.save(entity);</span>
+<span class="nc" id="L219">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(error2), NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L220">                return true;</span>
             }
 
             //Reservation was approved
-<span class="nc" id="L306">            entity.setAccepted(Boolean.TRUE);</span>
+<span class="fc" id="L224">            entity.setAccepted(Boolean.TRUE);</span>
 
             //Send email
-<span class="nc" id="L309">            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());</span>
-<span class="nc" id="L310">            addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_accepted_succ&quot;), NotifyType.SUCCESS, 15000));</span>
-<span class="nc bnc" id="L311" title="All 2 branches missed.">        } else if(&quot;reject&quot;.equals(action)) {</span>
+<span class="fc" id="L227">            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);</span>
+<span class="fc" id="L228">            addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_accepted_succ&quot;), NotifyType.SUCCESS, 15000));</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">        } else if(&quot;reject&quot;.equals(action)) {</span>
             //Is this status already set ?
-<span class="nc bnc" id="L313" title="All 2 branches missed.">            if(Tools.isFalse(entity.getAccepted())) {</span>
-<span class="nc" id="L314">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_rejected_succ&quot;), NotifyType.SUCCESS, 15000));</span>
-<span class="nc" id="L315">                return true;</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">            if(Tools.isFalse(entity.getAccepted())) {</span>
+<span class="nc" id="L232">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_rejected_succ&quot;), NotifyType.SUCCESS, 15000));</span>
+<span class="nc" id="L233">                return true;</span>
             }
             //Reservation was rejected
-<span class="nc" id="L318">            entity.setAccepted(Boolean.FALSE);</span>
+<span class="fc" id="L236">            entity.setAccepted(Boolean.FALSE);</span>
 
             //Send email
-<span class="nc" id="L321">            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());</span>
-<span class="nc" id="L322">            addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_rejected_succ&quot;), NotifyType.SUCCESS, 15000));</span>
-<span class="nc bnc" id="L323" title="All 2 branches missed.">        } else if(&quot;reset&quot;.equals(action)) {</span>
+<span class="fc" id="L239">            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);</span>
+<span class="fc" id="L240">            addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_rejected_succ&quot;), NotifyType.SUCCESS, 15000));</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">        } else if(&quot;reset&quot;.equals(action)) {</span>
             //Is this status already set ?
-<span class="nc bnc" id="L325" title="All 2 branches missed.">            if(entity.getAccepted() == null) {</span>
-<span class="nc" id="L326">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_reset_succ&quot;), NotifyType.SUCCESS, 15000));</span>
-<span class="nc" id="L327">                return true;</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">            if(entity.getAccepted() == null) {</span>
+<span class="nc" id="L244">                addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_reset_succ&quot;), NotifyType.SUCCESS, 15000));</span>
+<span class="nc" id="L245">                return true;</span>
             }
 
             //Reservation now will waiting for acceptation
-<span class="nc" id="L331">            entity.setAccepted(null);</span>
+<span class="fc" id="L249">            entity.setAccepted(null);</span>
 
             //Send email
-<span class="nc" id="L334">            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser.getFullName());</span>
-<span class="nc" id="L335">            addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_reset_succ&quot;), NotifyType.SUCCESS, 15000));</span>
+<span class="fc" id="L252">            reservationService.sendConfirmationEmail(entity, getRequest(), loggedUser);</span>
+<span class="fc" id="L253">            addNotify(new NotifyBean(acceptanceTitle, getProp().getText(&quot;reservation.reservations.reservation_reset_succ&quot;), NotifyType.SUCCESS, 15000));</span>
         }
 
         //Save changes entity
-<span class="nc" id="L339">        reservationRepository.save(entity);</span>
+<span class="fc" id="L257">        reservationRepository.save(entity);</span>
 
-<span class="nc" id="L341">        return true;</span>
+<span class="fc" id="L259">        return true;</span>
     }
 
     @Override
 	public void beforeSave(ReservationEntity entity) {
         //Email is NULL, because this is ADMIN section, so admin must be logged in
-<span class="fc" id="L347">        int userId = ReservationService.getUserToPay(null, entity.getId(), reservationRepository, getRequest());</span>
+<span class="fc" id="L265">        int userId = ReservationService.getUserToPay(null, entity.getId(), reservationRepository, getRequest());</span>
 
         //INSERT action
-<span class="pc bpc" id="L350" title="1 of 4 branches missed.">        if(entity.getId() == null || entity.getId() == -1) {</span>
-            //Set domain id, not null
-<span class="fc" id="L352">            entity.setDomainId(CloudToolsForCore.getDomainId());</span>
-
-            //Set creator id
-<span class="fc" id="L355">            entity.setUserId(userId);</span>
-
-<span class="fc" id="L357">            entity.setId(-1L);</span>
+<span class="pc bpc" id="L268" title="1 of 4 branches missed.">        if(entity.getId() == null || entity.getId() == -1) {</span>
+<span class="fc" id="L269">            entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L270">            entity.setUserId(userId);</span>
+<span class="fc" id="L271">            entity.setId(-1L);</span>
         }
 
         //Set price of reservation
-<span class="fc" id="L361">        entity.setPrice( ReservationService.calculateReservationPrice(entity, userId, ror, ropr) );</span>
-<span class="fc" id="L362">	}</span>
+<span class="fc" id="L275">        entity.setPrice( ReservationService.calculateReservationPrice(entity, userId, ror, ropr) );</span>
+<span class="fc" id="L276">	}</span>
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;ReservationEntity&gt; root, CriteriaBuilder builder) {
         //Search based on reservationObjectName, we find inside DB then in columns reservationObjectId
-<span class="fc" id="L367">        String searchReservationObjectName = params.get(&quot;searchEditorFields.selectedReservation&quot;);</span>
-<span class="fc bfc" id="L368" title="All 2 branches covered.">        if (searchReservationObjectName != null)</span>
-<span class="fc" id="L369">            addSpecSearchReservationObjectName(searchReservationObjectName, RESERVATION_OBJECT_ID, predicates, root, builder);</span>
+<span class="fc" id="L281">        String searchReservationObjectName = params.get(&quot;searchEditorFields.selectedReservation&quot;);</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">        if (searchReservationObjectName != null)</span>
+<span class="fc" id="L283">            addSpecSearchReservationObjectName(searchReservationObjectName, RESERVATION_OBJECT_ID, predicates, root, builder);</span>
 
-<span class="fc" id="L371">        super.addSpecSearch(params, predicates, root, builder);</span>
-<span class="fc" id="L372">    }</span>
+<span class="fc" id="L285">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L286">    }</span>
 
     /**
 	 * Special search to filter reservations based on reservationObjectName (paramValue). Because ReservationEntity do not contain column with reservationObjectName (only reservationObjectId),
@@ -381,101 +295,117 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
 	 * @param builder
 	 */
 	private static void addSpecSearchReservationObjectName(String paramValue, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;ReservationEntity&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L384">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
+<span class="fc" id="L298">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
 
-<span class="fc" id="L386">		String operator = &quot;LIKE&quot;;</span>
-<span class="fc" id="L387">		String prepend = &quot;%&quot;;</span>
-<span class="fc" id="L388">		String append = &quot;%&quot;;</span>
+<span class="fc" id="L300">		String operator = &quot;LIKE&quot;;</span>
+<span class="fc" id="L301">		String prepend = &quot;%&quot;;</span>
+<span class="fc" id="L302">		String append = &quot;%&quot;;</span>
 
-<span class="pc bpc" id="L390" title="3 of 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L391">			operator = &quot;=&quot;;</span>
-<span class="nc" id="L392">			prepend = &quot;&quot;;</span>
-<span class="nc" id="L393">			append = &quot;&quot;;</span>
-<span class="pc bpc" id="L394" title="1 of 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
-<span class="nc" id="L395">			prepend = &quot;&quot;;</span>
-<span class="pc bpc" id="L396" title="1 of 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L397">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L304" title="1 of 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="fc" id="L305">			operator = &quot;=&quot;;</span>
+<span class="fc" id="L306">			prepend = &quot;&quot;;</span>
+<span class="fc" id="L307">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
+<span class="nc" id="L309">			prepend = &quot;&quot;;</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L311">			append = &quot;&quot;;</span>
 		}
 
-<span class="fc" id="L400">		List&lt;Integer&gt; reservationObejctIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT reservation_object_id FROM reservation_object WHERE name &quot; + operator +&quot; ?&quot;, prepend + valueClean + append);</span>
-<span class="pc bpc" id="L401" title="1 of 2 branches missed.">		if(reservationObejctIds.isEmpty() == false) predicates.add(root.get(jpaProperty).in(reservationObejctIds));</span>
-<span class="nc" id="L402">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
-<span class="fc" id="L403">	}</span>
+<span class="fc" id="L314">		List&lt;Integer&gt; reservationObejctIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT reservation_object_id FROM reservation_object WHERE name &quot; + operator + &quot; ?&quot;, prepend + valueClean + append);</span>
+<span class="pc bpc" id="L315" title="1 of 2 branches missed.">		if(reservationObejctIds.isEmpty() == false) predicates.add(root.get(jpaProperty).in(reservationObejctIds));</span>
+<span class="nc" id="L316">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
+<span class="fc" id="L317">	}</span>
 
     @Override
     public boolean deleteItem(ReservationEntity entity, long id) {
-
-<span class="fc" id="L408">        String unexpectedError = getProp().getText(&quot;html_area.insert_image.error_occured&quot;);</span>
-<span class="fc" id="L409">        String errorTitle = getProp().getText(&quot;reservation.reservations.password_for_delete.error_title&quot;);</span>
+<span class="fc" id="L321">        String unexpectedError = getProp().getText(&quot;html_area.insert_image.error_occured&quot;);</span>
+<span class="fc" id="L322">        String errorTitle = getProp().getText(&quot;reservation.reservations.password_for_delete.error_title&quot;);</span>
 
         //Check if reservation object need password
-<span class="fc bfc" id="L412" title="All 2 branches covered.">        if(Tools.isTrue(entity.getEditorFields().getNeedPasswordToDelete())) {</span>
-<span class="fc" id="L413">            Prop prop = getProp();</span>
-<span class="fc" id="L414">            Optional&lt;ReservationObjectEntity&gt; optReservationObject = ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if(Tools.isTrue(entity.getEditorFields().getNeedPasswordToDelete())) {</span>
+<span class="fc" id="L326">            Prop prop = getProp();</span>
+<span class="fc" id="L327">            Optional&lt;ReservationObjectEntity&gt; optReservationObject = ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId());</span>
 
-<span class="pc bpc" id="L416" title="1 of 2 branches missed.">            if(!optReservationObject.isPresent()) {</span>
-<span class="nc" id="L417">                addNotify(new NotifyBean(errorTitle, getProp().getText(&quot;reservation.reservations.password_for_delete.error_entity_not_found&quot;), NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L418">                return false;</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">            if(!optReservationObject.isPresent()) {</span>
+<span class="nc" id="L330">                addNotify(new NotifyBean(errorTitle, getProp().getText(&quot;reservation.reservations.password_for_delete.error_entity_not_found&quot;), NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L331">                return false;</span>
             }
 
             @SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L422">            Map&lt;Long, String&gt; deletePasswords = (Map&lt;Long, String&gt;)getRequest().getSession().getAttribute(SESSION_ATRIBUTE_NAME);</span>
+<span class="fc" id="L335">            Map&lt;Long, String&gt; deletePasswords = (Map&lt;Long, String&gt;)getRequest().getSession().getAttribute(SESSION_ATRIBUTE_NAME);</span>
 
-<span class="fc" id="L424">            String password = deletePasswords.get(entity.getReservationObjectId());</span>
+<span class="fc" id="L337">            String password = deletePasswords.get(entity.getReservationObjectId());</span>
 
-<span class="pc bpc" id="L426" title="1 of 2 branches missed.">            if(password == null) {</span>
-<span class="nc" id="L427">                addNotify(new NotifyBean(errorTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
-<span class="nc" id="L428">                return false;</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">            if(password == null) {</span>
+<span class="nc" id="L340">                addNotify(new NotifyBean(errorTitle, unexpectedError, NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L341">                return false;</span>
             }
 
             //Verify password
-<span class="fc bfc" id="L432" title="All 2 branches covered.">            if(optReservationObject.get().checkPasswordAndHashEquality(password, optReservationObject.get().getPassword())) reservationRepository.delete(entity);</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">            if(optReservationObject.get().checkPasswordAndHashEquality(password, optReservationObject.get().getPassword())) reservationRepository.delete(entity);</span>
             else {
-<span class="fc" id="L434">                String errorText = prop.getText(&quot;reservation.reservations.password_for_delete.error_bad_password_1&quot;) + &quot; &lt;b&gt;&quot; + optReservationObject.get().getName() + &quot; &lt;/b&gt; &quot;;</span>
-<span class="fc" id="L435">                errorText += prop.getText(&quot;reservation.reservations.password_for_delete.error_bad_password_2&quot;) + &quot; &lt;b&gt;&quot; + id + &quot; &lt;/b&gt; &quot;;</span>
-<span class="fc" id="L436">                errorText += prop.getText(&quot;reservation.reservations.password_for_delete.error_bad_password_3&quot;);</span>
-<span class="fc" id="L437">                addNotify(new NotifyBean(errorTitle, errorText, NotifyType.ERROR, 15000));</span>
+<span class="fc" id="L347">                String errorText = prop.getText(&quot;reservation.reservations.password_for_delete.error_bad_password_1&quot;) + &quot; &lt;b&gt;&quot; + optReservationObject.get().getName() + &quot; &lt;/b&gt; &quot;;</span>
+<span class="fc" id="L348">                errorText += prop.getText(&quot;reservation.reservations.password_for_delete.error_bad_password_2&quot;) + &quot; &lt;b&gt;&quot; + id + &quot; &lt;/b&gt; &quot;;</span>
+<span class="fc" id="L349">                errorText += prop.getText(&quot;reservation.reservations.password_for_delete.error_bad_password_3&quot;);</span>
+<span class="fc" id="L350">                addNotify(new NotifyBean(errorTitle, errorText, NotifyType.ERROR, 15000));</span>
             }
-<span class="fc" id="L439">        } else reservationRepository.delete(entity);</span>
+<span class="fc" id="L352">        } else reservationRepository.delete(entity);</span>
 
-<span class="fc" id="L441">        return true;</span>
+<span class="fc" id="L354">        return true;</span>
     }
 
     @Override
     public void afterSave(ReservationEntity entity, ReservationEntity saved) {
-        //Check if we must send Acceptation email
-<span class="fc" id="L447">        ReservationObjectEntity reservationObject = entity.getReservationObjectForReservation();</span>
-<span class="fc" id="L448">        ReservationService reservationService = new ReservationService(getProp());</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        if(!isImporting()) {</span>
+            //Check if we must send Acceptation email
+<span class="fc" id="L361">            ReservationObjectEntity reservationObject = entity.getReservationObjectForReservation();</span>
+<span class="fc" id="L362">            ReservationService reservationService = new ReservationService(getProp());</span>
 
-<span class="pc bpc" id="L450" title="3 of 6 branches missed.">        if(reservationObject != null &amp;&amp; Tools.isTrue(reservationObject.getMustAccepted()) &amp;&amp; entity.getAccepted() == null) {</span>
-            //for some reason time part is lost even when in DB its saved good
-<span class="nc" id="L452">            entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()) );</span>
-<span class="nc" id="L453">            entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()) );</span>
-<span class="nc" id="L454">            reservationService.sendAcceptationEmail(entity, getRequest());</span>
+<span class="pc bpc" id="L364" title="3 of 6 branches missed.">            if(reservationObject != null &amp;&amp; Tools.isTrue(reservationObject.getMustAccepted()) &amp;&amp; entity.getAccepted() == null) {</span>
+                //for some reason time part is lost even when in DB its saved good
+<span class="nc" id="L366">                entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()) );</span>
+<span class="nc" id="L367">                entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()) );</span>
+<span class="nc" id="L368">                reservationService.sendAcceptationEmail(entity, getRequest());</span>
+            }
+
+            //Send email only if reservation was created - new only
+<span class="fc bfc" id="L372" title="All 2 branches covered.">            if(entity.getId() == -1)</span>
+<span class="fc" id="L373">                reservationService.sendCreatedReservationEmail(saved, getRequest());</span>
         }
-
-<span class="fc" id="L457">        reservationService.sendCreatedReservationEmail(saved, getRequest());</span>
-<span class="fc" id="L458">    }</span>
+<span class="fc" id="L375">    }</span>
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, ReservationEntity&gt; target, Identity user, Errors errors, Long id, ReservationEntity entity) {
-<span class="pc bpc" id="L462" title="1 of 6 branches missed.">        if(target.getAction().equals(&quot;create&quot;) || target.getAction().equals(&quot;edit&quot;) &amp;&amp; entity.getEditorFields() != null) {</span>
+<span class="pc bpc" id="L379" title="1 of 6 branches missed.">        if(target.getAction().equals(&quot;create&quot;) || target.getAction().equals(&quot;edit&quot;) &amp;&amp; entity.getEditorFields() != null) {</span>
             //Is object set as ALL DAY reservation ? - if yes, we do not need to check time
-<span class="fc" id="L464">            Boolean allDay = false;</span>
-<span class="pc bpc" id="L465" title="1 of 2 branches missed.">            if (entity.getReservationObjectId()!=null) allDay = ror.isReservationForAllDay(entity.getReservationObjectId());</span>
-<span class="pc bpc" id="L466" title="1 of 2 branches missed.">            if(Tools.isFalse(allDay)) {</span>
-<span class="pc bpc" id="L467" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeFrom() == null)</span>
-<span class="nc" id="L468">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeFrom&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
-<span class="pc bpc" id="L469" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeTo() == null)</span>
-<span class="nc" id="L470">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeTo&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="fc" id="L381">            Boolean allDay = false;</span>
+<span class="pc bpc" id="L382" title="1 of 2 branches missed.">            if (entity.getReservationObjectId()!=null) allDay = ror.isReservationForAllDay(entity.getReservationObjectId());</span>
+
+<span class="fc bfc" id="L384" title="All 2 branches covered.">            if(Tools.isTrue(allDay)) {</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">                if(entity.getEditorFields().getArrivingTime() == null) {</span>
+                    //errors.rejectValue(&quot;errorField.editorFields.arrivingTime&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));
+<span class="pc bpc" id="L387" title="1 of 2 branches missed.">                    if (entity.getEditorFields().getReservationTimeFrom() != null) entity.getEditorFields().setArrivingTime(entity.getEditorFields().getReservationTimeFrom());</span>
+<span class="nc" id="L388">                    else entity.getEditorFields().setArrivingTime(ReservationService.getArrivalTime(entity));</span>
+                }
+<span class="fc bfc" id="L390" title="All 2 branches covered.">                if(entity.getEditorFields().getDepartureTime() == null) {</span>
+                    //errors.rejectValue(&quot;errorField.editorFields.departureTime&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));
+<span class="pc bpc" id="L392" title="1 of 2 branches missed.">                    if (entity.getEditorFields().getReservationTimeTo() != null) entity.getEditorFields().setDepartureTime(entity.getEditorFields().getReservationTimeTo());</span>
+<span class="nc" id="L393">                    else entity.getEditorFields().setDepartureTime(ReservationService.getDepartureTime(entity));</span>
+                }
+            } else {
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeFrom() == null)</span>
+<span class="nc" id="L397">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeFrom&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeTo() == null)</span>
+<span class="nc" id="L399">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeTo&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
             }
 
-<span class="pc bpc" id="L473" title="2 of 4 branches missed.">            if(Tools.isEmpty(entity.getEmail()) == false &amp;&amp; Tools.isEmail(entity.getEmail()) == false)</span>
-<span class="nc" id="L474">                errors.rejectValue(&quot;errorField.email&quot;, null, getProp().getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
+<span class="pc bpc" id="L402" title="2 of 4 branches missed.">            if(Tools.isNotEmpty(entity.getEmail()) &amp;&amp; Tools.isEmail(entity.getEmail())==false) {</span>
+<span class="nc" id="L403">                errors.rejectValue(&quot;errorField.email&quot;, null, getProp().getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
+            }
         }
 
-<span class="fc" id="L477">        super.validateEditor(request, target, user, errors, id, entity);</span>
-<span class="fc" id="L478">    }</span>
+<span class="fc" id="L407">        super.validateEditor(request, target, user, errors, id, entity);</span>
+<span class="fc" id="L408">    }</span>
 
     @RequestMapping(
         value=&quot;/compute-reservation-price&quot;,
@@ -488,8 +418,121 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
         @RequestParam(&quot;object-id&quot;) Long objectId,
         @RequestParam(&quot;reservation-id&quot;) Long reservationId) {
             //Email is NULL, because this is ADMIN section, so admin must be logged in
-<span class="fc" id="L491">            int userId = ReservationService.getUserToPay(null, reservationId, reservationRepository, getRequest());</span>
-<span class="fc" id="L492">            return ReservationService.calculateReservationPrice(dateFrom, dateTo, timeFrom, timeTo, objectId, userId, ror, ropr);</span>
+<span class="fc" id="L421">            int userId = ReservationService.getUserToPay(null, reservationId, reservationRepository, getRequest());</span>
+<span class="fc" id="L422">            return ReservationService.calculateReservationPrice(dateFrom, dateTo, timeFrom, timeTo, objectId, userId, ror, ropr);</span>
         }
+
+    @RequestMapping(path={&quot;/reservation-object/{objectId}&quot;})
+    public ReservationObjectEntity getReservationObject(@PathVariable Long objectId) {
+<span class="pc bpc" id="L427" title="1 of 2 branches missed.">        if(objectId != null) {</span>
+            //Get reservation object
+<span class="fc" id="L429">            ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">            if(reservationObject == null) {</span>
+<span class="nc" id="L431">                throwError(&quot;Reservation object was not found.&quot;);</span>
+<span class="nc" id="L432">                return null;</span>
+            }
+
+            //First set default values
+<span class="fc" id="L436">            String defaultTimeRangeString = getTimeStringRange(reservationObject.getReservationTimeFrom(), reservationObject.getReservationTimeTo());</span>
+<span class="fc" id="L437">            HashMap&lt;Integer, String&gt; objectTimesInfo = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">            for(int day = 1; day &lt;= 7; day++)</span>
+<span class="fc" id="L439">                objectTimesInfo.put(day, defaultTimeRangeString);</span>
+
+<span class="fc bfc" id="L441" title="All 2 branches covered.">            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {</span>
+                //Key (Integer) is day of week 1,2 ... 7
+                //Value (String) is combination timeFrom + &quot;-&quot; + timeTo (HH:mm format)
+<span class="fc" id="L444">                String timeRangeString = getTimeStringRange(objectTime.getTimeFrom(), objectTime.getTimeTo());</span>
+<span class="fc" id="L445">                objectTimesInfo.put(objectTime.getDay(), timeRangeString);</span>
+<span class="fc" id="L446">            }</span>
+
+<span class="fc" id="L448">            reservationObject.setObjectTimesInfo(objectTimesInfo);</span>
+
+<span class="fc" id="L450">            return reservationObject;</span>
+<span class="nc" id="L451">        } else throwError(&quot;&quot;);</span>
+<span class="nc" id="L452">        return null;</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/check-reservation-validity&quot;,
+        params={&quot;date-from&quot;, &quot;date-to&quot;, &quot;time-from&quot;, &quot;time-to&quot;, &quot;object-id&quot;, &quot;reservation-id&quot;, &quot;allow-history-save&quot;, &quot;allow-overbooking&quot;, &quot;isDuplicate&quot;})
+    public String checkReservationValidity(
+        @RequestParam(&quot;date-from&quot;) Long dateFrom,
+        @RequestParam(&quot;date-to&quot;) Long dateTo,
+        @RequestParam(&quot;time-from&quot;) Long timeFrom, //or aka arrivalTime if it's all day reservation
+        @RequestParam(&quot;time-to&quot;) Long timeTo,     //or aka departureTime if it's all day reservation
+        @RequestParam(&quot;object-id&quot;) Long objectId,
+        @RequestParam(&quot;reservation-id&quot;) Long reservationId,
+        @RequestParam(&quot;allow-history-save&quot;) boolean allowHistorySave,
+        @RequestParam(&quot;allow-overbooking&quot;) boolean allowOverbooking,
+        @RequestParam(&quot;isDuplicate&quot;) boolean isDuplicate) {
+
+<span class="fc" id="L469">        String unexpectedError = getProp().getText(&quot;html_area.insert_image.error_occured&quot;);</span>
+
+<span class="pc bpc" id="L471" title="5 of 10 branches missed.">        if(dateFrom == null || dateTo == null || timeFrom == null || timeTo == null || objectId == null)</span>
+<span class="nc" id="L472">            return unexpectedError;</span>
+
+        //Get reservation object
+<span class="fc" id="L475">        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="pc bpc" id="L476" title="1 of 2 branches missed.">        if(reservationObject == null) {</span>
+<span class="nc" id="L477">            throwError(&quot;Reservation object was not found.&quot;);</span>
+<span class="nc" id="L478">            return null;</span>
+        }
+
+        //We need keep data as fresh for validation, so get joined object times from DB
+<span class="fc" id="L482">        reservationObject.setReservationObjectTimeEntities( rotr.findAllByObjectIdAndDomainId(reservationObject.getId(), CloudToolsForCore.getDomainId()) );</span>
+
+        //Create reservation entity (just for test purpose)
+<span class="fc" id="L485">        ReservationEntity reservation = new ReservationEntity();</span>
+
+        //Set reservation
+<span class="fc" id="L488">        reservation.setDateFrom(new Date(dateFrom));</span>
+<span class="fc" id="L489">        reservation.setDateTo(new Date(dateTo));</span>
+
+<span class="pc bpc" id="L491" title="1 of 2 branches missed.">        if(isDuplicate) {</span>
+<span class="nc" id="L492">            reservation.setId(Long.valueOf(-1));</span>
+        } else {
+<span class="fc" id="L494">            reservation.setId(reservationId);</span>
+        }
+
+<span class="fc" id="L497">        ReservationEditorFields ef = new ReservationEditorFields();</span>
+
+<span class="fc bfc" id="L499" title="All 2 branches covered.">        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {</span>
+<span class="fc" id="L500">            ef.setArrivingTime(DefaultTimeValueConverter.getValidTimeValue(new Date(timeFrom)));</span>
+<span class="fc" id="L501">            ef.setDepartureTime(DefaultTimeValueConverter.getValidTimeValue(new Date(timeTo)));</span>
+        } else {
+<span class="fc" id="L503">            ef.setReservationTimeFrom(DefaultTimeValueConverter.getValidTimeValue(new Date(timeFrom)));</span>
+<span class="fc" id="L504">            ef.setReservationTimeTo(DefaultTimeValueConverter.getValidTimeValue(new Date(timeTo)));</span>
+        }
+
+<span class="fc" id="L507">        ef.setAllowHistorySave(allowHistorySave);</span>
+<span class="fc" id="L508">        ef.setAllowOverbooking(allowOverbooking);</span>
+
+<span class="fc" id="L510">        reservation.setEditorFields(ef);</span>
+
+<span class="fc" id="L512">        ReservationService reservationService = new ReservationService(getProp());</span>
+
+        //Prepare entity
+        try{
+<span class="fc" id="L516">            reservationService.prepareReservationToValidation(reservation, Tools.isTrue(reservationObject.getReservationForAllDay()));</span>
+<span class="nc" id="L517">        } catch(IllegalArgumentException e) {</span>
+<span class="nc" id="L518">            return unexpectedError;</span>
+<span class="fc" id="L519">        }</span>
+
+<span class="fc" id="L521">        String error = null;</span>
+<span class="fc bfc" id="L522" title="All 2 branches covered.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
+<span class="fc" id="L523">            error = reservationService.checkReservationTimeRangeValidity(reservation, reservationObject);</span>
+<span class="fc bfc" id="L524" title="All 2 branches covered.">            if(error != null) return error;</span>
+        }
+
+<span class="fc" id="L527">        error = reservationService.checkReservationOverlappingValidity(reservation, reservationObject, reservationRepository, false);</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">        if(error != null) return error;</span>
+
+<span class="fc" id="L530">        return null;</span>
+    }
+
+    private String getTimeStringRange(Date start, Date end) {
+<span class="pc bpc" id="L534" title="2 of 4 branches missed.">        if(start == null || end == null) return &quot;&quot;;</span>
+<span class="fc" id="L535">        return new SimpleDateFormat(&quot;HH:mm&quot;).format(start) + &quot; - &quot; + new SimpleDateFormat(&quot;HH:mm&quot;).format(end);</span>
+    }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

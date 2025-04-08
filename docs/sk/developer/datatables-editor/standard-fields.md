@@ -12,7 +12,7 @@ public class CalendarEventsEntity {
     @Id
     @Column(name = "calendar_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_calendar")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
 }

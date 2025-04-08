@@ -46,7 +46,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [ ] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
-- [ ] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
+- [x] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
 - [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
 - [ ] +Formuláre - zakázať `GET` volanie na `FormMail/FormMailAjax`.
 - [ ] +Elektronický obchod - do emailu pridať `JSON-LD` dáta https://schema.seznam.cz/objednavky/dokumentace/.
@@ -55,13 +55,16 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
 - [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu.
 - [ ] +Galéria - ak nastavujem perex obrázok na obrázok v galérii, stiahnem z fotobanky, a obrázok premenujem na existujúci v databáze (ak je súbor zmazaný z disku) tak vznikne v `gallery` tabuľke duplicitný záznam. Naviac sa nepremenujú ostatné obrázky `o_,s_`. Treba pamätať na to, že teoreticky môžem premenovať ľubovoľný, malo by to detegovať, že som v galérii a premenovať všetky verzie.
-- [ ] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000`.
+- [x] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
 - [ ] Datatable - opraviť počítanie označených riadkov po ich vymazaní.
 - [ ] +Prieskumník - nastaviť vlastnosti priečinka (indexovanie, práva) podľa rodičovského (rekurzívne) pri prvom otvorení, ak priečinok nemá nastavenia v databáze.
 - [ ] +Pre pole typu `DataTableColumnType.JSON`, konkrétne `className = "dt-tree-page-null"` pridať možnosť definovať koreňový priečinok.
 - [ ] +Presunúť všetky `Converter` triedy ako napr. `DocDetailsNotNullConverter` do samostatného `package` kde nebudú iné entity aby bolo možné tento `Converter` použiť aj v projektoch kde je použitý samostatný `JPA`.
 - [ ] +Pridať možnosť nastaviť meno HTTP hlavičky pre `x-forwarded-for` a určiť, ktorá z IP adries sa použije (prvá VS posledná).
 - [ ] +Datatabuľky - pridať možnosť usporiadania podľa viacerých stĺpcov kliknutím s klávesou `SHIFT`.
+- [ ] +Datatabuľky - pridať možnosť `hideOnDuplicate` pre karty v editore, nezabudnúť aj na triedu `DataTableTab` aby to išlo nastaviť aj v anotácii.
+- [ ] +Prieskumník - do Média tejto stránky pridať možnosť presunúť sa do rodičovského priečinka.
+- [ ] +Konfigurácia - v prípade `cluster` inštalácie doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy). Pôvodne to riešilo výberové pole `applyToAllClusterNodes`.
 
 ## 2024
 

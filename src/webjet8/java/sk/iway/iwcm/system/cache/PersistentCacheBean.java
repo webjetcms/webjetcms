@@ -14,7 +14,7 @@ import java.util.Date;
 
 
 /**
- * PersistentCacheBean.java - >>>POPIS MA<<<<
+ * PersistentCacheBean.java
  *
  * @author $Author: jeeff $
  * @version $Revision: 1.3 $
@@ -35,10 +35,7 @@ public class PersistentCacheBean extends ActiveRecordRepository implements Seria
     @GeneratedValue(generator = "WJGen_cache")
     @TableGenerator(name = "WJGen_cache", pkColumnValue = "cache")
     @Column(name = "cache_id")
-    @DataTableColumn(
-            inputType = {DataTableColumnType.ID},
-            title = "[[#{components.memory_cleanup.persistent_cache_objects.id}]]"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long cacheId;
 
     @Column(name = "data_type")

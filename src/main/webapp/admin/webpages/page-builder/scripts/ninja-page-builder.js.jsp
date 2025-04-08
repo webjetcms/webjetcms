@@ -3029,13 +3029,14 @@
                         me.user_style.current_element.attr('id', value);
                     }
                 } else if (prop === 'visibility-xs') {
-                    if(value === true) {
+                    /*if(value === true) {
                         me.user_style.current_element.removeClass('d-none');
                         me.user_style.current_element.addClass('d-block');
                     } else {
                         me.user_style.current_element.removeClass('d-block');
                         me.user_style.current_element.addClass('d-none');
-                    }
+                    }*/
+                    me.user_style.current_element.removeClass('d-block');
                 } else if (prop === 'visibility-sm') {
                     if(value === true) {
                         me.user_style.current_element.removeClass('d-sm-none');
@@ -3053,13 +3054,14 @@
                         me.user_style.current_element.addClass('d-md-none');
                     }
                 } else if (prop === 'visibility-lg') {
-                    if(value === true) {
+                    /*if(value === true) {
                         me.user_style.current_element.removeClass('d-lg-none');
                         me.user_style.current_element.addClass('d-lg-block');
                     } else {
                         me.user_style.current_element.removeClass('d-lg-block');
                         me.user_style.current_element.addClass('d-lg-none');
-                    }
+                    }*/
+                    me.user_style.current_element.removeClass('d-lg-none');
                 } else if (prop === 'visibility-xl') {
                     if(value === true) {
                         me.user_style.current_element.removeClass('d-xl-none');

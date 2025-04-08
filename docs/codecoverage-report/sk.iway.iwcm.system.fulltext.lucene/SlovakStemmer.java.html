@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlovakStemmer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">SlovakStemmer.java</span></div><h1>SlovakStemmer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SlovakStemmer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">SlovakStemmer.java</span></div><h1>SlovakStemmer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
 
 /**
  *  SlovakStemmer.java
@@ -70,7 +70,7 @@ public class SlovakStemmer {
 
 					//cudzie -cia, -gia...
 <span class="fc bfc" id="L72" title="All 2 branches covered.">					if(pripona.startsWith(&quot;i&quot;)) {</span>
-<span class="fc bfc" id="L73" title="All 2 branches covered.">						if(cudzie(in, pripona)) {</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">						if(cudzie(in, pripona)) {</span>
 <span class="fc" id="L74">							return odstranPriponu(in, pripona).concat(&quot;i&quot;);</span>
 						}
 					}
@@ -106,8 +106,8 @@ public class SlovakStemmer {
 		}
 
 		//konci na ic -&gt; matematic (matematik, matematici)... (pracovnici vs slnecnic)
-<span class="fc bfc" id="L109" title="All 2 branches covered.">		if(in.endsWith(&quot;ic&quot;)) {</span>
-<span class="fc" id="L110">			return (odstranPriponu(in, &quot;c&quot;)).concat(&quot;k&quot;);</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">		if(in.endsWith(&quot;ic&quot;)) {</span>
+<span class="nc" id="L110">			return (odstranPriponu(in, &quot;c&quot;)).concat(&quot;k&quot;);</span>
 		}
 
 		//konci na ec -&gt; tanec, obec....
@@ -139,7 +139,7 @@ public class SlovakStemmer {
 		}
 
 <span class="fc bfc" id="L141" title="All 2 branches covered.">		for(String rl : lr) {</span>
-<span class="fc bfc" id="L142" title="All 4 branches covered.">			if(s.contains(rl) &amp;&amp; !s.endsWith(rl))</span>
+<span class="pc bpc" id="L142" title="1 of 4 branches missed.">			if(s.contains(rl) &amp;&amp; !s.endsWith(rl))</span>
 <span class="fc" id="L143">				return false;</span>
 		}
 
@@ -237,12 +237,12 @@ public class SlovakStemmer {
 	private static boolean cudzie(String in, String pripona) {
 <span class="fc" id="L238">		String s = odstranPriponu(in, pripona);</span>
 
-<span class="fc bfc" id="L240" title="All 2 branches covered.">		for(String koncovka : cudzieSlovaPredIa) {</span>
-<span class="fc bfc" id="L241" title="All 2 branches covered.">			if(s.endsWith(koncovka))</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">		for(String koncovka : cudzieSlovaPredIa) {</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">			if(s.endsWith(koncovka))</span>
 <span class="fc" id="L242">				return true;</span>
 		}
 
-<span class="fc" id="L245">		return false;</span>
+<span class="nc" id="L245">		return false;</span>
 	}
 
 

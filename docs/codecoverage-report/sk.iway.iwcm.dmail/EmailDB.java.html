@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">EmailDB.java</span></div><h1>EmailDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail</a> &gt; <span class="el_source">EmailDB.java</span></div><h1>EmailDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail;
 
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -308,9 +308,9 @@ public class EmailDB
 <span class="fc" id="L308">			ps.setInt(1, emailId);</span>
 <span class="fc" id="L309">			ps.setInt(2, CloudToolsForCore.getDomainId());</span>
 <span class="fc" id="L310">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L311" title="1 of 2 branches missed.">			while (rs.next())</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="nc" id="L313">				email = DB.getDbString(rs, &quot;recipient_email&quot;);</span>
+<span class="fc" id="L313">				email = DB.getDbString(rs, &quot;recipient_email&quot;);</span>
 			}
 <span class="fc" id="L315">			rs.close();</span>
 <span class="fc" id="L316">			ps.close();</span>

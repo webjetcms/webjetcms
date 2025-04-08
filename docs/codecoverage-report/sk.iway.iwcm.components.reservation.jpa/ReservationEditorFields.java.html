@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationEditorFields.java</span></div><h1>ReservationEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationEditorFields.java</span></div><h1>ReservationEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -33,7 +33,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.OPEN_EDITOR,
         title=&quot;reservation.reservation_object.selected_object&quot;,
         hiddenEditor = true,
-        sortAfter = &quot;email&quot;
+        sortAfter = &quot;email&quot;,
+        orderable = false
     )
     private String selectedReservation;
 
@@ -49,7 +50,7 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TIME_HM,
         title=&quot;reservation.reservations.time_from&quot;,
-        sortAfter = &quot;dateTo&quot;,
+        sortAfter = &quot;dateFrom&quot;,
         tab = &quot;basic&quot;
     )
     private Date reservationTimeFrom;
@@ -57,55 +58,37 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TIME_HM,
         title=&quot;reservation.reservations.time_to&quot;,
-        sortAfter = &quot;editorFields.reservationTimeFrom&quot;,
+        sortAfter = &quot;dateTo&quot;,
         tab = &quot;basic&quot;
     )
     private Date reservationTimeTo;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
-        title = &quot;reservation.reservations.info_title&quot;,
-        sortAfter = &quot;dateTo&quot;,
-        tab = &quot;basic&quot;,
-        className = &quot;wrap&quot;,
-        hidden = true
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;components.reservation.allow_history_save&quot;,
+        visible = false,
+        sortAfter = &quot;accepted&quot;,
+        tab = &quot;basic&quot;
     )
-    private String infoLabel1;
+    private Boolean allowHistorySave;
 
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
-        title = &quot;reservation.reservations.validate_reservation&quot;,
+        title = &quot;components.reservation.allow_overbooking&quot;,
         visible = false,
-        sortAfter = &quot;purpose&quot;,
+        sortAfter = &quot;editorFields.allowHistorySave&quot;,
         tab = &quot;basic&quot;
     )
-    private Boolean showReservationValidity;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.RADIO,
-        title = &quot;reservation.reservations.status&quot;,
-        tab = &quot;acceptation&quot;,
-        editor = {
-            @DataTableColumnEditor(
-                options = {
-                    @DataTableColumnEditorAttr(key = &quot;reservation.reservations.accept&quot;, value = &quot;1&quot;),
-                    @DataTableColumnEditorAttr(key = &quot;reservation.reservations.reject&quot;, value = &quot;0&quot;),
-                    @DataTableColumnEditorAttr(key = &quot;reservation.reservations.reset&quot;, value = &quot;-1&quot;)
-                }
-            )
-        },
-        visible = false
-    )
-    private Integer acceptation;
+    private Boolean allowOverbooking;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         title = &quot;reservation.reservations.info_title&quot;,
         tab = &quot;basic&quot;,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap not-export&quot;,
         hidden = true
     )
-    private String infoLabel2;
+    private String infoLabel;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
@@ -192,77 +175,106 @@ public class ReservationEditorFields {
     })
     private List&lt;ReservationObjectPriceEntity&gt; objectPrices;
 
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;reservation.reservations.arrival_time&quot;,
+        sortAfter = &quot;dateFrom&quot;,
+        tab = &quot;basic&quot;,
+        hidden = true
+    )
+    private Date arrivingTime;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TIME_HM,
+        title=&quot;reservation.reservations.departure_time&quot;,
+        sortAfter = &quot;dateTo&quot;,
+        tab = &quot;basic&quot;,
+        hidden = true
+    )
+    private Date departureTime;
+
     public void fromReservationEntity(ReservationEntity originalEntity, ProcessItemAction action, HttpServletRequest request) {
 
-<span class="fc bfc" id="L197" title="All 2 branches covered.">        if(action != ProcessItemAction.GETALL) {</span>
-            //Set info label
-<span class="fc" id="L199">            Prop prop = Prop.getInstance(request);</span>
-<span class="fc" id="L200">            setInfoLabel1(prop.getText(&quot;reservation.reservations.info_label_1&quot;));</span>
-        }
+<span class="fc" id="L198">        ReservationObjectEntity selected = originalEntity.getReservationObjectForReservation();</span>
 
-<span class="fc bfc" id="L203" title="All 2 branches covered.">        if(action == ProcessItemAction.CREATE) {</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if(action == ProcessItemAction.CREATE) {</span>
             //Logged user
-<span class="fc" id="L205">            Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L206">            originalEntity.setName(user.getFirstName());</span>
-<span class="fc" id="L207">            originalEntity.setSurname(user.getLastName());</span>
-<span class="fc" id="L208">            originalEntity.setEmail(user.getEmail());</span>
-
-            //-1 represent waiting for approve
-<span class="fc" id="L211">            acceptation = -1;</span>
-
-            //Set default time range
-<span class="fc" id="L214">            reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(8, 0);</span>
-<span class="fc" id="L215">            reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(16, 0);</span>
+<span class="fc" id="L202">            Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L203">            originalEntity.setName(user.getFirstName());</span>
+<span class="fc" id="L204">            originalEntity.setSurname(user.getLastName());</span>
+<span class="fc" id="L205">            originalEntity.setEmail(user.getEmail());</span>
 
             //Set default reservation date on tomorrow
-<span class="fc" id="L218">            Calendar cld = Calendar.getInstance();</span>
-<span class="fc" id="L219">            cld.setTime(new Date());</span>
-<span class="fc" id="L220">            cld.add(Calendar.DAY_OF_MONTH, 1);</span>
-<span class="fc" id="L221">            originalEntity.setDateFrom(cld.getTime());</span>
-<span class="fc" id="L222">            originalEntity.setDateTo(cld.getTime());</span>
-<span class="fc" id="L223">        } else {</span>
-            //Set correct time range
-<span class="fc" id="L225">            reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateFrom());</span>
-<span class="fc" id="L226">            reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());</span>
+<span class="fc" id="L208">            Calendar cld = Calendar.getInstance();</span>
+<span class="fc" id="L209">            cld.setTime(new Date());</span>
+<span class="fc" id="L210">            cld.add(Calendar.DAY_OF_YEAR, 1);</span>
+<span class="fc" id="L211">            originalEntity.setDateFrom(cld.getTime());</span>
+<span class="fc" id="L212">            originalEntity.setDateTo(cld.getTime());</span>
+
+            // !! CANT set time while CREATING - because we dont know if first selected reservationObject in select is for whole day or not
+<span class="fc" id="L215">        } else {</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">            if(selected != null) {</span>
+<span class="fc" id="L217">                reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateFrom());</span>
+<span class="fc" id="L218">                reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());</span>
+
+<span class="fc bfc" id="L220" title="All 2 branches covered.">                if(Tools.isTrue(selected.getReservationForAllDay())) {</span>
+<span class="fc" id="L221">                    arrivingTime = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateFrom());</span>
+<span class="fc" id="L222">                    departureTime = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());</span>
+                }
+            }
         }
 
-<span class="fc" id="L229">        ReservationObjectEntity selected = originalEntity.getReservationObjectForReservation();</span>
-<span class="fc bfc" id="L230" title="All 2 branches covered.">        if(selected != null) {</span>
-<span class="fc" id="L231">            selectedReservation = selected.getName();</span>
-<span class="pc bpc" id="L232" title="1 of 4 branches missed.">            if(selected.getPassword() != null &amp;&amp; selected.getPassword().isEmpty() == false) needPasswordToDelete = Boolean.TRUE;</span>
-<span class="fc" id="L233">            else needPasswordToDelete = Boolean.FALSE;</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if(selected != null) {</span>
+<span class="fc" id="L228">            selectedReservation = selected.getName();</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if(Tools.isNotEmpty(selected.getPassword())) needPasswordToDelete = Boolean.TRUE;</span>
+<span class="fc" id="L230">            else needPasswordToDelete = Boolean.FALSE;</span>
         }
 
-<span class="fc" id="L236">        originalEntity.setEditorFields(this);</span>
-<span class="fc" id="L237">    }</span>
+<span class="fc" id="L233">        originalEntity.setEditorFields(this);</span>
+<span class="fc" id="L234">    }</span>
 
-    public void toReservationEntity(ReservationEntity originalEntity, ReservationRepository rr, HttpServletRequest request, boolean skipPrepare) {
+    public void toReservationEntity(ReservationEntity originalEntity, ReservationRepository rr, HttpServletRequest request, boolean skipPrepare, boolean isImporting, ProcessItemAction action) {
         //Set domain id for new entity
-<span class="fc bfc" id="L241" title="All 2 branches covered.">        if(originalEntity.getDomainId() == null) originalEntity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        if(originalEntity.getDomainId() == null) originalEntity.setDomainId(CloudToolsForCore.getDomainId());</span>
 
-<span class="fc" id="L243">        ReservationObjectEntity reservationObject = originalEntity.getReservationObjectForReservation();</span>
+<span class="fc" id="L240">        ReservationObjectEntity reservationObject = originalEntity.getReservationObjectForReservation();</span>
 
-<span class="fc" id="L245">        String error = null;</span>
-<span class="fc" id="L246">        ReservationService reservationService = new ReservationService(Prop.getInstance(request));</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">        if(skipPrepare == false)</span>
-<span class="fc" id="L248">            reservationService.prepareReservationToValidation(originalEntity, Tools.isTrue(reservationObject.getReservationForAllDay()) );</span>
-
-        //If reservationObject can be reserve only for whole day, we dont need to check time range (time range is set automatically)
-<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
-            //In this case we can select even time, so we need check time validity
-<span class="fc" id="L253">            error = reservationService.checkReservationTimeRangeValidity(originalEntity, reservationObject);</span>
-            //Check if error was returned
-<span class="pc bpc" id="L255" title="1 of 2 branches missed.">            if(error != null) reservationService.throwError(error);</span>
+<span class="fc" id="L242">        String error = null;</span>
+<span class="fc" id="L243">        ReservationService reservationService = new ReservationService(Prop.getInstance(request));</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if(skipPrepare == false) {</span>
+<span class="fc" id="L245">            reservationService.prepareReservationToValidation(originalEntity, Tools.isTrue(reservationObject.getReservationForAllDay()) );</span>
         }
 
-        //Validate reservation range
-<span class="fc" id="L259">        error = reservationService.checkReservationOverlappingValidity(originalEntity, reservationObject, rr);</span>
-<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if(error != null) reservationService.throwError(error);</span>
-
-        //Now decide if reservation need acceptation or not
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if(ReservationService.acceptation(originalEntity, request) == false)  {</span>
-            // !! Send mail - &gt; in after save because we dont have ID yet
+<span class="fc" id="L248">        boolean doCheck = true;</span>
+<span class="fc bfc" id="L249" title="All 4 branches covered.">        if(isImporting == false &amp;&amp; action == ProcessItemAction.EDIT) {</span>
+            //IF action is edit AND reservation object with reservation date/time wans NOT changed, we dont need to check it
+<span class="fc" id="L251">            doCheck = ReservationService.wasReservationChanged(originalEntity, rr);</span>
         }
-<span class="fc" id="L266">    }</span>
+
+<span class="fc bfc" id="L254" title="All 4 branches covered.">        if(originalEntity.getId() != null &amp;&amp; originalEntity.getId() &gt; 0) {</span>
+            //Acceptation MUST be actual value from DB - because it can be changed using processAction, while editing
+<span class="fc" id="L256">            Boolean acceptedDB = rr.findAcceptedByIdAndDomainId(originalEntity.getId(), originalEntity.getDomainId());</span>
+<span class="fc" id="L257">            originalEntity.setAccepted(acceptedDB);</span>
+        }
+
+<span class="fc bfc" id="L260" title="All 2 branches covered.">        if(doCheck) {</span>
+            //If reservationObject can be reserve only for whole day, we dont need to check time range (time range is set automatically)
+<span class="fc bfc" id="L262" title="All 2 branches covered.">            if(Tools.isFalse(reservationObject.getReservationForAllDay())) {</span>
+                //In this case we can select even time, so we need check time validity
+<span class="fc" id="L264">                error = reservationService.checkReservationTimeRangeValidity(originalEntity, reservationObject);</span>
+                //Check if error was returned
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">                if(error != null) reservationService.throwError(error);</span>
+            }
+
+            //Validate reservation range
+<span class="fc" id="L270">            error = reservationService.checkReservationOverlappingValidity(originalEntity, reservationObject, rr, isImporting);</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">            if(error != null) reservationService.throwError(error);</span>
+
+            //Now decide if reservation need acceptation or not
+<span class="fc bfc" id="L274" title="All 2 branches covered.">            if(!ReservationService.acceptation(originalEntity, request))  {</span>
+                // !! Send mail - &gt; in after save because we dont have ID yet
+            }
+        }
+<span class="fc" id="L278">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

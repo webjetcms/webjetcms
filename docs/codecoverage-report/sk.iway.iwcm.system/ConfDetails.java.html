@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">ConfDetails.java</span></div><h1>ConfDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConfDetails.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">ConfDetails.java</span></div><h1>ConfDetails.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
 
 import java.util.Date;
 
@@ -47,7 +47,14 @@ public class ConfDetails
       title = &quot;admin.conf_editor.value&quot;,
       tab = &quot;basic&quot;,
       sortAfter = &quot;name&quot;,
-      className = &quot;wrap show-html&quot;
+      className = &quot;wrap show-html&quot;,
+      editor = {
+         @DataTableColumnEditor(
+             attr = {
+                 @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
+             }
+         )
+     }
    )
    private String value;
 
@@ -78,11 +85,13 @@ public class ConfDetails
       title = &quot;admin.conf_editor.date_change&quot;,
       tab = &quot;basic&quot;,
       sortAfter = &quot;description&quot;,
+      className = &quot;not-export&quot;,
       editor = {
          @DataTableColumnEditor(
             type = &quot;datetime&quot;,
             attr = {
-               @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
+               @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;),
+               @DataTableColumnEditorAttr(key = &quot;data-dt-import-hidden&quot;, value = &quot;true&quot;)
             }
             /*className: 'hide-on-create'*/
          )
@@ -90,76 +99,76 @@ public class ConfDetails
    )
    private Date dateChanged;
 
-<span class="fc" id="L93">   public ConfDetails(){}</span>
+<span class="fc" id="L102">   public ConfDetails(){}</span>
 
    public ConfDetails(String name, String value)
-<span class="fc" id="L96">   {</span>
-<span class="fc" id="L97">      this.name = name;</span>
-<span class="fc" id="L98">      this.value = value;</span>
-<span class="fc" id="L99">   }</span>
+<span class="fc" id="L105">   {</span>
+<span class="fc" id="L106">      this.name = name;</span>
+<span class="fc" id="L107">      this.value = value;</span>
+<span class="fc" id="L108">   }</span>
 
    public ConfDetails(String name, String value, Date dateChanged)
-<span class="fc" id="L102">   {</span>
-<span class="fc" id="L103">      this.name = name;</span>
-<span class="fc" id="L104">      this.value = value;</span>
-<span class="fc" id="L105">      this.dateChanged = dateChanged;</span>
-<span class="fc" id="L106">   }</span>
+<span class="fc" id="L111">   {</span>
+<span class="fc" id="L112">      this.name = name;</span>
+<span class="fc" id="L113">      this.value = value;</span>
+<span class="fc" id="L114">      this.dateChanged = dateChanged;</span>
+<span class="fc" id="L115">   }</span>
 
    public String getName()
    {
-<span class="fc" id="L110">      return name;</span>
+<span class="fc" id="L119">      return name;</span>
    }
 
    public void setName(String newName)
    {
-<span class="pc bpc" id="L115" title="1 of 2 branches missed.">      if (newName!=null)</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">      if (newName!=null)</span>
       {
-<span class="fc" id="L117">         name = newName;</span>
+<span class="fc" id="L126">         name = newName;</span>
       }
-<span class="fc" id="L119">   }</span>
+<span class="fc" id="L128">   }</span>
 
    public String getValue()
    {
-<span class="fc" id="L123">      return value;</span>
+<span class="fc" id="L132">      return value;</span>
    }
 
    public void setValue(String newValue)
    {
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">      if (newValue!=null)</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">      if (newValue!=null)</span>
       {
-<span class="fc" id="L130">         value = newValue;</span>
+<span class="fc" id="L139">         value = newValue;</span>
       }
-<span class="fc" id="L132">   }</span>
+<span class="fc" id="L141">   }</span>
 
 	public String getModules()
 	{
-<span class="fc" id="L136">		return modules;</span>
+<span class="fc" id="L145">		return modules;</span>
 	}
 
 	public void setModules(String modules)
 	{
-<span class="fc" id="L141">		this.modules = modules;</span>
-<span class="fc" id="L142">	}</span>
+<span class="fc" id="L150">		this.modules = modules;</span>
+<span class="fc" id="L151">	}</span>
 
 	public String getDescription()
 	{
-<span class="fc" id="L146">		return description;</span>
+<span class="fc" id="L155">		return description;</span>
 	}
 
 	public void setDescription(String description)
 	{
-<span class="fc" id="L151">		this.description = description;</span>
-<span class="fc" id="L152">	}</span>
+<span class="fc" id="L160">		this.description = description;</span>
+<span class="fc" id="L161">	}</span>
 
 	public Date getDateChanged()
 	{
-<span class="fc" id="L156">		return dateChanged;</span>
+<span class="fc" id="L165">		return dateChanged;</span>
 	}
 
 	public void setDateChanged(Date dateChanged)
 	{
-<span class="fc" id="L161">		this.dateChanged = dateChanged;</span>
-<span class="fc" id="L162">	}</span>
+<span class="fc" id="L170">		this.dateChanged = dateChanged;</span>
+<span class="fc" id="L171">	}</span>
 
 
 }

@@ -51,7 +51,7 @@ import sk.iway.iwcm.users.UsersDB;
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/users")
-@PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuUsers')")
+@PreAuthorize(value = "@WebjetSecurityService.hasPermission('users.edit_admins|users.edit_public_users')")
 public class UserDetailsController extends DatatableRestControllerV2<UserDetailsEntity, Long> {
 
     private final UserDetailsService userDetailsService;
@@ -77,7 +77,6 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         Prop prop = Prop.getInstance(Constants.getServletContext(), getRequest());
         Modules modules = Modules.getInstance();
         List<ModuleInfo> moduleItems = modules.getUserEditItems(prop);
-        getRequest().setAttribute("moduleItems",moduleItems);
 
         page.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", "userGroupId", false);
         page.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", "userGroupId", false);
@@ -294,7 +293,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         return entity;
     }
 
-    //Return list od user ids that belongs into selected groups
+    //Return list of user ids that belongs into selected groups
     public static List<Integer> getUserIdsByUserGroupsIds(UserDetailsRepository repo, List<Integer> groupIds) {
         List<Integer> userIds = new ArrayList<>();
         for(Integer groupId : groupIds) {
@@ -381,5 +380,5 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             entity.setPassword("random");
             super.beforeDuplicate(entity);
         }
-    }   
+    }
 }

@@ -39,7 +39,7 @@ public final class PasswordSecurity {
 	 * @param numbers ( e.g. 123456 )
 	 * @param lowercase ( e.g. abcdefgh )
 	 * @param uppercase ( e.g. ABCDEFGH )
-	 * @param excludeAmbiguousCharacters ( { } [ ] ( ) / \ ' " ` ~ , ; : . < > )
+	 * @param excludeAmbiguousCharacters ( { } [ ] ( ) / \ ' " ` ~ , ; : . &lt; &gt; )
 	 * @return
 	 */
 	public static String generatePassword(int length, boolean symbols, boolean numbers, boolean lowercase, boolean uppercase, boolean excludeAmbiguousCharacters)

@@ -2,17 +2,20 @@ Feature('manual-frontend');
 
 let confLng = "sk";
 
-Before(({ I, login }) => {
-    login("admin");
+Before(({ I }) => {
     confLng = I.getConfLng();
 });
 
-Scenario('template-bare', async({ I, DT, DTE, Document }) => {
+Scenario('templates-bare', async({ I, DT, DTE, Document }) => {
 
-    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
-    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
-    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
-    I.say("TOTO TREBA SPUSTIT S webjet9demo_web databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoDB - s poolman-local-webjet9demo.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoDB - s poolman-local-webjet9demo.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoDB - s poolman-local-webjet9demo.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoDB - s poolman-local-webjet9demo.xml databazou!!!");
+    I.say("You also need /src/main/webapp/templates/bare");
+    pause();
+
+    I.relogin("admin");
 
     //bare.tau27.iway.sk/Slovensky
     if("sk" === confLng) {
@@ -25,6 +28,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
 
 
     DT.waitForLoader();
+    DTE.waitForEditor();
     DTE.cancel();
 
     //korenovy priecinok
@@ -32,12 +36,12 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     I.click(".ti.ti-pencil", "div.tree-col");
     DTE.waitForEditor("groups-datatable");
     Document.screenshot("/frontend/examples/template-bare/group-editor.png");
-    I.click("#pills-dt-groups-datatable-template-tab");
+    I.clickCss("#pills-dt-groups-datatable-template-tab");
     Document.screenshot("/frontend/examples/template-bare/group-editor-temp.png");
     DTE.cancel();
 
     //stranka hlavicka
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     I.jstreeClick("Hlavičky");
     I.click("Default Hlavička");
@@ -76,7 +80,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     Document.screenshot("/frontend/examples/template-bare/tempgroup-editor.png");
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
     Document.screenshot("/frontend/examples/template-bare/tempgroup-editor-metadata.png");
 
     //screenshot sablona
@@ -86,7 +90,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     Document.screenshot("/frontend/examples/template-bare/temp-editor.png");
-    I.click("#pills-dt-datatableInit-style-tab");
+    I.clickCss("#pills-dt-datatableInit-style-tab");
     Document.screenshot("/frontend/examples/template-bare/temp-editor-style.png");
 
     //screenshot web stranka
@@ -103,6 +107,9 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
 });
 
 Scenario('editor style combo', ({ I, DTE, Document }) => {
+    I.say("TOTO TREBA SPUSTIT so standardnou demo databazou");
+
+    I.relogin("admin");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=265");
     DTE.waitForEditor();
 
@@ -111,7 +118,7 @@ Scenario('editor style combo', ({ I, DTE, Document }) => {
 
     //sprav screenshot standardneho selectu
     I.waitForElement('#trEditor', 10);
-    I.click('#trEditor');
+    I.clickCss('#trEditor');
     I.click('p');
 
     I.click(".cke_combo__styles .cke_combo_button");
@@ -122,7 +129,7 @@ Scenario('editor style combo', ({ I, DTE, Document }) => {
     //I.resizeWindow(1280, 700);
 
     //sprav screenshot ked je kurzor v tabulke
-    I.click('#trEditor');
+    I.clickCss('#trEditor');
     I.click('.cke_button.cke_button__table.cke_button_.cke_button_off');
     I.waitForElement('.cke_button.cke_button__table.cke_button_.cke_button_on', 10);
     // volba velkosti tabulky
@@ -148,29 +155,33 @@ Scenario('editor style combo', ({ I, DTE, Document }) => {
 
 Scenario('template-creative', async({ I, DT, DTE, Document }) => {
 
-    I.say("TOTO TREBA SPUSTIT S demoCMS databazou!!!");
-    I.say("TOTO TREBA SPUSTIT S demoCMS databazou!!!");
-    I.say("TOTO TREBA SPUSTIT S demoCMS databazou!!!");
-    I.say("TOTO TREBA SPUSTIT S demoCMS databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("TOTO TREBA SPUSTIT Debug DemoCMS DB - s poolman-local-democms.xml databazou!!!");
+    I.say("You also need /src/main/webapp/templates/creative");
+    pause();
     //I.sleep(5);
+
+    I.relogin("admin");
 
     //creative.webjetcms.sk/Slovensky
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=42");
     DT.waitForLoader();
-    I.say("Kllikni aby bolo vidno ciary a rozklikni bloky");
-    I.say("Kllikni aby bolo vidno ciary a rozklikni bloky");
-    I.say("Kllikni aby bolo vidno ciary a rozklikni bloky");
-    I.say("Kllikni aby bolo vidno ciary a rozklikni bloky");
+    I.say("Kllikni aby bolo vidno PageBuilder ciary");
+    I.say("Kllikni aby bolo vidno PageBuilder ciary");
+    I.say("Kllikni aby bolo vidno PageBuilder ciary");
+    I.say("Kllikni aby bolo vidno PageBuilder ciary");
     I.wait(30);
     Document.screenshot("/frontend/examples/templates-creative/editor-webpage.png");
     DTE.cancel();
 
     //korenovy priecinok
     I.jstreeClick("Slovensky");
-    I.click("i.fa-pencil", "div.tree-col");
+    I.click("button.buttons-edit", "div.tree-col");
     DTE.waitForEditor("groups-datatable");
     Document.screenshot("/frontend/examples/templates-creative/group-editor.png");
-    I.click("#pills-dt-groups-datatable-template-tab");
+    I.clickCss("#pills-dt-groups-datatable-template-tab");
     Document.screenshot("/frontend/examples/templates-creative/group-editor-temp.png");
     DTE.cancel();
 
@@ -189,7 +200,7 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     Document.screenshot("/frontend/examples/templates-creative/temp-editor.png");
-    I.click("#pills-dt-datatableInit-style-tab");
+    I.clickCss("#pills-dt-datatableInit-style-tab");
     Document.screenshot("/frontend/examples/templates-creative/temp-editor-style.png");
 
     //web stranka
@@ -200,7 +211,7 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     } else if("cs" === confLng) {
         I.amOnPage("/sk/?NO_WJTOOLBAR=true");
     }
-    
+
     I.pressKey("ArrowDown");
 
     Document.screenshot("/frontend/examples/templates-creative/creativepage.png", 1000, 700);

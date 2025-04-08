@@ -59,7 +59,7 @@ block content
                 return;
             }
 
-            $('.dt-buttons').append('<div class="btn btn-sm buttons-select">[[\#{components.monitoring.node_name}]] <select class="form-select" id="nodes"></select></div>');
+            $('.dt-buttons').append('<div class="btn btn-sm buttons-select"><label>[[\#{components.monitoring.node_name}]]</label> <select class="form-select" id="nodes"></select></div>');
             $('select#nodes').append($('<option class="currentNode" selected="selected" value="' + currentNode.value + '">' + currentNode.label + '</option>'));
 
             $(nodes).each(function(i, v){

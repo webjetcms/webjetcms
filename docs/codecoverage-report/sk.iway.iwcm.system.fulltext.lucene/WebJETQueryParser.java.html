@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETQueryParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">WebJETQueryParser.java</span></div><h1>WebJETQueryParser.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETQueryParser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">WebJETQueryParser.java</span></div><h1>WebJETQueryParser.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryParser.ParseException;
@@ -25,13 +25,13 @@ import sk.iway.iwcm.Tools;
  */
 public class WebJETQueryParser extends QueryParser
 {
-<span class="fc" id="L28">	private static String numericFields[] = {&quot;author_id&quot;, &quot;group_id&quot;, &quot;temp_id&quot;, &quot;sort_priority&quot;, &quot;password_protected&quot;};</span>
-	
+<span class="fc" id="L28">	private static String numericFields[] = {&quot;author_id&quot;, &quot;group_id&quot;, &quot;temp_id&quot;, &quot;sort_priority&quot;, &quot;password_protected&quot;, &quot;root_group_l1&quot;, &quot;root_group_l2&quot;, &quot;root_group_l3&quot;};</span>
+
 	private boolean isNumericField(String name)
 	{
 <span class="fc bfc" id="L32" title="All 2 branches covered.">		for (String field : numericFields)</span>
 		{
-<span class="pc bpc" id="L34" title="1 of 2 branches missed.">			if (field.equals(name)) return true;</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">			if (field.equals(name)) return true;</span>
 		}
 <span class="fc" id="L36">		return false;</span>
 	}
@@ -42,14 +42,14 @@ public class WebJETQueryParser extends QueryParser
 <span class="fc" id="L42">	}</span>
 
 	@Override
-	public org.apache.lucene.search.Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException 
+	public org.apache.lucene.search.Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException
 	{
 <span class="nc" id="L47">		Logger.debug(WebJETQueryParser.class, &quot;Range query&quot;);</span>
 <span class="nc" id="L48">		TermRangeQuery query = (TermRangeQuery)super.getRangeQuery(field, part1, part2, inclusive);</span>
-		
-<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (isNumericField(field)) </span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (isNumericField(field))</span>
 		{
-<span class="nc" id="L52">			Logger.debug(WebJETQueryParser.class, &quot;Range query - numeric, name=&quot;+field+&quot; low=&quot;+query.getLowerTerm()+&quot; up=&quot;+query.getUpperTerm());		</span>
+<span class="nc" id="L52">			Logger.debug(WebJETQueryParser.class, &quot;Range query - numeric, name=&quot;+field+&quot; low=&quot;+query.getLowerTerm()+&quot; up=&quot;+query.getUpperTerm());</span>
 <span class="nc" id="L53">			return NumericRangeQuery.newIntRange(field, Tools.getIntValue(query.getLowerTerm(), 0), Tools.getIntValue(query.getUpperTerm(), 0), query.includesLower(), query.includesUpper());</span>
 		}
 <span class="nc" id="L55">		return query;</span>
@@ -59,15 +59,15 @@ public class WebJETQueryParser extends QueryParser
 	protected org.apache.lucene.search.Query getFieldQuery(String field, String queryText, boolean quoted) throws ParseException
 	{
 <span class="fc" id="L61">		org.apache.lucene.search.Query superQuery = super.getFieldQuery(field, queryText, quoted);</span>
-		
-<span class="pc bpc" id="L63" title="1 of 2 branches missed.">		if (isNumericField(field))</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">		if (isNumericField(field))</span>
 		{
-<span class="nc" id="L65">			Logger.debug(WebJETQueryParser.class, &quot;Som numeric field: &quot;+field+&quot; text=&quot;+queryText);			</span>
-<span class="nc" id="L66">			superQuery = new TermQuery(new org.apache.lucene.index.Term(field, NumericUtils.intToPrefixCoded(Tools.getIntValue(queryText, 0))));</span>
+<span class="fc" id="L65">			Logger.debug(WebJETQueryParser.class, &quot;Som numeric field: &quot;+field+&quot; text=&quot;+queryText);</span>
+<span class="fc" id="L66">			superQuery = new TermQuery(new org.apache.lucene.index.Term(field, NumericUtils.intToPrefixCoded(Tools.getIntValue(queryText, 0))));</span>
 		}
-		
+
 <span class="fc" id="L69">		return superQuery;</span>
 	}
-	
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

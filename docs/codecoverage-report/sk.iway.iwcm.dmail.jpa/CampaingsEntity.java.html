@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CampaingsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.jpa</a> &gt; <span class="el_source">CampaingsEntity.java</span></div><h1>CampaingsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CampaingsEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.dmail.jpa</a> &gt; <span class="el_source">CampaingsEntity.java</span></div><h1>CampaingsEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.dmail.jpa;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -51,7 +51,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title=&quot;components.dmail.camp.subject&quot;,
-        tab = &quot;main&quot;
+        tab = &quot;main&quot;,
+        sortAfter = &quot;editorFields.pageToSend&quot;
     )
     @Size(max = 255)
     private String subject;
@@ -109,7 +110,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     private String userGroupsIds;
 
     //Bind editor fields
-<span class="fc" id="L112">    @Transient</span>
+<span class="fc" id="L113">    @Transient</span>
     @DataTableColumnNested
 	private CampaingsEditorFields editorFields = null;
 
@@ -129,7 +130,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
                                             value = &quot;/admin/rest/dmail/emails?campainId={id}&amp;selectType=recipients&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.dmail.jpa.EmailsEntity&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;),
-                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;id,recipientName,recipientEmail,sentDate,status&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-forceVisibleColumns&quot;, value = &quot;id,recipientName,recipientEmail,sentDate,status,groupIds&quot;),
                 @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-order&quot;, value = &quot;3,desc&quot;)
             }
         )

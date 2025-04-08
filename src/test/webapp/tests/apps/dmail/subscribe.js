@@ -73,6 +73,7 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/users/user-list/");
     DT.filterContains("email", "webjetcmsdmail");
+    I.dontSee('Nenašli sa žiadne vyhovujúce záznamy');
     let lineColor = await getFontColor(I, 1,1);
     I.assertEqual(lineColor, "rgb(255, 75, 88)");
 

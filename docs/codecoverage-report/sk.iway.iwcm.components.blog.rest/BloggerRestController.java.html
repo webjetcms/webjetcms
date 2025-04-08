@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BloggerRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.blog.rest</a> &gt; <span class="el_source">BloggerRestController.java</span></div><h1>BloggerRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.blog.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BloggerRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.blog.rest</a> &gt; <span class="el_source">BloggerRestController.java</span></div><h1>BloggerRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.blog.rest;
 
 import java.util.List;
 
@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UsersDB;
 
 @RestController
-@RequestMapping(&quot;/admin/rest/blog&quot;)
+@RequestMapping(&quot;/admin/rest/blogger&quot;)
 @PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_blog_admin')&quot;)
 @Datatable
 public class BloggerRestController extends DatatableRestControllerV2&lt;BloggerBean, Long&gt; {
@@ -44,19 +44,19 @@ public class BloggerRestController extends DatatableRestControllerV2&lt;BloggerB
 
     @Override
     public Page&lt;BloggerBean&gt; getAllItems(Pageable pageable) {
-<span class="fc" id="L47">        List&lt;BloggerBean&gt; bloggers = BlogService.getAllBloggers();</span>
+<span class="fc" id="L47">        List&lt;BloggerBean&gt; bloggers = BloggerService.getAllBloggers();</span>
 <span class="fc" id="L48">        return new DatatablePageImpl&lt;&gt;(bloggers);</span>
     }
 
     @Override
     public BloggerBean getOneItem(long id) {
 <span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if(id &lt; 0) return new BloggerBean();</span>
-<span class="nc" id="L54">        return BlogService.getBloggerBean(id);</span>
+<span class="nc" id="L54">        return BloggerService.getBloggerBean(id);</span>
     }
 
     @Override
     public BloggerBean insertItem(BloggerBean entity) {
-<span class="fc" id="L59">        boolean result = BlogService.saveBlogger(entity, userDetailsRepository, editorFacade, getRequest());</span>
+<span class="fc" id="L59">        boolean result = BloggerService.saveBlogger(entity, userDetailsRepository, editorFacade, getRequest());</span>
 <span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if(Boolean.FALSE.equals(result)) throwError(&quot;datatable.error.unknown&quot;);</span>
 
         //SAVE successful
@@ -66,7 +66,7 @@ public class BloggerRestController extends DatatableRestControllerV2&lt;BloggerB
 
     @Override
     public BloggerBean editItem(BloggerBean entity, long id) {
-<span class="nc" id="L69">        boolean result = BlogService.editBlogger(entity, userDetailsRepository, getRequest());</span>
+<span class="nc" id="L69">        boolean result = BloggerService.editBlogger(entity, userDetailsRepository, getRequest());</span>
 <span class="nc bnc" id="L70" title="All 2 branches missed.">        if(Boolean.FALSE.equals(result)) throwError(&quot;datatable.error.unknown&quot;);</span>
 
         //EDIT successful

@@ -16,7 +16,7 @@ import java.io.Serializable;
 
 
 /**
- *  InsertScriptGroupBean.java - >>>POPIS MA<<<<
+ *  InsertScriptGroupBean.java
  *
  *@Title        webjet7
  *@Company      Interway s.r.o. (www.interway.sk)

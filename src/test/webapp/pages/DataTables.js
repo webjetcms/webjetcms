@@ -340,7 +340,7 @@ module.exports = {
 
         //reloadni DT a over, ci to je skutocne zmazane
         I.say("Obnovenie DT a overenie zmazania");
-        //I.click("#dt-filter-labels-link-availableGrooupsList");
+        //I.clickCss("#dt-filter-labels-link-availableGrooupsList");
         I.clickCss(container+'.dt-buttons .buttons-refresh');
         DT.waitForLoader();
         I.dontSee(`${testingData[0]}chan.ge`, ".dt-scroll-body table.dataTable tbody");
@@ -512,7 +512,7 @@ module.exports = {
             const valueToCheck = await I.grabValueFrom(`#DTE_Field_${fieldToCheck}`);
             I.assertEqual(`${testingData[index]}`, valueToCheck, `Hodnota pola #DTE_Field_${fieldToCheck} sa nezhoduje s povodne nastavenou`);
         } else if ("quill" === fieldType) {
-            const valueToCheck = await I.grabHTMLFrom(`#DTE_Field_${fieldToCheck} > div.ql-container > div.ql-editor`);
+            const valueToCheck = (await I.grabHTMLFrom(`#DTE_Field_${fieldToCheck} > div.ql-container > div.ql-editor`)).replace(/<br>/g, '')
             I.assertEqual("<p>" + `${testingData[index]}` + valueAppend + "</p>", valueToCheck, 'Hodnota pola ' + `#DTE_Field_${fieldToCheck}` + ' sa nezhoduje s povodne nastavenou');
         } else {
             const valueToCheck = await I.grabValueFrom(`#DTE_Field_${fieldToCheck}`);

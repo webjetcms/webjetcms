@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ComponentsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">ComponentsService.java</span></div><h1>ComponentsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+
+import org.springframework.aop.TargetSource;
+import org.springframework.aop.framework.Advised;
+import org.springframework.aop.framework.AopProxyUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationContext;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageParams;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.WebjetComponentInterface;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.datatable.*;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.spring.DateConverter;
+import sk.iway.iwcm.system.spring.components.SpringContext;
+
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * Rest controller pre datatabulku zobrazenia parametrov aplikacie (v appstore)
+ */
+<span class="nc" id="L37">public class ComponentsService {</span>
+
+
+    public static Map&lt;String, Object&gt; getComponentResponse(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L41">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L43">        String className = componentRequest.getClassName();</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (Tools.isEmpty(className)) {</span>
+<span class="nc" id="L45">            result.put(&quot;error&quot;, &quot;Class name empty&quot;);</span>
+<span class="nc" id="L46">            return result;</span>
+        }
+
+<span class="fc" id="L49">        ApplicationContext applicationContext = SpringContext.getApplicationContext();</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (!applicationContext.containsBean(className)) {</span>
+<span class="nc" id="L51">            result.put(&quot;error&quot;, &quot;Class with name: &quot; + className + &quot; not found&quot;);</span>
+<span class="nc" id="L52">            return result;</span>
+        }
+
+<span class="fc" id="L55">        WebjetComponentInterface bean = getWebjetComponentBean(applicationContext, className);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (bean == null) {</span>
+<span class="nc" id="L57">            result.put(&quot;error&quot;, &quot;Class with name: &quot; + className + &quot; is not webjet component&quot;);</span>
+<span class="nc" id="L58">            return result;</span>
+        }
+
+        try {
+<span class="fc" id="L62">            bean.initAppEditor(componentRequest, request);</span>
+<span class="fc" id="L63">            setParametersToBean(componentRequest, bean);</span>
+<span class="fc" id="L64">            DataTableColumnsFactory dataTableColumnsFactory = new DataTableColumnsFactory(className);</span>
+<span class="fc" id="L65">            result.put(&quot;data&quot;, bean);</span>
+<span class="fc" id="L66">            result.put(&quot;columns&quot;, dataTableColumnsFactory.getColumns(null));</span>
+<span class="fc" id="L67">            result.put(&quot;tabs&quot;, dataTableColumnsFactory.getTabs());</span>
+<span class="fc" id="L68">            result.put(&quot;title&quot;, dataTableColumnsFactory.getTitle());</span>
+
+            //add options for selects
+<span class="fc" id="L71">            result.put(&quot;options&quot;, bean.getAppOptions(componentRequest, request));</span>
+
+<span class="fc" id="L73">            String componentPath = null;</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (bean.getClass().isAnnotationPresent(WebjetAppStore.class)) {</span>
+<span class="fc" id="L75">                WebjetAppStore appStore = bean.getClass().getAnnotation(WebjetAppStore.class);</span>
+<span class="fc" id="L76">                componentPath = appStore.componentPath();</span>
+            }
+<span class="fc" id="L78">            result.put(&quot;componentPath&quot;, componentPath);</span>
+        }
+<span class="nc" id="L80">        catch (Exception e) {</span>
+<span class="nc" id="L81">            result.put(&quot;error&quot;, e.getMessage());</span>
+<span class="nc" id="L82">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L83">        }</span>
+
+<span class="fc" id="L85">        return result;</span>
+    }
+
+    /**
+     * Nastavenie na FE zadanych hodnot do beanu
+     * @param componentRequest ComponentRequest
+     * @param bean WebjetComponentInterface
+     */
+    private static void setParametersToBean(ComponentRequest componentRequest, WebjetComponentInterface bean) {
+<span class="fc" id="L94">        PageParams pageParams = new PageParams(componentRequest.getParameters());</span>
+<span class="fc" id="L95">        setParametersToBean(bean, pageParams);</span>
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * Nastavenie na FE zadanych hodnot do beanu
+     * @param bean
+     * @param pageParams
+     */
+    public static void setParametersToBean(WebjetComponentInterface bean, PageParams pageParams) {
+<span class="fc" id="L104">        Class&lt;?&gt; targetClass = AopProxyUtils.ultimateTargetClass(bean);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (String paramName : pageParams.getParamNames()) {</span>
+<span class="fc" id="L106">            PropertyDescriptor propertyDescriptor = BeanUtils.getPropertyDescriptor(targetClass, paramName);</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (propertyDescriptor == null) {</span>
+<span class="nc" id="L108">                continue;</span>
+            }
+<span class="fc" id="L110">            Method writeMethod = propertyDescriptor.getWriteMethod();</span>
+            try {
+<span class="fc" id="L112">                java.lang.reflect.Field field = getDeclaredFiledRecursive(targetClass, paramName);</span>
+<span class="fc" id="L113">                DataTableColumn annotation = null;</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">                if (field.isAnnotationPresent(DataTableColumn.class)) {</span>
+<span class="fc" id="L115">                    annotation = field.getAnnotation(DataTableColumn.class);</span>
+                }
+
+<span class="fc" id="L118">                Object value = retypeValue(propertyDescriptor.getPropertyType(), pageParams.getValue(paramName, &quot;&quot;), field, annotation);</span>
+<span class="fc" id="L119">                writeMethod.invoke(bean, value);</span>
+<span class="nc" id="L120">            } catch (IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {</span>
+<span class="nc" id="L121">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L122">            }</span>
+<span class="fc" id="L123">        }</span>
+<span class="fc" id="L124">    }</span>
+
+    /**
+     * Method will try get Field from class by given fieldName. If field is not found in class, method will try find field in super classes (and in the superClass of superClass ...).
+     * If we reach last superClass and field is not found, method will throw NoSuchFieldException.
+     *
+     * @param initialClass
+     * @param fieldName
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws NoSuchFieldException - if error is catch and there is still superClass do nothing, else return new NoSuchFieldException
+     */
+    private static java.lang.reflect.Field getDeclaredFiledRecursive(Class&lt;?&gt; initialClass, String fieldName) throws NoSuchFieldException {
+<span class="fc" id="L138">        java.lang.reflect.Field field = null;</span>
+
+<span class="fc" id="L140">        int failsafe=0;</span>
+<span class="fc" id="L141">        Class&lt;?&gt; targetClass = initialClass;</span>
+<span class="pc bpc" id="L142" title="2 of 4 branches missed.">        while (targetClass != null &amp;&amp; failsafe++&lt;15) {</span>
+            try {
+<span class="fc" id="L144">                field = targetClass.getDeclaredField(fieldName);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">                if(field != null) return field;</span>
+<span class="fc" id="L146">            } catch (NoSuchFieldException e) {</span>
+
+<span class="nc" id="L148">            }</span>
+            // Field not found in current class, continue to superclass
+<span class="fc" id="L150">            targetClass = targetClass.getSuperclass();</span>
+        }
+
+<span class="nc" id="L153">       throw new NoSuchFieldException(&quot;Field &quot; + fieldName + &quot; not found in class &quot; + initialClass.getName() + &quot; or in super classes&quot;);</span>
+    }
+
+    /**
+     * Metoda pre pretypovanie hodnot
+     * @param parameterType Class&lt;?&gt;
+     * @param value String
+     * @return Object
+     */
+    private static Object retypeValue(Class&lt;?&gt; parameterType, String value, java.lang.reflect.Field field, DataTableColumn annotation) {
+<span class="pc bpc" id="L163" title="1 of 4 branches missed.">        if (value == null || &quot;null&quot;.equals(value)) {</span>
+<span class="fc" id="L164">            return null;</span>
+        }
+
+        try {
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.math.BigDecimal&quot;)) {</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                if (Tools.isEmpty(value)) return null;</span>
+<span class="fc" id="L170">                return new BigDecimal(value);</span>
+            }
+
+<span class="fc bfc" id="L173" title="All 4 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.lang.Boolean&quot;) || parameterType.getTypeName().equalsIgnoreCase(&quot;boolean&quot;)) {</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                if (Tools.isEmpty(value)) return Boolean.FALSE;</span>
+<span class="fc" id="L175">                return Boolean.valueOf(value);</span>
+            }
+
+<span class="fc bfc" id="L178" title="All 4 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.lang.Float&quot;) || parameterType.getTypeName().equalsIgnoreCase(&quot;float&quot;)) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                if (Tools.isEmpty(value)) return Float.valueOf(0);</span>
+<span class="fc" id="L180">                return Float.valueOf(value);</span>
+            }
+
+<span class="fc bfc" id="L183" title="All 4 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.lang.Double&quot;) || parameterType.getTypeName().equalsIgnoreCase(&quot;double&quot;)) {</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">                if (Tools.isEmpty(value)) return Double.valueOf(0);</span>
+<span class="fc" id="L185">                return Double.valueOf(value);</span>
+            }
+
+<span class="fc bfc" id="L188" title="All 4 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.lang.Integer&quot;) || parameterType.getTypeName().equalsIgnoreCase(&quot;int&quot;)) {</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">                if (Tools.isEmpty(value)) return Integer.valueOf(0);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">                if (value.contains(&quot;.&quot;)) {</span>
+<span class="fc" id="L191">                    value = value.substring(0, value.indexOf(&quot;.&quot;));</span>
+                }
+<span class="fc" id="L193">                return Integer.valueOf(value);</span>
+            }
+
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.lang.Integer[]&quot;)) {</span>
+                //get tokens, it's probably + separated list
+<span class="fc" id="L198">                int[] tokens = Tools.getTokensInt(value, &quot;+&quot;);</span>
+<span class="fc" id="L199">                Integer[] result = Arrays.stream( tokens ).boxed().toArray( Integer[]::new );</span>
+<span class="fc" id="L200">                return result;</span>
+            }
+
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.lang.String[]&quot;)) {</span>
+                //get tokens, it's probably + separated list
+<span class="fc" id="L205">                String[] tokens = Tools.getTokens(value, &quot;+&quot;);</span>
+<span class="fc" id="L206">                return tokens;</span>
+            }
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.util.Date&quot;)) {</span>
+<span class="fc" id="L210">                DateConverter dateConverter = new DateConverter();</span>
+<span class="fc" id="L211">                return dateConverter.convert(value);</span>
+            }
+
+<span class="fc bfc" id="L214" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;sk.iway.iwcm.doc.GroupDetails&quot;)) {</span>
+<span class="fc" id="L215">                int groupId = Tools.getIntValue(value, 0);</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">                if (groupId == 0) {</span>
+<span class="nc" id="L217">                    return null;</span>
+                }
+<span class="fc" id="L219">                GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="fc" id="L220">                return group;</span>
+            }
+
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;sk.iway.iwcm.doc.DocDetails&quot;)) {</span>
+<span class="fc" id="L224">                int docId = Tools.getIntValue(value, 0);</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">                if (docId == 0) {</span>
+<span class="nc" id="L226">                    return null;</span>
+                }
+<span class="fc" id="L228">                DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="fc" id="L229">                return doc;</span>
+            }
+
+<span class="fc bfc" id="L232" title="All 2 branches covered.">            if (parameterType.getTypeName().equalsIgnoreCase(&quot;java.util.List&quot;)) {</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">                if (annotation == null) {</span>
+<span class="nc" id="L234">                    return null;</span>
+                }
+<span class="fc" id="L236">                String className = annotation.className();</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                if (className == null) return null;</span>
+
+<span class="fc bfc" id="L239" title="All 2 branches covered.">                if (className.contains(&quot;dt-tree-page&quot;)) {</span>
+<span class="fc" id="L240">                    List&lt;DocDetails&gt; docs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L241">                    String[] docIds = value.split(&quot;[+,]&quot;);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">                    for (String docId : docIds) {</span>
+<span class="fc" id="L243">                        DocDetails doc = DocDB.getInstance().getBasicDocDetails(Tools.getIntValue(docId, 0), false);</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">                        if (doc != null) {</span>
+<span class="fc" id="L245">                            docs.add(doc);</span>
+                        }
+                    }
+<span class="fc" id="L248">                    return docs;</span>
+                }
+
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">                if (className.contains(&quot;dt-tree-group&quot;)) {</span>
+<span class="fc" id="L252">                    List&lt;GroupDetails&gt; groups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L253">                    String[] groupIds = value.split(&quot;[+,]&quot;);</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                    for (String groupId : groupIds) {</span>
+<span class="fc" id="L255">                        GroupDetails group = GroupsDB.getInstance().getGroup(Tools.getIntValue(groupId, 0));</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">                        if (group != null) {</span>
+<span class="fc" id="L257">                            groups.add(group);</span>
+                        }
+                    }
+<span class="fc" id="L260">                    return groups;</span>
+                }
+            }
+
+<span class="fc" id="L264">            return value;</span>
+<span class="nc" id="L265">        } catch (Exception ex) {</span>
+<span class="nc" id="L266">            Logger.error(ComponentsService.class, ex);</span>
+        }
+<span class="nc" id="L268">        return null;</span>
+    }
+
+    /**
+     * Metoda pre ziskanie triedy webjet komponenty zo springovej komponenty
+     * @param applicationContext ApplicationContext
+     * @param className String
+     * @return WebjetComponentInterface
+     */
+    private static WebjetComponentInterface getWebjetComponentBean(ApplicationContext applicationContext, String className) {
+<span class="fc" id="L278">        WebjetComponentInterface bean = null;</span>
+        try {
+<span class="fc" id="L280">            bean = applicationContext.getBean(className, WebjetComponentInterface.class);</span>
+        }
+<span class="nc" id="L282">        catch (Exception e) {</span>
+<span class="nc" id="L283">            Logger.error(ComponentsService.class, &quot;exception&quot;, e);</span>
+<span class="fc" id="L284">        }</span>
+
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">        if (bean == null) {</span>
+<span class="nc" id="L287">            return null;</span>
+        }
+
+<span class="pc bpc" id="L290" title="1 of 2 branches missed.">        if (Advised.class.isAssignableFrom(bean.getClass())) {</span>
+<span class="fc" id="L291">            Advised advised = (Advised) bean;</span>
+<span class="fc" id="L292">            TargetSource targetSource = advised.getTargetSource();</span>
+            try {
+<span class="fc" id="L294">                bean = (WebjetComponentInterface) targetSource.getTarget();</span>
+<span class="nc" id="L295">            } catch (Exception e) {</span>
+<span class="nc" id="L296">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L297">            }</span>
+        }
+
+<span class="fc" id="L300">        return bean;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

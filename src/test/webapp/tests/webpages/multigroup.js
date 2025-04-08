@@ -30,7 +30,7 @@ Scenario('multigroup - change URL by title', ({ I, DT, DTE }) => {
     var title = baseTitle + " " + randomNumber;
     //
     I.say("Changing master title to "+title);
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     DTE.fillField("title", title);
     DTE.fillField("navbar", title);
     I.checkOption({css: "#DTE_Field_generateUrlFromTitle_0"});
@@ -102,10 +102,11 @@ Scenario('multigroup - preserve URL', ({ I, DT, DTE }) => {
 
 });
 
-Scenario('multigroup - preserve sort order', ({ I, DT, DTE }) => {
+Scenario('multigroup - preserve sort order', ({ I, DTE }) => {
     //
     I.say("Changing master sort order");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+masterDocId);
+    DTE.seeInField('virtualPath', '/test-stavov/multigroup/master/multi-page-change.html');
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-menu-tab");
     DTE.fillField("sortPriority", "440");
@@ -114,6 +115,7 @@ Scenario('multigroup - preserve sort order', ({ I, DT, DTE }) => {
     //
     I.say("Changing slave sort order");
     openPage(slaveDocId, I, DTE);
+    DTE.seeInField('virtualPath', '/test-stavov/multigroup/slave/multi-page-change.html');
     I.clickCss("#pills-dt-datatableInit-menu-tab");
     DTE.fillField("sortPriority", "500");
     DTE.save();
@@ -121,11 +123,13 @@ Scenario('multigroup - preserve sort order', ({ I, DT, DTE }) => {
     //
     I.say("Verify sort order");
     openPage(masterDocId, I, DTE);
+    DTE.seeInField('virtualPath', '/test-stavov/multigroup/master/multi-page-change.html');
     I.clickCss("#pills-dt-datatableInit-menu-tab");
     I.seeInField("#DTE_Field_sortPriority", "440");
     DTE.cancel();
 
     openPage(slaveDocId, I, DTE);
+    DTE.seeInField('virtualPath', '/test-stavov/multigroup/slave/multi-page-change.html');
     I.clickCss("#pills-dt-datatableInit-menu-tab");
     I.seeInField("#DTE_Field_sortPriority", "500");
     DTE.cancel();
@@ -160,7 +164,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
         I.click(DT.btn.add_button);
         DTE.waitForEditor();
         I.waitForElement("#DTE_Field_title");
-        I.click("#DTE_Field_title");
+        I.clickCss("#DTE_Field_title");
         I.fillField("#DTE_Field_title", docName);
         selectSlave(I);
         DTE.save();
@@ -174,7 +178,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
 
     //
     I.say("Hard delete of slave");
-        I.click("#pills-trash-tab");
+        I.clickCss("#pills-trash-tab");
         DT.waitForLoader();
         I.see(docName);
         deletePage(I, DT, DTE);
@@ -187,7 +191,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
         I.click(DT.btn.edit_button)
         DTE.waitForEditor();
 
-        I.click("#pills-dt-datatableInit-basic-tab");
+        I.clickCss("#pills-dt-datatableInit-basic-tab");
         selectSlave(I);
         DTE.save();
 
@@ -206,7 +210,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
 
     //
     I.say("Master hard delete - should be allso slave hard deleted");
-        I.click("#pills-trash-tab");
+        I.clickCss("#pills-trash-tab");
         DT.waitForLoader();
         DT.waitForLoader();
         DT.filterContains("title", docName);
@@ -221,7 +225,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
 
         //
         I.say("Check hard delete");
-        I.click("#pills-trash-tab");
+        I.clickCss("#pills-trash-tab");
         DT.waitForLoader();
         DT.filterContains("title", docName);
         I.dontSee(docName);

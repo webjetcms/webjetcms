@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebpagesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">WebpagesService.java</span></div><h1>WebpagesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebpagesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">WebpagesService.java</span></div><h1>WebpagesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,8 +36,6 @@ import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.UserTools;
-import sk.iway.iwcm.components.abtesting.ABTesting;
-import sk.iway.iwcm.components.blog.rest.BlogService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
@@ -48,15 +45,24 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupEditorField;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.doc.HistoryDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyButton;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -77,26 +83,26 @@ public class WebpagesService {
 	private GroupDetails localSystemGroup;
 
 	public static final String DATA_NOT_LOADED = &quot;data not loaded&quot;;
+	private static final String ADMIN_SETTINGS_KEY = &quot;jstreeSettings_web-pages-list&quot;;
 
-<span class="nc" id="L81">	public WebpagesService() {</span>
-<span class="nc" id="L82">	}</span>
+<span class="nc" id="L88">	public WebpagesService() {}</span>
 
-<span class="fc" id="L84">    public WebpagesService(int groupId, Identity user, Prop prop, HttpServletRequest request) {</span>
-<span class="fc" id="L85">        this.groupId = groupId;</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">		if (groupId&lt;1) {</span>
+<span class="fc" id="L90">    public WebpagesService(int groupId, Identity user, Prop prop, HttpServletRequest request) {</span>
+<span class="fc" id="L91">        this.groupId = groupId;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">		if (groupId&lt;1) {</span>
 			//musime vydedukovat korenovy adresar
 			//zoznam web stranok v korenovom/prvom adresari v zozname
-<span class="fc" id="L89">			int rootGroupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
+<span class="fc" id="L95">			int rootGroupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
 			//ziskaj zoznam root adresarov
-<span class="fc" id="L91">			GroupsTreeService groupsTreeService = new GroupsTreeService();</span>
-<span class="fc" id="L92">			List&lt;JsTreeItem&gt; rootGroups = groupsTreeService.getItems(user, 0, false, &quot;dt-tree-group-filter-system-trash&quot;, null, request);</span>
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">			if (rootGroups.isEmpty()==false) {</span>
-<span class="fc" id="L94">				rootGroupId = Tools.getIntValue(rootGroups.get(0).getId(), rootGroupId);</span>
+<span class="fc" id="L97">			GroupsTreeService groupsTreeService = new GroupsTreeService();</span>
+<span class="fc" id="L98">			List&lt;JsTreeItem&gt; rootGroups = groupsTreeService.getItems(user, 0, false, &quot;dt-tree-group-filter-system-trash&quot;, null, request);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">			if (rootGroups.isEmpty()==false) {</span>
+<span class="fc" id="L100">				rootGroupId = Tools.getIntValue(rootGroups.get(0).getId(), rootGroupId);</span>
 			}
-<span class="fc" id="L96">			this.groupId = rootGroupId;</span>
+<span class="fc" id="L102">			this.groupId = rootGroupId;</span>
 		}
-<span class="fc" id="L98">		this.prop = prop;</span>
-<span class="fc" id="L99">    }</span>
+<span class="fc" id="L104">		this.prop = prop;</span>
+<span class="fc" id="L105">    }</span>
 
 	/**
 	 * Ponecha v zozname len adresare z aktualne nastavenej domeny
@@ -104,34 +110,34 @@ public class WebpagesService {
 	 * @return
 	 */
 	public static List&lt;GroupDetails&gt; filterGroupsByCurrentDomain(List&lt;GroupDetails&gt; groups) {
-<span class="fc" id="L107">		List&lt;GroupDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L108">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="fc" id="L109">		String currentDomain = null;</span>
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (rb != null) currentDomain = rb.getDomain();</span>
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">		if (currentDomain == null) currentDomain = &quot;&quot;;</span>
+<span class="fc" id="L113">		List&lt;GroupDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L114">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L115">		String currentDomain = null;</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">		if (rb != null) currentDomain = rb.getDomain();</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">		if (currentDomain == null) currentDomain = &quot;&quot;;</span>
 
-<span class="fc" id="L113">		boolean hasLocalSystem = false;</span>
-<span class="fc" id="L114">		GroupDetails globalSystem = null;</span>
+<span class="fc" id="L119">		boolean hasLocalSystem = false;</span>
+<span class="fc" id="L120">		GroupDetails globalSystem = null;</span>
 
-<span class="fc bfc" id="L116" title="All 2 branches covered.">		for (GroupDetails group : groups) {</span>
-<span class="fc bfc" id="L117" title="All 4 branches covered.">			if (Tools.isEmpty(group.getDomainName()) || currentDomain.equals(group.getDomainName())) {</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">		for (GroupDetails group : groups) {</span>
+<span class="fc bfc" id="L123" title="All 4 branches covered.">			if (Tools.isEmpty(group.getDomainName()) || currentDomain.equals(group.getDomainName())) {</span>
 
-<span class="fc bfc" id="L119" title="All 4 branches covered.">				if (&quot;System&quot;.equals(group.getGroupName()) &amp;&amp; group.getParentGroupId()&lt;1) {</span>
+<span class="fc bfc" id="L125" title="All 4 branches covered.">				if (&quot;System&quot;.equals(group.getGroupName()) &amp;&amp; group.getParentGroupId()&lt;1) {</span>
 					//globalny system adresar ma typicky prazdne domenove meno, ak existuje lokalny system nechceme ten globalny mat v zozname
-<span class="fc bfc" id="L121" title="All 2 branches covered.">					if (Tools.isEmpty(group.getDomainName())) {</span>
-<span class="fc" id="L122">						globalSystem = group;</span>
-<span class="fc" id="L123">						continue;</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">					if (Tools.isEmpty(group.getDomainName())) {</span>
+<span class="fc" id="L128">						globalSystem = group;</span>
+<span class="fc" id="L129">						continue;</span>
 					}
-<span class="fc" id="L125">					else hasLocalSystem = true;</span>
+<span class="fc" id="L131">					else hasLocalSystem = true;</span>
 				}
 
-<span class="fc" id="L128">				filtered.add(group);</span>
+<span class="fc" id="L134">				filtered.add(group);</span>
 			}
-<span class="fc" id="L130">		}</span>
+<span class="fc" id="L136">		}</span>
 
-<span class="pc bpc" id="L132" title="1 of 4 branches missed.">		if (hasLocalSystem==false &amp;&amp; globalSystem!=null) filtered.add(globalSystem);</span>
+<span class="pc bpc" id="L138" title="1 of 4 branches missed.">		if (hasLocalSystem==false &amp;&amp; globalSystem!=null) filtered.add(globalSystem);</span>
 
-<span class="fc" id="L134">		return filtered;</span>
+<span class="fc" id="L140">		return filtered;</span>
 	}
 
 	/**
@@ -141,11 +147,11 @@ public class WebpagesService {
 	 */
     public List&lt;TemplateDetails&gt; getTemplates(boolean recursive) {
 
-<span class="fc" id="L144">		List&lt;TemplateDetails&gt; allTemplates = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L145">		allTemplates.addAll(getTemplates(-1, recursive));</span>
-<span class="fc" id="L146">		List&lt;TemplateDetails&gt; templates = TemplatesDB.filterDeviceTemplates(allTemplates);</span>
+<span class="fc" id="L150">		List&lt;TemplateDetails&gt; allTemplates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L151">		allTemplates.addAll(getTemplates(-1, recursive));</span>
+<span class="fc" id="L152">		List&lt;TemplateDetails&gt; templates = TemplatesDB.filterDeviceTemplates(allTemplates);</span>
 
-<span class="fc" id="L148">        return templates;</span>
+<span class="fc" id="L154">        return templates;</span>
 	}
 
 	/**
@@ -154,20 +160,20 @@ public class WebpagesService {
 	 * @return
 	 */
 	public static GroupDetails getRootGroup() {
-<span class="fc" id="L157">		GroupEditorField groupEditorField = new GroupEditorField();</span>
+<span class="fc" id="L163">		GroupEditorField groupEditorField = new GroupEditorField();</span>
 
 		//Set root parent group details into group editor field
-<span class="fc" id="L160">		groupEditorField.setParentGroupDetails(null);</span>
+<span class="fc" id="L166">		groupEditorField.setParentGroupDetails(null);</span>
 
 		// Create default root group and set editorFileds
-<span class="fc" id="L163">		GroupDetails groupDetails = new GroupDetails();</span>
-<span class="fc" id="L164">		groupDetails.setGroupId(0);</span>
-<span class="fc" id="L165">		Prop prop = Prop.getInstance();</span>
-<span class="fc" id="L166">		groupDetails.setGroupName(prop.getText(&quot;stat_settings.group_id&quot;));</span>
-<span class="fc" id="L167">		groupDetails.setFullPath(&quot;/&quot;);</span>
-<span class="fc" id="L168">		groupDetails.setEditorFields(groupEditorField);</span>
+<span class="fc" id="L169">		GroupDetails groupDetails = new GroupDetails();</span>
+<span class="fc" id="L170">		groupDetails.setGroupId(0);</span>
+<span class="fc" id="L171">		Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L172">		groupDetails.setGroupName(prop.getText(&quot;stat_settings.group_id&quot;));</span>
+<span class="fc" id="L173">		groupDetails.setFullPath(&quot;/&quot;);</span>
+<span class="fc" id="L174">		groupDetails.setEditorFields(groupEditorField);</span>
 
-<span class="fc" id="L170">		return groupDetails;</span>
+<span class="fc" id="L176">		return groupDetails;</span>
 	}
 
 	/**
@@ -176,10 +182,10 @@ public class WebpagesService {
 	 * @return
 	 */
 	public static GroupDetails getGroup(int groupId) {
-<span class="fc bfc" id="L179" title="All 2 branches covered.">		if (groupId == 0) {</span>
-<span class="fc" id="L180">			return getRootGroup();</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">		if (groupId == 0) {</span>
+<span class="fc" id="L186">			return getRootGroup();</span>
 		} else {
-<span class="fc" id="L182">			return GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="fc" id="L188">			return GroupsDB.getInstance().getGroup(groupId);</span>
 		}
 	}
 
@@ -190,15 +196,15 @@ public class WebpagesService {
 	 */
 	public static DocDetails getBasicDoc(int docId) {
 		DocDetails doc;
-<span class="fc bfc" id="L193" title="All 2 branches covered.">		if (docId &lt; 1) {</span>
-<span class="fc" id="L194">			doc = new DocDetails();</span>
-<span class="fc" id="L195">            doc.setDocId(0);</span>
-<span class="fc" id="L196">            doc.setEditorFields(null);</span>
-<span class="fc" id="L197">            doc.setTitle(Prop.getInstance().getText(&quot;editor.json.pathNotSet&quot;));</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">		if (docId &lt; 1) {</span>
+<span class="fc" id="L200">			doc = new DocDetails();</span>
+<span class="fc" id="L201">            doc.setDocId(0);</span>
+<span class="fc" id="L202">            doc.setEditorFields(null);</span>
+<span class="fc" id="L203">            doc.setTitle(Prop.getInstance().getText(&quot;editor.json.pathNotSet&quot;));</span>
 		} else {
-<span class="fc" id="L199">			doc = DocDB.getInstance().getBasicDocDetails(docId, true);</span>
+<span class="fc" id="L205">			doc = DocDB.getInstance().getBasicDocDetails(docId, true);</span>
 		}
-<span class="fc" id="L201">		return doc;</span>
+<span class="fc" id="L207">		return doc;</span>
 	}
 
 	/**
@@ -208,14 +214,14 @@ public class WebpagesService {
 	 */
     public List&lt;DocDetails&gt; getHeaderList(boolean addFromTemplateAndEmptyToSelect) {
 		List&lt;DocDetails&gt; docs;
-<span class="fc" id="L211">		GroupDetails localSystem = getLocalSystemGroup();</span>
-<span class="pc bpc" id="L212" title="1 of 2 branches missed.">		if (localSystem != null){</span>
-<span class="fc" id="L213">			docs = getBasicDocDetailsByGroupRecursive(localSystem.getGroupId(), true);</span>
+<span class="fc" id="L217">		GroupDetails localSystem = getLocalSystemGroup();</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">		if (localSystem != null){</span>
+<span class="fc" id="L219">			docs = getBasicDocDetailsByGroupRecursive(localSystem.getGroupId(), true);</span>
 		} else {
-<span class="nc" id="L215">			docs = DocDB.getInstance().getDocByGroup(Constants.getInt(&quot;headerFooterGroupId&quot;));</span>
+<span class="nc" id="L221">			docs = DocDB.getInstance().getDocByGroup(Constants.getInt(&quot;headerFooterGroupId&quot;));</span>
 		}
-<span class="fc bfc" id="L217" title="All 2 branches covered.">		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);</span>
-<span class="fc" id="L218">		return docs;</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);</span>
+<span class="fc" id="L224">		return docs;</span>
     }
 
 	/**
@@ -225,14 +231,14 @@ public class WebpagesService {
 	 */
     public List&lt;DocDetails&gt; getMenuList(boolean addFromTemplateAndEmptyToSelect) {
 		List&lt;DocDetails&gt; docs;
-<span class="fc" id="L228">		GroupDetails localSystem = getLocalSystemGroup();</span>
-<span class="pc bpc" id="L229" title="1 of 2 branches missed.">		if (localSystem != null){</span>
-<span class="fc" id="L230">			docs = getBasicDocDetailsByGroupRecursive(localSystem.getGroupId(), true);</span>
+<span class="fc" id="L234">		GroupDetails localSystem = getLocalSystemGroup();</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">		if (localSystem != null){</span>
+<span class="fc" id="L236">			docs = getBasicDocDetailsByGroupRecursive(localSystem.getGroupId(), true);</span>
 		} else {
-<span class="nc" id="L232">			docs = DocDB.getInstance().getDocByGroup(Constants.getInt(&quot;menuGroupId&quot;));</span>
+<span class="nc" id="L238">			docs = DocDB.getInstance().getDocByGroup(Constants.getInt(&quot;menuGroupId&quot;));</span>
 		}
-<span class="fc bfc" id="L234" title="All 2 branches covered.">		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);</span>
-<span class="fc" id="L235">		return docs;</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);</span>
+<span class="fc" id="L241">		return docs;</span>
 	}
 
 	/**
@@ -242,23 +248,23 @@ public class WebpagesService {
 	 */
 	public List&lt;DocDetails&gt; getHeaderFooterMenuList(boolean addFromTemplateAndEmptyToSelect) {
 		List&lt;DocDetails&gt; docs;
-<span class="fc" id="L245">		GroupDetails localSystem = getLocalSystemGroup();</span>
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">		if (localSystem != null){</span>
-<span class="fc" id="L247">			docs = getBasicDocDetailsByGroupRecursive(localSystem.getGroupId(), true);</span>
+<span class="fc" id="L251">		GroupDetails localSystem = getLocalSystemGroup();</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">		if (localSystem != null){</span>
+<span class="fc" id="L253">			docs = getBasicDocDetailsByGroupRecursive(localSystem.getGroupId(), true);</span>
 		} else {
-<span class="nc" id="L249">			DocDB docDB = DocDB.getInstance();</span>
-<span class="nc" id="L250">			docs = docDB.getDocByGroup(Constants.getInt(&quot;headerFooterGroupId&quot;));</span>
-<span class="nc" id="L251">			docs.addAll(docDB.getDocByGroup(Constants.getInt(&quot;menuGroupId&quot;)));</span>
+<span class="nc" id="L255">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L256">			docs = docDB.getDocByGroup(Constants.getInt(&quot;headerFooterGroupId&quot;));</span>
+<span class="nc" id="L257">			docs.addAll(docDB.getDocByGroup(Constants.getInt(&quot;menuGroupId&quot;)));</span>
 		}
-<span class="fc bfc" id="L253" title="All 2 branches covered.">		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);</span>
-<span class="fc" id="L254">		return docs;</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">		if (addFromTemplateAndEmptyToSelect) return addFromTemlateAndEmptyDoc(docs);</span>
+<span class="fc" id="L260">		return docs;</span>
 	}
 
 	private List&lt;DocDetails&gt; addFromTemlateAndEmptyDoc(List&lt;DocDetails&gt; list)
 	{
-<span class="fc" id="L259">		addEmptyDoc(list, -2);</span>
-<span class="fc" id="L260">		addFromTemlateDoc(list);</span>
-<span class="fc" id="L261">		return list;</span>
+<span class="fc" id="L265">		addEmptyDoc(list, -2);</span>
+<span class="fc" id="L266">		addFromTemlateDoc(list);</span>
+<span class="fc" id="L267">		return list;</span>
 	}
 
 	/**
@@ -269,13 +275,13 @@ public class WebpagesService {
 	 */
     public List&lt;DocDetails&gt; addFromTemlateDoc(List&lt;DocDetails&gt; list)
 	{
-<span class="fc" id="L272">		DocDetails fromTemplate = new DocDetails();</span>
-<span class="fc" id="L273">		fromTemplate.setDocId(-1);</span>
-<span class="fc" id="L274">        fromTemplate.setTitle(prop.getText(&quot;editor.fromTemplate&quot;));</span>
+<span class="fc" id="L278">		DocDetails fromTemplate = new DocDetails();</span>
+<span class="fc" id="L279">		fromTemplate.setDocId(-1);</span>
+<span class="fc" id="L280">        fromTemplate.setTitle(prop.getText(&quot;editor.fromTemplate&quot;));</span>
 
-<span class="fc" id="L276">		list.add(0, fromTemplate);</span>
+<span class="fc" id="L282">		list.add(0, fromTemplate);</span>
 
-<span class="fc" id="L278">		return list;</span>
+<span class="fc" id="L284">		return list;</span>
     }
 
 	/**
@@ -287,13 +293,13 @@ public class WebpagesService {
 	 */
 	public List&lt;DocDetails&gt; addEmptyDoc(List&lt;DocDetails&gt; list, int emptyDocId)
 	{
-<span class="fc" id="L290">		DocDetails empty = new DocDetails();</span>
-<span class="fc" id="L291">		empty.setDocId(emptyDocId);</span>
-<span class="fc" id="L292">		empty.setTitle(prop.getText(&quot;editor.empyDoc&quot;));</span>
+<span class="fc" id="L296">		DocDetails empty = new DocDetails();</span>
+<span class="fc" id="L297">		empty.setDocId(emptyDocId);</span>
+<span class="fc" id="L298">		empty.setTitle(prop.getText(&quot;editor.empyDoc&quot;));</span>
 
-<span class="fc" id="L294">		list.add(0, empty);</span>
+<span class="fc" id="L300">		list.add(0, empty);</span>
 
-<span class="fc" id="L296">		return list;</span>
+<span class="fc" id="L302">		return list;</span>
 	}
 
 	/**
@@ -303,31 +309,31 @@ public class WebpagesService {
 	 * @return
 	 */
 	public static List&lt;DocDetails&gt; getBasicDocDetailsByGroupRecursive(int groupId, boolean titleIncludePath) {
-<span class="fc" id="L306">		DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L307">		List&lt;DocDetails&gt; localDocsInGroup = filterUnavailableDocs(docDB.getBasicDocDetailsByGroup(groupId, -1));</span>
-<span class="fc" id="L308">		List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(groupId);</span>
-<span class="fc" id="L309">		Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
-<span class="fc" id="L310">        String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
-<span class="fc bfc" id="L311" title="All 2 branches covered.">		for (GroupDetails subGroup : subGroups) {</span>
+<span class="fc" id="L312">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L313">		List&lt;DocDetails&gt; localDocsInGroup = filterUnavailableDocs(docDB.getBasicDocDetailsByGroup(groupId, -1));</span>
+<span class="fc" id="L314">		List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(groupId);</span>
+<span class="fc" id="L315">		Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L316">        String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">		for (GroupDetails subGroup : subGroups) {</span>
 			//trash preskakujeme
-<span class="pc bpc" id="L313" title="1 of 2 branches missed.">			if (trashDirName.equals(subGroup.getGroupName())) continue;</span>
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">			if (trashDirName.equals(subGroup.getGroupName())) continue;</span>
 
-<span class="fc" id="L315">			List&lt;DocDetails&gt; subDocs = docDB.getBasicDocDetailsByGroup(subGroup.getGroupId(), -1);</span>
-<span class="fc bfc" id="L316" title="All 2 branches covered.">			for (DocDetails subDoc : subDocs) {</span>
-<span class="fc bfc" id="L317" title="All 2 branches covered.">				if (subDoc.isAvailable()==false) continue;</span>
+<span class="fc" id="L321">			List&lt;DocDetails&gt; subDocs = docDB.getBasicDocDetailsByGroup(subGroup.getGroupId(), -1);</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">			for (DocDetails subDoc : subDocs) {</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">				if (subDoc.isAvailable()==false) continue;</span>
 
-<span class="fc bfc" id="L319" title="All 2 branches covered.">				if (titleIncludePath) {</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">				if (titleIncludePath) {</span>
 					//upravime meno, aby obsahovalo aj meno adresara, aby bolo zrejme od kial pochadza
-<span class="fc" id="L321">					DocDetails menuDoc = new DocDetails();</span>
-<span class="fc" id="L322">					menuDoc.setDocId(subDoc.getDocId());</span>
-<span class="fc" id="L323">					menuDoc.setTitle(subGroup.getGroupName()+&quot;/&quot;+subDoc.getTitle());</span>
-<span class="fc" id="L324">					localDocsInGroup.add(menuDoc);</span>
-<span class="fc" id="L325">				} else {</span>
-<span class="fc" id="L326">					localDocsInGroup.add(subDoc);</span>
+<span class="fc" id="L327">					DocDetails menuDoc = new DocDetails();</span>
+<span class="fc" id="L328">					menuDoc.setDocId(subDoc.getDocId());</span>
+<span class="fc" id="L329">					menuDoc.setTitle(subGroup.getGroupName()+&quot;/&quot;+subDoc.getTitle());</span>
+<span class="fc" id="L330">					localDocsInGroup.add(menuDoc);</span>
+<span class="fc" id="L331">				} else {</span>
+<span class="fc" id="L332">					localDocsInGroup.add(subDoc);</span>
 				}
-<span class="fc" id="L328">			}</span>
-<span class="fc" id="L329">		}</span>
-<span class="fc" id="L330">		return localDocsInGroup;</span>
+<span class="fc" id="L334">			}</span>
+<span class="fc" id="L335">		}</span>
+<span class="fc" id="L336">		return localDocsInGroup;</span>
 	}
 
 	/**
@@ -335,11 +341,11 @@ public class WebpagesService {
 	 * @return
 	 */
     private GroupDetails getLocalSystemGroup() {
-<span class="pc bpc" id="L338" title="1 of 4 branches missed.">		if (localSystemGroup == null &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
-<span class="fc" id="L339">			localSystemGroup = GroupsDB.getInstance().getLocalSystemGroup();</span>
+<span class="pc bpc" id="L344" title="1 of 4 branches missed.">		if (localSystemGroup == null &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
+<span class="fc" id="L345">			localSystemGroup = GroupsDB.getInstance().getLocalSystemGroup();</span>
 		}
 
-<span class="fc" id="L342">		return localSystemGroup;</span>
+<span class="fc" id="L348">		return localSystemGroup;</span>
 	}
 
 	/**
@@ -347,11 +353,11 @@ public class WebpagesService {
 	 * @return
 	 */
 	public GroupDetails getGroup() {
-<span class="pc bpc" id="L350" title="1 of 2 branches missed.">		if (groupId &gt; 0) {</span>
-<span class="fc" id="L351">			return GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="pc bpc" id="L356" title="1 of 2 branches missed.">		if (groupId &gt; 0) {</span>
+<span class="fc" id="L357">			return GroupsDB.getInstance().getGroup(groupId);</span>
 		}
 
-<span class="nc" id="L354">		return null;</span>
+<span class="nc" id="L360">		return null;</span>
 	}
 
 	/**
@@ -359,43 +365,43 @@ public class WebpagesService {
 	 * @return
 	 */
 	public List&lt;LabelValueDetails&gt; getOptionsInternal() {
-<span class="fc" id="L362">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L363">		list.add(new LabelValueDetails(prop.getText(&quot;editor.available-public&quot;), &quot;false&quot;));</span>
-<span class="fc" id="L364">		list.add(new LabelValueDetails(prop.getText(&quot;editor.notavailable-notpublic&quot;), &quot;true&quot;));</span>
-<span class="fc" id="L365">		return list;</span>
+<span class="fc" id="L368">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L369">		list.add(new LabelValueDetails(prop.getText(&quot;editor.available-public&quot;), &quot;false&quot;));</span>
+<span class="fc" id="L370">		list.add(new LabelValueDetails(prop.getText(&quot;editor.notavailable-notpublic&quot;), &quot;true&quot;));</span>
+<span class="fc" id="L371">		return list;</span>
 	}
 
 	/**
 	 * Vrati ciselnik pre zoznam sablon
 	 */
 	public List&lt;LabelValueDetails&gt; getOptionsTemplates(UserDetails currentUser, GroupDetails group) {
-<span class="fc" id="L372">		TemplatesDB templatesDB = TemplatesDB.getInstance();</span>
+<span class="fc" id="L378">		TemplatesDB templatesDB = TemplatesDB.getInstance();</span>
 		List&lt;TemplateDetails&gt; allTemps;
-<span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if (group != null) allTemps = templatesDB.getTemplates(group.getGroupId(), group.getTempId());</span>
-<span class="nc" id="L375">		else allTemps = templatesDB.getTemplatesSaved();</span>
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">		if (group != null) allTemps = templatesDB.getTemplates(group.getGroupId(), group.getTempId());</span>
+<span class="nc" id="L381">		else allTemps = templatesDB.getTemplatesSaved();</span>
 
-<span class="fc" id="L377">		List&lt;TemplateDetails&gt; templateDetailsList = TemplatesDB.filterTemplatesByUser(currentUser, allTemps);</span>
-<span class="fc" id="L378">		List&lt;LabelValueDetails&gt; templateNames = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L383">		List&lt;TemplateDetails&gt; templateDetailsList = TemplatesDB.filterTemplatesByUser(currentUser, allTemps);</span>
+<span class="fc" id="L384">		List&lt;LabelValueDetails&gt; templateNames = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L380">		templateDetailsList.forEach(templateDetails -&gt;</span>
-<span class="fc" id="L381">			templateNames.add(new LabelValueDetails(templateDetails.getTempName(), String.valueOf(templateDetails.getTempId())))</span>
+<span class="fc" id="L386">		templateDetailsList.forEach(templateDetails -&gt;</span>
+<span class="fc" id="L387">			templateNames.add(new LabelValueDetails(templateDetails.getTempName(), String.valueOf(templateDetails.getTempId())))</span>
 		);
 
-<span class="fc" id="L384">		return templateNames;</span>
+<span class="fc" id="L390">		return templateNames;</span>
 	}
 
 	/**
 	 * Vrati ciselnik pre vyber jazyka
 	 */
 	public List&lt;LabelValueDetails&gt; getOptionsLanguages(HttpServletRequest request) {
-<span class="fc" id="L391">		LayoutService ls = new LayoutService(request);</span>
-<span class="fc" id="L392">		List&lt;LabelValueDetails&gt; incompleteLanguages = ls.getLanguages(false, true);</span>
-<span class="fc" id="L393">		List&lt;LabelValueDetails&gt; finalLanguages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L397">		LayoutService ls = new LayoutService(request);</span>
+<span class="fc" id="L398">		List&lt;LabelValueDetails&gt; incompleteLanguages = ls.getLanguages(false, true);</span>
+<span class="fc" id="L399">		List&lt;LabelValueDetails&gt; finalLanguages = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L395">		finalLanguages.add(new LabelValueDetails(prop.getText(&quot;groupedit.lng.default&quot;), &quot;&quot;));</span>
-<span class="fc" id="L396">		finalLanguages.addAll(incompleteLanguages);</span>
+<span class="fc" id="L401">		finalLanguages.add(new LabelValueDetails(prop.getText(&quot;groupedit.lng.default&quot;), &quot;&quot;));</span>
+<span class="fc" id="L402">		finalLanguages.addAll(incompleteLanguages);</span>
 
-<span class="fc" id="L398">		return finalLanguages;</span>
+<span class="fc" id="L404">		return finalLanguages;</span>
 	}
 
 	/**
@@ -403,14 +409,14 @@ public class WebpagesService {
 	 * @return
 	 */
 	public List&lt;LabelValueDetails&gt; getOptionsNewPageHTMLCode() {
-<span class="fc" id="L406">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L407">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.new_page_template.empty&quot;), &quot;-1&quot;));</span>
-<span class="fc" id="L408">		DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L409">		List&lt;DocDetails&gt; pageTemps = docDB.getDocByGroup(Constants.getInt(&quot;tempGroupId&quot;));</span>
-<span class="fc bfc" id="L410" title="All 2 branches covered.">		for (DocDetails pageTemp : pageTemps) {</span>
-<span class="fc" id="L411">			list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));</span>
-<span class="fc" id="L412">		}</span>
-<span class="fc" id="L413">		return list;</span>
+<span class="fc" id="L412">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L413">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.new_page_template.empty&quot;), &quot;-1&quot;));</span>
+<span class="fc" id="L414">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L415">		List&lt;DocDetails&gt; pageTemps = docDB.getDocByGroup(Constants.getInt(&quot;tempGroupId&quot;));</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">		for (DocDetails pageTemp : pageTemps) {</span>
+<span class="fc" id="L417">			list.add(new LabelValueDetails(pageTemp.getTitle(), String.valueOf(pageTemp.getDocId())));</span>
+<span class="fc" id="L418">		}</span>
+<span class="fc" id="L419">		return list;</span>
 	}
 
 	/**
@@ -419,15 +425,15 @@ public class WebpagesService {
 	 * @return
 	 */
 	public List&lt;LabelValueDetails&gt; getOptionsNavbar(boolean isLogged) {
-<span class="fc" id="L422">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L423" title="All 2 branches covered.">		if (isLogged) list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_same_as_normal&quot;), &quot;null&quot;));</span>
-<span class="fc" id="L424">		else list.add(new LabelValueDetails(prop.getText(&quot;editor.navbar.same_as_menu&quot;), &quot;null&quot;));</span>
+<span class="fc" id="L428">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L429" title="All 2 branches covered.">		if (isLogged) list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_same_as_normal&quot;), &quot;null&quot;));</span>
+<span class="fc" id="L430">		else list.add(new LabelValueDetails(prop.getText(&quot;editor.navbar.same_as_menu&quot;), &quot;null&quot;));</span>
 
-<span class="fc" id="L426">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_onlydefault&quot;), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));</span>
-<span class="fc" id="L427">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_hidden&quot;), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));</span>
+<span class="fc" id="L432">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_onlydefault&quot;), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));</span>
+<span class="fc" id="L433">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_hidden&quot;), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));</span>
 		//list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_nosub&quot;), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));
 		//list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_normal&quot;), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));
-<span class="fc" id="L430">		return list;</span>
+<span class="fc" id="L436">		return list;</span>
 	}
 
 	/**
@@ -436,15 +442,15 @@ public class WebpagesService {
 	 * @return
 	 */
 	public List&lt;LabelValueDetails&gt; getOptionsSitemap(boolean isLogged) {
-<span class="fc" id="L439">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L440" title="All 2 branches covered.">		if (isLogged) list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_same_as_normal&quot;), &quot;null&quot;));</span>
-<span class="fc" id="L441">		else list.add(new LabelValueDetails(prop.getText(&quot;editor.navbar.same_as_menu&quot;), &quot;null&quot;));</span>
+<span class="fc" id="L445">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L446" title="All 2 branches covered.">		if (isLogged) list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_same_as_normal&quot;), &quot;null&quot;));</span>
+<span class="fc" id="L447">		else list.add(new LabelValueDetails(prop.getText(&quot;editor.navbar.same_as_menu&quot;), &quot;null&quot;));</span>
 
-<span class="fc" id="L443">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_onlydefault&quot;), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));</span>
-<span class="fc" id="L444">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_hidden&quot;), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));</span>
-<span class="fc" id="L445">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_nosub&quot;), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));</span>
-<span class="fc" id="L446">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_normal&quot;), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));</span>
-<span class="fc" id="L447">		return list;</span>
+<span class="fc" id="L449">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_onlydefault&quot;), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));</span>
+<span class="fc" id="L450">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_hidden&quot;), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));</span>
+<span class="fc" id="L451">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_nosub&quot;), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));</span>
+<span class="fc" id="L452">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_normal&quot;), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));</span>
+<span class="fc" id="L453">		return list;</span>
 	}
 
 	/**
@@ -453,13 +459,13 @@ public class WebpagesService {
 	 * @return
 	 */
 	public List&lt;LabelValueDetails&gt; getMenuType(boolean isLogged) {
-<span class="fc" id="L456">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L457" title="All 2 branches covered.">		if (isLogged) list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_same_as_normal&quot;), &quot;-1&quot;));</span>
-<span class="fc" id="L458">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_onlydefault&quot;), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));</span>
-<span class="fc" id="L459">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_hidden&quot;), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));</span>
-<span class="fc" id="L460">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_nosub&quot;), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));</span>
-<span class="fc" id="L461">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_normal&quot;), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));</span>
-<span class="fc" id="L462">		return list;</span>
+<span class="fc" id="L462">		List&lt;LabelValueDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L463" title="All 2 branches covered.">		if (isLogged) list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_same_as_normal&quot;), &quot;-1&quot;));</span>
+<span class="fc" id="L464">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_onlydefault&quot;), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));</span>
+<span class="fc" id="L465">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_hidden&quot;), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));</span>
+<span class="fc" id="L466">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_nosub&quot;), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));</span>
+<span class="fc" id="L467">		list.add(new LabelValueDetails(prop.getText(&quot;groupedit.menu_type_normal&quot;), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));</span>
+<span class="fc" id="L468">		return list;</span>
 	}
 
 	/**
@@ -468,8 +474,8 @@ public class WebpagesService {
 	 * @return
 	 */
 	public List&lt;PerexGroupBean&gt; getPerexGroups(boolean recursive) {
-<span class="fc" id="L471">		List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups(groupId, recursive);</span>
-<span class="fc" id="L472">		return perexGroups;</span>
+<span class="fc" id="L477">		List&lt;PerexGroupBean&gt; perexGroups = DocDB.getInstance().getPerexGroups(groupId, recursive);</span>
+<span class="fc" id="L478">		return perexGroups;</span>
 	}
 
 	/**
@@ -479,38 +485,38 @@ public class WebpagesService {
 	 * @param attributeValue - hodnota
 	 */
 	public void  setAttributeToSubgroups(int groupId, String attributeName, Object attributeValue){
-<span class="fc" id="L482">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L483">        Connection db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L484">        PreparedStatement ps = null;</span>
-<span class="fc" id="L485">        String groupIds = groupsDB.getSubgroupsIds(groupId);</span>
+<span class="fc" id="L488">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L489">        Connection db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L490">        PreparedStatement ps = null;</span>
+<span class="fc" id="L491">        String groupIds = groupsDB.getSubgroupsIds(groupId);</span>
 
-<span class="fc" id="L487">        Adminlog.add(Adminlog.TYPE_GROUP, &quot;Force &quot;+DB.removeSlashes(attributeName)+&quot; to subgroups: &quot; + groupIds + &quot; value=&quot; + attributeValue, groupId, -1);</span>
+<span class="fc" id="L493">        Adminlog.add(Adminlog.TYPE_GROUP, &quot;Force &quot;+DB.removeSlashes(attributeName)+&quot; to subgroups: &quot; + groupIds + &quot; value=&quot; + attributeValue, groupId, -1);</span>
 
         try {
-<span class="fc" id="L490">			ps = db_conn.prepareStatement(&quot;UPDATE groups SET &quot; + DB.removeSlashes(attributeName) + &quot;=? WHERE group_id IN (&quot; + groupIds + &quot;)&quot;);</span>
+<span class="fc" id="L496">			ps = db_conn.prepareStatement(&quot;UPDATE groups SET &quot; + DB.removeSlashes(attributeName) + &quot;=? WHERE group_id IN (&quot; + groupIds + &quot;)&quot;);</span>
 
-<span class="fc bfc" id="L492" title="All 2 branches covered.">			if (attributeValue instanceof String) ps.setString(1, (String)attributeValue);</span>
-<span class="fc bfc" id="L493" title="All 2 branches covered.">			else if (attributeValue instanceof Integer) ps.setInt(1, ((Integer)attributeValue).intValue());</span>
-<span class="fc bfc" id="L494" title="All 2 branches covered.">			else if (attributeValue instanceof Boolean) ps.setBoolean(1, ((Boolean)attributeValue).booleanValue());</span>
-<span class="fc" id="L495">			else ps.setObject(1, attributeValue);</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">			if (attributeValue instanceof String) ps.setString(1, (String)attributeValue);</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">			else if (attributeValue instanceof Integer) ps.setInt(1, ((Integer)attributeValue).intValue());</span>
+<span class="fc bfc" id="L500" title="All 2 branches covered.">			else if (attributeValue instanceof Boolean) ps.setBoolean(1, ((Boolean)attributeValue).booleanValue());</span>
+<span class="fc" id="L501">			else ps.setObject(1, attributeValue);</span>
 
-<span class="fc" id="L497">            ps.execute();</span>
-<span class="nc" id="L498">        } catch (Exception ex) {</span>
-<span class="nc" id="L499">            Logger.error(WebpagesService.class, ex);</span>
+<span class="fc" id="L503">            ps.execute();</span>
+<span class="nc" id="L504">        } catch (Exception ex) {</span>
+<span class="nc" id="L505">            Logger.error(WebpagesService.class, ex);</span>
         } finally {
             try {
-<span class="pc bpc" id="L502" title="1 of 2 branches missed.">                if (ps != null)</span>
-<span class="fc" id="L503">                    ps.close();</span>
-<span class="pc bpc" id="L504" title="1 of 2 branches missed.">                if (db_conn != null)</span>
-<span class="fc" id="L505">                    db_conn.close();</span>
-<span class="nc" id="L506">            } catch (Exception ex) {</span>
-<span class="nc" id="L507">                Logger.error(WebpagesService.class, ex);</span>
-<span class="fc" id="L508">            }</span>
+<span class="pc bpc" id="L508" title="1 of 2 branches missed.">                if (ps != null)</span>
+<span class="fc" id="L509">                    ps.close();</span>
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">                if (db_conn != null)</span>
+<span class="fc" id="L511">                    db_conn.close();</span>
+<span class="nc" id="L512">            } catch (Exception ex) {</span>
+<span class="nc" id="L513">                Logger.error(WebpagesService.class, ex);</span>
+<span class="fc" id="L514">            }</span>
 		  }
 
 		  //mame zmeny je najlepsie refreshnut celu GroupsDB
-<span class="fc" id="L512">		  GroupsDB.getInstance(true);</span>
-<span class="fc" id="L513">    }</span>
+<span class="fc" id="L518">		  GroupsDB.getInstance(true);</span>
+<span class="fc" id="L519">    }</span>
 
 	/**
 	 * Pregeneruje URL adresy stranok v zadanom adresari
@@ -522,54 +528,54 @@ public class WebpagesService {
 	public static void regenerateUrl(int rootGroupId, Identity user, HttpServletRequest request, boolean onlyChangeUrlInheritGroup)
 	{
 		//ziskaj zoznam stranok v adresari
-<span class="fc" id="L525">		List&lt;DocDetails&gt; docs = DocDB.getInstance().getDocByGroup(rootGroupId);</span>
+<span class="fc" id="L531">		List&lt;DocDetails&gt; docs = DocDB.getInstance().getDocByGroup(rootGroupId);</span>
 		EditorForm ef;
-<span class="fc bfc" id="L527" title="All 2 branches covered.">		for (DocDetails doc : docs)</span>
+<span class="fc bfc" id="L533" title="All 2 branches covered.">		for (DocDetails doc : docs)</span>
 		{
 
-<span class="pc bpc" id="L530" title="1 of 2 branches missed.">			if(onlyChangeUrlInheritGroup) {</span>
+<span class="pc bpc" id="L536" title="1 of 2 branches missed.">			if(onlyChangeUrlInheritGroup) {</span>
 				//Ak ma doc urlInheritGroup != true preskoc tento doc a nepregeneruj url
-<span class="fc bfc" id="L532" title="All 4 branches covered.">				if(Boolean.TRUE.equals(doc.getUrlInheritGroup())==false &amp;&amp; Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())==false) {</span>
-<span class="fc" id="L533">					continue;</span>
+<span class="fc bfc" id="L538" title="All 4 branches covered.">				if(Boolean.TRUE.equals(doc.getUrlInheritGroup())==false &amp;&amp; Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())==false) {</span>
+<span class="fc" id="L539">					continue;</span>
 				}
 			}
 
-<span class="fc" id="L537">			ef = EditorDB.getEditorForm(request, doc.getDocId(), -1, rootGroupId);</span>
+<span class="fc" id="L543">			ef = EditorDB.getEditorForm(request, doc.getDocId(), -1, rootGroupId);</span>
 			//out.println(&quot;&lt;strong&gt;&quot;+ef.getTitle()+&quot;&lt;/strong&gt; [docid:&quot;+ef.getDocId()+&quot;] - &quot;+ef.getVirtualPath());
 
-<span class="pc bpc" id="L540" title="1 of 2 branches missed.">			if (ef.getVirtualPath().contains(&quot;*&quot;))</span>
+<span class="pc bpc" id="L546" title="1 of 2 branches missed.">			if (ef.getVirtualPath().contains(&quot;*&quot;))</span>
 			{
 				//out.println(&quot; skipping (contains *)&lt;br/&gt;&quot;);
-<span class="nc" id="L543">				continue;</span>
+<span class="nc" id="L549">				continue;</span>
 			}
 
-<span class="fc" id="L546">			ef.setVirtualPath(&quot;&quot;);</span>
+<span class="fc" id="L552">			ef.setVirtualPath(&quot;&quot;);</span>
 
-<span class="fc bfc" id="L548" title="All 2 branches covered.">			if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) ef.setVirtualPath(doc.getEditorVirtualPath());</span>
+<span class="fc bfc" id="L554" title="All 2 branches covered.">			if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) ef.setVirtualPath(doc.getEditorVirtualPath());</span>
 
 			//nastav aktualneho usera
-<span class="fc" id="L551">			ef.setAuthorId(user.getUserId());</span>
-<span class="fc" id="L552">			ef.setPublish(&quot;1&quot;);</span>
+<span class="fc" id="L557">			ef.setAuthorId(user.getUserId());</span>
+<span class="fc" id="L558">			ef.setPublish(&quot;1&quot;);</span>
 
-<span class="fc" id="L554">			EditorDB.saveEditorForm(ef, request);</span>
+<span class="fc" id="L560">			EditorDB.saveEditorForm(ef, request);</span>
 
 			//out.println(&quot; -&gt; &quot; + ef.getVirtualPath()+&quot;&lt;br&gt;&quot;);
 
-<span class="fc" id="L558">			EditorDB.cleanSessionData(request);</span>
+<span class="fc" id="L564">			EditorDB.cleanSessionData(request);</span>
 
 			//out.flush();
-<span class="fc" id="L561">		}</span>
+<span class="fc" id="L567">		}</span>
 
 		//out.flush();
 
 		//rekurzivne sa zavolaj na podadresare
-<span class="fc" id="L566">		List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(rootGroupId);</span>
-<span class="pc bpc" id="L567" title="1 of 2 branches missed.">		for (GroupDetails group : subGroups)</span>
+<span class="fc" id="L572">		List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(rootGroupId);</span>
+<span class="pc bpc" id="L573" title="1 of 2 branches missed.">		for (GroupDetails group : subGroups)</span>
 		{
-<span class="nc" id="L569">			regenerateUrl(group.getGroupId(), user, request, onlyChangeUrlInheritGroup);</span>
-<span class="nc" id="L570">		}</span>
+<span class="nc" id="L575">			regenerateUrl(group.getGroupId(), user, request, onlyChangeUrlInheritGroup);</span>
+<span class="nc" id="L576">		}</span>
 		//out.flush();
-<span class="fc" id="L572">	}</span>
+<span class="fc" id="L578">	}</span>
 
 	/**
 	 * Zo zoznamu DocDetails odstrani objekty, ktore nie su dostupne na zobrazenie (available=false)
@@ -577,12 +583,12 @@ public class WebpagesService {
 	 * @return
 	 */
 	private static List&lt;DocDetails&gt; filterUnavailableDocs(List&lt;DocDetails&gt; original) {
-<span class="fc" id="L580">		List&lt;DocDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L581" title="All 2 branches covered.">		for (DocDetails doc : original) {</span>
-<span class="pc bpc" id="L582" title="1 of 2 branches missed.">			if (doc.isAvailable()==false) continue;</span>
-<span class="fc" id="L583">			filtered.add(doc);</span>
-<span class="fc" id="L584">		}</span>
-<span class="fc" id="L585">		return filtered;</span>
+<span class="fc" id="L586">		List&lt;DocDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L587" title="All 2 branches covered.">		for (DocDetails doc : original) {</span>
+<span class="pc bpc" id="L588" title="1 of 2 branches missed.">			if (doc.isAvailable()==false) continue;</span>
+<span class="fc" id="L589">			filtered.add(doc);</span>
+<span class="fc" id="L590">		}</span>
+<span class="fc" id="L591">		return filtered;</span>
 	}
 
 	/**
@@ -592,15 +598,15 @@ public class WebpagesService {
 	 */
 	public List&lt;GroupDetails&gt; getGroupsByTemplateId(int tempId) {
 
-<span class="nc" id="L595">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L596">		List&lt;GroupDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L601">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L602">		List&lt;GroupDetails&gt; result = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L598" title="All 2 branches missed.">		for(GroupDetails group : groupsDB.getGroupsAll()) {</span>
-<span class="nc bnc" id="L599" title="All 2 branches missed.">			if(group.getTempId() == tempId)</span>
-<span class="nc" id="L600">				result.add(group);</span>
-<span class="nc" id="L601">		}</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		for(GroupDetails group : groupsDB.getGroupsAll()) {</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">			if(group.getTempId() == tempId)</span>
+<span class="nc" id="L606">				result.add(group);</span>
+<span class="nc" id="L607">		}</span>
 
-<span class="nc" id="L603">		return filterGroupsByCurrentDomain(result);</span>
+<span class="nc" id="L609">		return filterGroupsByCurrentDomain(result);</span>
 	}
 
 	/**
@@ -610,28 +616,28 @@ public class WebpagesService {
 	 */
 	public List&lt;GroupDetails&gt; getGroupsByPasswordProtected(int userGroupId) {
 
-<span class="fc" id="L613">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L614">		List&lt;GroupDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L619">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L620">		List&lt;GroupDetails&gt; result = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L616" title="All 2 branches covered.">		for(GroupDetails group : groupsDB.getGroupsAll()) {</span>
+<span class="fc bfc" id="L622" title="All 2 branches covered.">		for(GroupDetails group : groupsDB.getGroupsAll()) {</span>
 
 			//Its string of user_groups ids, separated by column
-<span class="fc" id="L619">			String passwordProtected = group.getPasswordProtected();</span>
-<span class="fc bfc" id="L620" title="All 2 branches covered.">			if (Tools.isEmpty(passwordProtected)) continue;</span>
+<span class="fc" id="L625">			String passwordProtected = group.getPasswordProtected();</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">			if (Tools.isEmpty(passwordProtected)) continue;</span>
 
 			//Split string to get ids
-<span class="fc" id="L623">			String[] idsArray = passwordProtected.split(&quot;,&quot;);</span>
+<span class="fc" id="L629">			String[] idsArray = passwordProtected.split(&quot;,&quot;);</span>
 
 			//Loop array of ids, and if id from passwordProtected if same as userGroupId push group to result list
-<span class="fc bfc" id="L626" title="All 2 branches covered.">			for(int i = 0; i &lt; idsArray.length; i++) {</span>
+<span class="fc bfc" id="L632" title="All 2 branches covered.">			for(int i = 0; i &lt; idsArray.length; i++) {</span>
 
-<span class="fc bfc" id="L628" title="All 2 branches covered.">				if(Integer.parseInt(idsArray[i]) == userGroupId) {</span>
-<span class="fc" id="L629">					result.add(group);</span>
+<span class="fc bfc" id="L634" title="All 2 branches covered.">				if(Integer.parseInt(idsArray[i]) == userGroupId) {</span>
+<span class="fc" id="L635">					result.add(group);</span>
 				}
 			}
-<span class="fc" id="L632">		}</span>
+<span class="fc" id="L638">		}</span>
 
-<span class="fc" id="L634">		return filterGroupsByCurrentDomain(result);</span>
+<span class="fc" id="L640">		return filterGroupsByCurrentDomain(result);</span>
 	}
 
 	/**
@@ -640,51 +646,51 @@ public class WebpagesService {
 	 * @return
 	 */
 	private static Specification&lt;DocDetails&gt; getRecentPagesConditions(int userId) {
-<span class="fc" id="L643">		return (Specification&lt;DocDetails&gt;) (root, query, builder) -&gt; {</span>
-<span class="fc" id="L644">			final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L649">		return (Specification&lt;DocDetails&gt;) (root, query, builder) -&gt; {</span>
+<span class="fc" id="L650">			final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L646">			int domainId = CloudToolsForCore.getDomainId();</span>
-<span class="fc" id="L647">			Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
-<span class="fc" id="L648">			String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+<span class="fc" id="L652">			int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L653">			Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L654">			String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
 
-<span class="fc" id="L650">			predicates.add(builder.equal(root.get(&quot;authorId&quot;), userId));</span>
-<span class="fc" id="L651">			predicates.add(builder.notLike(root.get(&quot;virtualPath&quot;), &quot;/files/%&quot;));</span>
+<span class="fc" id="L656">			predicates.add(builder.equal(root.get(&quot;authorId&quot;), userId));</span>
+<span class="fc" id="L657">			predicates.add(builder.notLike(root.get(&quot;virtualPath&quot;), &quot;/files/%&quot;));</span>
 			//toto uz nedavame, chceme zobrazit aj rozpracovane/vypnute stranky predicates.add(builder.isTrue(root.get(&quot;available&quot;)));
 
-<span class="pc bpc" id="L654" title="1 of 2 branches missed.">			if (InitServlet.isTypeCloud()) predicates.add(builder.equal(root.get(&quot;rootGroupL1&quot;), domainId));</span>
-<span class="pc bpc" id="L655" title="1 of 2 branches missed.">			else if (domainId &gt; 0) {</span>
+<span class="pc bpc" id="L660" title="1 of 2 branches missed.">			if (InitServlet.isTypeCloud()) predicates.add(builder.equal(root.get(&quot;rootGroupL1&quot;), domainId));</span>
+<span class="pc bpc" id="L661" title="1 of 2 branches missed.">			else if (domainId &gt; 0) {</span>
 				//ziskaj zoznam ROOT adresarov v zadanej domene
-<span class="fc" id="L657">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L658">				GroupDetails domainGroup = groupsDB.getGroup(domainId);</span>
-<span class="pc bpc" id="L659" title="2 of 4 branches missed.">				if (domainGroup != null &amp;&amp; Tools.isNotEmpty(domainGroup.getDomainName())) {</span>
-<span class="fc" id="L660">					List&lt;GroupDetails&gt; rootGroups = groupsDB.getGroups(0);</span>
-<span class="fc" id="L661">					List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L662" title="All 2 branches covered.">					for (GroupDetails rootGroup : rootGroups) {</span>
-<span class="fc bfc" id="L663" title="All 2 branches covered.">						if (rootGroup.getDomainName().equalsIgnoreCase(domainGroup.getDomainName())==false) continue;</span>
+<span class="fc" id="L663">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L664">				GroupDetails domainGroup = groupsDB.getGroup(domainId);</span>
+<span class="pc bpc" id="L665" title="2 of 4 branches missed.">				if (domainGroup != null &amp;&amp; Tools.isNotEmpty(domainGroup.getDomainName())) {</span>
+<span class="fc" id="L666">					List&lt;GroupDetails&gt; rootGroups = groupsDB.getGroups(0);</span>
+<span class="fc" id="L667">					List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L668" title="All 2 branches covered.">					for (GroupDetails rootGroup : rootGroups) {</span>
+<span class="fc bfc" id="L669" title="All 2 branches covered.">						if (rootGroup.getDomainName().equalsIgnoreCase(domainGroup.getDomainName())==false) continue;</span>
 
-<span class="fc" id="L665">						groupIds.add(rootGroup.getGroupId());</span>
-<span class="fc" id="L666">					}</span>
-<span class="pc bpc" id="L667" title="1 of 2 branches missed.">					if (groupIds.isEmpty()==false) {</span>
-<span class="fc" id="L668">						predicates.add(root.get(&quot;rootGroupL1&quot;).in(groupIds));</span>
+<span class="fc" id="L671">						groupIds.add(rootGroup.getGroupId());</span>
+<span class="fc" id="L672">					}</span>
+<span class="pc bpc" id="L673" title="1 of 2 branches missed.">					if (groupIds.isEmpty()==false) {</span>
+<span class="fc" id="L674">						predicates.add(root.get(&quot;rootGroupL1&quot;).in(groupIds));</span>
 					}
 
 					//Vylúč všetky kôš adresáre
-<span class="fc" id="L672">					List&lt;Integer&gt; groupIdsTrash = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L673" title="All 2 branches covered.">					for (GroupDetails group : groupsDB.getGroupsAll()) {</span>
-<span class="fc bfc" id="L674" title="All 2 branches covered.">						if (trashDirName.equals(group.getFullPath())==false) continue;</span>
+<span class="fc" id="L678">					List&lt;Integer&gt; groupIdsTrash = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L679" title="All 2 branches covered.">					for (GroupDetails group : groupsDB.getGroupsAll()) {</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">						if (trashDirName.equals(group.getFullPath())==false) continue;</span>
 
-<span class="fc" id="L676">						groupIdsTrash.add(group.getGroupId());</span>
-<span class="fc" id="L677">					}</span>
-<span class="pc bpc" id="L678" title="1 of 2 branches missed.">					if (groupIdsTrash.isEmpty()==false) {</span>
-<span class="fc" id="L679">						predicates.add(builder.not(root.get(&quot;groupId&quot;).in(groupIdsTrash)));</span>
-<span class="fc" id="L680">						predicates.add(builder.not(root.get(&quot;rootGroupL2&quot;).in(groupIdsTrash)));</span>
+<span class="fc" id="L682">						groupIdsTrash.add(group.getGroupId());</span>
+<span class="fc" id="L683">					}</span>
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">					if (groupIdsTrash.isEmpty()==false) {</span>
+<span class="fc" id="L685">						predicates.add(builder.not(root.get(&quot;groupId&quot;).in(groupIdsTrash)));</span>
+<span class="fc" id="L686">						predicates.add(builder.not(root.get(&quot;rootGroupL2&quot;).in(groupIdsTrash)));</span>
 					}
 				}
 			}
 			//Set order
-<span class="fc" id="L685">			query.orderBy(builder.desc(root.get(&quot;dateCreated&quot;)));</span>
+<span class="fc" id="L691">			query.orderBy(builder.desc(root.get(&quot;dateCreated&quot;)));</span>
 
-<span class="fc" id="L687">			return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
+<span class="fc" id="L693">			return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
 		};
 	}
 
@@ -695,22 +701,22 @@ public class WebpagesService {
 	 * @return
 	 */
 	public static List&lt;Predicate&gt; getGroupIdCondition(int groupId, boolean recursive, Root&lt;DocDetails&gt; root, CriteriaBuilder builder) {
-<span class="nc" id="L698">		final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L704">		final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L700" title="All 2 branches missed.">		if (recursive) {</span>
-<span class="nc" id="L701">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L702">			List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(groupId, true, true);</span>
-<span class="nc" id="L703">			List&lt;Integer&gt; groupIds = subGroups.stream().map(GroupDetails::getGroupId).collect(Collectors.toList());</span>
-<span class="nc bnc" id="L704" title="All 2 branches missed.">			if (groupIds.size()==1) {</span>
+<span class="nc bnc" id="L706" title="All 2 branches missed.">		if (recursive) {</span>
+<span class="nc" id="L707">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L708">			List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(groupId, true, true);</span>
+<span class="nc" id="L709">			List&lt;Integer&gt; groupIds = subGroups.stream().map(GroupDetails::getGroupId).collect(Collectors.toList());</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">			if (groupIds.size()==1) {</span>
 				//ak sa jedna o posledny uzol daj to ako klasicku where kvoli efektivite
-<span class="nc" id="L706">				predicates.add(builder.equal(root.get(&quot;groupId&quot;), groupIds.get(0)));</span>
-<span class="nc bnc" id="L707" title="All 2 branches missed.">			} else if (groupIds.isEmpty()==false) {</span>
-<span class="nc" id="L708">				predicates.add(root.get(&quot;groupId&quot;).in(groupIds));</span>
+<span class="nc" id="L712">				predicates.add(builder.equal(root.get(&quot;groupId&quot;), groupIds.get(0)));</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">			} else if (groupIds.isEmpty()==false) {</span>
+<span class="nc" id="L714">				predicates.add(root.get(&quot;groupId&quot;).in(groupIds));</span>
 			}
-<span class="nc bnc" id="L710" title="All 2 branches missed.">		} else if (groupId&gt;0)  {</span>
-<span class="nc" id="L711">			predicates.add(builder.equal(root.get(&quot;groupId&quot;), groupId));</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">		} else if (groupId&gt;0)  {</span>
+<span class="nc" id="L717">			predicates.add(builder.equal(root.get(&quot;groupId&quot;), groupId));</span>
 		}
-<span class="nc" id="L713">		return predicates;</span>
+<span class="nc" id="L719">		return predicates;</span>
 	}
 
 	/**
@@ -722,50 +728,50 @@ public class WebpagesService {
 	 */
     public static DocBasic processFromEntity(DocBasic entity, ProcessItemAction action,  HttpServletRequest request, boolean addFields) {
 
-<span class="fc" id="L725">        int groupId = Tools.getIntValue(request.getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
+<span class="fc" id="L731">        int groupId = Tools.getIntValue(request.getParameter(&quot;groupId&quot;), Constants.getInt(&quot;rootGroupId&quot;));</span>
 
-<span class="pc bpc" id="L727" title="1 of 4 branches missed.">        if (ProcessItemAction.GETONE.equals(action) &amp;&amp; entity==null) {</span>
-<span class="nc" id="L728">            entity = new DocDetails();</span>
+<span class="pc bpc" id="L733" title="1 of 4 branches missed.">        if (ProcessItemAction.GETONE.equals(action) &amp;&amp; entity==null) {</span>
+<span class="nc" id="L734">            entity = new DocDetails();</span>
         }
 
-<span class="pc bpc" id="L731" title="1 of 2 branches missed.">        if(entity != null) {</span>
+<span class="pc bpc" id="L737" title="1 of 2 branches missed.">        if(entity != null) {</span>
 
-<span class="fc bfc" id="L733" title="All 2 branches covered.">			if (ProcessItemAction.GETONE.equals(action)==false) entity.setData(DATA_NOT_LOADED);</span>
+<span class="fc bfc" id="L739" title="All 2 branches covered.">			if (ProcessItemAction.GETONE.equals(action)==false) entity.setData(DATA_NOT_LOADED);</span>
 
 			//Get doc author
-<span class="fc" id="L736">			UserDetails user = UsersDB.getUser(entity.getAuthorId());</span>
-<span class="fc bfc" id="L737" title="All 2 branches covered.">			if (user != null) {</span>
-<span class="fc" id="L738">				entity.setAuthorName(user.getFullName());</span>
-<span class="fc" id="L739">				entity.setAuthorEmail(user.getEmail());</span>
-<span class="fc" id="L740">				entity.setAuthorPhoto(user.getPhoto());</span>
+<span class="fc" id="L742">			UserDetails user = UsersDB.getUser(entity.getAuthorId());</span>
+<span class="fc bfc" id="L743" title="All 2 branches covered.">			if (user != null) {</span>
+<span class="fc" id="L744">				entity.setAuthorName(user.getFullName());</span>
+<span class="fc" id="L745">				entity.setAuthorEmail(user.getEmail());</span>
+<span class="fc" id="L746">				entity.setAuthorPhoto(user.getPhoto());</span>
 			} else {
-<span class="fc" id="L742">				entity.setAuthorName(&quot;&quot;);</span>
-<span class="fc" id="L743">				entity.setAuthorEmail(&quot;&quot;);</span>
-<span class="fc" id="L744">				entity.setAuthorPhoto(&quot;&quot;);</span>
+<span class="fc" id="L748">				entity.setAuthorName(&quot;&quot;);</span>
+<span class="fc" id="L749">				entity.setAuthorEmail(&quot;&quot;);</span>
+<span class="fc" id="L750">				entity.setAuthorPhoto(&quot;&quot;);</span>
 			}
 
-<span class="fc bfc" id="L747" title="All 2 branches covered.">			if(groupId == Constants.getInt(&quot;systemPagesRecentPages&quot;)) {</span>
+<span class="fc bfc" id="L753" title="All 2 branches covered.">			if(groupId == Constants.getInt(&quot;systemPagesRecentPages&quot;)) {</span>
 				//There is no need edit for this doc's
 			} else {
-<span class="fc" id="L750">				boolean linkTypeHtml = false;</span>
-<span class="pc bpc" id="L751" title="1 of 2 branches missed.">				if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML) {</span>
-<span class="fc" id="L752">					linkTypeHtml = true;</span>
+<span class="fc" id="L756">				boolean linkTypeHtml = false;</span>
+<span class="pc bpc" id="L757" title="1 of 2 branches missed.">				if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML) {</span>
+<span class="fc" id="L758">					linkTypeHtml = true;</span>
 				}
 
-<span class="pc bpc" id="L755" title="1 of 2 branches missed.">				if (linkTypeHtml) {</span>
-<span class="fc" id="L756">					entity.setDocLink(entity.getVirtualPath());</span>
+<span class="pc bpc" id="L761" title="1 of 2 branches missed.">				if (linkTypeHtml) {</span>
+<span class="fc" id="L762">					entity.setDocLink(entity.getVirtualPath());</span>
 				}
 
 				//toto nerobime, lebo tam ma byt skutocne hodnota z DB entity.setNavbar(groupsDB.getNavbarNoHref(entity.getGroupId()));
 			}
 
-<span class="fc" id="L762">            DocEditorFields def = entity.getEditorFields();</span>
-<span class="fc bfc" id="L763" title="All 2 branches covered.">			if (def == null) def = new DocEditorFields();</span>
-<span class="fc" id="L764">			boolean loadSubQueries = ProcessItemAction.GETONE.equals(action);</span>
-<span class="fc" id="L765">			def.fromDocDetails(entity, loadSubQueries, addFields);</span>
-<span class="fc" id="L766">			entity.setEditorFields(def);</span>
+<span class="fc" id="L768">            DocEditorFields def = entity.getEditorFields();</span>
+<span class="fc bfc" id="L769" title="All 2 branches covered.">			if (def == null) def = new DocEditorFields();</span>
+<span class="fc" id="L770">			boolean loadSubQueries = ProcessItemAction.GETONE.equals(action);</span>
+<span class="fc" id="L771">			def.fromDocDetails(entity, loadSubQueries, addFields);</span>
+<span class="fc" id="L772">			entity.setEditorFields(def);</span>
         }
-<span class="fc" id="L768">        return entity;</span>
+<span class="fc" id="L774">        return entity;</span>
     }
 
 	/**
@@ -774,34 +780,34 @@ public class WebpagesService {
 	public List&lt;TemplateDetails&gt; getTemplates(int mustHaveTempId, boolean recursive)
 	{
 		//najskor potrebujeme zoznam parent skupin
-<span class="fc" id="L777">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L778">		List&lt;GroupDetails&gt; parentGroups = groupsDB.getParentGroups(groupId);</span>
+<span class="fc" id="L783">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L784">		List&lt;GroupDetails&gt; parentGroups = groupsDB.getParentGroups(groupId);</span>
 
-<span class="fc" id="L780">		List&lt;TemplateDetails&gt; allTemps = TemplatesDB.getInstance().getTemplates();</span>
+<span class="fc" id="L786">		List&lt;TemplateDetails&gt; allTemps = TemplatesDB.getInstance().getTemplates();</span>
 
-<span class="fc" id="L782">	   Set&lt;TemplateDetails&gt; ret = new HashSet&lt;&gt; ();</span>
+<span class="fc" id="L788">	   Set&lt;TemplateDetails&gt; ret = new HashSet&lt;&gt; ();</span>
 
 	   //Loop all Templates and for each one call isGroupAvailable method (method will return true if this Template is availaible)
-<span class="fc bfc" id="L785" title="All 2 branches covered.">	   for (TemplateDetails temp : allTemps) {</span>
+<span class="fc bfc" id="L791" title="All 2 branches covered.">	   for (TemplateDetails temp : allTemps) {</span>
 
-<span class="fc bfc" id="L787" title="All 2 branches covered.">		  if (temp.getTempId()&lt;1) continue;</span>
+<span class="fc bfc" id="L793" title="All 2 branches covered.">		  if (temp.getTempId()&lt;1) continue;</span>
 
 		  //List of Group Ids where temp is available
-<span class="fc" id="L790">		  int[] tempAvailableGroups = temp.getAvailableGroupsInt();</span>
+<span class="fc" id="L796">		  int[] tempAvailableGroups = temp.getAvailableGroupsInt();</span>
 
 		  //isGroupAvailable param &quot;recursive&quot; is set for getting Templates for child (all subfolders - if recursive is true)
-<span class="pc bpc" id="L793" title="2 of 8 branches missed.">		  if (tempAvailableGroups.length == 0 || groupId == -1 || temp.getTempId() == mustHaveTempId || isGroupAvailable(tempAvailableGroups, parentGroups, recursive)) {</span>
-<span class="fc" id="L794">			  ret.add(temp);</span>
+<span class="pc bpc" id="L799" title="2 of 8 branches missed.">		  if (tempAvailableGroups.length == 0 || groupId == -1 || temp.getTempId() == mustHaveTempId || isGroupAvailable(tempAvailableGroups, parentGroups, recursive)) {</span>
+<span class="fc" id="L800">			  ret.add(temp);</span>
 		  }
-<span class="fc" id="L796">	   }</span>
+<span class="fc" id="L802">	   }</span>
 
-<span class="pc bpc" id="L798" title="1 of 2 branches missed.">	   if (ret.isEmpty()) {</span>
-<span class="nc" id="L799">		   ret.add(allTemps.get(0));</span>
+<span class="pc bpc" id="L804" title="1 of 2 branches missed.">	   if (ret.isEmpty()) {</span>
+<span class="nc" id="L805">		   ret.add(allTemps.get(0));</span>
 	   }
 
-<span class="fc" id="L802">	   List&lt;TemplateDetails&gt; sortedRet = ret.stream().sorted((e1, e2) -&gt; e1.getTempName().compareTo(e2.getTempName())).collect(Collectors.toList());</span>
+<span class="fc" id="L808">	   List&lt;TemplateDetails&gt; sortedRet = ret.stream().sorted((e1, e2) -&gt; e1.getTempName().compareTo(e2.getTempName())).collect(Collectors.toList());</span>
 
-<span class="fc" id="L804">	   return (new ArrayList&lt;TemplateDetails&gt;(sortedRet));</span>
+<span class="fc" id="L810">	   return (new ArrayList&lt;TemplateDetails&gt;(sortedRet));</span>
 	}
 
 	/**
@@ -812,28 +818,28 @@ public class WebpagesService {
 	private boolean isGroupAvailable(int[] availableGroups, List&lt;GroupDetails&gt; groups, boolean recursive)
 	{
 		//check availability for parent groups
-<span class="fc bfc" id="L815" title="All 2 branches covered.">		for (int availableGroupId : availableGroups) {</span>
-<span class="fc bfc" id="L816" title="All 2 branches covered.">			for (GroupDetails group : groups) {</span>
-<span class="fc bfc" id="L817" title="All 2 branches covered.">				if (group.getGroupId() == availableGroupId) return true;</span>
-<span class="fc" id="L818">			}</span>
+<span class="fc bfc" id="L821" title="All 2 branches covered.">		for (int availableGroupId : availableGroups) {</span>
+<span class="fc bfc" id="L822" title="All 2 branches covered.">			for (GroupDetails group : groups) {</span>
+<span class="fc bfc" id="L823" title="All 2 branches covered.">				if (group.getGroupId() == availableGroupId) return true;</span>
+<span class="fc" id="L824">			}</span>
 		}
 
 		//check availability for child groups
-<span class="fc bfc" id="L822" title="All 2 branches covered.">		if(recursive) {</span>
+<span class="fc bfc" id="L828" title="All 2 branches covered.">		if(recursive) {</span>
 
-<span class="fc" id="L824">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L830">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="fc bfc" id="L826" title="All 2 branches covered.">			for (int availableGroupId : availableGroups) {</span>
+<span class="fc bfc" id="L832" title="All 2 branches covered.">			for (int availableGroupId : availableGroups) {</span>
 
-<span class="fc" id="L828">				int[] tmpParentGroupIds = Tools.getTokensInt(groupsDB.getParents(availableGroupId), &quot;,&quot;);</span>
+<span class="fc" id="L834">				int[] tmpParentGroupIds = Tools.getTokensInt(groupsDB.getParents(availableGroupId), &quot;,&quot;);</span>
 
-<span class="fc bfc" id="L830" title="All 2 branches covered.">				for(int tmpParentGroupId : tmpParentGroupIds) {</span>
-<span class="fc bfc" id="L831" title="All 2 branches covered.">					if(tmpParentGroupId == groupId) return true;</span>
+<span class="fc bfc" id="L836" title="All 2 branches covered.">				for(int tmpParentGroupId : tmpParentGroupIds) {</span>
+<span class="fc bfc" id="L837" title="All 2 branches covered.">					if(tmpParentGroupId == groupId) return true;</span>
 				}
 			}
 		}
 
-<span class="fc" id="L836">		return false;</span>
+<span class="fc" id="L842">		return false;</span>
 	}
 
 	/**
@@ -842,145 +848,105 @@ public class WebpagesService {
 	 * @return
 	 */
     public static DatatablePageImpl&lt;DocDetails&gt; getAllItems(GetAllItemsDocOptions options) {
+<span class="fc" id="L851">        Page&lt;DocDetails&gt; page = null;</span>
 
-<span class="fc" id="L846">        Page&lt;DocDetails&gt; page = null;</span>
-
-<span class="fc" id="L848">        Prop prop = Prop.getInstance(options.getRequest());</span>
-<span class="fc" id="L849">        WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());</span>
-
-<span class="fc bfc" id="L851" title="All 2 branches covered.">		if(&quot;true&quot;.equals(options.getRequest().getParameter(&quot;isABtestingVersion&quot;)) ) {</span>
-			//Check perms with combination with ABTesting version
-<span class="pc bpc" id="L853" title="1 of 2 branches missed.">			if(options.getCurrentUser().isEnabledItem(&quot;cmp_abtesting&quot;)) {</span>
-<span class="fc" id="L854">				Set&lt;DocDetails&gt; mainWebPages = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L855">				List&lt;DocDetails&gt; allBasicDoc = DocDB.getInstance().getBasicDocDetailsAll();</span>
-<span class="pc bpc" id="L856" title="1 of 2 branches missed.">				if(allBasicDoc != null) {</span>
-<span class="fc" id="L857">					List&lt;String&gt; allDomains = GroupsDB.getInstance().getAllDomainsList();</span>
-<span class="fc" id="L858">					DocDB docDB = DocDB.getInstance();</span>
-<span class="fc bfc" id="L859" title="All 2 branches covered.">					for(DocDetails dd : allBasicDoc)</span>
-<span class="fc bfc" id="L860" title="All 2 branches covered.">						if(!ABTesting.getAllVariantsDocIds(dd, allDomains, docDB).isEmpty()) mainWebPages.add(dd);</span>
-				}
-
-				//Editor fields need to be nullified, or status icons will be stacking
-<span class="fc bfc" id="L864" title="All 2 branches covered.">				for(DocDetails dd : mainWebPages) dd.setEditorFields(null);</span>
-
-<span class="fc" id="L866">				page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;(mainWebPages));</span>
-<span class="fc" id="L867">			} else {</span>
-				//User has no right to request data in ABTesting mode
-<span class="nc" id="L869">				page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
-			}
-<span class="fc bfc" id="L871" title="All 2 branches covered.">		} else if(&quot;true&quot;.equals(options.getRequest().getParameter(&quot;isBlogVersion&quot;))) {</span>
-			//BLOG VERSION
-<span class="fc" id="L873">			List&lt;Integer&gt; allGroupIds = getBloggerDataList(options.getCurrentUser(), Tools.getIntValue(options.getRequest().getParameter(&quot;groupId&quot;), -1));</span>
-<span class="pc bpc" id="L874" title="2 of 4 branches missed.">			if(allGroupIds == null || allGroupIds.isEmpty()) page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
-<span class="fc" id="L875">			else page = options.getDocDetailsRepository().findAllByGroupIdIn(allGroupIds.toArray(new Integer[0]), options.getPageable());</span>
-<span class="fc bfc" id="L876" title="All 2 branches covered.">		} else if(options.getGroupId() == Constants.getInt(&quot;systemPagesRecentPages&quot;)) {</span>
-<span class="fc" id="L877">			Specification&lt;DocDetails&gt; spec = WebpagesService.getRecentPagesConditions(options.getUserId());</span>
+<span class="fc bfc" id="L853" title="All 2 branches covered.">		if(options.getGroupId() == Constants.getInt(&quot;systemPagesRecentPages&quot;)) {</span>
+<span class="fc" id="L854">			Specification&lt;DocDetails&gt; spec = WebpagesService.getRecentPagesConditions(options.getUserId());</span>
 			//Combine spec (recent pages) with columnsSpecification (serch throu columns)
-<span class="fc bfc" id="L879" title="All 2 branches covered.">			if(options.getColumnsSpecification() != null) {</span>
-<span class="fc" id="L880">				spec = spec.and(options.getColumnsSpecification());</span>
+<span class="fc bfc" id="L856" title="All 2 branches covered.">			if(options.getColumnsSpecification() != null) {</span>
+<span class="fc" id="L857">				spec = spec.and(options.getColumnsSpecification());</span>
 			}
-<span class="fc" id="L882">			page = ((JpaSpecificationExecutor&lt;DocDetails&gt;)options.getDocDetailsRepository()).findAll(spec, options.getPageable());</span>
-<span class="fc bfc" id="L883" title="All 2 branches covered.">		} else if(options.isUserGroupIdRequested()) {</span>
+<span class="fc" id="L859">			page = ((JpaSpecificationExecutor&lt;DocDetails&gt;)options.getDocDetailsRepository()).findAll(spec, options.getPageable());</span>
+<span class="fc bfc" id="L860" title="All 2 branches covered.">		} else if(options.isUserGroupIdRequested()) {</span>
             //chceme vratit stranky podla zadaneho ID skupiny pouzivatelov, pouziva sa na zoznam stranok s danou skupinou
-<span class="fc" id="L885">            page = options.getDocDetailsRepository().findAllByPasswordProtectedLike(&quot;&quot;+options.getUserGroupId(), options.getUserGroupId()+&quot;,%&quot;, &quot;%,&quot;+options.getUserGroupId(), &quot;%,&quot; + options.getUserGroupId() + &quot;,%&quot;, options.getPageable());</span>
-<span class="pc bpc" id="L886" title="1 of 2 branches missed.">        } else if(options.isTempIdRequested()) {</span>
+<span class="fc" id="L862">            page = options.getDocDetailsRepository().findAllByPasswordProtectedLike(&quot;&quot;+options.getUserGroupId(), options.getUserGroupId()+&quot;,%&quot;, &quot;%,&quot;+options.getUserGroupId(), &quot;%,&quot; + options.getUserGroupId() + &quot;,%&quot;, options.getPageable());</span>
+<span class="pc bpc" id="L863" title="1 of 2 branches missed.">        } else if(options.isTempIdRequested()) {</span>
 			//We want to return web pages that use specific template (by tempId)
-<span class="nc" id="L888">			page = options.getDocDetailsRepository().findAllByTempId(options.getTempId(), options.getPageable());</span>
-<span class="fc bfc" id="L889" title="All 2 branches covered.">		} else if(&quot;true&quot;.equals(options.getRequest().getParameter(&quot;auditVersion&quot;))) {</span>
+<span class="nc" id="L865">			page = options.getDocDetailsRepository().findAllByTempId(options.getTempId(), options.getPageable());</span>
+<span class="fc bfc" id="L866" title="All 2 branches covered.">		} else if(&quot;true&quot;.equals(options.getRequest().getParameter(&quot;auditVersion&quot;))) {</span>
 			/** We want all web pages sorted by date of change **/
 
-<span class="fc bfc" id="L892" title="All 2 branches covered.">			if(!options.getCurrentUser().isEnabledItem(&quot;cmp_adminlog&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>
-<span class="fc" id="L893">			page = options.getDocDetailsRepository().findAllByOrderByDateCreatedDesc(options.getPageable());</span>
+<span class="fc bfc" id="L869" title="All 2 branches covered.">			if(!options.getCurrentUser().isEnabledItem(&quot;cmp_adminlog&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>
+<span class="fc" id="L870">			page = options.getDocDetailsRepository().findAllByOrderByDateCreatedDesc(options.getPageable());</span>
+
+<span class="pc bpc" id="L872" title="1 of 2 branches missed.">		} else if(&quot;true&quot;.equals(options.getRequest().getParameter(&quot;isSearchVersion&quot;))) {</span>
+			// return empty page, we need to have search text to get data (processed in addSpecSearch)
+<span class="nc" id="L874">			page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
 		} else {
-<span class="fc bfc" id="L895" title="All 2 branches covered.">			if (GroupsDB.isGroupEditable(options.getCurrentUser(), options.getGroupId())) {</span>
-<span class="fc" id="L896">				Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
-<span class="pc bpc" id="L897" title="1 of 2 branches missed.">				if (options.getRequest()!=null) {</span>
-<span class="fc" id="L898">					params.putAll(DatatableRestControllerV2.getParamsMap(options.getRequest()));</span>
+<span class="fc bfc" id="L876" title="All 2 branches covered.">			if (GroupsDB.isGroupEditable(options.getCurrentUser(), options.getGroupId())) {</span>
+<span class="fc" id="L877">				Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="pc bpc" id="L878" title="1 of 2 branches missed.">				if (options.getRequest()!=null) {</span>
+<span class="fc" id="L879">					params.putAll(DatatableRestControllerV2.getParamsMap(options.getRequest()));</span>
 				}
 				//override groupId from options
-<span class="fc" id="L901">				params.put(&quot;groupId&quot;, &quot;&quot; + options.getGroupId());</span>
+<span class="fc" id="L882">				params.put(&quot;groupId&quot;, &quot;&quot; + options.getGroupId());</span>
 
 				@SuppressWarnings(&quot;java:S1602&quot;)
-<span class="fc" id="L904">				Specification&lt;DocDetails&gt; spec = (Specification&lt;DocDetails&gt;) (root, query, builder) -&gt; {</span>
-
-<span class="fc" id="L906">					final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
-
-<span class="fc" id="L908">					addSpecSearch(params, predicates, root, builder, options.getCurrentUser());</span>
-
-<span class="fc" id="L910">					return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
+<span class="fc" id="L885">				Specification&lt;DocDetails&gt; spec = (Specification&lt;DocDetails&gt;) (root, query, builder) -&gt; {</span>
+<span class="fc" id="L886">					final List&lt;Predicate&gt; predicates = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L887">					addSpecSearch(params, predicates, root, builder, options.getCurrentUser());</span>
+<span class="fc" id="L888">					return builder.and(predicates.toArray(new Predicate[predicates.size()]));</span>
 				};
 
-<span class="fc" id="L913">				page = options.getDocDetailsRepository().findAll(spec, options.getPageable());</span>
-<span class="fc" id="L914">			} else {</span>
+<span class="fc" id="L891">				page = options.getDocDetailsRepository().findAll(spec, options.getPageable());</span>
+<span class="fc" id="L892">			} else {</span>
 				//pridaj stranky ak ma specialne nastavene z tohto adresara
-<span class="pc bpc" id="L916" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(options.getCurrentUser().getEditablePages())) {</span>
-<span class="fc" id="L917">					List&lt;DocDetails&gt; docs = UserTools.getEditablePages(options.getCurrentUser().getEditablePages());</span>
-<span class="fc" id="L918">					List&lt;DocDetails&gt; availableDocs = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L919" title="All 2 branches covered.">            		for (DocDetails doc : docs) {</span>
-<span class="fc bfc" id="L920" title="All 2 branches covered.">						if (doc.getGroupId() == options.getGroupId()) availableDocs.add(doc);</span>
-<span class="fc" id="L921">					}</span>
-<span class="fc bfc" id="L922" title="All 2 branches covered.">					if (availableDocs.isEmpty()==false) page = new DatatablePageImpl&lt;&gt;(availableDocs);</span>
+<span class="pc bpc" id="L894" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(options.getCurrentUser().getEditablePages())) {</span>
+<span class="fc" id="L895">					List&lt;DocDetails&gt; docs = UserTools.getEditablePages(options.getCurrentUser().getEditablePages());</span>
+<span class="fc" id="L896">					List&lt;DocDetails&gt; availableDocs = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L897" title="All 2 branches covered.">            		for (DocDetails doc : docs) {</span>
+<span class="fc bfc" id="L898" title="All 2 branches covered.">						if (doc.getGroupId() == options.getGroupId()) availableDocs.add(doc);</span>
+<span class="fc" id="L899">					}</span>
+<span class="fc bfc" id="L900" title="All 2 branches covered.">					if (availableDocs.isEmpty()==false) page = new DatatablePageImpl&lt;&gt;(availableDocs);</span>
 				}
 			}
 		}
 
-        DatatablePageImpl&lt;DocDetails&gt; pageImpl;
-
-<span class="fc bfc" id="L929" title="All 2 branches covered.">		if (page != null) pageImpl = new DatatablePageImpl&lt;&gt;(page);</span>
-<span class="fc" id="L930">		else pageImpl = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
-
-<span class="fc" id="L932">        pageImpl.addOptions(&quot;tempId&quot;, ws.getTemplates(options.isRecursiveSubfolders()), &quot;tempName&quot;, &quot;tempId&quot;, true);</span>
-<span class="fc" id="L933">        pageImpl.addOptions(&quot;menuDocId,rightMenuDocId&quot;, ws.getMenuList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L934">        pageImpl.addOptions(&quot;headerDocId,footerDocId&quot;, ws.getHeaderList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L935">		pageImpl.addOptions(&quot;tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId&quot;, ws.getHeaderFooterMenuList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L936">        pageImpl.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L937">        pageImpl.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L938">        pageImpl.addOptions(&quot;perexGroups&quot;, ws.getPerexGroups(options.isRecursiveSubfolders()), &quot;perexGroupName&quot;, &quot;perexGroupId&quot;, false);</span>
-
-		//optiony pre ikonu
-<span class="fc" id="L941">		pageImpl.addOptions(&quot;editorFields.statusIcons&quot;, getStatusIconOptions(options, prop), &quot;label&quot;, &quot;value&quot;, false);</span>
-
-		//attributes group
-<span class="pc bpc" id="L944" title="1 of 2 branches missed.">		if (options.getDocAtrDefRepository()!=null) {</span>
-<span class="fc" id="L945">			pageImpl.addOptions(&quot;editorFields.attrGroup&quot;, options.getDocAtrDefRepository().findDistinctGroups(CloudToolsForCore.getDomainId()) , &quot;&quot;, &quot;&quot;, false);</span>
-		}
-
-<span class="fc" id="L948">		boolean addFields = true;</span>
-<span class="fc bfc" id="L949" title="All 2 branches covered.">        for (DocDetails entity : pageImpl.getContent()) {</span>
-<span class="fc" id="L950">			WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, options.getRequest(), addFields);</span>
-<span class="fc" id="L951">			addFields = false;</span>
-<span class="fc" id="L952">		}</span>
-
-<span class="fc" id="L954">        return pageImpl;</span>
+<span class="fc" id="L905">		return preparePage(page, options);</span>
     }
 
-	private static List&lt;Integer&gt; getBloggerDataList(Identity currentUser, int selectedGroupId) {
-<span class="fc bfc" id="L958" title="All 2 branches covered.">		if(BlogService.isUserBloggerAdmin(currentUser)) {</span>
-			//It's admin with perms cmp_blog &amp;&amp; cmp_blog_admin -&gt; return all bloggers web pages
-<span class="fc" id="L960">			List&lt;Integer&gt; allGroupIds = BlogService.getAllBloggersGroupIds();</span>
+	public static DatatablePageImpl&lt;DocDetails&gt; preparePage(Page&lt;DocDetails&gt; page, GetAllItemsDocOptions options) {
+        DatatablePageImpl&lt;DocDetails&gt; pageImpl;
 
-<span class="pc bpc" id="L962" title="1 of 2 branches missed.">			if(selectedGroupId == -1) //Docs from all bloggers groups</span>
-<span class="fc" id="L963">				return allGroupIds;</span>
-<span class="nc bnc" id="L964" title="All 2 branches missed.">			else if(allGroupIds.contains(selectedGroupId)) //Docs from specific blogger group</span>
-<span class="nc" id="L965">				return Arrays.asList(selectedGroupId);</span>
-<span class="pc bpc" id="L966" title="1 of 2 branches missed.">		} else if(BlogService.isUserBlogger( currentUser )) {</span>
-			//It's blogger -&gt; return only his web pages
-<span class="fc" id="L968">			int rootGroupId = Tools.getTokensInt(currentUser.getEditableGroups(), &quot;,&quot;)[0];</span>
+<span class="fc bfc" id="L911" title="All 2 branches covered.">		if (page != null) pageImpl = new DatatablePageImpl&lt;&gt;(page);</span>
+<span class="fc" id="L912">		else pageImpl = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
 
-			//Get groups tree from user editable root group
-<span class="fc" id="L971">			List&lt;GroupDetails&gt; groupsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
-<span class="fc" id="L972">			List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L973" title="All 2 branches covered.">			for(GroupDetails group : groupsTree) groupIds.add(group.getGroupId());</span>
+<span class="fc" id="L914">        addOptions(pageImpl, options);</span>
 
-<span class="fc bfc" id="L975" title="All 2 branches covered.">			if(selectedGroupId == -1)</span>
-<span class="fc" id="L976">				return groupIds;</span>
-<span class="pc bpc" id="L977" title="1 of 2 branches missed.">			else if(groupIds.contains(selectedGroupId))</span>
-<span class="fc" id="L978">				return Arrays.asList(selectedGroupId);</span>
+<span class="fc" id="L916">        return pageImpl;</span>
+    }
+
+	/**
+	 * Add options to DatatablePage object
+	 * @param pageImpl - current response Page object
+	 * @param options - options object
+	 */
+	public static void addOptions(DatatablePageImpl&lt;DocDetails&gt; pageImpl, GetAllItemsDocOptions options) {
+<span class="fc" id="L925">		Prop prop = Prop.getInstance(options.getRequest());</span>
+<span class="fc" id="L926">        WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());</span>
+
+<span class="fc" id="L928">		pageImpl.addOptions(&quot;tempId&quot;, ws.getTemplates(options.isRecursiveSubfolders()), &quot;tempName&quot;, &quot;tempId&quot;, true);</span>
+<span class="fc" id="L929">        pageImpl.addOptions(&quot;menuDocId,rightMenuDocId&quot;, ws.getMenuList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="fc" id="L930">        pageImpl.addOptions(&quot;headerDocId,footerDocId&quot;, ws.getHeaderList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="fc" id="L931">		pageImpl.addOptions(&quot;tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId&quot;, ws.getHeaderFooterMenuList(true), &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="fc" id="L932">        pageImpl.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L933">        pageImpl.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L934">        pageImpl.addOptions(&quot;perexGroups&quot;, ws.getPerexGroups(options.isRecursiveSubfolders()), &quot;perexGroupName&quot;, &quot;perexGroupId&quot;, false);</span>
+
+		//optiony pre ikonu
+<span class="fc" id="L937">		pageImpl.addOptions(&quot;editorFields.statusIcons&quot;, getStatusIconOptions(options, prop), &quot;label&quot;, &quot;value&quot;, false);</span>
+
+		//attributes group
+<span class="pc bpc" id="L940" title="1 of 2 branches missed.">		if (options.getDocAtrDefRepository()!=null) {</span>
+<span class="fc" id="L941">			pageImpl.addOptions(&quot;editorFields.attrGroup&quot;, options.getDocAtrDefRepository().findDistinctGroups(CloudToolsForCore.getDomainId()) , &quot;&quot;, &quot;&quot;, false);</span>
 		}
 
-		//User has no right or specific groupId is not from his groups tree (or not from any blogger group tree)
-<span class="nc" id="L982">		return null;</span>
-	}
+<span class="fc" id="L944">		boolean addFields = true;</span>
+<span class="fc bfc" id="L945" title="All 2 branches covered.">        for (DocDetails entity : pageImpl.getContent()) {</span>
+<span class="fc" id="L946">			WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, options.getRequest(), addFields);</span>
+<span class="fc" id="L947">			addFields = false;</span>
+<span class="fc" id="L948">		}</span>
+<span class="fc" id="L949">	}</span>
 
 	/**
 	 * Vrati option pre DT so zoznamom stavovych ikon
@@ -990,22 +956,22 @@ public class WebpagesService {
 	 * @return
 	 */
 	private static List&lt;LabelValue&gt; getStatusIconOptions(GetAllItemsDocOptions options, Prop prop) {
-<span class="fc" id="L993">		List&lt;LabelValue&gt; icons = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L959">		List&lt;LabelValue&gt; icons = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L995">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-star\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;editor.main_site&quot;), &quot;searchDefaultPage&quot;));</span>
-<span class="fc" id="L996">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-map-pin\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.showInMenu&quot;), &quot;showInMenu:true&quot;));</span>
-<span class="fc" id="L997">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-map-pin-off\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.notShowInMenu&quot;), &quot;showInMenu:false&quot;));</span>
-<span class="fc" id="L998">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-lock\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.onlyForLogged&quot;), &quot;passwordProtected:notEmpty&quot;));</span>
-<span class="fc" id="L999">		icons.add(new LabelValue(&quot;&lt;span style=\&quot;color: #FF4B58\&quot;&gt;&quot;+prop.getText(&quot;webpages.icons.disabled&quot;)+&quot;&lt;/span&gt;&quot;, &quot;available:false&quot;));</span>
-<span class="fc" id="L1000">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-external-link\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.externalLink&quot;), &quot;externalLink:notEmpty&quot;));</span>
-<span class="fc" id="L1001">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-eye-off\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.notSearchable&quot;), &quot;searchable:false&quot;));</span>
+<span class="fc" id="L961">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-star\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;editor.main_site&quot;), &quot;searchDefaultPage&quot;));</span>
+<span class="fc" id="L962">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-map-pin\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.showInMenu&quot;), &quot;showInMenu:true&quot;));</span>
+<span class="fc" id="L963">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-map-pin-off\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.notShowInMenu&quot;), &quot;showInMenu:false&quot;));</span>
+<span class="fc" id="L964">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-lock\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.onlyForLogged&quot;), &quot;passwordProtected:notEmpty&quot;));</span>
+<span class="fc" id="L965">		icons.add(new LabelValue(&quot;&lt;span style=\&quot;color: #FF4B58\&quot;&gt;&quot;+prop.getText(&quot;webpages.icons.disabled&quot;)+&quot;&lt;/span&gt;&quot;, &quot;available:false&quot;));</span>
+<span class="fc" id="L966">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-external-link\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.externalLink&quot;), &quot;externalLink:notEmpty&quot;));</span>
+<span class="fc" id="L967">		icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-eye-off\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.notSearchable&quot;), &quot;searchable:false&quot;));</span>
 
-<span class="fc bfc" id="L1003" title="All 2 branches covered.">		if (options.getCurrentUser().isEnabledItem(&quot;cmp_abtesting&quot;)) {</span>
-<span class="fc" id="L1004">			icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-a-b\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.avariant&quot;), &quot;virtualPath:!%&quot;+Constants.getString(&quot;ABTestingName&quot;)+&quot;%&quot;));</span>
-<span class="fc" id="L1005">			icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-a-b\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.bvariant&quot;), &quot;virtualPath:%&quot;+Constants.getString(&quot;ABTestingName&quot;)+&quot;%&quot;));</span>
+<span class="fc bfc" id="L969" title="All 2 branches covered.">		if (options.getCurrentUser().isEnabledItem(&quot;cmp_abtesting&quot;)) {</span>
+<span class="fc" id="L970">			icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-a-b\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.avariant&quot;), &quot;virtualPath:!%&quot;+Constants.getString(&quot;ABTestingName&quot;)+&quot;%&quot;));</span>
+<span class="fc" id="L971">			icons.add(new LabelValue(&quot;&lt;i class=\&quot;ti ti-a-b\&quot;&gt;&lt;/i&gt; &quot;+prop.getText(&quot;webpages.icons.bvariant&quot;), &quot;virtualPath:%&quot;+Constants.getString(&quot;ABTestingName&quot;)+&quot;%&quot;));</span>
 		}
 
-<span class="fc" id="L1008">		return icons;</span>
+<span class="fc" id="L974">		return icons;</span>
 	}
 
 	/**
@@ -1019,44 +985,44 @@ public class WebpagesService {
 	 * @return
 	 */
 	public static DocDetails getBasicDocFromUrl(String url) {
-<span class="fc" id="L1022">		DocDetails doc = null;</span>
+<span class="fc" id="L988">		DocDetails doc = null;</span>
 		try {
-<span class="fc bfc" id="L1024" title="All 2 branches covered.">			if (Tools.isNotEmpty(url)) {</span>
-<span class="pc bpc" id="L1025" title="1 of 2 branches missed.">				if (url.startsWith(&quot;http&quot;)==false) {</span>
-<span class="nc" id="L1026">					url = &quot;http://&quot;+CloudToolsForCore.getDomainName()+url;</span>
+<span class="fc bfc" id="L990" title="All 2 branches covered.">			if (Tools.isNotEmpty(url)) {</span>
+<span class="pc bpc" id="L991" title="1 of 2 branches missed.">				if (url.startsWith(&quot;http&quot;)==false) {</span>
+<span class="nc" id="L992">					url = &quot;http://&quot;+CloudToolsForCore.getDomainName()+url;</span>
 				}
-<span class="fc" id="L1028">				DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L1029">				int to = url.indexOf(&quot;/&quot;, 8);</span>
-<span class="pc bpc" id="L1030" title="1 of 2 branches missed.">				if (to==-1) to = url.indexOf(&quot;:&quot;, 8);</span>
-<span class="pc bpc" id="L1031" title="1 of 2 branches missed.">				if (to==-1) to = url.indexOf(&quot;?&quot;, 8);</span>
+<span class="fc" id="L994">				DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L995">				int to = url.indexOf(&quot;/&quot;, 8);</span>
+<span class="pc bpc" id="L996" title="1 of 2 branches missed.">				if (to==-1) to = url.indexOf(&quot;:&quot;, 8);</span>
+<span class="pc bpc" id="L997" title="1 of 2 branches missed.">				if (to==-1) to = url.indexOf(&quot;?&quot;, 8);</span>
 
-<span class="fc" id="L1033">				String domainName = url.substring(url.indexOf(&quot;://&quot;)+3, to);</span>
-<span class="fc" id="L1034">				int portDelimiter = domainName.indexOf(&quot;:&quot;);</span>
-<span class="pc bpc" id="L1035" title="1 of 2 branches missed.">				if (portDelimiter &gt; 0) domainName = domainName.substring(0, portDelimiter);</span>
+<span class="fc" id="L999">				String domainName = url.substring(url.indexOf(&quot;://&quot;)+3, to);</span>
+<span class="fc" id="L1000">				int portDelimiter = domainName.indexOf(&quot;:&quot;);</span>
+<span class="pc bpc" id="L1001" title="1 of 2 branches missed.">				if (portDelimiter &gt; 0) domainName = domainName.substring(0, portDelimiter);</span>
 
-<span class="fc" id="L1037">				to = url.indexOf(&quot;/&quot;, 8);</span>
-<span class="fc" id="L1038">				String path = &quot;/&quot;;</span>
-<span class="pc bpc" id="L1039" title="1 of 2 branches missed.">				if (to&gt;0) path = url.substring(to);</span>
-<span class="fc" id="L1040">				path = Tools.replace(path, &quot;//&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L1003">				to = url.indexOf(&quot;/&quot;, 8);</span>
+<span class="fc" id="L1004">				String path = &quot;/&quot;;</span>
+<span class="pc bpc" id="L1005" title="1 of 2 branches missed.">				if (to&gt;0) path = url.substring(to);</span>
+<span class="fc" id="L1006">				path = Tools.replace(path, &quot;//&quot;, &quot;/&quot;);</span>
 
-<span class="fc" id="L1042">				int docId = -1;</span>
-<span class="pc bpc" id="L1043" title="1 of 2 branches missed.">				if (path.startsWith(&quot;/showdoc.do&quot;)) {</span>
-<span class="nc" id="L1044">					docId = Tools.getIntValue(Tools.getParameterFromUrl(path, &quot;docid&quot;), -1);</span>
+<span class="fc" id="L1008">				int docId = -1;</span>
+<span class="pc bpc" id="L1009" title="1 of 2 branches missed.">				if (path.startsWith(&quot;/showdoc.do&quot;)) {</span>
+<span class="nc" id="L1010">					docId = Tools.getIntValue(Tools.getParameterFromUrl(path, &quot;docid&quot;), -1);</span>
 				} else {
-<span class="fc" id="L1046">					String pathNoParams = path;</span>
-<span class="fc" id="L1047">					int i = pathNoParams.indexOf(&quot;?&quot;);</span>
-<span class="pc bpc" id="L1048" title="1 of 2 branches missed.">					if (i&gt;0) pathNoParams = pathNoParams.substring(0, i);</span>
+<span class="fc" id="L1012">					String pathNoParams = path;</span>
+<span class="fc" id="L1013">					int i = pathNoParams.indexOf(&quot;?&quot;);</span>
+<span class="pc bpc" id="L1014" title="1 of 2 branches missed.">					if (i&gt;0) pathNoParams = pathNoParams.substring(0, i);</span>
 
-<span class="fc" id="L1050">					docId = docDB.getDocIdFromURLImpl(pathNoParams, domainName);</span>
+<span class="fc" id="L1016">					docId = docDB.getDocIdFromURLImpl(pathNoParams, domainName);</span>
 				}
-<span class="pc bpc" id="L1052" title="1 of 2 branches missed.">				if (docId &gt; 0) {</span>
-<span class="fc" id="L1053">					doc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L1018" title="1 of 2 branches missed.">				if (docId &gt; 0) {</span>
+<span class="fc" id="L1019">					doc = docDB.getBasicDocDetails(docId, false);</span>
 				}
 			}
-<span class="nc" id="L1056">		} catch (Exception e) {</span>
-<span class="nc" id="L1057">			Logger.error(WebpagesService.class, e);</span>
-<span class="fc" id="L1058">		}</span>
-<span class="fc" id="L1059">		return doc;</span>
+<span class="nc" id="L1022">		} catch (Exception e) {</span>
+<span class="nc" id="L1023">			Logger.error(WebpagesService.class, e);</span>
+<span class="fc" id="L1024">		}</span>
+<span class="fc" id="L1025">		return doc;</span>
 	}
 
 	/**
@@ -1067,24 +1033,24 @@ public class WebpagesService {
 	public static boolean isTreeShowPages(UserDetails user) {
 		//ak je zapnute zobrazenie zoznamu stranok pre novu stranku musim spravit reload
         //ostatne ako zmena adresara vyvolava reload uz standardne
-<span class="fc" id="L1070">        AdminSettingsService ass = new AdminSettingsService(user);</span>
-<span class="fc" id="L1071">        return ass.getJsonBooleanValue(&quot;jstreeSettings_web-pages-list&quot;, &quot;showPages&quot;);</span>
+<span class="fc" id="L1036">        AdminSettingsService ass = new AdminSettingsService(user);</span>
+<span class="fc" id="L1037">        return ass.getJsonBooleanValue(ADMIN_SETTINGS_KEY, &quot;showPages&quot;);</span>
 	}
 
 	public static int getUserFirstEditableGroup(Identity user)
 	{
-<span class="fc" id="L1076">		int[] editableGroups = Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;);</span>
-<span class="pc bpc" id="L1077" title="2 of 4 branches missed.">		if (editableGroups!=null &amp;&amp; editableGroups.length&gt;0)</span>
+<span class="fc" id="L1042">		int[] editableGroups = Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;);</span>
+<span class="pc bpc" id="L1043" title="2 of 4 branches missed.">		if (editableGroups!=null &amp;&amp; editableGroups.length&gt;0)</span>
 		{
-<span class="pc bpc" id="L1079" title="1 of 2 branches missed.">			for (int groupId : editableGroups)</span>
+<span class="pc bpc" id="L1045" title="1 of 2 branches missed.">			for (int groupId : editableGroups)</span>
 			{
-<span class="pc bpc" id="L1081" title="1 of 2 branches missed.">				if (groupId &gt; 0)</span>
+<span class="pc bpc" id="L1047" title="1 of 2 branches missed.">				if (groupId &gt; 0)</span>
 				{
-<span class="fc" id="L1083">					return groupId;</span>
+<span class="fc" id="L1049">					return groupId;</span>
 				}
 			}
 		}
-<span class="nc" id="L1087">		return -1;</span>
+<span class="nc" id="L1053">		return -1;</span>
 	}
 
 	/**
@@ -1095,38 +1061,38 @@ public class WebpagesService {
 	 */
 	public static int getUserLastGroupId(Identity user, HttpServletRequest request)
 	{
-<span class="nc" id="L1098">		HttpSession session = request.getSession();</span>
+<span class="nc" id="L1064">		HttpSession session = request.getSession();</span>
 
-<span class="nc" id="L1100">		int group_id = Constants.getInt(&quot;rootGroupId&quot;);</span>
+<span class="nc" id="L1066">		int group_id = Constants.getInt(&quot;rootGroupId&quot;);</span>
 
-<span class="nc" id="L1102">		int groupId = getUserFirstEditableGroup(user);</span>
-<span class="nc bnc" id="L1103" title="All 2 branches missed.">		if (groupId &gt; 0)</span>
+<span class="nc" id="L1068">		int groupId = getUserFirstEditableGroup(user);</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">		if (groupId &gt; 0)</span>
 		{
-<span class="nc" id="L1105">			group_id = groupId;</span>
+<span class="nc" id="L1071">			group_id = groupId;</span>
 		}
 
 		try
 		{
-<span class="nc bnc" id="L1110" title="All 2 branches missed.">			if (request.getParameter(&quot;groupid&quot;) != null)</span>
+<span class="nc bnc" id="L1076" title="All 2 branches missed.">			if (request.getParameter(&quot;groupid&quot;) != null)</span>
 			{
-<span class="nc" id="L1112">				group_id = Integer.parseInt(request.getParameter(&quot;groupid&quot;));</span>
+<span class="nc" id="L1078">				group_id = Integer.parseInt(request.getParameter(&quot;groupid&quot;));</span>
 			}
 			else
 			{
 				//skus ziskat data zo session
-<span class="nc bnc" id="L1117" title="All 2 branches missed.">				if (session.getAttribute(Constants.SESSION_GROUP_ID) != null)</span>
+<span class="nc bnc" id="L1083" title="All 2 branches missed.">				if (session.getAttribute(Constants.SESSION_GROUP_ID) != null)</span>
 				{
-<span class="nc" id="L1119">					group_id = Integer.parseInt((String) session.getAttribute(Constants.SESSION_GROUP_ID));</span>
+<span class="nc" id="L1085">					group_id = Integer.parseInt((String) session.getAttribute(Constants.SESSION_GROUP_ID));</span>
 				}
 
 			}
 		}
-<span class="nc" id="L1124">		catch (Exception ex)</span>
+<span class="nc" id="L1090">		catch (Exception ex)</span>
 		{
 
-<span class="nc" id="L1127">		}</span>
+<span class="nc" id="L1093">		}</span>
 
-<span class="nc" id="L1129">		return group_id;</span>
+<span class="nc" id="L1095">		return group_id;</span>
 	}
 
 	/**
@@ -1134,83 +1100,151 @@ public class WebpagesService {
 	 */
 	public static void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;DocDetails&gt; root, CriteriaBuilder builder, Identity user) {
 
-<span class="fc" id="L1137">        SpecSearch&lt;DocDetails&gt; specSearch = new SpecSearch&lt;&gt;();</span>
-<span class="fc" id="L1138">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L1103">        SpecSearch&lt;DocDetails&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+<span class="fc" id="L1104">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
 		//remove groupId predicate which was auto binded, it will be set later in this method depending on recursive attribute
-<span class="fc" id="L1141">		JpaTools.removePredicateWithName(&quot;groupId&quot;, predicates);</span>
+<span class="fc" id="L1107">		JpaTools.removePredicateWithName(&quot;groupId&quot;, predicates);</span>
 
         //vyhladanie na zaklade Meno autora, hladane v DB tabulke nasledne v stlpci authorId
-<span class="fc" id="L1144">        String searchAuthorName = params.get(&quot;searchAuthorName&quot;);</span>
-<span class="fc bfc" id="L1145" title="All 2 branches covered.">        if (searchAuthorName != null) {</span>
-<span class="fc" id="L1146">            specSearch.addSpecSearchUserFullName(searchAuthorName, &quot;authorId&quot;, predicates, root, builder);</span>
-        }
+<span class="fc" id="L1110">        String searchAuthorName = params.get(&quot;searchAuthorName&quot;);</span>
+<span class="fc bfc" id="L1111" title="All 2 branches covered.">        if (searchAuthorName != null)</span>
+<span class="fc" id="L1112">            specSearch.addSpecSearchUserFullName(searchAuthorName, &quot;authorId&quot;, predicates, root, builder);</span>
 
-<span class="fc" id="L1149">        String permissions = params.get(&quot;searchEditorFields.permisions&quot;);</span>
-<span class="pc bpc" id="L1150" title="1 of 2 branches missed.">        if (permissions!=null) {</span>
-<span class="nc" id="L1151">            specSearch.addSpecSearchPasswordProtected(permissions, &quot;passwordProtected&quot;, predicates, root, builder);</span>
-        }
-<span class="fc" id="L1153">        String emails = params.get(&quot;searchEditorFields.emails&quot;);</span>
-<span class="fc bfc" id="L1154" title="All 2 branches covered.">        if (emails!=null) {</span>
-<span class="fc" id="L1155">            specSearch.addSpecSearchPasswordProtected(emails, &quot;passwordProtected&quot;, predicates, root, builder);</span>
-        }
-<span class="fc" id="L1157">        int userGroupId = Tools.getIntValue(params.get(&quot;userGroupId&quot;), -1);</span>
-<span class="fc bfc" id="L1158" title="All 2 branches covered.">        if (userGroupId&gt;0) {</span>
-<span class="fc" id="L1159">            specSearch.addSpecSearchPasswordProtected(userGroupId, &quot;passwordProtected&quot;, predicates, root, builder);</span>
-        }
+<span class="fc" id="L1114">        String permissions = params.get(&quot;searchEditorFields.permisions&quot;);</span>
+<span class="pc bpc" id="L1115" title="1 of 2 branches missed.">        if (permissions != null)</span>
+<span class="nc" id="L1116">            specSearch.addSpecSearchPasswordProtected(permissions, &quot;passwordProtected&quot;, predicates, root, builder);</span>
 
-<span class="fc" id="L1162">		String groupIdListParam = params.get(&quot;groupIdList&quot;);</span>
-<span class="fc bfc" id="L1163" title="All 4 branches covered.">		if (Tools.isEmpty(groupIdListParam) &amp;&amp; Tools.isNotEmpty(params.get(&quot;groupId&quot;))) {</span>
-<span class="fc" id="L1164">			groupIdListParam = params.get(&quot;groupId&quot;);</span>
-<span class="fc bfc" id="L1165" title="All 2 branches covered.">			if (&quot;true&quot;.equals(params.get(&quot;recursive&quot;))) groupIdListParam+=&quot;*&quot;;</span>
+<span class="fc" id="L1118">        String emails = params.get(&quot;searchEditorFields.emails&quot;);</span>
+<span class="fc bfc" id="L1119" title="All 2 branches covered.">        if (emails != null)</span>
+<span class="fc" id="L1120">            specSearch.addSpecSearchPasswordProtected(emails, &quot;passwordProtected&quot;, predicates, root, builder);</span>
+
+<span class="fc" id="L1122">        int userGroupId = Tools.getIntValue(params.get(&quot;userGroupId&quot;), -1);</span>
+<span class="fc bfc" id="L1123" title="All 2 branches covered.">        if (userGroupId &gt; 0)</span>
+<span class="fc" id="L1124">            specSearch.addSpecSearchPasswordProtected(userGroupId, &quot;passwordProtected&quot;, predicates, root, builder);</span>
+
+<span class="fc" id="L1126">		String groupIdListParam = params.get(&quot;groupIdList&quot;);</span>
+<span class="fc bfc" id="L1127" title="All 4 branches covered.">		if (Tools.isEmpty(groupIdListParam) &amp;&amp; Tools.isNotEmpty(params.get(&quot;groupId&quot;))) {</span>
+<span class="fc" id="L1128">			groupIdListParam = params.get(&quot;groupId&quot;);</span>
+<span class="fc bfc" id="L1129" title="All 2 branches covered.">			if (&quot;true&quot;.equals(params.get(&quot;recursive&quot;))) groupIdListParam+=&quot;*&quot;;</span>
 		}
 
-<span class="fc bfc" id="L1168" title="All 2 branches covered.">		if(Boolean.TRUE.equals( Tools.getBooleanValue(params.get(&quot;isBlogVersion&quot;), false) )) {</span>
-<span class="fc" id="L1169">			List&lt;Integer&gt; bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get(&quot;groupId&quot;), -1));</span>
-<span class="pc bpc" id="L1170" title="1 of 2 branches missed.">			if(bloggersGroupIds != null)</span>
-<span class="fc" id="L1171">				predicates.add(root.get(&quot;groupId&quot;).in(bloggersGroupIds));</span>
-<span class="fc" id="L1172">		} else {</span>
-<span class="fc" id="L1173">			String[] groupIdListArray = Tools.getTokens(groupIdListParam, &quot;,&quot;, true);</span>
+<span class="fc bfc" id="L1132" title="All 2 branches covered.">		if(Boolean.TRUE.equals( Tools.getBooleanValue(params.get(&quot;isSearchVersion&quot;), false) )) {</span>
+			// SEARCH_ALL VERSION
+<span class="fc" id="L1134">			SearchService.getWebPagesData(params, user, predicates, builder, root);</span>
+		} else {
+<span class="fc" id="L1136">			String[] groupIdListArray = Tools.getTokens(groupIdListParam, &quot;,&quot;, true);</span>
 			int groupId;
-<span class="fc bfc" id="L1175" title="All 2 branches covered.">			if (groupIdListArray.length&gt;0) {</span>
-<span class="fc" id="L1176">				List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L1177" title="All 2 branches covered.">				for (String id : groupIdListArray) {</span>
-<span class="pc bpc" id="L1178" title="1 of 4 branches missed.">					if (id.endsWith(&quot;*&quot;) &amp;&amp; id.length()&gt;1) {</span>
+<span class="fc bfc" id="L1138" title="All 2 branches covered.">			if (groupIdListArray.length&gt;0) {</span>
+<span class="fc" id="L1139">				List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1140" title="All 2 branches covered.">				for (String id : groupIdListArray) {</span>
+<span class="pc bpc" id="L1141" title="1 of 4 branches missed.">					if (id.endsWith(&quot;*&quot;) &amp;&amp; id.length()&gt;1) {</span>
 
-<span class="fc" id="L1180">						groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);</span>
-<span class="fc" id="L1181">						GroupDetails baseGroup = groupsDB.getGroup(groupId);</span>
+<span class="fc" id="L1143">						groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);</span>
+<span class="fc" id="L1144">						GroupDetails baseGroup = groupsDB.getGroup(groupId);</span>
 						//to filter FullTextIndex of files
-<span class="fc" id="L1183">						final boolean baseGroupIsFiles = baseGroup.getFullPath().contains(&quot;/files&quot;);</span>
-<span class="fc" id="L1184">						List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(groupId, true, true);</span>
+<span class="fc" id="L1146">						final boolean baseGroupIsFiles = baseGroup.getFullPath().contains(&quot;/files&quot;);</span>
+<span class="fc" id="L1147">						List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(groupId, true, true);</span>
 
-<span class="fc" id="L1186">						groupIds.addAll(subGroups.stream()</span>
-<span class="pc bpc" id="L1187" title="1 of 4 branches missed.">							.filter(g -&gt; baseGroupIsFiles || !g.getFullPath().contains(&quot;/files&quot;))</span>
-<span class="fc" id="L1188">							.map(g -&gt; g.getGroupId())</span>
-<span class="fc" id="L1189">							.collect(Collectors.toList()));</span>
+<span class="fc" id="L1149">						groupIds.addAll(subGroups.stream()</span>
+<span class="pc bpc" id="L1150" title="1 of 4 branches missed.">							.filter(g -&gt; baseGroupIsFiles || !g.getFullPath().contains(&quot;/files&quot;))</span>
+<span class="fc" id="L1151">							.map(g -&gt; g.getGroupId())</span>
+<span class="fc" id="L1152">							.collect(Collectors.toList()));</span>
 
-<span class="fc" id="L1191">					} else {</span>
+<span class="fc" id="L1154">					} else {</span>
 
-<span class="fc" id="L1193">						groupIds.add(Tools.getIntValue(id, -1));</span>
+<span class="fc" id="L1156">						groupIds.add(Tools.getIntValue(id, -1));</span>
 
 					}
 				}
-<span class="fc bfc" id="L1197" title="All 2 branches covered.">				if (groupIds.size()==1) {</span>
-<span class="fc" id="L1198">					predicates.add(builder.equal(root.get(&quot;groupId&quot;), groupIds.get(0)));</span>
-<span class="pc bpc" id="L1199" title="1 of 2 branches missed.">				} else if (groupIds.size()&gt;1) {</span>
-<span class="fc" id="L1200">					predicates.add(root.get(&quot;groupId&quot;).in(groupIds));</span>
+<span class="fc bfc" id="L1160" title="All 2 branches covered.">				if (groupIds.size()==1) {</span>
+<span class="fc" id="L1161">					predicates.add(builder.equal(root.get(&quot;groupId&quot;), groupIds.get(0)));</span>
+<span class="pc bpc" id="L1162" title="1 of 2 branches missed.">				} else if (groupIds.size()&gt;1) {</span>
+<span class="fc" id="L1163">					predicates.add(root.get(&quot;groupId&quot;).in(groupIds));</span>
 				}
 
 				//filter iba hlavnych stranok adresarov
-<span class="fc" id="L1204">				String searchStatusIcon = params.get(&quot;searchEditorFields.statusIcons&quot;);</span>
-<span class="pc bpc" id="L1205" title="1 of 4 branches missed.">				if (&quot;searchDefaultPage&quot;.equals(searchStatusIcon) &amp;&amp; groupIds.size()&gt;0) {</span>
+<span class="fc" id="L1167">				String searchStatusIcon = params.get(&quot;searchEditorFields.statusIcons&quot;);</span>
+<span class="pc bpc" id="L1168" title="1 of 4 branches missed.">				if (&quot;searchDefaultPage&quot;.equals(searchStatusIcon) &amp;&amp; groupIds.size()&gt;0) {</span>
 					//ziskaj zoznam default_doc_id pre zvolene adresare
-<span class="fc" id="L1207">					String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(&quot;,&quot;));</span>
-<span class="fc" id="L1208">					List&lt;Integer&gt; defaultDocIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN (&quot;+ids+&quot;)&quot;);</span>
+<span class="fc" id="L1170">					String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(&quot;,&quot;));</span>
+<span class="fc" id="L1171">					List&lt;Integer&gt; defaultDocIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN (&quot;+ids+&quot;)&quot;);</span>
 					//pridaj to ako predikat
-<span class="fc" id="L1210">					predicates.add(root.get(&quot;id&quot;).in(defaultDocIds));</span>
+<span class="fc" id="L1173">					predicates.add(root.get(&quot;id&quot;).in(defaultDocIds));</span>
 				}
 			}
 		}
-<span class="fc" id="L1214">    }</span>
+<span class="fc" id="L1177">    }</span>
+
+	public static DocDetails getOneItem(long id, int groupId, int historyId, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, List&lt;NotifyBean&gt; notifyList, HttpServletRequest request) {
+<span class="pc bpc" id="L1180" title="1 of 2 branches missed.">		if (groupId == Constants.getInt(&quot;systemPagesDocsToApprove&quot;)) {</span>
+            //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
+<span class="nc" id="L1182">            historyId = (int)id;</span>
+            //ziskaj docid podla historyid
+<span class="nc" id="L1184">            id = (new SimpleQuery()).forInt(&quot;SELECT doc_id FROM documents_history WHERE history_id=?&quot;, historyId);</span>
+        }
+
+<span class="fc" id="L1187">        Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc" id="L1189">		DocDetails doc = editorFacade.getDocForEditor((int) id, historyId, groupId);</span>
+
+<span class="fc bfc" id="L1191" title="All 2 branches covered.">        if(id == -1) {</span>
+<span class="fc" id="L1192">            doc.setGenerateUrlFromTitle(true);</span>
+        }
+
+<span class="pc bpc" id="L1195" title="1 of 2 branches missed.">        if (ContextFilter.isRunning(request)) {</span>
+            // do editoru nahrame texty s pridanymi linkami
+<span class="nc" id="L1197">            doc.setData(ContextFilter.addContextPath(request.getContextPath(), doc.getData()));</span>
+		}
+
+<span class="pc bpc" id="L1200" title="1 of 2 branches missed.">		if (groupId == Constants.getInt(&quot;systemPagesDocsToApprove&quot;)) {</span>
+<span class="nc" id="L1201">			int docId = doc.getDocId();</span>
+<span class="nc" id="L1202">			doc.setDocId(historyId);</span>
+<span class="nc" id="L1203">			doc.setHistoryId(docId);</span>
+        }
+
+		//over, ci existuju neschvalene/rozpracovane verzie, ak ano, zobraz notifikaciu
+<span class="fc" id="L1207">        HistoryDB historyDB = new HistoryDB(&quot;iwcm&quot;);</span>
+<span class="fc" id="L1208">        List&lt;DocDetails&gt; history = historyDB.getHistory(doc.getDocId(), false, true);</span>
+<span class="pc bpc" id="L1209" title="1 of 4 branches missed.">        if (history != null &amp;&amp; history.isEmpty()==false) {</span>
+<span class="fc bfc" id="L1210" title="All 2 branches covered.">            if (historyId &lt; 1) {</span>
+                //ak nemame zadane historyId pridaj notifikaciu o tom, ze existuje novsia verzia
+<span class="fc" id="L1212">                NotifyBean notify = new NotifyBean(prop.getText(&quot;text.warning&quot;), prop.getText(&quot;editor.notify.checkHistory&quot;), NotifyBean.NotifyType.WARNING, 15000);</span>
+<span class="fc" id="L1213">				notify.addButton(new NotifyButton(prop.getText(&quot;editor.notify.editFromHistory&quot;), &quot;btn btn-primary&quot;, &quot;ti ti-history&quot;, &quot;editFromHistory(&quot;+history.get(0).getDocId()+&quot;, &quot;+history.get(0).getHistoryId()+&quot;)&quot;));</span>
+<span class="fc" id="L1214">                notifyList.add(notify);</span>
+            }
+<span class="fc" id="L1216">            request.getSession().removeAttribute(&quot;docHistory&quot;);</span>
+        }
+
+<span class="fc" id="L1219">        List&lt;DocAtrDefEntity&gt; atrDefs = docAtrDefRepository.findAllByDocId(MultigroupMappingDB.getMasterDocId(doc.getDocId(), true), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L1220">        atrDefs.forEach(f -&gt; {</span>
+<span class="pc bpc" id="L1221" title="1 of 4 branches missed.">            if (f.getDocAtrEntities()!=null &amp;&amp; f.getDocAtrEntities().isEmpty()==false) {</span>
+                //normally in JSON we don't want to send all DocAtrEntity relationship (it's lazy loaded ant it will be populated), it's JsonIgnored,
+                //we just need first entity to be sent, so set it here for this specific case
+<span class="fc" id="L1224">                f.setDocAtrEntityFirst(f.getDocAtrEntities().get(0));</span>
+            }
+<span class="fc" id="L1226">        });</span>
+<span class="fc" id="L1227">        doc.getEditorFields().setAttrs(atrDefs);</span>
+
+<span class="fc" id="L1229">        String newPageTitleKey = request.getParameter(&quot;newPageTitleKey&quot;);</span>
+<span class="fc bfc" id="L1230" title="All 4 branches covered.">        if (Tools.isNotEmpty(newPageTitleKey) &amp;&amp; doc.getDocId()&lt;1) {</span>
+<span class="fc" id="L1231">            doc.setTitle(prop.getText(newPageTitleKey));</span>
+        }
+
+<span class="fc" id="L1234">        return doc;</span>
+	}
+
+	public static String getTreeSortType(UserDetails user) {
+<span class="fc" id="L1238">        AdminSettingsService ass = new AdminSettingsService(user);</span>
+<span class="fc" id="L1239">		String sortType = ass.getJsonValue(ADMIN_SETTINGS_KEY, &quot;treeSortType&quot;);</span>
+
+<span class="pc bpc" id="L1241" title="1 of 4 branches missed.">		if(sortType == null || Tools.isEmpty(sortType) == true) return &quot;priority&quot;;</span>
+<span class="fc" id="L1242">		else return sortType;</span>
+	}
+
+	public static boolean isTreeSortOrderAsc(UserDetails user) {
+<span class="fc" id="L1246">		AdminSettingsService ass = new AdminSettingsService(user);</span>
+<span class="fc" id="L1247">		return ass.getJsonBooleanValue(ADMIN_SETTINGS_KEY, &quot;treeSortOrderAsc&quot;);</span>
+	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

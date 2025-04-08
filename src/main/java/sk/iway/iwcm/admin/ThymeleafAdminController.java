@@ -51,7 +51,7 @@ public class ThymeleafAdminController {
     *
     * @param page String
     * @param subpage - String - nesmie obsahovat znak ., cize nemoze to byt subor
-    * @param allParams MultiValueMap<String, String>
+    * @param allParams MultiValueMap&lt;String, String&gt;
     * @param model ModelMap
     * @param request HttpServletRequest
     * @return String

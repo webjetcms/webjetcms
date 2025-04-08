@@ -14,7 +14,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_GDPR_DELETE)
 public class GdprDataDeletingEntity {
 
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="components.gdpr.id")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title="components.gdpr.type")

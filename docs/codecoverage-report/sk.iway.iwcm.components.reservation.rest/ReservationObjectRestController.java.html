@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationObjectRestController.java</span></div><h1>ReservationObjectRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationObjectRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationObjectRestController.java</span></div><h1>ReservationObjectRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -117,15 +117,15 @@ public class ReservationObjectRestController extends DatatableRestControllerV2&l
         }
 
         //Email validation
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if(Tools.isTrue(entity.getMustAccepted())) {</span>
-<span class="nc bnc" id="L121" title="All 4 branches missed.">            if(entity.getEmailAccepter() == null || entity.getEmailAccepter().isEmpty()) throwError(&quot;components.reservation.reservation_manager.addReservationObject.one&quot;);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if(Tools.isTrue(entity.getMustAccepted())) {</span>
+<span class="pc bpc" id="L121" title="2 of 4 branches missed.">            if(entity.getEmailAccepter() == null || entity.getEmailAccepter().isEmpty()) throwError(&quot;components.reservation.reservation_manager.addReservationObject.one&quot;);</span>
             //Email validation
             try {
-<span class="nc" id="L124">                InternetAddress emailAddr = new InternetAddress(entity.getEmailAccepter());</span>
-<span class="nc" id="L125">                emailAddr.validate();</span>
+<span class="fc" id="L124">                InternetAddress emailAddr = new InternetAddress(entity.getEmailAccepter());</span>
+<span class="fc" id="L125">                emailAddr.validate();</span>
 <span class="nc" id="L126">            } catch (AddressException ex) {</span>
 <span class="nc" id="L127">                throwError(&quot;components.form.email.not_valid&quot;);</span>
-<span class="nc" id="L128">            }</span>
+<span class="fc" id="L128">            }</span>
 	    }
 <span class="fc" id="L130">    }</span>
 

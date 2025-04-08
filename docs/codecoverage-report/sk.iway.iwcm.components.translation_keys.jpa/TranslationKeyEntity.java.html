@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.jpa</a> &gt; <span class="el_source">TranslationKeyEntity.java</span></div><h1>TranslationKeyEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TranslationKeyEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.translation_keys.jpa</a> &gt; <span class="el_source">TranslationKeyEntity.java</span></div><h1>TranslationKeyEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.translation_keys.jpa;
 
 import java.util.Date;
 
@@ -297,6 +297,32 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
         //ochrana pred XSS ak kluc nie je citany z DB nie je chraneny
 <span class="pc bpc" id="L298" title="2 of 4 branches missed.">        if (key.contains(&quot;&lt;&quot;) || key.contains(&quot;&gt;&quot;)) return ResponseUtils.filter(key).trim();</span>
 <span class="fc" id="L299">        return key.trim();</span>
+    }
+
+    public String getOriginalValue(char a) {
+<span class="pc bpc" id="L303" title="1 of 11 branches missed.">        switch (a) {</span>
+            case 'A':
+<span class="fc" id="L305">                return originalValueA;</span>
+            case 'B':
+<span class="fc" id="L307">                return originalValueB;</span>
+            case 'C':
+<span class="fc" id="L309">                return originalValueC;</span>
+            case 'D':
+<span class="fc" id="L311">                return originalValueD;</span>
+            case 'E':
+<span class="fc" id="L313">                return originalValueE;</span>
+            case 'F':
+<span class="fc" id="L315">                return originalValueF;</span>
+            case 'G':
+<span class="fc" id="L317">                return originalValueG;</span>
+            case 'H':
+<span class="fc" id="L319">                return originalValueH;</span>
+            case 'I':
+<span class="fc" id="L321">                return originalValueI;</span>
+            case 'J':
+<span class="fc" id="L323">                return originalValueJ;</span>
+<span class="nc" id="L324">            default: return null;</span>
+        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

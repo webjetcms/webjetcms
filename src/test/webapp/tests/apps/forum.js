@@ -216,7 +216,7 @@ Scenario('Message board', async ({I, DT, DTE}) => {
     I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
 
     //Add new theme
-    I.click("#forumContentDiv a.btn-primary");
+    I.clickCss("#forumContentDiv a.btn-primary");
 
     I.waitForElement("#forumForm");
 

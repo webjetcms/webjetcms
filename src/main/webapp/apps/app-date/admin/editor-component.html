@@ -5,6 +5,8 @@
         if ("last_update" === field) {
             //change component path to last_update.jsp
             return "/components/app-date/last_update.jsp";
+        } else if ("meniny" === field){
+            return "/components/app-date/meniny.jsp";
         }
         return componentPath;
     }

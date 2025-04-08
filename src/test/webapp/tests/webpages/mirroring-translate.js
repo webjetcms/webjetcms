@@ -73,7 +73,7 @@ async function testTranslation(I, DT, DTE, useAutotranslator) {
     I.waitForVisible("#DTE_Field_title");
     I.fillField("#DTE_Field_title", docTitleSK);
 
-    I.click("#pills-dt-datatableInit-content-tab");
+    I.clickCss("#pills-dt-datatableInit-content-tab");
     I.waitForElement("iframe.cke_wysiwyg_frame");
     await DTE.fillCkeditor(docDataSK);
     DTE.save();

@@ -90,13 +90,13 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
 
         //link to page doalog
         I.switchTo( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjLinkIframe") );
-        I.click("#nav-iwcm_doc_group_volume_");
+        I.clickCss("#nav-iwcm_doc_group_volume_");
         I.waitForElement("#nav-iwcm_doc_group_volume_L2dyb3VwOjE_E", 5); //Jet portal 4
-        I.click("#nav-iwcm_doc_group_volume_L2dyb3VwOjE_E");
+        I.clickCss("#nav-iwcm_doc_group_volume_L2dyb3VwOjE_E");
         I.waitForElement("#nav-iwcm_doc_group_volume_L2dyb3VwOjI0", 5); //zo sveta financii
-        I.click("#nav-iwcm_doc_group_volume_L2dyb3VwOjI0");
+        I.clickCss("#nav-iwcm_doc_group_volume_L2dyb3VwOjI0");
         I.waitForElement("#iwcm_doc_group_volume_L2RvYzoxNg_E_E", 5); //konzolidacia napriec trhmi
-        I.click("#iwcm_doc_group_volume_L2RvYzoxNg_E_E");
+        I.clickCss("#iwcm_doc_group_volume_L2RvYzoxNg_E_E");
         I.switchTo();
         Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/link_dialog-webpage.png');
 
@@ -305,4 +305,9 @@ Scenario('editor-btn-dialog', ({ I, DTE, Document }) => {
     Document.screenshot('/redactor/webpages/working-in-editor/link_dialog_button.png');
 
     I.switchTo();
+});
+
+Scenario('webjet-toolbar', ({ I, DTE, Document }) => {
+    I.amOnPage("/investicie/?NO_WJTOOLBAR=false");
+    Document.screenshot('/redactor/webpages/webjet-toolbar.png');
 });

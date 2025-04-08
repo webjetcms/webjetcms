@@ -66,7 +66,7 @@ Scenario('demo component page params', ({I, DTE}) => {
     I.wait(2);
 
     I.say("Testing JSON fields");
-    I.click("#pills-dt-component-datatable-json-tab");
+    I.clickCss("#pills-dt-component-datatable-json-tab");
     I.waitForElement("#editorAppDTE_Field_groupDetails input.form-control", 10);
     I.seeInField("#editorAppDTE_Field_groupDetails input.form-control", "/Test stavov");
     I.seeInField("#editorAppDTE_Field_docDetails input.form-control", "/Jet portal 4/Zo sveta financií/Trhy sú naďalej vydesené");

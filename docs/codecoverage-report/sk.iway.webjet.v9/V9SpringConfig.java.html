@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>V9SpringConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.webjet.v9</a> &gt; <span class="el_source">V9SpringConfig.java</span></div><h1>V9SpringConfig.java</h1><pre class="source lang-java linenums">package sk.iway.webjet.v9;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>V9SpringConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.webjet.v9</a> &gt; <span class="el_source">V9SpringConfig.java</span></div><h1>V9SpringConfig.java</h1><pre class="source lang-java linenums">package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
@@ -31,94 +31,118 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @Configuration
 @EnableWebMvc
 @ComponentScan({
-    &quot;sk.iway.iwcm.admin.upload&quot;,
+    &quot;sk.iway.iwcm.admin&quot;,
+    &quot;sk.iway.iwcm.calendar&quot;,
     &quot;sk.iway.iwcm.doc&quot;,
-    &quot;sk.iway.iwcm.components.gallery&quot;,
-    &quot;sk.iway.iwcm.components.redirects&quot;,
-    &quot;sk.iway.iwcm.components.insertScript.rest&quot;,
-    &quot;sk.iway.iwcm.components.domain_redirects&quot;,
-    &quot;sk.iway.iwcm.components.forms&quot;,
-    &quot;sk.iway.iwcm.components.forms.archive&quot;,
-    &quot;sk.iway.iwcm.components.memory_cleanup.cache_objects&quot;,
-    &quot;sk.iway.iwcm.editor.rest&quot;,
-    &quot;sk.iway.iwcm.components.translation_keys.rest&quot;,
-    &quot;sk.iway.webjet.v9&quot;,
+    &quot;sk.iway.iwcm.dmail.rest&quot;,
+    &quot;sk.iway.iwcm.editor&quot;,
+    &quot;sk.iway.iwcm.filebrowser&quot;,
+    &quot;sk.iway.iwcm.findexer&quot;,
+    &quot;sk.iway.iwcm.grideditor.controller&quot;,
+    &quot;sk.iway.iwcm.localconf&quot;,
+    &quot;sk.iway.iwcm.logon&quot;,
+    &quot;sk.iway.iwcm.rest&quot;,
+    &quot;sk.iway.iwcm.stat.rest&quot;,
     &quot;sk.iway.iwcm.system.audit.rest&quot;,
-    &quot;sk.iway.iwcm.system.monitoring.rest&quot;,
+    &quot;sk.iway.iwcm.system.datatable.editorlocking&quot;,
+    &quot;sk.iway.iwcm.system.datatables&quot;,
     &quot;sk.iway.iwcm.system.elfinder&quot;,
     &quot;sk.iway.iwcm.system.logging&quot;,
+    &quot;sk.iway.iwcm.system.monitoring.rest&quot;,
     &quot;sk.iway.iwcm.system.ntlm&quot;,
-    &quot;sk.iway.iwcm.components.media&quot;,
-    &quot;sk.iway.iwcm.components.welcome&quot;,
-    &quot;sk.iway.iwcm.components.perex_groups&quot;,
-    &quot;sk.iway.iwcm.components.user&quot;,
-    &quot;sk.iway.iwcm.components.users.userdetail&quot;,
-    &quot;sk.iway.iwcm.components.users.groups_approve&quot;,
-    &quot;sk.iway.iwcm.components.users.usergroups&quot;,
-    &quot;sk.iway.iwcm.components.users.permgroups&quot;,
-    &quot;sk.iway.iwcm.components.gdpr.rest&quot;,
-    &quot;sk.iway.iwcm.components.qa.rest&quot;,
-    &quot;sk.iway.iwcm.components.tooltip&quot;,
-    &quot;sk.iway.iwcm.components.export&quot;,
-    &quot;sk.iway.iwcm.dmail.rest&quot;,
-    &quot;sk.iway.iwcm.system.datatable.editorlocking&quot;,
-    &quot;sk.iway.iwcm.components.banner&quot;,
-    &quot;sk.iway.iwcm.dmail.jpa&quot;,
-    &quot;sk.iway.iwcm.stat.rest&quot;,
-    &quot;sk.iway.iwcm.components.calendar.rest&quot;,
-    &quot;sk.iway.iwcm.components.reservation.rest&quot;,
-    &quot;sk.iway.iwcm.components.inquiry.rest&quot;,
-    &quot;sk.iway.iwcm.doc.attributes.jpa&quot;,
-    &quot;sk.iway.iwcm.components.proxy.rest&quot;,
-    &quot;sk.iway.iwcm.components.enumerations.rest&quot;,
-    &quot;sk.iway.iwcm.components.response_header.rest&quot;,
-    &quot;sk.iway.iwcm.findexer&quot;,
-    &quot;sk.iway.iwcm.filebrowser&quot;,
-    &quot;sk.iway.iwcm.components.forum.rest&quot;,
-    &quot;sk.iway.iwcm.components.seo.rest&quot;,
-    &quot;sk.iway.iwcm.doc.clone_structure&quot;,
     &quot;sk.iway.iwcm.update&quot;,
+    &quot;sk.iway.iwcm.users&quot;,
     &quot;sk.iway.iwcm.xls&quot;,
-    &quot;sk.iway.iwcm.components.restaurant_menu.rest&quot;,
-    &quot;sk.iway.iwcm.components.quiz.rest&quot;,
-    &quot;sk.iway.iwcm.components.blog.rest&quot;,
+    &quot;sk.iway.iwcm.components.abtesting.rest&quot;,
     &quot;sk.iway.iwcm.components.appcookiebar&quot;,
+    &quot;sk.iway.iwcm.components.appdate&quot;,
+    &quot;sk.iway.iwcm.components.appdisqus&quot;,
     &quot;sk.iway.iwcm.components.appdocsembed&quot;,
     &quot;sk.iway.iwcm.components.appfacebookcomments&quot;,
     &quot;sk.iway.iwcm.components.appfacebooklike&quot;,
-    &quot;sk.iway.iwcm.components.appsmartsupp&quot;,
+    &quot;sk.iway.iwcm.components.appfacebooklikebox&quot;,
     &quot;sk.iway.iwcm.components.apphtmlembed&quot;,
+    &quot;sk.iway.iwcm.components.appsmartsupp&quot;,
     &quot;sk.iway.iwcm.components.appvyhladavanie&quot;,
+    &quot;sk.iway.iwcm.components.banner&quot;,
+    &quot;sk.iway.iwcm.components.basket.rest&quot;,
+    &quot;sk.iway.iwcm.components.blog.rest&quot;,
+    &quot;sk.iway.iwcm.components.calendar&quot;,
+    &quot;sk.iway.iwcm.components.calendarnews&quot;,
+    &quot;sk.iway.iwcm.components.configuration&quot;,
     &quot;sk.iway.iwcm.components.contentblock&quot;,
-    &quot;sk.iway.iwcm.components.sendlink&quot;,
+    &quot;sk.iway.iwcm.components.crypto&quot;,
+    &quot;sk.iway.iwcm.components.cronjob&quot;,
+    &quot;sk.iway.iwcm.components.date&quot;,
+    &quot;sk.iway.iwcm.components.dmail&quot;,
+    &quot;sk.iway.iwcm.components.domain_redirects&quot;,
+    &quot;sk.iway.iwcm.components.enumerations.rest&quot;,
+    &quot;sk.iway.iwcm.components.export&quot;,
+    &quot;sk.iway.iwcm.components.form&quot;,
+    &quot;sk.iway.iwcm.components.forms&quot;,
+    &quot;sk.iway.iwcm.components.forum.rest&quot;,
+    &quot;sk.iway.iwcm.components.gallery&quot;,
     &quot;sk.iway.iwcm.components.gdpr&quot;,
-    &quot;sk.iway.iwcm.components.sitebrowser&quot;
-
-
+    &quot;sk.iway.iwcm.components.inquiry&quot;,
+    &quot;sk.iway.iwcm.components.inquirySimple&quot;,
+    &quot;sk.iway.iwcm.components.insertScript.rest&quot;,
+    &quot;sk.iway.iwcm.components.media&quot;,
+    &quot;sk.iway.iwcm.components.menu&quot;,
+    &quot;sk.iway.iwcm.components.memory_cleanup.cache_objects&quot;,
+    &quot;sk.iway.iwcm.components.memory_cleanup.database&quot;,
+    &quot;sk.iway.iwcm.components.memory_cleanup.persistent_cache_objects&quot;,
+    &quot;sk.iway.iwcm.components.monitoring.rest&quot;,
+    &quot;sk.iway.iwcm.components.news&quot;,
+    &quot;sk.iway.iwcm.components.perex_groups&quot;,
+    &quot;sk.iway.iwcm.components.proxy.rest&quot;,
+    &quot;sk.iway.iwcm.components.qa.rest&quot;,
+    &quot;sk.iway.iwcm.components.quiz&quot;,
+    &quot;sk.iway.iwcm.components.redirects&quot;,
+    &quot;sk.iway.iwcm.components.reservation&quot;,
+    &quot;sk.iway.iwcm.components.response_header.rest&quot;,
+    &quot;sk.iway.iwcm.components.restaurant_menu.rest&quot;,
+    &quot;sk.iway.iwcm.components.search&quot;,
+    &quot;sk.iway.iwcm.components.seo.rest&quot;,
+    &quot;sk.iway.iwcm.components.sendlink&quot;,
+    &quot;sk.iway.iwcm.components.sitebrowser&quot;,
+    &quot;sk.iway.iwcm.components.stat&quot;,
+    &quot;sk.iway.iwcm.components.structuremirroring&quot;,
+    &quot;sk.iway.iwcm.components.templates&quot;,
+    &quot;sk.iway.iwcm.components.template_groups&quot;,
+    &quot;sk.iway.iwcm.components.todo&quot;,
+    &quot;sk.iway.iwcm.components.tooltip&quot;,
+    &quot;sk.iway.iwcm.components.translation_keys&quot;,
+    &quot;sk.iway.iwcm.components.user&quot;,
+    &quot;sk.iway.iwcm.components.users.groups_approve&quot;,
+    &quot;sk.iway.iwcm.components.users.permgroups&quot;,
+    &quot;sk.iway.iwcm.components.users.userdetail&quot;,
+    &quot;sk.iway.iwcm.components.users.usergroups&quot;,
+    &quot;sk.iway.iwcm.components.welcome&quot;,
+    &quot;sk.iway.webjet.v9&quot;
 })
-<span class="fc" id="L99">public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {</span>
+<span class="fc" id="L123">public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {</span>
 
     @Bean
     public AcceptHeaderLocaleResolver localeResolver() {
-<span class="fc" id="L103">        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {</span>
+<span class="fc" id="L127">        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {</span>
             @Override
             public Locale resolveLocale(HttpServletRequest request) {
-<span class="fc" id="L106">                String lng = Prop.getLng(request, false);</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">                if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
-<span class="fc bfc" id="L108" title="All 2 branches covered.">                if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
-<span class="fc" id="L109">                return org.springframework.util.StringUtils.parseLocaleString(PageLng.getUserLngIso(lng).replaceAll(&quot;-&quot;, &quot;_&quot;));</span>
+<span class="fc" id="L130">                String lng = Prop.getLng(request, false);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">                if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">                if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
+<span class="fc" id="L133">                return org.springframework.util.StringUtils.parseLocaleString(PageLng.getUserLngIso(lng).replaceAll(&quot;-&quot;, &quot;_&quot;));</span>
             }
         };
 
-<span class="fc" id="L113">        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString(&quot;defaultLanguage&quot;)).replaceAll(&quot;-&quot;, &quot;_&quot;)));</span>
-<span class="fc" id="L114">        return localeResolver;</span>
+<span class="fc" id="L137">        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString(&quot;defaultLanguage&quot;)).replaceAll(&quot;-&quot;, &quot;_&quot;)));</span>
+<span class="fc" id="L138">        return localeResolver;</span>
     }
 
     @Bean(name = &quot;multipartResolver&quot;)
     public CommonsMultipartResolver multipartResolver() {
-<span class="fc" id="L119">        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();</span>
-<span class="fc" id="L120">        multipartResolver.setMaxUploadSize(-1);</span>
-<span class="fc" id="L121">        return multipartResolver;</span>
+<span class="fc" id="L143">        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();</span>
+<span class="fc" id="L144">        multipartResolver.setMaxUploadSize(-1);</span>
+<span class="fc" id="L145">        return multipartResolver;</span>
     }
 
     /**
@@ -127,18 +151,18 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
      */
     @Bean(name = &quot;conversionService&quot;)
     public ConversionService conversionService() {
-<span class="fc" id="L130">        ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();</span>
-<span class="fc" id="L131">        conversionServiceFactoryBean.afterPropertiesSet();</span>
-<span class="fc" id="L132">        return conversionServiceFactoryBean.getObject();</span>
+<span class="fc" id="L154">        ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();</span>
+<span class="fc" id="L155">        conversionServiceFactoryBean.afterPropertiesSet();</span>
+<span class="fc" id="L156">        return conversionServiceFactoryBean.getObject();</span>
     }
 
     @Override
     public void configureSecurity(HttpSecurity http) throws Exception {
         //add logon filter using API token
-<span class="fc" id="L138">        http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);</span>
+<span class="fc" id="L162">        http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);</span>
 
         //add SetCharacterEncodingFilter for setting RequestBean and other system stuff, must be after ApiTokenAuthFilter because it needs logged user
-<span class="fc" id="L141">        http.addFilterAfter(new sk.iway.iwcm.SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);</span>
-<span class="fc" id="L142">    }</span>
+<span class="fc" id="L165">        http.addFilterAfter(new sk.iway.iwcm.SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);</span>
+<span class="fc" id="L166">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">GalleryImporter.java</span></div><h1>GalleryImporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">GalleryImporter.java</span></div><h1>GalleryImporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
 
 import java.awt.Dimension;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.gallery.GalleryBean;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.gallery.GalleryDimension;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.SyncDirWriterService;
 import sk.iway.iwcm.sync.export.Content;
 
 /**
@@ -26,105 +29,179 @@ import sk.iway.iwcm.sync.export.Content;
  *@created      Date: 26.6.2012 17:38:43
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-<span class="nc" id="L29">public class GalleryImporter</span>
+<span class="nc" id="L32">public class GalleryImporter</span>
 {
+
+	private static final String GALLERY_INFO_PREFIX = &quot;galleryInfo_&quot;;
+	private static final String GALLERY_IMAGE_PREFIX = &quot;galleryImage_&quot;;
+	private static final String PRODUCTS_PATH = &quot;/images/gallery/products&quot;;
 
 	public static List&lt;ContentGalleryBean.Info&gt; getGalleryInfos(Content content)
 	{
-<span class="fc" id="L34">		List&lt;ContentGalleryBean.Info&gt; infoBeans = new ArrayList&lt;ContentGalleryBean.Info&gt;();</span>
-<span class="pc bpc" id="L35" title="1 of 2 branches missed.">		if (null == content) return infoBeans;</span>
+<span class="fc" id="L41">		List&lt;ContentGalleryBean.Info&gt; infoBeans = new ArrayList&lt;ContentGalleryBean.Info&gt;();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		if (null == content) return infoBeans;</span>
 
-<span class="pc bpc" id="L37" title="1 of 2 branches missed.">		for (Numbered&lt;Content.GalleryInfo&gt; remoteInfo : Numbered.list(content.getGalleryInfos()))</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">		for (Numbered&lt;Content.GalleryInfo&gt; remoteInfo : Numbered.list(content.getGalleryInfos()))</span>
 		{
-<span class="nc" id="L39">			Content.GalleryInfo localInfo = getLocalGalleryInfo(remoteInfo.item);</span>
-<span class="nc" id="L40">			infoBeans.add(new ContentGalleryBean.Info(remoteInfo.number, remoteInfo.item, localInfo));</span>
-<span class="nc" id="L41">		}</span>
-<span class="fc" id="L42">		return infoBeans;</span>
+<span class="nc" id="L46">			Content.GalleryInfo localInfo = getLocalGalleryInfo(remoteInfo.item);</span>
+<span class="nc" id="L47">			infoBeans.add(new ContentGalleryBean.Info(remoteInfo.number, remoteInfo.item, localInfo));</span>
+<span class="nc" id="L48">		}</span>
+<span class="fc" id="L49">		return infoBeans;</span>
 	}
 
 	public static List&lt;ContentGalleryBean.Image&gt; getGalleryImages(Content content, HttpServletRequest request)
 	{
-<span class="nc" id="L47">		List&lt;ContentGalleryBean.Image&gt; imageBeans = new ArrayList&lt;ContentGalleryBean.Image&gt;();</span>
-<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (null == content) return imageBeans;</span>
+<span class="nc" id="L54">		List&lt;ContentGalleryBean.Image&gt; imageBeans = new ArrayList&lt;ContentGalleryBean.Image&gt;();</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (null == content) return imageBeans;</span>
 
-<span class="nc bnc" id="L50" title="All 2 branches missed.">		for (Numbered&lt;Map&lt;String, GalleryBean&gt;&gt; remoteImageTranslations : Numbered.list(content.getGalleryImages()))</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		for (Numbered&lt;Map&lt;String, GalleryBean&gt;&gt; remoteImageTranslations : Numbered.list(content.getGalleryImages()))</span>
 		{
-<span class="nc" id="L52">			GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();</span>
-<span class="nc" id="L53">			GalleryBean localImage = getLocalGalleryImage(remoteImage, request);</span>
-<span class="nc" id="L54">			imageBeans.add(new ContentGalleryBean.Image(remoteImageTranslations.number, remoteImage, localImage));</span>
-<span class="nc" id="L55">		}</span>
-<span class="nc" id="L56">		return imageBeans;</span>
+<span class="nc" id="L59">			GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();</span>
+<span class="nc" id="L60">			GalleryBean localImage = getLocalGalleryImage(remoteImage, request);</span>
+<span class="nc" id="L61">			imageBeans.add(new ContentGalleryBean.Image(remoteImageTranslations.number, remoteImage, localImage));</span>
+<span class="nc" id="L62">		}</span>
+<span class="nc" id="L63">		return imageBeans;</span>
 	}
 
-	public static void importGalleries(HttpServletRequest request, Content content)
+	public static void importGalleries(HttpServletRequest request, Content content, PrintWriter writer)
 	{
-<span class="pc bpc" id="L61" title="1 of 2 branches missed.">		if (null == content) return;</span>
-<span class="pc bpc" id="L62" title="3 of 4 branches missed.">		boolean hasCloudShop = &quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; CloudToolsForCore.hasShop(request);</span>
+		//
+<span class="fc" id="L69">		importGalleriesInfos(request, content, writer);</span>
 
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		for (Numbered&lt;Content.GalleryInfo&gt; remoteInfo : Numbered.list(content.getGalleryInfos()))</span>
-		{
-<span class="nc bnc" id="L66" title="All 4 branches missed.">			if (null != request.getParameter(&quot;galleryInfo_&quot; + remoteInfo.number) || request.getAttribute(&quot;syncAll&quot;)!=null)</span>
-			{
-<span class="nc bnc" id="L68" title="All 6 branches missed.">				if(&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; hasCloudShop==false &amp;&amp; remoteInfo.item.getInfo().getGalleryPath().equals(&quot;/images/gallery/products&quot;)) continue;</span>
-<span class="nc" id="L69">				createLocalGalleryInfo(remoteInfo.item, request);</span>
-			}
-<span class="nc" id="L71">		}</span>
+		//
+<span class="fc" id="L72">		importGalleriesImages(request, content, writer);</span>
+<span class="fc" id="L73">	}</span>
 
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		for (Numbered&lt;Map&lt;String, GalleryBean&gt;&gt; remoteImageTranslations : Numbered.list(content.getGalleryImages()))</span>
+	public static void importGalleriesInfos(HttpServletRequest request, Content content, PrintWriter writer) {
+<span class="fc" id="L76">		Prop prop = Prop.getInstance(request);</span>
+		//Prepare HTML with progress
+<span class="fc" id="L78">		SyncDirWriterService.prepareProgress(prop.getText(&quot;components.syncDirAction.progress.syncingGalleryInfos&quot;), &quot;galleriesInfosImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingGalleryInfo&quot;) + &quot;: - / -&quot;, writer);</span>
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">		if (null == content) return;</span>
+
+<span class="fc" id="L82">		Map&lt;String, String&gt; selectedGalleryInfosMap = SyncDirWriterService.getOptionsMap(GALLERY_INFO_PREFIX, request);</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">		if(selectedGalleryInfosMap.size() &lt; 1) return;</span>
+
+<span class="nc" id="L85">		int importedGalleriesInfosCount = 1;</span>
+<span class="nc" id="L86">		int galleriesInfosToImportCount = 0;</span>
+<span class="nc" id="L87">		String installName  = Constants.getInstallName();</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		boolean hasCloudShop = &quot;cloud&quot;.equals(installName) &amp;&amp; CloudToolsForCore.hasShop(request);</span>
+<span class="nc" id="L89">		Iterable&lt;Numbered&lt;Content.GalleryInfo&gt;&gt; galleriesInfosToImport = Numbered.list(content.getGalleryInfos());</span>
+
+		//Get number of all galleries infos to import
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (Numbered&lt;Content.GalleryInfo&gt; remoteInfo : galleriesInfosToImport)</span>
 		{
-<span class="nc bnc" id="L75" title="All 4 branches missed.">			if (null != request.getParameter(&quot;galleryImage_&quot; + remoteImageTranslations.number) || request.getAttribute(&quot;syncAll&quot;)!=null)</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (selectedGalleryInfosMap.get(GALLERY_INFO_PREFIX + remoteInfo.number) != null)</span>
 			{
-<span class="nc" id="L77">				GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();</span>
-<span class="nc bnc" id="L78" title="All 6 branches missed.">				if(&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; hasCloudShop==false &amp;&amp; remoteImage.getImagePath().startsWith(&quot;/images/gallery/products&quot;)) continue;</span>
-<span class="nc" id="L79">				createLocalGalleryImage(remoteImage);</span>
+<span class="nc bnc" id="L96" title="All 6 branches missed.">				if(&quot;cloud&quot;.equals(installName) &amp;&amp; hasCloudShop==false &amp;&amp; remoteInfo.item.getInfo().getGalleryPath().equals(PRODUCTS_PATH)) continue;</span>
+<span class="nc" id="L97">				galleriesInfosToImportCount++;</span>
 			}
-<span class="nc" id="L81">		}</span>
-<span class="fc" id="L82">	}</span>
+<span class="nc" id="L99">		}</span>
+
+		//Start importing + update progress
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (Numbered&lt;Content.GalleryInfo&gt; remoteInfo : galleriesInfosToImport)</span>
+		{
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			if (selectedGalleryInfosMap.get(GALLERY_INFO_PREFIX + remoteInfo.number) != null)</span>
+			{
+<span class="nc bnc" id="L106" title="All 6 branches missed.">				if(&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; hasCloudShop==false &amp;&amp; remoteInfo.item.getInfo().getGalleryPath().equals(PRODUCTS_PATH)) continue;</span>
+
+<span class="nc" id="L108">				SyncDirWriterService.updateProgress(&quot;galleriesInfosImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingGalleryInfo&quot;) + &quot;: &quot; + importedGalleriesInfosCount + &quot; / &quot; + galleriesInfosToImportCount, writer);</span>
+<span class="nc" id="L109">				importedGalleriesInfosCount++;</span>
+
+<span class="nc" id="L111">				createLocalGalleryInfo(remoteInfo.item, request);</span>
+			}
+<span class="nc" id="L113">		}</span>
+<span class="nc" id="L114">	}</span>
+
+	public static void importGalleriesImages(HttpServletRequest request, Content content, PrintWriter writer) {
+<span class="fc" id="L117">		Prop prop = Prop.getInstance(request);</span>
+		//Prepare HTML with progress
+<span class="fc" id="L119">		SyncDirWriterService.prepareProgress(prop.getText(&quot;components.syncDirAction.progress.syncingGalleryImages&quot;), &quot;galleriesImagesImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingGalleryImage&quot;) + &quot;: - / -&quot;, &quot;border-bottom&quot;, writer);</span>
+
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">		if (null == content) return;</span>
+
+		//
+<span class="fc" id="L124">		Map&lt;String, String&gt; selectedGalleryImagesMap = SyncDirWriterService.getOptionsMap(GALLERY_IMAGE_PREFIX, request);</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">		if(selectedGalleryImagesMap.size() &lt; 1) return;</span>
+
+<span class="nc" id="L127">		String installName  = Constants.getInstallName();</span>
+<span class="nc bnc" id="L128" title="All 4 branches missed.">		boolean hasCloudShop = &quot;cloud&quot;.equals(installName) &amp;&amp; CloudToolsForCore.hasShop(request);</span>
+<span class="nc" id="L129">		Iterable&lt;Numbered&lt;Map&lt;String,GalleryBean&gt;&gt;&gt; galleriesImagesToImport = Numbered.list(content.getGalleryImages());</span>
+
+<span class="nc" id="L131">		int importedGalleriesImagesCount = 1;</span>
+<span class="nc" id="L132">		int galleriesImagesToImportCount = 0;</span>
+
+		//Get number of all galleries images to import
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (Numbered&lt;Map&lt;String, GalleryBean&gt;&gt; remoteImageTranslations : galleriesImagesToImport)</span>
+		{
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (selectedGalleryImagesMap.get(GALLERY_IMAGE_PREFIX + remoteImageTranslations.number) != null)</span>
+			{
+<span class="nc" id="L139">				GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();</span>
+<span class="nc bnc" id="L140" title="All 6 branches missed.">				if(&quot;cloud&quot;.equals(installName) &amp;&amp; hasCloudShop==false &amp;&amp; remoteImage.getImagePath().startsWith(PRODUCTS_PATH)) continue;</span>
+<span class="nc" id="L141">				galleriesImagesToImportCount++;</span>
+			}
+<span class="nc" id="L143">		}</span>
+
+		//Start importing + update progress
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		for (Numbered&lt;Map&lt;String, GalleryBean&gt;&gt; remoteImageTranslations : galleriesImagesToImport)</span>
+		{
+<span class="nc bnc" id="L148" title="All 2 branches missed.">			if (selectedGalleryImagesMap.get(GALLERY_IMAGE_PREFIX + remoteImageTranslations.number) != null)</span>
+			{
+<span class="nc" id="L150">				GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();</span>
+<span class="nc bnc" id="L151" title="All 6 branches missed.">				if(&quot;cloud&quot;.equals(installName) &amp;&amp; hasCloudShop==false &amp;&amp; remoteImage.getImagePath().startsWith(PRODUCTS_PATH)) continue;</span>
+
+<span class="nc" id="L153">				SyncDirWriterService.updateProgress(&quot;galleriesImagesImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingGalleryImage&quot;) + &quot;: &quot; + importedGalleriesImagesCount + &quot; / &quot; + galleriesImagesToImportCount, writer);</span>
+<span class="nc" id="L154">				importedGalleriesImagesCount++;</span>
+
+<span class="nc" id="L156">				createLocalGalleryImage(remoteImage);</span>
+			}
+<span class="nc" id="L158">		}</span>
+<span class="nc" id="L159">	}</span>
 
 	private static Content.GalleryInfo getLocalGalleryInfo(Content.GalleryInfo remoteInfo)
 	{
-<span class="nc" id="L86">		String path = remoteInfo.getInfo().getGalleryPath();</span>
-<span class="nc" id="L87">		GalleryDimension info = GalleryDB.getGalleryInfo(path, -1);</span>
-<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (info.getGalleryId() &lt; 0) return null;</span>
+<span class="nc" id="L163">		String path = remoteInfo.getInfo().getGalleryPath();</span>
+<span class="nc" id="L164">		GalleryDimension info = GalleryDB.getGalleryInfo(path, -1);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (info.getGalleryId() &lt; 0) return null;</span>
 
-<span class="nc" id="L90">		Dimension[] dim = GalleryDB.getDimension(path);</span>
-<span class="nc" id="L91">		Content.GalleryInfo localInfo = new Content.GalleryInfo();</span>
-<span class="nc" id="L92">		localInfo.setInfo(info);</span>
-<span class="nc" id="L93">		localInfo.setDim(dim[0]);</span>
-<span class="nc" id="L94">		localInfo.setDimNormal(dim[1]);</span>
-<span class="nc" id="L95">		return localInfo;</span>
+<span class="nc" id="L167">		Dimension[] dim = GalleryDB.getDimension(path);</span>
+<span class="nc" id="L168">		Content.GalleryInfo localInfo = new Content.GalleryInfo();</span>
+<span class="nc" id="L169">		localInfo.setInfo(info);</span>
+<span class="nc" id="L170">		localInfo.setDim(dim[0]);</span>
+<span class="nc" id="L171">		localInfo.setDimNormal(dim[1]);</span>
+<span class="nc" id="L172">		return localInfo;</span>
 	}
 
 	private static GalleryBean getLocalGalleryImage(GalleryBean remoteImage, HttpServletRequest request)
 	{
-<span class="nc" id="L100">		int id = GalleryDB.getImageId(remoteImage.getImagePath(), remoteImage.getImageName());</span>
-<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (id &lt; 0) return null;</span>
+<span class="nc" id="L177">		int id = GalleryDB.getImageId(remoteImage.getImagePath(), remoteImage.getImageName());</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (id &lt; 0) return null;</span>
 
-<span class="nc" id="L103">		return GalleryDB.getImageByID(id, request, Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="nc" id="L180">		return GalleryDB.getImageByID(id, request, Constants.getString(&quot;defaultLanguage&quot;));</span>
 	}
 
 	private static boolean createLocalGalleryInfo(Content.GalleryInfo remoteInfo, HttpServletRequest request)
 	{
-<span class="nc" id="L108">		GalleryDB.changeDimension(null, remoteInfo.getInfo().getGalleryPath(), remoteInfo.getDim(), remoteInfo.getDimNormal(), request);</span>
-<span class="nc" id="L109">		return true;</span>
+<span class="nc" id="L185">		GalleryDB.changeDimension(null, remoteInfo.getInfo().getGalleryPath(), remoteInfo.getDim(), remoteInfo.getDimNormal(), request);</span>
+<span class="nc" id="L186">		return true;</span>
 	}
 
 	private static boolean createLocalGalleryImage(GalleryBean remoteImage)
 	{
-<span class="nc" id="L114">		String language = Constants.getString(&quot;defaultLanguage&quot;);</span>
-<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (Tools.isEmpty(language)) language = &quot;sk&quot;;</span>
-<span class="nc" id="L116">		String path = remoteImage.getImagePath();</span>
-<span class="nc" id="L117">		String name = remoteImage.getImageName();</span>
-<span class="nc" id="L118">		int id = GalleryDB.setImage(path, name); //GalleryDB.getImageId(path, name);</span>
-<span class="nc" id="L119">		GalleryDB.updateImageItem(id, &quot;short&quot;, remoteImage.getShortDescription(), path, name, language);</span>
-<span class="nc" id="L120">		GalleryDB.updateImageItem(id, &quot;long&quot;, remoteImage.getLongDescription(), path, name, language);</span>
-<span class="nc" id="L121">		GalleryDB.updateImageItem(id, &quot;author&quot;, remoteImage.getAuthor(), path, name, language);</span>
-<span class="nc" id="L122">		GalleryDB.updateImageItem(id, &quot;priority&quot;, &quot;&quot; + remoteImage.getSortPriority(), path, name, language);</span>
-<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (null != remoteImage.getUploadDateNull())</span>
+<span class="nc" id="L191">		String language = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (Tools.isEmpty(language)) language = &quot;sk&quot;;</span>
+<span class="nc" id="L193">		String path = remoteImage.getImagePath();</span>
+<span class="nc" id="L194">		String name = remoteImage.getImageName();</span>
+<span class="nc" id="L195">		int id = GalleryDB.setImage(path, name); //GalleryDB.getImageId(path, name);</span>
+<span class="nc" id="L196">		GalleryDB.updateImageItem(id, &quot;short&quot;, remoteImage.getShortDescription(), path, name, language);</span>
+<span class="nc" id="L197">		GalleryDB.updateImageItem(id, &quot;long&quot;, remoteImage.getLongDescription(), path, name, language);</span>
+<span class="nc" id="L198">		GalleryDB.updateImageItem(id, &quot;author&quot;, remoteImage.getAuthor(), path, name, language);</span>
+<span class="nc" id="L199">		GalleryDB.updateImageItem(id, &quot;priority&quot;, &quot;&quot; + remoteImage.getSortPriority(), path, name, language);</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (null != remoteImage.getUploadDateNull())</span>
 		{
-<span class="nc" id="L125">			GalleryDB.updateImageItem(id, &quot;upload&quot;, &quot;&quot; + remoteImage.getUploadDateNull(), path, name, language);</span>
+<span class="nc" id="L202">			GalleryDB.updateImageItem(id, &quot;upload&quot;, &quot;&quot; + remoteImage.getUploadDateNull(), path, name, language);</span>
 		}
-<span class="nc" id="L127">		return false;</span>
+<span class="nc" id="L204">		return false;</span>
 	}
 
 }

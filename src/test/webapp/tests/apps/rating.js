@@ -30,7 +30,7 @@ Scenario("Rating action testing", async ({ I, DT, DTE }) => {
         I.click(DT.btn.add_button);
         DTE.waitForEditor();
         I.waitForElement("#DTE_Field_title");
-        I.click("#DTE_Field_title");
+        I.clickCss("#DTE_Field_title");
         I.fillField("#DTE_Field_title", docName);
         DTE.save();
 

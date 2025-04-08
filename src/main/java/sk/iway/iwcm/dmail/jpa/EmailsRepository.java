@@ -49,4 +49,8 @@ public interface EmailsRepository extends DomainIdRepository<EmailsEntity, Long>
     @Modifying
     public void deleteByCampainIdAndDomainId(Long campainId, Integer domainId);
 
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM EmailsEntity ee WHERE ee.campainId = :campainId AND ee.recipientUserId != -1 AND ee.domainId = :domainId")
+    public void deleteByCampainIdAndDomainIdWhereRecipientUserIsSet(@Param("campainId") Integer campainId, @Param("domainId") Integer domainId);
 }

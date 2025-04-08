@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryEntity.java</span></div><h1>GalleryEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GalleryEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.gallery</a> &gt; <span class="el_source">GalleryEntity.java</span></div><h1>GalleryEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.gallery;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
@@ -25,15 +26,15 @@ import java.util.Date;
 @Setter
 public class GalleryEntity {
 
-<span class="fc" id="L28">    public GalleryEntity() {</span>
+<span class="fc" id="L29">    public GalleryEntity() {</span>
         //
-<span class="fc" id="L30">    }</span>
+<span class="fc" id="L31">    }</span>
 
     @PrePersist
     public void prePersist() {
-<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        if (sendCount==null) sendCount = 0;</span>
-<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (domainId==null) domainId = CloudToolsForCore.getDomainId();</span>
-<span class="fc" id="L36">    }</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        if (sendCount==null) sendCount = 0;</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        if (domainId==null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L37">    }</span>
 
     @Id
     @GeneratedValue(generator=&quot;WJGen_gallery&quot;)
@@ -46,6 +47,7 @@ public class GalleryEntity {
     @DataTableColumn(inputType = DataTableColumnType.GALLERY_IMAGE, title=&quot;editor.perex.image&quot;, hiddenEditor = true)
     private String datatableImage;
 
+    @NotBlank
     @Size(max = 255)
     @Column(name = &quot;image_name&quot;)
     @DataTableColumn(inputType = {DataTableColumnType.OPEN_EDITOR}, tab = &quot;metadata&quot;, title=&quot;[[#{components.gallery.fileName}]]&quot;)
@@ -57,10 +59,18 @@ public class GalleryEntity {
         editor = {
             @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;),
+            })
+    })
+    private String imagePath;    
+    
+    @Column(name = &quot;image_source&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title=&quot;components.gallery.image_source&quot;, tab = &quot;metadata&quot;,
+        editor = {
+            @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;after&quot;)
             })
     })
-    private String imagePath;
+    private String imageSource;
 
     @Size(max = 1000)
     @Column(name = &quot;s_description_sk&quot;)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DateTimeDecorator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.displaytag</a> &gt; <span class="el_source">DateTimeDecorator.java</span></div><h1>DateTimeDecorator.java</h1><pre class="source lang-java linenums">package sk.iway.displaytag;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DateTimeDecorator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.displaytag</a> &gt; <span class="el_source">DateTimeDecorator.java</span></div><h1>DateTimeDecorator.java</h1><pre class="source lang-java linenums">package sk.iway.displaytag;
 
 import java.util.Date;
 
@@ -20,17 +20,17 @@ import sk.iway.iwcm.Tools;
  *@created      Date: 3.12.2005 16:59:47
  *@modified     $Date: 2007/09/07 07:53:36 $
  */
-<span class="nc" id="L23">public class DateTimeDecorator implements DisplaytagColumnDecorator</span>
+<span class="fc" id="L23">public class DateTimeDecorator implements DisplaytagColumnDecorator</span>
 {
 	@Override
 	public final String decorate(Object columnValue, PageContext pageContext, MediaTypeEnum media)
    {		
-<span class="nc bnc" id="L28" title="All 2 branches missed.">		if(columnValue != null) </span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">		if(columnValue != null) </span>
 		{
-<span class="nc bnc" id="L30" title="All 2 branches missed.">			if ( columnValue instanceof Date)</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">			if ( columnValue instanceof Date)</span>
 			{
-<span class="nc" id="L32">				Date date = (Date) columnValue;</span>
-<span class="nc" id="L33">				return(Tools.formatDateTime(date.getTime()));</span>
+<span class="fc" id="L32">				Date date = (Date) columnValue;</span>
+<span class="fc" id="L33">				return(Tools.formatDateTime(date.getTime()));</span>
 			}
 			
 			//mozno je to long, skus sparsovat

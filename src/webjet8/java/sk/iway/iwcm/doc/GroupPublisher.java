@@ -17,6 +17,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.cron.CronFacade;
 
 /**
  *  GroupPublisher.java
@@ -127,7 +128,7 @@ public class GroupPublisher
 
 	/**
 	 * Publishes scheduled changes in {@link GroupDetails} attributes
-	 * Called main because of Cron's naming restrictions, @see {@link Crontab}
+	 * Called main because of Cron's naming restrictions, @see {@link CronFacade}
 	 */
 	public static void main(String[] args)
 	{

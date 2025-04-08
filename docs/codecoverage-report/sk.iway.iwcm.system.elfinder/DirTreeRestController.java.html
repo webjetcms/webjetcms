@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">DirTreeRestController.java</span></div><h1>DirTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DirTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">DirTreeRestController.java</span></div><h1>DirTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,57 +34,71 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="fc bfc" id="L34" title="All 2 branches covered.">        if (&quot;-1&quot;.equals(parentPath)) parentPath = &quot;/&quot;;</span>
 
 <span class="fc" id="L36">        boolean isRoot = &quot;/&quot;.equals(parentPath);</span>
+<span class="fc" id="L37">        Identity user = getUser();</span>
 
-<span class="fc" id="L38">        Identity user = getUser();</span>
+        List&lt;DirTreeItem&gt; items;
 
-        List&lt;IwcmFile&gt; files;
-<span class="pc bpc" id="L41" title="1 of 4 branches missed.">        if (isRoot || user.isFolderWritable(parentPath)) {</span>
-<span class="fc" id="L42">            IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));</span>
-<span class="fc" id="L43">            files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -&gt; {</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">                if (file.isFile()) return false;</span>
+<span class="fc" id="L41">        String click = getRequest().getParameter(&quot;click&quot;);</span>
+<span class="pc bpc" id="L42" title="4 of 10 branches missed.">        if (&quot;-1&quot;.equals(item.getId()) &amp;&amp; isRoot &amp;&amp; click != null &amp;&amp; click.contains(&quot;-root&quot;) &amp;&amp; user.isFolderWritable(&quot;/&quot;)) {</span>
+            //show Root folder for first call (id is sent as -1 instead of / for first request)
+<span class="fc" id="L44">            DirTreeItem rootItem = new DirTreeItem(new IwcmFile(Tools.getRealPath(&quot;/&quot;)));</span>
+<span class="fc" id="L45">            rootItem.setId(&quot;/&quot;);</span>
+<span class="fc" id="L46">            rootItem.setText(getProp().getText(&quot;stat_settings.group_id&quot;));</span>
+<span class="fc" id="L47">            rootItem.setIcon(&quot;ti ti-home&quot;);</span>
+<span class="fc" id="L48">            rootItem.getState().setLoaded(true);</span>
+<span class="fc" id="L49">            rootItem.getState().setOpened(true);</span>
+<span class="fc" id="L50">            items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L51">            items.add(rootItem);</span>
+<span class="fc" id="L52">        } else {</span>
+            List&lt;IwcmFile&gt; files;
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">            if (isRoot || user.isFolderWritable(parentPath)) {</span>
+<span class="fc" id="L55">                IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));</span>
+<span class="fc" id="L56">                files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -&gt; {</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                    if (file.isFile()) return false;</span>
 
-                //System.out.println(&quot;path=&quot;+file.getVirtualPath()+&quot; isRoot=&quot;+isRoot+&quot; isJarPackaging=&quot;+file.isJarPackaging());
-<span class="pc bpc" id="L47" title="1 of 4 branches missed.">                if (isRoot==false &amp;&amp; file.isJarPackaging()) return false;</span>
+                    //System.out.println(&quot;path=&quot;+file.getVirtualPath()+&quot; isRoot=&quot;+isRoot+&quot; isJarPackaging=&quot;+file.isJarPackaging());
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">                    if (isRoot==false &amp;&amp; file.isJarPackaging()) return false;</span>
 
-<span class="pc bpc" id="L49" title="1 of 2 branches missed.">                if (user.isFolderWritable(file.getVirtualPath())==false) return false;</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">                    if (user.isFolderWritable(file.getVirtualPath())==false) return false;</span>
 
-<span class="fc" id="L51">                return true;</span>
-            })));
-<span class="fc" id="L53">        } else {</span>
-<span class="nc" id="L54">            files = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L64">                    return true;</span>
+                })));
+<span class="fc" id="L66">            } else {</span>
+<span class="nc" id="L67">                files = new ArrayList&lt;&gt;();</span>
+            }
+
+<span class="fc" id="L70">            items = files.stream().map(f -&gt; new DirTreeItem(f)).collect(Collectors.toList());</span>
         }
 
-<span class="fc" id="L57">        List&lt;DirTreeItem&gt; items = files.stream().map(f -&gt; new DirTreeItem(f)).collect(Collectors.toList());</span>
-
-<span class="fc" id="L59">        result.put(&quot;result&quot;, true);</span>
-<span class="fc" id="L60">        result.put(&quot;items&quot;, items);</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc" id="L73">        result.put(&quot;result&quot;, true);</span>
+<span class="fc" id="L74">        result.put(&quot;items&quot;, items);</span>
+<span class="fc" id="L75">    }</span>
 
     @Override
     protected void move(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
-<span class="nc" id="L65">        result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L66">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
-<span class="nc" id="L67">        return;</span>
-    }
-
-    @Override
-    protected void save(Map&lt;String, Object&gt; result, DirTreeItem item) {
-<span class="nc" id="L72">        result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L73">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
-<span class="nc" id="L74">        return;</span>
-    }
-
-    @Override
-    protected void delete(Map&lt;String, Object&gt; result, DirTreeItem item) {
 <span class="nc" id="L79">        result.put(&quot;result&quot;, false);</span>
 <span class="nc" id="L80">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
 <span class="nc" id="L81">        return;</span>
     }
 
     @Override
+    protected void save(Map&lt;String, Object&gt; result, DirTreeItem item) {
+<span class="nc" id="L86">        result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L87">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
+<span class="nc" id="L88">        return;</span>
+    }
+
+    @Override
+    protected void delete(Map&lt;String, Object&gt; result, DirTreeItem item) {
+<span class="nc" id="L93">        result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L94">        result.put(&quot;error&quot;, getProp().getText(&quot;components.jstree.access_denied__group&quot;));</span>
+<span class="nc" id="L95">        return;</span>
+    }
+
+    @Override
     public boolean checkAccessAllowed(HttpServletRequest request) {
         //prava kontrolujeme hore v cykle
-<span class="fc" id="L87">        return true;</span>
+<span class="fc" id="L101">        return true;</span>
     }
 
 }

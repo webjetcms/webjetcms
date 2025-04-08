@@ -37,8 +37,7 @@ public class AdminlogFile
 
 	/**
 	 * @param timestamp
-	 * @param userId
-	 * @param remoteIp
+	 * @param requestBean
 	 * @param logType
 	 * @param description
 	 */

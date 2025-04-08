@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FsService.java</span></div><h1>FsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FsService.java</span></div><h1>FsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -313,7 +313,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 <span class="fc" id="L313">					String relativePath = new String(Base64.decodeBase64(localHash.getBytes()));</span>
 
 					//bad hackers CVE-2022-26960
-<span class="fc bfc" id="L316" title="All 4 branches covered.">					if (hash.startsWith(&quot;iwcm_doc_group_volume&quot;)==false &amp;&amp; FileBrowserTools.hasForbiddenSymbol(relativePath)) return null;</span>
+<span class="pc bpc" id="L316" title="1 of 4 branches missed.">					if (hash.startsWith(&quot;iwcm_doc_group_volume&quot;)==false &amp;&amp; FileBrowserTools.hasForbiddenSymbol(relativePath)) return null;</span>
 
 <span class="fc" id="L318">					return v.fromPath(relativePath);</span>
 				}
@@ -394,27 +394,27 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	@Override
     public FsItemEx[] find(FsItemFilter filter, FsItemEx target, boolean recursive)
     {
-<span class="fc" id="L397">        List&lt;FsItemEx&gt; listFsItemsEx = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L398" title="2 of 4 branches missed.">        if(getVolumes() != null &amp;&amp; getVolumes().length &gt;0)</span>
+<span class="nc" id="L397">        List&lt;FsItemEx&gt; listFsItemsEx = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L398" title="All 4 branches missed.">        if(getVolumes() != null &amp;&amp; getVolumes().length &gt;0)</span>
         {
-<span class="fc bfc" id="L400" title="All 2 branches covered.">            for(FsVolume volume:getVolumes())</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">            for(FsVolume volume:getVolumes())</span>
             {
-<span class="fc bfc" id="L402" title="All 2 branches covered.">				if (target.getVolume().equals(volume) == false) continue;</span>
+<span class="nc bnc" id="L402" title="All 2 branches missed.">				if (target.getVolume().equals(volume) == false) continue;</span>
 
-<span class="fc bfc" id="L404" title="All 2 branches covered.">				if (volume instanceof IwcmFsVolume) {</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">				if (volume instanceof IwcmFsVolume) {</span>
 					try {
-<span class="fc" id="L406">						FsItem root = ((IwcmFsVolume)volume).fromPath(target.getPath());</span>
-<span class="fc" id="L407">						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet&lt;&gt;()));</span>
+<span class="nc" id="L406">						FsItem root = ((IwcmFsVolume)volume).fromPath(target.getPath());</span>
+<span class="nc" id="L407">						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet&lt;&gt;()));</span>
 <span class="nc" id="L408">					} catch (Exception ex) {</span>
 <span class="nc" id="L409">						Logger.error(ex);</span>
-<span class="pc" id="L410">					}</span>
-<span class="pc bpc" id="L411" title="1 of 2 branches missed.">				} else if (volume instanceof IwcmDocGroupFsVolume) {</span>
+<span class="nc" id="L410">					}</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">				} else if (volume instanceof IwcmDocGroupFsVolume) {</span>
 					try {
-<span class="fc" id="L413">						FsItem root = ((IwcmDocGroupFsVolume)volume).fromPath(target.getPath());</span>
-<span class="fc" id="L414">						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet&lt;&gt;()));</span>
+<span class="nc" id="L413">						FsItem root = ((IwcmDocGroupFsVolume)volume).fromPath(target.getPath());</span>
+<span class="nc" id="L414">						listFsItemsEx.addAll(findRecursively(filter, root, recursive, new HashSet&lt;&gt;()));</span>
 <span class="nc" id="L415">					} catch (Exception ex) {</span>
 <span class="nc" id="L416">						Logger.error(ex);</span>
-<span class="pc" id="L417">					}</span>
+<span class="nc" id="L417">					}</span>
 				} else {
 <span class="nc bnc" id="L419" title="All 2 branches missed.">					for(FsItem item: volume.listChildren(volume.getRoot()))</span>
 					{
@@ -427,9 +427,9 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
             }
         }
         //Logger.debug(this,&quot;listFsItemsEx.size() &quot;+listFsItemsEx.size());
-<span class="fc" id="L430">        FsItemEx[] cwd = new FsItemEx[listFsItemsEx.size()];</span>
-<span class="fc" id="L431">        cwd = listFsItemsEx.toArray(cwd);</span>
-<span class="fc" id="L432">        return cwd;</span>
+<span class="nc" id="L430">        FsItemEx[] cwd = new FsItemEx[listFsItemsEx.size()];</span>
+<span class="nc" id="L431">        cwd = listFsItemsEx.toArray(cwd);</span>
+<span class="nc" id="L432">        return cwd;</span>
     }
 
     private static List&lt;FsItemEx&gt; listFsFiles(FsItem item,FsVolume volume, List&lt;FsItemEx&gt; listFsItemsEx,FsItemFilter filter, FsService fsService)
@@ -463,32 +463,32 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	 */
 	private Collection&lt;FsItemEx&gt; findRecursively(FsItemFilter filter, FsItem root, boolean recursive, Set&lt;String&gt; duplicityCheck)
 	{
-<span class="fc" id="L466">		List&lt;FsItemEx&gt; results = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L467">		FsVolume vol = root.getVolume();</span>
-<span class="fc" id="L468">		FsItem[] childrens = vol.listChildren(root);</span>
-<span class="fc bfc" id="L469" title="All 2 branches covered.">		for (int i=0; i&lt;childrens.length; i++) {</span>
-<span class="fc" id="L470">			FsItem child = childrens[i];</span>
-<span class="fc" id="L471">			FsItemEx item = new FsItemEx(child, this);</span>
+<span class="nc" id="L466">		List&lt;FsItemEx&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L467">		FsVolume vol = root.getVolume();</span>
+<span class="nc" id="L468">		FsItem[] childrens = vol.listChildren(root);</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">		for (int i=0; i&lt;childrens.length; i++) {</span>
+<span class="nc" id="L470">			FsItem child = childrens[i];</span>
+<span class="nc" id="L471">			FsItemEx item = new FsItemEx(child, this);</span>
 			try {
-<span class="fc bfc" id="L473" title="All 2 branches covered.">				if (vol.isFolder(child)) {</span>
-<span class="pc bpc" id="L474" title="1 of 4 branches missed.">					if (recursive &amp;&amp; duplicityCheck.contains(item.getPath())==false) {</span>
-<span class="fc" id="L475">						Collection&lt;FsItemEx&gt; sublist = findRecursively(filter, child, recursive, duplicityCheck);</span>
-<span class="fc bfc" id="L476" title="All 2 branches covered.">						if (sublist.isEmpty()==false) {</span>
-<span class="fc" id="L477">							results.addAll(sublist);</span>
-<span class="fc" id="L478">							duplicityCheck.add(item.getPath());</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">				if (vol.isFolder(child)) {</span>
+<span class="nc bnc" id="L474" title="All 4 branches missed.">					if (recursive &amp;&amp; duplicityCheck.contains(item.getPath())==false) {</span>
+<span class="nc" id="L475">						Collection&lt;FsItemEx&gt; sublist = findRecursively(filter, child, recursive, duplicityCheck);</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">						if (sublist.isEmpty()==false) {</span>
+<span class="nc" id="L477">							results.addAll(sublist);</span>
+<span class="nc" id="L478">							duplicityCheck.add(item.getPath());</span>
 						}
-<span class="fc" id="L480">					}</span>
+<span class="nc" id="L480">					}</span>
 				} else {
-<span class="fc bfc" id="L482" title="All 2 branches covered.">					if (filter.accepts(item)) {</span>
-<span class="fc" id="L483">						results.add(item);</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">					if (filter.accepts(item)) {</span>
+<span class="nc" id="L483">						results.add(item);</span>
 					}
 				}
 <span class="nc" id="L486">			} catch (Exception ex) {</span>
 <span class="nc" id="L487">				Logger.error(ex);</span>
-<span class="fc" id="L488">			}</span>
+<span class="nc" id="L488">			}</span>
 		}
 
-<span class="fc" id="L491">		return results;</span>
+<span class="nc" id="L491">		return results;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

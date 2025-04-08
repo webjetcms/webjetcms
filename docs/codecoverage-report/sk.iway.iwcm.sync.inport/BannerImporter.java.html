@@ -1,13 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">BannerImporter.java</span></div><h1>BannerImporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BannerImporter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.sync.inport</a> &gt; <span class="el_source">BannerImporter.java</span></div><h1>BannerImporter.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.sync.inport;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.banner.BannerDB;
 import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.SyncDirWriterService;
 import sk.iway.iwcm.sync.export.Content;
 
 /**
@@ -21,64 +25,80 @@ import sk.iway.iwcm.sync.export.Content;
  *@created      Date: 15.6.2012 11:08:12
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-<span class="nc" id="L24">public class BannerImporter</span>
+<span class="nc" id="L28">public class BannerImporter</span>
 {
+
+	private static final String BANNER_PREFIX = &quot;banner_&quot;;
 
 	public static List&lt;ContentBannerBean&gt; getBanners(Content content)
 	{
-<span class="fc" id="L29">		List&lt;ContentBannerBean&gt; bannerBeans = new ArrayList&lt;ContentBannerBean&gt;();</span>
-<span class="pc bpc" id="L30" title="1 of 2 branches missed.">		if (null == content) return bannerBeans;</span>
+<span class="fc" id="L35">		List&lt;ContentBannerBean&gt; bannerBeans = new ArrayList&lt;ContentBannerBean&gt;();</span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">		if (null == content) return bannerBeans;</span>
 
-<span class="pc bpc" id="L32" title="1 of 2 branches missed.">		for (Numbered&lt;BannerBean&gt; remoteBanner : Numbered.list(content.getBanners()))</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">		for (Numbered&lt;BannerBean&gt; remoteBanner : Numbered.list(content.getBanners()))</span>
 		{
-<span class="nc" id="L34">			BannerBean localBanner = getLocalBanner(remoteBanner.item);</span>
-<span class="nc" id="L35">			bannerBeans.add(new ContentBannerBean(remoteBanner.number, remoteBanner.item, localBanner));</span>
-<span class="nc" id="L36">		}</span>
-<span class="fc" id="L37">		return bannerBeans;</span>
+<span class="nc" id="L40">			BannerBean localBanner = getLocalBanner(remoteBanner.item);</span>
+<span class="nc" id="L41">			bannerBeans.add(new ContentBannerBean(remoteBanner.number, remoteBanner.item, localBanner));</span>
+<span class="nc" id="L42">		}</span>
+<span class="fc" id="L43">		return bannerBeans;</span>
 	}
 
-	public static void importBanners(HttpServletRequest request, Content content)
-	{
-<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		if (null == content) return;</span>
-<span class="pc bpc" id="L43" title="1 of 2 branches missed.">		for (Numbered&lt;BannerBean&gt; banner : Numbered.list(content.getBanners()))</span>
+	public static void importBanners(HttpServletRequest request, Content content, PrintWriter writer) {
+<span class="fc" id="L47">		Prop prop = Prop.getInstance(request);</span>
+		//
+<span class="fc" id="L49">		SyncDirWriterService.prepareProgress(prop.getText(&quot;components.syncDirAction.progress.syncingBanners&quot;), &quot;bammersImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingBanner&quot;) + &quot;: - / -&quot;, writer);</span>
+
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">		if (null == content) return;</span>
+
+<span class="fc" id="L53">		Map&lt;String, String&gt; selectedBannersMap = SyncDirWriterService.getOptionsMap(BANNER_PREFIX, request);</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">		if(selectedBannersMap.size() &lt; 1) return;</span>
+
+<span class="nc" id="L56">		int importedBannersCount = 1;</span>
+<span class="nc" id="L57">		Iterable&lt;Numbered&lt;BannerBean&gt;&gt; bannersToImport = Numbered.list(content.getBanners());</span>
+<span class="nc" id="L58">		int bannersToImportCount = SyncDirWriterService.getCountToHandle(selectedBannersMap, bannersToImport, BANNER_PREFIX);</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		for (Numbered&lt;BannerBean&gt; banner : bannersToImport)</span>
 		{
-<span class="nc bnc" id="L45" title="All 4 branches missed.">			if (null != request.getParameter(&quot;banner_&quot; + banner.number) || request.getAttribute(&quot;syncAll&quot;)!=null)</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			if (selectedBannersMap.get(BANNER_PREFIX + banner.number) != null)</span>
 			{
-<span class="nc" id="L47">				createLocalContentBanner(banner.item);</span>
+<span class="nc" id="L64">				SyncDirWriterService.updateProgress(&quot;bammersImportCount&quot;, prop.getText(&quot;components.syncDirAction.progress.syncingBanner&quot;) + &quot;: &quot; + importedBannersCount + &quot; / &quot; + bannersToImportCount, writer);</span>
+<span class="nc" id="L65">				importedBannersCount++;</span>
+
+<span class="nc" id="L67">				createLocalContentBanner(banner.item);</span>
 			}
-<span class="nc" id="L49">		}</span>
-<span class="fc" id="L50">	}</span>
+<span class="nc" id="L69">		}</span>
+<span class="nc" id="L70">	}</span>
 
 	/**
 	 * Vrati banner zodpovedajuci importovanemu (rovnaka skupina a meno), alebo null.
-	 * 
+	 *
 	 * @param remoteBanner
 	 * @return
 	 */
 	private static BannerBean getLocalBanner(BannerBean remoteBanner)
 	{
-<span class="nc" id="L60">		List&lt;BannerBean&gt; localBanners = BannerDB.getBanners(remoteBanner.getBannerGroup(), null);  // rovnaka skupina</span>
-<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (BannerBean localBanner : localBanners)</span>
+<span class="nc" id="L80">		List&lt;BannerBean&gt; localBanners = BannerDB.getBanners(remoteBanner.getBannerGroup(), null);  // rovnaka skupina</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (BannerBean localBanner : localBanners)</span>
 		{
-<span class="nc bnc" id="L63" title="All 2 branches missed.">			if (Tools.areSame(remoteBanner.getName(), localBanner.getName()))  // rovnake meno</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (Tools.areSame(remoteBanner.getName(), localBanner.getName()))  // rovnake meno</span>
 			{
-<span class="nc" id="L65">				return localBanner;</span>
+<span class="nc" id="L85">				return localBanner;</span>
 			}
-<span class="nc" id="L67">		}</span>
-<span class="nc" id="L68">		return null;</span>
+<span class="nc" id="L87">		}</span>
+<span class="nc" id="L88">		return null;</span>
 	}
 
 	private static boolean createLocalContentBanner(BannerBean remoteBanner)
 	{
-<span class="nc" id="L73">		BannerBean localBanner = getLocalBanner(remoteBanner);</span>
-<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (null == localBanner)</span>
+<span class="nc" id="L93">		BannerBean localBanner = getLocalBanner(remoteBanner);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (null == localBanner)</span>
 		{
-<span class="nc" id="L76">			remoteBanner.setBannerId(-1);</span>
-<span class="nc" id="L77">			return BannerDB.saveBanner(remoteBanner, -1);</span>
+<span class="nc" id="L96">			remoteBanner.setBannerId(-1);</span>
+<span class="nc" id="L97">			return BannerDB.saveBanner(remoteBanner, -1);</span>
 		}
-<span class="nc" id="L79">		int id = localBanner.getBannerId();</span>
-<span class="nc" id="L80">		remoteBanner.setBannerId(id);</span>
-<span class="nc" id="L81">		return BannerDB.saveBanner(remoteBanner, id);</span>
+<span class="nc" id="L99">		int id = localBanner.getBannerId();</span>
+<span class="nc" id="L100">		remoteBanner.setBannerId(id);</span>
+<span class="nc" id="L101">		return BannerDB.saveBanner(remoteBanner, id);</span>
 	}
 
 }

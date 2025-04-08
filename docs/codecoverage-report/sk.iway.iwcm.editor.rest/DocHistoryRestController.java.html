@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocHistoryRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">DocHistoryRestController.java</span></div><h1>DocHistoryRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocHistoryRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">DocHistoryRestController.java</span></div><h1>DocHistoryRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -58,88 +58,89 @@ public class DocHistoryRestController extends DatatableRestControllerV2&lt;DocHi
 <span class="fc bfc" id="L58" title="All 2 branches covered.">            if(!getUser().isEnabledItem(&quot;cmp_adminlog&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>
 
 <span class="fc" id="L60">            GroupDetails gd = null;</span>
-<span class="fc" id="L61">            DocDB ddb = DocDB.getInstance(true);</span>
-<span class="fc" id="L62">            List&lt;DocBasic&gt; publicableDocs = ddb.getPublicableDocs();</span>
-<span class="fc" id="L63">            List&lt;DocHistoryDto&gt; docDetailsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L61">            DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L62">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L63">            List&lt;DocBasic&gt; publicableDocs = docDB.getPublicableDocs();</span>
+<span class="fc" id="L64">            List&lt;DocHistoryDto&gt; docDetailsList = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L65" title="All 2 branches covered.">            for(DocBasic publicableDoc : publicableDocs) {</span>
-<span class="fc" id="L66">                gd = (GroupsDB.getInstance()).getGroup(publicableDoc.getGroupId());</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">                if(gd != null) { //ak stranka ma adresar, pridam ju do zoznamu</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">                    if (publicableDoc instanceof DocDetails) {</span>
-<span class="fc" id="L69">                        DocHistoryDto dto = DocHistoryDtoMapper.INSTANCE.docToHistoryDto((DocDetails)publicableDoc);</span>
-<span class="fc" id="L70">                        BaseEditorFields ef = new BaseEditorFields();</span>
-<span class="fc" id="L71">                        ef.addRowClass(&quot;is-disabled&quot;);</span>
-<span class="fc" id="L72">                        dto.setEditorFields(ef);</span>
-<span class="fc" id="L73">                        docDetailsList.add(dto);</span>
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                    } else if (publicableDoc instanceof DocHistory) {</span>
-<span class="fc" id="L75">                        docDetailsList.add(DocHistoryDtoMapper.INSTANCE.docHistoryToHistoryDto((DocHistory)publicableDoc));</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            for(DocBasic publicableDoc : publicableDocs) {</span>
+<span class="fc" id="L67">                gd = groupsDB.getGroup(publicableDoc.getGroupId());</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">                if(gd != null) { //ak stranka ma adresar, pridam ju do zoznamu</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">                    if (publicableDoc instanceof DocDetails) {</span>
+<span class="fc" id="L70">                        DocHistoryDto dto = DocHistoryDtoMapper.INSTANCE.docToHistoryDto((DocDetails)publicableDoc);</span>
+<span class="fc" id="L71">                        BaseEditorFields ef = new BaseEditorFields();</span>
+<span class="fc" id="L72">                        ef.addRowClass(&quot;is-disabled&quot;);</span>
+<span class="fc" id="L73">                        dto.setEditorFields(ef);</span>
+<span class="fc" id="L74">                        docDetailsList.add(dto);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                    } else if (publicableDoc instanceof DocHistory) {</span>
+<span class="fc" id="L76">                        docDetailsList.add(DocHistoryDtoMapper.INSTANCE.docHistoryToHistoryDto((DocHistory)publicableDoc));</span>
                     }
                 }
-<span class="fc" id="L78">            }</span>
+<span class="fc" id="L79">            }</span>
 
-<span class="fc" id="L80">            docDetailsList.sort(Comparator.comparing(DocHistoryDto::getPublishStartDate, Comparator.nullsFirst(Comparator.naturalOrder())));</span>
-<span class="fc" id="L81">            page = new DatatablePageImpl&lt;&gt;(docDetailsList);</span>
-<span class="fc" id="L82">        } else {</span>
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">            if(!getUser().isEnabledItem(&quot;menuWebpages&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>
+<span class="fc" id="L81">            docDetailsList.sort(Comparator.comparing(DocHistoryDto::getPublishStartDate, Comparator.nullsFirst(Comparator.naturalOrder())));</span>
+<span class="fc" id="L82">            page = new DatatablePageImpl&lt;&gt;(docDetailsList);</span>
+<span class="fc" id="L83">        } else {</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">            if(!getUser().isEnabledItem(&quot;menuWebpages&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>
 
-<span class="fc" id="L85">            int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
-<span class="fc" id="L86">            int docIdOriginal = docId;</span>
-<span class="fc" id="L87">            int masterDocId = MultigroupMappingDB.getMasterDocId(docId);</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">            docId = masterDocId &gt; 0 ? masterDocId : docId; //ak slave stranka, tak ukazem historiu master stranky</span>
-<span class="fc" id="L89">            List&lt;DocDetails&gt; docDetailsList = historyDB.getHistory(docId, false, false);</span>
+<span class="fc" id="L86">            int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+<span class="fc" id="L87">            int docIdOriginal = docId;</span>
+<span class="fc" id="L88">            int masterDocId = MultigroupMappingDB.getMasterDocId(docId);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            docId = masterDocId &gt; 0 ? masterDocId : docId; //ak slave stranka, tak ukazem historiu master stranky</span>
+<span class="fc" id="L90">            List&lt;DocDetails&gt; docDetailsList = historyDB.getHistory(docId, false, false);</span>
 
-<span class="fc" id="L91">            page = new DatatablePageImpl&lt;&gt;(DocHistoryDtoMapper.INSTANCE.toHistoryDtos(docDetailsList));</span>
+<span class="fc" id="L92">            page = new DatatablePageImpl&lt;&gt;(DocHistoryDtoMapper.INSTANCE.toHistoryDtos(docDetailsList));</span>
 
-<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (docId != docIdOriginal) {</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (docId != docIdOriginal) {</span>
                 //preserve docId from original request, not from multigroup mapping
-<span class="fc bfc" id="L95" title="All 2 branches covered.">                for (DocHistoryDto dto : page.getContent()) {</span>
-<span class="fc" id="L96">                    dto.setDocId(docIdOriginal);</span>
-<span class="fc" id="L97">                }</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                for (DocHistoryDto dto : page.getContent()) {</span>
+<span class="fc" id="L97">                    dto.setDocId(docIdOriginal);</span>
+<span class="fc" id="L98">                }</span>
             }
         }
 
-<span class="fc" id="L101">        processFromEntity(page, ProcessItemAction.GETALL);</span>
-<span class="fc" id="L102">        return page;</span>
+<span class="fc" id="L102">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L103">        return page;</span>
     }
 
     @Override
     public boolean deleteItem(DocHistoryDto entity, long id) {
         //zmazat je mozne len zaznamy v buducnosti
-<span class="nc" id="L108">        DocHistory history = docHistoryRepository.getById(entity.getId());</span>
-<span class="nc bnc" id="L109" title="All 6 branches missed.">        if (history!=null &amp;&amp; Boolean.TRUE.equals(history.getPublicable()) &amp;&amp; history.getPublishStartDate().getTime()&gt;Tools.getNow()) {</span>
-<span class="nc bnc" id="L110" title="All 2 branches missed.">            if (EditorDB.isPageEditable(getUser(), history.getDocId())) {</span>
-<span class="nc" id="L111">                docHistoryRepository.deleteByIdPublicable(history.getId(), true);</span>
-<span class="nc" id="L112">                return true;</span>
+<span class="nc" id="L109">        DocHistory history = docHistoryRepository.getById(entity.getId());</span>
+<span class="nc bnc" id="L110" title="All 6 branches missed.">        if (history!=null &amp;&amp; Boolean.TRUE.equals(history.getPublicable()) &amp;&amp; history.getPublishStartDate().getTime()&gt;Tools.getNow()) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (EditorDB.isPageEditable(getUser(), history.getDocId())) {</span>
+<span class="nc" id="L112">                docHistoryRepository.deleteByIdPublicable(history.getId(), true);</span>
+<span class="nc" id="L113">                return true;</span>
             }
         }
-<span class="nc" id="L115">        return false;</span>
+<span class="nc" id="L116">        return false;</span>
     }
 
     @Override
     public void beforeSave(DocHistoryDto entity) {
-<span class="nc" id="L120">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
-<span class="nc" id="L121">    }</span>
+<span class="nc" id="L121">        throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L122">    }</span>
 
     @Override
     public DocHistoryDto processFromEntity(DocHistoryDto entity, ProcessItemAction action) {
-<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (entity.isHistoryActual()) {</span>
-<span class="fc" id="L126">            BaseEditorFields ef = entity.getEditorFields();</span>
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">            if (ef == null) ef = new BaseEditorFields();</span>
-<span class="fc" id="L128">            ef.addRowClass(&quot;is-default-page&quot;);</span>
-<span class="fc" id="L129">            entity.setEditorFields(ef);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (entity.isHistoryActual()) {</span>
+<span class="fc" id="L127">            BaseEditorFields ef = entity.getEditorFields();</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">            if (ef == null) ef = new BaseEditorFields();</span>
+<span class="fc" id="L129">            ef.addRowClass(&quot;is-default-page&quot;);</span>
+<span class="fc" id="L130">            entity.setEditorFields(ef);</span>
         }
-<span class="fc bfc" id="L131" title="All 2 branches covered.">        if (entity.isDisableAfterEnd()) {</span>
-<span class="fc" id="L132">            entity.setPublishEndExtra(entity.getPublishEndDate());</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">        if (entity.isDisableAfterEnd()) {</span>
+<span class="fc" id="L133">            entity.setPublishEndExtra(entity.getPublishEndDate());</span>
         }
         //If history record is disapproved, set it's color to red in table
-<span class="fc bfc" id="L135" title="All 4 branches covered.">        if(entity.getHistoryDisapprovedByName() != null &amp;&amp; !entity.getHistoryDisapprovedByName().isEmpty()) {</span>
-<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if(entity.getEditorFields() == null) {</span>
-<span class="fc" id="L137">                BaseEditorFields ef = new BaseEditorFields();</span>
-<span class="fc" id="L138">                entity.setEditorFields(ef);</span>
+<span class="pc bpc" id="L136" title="1 of 4 branches missed.">        if(entity.getHistoryDisapprovedByName() != null &amp;&amp; !entity.getHistoryDisapprovedByName().isEmpty()) {</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            if(entity.getEditorFields() == null) {</span>
+<span class="nc" id="L138">                BaseEditorFields ef = new BaseEditorFields();</span>
+<span class="nc" id="L139">                entity.setEditorFields(ef);</span>
             }
-<span class="fc" id="L140">            entity.getEditorFields().addRowClass(&quot;is-disapproved&quot;);</span>
+<span class="nc" id="L141">            entity.getEditorFields().addRowClass(&quot;is-disapproved&quot;);</span>
         }
-<span class="fc" id="L142">        return entity;</span>
+<span class="fc" id="L143">        return entity;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

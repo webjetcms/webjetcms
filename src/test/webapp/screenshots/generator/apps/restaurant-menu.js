@@ -46,7 +46,7 @@ Scenario('menu screens', ({ I, DT, Document, i18n }) => {
     Document.screenshotElement("#menuType", "/redactor/apps/restaurant-menu/menu-external-filter-type.png");
     Document.screenshotElement("div.status-info", "/redactor/apps/restaurant-menu/menu-external-filter-status-a.png");
 
-    I.click("#menuType > button[data-menu-type=weeks]");
+    I.clickCss("#menuType > button[data-menu-type=weeks]");
 
     Document.screenshot("/redactor/apps/restaurant-menu/menu-data-table-weeks.png", 1650, 1000);
     Document.screenshotElement("div.status-info", "/redactor/apps/restaurant-menu/menu-external-filter-status-b.png");

@@ -29,9 +29,9 @@ block content
 
             vueOverviewApp.config.globalProperties.$printToPdf = '[[\#{components.monitoring.print_to_pdf}]]';
             vueOverviewApp.config.globalProperties.$emptySpaceOnDisk = '[[\#{components.monitoring.empty_space_on_disc}]]';
-            vueOverviewApp.config.globalProperties.$usedMemory = '[[\#{components.monitoring.used_memory}]]';
-            vueOverviewApp.config.globalProperties.$freeMemory = '[[\#{components.monitoring.free_memory}]]';
-            vueOverviewApp.config.globalProperties.$totalMemory = '[[\#{components.monitoring.total_memory}]]';
+            vueOverviewApp.config.globalProperties.$usedMemory = '[[\#{components.monitoring.used_memory.js}]]';
+            vueOverviewApp.config.globalProperties.$freeMemory = '[[\#{components.monitoring.free_memory.js}]]';
+            vueOverviewApp.config.globalProperties.$totalMemory = '[[\#{components.monitoring.total_memory.js}]]';
             vueOverviewApp.config.globalProperties.$occupancyMemory = '[[\#{components.monitoring.memory_occupancy}]]';
             vueOverviewApp.config.globalProperties.$cpuLoad = '[[\#{components.monitoring.cpu_load}]]';
             vueOverviewApp.config.globalProperties.$serverCpus = '[[\#{components.monitoring.server_cpus}]]';

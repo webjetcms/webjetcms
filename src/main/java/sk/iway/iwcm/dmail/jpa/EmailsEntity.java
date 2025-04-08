@@ -1,6 +1,5 @@
 package sk.iway.iwcm.dmail.jpa;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -9,15 +8,22 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -30,7 +36,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
-public class EmailsEntity extends ActiveRecordRepository implements Serializable {
+public class EmailsEntity extends ActiveRecordRepository {
 
     public EmailsEntity() {}
 
@@ -52,7 +58,7 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
     @Id
     @Column(name = "email_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_emails")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "recipient_name")
@@ -118,6 +124,20 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
     @Column(name = "recipient_user_id")
     private Integer recipientUserId;
 
+    @OneToOne
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonBackReference(value="userDetailsEntity")
+	@JoinColumn(name="recipient_user_id", insertable = false, updatable = false)
+	private UserDetailsEntity userDetailsEntity;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.MULTISELECT,
+        title = "user.admin.userGroups",
+        hiddenEditor = true
+    )
+    private Integer[] groupIds;
+
     @Column(name = "sender_name")
     private String senderName;
 
@@ -163,4 +183,15 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
     public void setId(Long id) {
 		this. id = id;
 	}
+
+    public Integer[] getGroupIds() {
+        if(userDetailsEntity == null) return new Integer[0];
+
+        String ugi = userDetailsEntity.getUserGroupsIds();
+        if(Tools.isNotEmpty(ugi)) {
+            return Tools.getTokensInteger(ugi, ",");
+        }
+
+        return new Integer[0];
+    }
 }

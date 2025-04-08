@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.jstree</a> &gt; <span class="el_source">JsTreeRestController.java</span></div><h1>JsTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.jstree;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JsTreeRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin.jstree</a> &gt; <span class="el_source">JsTreeRestController.java</span></div><h1>JsTreeRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin.jstree;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,8 +24,8 @@ import java.util.Map;
  *  Abstraktny univerzalny RestController na pracu s JsTree
  *
  */
-<span class="fc" id="L29">public abstract class JsTreeRestController&lt;T&gt; {</span>
-<span class="fc" id="L30">    private static Logger log = LoggerFactory.getLogger(JsTreeRestController.class);</span>
+<span class="fc" id="L27">public abstract class JsTreeRestController&lt;T&gt; {</span>
+
     private Prop prop;
 
     @Autowired
@@ -41,11 +39,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/tree&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tree(@RequestBody JsTreeMoveItem item) {
-<span class="fc" id="L44">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L42">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L46">        tree(result, item);</span>
+<span class="fc" id="L44">        tree(result, item);</span>
 
-<span class="fc" id="L48">        return ResponseEntity.ok(result);</span>
+<span class="fc" id="L46">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -56,11 +54,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/move&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; moveItem(@RequestBody JsTreeMoveItem item) {
-<span class="fc" id="L59">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L57">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L61">        move(result, item);</span>
+<span class="fc" id="L59">        move(result, item);</span>
 
-<span class="fc" id="L63">        return ResponseEntity.ok(result);</span>
+<span class="fc" id="L61">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -71,11 +69,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/save&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; saveItem(@RequestBody T item) {
-<span class="nc" id="L74">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L72">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L76">        save(result, item);</span>
+<span class="nc" id="L74">        save(result, item);</span>
 
-<span class="nc" id="L78">        return ResponseEntity.ok(result);</span>
+<span class="nc" id="L76">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -86,11 +84,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/delete&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; deleteItem(@RequestBody T item) {
-<span class="nc" id="L89">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L87">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L91">        delete(result, item);</span>
+<span class="nc" id="L89">        delete(result, item);</span>
 
-<span class="nc" id="L93">        return ResponseEntity.ok(result);</span>
+<span class="nc" id="L91">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -125,22 +123,22 @@ import java.util.Map;
     public abstract boolean checkAccessAllowed(HttpServletRequest request);
 
     protected Prop getProp() {
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (prop == null) {</span>
-<span class="fc" id="L129">            prop = Prop.getInstance(getRequest());</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (prop == null) {</span>
+<span class="fc" id="L127">            prop = Prop.getInstance(getRequest());</span>
         }
-<span class="fc" id="L131">        return prop;</span>
+<span class="fc" id="L129">        return prop;</span>
     }
 
     public HttpServletRequest getRequest() {
-<span class="fc" id="L135">        return request;</span>
+<span class="fc" id="L133">        return request;</span>
     }
 
     public void setRequest(HttpServletRequest request) {
-<span class="nc" id="L139">        this.request = request;</span>
-<span class="nc" id="L140">    }</span>
+<span class="nc" id="L137">        this.request = request;</span>
+<span class="nc" id="L138">    }</span>
 
     public Identity getUser(){
-<span class="fc" id="L143">		return UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L141">		return UsersDB.getCurrentUser(getRequest());</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

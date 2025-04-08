@@ -24,7 +24,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
             DTE.fillField("fromName", "Web tester");
             DTE.fillField("fromEmail", "tester@balat.sk");
 
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             DTE.fillQuill("answerToEmail", "Toto je odpoved do emailu.");
             //oznac emailu ako bold
             I.pressKey('ArrowLeft');
@@ -37,7 +37,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
             DTE.fillQuill("answer", "Toto je odpoved na web stranku.");
         },
         editSteps: function(I, options) {
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             I.wait(1);
         },
         editSearchSteps: function(I, options) {
@@ -46,7 +46,7 @@ Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
             //I.wait(20);
         }, 
         duplicateSteps: function(I, options) {
-            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.clickCss("#pills-dt-qaDataTable-answer-tab");
             I.wait(1);
         },
     });
@@ -125,7 +125,7 @@ Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) =>
     DTE.fillQuill("answerToEmail", copyValue);
     I.checkOption("#DTE_Field_publishOnWeb_0");
 
-    const answer_a = await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor");
+    const answer_a = (await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor")).replace(/<br>/g, '');
     I.assertEqual("<p>" + copyValue + "</p>", answer_a);
 
     DTE.fillQuill("answerToEmail", copyValue + "_change");
@@ -133,7 +133,7 @@ Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) =>
     I.checkOption("#DTE_Field_publishOnWeb_0");
 
     //Should be same as before
-    const answer_b = await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor");
+    const answer_b = (await I.grabHTMLFrom("#DTE_Field_answer > div.ql-container > div.ql-editor")).replace(/<br>/g, '');
     I.assertEqual("<p>" + copyValue + "</p>", answer_b);
 
     DTE.save();

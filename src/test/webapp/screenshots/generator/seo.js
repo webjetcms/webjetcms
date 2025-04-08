@@ -16,8 +16,8 @@ Scenario("seo - screenshots", ({ I, Document, DT, i18n }) => {
     I.waitForInvisible("#webjetAnimatedLoader");
     Document.screenshot("/redactor/apps/seo/seo-admin-page.png", 1500, 800);
 
-    DT.filterContains("name", "YandexBot 3.0");
-    I.click("YandexBot 3.0");
+    DT.filterContains("name", "Googlebot 2.0");
+    I.click("Googlebot 2.0");
     DT.waitForLoader();
     I.waitForInvisible(".webjetAnimatedLoader");
     Document.screenshot("/redactor/apps/seo/seo-admin-details-page.png", 1500, 800);
@@ -46,6 +46,7 @@ Scenario("seo - screenshots", ({ I, Document, DT, i18n }) => {
     I.click("Redakčný systém WebJET");
     DT.waitForLoader();
     I.waitForInvisible(".webjetAnimatedLoader");
+    DT.setDates(i18n.getDate("08/01/2023"), i18n.getDate("08/01/2024"), "#googlePoitionDataTable_extfilter");
     Document.screenshot("/redactor/apps/seo/seo-positions-details-page.png", 1500, 800);
 
     I.amOnPage("/apps/seo/admin/number-keywords/");

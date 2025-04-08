@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">DB.java</span></div><h1>DB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">DB.java</span></div><h1>DB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
 
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -325,7 +325,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 <span class="fc" id="L325">				dateTime = Tools.replace(dateTime, &quot;. &quot;, &quot;.&quot;);</span>
 
 				//ak je to zadane ako 26112009 uprav na lepsi format
-<span class="pc bpc" id="L328" title="3 of 4 branches missed.">				if (dateTime.length()==8 &amp;&amp; dateTime.indexOf('.')==-1)</span>
+<span class="pc bpc" id="L328" title="1 of 4 branches missed.">				if (dateTime.length()==8 &amp;&amp; dateTime.indexOf('.')==-1)</span>
 				{
 <span class="nc" id="L330">					dateTime = dateTime.substring(0, 2)+&quot;.&quot;+dateTime.substring(2,4)+&quot;.&quot;+dateTime.substring(4);</span>
 				}
@@ -376,9 +376,9 @@ import sk.iway.iwcm.doc.GroupsDB;
 <span class="fc" id="L376">			return (0);</span>
 		}
 
-<span class="pc bpc" id="L379" title="1 of 2 branches missed.">		if (Tools.isEmpty(time))</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">		if (Tools.isEmpty(time))</span>
 		{
-<span class="nc" id="L381">			time = &quot;00:00:00&quot;;</span>
+<span class="fc" id="L381">			time = &quot;00:00:00&quot;;</span>
 		}
 
 <span class="fc" id="L384">		Calendar tmpCalendar = Calendar.getInstance();</span>
@@ -398,7 +398,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 <span class="fc" id="L398">		date = date.replace(',', '.');</span>
 
 		//ak je to zadane ako 26112009 uprav na lepsi format
-<span class="pc bpc" id="L401" title="3 of 4 branches missed.">		if (date.length()==8 &amp;&amp; date.indexOf('.')==-1)</span>
+<span class="pc bpc" id="L401" title="1 of 4 branches missed.">		if (date.length()==8 &amp;&amp; date.indexOf('.')==-1)</span>
 		{
 <span class="nc" id="L403">			date = date.substring(0, 2)+&quot;.&quot;+date.substring(2,4)+&quot;.&quot;+date.substring(4);</span>
 		}
@@ -1149,5 +1149,101 @@ import sk.iway.iwcm.doc.GroupsDB;
 		}
 <span class="fc" id="L1150">		return value;</span>
 	}
+
+	/*
+	 * prepare SQL query for datatable search, usage:
+	 *
+	 * List&lt;Object&gt; params = new ArrayList&lt;&gt;();
+	 * sql += DB.getSqlQueryDatatable(&quot;url&quot;, url, true, params);
+	 * sql += DB.getSqlQueryDatatable(&quot;query_string&quot;, errorText, true, params);
+	 * sql += DB.getSqlQueryDatatable(&quot;count&quot;, countRange, true, params);
+	 * int psCounter = 1;
+	 * psCounter = DB.getSqlParamsDatatable(params, ps, psCounter);
+	 *
+	 * @param fieldName - name of database column
+	 * @param searchText - searched text from request
+	 * @param addAnd - true to add AND before condition
+	 * @param params - list of parameters for PreparedStatement
+	 * @return - SQL WHERE query part
+	 */
+	public static String getSqlQueryDatatable(String fieldName, String searchText, boolean addAnd, List&lt;Object&gt; params) {
+
+<span class="fc bfc" id="L1171" title="All 2 branches covered.">		if (Tools.isEmpty(searchText)) return &quot;&quot;;</span>
+
+<span class="fc" id="L1173">		StringBuilder sb = new StringBuilder();</span>
+<span class="pc bpc" id="L1174" title="1 of 2 branches missed.">		if (addAnd) sb.append(&quot; AND &quot;);</span>
+<span class="fc" id="L1175">		sb.append(fieldName).append(&quot; &quot;);</span>
+
+<span class="pc bpc" id="L1177" title="1 of 4 branches missed.">		if (searchText.startsWith(&quot;range:&quot;) || searchText.startsWith(&quot;daterange:&quot;)) {</span>
+
+<span class="fc" id="L1179">			boolean isDateRange = searchText.startsWith(&quot;daterange:&quot;);</span>
+<span class="fc" id="L1180">			String value = searchText.substring(searchText.indexOf(&quot;:&quot;) + 1);</span>
+
+<span class="pc bpc" id="L1182" title="1 of 2 branches missed.">			if (value.startsWith(&quot;-&quot;)) {</span>
+<span class="nc" id="L1183">				sb.append(&quot; &lt;= ? &quot;);</span>
+
+<span class="nc bnc" id="L1185" title="All 2 branches missed.">				if (isDateRange) params.add(new Timestamp(Tools.getLongValue(value.substring(1), 0)));</span>
+<span class="nc" id="L1186">				else params.add(Tools.getIntValue(value.substring(1), 0));</span>
+<span class="fc bfc" id="L1187" title="All 2 branches covered.">			} else if (value.contains(&quot;-&quot;)) {</span>
+<span class="fc" id="L1188">				sb.append(&quot; BETWEEN ? AND ? &quot;);</span>
+
+<span class="fc" id="L1190">				String[] values = Tools.getTokens(value, &quot;-&quot;);</span>
+<span class="pc bpc" id="L1191" title="1 of 2 branches missed.">				if (isDateRange) {</span>
+<span class="nc" id="L1192">					params.add(new Timestamp(Tools.getLongValue(values[0], 0)));</span>
+<span class="nc" id="L1193">					params.add(new Timestamp(Tools.getLongValue(values[1], 0)));</span>
+				} else {
+<span class="fc" id="L1195">					params.add(Tools.getIntValue(values[0], 0));</span>
+<span class="fc" id="L1196">					params.add(Tools.getIntValue(values[1], 0));</span>
+				}
+<span class="fc" id="L1198">			} else {</span>
+<span class="fc" id="L1199">				sb.append(&quot; &gt;= ? &quot;);</span>
+
+<span class="pc bpc" id="L1201" title="1 of 2 branches missed.">				if (isDateRange) params.add(new Timestamp(Tools.getLongValue(value, 0)));</span>
+<span class="fc" id="L1202">				else params.add(Tools.getIntValue(value, 0));</span>
+			}
+<span class="fc" id="L1204">		} else {</span>
+<span class="fc" id="L1205">			String operator = &quot;LIKE&quot;;</span>
+<span class="pc bpc" id="L1206" title="3 of 4 branches missed.">			if (searchText.startsWith(&quot;^&quot;) &amp;&amp; searchText.endsWith(&quot;$&quot;)) operator = &quot;&quot;;</span>
+
+<span class="fc" id="L1208">			sb.append(operator).append(&quot; ? &quot;);</span>
+
+<span class="pc bpc" id="L1210" title="3 of 4 branches missed.">			if (searchText.startsWith(&quot;^&quot;) &amp;&amp; searchText.endsWith(&quot;$&quot;)) params.add(searchText);</span>
+<span class="pc bpc" id="L1211" title="1 of 2 branches missed.">			else if (searchText.startsWith(&quot;^&quot;)) params.add(searchText.substring(1) + &quot;%&quot;);</span>
+<span class="pc bpc" id="L1212" title="1 of 2 branches missed.">			else if (searchText.endsWith(&quot;$&quot;)) params.add(&quot;%&quot; + searchText.substring(0, searchText.length() - 1));</span>
+<span class="fc" id="L1213">			else params.add(&quot;%&quot; + searchText.substring(1, searchText.length() - 1) + &quot;%&quot;);</span>
+		}
+
+<span class="fc" id="L1216">		return sb.toString();</span>
+	}
+
+	/**
+	 * Fill PreparedStatement with parameters
+	 * @param params - list of Parameters
+	 * @param ps - prepared statement
+	 * @param psCounter - counter of parameters, starts with 1 for first parameter
+	 * @return - new counter of parameters
+	 * @throws SQLException
+	 */
+	public static int getSqlParamsDatatable(List&lt;Object&gt; params, PreparedStatement ps, int psCounter) throws SQLException {
+
+		//set list of params to PreparedStatemend based of instanceof
+<span class="fc bfc" id="L1230" title="All 2 branches covered.">		for (Object param : params) {</span>
+<span class="pc bpc" id="L1231" title="1 of 2 branches missed.">			if (param instanceof Timestamp) {</span>
+<span class="nc" id="L1232">				ps.setTimestamp(psCounter++, (Timestamp) param);</span>
+<span class="pc bpc" id="L1233" title="1 of 2 branches missed.">			} else if (param instanceof Long) {</span>
+<span class="nc" id="L1234">				ps.setLong(psCounter++, (Long) param);</span>
+<span class="fc bfc" id="L1235" title="All 2 branches covered.">			} else if (param instanceof Integer) {</span>
+<span class="fc" id="L1236">				ps.setInt(psCounter++, (Integer) param);</span>
+<span class="pc bpc" id="L1237" title="1 of 2 branches missed.">			} else if (param instanceof String) {</span>
+<span class="fc" id="L1238">				ps.setString(psCounter++, (String) param);</span>
+<span class="nc bnc" id="L1239" title="All 2 branches missed.">			} else if (param instanceof Boolean) {</span>
+<span class="nc" id="L1240">				ps.setBoolean(psCounter++, (Boolean) param);</span>
+			}
+<span class="fc" id="L1242">		}</span>
+
+<span class="fc" id="L1244">		return psCounter;</span>
+	}
+
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

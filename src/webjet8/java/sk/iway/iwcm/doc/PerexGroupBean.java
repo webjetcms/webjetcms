@@ -97,7 +97,7 @@ public class PerexGroupBean
 	}
 
 	/**
-	 * @param relatedPages The relatedPages to set.
+	 * @param pages The relatedPages to set.
 	 */
 	public void setRelatedPages(String pages)
 	{

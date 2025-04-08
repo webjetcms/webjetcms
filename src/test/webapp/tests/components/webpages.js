@@ -366,7 +366,7 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     I.waitForVisible('.btn.buttons-collection.dropdown-toggle.buttons-colvis');
 
     I.click(locate('button').withAttr({ title: 'Zobrazenie stĺpcov' }));
-    I.click(locate('span').withText('Šablóna web stránky'));
+    I.click(locate('span').withText('Šablóna'));
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
     DT.waitForLoader();
 
@@ -1064,9 +1064,16 @@ Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa r
 
 //TODO: test ukladania stranky v multi adresari, overenie, ze sa po editacii slave stranky ulozi aj master
 
-Scenario("Check editor for user with perms only for one webpage", ({ I, DTE }) => {
+Scenario("Check editor for user with perms only for one webpage", ({ I, DT, DTE }) => {
 
     I.relogin("jtester");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
+
+    I.see("English", "#SomStromcek a.jstree-anchor");
+    I.see("Home", "#SomStromcek a.jstree-anchor");
+
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=31");
     DTE.waitForEditor();
 
@@ -1083,6 +1090,10 @@ Scenario("Check editor for user with perms only for one webpage", ({ I, DTE }) =
     I.see("Homepage", "div.DTE_Field_Name_tempId div.filter-option-inner-inner");
 
     DTE.cancel();
+
+    //
+    I.say("Verify domain name selector");
+    I.see(I.getDefaultDomainName(), ".js-domain-toggler .filter-option-inner-inner");
 });
 
 Scenario("logout jtester", ({ I }) => {

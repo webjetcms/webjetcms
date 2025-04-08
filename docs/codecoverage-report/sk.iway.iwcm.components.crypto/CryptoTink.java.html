@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CryptoTink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.crypto</a> &gt; <span class="el_source">CryptoTink.java</span></div><h1>CryptoTink.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.crypto;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CryptoTink.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.crypto</a> &gt; <span class="el_source">CryptoTink.java</span></div><h1>CryptoTink.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.crypto;
 
 import com.google.crypto.tink.*;
 import com.google.crypto.tink.hybrid.HybridConfig;
@@ -11,8 +11,8 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.ConfDB;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
 
@@ -50,12 +50,12 @@ public class CryptoTink implements Crypto {
 
     @Override
     public CryptoKeys generateNewPrivateAndPublicKey(String login) {
-<span class="nc" id="L53">        KeysetHandle keysetHandle = this.generateNewPrivateAndPublicKey2();</span>
-<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (keysetHandle==null) return null;</span>
+<span class="fc" id="L53">        KeysetHandle keysetHandle = this.generateNewPrivateAndPublicKey2();</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if (keysetHandle==null) return null;</span>
         try {
-<span class="nc" id="L56">            String privateKeyEncoded = this.getKeyBase64(keysetHandle);</span>
-<span class="nc" id="L57">            String publicKeyEncoded = this.getKeyBase64(keysetHandle.getPublicKeysetHandle()); // public key viem dostat z privatneho kluca</span>
-<span class="nc" id="L58">            return new CryptoKeys(null, publicKeyEncoded, privateKeyEncoded);</span>
+<span class="fc" id="L56">            String privateKeyEncoded = this.getKeyBase64(keysetHandle);</span>
+<span class="fc" id="L57">            String publicKeyEncoded = this.getKeyBase64(keysetHandle.getPublicKeysetHandle()); // public key viem dostat z privatneho kluca</span>
+<span class="fc" id="L58">            return new CryptoKeys(null, publicKeyEncoded, privateKeyEncoded);</span>
 <span class="nc" id="L59">        } catch (GeneralSecurityException e) {</span>
 <span class="nc" id="L60">            sk.iway.iwcm.Logger.error(e);</span>
         }
@@ -83,29 +83,29 @@ public class CryptoTink implements Crypto {
 
     @Override
     public String getAlgKey() {
-<span class="nc" id="L86">        return ALG_KEY;</span>
+<span class="fc" id="L86">        return ALG_KEY;</span>
     }
 
-    private KeysetHandle generateNewPrivateAndPublicKey2() {
+    protected KeysetHandle generateNewPrivateAndPublicKey2() {
         try {
-<span class="nc" id="L91">            KeysetHandle privateKey = KeysetHandle.generateNew(KeyTemplates.get(&quot;ECIES_P256_HKDF_HMAC_SHA256_AES128_CTR_HMAC_SHA256&quot;));</span>
-<span class="nc" id="L92">            KeysetHandle publiceKey = privateKey.getPublicKeysetHandle();</span>
+<span class="fc" id="L91">            KeysetHandle privateKey = KeysetHandle.generateNew(KeyTemplates.get(&quot;ECIES_P256_HKDF_HMAC_SHA256_AES128_CTR_HMAC_SHA256&quot;));</span>
+<span class="fc" id="L92">            KeysetHandle publiceKey = privateKey.getPublicKeysetHandle();</span>
 
-<span class="nc" id="L94">            boolean showLog = Constants.getBoolean(&quot;cryptoToolsShowGeneratedKeysLog&quot;);</span>
-<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (showLog) {</span>
+<span class="fc" id="L94">            boolean showLog = Constants.getBoolean(&quot;cryptoToolsShowGeneratedKeysLog&quot;);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (showLog) {</span>
 <span class="nc" id="L96">                Logger.println(this.getClass(), &quot;=== Generating keys ===&quot;);</span>
 <span class="nc" id="L97">                Logger.println(this.getClass(), &quot;Generated Private key =&gt; &quot; + this.getPrivateKeyBase64(privateKey));</span>
 <span class="nc" id="L98">                Logger.println(this.getClass(), &quot;Generated Public key =&gt; &quot; + this.getKeyBase64(publiceKey));</span>
 <span class="nc" id="L99">                Logger.println(this.getClass(), &quot;===========================&quot;);</span>
             }
-<span class="nc" id="L101">            return privateKey;</span>
+<span class="fc" id="L101">            return privateKey;</span>
 <span class="nc" id="L102">        } catch (Exception e) {</span>
 <span class="nc" id="L103">            sk.iway.iwcm.Logger.error(e);</span>
         }
 <span class="nc" id="L105">        return null;</span>
     }
 
-    private KeysetHandle loadPublicKeyBase64(String publicKey) {
+    protected KeysetHandle loadPublicKeyBase64(String publicKey) {
 <span class="fc" id="L109">        String string = new String(Base64.getDecoder().decode(publicKey));</span>
         try {
 <span class="fc" id="L111">            return loadKey(string);</span>
@@ -115,7 +115,7 @@ public class CryptoTink implements Crypto {
 <span class="nc" id="L115">        return null;</span>
     }
 
-    private KeysetHandle loadPrivateKeyBase64(String privateKey) {
+    protected KeysetHandle loadPrivateKeyBase64(String privateKey) {
 <span class="fc" id="L119">        String string = new String(Base64.getDecoder().decode(privateKey));</span>
         try {
 <span class="fc" id="L121">           return loadKey(string);</span>
@@ -129,39 +129,37 @@ public class CryptoTink implements Crypto {
 <span class="fc" id="L129">        return CleartextKeysetHandle.read(JsonKeysetReader.withString(key));</span>
     }
 
-    private String getKeyBase64(KeysetHandle keysetHandle) {
-<span class="nc" id="L133">        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+    protected String getKeyBase64(KeysetHandle keysetHandle) {
         try {
-<span class="nc" id="L135">            CleartextKeysetHandle.write(keysetHandle, JsonKeysetWriter.withOutputStream(outputStream));</span>
-<span class="nc" id="L136">            outputStream.flush();</span>
-<span class="nc" id="L137">            return Base64.getEncoder().encodeToString(outputStream.toByteArray());</span>
-<span class="nc" id="L138">        } catch (Exception e) {</span>
-<span class="nc" id="L139">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L134">            String serializedKeyset = TinkJsonProtoKeysetFormat.serializeKeyset(keysetHandle, InsecureSecretKeyAccess.get());</span>
+<span class="fc" id="L135">            return Base64.getEncoder().encodeToString(serializedKeyset.getBytes(StandardCharsets.UTF_8));</span>
+<span class="nc" id="L136">        } catch (Exception e) {</span>
+<span class="nc" id="L137">            sk.iway.iwcm.Logger.error(e);</span>
         }
-<span class="nc" id="L141">        return new String(outputStream.toByteArray());</span>
+<span class="nc" id="L139">        return null;</span>
     }
 
     public String getPublicKeyFromPrivateKeyBase64(KeysetHandle keysetHandle) {
         try {
-<span class="nc" id="L146">            return getKeyBase64(keysetHandle.getPublicKeysetHandle());</span>
-<span class="nc" id="L147">        } catch (Exception e) {</span>
-<span class="nc" id="L148">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L144">            return getKeyBase64(keysetHandle.getPublicKeysetHandle());</span>
+<span class="nc" id="L145">        } catch (Exception e) {</span>
+<span class="nc" id="L146">            sk.iway.iwcm.Logger.error(e);</span>
         }
-<span class="nc" id="L150">        return null;</span>
+<span class="nc" id="L148">        return null;</span>
     }
 
-    private String getPrivateKeyBase64(KeysetHandle keysetHandle) {
-<span class="nc" id="L154">        return getKeyBase64(keysetHandle);</span>
+    protected String getPrivateKeyBase64(KeysetHandle keysetHandle) {
+<span class="fc" id="L152">        return getKeyBase64(keysetHandle);</span>
     }
 
-    private String getContextInfo() {
-<span class="fc" id="L158">        String cryptoContextInfo = Constants.getString(&quot;cryptoContextInfo&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (Tools.isEmpty(cryptoContextInfo)) {</span>
-<span class="nc" id="L160">            cryptoContextInfo = Password.generateStringHash(16);</span>
-<span class="nc" id="L161">            Logger.println(this, &quot;=== Generating cryptoContextInfo ===&quot;);</span>
-<span class="nc" id="L162">            ConfDB.setName(&quot;cryptoContextInfo&quot;, cryptoContextInfo);</span>
+    protected String getContextInfo() {
+<span class="fc" id="L156">        String cryptoContextInfo = Constants.getString(&quot;cryptoContextInfo&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        if (Tools.isEmpty(cryptoContextInfo)) {</span>
+<span class="nc" id="L158">            cryptoContextInfo = Password.generateStringHash(16);</span>
+<span class="nc" id="L159">            Logger.println(this, &quot;=== Generating cryptoContextInfo ===&quot;);</span>
+<span class="nc" id="L160">            ConfDB.setName(&quot;cryptoContextInfo&quot;, cryptoContextInfo);</span>
         }
-<span class="fc" id="L164">        return Constants.getString(&quot;cryptoContextInfo&quot;, &quot;Tink&quot;);</span>
+<span class="fc" id="L162">        return Constants.getString(&quot;cryptoContextInfo&quot;, &quot;Tink&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

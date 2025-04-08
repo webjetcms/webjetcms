@@ -23,7 +23,7 @@ Scenario('update from file', async ({ I }) => {
     I.dontSeeElement("#submitButton");
     I.seeElement("#UPLOAD > form");
 
-    I.click("#uploadSubmitButton");
+    I.clickCss("#uploadSubmitButton");
     I.waitForText("Dokument nemôže byť prázdny");
     I.waitForElement(locate("div.alert-danger li").withText("Dokument nemôže byť prázdny"), 10);
     I.dontSeeElement("#submitButton");

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleAuthenticator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.googleauth</a> &gt; <span class="el_source">GoogleAuthenticator.java</span></div><h1>GoogleAuthenticator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.googleauth;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GoogleAuthenticator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.googleauth</a> &gt; <span class="el_source">GoogleAuthenticator.java</span></div><h1>GoogleAuthenticator.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.googleauth;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -396,13 +396,13 @@ import org.apache.commons.codec.binary.Base64;
 
 <span class="fc" id="L397">		            int scratchCode = calculateScratchCode(scratchCodeBuffer);</span>
 
-<span class="fc bfc" id="L399" title="All 2 branches covered.">		            if (scratchCode != SCRATCH_CODE_INVALID)</span>
+<span class="pc bpc" id="L399" title="1 of 2 branches missed.">		            if (scratchCode != SCRATCH_CODE_INVALID)</span>
 		            {
 <span class="fc" id="L401">		                scratchCodes.add(scratchCode);</span>
 		            }
 		            else
 		            {
-<span class="fc" id="L405">		                scratchCodes.add(generateScratchCode());</span>
+<span class="nc" id="L405">		                scratchCodes.add(generateScratchCode());</span>
 		            }
 <span class="fc" id="L407">		        }</span>
 
@@ -438,19 +438,19 @@ import org.apache.commons.codec.binary.Base64;
 
 		        // Accept the scratch code only if it has exactly
 		        // SCRATCH_CODE_LENGTH digits.
-<span class="fc bfc" id="L441" title="All 2 branches covered.">		        if (validateScratchCode(scratchCode))</span>
+<span class="pc bpc" id="L441" title="1 of 2 branches missed.">		        if (validateScratchCode(scratchCode))</span>
 		        {
 <span class="fc" id="L443">		            return scratchCode;</span>
 		        }
 		        else
 		        {
-<span class="fc" id="L447">		            return SCRATCH_CODE_INVALID;</span>
+<span class="nc" id="L447">		            return SCRATCH_CODE_INVALID;</span>
 		        }
 		    }
 
 		    /* package */ boolean validateScratchCode(int scratchCode)
 		    {
-<span class="fc bfc" id="L453" title="All 2 branches covered.">		        return (scratchCode &gt;= SCRATCH_CODE_MODULUS / 10);</span>
+<span class="pc bpc" id="L453" title="1 of 2 branches missed.">		        return (scratchCode &gt;= SCRATCH_CODE_MODULUS / 10);</span>
 		    }
 
 		    /**
@@ -465,14 +465,14 @@ import org.apache.commons.codec.binary.Base64;
 		    {
 		        while (true)
 		        {
-<span class="fc" id="L468">		            byte[] scratchCodeBuffer = new byte[BYTES_PER_SCRATCH_CODE];</span>
-<span class="fc" id="L469">		            secureRandom.nextBytes(scratchCodeBuffer);</span>
+<span class="nc" id="L468">		            byte[] scratchCodeBuffer = new byte[BYTES_PER_SCRATCH_CODE];</span>
+<span class="nc" id="L469">		            secureRandom.nextBytes(scratchCodeBuffer);</span>
 
-<span class="fc" id="L471">		            int scratchCode = calculateScratchCode(scratchCodeBuffer);</span>
+<span class="nc" id="L471">		            int scratchCode = calculateScratchCode(scratchCodeBuffer);</span>
 
-<span class="pc bpc" id="L473" title="1 of 2 branches missed.">		            if (scratchCode != SCRATCH_CODE_INVALID)</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">		            if (scratchCode != SCRATCH_CODE_INVALID)</span>
 		            {
-<span class="fc" id="L475">		                return scratchCode;</span>
+<span class="nc" id="L475">		                return scratchCode;</span>
 		            }
 <span class="nc" id="L477">		        }</span>
 		    }

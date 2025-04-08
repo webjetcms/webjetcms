@@ -26,7 +26,6 @@ public class JsonTools
 	 * @param html html kod
 	 * @param request request
 	 * @return
-	 * @author mhalas
 	 */
 	public static String prepare4Json(String html, HttpServletRequest request)
 	{

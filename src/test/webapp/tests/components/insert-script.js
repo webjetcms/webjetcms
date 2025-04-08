@@ -24,9 +24,9 @@ Scenario('pridanie platnosti od-do do upravovaneho zaznamu @baseTest', async ({ 
           editSteps: function (I, options, DT, DTE) {
                I.say('pridanie platnosti zaznamu');
                // zalozka obmedzenia
-               I.click('#pills-dt-insertScriptTable-scriptPerms-tab');
+               I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
                // nastavenie datumu od
-               I.click('#DTE_Field_validFrom');
+               I.clickCss('#DTE_Field_validFrom');
                I.selectOption('.dt-datetime-month', 'Január');
                I.selectOption('.dt-datetime-year', '2021');
                I.click(locate('.dt-datetime-button.dt-datetime-day').withText('1'));
@@ -36,7 +36,7 @@ Scenario('pridanie platnosti od-do do upravovaneho zaznamu @baseTest', async ({ 
                I.pressKey('Enter');
                // nastavenie datumu do
                I.waitForElement('#DTE_Field_validTo', 5);
-               I.click('#DTE_Field_validTo');
+               I.clickCss('#DTE_Field_validTo');
                I.selectOption('.dt-datetime-month', 'Január');
                I.selectOption('.dt-datetime-year', '2022');
                I.click(locate('.dt-datetime-button.dt-datetime-day').withText('1'));
@@ -45,7 +45,7 @@ Scenario('pridanie platnosti od-do do upravovaneho zaznamu @baseTest', async ({ 
                I.click(locate('.dt-datetime-button.dt-datetime-day').withAttr({ "data-unit": 'seconds' }).withText('00'));
                I.pressKey('Enter');
 
-               I.click('#pills-dt-insertScriptTable-main-tab');
+               I.clickCss('#pills-dt-insertScriptTable-main-tab');
           },
 
           // pridana platnost do upraveneho zaznamu
@@ -73,7 +73,7 @@ Scenario('pridanie adresara a webstranky do edit zaznamu @baseTest', async ({ I,
           editSteps: function (I, options, DT, DTE) {
                // pridanie adresara
                I.say('pridanie adresara');
-               I.click('#pills-dt-insertScriptTable-scriptPerms-tab');
+               I.clickCss('#pills-dt-insertScriptTable-scriptPerms-tab');
                I.click('.btn.btn-outline-secondary.btn-vue-jstree-add');
                // vyber test23
                I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
@@ -86,7 +86,7 @@ Scenario('pridanie adresara a webstranky do edit zaznamu @baseTest', async ({ I,
                I.click(locate('.jstree-node.jstree-closed').withText('Test stavov').find('.jstree-icon.jstree-ocl'));
                I.click("Presmerovaná extrená linka", 'section.custom-modal div.jstree');
 
-               I.click('#pills-dt-insertScriptTable-main-tab');
+               I.clickCss('#pills-dt-insertScriptTable-main-tab');
           },
 
           // pridany adresar a web stranka
@@ -114,10 +114,10 @@ Scenario('pridanie sriptu do edit zaznamu @baseTest', async ({ I, DataTables, DT
           editSteps: function (I, options, DT, DTE) {
                // pridanie scriptu
                I.say('pridanie scriptu do edit zaznamu');
-               I.click('#pills-dt-insertScriptTable-scriptBody-tab');
+               I.clickCss('#pills-dt-insertScriptTable-scriptBody-tab');
                I.fillField('#DTE_Field_scriptBody', '<!-- auto test script -->');
 
-               I.click('#pills-dt-insertScriptTable-main-tab');
+               I.clickCss('#pills-dt-insertScriptTable-main-tab');
           },
 
           // pridany script do zaznamu
@@ -167,7 +167,7 @@ Scenario('zmena hodnoty cookie @baseTest', async ({ I, DataTables, DT, DTE }) =>
                I.waitForText('Neklasifikované', 10);
                I.click('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning');
 
-               I.click('#pills-dt-insertScriptTable-main-tab');
+               I.clickCss('#pills-dt-insertScriptTable-main-tab');
           },
 
           // cookie PREFERENCNE

@@ -18,7 +18,7 @@ Before(({ I, login }) => {
 Scenario('user-list-zakladne testy @baseTest', async ({ I, DataTables, DTE }) => {
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
-          perms: 'menuUsers',
+          perms: permEditAdminUser + "," + permEditPublicUser,
           createSteps: function(I, options) {
                DTE.save();
                I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");
@@ -53,30 +53,30 @@ Scenario('user-list-test pridania a odobratia skupin prav @baseTest', async ({ I
 
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
-          perms: 'menuUsers',
+          perms: permEditAdminUser + "," + permEditPublicUser,
           createSteps: function(I, options) {
                //tieto polia musia byt zadane a nezbehne ich autodetekcia, kedze su len v editore
                I.fillField("#DTE_Field_editorFields-login", "login-"+randomText);
                //I.fillField("#DTE_Field_email", randomText+"@balat.sk");
                I.fillField("#DTE_Field_password", "Heslo"+randomText);
 
-               I.click("#pills-dt-datatableInit-rightsTab-tab");
+               I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
                I.click("Áno", "div.DTE_Field_Name_admin");
                I.forceClick("forTestA");
                I.forceClick("forTestB");
                I.seeElement("#DTE_Field_editorFields-permGroups_1:checked");
                I.seeElement("#DTE_Field_editorFields-permGroups_2:checked");
-               I.click("#pills-dt-datatableInit-personalInfo-tab");
+               I.clickCss("#pills-dt-datatableInit-personalInfo-tab");
           },
           editSteps: function(I, options) {
-               I.click("#pills-dt-datatableInit-rightsTab-tab");
+               I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
                I.seeElement("#DTE_Field_editorFields-permGroups_1:checked");
                I.seeElement("#DTE_Field_editorFields-permGroups_2:checked");
                I.forceClick("forTestA");
                I.forceClick("forTestB");
                I.dontSeeElement("#DTE_Field_editorFields-permGroups_1:checked");
                I.dontSeeElement("#DTE_Field_editorFields-permGroups_2:checked");
-               I.click("#pills-dt-datatableInit-personalInfo-tab");
+               I.clickCss("#pills-dt-datatableInit-personalInfo-tab");
           },
           duplicateSteps: function(I, options) {
                I.fillField('#DTE_Field_editorFields-login', "login-"+randomText+DUPLICATE_TEXT);
@@ -131,13 +131,7 @@ Scenario('test-prava-admin-user', ({ I }) => {
 
      I.amOnPage(url + "?removePerm=" + permEditAdminUser + "," + permEditPublicUser);
 
-     I.fillField({css: "input.dt-filter-lastName"}, "Admin");
-     I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Admin", "div.dt-scroll-body tbody");
-
-     I.fillField({css: "input.dt-filter-lastName"}, "Balážová");
-     I.pressKey('Enter', "input.dt-filter-key");
-     I.dontSee("Balážová", "div.dt-scroll-body tbody");
+     I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
 
      I.logout();
  });
@@ -156,7 +150,7 @@ Scenario('test-prava-admin-user', ({ I }) => {
      I.click("button.buttons-edit");
      DTE.waitForEditor();
 
-     //I.click("#pills-dt-datatableInit-rightsTab-tab");
+     //I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
      I.forceClick('#DTE_Field_admin_0');
      DTE.save();
      I.see("Nemáte právo na túto editáciu");
@@ -229,7 +223,7 @@ Scenario("BUG set user perms from first page", ({I, DTE}) => {
      //
      I.say("Checking clicked perms, it was empty before fix")
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
      I.seeElement("#perms_cmp_adminlog a.jstree-clicked");
 
      DTE.cancel();
@@ -238,7 +232,7 @@ Scenario("BUG set user perms from first page", ({I, DTE}) => {
      I.say("open another user, check perms are different");
      I.click("sylvesterstallone");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
      I.dontSeeElement("#perms_cmp_adminlog a.jstree-clicked");
 
      DTE.cancel();
@@ -248,7 +242,7 @@ Scenario("BUG set user perms from first page", ({I, DTE}) => {
 Scenario("BUG permgroups icons not shown", ({I, DTE}) => {
      I.amOnPage("/admin/v9/users/user-list/?id=1");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
      I.seeElement("li#perms_cmp_adminlog span.taggroup span.tag.permgroup-62");
      I.dontSeeElement("li#perms_cmp_adminlog_logging span.taggroup span.tag.permgroup-63");
 
@@ -305,11 +299,11 @@ function userEditDialog(I, login, isSelf) {
      //
      I.say("Fill data");
      var address = "autotest-address-"+randomText;
-     I.click("#pills-dt-datatableInit-contactTab-tab");
+     I.clickCss("#pills-dt-datatableInit-contactTab-tab");
      I.fillField("#DTE_Field_address", address);
 
      I.switchTo();
-     I.click("#modalIframe div.modal-footer button.btn-primary");
+     I.clickCss("#modalIframe div.modal-footer button.btn-primary");
 
      I.waitForText("Profil bol aktualizovaný", 20, ".toast-message");
      I.dontSeeElement("#modalIframe");
@@ -327,11 +321,11 @@ function userEditDialog(I, login, isSelf) {
      I.waitForText(login, 15, "#datatableInit_modal div.DTE_Header_Content h5");
      I.waitForText("E-mailová adresa", 10);
 
-     I.click("#pills-dt-datatableInit-contactTab-tab");
+     I.clickCss("#pills-dt-datatableInit-contactTab-tab");
      I.seeInField("#DTE_Field_address", address);
 
      I.switchTo();
-     I.click("#modalIframe div.modal-header button.btn-close");
+     I.clickCss("#modalIframe div.modal-header button.btn-close");
 }
 
 Scenario("Useredit-dialog", ({I}) => {
@@ -447,7 +441,7 @@ function insertFile(I, fileName, skipWrong) {
           I.uncheckOption( locate("#datatableImportModal").find("#skip-wrong-data") );
      }
 
-     I.click("#submit-import");
+     I.clickCss("#submit-import");
 }
 
 Scenario("logout 2", ({I}) => {
@@ -468,7 +462,7 @@ Scenario('user-list-multiweb testy @singlethread @baseTest', async ({ I, DataTab
 
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
-          perms: 'menuUsers',
+          perms: permEditAdminUser + "," + permEditPublicUser,
           createSteps: function(I, options) {
                DTE.save();
                I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");
@@ -513,6 +507,23 @@ Scenario("BUG - do not allow to edit disabled fields", async ({I, DTE}) => {
      DTE.waitForEditor();
      I.seeInField("#DTE_Field_regDate", regDate);
 
+});
+
+Scenario("Show also root folders for writable_folders", async ({I, DTE}) => {
+     I.amOnPage("/admin/v9/users/user-list/?id=19");
+     DTE.waitForEditor();
+     I.click("#pills-dt-datatableInit-rightsTab-tab");
+     I.click(".DTE_Field_Name_editorFields\\.writableFolders button.btn-vue-jstree-add");
+     I.waitForElement("#custom-modal-id", 10);
+     I.waitForText("Koreňový priečinok", 10, "#custom-modal-id a.jstree-anchor");
+     I.waitForText("WEB-INF", 10, "#custom-modal-id a.jstree-anchor");
+     I.waitForText("components", 10, "#custom-modal-id a.jstree-anchor");
+
+     I.click("Koreňový priečinok", "#custom-modal-id a.jstree-anchor");
+     I.waitForInvisible("#custom-modal-id", 10);
+     let value = await I.grabValueFrom(".DTE_Field_Name_editorFields\\.writableFolders input.form-control");
+     I.assertEqual(value, "/");
+     DTE.cancel();
 });
 
 //TODO: dalsie testy, overenie jednotlivych kariet, overenie prihlasenia vytvoreneho pouzivatela

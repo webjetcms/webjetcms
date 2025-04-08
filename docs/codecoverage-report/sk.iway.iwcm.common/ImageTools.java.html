@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">ImageTools.java</span></div><h1>ImageTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageTools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.common</a> &gt; <span class="el_source">ImageTools.java</span></div><h1>ImageTools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.common;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -47,27 +47,38 @@ public class ImageTools
 
 	}
 
+	/**
+	 * Returns true if fileName is image file (ends with .jpg, png...)
+	 * @param fileName
+	 * @return
+	 */
+	public static boolean isImage(String fileName)
+	{
+<span class="nc" id="L57">		String ext = FileTools.getFileExtension(fileName);</span>
+<span class="nc bnc" id="L58" title="All 10 branches missed.">		return ext.equalsIgnoreCase(&quot;jpg&quot;) || ext.equalsIgnoreCase(&quot;jpeg&quot;) || ext.equalsIgnoreCase(&quot;gif&quot;) || ext.equalsIgnoreCase(&quot;png&quot;) || ext.equalsIgnoreCase(&quot;svg&quot;);</span>
+	}
+
 	public static int resizeImage(IwcmFile imageFile, int width, int height)
 	{
 		try
 		{
-<span class="nc" id="L54">			String srcUrlLC  = imageFile.getName().toLowerCase();</span>
+<span class="nc" id="L65">			String srcUrlLC  = imageFile.getName().toLowerCase();</span>
 
-<span class="nc bnc" id="L56" title="All 10 branches missed.">			if (imageFile.isFile() &amp;&amp; (srcUrlLC.endsWith(&quot;.jpg&quot;) || srcUrlLC.endsWith(&quot;.jpeg&quot;) || srcUrlLC.endsWith(&quot;.gif&quot;) || srcUrlLC.endsWith(&quot;.png&quot;)))</span>
+<span class="nc bnc" id="L67" title="All 10 branches missed.">			if (imageFile.isFile() &amp;&amp; (srcUrlLC.endsWith(&quot;.jpg&quot;) || srcUrlLC.endsWith(&quot;.jpeg&quot;) || srcUrlLC.endsWith(&quot;.gif&quot;) || srcUrlLC.endsWith(&quot;.png&quot;)))</span>
 			{
-<span class="nc bnc" id="L58" title="All 2 branches missed.">				if (GalleryDB.existsImageMagickConvertCommand()){</span>
-<span class="nc" id="L59">					return resizeImageImageMagick(imageFile,width,height);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">				if (GalleryDB.existsImageMagickConvertCommand()){</span>
+<span class="nc" id="L70">					return resizeImageImageMagick(imageFile,width,height);</span>
 				}
 				else{
-<span class="nc" id="L62">					return resizeImageGraphics2D(imageFile, width, height);</span>
+<span class="nc" id="L73">					return resizeImageGraphics2D(imageFile, width, height);</span>
 				}
 			}
 		}
-<span class="nc" id="L66">		catch (Exception ex)</span>
+<span class="nc" id="L77">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L68">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L69">		}</span>
-<span class="nc" id="L70">		return(3);</span>
+<span class="nc" id="L79">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L80">		}</span>
+<span class="nc" id="L81">		return(3);</span>
 
 	}
 
@@ -79,10 +90,10 @@ public class ImageTools
 	 */
 	private static int resizeImageImageMagick(IwcmFile imageFile, int width, int height)
 	{
-<span class="nc" id="L82">		GalleryDB.stripExif(imageFile.getAbsolutePath());</span>
+<span class="nc" id="L93">		GalleryDB.stripExif(imageFile.getAbsolutePath());</span>
 
-<span class="nc" id="L84">		String[] args = new String[]{&quot;imagemagick&quot;,&quot;from&quot;,&quot;-resize&quot;,width+&quot;x&quot;+height+&quot;!&quot;,&quot;to&quot;};</span>
-<span class="nc" id="L85">		return executeImageMagick(imageFile, args);</span>
+<span class="nc" id="L95">		String[] args = new String[]{&quot;imagemagick&quot;,&quot;from&quot;,&quot;-resize&quot;,width+&quot;x&quot;+height+&quot;!&quot;,&quot;to&quot;};</span>
+<span class="nc" id="L96">		return executeImageMagick(imageFile, args);</span>
 	}
 
 	/**
@@ -97,63 +108,63 @@ public class ImageTools
 	{
 		//opener = new Opener();
 		//imp = opener.openImage(realPath);
-<span class="nc" id="L100">		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));</span>
+<span class="nc" id="L111">		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));</span>
 
-<span class="nc" id="L102">		double scaleFactor = (width * 1.0) / (originalImage.getWidth() * 1.0);</span>
-<span class="nc" id="L103">		double scaleFactor2 = (height * 1.0) / (originalImage.getHeight() * 1.0);</span>
+<span class="nc" id="L113">		double scaleFactor = (width * 1.0) / (originalImage.getWidth() * 1.0);</span>
+<span class="nc" id="L114">		double scaleFactor2 = (height * 1.0) / (originalImage.getHeight() * 1.0);</span>
 
-<span class="nc" id="L105">		int w = (int) (originalImage.getWidth() * scaleFactor);</span>
-<span class="nc" id="L106">		int h = (int) (originalImage.getHeight() * scaleFactor2);</span>
+<span class="nc" id="L116">		int w = (int) (originalImage.getWidth() * scaleFactor);</span>
+<span class="nc" id="L117">		int h = (int) (originalImage.getHeight() * scaleFactor2);</span>
 
-<span class="nc" id="L108">		Image resizedImage = originalImage.getScaledInstance(w, h, Image.SCALE_AREA_AVERAGING);</span>
-<span class="nc" id="L109">		BufferedImage bufSmall = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);</span>
-<span class="nc" id="L110">		bufSmall.getGraphics().drawImage(resizedImage, 0, 0, null);</span>
-<span class="nc" id="L111">		bufSmall.getGraphics().dispose();</span>
+<span class="nc" id="L119">		Image resizedImage = originalImage.getScaledInstance(w, h, Image.SCALE_AREA_AVERAGING);</span>
+<span class="nc" id="L120">		BufferedImage bufSmall = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L121">		bufSmall.getGraphics().drawImage(resizedImage, 0, 0, null);</span>
+<span class="nc" id="L122">		bufSmall.getGraphics().dispose();</span>
 
 
 		try
 		{
-<span class="nc" id="L116">			ImageWriteParam iwparam = new JPEGImageWriteParam(null);</span>
-<span class="nc" id="L117">			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;</span>
-<span class="nc" id="L118">			iwparam.setCompressionQuality(0.85F);</span>
+<span class="nc" id="L127">			ImageWriteParam iwparam = new JPEGImageWriteParam(null);</span>
+<span class="nc" id="L128">			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;</span>
+<span class="nc" id="L129">			iwparam.setCompressionQuality(0.85F);</span>
 
 			//ImageIO.write(bufSmall, format, iwparam, fSmallImg);
 			//Jimi.putImage(&quot;image/&quot; + type, image, realPathSmall);
 
-<span class="nc" id="L123">			ImageWriter writer = null;</span>
+<span class="nc" id="L134">			ImageWriter writer = null;</span>
 			@SuppressWarnings(&quot;rawtypes&quot;)
-<span class="nc" id="L125">			Iterator iter = ImageIO.getImageWritersByFormatName(&quot;jpg&quot;);</span>
-<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (iter.hasNext()) {</span>
-<span class="nc" id="L127">				 writer = (ImageWriter)iter.next();</span>
+<span class="nc" id="L136">			Iterator iter = ImageIO.getImageWritersByFormatName(&quot;jpg&quot;);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (iter.hasNext()) {</span>
+<span class="nc" id="L138">				 writer = (ImageWriter)iter.next();</span>
 			}
 
-<span class="nc bnc" id="L130" title="All 2 branches missed.">			if (writer != null) {</span>
-<span class="nc bnc" id="L131" title="All 2 branches missed.">				if (imageFile.exists())</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (writer != null) {</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">				if (imageFile.exists())</span>
 				{
-<span class="nc" id="L133">					imageFile.delete();</span>
+<span class="nc" id="L144">					imageFile.delete();</span>
 				}
 
 				// Prepare output file
-<span class="nc" id="L137">				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);</span>
-<span class="nc" id="L138">				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);</span>
-<span class="nc" id="L139">				writer.setOutput(ios);</span>
+<span class="nc" id="L148">				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);</span>
+<span class="nc" id="L149">				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);</span>
+<span class="nc" id="L150">				writer.setOutput(ios);</span>
 
 				// Write the image
-<span class="nc" id="L142">				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
+<span class="nc" id="L153">				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
 
 				// Cleanup
-<span class="nc" id="L145">				ios.flush();</span>
-<span class="nc" id="L146">				writer.dispose();</span>
-<span class="nc" id="L147">				ios.close();</span>
-<span class="nc" id="L148">				iwos.close();</span>
+<span class="nc" id="L156">				ios.flush();</span>
+<span class="nc" id="L157">				writer.dispose();</span>
+<span class="nc" id="L158">				ios.close();</span>
+<span class="nc" id="L159">				iwos.close();</span>
 			}
 
-<span class="nc" id="L151">			return(0);</span>
+<span class="nc" id="L162">			return(0);</span>
 		}
-<span class="nc" id="L153">		catch (Exception ex)</span>
+<span class="nc" id="L164">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L155">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L156">			return(2);</span>
+<span class="nc" id="L166">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L167">			return(2);</span>
 		}
 	}
 
@@ -172,31 +183,31 @@ public class ImageTools
 	 */
 	public static int resizeImage(String srcUrl, int width, int height)
 	{
-<span class="nc" id="L175">		IwcmFile imageFile = new IwcmFile(Tools.getRealPath(srcUrl));</span>
-<span class="nc" id="L176">		return resizeImage(imageFile, width, height);</span>
+<span class="nc" id="L186">		IwcmFile imageFile = new IwcmFile(Tools.getRealPath(srcUrl));</span>
+<span class="nc" id="L187">		return resizeImage(imageFile, width, height);</span>
 	}
 
 	public static int cropImage(IwcmFile imageFile, int width, int height, int startX, int startY)
 	{
 		try
 		{
-<span class="nc" id="L183">			String srcUrlLC = imageFile.getName().toLowerCase();</span>
+<span class="nc" id="L194">			String srcUrlLC = imageFile.getName().toLowerCase();</span>
 
-<span class="nc bnc" id="L185" title="All 10 branches missed.">			if (imageFile.isFile() &amp;&amp; (srcUrlLC.endsWith(&quot;.jpg&quot;) || srcUrlLC.endsWith(&quot;.jpeg&quot;) || srcUrlLC.endsWith(&quot;.gif&quot;) || srcUrlLC.endsWith(&quot;.png&quot;)))</span>
+<span class="nc bnc" id="L196" title="All 10 branches missed.">			if (imageFile.isFile() &amp;&amp; (srcUrlLC.endsWith(&quot;.jpg&quot;) || srcUrlLC.endsWith(&quot;.jpeg&quot;) || srcUrlLC.endsWith(&quot;.gif&quot;) || srcUrlLC.endsWith(&quot;.png&quot;)))</span>
 			{
-<span class="nc bnc" id="L187" title="All 2 branches missed.">				if (GalleryDB.existsImageMagickConvertCommand()){</span>
-<span class="nc" id="L188">					return cropImageImageMagick(imageFile, width, height, startX, startY);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">				if (GalleryDB.existsImageMagickConvertCommand()){</span>
+<span class="nc" id="L199">					return cropImageImageMagick(imageFile, width, height, startX, startY);</span>
 				}
 				else{
-<span class="nc" id="L191">					return cropImageGraphics2D(imageFile, width, height, startX, startY);</span>
+<span class="nc" id="L202">					return cropImageGraphics2D(imageFile, width, height, startX, startY);</span>
 				}
 			}
 		}
-<span class="nc" id="L195">		catch (Exception ex)</span>
+<span class="nc" id="L206">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L197">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L198">		}</span>
-<span class="nc" id="L199">		return(3);</span>
+<span class="nc" id="L208">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L209">		}</span>
+<span class="nc" id="L210">		return(3);</span>
 
 	}
 
@@ -210,10 +221,10 @@ public class ImageTools
 	 */
 	private static int cropImageImageMagick(IwcmFile imageFile, int width, int height, int startX, int startY)
 	{
-<span class="nc" id="L213">		GalleryDB.stripExif(imageFile.getAbsolutePath());</span>
+<span class="nc" id="L224">		GalleryDB.stripExif(imageFile.getAbsolutePath());</span>
 
-<span class="nc" id="L215">		String[] args = new String[]{&quot;imagemagick&quot;, &quot;from&quot;, &quot;-crop&quot;, width+&quot;x&quot;+height+&quot;+&quot;+startX+&quot;+&quot;+startY, &quot;to&quot;};</span>
-<span class="nc" id="L216">		return executeImageMagick(imageFile,args);</span>
+<span class="nc" id="L226">		String[] args = new String[]{&quot;imagemagick&quot;, &quot;from&quot;, &quot;-crop&quot;, width+&quot;x&quot;+height+&quot;+&quot;+startX+&quot;+&quot;+startY, &quot;to&quot;};</span>
+<span class="nc" id="L227">		return executeImageMagick(imageFile,args);</span>
 	}
 
 	/**
@@ -232,54 +243,54 @@ public class ImageTools
 		//double scaleFactor = 0.3;
 		//double scaleFactor2 = 0.3;
 
-<span class="nc" id="L235">		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));</span>
+<span class="nc" id="L246">		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));</span>
 
-<span class="nc" id="L237">		Image cropedImage = originalImage.getSubimage(startX, startY, width, height);</span>
+<span class="nc" id="L248">		Image cropedImage = originalImage.getSubimage(startX, startY, width, height);</span>
 
-<span class="nc" id="L239">		BufferedImage bufSmall = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
-<span class="nc" id="L240">		bufSmall.getGraphics().drawImage(cropedImage, 0, 0, null);</span>
-<span class="nc" id="L241">		bufSmall.getGraphics().dispose();</span>
+<span class="nc" id="L250">		BufferedImage bufSmall = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L251">		bufSmall.getGraphics().drawImage(cropedImage, 0, 0, null);</span>
+<span class="nc" id="L252">		bufSmall.getGraphics().dispose();</span>
 
 		try
 		{
-<span class="nc" id="L245">			ImageWriteParam iwparam = new JPEGImageWriteParam(null);</span>
-<span class="nc" id="L246">			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;</span>
-<span class="nc" id="L247">			iwparam.setCompressionQuality(0.85F);</span>
+<span class="nc" id="L256">			ImageWriteParam iwparam = new JPEGImageWriteParam(null);</span>
+<span class="nc" id="L257">			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;</span>
+<span class="nc" id="L258">			iwparam.setCompressionQuality(0.85F);</span>
 
-<span class="nc" id="L249">			ImageWriter writer = null;</span>
+<span class="nc" id="L260">			ImageWriter writer = null;</span>
 			@SuppressWarnings(&quot;rawtypes&quot;)
-<span class="nc" id="L251">			Iterator iter = ImageIO.getImageWritersByFormatName(&quot;jpg&quot;);</span>
-<span class="nc bnc" id="L252" title="All 2 branches missed.">			if (iter.hasNext()) {</span>
-<span class="nc" id="L253">				 writer = (ImageWriter)iter.next();</span>
+<span class="nc" id="L262">			Iterator iter = ImageIO.getImageWritersByFormatName(&quot;jpg&quot;);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			if (iter.hasNext()) {</span>
+<span class="nc" id="L264">				 writer = (ImageWriter)iter.next();</span>
 			}
-<span class="nc bnc" id="L255" title="All 2 branches missed.">			if (writer != null) {</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">			if (writer != null) {</span>
 				// Prepare output file
-<span class="nc" id="L257">				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);</span>
-<span class="nc" id="L258">				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);</span>
-<span class="nc" id="L259">				writer.setOutput(ios);</span>
+<span class="nc" id="L268">				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);</span>
+<span class="nc" id="L269">				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);</span>
+<span class="nc" id="L270">				writer.setOutput(ios);</span>
 
 				// Write the image
-<span class="nc" id="L262">				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
+<span class="nc" id="L273">				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
 
 				// Cleanup
-<span class="nc" id="L265">				ios.flush();</span>
-<span class="nc" id="L266">				writer.dispose();</span>
-<span class="nc" id="L267">				ios.close();</span>
-<span class="nc" id="L268">				iwos.close();</span>
+<span class="nc" id="L276">				ios.flush();</span>
+<span class="nc" id="L277">				writer.dispose();</span>
+<span class="nc" id="L278">				ios.close();</span>
+<span class="nc" id="L279">				iwos.close();</span>
 			}
 
-<span class="nc" id="L271">			return(0);</span>
+<span class="nc" id="L282">			return(0);</span>
 		}
-<span class="nc" id="L273">		catch (Exception ex)</span>
+<span class="nc" id="L284">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L275">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L276">			return(2);</span>
+<span class="nc" id="L286">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L287">			return(2);</span>
 		}
 	}
 	public static int cropImage(String srcUrl, int width, int height, int startX, int startY)
 	{
-<span class="nc" id="L281">		IwcmFile imageFile = new IwcmFile(Tools.getRealPath(srcUrl));</span>
-<span class="nc" id="L282">		return  cropImage(imageFile, width, height, startX, startY);</span>
+<span class="nc" id="L292">		IwcmFile imageFile = new IwcmFile(Tools.getRealPath(srcUrl));</span>
+<span class="nc" id="L293">		return  cropImage(imageFile, width, height, startX, startY);</span>
 	}
 
 	public static int rotateImage(IwcmFile imageFile, double angle)
@@ -287,23 +298,23 @@ public class ImageTools
 
 		try
 		{
-<span class="nc" id="L290">			String srcUrlLC = imageFile.toString().toLowerCase();</span>
+<span class="nc" id="L301">			String srcUrlLC = imageFile.toString().toLowerCase();</span>
 
-<span class="nc bnc" id="L292" title="All 10 branches missed.">			if (imageFile.isFile() &amp;&amp; (srcUrlLC.endsWith(&quot;.jpg&quot;) || srcUrlLC.endsWith(&quot;.jpeg&quot;) || srcUrlLC.endsWith(&quot;.gif&quot;) || srcUrlLC.endsWith(&quot;.png&quot;)))</span>
+<span class="nc bnc" id="L303" title="All 10 branches missed.">			if (imageFile.isFile() &amp;&amp; (srcUrlLC.endsWith(&quot;.jpg&quot;) || srcUrlLC.endsWith(&quot;.jpeg&quot;) || srcUrlLC.endsWith(&quot;.gif&quot;) || srcUrlLC.endsWith(&quot;.png&quot;)))</span>
 			{
-<span class="nc bnc" id="L294" title="All 2 branches missed.">				if (GalleryDB.existsImageMagickConvertCommand()){</span>
-<span class="nc" id="L295">					return rotateImageImageMagick(imageFile, angle);</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">				if (GalleryDB.existsImageMagickConvertCommand()){</span>
+<span class="nc" id="L306">					return rotateImageImageMagick(imageFile, angle);</span>
 				}else{
-<span class="nc" id="L297">					return rotateImageGraphics2D(imageFile, angle);</span>
+<span class="nc" id="L308">					return rotateImageGraphics2D(imageFile, angle);</span>
 				}
 
 			}
 		}
-<span class="nc" id="L302">		catch (Exception ex)</span>
+<span class="nc" id="L313">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L304">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L305">		}</span>
-<span class="nc" id="L306">		return(3);</span>
+<span class="nc" id="L315">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L316">		}</span>
+<span class="nc" id="L317">		return(3);</span>
 
 	}
 
@@ -315,10 +326,10 @@ public class ImageTools
 	 */
 	private static int rotateImageImageMagick(IwcmFile imageFile, double angle)
 	{
-<span class="nc" id="L318">		GalleryDB.stripExif(imageFile.getAbsolutePath());</span>
+<span class="nc" id="L329">		GalleryDB.stripExif(imageFile.getAbsolutePath());</span>
 
-<span class="nc" id="L320">		String[] args = new String[]{&quot;imagemagick&quot;, &quot;from&quot;, &quot;-rotate&quot;, Double.toString(angle), &quot;to&quot;};</span>
-<span class="nc" id="L321">		return executeImageMagick(imageFile,args);</span>
+<span class="nc" id="L331">		String[] args = new String[]{&quot;imagemagick&quot;, &quot;from&quot;, &quot;-rotate&quot;, Double.toString(angle), &quot;to&quot;};</span>
+<span class="nc" id="L332">		return executeImageMagick(imageFile,args);</span>
 	}
 
 	/**
@@ -328,55 +339,55 @@ public class ImageTools
 	 */
 	private static int executeImageMagick(IwcmFile imageFile, String[] args)
 	{
-<span class="nc" id="L331">		int fromIndex = ArrayUtils.indexOf(args, &quot;from&quot;);</span>
-<span class="nc" id="L332">		int toIndex = ArrayUtils.indexOf(args, &quot;to&quot;);</span>
-<span class="nc bnc" id="L333" title="All 4 branches missed.">		if (fromIndex &lt; 0 || toIndex &lt; 0)</span>
+<span class="nc" id="L342">		int fromIndex = ArrayUtils.indexOf(args, &quot;from&quot;);</span>
+<span class="nc" id="L343">		int toIndex = ArrayUtils.indexOf(args, &quot;to&quot;);</span>
+<span class="nc bnc" id="L344" title="All 4 branches missed.">		if (fromIndex &lt; 0 || toIndex &lt; 0)</span>
 		{
-<span class="nc" id="L335">			throw new IllegalArgumentException(&quot;String argument array parameter must contain 'from' and 'to' &quot;);</span>
+<span class="nc" id="L346">			throw new IllegalArgumentException(&quot;String argument array parameter must contain 'from' and 'to' &quot;);</span>
 		}
-<span class="nc bnc" id="L337" title="All 2 branches missed.">		if (IwcmFsDB.useDBStorage(imageFile.getVirtualPath()))</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (IwcmFsDB.useDBStorage(imageFile.getVirtualPath()))</span>
 		{
 			try
 			{
-<span class="nc" id="L341">				String temporaryOriginal = IwcmFsDB.getTempFilePath(imageFile.getPath());</span>
-<span class="nc" id="L342">				String temporaryProcessed = IwcmFsDB.getTempFilePath(imageFile.getPath() + &quot;.new&quot;);</span>
-<span class="nc" id="L343">				File temporaryProcessedFile = new File(temporaryProcessed);</span>
-<span class="nc" id="L344">				File imageFileFile = new File(imageFile.getAbsolutePath());</span>
-<span class="nc" id="L345">				IwcmFsDB.writeFileToDisk(imageFileFile, temporaryProcessedFile);</span>
-<span class="nc" id="L346">				args[fromIndex] = temporaryOriginal;</span>
-<span class="nc" id="L347">				args[toIndex] = temporaryProcessed;</span>
-<span class="nc" id="L348">				int result = GalleryDB.executeImageMagickCommand(args);</span>
-<span class="nc bnc" id="L349" title="All 2 branches missed.">				if (result == 0)</span>
+<span class="nc" id="L352">				String temporaryOriginal = IwcmFsDB.getTempFilePath(imageFile.getPath());</span>
+<span class="nc" id="L353">				String temporaryProcessed = IwcmFsDB.getTempFilePath(imageFile.getPath() + &quot;.new&quot;);</span>
+<span class="nc" id="L354">				File temporaryProcessedFile = new File(temporaryProcessed);</span>
+<span class="nc" id="L355">				File imageFileFile = new File(imageFile.getAbsolutePath());</span>
+<span class="nc" id="L356">				IwcmFsDB.writeFileToDisk(imageFileFile, temporaryProcessedFile);</span>
+<span class="nc" id="L357">				args[fromIndex] = temporaryOriginal;</span>
+<span class="nc" id="L358">				args[toIndex] = temporaryProcessed;</span>
+<span class="nc" id="L359">				int result = GalleryDB.executeImageMagickCommand(args);</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">				if (result == 0)</span>
 				{
-<span class="nc" id="L351">					IwcmFsDB.writeFileToDB(temporaryProcessedFile, imageFileFile);</span>
-<span class="nc bnc" id="L352" title="All 4 branches missed.">					if (new File(temporaryOriginal).delete() &amp;&amp; temporaryProcessedFile.delete())</span>
+<span class="nc" id="L362">					IwcmFsDB.writeFileToDB(temporaryProcessedFile, imageFileFile);</span>
+<span class="nc bnc" id="L363" title="All 4 branches missed.">					if (new File(temporaryOriginal).delete() &amp;&amp; temporaryProcessedFile.delete())</span>
 					{
-<span class="nc" id="L354">						return 0;</span>
+<span class="nc" id="L365">						return 0;</span>
 					}
 				}
 				else
 				{
-<span class="nc" id="L359">					return result;</span>
+<span class="nc" id="L370">					return result;</span>
 				}
 			}
-<span class="nc" id="L362">			catch (IOException e)</span>
+<span class="nc" id="L373">			catch (IOException e)</span>
 			{
-<span class="nc" id="L364">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L365">			}</span>
+<span class="nc" id="L375">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L376">			}</span>
 		}
 		else
 		{
-<span class="nc" id="L369">			IwcmFile processed = new IwcmFile(imageFile.getAbsolutePath() + &quot;.new&quot;);</span>
-<span class="nc" id="L370">			args[fromIndex] = imageFile.getAbsolutePath();</span>
-<span class="nc" id="L371">			args[toIndex] = processed.getAbsolutePath();</span>
-<span class="nc" id="L372">			int result = GalleryDB.executeImageMagickCommand(args);</span>
-<span class="nc bnc" id="L373" title="All 2 branches missed.">			if (result == 0)</span>
+<span class="nc" id="L380">			IwcmFile processed = new IwcmFile(imageFile.getAbsolutePath() + &quot;.new&quot;);</span>
+<span class="nc" id="L381">			args[fromIndex] = imageFile.getAbsolutePath();</span>
+<span class="nc" id="L382">			args[toIndex] = processed.getAbsolutePath();</span>
+<span class="nc" id="L383">			int result = GalleryDB.executeImageMagickCommand(args);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">			if (result == 0)</span>
 			{
-<span class="nc" id="L375">				FileTools.copyFile(processed, imageFile);</span>
-<span class="nc bnc" id="L376" title="All 2 branches missed.">				return processed.delete() ? 0 : -1;</span>
+<span class="nc" id="L386">				FileTools.copyFile(processed, imageFile);</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">				return processed.delete() ? 0 : -1;</span>
 			}
 		}
-<span class="nc" id="L379">		return -1;</span>
+<span class="nc" id="L390">		return -1;</span>
 	}
 
 	/**
@@ -388,19 +399,19 @@ public class ImageTools
 	 */
 	private static int rotateImageGraphics2D(IwcmFile imageFile, double angle) throws IOException, FileNotFoundException
 	{
-<span class="nc" id="L391">		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));</span>
+<span class="nc" id="L402">		BufferedImage originalImage = ImageIO.read(new IwcmInputStream(imageFile));</span>
 
-<span class="nc" id="L393">		int w = originalImage.getWidth();</span>
-<span class="nc" id="L394">		int h = originalImage.getHeight();</span>
+<span class="nc" id="L404">		int w = originalImage.getWidth();</span>
+<span class="nc" id="L405">		int h = originalImage.getHeight();</span>
 
 		//prepocet na radiany
-<span class="nc" id="L397">		double angleRad = angle*(Math.PI*2)/360;</span>
+<span class="nc" id="L408">		double angleRad = angle*(Math.PI*2)/360;</span>
 
-<span class="nc" id="L399">		double sin = Math.abs(Math.sin(angleRad));</span>
-<span class="nc" id="L400">		double cos = Math.abs(Math.cos(angleRad));</span>
+<span class="nc" id="L410">		double sin = Math.abs(Math.sin(angleRad));</span>
+<span class="nc" id="L411">		double cos = Math.abs(Math.cos(angleRad));</span>
 
-<span class="nc" id="L402">		int neww = (int)Math.floor(w*cos+h*sin);</span>
-<span class="nc" id="L403">		int newh = (int)Math.floor(h*cos+w*sin);</span>
+<span class="nc" id="L413">		int neww = (int)Math.floor(w*cos+h*sin);</span>
+<span class="nc" id="L414">		int newh = (int)Math.floor(h*cos+w*sin);</span>
 
 
 		//debug
@@ -422,62 +433,62 @@ public class ImageTools
 		BufferedImage result = gc.createCompatibleImage(neww, newh); //, transparency);*/
 
 		//BufferedImage result = originalImage.getScaledInstance(neww, newh, )
-<span class="nc" id="L425">		BufferedImage result = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L436">		BufferedImage result = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_RGB);</span>
 
-<span class="nc" id="L427">		Graphics2D g = result.createGraphics();</span>
-<span class="nc" id="L428">		g.translate((neww-w)/(double)2, (newh-h)/(double)2);</span>
-<span class="nc" id="L429">		g.rotate(angleRad, w/(double)2, h/(double)2);</span>
-<span class="nc" id="L430">		g.drawRenderedImage(originalImage, null);</span>
+<span class="nc" id="L438">		Graphics2D g = result.createGraphics();</span>
+<span class="nc" id="L439">		g.translate((neww-w)/(double)2, (newh-h)/(double)2);</span>
+<span class="nc" id="L440">		g.rotate(angleRad, w/(double)2, h/(double)2);</span>
+<span class="nc" id="L441">		g.drawRenderedImage(originalImage, null);</span>
 
-<span class="nc" id="L432">		Image rotatedImage = result.getSubimage(0, 0, result.getWidth(), result.getHeight());</span>
+<span class="nc" id="L443">		Image rotatedImage = result.getSubimage(0, 0, result.getWidth(), result.getHeight());</span>
 
-<span class="nc" id="L434">		BufferedImage bufSmall = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_RGB);</span>
-<span class="nc" id="L435">		bufSmall.getGraphics().drawImage(rotatedImage, 0, 0, null);</span>
-<span class="nc" id="L436">		bufSmall.getGraphics().dispose();</span>
+<span class="nc" id="L445">		BufferedImage bufSmall = new BufferedImage(neww, newh, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L446">		bufSmall.getGraphics().drawImage(rotatedImage, 0, 0, null);</span>
+<span class="nc" id="L447">		bufSmall.getGraphics().dispose();</span>
 
 		try
 		{
-<span class="nc" id="L440">			ImageWriteParam iwparam = new JPEGImageWriteParam(null);</span>
-<span class="nc" id="L441">			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;</span>
-<span class="nc" id="L442">			iwparam.setCompressionQuality(0.85F);</span>
+<span class="nc" id="L451">			ImageWriteParam iwparam = new JPEGImageWriteParam(null);</span>
+<span class="nc" id="L452">			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;</span>
+<span class="nc" id="L453">			iwparam.setCompressionQuality(0.85F);</span>
 
 			//ImageIO.write(bufSmall, format, iwparam, fSmallImg);
 			//Jimi.putImage(&quot;image/&quot; + type, image, realPathSmall);
 
-<span class="nc" id="L447">			ImageWriter writer = null;</span>
+<span class="nc" id="L458">			ImageWriter writer = null;</span>
 			@SuppressWarnings(&quot;rawtypes&quot;)
-<span class="nc" id="L449">			Iterator iter = ImageIO.getImageWritersByFormatName(&quot;jpg&quot;);</span>
-<span class="nc bnc" id="L450" title="All 2 branches missed.">			if (iter.hasNext()) {</span>
-<span class="nc" id="L451">				 writer = (ImageWriter)iter.next();</span>
+<span class="nc" id="L460">			Iterator iter = ImageIO.getImageWritersByFormatName(&quot;jpg&quot;);</span>
+<span class="nc bnc" id="L461" title="All 2 branches missed.">			if (iter.hasNext()) {</span>
+<span class="nc" id="L462">				 writer = (ImageWriter)iter.next();</span>
 			}
-<span class="nc bnc" id="L453" title="All 2 branches missed.">			if (writer != null) {</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">			if (writer != null) {</span>
 				// Prepare output file
-<span class="nc" id="L455">				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);</span>
-<span class="nc" id="L456">				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);</span>
-<span class="nc" id="L457">				writer.setOutput(ios);</span>
+<span class="nc" id="L466">				IwcmOutputStream iwos = new IwcmOutputStream(imageFile);</span>
+<span class="nc" id="L467">				ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);</span>
+<span class="nc" id="L468">				writer.setOutput(ios);</span>
 
 				// Write the image
-<span class="nc" id="L460">				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
+<span class="nc" id="L471">				writer.write(null, new IIOImage(bufSmall, null, null), iwparam);</span>
 
 				// Cleanup
-<span class="nc" id="L463">				ios.flush();</span>
-<span class="nc" id="L464">				writer.dispose();</span>
-<span class="nc" id="L465">				ios.close();</span>
-<span class="nc" id="L466">				iwos.close();</span>
+<span class="nc" id="L474">				ios.flush();</span>
+<span class="nc" id="L475">				writer.dispose();</span>
+<span class="nc" id="L476">				ios.close();</span>
+<span class="nc" id="L477">				iwos.close();</span>
 			}
 
-<span class="nc" id="L469">			return(0);</span>
+<span class="nc" id="L480">			return(0);</span>
 		}
-<span class="nc" id="L471">		catch (Exception ex)</span>
+<span class="nc" id="L482">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L473">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L474">			return(2);</span>
+<span class="nc" id="L484">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L485">			return(2);</span>
 		}
 	}
 
 	public static int rotateImage(String srcUrl, double angle)
 	{
-<span class="nc" id="L480">		return rotateImage(new IwcmFile(Tools.getRealPath(srcUrl)), angle);</span>
+<span class="nc" id="L491">		return rotateImage(new IwcmFile(Tools.getRealPath(srcUrl)), angle);</span>
 	}
 
 	/**
@@ -487,126 +498,126 @@ public class ImageTools
 	 */
 	public static void convertCmykToRgb(String filePath)
 	{
-<span class="pc bpc" id="L490" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;galleryConvertCmykToRgb&quot;) == false)</span>
-<span class="fc" id="L491">			return;</span>
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;galleryConvertCmykToRgb&quot;) == false)</span>
+<span class="fc" id="L502">			return;</span>
 
-<span class="nc" id="L493">		String imageMagickDir = GalleryDB.getImageMagicDir();</span>
-<span class="nc" id="L494">		boolean isCmyk = false;</span>
-<span class="nc" id="L495">		boolean identifyExist = false;</span>
-<span class="nc" id="L496">		boolean convertExists = false;</span>
-<span class="nc" id="L497">		String identifyFile = getIdentifyRuntimeFile();</span>
-<span class="nc" id="L498">		String runtimeFile = getMogrifyRuntimeFile();</span>
+<span class="nc" id="L504">		String imageMagickDir = GalleryDB.getImageMagicDir();</span>
+<span class="nc" id="L505">		boolean isCmyk = false;</span>
+<span class="nc" id="L506">		boolean identifyExist = false;</span>
+<span class="nc" id="L507">		boolean convertExists = false;</span>
+<span class="nc" id="L508">		String identifyFile = getIdentifyRuntimeFile();</span>
+<span class="nc" id="L509">		String runtimeFile = getMogrifyRuntimeFile();</span>
 
 		try
 		{
-<span class="nc bnc" id="L502" title="All 2 branches missed.">			if (Tools.isNotEmpty(imageMagickDir))</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">			if (Tools.isNotEmpty(imageMagickDir))</span>
 			{
 				//overime si ci existuje convert a identify
-<span class="nc" id="L505">				File f = new File(imageMagickDir + File.separatorChar + identifyFile);</span>
-<span class="nc bnc" id="L506" title="All 4 branches missed.">				if (f.exists() &amp;&amp; f.canRead())</span>
-<span class="nc" id="L507">					identifyExist = true;</span>
+<span class="nc" id="L516">				File f = new File(imageMagickDir + File.separatorChar + identifyFile);</span>
+<span class="nc bnc" id="L517" title="All 4 branches missed.">				if (f.exists() &amp;&amp; f.canRead())</span>
+<span class="nc" id="L518">					identifyExist = true;</span>
 				else
-<span class="nc" id="L509">					Logger.debug(ImageTools.class, &quot;identify command not found&quot;);</span>
-<span class="nc" id="L510">				File fi = new File(imageMagickDir + File.separatorChar + runtimeFile);</span>
-<span class="nc bnc" id="L511" title="All 4 branches missed.">				if (fi.exists() &amp;&amp; fi.canRead())</span>
-<span class="nc" id="L512">					convertExists = true;</span>
+<span class="nc" id="L520">					Logger.debug(ImageTools.class, &quot;identify command not found&quot;);</span>
+<span class="nc" id="L521">				File fi = new File(imageMagickDir + File.separatorChar + runtimeFile);</span>
+<span class="nc bnc" id="L522" title="All 4 branches missed.">				if (fi.exists() &amp;&amp; fi.canRead())</span>
+<span class="nc" id="L523">					convertExists = true;</span>
 				else
-<span class="nc" id="L514">					Logger.debug(ImageTools.class, &quot;converter command not found&quot;);</span>
+<span class="nc" id="L525">					Logger.debug(ImageTools.class, &quot;converter command not found&quot;);</span>
 			}
 
-<span class="nc bnc" id="L517" title="All 10 branches missed.">			if (Tools.isNotEmpty(imageMagickDir) &amp;&amp; convertExists &amp;&amp; identifyExist &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;galleryConvertCmykToRgbInputProfilePath&quot;)) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;galleryConvertCmykToRgbOutputProfilePath&quot;)))</span>
+<span class="nc bnc" id="L528" title="All 10 branches missed.">			if (Tools.isNotEmpty(imageMagickDir) &amp;&amp; convertExists &amp;&amp; identifyExist &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;galleryConvertCmykToRgbInputProfilePath&quot;)) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;galleryConvertCmykToRgbOutputProfilePath&quot;)))</span>
 			{
-<span class="nc" id="L519">				Logger.debug(GalleryDB.class, &quot;executing image magick: &quot; + imageMagickDir + File.separatorChar + identifyFile);</span>
-<span class="nc" id="L520">				Runtime rt = Runtime.getRuntime();</span>
+<span class="nc" id="L530">				Logger.debug(GalleryDB.class, &quot;executing image magick: &quot; + imageMagickDir + File.separatorChar + identifyFile);</span>
+<span class="nc" id="L531">				Runtime rt = Runtime.getRuntime();</span>
 
-<span class="nc" id="L522">				String[] args = new String[3];</span>
-
-
+<span class="nc" id="L533">				String[] args = new String[3];</span>
 
 
-<span class="nc" id="L527">				args[0] = imageMagickDir + File.separatorChar + identifyFile;</span>
-<span class="nc" id="L528">				args[1] = &quot;-verbose&quot;;</span>
-<span class="nc" id="L529">				args[2] = filePath;</span>
 
-<span class="nc" id="L531">				Process proc = rt.exec(args);</span>
-<span class="nc" id="L532">				InputStream stderr = proc.getInputStream();//getErrorStream();</span>
-<span class="nc" id="L533">				BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
-<span class="nc" id="L534">				String line = null;</span>
-<span class="nc bnc" id="L535" title="All 2 branches missed.">				while ((line = br.readLine()) != null)</span>
+
+<span class="nc" id="L538">				args[0] = imageMagickDir + File.separatorChar + identifyFile;</span>
+<span class="nc" id="L539">				args[1] = &quot;-verbose&quot;;</span>
+<span class="nc" id="L540">				args[2] = filePath;</span>
+
+<span class="nc" id="L542">				Process proc = rt.exec(args);</span>
+<span class="nc" id="L543">				InputStream stderr = proc.getInputStream();//getErrorStream();</span>
+<span class="nc" id="L544">				BufferedReader br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc" id="L545">				String line = null;</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">				while ((line = br.readLine()) != null)</span>
 				{
-<span class="nc bnc" id="L537" title="All 2 branches missed.">					if (line.indexOf(&quot;CMYK&quot;)&gt;-1)</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">					if (line.indexOf(&quot;CMYK&quot;)&gt;-1)</span>
 					{
-<span class="nc" id="L539">						isCmyk = true;</span>
-<span class="nc" id="L540">						break;</span>
+<span class="nc" id="L550">						isCmyk = true;</span>
+<span class="nc" id="L551">						break;</span>
 					}
 				}
-<span class="nc" id="L543">				br.close();</span>
+<span class="nc" id="L554">				br.close();</span>
 
 				//ak uploadovany obrazok je v CMYKu, skonvertujeme ho...
-<span class="nc bnc" id="L546" title="All 2 branches missed.">				if (isCmyk)</span>
+<span class="nc bnc" id="L557" title="All 2 branches missed.">				if (isCmyk)</span>
 				{
-<span class="nc" id="L548">					args = new String[11];</span>
+<span class="nc" id="L559">					args = new String[11];</span>
 
-<span class="nc bnc" id="L550" title="All 2 branches missed.">					if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(filePath)))</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">					if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(filePath)))</span>
 					{
-<span class="nc" id="L552">						IwcmFsDB.writeFileToDisk(new File(filePath),new File(IwcmFsDB.getTempFilePath(filePath)));</span>
-<span class="nc" id="L553">						args[0] = imageMagickDir + File.separatorChar + runtimeFile;</span>
-<span class="nc" id="L554">						args[1] = &quot;-profile&quot;;</span>
-<span class="nc" id="L555">						args[2] = Constants.getString(&quot;galleryConvertCmykToRgbInputProfilePath&quot;);</span>
-<span class="nc" id="L556">						args[3] = &quot;-profile&quot;;</span>
-<span class="nc" id="L557">						args[4] = Constants.getString(&quot;galleryConvertCmykToRgbOutputProfilePath&quot;);</span>
-<span class="nc" id="L558">						args[5]	= &quot;-set&quot;;</span>
-<span class="nc" id="L559">						args[6] = &quot;colorspace&quot;;</span>
-<span class="nc" id="L560">						args[7] = &quot;sRGB&quot;;</span>
-<span class="nc" id="L561">						args[8] = &quot;-quality&quot;;</span>
-<span class="nc" id="L562">						args[9] = &quot;85&quot;;</span>
-<span class="nc" id="L563">						args[10] = IwcmFsDB.getTempFilePath(filePath);</span>
+<span class="nc" id="L563">						IwcmFsDB.writeFileToDisk(new File(filePath),new File(IwcmFsDB.getTempFilePath(filePath)));</span>
+<span class="nc" id="L564">						args[0] = imageMagickDir + File.separatorChar + runtimeFile;</span>
+<span class="nc" id="L565">						args[1] = &quot;-profile&quot;;</span>
+<span class="nc" id="L566">						args[2] = Constants.getString(&quot;galleryConvertCmykToRgbInputProfilePath&quot;);</span>
+<span class="nc" id="L567">						args[3] = &quot;-profile&quot;;</span>
+<span class="nc" id="L568">						args[4] = Constants.getString(&quot;galleryConvertCmykToRgbOutputProfilePath&quot;);</span>
+<span class="nc" id="L569">						args[5]	= &quot;-set&quot;;</span>
+<span class="nc" id="L570">						args[6] = &quot;colorspace&quot;;</span>
+<span class="nc" id="L571">						args[7] = &quot;sRGB&quot;;</span>
+<span class="nc" id="L572">						args[8] = &quot;-quality&quot;;</span>
+<span class="nc" id="L573">						args[9] = &quot;85&quot;;</span>
+<span class="nc" id="L574">						args[10] = IwcmFsDB.getTempFilePath(filePath);</span>
 					}
 					else
 					{
-<span class="nc" id="L567">						args[0] = imageMagickDir + File.separatorChar + runtimeFile;</span>
-<span class="nc" id="L568">						args[1] = &quot;-profile&quot;;</span>
-<span class="nc" id="L569">						args[2] = Constants.getString(&quot;galleryConvertCmykToRgbInputProfilePath&quot;);</span>
-<span class="nc" id="L570">						args[3] = &quot;-profile&quot;;</span>
-<span class="nc" id="L571">						args[4] = Constants.getString(&quot;galleryConvertCmykToRgbOutputProfilePath&quot;);</span>
-<span class="nc" id="L572">						args[5]	= &quot;-set&quot;;</span>
-<span class="nc" id="L573">						args[6] = &quot;colorspace&quot;;</span>
-<span class="nc" id="L574">						args[7] = &quot;sRGB&quot;;</span>
-<span class="nc" id="L575">						args[8] = &quot;-quality&quot;;</span>
-<span class="nc" id="L576">						args[9] = &quot;85&quot;;</span>
-<span class="nc" id="L577">						args[10] = filePath;</span>
+<span class="nc" id="L578">						args[0] = imageMagickDir + File.separatorChar + runtimeFile;</span>
+<span class="nc" id="L579">						args[1] = &quot;-profile&quot;;</span>
+<span class="nc" id="L580">						args[2] = Constants.getString(&quot;galleryConvertCmykToRgbInputProfilePath&quot;);</span>
+<span class="nc" id="L581">						args[3] = &quot;-profile&quot;;</span>
+<span class="nc" id="L582">						args[4] = Constants.getString(&quot;galleryConvertCmykToRgbOutputProfilePath&quot;);</span>
+<span class="nc" id="L583">						args[5]	= &quot;-set&quot;;</span>
+<span class="nc" id="L584">						args[6] = &quot;colorspace&quot;;</span>
+<span class="nc" id="L585">						args[7] = &quot;sRGB&quot;;</span>
+<span class="nc" id="L586">						args[8] = &quot;-quality&quot;;</span>
+<span class="nc" id="L587">						args[9] = &quot;85&quot;;</span>
+<span class="nc" id="L588">						args[10] = filePath;</span>
 					}
 
-<span class="nc" id="L580">					StringBuilder params = new StringBuilder();</span>
-<span class="nc bnc" id="L581" title="All 2 branches missed.">					for (int i = 0; i &lt; args.length; i++)</span>
+<span class="nc" id="L591">					StringBuilder params = new StringBuilder();</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">					for (int i = 0; i &lt; args.length; i++)</span>
 					{
-<span class="nc" id="L583">						params.append(' ').append(args[i]);</span>
+<span class="nc" id="L594">						params.append(' ').append(args[i]);</span>
 					}
-<span class="nc" id="L585">					Logger.debug(GalleryDB.class, &quot;LONGCMD:\n&quot; + params);</span>
-<span class="nc" id="L586">					proc = rt.exec(args);</span>
-<span class="nc" id="L587">					stderr = proc.getInputStream();</span>
-<span class="nc" id="L588">					br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
-<span class="nc bnc" id="L589" title="All 2 branches missed.">					while ((line = br.readLine()) != null)</span>
+<span class="nc" id="L596">					Logger.debug(GalleryDB.class, &quot;LONGCMD:\n&quot; + params);</span>
+<span class="nc" id="L597">					proc = rt.exec(args);</span>
+<span class="nc" id="L598">					stderr = proc.getInputStream();</span>
+<span class="nc" id="L599">					br = new BufferedReader(new InputStreamReader(stderr, Constants.FILE_ENCODING));</span>
+<span class="nc bnc" id="L600" title="All 2 branches missed.">					while ((line = br.readLine()) != null)</span>
 					{
-<span class="nc" id="L591">						Logger.debug(GalleryDB.class, line);</span>
+<span class="nc" id="L602">						Logger.debug(GalleryDB.class, line);</span>
 					}
-<span class="nc" id="L593">					br.close();</span>
-<span class="nc" id="L594">					int exitValue = proc.waitFor();</span>
-<span class="nc bnc" id="L595" title="All 2 branches missed.">					if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(filePath)))</span>
+<span class="nc" id="L604">					br.close();</span>
+<span class="nc" id="L605">					int exitValue = proc.waitFor();</span>
+<span class="nc bnc" id="L606" title="All 2 branches missed.">					if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(filePath)))</span>
 					{
-<span class="nc" id="L597">						IwcmFsDB.writeFileToDB(new File(IwcmFsDB.getTempFilePath(IwcmFsDB.getVirtualPath(filePath))), new File(IwcmFsDB.getVirtualPath(filePath)));</span>
-<span class="nc" id="L598">						new File(IwcmFsDB.getTempFilePath(IwcmFsDB.getVirtualPath(filePath))).delete();</span>
+<span class="nc" id="L608">						IwcmFsDB.writeFileToDB(new File(IwcmFsDB.getTempFilePath(IwcmFsDB.getVirtualPath(filePath))), new File(IwcmFsDB.getVirtualPath(filePath)));</span>
+<span class="nc" id="L609">						new File(IwcmFsDB.getTempFilePath(IwcmFsDB.getVirtualPath(filePath))).delete();</span>
 					}
-<span class="nc" id="L600">					Logger.debug(GalleryDB.class, &quot;ExitValue: &quot; + exitValue);</span>
+<span class="nc" id="L611">					Logger.debug(GalleryDB.class, &quot;ExitValue: &quot; + exitValue);</span>
 				}
 			}
 
 		}
-<span class="nc" id="L605">		catch (Exception ex)</span>
+<span class="nc" id="L616">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L607">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L608">		}</span>
-<span class="nc" id="L609">	}</span>
+<span class="nc" id="L618">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L619">		}</span>
+<span class="nc" id="L620">	}</span>
 
 	/**
 	 * ziska prikaz programu Identify (sucast Imagemagick)
@@ -615,12 +626,12 @@ public class ImageTools
 	 */
 	public static String getIdentifyRuntimeFile()
 	{
-<span class="nc" id="L618">		String result = &quot;identify&quot;;</span>
-<span class="nc bnc" id="L619" title="All 2 branches missed.">		if (System.getProperty(&quot;os.name&quot;).indexOf(&quot;Windows&quot;) != -1)</span>
+<span class="nc" id="L629">		String result = &quot;identify&quot;;</span>
+<span class="nc bnc" id="L630" title="All 2 branches missed.">		if (System.getProperty(&quot;os.name&quot;).indexOf(&quot;Windows&quot;) != -1)</span>
 		{
-<span class="nc" id="L621">			result  = &quot;identify.exe&quot;;</span>
+<span class="nc" id="L632">			result  = &quot;identify.exe&quot;;</span>
 		}
-<span class="nc" id="L623">		return result ;</span>
+<span class="nc" id="L634">		return result ;</span>
 	}
 
 	/**
@@ -631,12 +642,12 @@ public class ImageTools
 	 */
 	public static String getMogrifyRuntimeFile()
 	{
-<span class="nc" id="L634">		String result = &quot;mogrify&quot;;</span>
-<span class="nc bnc" id="L635" title="All 2 branches missed.">		if (System.getProperty(&quot;os.name&quot;).indexOf(&quot;Windows&quot;) != -1)</span>
+<span class="nc" id="L645">		String result = &quot;mogrify&quot;;</span>
+<span class="nc bnc" id="L646" title="All 2 branches missed.">		if (System.getProperty(&quot;os.name&quot;).indexOf(&quot;Windows&quot;) != -1)</span>
 		{
-<span class="nc" id="L637">			result  = &quot;mogrify.exe&quot;;</span>
+<span class="nc" id="L648">			result  = &quot;mogrify.exe&quot;;</span>
 		}
-<span class="nc" id="L639">		return result ;</span>
+<span class="nc" id="L650">		return result ;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

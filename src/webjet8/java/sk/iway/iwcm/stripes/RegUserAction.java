@@ -1022,7 +1022,8 @@ public class RegUserAction extends WebJETActionBean
 	/**
 	 * Odosle email o tom, ze sa caka na autorizaciu
 	 * @param userId
-	 * @param docId
+	 * @param password
+	 * @param doc
 	 * @param request
 	 * @return
 	 */

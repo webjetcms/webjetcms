@@ -24,7 +24,7 @@ public class GalleryDimension {
     @Id
     @Column(name = "dimension_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_gallery_dimension")
-    @DataTableColumn(inputType=DataTableColumnType.ID, title="editor.cell.id", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType=DataTableColumnType.ID)
     private Long id;
 
 

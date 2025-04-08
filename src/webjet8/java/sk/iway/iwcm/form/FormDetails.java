@@ -183,7 +183,7 @@ public class FormDetails
 
 	/**
 	 * vrati hodnotu v stlpci daneho mena
-	 * @param name
+	 * @param columnName
 	 * @return
 	 */
 	public String getColumn(String columnName)

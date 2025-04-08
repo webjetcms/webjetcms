@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbTestingService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.abtesting.service</a> &gt; <span class="el_source">AbTestingService.java</span></div><h1>AbTestingService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.abtesting.service;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Page;
+
+import sk.iway.iwcm.components.abtesting.ABTesting;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+
+public class AbTestingService {
+
+    private AbTestingService() {}
+
+    public static DatatablePageImpl&lt;DocDetails&gt; getAllItems(GetAllItemsDocOptions options) {
+<span class="fc" id="L23">        Page&lt;DocDetails&gt; page = null;</span>
+
+        //Check perms with combination with ABTesting version
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">		if(options.getCurrentUser().isEnabledItem(&quot;cmp_abtesting&quot;)) {</span>
+<span class="fc" id="L27">			Set&lt;DocDetails&gt; mainWebPages = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L28">			List&lt;DocDetails&gt; allBasicDoc = DocDB.getInstance().getBasicDocDetailsAll();</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">			if(allBasicDoc != null) {</span>
+<span class="fc" id="L30">				List&lt;String&gt; allDomains = GroupsDB.getInstance().getAllDomainsList();</span>
+<span class="fc" id="L31">				DocDB docDB = DocDB.getInstance();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">				for(DocDetails dd : allBasicDoc)</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">					if(!ABTesting.getAllVariantsDocIds(dd, allDomains, docDB).isEmpty()) mainWebPages.add(dd);</span>
+			}
+
+			//Editor fields need to be nullified, or status icons will be stacking
+<span class="fc bfc" id="L37" title="All 2 branches covered.">			for(DocDetails dd : mainWebPages) dd.setEditorFields(null);</span>
+
+<span class="fc" id="L39">			page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;(mainWebPages));</span>
+<span class="fc" id="L40">		} else {</span>
+			//User has no right to request data in ABTesting mode
+<span class="nc" id="L42">			page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+		}
+
+<span class="fc" id="L45">        return WebpagesService.preparePage(page, options);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -29,7 +29,7 @@ Scenario('basic tests', async ({I, DT, DTE}) => {
     I.see("1 - Obilniny, 3 - Vajcia");
 
     //First
-    I.click("#menuDataTable > tbody > tr > td.dt-select-td.cell-not-editable");
+    I.clickCss("#menuDataTable > tbody > tr > td.dt-select-td.cell-not-editable");
     I.click("button.btn.btn-sm.buttons-selected.buttons-edit");
     DTE.waitForLoader("menuDataTable");
     DTE.selectOption('editorFields\\.mealCathegory', 'Príloha');
@@ -75,7 +75,7 @@ Scenario('days-weeks dates setting tests', async ({I, DT}) => {
     await testDateInputValue(I, "30.11.2023");
 
     I.say("Now try weeks version");
-    I.click("#menuType > button[data-menu-type=weeks]");
+    I.clickCss("#menuType > button[data-menu-type=weeks]");
     //Changed type of info input format
     await testDateInfoInput(I, "48. týždeň - 2023");
     //date must be still same
@@ -95,7 +95,7 @@ Scenario('days-weeks dates setting tests', async ({I, DT}) => {
     DT.checkTableRow("menuDataTable", 3, ["39", "Streda", "22.11.2023", "Hlavné jedlo", "Boloňské špagety"]);
 
     I.say("Go back o days format");
-    I.click("#menuType > button[data-menu-type=days]");
+    I.clickCss("#menuType > button[data-menu-type=days]");
     await testDateInputValue(I, "23.11.2023");
     await testDateInfoInput(I, "Štvrtok - 47. týždeň");
     DT.checkTableRow("menuDataTable", 1, ["52", "Štvrtok", "23.11.2023", "Polievka", "Fazuľová"]);

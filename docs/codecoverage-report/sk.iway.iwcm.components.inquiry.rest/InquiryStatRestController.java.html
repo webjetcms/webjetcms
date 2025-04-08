@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InquiryStatRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.inquiry.rest</a> &gt; <span class="el_source">InquiryStatRestController.java</span></div><h1>InquiryStatRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.inquiry.rest;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.inquiry.jpa.InquiryAnswerRepository;
+import sk.iway.iwcm.components.inquiry.jpa.InquiryRepository;
+import sk.iway.iwcm.components.inquiry.jpa.InquiryUsersVoteEntity;
+import sk.iway.iwcm.components.inquiry.jpa.InquiryUsersVoteRepository;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+
+@RestController
+@RequestMapping(&quot;/admin/rest/inquiry-stat&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuInquiry')&quot;)
+@Datatable
+public class InquiryStatRestController extends DatatableRestControllerV2&lt;InquiryUsersVoteEntity, Long&gt; {
+
+    private final InquiryRepository ir;
+    private final InquiryAnswerRepository iar;
+    private final InquiryUsersVoteRepository iuvr;
+    private final UserDetailsRepository udr;
+    
+    @Autowired
+    public InquiryStatRestController(InquiryUsersVoteRepository iuvr, InquiryRepository ir, InquiryAnswerRepository iar, UserDetailsRepository udr) {
+<span class="fc" id="L44">        super(iuvr);</span>
+<span class="fc" id="L45">        this.ir = ir;</span>
+<span class="fc" id="L46">        this.iar = iar;</span>
+<span class="fc" id="L47">        this.iuvr = iuvr;</span>
+<span class="fc" id="L48">        this.udr = udr;</span>
+<span class="fc" id="L49">    }</span>
+
+    @Override
+    public Page&lt;InquiryUsersVoteEntity&gt; getAllItems(Pageable pageable) {
+<span class="nc" id="L53">        Page&lt;InquiryUsersVoteEntity&gt; page = super.getAllItemsIncludeSpecSearch(new InquiryUsersVoteEntity(), null);</span>
+
+<span class="nc" id="L55">        int questionId = Tools.getIntValue(getRequest().getParameter(InquiryStatService.QUESTION_ID), -1);</span>
+<span class="nc" id="L56">        return InquiryStatService.getPreparedPage(questionId, page, iar, iuvr, udr);</span>
+    }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;InquiryUsersVoteEntity&gt; root, CriteriaBuilder builder) {
+<span class="fc" id="L61">        InquiryStatService.getTableData(params, predicates, root, builder);</span>
+<span class="fc" id="L62">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L63">    }</span>
+
+    @Override
+    public Page&lt;InquiryUsersVoteEntity&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, InquiryUsersVoteEntity search) {
+<span class="fc" id="L67">        Page&lt;InquiryUsersVoteEntity&gt; page = super.searchItem(params, pageable, search);</span>
+
+<span class="fc" id="L69">        int questionId = Tools.getIntValue(getRequest().getParameter(InquiryStatService.QUESTION_ID), -1);</span>
+<span class="fc" id="L70">        return InquiryStatService.getPreparedPage(questionId, page, iar, iuvr, udr);</span>
+    }
+
+    @GetMapping(value = &quot;/supportValues&quot;, produces = &quot;application/json; charset=UTF-8&quot;)
+    public String getStatSupportValues(@RequestParam Long questionId) {
+<span class="fc" id="L75">        JSONObject statSupportValues = new JSONObject();</span>
+
+        //Question text
+<span class="fc" id="L78">        statSupportValues.put(&quot;questionText&quot;, ir.getQuestionTextById(questionId));</span>
+
+        //Answers
+<span class="fc" id="L81">        statSupportValues.put(&quot;answers&quot;, InquiryStatService.getPreparedAnswers(questionId, iar));</span>
+
+        //Users that answered (voted)
+<span class="fc" id="L84">        statSupportValues.put(&quot;users&quot;, InquiryStatService.getPrepareUsersNames(questionId, iuvr, udr));</span>
+
+<span class="fc" id="L86">        return statSupportValues.toString();</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/pieChartData&quot;,
+        params={InquiryStatService.QUESTION_ID, InquiryStatService.DAY_DATE, InquiryStatService.ANSWER_ID, InquiryStatService.USER_ID})
+    public List&lt;LabelValueInteger&gt; getPieChartData(
+        @RequestParam(InquiryStatService.QUESTION_ID) Long questionId,
+        @RequestParam(InquiryStatService.DAY_DATE) String dayDate,
+        @RequestParam(InquiryStatService.ANSWER_ID) Long answerId,
+        @RequestParam(InquiryStatService.USER_ID) Long userId ) {
+        
+        //We need it as DatatablePageImpl, so we can access the options
+<span class="fc" id="L99">        DatatablePageImpl&lt;InquiryUsersVoteEntity&gt; page = new DatatablePageImpl&lt;&gt;( super.getAllItemsIncludeSpecSearch(new InquiryUsersVoteEntity(), null) );</span>
+
+<span class="fc" id="L101">        return InquiryStatService.getPieChartData(page);</span>
+    }
+
+    @RequestMapping(
+        value=&quot;/lineChartData&quot;,
+        params={InquiryStatService.QUESTION_ID, InquiryStatService.DAY_DATE, InquiryStatService.ANSWER_ID, InquiryStatService.USER_ID})
+    public Map&lt;String, List&lt;InquiryStatService.LineChartData&gt;&gt; getLineChartData(
+        @RequestParam(InquiryStatService.QUESTION_ID) Long questionId,
+        @RequestParam(InquiryStatService.DAY_DATE) String dayDate,
+        @RequestParam(InquiryStatService.ANSWER_ID) Long answerId,
+        @RequestParam(InquiryStatService.USER_ID) Long userId ) { 
+
+        //We need it as DatatablePageImpl, so we can access the options
+<span class="fc" id="L114">        DatatablePageImpl&lt;InquiryUsersVoteEntity&gt; page = new DatatablePageImpl&lt;&gt;( super.getAllItemsIncludeSpecSearch(new InquiryUsersVoteEntity(), null) );</span>
+
+<span class="fc" id="L116">        return InquiryStatService.getLineChartData(page, dayDate);</span>
+    }    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

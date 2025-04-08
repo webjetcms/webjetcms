@@ -6,7 +6,7 @@ import javax.persistence.Converter;
 import sk.iway.iwcm.DB;
 
 /**
- * Konverter ktory automaticky escapne HTML kod ak sa v hodnote nachadzaju znaky < alebo >
+ * Konverter ktory automaticky escapne HTML kod ak sa v hodnote nachadzaju znaky &lt; alebo &gt;
  * Pre povolenie HTML znakov je potrebne pouzit anotaciu:
  * @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
  * V pripade potreby vypnutia je mozne do konf. premennej xssHtmlAllowedFields pridat hodnotu jpaentity

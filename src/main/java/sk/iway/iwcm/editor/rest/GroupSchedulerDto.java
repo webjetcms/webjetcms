@@ -21,10 +21,7 @@ public class GroupSchedulerDto {
 
     @Id
     @Column(name = "schedule_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        renderFormat = "dt-format-selector",
-        title = "editor.cell.id")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "group_name")

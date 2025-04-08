@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsQuery.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news</a> &gt; <span class="el_source">NewsQuery.java</span></div><h1>NewsQuery.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NewsQuery.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.news</a> &gt; <span class="el_source">NewsQuery.java</span></div><h1>NewsQuery.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.news;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -62,7 +62,6 @@ import sk.iway.iwcm.utils.Pair;
 
 <span class="fc" id="L63">	private boolean returnDocdetailsWithAtributes = false;</span>
 
-
 	/**
 	 * vygeneruje DB dotaz na zaklade kriterii
 	 * @param count vrati len pocet najdenych stranok
@@ -71,37 +70,38 @@ import sk.iway.iwcm.utils.Pair;
 	 */
 	private String getSelectSql(boolean count, boolean noData)
 	{
-<span class="fc" id="L74">		StringBuilder sql = new StringBuilder();</span>
+<span class="fc" id="L73">		StringBuilder sql = new StringBuilder();</span>
 
-<span class="fc" id="L76">		sql.append(&quot;SELECT &quot;);</span>
-<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		if (count)</span>
-<span class="nc" id="L78">			sql.append(&quot;count(d.doc_id) &quot;);</span>
+<span class="fc" id="L75">		sql.append(&quot;SELECT &quot;);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		if (count)</span>
+<span class="fc" id="L77">			sql.append(&quot;count(d.doc_id) &quot;);</span>
 		else
 		{
 
-<span class="fc" id="L82">			String docFields = FieldEnum.getFields();</span>
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			if (noData) docFields = FieldEnum.getFieldsNoData();</span>
+<span class="fc" id="L81">			String docFields = FieldEnum.getFields();</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">			if (noData) docFields = FieldEnum.getFieldsNoData();</span>
 			//TODO: zatial, neskor treba dorobit
 			//perexGroupUseJoin = false;//Constants.getBoolean(&quot;perexGroupUseJoin&quot;) &amp;&amp; Tools.isNotEmpty(whereSql) &amp;&amp; whereSql.contains(&quot;p.perex_group_id&quot;);
 
-<span class="fc" id="L87">			sql.append(&quot;u.title as u_title, u.first_name, u.last_name, u.email, u.photo, &quot;)</span>
-<span class="fc" id="L88">			.append(docFields);</span>
+<span class="fc" id="L86">			sql.append(&quot;u.title as u_title, u.first_name, u.last_name, u.email, u.photo, &quot;)</span>
+<span class="fc" id="L87">			.append(docFields);</span>
 
-<span class="fc" id="L90">			String[] additionalFields = DataAccessHelper.getDocFields();</span>
-<span class="pc bpc" id="L91" title="2 of 4 branches missed.">			if (additionalFields!=null &amp;&amp; additionalFields.length&gt;0) {</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">				for (String field : additionalFields) {</span>
-<span class="fc" id="L93">					sql.append(&quot;, d.&quot;).append(field);</span>
+<span class="fc" id="L89">			String[] additionalFields = DataAccessHelper.getDocFields();</span>
+<span class="pc bpc" id="L90" title="2 of 4 branches missed.">			if (additionalFields!=null &amp;&amp; additionalFields.length&gt;0) {</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">				for (String field : additionalFields) {</span>
+<span class="fc" id="L92">					sql.append(&quot;, d.&quot;).append(field);</span>
 				}
 			}
 
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">			if (useAtributeSearch)</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">			if (useAtributeSearch)</span>
 			{
-<span class="nc" id="L99">				sql.append(&quot;, dad.*, da.value_string, da.value_int, da.value_bool &quot;);</span>
+<span class="nc" id="L98">				sql.append(&quot;, dad.*, da.value_string, da.value_int, da.value_bool &quot;);</span>
 			}
 		}
-<span class="fc" id="L102">		sql.append(&quot; FROM documents d &quot;);</span>
+<span class="fc" id="L101">		sql.append(&quot; FROM documents d &quot;);</span>
 
-<span class="fc" id="L104">		sql.append(&quot;LEFT JOIN users u ON d.author_id=u.user_id &quot;);</span>
+<span class="fc" id="L103">		sql.append(&quot;LEFT JOIN users u ON d.author_id=u.user_id &quot;);</span>
+
 <span class="pc bpc" id="L105" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;perexGroupUseJoin&quot;))</span>
 		{
 <span class="nc" id="L107">			sql.append(&quot;LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id &quot;);</span>
@@ -131,12 +131,12 @@ import sk.iway.iwcm.utils.Pair;
 <span class="fc" id="L131">			}</span>
 		}
 
-<span class="pc bpc" id="L134" title="1 of 2 branches missed.">		if (!count) {</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">		if (!count) {</span>
 <span class="fc" id="L135">			setOrdering(sql, &quot;d&quot;, false);</span>
 		}
 
 		// strankovanie
-<span class="pc bpc" id="L139" title="3 of 6 branches missed.">		if (!count &amp;&amp; limit!=NOT_SET_INT &amp;&amp; Tools.isEmpty(resultCriteriaList))</span>
+<span class="pc bpc" id="L139" title="2 of 6 branches missed.">		if (!count &amp;&amp; limit!=NOT_SET_INT &amp;&amp; Tools.isEmpty(resultCriteriaList))</span>
 		{
 			// nastavim limity a strankovanie, ale len v pripade ze sa nejedna po select pre pocet dokumentov (tam sa strankovanie nepouzije)
 <span class="pc bpc" id="L142" title="1 of 2 branches missed.">			if (Constants.DB_TYPE==Constants.DB_MYSQL)</span>
@@ -692,35 +692,35 @@ import sk.iway.iwcm.utils.Pair;
 	 * */
 	public int getNewsCount()
 	{
-<span class="nc bnc" id="L695" title="All 4 branches missed.">		if (!Tools.isEmpty(resultCriteriaList) &amp;&amp; resultCriteriaTotalCount&gt;0)</span>
+<span class="pc bpc" id="L695" title="3 of 4 branches missed.">		if (!Tools.isEmpty(resultCriteriaList) &amp;&amp; resultCriteriaTotalCount&gt;0)</span>
 		{
 <span class="nc" id="L697">			return resultCriteriaTotalCount;</span>
 		}
-<span class="nc" id="L699">		Connection db_conn = null;</span>
-<span class="nc" id="L700">		PreparedStatement ps = null;</span>
-<span class="nc" id="L701">		ResultSet rs = null;</span>
-<span class="nc" id="L702">		int result = 0;</span>
+<span class="fc" id="L699">		Connection db_conn = null;</span>
+<span class="fc" id="L700">		PreparedStatement ps = null;</span>
+<span class="fc" id="L701">		ResultSet rs = null;</span>
+<span class="fc" id="L702">		int result = 0;</span>
 		try
 		{
-<span class="nc" id="L705">			db_conn = DBPool.getConnectionReadUncommited();</span>
-<span class="nc" id="L706">			String sql = getSelectSql(true, loadData);</span>
-<span class="nc" id="L707">			Logger.debug(this,&quot;sql: &quot;+sql);</span>
+<span class="fc" id="L705">			db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="fc" id="L706">			String sql = getSelectSql(true, loadData);</span>
+<span class="fc" id="L707">			Logger.debug(this,&quot;sql: &quot;+sql);</span>
 
-<span class="nc" id="L709">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L709">			ps = db_conn.prepareStatement(sql);</span>
 
-<span class="nc" id="L711">			setArguments(ps);</span>
-<span class="nc" id="L712">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L713" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="fc" id="L711">			setArguments(ps);</span>
+<span class="fc" id="L712">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L713" title="1 of 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="nc" id="L715">				result = rs.getInt(1);</span>
+<span class="fc" id="L715">				result = rs.getInt(1);</span>
 			}
-<span class="nc" id="L717">			rs.close();</span>
-<span class="nc" id="L718">			ps.close();</span>
-<span class="nc" id="L719">			db_conn.close();</span>
+<span class="fc" id="L717">			rs.close();</span>
+<span class="fc" id="L718">			ps.close();</span>
+<span class="fc" id="L719">			db_conn.close();</span>
 
-<span class="nc" id="L721">			rs = null;</span>
-<span class="nc" id="L722">			ps = null;</span>
-<span class="nc" id="L723">			db_conn = null;</span>
+<span class="fc" id="L721">			rs = null;</span>
+<span class="fc" id="L722">			ps = null;</span>
+<span class="fc" id="L723">			db_conn = null;</span>
 
 
 		}
@@ -733,24 +733,24 @@ import sk.iway.iwcm.utils.Pair;
 		{
 			try
 			{
-<span class="nc bnc" id="L736" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="pc bpc" id="L736" title="1 of 2 branches missed.">				if (rs != null)</span>
 <span class="nc" id="L737">					rs.close();</span>
-<span class="nc bnc" id="L738" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="pc bpc" id="L738" title="1 of 2 branches missed.">				if (ps != null)</span>
 <span class="nc" id="L739">					ps.close();</span>
-<span class="nc bnc" id="L740" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="pc bpc" id="L740" title="1 of 2 branches missed.">				if (db_conn != null)</span>
 <span class="nc" id="L741">					db_conn.close();</span>
 			}
 <span class="nc" id="L743">			catch (Exception ex2)</span>
 			{
 <span class="nc" id="L745">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L746">			}</span>
+<span class="fc" id="L746">			}</span>
 		}
 
-<span class="nc bnc" id="L749" title="All 2 branches missed.">		if (initialOffset&gt;0)</span>
+<span class="pc bpc" id="L749" title="1 of 2 branches missed.">		if (initialOffset&gt;0)</span>
 		{
 <span class="nc" id="L751">			result = result - initialOffset;</span>
 		}
-<span class="nc" id="L753">		return result;</span>
+<span class="fc" id="L753">		return result;</span>
 	}
 
 	/**
@@ -822,25 +822,26 @@ import sk.iway.iwcm.utils.Pair;
 <span class="fc" id="L822">		PLACE (&quot;perex_place &quot;),</span>
 <span class="fc" id="L823">		EVENT_DATE (&quot;event_date &quot;),</span>
 <span class="fc" id="L824">		SAVE_DATE (&quot;date_created &quot;),</span>
-<span class="fc" id="L825">		RATING (&quot;forum_count &quot;);</span>
+<span class="fc" id="L825">		RATING (&quot;forum_count &quot;),</span>
+<span class="fc" id="L826">		PRICE (&quot;field_k &quot;);</span>
 
 
 		private OrderEnum(String orderField)
-<span class="fc" id="L829">		{</span>
-<span class="fc" id="L830">			this.orderField = orderField;</span>
-<span class="fc" id="L831">		}</span>
+<span class="fc" id="L830">		{</span>
+<span class="fc" id="L831">			this.orderField = orderField;</span>
+<span class="fc" id="L832">		}</span>
 
 		private String orderField;
 
 		@Override
 		public String toString()
 		{
-<span class="nc" id="L838">			return getOrderName(&quot;d&quot;);</span>
+<span class="nc" id="L839">			return getOrderName(&quot;d&quot;);</span>
 		}
 
 		public String getOrderName(String prefix)
 		{
-<span class="fc" id="L843">			return prefix + &quot;.&quot; + orderField;</span>
+<span class="fc" id="L844">			return prefix + &quot;.&quot; + orderField;</span>
 		}
 	}
 
@@ -849,22 +850,22 @@ import sk.iway.iwcm.utils.Pair;
 	 * @author mbocko
 	 *
 	 */
-<span class="fc" id="L852">	public static enum SortEnum</span>
+<span class="fc" id="L853">	public static enum SortEnum</span>
 	{
-<span class="fc" id="L854">		ASC (&quot;ASC &quot;),</span>
-<span class="fc" id="L855">		DESC (&quot;DESC &quot;);</span>
+<span class="fc" id="L855">		ASC (&quot;ASC &quot;),</span>
+<span class="fc" id="L856">		DESC (&quot;DESC &quot;);</span>
 
 		private SortEnum(String sort)
-<span class="fc" id="L858">		{</span>
-<span class="fc" id="L859">			this.sort = sort;</span>
-<span class="fc" id="L860">		}</span>
+<span class="fc" id="L859">		{</span>
+<span class="fc" id="L860">			this.sort = sort;</span>
+<span class="fc" id="L861">		}</span>
 
 		private String sort;
 
 		@Override
 		public String toString()
 		{
-<span class="fc" id="L867">			return sort;</span>
+<span class="fc" id="L868">			return sort;</span>
 		}
 
 		/**
@@ -873,8 +874,8 @@ import sk.iway.iwcm.utils.Pair;
 		 */
 		public SortEnum getReverse()
 		{
-<span class="nc bnc" id="L876" title="All 2 branches missed.">			if (this==ASC) return DESC;</span>
-<span class="nc" id="L877">			else return ASC;</span>
+<span class="nc bnc" id="L877" title="All 2 branches missed.">			if (this==ASC) return DESC;</span>
+<span class="nc" id="L878">			else return ASC;</span>
 		}
 	}
 
@@ -886,8 +887,8 @@ import sk.iway.iwcm.utils.Pair;
 	 */
 	public NewsQuery setPerexGroupUseJoin(boolean perexGroupUseJoin)
 	{
-<span class="nc" id="L889">		this.perexGroupUseJoin = perexGroupUseJoin;</span>
-<span class="nc" id="L890">		return this;</span>
+<span class="nc" id="L890">		this.perexGroupUseJoin = perexGroupUseJoin;</span>
+<span class="nc" id="L891">		return this;</span>
 	}
 
 	/**
@@ -898,8 +899,8 @@ import sk.iway.iwcm.utils.Pair;
 	 */
 	public NewsQuery addOrder(OrderEnum order, SortEnum sort)
 	{
-<span class="fc" id="L901">		orderings.add(Pair.of(order, sort));</span>
-<span class="fc" id="L902">		return this;</span>
+<span class="fc" id="L902">		orderings.add(Pair.of(order, sort));</span>
+<span class="fc" id="L903">		return this;</span>
 	}
 
 
@@ -908,20 +909,20 @@ import sk.iway.iwcm.utils.Pair;
 
 	public NewsQuery setPageSize(int pageSize)
 	{
-<span class="fc" id="L911">		limit = pageSize;</span>
-<span class="fc" id="L912">		return this;</span>
+<span class="fc" id="L912">		limit = pageSize;</span>
+<span class="fc" id="L913">		return this;</span>
 	}
 
 
 	public void setInitialOffset(int initialOffset)
 	{
-<span class="nc" id="L918">		this.initialOffset = initialOffset;</span>
-<span class="nc" id="L919">	}</span>
+<span class="nc" id="L919">		this.initialOffset = initialOffset;</span>
+<span class="nc" id="L920">	}</span>
 
 	public NewsQuery setReturnDocdetailsWithAtributes(boolean returnDocdetailsWithAtributes)
 	{
-<span class="nc" id="L923">		this.returnDocdetailsWithAtributes = returnDocdetailsWithAtributes;</span>
-<span class="nc" id="L924">		return this;</span>
+<span class="nc" id="L924">		this.returnDocdetailsWithAtributes = returnDocdetailsWithAtributes;</span>
+<span class="nc" id="L925">		return this;</span>
 	}
 
 
@@ -930,12 +931,12 @@ import sk.iway.iwcm.utils.Pair;
 
 	public NewsQuery setPage(int page)
 	{
-<span class="nc bnc" id="L933" title="All 2 branches missed.">		if (page&lt;=0) page = 1;</span>
-<span class="nc bnc" id="L934" title="All 2 branches missed.">		if (limit&gt;NOT_SET_INT)</span>
+<span class="pc bpc" id="L934" title="1 of 2 branches missed.">		if (page&lt;=0) page = 1;</span>
+<span class="pc bpc" id="L935" title="1 of 2 branches missed.">		if (limit&gt;NOT_SET_INT)</span>
 		{
-<span class="nc" id="L936">			offset = page * limit - limit;</span>
+<span class="fc" id="L937">			offset = page * limit - limit;</span>
 		}
-<span class="nc" id="L938">		return this;</span>
+<span class="fc" id="L939">		return this;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -302,7 +302,6 @@ public class CalendarDB
 	 *  Ziska zaznam v kalendari
 	 *
 	 *@param  calendarId
-	 *@param  request
 	 *@return
 	 */
 	public static CalendarDetails getEvent(int calendarId)
@@ -700,7 +699,7 @@ public class CalendarDB
 	}
 
 	/**
-	 *  Vrati meno zo stringu typu Peter Weber <peter@weber.sk>
+	 *  Vrati meno zo stringu typu Peter Weber &lt;peter@domain.sk&gt;
 	 *
 	 *@param  from  Description of the Parameter
 	 *@return       The email value
@@ -736,7 +735,7 @@ public class CalendarDB
 	}
 
 	/**
-	 *  Vrati email zo stringu typu Peter Weber <peter@weber.sk>
+	 *  Vrati email zo stringu typu Peter Weber &lt;peter@domain.sk&gt;
 	 *
 	 *@param  from  Description of the Parameter
 	 *@return       The name value
@@ -1218,9 +1217,7 @@ public class CalendarDB
 
 	/**
 	 * vrati vsetky neschvalene udalosti ktore ma user s userId schvalit
-	 * @param request
 	 * @param userId
-	 * @param schvalene
 	 * @return
 	 */
 	public static List<CalendarDetails> getNotApprovedEvents(int userId)

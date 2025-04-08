@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo.rest</a> &gt; <span class="el_source">SeoService.java</span></div><h1>SeoService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.seo.rest</a> &gt; <span class="el_source">SeoService.java</span></div><h1>SeoService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.seo.rest;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -432,63 +432,63 @@ import sk.iway.iwcm.users.UsersDB;
 
 	/********************************** SEO - BOTS  SECTIONS **************************************************/
 	public static List&lt;BotsDetailsDTO&gt; getUserStatViews(FilterHeaderDto filter, Integer botId) {
-<span class="fc" id="L435">		botId = Tools.getIntValue(botId, -1);</span>
-<span class="pc bpc" id="L436" title="1 of 2 branches missed.">		if(botId == -1) throw new ConstraintViolationException(&quot;Invalid parameter botId, cant be empty.&quot;, null);</span>
+<span class="nc" id="L435">		botId = Tools.getIntValue(botId, -1);</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">		if(botId == -1) throw new ConstraintViolationException(&quot;Invalid parameter botId, cant be empty.&quot;, null);</span>
 
-<span class="fc" id="L438">		List&lt;Column&gt; columns = StatNewDB.getUserStatViews(botId, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId());</span>
+<span class="nc" id="L438">		List&lt;Column&gt; columns = StatNewDB.getUserStatViews(botId, filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId());</span>
 
-<span class="fc" id="L440">		return convert(columns);</span>
+<span class="nc" id="L440">		return convert(columns);</span>
 	}
 
 	private static List&lt;BotsDetailsDTO&gt; convert(List&lt;Column&gt; columns) {
-<span class="fc" id="L444">        List&lt;BotsDetailsDTO&gt; data = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L445" title="All 2 branches covered.">        for(Column column : columns) {</span>
-<span class="fc" id="L446">            data.add(</span>
+<span class="nc" id="L444">        List&lt;BotsDetailsDTO&gt; data = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">        for(Column column : columns) {</span>
+<span class="nc" id="L446">            data.add(</span>
                 new BotsDetailsDTO(
-<span class="fc" id="L448">                    Tools.getIntValue(column.getColumn4(), -1),</span>
-<span class="fc" id="L449">                    column.getDateColumn1(),</span>
-<span class="fc" id="L450">                    column.getColumn1(),</span>
-<span class="fc" id="L451">                    column.getColumn2(),</span>
-<span class="fc" id="L452">                    column.getColumn3()</span>
+<span class="nc" id="L448">                    Tools.getIntValue(column.getColumn4(), -1),</span>
+<span class="nc" id="L449">                    column.getDateColumn1(),</span>
+<span class="nc" id="L450">                    column.getColumn1(),</span>
+<span class="nc" id="L451">                    column.getColumn2(),</span>
+<span class="nc" id="L452">                    column.getColumn3()</span>
                 )
             );
-<span class="fc" id="L455">        }</span>
-<span class="fc" id="L456">        return data;</span>
+<span class="nc" id="L455">        }</span>
+<span class="nc" id="L456">        return data;</span>
     }
 
 	public static Map&lt;String, List&lt;BotsDetailsDTO&gt;&gt; getBotsDetailsLineChartData(Date from, Date to, int botId, int rootGroupId) {
-<span class="fc" id="L460">        Map&lt;Date, Integer&gt; viewsCount = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L461">		Map&lt;String, List&lt;BotsDetailsDTO&gt;&gt; result = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L462">        result.put(&quot;&quot;, new ArrayList&lt;&gt;());</span>
+<span class="nc" id="L460">        Map&lt;Date, Integer&gt; viewsCount = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L461">		Map&lt;String, List&lt;BotsDetailsDTO&gt;&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L462">        result.put(&quot;&quot;, new ArrayList&lt;&gt;());</span>
 
-<span class="fc bfc" id="L464" title="All 2 branches covered.">        for(Column column : StatNewDB.getUserStatViews(botId, from, to, rootGroupId)) {</span>
-<span class="fc" id="L465">            Date dayDate = formatDate( column.getDateColumn1() );</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">        for(Column column : StatNewDB.getUserStatViews(botId, from, to, rootGroupId)) {</span>
+<span class="nc" id="L465">            Date dayDate = formatDate( column.getDateColumn1() );</span>
 
-<span class="fc bfc" id="L467" title="All 2 branches covered.">            if(viewsCount.get(dayDate) == null)</span>
-<span class="fc" id="L468">                viewsCount.put(dayDate, 1);</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">            if(viewsCount.get(dayDate) == null)</span>
+<span class="nc" id="L468">                viewsCount.put(dayDate, 1);</span>
             else
-<span class="fc" id="L470">                viewsCount.put(dayDate, viewsCount.get(dayDate) + 1);</span>
-<span class="fc" id="L471">        }</span>
+<span class="nc" id="L470">                viewsCount.put(dayDate, viewsCount.get(dayDate) + 1);</span>
+<span class="nc" id="L471">        }</span>
 
-<span class="fc bfc" id="L473" title="All 2 branches covered.">        for (Map.Entry&lt;Date, Integer&gt; entry : viewsCount.entrySet()) {</span>
-<span class="fc" id="L474">            result.get(&quot;&quot;).add(</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">        for (Map.Entry&lt;Date, Integer&gt; entry : viewsCount.entrySet()) {</span>
+<span class="nc" id="L474">            result.get(&quot;&quot;).add(</span>
                 new BotsDetailsDTO(
-<span class="fc" id="L476">                    entry.getKey(),</span>
-<span class="fc" id="L477">                    entry.getValue()</span>
+<span class="nc" id="L476">                    entry.getKey(),</span>
+<span class="nc" id="L477">                    entry.getValue()</span>
                 )
             );
-<span class="fc" id="L480">        }</span>
-<span class="fc" id="L481">        return result;</span>
+<span class="nc" id="L480">        }</span>
+<span class="nc" id="L481">        return result;</span>
 	}
 
 	private static Date formatDate(Date dateToFormat) {
-<span class="fc" id="L485">        Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L486">        cal.setTime(dateToFormat);</span>
-<span class="fc" id="L487">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
-<span class="fc" id="L488">        cal.set(Calendar.MINUTE, 0);</span>
-<span class="fc" id="L489">        cal.set(Calendar.SECOND, 0);</span>
-<span class="fc" id="L490">        cal.set(Calendar.MILLISECOND, 0);</span>
-<span class="fc" id="L491">		return cal.getTime();</span>
+<span class="nc" id="L485">        Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L486">        cal.setTime(dateToFormat);</span>
+<span class="nc" id="L487">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L488">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L489">        cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L490">        cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L491">		return cal.getTime();</span>
 	}
 
 	/********************************** SUPPORT METHODS **************************************************/

@@ -23,7 +23,7 @@ function login(I, correctPassword=false, checkText=true) {
     I.fillField("username", "tester");
     if (correctPassword) I.fillField("password", secret(I.getDefaultPassword()));
     else I.fillField("password", "tralala");
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
 
     if (checkText) {
         if (correctPassword) I.see("Moje posledné stránky");
@@ -165,14 +165,14 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     I.say("over vyplnenie nespravneho potvrdenia hesla");
     I.fillField("#retypeNewPassword", "x"+newPassword);
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
     I.see("Nové heslo a opakovanie nového hesla sa nezhodujú");
     if (Browser.isFirefox()) I.wait(1);
 
     I.say("vypln a over prihlasenie");
     I.fillField("#newPassword", newPassword);
     I.fillField("#retypeNewPassword", newPassword);
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
 
     I.say("over zobrazenie welcome obrazovky");
     I.see("Vitajte, User Slabeheslo");
@@ -197,7 +197,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     I.fillField("#newPassword", newPassword);
     I.fillField("#retypeNewPassword", newPassword);
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
 
     I.see("Pri spracovaní formuláru nastali chyby")
     I.see("toto heslo bolo už použité v minulosti, použite nové heslo");
@@ -205,7 +205,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     I.fillField("#newPassword", "x"+newPassword);
     I.fillField("#retypeNewPassword", "x"+newPassword);
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
 
     I.see("Vitajte, User Slabeheslo");
     I.see("Prehľad");

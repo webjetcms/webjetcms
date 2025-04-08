@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThumbServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">ThumbServlet.java</span></div><h1>ThumbServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThumbServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">ThumbServlet.java</span></div><h1>ThumbServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -129,7 +129,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L129">			return;</span>
 		}
 
-<span class="pc bpc" id="L132" title="8 of 16 branches missed.">		if ( (imagePath.startsWith(&quot;images/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;files/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;shared/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;video/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;templates/&quot;)==false &amp;&amp; imagePath.indexOf(&quot;grideditor&quot;)==-1 &amp;&amp; imagePath.indexOf(&quot;thumb&quot;)==-1) || imagePath.indexOf(&quot;..&quot;)!=-1)</span>
+<span class="pc bpc" id="L132" title="12 of 16 branches missed.">		if ( (imagePath.startsWith(&quot;images/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;files/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;shared/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;video/&quot;)==false &amp;&amp; imagePath.startsWith(&quot;templates/&quot;)==false &amp;&amp; imagePath.indexOf(&quot;grideditor&quot;)==-1 &amp;&amp; imagePath.indexOf(&quot;thumb&quot;)==-1) || imagePath.indexOf(&quot;..&quot;)!=-1)</span>
 		{
 <span class="nc" id="L134">			sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
 <span class="nc" id="L135">			response.setStatus(404);</span>
@@ -147,7 +147,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="pc bpc" id="L147" title="2 of 4 branches missed.">		if (imagePath != null &amp;&amp; imagePath.length()&gt;3)</span>
 		{
 			//pridaj installName (ak cesta neobsahuje) ak je to asset v /templates adresari
-<span class="fc bfc" id="L150" title="All 2 branches covered.">         if (imagePath.startsWith(&quot;templates/&quot;)) imagePath = WriteTagToolsForCore.getCustomPage(&quot;/&quot;+imagePath, request).substring(1);</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">         if (imagePath.startsWith(&quot;templates/&quot;)) imagePath = WriteTagToolsForCore.getCustomPage(&quot;/&quot;+imagePath, request).substring(1);</span>
 
 			//kontrolujem prava
 <span class="pc bpc" id="L153" title="1 of 2 branches missed.">			EditForm ef = PathFilter.isPasswordProtected(imagePath.startsWith(&quot;/&quot;) == false ? &quot;/&quot;+imagePath : imagePath, request, request.getSession());</span>
@@ -215,19 +215,19 @@ import sk.iway.iwcm.users.UsersDB;
 
 <span class="fc" id="L216">			String realPath = PathFilter.getRealPath(&quot;/&quot;+imagePath);</span>
 <span class="fc" id="L217">			IwcmFile imageFile = new IwcmFile(realPath);</span>
-<span class="pc bpc" id="L218" title="1 of 2 branches missed.">			if (imageFile.exists()==false)</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">			if (imageFile.exists()==false)</span>
 			{
 				//kukni ci neexistuje presmerovanie k danemu obrazku, pouzitie thumbServletMissingImg_/images/cesta/ibrazok.jpg je stary format,
 				//je potrebne pouzit konstantu thumbServletMissingImg kde na kazdom riadku je cesta|cesta-k-obrazku.jpg
-<span class="nc" id="L222">				boolean return404 = true;</span>
-<span class="nc" id="L223">				String imgDirPath = &quot;/&quot;+imagePath.substring(0, imagePath.lastIndexOf(&quot;/&quot;)+1);</span>
-<span class="nc" id="L224">				String replaceForMissingPath = Constants.getString(&quot;thumbServletMissingImg_&quot;+imgDirPath);</span>
+<span class="fc" id="L222">				boolean return404 = true;</span>
+<span class="fc" id="L223">				String imgDirPath = &quot;/&quot;+imagePath.substring(0, imagePath.lastIndexOf(&quot;/&quot;)+1);</span>
+<span class="fc" id="L224">				String replaceForMissingPath = Constants.getString(&quot;thumbServletMissingImg_&quot;+imgDirPath);</span>
 
-<span class="nc bnc" id="L226" title="All 2 branches missed.">				if (Tools.isEmpty(replaceForMissingPath)) {</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">				if (Tools.isEmpty(replaceForMissingPath)) {</span>
 					//skus novy format, kde v konf. premennej thumbServletMissingImg je na novom riadku definovane URL ktore sa hladaju
-<span class="nc" id="L228">					String thumbServletMissingImg = Constants.getString(&quot;thumbServletMissingImg&quot;);</span>
-<span class="nc" id="L229">					String bestMatch = null;</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">					if (Tools.isNotEmpty(thumbServletMissingImg)) {</span>
+<span class="fc" id="L228">					String thumbServletMissingImg = Constants.getString(&quot;thumbServletMissingImg&quot;);</span>
+<span class="fc" id="L229">					String bestMatch = null;</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(thumbServletMissingImg)) {</span>
 						//eviduje vyraz ktory drzime, aby sa urcil best match
 <span class="nc" id="L232">						int maxLenght = 0;</span>
 <span class="nc" id="L233">						String[] urls = Tools.getTokens(thumbServletMissingImg, &quot;\n&quot;);</span>
@@ -244,14 +244,14 @@ import sk.iway.iwcm.users.UsersDB;
 							}
 						}
 					}
-<span class="nc bnc" id="L247" title="All 2 branches missed.">					if (bestMatch != null) {</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">					if (bestMatch != null) {</span>
 						//nafejkuj, ze tento obrazo mame nastaveny a existuje, potom z neho normalne spravi thumb
 <span class="nc" id="L249">						imagePath = bestMatch.substring(1); //odstran prve lomitko, taky je format</span>
 <span class="nc" id="L250">						realPath = PathFilter.getRealPath(&quot;/&quot;+imagePath);</span>
 <span class="nc" id="L251">						imageFile = new IwcmFile(realPath);</span>
 <span class="nc bnc" id="L252" title="All 2 branches missed.">						if (imageFile.exists()) return404 = false;</span>
 					}
-<span class="nc" id="L254">				}</span>
+<span class="fc" id="L254">				}</span>
 				else
 				{
 <span class="nc" id="L257">					Logger.debug(ThumbServlet.class, &quot;Replace for missing path '&quot;+imgDirPath+&quot;' - '&quot;+replaceForMissingPath+&quot;'&quot;);</span>
@@ -273,13 +273,13 @@ import sk.iway.iwcm.users.UsersDB;
 				}
 
 				//
-<span class="nc bnc" id="L276" title="All 2 branches missed.">				if (return404)</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">				if (return404)</span>
 				{
-<span class="nc" id="L278">					Logger.debug(ThumbServlet.class, &quot;Image doesn't exists, imagePath=&quot;+imagePath+&quot; realPath=&quot;+realPath+&quot; qs=&quot;+request.getQueryString()+&quot; uri=&quot;+request.getRequestURI());</span>
-<span class="nc" id="L279">					sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
-<span class="nc" id="L280">					response.setStatus(404);</span>
-<span class="nc" id="L281">					response.getWriter().print(&quot;&lt;html&gt;&lt;body&gt;404  -  not found&lt;/body&gt;&lt;/html&gt;&quot;);</span>
-<span class="nc" id="L282">					return;</span>
+<span class="fc" id="L278">					Logger.debug(ThumbServlet.class, &quot;Image doesn't exists, imagePath=&quot;+imagePath+&quot; realPath=&quot;+realPath+&quot; qs=&quot;+request.getQueryString()+&quot; uri=&quot;+request.getRequestURI());</span>
+<span class="fc" id="L279">					sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
+<span class="fc" id="L280">					response.setStatus(404);</span>
+<span class="fc" id="L281">					response.getWriter().print(&quot;&lt;html&gt;&lt;body&gt;404  -  not found&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="fc" id="L282">					return;</span>
 				}
 			}
 

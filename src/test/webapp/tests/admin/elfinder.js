@@ -8,11 +8,11 @@ function getFileUsage(I, DT, loader) {
 
     I.clickCss("#pills-dt-datatableInit-usage-tab");
 
-    I.waitForText("Použitie súboru", 300);
+    I.waitForText("Použitie", 300, ".nav-link.active");
 
     DT.waitForLoader(loader);
 
-    I.see("Použitie súboru");
+    I.see("Použitie", ".nav-link.active");
 
     I.see("Test file usage");
 
@@ -23,13 +23,13 @@ Scenario('dir usage', async ({I, DT}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_2_L2ltYWdlcw_E_E");
 
     I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
-
+    
     I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie priečinka"));
     I.waitForVisible("#modalIframe", 10);
 
     I.switchTo("#modalIframeIframeElement");
 
-    I.see("Indexovať súbory pre vyhľadávanie");
+    I.waitForText("Indexovať súbory pre vyhľadávanie", 20);
     I.see("Obchodní partneri");
 
     getFileUsage(I, DT, "#datatableFieldDTE_Field_editorFields-docDetailsList_processing");
@@ -315,7 +315,7 @@ Scenario('Explorer - file diacritics test', async ({ I }) => {
 
     I.amOnPage("/admin/v9/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
-    I.click("#nav-iwcm_2_L2ZpbGVz"); //files
+    I.clickCss("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
 
     I.say('Try to rename a folder to the name with diacritics');

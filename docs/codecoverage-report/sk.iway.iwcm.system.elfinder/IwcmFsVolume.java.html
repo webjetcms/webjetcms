@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmFsVolume.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">IwcmFsVolume.java</span></div><h1>IwcmFsVolume.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IwcmFsVolume.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">IwcmFsVolume.java</span></div><h1>IwcmFsVolume.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -93,7 +93,7 @@ public class IwcmFsVolume implements FsVolume
 <span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (canWrite(f))</span>
 		{
 			//odstran diakritiku
-<span class="pc bpc" id="L96" title="1 of 4 branches missed.">			if (f.getVirtualPath().startsWith(&quot;/files&quot;) || f.getVirtualPath().startsWith(&quot;/images&quot;))</span>
+<span class="pc bpc" id="L96" title="2 of 4 branches missed.">			if (f.getVirtualPath().startsWith(&quot;/files&quot;) || f.getVirtualPath().startsWith(&quot;/images&quot;))</span>
 			{
 <span class="fc" id="L98">				String newDir = DB.internationalToEnglish(DocTools.removeCharsDir(f.getName(), true).toLowerCase());</span>
 <span class="fc" id="L99">				IwcmFile f2 = new IwcmFile(f.getParentFile(), newDir);</span>
@@ -116,10 +116,10 @@ public class IwcmFsVolume implements FsVolume
 <span class="fc" id="L116">			deleted = file.delete();</span>
 			//zmaz z indexu (ak existuje)
 <span class="fc" id="L118">			String virtualPath = file.getVirtualPath();</span>
-<span class="fc bfc" id="L119" title="All 2 branches covered.">			if (virtualPath.startsWith(&quot;/files&quot;))</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">			if (virtualPath.startsWith(&quot;/files&quot;))</span>
 			{
 				//vymazanie full text indexu
-<span class="fc" id="L122">				FileIndexerTools.deleteIndexedFile(virtualPath);</span>
+<span class="nc" id="L122">				FileIndexerTools.deleteIndexedFile(virtualPath);</span>
 			}
 
 <span class="fc" id="L125">			Adminlog.add(Adminlog.TYPE_FILE_DELETE, &quot;elfinder deleteFile, path=&quot;+virtualPath, -1, -1);</span>
@@ -305,40 +305,50 @@ public class IwcmFsVolume implements FsVolume
 	@Override
 	public long getSize(FsItem fsi)
 	{
-<span class="pc bpc" id="L308" title="1 of 2 branches missed.">		if(!Constants.getBoolean(&quot;elfinderUseFastLoading&quot;))</span>
-<span class="fc" id="L309">			return asFile(fsi).length();</span>
-		else
-<span class="nc" id="L311">			return 0;</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">		if(Constants.getBoolean(&quot;elfinderUseFastLoading&quot;)) return 0;</span>
+<span class="fc" id="L309">		IwcmFile file = asFile(fsi);</span>
+<span class="fc" id="L310">		long size = file.getLength();</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">		if (file.isDirectory())</span>
+		{
+<span class="fc" id="L313">			size = 0;</span>
+			//iterate over files in directory and sum their sizes
+<span class="fc" id="L315">			IwcmFile[] files = file.listFiles();</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">			for (IwcmFile f : files)</span>
+			{
+<span class="fc" id="L318">				size += f.getLength();</span>
+			}
+		}
+<span class="fc" id="L321">		return size;</span>
 	}
 
 	@Override
 	public String getThumbnailFileName(FsItem fsi)
 	{
-<span class="nc" id="L317">		return null;</span>
+<span class="nc" id="L327">		return null;</span>
 	}
 
 	@Override
 	public boolean hasChildFolder(FsItem fsi)
 	{
-<span class="pc bpc" id="L323" title="1 of 2 branches missed.">		if(!Constants.getBoolean(&quot;elfinderUseFastLoading&quot;))</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">		if(!Constants.getBoolean(&quot;elfinderUseFastLoading&quot;))</span>
 		{
-<span class="pc bpc" id="L325" title="1 of 4 branches missed.">			return asFile(fsi).isDirectory() &amp;&amp; asFile(fsi).listFiles(new IwcmFileFilter()</span>
-<span class="fc" id="L326">			{</span>
+<span class="pc bpc" id="L335" title="1 of 4 branches missed.">			return asFile(fsi).isDirectory() &amp;&amp; asFile(fsi).listFiles(new IwcmFileFilter()</span>
+<span class="fc" id="L336">			{</span>
 				@Override
 				public boolean accept(IwcmFile arg0)
 				{
-<span class="fc" id="L330">					return arg0.isDirectory();</span>
+<span class="fc" id="L340">					return arg0.isDirectory();</span>
 				}
 			}).length &gt; 0;
 		}
 		else
-<span class="nc" id="L335">			return true;</span>
+<span class="nc" id="L345">			return true;</span>
 	}
 
 	@Override
 	public boolean isFolder(FsItem fsi)
 	{
-<span class="fc" id="L341">		return asFile(fsi).isDirectory();</span>
+<span class="fc" id="L351">		return asFile(fsi).isDirectory();</span>
 	}
 
 	@Override
@@ -348,131 +358,131 @@ public class IwcmFsVolume implements FsVolume
 		//Logger.debug(IwcmFsVolume.class, &quot;isRoot: &quot; + _rootDir + &quot; &quot; + asFile(fsi) + &quot; &quot; + asFile(fsi).getVirtualPath() + &quot; is=&quot;+isRoot);
 		//return isRoot;
 
-<span class="fc" id="L351">		return &quot;/&quot;.equals(asFile(fsi).getVirtualPath());</span>
+<span class="fc" id="L361">		return &quot;/&quot;.equals(asFile(fsi).getVirtualPath());</span>
 	}
 
 	@Override
 	public FsItem[] listChildren(FsItem fsi)
 	{
-<span class="fc" id="L357">		List&lt;FsItem&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L367">		List&lt;FsItem&gt; list = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L359">		IwcmFile fsiFile = asFile(fsi);</span>
+<span class="fc" id="L369">		IwcmFile fsiFile = asFile(fsi);</span>
 
-<span class="fc" id="L361">		Logger.debug(IwcmFsVolume.class, &quot;listChildrens, virtualPath=&quot;+fsiFile.getVirtualPath()+&quot; realPath=&quot;+fsiFile.getAbsolutePath());</span>
+<span class="fc" id="L371">		Logger.debug(IwcmFsVolume.class, &quot;listChildrens, virtualPath=&quot;+fsiFile.getVirtualPath()+&quot; realPath=&quot;+fsiFile.getAbsolutePath());</span>
 
-<span class="fc" id="L363">		IwcmFile[] cs = fsiFile.listFiles();</span>
-<span class="pc bpc" id="L364" title="1 of 2 branches missed.">		if (cs == null)</span>
+<span class="fc" id="L373">		IwcmFile[] cs = fsiFile.listFiles();</span>
+<span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if (cs == null)</span>
 		{
-<span class="nc" id="L366">			Logger.debug(IwcmFsVolume.class, &quot;listChildren - cs is null: &quot;+cs);</span>
-<span class="nc" id="L367">			return new FsItem[0];</span>
+<span class="nc" id="L376">			Logger.debug(IwcmFsVolume.class, &quot;listChildren - cs is null: &quot;+cs);</span>
+<span class="nc" id="L377">			return new FsItem[0];</span>
 		}
 
-<span class="fc" id="L370">		boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean(&quot;fbrowserShowOnlyWritableFolders&quot;);</span>
+<span class="fc" id="L380">		boolean fbrowserShowOnlyWritableFolders = Constants.getBoolean(&quot;fbrowserShowOnlyWritableFolders&quot;);</span>
 
-<span class="fc" id="L372">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
-<span class="fc" id="L373">		Logger.debug(IwcmFsVolume.class, &quot;listChildren, user=&quot;+user+&quot; cs.length=&quot;+cs.length+&quot; fbrowserShowOnlyWritableFolders=&quot;+fbrowserShowOnlyWritableFolders);</span>
-<span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if (user!=null)</span>
+<span class="fc" id="L382">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="fc" id="L383">		Logger.debug(IwcmFsVolume.class, &quot;listChildren, user=&quot;+user+&quot; cs.length=&quot;+cs.length+&quot; fbrowserShowOnlyWritableFolders=&quot;+fbrowserShowOnlyWritableFolders);</span>
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">		if (user!=null)</span>
 		{
-<span class="fc" id="L376">			String path = fsiFile.getVirtualPath();</span>
-<span class="fc bfc" id="L377" title="All 2 branches covered.">			if (path.endsWith(&quot;/&quot;)==false) path = path+&quot;/&quot;; //NOSONAR</span>
+<span class="fc" id="L386">			String path = fsiFile.getVirtualPath();</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">			if (path.endsWith(&quot;/&quot;)==false) path = path+&quot;/&quot;; //NOSONAR</span>
 
-<span class="fc" id="L379">			List&lt;IwcmFile&gt; writableFolders = user.getWritableFoldersList();</span>
-<span class="fc" id="L380">			String fbrowserAlwaysShowFolders = Constants.getStringExecuteMacro(&quot;fbrowserAlwaysShowFolders&quot;);</span>
-<span class="pc bpc" id="L381" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(fbrowserAlwaysShowFolders))</span>
+<span class="fc" id="L389">			List&lt;IwcmFile&gt; writableFolders = user.getWritableFoldersList();</span>
+<span class="fc" id="L390">			String fbrowserAlwaysShowFolders = Constants.getStringExecuteMacro(&quot;fbrowserAlwaysShowFolders&quot;);</span>
+<span class="pc bpc" id="L391" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(fbrowserAlwaysShowFolders))</span>
 			{
-<span class="nc" id="L383">				String[] fbrowserAlwaysShowFoldersList = fbrowserAlwaysShowFolders.split(&quot;\n&quot;);</span>
-<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (fbrowserAlwaysShowFoldersList.length &gt; 0) {</span>
-<span class="nc bnc" id="L385" title="All 2 branches missed.">					for (String fbrowserAlwaysShowFolder : fbrowserAlwaysShowFoldersList) {</span>
-<span class="nc" id="L386">						writableFolders.add(new IwcmFile(Tools.getRealPath(fbrowserAlwaysShowFolder)));</span>
+<span class="nc" id="L393">				String[] fbrowserAlwaysShowFoldersList = fbrowserAlwaysShowFolders.split(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">				if (fbrowserAlwaysShowFoldersList.length &gt; 0) {</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">					for (String fbrowserAlwaysShowFolder : fbrowserAlwaysShowFoldersList) {</span>
+<span class="nc" id="L396">						writableFolders.add(new IwcmFile(Tools.getRealPath(fbrowserAlwaysShowFolder)));</span>
 					}
 				}
 			}
 
-<span class="fc bfc" id="L391" title="All 2 branches covered.">			for (IwcmFile c : cs)</span>
+<span class="fc bfc" id="L401" title="All 2 branches covered.">			for (IwcmFile c : cs)</span>
 			{
-<span class="pc bpc" id="L393" title="1 of 2 branches missed.">				if (FileBrowserTools.hasForbiddenSymbol(c.getName())) {</span>
-<span class="nc" id="L394">					continue;</span>
+<span class="pc bpc" id="L403" title="1 of 2 branches missed.">				if (FileBrowserTools.hasForbiddenSymbol(c.getName())) {</span>
+<span class="nc" id="L404">					continue;</span>
 				}
 
-<span class="pc bpc" id="L397" title="3 of 4 branches missed.">				if (fbrowserShowOnlyWritableFolders &amp;&amp; !isFolderWritable(writableFolders, c.getVirtualPath())) {</span>
-<span class="nc" id="L398">						continue;</span>
+<span class="pc bpc" id="L407" title="3 of 4 branches missed.">				if (fbrowserShowOnlyWritableFolders &amp;&amp; !isFolderWritable(writableFolders, c.getVirtualPath())) {</span>
+<span class="nc" id="L408">						continue;</span>
 				}
 
-<span class="fc" id="L401">				list.add(fromFile(c));</span>
+<span class="fc" id="L411">				list.add(fromFile(c));</span>
 			}
 		}
 
-<span class="fc" id="L405">		return list.toArray(new FsItem[0]);</span>
+<span class="fc" id="L415">		return list.toArray(new FsItem[0]);</span>
 	}
 
 	private boolean isFolderWritable(List&lt;IwcmFile&gt; writableFolders, String path) {
-<span class="nc" id="L409">		IwcmFile pathFile = new IwcmFile(Tools.getRealPath(path));</span>
-<span class="nc" id="L410">		String pathVirtualPath = pathFile.getVirtualPath();</span>
-<span class="nc bnc" id="L411" title="All 4 branches missed.">		if (!pathVirtualPath.endsWith(&quot;/&quot;) &amp;&amp; pathFile.isDirectory()) {</span>
-<span class="nc" id="L412">			pathVirtualPath += &quot;/&quot;;</span>
+<span class="nc" id="L419">		IwcmFile pathFile = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="nc" id="L420">		String pathVirtualPath = pathFile.getVirtualPath();</span>
+<span class="nc bnc" id="L421" title="All 4 branches missed.">		if (!pathVirtualPath.endsWith(&quot;/&quot;) &amp;&amp; pathFile.isDirectory()) {</span>
+<span class="nc" id="L422">			pathVirtualPath += &quot;/&quot;;</span>
 		}
 
-<span class="nc bnc" id="L415" title="All 2 branches missed.">		for (IwcmFile folder : writableFolders) {</span>
-<span class="nc" id="L416">			IwcmFile actualFolder = folder;</span>
-<span class="nc bnc" id="L417" title="All 2 branches missed.">			if (!actualFolder.exists()) {</span>
-<span class="nc" id="L418">				actualFolder = new IwcmFile(Tools.replace(folder.getAbsolutePath(), &quot;*&quot;, &quot;&quot;));</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">		for (IwcmFile folder : writableFolders) {</span>
+<span class="nc" id="L426">			IwcmFile actualFolder = folder;</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">			if (!actualFolder.exists()) {</span>
+<span class="nc" id="L428">				actualFolder = new IwcmFile(Tools.replace(folder.getAbsolutePath(), &quot;*&quot;, &quot;&quot;));</span>
 			}
 
-<span class="nc bnc" id="L421" title="All 2 branches missed.">			if (!actualFolder.exists()) {</span>
-<span class="nc" id="L422">				continue;</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">			if (!actualFolder.exists()) {</span>
+<span class="nc" id="L432">				continue;</span>
 			}
 
-<span class="nc" id="L425">			String folderVirtualPath = actualFolder.getVirtualPath();</span>
-<span class="nc bnc" id="L426" title="All 2 branches missed.">			if (!folderVirtualPath.endsWith(&quot;/&quot;)) {</span>
-<span class="nc" id="L427">				folderVirtualPath += &quot;/&quot;;</span>
+<span class="nc" id="L435">			String folderVirtualPath = actualFolder.getVirtualPath();</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">			if (!folderVirtualPath.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L437">				folderVirtualPath += &quot;/&quot;;</span>
 			}
 
-<span class="nc bnc" id="L430" title="All 6 branches missed.">			if (pathFile.isDirectory() &amp;&amp; pathVirtualPath.startsWith(folderVirtualPath) || folderVirtualPath.startsWith(pathVirtualPath)) {</span>
-<span class="nc" id="L431">					return true;</span>
+<span class="nc bnc" id="L440" title="All 6 branches missed.">			if (pathFile.isDirectory() &amp;&amp; pathVirtualPath.startsWith(folderVirtualPath) || folderVirtualPath.startsWith(pathVirtualPath)) {</span>
+<span class="nc" id="L441">					return true;</span>
 			}
 
-<span class="nc bnc" id="L434" title="All 4 branches missed.">			if (pathFile.isFile() &amp;&amp; pathVirtualPath.startsWith(folderVirtualPath)) {</span>
-<span class="nc" id="L435">					return true;</span>
+<span class="nc bnc" id="L444" title="All 4 branches missed.">			if (pathFile.isFile() &amp;&amp; pathVirtualPath.startsWith(folderVirtualPath)) {</span>
+<span class="nc" id="L445">					return true;</span>
 			}
-<span class="nc" id="L437">		}</span>
-<span class="nc" id="L438">		return false;</span>
+<span class="nc" id="L447">		}</span>
+<span class="nc" id="L448">		return false;</span>
 	}
 
 	@Override
 	public IwcmInputStream openInputStream(FsItem fsi) throws IOException
 	{
-<span class="fc" id="L444">		return new IwcmInputStream(asFile(fsi));</span>
+<span class="nc" id="L454">		return new IwcmInputStream(asFile(fsi));</span>
 	}
 
 	@Override
 	public IwcmOutputStream openOutputStream(FsItem fsi) throws IOException
 	{
-<span class="nc" id="L450">		Adminlog.add(Adminlog.TYPE_FILE_SAVE, &quot;elfinder saveFile, path=&quot;+asFile(fsi).getVirtualPath(), -1, -1);</span>
+<span class="nc" id="L460">		Adminlog.add(Adminlog.TYPE_FILE_SAVE, &quot;elfinder saveFile, path=&quot;+asFile(fsi).getVirtualPath(), -1, -1);</span>
 
-<span class="nc" id="L452">		return new IwcmOutputStream(asFile(fsi));</span>
+<span class="nc" id="L462">		return new IwcmOutputStream(asFile(fsi));</span>
 	}
 
 	@Override
 	public void rename(FsItem src, FsItem dst) throws IOException
 	{
-<span class="fc" id="L458">		asFile(src).renameTo(asFile(dst));</span>
-<span class="fc" id="L459">		Adminlog.add(Adminlog.TYPE_FILE_EDIT, &quot;elfinder rename, old=&quot;+asFile(src).getVirtualPath()+&quot; new=&quot;+asFile(dst).getVirtualPath(), -1, -1);</span>
-<span class="fc" id="L460">	}</span>
+<span class="nc" id="L468">		asFile(src).renameTo(asFile(dst));</span>
+<span class="nc" id="L469">		Adminlog.add(Adminlog.TYPE_FILE_EDIT, &quot;elfinder rename, old=&quot;+asFile(src).getVirtualPath()+&quot; new=&quot;+asFile(dst).getVirtualPath(), -1, -1);</span>
+<span class="nc" id="L470">	}</span>
 
 	public void setName(String name)
 	{
-<span class="nc" id="L464">		_name = name;</span>
-<span class="nc" id="L465">	}</span>
+<span class="nc" id="L474">		_name = name;</span>
+<span class="nc" id="L475">	}</span>
 
 	public void setRootDir(IwcmFile rootDir)
 	{
-<span class="nc bnc" id="L469" title="All 2 branches missed.">		if (!rootDir.exists())</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">		if (!rootDir.exists())</span>
 		{
-<span class="nc" id="L471">			rootDir.mkdirs();</span>
+<span class="nc" id="L481">			rootDir.mkdirs();</span>
 		}
 
-<span class="nc" id="L474">		_rootDir = rootDir;</span>
-<span class="nc" id="L475">	}</span>
+<span class="nc" id="L484">		_rootDir = rootDir;</span>
+<span class="nc" id="L485">	}</span>
 
 	/**
 	 * Vrati URL adresu pre subor
@@ -481,9 +491,9 @@ public class IwcmFsVolume implements FsVolume
 	 */
 	public String getVirtualPath(FsItemEx item) throws IOException
 	{
-<span class="fc" id="L484">		IwcmFile file = asFile(fromPath(item.getPath()));</span>
+<span class="fc" id="L494">		IwcmFile file = asFile(fromPath(item.getPath()));</span>
 
-<span class="fc" id="L486">		return file.getVirtualPath();</span>
+<span class="fc" id="L496">		return file.getVirtualPath();</span>
 	}
 
 	/**
@@ -494,7 +504,7 @@ public class IwcmFsVolume implements FsVolume
 	@Deprecated
 	public static String getDomainNameFileAliasAppend()
 	{
-<span class="nc" id="L497">		return AdminTools.getDomainNameFileAliasAppend();</span>
+<span class="nc" id="L507">		return AdminTools.getDomainNameFileAliasAppend();</span>
 	}
 
 	/**
@@ -505,12 +515,12 @@ public class IwcmFsVolume implements FsVolume
 	 * @throws IOException
 	 */
 	public static String removeSpecialChars(String name, FsItemEx fsi) throws IOException {
-<span class="pc bpc" id="L508" title="1 of 4 branches missed.">		if (fsi.getPath().startsWith(&quot;/files&quot;) || fsi.getPath().startsWith(&quot;/images&quot;))</span>
+<span class="pc bpc" id="L518" title="2 of 4 branches missed.">		if (fsi.getPath().startsWith(&quot;/files&quot;) || fsi.getPath().startsWith(&quot;/images&quot;))</span>
 		{
-<span class="fc" id="L510">			name = DB.internationalToEnglish(name);</span>
-<span class="fc" id="L511">			name = DocTools.removeCharsDir(name, true).toLowerCase();</span>
+<span class="fc" id="L520">			name = DB.internationalToEnglish(name);</span>
+<span class="fc" id="L521">			name = DocTools.removeCharsDir(name, true).toLowerCase();</span>
 		}
-<span class="fc" id="L513">		return name;</span>
+<span class="fc" id="L523">		return name;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

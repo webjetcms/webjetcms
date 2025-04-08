@@ -129,7 +129,7 @@ public class InquiryDB
 	/**
 	 * vrati poslednu anketu zo zadanej skupiny
 	 *
-	 * @param groupName -
+	 * @param groupNames -
 	 *           nazov skupiny ankiet
 	 * @param imagesLength -
 	 *           pocet generovanych obrazkov v stlpiku

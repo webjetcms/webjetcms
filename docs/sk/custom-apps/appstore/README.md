@@ -673,6 +673,6 @@ Ukážkový kód, ktorý reaguje na zmenu výberového poľa:
 - Logika pre zobrazenie administrácie je v ```/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp```, zobrazuje buď klasický ```editor_component.jsp```, tento automatický editor cez anotácie, alebo zoznam aplikácií.
 - Pridaná metóda pre získanie zoznamu kariet z anotácie vlastností ```sk.iway.iwcm.system.datatable.DataTableColumnsFactory```
 - Vytvorený nový dátový objekt pre karty ```sk.iway.iwcm.system.datatable.json.DataTableTab```
-- Rest controller pre dáta aplikácie ```sk.iway.iwcm.editor.rest.ComponentsRestController```
+- Servisná trieda pre dáta aplikácie ```sk.iway.iwcm.editor.rest.ComponentsService```
 - Nový dátový ```request``` objekt pre získanie dát aplikácie ```sk.iway.iwcm.editor.rest.ComponentRequest```
 - Zoznam aplikácií sa z anotácií hľadá v ```sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations```.

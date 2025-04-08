@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Modules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">Modules.java</span></div><h1>Modules.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Modules.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system</a> &gt; <span class="el_source">Modules.java</span></div><h1>Modules.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system;
 
 import java.io.File;
 import java.sql.Connection;
@@ -590,7 +590,7 @@ public class Modules
 
 
 <span class="fc" id="L592">		sub = new ModuleInfo();</span>
-<span class="fc" id="L593">		sub.setNameKey(&quot;admin.temp_list.zoznam_sablon&quot;);</span>
+<span class="fc" id="L593">		sub.setNameKey(&quot;components.templates.dialog_title&quot;);</span>
 <span class="fc" id="L594">		sub.setPath(&quot;/admin/v9/dist/views/templates/temps-list.html&quot;);</span>
 <span class="fc" id="L595">		sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));</span>
 <span class="fc" id="L596">		sub.setItemKey(&quot;menuTemplates&quot;);</span>
@@ -600,7 +600,7 @@ public class Modules
 <span class="fc" id="L600">		templates.addSubmenu(sub);</span>
 
 <span class="fc" id="L602">        sub = new ModuleInfo();</span>
-<span class="fc" id="L603">        sub.setNameKey(&quot;admin.temp_group_list.title&quot;);</span>
+<span class="fc" id="L603">        sub.setNameKey(&quot;menu.group_templates&quot;);</span>
 <span class="fc" id="L604">        sub.setPath(&quot;/admin/v9/dist/views/templates/temps-groups-list.html&quot;);</span>
 <span class="fc" id="L605">        sub.setWjVersions(modVersions.get(&quot;menu.templates&quot;));</span>
 <span class="fc" id="L606">        sub.setItemKey(&quot;menuTemplatesGroup&quot;);</span>
@@ -639,7 +639,7 @@ public class Modules
 		//pouzivatelia
 <span class="fc" id="L640">		ModuleInfo users = new ModuleInfo(&quot;menu.users&quot;, &quot;menuUsers&quot;, &quot;/components/user&quot;, null, true, true, &quot;/admin/v9/users/user-list/&quot;, modVersions.get(&quot;menu.users&quot;), 30);</span>
 <span class="fc" id="L641">		users.setGroup(&quot;users&quot;);</span>
-<span class="fc" id="L642">		users.setLeftMenuNameKey(&quot;users.list&quot;);</span>
+<span class="fc" id="L642">		users.setLeftMenuNameKey(&quot;menu.users&quot;);</span>
 <span class="fc" id="L643">		loadModule(users);</span>
 
 		//toto je tu kvoli menu, aby sa vypisala moznost Zoznam pouzivatelov
@@ -782,7 +782,7 @@ public class Modules
 <span class="fc" id="L782">		sub = new ModuleInfo().setMenuOrder(7020);</span>
 <span class="fc" id="L783">		sub.setLeftMenuNameKey(&quot;admin.conf_editor.edit_text&quot;);</span>
 <span class="fc" id="L784">		sub.setNameKey(&quot;menu.config.rights.edit_text&quot;);</span>
-<span class="fc" id="L785">		sub.setPath(&quot;javascript:void()&quot;);</span>
+<span class="fc" id="L785">		sub.setPath(&quot;/admin/v9/settings/translation-keys/&quot;);</span>
 <span class="fc" id="L786">		sub.setWjVersions(&quot;BPECDIM&quot;);</span>
 <span class="fc" id="L787">		sub.setUserItem(true);</span>
 <span class="fc" id="L788">		sub.setItemKey(&quot;edit_text&quot;);</span>
@@ -836,7 +836,7 @@ public class Modules
 <span class="fc" id="L836">		sub.setMenuIcon(&quot;refresh&quot;);</span>
 <span class="fc" id="L837">		loadModule(sub);</span>
 
-<span class="fc" id="L839">		sub = new ModuleInfo().setMenuOrder(7320);</span>
+<span class="fc" id="L839">		sub = new ModuleInfo().setMenuOrder(7290);</span>
 <span class="fc" id="L840">		sub.setLeftMenuNameKey(&quot;components.user.perms.replaceAll&quot;);</span>
 <span class="fc" id="L841">		sub.setNameKey(&quot;components.user.perms.replaceAll&quot;);</span>
 <span class="fc" id="L842">		sub.setPath(&quot;/admin/replaceall.jsp&quot;);</span>

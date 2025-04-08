@@ -10,7 +10,7 @@ echo "WARNING: CHECK VERSION IN build.xml"
 
 date
 
-./mount-license.sh
+#./mount-license.sh
 
 source ~/.nvm/nvm.sh
 nvm install;
@@ -24,6 +24,7 @@ ant update-version
 #ant deploy
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
+ant rsyncToLicenseServer
 ant deployGithub
 
 #GITHUB: just run ant deployStaging

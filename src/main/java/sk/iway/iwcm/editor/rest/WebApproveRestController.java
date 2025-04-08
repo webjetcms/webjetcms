@@ -1,8 +1,12 @@
 package sk.iway.iwcm.editor.rest;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
@@ -18,11 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -75,17 +82,48 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
         predicates.add(builder.isNotNull(root.get("awaitingApprove")));
         predicates.add(builder.like(root.get("awaitingApprove"), "%," + userId + ",%"));
 
+        DocDB docDB = DocDB.getInstance();
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        String trashPath = GroupsTreeService.getTrashDirPath();
+        Set<Integer> awaitingGroupIds = new HashSet<>();
+        List<Integer> skipHistoryId = new ArrayList<>();
+
+        ComplexQuery cq = new ComplexQuery();
+        cq.setSql("SELECT group_id, doc_id, history_id FROM documents_history WHERE awaiting_approve LIKE ?");
+        cq.setParams("%," + userId + ",%");
+        cq.list(new sk.iway.iwcm.database.Mapper<DocDetails>()
+		{
+			public DocDetails map(ResultSet rs) throws SQLException
+			{
+                int groupId = rs.getInt("group_id");
+                int docId = rs.getInt("doc_id");
+                int historyId = rs.getInt("history_id");
+
+                awaitingGroupIds.add(groupId);
+
+                //verify current doc_id is not in trash
+                DocDetails currentDoc = docDB.getBasicDocDetails(docId, false);
+                if (currentDoc == null) {
+                    skipHistoryId.add(historyId);
+                } else {
+                    GroupDetails docGroup = groupsDB.getGroup(currentDoc.getGroupId());
+                    if (docGroup == null || docGroup.getFullPath().contains(trashPath)) {
+                        skipHistoryId.add(historyId);
+                    }
+                }
+                return null;
+            }
+        });
+
         //TODO: pridat do history tabulky root_group_l1 atd ako je aj v documents tabulke a testovat to podla toho
         int domainId = CloudToolsForCore.getDomainId();
         if (domainId>0) {
             //ziskaj zoznam vsetkych groupId v tejto domene
-            GroupsDB groupsDB = GroupsDB.getInstance();
+
             GroupDetails group = groupsDB.getGroup(domainId);
             if (group != null) {
                 String domainName = group.getDomainName();
                 if (Tools.isNotEmpty(domainName)) {
-                    List<Integer> awaitingGroupIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT group_id FROM documents_history WHERE awaiting_approve LIKE ?", "%," + userId + ",%");
-
                     List<Integer> groupIdsInDomain = new ArrayList<>();
 
                     //check if group is in domain
@@ -107,6 +145,24 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
                 }
             }
         }
+
+        //remove groups in trash - we must check CURRENT doc if it is in trash (in history group is not current)
+        List<Integer> groupIdsInTrash = new ArrayList<>();
+
+        for (Integer groupId : awaitingGroupIds) {
+            GroupDetails groupDetails = groupsDB.getGroup(groupId);
+            if (groupDetails != null) {
+                if (groupDetails.getFullPath().contains(trashPath)) {
+                    groupIdsInTrash.add(groupId);
+                }
+            }
+        }
+        if (groupIdsInTrash.isEmpty()==false) {
+            predicates.add(builder.not(root.get("groupId").in(groupIdsInTrash)));
+        }
+
+        //remove pages which current version is in Trash
+        if (skipHistoryId.isEmpty()==false) predicates.add(builder.not(root.get("id").in(skipHistoryId)));
 
         return predicates;
     }

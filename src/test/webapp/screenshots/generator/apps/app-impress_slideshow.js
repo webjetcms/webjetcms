@@ -10,8 +10,8 @@ Scenario('posobiva prezentacia', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/app-impress_slideshow/app-impress_slideshow.png");
 
     Document.screenshotAppEditor(77868, "/redactor/apps/app-impress_slideshow/editor-style.png", function(Document, I, DT, DTE) {
-        I.click("#tabLink2");
+        I.clickCss("#tabLink2");
         Document.screenshot("/redactor/apps/app-impress_slideshow/editor-items.png");
-        I.click("#tabLink1");
+        I.clickCss("#tabLink1");
     });
 });

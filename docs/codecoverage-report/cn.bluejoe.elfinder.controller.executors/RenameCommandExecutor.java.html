@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RenameCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">RenameCommandExecutor.java</span></div><h1>RenameCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RenameCommandExecutor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.controller.executors</a> &gt; <span class="el_source">RenameCommandExecutor.java</span></div><h1>RenameCommandExecutor.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.controller.executors;
 
 import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
@@ -14,43 +15,46 @@ import sk.iway.iwcm.users.UsersDB;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-<span class="fc" id="L17">public class RenameCommandExecutor extends AbstractJsonCommandExecutor</span>
+<span class="nc" id="L18">public class RenameCommandExecutor extends AbstractJsonCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
 			throws Exception
 	{
-<span class="fc" id="L23">		String target = request.getParameter(&quot;target&quot;);</span>
-<span class="fc" id="L24">		String name = request.getParameter(&quot;name&quot;);</span>
-<span class="fc" id="L25">		FsItemEx fsi = super.findItem(fsService, target);</span>
-<span class="fc" id="L26">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L24">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="nc" id="L25">		String name = request.getParameter(&quot;name&quot;);</span>
+<span class="nc" id="L26">		FsItemEx fsi = super.findItem(fsService, target);</span>
+<span class="nc" id="L27">		Prop prop = Prop.getInstance(request);</span>
 
-<span class="pc bpc" id="L28" title="1 of 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(name)) {</span>
-<span class="nc" id="L29">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error.banned_character&quot;));</span>
-<span class="nc" id="L30">			return;</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(name)) {</span>
+<span class="nc" id="L30">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error.banned_character&quot;));</span>
+<span class="nc" id="L31">			return;</span>
 		}
 
-<span class="fc" id="L33">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
-<span class="pc bpc" id="L34" title="2 of 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))</span>
+<span class="nc" id="L34">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="nc bnc" id="L35" title="All 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))</span>
 		{
 			// remove diacritics
-<span class="fc" id="L37">			name = IwcmFsVolume.removeSpecialChars(name, fsi);</span>
+<span class="nc" id="L38">			name = IwcmFsVolume.removeSpecialChars(name, fsi);</span>
 
-<span class="fc" id="L39">			FsItemEx dst = new FsItemEx(fsi.getParent(), name);</span>
+<span class="nc" id="L40">			FsItemEx dst = new FsItemEx(fsi.getParent(), name);</span>
 
 			//#20481 - po vystrihnuti/premenovani vytvori redirect
-<span class="pc bpc" id="L42" title="1 of 2 branches missed.">			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
-<span class="fc" id="L43">				PasteCommandExecutor.createRedirect(fsi, fsi.getPath(), dst.getPath(), request);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
+<span class="nc" id="L44">				PasteCommandExecutor.createRedirect(fsi, fsi.getPath(), dst.getPath(), request);</span>
 
-<span class="fc" id="L45">			fsi.renameTo(dst);</span>
+<span class="nc" id="L46">			fsi.renameTo(dst);</span>
 
-<span class="fc" id="L47">			json.put(&quot;added&quot;, new Object[] { getFsItemInfo(request, dst) });</span>
-<span class="fc" id="L48">			json.put(&quot;removed&quot;, new String[] { target });</span>
-<span class="fc" id="L49">		}</span>
+<span class="nc" id="L48">			json.put(&quot;added&quot;, new Object[] { getFsItemInfo(request, dst) });</span>
+<span class="nc" id="L49">			json.put(&quot;removed&quot;, new String[] { target });</span>
+
+			//update gallery entity
+<span class="nc" id="L52">			GalleryService.createOrUpdateGalleryEntity(fsi, dst);</span>
+<span class="nc" id="L53">		}</span>
 		else
 		{
-<span class="nc" id="L52">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error&quot;, fsi.getParent().getPath()));</span>
+<span class="nc" id="L56">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error&quot;, fsi.getParent().getPath()));</span>
 		}
-<span class="fc" id="L54">	}</span>
+<span class="nc" id="L58">	}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

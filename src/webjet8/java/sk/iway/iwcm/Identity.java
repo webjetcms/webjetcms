@@ -153,6 +153,13 @@ public class Identity extends UserDetails
 		//fix starych nazvov
 		if ("menuForms".equals(fixedName)) fixedName = "cmp_form";
 
+		if ("menuUsers".equals(fixedName)) {
+			//return false if users.edit_admins || users.edit_public_users
+			if (disabledItemsTable.get("users.edit_admins") == null && disabledItemsTable.get("users.edit_public_users") == null) {
+				return false;
+			}
+			return true;
+		}
 
 		//Logger.println(this,"isDisabledItem("+name+")");
 		if (disabledItemsTable == null)
@@ -174,7 +181,7 @@ public class Identity extends UserDetails
 	/**
 	 * Vrati true, ak ma pouzivatel dane pravo, prava je mozne zadat aj vo formate:
 	 * menuFbrowser|menuForms - pouzije sa ALEBO
-	 * menuFbrowser&menuForms - pouzije sa A
+	 * menuFbrowser&amp;menuForms - pouzije sa A
 	 * @param name
 	 * @return
 	 */

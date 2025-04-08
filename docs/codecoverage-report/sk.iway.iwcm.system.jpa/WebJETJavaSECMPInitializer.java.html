@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETJavaSECMPInitializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">WebJETJavaSECMPInitializer.java</span></div><h1>WebJETJavaSECMPInitializer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.jpa;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJETJavaSECMPInitializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.jpa</a> &gt; <span class="el_source">WebJETJavaSECMPInitializer.java</span></div><h1>WebJETJavaSECMPInitializer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.jpa;
 
 import static sk.iway.iwcm.Tools.isEmpty;
 
@@ -229,154 +229,166 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
 <span class="fc" id="L229">	      	puInfo.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);</span>
 <span class="fc" id="L230">	      	puInfo.setPersistenceProviderClassName(&quot;sk.iway.iwcm.system.jpa.WebJETPersistenceProvider&quot;);</span>
 <span class="fc" id="L231">	      	puInfo.setPersistenceUnitRootUrl(archive.getRootURL());</span>
-<span class="fc" id="L232">	      	List&lt;String&gt; managedClasses = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L233">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar&quot;));</span>
-<span class="fc" id="L234">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/components&quot;));</span>
-<span class="fc" id="L235">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/system&quot;));</span>
-<span class="fc" id="L236">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/dmail&quot;));</span>
-<span class="fc" id="L237">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/users&quot;));</span>
-<span class="fc" id="L238">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/&quot;+Constants.getInstallName()));</span>
-<span class="fc" id="L239">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/spirit&quot;));</span>
-<span class="fc" id="L240">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/io&quot;));	//MRE - 20.05.2013 - pridane kvoli historii suborov</span>
-<span class="fc" id="L241">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/editor&quot;));</span>
-<span class="fc" id="L242">	      	managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/sk/iway/iwcm/doc&quot;));</span>
 
-<span class="pc bpc" id="L244" title="1 of 2 branches missed.">	      	if (Tools.isNotEmpty(Constants.getString(&quot;jpaAddPackages&quot;)))</span>
+<span class="fc" id="L233">            String[] packages = {</span>
+                &quot;sk.iway.iwcm.calendar&quot;,
+                &quot;sk.iway.iwcm.components.banner.model&quot;,
+                &quot;sk.iway.iwcm.components.basket&quot;,
+                &quot;sk.iway.iwcm.components.dictionary.model&quot;,
+                &quot;sk.iway.iwcm.components.domainRedirects&quot;,
+                &quot;sk.iway.iwcm.components.enumerations.model&quot;,
+                &quot;sk.iway.iwcm.components.export&quot;,
+                &quot;sk.iway.iwcm.components.file_archiv&quot;,
+                &quot;sk.iway.iwcm.components.gdpr&quot;,
+                &quot;sk.iway.iwcm.components.insertScript&quot;,
+                &quot;sk.iway.iwcm.components.inquirySimple&quot;,
+                &quot;sk.iway.iwcm.components.quiz.jpa&quot;,
+                &quot;sk.iway.iwcm.components.reservation&quot;,
+                &quot;sk.iway.iwcm.components.todo&quot;,
+                &quot;sk.iway.iwcm.components.users.userdetail&quot;,
+                &quot;sk.iway.iwcm.dmail&quot;,
+                &quot;sk.iway.iwcm.doc&quot;,
+                &quot;sk.iway.iwcm.editor&quot;,
+                &quot;sk.iway.iwcm.io&quot;,
+                &quot;sk.iway.iwcm.system.cache&quot;,
+                &quot;sk.iway.iwcm.system.captcha&quot;,
+                &quot;sk.iway.iwcm.system.jpa&quot;,
+                &quot;sk.iway.iwcm.system.msg&quot;,
+                &quot;sk.iway.iwcm.users&quot;,
+                &quot;sk.iway.spirit.model&quot;
+            };
+
+<span class="fc" id="L261">            List&lt;String&gt; managedClasses = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">            for (String packageToScan : packages) {</span>
+<span class="fc" id="L263">                managedClasses.addAll(JpaTools.getJpaClassNames(&quot;/WEB-INF/classes/&quot; + packageToScan.replace(&quot;.&quot;, &quot;/&quot;)));</span>
+            }
+
+<span class="fc" id="L266">            managedClasses.add(&quot;sk.iway.iwcm.system.UrlRedirectBean&quot;);</span>
+
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">	      	if (Tools.isNotEmpty(Constants.getString(&quot;jpaAddPackages&quot;)))</span>
 	      	{
-<span class="fc bfc" id="L246" title="All 2 branches covered.">	      		for (String packageToScan : Constants.getString(&quot;jpaAddPackages&quot;).split(&quot;,&quot;))</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">	      		for (String packageToScan : Constants.getString(&quot;jpaAddPackages&quot;).split(&quot;,&quot;))</span>
 	      		{
-<span class="pc bpc" id="L248" title="1 of 2 branches missed.">	      			if (isEmpty(packageToScan)) continue;</span>
-<span class="fc" id="L249">	      			String packagePath = &quot;/WEB-INF/classes/&quot;+packageToScan.replace(&quot;.&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L250">	      			packagePath = Tools.replace(packagePath, &quot;/*&quot;, &quot;&quot;);</span>
-<span class="fc" id="L251">	      			managedClasses.addAll(JpaTools.getJpaClassNames(packagePath));</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">	      			if (isEmpty(packageToScan)) continue;</span>
+<span class="fc" id="L273">	      			String packagePath = &quot;/WEB-INF/classes/&quot;+packageToScan.replace(&quot;.&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L274">	      			packagePath = Tools.replace(packagePath, &quot;/*&quot;, &quot;&quot;);</span>
+<span class="fc" id="L275">	      			managedClasses.addAll(JpaTools.getJpaClassNames(packagePath));</span>
 	      		}
 	      	}
 
-<span class="fc" id="L255">	      	Logger.debug(WebJETJavaSECMPInitializer.class, &quot;initPersistenceUnits[&quot;+dbName+&quot;], beans=&quot;+managedClasses.size());</span>
+<span class="fc" id="L279">	      	Logger.debug(WebJETJavaSECMPInitializer.class, &quot;initPersistenceUnits[&quot;+dbName+&quot;], beans=&quot;+managedClasses.size());</span>
 
-<span class="fc" id="L257">	      	puInfo.setManagedClassNames(managedClasses);</span>
-<span class="fc" id="L258">	      	puInfo.setExcludeUnlistedClasses(true);</span>
+<span class="fc" id="L281">	      	puInfo.setManagedClassNames(managedClasses);</span>
+<span class="fc" id="L282">	      	puInfo.setExcludeUnlistedClasses(true);</span>
 
-<span class="fc" id="L260">            List&lt;URL&gt; libUrlsList = new ArrayList&lt;&gt;();</span>
-
-<span class="fc" id="L262">	      	File wjJar = new File(Tools.getRealPath(&quot;/WEB-INF/lib/1webjet.jar&quot;));</span>
-<span class="pc bpc" id="L263" title="1 of 2 branches missed.">	      	if (wjJar.exists())</span>
-	      	{
-	      		try
-					{
-<span class="nc" id="L267">	      			Logger.debug(WebJETJavaSECMPInitializer.class, &quot;JPA: Adding webjet.jar&quot;);</span>
-<span class="nc" id="L268">                  libUrlsList.add(wjJar.toURI().toURL());</span>
-					}
-<span class="nc" id="L270">					catch (Exception e)</span>
-					{
-<span class="nc" id="L272">						sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L273">					}</span>
-	      	}
+<span class="fc" id="L284">            List&lt;URL&gt; libUrlsList = new ArrayList&lt;&gt;();</span>
 
             //pridaj lokacie z JarPackagingu
             try
             {
-<span class="fc" id="L279">               List&lt;String&gt; jarLocations = JarPackaging.getJarLocations();</span>
-<span class="fc bfc" id="L280" title="All 2 branches covered.">               for (String location : jarLocations)</span>
+<span class="fc" id="L289">               List&lt;String&gt; jarLocations = JarPackaging.getJarLocations();</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">               for (String location : jarLocations)</span>
                {
-<span class="pc bpc" id="L282" title="1 of 2 branches missed.">                  if (location == null) continue;</span>
-<span class="nc" id="L283">                  location = Tools.URLDecode(location);</span>
-<span class="nc" id="L284">                  Logger.debug(WebJETJavaSECMPInitializer.class, &quot;JPA: Adding &quot;+location);</span>
-<span class="nc" id="L285">                  libUrlsList.add(new File(location).toURI().toURL());</span>
-<span class="nc" id="L286">               }</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">                  if (location == null) continue;</span>
+<span class="nc" id="L293">                  location = Tools.URLDecode(location);</span>
+<span class="nc bnc" id="L294" title="All 4 branches missed.">                  if (location.endsWith(&quot;-admin.jar&quot;) || location.endsWith(&quot;-components.jar&quot;)) continue;</span>
+
+<span class="nc" id="L296">                  Logger.debug(WebJETJavaSECMPInitializer.class, &quot;JPA: Adding &quot;+location);</span>
+<span class="nc" id="L297">                  libUrlsList.add(new File(location).toURI().toURL());</span>
+<span class="nc" id="L298">               }</span>
             }
-<span class="nc" id="L288">            catch (Exception e)</span>
+<span class="nc" id="L300">            catch (Exception e)</span>
             {
-<span class="nc" id="L290">               sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L291">            }</span>
+<span class="nc" id="L302">               sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L303">            }</span>
 
-<span class="pc bpc" id="L293" title="1 of 2 branches missed.">            if (libUrlsList.size()&gt;0) puInfo.setJarFileUrls(libUrlsList);</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">            if (libUrlsList.size()&gt;0) puInfo.setJarFileUrls(libUrlsList);</span>
 
-<span class="fc" id="L295">	      	Properties properties = new Properties();</span>
-<span class="fc" id="L296">	      	String driverClassName = &quot;&quot;;</span>
+<span class="fc" id="L307">	      	Properties properties = new Properties();</span>
+<span class="fc" id="L308">	      	String driverClassName = &quot;&quot;;</span>
             try
             {
-<span class="fc" id="L299">                Connection connection = ds.getConnection();</span>
-<span class="fc" id="L300">                driverClassName = DriverManager.getDriver(connection.getMetaData().getURL()).getClass().getName();</span>
-<span class="fc" id="L301">                connection.close();</span>
+<span class="fc" id="L311">                Connection connection = ds.getConnection();</span>
+<span class="fc" id="L312">                driverClassName = DriverManager.getDriver(connection.getMetaData().getURL()).getClass().getName();</span>
+<span class="fc" id="L313">                connection.close();</span>
             }
-<span class="pc" id="L303">            catch (SQLException e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc" id="L315">            catch (SQLException e){sk.iway.iwcm.Logger.error(e);}</span>
 
-<span class="fc" id="L305">	      	String jpaTargetDatabase = TargetDatabase.Auto;</span>
-<span class="pc bpc" id="L306" title="2 of 4 branches missed.">	      	if(driverClassName.contains(&quot;com.mysql.jdbc.Driver&quot;) || driverClassName.contains(&quot;mariadb&quot;)) {</span>
-<span class="fc" id="L307">	      		jpaTargetDatabase = TargetDatabase.MySQL;</span>
-<span class="nc bnc" id="L308" title="All 2 branches missed.">            } else if(driverClassName.contains(&quot;oracle.jdbc.OracleDriver&quot;)) {</span>
-<span class="nc" id="L309">	      		jpaTargetDatabase = TargetDatabase.Oracle;</span>
-<span class="nc bnc" id="L310" title="All 2 branches missed.">            } else if(driverClassName.contains(&quot;net.sourceforge.jtds.jdbc.Driver&quot;)) {</span>
-<span class="nc" id="L311">	      		jpaTargetDatabase = TargetDatabase.SQLServer;</span>
-<span class="nc bnc" id="L312" title="All 2 branches missed.">            } else if(driverClassName.contains(&quot;org.postgresql.Driver&quot;)) {</span>
-<span class="nc" id="L313">                jpaTargetDatabase = TargetDatabase.PostgreSQL;</span>
+<span class="fc" id="L317">	      	String jpaTargetDatabase = TargetDatabase.Auto;</span>
+<span class="pc bpc" id="L318" title="2 of 4 branches missed.">	      	if(driverClassName.contains(&quot;com.mysql.jdbc.Driver&quot;) || driverClassName.contains(&quot;mariadb&quot;)) {</span>
+<span class="fc" id="L319">	      		jpaTargetDatabase = TargetDatabase.MySQL;</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">            } else if(driverClassName.contains(&quot;oracle.jdbc.OracleDriver&quot;)) {</span>
+<span class="nc" id="L321">	      		jpaTargetDatabase = TargetDatabase.Oracle;</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">            } else if(driverClassName.contains(&quot;net.sourceforge.jtds.jdbc.Driver&quot;)) {</span>
+<span class="nc" id="L323">	      		jpaTargetDatabase = TargetDatabase.SQLServer;</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">            } else if(driverClassName.contains(&quot;org.postgresql.Driver&quot;)) {</span>
+<span class="nc" id="L325">                jpaTargetDatabase = TargetDatabase.PostgreSQL;</span>
             }
 
-<span class="fc" id="L316">	      	Logger.debug(WebJETJavaSECMPInitializer.class, &quot;JPA: Setting TargetDatabase to &quot; + jpaTargetDatabase + &quot; driverClassName=&quot;+driverClassName);</span>
+<span class="fc" id="L328">	      	Logger.debug(WebJETJavaSECMPInitializer.class, &quot;JPA: Setting TargetDatabase to &quot; + jpaTargetDatabase + &quot; driverClassName=&quot;+driverClassName);</span>
 
-<span class="fc" id="L318">	      	properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, jpaTargetDatabase);</span>
+<span class="fc" id="L330">	      	properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, jpaTargetDatabase);</span>
 
-<span class="fc bfc" id="L320" title="All 2 branches covered.">            if (Constants.getBoolean(&quot;serverMonitoringEnableJPA&quot;)) properties.setProperty(PersistenceUnitProperties.PROFILER, &quot;sk.iway.iwcm.system.jpa.WebJETPerformanceProfiler&quot;);</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">            if (Constants.getBoolean(&quot;serverMonitoringEnableJPA&quot;)) properties.setProperty(PersistenceUnitProperties.PROFILER, &quot;sk.iway.iwcm.system.jpa.WebJETPerformanceProfiler&quot;);</span>
 
-<span class="fc" id="L322">            setDefaultProperties(properties);</span>
+<span class="fc" id="L334">            setDefaultProperties(properties);</span>
 
-<span class="fc" id="L324">	      	puInfo.setProperties(properties);</span>
+<span class="fc" id="L336">	      	puInfo.setProperties(properties);</span>
 
-<span class="fc" id="L326">	      	puInfo.setClassLoader(this.initializationClassloader);</span>
+<span class="fc" id="L338">	      	puInfo.setClassLoader(this.initializationClassloader);</span>
 
-<span class="fc" id="L328">	      	persistenceUnitsList.add(puInfo);</span>
+<span class="fc" id="L340">	      	persistenceUnitsList.add(puInfo);</span>
       	}
-<span class="fc" id="L330">      }</span>
+<span class="fc" id="L342">      }</span>
 
-<span class="fc bfc" id="L332" title="All 2 branches covered.">       for (SEPersistenceUnitInfo persistenceUnitInfo : persistenceUnitsList)</span>
+<span class="fc bfc" id="L344" title="All 2 branches covered.">       for (SEPersistenceUnitInfo persistenceUnitInfo : persistenceUnitsList)</span>
        {
              // puName uniquely defines the pu on a class loader
-<span class="fc" id="L335">             String puName = persistenceUnitInfo.getPersistenceUnitName();</span>
+<span class="fc" id="L347">             String puName = persistenceUnitInfo.getPersistenceUnitName();</span>
 
              // don't add puInfo that could not be used standalone (only as composite member).
-<span class="pc bpc" id="L338" title="1 of 2 branches missed.">             if (EntityManagerSetupImpl.mustBeCompositeMember(persistenceUnitInfo)) {</span>
-<span class="nc" id="L339">                 continue;</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">             if (EntityManagerSetupImpl.mustBeCompositeMember(persistenceUnitInfo)) {</span>
+<span class="nc" id="L351">                 continue;</span>
              }
 
              // If puName is already in the map then there are two jars containing persistence units with the same name.
              // Because both are loaded from the same classloader there is no way to distinguish between them - throw exception.
-<span class="fc" id="L344">             EntityManagerSetupImpl anotherEmSetupImpl = null;</span>
-<span class="pc bpc" id="L345" title="1 of 2 branches missed.">             if (initialEmSetupImpls != null){</span>
-<span class="fc" id="L346">                 anotherEmSetupImpl = this.initialEmSetupImpls.get(puName);</span>
+<span class="fc" id="L356">             EntityManagerSetupImpl anotherEmSetupImpl = null;</span>
+<span class="pc bpc" id="L357" title="1 of 2 branches missed.">             if (initialEmSetupImpls != null){</span>
+<span class="fc" id="L358">                 anotherEmSetupImpl = this.initialEmSetupImpls.get(puName);</span>
              }
-<span class="pc bpc" id="L348" title="1 of 2 branches missed.">             if(anotherEmSetupImpl != null) {</span>
-<span class="nc" id="L349">                 EntityManagerSetupImpl.throwPersistenceUnitNameAlreadyInUseException(puName, persistenceUnitInfo, anotherEmSetupImpl.getPersistenceUnitInfo());</span>
+<span class="pc bpc" id="L360" title="1 of 2 branches missed.">             if(anotherEmSetupImpl != null) {</span>
+<span class="nc" id="L361">                 EntityManagerSetupImpl.throwPersistenceUnitNameAlreadyInUseException(puName, persistenceUnitInfo, anotherEmSetupImpl.getPersistenceUnitInfo());</span>
              }
 
              // Note that session name is extracted only from puInfo, the passed properties ignored.
-<span class="fc" id="L353">             String sessionName = EntityManagerSetupImpl.getOrBuildSessionName(Collections.emptyMap(), persistenceUnitInfo, puName);</span>
-<span class="fc" id="L354">             EntityManagerSetupImpl emSetupImpl = callPredeploy(persistenceUnitInfo, m, puName, sessionName);</span>
-<span class="pc bpc" id="L355" title="1 of 2 branches missed.">             if (initialEmSetupImpls != null){</span>
-<span class="fc" id="L356">                 this.initialEmSetupImpls.put(puName, emSetupImpl);</span>
+<span class="fc" id="L365">             String sessionName = EntityManagerSetupImpl.getOrBuildSessionName(Collections.emptyMap(), persistenceUnitInfo, puName);</span>
+<span class="fc" id="L366">             EntityManagerSetupImpl emSetupImpl = callPredeploy(persistenceUnitInfo, m, puName, sessionName);</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">             if (initialEmSetupImpls != null){</span>
+<span class="fc" id="L368">                 this.initialEmSetupImpls.put(puName, emSetupImpl);</span>
              }
-<span class="pc bpc" id="L358" title="1 of 2 branches missed.">             if (initialPuInfos != null){</span>
-<span class="fc" id="L359">                 this.initialPuInfos.put(puName, persistenceUnitInfo);</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">             if (initialPuInfos != null){</span>
+<span class="fc" id="L371">                 this.initialPuInfos.put(puName, persistenceUnitInfo);</span>
              }
-<span class="fc" id="L361">       }</span>
-<span class="fc" id="L362">   }</span>
+<span class="fc" id="L373">       }</span>
+<span class="fc" id="L374">   }</span>
 
    public static void setDefaultProperties(Properties properties)
    {
-<span class="fc" id="L366">      properties.setProperty(PersistenceUnitProperties.CACHE_TYPE_DEFAULT, &quot;None&quot;);</span>
-<span class="fc" id="L367">      properties.setProperty(PersistenceUnitProperties.CACHE_SIZE_DEFAULT, &quot;0&quot;);</span>
-<span class="fc" id="L368">      properties.setProperty(PersistenceUnitProperties.CACHE_SHARED_DEFAULT, &quot;false&quot;);</span>
+<span class="fc" id="L378">      properties.setProperty(PersistenceUnitProperties.CACHE_TYPE_DEFAULT, &quot;None&quot;);</span>
+<span class="fc" id="L379">      properties.setProperty(PersistenceUnitProperties.CACHE_SIZE_DEFAULT, &quot;0&quot;);</span>
+<span class="fc" id="L380">      properties.setProperty(PersistenceUnitProperties.CACHE_SHARED_DEFAULT, &quot;false&quot;);</span>
 
-<span class="fc bfc" id="L370" title="All 2 branches covered.">      if (Constants.getBoolean(&quot;serverMonitoringEnableJPA&quot;))</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">      if (Constants.getBoolean(&quot;serverMonitoringEnableJPA&quot;))</span>
       {
-<span class="fc" id="L372">         properties.setProperty(&quot;eclipselink.logging.level&quot;, &quot;FINE&quot;);</span>
-<span class="fc" id="L373">         properties.setProperty(&quot;eclipselink.logging.level.sql&quot;, &quot;FINE&quot;);</span>
+<span class="fc" id="L384">         properties.setProperty(&quot;eclipselink.logging.level&quot;, &quot;FINE&quot;);</span>
+<span class="fc" id="L385">         properties.setProperty(&quot;eclipselink.logging.level.sql&quot;, &quot;FINE&quot;);</span>
 
-<span class="fc" id="L375">         properties.setProperty(PersistenceUnitProperties.LOGGING_PARAMETERS, &quot;true&quot;);</span>
-<span class="fc" id="L376">         properties.setProperty(&quot;eclipselink.jdbc.bind-parameters&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L387">         properties.setProperty(PersistenceUnitProperties.LOGGING_PARAMETERS, &quot;true&quot;);</span>
+<span class="fc" id="L388">         properties.setProperty(&quot;eclipselink.jdbc.bind-parameters&quot;, &quot;true&quot;);</span>
       }
 
-<span class="fc" id="L379">      properties.setProperty(&quot;eclipselink.session.customizer&quot;, &quot;sk.iway.webjet.v9.JpaSessionCustomizer&quot;);</span>
-<span class="fc" id="L380">   }</span>
+<span class="fc" id="L391">      properties.setProperty(&quot;eclipselink.session.customizer&quot;, &quot;sk.iway.webjet.v9.JpaSessionCustomizer&quot;);</span>
+<span class="fc" id="L392">   }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

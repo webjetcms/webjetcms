@@ -44,7 +44,7 @@ Scenario('test user tabu a linky na usera', ({ I, DT, DTE }) => {
      I.click("VIP Klienti");
      DTE.waitForEditor('userGroupsDataTable');
 
-     I.click("#pills-dt-userGroupsDataTable-users-tab");
+     I.clickCss("#pills-dt-userGroupsDataTable-users-tab");
      I.see("vipklient")
 
      I.click("vipklient");
@@ -60,7 +60,7 @@ Scenario('test karty adresare', ({ I, DT, DTE }) => {
      I.click("Newsletter");
      DTE.waitForEditor("userGroupsDataTable");
 
-     I.click("#pills-dt-userGroupsDataTable-folders-tab");
+     I.clickCss("#pills-dt-userGroupsDataTable-folders-tab");
      DT.waitForLoader();
      I.see("Newsletter", ".DTE_Field_Name_groupDetailsList");
      I.see("Zaheslovaný", ".DTE_Field_Name_groupDetailsList");
@@ -79,7 +79,7 @@ Scenario('test karty web stranky', ({ I, DT, DTE }) => {
      I.click("Newsletter");
      DTE.waitForEditor("userGroupsDataTable");
 
-     I.click("#pills-dt-userGroupsDataTable-sites-tab");
+     I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
      DT.waitForLoader();
 
      I.see("Testovaci newsletter", ".DTE_Field_Name_docDetailsList");
@@ -97,7 +97,7 @@ Scenario('test karty web pouzivatelia', ({ I, DT, DTE }) => {
      I.click("Newsletter");
      DTE.waitForEditor("userGroupsDataTable");
 
-     I.click("#pills-dt-userGroupsDataTable-users-tab");
+     I.clickCss("#pills-dt-userGroupsDataTable-users-tab");
      DT.waitForLoader();
 
      I.see("vipklient@balat.sk", ".DTE_Field_Name_usersList");

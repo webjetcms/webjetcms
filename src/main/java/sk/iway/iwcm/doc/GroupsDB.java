@@ -1929,7 +1929,7 @@ public class GroupsDB extends DB
 
 	/**
 	 * Vrati HTML kod pre Breadcrumb navigaciu vo formate RDF
-	 * http://support.google.com/webmasters/bin/answer.py?hl=en&topic=1088474&hlrm=en&answer=185417&ctx=topic
+	 * http://support.google.com/webmasters/bin/answer.py?hl=en&amp;topic=1088474&amp;hlrm=en&amp;answer=185417&amp;ctx=topic
 	 * @param groupId - ID adresara
 	 * @param docId - ID aktualnej web stranky
 	 * @param session
@@ -2010,7 +2010,7 @@ public class GroupsDB extends DB
 
 
 	/**
-	 *  to iste ako getNavbar, len do ciest nedava linky (<a href...)
+	 *  to iste ako getNavbar, len do ciest nedava linky (&lt;a href...)
 	 *
 	 *@param  groupId  Description of the Parameter
 	 *@return          The navbarNoHref value
@@ -2740,7 +2740,6 @@ public class GroupsDB extends DB
 	/**
 	 * Vymazanie adresara
 	 * @param groupId - id adresara
-	 * @param request - request (treba kvoli admin logu, ale moze byt aj null)
 	 * @param includeParent - urci, ci ma pri vymazani brat aj rodicovsky adresar
 	 * @param permanentlyDelete - nevlozi do kosa, ale priamo vymaze
 	 * @param publishEvents - ak je true, su vyvolane udalosti (false potrebne ak napr. reagujeme na udalost a potrebujeme znova upravit adresar a nechceme aby doslo k zacykleniu)
@@ -3643,8 +3642,19 @@ public class GroupsDB extends DB
 	 * @param editableGroups
 	 * @return
 	 */
-	public List<String> getUserRootDomainNames(String editableGroups)
+	public List<String> getUserRootDomainNames(Identity user)
 	{
+		String editableGroups = user.getEditableGroups();
+
+		if (Tools.isNotEmpty(user.getEditablePages())) {
+			List<DocDetails> pages = DocDB.getMyPages(user);
+			for (DocDetails doc : pages) {
+				if (doc.getGroupId() > 0) {
+					editableGroups += "," + doc.getGroupId();
+				}
+			}
+		}
+
 		List<String> ret = new ArrayList<>();
 		for(GroupDetails gd : getRootGroups(editableGroups))
 		{
@@ -4081,7 +4091,7 @@ public class GroupsDB extends DB
 	}
 
 	/**
-	 * Opravi poradie adresarov po presunuti zadaneho adresara cez drag&drop v adresari (precisluje poradie nasledovnych adresarov)
+	 * Opravi poradie adresarov po presunuti zadaneho adresara cez drag/drop v adresari (precisluje poradie nasledovnych adresarov)
 	 * @param group
 	 * @param position
 	 */

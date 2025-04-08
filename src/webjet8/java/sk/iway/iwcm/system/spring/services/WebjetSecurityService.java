@@ -73,9 +73,9 @@ public class WebjetSecurityService {
     }
 
     /**
-     * Check user permissions. Perms can be separated by '|' or '&'.
+     * Check user permissions. Perms can be separated by '|' or '&amp;'.
      * If separated by '|' user must have at least one of this permissions.
-     * If separated by '&' user must have all of this permissions.
+     * If separated by '&amp;' user must have all of this permissions.
      * @param permission
      * @return
      */

@@ -36,7 +36,6 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 {
 	@DataTableColumn(
 			inputType = DataTableColumnType.ID,
-			title= "[[#{components.editor.rest.id}]]",
 			data = "groupId",
 			name = "id"
 	)

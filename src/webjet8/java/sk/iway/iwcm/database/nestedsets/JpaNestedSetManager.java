@@ -141,7 +141,6 @@ public class JpaNestedSetManager implements NestedSetManager
 	 * @param <T>
 	 * @param treeList
 	 * @param maxLevel
-	 * @return void
 	 */
 	public <T extends NodeInfo> void buildTree(List<Node<T>> treeList, int maxLevel)
 	{

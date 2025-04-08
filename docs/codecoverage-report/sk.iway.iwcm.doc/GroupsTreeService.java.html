@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsTreeService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupsTreeService.java</span></div><h1>GroupsTreeService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsTreeService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GroupsTreeService.java</span></div><h1>GroupsTreeService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -12,6 +13,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.rest.WebPagesListener;
 import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,7 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-<span class="fc" id="L22">public class GroupsTreeService {</span>
+<span class="fc" id="L24">public class GroupsTreeService {</span>
 
     /**
      *
@@ -32,206 +34,254 @@ import java.util.stream.Collectors;
      * @return
      */
     public List&lt;JsTreeItem&gt; getItems(Identity user, int id, boolean showPages, String click, String requestedDomain, HttpServletRequest request) {
-<span class="fc" id="L35">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L36">        DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L37">        int idOriginal = id;</span>
+<span class="fc" id="L37">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L38">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L39">        int idOriginal = id;</span>
 
-<span class="fc bfc" id="L39" title="All 4 branches covered.">        if (isSystemRequested(click) &amp;&amp; id&lt;1) {</span>
-<span class="pc bpc" id="L40" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;templatesUseRecursiveSystemFolder&quot;)==false) {</span>
-<span class="fc" id="L41">                GroupDetails systemGroupDetails = GroupsService.getSystemGroupDetails();</span>
-<span class="pc bpc" id="L42" title="1 of 2 branches missed.">                if (systemGroupDetails != null) id = systemGroupDetails.getGroupId();</span>
-<span class="fc" id="L43">            }</span>
-<span class="fc bfc" id="L44" title="All 4 branches covered.">        } else if (isTrashRequested(click) &amp;&amp; id&lt;1) {</span>
-<span class="fc" id="L45">            GroupDetails trashGroupDetails = GroupsService.getTrashGroupDetails();</span>
-<span class="pc bpc" id="L46" title="1 of 2 branches missed.">            if (trashGroupDetails != null) id = trashGroupDetails.getGroupId();</span>
+<span class="fc" id="L41">        String treeSearchValue = Tools.getStringValue(request.getParameter(&quot;treeSearchValue&quot;), null);</span>
+<span class="fc bfc" id="L42" title="All 4 branches covered.">        if (isSystemRequested(click) &amp;&amp; id&lt;1) {</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;templatesUseRecursiveSystemFolder&quot;)==false) {</span>
+<span class="fc" id="L44">                GroupDetails systemGroupDetails = GroupsService.getSystemGroupDetails();</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">                if (systemGroupDetails != null) id = systemGroupDetails.getGroupId();</span>
+<span class="fc" id="L46">            }</span>
+<span class="fc bfc" id="L47" title="All 4 branches covered.">        } else if (isTrashRequested(click) &amp;&amp; id&lt;1) {</span>
+<span class="fc" id="L48">            GroupDetails trashGroupDetails = GroupsService.getTrashGroupDetails();</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">            if (trashGroupDetails != null) id = trashGroupDetails.getGroupId();</span>
         }
 
-<span class="fc" id="L49">        List&lt;JsTreeItem&gt; items = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L50">        GroupDetails group = groupsDB.getGroup(id);</span>
-<span class="pc bpc" id="L51" title="1 of 4 branches missed.">        if (group == null &amp;&amp; id != 0) return items;</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        final int groupDefaultDocId = (group != null) ? group.getDefaultDocId() : -1;</span>
+<span class="fc" id="L52">        List&lt;JsTreeItem&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L53">        GroupDetails group = groupsDB.getGroup(id);</span>
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">        if (group == null &amp;&amp; id != 0) return items;</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        final int groupDefaultDocId = (group != null) ? group.getDefaultDocId() : -1;</span>
 
-<span class="fc" id="L54">        boolean parentEditable = GroupsDB.isGroupEditable(user, id);</span>
+<span class="fc" id="L57">        boolean parentEditable = GroupsDB.isGroupEditable(user, id);</span>
 
-<span class="fc" id="L56">        List&lt;GroupDetails&gt; groups = groupsDB.getGroups(id);</span>
+<span class="fc" id="L59">        List&lt;GroupDetails&gt; groups = getGroups(id, treeSearchValue, request);</span>
 
-        //Special case -&gt; if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RESTURN ALL ITEMS
-<span class="fc" id="L59">        String referer = request.getHeader(&quot;referer&quot;);</span>
-<span class="fc" id="L60">        String uri = request.getRequestURI();</span>
+        //Special case -&gt; if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RETURN ALL ITEMS
+<span class="fc" id="L62">        String referer = request.getHeader(&quot;referer&quot;);</span>
+<span class="fc" id="L63">        String uri = request.getRequestURI();</span>
         final boolean checkGroupsPerms;
         //Referer -&gt; that we call from stat section
         //Uri -&gt; that it's called from GroupTreeRestController NOT from WebPagesListener
-<span class="pc bpc" id="L64" title="2 of 10 branches missed.">        if(referer!=null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; uri != null &amp;&amp; uri.contains(&quot;/admin/rest/groups/tree/tree&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;))</span>
-<span class="fc" id="L65">            checkGroupsPerms = false;</span>
-        else {
-<span class="fc" id="L67">            checkGroupsPerms = true;</span>
-<span class="fc" id="L68">            groups = filterByPerms(groups, user); //Filter groups by perms</span>
+<span class="pc bpc" id="L67" title="2 of 10 branches missed.">        if(referer!=null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; uri != null &amp;&amp; uri.contains(&quot;/admin/rest/groups/tree/tree&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;)) {</span>
+<span class="fc" id="L68">            checkGroupsPerms = false;</span>
+        } else {
+<span class="fc" id="L70">            checkGroupsPerms = true;</span>
+<span class="fc" id="L71">            groups = filterByPerms(groups, user); //Filter groups by perms</span>
         }
 
-<span class="fc bfc" id="L71" title="All 4 branches covered.">        if (click.contains(&quot;alldomains&quot;)==false || requestedDomain!=null) groups = filterByDomain(groups, requestedDomain);</span>
+<span class="fc bfc" id="L74" title="All 4 branches covered.">        if (click.contains(&quot;alldomains&quot;)==false || requestedDomain!=null) groups = filterByDomain(groups, requestedDomain);</span>
 
-<span class="fc" id="L73">        GroupDetails domainRootGroup = null;</span>
-<span class="fc" id="L74">        String domainFilesPrefix = &quot;&quot;;</span>
-<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
+<span class="fc" id="L76">        GroupDetails domainRootGroup = null;</span>
+<span class="fc" id="L77">        String domainFilesPrefix = &quot;&quot;;</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
         {
-<span class="fc" id="L77">            int domainId = CloudToolsForCore.getDomainId();</span>
-<span class="fc" id="L78">            domainRootGroup = GroupsDB.getInstance().getGroup(domainId);</span>
-<span class="fc" id="L79">            domainFilesPrefix =  &quot;/&quot; + domainRootGroup.getGroupName();</span>
+<span class="fc" id="L80">            int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L81">            domainRootGroup = GroupsDB.getInstance().getGroup(domainId);</span>
+<span class="fc" id="L82">            domainFilesPrefix =  &quot;/&quot; + domainRootGroup.getGroupName();</span>
         }
 
-<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (click.contains(&quot;filter-system-trash&quot;)) {</span>
-<span class="fc" id="L83">            groups = filterSystem(groups);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (click.contains(&quot;filter-system-trash&quot;)) {</span>
+<span class="fc" id="L86">            groups = filterSystem(groups);</span>
             //filter Full text Index folder /files
-<span class="fc" id="L85">            groups = filterFullPath(groups, &quot;/files&quot;);</span>
+<span class="fc" id="L88">            groups = filterFullPath(groups, &quot;/files&quot;);</span>
 
-<span class="pc bpc" id="L87" title="2 of 4 branches missed.">            if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; domainRootGroup!=null)</span>
+<span class="pc bpc" id="L90" title="2 of 4 branches missed.">            if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; domainRootGroup!=null)</span>
             {
                 ///files adresar vytvarame v domenovom foldri
-<span class="fc" id="L90">                groups = filterFullPath(groups, domainFilesPrefix + &quot;/files&quot;);</span>
+<span class="fc" id="L93">                groups = filterFullPath(groups, domainFilesPrefix + &quot;/files&quot;);</span>
             }
         }
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (isSystemRequested(click)) {</span>
-<span class="pc bpc" id="L94" title="3 of 6 branches missed.">            if (group!=null &amp;&amp; (group.getFullPath().startsWith(&quot;/files&quot;) || group.getFullPath().startsWith(domainFilesPrefix+&quot;/files&quot;))) {</span>
+
+<span class="fc" id="L97">        List&lt;JsTreeItem&gt; filteredFilesGroupsTree = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (isSystemRequested(click)) {</span>
+<span class="pc bpc" id="L99" title="3 of 6 branches missed.">            if (group!=null &amp;&amp; (group.getFullPath().startsWith(&quot;/files&quot;) || group.getFullPath().startsWith(domainFilesPrefix+&quot;/files&quot;))) {</span>
                 //if it's /files/something OR /Jet Portal 4/files/something then do not filter and show all groups by requested parent folder
             } else {
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;templatesUseRecursiveSystemFolder&quot;)) {</span>
-<span class="nc" id="L98">                    groups = filterOnlyWithSystemChilds(groups, groupsDB);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;templatesUseRecursiveSystemFolder&quot;)) {</span>
+<span class="nc" id="L103">                    groups = filterOnlyWithSystemChilds(groups, groupsDB);</span>
                 } else {
                     //musis odfiltrovat Kos priecinok
-<span class="fc" id="L101">                    groups = filterTrash(groups);</span>
+<span class="fc" id="L106">                    groups = filterTrash(groups);</span>
                 }
 
                 //add /files folder to root (it's shown in /System folder)
-<span class="fc bfc" id="L105" title="All 2 branches covered.">                if (idOriginal==0) {</span>
-<span class="fc" id="L106">                    List&lt;GroupDetails&gt; filesGroups = filterFullPath(groupsDB.getGroups(0), &quot;!/files&quot;);</span>
-<span class="fc" id="L107">                    groups.addAll(filesGroups);</span>
-<span class="pc bpc" id="L108" title="2 of 4 branches missed.">                    if (domainRootGroup != null &amp;&amp; Tools.isNotEmpty(domainFilesPrefix)) {</span>
-<span class="fc" id="L109">                        filesGroups = filterFullPath(groupsDB.getGroups(domainRootGroup.getGroupId()), &quot;!&quot;+domainFilesPrefix+&quot;/files&quot;);</span>
-<span class="fc" id="L110">                        groups.addAll(filesGroups);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">                if (idOriginal==0) {</span>
+<span class="fc" id="L111">                    List&lt;GroupDetails&gt; filesGroups = filterFullPath(groupsDB.getGroups(0), &quot;!/files&quot;);</span>
+<span class="pc bpc" id="L112" title="2 of 4 branches missed.">                    if (domainRootGroup != null &amp;&amp; Tools.isNotEmpty(domainFilesPrefix)) {</span>
+<span class="fc" id="L113">                        filesGroups.addAll( filterFullPath(groupsDB.getGroups(domainRootGroup.getGroupId()), &quot;!&quot;+domainFilesPrefix+&quot;/files&quot;) );</span>
+                    }
+
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                    if(Tools.isNotEmpty(treeSearchValue) == true) {</span>
+<span class="fc" id="L117">                        filteredFilesGroupsTree = getFilteredGroupsTree(filesGroups, treeSearchValue, user, showPages, request);</span>
+                        // This file groups is fully prepared tree with parents -&gt; add at end
+                    } else {
+<span class="fc" id="L120">                        groups.addAll(filesGroups);</span>
                     }
                 }
             }
         }
 
-<span class="fc" id="L116">        items.addAll(groups.stream().sorted(Comparator.comparing(GroupDetails::getSortPriority)).map(g -&gt; new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms)).collect(Collectors.toList()));</span>
+<span class="fc" id="L126">        items.addAll( sortTreeBasedOnUserSettings(user, groups, showPages, checkGroupsPerms) );</span>
 
-        //standardne zobrazenie v stromovej strukture, rovno zobraz aj pod adresare
-<span class="fc" id="L119">        int groupId = WebPagesListener.getLastGroupId(request, 0);</span>
-<span class="fc bfc" id="L120" title="All 10 branches covered.">        if ((click.equals(&quot;dt-tree-group-filter-system-trash&quot;) || click.equals(&quot;dt-tree-filter-system-trash&quot;)) &amp;&amp; id==0 &amp;&amp; groupId&lt;1 &amp;&amp; request.getParameter(&quot;docid&quot;)==null) {</span>
-<span class="fc" id="L121">            List&lt;JsTreeItem&gt; rootItems = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L122">            rootItems.addAll(items);</span>
-            //oznac prvy adresar ako selectnuty
-<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (rootItems.isEmpty()==false) {</span>
-<span class="fc" id="L125">                rootItems.get(0).getState().setSelected(true);</span>
-            }
-            //pridaj child elementy
-<span class="fc bfc" id="L128" title="All 2 branches covered.">            if (rootItems.size() &lt;= Constants.getInt(&quot;webpagesTreeAutoOpenLimit&quot;, 2)) {</span>
-                //ak je tam menej ako 3 grupy, tak nacitaj rovno aj subgrupy
-<span class="fc bfc" id="L130" title="All 2 branches covered.">                for (JsTreeItem item : rootItems) {</span>
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                    if (item.getState()==null) item.setState(new JsTreeItemState());</span>
-<span class="fc" id="L132">                    item.getState().setOpened(true);</span>
-                    //toto je totalna haluz, pri rozbalenie a refreshi toto nemoze byt nastavene, inak to padne
-<span class="fc bfc" id="L134" title="All 2 branches covered.">                    if (request.getParameter(&quot;click&quot;)!=null) item.setChildren(null);</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        if(Tools.isEmpty(treeSearchValue)) {</span>
+            //standardne zobrazenie v stromovej strukture, rovno zobraz aj pod adresare
+<span class="fc" id="L130">            int groupId = WebPagesListener.getLastGroupId(request, 0);</span>
+<span class="fc bfc" id="L131" title="All 10 branches covered.">            if ((click.equals(&quot;dt-tree-group-filter-system-trash&quot;) || click.equals(&quot;dt-tree-filter-system-trash&quot;)) &amp;&amp; id==0 &amp;&amp; groupId&lt;1 &amp;&amp; request.getParameter(&quot;docid&quot;)==null) {</span>
+<span class="fc" id="L132">                List&lt;JsTreeItem&gt; rootItems = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L133">                rootItems.addAll(items);</span>
+                //oznac prvy adresar ako selectnuty
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                if (rootItems.isEmpty()==false) {</span>
+<span class="fc" id="L136">                    rootItems.get(0).getState().setSelected(true);</span>
+                }
+                //pridaj child elementy
+<span class="fc bfc" id="L139" title="All 2 branches covered.">                if (rootItems.size() &lt;= Constants.getInt(&quot;webpagesTreeAutoOpenLimit&quot;, 2)) {</span>
+                    //ak je tam menej ako 3 grupy, tak nacitaj rovno aj subgrupy
+<span class="fc bfc" id="L141" title="All 2 branches covered.">                    for (JsTreeItem item : rootItems) {</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">                        if (item.getState()==null) item.setState(new JsTreeItemState());</span>
+<span class="fc" id="L143">                        item.getState().setOpened(true);</span>
+                        //toto je totalna haluz, pri rozbalenie a refreshi toto nemoze byt nastavene, inak to padne
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                        if (request.getParameter(&quot;click&quot;)!=null) item.setChildren(null);</span>
 
-<span class="fc" id="L136">                    item.setParent(&quot;#&quot;);</span>
-<span class="fc" id="L137">                    List&lt;JsTreeItem&gt; subGroups = this.getItems(user, Tools.getIntValue(item.getId(), -1), showPages, click, requestedDomain, request);</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">                    for (JsTreeItem sub : subGroups) {</span>
-<span class="fc" id="L139">                        sub.setParent(item.getId());</span>
-<span class="fc" id="L140">                    }</span>
-<span class="fc" id="L141">                    items.addAll(subGroups);</span>
-<span class="fc" id="L142">                }</span>
+<span class="fc" id="L147">                        item.setParent(&quot;#&quot;);</span>
+<span class="fc" id="L148">                        List&lt;JsTreeItem&gt; subGroups = this.getItems(user, Tools.getIntValue(item.getId(), -1), showPages, click, requestedDomain, request);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                        for (JsTreeItem sub : subGroups) {</span>
+<span class="fc" id="L150">                            sub.setParent(item.getId());</span>
+<span class="fc" id="L151">                        }</span>
+<span class="fc" id="L152">                        items.addAll(subGroups);</span>
+<span class="fc" id="L153">                    }</span>
+                }
             }
+<span class="fc" id="L156">        } else {</span>
+            //
+<span class="fc" id="L158">            List&lt;JsTreeItem&gt; filteredListWithParents = addParents( items, user, showPages, checkGroupsPerms, id );</span>
+            // Add prepared file groups
+<span class="fc" id="L160">            filteredListWithParents.addAll(filteredFilesGroupsTree);</span>
+
+<span class="fc" id="L162">            items.clear();</span>
+<span class="fc" id="L163">            items.addAll(filteredListWithParents);</span>
         }
 
-<span class="fc bfc" id="L146" title="All 6 branches covered.">        if (parentEditable &amp;&amp; showPages &amp;&amp; id&gt;0)</span>
+<span class="fc bfc" id="L166" title="All 6 branches covered.">        if (parentEditable &amp;&amp; showPages &amp;&amp; id&gt;0)</span>
         {
-<span class="fc" id="L148">            List&lt;DocDetails&gt; childDocs = docDB.getBasicDocDetailsByGroup(id, DocDB.ORDER_PRIORITY);</span>
-<span class="pc bpc" id="L149" title="2 of 4 branches missed.">            if (childDocs != null &amp;&amp; childDocs.size() &gt; 0) {</span>
-<span class="fc" id="L150">                items.addAll(childDocs.stream().map(doc -&gt; {</span>
-<span class="fc" id="L151">                    DocumentsJsTreeItem jstree = new DocumentsJsTreeItem(doc, groupDefaultDocId);</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">                    if (click.contains(&quot;alldomains&quot;)) {</span>
-<span class="fc" id="L153">                        jstree.setVirtualPath(addDomainPrefixToFullPath(doc, groupsDB));</span>
+<span class="fc" id="L168">            List&lt;DocDetails&gt; childDocs = docDB.getBasicDocDetailsByGroup(id, DocDB.ORDER_PRIORITY);</span>
+<span class="pc bpc" id="L169" title="2 of 4 branches missed.">            if (childDocs != null &amp;&amp; childDocs.size() &gt; 0) {</span>
+<span class="fc" id="L170">                items.addAll(childDocs.stream().map(doc -&gt; {</span>
+<span class="fc" id="L171">                    DocumentsJsTreeItem jstree = new DocumentsJsTreeItem(doc, groupDefaultDocId);</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">                    if (click.contains(&quot;alldomains&quot;)) {</span>
+<span class="fc" id="L173">                        jstree.setVirtualPath(addDomainPrefixToFullPath(doc, groupsDB));</span>
                     }
-<span class="fc" id="L155">                    return jstree;</span>
-<span class="fc" id="L156">                }).collect(Collectors.toList()));</span>
+<span class="fc" id="L175">                    return jstree;</span>
+<span class="fc" id="L176">                }).collect(Collectors.toList()));</span>
             }
         }
 
-<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (id == Constants.getInt(&quot;systemPagesNotApprovedDocs&quot;)) {</span>
-<span class="nc" id="L161">            List&lt;DocDetails&gt; notApproved = docDB.getNotApprovedDocs(user.getUserId());</span>
-<span class="nc bnc" id="L162" title="All 4 branches missed.">            if (notApproved != null &amp;&amp; notApproved.size() &gt; 0) {</span>
-<span class="nc" id="L163">                items.addAll(notApproved.stream().map(doc -&gt; new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (id == Constants.getInt(&quot;systemPagesNotApprovedDocs&quot;)) {</span>
+<span class="nc" id="L181">            List&lt;DocDetails&gt; notApproved = docDB.getNotApprovedDocs(user.getUserId());</span>
+<span class="nc bnc" id="L182" title="All 4 branches missed.">            if (notApproved != null &amp;&amp; notApproved.size() &gt; 0) {</span>
+<span class="nc" id="L183">                items.addAll(notApproved.stream().map(doc -&gt; new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));</span>
             }
         }
 
-<span class="pc bpc" id="L167" title="1 of 2 branches missed.">        if (id == Constants.getInt(&quot;systemPagesMyPages&quot;)) {</span>
-<span class="nc" id="L168">            List&lt;DocDetails&gt; myPages = DocDB.getMyPages(user);</span>
-<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (myPages.size() &gt; 0) {</span>
-<span class="nc" id="L170">                items.addAll(myPages.stream().map(doc -&gt; new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));</span>
+<span class="pc bpc" id="L187" title="1 of 2 branches missed.">        if (id == Constants.getInt(&quot;systemPagesMyPages&quot;)) {</span>
+<span class="nc" id="L188">            List&lt;DocDetails&gt; myPages = DocDB.getMyPages(user);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">            if (myPages.size() &gt; 0) {</span>
+<span class="nc" id="L190">                items.addAll(myPages.stream().map(doc -&gt; new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));</span>
             }
         }
 
-<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if (id == Constants.getInt(&quot;systemPagesDocsToApprove&quot;)) {</span>
-<span class="nc" id="L175">            List&lt;DocDetails&gt; approve = docDB.getDocsForApprove(user.getUserId());</span>
-<span class="nc bnc" id="L176" title="All 4 branches missed.">            if (approve != null &amp;&amp; approve.size() &gt; 0) {</span>
-<span class="nc" id="L177">                items.addAll(approve.stream().map(doc -&gt; new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (id == Constants.getInt(&quot;systemPagesDocsToApprove&quot;)) {</span>
+<span class="nc" id="L195">            List&lt;DocDetails&gt; approve = docDB.getDocsForApprove(user.getUserId());</span>
+<span class="nc bnc" id="L196" title="All 4 branches missed.">            if (approve != null &amp;&amp; approve.size() &gt; 0) {</span>
+<span class="nc" id="L197">                items.addAll(approve.stream().map(doc -&gt; new DocumentsJsTreeItem(doc, groupDefaultDocId)).collect(Collectors.toList()));</span>
             }
         }
 
-<span class="fc" id="L181">        return items;</span>
+<span class="fc" id="L201">        return items;</span>
+    }
+
+    private List&lt;JsTreeItem&gt; sortTreeBasedOnUserSettings(Identity user, List&lt;GroupDetails&gt; groups, boolean showPages, boolean checkGroupsPerms) {
+<span class="fc" id="L205">        String sortType = WebpagesService.getTreeSortType(user);</span>
+<span class="fc" id="L206">        boolean orderAsc = WebpagesService.isTreeSortOrderAsc(user);</span>
+
+        Comparator&lt;GroupDetails&gt; comparator;
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        if(&quot;title&quot;.equals(sortType)) {</span>
+            // ignore case, sort that way is better
+<span class="fc" id="L211">            comparator = Comparator.comparing(GroupDetails::getGroupName, String.CASE_INSENSITIVE_ORDER);</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        } else if(&quot;createDate&quot;.equals(sortType)) {</span>
+<span class="fc" id="L213">            comparator = Comparator.comparing(GroupDetails::getGroupId);</span>
+        } else {
+            //DEFAULT OPTION -&gt; sort by &quot;priority&quot;
+<span class="fc" id="L216">            comparator = Comparator.comparing(GroupDetails::getSortPriority);</span>
+        }
+
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        if(!orderAsc) {</span>
+<span class="fc" id="L220">            comparator = comparator.reversed();</span>
+        }
+
+<span class="fc" id="L223">        return groups.stream()</span>
+<span class="fc" id="L224">            .sorted(comparator)</span>
+<span class="fc" id="L225">            .map(g -&gt; new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))</span>
+<span class="fc" id="L226">            .collect(Collectors.toList());</span>
     }
 
     public void fixSortPriority(HttpServletRequest request, int docId, GroupDetails parent, int position) {
-<span class="fc" id="L185">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L230">        DocDB docDB = DocDB.getInstance();</span>
 
-<span class="fc" id="L187">        DocDetails doc = docDB.getDoc(docId);</span>
-<span class="fc" id="L188">        List&lt;DocDetails&gt; docsByGroup = docDB.getDocByGroup(parent.getGroupId());</span>
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        List&lt;DocDetails&gt; collect = docsByGroup.stream().filter(d -&gt; d.getDocId() != doc.getDocId()).sorted(Comparator.comparing(DocDetails::getSortPriority)).collect(Collectors.toList());</span>
+        //we need to subtrack groups from position, because we have groups in the list
+<span class="fc" id="L233">        List&lt;GroupDetails&gt; groups = GroupsDB.getInstance().getGroups(parent.getGroupId());</span>
+<span class="fc" id="L234">        position -= groups.size();</span>
 
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        int sortPriority = collect.size() &gt; 0 ? collect.get(0).getSortPriority() : parent.getSortPriority() * 10;</span>
-<span class="fc" id="L192">        collect.add(position, doc);</span>
+<span class="fc" id="L236">        DocDetails doc = docDB.getDoc(docId);</span>
+<span class="fc" id="L237">        List&lt;DocDetails&gt; docsByGroup = docDB.getDocByGroup(parent.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, false, false);</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        List&lt;DocDetails&gt; collect = docsByGroup.stream().filter(d -&gt; d.getDocId() != doc.getDocId()).sorted(Comparator.comparing(DocDetails::getSortPriority)).collect(Collectors.toList());</span>
 
-<span class="fc bfc" id="L194" title="All 2 branches covered.">        for (DocDetails document : collect) {</span>
-<span class="fc" id="L195">            document.setSortPriority(sortPriority);</span>
-<span class="fc" id="L196">            DocDB.saveDoc(document);</span>
-<span class="fc" id="L197">            sortPriority += 10;</span>
-<span class="fc" id="L198">        }</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        int sortPriority = collect.size() &gt; 0 ? collect.get(0).getSortPriority() : parent.getSortPriority() * 10;</span>
+<span class="fc" id="L241">        collect.add(position, doc);</span>
 
-<span class="fc" id="L200">        EditorDB.cleanSessionData(request);</span>
-<span class="fc" id="L201">    }</span>
+<span class="fc" id="L243">        int sortPriorityIncrementDoc = Constants.getInt(&quot;sortPriorityIncrementDoc&quot;);</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        for (DocDetails document : collect) {</span>
+<span class="fc" id="L245">            document.setSortPriority(sortPriority);</span>
+<span class="fc" id="L246">            DocDB.saveDoc(document);</span>
+<span class="fc" id="L247">            sortPriority += sortPriorityIncrementDoc;</span>
+<span class="fc" id="L248">        }</span>
+
+<span class="fc" id="L250">        EditorDB.cleanSessionData(request);</span>
+<span class="fc" id="L251">    }</span>
 
     private static List&lt;GroupDetails&gt; filterByPerms(List&lt;GroupDetails&gt; groups, Identity user) {
-<span class="fc" id="L204">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
-<span class="fc" id="L205">            boolean editable = GroupsDB.isGroupEditable(user, g.getGroupId());</span>
-<span class="fc" id="L206">            boolean viewable = GroupsDB.isGroupViewable(user, g.getGroupId());</span>
+<span class="fc" id="L254">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
+<span class="fc" id="L255">            boolean editable = GroupsDB.isGroupEditable(user, g.getGroupId());</span>
+<span class="fc" id="L256">            boolean viewable = GroupsDB.isGroupViewable(user, g.getGroupId());</span>
 
-<span class="pc bpc" id="L208" title="3 of 4 branches missed.">            if (g.isHiddenInAdmin() &amp;&amp; user.isDisabledItem(&quot;editor_show_hidden_folders&quot;)) {</span>
-<span class="nc" id="L209">                return false;</span>
+<span class="pc bpc" id="L258" title="3 of 4 branches missed.">            if (g.isHiddenInAdmin() &amp;&amp; user.isDisabledItem(&quot;editor_show_hidden_folders&quot;)) {</span>
+<span class="nc" id="L259">                return false;</span>
             }
 
-<span class="fc bfc" id="L212" title="All 4 branches covered.">            return viewable || editable;</span>
-<span class="fc" id="L213">        }).collect(Collectors.toList());</span>
+<span class="fc bfc" id="L262" title="All 4 branches covered.">            return viewable || editable;</span>
+<span class="fc" id="L263">        }).collect(Collectors.toList());</span>
 
-<span class="fc" id="L215">        return filtered;</span>
+<span class="fc" id="L265">        return filtered;</span>
     }
 
     private static List&lt;GroupDetails&gt; filterByDomain(List&lt;GroupDetails&gt; groups, String requestedDomain) {
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==false) return groups;</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==false) return groups;</span>
 
-<span class="fc bfc" id="L221" title="All 2 branches covered.">        String currentDomain = requestedDomain!=null ? requestedDomain : CloudToolsForCore.getDomainName();</span>
-<span class="fc" id="L222">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        String currentDomain = requestedDomain!=null ? requestedDomain : CloudToolsForCore.getDomainName();</span>
+<span class="fc" id="L272">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
 
-<span class="pc bpc" id="L224" title="1 of 6 branches missed.">            if (&quot;System&quot;.equals(g.getGroupName()) &amp;&amp; Tools.isEmpty(g.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
+<span class="pc bpc" id="L274" title="1 of 6 branches missed.">            if (&quot;System&quot;.equals(g.getGroupName()) &amp;&amp; Tools.isEmpty(g.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
                 //odignorujme globalny system adresar, ak ma existovat lokalny
-<span class="fc" id="L226">                return false;</span>
+<span class="fc" id="L276">                return false;</span>
             }
 
-<span class="fc bfc" id="L229" title="All 4 branches covered.">            if (Tools.isEmpty(g.getDomainName()) || g.getDomainName().equals(currentDomain)) return true;</span>
+<span class="pc bpc" id="L279" title="1 of 4 branches missed.">            if (Tools.isEmpty(g.getDomainName()) || g.getDomainName().equals(currentDomain)) return true;</span>
 
-<span class="fc" id="L231">            return false;</span>
-<span class="fc" id="L232">        }).collect(Collectors.toList());</span>
+<span class="fc" id="L281">            return false;</span>
+<span class="fc" id="L282">        }).collect(Collectors.toList());</span>
 
-<span class="fc" id="L234">        return filtered;</span>
+<span class="fc" id="L284">        return filtered;</span>
     }
 
     /**
@@ -240,25 +290,25 @@ import java.util.stream.Collectors;
      * @return
      */
     private static List&lt;GroupDetails&gt; filterSystem(List&lt;GroupDetails&gt; groups) {
-<span class="fc" id="L243">        List&lt;GroupDetails&gt; filteredByPath = filterFullPath(groups, &quot;/System&quot;);</span>
+<span class="fc" id="L293">        List&lt;GroupDetails&gt; filteredByPath = filterFullPath(groups, &quot;/System&quot;);</span>
 
-<span class="fc" id="L245">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">		if (rb == null)</span>
+<span class="fc" id="L295">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">		if (rb == null)</span>
 		{
-<span class="nc" id="L248">			return filteredByPath;</span>
+<span class="nc" id="L298">			return filteredByPath;</span>
 		}
 
         //v starych WJ mame Syste priecinok ako podpriecinok hlavneho priecinku, musime odfiltrovat takto
-<span class="fc" id="L252">		String domain = rb.getDomain();</span>
-<span class="pc bpc" id="L253" title="1 of 2 branches missed.">		if (Tools.isEmpty(domain)) return filteredByPath;</span>
-<span class="fc" id="L254">		int domainId = GroupsDB.getDomainId(domain);</span>
+<span class="fc" id="L302">		String domain = rb.getDomain();</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">		if (Tools.isEmpty(domain)) return filteredByPath;</span>
+<span class="fc" id="L304">		int domainId = GroupsDB.getDomainId(domain);</span>
 
-<span class="fc" id="L256">        List&lt;GroupDetails&gt; filtered = filteredByPath.stream().filter(g-&gt;{</span>
-<span class="fc bfc" id="L257" title="All 4 branches covered.">            if (&quot;System&quot;.equals(g.getGroupName()) &amp;&amp; g.getParentGroupId()==domainId) return false;</span>
-<span class="fc" id="L258">            return true;</span>
-<span class="fc" id="L259">        }).collect(Collectors.toList());</span>
+<span class="fc" id="L306">        List&lt;GroupDetails&gt; filtered = filteredByPath.stream().filter(g-&gt;{</span>
+<span class="fc bfc" id="L307" title="All 4 branches covered.">            if (&quot;System&quot;.equals(g.getGroupName()) &amp;&amp; g.getParentGroupId()==domainId) return false;</span>
+<span class="fc" id="L308">            return true;</span>
+<span class="fc" id="L309">        }).collect(Collectors.toList());</span>
 
-<span class="fc" id="L261">        return filtered;</span>
+<span class="fc" id="L311">        return filtered;</span>
     }
 
     /**
@@ -267,15 +317,15 @@ import java.util.stream.Collectors;
      * @return
      */
     public static List&lt;GroupDetails&gt; filterTrash(List&lt;GroupDetails&gt; groups) {
-<span class="fc" id="L270">        String trashDirPath = getTrashDirPath();</span>
+<span class="fc" id="L320">        String trashDirPath = getTrashDirPath();</span>
 
-<span class="fc" id="L272">        return filterFullPath(groups, &quot;*&quot;+trashDirPath);</span>
+<span class="fc" id="L322">        return filterFullPath(groups, &quot;*&quot;+trashDirPath);</span>
     }
 
     public static String getTrashDirPath() {
-<span class="fc" id="L276">        Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
-<span class="fc" id="L277">        String trashDirPath = propSystem.getText(&quot;config.trash_dir&quot;);</span>
-<span class="fc" id="L278">        return trashDirPath;</span>
+<span class="fc" id="L326">        Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L327">        String trashDirPath = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+<span class="fc" id="L328">        return trashDirPath;</span>
     }
 
     /**
@@ -285,14 +335,14 @@ import java.util.stream.Collectors;
      * @return
      */
     private static List&lt;GroupDetails&gt; filterFullPath(List&lt;GroupDetails&gt; groups, String filterFullPath) {
-<span class="fc" id="L288">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
-<span class="fc bfc" id="L289" title="All 4 branches covered.">            if (filterFullPath.startsWith(&quot;!&quot;) &amp;&amp; g.getFullPath().startsWith(filterFullPath.substring(1))==false) return false;</span>
-<span class="fc bfc" id="L290" title="All 2 branches covered.">            if ( g.getFullPath().startsWith(filterFullPath) ) return false;</span>
-<span class="pc bpc" id="L291" title="1 of 6 branches missed.">            if (filterFullPath.startsWith(&quot;*&quot;) &amp;&amp; filterFullPath.length()&gt;2 &amp;&amp; g.getFullPath().contains(filterFullPath.substring(1)) ) return false;</span>
-<span class="fc" id="L292">            return true;</span>
-<span class="fc" id="L293">        }).collect(Collectors.toList());</span>
+<span class="fc" id="L338">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
+<span class="fc bfc" id="L339" title="All 4 branches covered.">            if (filterFullPath.startsWith(&quot;!&quot;) &amp;&amp; g.getFullPath().startsWith(filterFullPath.substring(1))==false) return false;</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">            if ( g.getFullPath().startsWith(filterFullPath) ) return false;</span>
+<span class="pc bpc" id="L341" title="1 of 6 branches missed.">            if (filterFullPath.startsWith(&quot;*&quot;) &amp;&amp; filterFullPath.length()&gt;2 &amp;&amp; g.getFullPath().contains(filterFullPath.substring(1)) ) return false;</span>
+<span class="fc" id="L342">            return true;</span>
+<span class="fc" id="L343">        }).collect(Collectors.toList());</span>
 
-<span class="fc" id="L295">        return filtered;</span>
+<span class="fc" id="L345">        return filtered;</span>
     }
 
     /**
@@ -301,21 +351,21 @@ import java.util.stream.Collectors;
      * @return
      */
     private static List&lt;GroupDetails&gt; filterOnlyWithSystemChilds(List&lt;GroupDetails&gt; groups, GroupsDB groupsDB) {
-<span class="nc" id="L304">        List&lt;GroupDetails&gt; allSystemFolders = groupsDB.getAllSystemFolders(false);</span>
+<span class="nc" id="L354">        List&lt;GroupDetails&gt; allSystemFolders = groupsDB.getAllSystemFolders(false);</span>
 
-<span class="nc" id="L306">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
-<span class="nc" id="L307">            String fullPath = g.getFullPath();</span>
-<span class="nc bnc" id="L308" title="All 2 branches missed.">            for (GroupDetails system : allSystemFolders) {</span>
+<span class="nc" id="L356">        List&lt;GroupDetails&gt; filtered = groups.stream().filter(g-&gt;{</span>
+<span class="nc" id="L357">            String fullPath = g.getFullPath();</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">            for (GroupDetails system : allSystemFolders) {</span>
                 //Logger.debug(GroupsTreeService.class, &quot;Comparing system &quot;+system.getFullPath()+&quot; vs group &quot;+fullPath);
                 //smerom dole
-<span class="nc bnc" id="L311" title="All 2 branches missed.">                if (system.getFullPath().startsWith(fullPath)) return true;</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">                if (system.getFullPath().startsWith(fullPath)) return true;</span>
                 //smerom na childov
-<span class="nc bnc" id="L313" title="All 2 branches missed.">                if (fullPath.startsWith(system.getFullPath())) return true;</span>
-<span class="nc" id="L314">            }</span>
-<span class="nc" id="L315">            return false;</span>
-<span class="nc" id="L316">        }).collect(Collectors.toList());</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">                if (fullPath.startsWith(system.getFullPath())) return true;</span>
+<span class="nc" id="L364">            }</span>
+<span class="nc" id="L365">            return false;</span>
+<span class="nc" id="L366">        }).collect(Collectors.toList());</span>
 
-<span class="nc" id="L318">        return filtered;</span>
+<span class="nc" id="L368">        return filtered;</span>
     }
 
     /**
@@ -324,7 +374,7 @@ import java.util.stream.Collectors;
      * @return
      */
     private static boolean isSystemRequested(String click) {
-<span class="pc bpc" id="L327" title="1 of 4 branches missed.">        return (&quot;dt-tree-group-system&quot;.equals(click) || &quot;dt-tree-system&quot;.equals(click));</span>
+<span class="pc bpc" id="L377" title="1 of 4 branches missed.">        return (&quot;dt-tree-group-system&quot;.equals(click) || &quot;dt-tree-system&quot;.equals(click));</span>
     }
 
     /**
@@ -333,7 +383,7 @@ import java.util.stream.Collectors;
      * @return
      */
     private static boolean isTrashRequested(String click) {
-<span class="pc bpc" id="L336" title="1 of 4 branches missed.">        return (&quot;dt-tree-group-trash&quot;.equals(click) || &quot;dt-tree-trash&quot;.equals(click));</span>
+<span class="pc bpc" id="L386" title="1 of 4 branches missed.">        return (&quot;dt-tree-group-trash&quot;.equals(click) || &quot;dt-tree-trash&quot;.equals(click));</span>
     }
 
     /**
@@ -343,15 +393,232 @@ import java.util.stream.Collectors;
      * @return
      */
     public static String addDomainPrefixToFullPath(DocDetails tmp, GroupsDB groupsDB) {
-<span class="fc" id="L346">        GroupDetails grp = groupsDB.getGroup(tmp.getGroupId());</span>
-<span class="fc" id="L347">        StringBuilder path = new StringBuilder();</span>
-<span class="pc bpc" id="L348" title="1 of 2 branches missed.">        if (grp != null) {</span>
-<span class="pc bpc" id="L349" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(grp.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;)) path.append(grp.getDomainName()).append(&quot;:&quot;);</span>
-<span class="fc" id="L350">            path.append(grp.getFullPath());</span>
+<span class="fc" id="L396">        GroupDetails grp = groupsDB.getGroup(tmp.getGroupId());</span>
+<span class="fc" id="L397">        StringBuilder path = new StringBuilder();</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">        if (grp != null) {</span>
+<span class="pc bpc" id="L399" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(grp.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;)) path.append(grp.getDomainName()).append(&quot;:&quot;);</span>
+<span class="fc" id="L400">            path.append(grp.getFullPath());</span>
         }
-<span class="fc" id="L352">        path.append(&quot;/&quot;);</span>
-<span class="fc" id="L353">        path.append(tmp.getTitle());</span>
-<span class="fc" id="L354">        return path.toString();</span>
+<span class="fc" id="L402">        path.append(&quot;/&quot;);</span>
+<span class="fc" id="L403">        path.append(tmp.getTitle());</span>
+<span class="fc" id="L404">        return path.toString();</span>
+    }
+
+    /**
+     * Returns GrooupDetails object for groupId, BUT verify permissions for user.
+     * It it's not accessible, return first accessible group for user.
+     * @param groupId
+     * @param user
+     * @return
+     */
+    public static GroupDetails gerDefaultGroupTreeOptionForUser(int groupId, Identity user) {
+<span class="fc" id="L415">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+        //User can edit all groups -&gt; so return group (no check needed)
+        //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
+<span class="fc" id="L419">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L420">        String referer = null;</span>
+<span class="pc bpc" id="L421" title="1 of 2 branches missed.">        if (rb != null) {</span>
+<span class="fc" id="L422">            referer = rb.getReferrer();</span>
+        }
+<span class="pc bpc" id="L424" title="1 of 8 branches missed.">        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;))) {</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">            if(groupId &gt; 0) return groupsDB.findGroup(groupId);</span>
+
+<span class="fc" id="L427">            GroupDetails rootGroup = new GroupDetails();</span>
+<span class="fc" id="L428">            rootGroup.setGroupId(-1);</span>
+<span class="fc" id="L429">            return rootGroup;</span>
+        }
+
+        //Can handle default group ?
+<span class="fc" id="L433">        boolean parentEditable = GroupsDB.isGroupEditable(user, groupId);</span>
+<span class="fc" id="L434">        boolean parentViewable = GroupsDB.isGroupViewable(user, groupId);</span>
+
+        //Check if user have right for this group
+        //It cant be -1 (root group), because there is group restriction for you part of tree
+<span class="pc bpc" id="L438" title="4 of 6 branches missed.">        if( (parentEditable || parentViewable) &amp;&amp; groupId != -1) {</span>
+            //User have right for this group)
+<span class="nc" id="L440">           return groupsDB.findGroup(groupId);</span>
+        } else {
+            //Problem, user missing rights for this group ... return first permitted group
+<span class="fc" id="L443">            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(true), &quot;,&quot;);</span>
+
+            //Use first groupId
+<span class="fc" id="L446">            return groupsDB.findGroup( permittedGroups[0] );</span>
+        }
+    }
+
+    /**
+     * Filter list of groups by searchText value
+     * @param groups
+     * @param searchText
+     * @param request
+     * @return
+     */
+    private List&lt;GroupDetails&gt; filterGroups(List&lt;GroupDetails&gt; groups, String searchText, HttpServletRequest request) {
+<span class="fc" id="L458">        String treeSearchType = Tools.getStringValue(request.getParameter(&quot;treeSearchType&quot;), &quot;&quot;);</span>
+<span class="fc" id="L459">        final String wantedValueLC = DB.internationalToEnglish(searchText).toLowerCase();</span>
+
+        //Filter by serach value and search type
+<span class="fc bfc" id="L462" title="All 2 branches covered.">        if(&quot;contains&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L463">            return groups.stream()</span>
+<span class="fc" id="L464">                .filter(group -&gt; DB.internationalToEnglish(group.getGroupName()).toLowerCase().contains(wantedValueLC))</span>
+<span class="fc" id="L465">                .collect(Collectors.toList());</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">        } else if(&quot;startwith&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L467">            return groups.stream()</span>
+<span class="fc" id="L468">                .filter(group -&gt; DB.internationalToEnglish(group.getGroupName()).toLowerCase().startsWith(wantedValueLC))</span>
+<span class="fc" id="L469">                .collect(Collectors.toList());</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">        } else if(&quot;endwith&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L471">            return groups.stream()</span>
+<span class="fc" id="L472">                .filter(group -&gt; DB.internationalToEnglish(group.getGroupName()).toLowerCase().endsWith(wantedValueLC))</span>
+<span class="fc" id="L473">                .collect(Collectors.toList());</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">        } else if(&quot;equals&quot;.equals(treeSearchType)) {</span>
+<span class="fc" id="L475">            return groups.stream()</span>
+<span class="fc" id="L476">                .filter(group -&gt; DB.internationalToEnglish(group.getGroupName()).equalsIgnoreCase(wantedValueLC))</span>
+<span class="fc" id="L477">                .collect(Collectors.toList());</span>
+<span class="nc" id="L478">        } else return new ArrayList&lt;&gt;();</span>
+    }
+
+    /**
+     * Get groups list by root ID and filter by searchText
+     * @param rootGroupId
+     * @param searchText
+     * @param request
+     * @return
+     */
+    private List&lt;GroupDetails&gt; getGroups(int rootGroupId, String searchText, HttpServletRequest request) {
+<span class="fc" id="L489">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+<span class="fc bfc" id="L491" title="All 2 branches covered.">        if (Tools.isEmpty(searchText)) return groupsDB.getGroups(rootGroupId);</span>
+
+        //Get all suitable
+        List&lt;GroupDetails&gt; result;
+<span class="fc bfc" id="L495" title="All 2 branches covered.">        if(rootGroupId &lt; 1) {</span>
+<span class="fc" id="L496">            result = groupsDB.getGroupsAll();</span>
+        } else {
+<span class="fc" id="L498">            result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L499">            groupsDB.getGroupsTree(rootGroupId, result);</span>
+        }
+
+<span class="fc" id="L502">        return filterGroups(result, searchText, request);</span>
+    }
+
+    /**
+     * Filter file groups by searchValue
+     * @param fileGroups
+     * @param searchValue
+     * @param user
+     * @param showPages
+     * @param request
+     * @return
+     */
+    private List&lt;JsTreeItem&gt; getFilteredGroupsTree(List&lt;GroupDetails&gt; fileGroups, String searchValue, Identity user, boolean showPages, HttpServletRequest request) {
+<span class="fc" id="L515">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+
+        // From fileGroups get all groups expanded -&gt; direction down (children)
+<span class="fc" id="L518">        Map&lt;Integer, GroupDetails&gt; allGroupsExpanded = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L519">        fileGroups.forEach(g -&gt; allGroupsExpanded.put(g.getGroupId(), g));</span>
+<span class="fc bfc" id="L520" title="All 2 branches covered.">        for(GroupDetails fileGroup : fileGroups) {</span>
+<span class="fc" id="L521">            List&lt;GroupDetails&gt; childs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L522">            groupsDB.getGroupsTree(fileGroup.getGroupId(), childs);</span>
+<span class="fc bfc" id="L523" title="All 2 branches covered.">            for(GroupDetails child : childs) {</span>
+<span class="fc" id="L524">                allGroupsExpanded.putIfAbsent(child.getGroupId(), child);</span>
+<span class="fc" id="L525">            }</span>
+<span class="fc" id="L526">        }</span>
+
+        // Filter all groups by wanted value
+<span class="fc" id="L529">        List&lt;GroupDetails&gt; filtered = filterGroups(new ArrayList&lt;&gt;(allGroupsExpanded.values()), searchValue, request);</span>
+
+        //Transform to JsTreeItem
+<span class="fc" id="L532">        List&lt;JsTreeItem&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L533">        items.addAll(</span>
+<span class="fc" id="L534">            filtered.stream()</span>
+<span class="fc" id="L535">            .map(g -&gt; new GroupsJsTreeItem(g, user, showPages))</span>
+<span class="fc" id="L536">            .collect(Collectors.toList())</span>
+        );
+
+        // Add to filtered groups their parents -&gt; but only to height of original groups
+<span class="fc" id="L540">        Map&lt;Integer, JsTreeItem&gt; filteredWithParents = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L541" title="All 2 branches covered.">        for(JsTreeItem item : items) {</span>
+<span class="fc" id="L542">            int idToAdd = Integer.parseInt(item.getId());</span>
+            while(true) {
+<span class="fc" id="L544">                GroupDetails g = allGroupsExpanded.get(idToAdd);</span>
+<span class="pc bpc" id="L545" title="1 of 4 branches missed.">                if(g != null &amp;&amp; filteredWithParents.containsKey(g.getGroupId()) == false) {</span>
+<span class="fc" id="L546">                    filteredWithParents.putIfAbsent(g.getGroupId(), new GroupsJsTreeItem(g, user, showPages));</span>
+<span class="fc" id="L547">                    idToAdd = g.getParentGroupId();</span>
+                } else {
+                    break;
+                }
+<span class="fc" id="L551">            }</span>
+<span class="fc" id="L552">        }</span>
+
+        // Set statuses
+<span class="fc bfc" id="L555" title="All 2 branches covered.">        for (Map.Entry&lt;Integer, JsTreeItem&gt; entry : filteredWithParents.entrySet()) {</span>
+<span class="fc" id="L556">            entry.getValue().setState(getLoadedState());</span>
+<span class="fc" id="L557">            Integer parentId = allGroupsExpanded.get( entry.getKey() ).getParentGroupId();</span>
+<span class="fc bfc" id="L558" title="All 2 branches covered.">            entry.getValue().setParent( filteredWithParents.containsKey(parentId) ? parentId.toString() : &quot;#&quot; );</span>
+<span class="fc" id="L559">        }</span>
+
+        // Return filtered groups with their parents
+<span class="fc" id="L562">        return new ArrayList&lt;&gt;(filteredWithParents.values());</span>
+    }
+
+    /**
+     * Add parent groups for foundGroups to correctly build tree structure
+     * @param filteredGroups
+     * @param user
+     * @param showPages
+     * @param checkGroupsPerms
+     * @param id
+     * @return
+     */
+    private List&lt;JsTreeItem&gt; addParents(List&lt;JsTreeItem&gt; filteredGroups, Identity user, boolean showPages, boolean checkGroupsPerms, int id) {
+<span class="fc" id="L575">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L576">        Map&lt;Integer, GroupDetails&gt; kk = new HashMap&lt;&gt;();</span>
+
+        //Get whole trees
+<span class="fc bfc" id="L579" title="All 2 branches covered.">        for(JsTreeItem group : filteredGroups) {</span>
+<span class="fc" id="L580">            List&lt;GroupDetails&gt; parents = groupsDB.getParentGroups(Integer.parseInt(group.getId()), false);</span>
+<span class="fc bfc" id="L581" title="All 2 branches covered.">            for(GroupDetails parent : parents) {</span>
+<span class="fc" id="L582">                kk.putIfAbsent(parent.getGroupId(), parent);</span>
+<span class="fc" id="L583">            }</span>
+<span class="fc" id="L584">        }</span>
+
+        // Remove groups that are higher level that we want (including parent group because its System or trash and we dont want to show them)
+<span class="fc bfc" id="L587" title="All 2 branches covered.">        if(id &gt; 0) {</span>
+<span class="fc" id="L588">            List&lt;GroupDetails&gt; groupsToRemove = groupsDB.getParentGroups(id);</span>
+<span class="fc bfc" id="L589" title="All 2 branches covered.">            for(GroupDetails group : groupsToRemove) {</span>
+<span class="fc" id="L590">                kk.remove(group.getGroupId());</span>
+<span class="fc" id="L591">            }</span>
+        }
+
+        //Transform to JsTreeItem
+<span class="fc" id="L595">        List&lt;JsTreeItem&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L596">        items.addAll(</span>
+<span class="fc" id="L597">            kk.values().stream()</span>
+<span class="fc" id="L598">            .map(g -&gt; new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))</span>
+<span class="fc" id="L599">            .collect(Collectors.toList())</span>
+        );
+
+        //Set them states
+<span class="fc bfc" id="L603" title="All 2 branches covered.">        for(JsTreeItem item : items) {</span>
+<span class="fc" id="L604">            item.setState(getLoadedState());</span>
+
+<span class="fc" id="L606">            int parentId = kk.get( Integer.parseInt(item.getId()) ).getParentGroupId();</span>
+<span class="fc bfc" id="L607" title="All 4 branches covered.">            item.setParent( (parentId == 0 || parentId == id)  ? &quot;#&quot; : String.valueOf(parentId) );</span>
+<span class="fc" id="L608">        }</span>
+
+<span class="fc" id="L610">        return items;</span>
+    }
+
+    /**
+     * Returns JsTreeItemState with loaded state
+     * @return
+     */
+    private JsTreeItemState getLoadedState() {
+<span class="fc" id="L618">        JsTreeItemState state =  new JsTreeItemState();</span>
+<span class="fc" id="L619">        state.setOpened(false);</span>
+<span class="fc" id="L620">        state.setLoaded(true);</span>
+<span class="fc" id="L621">        return state;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

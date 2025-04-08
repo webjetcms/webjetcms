@@ -48,7 +48,6 @@ public class MonitoringNodeService {
 
     /**
      * Based on request values "showType" and "selectedNode", return list of corresponding data's.
-     * @param request
      * @return List<ExecutionEntry>
      */
     public List<ExecutionEntry> getAll() {

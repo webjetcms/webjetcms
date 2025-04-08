@@ -34,7 +34,6 @@ public class BaseJpaDBConfig {
 
     /**
      * In your implementation you need to override this method and annotate it with @Bean("basecmsEntityManager")
-     * @param packagesToScan
      * @return
      */
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {

@@ -213,7 +213,6 @@ Scenario('TODO - bugs', ({ I, DT, DTE }) => {
      I.clickCss('#trEditor');
      I.clickCss('.cke_button_icon.cke_button__htmlbox_icon');
      I.wait(3);
-     I.waitForElement(locate('.cke_dialog_title').withText('Bloky'), 10);
      I.waitForElement('.cke_dialog_ui_iframe', 5);
      I.wait(3);
      I.switchTo('.cke_dialog_ui_iframe');
@@ -663,7 +662,7 @@ async function testLink(link, fixedLink, I, DT, DTE) {
           if (fixedLink.indexOf("/?email=")===0) {
                //click on another page and verify URL contains email parameter
                //I.forceClick("Banner neprihlásený", "div.elfinder-cwd-filename");
-               I.click("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E");
+               I.clickCss("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E");
                I.waitForElement("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E.ui-selected", 10);
                I.wait(1);
                I.seeInField("#txtUrl", "/banner-neprihlaseny.html?email=!RECIPIENT_EMAIL!");
@@ -704,7 +703,7 @@ Scenario('Various link types', async ({ I, DT, DTE }) => {
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
-     I.click("#pills-dt-datatableInit-content-tab");
+     I.clickCss("#pills-dt-datatableInit-content-tab");
 
      I.say("Testing phone links");
      await testLink("tel:0903123666", null, I, DT, DTE);

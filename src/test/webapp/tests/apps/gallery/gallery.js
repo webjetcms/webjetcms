@@ -398,14 +398,14 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.clickCss('.cke_button__image');
     I.switchTo("#wjImageIframeElement");
     I.waitForElement('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', 10);
-    I.click('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', null, { position: { x: 3, y: 3 } });
+    I.clickCss('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', null, { position: { x: 3, y: 3 } });
     I.wait(2)
     I.forceClick('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
     I.waitForVisible('.elfinder-button-icon.elfinder-button-icon-mkdir', 10);
     I.wait(5)
     I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
     I.type(autoName);
-    I.click('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
+    I.clickCss('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
     I.wait(2);
     I.doubleClick(autoName);
     I.clickCss('.elfinder-button-icon.elfinder-button-icon-upload');
@@ -500,7 +500,7 @@ Scenario('BUG set gallery dimmension by not saved/white parent #56393-10', ({ I,
     DTE.waitForEditor("galleryDimensionDatatable");
 
     I.seeInField("#DTE_Field_path", "/images/gallery/apps/blog");
-    I.click("#pills-dt-galleryDimensionDatatable-sizes-tab");
+    I.clickCss("#pills-dt-galleryDimensionDatatable-sizes-tab");
     I.seeInField("#DTE_Field_imageWidth", "200");
     I.seeInField("#DTE_Field_imageHeight", "200");
 
@@ -881,7 +881,7 @@ Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, D
     I.seeAndClick(nameOfImage);
     I.waitForVisible('.DTE_Header.modal-header', 15);
     I.waitForVisible('#pills-dt-galleryTable-photoeditor-tab', 5);
-    I.click('#pills-dt-galleryTable-photoeditor-tab');
+    I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
     I.waitForVisible('#photoEditorContainer', 10);
     DTE.save();
 

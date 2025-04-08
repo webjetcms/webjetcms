@@ -566,8 +566,8 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?removePerm=addPage,pageSave,deletePage,pageSaveAs,forceShowButton&groupid=67");
     DT.waitForLoader();
     //skus pridat
-    I.click("#datatableInit_wrapper button.buttons-create");
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#datatableInit_wrapper button.buttons-create");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("Názov web stránky", auto_webPage);
     DTE.save();
     I.see("Pridať web stránku - nemáte právo na pridanie web stránky");
@@ -577,7 +577,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
     I.click("Nedá sa zmazať", "#datatableInit");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nedá sa zmazať");
     DTE.save();
     I.see("Nemáte právo na editáciu web stránky");
@@ -586,7 +586,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
     //skus zmazat
     DT.filter("title", "Nedá sa zmazať");
     I.click("table.datatableInit button.buttons-select-all");
-    I.click("#datatableInit_wrapper button.buttons-remove");
+    I.clickCss("#datatableInit_wrapper button.buttons-remove");
     DT.waitForEditor();
     I.see("Naozaj chcete zmazať položku?");
     DTE.save();

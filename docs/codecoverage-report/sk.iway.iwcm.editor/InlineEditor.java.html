@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InlineEditor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">InlineEditor.java</span></div><h1>InlineEditor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InlineEditor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor</a> &gt; <span class="el_source">InlineEditor.java</span></div><h1>InlineEditor.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -170,13 +170,13 @@ public class InlineEditor
 <span class="pc bpc" id="L170" title="2 of 4 branches missed.">		if (user != null &amp;&amp; InlineEditor.isInlineEditingEnabled(request))</span>
 		{
 <span class="fc" id="L172">			atrs.append(&quot; data-wjapp='&quot;).append(appName).append(&quot;' data-wjappkey='&quot;).append(doc.getDocId()).append(&quot;'&quot;);</span>
-<span class="fc bfc" id="L173" title="All 2 branches covered.">			if (Tools.isNotEmpty(field))</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(field))</span>
 			{
 <span class="fc" id="L175">				atrs.append(&quot; data-wjappfield='&quot;).append(field).append(&quot;'&quot;);</span>
 			}
-<span class="fc bfc" id="L177" title="All 2 branches covered.">			if (generateId)</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">			if (generateId)</span>
 			{
-<span class="fc" id="L179">				atrs.append(&quot; id='wjInline&quot;).append(getUniqueIdAttribute(request)).append(&quot;'&quot;);</span>
+<span class="nc" id="L179">				atrs.append(&quot; id='wjInline&quot;).append(getUniqueIdAttribute(request)).append(&quot;'&quot;);</span>
 			}
 		}
 
@@ -185,11 +185,11 @@ public class InlineEditor
 
 	private static int getUniqueIdAttribute(HttpServletRequest request)
 	{
-<span class="fc" id="L188">		Object numberAttribute = request.getAttribute(NUMBER_ATTRIBUTE);</span>
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">		int number = ((null == numberAttribute) ? 0 : ((Integer) numberAttribute).intValue()) + 1;</span>
-<span class="fc" id="L190">		request.setAttribute(NUMBER_ATTRIBUTE, Integer.valueOf(number));</span>
+<span class="nc" id="L188">		Object numberAttribute = request.getAttribute(NUMBER_ATTRIBUTE);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		int number = ((null == numberAttribute) ? 0 : ((Integer) numberAttribute).intValue()) + 1;</span>
+<span class="nc" id="L190">		request.setAttribute(NUMBER_ATTRIBUTE, Integer.valueOf(number));</span>
 
-<span class="fc" id="L192">		return number;</span>
+<span class="nc" id="L192">		return number;</span>
 	}
 
 	public String getJson()
@@ -214,29 +214,32 @@ public class InlineEditor
 		//ak sa jedan o preview - preview.do (PreviewAction) - nezobrazime InlineEditor
 <span class="pc bpc" id="L215" title="1 of 4 branches missed.">		boolean isPreview = request.getAttribute(&quot;isPreview&quot;) != null &amp;&amp; (boolean) request.getAttribute(&quot;isPreview&quot;) == true;</span>
 
-<span class="fc" id="L217">		boolean inlineEditingEnabled = Constants.getBoolean(&quot;inlineEditingEnabled&quot;);</span>
+<span class="fc" id="L217">		boolean inlineEditingEnabled = false; //57629 - not enabled anymore Constants.getBoolean(&quot;inlineEditingEnabled&quot;);</span>
 
 <span class="pc bpc" id="L219" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(request.getAttribute(&quot;isInlineEditing&quot;))) return false;</span>
 
+		//DEPRECATED - allow temporary force editing
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">		if (&quot;true&quot;.equals(request.getAttribute(&quot;isInlineEditing&quot;))) inlineEditingEnabled = true;</span>
+
 		//ak sa jedna o priamu editaciu v editore stranok
-<span class="fc bfc" id="L222" title="All 2 branches covered.">		if (&quot;true&quot;.equals(request.getParameter(&quot;inlineEditorAdmin&quot;))) {</span>
-<span class="fc" id="L223">			Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L224" title="2 of 4 branches missed.">			if (user != null &amp;&amp; user.isAdmin()) {</span>
-<span class="fc" id="L225">				inlineEditingEnabled = true;</span>
-<span class="fc" id="L226">				isHeatmapEnabled = false;</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">		if (&quot;true&quot;.equals(request.getParameter(&quot;inlineEditorAdmin&quot;))) {</span>
+<span class="fc" id="L226">			Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L227" title="2 of 4 branches missed.">			if (user != null &amp;&amp; user.isAdmin()) {</span>
+<span class="fc" id="L228">				inlineEditingEnabled = true;</span>
+<span class="fc" id="L229">				isHeatmapEnabled = false;</span>
 			}
 		}
 
-<span class="pc bpc" id="L230" title="1 of 2 branches missed.">		return (inlineEditingEnabled</span>
-<span class="fc bfc" id="L231" title="All 2 branches covered.">					&amp;&amp; request.getHeader(&quot;dmail&quot;)==null</span>
-<span class="fc bfc" id="L232" title="All 2 branches covered.">					&amp;&amp; request.getParameter(&quot;NO_WJTOOLBAR&quot;)==null</span>
-<span class="pc bpc" id="L233" title="2 of 4 branches missed.">					&amp;&amp; request.getParameter(&quot;isDmail&quot;)==null</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">		return (inlineEditingEnabled</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">					&amp;&amp; request.getHeader(&quot;dmail&quot;)==null</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">					&amp;&amp; request.getParameter(&quot;NO_WJTOOLBAR&quot;)==null</span>
+<span class="pc bpc" id="L236" title="2 of 4 branches missed.">					&amp;&amp; request.getParameter(&quot;isDmail&quot;)==null</span>
 					&amp;&amp; !isHeatmapEnabled
-<span class="pc bpc" id="L235" title="1 of 4 branches missed.">					&amp;&amp; request.getAttribute(&quot;disableInlineEditing&quot;)==null</span>
+<span class="pc bpc" id="L238" title="2 of 4 branches missed.">					&amp;&amp; request.getAttribute(&quot;disableInlineEditing&quot;)==null</span>
 					&amp;&amp; !isPreview);
 	}
 
-<span class="fc" id="L239">	public enum EditingMode { newsInline, pageBuilder, gridEditor }; //NOSONAR</span>
+<span class="fc" id="L242">	public enum EditingMode { newsInline, pageBuilder, gridEditor }; //NOSONAR</span>
 	private static final String EDITING_MODE_KEY = &quot;sk.iway.iwcm.editor.editingMode&quot;;
 
     /**
@@ -246,33 +249,33 @@ public class InlineEditor
      */
 	public static void setEditingMode(EditingMode mode, HttpServletRequest request)
     {
-<span class="fc" id="L249">        request.setAttribute(EDITING_MODE_KEY, mode);</span>
-<span class="fc" id="L250">    }</span>
+<span class="fc" id="L252">        request.setAttribute(EDITING_MODE_KEY, mode);</span>
+<span class="fc" id="L253">    }</span>
 
     public static EditingMode getEditingMode(HttpServletRequest request)
     {
-<span class="fc" id="L254">        EditingMode mode = (EditingMode)request.getAttribute(EDITING_MODE_KEY);</span>
-<span class="fc bfc" id="L255" title="All 2 branches covered.">        if (mode == null)</span>
+<span class="fc" id="L257">        EditingMode mode = (EditingMode)request.getAttribute(EDITING_MODE_KEY);</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">        if (mode == null)</span>
         {
-<span class="fc" id="L257">            mode = EditingMode.newsInline;</span>
+<span class="fc" id="L260">            mode = EditingMode.newsInline;</span>
 
-<span class="fc" id="L259">            TemplatesGroupBean tempGroup = (TemplatesGroupBean)request.getAttribute(&quot;templatesGroupDetails&quot;);</span>
-<span class="fc bfc" id="L260" title="All 2 branches covered.">            if (tempGroup!=null)</span>
+<span class="fc" id="L262">            TemplatesGroupBean tempGroup = (TemplatesGroupBean)request.getAttribute(&quot;templatesGroupDetails&quot;);</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">            if (tempGroup!=null)</span>
             {
-<span class="pc bpc" id="L262" title="1 of 2 branches missed.">                if (&quot;pageBuilder&quot;.equals(tempGroup.getInlineEditingMode())) mode = EditingMode.pageBuilder;</span>
-<span class="pc bpc" id="L263" title="1 of 2 branches missed.">                else if (&quot;gridEditor&quot;.equals(tempGroup.getInlineEditingMode())) mode = EditingMode.gridEditor;</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">                if (&quot;pageBuilder&quot;.equals(tempGroup.getInlineEditingMode())) mode = EditingMode.pageBuilder;</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">                else if (&quot;gridEditor&quot;.equals(tempGroup.getInlineEditingMode())) mode = EditingMode.gridEditor;</span>
             }
 
-<span class="fc" id="L266">            TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
-<span class="fc bfc" id="L267" title="All 2 branches covered.">            if (temp != null)</span>
+<span class="fc" id="L269">            TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">            if (temp != null)</span>
             {
-<span class="pc bpc" id="L269" title="2 of 4 branches missed.">                if (temp.getTempName().contains(&quot;PageBuilder&quot;) || temp.getAfterBodyData().contains(&quot;PageBuilder&quot;))</span>
+<span class="pc bpc" id="L272" title="2 of 4 branches missed.">                if (temp.getTempName().contains(&quot;PageBuilder&quot;) || temp.getAfterBodyData().contains(&quot;PageBuilder&quot;))</span>
                 {
-<span class="nc" id="L271">                    mode = EditingMode.pageBuilder;</span>
+<span class="nc" id="L274">                    mode = EditingMode.pageBuilder;</span>
                 }
             }
         }
-<span class="fc" id="L275">        return mode;</span>
+<span class="fc" id="L278">        return mode;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

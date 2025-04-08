@@ -78,7 +78,7 @@ public class ApproveService {
 
     /**
      * Initializes hash tables approveByTable and notifyTable (also set selfApproved)
-     * @param editedDoc
+     * @param currentGroupId
     */
 	public void loadApproveTables(int currentGroupId) {
         approveByTable = new HashMap<>();

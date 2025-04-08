@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtrBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">AtrBean.java</span></div><h1>AtrBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtrBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">AtrBean.java</span></div><h1>AtrBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -14,6 +14,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.tags.SelectTag;
 
 /**
@@ -28,7 +29,7 @@ import sk.iway.iwcm.tags.SelectTag;
  *@modified     $Date: 2003/10/24 15:33:30 $
  */
 @SuppressWarnings(&quot;java:S1659&quot;)
-<span class="fc" id="L31">public class AtrBean implements Serializable</span>
+<span class="fc" id="L32">public class AtrBean implements Serializable</span>
 {
    private int atrId;
    private String atrName;
@@ -50,198 +51,217 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getHtml()
    {
-<span class="nc" id="L53">   	return getHtml(false);</span>
+<span class="nc" id="L54">   	return getHtml(false, null, null, null);</span>
    }
 
    /**
     * vygeneruje HTML podobu atributu
     * @return
     */
-   public String getHtml(boolean onWebPage)
+   public String getHtml(boolean onWebPage) {
+<span class="nc" id="L62">      	return getHtml(onWebPage, null, null, null);</span>
+   }
+
+   /**
+    * vygeneruje HTML podobu atributu
+    * @return
+    */
+   public String getHtml(boolean onWebPage, String name, String id, String classes)
    {
-<span class="nc bnc" id="L62" title="All 2 branches missed.">   	if (atrDefaultValue == null) atrDefaultValue = &quot;&quot;;</span>
-<span class="nc" id="L63">   	StringBuilder ret = null;</span>
-<span class="nc" id="L64">      String actualValue = &quot;&quot;;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">   	if (atrDefaultValue == null) atrDefaultValue = &quot;&quot;;</span>
+<span class="nc" id="L72">   	StringBuilder ret = null;</span>
+<span class="nc" id="L73">      String actualValue = &quot;&quot;;</span>
       //ak mame docid, znamena to, ze uz to ma v DB nejaku hodnotu
-<span class="nc bnc" id="L66" title="All 2 branches missed.">      if (docId &gt; 0)</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">      if (docId &gt; 0)</span>
       {
-<span class="nc" id="L68">         actualValue = getValue();</span>
+<span class="nc" id="L77">         actualValue = getValue();</span>
       }
-<span class="nc" id="L70">      String delimeter = &quot;,&quot;;</span>
-<span class="nc bnc" id="L71" title="All 2 branches missed.">      if(atrDefaultValue.indexOf(&quot;|&quot;) != -1 )</span>
+<span class="nc" id="L79">      String delimeter = &quot;,&quot;;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">      if(atrDefaultValue.indexOf(&quot;|&quot;) != -1 )</span>
       {
-<span class="nc" id="L73">      	delimeter = &quot;|&quot;;	//ak najdem '|', parsujem podla '|'</span>
+<span class="nc" id="L82">      	delimeter = &quot;|&quot;;	//ak najdem '|', parsujem podla '|'</span>
       }
-<span class="nc" id="L75">      StringTokenizer st = new StringTokenizer(atrDefaultValue, delimeter);</span>
-<span class="nc bnc" id="L76" title="All 2 branches missed.">      if (st.countTokens()&gt;1)</span>
+<span class="nc" id="L84">      StringTokenizer st = new StringTokenizer(atrDefaultValue, delimeter);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">      if (st.countTokens()&gt;1)</span>
       {
-<span class="nc bnc" id="L78" title="All 2 branches missed.">         if(onWebPage)</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">         if(onWebPage)</span>
          {
-<span class="nc" id="L80">         	ret = new StringBuilder(&quot;&lt;option value=''&gt;nezáleží&lt;/option&gt;&quot;);</span>
-         }
+<span class="nc" id="L89">            Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L90">         	ret = new StringBuilder(&quot;&lt;option value=''&gt;&quot;+prop.getText(&quot;components.atr.doesntMatter&quot;)+&quot;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L91">         }</span>
          else
          {
-<span class="nc" id="L84">         	ret = new StringBuilder(&quot;&lt;select name='atr_&quot;+atrId+&quot;'&gt;&quot;);</span>
-<span class="nc" id="L85">         	ret.append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            if(Tools.isEmpty(name))</span>
+<span class="nc" id="L95">         	   ret = new StringBuilder(&quot;&lt;select name='atr_&quot;+atrId+&quot;' &quot;);</span>
+            else
+<span class="nc" id="L97">         	   ret = new StringBuilder(&quot;&lt;select name='&quot;+name+&quot;' &quot;);</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if(Tools.isNotEmpty(id)) ret.append(&quot;id='&quot;+id+&quot;' &quot;);</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">            if(Tools.isNotEmpty(classes)) ret.append(&quot;class='&quot;+classes+&quot;' &quot;);</span>
+
+<span class="nc" id="L103">            ret.append(&quot;&gt;&quot;);</span>
+
+<span class="nc" id="L105">         	ret.append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
          }
          String tmp, selected;
-<span class="nc bnc" id="L88" title="All 2 branches missed.">         while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">         while (st.hasMoreTokens())</span>
          {
-<span class="nc" id="L90">            tmp = st.nextToken();</span>
-<span class="nc bnc" id="L91" title="All 2 branches missed.">            if (atrType==AtrDB.TYPE_BOOL)</span>
+<span class="nc" id="L110">            tmp = st.nextToken();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">            if (atrType==AtrDB.TYPE_BOOL)</span>
             {
-<span class="nc bnc" id="L93" title="All 4 branches missed.">               if (&quot;true&quot;.equalsIgnoreCase(tmp) || &quot;yes&quot;.equalsIgnoreCase(tmp))</span>
+<span class="nc bnc" id="L113" title="All 4 branches missed.">               if (&quot;true&quot;.equalsIgnoreCase(tmp) || &quot;yes&quot;.equalsIgnoreCase(tmp))</span>
                {
-<span class="nc" id="L95">                  tmp = &quot;true&quot;;</span>
+<span class="nc" id="L115">                  tmp = &quot;true&quot;;</span>
                }
                else
                {
-<span class="nc" id="L99">                  tmp = &quot;false&quot;;</span>
+<span class="nc" id="L119">                  tmp = &quot;false&quot;;</span>
                }
             }
-<span class="nc" id="L102">            Logger.debug(AtrBean.class, &quot;Select atr&quot;);</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (tmp.compareTo(actualValue)==0)</span>
+<span class="nc" id="L122">            Logger.debug(AtrBean.class, &quot;Select atr&quot;);</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (tmp.compareTo(actualValue)==0)</span>
             {
-<span class="nc" id="L105">               selected = &quot; selected&quot;;</span>
+<span class="nc" id="L125">               selected = &quot; selected&quot;;</span>
             }
             else
             {
-<span class="nc" id="L109">               selected = &quot;&quot;;</span>
+<span class="nc" id="L129">               selected = &quot;&quot;;</span>
             }
-<span class="nc" id="L111">            ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(tmp)).append('\'').append(selected).append('&gt;').append(tmp).append(&quot;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L131">            ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(tmp)).append('\'').append(selected).append('&gt;').append(tmp).append(&quot;&lt;/option&gt;&quot;);</span>
          }
-<span class="nc bnc" id="L113" title="All 2 branches missed.">         if(!onWebPage)</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">         if(!onWebPage)</span>
          {
-<span class="nc" id="L115">				ret.append(&quot;&lt;/select&gt;&quot;);</span>
+<span class="nc" id="L135">				ret.append(&quot;&lt;/select&gt;&quot;);</span>
          }
       }
       else
       {
-<span class="nc bnc" id="L120" title="All 2 branches missed.">      	if (atrDefaultValue.startsWith(&quot;multiline&quot;))</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">      	if (atrDefaultValue.startsWith(&quot;multiline&quot;))</span>
          {
-<span class="nc" id="L122">      		int cols=40;</span>
-<span class="nc" id="L123">      		int rows=4;</span>
-<span class="nc" id="L124">      		st = new StringTokenizer(atrDefaultValue, &quot;-&quot;);</span>
-<span class="nc bnc" id="L125" title="All 2 branches missed.">      		if (st.countTokens() == 3)</span>
+<span class="nc" id="L142">      		int cols=40;</span>
+<span class="nc" id="L143">      		int rows=4;</span>
+<span class="nc" id="L144">      		st = new StringTokenizer(atrDefaultValue, &quot;-&quot;);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">      		if (st.countTokens() == 3)</span>
       		{
-<span class="nc" id="L127">      			st.nextToken();</span>
+<span class="nc" id="L147">      			st.nextToken();</span>
       			//pocet stlpcov
-<span class="nc" id="L129">      			cols = Tools.getIntValue(st.nextToken(), cols);</span>
-<span class="nc" id="L130">      			rows = Tools.getIntValue(st.nextToken(), rows);</span>
+<span class="nc" id="L149">      			cols = Tools.getIntValue(st.nextToken(), cols);</span>
+<span class="nc" id="L150">      			rows = Tools.getIntValue(st.nextToken(), rows);</span>
       		}
-<span class="nc bnc" id="L132" title="All 2 branches missed.">      		if (docId &lt; 1)</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">      		if (docId &lt; 1)</span>
 	         {
-<span class="nc" id="L134">	            actualValue = &quot;&quot;;</span>
+<span class="nc" id="L154">	            actualValue = &quot;&quot;;</span>
 	         }
-<span class="nc" id="L136">	         ret = new StringBuilder(&quot;&lt;textarea name='atr_&quot;+atrId+&quot;' rows='&quot;+rows+&quot;' cols='&quot;+cols+&quot;'&gt;&quot;+actualValue+&quot;&lt;/textarea&gt;&quot;);</span>
-<span class="nc" id="L137">         }</span>
-<span class="nc bnc" id="L138" title="All 2 branches missed.">      	else if (atrDefaultValue.equals(&quot;autoSelect&quot;))</span>
+<span class="nc" id="L156">	         ret = new StringBuilder(&quot;&lt;textarea name='atr_&quot;+atrId+&quot;' rows='&quot;+rows+&quot;' cols='&quot;+cols+&quot;'&gt;&quot;+actualValue+&quot;&lt;/textarea&gt;&quot;);</span>
+<span class="nc" id="L157">         }</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">      	else if (atrDefaultValue.equals(&quot;autoSelect&quot;))</span>
          {
-<span class="nc bnc" id="L140" title="All 2 branches missed.">      		if(onWebPage)</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">      		if(onWebPage)</span>
             {
-<span class="nc" id="L142">            	ret = new StringBuilder(&quot;&lt;option value=''&gt;nezáleží&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L162">            	ret = new StringBuilder(&quot;&lt;option value=''&gt;nezáleží&lt;/option&gt;&quot;);</span>
             }
             else
             {
-<span class="nc" id="L146">            	ret = new StringBuilder(&quot;&lt;select name='atr_&quot;+atrId+&quot;' onChange='htmlSelectTagAddOption(this)'&gt;&quot;);</span>
-<span class="nc" id="L147">            	ret.append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L166">            	ret = new StringBuilder(&quot;&lt;select name='atr_&quot;+atrId+&quot;' onChange='htmlSelectTagAddOption(this)'&gt;&quot;);</span>
+<span class="nc" id="L167">            	ret.append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
             }
 
             //ziskaj zoznam hodnot tohto atributu z DB
-<span class="nc" id="L151">            Connection db_conn = null;</span>
-<span class="nc" id="L152">				PreparedStatement ps = null;</span>
-<span class="nc" id="L153">				ResultSet rs = null;</span>
+<span class="nc" id="L171">            Connection db_conn = null;</span>
+<span class="nc" id="L172">				PreparedStatement ps = null;</span>
+<span class="nc" id="L173">				ResultSet rs = null;</span>
 				try
 				{
-<span class="nc" id="L156">					db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L176">					db_conn = DBPool.getConnection();</span>
 					//nemozeme pouzit DISTINCT, pretoze MySQL nie je case sensitive
-<span class="nc" id="L158">					ps = db_conn.prepareStatement(&quot;SELECT value_string FROM doc_atr WHERE atr_id=? ORDER BY value_string&quot;);</span>
-<span class="nc" id="L159">					ps.setInt(1, getAtrId());</span>
-<span class="nc" id="L160">					rs = ps.executeQuery();</span>
+<span class="nc" id="L178">					ps = db_conn.prepareStatement(&quot;SELECT value_string FROM doc_atr WHERE atr_id=? ORDER BY value_string&quot;);</span>
+<span class="nc" id="L179">					ps.setInt(1, getAtrId());</span>
+<span class="nc" id="L180">					rs = ps.executeQuery();</span>
 					String value, selected;
-<span class="nc" id="L162">					Map&lt;String, String&gt; values = new Hashtable&lt;&gt;();</span>
-<span class="nc bnc" id="L163" title="All 2 branches missed.">					while (rs.next())</span>
+<span class="nc" id="L182">					Map&lt;String, String&gt; values = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">					while (rs.next())</span>
 					{
-<span class="nc" id="L165">						value = DB.getDbString(rs, &quot;value_string&quot;);</span>
-<span class="nc bnc" id="L166" title="All 2 branches missed.">						if (values.get(value)!=null) continue;</span>
-<span class="nc" id="L167">						values.put(value, value);</span>
-<span class="nc bnc" id="L168" title="All 2 branches missed.">						if (value.compareTo(actualValue)==0)</span>
+<span class="nc" id="L185">						value = DB.getDbString(rs, &quot;value_string&quot;);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">						if (values.get(value)!=null) continue;</span>
+<span class="nc" id="L187">						values.put(value, value);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">						if (value.compareTo(actualValue)==0)</span>
 		            {
-<span class="nc" id="L170">		               selected = &quot; selected&quot;;</span>
+<span class="nc" id="L190">		               selected = &quot; selected&quot;;</span>
 		            }
 		            else
 		            {
-<span class="nc" id="L174">		               selected = &quot;&quot;;</span>
+<span class="nc" id="L194">		               selected = &quot;&quot;;</span>
 		            }
-<span class="nc" id="L176">						ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(value)).append('\'').append(selected).append('&gt;').append(value).append(&quot;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L196">						ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(value)).append('\'').append(selected).append('&gt;').append(value).append(&quot;&lt;/option&gt;&quot;);</span>
 					}
-<span class="nc" id="L178">					rs.close();</span>
-<span class="nc" id="L179">					ps.close();</span>
-<span class="nc" id="L180">					db_conn.close();</span>
-<span class="nc" id="L181">					rs = null;</span>
-<span class="nc" id="L182">					ps = null;</span>
-<span class="nc" id="L183">					db_conn = null;</span>
+<span class="nc" id="L198">					rs.close();</span>
+<span class="nc" id="L199">					ps.close();</span>
+<span class="nc" id="L200">					db_conn.close();</span>
+<span class="nc" id="L201">					rs = null;</span>
+<span class="nc" id="L202">					ps = null;</span>
+<span class="nc" id="L203">					db_conn = null;</span>
 
-<span class="nc bnc" id="L185" title="All 2 branches missed.">					if(!onWebPage)</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">					if(!onWebPage)</span>
 	            {
-<span class="nc" id="L187">						ret.append(&quot;&lt;option value='&quot;+SelectTag.NEW_OPTION_VALUE+&quot;'&gt;+++&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L207">						ret.append(&quot;&lt;option value='&quot;+SelectTag.NEW_OPTION_VALUE+&quot;'&gt;+++&lt;/option&gt;&quot;);</span>
 	            }
 				}
-<span class="nc" id="L190">				catch (Exception ex)</span>
+<span class="nc" id="L210">				catch (Exception ex)</span>
 				{
-<span class="nc" id="L192">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L212">					sk.iway.iwcm.Logger.error(ex);</span>
 				}
 				finally
 				{
 					try
 					{
-<span class="nc bnc" id="L198" title="All 2 branches missed.">						if (rs != null)</span>
-<span class="nc" id="L199">							rs.close();</span>
-<span class="nc bnc" id="L200" title="All 2 branches missed.">						if (ps != null)</span>
-<span class="nc" id="L201">							ps.close();</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">						if (db_conn != null)</span>
-<span class="nc" id="L203">							db_conn.close();</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">						if (rs != null)</span>
+<span class="nc" id="L219">							rs.close();</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">						if (ps != null)</span>
+<span class="nc" id="L221">							ps.close();</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">						if (db_conn != null)</span>
+<span class="nc" id="L223">							db_conn.close();</span>
 					}
-<span class="nc" id="L205">					catch (Exception ex2)</span>
+<span class="nc" id="L225">					catch (Exception ex2)</span>
 					{
-<span class="nc" id="L207">						sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L208">					}</span>
+<span class="nc" id="L227">						sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L228">					}</span>
 				}
 
             //ret += &quot;&lt;option value='&quot;+tmp+&quot;'&quot;+selected+&quot;&gt;&quot;+tmp+&quot;&lt;/option&gt;&quot;;
-<span class="nc bnc" id="L212" title="All 2 branches missed.">				if(!onWebPage)</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">				if(!onWebPage)</span>
             {
-<span class="nc" id="L214">					ret.append(&quot;&lt;/select&gt;&quot;);</span>
+<span class="nc" id="L234">					ret.append(&quot;&lt;/select&gt;&quot;);</span>
             }
-<span class="nc" id="L216">         }</span>
+<span class="nc" id="L236">         }</span>
       	else
       	{
-<span class="nc bnc" id="L219" title="All 2 branches missed.">	         if (docId &lt; 1)</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">	         if (docId &lt; 1)</span>
 	         {
-<span class="nc" id="L221">	            actualValue = atrDefaultValue;</span>
+<span class="nc" id="L241">	            actualValue = atrDefaultValue;</span>
 	         }
-<span class="nc bnc" id="L223" title="All 2 branches missed.">	         if (getAtrType()==AtrDB.TYPE_BOOL)</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">	         if (getAtrType()==AtrDB.TYPE_BOOL)</span>
 	         {
-<span class="nc" id="L225">	         	ret = new StringBuilder(&quot;&lt;input type='radio' name='atr_&quot;+atrId+&quot;' value='false'&quot;);</span>
-<span class="nc bnc" id="L226" title="All 2 branches missed.">	         	if (isValueBool()==false) ret.append( &quot; checked='checked'&quot;);</span>
-<span class="nc" id="L227">	         	ret.append( &quot;&gt; &quot;+getFalseValue());</span>
-<span class="nc" id="L228">	         	ret.append( &quot;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L229">	         	ret.append( &quot;&lt;input type='radio' name='atr_&quot;+atrId+&quot;' value='true'&quot;);</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">	         	if (isValueBool()==true) ret.append( &quot; checked='checked'&quot;);</span>
-<span class="nc" id="L231">	         	ret.append( &quot;&gt; &quot;+getTrueValue());</span>
+<span class="nc" id="L245">	         	ret = new StringBuilder(&quot;&lt;input type='radio' name='atr_&quot;+atrId+&quot;' value='false'&quot;);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">	         	if (isValueBool()==false) ret.append( &quot; checked='checked'&quot;);</span>
+<span class="nc" id="L247">	         	ret.append( &quot;&gt; &quot;+getFalseValue());</span>
+<span class="nc" id="L248">	         	ret.append( &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L249">	         	ret.append( &quot;&lt;input type='radio' name='atr_&quot;+atrId+&quot;' value='true'&quot;);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">	         	if (isValueBool()==true) ret.append( &quot; checked='checked'&quot;);</span>
+<span class="nc" id="L251">	         	ret.append( &quot;&gt; &quot;+getTrueValue());</span>
 
 	         }
 	         else
 	         {
-<span class="nc" id="L236">		         ret = new StringBuilder(&quot;&lt;input name='atr_&quot;+atrId+&quot;'&quot;);</span>
-<span class="nc bnc" id="L237" title="All 2 branches missed.">		         if (getAtrType()==AtrDB.TYPE_INT) ret.append(&quot; onKeyUp='inputCheckNumberKey(this);' onBlur='inputCheckNumber(this);'&quot;);</span>
-<span class="nc bnc" id="L238" title="All 2 branches missed.">		         else if (getAtrType()==AtrDB.TYPE_DOUBLE) ret.append(&quot; onKeyUp='inputCheckNumberKeyFloat(this);' onBlur='inputCheckNumberKeyFloat(this);'&quot;);</span>
-<span class="nc" id="L239">		         else ret.append(&quot; length='128' &quot;);</span>
-<span class="nc" id="L240">		         ret.append( &quot; value='&quot;+ResponseUtils.filter(actualValue)+&quot;'&gt;&quot;);</span>
+<span class="nc" id="L256">		         ret = new StringBuilder(&quot;&lt;input name='atr_&quot;+atrId+&quot;'&quot;);</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		         if (getAtrType()==AtrDB.TYPE_INT) ret.append(&quot; onKeyUp='inputCheckNumberKey(this);' onBlur='inputCheckNumber(this);'&quot;);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		         else if (getAtrType()==AtrDB.TYPE_DOUBLE) ret.append(&quot; onKeyUp='inputCheckNumberKeyFloat(this);' onBlur='inputCheckNumberKeyFloat(this);'&quot;);</span>
+<span class="nc" id="L259">		         else ret.append(&quot; length='128' &quot;);</span>
+<span class="nc" id="L260">		         ret.append( &quot; value='&quot;+ResponseUtils.filter(actualValue)+&quot;'&gt;&quot;);</span>
 	         }
       	}
       }
-<span class="nc" id="L244">      return (ret.toString());</span>
+<span class="nc" id="L264">      return (ret.toString());</span>
    }
 
    /**
@@ -250,50 +270,50 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getValue()
    {
-<span class="fc bfc" id="L253" title="All 2 branches covered.">      if (atrType==AtrDB.TYPE_INT)</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">      if (atrType==AtrDB.TYPE_INT)</span>
       {
-<span class="fc" id="L255">         return(Long.toString(Math.round(valueNumber)));</span>
+<span class="fc" id="L275">         return(Long.toString(Math.round(valueNumber)));</span>
       }
-<span class="fc bfc" id="L257" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_DOUBLE)</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_DOUBLE)</span>
       {
-<span class="fc" id="L259">         return(Double.toString(valueNumber));</span>
+<span class="fc" id="L279">         return(Double.toString(valueNumber));</span>
       }
-<span class="fc bfc" id="L261" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_BOOL)</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_BOOL)</span>
       {
-<span class="fc" id="L263">         return(Boolean.toString(valueBool));</span>
+<span class="fc" id="L283">         return(Boolean.toString(valueBool));</span>
       }
-<span class="fc" id="L265">      return(valueString);</span>
+<span class="fc" id="L285">      return(valueString);</span>
    }
 
    public String getValueHtml()
    {
-<span class="fc bfc" id="L270" title="All 2 branches covered.">      if (atrType==AtrDB.TYPE_INT)</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">      if (atrType==AtrDB.TYPE_INT)</span>
       {
-<span class="fc" id="L272">         return(Long.toString(Math.round(valueNumber)));</span>
+<span class="fc" id="L292">         return(Long.toString(Math.round(valueNumber)));</span>
       }
-<span class="fc bfc" id="L274" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_DOUBLE)</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_DOUBLE)</span>
       {
-<span class="fc" id="L276">         return(Tools.replace(Double.toString(valueNumber), &quot;.&quot;, &quot;,&quot;));</span>
+<span class="fc" id="L296">         return(Tools.replace(Double.toString(valueNumber), &quot;.&quot;, &quot;,&quot;));</span>
       }
-<span class="fc bfc" id="L278" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_BOOL)</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">      else if (atrType==AtrDB.TYPE_BOOL)</span>
       {
-<span class="fc bfc" id="L280" title="All 2 branches covered.">         if (valueBool == true)</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">         if (valueBool == true)</span>
          {
-<span class="pc bpc" id="L282" title="2 of 4 branches missed.">            if (trueValue!=null &amp;&amp; trueValue.length()&gt;0)</span>
+<span class="pc bpc" id="L302" title="2 of 4 branches missed.">            if (trueValue!=null &amp;&amp; trueValue.length()&gt;0)</span>
             {
-<span class="fc" id="L284">               return(trueValue);</span>
+<span class="fc" id="L304">               return(trueValue);</span>
             }
          }
          else
          {
-<span class="pc bpc" id="L289" title="2 of 4 branches missed.">            if (falseValue!=null &amp;&amp; falseValue.length()&gt;0)</span>
+<span class="pc bpc" id="L309" title="2 of 4 branches missed.">            if (falseValue!=null &amp;&amp; falseValue.length()&gt;0)</span>
             {
-<span class="fc" id="L291">               return(falseValue);</span>
+<span class="fc" id="L311">               return(falseValue);</span>
             }
          }
-<span class="nc" id="L294">         return(Boolean.toString(valueBool));</span>
+<span class="nc" id="L314">         return(Boolean.toString(valueBool));</span>
       }
-<span class="fc" id="L296">      return(valueString);</span>
+<span class="fc" id="L316">      return(valueString);</span>
    }
 
 
@@ -304,7 +324,7 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public int getAtrId()
    {
-<span class="fc" id="L307">      return atrId;</span>
+<span class="fc" id="L327">      return atrId;</span>
    }
 
    /**
@@ -314,8 +334,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setAtrId(int atrId)
    {
-<span class="fc" id="L317">      this.atrId = atrId;</span>
-<span class="fc" id="L318">   }</span>
+<span class="fc" id="L337">      this.atrId = atrId;</span>
+<span class="fc" id="L338">   }</span>
 
    /**
     *  Sets the atrName attribute of the AtrBean object
@@ -324,8 +344,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setAtrName(String atrName)
    {
-<span class="fc" id="L327">      this.atrName = atrName;</span>
-<span class="fc" id="L328">   }</span>
+<span class="fc" id="L347">      this.atrName = atrName;</span>
+<span class="fc" id="L348">   }</span>
 
    /**
     *  Gets the atrName attribute of the AtrBean object
@@ -334,14 +354,14 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getAtrName()
    {
-<span class="fc" id="L337">      return atrName;</span>
+<span class="fc" id="L357">      return atrName;</span>
    }
 
 
 
    public String getAtrName(String lang)
    {
-<span class="nc" id="L344">      return parse(atrName,lang);</span>
+<span class="nc" id="L364">      return parse(atrName,lang);</span>
    }
 
    /**
@@ -351,8 +371,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setAtrDescription(String atrDescription)
    {
-<span class="fc" id="L354">      this.atrDescription = atrDescription;</span>
-<span class="fc" id="L355">   }</span>
+<span class="fc" id="L374">      this.atrDescription = atrDescription;</span>
+<span class="fc" id="L375">   }</span>
 
    /**
     *  Gets the atrDescription attribute of the AtrBean object
@@ -361,12 +381,12 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getAtrDescription()
    {
-<span class="nc" id="L364">      return atrDescription;</span>
+<span class="nc" id="L384">      return atrDescription;</span>
    }
 
    public String getAtrDescription(String lang)
    {
-<span class="nc" id="L369">      return parse(atrDescription,lang);</span>
+<span class="nc" id="L389">      return parse(atrDescription,lang);</span>
    }
 
    /**
@@ -376,8 +396,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setAtrDefaultValue(String atrDefaultValue)
    {
-<span class="fc" id="L379">      this.atrDefaultValue = atrDefaultValue;</span>
-<span class="fc" id="L380">   }</span>
+<span class="fc" id="L399">      this.atrDefaultValue = atrDefaultValue;</span>
+<span class="fc" id="L400">   }</span>
 
    /**
     *  Gets the atrDefaultValue attribute of the AtrBean object
@@ -386,11 +406,11 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getAtrDefaultValue()
    {
-<span class="nc bnc" id="L389" title="All 2 branches missed.">	   if (atrDefaultValue == null) {</span>
-<span class="nc" id="L390">		   return &quot;&quot;;</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">	   if (atrDefaultValue == null) {</span>
+<span class="nc" id="L410">		   return &quot;&quot;;</span>
 	   }
 
-<span class="nc" id="L393">	   return atrDefaultValue;</span>
+<span class="nc" id="L413">	   return atrDefaultValue;</span>
    }
 
    /**
@@ -400,7 +420,7 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getAtrDefaultValue(String lang)
    {
-<span class="nc" id="L403">      return parse(atrDefaultValue,lang);</span>
+<span class="nc" id="L423">      return parse(atrDefaultValue,lang);</span>
    }
 
 
@@ -411,8 +431,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setAtrType(int atrType)
    {
-<span class="fc" id="L414">      this.atrType = atrType;</span>
-<span class="fc" id="L415">   }</span>
+<span class="fc" id="L434">      this.atrType = atrType;</span>
+<span class="fc" id="L435">   }</span>
 
    /**
     *  Gets the atrType attribute of the AtrBean object
@@ -421,7 +441,7 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public int getAtrType()
    {
-<span class="fc" id="L424">      return atrType;</span>
+<span class="fc" id="L444">      return atrType;</span>
    }
 
    /**
@@ -431,8 +451,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setDocId(int docId)
    {
-<span class="fc" id="L434">      this.docId = docId;</span>
-<span class="fc" id="L435">   }</span>
+<span class="fc" id="L454">      this.docId = docId;</span>
+<span class="fc" id="L455">   }</span>
 
    /**
     *  Gets the docId attribute of the AtrBean object
@@ -441,7 +461,7 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public int getDocId()
    {
-<span class="fc" id="L444">      return docId;</span>
+<span class="fc" id="L464">      return docId;</span>
    }
 
    /**
@@ -451,8 +471,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setValueString(String valueString)
    {
-<span class="fc" id="L454">      this.valueString = valueString;</span>
-<span class="fc" id="L455">   }</span>
+<span class="fc" id="L474">      this.valueString = valueString;</span>
+<span class="fc" id="L475">   }</span>
 
    /**
     *  Gets the valueString attribute of the AtrBean object
@@ -461,7 +481,7 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public String getValueString()
    {
-<span class="nc" id="L464">      return valueString;</span>
+<span class="fc" id="L484">      return valueString;</span>
    }
 
    /**
@@ -471,8 +491,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setValueNumber(double valueNumber)
    {
-<span class="fc" id="L474">      this.valueNumber = valueNumber;</span>
-<span class="fc" id="L475">   }</span>
+<span class="fc" id="L494">      this.valueNumber = valueNumber;</span>
+<span class="fc" id="L495">   }</span>
 
    /**
     *  Gets the valueInt attribute of the AtrBean object
@@ -481,17 +501,17 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public double getValueNumber()
    {
-<span class="fc" id="L484">      return valueNumber;</span>
+<span class="fc" id="L504">      return valueNumber;</span>
    }
 
    public void setValueInt(int valueInt)
    {
-<span class="nc" id="L489">   	valueNumber = valueInt;</span>
-<span class="nc" id="L490">   }</span>
+<span class="nc" id="L509">   	valueNumber = valueInt;</span>
+<span class="nc" id="L510">   }</span>
 
    public int getValueInt()
    {
-<span class="nc" id="L494">   	return((int)Math.round(valueNumber));</span>
+<span class="nc" id="L514">   	return((int)Math.round(valueNumber));</span>
    }
 
    /**
@@ -501,8 +521,8 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public void setValueBool(boolean valueBool)
    {
-<span class="fc" id="L504">      this.valueBool = valueBool;</span>
-<span class="fc" id="L505">   }</span>
+<span class="fc" id="L524">      this.valueBool = valueBool;</span>
+<span class="fc" id="L525">   }</span>
 
    /**
     *  Gets the valueBool attribute of the AtrBean object
@@ -511,46 +531,46 @@ import sk.iway.iwcm.tags.SelectTag;
     */
    public boolean isValueBool()
    {
-<span class="nc" id="L514">      return valueBool;</span>
+<span class="nc" id="L534">      return valueBool;</span>
    }
    public void setOrderPriority(int orderPriority)
    {
-<span class="fc" id="L518">      this.orderPriority = orderPriority;</span>
-<span class="fc" id="L519">   }</span>
+<span class="fc" id="L538">      this.orderPriority = orderPriority;</span>
+<span class="fc" id="L539">   }</span>
    public int getOrderPriority()
    {
-<span class="nc" id="L522">      return orderPriority;</span>
+<span class="nc" id="L542">      return orderPriority;</span>
    }
    public void setAtrGroup(String atrGroup)
    {
-<span class="fc" id="L526">      this.atrGroup = atrGroup;</span>
-<span class="fc" id="L527">   }</span>
+<span class="fc" id="L546">      this.atrGroup = atrGroup;</span>
+<span class="fc" id="L547">   }</span>
    public String getAtrGroup()
    {
-<span class="nc" id="L530">      return atrGroup;</span>
+<span class="nc" id="L550">      return atrGroup;</span>
    }
 
    public String getAtrGroup(String lang)
    {
-<span class="nc" id="L535">   	return parse(atrGroup, lang);</span>
+<span class="nc" id="L555">   	return parse(atrGroup, lang);</span>
    }
 
    public String getTrueValue()
    {
-<span class="nc" id="L540">      return trueValue;</span>
+<span class="nc" id="L560">      return trueValue;</span>
    }
    public void setTrueValue(String trueValue)
    {
-<span class="fc" id="L544">      this.trueValue = trueValue;</span>
-<span class="fc" id="L545">   }</span>
+<span class="fc" id="L564">      this.trueValue = trueValue;</span>
+<span class="fc" id="L565">   }</span>
    public String getFalseValue()
    {
-<span class="nc" id="L548">      return falseValue;</span>
+<span class="nc" id="L568">      return falseValue;</span>
    }
    public void setFalseValue(String falseValue)
    {
-<span class="fc" id="L552">      this.falseValue = falseValue;</span>
-<span class="fc" id="L553">   }</span>
+<span class="fc" id="L572">      this.falseValue = falseValue;</span>
+<span class="fc" id="L573">   }</span>
 
    /**
     * vygeneruje HTML podobu atributu
@@ -560,180 +580,180 @@ import sk.iway.iwcm.tags.SelectTag;
    public String getHtml(String lang)
    {
    	StringBuilder ret;
-<span class="nc" id="L563">      String actualValue = &quot;&quot;;</span>
+<span class="nc" id="L583">      String actualValue = &quot;&quot;;</span>
       //ak mame docid, znamena to, ze uz to ma v DB nejaku hodnotu
-<span class="nc bnc" id="L565" title="All 2 branches missed.">      if (docId &gt; 0)</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">      if (docId &gt; 0)</span>
       {
-<span class="nc" id="L567">         actualValue = getValue();</span>
+<span class="nc" id="L587">         actualValue = getValue();</span>
       }
-<span class="nc" id="L569">      String delimeter = &quot;,&quot;;</span>
+<span class="nc" id="L589">      String delimeter = &quot;,&quot;;</span>
 
-<span class="nc bnc" id="L571" title="All 4 branches missed.">      if(getAtrDefaultValue() != null &amp;&amp; getAtrDefaultValue().indexOf(&quot;|&quot;) != -1)</span>
+<span class="nc bnc" id="L591" title="All 4 branches missed.">      if(getAtrDefaultValue() != null &amp;&amp; getAtrDefaultValue().indexOf(&quot;|&quot;) != -1)</span>
       {
-<span class="nc" id="L573">      	delimeter = &quot;|&quot;;	//ak najdem '|', parsujem podla '|'</span>
+<span class="nc" id="L593">      	delimeter = &quot;|&quot;;	//ak najdem '|', parsujem podla '|'</span>
       }
-<span class="nc" id="L575">      StringTokenizer st = new StringTokenizer(getAtrDefaultValue(), delimeter);</span>
-<span class="nc bnc" id="L576" title="All 2 branches missed.">      if (st.countTokens()&gt;1)</span>
+<span class="nc" id="L595">      StringTokenizer st = new StringTokenizer(getAtrDefaultValue(), delimeter);</span>
+<span class="nc bnc" id="L596" title="All 2 branches missed.">      if (st.countTokens()&gt;1)</span>
       {
-<span class="nc" id="L578">         ret = new StringBuilder(&quot;&lt;select name='atr_&quot;+atrId+&quot;'&gt;&quot;);</span>
-<span class="nc" id="L579">         ret.append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L598">         ret = new StringBuilder(&quot;&lt;select name='atr_&quot;+atrId+&quot;'&gt;&quot;);</span>
+<span class="nc" id="L599">         ret.append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
          String tmp, selected;
-<span class="nc bnc" id="L581" title="All 2 branches missed.">         while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L601" title="All 2 branches missed.">         while (st.hasMoreTokens())</span>
          {
-<span class="nc" id="L583">            tmp = st.nextToken();</span>
-<span class="nc" id="L584">            tmp=parse(tmp, lang);</span>
-<span class="nc bnc" id="L585" title="All 2 branches missed.">            if (atrType==AtrDB.TYPE_BOOL)</span>
+<span class="nc" id="L603">            tmp = st.nextToken();</span>
+<span class="nc" id="L604">            tmp=parse(tmp, lang);</span>
+<span class="nc bnc" id="L605" title="All 2 branches missed.">            if (atrType==AtrDB.TYPE_BOOL)</span>
             {
-<span class="nc bnc" id="L587" title="All 4 branches missed.">               if (&quot;true&quot;.equalsIgnoreCase(tmp) || &quot;yes&quot;.equalsIgnoreCase(tmp))</span>
+<span class="nc bnc" id="L607" title="All 4 branches missed.">               if (&quot;true&quot;.equalsIgnoreCase(tmp) || &quot;yes&quot;.equalsIgnoreCase(tmp))</span>
                {
-<span class="nc" id="L589">                  tmp = &quot;true&quot;;</span>
+<span class="nc" id="L609">                  tmp = &quot;true&quot;;</span>
                }
                else
                {
-<span class="nc" id="L593">                  tmp = &quot;false&quot;;</span>
+<span class="nc" id="L613">                  tmp = &quot;false&quot;;</span>
                }
             }
-<span class="nc bnc" id="L596" title="All 2 branches missed.">            if (tmp.compareTo(actualValue)==0)</span>
+<span class="nc bnc" id="L616" title="All 2 branches missed.">            if (tmp.compareTo(actualValue)==0)</span>
             {
-<span class="nc" id="L598">               selected = &quot; selected&quot;;</span>
+<span class="nc" id="L618">               selected = &quot; selected&quot;;</span>
             }
             else
             {
-<span class="nc" id="L602">               selected = &quot;&quot;;</span>
+<span class="nc" id="L622">               selected = &quot;&quot;;</span>
             }
-<span class="nc" id="L604">            ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(tmp)).append('\'').append(selected).append('&gt;').append(tmp).append(&quot;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L624">            ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(tmp)).append('\'').append(selected).append('&gt;').append(tmp).append(&quot;&lt;/option&gt;&quot;);</span>
          }
-<span class="nc" id="L606">         ret.append(&quot;&lt;/select&gt;&quot;);</span>
+<span class="nc" id="L626">         ret.append(&quot;&lt;/select&gt;&quot;);</span>
       }
       else
       {
-<span class="nc bnc" id="L610" title="All 4 branches missed.">      	if (getAtrDefaultValue(lang)!=null &amp;&amp; getAtrDefaultValue(lang).startsWith(&quot;multiline&quot;))</span>
+<span class="nc bnc" id="L630" title="All 4 branches missed.">      	if (getAtrDefaultValue(lang)!=null &amp;&amp; getAtrDefaultValue(lang).startsWith(&quot;multiline&quot;))</span>
          {
-<span class="nc" id="L612">      		int cols=40;</span>
-<span class="nc" id="L613">      		int rows=4;</span>
-<span class="nc" id="L614">      		st = new StringTokenizer(getAtrDefaultValue(lang), &quot;-&quot;);</span>
-<span class="nc bnc" id="L615" title="All 2 branches missed.">      		if (st.countTokens() == 3)</span>
+<span class="nc" id="L632">      		int cols=40;</span>
+<span class="nc" id="L633">      		int rows=4;</span>
+<span class="nc" id="L634">      		st = new StringTokenizer(getAtrDefaultValue(lang), &quot;-&quot;);</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">      		if (st.countTokens() == 3)</span>
       		{
-<span class="nc" id="L617">      			st.nextToken();</span>
+<span class="nc" id="L637">      			st.nextToken();</span>
       			//pocet stlpcov
-<span class="nc" id="L619">      			cols = Tools.getIntValue(st.nextToken(), cols);</span>
-<span class="nc" id="L620">      			rows = Tools.getIntValue(st.nextToken(), rows);</span>
+<span class="nc" id="L639">      			cols = Tools.getIntValue(st.nextToken(), cols);</span>
+<span class="nc" id="L640">      			rows = Tools.getIntValue(st.nextToken(), rows);</span>
       		}
-<span class="nc bnc" id="L622" title="All 2 branches missed.">      		if (docId &lt; 1)</span>
+<span class="nc bnc" id="L642" title="All 2 branches missed.">      		if (docId &lt; 1)</span>
 	         {
-<span class="nc" id="L624">	            actualValue = &quot;&quot;;</span>
+<span class="nc" id="L644">	            actualValue = &quot;&quot;;</span>
 	         }
-<span class="nc" id="L626">	         ret = new StringBuilder(&quot;&lt;textarea name='atr_&quot;).append(atrId).append(&quot;' rows='&quot;).append(rows).append(&quot;' cols='&quot;).append(cols).append(&quot;'&gt;&quot;).append(actualValue).append(&quot;&lt;/textarea&gt;&quot;);</span>
-<span class="nc" id="L627">         }</span>
-<span class="nc bnc" id="L628" title="All 4 branches missed.">      	else if (getAtrDefaultValue(lang)!=null &amp;&amp; getAtrDefaultValue(lang).equals(&quot;autoSelect&quot;))</span>
+<span class="nc" id="L646">	         ret = new StringBuilder(&quot;&lt;textarea name='atr_&quot;).append(atrId).append(&quot;' rows='&quot;).append(rows).append(&quot;' cols='&quot;).append(cols).append(&quot;'&gt;&quot;).append(actualValue).append(&quot;&lt;/textarea&gt;&quot;);</span>
+<span class="nc" id="L647">         }</span>
+<span class="nc bnc" id="L648" title="All 4 branches missed.">      	else if (getAtrDefaultValue(lang)!=null &amp;&amp; getAtrDefaultValue(lang).equals(&quot;autoSelect&quot;))</span>
          {
-<span class="nc" id="L630">         	ret = new StringBuilder(&quot;&lt;select name='atr_&quot;).append(atrId);</span>
-<span class="nc" id="L631">         	ret.append(&quot;' onChange='htmlSelectTagAddOption(this)'&gt;&quot;).append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L650">         	ret = new StringBuilder(&quot;&lt;select name='atr_&quot;).append(atrId);</span>
+<span class="nc" id="L651">         	ret.append(&quot;' onChange='htmlSelectTagAddOption(this)'&gt;&quot;).append(&quot;&lt;option value=''&gt;&lt;/option&gt;&quot;);</span>
 
             //ziskaj zoznam hodnot tohto atributu z DB
-<span class="nc" id="L634">            Connection db_conn = null;</span>
-<span class="nc" id="L635">				PreparedStatement ps = null;</span>
-<span class="nc" id="L636">				ResultSet rs = null;</span>
+<span class="nc" id="L654">            Connection db_conn = null;</span>
+<span class="nc" id="L655">				PreparedStatement ps = null;</span>
+<span class="nc" id="L656">				ResultSet rs = null;</span>
 				try
 				{
-<span class="nc" id="L639">					db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L659">					db_conn = DBPool.getConnection();</span>
 					//nemozeme pouzit DISTINCT, pretoze MySQL nie je case sensitive
-<span class="nc" id="L641">					ps = db_conn.prepareStatement(&quot;SELECT value_string FROM doc_atr WHERE atr_id=? ORDER BY value_string&quot;);</span>
-<span class="nc" id="L642">					ps.setInt(1, getAtrId());</span>
-<span class="nc" id="L643">					rs = ps.executeQuery();</span>
+<span class="nc" id="L661">					ps = db_conn.prepareStatement(&quot;SELECT value_string FROM doc_atr WHERE atr_id=? ORDER BY value_string&quot;);</span>
+<span class="nc" id="L662">					ps.setInt(1, getAtrId());</span>
+<span class="nc" id="L663">					rs = ps.executeQuery();</span>
 					String value, selected;
-<span class="nc" id="L645">					Map&lt;String, String&gt; values = new Hashtable&lt;&gt;();</span>
-<span class="nc bnc" id="L646" title="All 2 branches missed.">					while (rs.next())</span>
+<span class="nc" id="L665">					Map&lt;String, String&gt; values = new Hashtable&lt;&gt;();</span>
+<span class="nc bnc" id="L666" title="All 2 branches missed.">					while (rs.next())</span>
 					{
-<span class="nc" id="L648">						value = DB.getDbString(rs, &quot;value_string&quot;);</span>
-<span class="nc bnc" id="L649" title="All 2 branches missed.">						if (values.get(value)!=null) continue;</span>
-<span class="nc" id="L650">						values.put(value, value);</span>
-<span class="nc bnc" id="L651" title="All 2 branches missed.">						if (value.compareTo(actualValue)==0)</span>
+<span class="nc" id="L668">						value = DB.getDbString(rs, &quot;value_string&quot;);</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">						if (values.get(value)!=null) continue;</span>
+<span class="nc" id="L670">						values.put(value, value);</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">						if (value.compareTo(actualValue)==0)</span>
 		            {
-<span class="nc" id="L653">		               selected = &quot; selected&quot;;</span>
+<span class="nc" id="L673">		               selected = &quot; selected&quot;;</span>
 		            }
 		            else
 		            {
-<span class="nc" id="L657">		               selected = &quot;&quot;;</span>
+<span class="nc" id="L677">		               selected = &quot;&quot;;</span>
 		            }
-<span class="nc" id="L659">						ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(value)).append('\'').append(selected).append('&gt;').append(value).append(&quot;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L679">						ret.append(&quot;&lt;option value='&quot;).append(ResponseUtils.filter(value)).append('\'').append(selected).append('&gt;').append(value).append(&quot;&lt;/option&gt;&quot;);</span>
 					}
-<span class="nc" id="L661">					rs.close();</span>
-<span class="nc" id="L662">					ps.close();</span>
-<span class="nc" id="L663">					db_conn.close();</span>
-<span class="nc" id="L664">					rs = null;</span>
-<span class="nc" id="L665">					ps = null;</span>
-<span class="nc" id="L666">					db_conn = null;</span>
+<span class="nc" id="L681">					rs.close();</span>
+<span class="nc" id="L682">					ps.close();</span>
+<span class="nc" id="L683">					db_conn.close();</span>
+<span class="nc" id="L684">					rs = null;</span>
+<span class="nc" id="L685">					ps = null;</span>
+<span class="nc" id="L686">					db_conn = null;</span>
 
-<span class="nc" id="L668">					ret.append(&quot;&lt;option value='&quot;).append(SelectTag.NEW_OPTION_VALUE).append(&quot;'&gt;+++&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L688">					ret.append(&quot;&lt;option value='&quot;).append(SelectTag.NEW_OPTION_VALUE).append(&quot;'&gt;+++&lt;/option&gt;&quot;);</span>
 	         }
-<span class="nc" id="L670">				catch (Exception ex)</span>
+<span class="nc" id="L690">				catch (Exception ex)</span>
 				{
-<span class="nc" id="L672">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L692">					sk.iway.iwcm.Logger.error(ex);</span>
 				}
 				finally
 				{
 					try
 					{
-<span class="nc bnc" id="L678" title="All 2 branches missed.">						if (rs != null)</span>
-<span class="nc" id="L679">							rs.close();</span>
-<span class="nc bnc" id="L680" title="All 2 branches missed.">						if (ps != null)</span>
-<span class="nc" id="L681">							ps.close();</span>
-<span class="nc bnc" id="L682" title="All 2 branches missed.">						if (db_conn != null)</span>
-<span class="nc" id="L683">							db_conn.close();</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">						if (rs != null)</span>
+<span class="nc" id="L699">							rs.close();</span>
+<span class="nc bnc" id="L700" title="All 2 branches missed.">						if (ps != null)</span>
+<span class="nc" id="L701">							ps.close();</span>
+<span class="nc bnc" id="L702" title="All 2 branches missed.">						if (db_conn != null)</span>
+<span class="nc" id="L703">							db_conn.close();</span>
 					}
-<span class="nc" id="L685">					catch (Exception ex2)</span>
+<span class="nc" id="L705">					catch (Exception ex2)</span>
 					{
-<span class="nc" id="L687">						sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L688">					}</span>
+<span class="nc" id="L707">						sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L708">					}</span>
 				}
 
             //ret += &quot;&lt;option value='&quot;+tmp+&quot;'&quot;+selected+&quot;&gt;&quot;+tmp+&quot;&lt;/option&gt;&quot;;
-<span class="nc" id="L692">				ret.append(&quot;&lt;/select&gt;&quot;);</span>
-<span class="nc" id="L693">         }</span>
+<span class="nc" id="L712">				ret.append(&quot;&lt;/select&gt;&quot;);</span>
+<span class="nc" id="L713">         }</span>
       	else
       	{
-<span class="nc bnc" id="L696" title="All 2 branches missed.">	         if (docId &lt; 1)</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">	         if (docId &lt; 1)</span>
 	         {
-<span class="nc" id="L698">	            actualValue = getAtrDefaultValue(lang);</span>
+<span class="nc" id="L718">	            actualValue = getAtrDefaultValue(lang);</span>
 	         }
-<span class="nc bnc" id="L700" title="All 2 branches missed.">	         if (getAtrType()==AtrDB.TYPE_BOOL)</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">	         if (getAtrType()==AtrDB.TYPE_BOOL)</span>
 	         {
-<span class="nc" id="L702">	         	ret = new StringBuilder(&quot;&lt;input type='radio' name='atr_&quot;).append(atrId).append(&quot;' value='false'&quot;);</span>
-<span class="nc bnc" id="L703" title="All 2 branches missed.">	         	if (isValueBool()==false) ret.append(&quot; checked='checked'&quot;);</span>
-<span class="nc" id="L704">	         	ret.append(&quot;&gt; &quot;).append(getFalseValue());</span>
-<span class="nc" id="L705">	         	ret.append(&quot;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L706">	         	ret.append(&quot;&lt;input type='radio' name='atr_&quot;).append(atrId+&quot;' value='true'&quot;);</span>
-<span class="nc bnc" id="L707" title="All 2 branches missed.">	         	if (isValueBool()==true) ret.append(&quot; checked='checked'&quot;);</span>
-<span class="nc" id="L708">	         	ret.append(&quot;&gt; &quot;).append(getTrueValue());</span>
+<span class="nc" id="L722">	         	ret = new StringBuilder(&quot;&lt;input type='radio' name='atr_&quot;).append(atrId).append(&quot;' value='false'&quot;);</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">	         	if (isValueBool()==false) ret.append(&quot; checked='checked'&quot;);</span>
+<span class="nc" id="L724">	         	ret.append(&quot;&gt; &quot;).append(getFalseValue());</span>
+<span class="nc" id="L725">	         	ret.append(&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L726">	         	ret.append(&quot;&lt;input type='radio' name='atr_&quot;).append(atrId+&quot;' value='true'&quot;);</span>
+<span class="nc bnc" id="L727" title="All 2 branches missed.">	         	if (isValueBool()==true) ret.append(&quot; checked='checked'&quot;);</span>
+<span class="nc" id="L728">	         	ret.append(&quot;&gt; &quot;).append(getTrueValue());</span>
 
 	         }
 	         else
 	         {
-<span class="nc" id="L713">		         ret = new StringBuilder(&quot;&lt;input name='atr_&quot;).append(atrId+&quot;'&quot;);</span>
-<span class="nc bnc" id="L714" title="All 2 branches missed.">		         if (getAtrType()==AtrDB.TYPE_INT) ret.append(&quot; onKeyUp='inputCheckNumberKey(this);' onBlur='inputCheckNumber(this);'&quot;);</span>
-<span class="nc bnc" id="L715" title="All 2 branches missed.">		         else if (getAtrType()==AtrDB.TYPE_DOUBLE) ret.append(&quot; onKeyUp='inputCheckNumberKeyFloat(this);' onBlur='inputCheckNumberKeyFloat(this);'&quot;);</span>
-<span class="nc" id="L716">		         ret.append(&quot; value='&quot;).append(ResponseUtils.filter(actualValue)).append(&quot;'&gt;&quot;);</span>
+<span class="nc" id="L733">		         ret = new StringBuilder(&quot;&lt;input name='atr_&quot;).append(atrId+&quot;'&quot;);</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">		         if (getAtrType()==AtrDB.TYPE_INT) ret.append(&quot; onKeyUp='inputCheckNumberKey(this);' onBlur='inputCheckNumber(this);'&quot;);</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">		         else if (getAtrType()==AtrDB.TYPE_DOUBLE) ret.append(&quot; onKeyUp='inputCheckNumberKeyFloat(this);' onBlur='inputCheckNumberKeyFloat(this);'&quot;);</span>
+<span class="nc" id="L736">		         ret.append(&quot; value='&quot;).append(ResponseUtils.filter(actualValue)).append(&quot;'&gt;&quot;);</span>
 	         }
       	}
       }
-<span class="nc" id="L720">      return (ret.toString());</span>
+<span class="nc" id="L740">      return (ret.toString());</span>
    }
 
    public static  String parse(String str, String lang)
 	{
-<span class="nc bnc" id="L725" title="All 2 branches missed.">		if (str == null)</span>
-<span class="nc" id="L726">			return null;</span>
-<span class="nc" id="L727">		String[] tokens = str.split(&quot;\\|&quot;);</span>
-<span class="nc bnc" id="L728" title="All 4 branches missed.">		if (tokens != null &amp;&amp; tokens.length &gt; 1)</span>
+<span class="nc bnc" id="L745" title="All 2 branches missed.">		if (str == null)</span>
+<span class="nc" id="L746">			return null;</span>
+<span class="nc" id="L747">		String[] tokens = str.split(&quot;\\|&quot;);</span>
+<span class="nc bnc" id="L748" title="All 4 branches missed.">		if (tokens != null &amp;&amp; tokens.length &gt; 1)</span>
 		{
-<span class="nc bnc" id="L730" title="All 2 branches missed.">			for (String s : tokens)</span>
+<span class="nc bnc" id="L750" title="All 2 branches missed.">			for (String s : tokens)</span>
 			{
-<span class="nc bnc" id="L732" title="All 2 branches missed.">				if (s.indexOf(':') != -1)</span>
+<span class="nc bnc" id="L752" title="All 2 branches missed.">				if (s.indexOf(':') != -1)</span>
 				{
-<span class="nc bnc" id="L734" title="All 2 branches missed.">					if (s.substring(0, s.indexOf(':')).equalsIgnoreCase(lang))</span>
+<span class="nc bnc" id="L754" title="All 2 branches missed.">					if (s.substring(0, s.indexOf(':')).equalsIgnoreCase(lang))</span>
 					{
-<span class="nc" id="L736">						return s.substring(s.indexOf(':') + 1, s.length());</span>
+<span class="nc" id="L756">						return s.substring(s.indexOf(':') + 1, s.length());</span>
 					}
 				}
 			}
@@ -741,14 +761,14 @@ import sk.iway.iwcm.tags.SelectTag;
 		}
 		else
 		{
-<span class="nc bnc" id="L744" title="All 4 branches missed.">			if (tokens!=null &amp;&amp; tokens.length==1){</span>
-<span class="nc bnc" id="L745" title="All 2 branches missed.">				if (tokens[0].indexOf(':') != -1){</span>
-<span class="nc" id="L746">					return tokens[0].substring(tokens[0].indexOf(':') + 1, tokens[0].length());</span>
+<span class="nc bnc" id="L764" title="All 4 branches missed.">			if (tokens!=null &amp;&amp; tokens.length==1){</span>
+<span class="nc bnc" id="L765" title="All 2 branches missed.">				if (tokens[0].indexOf(':') != -1){</span>
+<span class="nc" id="L766">					return tokens[0].substring(tokens[0].indexOf(':') + 1, tokens[0].length());</span>
 				}
 			}
-<span class="nc" id="L749">			return str;</span>
+<span class="nc" id="L769">			return str;</span>
 		}
-<span class="nc" id="L751">		return str;</span>
+<span class="nc" id="L771">		return str;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UnsubscribeApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.dmail</a> &gt; <span class="el_source">UnsubscribeApp.java</span></div><h1>UnsubscribeApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.dmail;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.dmail.jpa.UnsubscribedEntity;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+import sk.iway.iwcm.users.UsersDB;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.dmail.UnsubscribeApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.dmail.unsubscribe.title&quot;,
+    descKey = &quot;components.dmail.unsubscribe.desc&quot;,
+    itemKey = &quot;cmp_dmail&quot;,
+    variant = &quot;unsubscribe&quot;,
+    imagePath = &quot;/components/dmail/editoricon.png&quot;,
+    galleryImages = &quot;/components/dmail/&quot;,
+    componentPath = &quot;/components/dmail/unsubscribe.jsp&quot;
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = &quot;basic&quot;, title = &quot;components.universalComponentDialog.title&quot;, selected = true),
+    @DataTableTab(id = &quot;unsubscribed&quot;, title = &quot;components.admin_unsubscribed_email.unsubscribed_email&quot;)
+})
+@Getter
+@Setter
+<span class="fc" id="L40">public class UnsubscribeApp extends WebjetComponentAbstract {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.dmail.camp.sender_email&quot;
+    )
+    private String senderEmail;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.dmail.camp.sender_name&quot;
+    )
+    private String senderName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.dmail.unsubscribe.confirmUnsubscribe&quot;
+    )
+    private Boolean confirmUnsubscribe;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        tab = &quot;basic&quot;,
+        title = &quot;components.dmail.unsubscribe.confirmUnsubscribeText.title&quot;,
+        editor = @DataTableColumnEditor(
+            message = &quot;components.dmail.unsubscribe.confirmUnsubscribeText&quot;
+        )
+    )
+    private String confirmUnsubscribeText;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATATABLE,
+        tab = &quot;unsubscribed&quot;,
+        title = &quot;&amp;nbsp;&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/dmail/unsubscribed&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.dmail.jpa.UnsubscribedEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;true&quot;)
+            }
+        )}
+    )
+    private List&lt;UnsubscribedEntity&gt; unsubscribedEmails;
+
+    @Override
+    public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L89">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if (user != null) {</span>
+<span class="fc" id="L91">            senderEmail = user.getEmail();</span>
+<span class="fc" id="L92">            senderName = user.getFullName();</span>
+        }
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (confirmUnsubscribeText == null) {</span>
+<span class="fc" id="L95">            confirmUnsubscribeText = &quot;&lt;p&gt;&quot;+Prop.getInstance(request).getText(&quot;components.dmail.unsubscribe.confirmUnsubscribeText&quot;)+&quot;&lt;/p&gt;&quot;;</span>
+        }
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (confirmUnsubscribe == null) {</span>
+<span class="fc" id="L98">            confirmUnsubscribe = true;</span>
+        }
+<span class="fc" id="L100">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

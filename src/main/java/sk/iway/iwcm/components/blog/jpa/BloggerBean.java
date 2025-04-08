@@ -16,7 +16,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 public class BloggerBean {
 
     @Id
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @DataTableColumn(

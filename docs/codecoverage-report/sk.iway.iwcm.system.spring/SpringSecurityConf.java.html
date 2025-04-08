@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringSecurityConf.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">SpringSecurityConf.java</span></div><h1>SpringSecurityConf.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringSecurityConf.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">SpringSecurityConf.java</span></div><h1>SpringSecurityConf.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,40 +18,50 @@ import sk.iway.iwcm.Tools;
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled=true)
 <span class="fc" id="L19">public class SpringSecurityConf {</span>
 
+<span class="fc" id="L21">	private static boolean basicAuthEnabled = false;</span>
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-<span class="fc" id="L23">        Logger.info(SpringSecurityConf.class, &quot;SpringSecurityConf - configure filterChain&quot;);</span>
+<span class="fc" id="L25">        Logger.info(SpringSecurityConf.class, &quot;SpringSecurityConf - configure filterChain&quot;);</span>
+<span class="fc" id="L26">		SpringAppInitializer.dtDiff(&quot;configureSecurity START&quot;);</span>
 
-<span class="fc" id="L25">        Logger.debug(SpringSecurityConf.class, &quot;SpringSecurityConf - configure auth provider&quot;);</span>
-<span class="fc" id="L26">        http.authenticationProvider(new WebjetAuthentificationProvider());</span>
+<span class="fc" id="L28">        Logger.debug(SpringSecurityConf.class, &quot;SpringSecurityConf - configure auth provider&quot;);</span>
+<span class="fc" id="L29">        http.authenticationProvider(new WebjetAuthentificationProvider());</span>
 
 		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
-<span class="fc" id="L29">		http.httpBasic();</span>
+<span class="fc" id="L32">		String springSecurityAllowedAuths = Constants.getString(&quot;springSecurityAllowedAuths&quot;);</span>
+<span class="pc bpc" id="L33" title="2 of 4 branches missed.">		if (springSecurityAllowedAuths != null &amp;&amp; springSecurityAllowedAuths.contains(&quot;basic&quot;)) {</span>
+<span class="nc" id="L34">			Logger.info(SpringSecurityConf.class, &quot;SpringSecurityConf - configure http - httpBasic&quot;);</span>
+<span class="nc" id="L35">			basicAuthEnabled = true;</span>
+<span class="nc" id="L36">			http.httpBasic();</span>
+		}
 
 		//toto nastavuje WebJET - https://docs.spring.io/spring-security/site/docs/4.2.x/reference/html/headers.html
-<span class="fc" id="L32">        http.headers().xssProtection().disable();</span>
-<span class="fc" id="L33">		http.headers().frameOptions().disable();</span>
-<span class="fc" id="L34">		http.headers().contentTypeOptions().disable();</span>
-<span class="fc" id="L35">		http.headers().httpStrictTransportSecurity().disable();</span>
-<span class="fc" id="L36">		http.csrf().disable();</span>
+<span class="fc" id="L40">        http.headers().xssProtection().disable();</span>
+<span class="fc" id="L41">		http.headers().frameOptions().disable();</span>
+<span class="fc" id="L42">		http.headers().contentTypeOptions().disable();</span>
+<span class="fc" id="L43">		http.headers().httpStrictTransportSecurity().disable();</span>
+<span class="fc" id="L44">		http.csrf().disable();</span>
 
 		// configure security from BaseSpringConfig
-<span class="fc" id="L39">		configureSecurity(http, &quot;sk.iway.iwcm.system.spring.BaseSpringConfig&quot;);</span>
+<span class="fc" id="L47">		configureSecurity(http, &quot;sk.iway.iwcm.system.spring.BaseSpringConfig&quot;);</span>
 
-<span class="pc bpc" id="L41" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getInstallName()))</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getInstallName()))</span>
 		{
 			//WebJET 9
-<span class="fc" id="L44">			configureSecurity(http, &quot;sk.iway.webjet.v9.V9SpringConfig&quot;);</span>
+<span class="fc" id="L52">			configureSecurity(http, &quot;sk.iway.webjet.v9.V9SpringConfig&quot;);</span>
 			//custom InstallName config
-<span class="fc" id="L46">			configureSecurity(http, &quot;sk.iway.&quot; + Constants.getInstallName() + &quot;.SpringConfig&quot;);</span>
+<span class="fc" id="L54">			configureSecurity(http, &quot;sk.iway.&quot; + Constants.getInstallName() + &quot;.SpringConfig&quot;);</span>
 		}
 
-<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getLogInstallName()))</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getLogInstallName()))</span>
 		{
-<span class="nc" id="L51">			configureSecurity(http, &quot;sk.iway.&quot; + Constants.getLogInstallName() + &quot;.SpringConfig&quot;);</span>
+<span class="nc" id="L59">			configureSecurity(http, &quot;sk.iway.&quot; + Constants.getLogInstallName() + &quot;.SpringConfig&quot;);</span>
 		}
 
-<span class="fc" id="L54">        return http.build();</span>
+<span class="fc" id="L62">        SecurityFilterChain chain = http.build();</span>
+<span class="fc" id="L63">		SpringAppInitializer.dtDiff(&quot;configureSecurity END&quot;);</span>
+<span class="fc" id="L64">		return chain;</span>
     }
 
     @Bean
@@ -59,31 +69,41 @@ import sk.iway.iwcm.Tools;
 		//StrictHttpFirewall firewall = new StrictHttpFirewall();
 		//firewall.setAllowUrlEncodedSlash(true);
 
-<span class="fc" id="L62">		Logger.debug(SpringSecurityConf.class, &quot;configure web security, setting default firewall&quot;);</span>
+<span class="fc" id="L72">		Logger.debug(SpringSecurityConf.class, &quot;configure web security, setting default firewall&quot;);</span>
 
 		//pouzivame defaultfirewall aby nam spring nezastavil URL vo formate /sk//, to spracuje az nasledne PathFilter, ktory to presmeruje na /sk/
-<span class="fc" id="L65">		DefaultHttpFirewall firewall = new DefaultHttpFirewall();</span>
-<span class="fc" id="L66">		return firewall;</span>
+<span class="fc" id="L75">		DefaultHttpFirewall firewall = new DefaultHttpFirewall();</span>
+<span class="fc" id="L76">		return firewall;</span>
 	}
 
     protected void configureSecurity(HttpSecurity http, String className)
 	{
-<span class="fc" id="L71">		Logger.info(SpringSecurityConf.class, &quot;configure - SpringAppInitializer - start - &quot; + className);</span>
+<span class="fc" id="L81">		Logger.info(SpringSecurityConf.class, &quot;configure - SpringSecurityConf - start - &quot; + className);</span>
 
 		try
 		{
-<span class="fc" id="L75">			Class&lt;?&gt; configClass = Class.forName(className);</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">			if (ConfigurableSecurity.class.isAssignableFrom(configClass))</span>
+<span class="fc" id="L85">			Class&lt;?&gt; configClass = Class.forName(className);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">			if (ConfigurableSecurity.class.isAssignableFrom(configClass))</span>
 			{
-<span class="fc" id="L78">				ConfigurableSecurity cs = (ConfigurableSecurity) configClass.getDeclaredConstructor().newInstance();</span>
-<span class="fc" id="L79">				cs.configureSecurity(http);</span>
+<span class="fc" id="L88">				ConfigurableSecurity cs = (ConfigurableSecurity) configClass.getDeclaredConstructor().newInstance();</span>
+<span class="fc" id="L89">				cs.configureSecurity(http);</span>
 			}
-<span class="nc" id="L81">		} catch (Exception e)</span>
+<span class="nc" id="L91">		} catch (Exception e)</span>
 		{
 			// config class asi neexistuje.
-<span class="fc" id="L84">		}</span>
+<span class="fc" id="L94">		}</span>
 
-<span class="fc" id="L86">		Logger.info(SpringSecurityConf.class, &quot;configure - SpringAppInitializer - end - &quot; + className);</span>
-<span class="fc" id="L87">	}</span>
+<span class="fc" id="L96">		Logger.info(SpringSecurityConf.class, &quot;configure - SpringSecurityConf - end - &quot; + className);</span>
+<span class="fc" id="L97">	}</span>
+
+	/**
+	 * Returns true if Basic Auth is enabled, it is initilized on startup,
+	 * so tests can't rely on springSecurityAllowedAuths conf value
+	 * @return
+	 */
+	public static boolean isBasicAuthEnabled()
+	{
+<span class="fc" id="L106">		return basicAuthEnabled;</span>
+	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

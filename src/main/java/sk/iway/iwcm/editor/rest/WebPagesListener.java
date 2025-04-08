@@ -85,6 +85,16 @@ public class WebPagesListener {
                 //ak je zadany docid ako parameter over/nastav korektne domenu
                 int docId = Tools.getIntValue(event.getSource().getRequest().getParameter("docid"), -1);
                 int groupId = Tools.getIntValue(event.getSource().getRequest().getParameter("groupid"), -1);
+
+                if (groupId < 1 && Integer.toString(Constants.getInt("systemPagesMyPages")).equals(user.getEditableGroups()) && Tools.isNotEmpty(user.getEditablePages())) {
+                    //use first group
+                    List<DocDetails> myPages = DocDB.getMyPages(user);
+                    if (myPages.size() > 0) {
+                        groupId = myPages.get(0).getGroupId();
+                        request.getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
+                    }
+                }
+
                 if (docId > 0 && EditorDB.isPageEditable(user, docId)) {
                     //DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);
                     Optional<DocDetails> doc = docRepo.findById(Long.valueOf(docId));
@@ -149,11 +159,13 @@ public class WebPagesListener {
                     //use first group as rootGroupDetails
                     List<GroupDetails> onlyRootGroupList = new ArrayList<>();
                     if (lastGroup != null) onlyRootGroupList.add(lastGroup); //user doesnt' have edit rights to group, so it's null
-                    else onlyRootGroupList.add(((GroupsJsTreeItem)rootGroups.get(0)).getGroup());
+                    else if (rootGroups.get(0) instanceof GroupsJsTreeItem) onlyRootGroupList.add(((GroupsJsTreeItem)rootGroups.get(0)).getGroup());
 
                     rootGroupDetails = new DatatablePageImpl<>(onlyRootGroupList);
-                    WebpagesService ws = new WebpagesService(onlyRootGroupList.get(0).getGroupId(), user, Prop.getInstance(request), request);
-                    GroupsRestController.addOptions(rootGroupDetails, ws, user, onlyRootGroupList.get(0), request);
+                    if (onlyRootGroupList.isEmpty()==false) {
+                        WebpagesService ws = new WebpagesService(onlyRootGroupList.get(0).getGroupId(), user, Prop.getInstance(request), request);
+                        GroupsRestController.addOptions(rootGroupDetails, ws, user, onlyRootGroupList.get(0), request);
+                    }
                 }
 
                 groupsInitialJson = JsonTools.objectToJSON(rootGroupDetails);

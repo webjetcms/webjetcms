@@ -30,12 +30,9 @@ public class SearchService {
 
     /**
      * Search for term in all webpages
-     * @param searchText search term
-     * @param searchType search type (docs, files)
-     * @param rootGroupId root group id
+     * @param params search term
      * @param user user
-     * @param pageable pageable
-     * @return page of documents
+     * @param predicates
      */
     public static void getWebPagesData(Map<String, String> params, Identity user, List<Predicate> predicates, CriteriaBuilder builder, Root<DocDetails> root) {
         String searchText = Tools.getStringValue(params.get("searchText"), null);

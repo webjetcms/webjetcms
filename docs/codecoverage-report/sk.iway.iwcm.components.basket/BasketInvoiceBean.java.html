@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoiceBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketInvoiceBean.java</span></div><h1>BasketInvoiceBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoiceBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">BasketInvoiceBean.java</span></div><h1>BasketInvoiceBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -160,7 +160,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 	 */
 	public double getTotalPriceVat()
 	{
-<span class="nc" id="L163">		return(InvoiceDB.getTotalPriceVat(getBasketItems()));</span>
+<span class="fc" id="L163">		return(InvoiceDB.getTotalPriceVat(getBasketItems()));</span>
 	}
 
 	public double getTotalPriceVatIn(String currency)
@@ -204,15 +204,15 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 	 */
 	public String getAuthorizationToken()
 	{
-<span class="nc" id="L207">		return getAuthorizationToken(getBasketInvoiceId());</span>
+<span class="fc" id="L207">		return getAuthorizationToken(getBasketInvoiceId());</span>
 	}
 
 	public static String getAuthorizationToken(int invoiceId)
 	{
-<span class="nc" id="L212">		String rawKey = new StringBuilder().append(&quot;INV&quot;).append(invoiceId).append(Constants.getInstallName()).toString();</span>
+<span class="fc" id="L212">		String rawKey = new StringBuilder().append(&quot;INV&quot;).append(invoiceId).append(Constants.getInstallName()).toString();</span>
 		try
 		{
-<span class="nc" id="L215">			return new Password().encrypt(rawKey);</span>
+<span class="fc" id="L215">			return new Password().encrypt(rawKey);</span>
 		}
 <span class="nc" id="L217">		catch (Exception e)</span>
 		{
@@ -230,12 +230,12 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public List&lt;BasketItemBean&gt; getBasketItems()
 	{
-<span class="nc" id="L233">		return basketItems;</span>
+<span class="fc" id="L233">		return basketItems;</span>
 	}
 	public void setBasketItems(List&lt;BasketItemBean&gt; basketItems)
 	{
-<span class="nc" id="L237">		this.basketItems = basketItems;</span>
-<span class="nc" id="L238">	}</span>
+<span class="fc" id="L237">		this.basketItems = basketItems;</span>
+<span class="fc" id="L238">	}</span>
 	public void setBasketInvoiceId(int basketInvoiceId)
 	{
 <span class="nc" id="L241">		this.basketInvoiceId = basketInvoiceId;</span>
@@ -245,7 +245,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public int getBasketInvoiceId()
 	{
-<span class="nc" id="L248">		return basketInvoiceId;</span>
+<span class="fc" id="L248">		return basketInvoiceId;</span>
 	}
 
 	public Long getBrowserId()
@@ -255,8 +255,8 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public void setBrowserId(Long browserId)
 	{
-<span class="nc" id="L258">		this.browserId = browserId;</span>
-<span class="nc" id="L259">	}</span>
+<span class="fc" id="L258">		this.browserId = browserId;</span>
+<span class="fc" id="L259">	}</span>
 
 	public int getLoggedUserId()
 	{
@@ -265,28 +265,28 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public void setLoggedUserId(int loggedUserId)
 	{
-<span class="nc" id="L268">		this.loggedUserId = loggedUserId;</span>
-<span class="nc" id="L269">	}</span>
+<span class="fc" id="L268">		this.loggedUserId = loggedUserId;</span>
+<span class="fc" id="L269">	}</span>
 
 	public Date getCreateDate()
 	{
-<span class="nc bnc" id="L273" title="All 2 branches missed.">		return createDate == null ? null : (Date) createDate.clone();</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">		return createDate == null ? null : (Date) createDate.clone();</span>
 	}
 
 	public void setCreateDate(Date createDate)
 	{
-<span class="nc bnc" id="L278" title="All 2 branches missed.">		this.createDate = createDate == null ? null : (Date) createDate.clone();</span>
-<span class="nc" id="L279">	}</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">		this.createDate = createDate == null ? null : (Date) createDate.clone();</span>
+<span class="fc" id="L279">	}</span>
 
 	public Integer getStatusId()
 	{
-<span class="nc" id="L283">		return statusId;</span>
+<span class="fc" id="L283">		return statusId;</span>
 	}
 
 	public void setStatusId(Integer statusId)
 	{
-<span class="nc" id="L288">		this.statusId = statusId;</span>
-<span class="nc" id="L289">	}</span>
+<span class="fc" id="L288">		this.statusId = statusId;</span>
+<span class="fc" id="L289">	}</span>
 
 	public String getDeliveryCompany()
 	{
@@ -300,61 +300,61 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public String getDeliveryName()
 	{
-<span class="nc" id="L303">		return deliveryName;</span>
+<span class="fc" id="L303">		return deliveryName;</span>
 	}
 
 	public void setDeliveryName(String deliveryName)
 	{
-<span class="nc" id="L308">		this.deliveryName = deliveryName;</span>
-<span class="nc" id="L309">	}</span>
+<span class="fc" id="L308">		this.deliveryName = deliveryName;</span>
+<span class="fc" id="L309">	}</span>
 
 	public String getDeliverySurName() {
-<span class="nc" id="L312">		return deliverySurName;</span>
+<span class="fc" id="L312">		return deliverySurName;</span>
 	}
 
 	public void setDeliverySurName(String deliverySurName) {
-<span class="nc" id="L316">		this.deliverySurName = deliverySurName;</span>
-<span class="nc" id="L317">	}</span>
+<span class="fc" id="L316">		this.deliverySurName = deliverySurName;</span>
+<span class="fc" id="L317">	}</span>
 
 	public String getDeliveryStreet()
 	{
-<span class="nc" id="L321">		return deliveryStreet;</span>
+<span class="fc" id="L321">		return deliveryStreet;</span>
 	}
 
 	public void setDeliveryStreet(String deliveryStreet)
 	{
-<span class="nc" id="L326">		this.deliveryStreet = deliveryStreet;</span>
-<span class="nc" id="L327">	}</span>
+<span class="fc" id="L326">		this.deliveryStreet = deliveryStreet;</span>
+<span class="fc" id="L327">	}</span>
 
 	public String getDeliveryCity()
 	{
-<span class="nc" id="L331">		return deliveryCity;</span>
+<span class="fc" id="L331">		return deliveryCity;</span>
 	}
 
 	public void setDeliveryCity(String deliveryCity)
 	{
-<span class="nc" id="L336">		this.deliveryCity = deliveryCity;</span>
-<span class="nc" id="L337">	}</span>
+<span class="fc" id="L336">		this.deliveryCity = deliveryCity;</span>
+<span class="fc" id="L337">	}</span>
 
 	public String getDeliveryZip()
 	{
-<span class="nc" id="L341">		return deliveryZip;</span>
+<span class="fc" id="L341">		return deliveryZip;</span>
 	}
 
 	public void setDeliveryZip(String deliveryZip)
 	{
-<span class="nc" id="L346">		this.deliveryZip = deliveryZip;</span>
-<span class="nc" id="L347">	}</span>
+<span class="fc" id="L346">		this.deliveryZip = deliveryZip;</span>
+<span class="fc" id="L347">	}</span>
 
 	public String getDeliveryCountry()
 	{
-<span class="nc" id="L351">		return deliveryCountry;</span>
+<span class="fc" id="L351">		return deliveryCountry;</span>
 	}
 
 	public void setDeliveryCountry(String deliveryCountry)
 	{
-<span class="nc" id="L356">		this.deliveryCountry = deliveryCountry;</span>
-<span class="nc" id="L357">	}</span>
+<span class="fc" id="L356">		this.deliveryCountry = deliveryCountry;</span>
+<span class="fc" id="L357">	}</span>
 
 	public String getInternalInvoiceId()
 	{
@@ -368,27 +368,27 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public String getUserNote()
 	{
-<span class="nc" id="L371">		return userNote;</span>
+<span class="fc" id="L371">		return userNote;</span>
 	}
 
 	public void setUserNote(String userNote)
 	{
-<span class="nc" id="L376">		this.userNote = userNote;</span>
-<span class="nc" id="L377">	}</span>
+<span class="fc" id="L376">		this.userNote = userNote;</span>
+<span class="fc" id="L377">	}</span>
 
 	public String getUserLng()
 	{
-<span class="nc" id="L381">		return userLng;</span>
+<span class="fc" id="L381">		return userLng;</span>
 	}
 
 	public void setUserLng(String userLng)
 	{
-<span class="nc" id="L386">		this.userLng = userLng;</span>
-<span class="nc" id="L387">	}</span>
+<span class="fc" id="L386">		this.userLng = userLng;</span>
+<span class="fc" id="L387">	}</span>
 
 	public String getPaymentMethod()
 	{
-<span class="nc" id="L391">		return paymentMethod;</span>
+<span class="fc" id="L391">		return paymentMethod;</span>
 	}
 
 	public void setPaymentMethod(String paymentMethod)
@@ -398,13 +398,13 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public String getDeliveryMethod()
 	{
-<span class="nc" id="L401">		return deliveryMethod;</span>
+<span class="fc" id="L401">		return deliveryMethod;</span>
 	}
 
 	public void setDeliveryMethod(String deliveryMethod)
 	{
-<span class="nc" id="L406">		this.deliveryMethod = deliveryMethod;</span>
-<span class="nc" id="L407">	}</span>
+<span class="fc" id="L406">		this.deliveryMethod = deliveryMethod;</span>
+<span class="fc" id="L407">	}</span>
 
 	public String getContactTitle()
 	{
@@ -438,33 +438,33 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public String getContactEmail()
 	{
-<span class="nc" id="L441">		return contactEmail;</span>
+<span class="fc" id="L441">		return contactEmail;</span>
 	}
 
 	public void setContactEmail(String contactEmail)
 	{
-<span class="nc" id="L446">		this.contactEmail = contactEmail;</span>
-<span class="nc" id="L447">	}</span>
+<span class="fc" id="L446">		this.contactEmail = contactEmail;</span>
+<span class="fc" id="L447">	}</span>
 
 	public String getContactPhone()
 	{
-<span class="nc" id="L451">		return contactPhone;</span>
+<span class="fc" id="L451">		return contactPhone;</span>
 	}
 
 	public void setContactPhone(String contactPhone)
 	{
-<span class="nc" id="L456">		this.contactPhone = contactPhone;</span>
-<span class="nc" id="L457">	}</span>
+<span class="fc" id="L456">		this.contactPhone = contactPhone;</span>
+<span class="fc" id="L457">	}</span>
 
 	public String getContactCompany()
 	{
-<span class="nc" id="L461">		return contactCompany;</span>
+<span class="fc" id="L461">		return contactCompany;</span>
 	}
 
 	public void setContactCompany(String contactCompany)
 	{
-<span class="nc" id="L466">		this.contactCompany = contactCompany;</span>
-<span class="nc" id="L467">	}</span>
+<span class="fc" id="L466">		this.contactCompany = contactCompany;</span>
+<span class="fc" id="L467">	}</span>
 
 	public String getContactStreet()
 	{
@@ -608,13 +608,13 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 	public String getCurrency()
 	{
-<span class="nc" id="L611">		return currency;</span>
+<span class="fc" id="L611">		return currency;</span>
 	}
 
 	public void setCurrency(String currency)
 	{
-<span class="nc" id="L616">		this.currency = currency;</span>
-<span class="nc" id="L617">	}</span>
+<span class="fc" id="L616">		this.currency = currency;</span>
+<span class="fc" id="L617">	}</span>
 
 	/**
 	 * Vrati aktualnu domainId
@@ -631,8 +631,8 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 	 */
 	public void setDomainId(int domainId) {
 		//this.domainId = domainId;
-<span class="nc" id="L634">		this.domainId = CloudToolsForCore.getDomainId();</span>
-<span class="nc" id="L635">	}</span>
+<span class="fc" id="L634">		this.domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L635">	}</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

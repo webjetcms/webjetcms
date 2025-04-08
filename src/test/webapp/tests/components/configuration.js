@@ -144,17 +144,17 @@ Scenario("planovanie a historia", async ({ I, DTE }) => {
     I.click(historyName);
     DTE.waitForEditor(datatableName);
 
-    I.click("#pills-dt-configurationDatatable-advanced-tab");
+    I.clickCss("#pills-dt-configurationDatatable-advanced-tab");
     I.see("aaatest - CHANGED - manual 16:10B");
     I.dontSee("aaatest zakladna hodnota-v3");
-    I.click("#datatableFieldDTE_Field_confPrepared tr:nth-child(3) td");
-    I.click("#datatableFieldDTE_Field_confPrepared_wrapper button.buttons-remove");
+    I.clickCss("#datatableFieldDTE_Field_confPrepared tr:nth-child(3) td");
+    I.clickCss("#datatableFieldDTE_Field_confPrepared_wrapper button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove", 5);
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see("Chyba: zmazať je možné len záznamy v budúcnosti");
     I.click("div.DTE_Action_Remove div.DTE_Header button.btn-close-editor");
 
-    I.click("#pills-dt-configurationDatatable-history-tab")
+    I.clickCss("#pills-dt-configurationDatatable-history-tab")
     I.see("aaatest zakladna hodnota-v3");
     I.dontSee("aaatest - CHANGED - manual 16:10B");
 });

@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">GroupsService.java</span></div><h1>GroupsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GroupsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.service</a> &gt; <span class="el_source">GroupsService.java</span></div><h1>GroupsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,10 +39,10 @@ public class GroupsService extends NotifyService {
     private Prop prop;
 
     @Autowired
-<span class="fc" id="L41">    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, HttpServletRequest request) {</span>
-<span class="fc" id="L42">        this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;</span>
-<span class="fc" id="L43">        this.prop = Prop.getInstance(request);</span>
-<span class="fc" id="L44">    }</span>
+<span class="fc" id="L42">    public GroupsService(GroupSchedulerDtoRepository groupSchedulerDtoRepository, HttpServletRequest request) {</span>
+<span class="fc" id="L43">        this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;</span>
+<span class="fc" id="L44">        this.prop = Prop.getInstance(request);</span>
+<span class="fc" id="L45">    }</span>
 
 	/**
 	 * Recover group from trash.
@@ -53,95 +54,95 @@ public class GroupsService extends NotifyService {
 	 */
     public boolean recoverGroupFromTrash(GroupDetails group, Identity currentUser) {
 
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">		if (isInTrash(group) == false) return false; //Group is not in trash</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">		if (isInTrash(group) == false) return false; //Group is not in trash</span>
 
 		//Get group by id + chec perms
-<span class="fc" id="L59">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L60">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
 		//Check user perms for dest group
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if(GroupsDB.isGroupEditable(currentUser, group.getGroupId())==false) {</span>
-<span class="nc" id="L63">			NotifyBean info = new NotifyBean(prop.getText(&quot;editor.recover.notify_title.failed_folder&quot;), prop.getText(&quot;editor.recover.notify.no_right&quot;), NotifyBean.NotifyType.WARNING, 60000);</span>
-<span class="nc" id="L64">			addNotify(info);</span>
-<span class="nc" id="L65">			return false;</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">		if(GroupsDB.isGroupEditable(currentUser, group.getGroupId())==false) {</span>
+<span class="nc" id="L64">			NotifyBean info = new NotifyBean(prop.getText(&quot;editor.recover.notify_title.failed_folder&quot;), prop.getText(&quot;editor.recover.notify.no_right&quot;), NotifyBean.NotifyType.WARNING, 60000);</span>
+<span class="nc" id="L65">			addNotify(info);</span>
+<span class="nc" id="L66">			return false;</span>
 		}
 
-<span class="fc" id="L68">		int parentGroupId = 0;</span>
-<span class="fc" id="L69">		String parentGroupPath = prop.getText(&quot;stat_settings.group_id&quot;);</span>
+<span class="fc" id="L69">		int parentGroupId = 0;</span>
+<span class="fc" id="L70">		String parentGroupPath = prop.getText(&quot;stat_settings.group_id&quot;);</span>
 		//get last parent_group_id value from history (groups_scheduler table)
-<span class="fc" id="L71">		GroupSchedulerDto latestGroupHistory = groupSchedulerDtoRepository.findFirstByGroupIdAndWhenToPublishNullOrderBySaveDateDesc(Long.valueOf(group.getGroupId()));</span>
+<span class="fc" id="L72">		GroupSchedulerDto latestGroupHistory = groupSchedulerDtoRepository.findFirstByGroupIdAndWhenToPublishNullOrderBySaveDateDesc(Long.valueOf(group.getGroupId()));</span>
 
 		//check if parent exists and NOT in trash
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">		if (latestGroupHistory != null) {</span>
-<span class="fc" id="L75">			GroupDetails parentGroup = groupsDB.getGroup(latestGroupHistory.getParentGroupId());</span>
-<span class="pc bpc" id="L76" title="2 of 4 branches missed.">			if (parentGroup != null &amp;&amp; isInTrash(parentGroup) == false) {</span>
-<span class="fc" id="L77">				parentGroupId = latestGroupHistory.getParentGroupId();</span>
-<span class="fc" id="L78">				parentGroupPath = parentGroup.getFullPath();</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">		if (latestGroupHistory != null) {</span>
+<span class="fc" id="L76">			GroupDetails parentGroup = groupsDB.getGroup(latestGroupHistory.getParentGroupId());</span>
+<span class="pc bpc" id="L77" title="2 of 4 branches missed.">			if (parentGroup != null &amp;&amp; isInTrash(parentGroup) == false) {</span>
+<span class="fc" id="L78">				parentGroupId = latestGroupHistory.getParentGroupId();</span>
+<span class="fc" id="L79">				parentGroupPath = parentGroup.getFullPath();</span>
 			}
 		}
 
 		//Set folder derent to root
-<span class="fc" id="L83">		group.setParentGroupId( parentGroupId );</span>
-<span class="fc" id="L84">		(new SimpleQuery()).execute(&quot;UPDATE groups SET parent_group_id=? WHERE group_id=?&quot;, parentGroupId, group.getGroupId());</span>
+<span class="fc" id="L84">		group.setParentGroupId( parentGroupId );</span>
+<span class="fc" id="L85">		(new SimpleQuery()).execute(&quot;UPDATE groups SET parent_group_id=? WHERE group_id=?&quot;, parentGroupId, group.getGroupId());</span>
 
-<span class="fc" id="L86">		NotifyBean info = new NotifyBean(prop.getText(&quot;editor.recover.notify_title.success_folder&quot;), prop.getText(&quot;editor.recover.notify_body.success_group&quot;, group.getGroupName(), parentGroupPath), NotifyBean.NotifyType.SUCCESS, 60000);</span>
-<span class="fc" id="L87">		addNotify(info);</span>
+<span class="fc" id="L87">		NotifyBean info = new NotifyBean(prop.getText(&quot;editor.recover.notify_title.success_folder&quot;), prop.getText(&quot;editor.recover.notify_body.success_group&quot;, group.getGroupName(), parentGroupPath), NotifyBean.NotifyType.SUCCESS, 60000);</span>
+<span class="fc" id="L88">		addNotify(info);</span>
 
 		//Update sub groups
-<span class="fc" id="L90">		StringBuilder groups = new StringBuilder();</span>
-<span class="fc" id="L91">		List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(group.getGroupId(), true, true);</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">		for (GroupDetails g : subGroups) {</span>
-<span class="fc bfc" id="L93" title="All 2 branches covered.">			if (groups.length() &gt; 0) groups.append(',').append(g.getGroupId());</span>
-<span class="fc" id="L94">			else groups.append(g.getGroupId());</span>
-<span class="fc" id="L95">		}</span>
+<span class="fc" id="L91">		StringBuilder groups = new StringBuilder();</span>
+<span class="fc" id="L92">		List&lt;GroupDetails&gt; subGroups = groupsDB.getGroupsTree(group.getGroupId(), true, true);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		for (GroupDetails g : subGroups) {</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">			if (groups.length() &gt; 0) groups.append(',').append(g.getGroupId());</span>
+<span class="fc" id="L95">			else groups.append(g.getGroupId());</span>
+<span class="fc" id="L96">		}</span>
 
 		//Repo
-<span class="fc" id="L98">		DocHistoryRepository docHistoryRepository = Tools.getSpringBean(&quot;docHistoryRepository&quot;, DocHistoryRepository.class);</span>
+<span class="fc" id="L99">		DocHistoryRepository docHistoryRepository = Tools.getSpringBean(&quot;docHistoryRepository&quot;, DocHistoryRepository.class);</span>
 
 		//List of doc id's that available should be updated (depend on history)
-<span class="fc" id="L101">		List&lt;Integer&gt; docIdsToChange = (new SimpleQuery()).forListInteger(&quot;SELECT doc_id FROM documents WHERE group_id IN (&quot; + groups.toString() + &quot;)&quot;);</span>
+<span class="fc" id="L102">		List&lt;Integer&gt; docIdsToChange = (new SimpleQuery()).forListInteger(&quot;SELECT doc_id FROM documents WHERE group_id IN (&quot; + groups.toString() + &quot;)&quot;);</span>
 
 		//History records
-<span class="fc" id="L104">		List&lt;DocHistory&gt; historyRecords = docHistoryRepository.findByDocIdInActual(docIdsToChange);</span>
+<span class="fc" id="L105">		List&lt;DocHistory&gt; historyRecords = docHistoryRepository.findByDocIdInActual(docIdsToChange);</span>
 
-<span class="fc" id="L106">		List&lt;Integer&gt; availableTrue = new ArrayList&lt;&gt;(); //Update availale to true</span>
-<span class="fc" id="L107">		List&lt;Integer&gt; availableFalse = new ArrayList&lt;&gt;(); //Update availale to false</span>
-<span class="fc" id="L108">		List&lt;Integer&gt; notFound = new ArrayList&lt;&gt;(); //No history found</span>
+<span class="fc" id="L107">		List&lt;Integer&gt; availableTrue = new ArrayList&lt;&gt;(); //Update availale to true</span>
+<span class="fc" id="L108">		List&lt;Integer&gt; availableFalse = new ArrayList&lt;&gt;(); //Update availale to false</span>
+<span class="fc" id="L109">		List&lt;Integer&gt; notFound = new ArrayList&lt;&gt;(); //No history found</span>
 
 		//Loops docIdsToChange and match them with historyRecords
-<span class="fc" id="L111">		boolean wasFound = false;</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">		for(Integer docId : docIdsToChange) {</span>
-<span class="fc" id="L113">			wasFound = false;</span>
-<span class="fc bfc" id="L114" title="All 2 branches covered.">			for(DocHistory history : historyRecords) {</span>
-<span class="fc bfc" id="L115" title="All 2 branches covered.">				if(history.getDocId() == docId) {</span>
-<span class="fc" id="L116">					wasFound = true;</span>
-<span class="fc bfc" id="L117" title="All 2 branches covered.">					if(history.isAvailable()) availableTrue.add(docId);</span>
-<span class="fc" id="L118">					else availableFalse.add(docId);</span>
-<span class="fc" id="L119">					break;</span>
+<span class="fc" id="L112">		boolean wasFound = false;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">		for(Integer docId : docIdsToChange) {</span>
+<span class="fc" id="L114">			wasFound = false;</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">			for(DocHistory history : historyRecords) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">				if(history.getDocId() == docId) {</span>
+<span class="fc" id="L117">					wasFound = true;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">					if(history.isAvailable()) availableTrue.add(docId);</span>
+<span class="fc" id="L119">					else availableFalse.add(docId);</span>
+<span class="fc" id="L120">					break;</span>
 				}
-<span class="fc" id="L121">			}</span>
-<span class="fc bfc" id="L122" title="All 2 branches covered.">			if(!wasFound) notFound.add(docId);</span>
-<span class="fc" id="L123">		}</span>
+<span class="fc" id="L122">			}</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">			if(!wasFound) notFound.add(docId);</span>
+<span class="fc" id="L124">		}</span>
 
 		//If history was not found, check last history with ACTUAL=false (maybe only actual is missing)
-<span class="fc bfc" id="L126" title="All 2 branches covered.">		for(Integer notFoundId : notFound) {</span>
-<span class="fc" id="L127">			Optional&lt;DocHistory&gt; history = docHistoryRepository.findTopByDocIdOrderBySaveDateDesc(notFoundId);</span>
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">			boolean available = history.isPresent() ? history.get().isAvailable() : true; //If history record is still not found, set available to true</span>
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">			if(available) availableTrue.add(notFoundId);</span>
-<span class="fc" id="L130">			else availableFalse.add(notFoundId);</span>
-<span class="fc" id="L131">		}</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">		for(Integer notFoundId : notFound) {</span>
+<span class="fc" id="L128">			Optional&lt;DocHistory&gt; history = docHistoryRepository.findTopByDocIdOrderBySaveDateDesc(notFoundId);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">			boolean available = history.isPresent() ? history.get().isAvailable() : true; //If history record is still not found, set available to true</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">			if(available) availableTrue.add(notFoundId);</span>
+<span class="fc" id="L131">			else availableFalse.add(notFoundId);</span>
+<span class="fc" id="L132">		}</span>
 
 		//Updatw doc's available status
-<span class="pc bpc" id="L134" title="1 of 2 branches missed.">		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute(&quot;UPDATE documents SET available=&quot;+DB.getBooleanSql(true)+&quot;, sync_status=1 WHERE doc_id IN (&quot; + StringUtils.join(availableTrue, &quot;,&quot;) + &quot;)&quot;);</span>
-<span class="pc bpc" id="L135" title="1 of 2 branches missed.">		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute(&quot;UPDATE documents SET available=&quot;+DB.getBooleanSql(false)+&quot;, sync_status=1 WHERE doc_id IN (&quot; + StringUtils.join(availableFalse, &quot;,&quot;) + &quot;)&quot;);</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">		if (availableTrue.isEmpty()==false) (new SimpleQuery()).execute(&quot;UPDATE documents SET available=&quot;+DB.getBooleanSql(true)+&quot;, sync_status=1 WHERE doc_id IN (&quot; + StringUtils.join(availableTrue, &quot;,&quot;) + &quot;)&quot;);</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">		if (availableFalse.isEmpty()==false) (new SimpleQuery()).execute(&quot;UPDATE documents SET available=&quot;+DB.getBooleanSql(false)+&quot;, sync_status=1 WHERE doc_id IN (&quot; + StringUtils.join(availableFalse, &quot;,&quot;) + &quot;)&quot;);</span>
 
 		//aktualizuj FT stplce
-<span class="fc" id="L138">		DocDB.updateFileNameField(group.getGroupId());</span>
+<span class="fc" id="L139">		DocDB.updateFileNameField(group.getGroupId());</span>
 
 		//Refresh
-<span class="fc" id="L141">		DocDB.getInstance(true);</span>
-<span class="fc" id="L142">		GroupsDB.getInstance(true);</span>
+<span class="fc" id="L142">		DocDB.getInstance(true);</span>
+<span class="fc" id="L143">		GroupsDB.getInstance(true);</span>
 
-<span class="fc" id="L144">        return true;</span>
+<span class="fc" id="L145">        return true;</span>
 	}
 
 	/**
@@ -150,9 +151,9 @@ public class GroupsService extends NotifyService {
 	 * @return
 	 */
     public static boolean isInTrash(GroupDetails group) {
-<span class="fc" id="L153">        GroupDetails trashGroupDetails = getTrashGroupDetails();</span>
-<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (group.getFullPath().startsWith(trashGroupDetails.getFullPath())) return true;</span>
-<span class="fc" id="L155">        return false;</span>
+<span class="fc" id="L154">        GroupDetails trashGroupDetails = getTrashGroupDetails();</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">        if (group.getFullPath().startsWith(trashGroupDetails.getFullPath())) return true;</span>
+<span class="fc" id="L156">        return false;</span>
     }
 
 	/**
@@ -160,8 +161,8 @@ public class GroupsService extends NotifyService {
      * @return
      */
     public static GroupDetails getTrashGroupDetails() {
-<span class="fc" id="L163">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L164">        return groupsDB.getTrashGroup();</span>
+<span class="fc" id="L164">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L165">        return groupsDB.getTrashGroup();</span>
     }
 
     /**
@@ -169,17 +170,41 @@ public class GroupsService extends NotifyService {
      * @return
      */
     public static GroupDetails getSystemGroupDetails() {
-<span class="fc" id="L172">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L173">        GroupDetails system = groupsDB.getLocalSystemGroup();</span>
+<span class="fc" id="L173">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L174">        GroupDetails system = groupsDB.getLocalSystemGroup();</span>
 
         //ak sa nenaslo, pouzi globalny
-<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (system == null) {</span>
-<span class="nc" id="L177">            system = groupsDB.getGroupByPath(&quot;/System&quot;);</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (system == null) {</span>
+<span class="nc" id="L178">            system = groupsDB.getGroupByPath(&quot;/System&quot;);</span>
         }
 
-<span class="fc" id="L180">        return system;</span>
+<span class="fc" id="L181">        return system;</span>
     }
 
+	/**
+	 * Sort list of groups into tree structure (deeper one last)
+	 * @param groups
+	 * @return
+	 */
+	public static List&lt;GroupDetails&gt; sortItIntoTree(List&lt;GroupDetails&gt; groups) {
+<span class="fc" id="L190">        Collections.sort(groups, (s1, s2) -&gt; { return s1.getFullPath().split(&quot;/&quot;).length - s2.getFullPath().split(&quot;/&quot;).length; });</span>
+
+<span class="fc" id="L192">        List&lt;GroupDetails&gt; sorted = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        for(GroupDetails group : groups) {</span>
+<span class="fc" id="L195">            int parentIndex = -1;</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            for(int i = 0; i &lt; sorted.size(); i++) {</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">                if(group.getParentGroupId() == sorted.get(i).getGroupId()) {</span>
+<span class="fc" id="L198">                    parentIndex = i;</span>
+<span class="fc" id="L199">                    break;</span>
+                }
+            }
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if(parentIndex == -1) sorted.add(0, group);</span>
+<span class="fc" id="L203">            else sorted.add(parentIndex + 1, group);</span>
+<span class="fc" id="L204">        }</span>
+
+<span class="fc" id="L206">        return sorted;</span>
+    }
 
 	/**
 	 * Check if title is syncable between group and webpage
@@ -189,19 +214,19 @@ public class GroupsService extends NotifyService {
 	 */
 	public static boolean canSyncTitle(Integer docId, Integer groupId) {
 
-<span class="pc bpc" id="L192" title="1 of 2 branches missed.">		if(Constants.getBoolean(&quot;syncGroupAndWebpageTitle&quot;)==false) return false;</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">		if(Constants.getBoolean(&quot;syncGroupAndWebpageTitle&quot;)==false) return false;</span>
 
-<span class="pc bpc" id="L194" title="2 of 4 branches missed.">		if(docId == null || docId.intValue() &lt; 1) return true;</span>
+<span class="pc bpc" id="L219" title="2 of 4 branches missed.">		if(docId == null || docId.intValue() &lt; 1) return true;</span>
 
 		//Is DOC, main DOC for SEVERAL groups ?
-<span class="fc" id="L197">		int defaultDocCount = (new SimpleQuery()).forInt(&quot;SELECT COUNT(group_id) FROM groups WHERE default_doc_id = ?&quot;, docId);</span>
-<span class="fc bfc" id="L198" title="All 2 branches covered.">		if(defaultDocCount &gt; 1) return false;</span>
+<span class="fc" id="L222">		int defaultDocCount = (new SimpleQuery()).forInt(&quot;SELECT COUNT(group_id) FROM groups WHERE default_doc_id = ?&quot;, docId);</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">		if(defaultDocCount &gt; 1) return false;</span>
 
 		//
-<span class="fc" id="L201">		GroupDetails group = GroupsDB.getInstance().getGroup(groupId.intValue());</span>
-<span class="fc bfc" id="L202" title="All 2 branches covered.">		if(group.getDefaultDocId() != docId) return false;</span>
+<span class="fc" id="L226">		GroupDetails group = GroupsDB.getInstance().getGroup(groupId.intValue());</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">		if(group.getDefaultDocId() != docId) return false;</span>
 
-<span class="fc" id="L204">		return true;</span>
+<span class="fc" id="L229">		return true;</span>
 	}
 
 	/**
@@ -212,19 +237,19 @@ public class GroupsService extends NotifyService {
 	 */
 	public static boolean canSyncTitle(GroupDetails toSaveGroup) {
 
-<span class="pc bpc" id="L215" title="1 of 2 branches missed.">		if(Constants.getBoolean(&quot;syncGroupAndWebpageTitle&quot;)==false) return false;</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		if(Constants.getBoolean(&quot;syncGroupAndWebpageTitle&quot;)==false) return false;</span>
 
-<span class="pc bpc" id="L217" title="1 of 2 branches missed.">		if(toSaveGroup == null) return false;</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">		if(toSaveGroup == null) return false;</span>
 
 		//Is DOC, main DOC for SEVERAL groups ?
-<span class="fc" id="L220">		int defaultDocCount = (new SimpleQuery()).forInt(&quot;SELECT COUNT(group_id) FROM groups WHERE default_doc_id = ?&quot;, toSaveGroup.getDefaultDocId());</span>
-<span class="fc bfc" id="L221" title="All 2 branches covered.">		if(defaultDocCount &gt; 1) return false;</span>
+<span class="fc" id="L245">		int defaultDocCount = (new SimpleQuery()).forInt(&quot;SELECT COUNT(group_id) FROM groups WHERE default_doc_id = ?&quot;, toSaveGroup.getDefaultDocId());</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">		if(defaultDocCount &gt; 1) return false;</span>
 
 		//Is DOC in another group that current changed group ?
-<span class="fc" id="L224">		DocDetails docDetails = DocDB.getInstance().getDoc(toSaveGroup.getDefaultDocId());</span>
-<span class="fc bfc" id="L225" title="All 2 branches covered.">		if(docDetails.getGroupId() != toSaveGroup.getGroupId()) return false;</span>
+<span class="fc" id="L249">		DocDetails docDetails = DocDB.getInstance().getDoc(toSaveGroup.getDefaultDocId());</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">		if(docDetails.getGroupId() != toSaveGroup.getGroupId()) return false;</span>
 
-<span class="fc" id="L227">		return true;</span>
+<span class="fc" id="L252">		return true;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

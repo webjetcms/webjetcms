@@ -1104,8 +1104,6 @@ public class FileTools
 	 *		media stlpec media_link<br />
 	 *		tips_of_the_day stlpec tip_text<br />
 	 *
-	 * @author jraska
-	 *
 	 * @param rootUrl - url adresa, napr. /files/mac, ktoreho obsah sa prehladava rekurzivne
 	 * @param request - request, z ktoreho zistime domeny
 	 *

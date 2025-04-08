@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CronjobController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.cronjob</a> &gt; <span class="el_source">CronjobController.java</span></div><h1>CronjobController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.cronjob;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CronjobController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.cronjob</a> &gt; <span class="el_source">CronjobController.java</span></div><h1>CronjobController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.cronjob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,7 @@ import sk.iway.iwcm.system.cron.CronDB;
 import sk.iway.iwcm.system.cron.CronFacade;
 import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
@@ -33,70 +34,71 @@ public class CronjobController extends DatatableRestControllerV2&lt;CronTask, Lo
 
     @Autowired
     public CronjobController(CronjobService cronjobService) {
-<span class="fc" id="L36">        super(null);</span>
-<span class="fc" id="L37">        this.cronjobService = cronjobService;</span>
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L37">        super(null);</span>
+<span class="fc" id="L38">        this.cronjobService = cronjobService;</span>
+<span class="fc" id="L39">    }</span>
 
     @Override
     public Page&lt;CronTask&gt; getAllItems(Pageable pageable) {
-<span class="fc" id="L42">        return cronjobService.getCronTasks(pageable);</span>
+<span class="fc" id="L43">        List&lt;CronTask&gt; tasks = cronjobService.getCronTasks();</span>
+<span class="fc" id="L44">        return new DatatablePageImpl&lt;&gt;(tasks);</span>
     }
 
     @Override
     public CronTask insertItem(CronTask entity) {
-<span class="fc" id="L47">        return cronjobService.saveCronTask(entity);</span>
+<span class="fc" id="L49">        return cronjobService.saveCronTask(entity);</span>
     }
 
     @Override
     public CronTask editItem(CronTask entity, long id) {
-<span class="fc" id="L52">        return cronjobService.editCronTask(entity, id);</span>
+<span class="fc" id="L54">        return cronjobService.editCronTask(entity, id);</span>
     }
 
     @Override
     public boolean deleteItem(CronTask entity, long id) {
-<span class="fc" id="L57">        return cronjobService.deleteCronTask(id);</span>
+<span class="fc" id="L59">        return cronjobService.deleteCronTask(id);</span>
     }
 
     @Override
     public CronTask getOneItem(long id) {
-<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (id &lt; 1) return new CronTask();</span>
-<span class="fc" id="L63">        CronTask task = CronDB.getById(id);</span>
-<span class="fc" id="L64">        return task;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (id &lt; 1) return new CronTask();</span>
+<span class="fc" id="L65">        CronTask task = CronDB.getById(id);</span>
+<span class="fc" id="L66">        return task;</span>
     }
 
     @Override
     public boolean processAction(CronTask entity, String action) {
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (&quot;play&quot;.equals(action)) {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (&quot;play&quot;.equals(action)) {</span>
             try {
-<span class="fc" id="L71">                CronFacade.getInstance().runSimpleTaskOnce(entity);</span>
-<span class="fc" id="L72">                Adminlog.add(Adminlog.TYPE_CRON, getProp().getText(&quot;admin.crontab.task_launched&quot;, entity.getTask()), -1, -1);</span>
-<span class="fc" id="L73">                addNotify(new NotifyBean(getProp().getText(&quot;admin.crontab.view&quot;), getProp().getText(&quot;admin.crontab.task_launched&quot;, entity.getTask()), NotifyType.SUCCESS, 15000));</span>
-<span class="fc" id="L74">                return true;</span>
-<span class="nc" id="L75">            } catch (ClassNotFoundException e) {</span>
-<span class="nc" id="L76">                Logger.error(CronjobController.class, e);</span>
+<span class="fc" id="L73">                CronFacade.getInstance().runSimpleTaskOnce(entity);</span>
+<span class="fc" id="L74">                Adminlog.add(Adminlog.TYPE_CRON, getProp().getText(&quot;admin.crontab.task_launched&quot;, entity.getTask()), -1, -1);</span>
+<span class="fc" id="L75">                addNotify(new NotifyBean(getProp().getText(&quot;admin.crontab.view&quot;), getProp().getText(&quot;admin.crontab.task_launched&quot;, entity.getTask()), NotifyType.SUCCESS, 15000));</span>
+<span class="fc" id="L76">                return true;</span>
+<span class="nc" id="L77">            } catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L78">                Logger.error(CronjobController.class, e);</span>
             }
         }
-<span class="nc" id="L79">        return false;</span>
+<span class="nc" id="L81">        return false;</span>
     }
 
     @Override
     public void afterSave(CronTask entity, CronTask saved) {
         //restart cron
-<span class="fc" id="L85">        ClusterDB.addRefresh(CronFacade.class);</span>
-<span class="fc" id="L86">		CronFacade.getInstance(true);</span>
-<span class="fc" id="L87">    }</span>
+<span class="fc" id="L87">        ClusterDB.addRefresh(CronFacade.class);</span>
+<span class="fc" id="L88">		CronFacade.getInstance(true);</span>
+<span class="fc" id="L89">    }</span>
 
     @Override
     public void afterDelete(CronTask entity, long id) {
-<span class="fc" id="L91">        afterSave(entity, null);</span>
-<span class="fc" id="L92">    }</span>
+<span class="fc" id="L93">        afterSave(entity, null);</span>
+<span class="fc" id="L94">    }</span>
 
     @GetMapping(&quot;/nodes&quot;)
     public List&lt;String&gt; getNodes(@RequestParam String term) {
-<span class="nc" id="L96">        List&lt;String&gt; nodes = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L97">        nodes.add(&quot;all&quot;);</span>
-<span class="nc" id="L98">        nodes.addAll(ClusterDB.getClusterNodeNamesExpandedAuto());</span>
-<span class="nc" id="L99">        return nodes;</span>
+<span class="nc" id="L98">        List&lt;String&gt; nodes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L99">        nodes.add(&quot;all&quot;);</span>
+<span class="nc" id="L100">        nodes.addAll(ClusterDB.getClusterNodeNamesExpandedAuto());</span>
+<span class="nc" id="L101">        return nodes;</span>
     }
 
 }

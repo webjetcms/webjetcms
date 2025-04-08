@@ -36,8 +36,8 @@ public class DmailUtil {
 
     /**
      * Extract email:
-     * from "Janko Tester <tester@test.sk>" -> "tester@test.sk"
-     * from "janko@test.sk" -> "janko@test.sk"
+     * from "Janko Tester &lt;tester@test.sk&gt;" -&gt; "tester@test.sk"
+     * from "janko@test.sk" -&gt; "janko@test.sk"
      * @param email
      * @return
      */

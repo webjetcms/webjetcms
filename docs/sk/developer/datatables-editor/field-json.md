@@ -109,6 +109,8 @@ všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie tex
 
 ```dt-tree-dir-array``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber zoznamu adresárov v súborovom systéme**
 
+```dt-tree-dir-array-root``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber zoznamu adresárov v súborovom systéme** vrátane možnosti Koreňový priečinok.
+
 ```dt-tree-universal-array``` - vrátený univerzálny JSON objekt zdedený z typu ```JsTreeItem``` pre zákazkové zobrazenie ```jsTree``` štruktúry
 
 Pridaním prípony ```-alldomains``` je možné pre výber ```GroupDetails``` alebo ```DocDetails``` vypnúť filtrovanie podľa aktuálne zvolenej domény. Ako koreňové priečinky sa zobrazia všetky povolené domény a vybrať je možné priečinok/stránku zo všetkých dostupných domén. Používa sa napr. v používateľoch, kde sa nastavujú práva naprieč všetkými doménami.

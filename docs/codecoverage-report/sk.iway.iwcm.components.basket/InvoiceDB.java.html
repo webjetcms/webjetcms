@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InvoiceDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">InvoiceDB.java</span></div><h1>InvoiceDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InvoiceDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket</a> &gt; <span class="el_source">InvoiceDB.java</span></div><h1>InvoiceDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,28 +56,28 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	{
 		//return JpaTools.getEclipseLinkEntityManager().find(BasketInvoiceBean.class, basketInvoiceId);
 
-<span class="nc" id="L59">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L60">	      ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L59">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L60">	      ExpressionBuilder builder = new ExpressionBuilder();</span>
 
 	      //Filter by domainId
-<span class="nc" id="L63">	      Expression expression = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L63">	      Expression expression = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
 
-<span class="nc" id="L65">	      expression = JpaDB.and(expression, builder.get(&quot;basketInvoiceId&quot;).equal(basketInvoiceId));</span>
+<span class="fc" id="L65">	      expression = JpaDB.and(expression, builder.get(&quot;basketInvoiceId&quot;).equal(basketInvoiceId));</span>
 
-<span class="nc" id="L67">	      ReadAllQuery dbQuery = new ReadAllQuery(BasketInvoiceBean.class, builder);</span>
-<span class="nc" id="L68">	      dbQuery.addOrdering(builder.get(&quot;createDate&quot;).descending());</span>
-<span class="nc" id="L69">	      dbQuery.setSelectionCriteria(expression);</span>
+<span class="fc" id="L67">	      ReadAllQuery dbQuery = new ReadAllQuery(BasketInvoiceBean.class, builder);</span>
+<span class="fc" id="L68">	      dbQuery.addOrdering(builder.get(&quot;createDate&quot;).descending());</span>
+<span class="fc" id="L69">	      dbQuery.setSelectionCriteria(expression);</span>
 
-<span class="nc" id="L71">	      Query query = em.createQuery(dbQuery);</span>
-<span class="nc" id="L72">	      BasketInvoiceBean result = null;</span>
+<span class="fc" id="L71">	      Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L72">	      BasketInvoiceBean result = null;</span>
 	      try
 	      {
-<span class="nc" id="L75">	    	  result = (BasketInvoiceBean) query.getSingleResult();</span>
-<span class="nc" id="L76">	    	  return result;</span>
+<span class="fc" id="L75">	    	  result = (BasketInvoiceBean) query.getSingleResult();</span>
+<span class="fc" id="L76">	    	  return result;</span>
 	      }
-<span class="nc" id="L78">	      catch (NoResultException ex)</span>
+<span class="fc" id="L78">	      catch (NoResultException ex)</span>
 	      {
-<span class="nc" id="L80">	    	  return null;</span>
+<span class="fc" id="L80">	    	  return null;</span>
 	      }
 	}
 
@@ -143,48 +143,48 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	 */
 	public static boolean sendInvoiceEmail(HttpServletRequest request, int invoiceId, String fromEmail, String toEmail, String subject)
 	{
-<span class="nc" id="L146">		return sendInvoiceEmail(request, invoiceId, fromEmail, toEmail, subject, null);</span>
+<span class="fc" id="L146">		return sendInvoiceEmail(request, invoiceId, fromEmail, toEmail, subject, null);</span>
 	}
 
 	public static boolean sendInvoiceEmail(HttpServletRequest request, int invoiceId, String fromEmail, String toEmail, String subject, String attachements)
 	{
-<span class="nc" id="L151">		boolean sendOK = false;</span>
+<span class="fc" id="L151">		boolean sendOK = false;</span>
 
-<span class="nc" id="L153">		String compUrl = WriteTagToolsForCore.getCustomPage(&quot;/components/basket/invoice_email.jsp&quot;, request);</span>
+<span class="fc" id="L153">		String compUrl = WriteTagToolsForCore.getCustomPage(&quot;/components/basket/invoice_email.jsp&quot;, request);</span>
 
-<span class="nc" id="L155">		Cookie [] cookies = request.getCookies();</span>
-<span class="nc" id="L156">		String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(request) + compUrl + &quot;?invoiceId=&quot; + invoiceId + &quot;&amp;auth=&quot;+BasketInvoiceBean.getAuthorizationToken(invoiceId),cookies);</span>
+<span class="fc" id="L155">		Cookie [] cookies = request.getCookies();</span>
+<span class="fc" id="L156">		String data = Tools.downloadUrl(Tools.getBaseHrefLoopback(request) + compUrl + &quot;?invoiceId=&quot; + invoiceId + &quot;&amp;auth=&quot;+BasketInvoiceBean.getAuthorizationToken(invoiceId),cookies);</span>
 
-<span class="nc" id="L158">		String senderName = null;</span>
+<span class="fc" id="L158">		String senderName = null;</span>
 
 		try
 		{
 			//pouzi meno domeny ako odosielatela emailu
-<span class="nc" id="L163">			String domain = Tools.getServerName(request);</span>
-<span class="nc" id="L164">			domain = Tools.replace(domain, &quot;www.&quot;, &quot;&quot;);</span>
+<span class="fc" id="L163">			String domain = Tools.getServerName(request);</span>
+<span class="fc" id="L164">			domain = Tools.replace(domain, &quot;www.&quot;, &quot;&quot;);</span>
 
-<span class="nc" id="L166">			String tokens[] = Tools.getTokens(domain, &quot;.&quot;);</span>
-<span class="nc bnc" id="L167" title="All 2 branches missed.">			if (tokens.length &gt; 0) senderName = tokens[0];</span>
+<span class="fc" id="L166">			String tokens[] = Tools.getTokens(domain, &quot;.&quot;);</span>
+<span class="pc bpc" id="L167" title="1 of 2 branches missed.">			if (tokens.length &gt; 0) senderName = tokens[0];</span>
 		}
 <span class="nc" id="L169">		catch (Exception e)</span>
 		{
 <span class="nc" id="L171">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L172">		}</span>
+<span class="fc" id="L172">		}</span>
 
-<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (Tools.isEmpty(senderName)) senderName = fromEmail;</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">		if (Tools.isEmpty(senderName)) senderName = fromEmail;</span>
 
-<span class="nc" id="L176">		String basketInvoiceSenderName = Constants.getString(&quot;basketInvoiceSenderName&quot;);</span>
-<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (&quot;@&quot;.equals(basketInvoiceSenderName)) senderName = fromEmail;</span>
-<span class="nc bnc" id="L178" title="All 2 branches missed.">		else if (Tools.isNotEmpty(basketInvoiceSenderName)) senderName = basketInvoiceSenderName;</span>
+<span class="fc" id="L176">		String basketInvoiceSenderName = Constants.getString(&quot;basketInvoiceSenderName&quot;);</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">		if (&quot;@&quot;.equals(basketInvoiceSenderName)) senderName = fromEmail;</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">		else if (Tools.isNotEmpty(basketInvoiceSenderName)) senderName = basketInvoiceSenderName;</span>
 
-<span class="nc bnc" id="L180" title="All 6 branches missed.">		if (Tools.isNotEmpty(data) &amp;&amp; Tools.isNotEmpty(toEmail) &amp;&amp; toEmail.indexOf('@')!=-1)</span>
+<span class="pc bpc" id="L180" title="3 of 6 branches missed.">		if (Tools.isNotEmpty(data) &amp;&amp; Tools.isNotEmpty(toEmail) &amp;&amp; toEmail.indexOf('@')!=-1)</span>
 		{
-<span class="nc bnc" id="L182" title="All 2 branches missed.">			if(Tools.isEmpty(attachements))</span>
-<span class="nc" id="L183">				sendOK = SendMail.send(senderName, fromEmail, toEmail, subject, data, request);</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">			if(Tools.isEmpty(attachements))</span>
+<span class="fc" id="L183">				sendOK = SendMail.send(senderName, fromEmail, toEmail, subject, data, request);</span>
 			else
 <span class="nc" id="L185">				sendOK = SendMail.send(senderName, fromEmail, toEmail, null, null, null, subject, data, Tools.getBaseHref(request), attachements);</span>
 		}
-<span class="nc" id="L187">		return(sendOK);</span>
+<span class="fc" id="L187">		return(sendOK);</span>
 	}
 
 	/**
@@ -219,14 +219,14 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	 */
 	public static double getTotalPriceVat(List&lt;BasketItemBean&gt; items)
 	{
-<span class="nc" id="L222">		double totalPrice = 0;</span>
+<span class="fc" id="L222">		double totalPrice = 0;</span>
 
-<span class="nc bnc" id="L224" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">		for (BasketItemBean b : items)</span>
 		{
-<span class="nc" id="L226">			totalPrice += b.getItemPriceVatQty();</span>
-<span class="nc" id="L227">		}</span>
+<span class="fc" id="L226">			totalPrice += b.getItemPriceVatQty();</span>
+<span class="fc" id="L227">		}</span>
 
-<span class="nc" id="L229">		return(totalPrice);</span>
+<span class="fc" id="L229">		return(totalPrice);</span>
 	}
 
 	/**
@@ -237,14 +237,14 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	 */
 	public static double getTotalPrice(List&lt;BasketItemBean&gt; items)
 	{
-<span class="nc" id="L240">		double totalPrice = 0;</span>
+<span class="fc" id="L240">		double totalPrice = 0;</span>
 
-<span class="nc bnc" id="L242" title="All 2 branches missed.">		for (BasketItemBean b : items)</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">		for (BasketItemBean b : items)</span>
 		{
-<span class="nc" id="L244">			totalPrice += b.getItemPriceQty();</span>
-<span class="nc" id="L245">		}</span>
+<span class="fc" id="L244">			totalPrice += b.getItemPriceQty();</span>
+<span class="fc" id="L245">		}</span>
 
-<span class="nc" id="L247">		return(totalPrice);</span>
+<span class="fc" id="L247">		return(totalPrice);</span>
 	}
 
 	/**
@@ -364,56 +364,56 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	 */
 	public static BasketInvoiceBean saveOrder(HttpServletRequest request)
 	{
-<span class="nc" id="L367">		BasketInvoiceBean invoice = null;</span>
+<span class="fc" id="L367">		BasketInvoiceBean invoice = null;</span>
 
 		try
 		{
-<span class="nc" id="L371">			invoice = new BasketInvoiceBean();</span>
-<span class="nc" id="L372">			RequestUtils.populate(invoice, request);</span>
+<span class="fc" id="L371">			invoice = new BasketInvoiceBean();</span>
+<span class="fc" id="L372">			RequestUtils.populate(invoice, request);</span>
 
-<span class="nc" id="L374">			long browserId = BasketDB.getBrowserId(request);</span>
-<span class="nc" id="L375">			int userId = BasketDB.getUserId(request);</span>
+<span class="fc" id="L374">			long browserId = BasketDB.getBrowserId(request);</span>
+<span class="fc" id="L375">			int userId = BasketDB.getUserId(request);</span>
 
-<span class="nc" id="L377">			invoice.setBrowserId(Long.valueOf(browserId));</span>
-<span class="nc" id="L378">			invoice.setLoggedUserId(userId);</span>
-<span class="nc" id="L379">			invoice.setCreateDate(new Date(Tools.getNow()));</span>
-<span class="nc" id="L380">			invoice.setStatusId(BasketInvoiceBean.INVOICE_STATUS_NEW);</span>
-<span class="nc" id="L381">			invoice.setCurrency(BasketDB.getDisplayCurrency(request));</span>
-<span class="nc" id="L382">			invoice.setUserLng(PageLng.getUserLng(request));</span>
+<span class="fc" id="L377">			invoice.setBrowserId(Long.valueOf(browserId));</span>
+<span class="fc" id="L378">			invoice.setLoggedUserId(userId);</span>
+<span class="fc" id="L379">			invoice.setCreateDate(new Date(Tools.getNow()));</span>
+<span class="fc" id="L380">			invoice.setStatusId(BasketInvoiceBean.INVOICE_STATUS_NEW);</span>
+<span class="fc" id="L381">			invoice.setCurrency(BasketDB.getDisplayCurrency(request));</span>
+<span class="fc" id="L382">			invoice.setUserLng(PageLng.getUserLng(request));</span>
 
-<span class="nc" id="L384">			int deliveryMethod = Tools.getIntValue(request.getParameter(&quot;deliveryMethod&quot;),-1);</span>
-<span class="nc bnc" id="L385" title="All 2 branches missed.">			if(deliveryMethod &gt; 0)</span>
+<span class="fc" id="L384">			int deliveryMethod = Tools.getIntValue(request.getParameter(&quot;deliveryMethod&quot;),-1);</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">			if(deliveryMethod &gt; 0)</span>
 			{
-<span class="nc" id="L387">				DocDetails deliveryDoc = DocDB.getInstance().getBasicDocDetails(deliveryMethod, false);</span>
-<span class="nc bnc" id="L388" title="All 2 branches missed.">				if (deliveryDoc != null) invoice.setDeliveryMethod(deliveryDoc.getTitle());</span>
+<span class="fc" id="L387">				DocDetails deliveryDoc = DocDB.getInstance().getBasicDocDetails(deliveryMethod, false);</span>
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">				if (deliveryDoc != null) invoice.setDeliveryMethod(deliveryDoc.getTitle());</span>
 			}
 
 			//nastav jej polozky
-<span class="nc" id="L392">			List&lt;BasketItemBean&gt; items = BasketDB.getBasketItems(request);</span>
+<span class="fc" id="L392">			List&lt;BasketItemBean&gt; items = BasketDB.getBasketItems(request);</span>
 
-<span class="nc" id="L394">			List&lt;BasketItemBean&gt; basketItems = new ArrayList&lt;BasketItemBean&gt;();</span>
+<span class="fc" id="L394">			List&lt;BasketItemBean&gt; basketItems = new ArrayList&lt;BasketItemBean&gt;();</span>
 
-<span class="nc bnc" id="L396" title="All 2 branches missed.">			for (BasketItemBean b : items)</span>
+<span class="fc bfc" id="L396" title="All 2 branches covered.">			for (BasketItemBean b : items)</span>
 			{
-<span class="nc" id="L398">				DocDetails itemDoc = b.getDoc();</span>
-<span class="nc" id="L399">				double price = itemDoc.calculateLocalPrice(itemDoc.getPrice(request), BasketDB.getDisplayCurrency(request));</span>
-<span class="nc bnc" id="L400" title="All 2 branches missed.">				if (price &gt; 0)</span>
+<span class="fc" id="L398">				DocDetails itemDoc = b.getDoc();</span>
+<span class="fc" id="L399">				double price = itemDoc.calculateLocalPrice(itemDoc.getPrice(request), BasketDB.getDisplayCurrency(request)).doubleValue();</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">				if (price &gt; 0)</span>
 				{
-<span class="nc" id="L402">					b.setItemPrice(price);</span>
+<span class="fc" id="L402">					b.setItemPrice(price);</span>
 				}
 
-<span class="nc" id="L405">				basketItems.add(b);</span>
-<span class="nc" id="L406">				b.setBasketInvoice(invoice);</span>
-<span class="nc" id="L407">			}</span>
+<span class="fc" id="L405">				basketItems.add(b);</span>
+<span class="fc" id="L406">				b.setBasketInvoice(invoice);</span>
+<span class="fc" id="L407">			}</span>
 
-<span class="nc" id="L409">			invoice.setBasketItems(basketItems);</span>
+<span class="fc" id="L409">			invoice.setBasketItems(basketItems);</span>
 
-<span class="nc bnc" id="L411" title="All 2 branches missed.">			if(saveInvoice(invoice))</span>
+<span class="pc bpc" id="L411" title="1 of 2 branches missed.">			if(saveInvoice(invoice))</span>
 			{
-<span class="nc" id="L413">				Adminlog.add(Adminlog.TYPE_BASKET_CREATE, &quot;Vytvorena objednavka: &quot; + StringUtils.join(items.iterator(), &quot;,&quot;), invoice.getBasketInvoiceId(), -1);</span>
-<span class="nc" id="L414">				Logger.println(BasketDB.class, &quot;Objednavka ulozena, id= &quot; + invoice.getBasketInvoiceId());</span>
+<span class="fc" id="L413">				Adminlog.add(Adminlog.TYPE_BASKET_CREATE, &quot;Vytvorena objednavka: &quot; + StringUtils.join(items.iterator(), &quot;,&quot;), invoice.getBasketInvoiceId(), -1);</span>
+<span class="fc" id="L414">				Logger.println(BasketDB.class, &quot;Objednavka ulozena, id= &quot; + invoice.getBasketInvoiceId());</span>
 				//zrus browserId
-<span class="nc" id="L416">				request.getSession().removeAttribute(BasketDB.BROWSER_ID_SESSION_KEY);</span>
+<span class="fc" id="L416">				request.getSession().removeAttribute(BasketDB.BROWSER_ID_SESSION_KEY);</span>
 			}
 			else
 			{
@@ -425,9 +425,9 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 		{
 <span class="nc" id="L426">			sk.iway.iwcm.Logger.error(e);</span>
 <span class="nc" id="L427">			invoice = null;</span>
-<span class="nc" id="L428">		}</span>
+<span class="fc" id="L428">		}</span>
 
-<span class="nc" id="L430">		return(invoice);</span>
+<span class="fc" id="L430">		return(invoice);</span>
 	}
 
 	/**
@@ -440,28 +440,28 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	public static boolean saveInvoice(BasketInvoiceBean basketInvoice)
 	{
 		//pre istotu setneme domainId
-<span class="nc" id="L443">		basketInvoice.setDomainId(CloudToolsForCore.getDomainId());</span>
-<span class="nc bnc" id="L444" title="All 2 branches missed.">		if (basketInvoice.getBasketInvoiceId() &gt; 0)</span>
+<span class="fc" id="L443">		basketInvoice.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L444" title="1 of 2 branches missed.">		if (basketInvoice.getBasketInvoiceId() &gt; 0)</span>
 		{
 <span class="nc" id="L446">			String message = new BeanDiffPrinter(new BeanDiff().setNewLoadJpaOriginal(basketInvoice, basketInvoice.getBasketInvoiceId())).toString();</span>
 <span class="nc" id="L447">			Adminlog.add(Adminlog.TYPE_BASKET_UPDATE, String.format(&quot;Zmenená objednávka: %s&quot;, message), basketInvoice.getBasketInvoiceId(), -1);</span>
 		}
-<span class="nc" id="L449">	    JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L449">	    JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
 	    try
 	    {
-<span class="nc" id="L452">	       em.getTransaction().begin();</span>
-<span class="nc bnc" id="L453" title="All 2 branches missed.">	       if(basketInvoice.getBasketInvoiceId() &lt; 1)</span>
+<span class="fc" id="L452">	       em.getTransaction().begin();</span>
+<span class="pc bpc" id="L453" title="1 of 2 branches missed.">	       if(basketInvoice.getBasketInvoiceId() &lt; 1)</span>
 	       {
-<span class="nc" id="L455">	    	   em.persist(basketInvoice);</span>
+<span class="fc" id="L455">	    	   em.persist(basketInvoice);</span>
 	       }
 	       else
 	       {
 <span class="nc" id="L459">	    	   em.merge(basketInvoice);</span>
 	       }
 
-<span class="nc" id="L462">	       em.getTransaction().commit();</span>
+<span class="fc" id="L462">	       em.getTransaction().commit();</span>
 
-<span class="nc" id="L464">	       return true;</span>
+<span class="fc" id="L464">	       return true;</span>
 	    }
 <span class="nc" id="L466">	    catch(Exception e)</span>
 	    {
@@ -500,20 +500,20 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	 */
 	public static void decreaseCountOfProductFromStock(int basketInvoiceId)
 	{
-<span class="nc" id="L503">		BasketInvoiceBean invoiceBean = InvoiceDB.getInvoiceById(basketInvoiceId);</span>
+<span class="fc" id="L503">		BasketInvoiceBean invoiceBean = InvoiceDB.getInvoiceById(basketInvoiceId);</span>
 
-<span class="nc bnc" id="L505" title="All 2 branches missed.">		if(invoiceBean == null )</span>
+<span class="pc bpc" id="L505" title="1 of 2 branches missed.">		if(invoiceBean == null )</span>
 <span class="nc" id="L506">			return;</span>
 
-<span class="nc" id="L508">		List&lt;BasketItemBean&gt; listItmes = invoiceBean.getBasketItems();</span>
-<span class="nc bnc" id="L509" title="All 2 branches missed.">		if(listItmes == null )</span>
+<span class="fc" id="L508">		List&lt;BasketItemBean&gt; listItmes = invoiceBean.getBasketItems();</span>
+<span class="pc bpc" id="L509" title="1 of 2 branches missed.">		if(listItmes == null )</span>
 <span class="nc" id="L510">			return;</span>
 
-<span class="nc bnc" id="L512" title="All 2 branches missed.">		for(BasketItemBean item: listItmes)</span>
+<span class="fc bfc" id="L512" title="All 2 branches covered.">		for(BasketItemBean item: listItmes)</span>
 		{
-<span class="nc" id="L514">			decreaseProductCount(item);</span>
-<span class="nc" id="L515">		}</span>
-<span class="nc" id="L516">	}</span>
+<span class="fc" id="L514">			decreaseProductCount(item);</span>
+<span class="fc" id="L515">		}</span>
+<span class="fc" id="L516">	}</span>
 
 	/** Odobere konkretnemu produktu pocet kusov na sklade
 	 *
@@ -523,13 +523,13 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 	 */
 	private static synchronized void decreaseProductCount(BasketItemBean item )
 	{
-<span class="nc" id="L526">		DocDetails docDetails = item.getDoc();</span>
-<span class="nc bnc" id="L527" title="All 2 branches missed.">		if(docDetails != null )</span>
+<span class="fc" id="L526">		DocDetails docDetails = item.getDoc();</span>
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">		if(docDetails != null )</span>
 		{
-<span class="nc" id="L529">			int stockQty = Tools.getIntValue(docDetails.getFieldB(), -1);</span>
-<span class="nc" id="L530">			int productQty = Tools.getIntValue(item.getItemQty());</span>
+<span class="fc" id="L529">			int stockQty = Tools.getIntValue(docDetails.getFieldB(), -1);</span>
+<span class="fc" id="L530">			int productQty = Tools.getIntValue(item.getItemQty());</span>
 
-<span class="nc bnc" id="L532" title="All 4 branches missed.">			if(stockQty &gt; 0 &amp;&amp; productQty &gt; 0)</span>
+<span class="pc bpc" id="L532" title="3 of 4 branches missed.">			if(stockQty &gt; 0 &amp;&amp; productQty &gt; 0)</span>
 			{
 <span class="nc bnc" id="L534" title="All 2 branches missed.">				if(stockQty - productQty &gt;= 0)</span>
 <span class="nc" id="L535">					docDetails.setFieldB(stockQty - productQty + &quot;&quot;);</span>
@@ -540,7 +540,7 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 			}
 		}
 
-<span class="nc" id="L543">	}</span>
+<span class="fc" id="L543">	}</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

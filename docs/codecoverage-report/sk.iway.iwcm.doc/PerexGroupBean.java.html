@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">PerexGroupBean.java</span></div><h1>PerexGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerexGroupBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">PerexGroupBean.java</span></div><h1>PerexGroupBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import java.util.StringTokenizer;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 ;
 
@@ -17,7 +19,7 @@ import sk.iway.iwcm.Tools;
  *@created      $Date: 2007/09/07 13:39:29 $
  *@modified     $Date: 2007/09/07 13:39:29 $
  */
-<span class="fc" id="L20">public class PerexGroupBean</span>
+<span class="fc" id="L22">public class PerexGroupBean</span>
 {
    private int perexGroupId;
    private String perexGroupName;
@@ -28,20 +30,54 @@ import sk.iway.iwcm.Tools;
     */
    private String availableGroups;
 
+   /**
+     * Get perex group name by language of current webpage
+     * @return
+     */
+    public String getPerexGroupName() {
+<span class="fc" id="L38">        String lng = null;</span>
 
-	/**
-	 * @return Returns the perexGroupName.
-	 */
-	public String getPerexGroupName()
-	{
-<span class="fc" id="L37">		return perexGroupName;</span>
-	}
+        //Get value by actual language
+<span class="fc" id="L41">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if(rb != null) lng = rb.getLng();</span>
+
+<span class="fc" id="L44">        return getPerexGroupName(lng);</span>
+    }
+
+    /**
+     * Get perex group name by language
+     * @param lng
+     * @return
+     */
+    public String getPerexGroupName(String lng) {
+<span class="fc" id="L53">        String name = getPerexGroupNameInternal(lng);</span>
+        //Get value by REQUIRED perexGroupName
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if(Tools.isEmpty(name)) name = perexGroupName;</span>
+
+<span class="fc" id="L57">        return name;</span>
+    }
+
+    private String getPerexGroupNameInternal(String lng) {
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (Tools.isEmpty(lng)) return &quot;&quot;;</span>
+<span class="pc bpc" id="L62" title="6 of 10 branches missed.">        switch(lng) {</span>
+<span class="fc" id="L63">            case &quot;sk&quot;: return perexGroupNameSk;</span>
+<span class="fc" id="L64">            case &quot;cz&quot;: return perexGroupNameCz;</span>
+<span class="fc" id="L65">            case &quot;en&quot;: return perexGroupNameEn;</span>
+<span class="nc" id="L66">            case &quot;de&quot;: return perexGroupNameDe;</span>
+<span class="nc" id="L67">            case &quot;pl&quot;: return perexGroupNamePl;</span>
+<span class="nc" id="L68">            case &quot;ru&quot;: return perexGroupNameRu;</span>
+<span class="fc" id="L69">            case &quot;hu&quot;: return perexGroupNameHu;</span>
+<span class="nc" id="L70">            case &quot;cho&quot;: return perexGroupNameCho;</span>
+<span class="nc" id="L71">            case &quot;esp&quot;: return perexGroupNameEsp;</span>
+<span class="nc" id="L72">            default: return &quot;&quot;;</span>
+        }
+    }
 
 	public String getPerexGroupNameId()
 	{
-<span class="pc bpc" id="L42" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;perexGroupIncludeId&quot;)==false) return getPerexGroupName();</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;perexGroupIncludeId&quot;)==false) return getPerexGroupName();</span>
 
-<span class="fc" id="L44">		return perexGroupName+&quot; (id:&quot;+perexGroupId+&quot;)&quot;;</span>
+<span class="fc" id="L80">		return perexGroupName+&quot; (id:&quot;+perexGroupId+&quot;)&quot;;</span>
 	}
 
 	/**
@@ -49,15 +85,15 @@ import sk.iway.iwcm.Tools;
 	 */
 	public void setPerexGroupName(String perexGroupName)
 	{
-<span class="fc" id="L52">		this.perexGroupName = perexGroupName;</span>
-<span class="fc" id="L53">	}</span>
+<span class="fc" id="L88">		this.perexGroupName = perexGroupName;</span>
+<span class="fc" id="L89">	}</span>
 
 	/**
 	 * @return Returns the relatedPages.
 	 */
 	public String[] getRelatedPages()
 	{
-<span class="nc" id="L60">		return relatedPages;</span>
+<span class="nc" id="L96">		return relatedPages;</span>
 	}
 
 	/**
@@ -67,27 +103,27 @@ import sk.iway.iwcm.Tools;
 	{
 		int size;
 		StringTokenizer st;
-<span class="fc" id="L70">		int index = 0;</span>
-<span class="fc" id="L71">		String[] relatedPages = new String[0];</span>
+<span class="fc" id="L106">		int index = 0;</span>
+<span class="fc" id="L107">		String[] relatedPages = new String[0];</span>
 
 		try
 		{
 
-<span class="pc bpc" id="L76" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(pages))</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(pages))</span>
 			{
-<span class="nc" id="L78">				st = new StringTokenizer(pages, &quot;,&quot;);</span>
-<span class="nc" id="L79">				size = st.countTokens();</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (size &gt; 0)</span>
+<span class="nc" id="L114">				st = new StringTokenizer(pages, &quot;,&quot;);</span>
+<span class="nc" id="L115">				size = st.countTokens();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">				if (size &gt; 0)</span>
 				{
 					//Logger.println(this,&quot;-------\nRelatedPages: &quot;+pages);
-<span class="nc" id="L83">					relatedPages = new String[size];</span>
-<span class="nc bnc" id="L84" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
+<span class="nc" id="L119">					relatedPages = new String[size];</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
 					{
-<span class="nc bnc" id="L86" title="All 2 branches missed.">						if ( index &lt; size)</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">						if ( index &lt; size)</span>
 						{
-<span class="nc" id="L88">							relatedPages[index] = st.nextToken().trim();</span>
+<span class="nc" id="L124">							relatedPages[index] = st.nextToken().trim();</span>
 							//Logger.println(this,relatedPages[index]);
-<span class="nc" id="L90">							index++;</span>
+<span class="nc" id="L126">							index++;</span>
 						}
 					}
 				}
@@ -95,41 +131,184 @@ import sk.iway.iwcm.Tools;
 
 			//relatedPages = RelatedPagesDB.getTokens(pages, &quot;,&quot;);
 		}
-<span class="nc" id="L98">		catch (Exception e)</span>
+<span class="nc" id="L134">		catch (Exception e)</span>
 		{
-<span class="nc" id="L100">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L101">		}</span>
-<span class="fc" id="L102">		this.relatedPages = relatedPages;</span>
-<span class="fc" id="L103">	}</span>
+<span class="nc" id="L136">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L137">		}</span>
+<span class="fc" id="L138">		this.relatedPages = relatedPages;</span>
+<span class="fc" id="L139">	}</span>
 
 	/**
 	 * @return Returns the perexGroupId.
 	 */
 	public int getPerexGroupId()
 	{
-<span class="fc" id="L110">		return perexGroupId;</span>
+<span class="fc" id="L146">		return perexGroupId;</span>
 	}
 	/**
 	 * @param perexGroupId The perexGroupId to set.
 	 */
 	public void setPerexGroupId(int perexGroupId)
 	{
-<span class="fc" id="L117">		this.perexGroupId = perexGroupId;</span>
-<span class="fc" id="L118">	}</span>
+<span class="fc" id="L153">		this.perexGroupId = perexGroupId;</span>
+<span class="fc" id="L154">	}</span>
 
 	public String getAvailableGroups()
 	{
-<span class="nc" id="L122">		return availableGroups;</span>
+<span class="fc" id="L158">		return availableGroups;</span>
 	}
 
 	public int[] getAvailableGroupsInt()
 	{
-<span class="fc" id="L127">		return Tools.getTokensInt(availableGroups, &quot;,&quot;);</span>
+<span class="fc" id="L163">		return Tools.getTokensInt(availableGroups, &quot;,&quot;);</span>
 	}
 
 	public void setAvailableGroups(String availableGroups)
 	{
-<span class="fc" id="L132">		this.availableGroups = availableGroups;</span>
-<span class="fc" id="L133">	}</span>
+<span class="fc" id="L168">		this.availableGroups = availableGroups;</span>
+<span class="fc" id="L169">	}</span>
+
+	private String perexGroupNameSk;
+	private String perexGroupNameCz;
+	private String perexGroupNameEn;
+	private String perexGroupNameDe;
+	private String perexGroupNamePl;
+	private String perexGroupNameRu;
+	private String perexGroupNameHu;
+	private String perexGroupNameCho;
+	private String perexGroupNameEsp;
+
+	public String getPerexGroupNameSk() {
+<span class="nc" id="L182">		return perexGroupNameSk;</span>
+	}
+
+	public void setPerexGroupNameSk(String perexGroupNameSk) {
+<span class="fc" id="L186">		this.perexGroupNameSk = perexGroupNameSk;</span>
+<span class="fc" id="L187">	}</span>
+
+	public String getPerexGroupNameCz() {
+<span class="nc" id="L190">		return perexGroupNameCz;</span>
+	}
+
+	public void setPerexGroupNameCz(String perexGroupNameCz) {
+<span class="fc" id="L194">		this.perexGroupNameCz = perexGroupNameCz;</span>
+<span class="fc" id="L195">	}</span>
+
+	public String getPerexGroupNameEn() {
+<span class="nc" id="L198">		return perexGroupNameEn;</span>
+	}
+
+	public void setPerexGroupNameEn(String perexGroupNameEn) {
+<span class="fc" id="L202">		this.perexGroupNameEn = perexGroupNameEn;</span>
+<span class="fc" id="L203">	}</span>
+
+	public String getPerexGroupNameDe() {
+<span class="nc" id="L206">		return perexGroupNameDe;</span>
+	}
+
+	public void setPerexGroupNameDe(String perexGroupNameDe) {
+<span class="fc" id="L210">		this.perexGroupNameDe = perexGroupNameDe;</span>
+<span class="fc" id="L211">	}</span>
+
+	public String getPerexGroupNamePl() {
+<span class="nc" id="L214">		return perexGroupNamePl;</span>
+	}
+
+	public void setPerexGroupNamePl(String perexGroupNamePl) {
+<span class="fc" id="L218">		this.perexGroupNamePl = perexGroupNamePl;</span>
+<span class="fc" id="L219">	}</span>
+
+	public String getPerexGroupNameRu() {
+<span class="nc" id="L222">		return perexGroupNameRu;</span>
+	}
+
+	public void setPerexGroupNameRu(String perexGroupNameRu) {
+<span class="fc" id="L226">		this.perexGroupNameRu = perexGroupNameRu;</span>
+<span class="fc" id="L227">	}</span>
+
+	public String getPerexGroupNameHu() {
+<span class="nc" id="L230">		return perexGroupNameHu;</span>
+	}
+
+	public void setPerexGroupNameHu(String perexGroupNameHu) {
+<span class="fc" id="L234">		this.perexGroupNameHu = perexGroupNameHu;</span>
+<span class="fc" id="L235">	}</span>
+
+	public String getPerexGroupNameCho() {
+<span class="nc" id="L238">		return perexGroupNameCho;</span>
+	}
+
+	public void setPerexGroupNameCho(String perexGroupNameCho) {
+<span class="fc" id="L242">		this.perexGroupNameCho = perexGroupNameCho;</span>
+<span class="fc" id="L243">	}</span>
+
+	public String getPerexGroupNameEsp() {
+<span class="nc" id="L246">		return perexGroupNameEsp;</span>
+	}
+
+	public void setPerexGroupNameEsp(String perexGroupNameEsp) {
+<span class="fc" id="L250">		this.perexGroupNameEsp = perexGroupNameEsp;</span>
+<span class="fc" id="L251">	}</span>
+
+	private String fieldA;
+	private String fieldB;
+	private String fieldC;
+	private String fieldD;
+	private String fieldE;
+	private String fieldF;
+
+	private String notNull(String field) {
+<span class="fc bfc" id="L261" title="All 2 branches covered.">		if (field == null) return &quot;&quot;;</span>
+<span class="fc" id="L262">		return field;</span>
+	}
+
+	public String getFieldA() {
+<span class="nc" id="L266">		return notNull(fieldA);</span>
+	}
+
+	public void setFieldA(String fieldA) {
+<span class="fc" id="L270">		this.fieldA = fieldA;</span>
+<span class="fc" id="L271">	}</span>
+
+	public String getFieldB() {
+<span class="nc" id="L274">		return notNull(fieldB);</span>
+	}
+
+	public void setFieldB(String fieldB) {
+<span class="fc" id="L278">		this.fieldB = fieldB;</span>
+<span class="fc" id="L279">	}</span>
+
+	public String getFieldC() {
+<span class="nc" id="L282">		return notNull(fieldC);</span>
+	}
+
+	public void setFieldC(String fieldC) {
+<span class="fc" id="L286">		this.fieldC = fieldC;</span>
+<span class="fc" id="L287">	}</span>
+
+	public String getFieldD() {
+<span class="nc" id="L290">		return notNull(fieldD);</span>
+	}
+
+	public void setFieldD(String fieldD) {
+<span class="fc" id="L294">		this.fieldD = fieldD;</span>
+<span class="fc" id="L295">	}</span>
+
+	public String getFieldE() {
+<span class="nc" id="L298">		return notNull(fieldE);</span>
+	}
+
+	public void setFieldE(String fieldE) {
+<span class="fc" id="L302">		this.fieldE = fieldE;</span>
+<span class="fc" id="L303">	}</span>
+
+	public String getFieldF() {
+<span class="fc" id="L306">		return notNull(fieldF);</span>
+	}
+
+	public void setFieldF(String fieldF) {
+<span class="fc" id="L310">		this.fieldF = fieldF;</span>
+<span class="fc" id="L311">	}</span>
+
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

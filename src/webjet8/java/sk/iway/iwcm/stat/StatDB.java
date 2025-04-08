@@ -1407,10 +1407,10 @@ public class StatDB extends DB
 	}
 
 	/**
-	 * Gets max x tags ( see {@link Tag} ) for opencloud from daysFrom ago till now
+	 * Gets max x tags for opencloud from daysFrom ago till now
 	 * @param maxTags max tags returned
 	 * @param daysFrom number of days from now to past
-	 * @param searchUrlBase base url for search (i.e.: "/showdoc.do?docid=36&words=")
+	 * @param searchUrlBase base url for search (i.e.: "/showdoc.do?docid=36&amp;words=")
 	 * @return collection of max maxTags tags from daysFrom days till now
 	 *
 	 * @throws IllegalArgumentException when maxTags or daysFrom are negative or zero, or searchUrlBase is null

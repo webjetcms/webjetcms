@@ -825,7 +825,6 @@ public class AtrDB
    /**
     * vrati zoznam vsetkych atributov
     * @param request
-    * @return
     */
    public static void updateAttribute(AtrBean attribute, HttpServletRequest request) {
    	Connection db_conn = null;
@@ -884,7 +883,6 @@ public class AtrDB
    /**
     * zmaze atribut
     * @param request
-    * @return
     */
    public static void deleteAttribute(int id, HttpServletRequest request) {
    	Connection db_conn = null;
@@ -921,7 +919,6 @@ public class AtrDB
    /**
     * prida atribut
     * @param request
-    * @return
     */
    public static void insertAttribute(AtrBean attribute, HttpServletRequest request) {
    	Connection db_conn = null;

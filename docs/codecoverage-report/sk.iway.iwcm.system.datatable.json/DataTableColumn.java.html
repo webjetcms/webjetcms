@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataTableColumn.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable.json</a> &gt; <span class="el_source">DataTableColumn.java</span></div><h1>DataTableColumn.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable.json;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataTableColumn.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable.json</a> &gt; <span class="el_source">DataTableColumn.java</span></div><h1>DataTableColumn.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -370,278 +370,293 @@ public class DataTableColumn {
 <span class="fc bfc" id="L370" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.DATETIME) {</span>
 <span class="fc" id="L371">            renderFormat = &quot;dt-format-date-time&quot;;</span>
 <span class="fc" id="L372">            addClassName(&quot;dt-style-date&quot;);</span>
+<span class="fc" id="L373">            addClassName(&quot;dt-style-datetime&quot;);</span>
 
-<span class="pc bpc" id="L374" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L375">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L376">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L377">            editor.setType(&quot;datetime&quot;);</span>
+<span class="fc" id="L378">            editor.setType(&quot;datetime&quot;);</span>
         }
 
-<span class="fc bfc" id="L380" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.TIME_HM) {</span>
-<span class="fc" id="L381">            renderFormat = &quot;dt-format-time-hm&quot;;</span>
-<span class="fc" id="L382">            addClassName(&quot;dt-style-date&quot;);</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.TIME_HM) {</span>
+<span class="fc" id="L382">            renderFormat = &quot;dt-format-time-hm&quot;;</span>
+<span class="fc" id="L383">            addClassName(&quot;dt-style-date&quot;);</span>
+<span class="fc" id="L384">            addClassName(&quot;dt-style-time&quot;);</span>
 
-<span class="pc bpc" id="L384" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L385">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L387">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L387">            editor.setType(&quot;timehm&quot;);</span>
+<span class="fc" id="L389">            editor.setType(&quot;timehm&quot;);</span>
         }
 
-<span class="pc bpc" id="L390" title="1 of 2 branches missed.">        if (dataTableColumnType == DataTableColumnType.TIME_HMS) {</span>
-<span class="nc" id="L391">            renderFormat = &quot;dt-format-time-hms&quot;;</span>
-<span class="nc" id="L392">            addClassName(&quot;dt-style-date&quot;);</span>
+<span class="pc bpc" id="L392" title="1 of 2 branches missed.">        if (dataTableColumnType == DataTableColumnType.TIME_HMS) {</span>
+<span class="nc" id="L393">            renderFormat = &quot;dt-format-time-hms&quot;;</span>
+<span class="nc" id="L394">            addClassName(&quot;dt-style-date&quot;);</span>
+<span class="nc" id="L395">            addClassName(&quot;dt-style-time&quot;);</span>
 
-<span class="nc bnc" id="L394" title="All 2 branches missed.">            if (editor == null) {</span>
-<span class="nc" id="L395">                editor = new DataTableColumnEditor();</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">            if (editor == null) {</span>
+<span class="nc" id="L398">                editor = new DataTableColumnEditor();</span>
             }
-<span class="nc" id="L397">            editor.setType(&quot;timehms&quot;);</span>
+<span class="nc" id="L400">            editor.setType(&quot;timehms&quot;);</span>
         }
 
-<span class="fc bfc" id="L400" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.OPEN_EDITOR) {</span>
-<span class="fc" id="L401">            addClassName(&quot;dt-row-edit&quot;);</span>
-<span class="fc" id="L402">            renderFormat = &quot;dt-format-text&quot;;</span>
-<span class="fc" id="L403">            renderFormatLinkTemplate = &quot;javascript:;&quot;;</span>
-<span class="fc" id="L404">            renderFormatPrefix = &quot;&lt;i class=\&quot;ti ti-pencil\&quot;&gt;&lt;/i&gt; &quot;;</span>
+<span class="fc bfc" id="L403" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.OPEN_EDITOR) {</span>
+<span class="fc" id="L404">            addClassName(&quot;dt-row-edit&quot;);</span>
+<span class="fc" id="L405">            renderFormat = &quot;dt-format-text&quot;;</span>
+<span class="fc" id="L406">            renderFormatLinkTemplate = &quot;javascript:;&quot;;</span>
+<span class="fc" id="L407">            renderFormatPrefix = &quot;&lt;i class=\&quot;ti ti-pencil\&quot;&gt;&lt;/i&gt; &quot;;</span>
 
-<span class="pc bpc" id="L406" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L407">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L409" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L410">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L409">            editor.setType(&quot;text&quot;);</span>
+<span class="fc" id="L412">            editor.setType(&quot;text&quot;);</span>
         }
 
-<span class="fc bfc" id="L412" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.DISABLED) {</span>
-<span class="pc bpc" id="L413" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L414">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L415" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.DISABLED) {</span>
+<span class="pc bpc" id="L416" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L417">                editor = new DataTableColumnEditor();</span>
             }
 
-<span class="fc" id="L417">            editor.addAttr(&quot;disabled&quot;, &quot;disabled&quot;);</span>
+<span class="fc" id="L420">            editor.addAttr(&quot;disabled&quot;, &quot;disabled&quot;);</span>
         }
 
-<span class="fc bfc" id="L420" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.GALLERY_IMAGE) {</span>
-<span class="fc" id="L421">            title = &quot;&quot;;</span>
-<span class="fc" id="L422">            hidden = Boolean.FALSE;</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.GALLERY_IMAGE) {</span>
+<span class="fc" id="L424">            title = &quot;&quot;;</span>
+<span class="fc" id="L425">            hidden = Boolean.FALSE;</span>
         }
 
-<span class="fc bfc" id="L425" title="All 4 branches covered.">        if (dataTableColumnType == DataTableColumnType.SELECT || dataTableColumnType == DataTableColumnType.MULTISELECT) {</span>
-<span class="fc" id="L426">            renderFormat = &quot;dt-format-select&quot;;</span>
-<span class="fc bfc" id="L427" title="All 2 branches covered.">            if (editor == null) {</span>
-<span class="fc" id="L428">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L428" title="All 4 branches covered.">        if (dataTableColumnType == DataTableColumnType.SELECT || dataTableColumnType == DataTableColumnType.MULTISELECT) {</span>
+<span class="fc" id="L429">            renderFormat = &quot;dt-format-select&quot;;</span>
+<span class="fc bfc" id="L430" title="All 2 branches covered.">            if (editor == null) {</span>
+<span class="fc" id="L431">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L430">            editor.setType(&quot;select&quot;);</span>
+<span class="fc" id="L433">            editor.setType(&quot;select&quot;);</span>
 
-<span class="fc bfc" id="L432" title="All 2 branches covered.">            if (dataTableColumnType == DataTableColumnType.MULTISELECT) {</span>
-<span class="fc" id="L433">                editor.setMultiple(Boolean.TRUE);</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">            if (dataTableColumnType == DataTableColumnType.MULTISELECT) {</span>
+<span class="fc" id="L436">                editor.setMultiple(Boolean.TRUE);</span>
                 //editor.addAttr(&quot;multiple&quot;, &quot;multiple&quot;);
             }
 
-<span class="pc bpc" id="L437" title="1 of 2 branches missed.">            if (editor.getOptions() == null) {</span>
-<span class="fc" id="L438">                editor.setOptions(new ArrayList&lt;&gt;());</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">            if (editor.getOptions() == null) {</span>
+<span class="fc" id="L441">                editor.setOptions(new ArrayList&lt;&gt;());</span>
             }
         }
 
-<span class="fc bfc" id="L442" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.BOOLEAN) {</span>
-<span class="fc" id="L443">            renderFormat = &quot;dt-format-boolean-true&quot;;</span>
-<span class="pc bpc" id="L444" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L445">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L445" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.BOOLEAN) {</span>
+<span class="fc" id="L446">            renderFormat = &quot;dt-format-boolean-true&quot;;</span>
+<span class="pc bpc" id="L447" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L448">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L447">            editor.setType(&quot;checkbox&quot;);</span>
+<span class="fc" id="L450">            editor.setType(&quot;checkbox&quot;);</span>
         }
 
-<span class="fc bfc" id="L450" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.BOOLEAN_TEXT) {</span>
-<span class="fc" id="L451">            renderFormat = &quot;dt-format-boolean-true&quot;;</span>
-<span class="pc bpc" id="L452" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L453">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L453" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.BOOLEAN_TEXT) {</span>
+<span class="fc" id="L454">            renderFormat = &quot;dt-format-boolean-true&quot;;</span>
+<span class="pc bpc" id="L455" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L456">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L455">            editor.setType(&quot;checkbox&quot;);</span>
-<span class="pc bpc" id="L456" title="1 of 2 branches missed.">            if (editor.getOptions() == null) {</span>
-<span class="fc" id="L457">                List&lt;LabelValue&gt; options = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L458">                options.add(new LabelValue(prop.getText(annotation.title()), &quot;true&quot;));</span>
-<span class="fc" id="L459">                editor.setOptions(options);</span>
+<span class="fc" id="L458">            editor.setType(&quot;checkbox&quot;);</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">            if (editor.getOptions() == null) {</span>
+<span class="fc" id="L460">                List&lt;LabelValue&gt; options = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L461">                options.add(new LabelValue(prop.getText(annotation.title()), &quot;true&quot;));</span>
+<span class="fc" id="L462">                editor.setOptions(options);</span>
             }
         }
 
-<span class="fc bfc" id="L463" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.CHECKBOX) {</span>
-<span class="fc" id="L464">            renderFormat = &quot;dt-format-checkbox&quot;;</span>
-<span class="pc bpc" id="L465" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L466">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.CHECKBOX) {</span>
+<span class="fc" id="L467">            renderFormat = &quot;dt-format-checkbox&quot;;</span>
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L469">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L468">            editor.setType(&quot;checkbox&quot;);</span>
+<span class="fc" id="L471">            editor.setType(&quot;checkbox&quot;);</span>
         }
 
-<span class="fc bfc" id="L471" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.JSON) {</span>
-<span class="fc" id="L472">            renderFormat = &quot;dt-format-json&quot;;</span>
-<span class="fc" id="L473">            addClassName(&quot;dt-style-json&quot;);</span>
+<span class="fc bfc" id="L474" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.JSON) {</span>
+<span class="fc" id="L475">            renderFormat = &quot;dt-format-json&quot;;</span>
+<span class="fc" id="L476">            addClassName(&quot;dt-style-json&quot;);</span>
 
-<span class="fc bfc" id="L475" title="All 2 branches covered.">            if (editor == null) {</span>
-<span class="fc" id="L476">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L478" title="All 2 branches covered.">            if (editor == null) {</span>
+<span class="fc" id="L479">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L478">            editor.setType(&quot;json&quot;);</span>
+<span class="fc" id="L481">            editor.setType(&quot;json&quot;);</span>
         }
 
-<span class="fc bfc" id="L481" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.DATATABLE) {</span>
-<span class="fc" id="L482">            renderFormat = &quot;dt-format-datatable&quot;;</span>
+<span class="fc bfc" id="L484" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.DATATABLE) {</span>
+<span class="fc" id="L485">            renderFormat = &quot;dt-format-datatable&quot;;</span>
 
-<span class="pc bpc" id="L484" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L485">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L487" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L488">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L487">            editor.setType(&quot;datatable&quot;);</span>
+<span class="fc" id="L490">            editor.setType(&quot;datatable&quot;);</span>
         }
 
-<span class="fc bfc" id="L490" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.ELFINDER) {</span>
-<span class="fc" id="L491">            renderFormat = &quot;dt-format-elfinder&quot;;</span>
+<span class="fc bfc" id="L493" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.ELFINDER) {</span>
+<span class="fc" id="L494">            renderFormat = &quot;dt-format-elfinder&quot;;</span>
 
-<span class="pc bpc" id="L493" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L494">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L497">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L496">            editor.setType(&quot;elfinder&quot;);</span>
+<span class="fc" id="L499">            editor.setType(&quot;elfinder&quot;);</span>
         }
 
-<span class="fc bfc" id="L499" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.WYSIWYG) {</span>
-<span class="fc" id="L500">            renderFormat = &quot;dt-format-wysiwyg&quot;;</span>
-<span class="fc" id="L501">            addClassName(&quot;dt-style-wysiwyg&quot;);</span>
-<span class="fc" id="L502">            addClassName(&quot;cell-not-editable&quot;);</span>
+<span class="fc bfc" id="L502" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.WYSIWYG) {</span>
+<span class="fc" id="L503">            renderFormat = &quot;dt-format-wysiwyg&quot;;</span>
+<span class="fc" id="L504">            addClassName(&quot;dt-style-wysiwyg&quot;);</span>
+<span class="fc" id="L505">            addClassName(&quot;cell-not-editable&quot;);</span>
 
-<span class="pc bpc" id="L504" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L505">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L507" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L508">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L507">            editor.setType(&quot;wysiwyg&quot;);</span>
+<span class="fc" id="L510">            editor.setType(&quot;wysiwyg&quot;);</span>
         }
 
-<span class="fc bfc" id="L510" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.JSTREE) {</span>
-<span class="fc" id="L511">            renderFormat = &quot;dt-format-jstree&quot;;</span>
-<span class="fc" id="L512">            addClassName(&quot;dt-style-jstree&quot;);</span>
+<span class="fc bfc" id="L513" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.JSTREE) {</span>
+<span class="fc" id="L514">            renderFormat = &quot;dt-format-jstree&quot;;</span>
+<span class="fc" id="L515">            addClassName(&quot;dt-style-jstree&quot;);</span>
 
-<span class="pc bpc" id="L514" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L515">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L517" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L518">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L517">            editor.setType(&quot;jsTree&quot;);</span>
+<span class="fc" id="L520">            editor.setType(&quot;jsTree&quot;);</span>
         }
 
-<span class="fc bfc" id="L520" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.HIDDEN) {</span>
-<span class="fc" id="L521">            renderFormat = &quot;dt-format-hidden&quot;;</span>
-<span class="fc" id="L522">            hidden = Boolean.TRUE;</span>
-<span class="pc bpc" id="L523" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L524">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L523" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.HIDDEN) {</span>
+<span class="fc" id="L524">            renderFormat = &quot;dt-format-hidden&quot;;</span>
+<span class="fc" id="L525">            hidden = Boolean.TRUE;</span>
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L527">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L526">            editor.setType(&quot;hidden&quot;);</span>
+<span class="fc" id="L529">            editor.setType(&quot;hidden&quot;);</span>
         }
 
-<span class="fc bfc" id="L529" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.RADIO) {</span>
-<span class="fc" id="L530">            renderFormat = &quot;dt-format-radio&quot;;</span>
-<span class="pc bpc" id="L531" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L532">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L532" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.RADIO) {</span>
+<span class="fc" id="L533">            renderFormat = &quot;dt-format-radio&quot;;</span>
+<span class="pc bpc" id="L534" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L535">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L534">            editor.setType(&quot;radio&quot;);</span>
+<span class="fc" id="L537">            editor.setType(&quot;radio&quot;);</span>
         }
 
-<span class="fc bfc" id="L537" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.PASSWORD) {</span>
-<span class="fc" id="L538">            renderFormat = &quot;dt-format-text&quot;;</span>
-<span class="pc bpc" id="L539" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L540">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L540" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.PASSWORD) {</span>
+<span class="fc" id="L541">            renderFormat = &quot;dt-format-text&quot;;</span>
+<span class="pc bpc" id="L542" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L543">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L542">            editor.setType(&quot;password&quot;);</span>
-<span class="fc" id="L543">            editor.addAttr(&quot;autocomplete&quot;, &quot;off&quot;);</span>
+<span class="fc" id="L545">            editor.setType(&quot;password&quot;);</span>
+<span class="fc" id="L546">            editor.addAttr(&quot;autocomplete&quot;, &quot;off&quot;);</span>
         }
 
-<span class="fc bfc" id="L546" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.ATTRS) {</span>
-<span class="fc" id="L547">            renderFormat = &quot;dt-format-attrs&quot;;</span>
-<span class="fc" id="L548">            addClassName(&quot;dt-style-attrs&quot;);</span>
+<span class="fc bfc" id="L549" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.ATTRS) {</span>
+<span class="fc" id="L550">            renderFormat = &quot;dt-format-attrs&quot;;</span>
+<span class="fc" id="L551">            addClassName(&quot;dt-style-attrs&quot;);</span>
 
-<span class="pc bpc" id="L550" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L551">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L553" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L554">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L553">            editor.setType(&quot;attrs&quot;);</span>
+<span class="fc" id="L556">            editor.setType(&quot;attrs&quot;);</span>
         }
 
-<span class="fc bfc" id="L556" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.COLOR) {</span>
-<span class="fc" id="L557">            renderFormat = &quot;dt-format-color&quot;;</span>
-<span class="pc bpc" id="L558" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L559">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L559" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.COLOR) {</span>
+<span class="fc" id="L560">            renderFormat = &quot;dt-format-color&quot;;</span>
+<span class="pc bpc" id="L561" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L562">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L561">            editor.setType(&quot;color&quot;);</span>
+<span class="fc" id="L564">            editor.setType(&quot;color&quot;);</span>
         }
 
-<span class="fc bfc" id="L564" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.IFRAME) {</span>
-<span class="fc" id="L565">            renderFormat = &quot;dt-format-iframe&quot;;</span>
+<span class="fc bfc" id="L567" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.IFRAME) {</span>
+<span class="fc" id="L568">            renderFormat = &quot;dt-format-iframe&quot;;</span>
 
-<span class="pc bpc" id="L567" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L568">                editor = new DataTableColumnEditor();</span>
+<span class="pc bpc" id="L570" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L571">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L570">            editor.setType(&quot;iframe&quot;);</span>
+<span class="fc" id="L573">            editor.setType(&quot;iframe&quot;);</span>
         }
 
-<span class="fc bfc" id="L573" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.BASE64) {</span>
-<span class="fc" id="L574">            renderFormat = &quot;dt-format-base64&quot;;</span>
-<span class="pc bpc" id="L575" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L576">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L576" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.BASE64) {</span>
+<span class="fc" id="L577">            renderFormat = &quot;dt-format-base64&quot;;</span>
+<span class="pc bpc" id="L578" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L579">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L578">            editor.setType(&quot;base64&quot;);</span>
+<span class="fc" id="L581">            editor.setType(&quot;base64&quot;);</span>
         }
 
-<span class="fc bfc" id="L581" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.STATIC_TEXT) {</span>
-<span class="fc" id="L582">            renderFormat = &quot;dt-format-static-text&quot;;</span>
-<span class="pc bpc" id="L583" title="1 of 2 branches missed.">            if (editor == null) {</span>
-<span class="fc" id="L584">                editor = new DataTableColumnEditor();</span>
+<span class="fc bfc" id="L584" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.STATIC_TEXT) {</span>
+<span class="fc" id="L585">            renderFormat = &quot;dt-format-static-text&quot;;</span>
+<span class="pc bpc" id="L586" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L587">                editor = new DataTableColumnEditor();</span>
             }
-<span class="fc" id="L586">            editor.setType(&quot;staticText&quot;);</span>
+<span class="fc" id="L589">            editor.setType(&quot;staticText&quot;);</span>
         }
-<span class="fc" id="L588">    }</span>
+
+<span class="fc bfc" id="L592" title="All 2 branches covered.">        if (dataTableColumnType == DataTableColumnType.IMAGE_RADIO) {</span>
+<span class="fc" id="L593">            renderFormat = &quot;dt-format-image-radio&quot;;</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">            if (editor == null) {</span>
+<span class="fc" id="L595">                editor = new DataTableColumnEditor();</span>
+            }
+<span class="fc" id="L597">            editor.setType(&quot;imageRadio&quot;);</span>
+        }
+<span class="fc" id="L599">    }</span>
 
     private void setFinalProperties(Field field) {
-<span class="fc" id="L591">        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);</span>
-<span class="pc bpc" id="L592" title="1 of 2 branches missed.">        if (annotation == null) {</span>
-<span class="nc" id="L593">            return;</span>
+<span class="fc" id="L602">        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);</span>
+<span class="pc bpc" id="L603" title="1 of 2 branches missed.">        if (annotation == null) {</span>
+<span class="nc" id="L604">            return;</span>
         }
-<span class="fc" id="L595">        DataTableColumnType[] inputType = annotation.inputType();</span>
-<span class="fc bfc" id="L596" title="All 2 branches covered.">        if (inputType.length &gt; 0) {</span>
-<span class="fc" id="L597">            DataTableColumnType dataTableColumnType = inputType[0];</span>
-<span class="fc bfc" id="L598" title="All 2 branches covered.">            if (dataTableColumnType == DataTableColumnType.DATATABLE) {</span>
+<span class="fc" id="L606">        DataTableColumnType[] inputType = annotation.inputType();</span>
+<span class="fc bfc" id="L607" title="All 2 branches covered.">        if (inputType.length &gt; 0) {</span>
+<span class="fc" id="L608">            DataTableColumnType dataTableColumnType = inputType[0];</span>
+<span class="fc bfc" id="L609" title="All 2 branches covered.">            if (dataTableColumnType == DataTableColumnType.DATATABLE) {</span>
                 try {
-<span class="fc" id="L600">                    String attrName = &quot;data-dt-field-dt-columns&quot;;</span>
-<span class="fc" id="L601">                    String classNameAttr = editor.getAttr().get(attrName);</span>
-<span class="fc" id="L602">                    String json = new DataTableColumnsFactory(classNameAttr).getColumnsJson();</span>
-<span class="fc" id="L603">                    editor.addAttr(attrName, json);</span>
-<span class="nc" id="L604">                } catch (Exception e) {</span>
-<span class="nc" id="L605">                    Logger.error(DataTableColumn.class, e);</span>
-<span class="fc" id="L606">                }</span>
+<span class="fc" id="L611">                    String attrName = &quot;data-dt-field-dt-columns&quot;;</span>
+<span class="fc" id="L612">                    String classNameAttr = editor.getAttr().get(attrName);</span>
+<span class="fc" id="L613">                    String json = new DataTableColumnsFactory(classNameAttr).getColumnsJson();</span>
+<span class="fc" id="L614">                    editor.addAttr(attrName, json);</span>
+<span class="nc" id="L615">                } catch (Exception e) {</span>
+<span class="nc" id="L616">                    Logger.error(DataTableColumn.class, e);</span>
+<span class="fc" id="L617">                }</span>
             }
         }
 
-<span class="fc" id="L610">    }</span>
+<span class="fc" id="L621">    }</span>
 
     /**
      * Nastavi className na cell-not-editable pre needitovatelne bunky (pre editaciu danej bunky)
      * @param field
      */
     private void setCellNotEditable(Field field) {
-<span class="fc" id="L617">        boolean notEditable = false;</span>
-<span class="fc" id="L618">        String columnType = &quot;&quot;;</span>
-<span class="fc bfc" id="L619" title="All 4 branches covered.">        if (editor != null &amp;&amp; editor.getType()!=null) columnType = editor.getType();</span>
-<span class="pc bpc" id="L620" title="1 of 4 branches missed.">        if (hiddenEditor!=null &amp;&amp; hiddenEditor.booleanValue()==true) notEditable = true;</span>
-<span class="fc bfc" id="L621" title="All 2 branches covered.">        else if (&quot;hidden&quot;.equals(columnType)) {</span>
-<span class="fc" id="L622">            notEditable = true;</span>
+<span class="fc" id="L628">        boolean notEditable = false;</span>
+<span class="fc" id="L629">        String columnType = &quot;&quot;;</span>
+<span class="fc bfc" id="L630" title="All 4 branches covered.">        if (editor != null &amp;&amp; editor.getType()!=null) columnType = editor.getType();</span>
+<span class="pc bpc" id="L631" title="1 of 4 branches missed.">        if (hiddenEditor!=null &amp;&amp; hiddenEditor.booleanValue()==true) notEditable = true;</span>
+<span class="fc bfc" id="L632" title="All 2 branches covered.">        else if (&quot;hidden&quot;.equals(columnType)) {</span>
+<span class="fc" id="L633">            notEditable = true;</span>
         }
-<span class="pc bpc" id="L624" title="1 of 8 branches missed.">        else if (editor != null &amp;&amp; editor.getAttr()!=null &amp;&amp; (&quot;disabled&quot;.equals(editor.getAttr().get(&quot;disabled&quot;)) || &quot;true&quot;.equals(editor.getAttr().get(&quot;disabled&quot;)))) notEditable = true;</span>
+<span class="pc bpc" id="L635" title="1 of 8 branches missed.">        else if (editor != null &amp;&amp; editor.getAttr()!=null &amp;&amp; (&quot;disabled&quot;.equals(editor.getAttr().get(&quot;disabled&quot;)) || &quot;true&quot;.equals(editor.getAttr().get(&quot;disabled&quot;)))) notEditable = true;</span>
 
-<span class="fc bfc" id="L626" title="All 2 branches covered.">        if (notEditable) {</span>
-<span class="fc" id="L627">            addClassName(&quot;cell-not-editable&quot;);</span>
+<span class="fc bfc" id="L637" title="All 2 branches covered.">        if (notEditable) {</span>
+<span class="fc" id="L638">            addClassName(&quot;cell-not-editable&quot;);</span>
         }
-<span class="fc" id="L629">    }</span>
+<span class="fc" id="L640">    }</span>
 
     private String toLowerUnderscore(String str) {
-<span class="fc" id="L632">        String underscored = str.replaceAll(&quot;([^_A-Z])([A-Z])&quot;, &quot;$1_$2&quot;).toLowerCase();</span>
-<span class="fc bfc" id="L633" title="All 2 branches covered.">        if (underscored.endsWith(&quot;_dto&quot;)) underscored = underscored.substring(0, underscored.length()-4);</span>
-<span class="fc bfc" id="L634" title="All 2 branches covered.">        if (underscored.endsWith(&quot;_bean&quot;)) underscored = underscored.substring(0, underscored.length()-5);</span>
-<span class="fc bfc" id="L635" title="All 2 branches covered.">        if (underscored.endsWith(&quot;_entity&quot;)) underscored = underscored.substring(0, underscored.length()-7);</span>
+<span class="fc" id="L643">        String underscored = str.replaceAll(&quot;([^_A-Z])([A-Z])&quot;, &quot;$1_$2&quot;).toLowerCase();</span>
+<span class="fc bfc" id="L644" title="All 2 branches covered.">        if (underscored.endsWith(&quot;_dto&quot;)) underscored = underscored.substring(0, underscored.length()-4);</span>
+<span class="fc bfc" id="L645" title="All 2 branches covered.">        if (underscored.endsWith(&quot;_bean&quot;)) underscored = underscored.substring(0, underscored.length()-5);</span>
+<span class="fc bfc" id="L646" title="All 2 branches covered.">        if (underscored.endsWith(&quot;_entity&quot;)) underscored = underscored.substring(0, underscored.length()-7);</span>
 
-<span class="fc" id="L637">        return underscored;</span>
+<span class="fc" id="L648">        return underscored;</span>
     }
 
     private void addClassName(String addClassName) {
-<span class="pc bpc" id="L641" title="1 of 2 branches missed.">        if (Tools.isEmpty(addClassName)) return;</span>
-<span class="fc bfc" id="L642" title="All 2 branches covered.">        if (Tools.isEmpty(className)) className = addClassName.trim();</span>
-<span class="fc" id="L643">        else className += &quot; &quot;+addClassName.trim();</span>
-<span class="fc" id="L644">    }</span>
+<span class="pc bpc" id="L652" title="1 of 2 branches missed.">        if (Tools.isEmpty(addClassName)) return;</span>
+
+        //add multiweb class name only in multiweb
+<span class="pc bpc" id="L655" title="1 of 4 branches missed.">        if (&quot;multiweb-noteditable&quot;.equals(addClassName) &amp;&amp; InitServlet.isTypeCloud()==false) return;</span>
+
+<span class="fc bfc" id="L657" title="All 2 branches covered.">        if (Tools.isEmpty(className)) className = addClassName.trim();</span>
+<span class="fc" id="L658">        else className += &quot; &quot;+addClassName.trim();</span>
+<span class="fc" id="L659">    }</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

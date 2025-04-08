@@ -44,7 +44,7 @@ public class CampaingsEntity implements Serializable {
     @Id
     @Column(name = "emails_campain_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_emails_campain")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab = "main")
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab = "main")
     private Long id;
 
     @Column(name = "subject")
@@ -130,7 +130,7 @@ public class CampaingsEntity implements Serializable {
                                             value = "/admin/rest/dmail/emails?campainId={id}&selectType=recipients"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.dmail.jpa.EmailsEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "true"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-forceVisibleColumns", value = "id,recipientName,recipientEmail,sentDate,status"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-forceVisibleColumns", value = "id,recipientName,recipientEmail,sentDate,status,groupIds"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "3,desc")
             }
         )

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsItemFilterUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.util</a> &gt; <span class="el_source">FsItemFilterUtils.java</span></div><h1>FsItemFilterUtils.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.util;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FsItemFilterUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">cn.bluejoe.elfinder.util</a> &gt; <span class="el_source">FsItemFilterUtils.java</span></div><h1>FsItemFilterUtils.java</h1><pre class="source lang-java linenums">package cn.bluejoe.elfinder.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,17 +9,17 @@ import sk.iway.iwcm.DB;
 
 <span class="nc" id="L10">public abstract class FsItemFilterUtils</span>
 {
-<span class="fc" id="L12">    public static FsItemFilter FILTER_ALL = new FsItemFilter()</span>
-<span class="fc" id="L13">    {</span>
+<span class="nc" id="L12">    public static FsItemFilter FILTER_ALL = new FsItemFilter()</span>
+<span class="nc" id="L13">    {</span>
         @Override
         public boolean accepts(FsItemEx item)
         {
-<span class="fc" id="L17">            return true;</span>
+<span class="nc" id="L17">            return true;</span>
         }
     };
 
-<span class="fc" id="L21">    public static FsItemFilter FILTER_FOLDER = new FsItemFilter()</span>
-<span class="fc" id="L22">    {</span>
+<span class="nc" id="L21">    public static FsItemFilter FILTER_FOLDER = new FsItemFilter()</span>
+<span class="nc" id="L22">    {</span>
         @Override
         public boolean accepts(FsItemEx item)
         {
@@ -29,26 +29,26 @@ import sk.iway.iwcm.DB;
 
     public static FsItemFilter createFileNameKeywordFilter(final String keyword)
     {
-<span class="fc" id="L32">        return new FsItemFilter()</span>
-<span class="fc" id="L33">        {</span>
+<span class="nc" id="L32">        return new FsItemFilter()</span>
+<span class="nc" id="L33">        {</span>
             @Override
             public boolean accepts(FsItemEx item)
             {
-<span class="fc" id="L37">                boolean accept = false;</span>
+<span class="nc" id="L37">                boolean accept = false;</span>
                 try
                 {
-<span class="fc bfc" id="L40" title="All 4 branches covered.">                    if(item.getPath().toLowerCase().contains(keyword) || DB.internationalToEnglish(item.getName()).toLowerCase().contains(keyword))</span>
+<span class="nc bnc" id="L40" title="All 4 branches missed.">                    if(item.getPath().toLowerCase().contains(keyword) || DB.internationalToEnglish(item.getName()).toLowerCase().contains(keyword))</span>
                     {
-<span class="fc" id="L42">                        accept = true;</span>
+<span class="nc" id="L42">                        accept = true;</span>
                     }
                 }
 <span class="nc" id="L45">                catch (Exception exc)</span>
                 {
 <span class="nc" id="L47">                    sk.iway.iwcm.Logger.error(exc);</span>
 <span class="nc" id="L48">                    return false;</span>
-<span class="fc" id="L49">                }</span>
+<span class="nc" id="L49">                }</span>
 
-<span class="fc" id="L51">                return accept;</span>
+<span class="nc" id="L51">                return accept;</span>
             }
         };
     }
@@ -56,14 +56,14 @@ import sk.iway.iwcm.DB;
     public static  List&lt;FsItemEx&gt; filterFiles(FsItemEx[] sourceFiles,
                                          FsItemFilter filter)
     {
-<span class="fc" id="L59">        List&lt;FsItemEx&gt; filtered = new ArrayList&lt;FsItemEx&gt;();</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (FsItemEx file : sourceFiles)</span>
+<span class="nc" id="L59">        List&lt;FsItemEx&gt; filtered = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        for (FsItemEx file : sourceFiles)</span>
         {
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            if (filter.accepts(file))</span>
-<span class="fc" id="L63">                filtered.add(file);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (filter.accepts(file))</span>
+<span class="nc" id="L63">                filtered.add(file);</span>
         }
 
-<span class="fc" id="L66">        return filtered;//.toArray(new FsItemEx[0]);</span>
+<span class="nc" id="L66">        return filtered;//.toArray(new FsItemEx[0]);</span>
     }
 
     /**

@@ -17,7 +17,7 @@ Scenario('editor and apps', ({I, DTE, Document}) => {
     I.click("Dell P2772");
     DTE.waitForEditor();
     I.seeElement("#pills-dt-datatableInit-attributes-tab");
-    I.click("#pills-dt-datatableInit-attributes-tab");
+    I.clickCss("#pills-dt-datatableInit-attributes-tab");
 
     Document.screenshot("/redactor/webpages/doc-attributes/page-editor.png");
 

@@ -76,6 +76,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
         "Spa celodenné", "01.01.2045", "14:00", "07.01.2045",
         "10:30", "760,00", "Schválená" ]);
 
+    setDate(I, 2045, 1);
     clickDate(I, 2045, 1, 5);
     clickDate(I, 2045, 1, 11);
     I.seeInField('#price', '720');

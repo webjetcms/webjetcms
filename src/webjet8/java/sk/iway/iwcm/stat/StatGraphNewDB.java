@@ -59,7 +59,7 @@ public class StatGraphNewDB
 	 *@param  from      Od kedy je pocitana historia pristupov
 	 *@param  to        Do kedy je pocitana historia pristupov
 	 *@param  groupId   Identifikacne cislo adresara, z ktoreho chceme statistiku
-	 *@return           vrati sa mnozina dat typu {@link TimeSeriesCollection}
+	 *@return
 	 */
 	public static Map<String,  Map<Date, Number>> getBotsTimeData(List<Bot> rows, int max_size, java.util.Date from, java.util.Date to, int groupId)
 	{
@@ -192,11 +192,11 @@ public class StatGraphNewDB
 	 *  Funkcia na naplnenie mnoziny dat, ktore sa pouziju pri vykresleni casoveho grafu historie navstev vyhladavacich botov
 	 *
 	 *@param  rows		  zoznam vsetkych vyhladavacich botov, ktori pristupili na stranku spolu s ich poctom navstev
-	 *@param  max_size  Pocet prvych mx_size vyhladavacich botov s najvacsim poctom navstev
+	 *@param  keyword
 	 *@param  from      Od kedy je pocitana historia pristupov
 	 *@param  to        Do kedy je pocitana historia pristupov
 	 *@param  groupId   Identifikacne cislo adresara, z ktoreho chceme statistiku
-	 *@return           vrati sa mnozina dat typu {@link TimeSeriesCollection}
+	 *@return
 	 */
 	public static Map<String,  Map<Date, Number>> getPositionHistoryData(List<Column> rows, String keyword, java.util.Date from, java.util.Date to, int groupId)
 	{
@@ -764,11 +764,9 @@ public class StatGraphNewDB
 	 * Vytvori casovy graf s ciarami, ak docList obsahuje zoznam docID, tak sa vygeneruje graf so statistikou pre
 	 * dane docID. V pripade ze je docList prazdny, beru sa do uvahy top stranky.
 	 *
-	 * @param max_size - udava pocet, kolko stranok sa ma v grafe zobrazit
-	 * @param from - dolna hranica vybraneho obdobia pre zobrazenie statistiky
-	 * @param to - horna hranica vybraneho obdobia pre zobrazenie statistiky
-	 * @param rootGroupId - groupID, ktore sa budu brat do uvahy
-	 * @param docList - zoznam docID, ktorym sa zobrazi statistika
+	 * @param title
+	 * @param rows
+	 * @param colIndex
 	 * @param type - typ vypisu grafu (momentalne sa vykonava iba vyber top stranok)
 	 * @return
 	 */

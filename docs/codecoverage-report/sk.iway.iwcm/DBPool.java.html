@@ -1,26 +1,20 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DBPool.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">DBPool.java</span></div><h1>DBPool.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DBPool.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">DBPool.java</span></div><h1>DBPool.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.util.PropertyElf;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.Set;
-import java.util.Vector;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXParseException;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
+import sk.iway.iwcm.system.dbpool.WebJetHikariDataSource;
+import sk.iway.iwcm.system.jpa.JpaTools;
+import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -31,22 +25,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXParseException;
-
-import sk.iway.iwcm.doc.DebugTimer;
-import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
-import sk.iway.iwcm.system.cluster.ClusterDB;
-import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
-import sk.iway.iwcm.system.dbpool.WebJetHikariDataSource;
-import sk.iway.iwcm.system.jpa.JpaTools;
-import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
-
-import static sk.iway.iwcm.Tools.*;
-
+import java.io.*;
+import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *  Database pooling s pouzitim DBCP
@@ -58,13 +45,13 @@ import static sk.iway.iwcm.Tools.*;
  *@version      $Revision$
  *@created      $Date$
  */
-<span class="fc" id="L61">public class DBPool</span>
+<span class="fc" id="L48">public class DBPool</span>
 {
-<span class="fc" id="L63">	private static DBPool instance = null;</span>
-<span class="fc" id="L64">	private static Hashtable&lt;String, ConfigurableDataSource&gt; dataSourcesTable = null; //NOSONAR</span>
+<span class="fc" id="L50">	private static DBPool instance = null;</span>
+<span class="fc" id="L51">	private static Hashtable&lt;String, ConfigurableDataSource&gt; dataSourcesTable = null; //NOSONAR</span>
 	private static Map&lt;String, EntityManagerFactory&gt; entityManagerFactories;
-<span class="fc" id="L66">	private static Map&lt;String, DataSource&gt; externalDataSources = null;</span>
-<span class="fc" id="L67">	private static AtomicBoolean hasPrintedStackTrace = new AtomicBoolean(false);</span>
+<span class="fc" id="L53">	private static Map&lt;String, DataSource&gt; externalDataSources = null;</span>
+<span class="fc" id="L54">	private static AtomicBoolean hasPrintedStackTrace = new AtomicBoolean(false);</span>
 
 	/**
 	 * Je to singleton, ziskame instanciu
@@ -72,12 +59,12 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static synchronized DBPool getInstance()
 	{
-<span class="fc bfc" id="L75" title="All 2 branches covered.">		if (instance == null)</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (instance == null)</span>
 		{
-<span class="fc" id="L77">			instance = new DBPool();</span>
-<span class="fc" id="L78">			instance.initialize();</span>
+<span class="fc" id="L64">			instance = new DBPool();</span>
+<span class="fc" id="L65">			instance.initialize();</span>
 		}
-<span class="fc" id="L80">		return(instance);</span>
+<span class="fc" id="L67">		return(instance);</span>
 	}
 
 	/**
@@ -87,12 +74,12 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static synchronized DBPool getInstance(boolean forceRefresh)
 	{
-<span class="nc bnc" id="L90" title="All 4 branches missed.">		if (instance == null || forceRefresh)</span>
+<span class="nc bnc" id="L77" title="All 4 branches missed.">		if (instance == null || forceRefresh)</span>
 		{
-<span class="nc" id="L92">			instance = new DBPool();</span>
-<span class="nc" id="L93">			instance.initialize();</span>
+<span class="nc" id="L79">			instance = new DBPool();</span>
+<span class="nc" id="L80">			instance.initialize();</span>
 		}
-<span class="nc" id="L95">		return(instance);</span>
+<span class="nc" id="L82">		return(instance);</span>
 	}
 
 	/**
@@ -101,10 +88,10 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	private synchronized void initialize()
 	{
-<span class="fc" id="L104">		dataSourcesTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L91">		dataSourcesTable = new Hashtable&lt;&gt;();</span>
 
 		// inicializuj
-<span class="fc" id="L107">		Logger.println(this,&quot;DBPool: init&quot;);</span>
+<span class="fc" id="L94">		Logger.println(this,&quot;DBPool: init&quot;);</span>
 
 		String dbname;
 		String driver;
@@ -112,95 +99,82 @@ import static sk.iway.iwcm.Tools.*;
 		String password;
 		String url;
 
-		int initialSize;
 		int minActive;
 		int maxActive;
 
-<span class="fc" id="L119">		String autoCommit = &quot;false&quot;;</span>
+		boolean autoCommit;
+		boolean readOnly;
+		String transactionIsolation;
 
 		int removeAbandonedTimeout;
 
-<span class="fc" id="L123">		int counter = 0;</span>
-
-
-<span class="fc" id="L126">		String systemIwcmDBName = InitServlet.getContextDbName();</span>
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">		if (Tools.isEmpty(systemIwcmDBName)) systemIwcmDBName = System.getProperty(&quot;webjetDbname&quot;);</span>
-<span class="fc" id="L128">		Logger.println(this, &quot;systemIwcmDBName=&quot;+systemIwcmDBName);</span>
+<span class="fc" id="L111">		String systemIwcmDBName = InitServlet.getContextDbName();</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">		if (Tools.isEmpty(systemIwcmDBName)) systemIwcmDBName = System.getProperty(&quot;webjetDbname&quot;);</span>
+<span class="fc" id="L113">		Logger.println(this, &quot;systemIwcmDBName=&quot;+systemIwcmDBName);</span>
 
 		//aj cez &lt;Context ... &lt;Parameter name=&quot;webjetDbname&quot; value=&quot;/poolman-local.xml&quot; override=&quot;true&quot;/&gt; je mozne zadat cestu
-<span class="fc" id="L131">		String customPoolmanPath = null;</span>
-<span class="pc bpc" id="L132" title="1 of 4 branches missed.">		if (Tools.isNotEmpty(systemIwcmDBName) &amp;&amp; systemIwcmDBName.endsWith(&quot;.xml&quot;)) {</span>
-<span class="fc" id="L133">			customPoolmanPath = systemIwcmDBName;</span>
-<span class="fc" id="L134">			systemIwcmDBName = &quot;iwcm&quot;;</span>
+<span class="fc" id="L116">		String customPoolmanPath = null;</span>
+<span class="pc bpc" id="L117" title="2 of 4 branches missed.">		if (Tools.isNotEmpty(systemIwcmDBName) &amp;&amp; systemIwcmDBName.endsWith(&quot;.xml&quot;)) {</span>
+<span class="fc" id="L118">			customPoolmanPath = systemIwcmDBName;</span>
+<span class="fc" id="L119">			systemIwcmDBName = &quot;iwcm&quot;;</span>
 		}
-<span class="fc" id="L136">		String data = readFileContent(customPoolmanPath);</span>
+<span class="fc" id="L121">		String data = readFileContent(customPoolmanPath);</span>
 
-<span class="fc" id="L138">		StringBuilder availableDatabases = null;</span>
-<span class="pc bpc" id="L139" title="2 of 4 branches missed.">		if (data != null &amp;&amp; data.contains(&quot;poolman&quot;))</span>
+<span class="fc" id="L123">		StringBuilder availableDatabases = null;</span>
+<span class="pc bpc" id="L124" title="2 of 4 branches missed.">		if (data != null &amp;&amp; data.contains(&quot;poolman&quot;))</span>
 		{
 			try
 			{
-<span class="fc" id="L143">				DocumentBuilderFactory b = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L128">				DocumentBuilderFactory b = DocumentBuilderFactory.newInstance();</span>
 				// to be compliant, completely disable DOCTYPE declaration:
-<span class="fc" id="L145">				b.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);</span>
-<span class="fc" id="L146">				DocumentBuilder dc = b.newDocumentBuilder();</span>
-<span class="fc" id="L147">				ByteArrayInputStream input = new ByteArrayInputStream(data.getBytes());</span>
-<span class="fc" id="L148">				Document doc = dc.parse(input);</span>
+<span class="fc" id="L130">				b.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);</span>
+<span class="fc" id="L131">				DocumentBuilder dc = b.newDocumentBuilder();</span>
+<span class="fc" id="L132">				ByteArrayInputStream input = new ByteArrayInputStream(data.getBytes());</span>
+<span class="fc" id="L133">				Document doc = dc.parse(input);</span>
 
-<span class="pc bpc" id="L150" title="1 of 2 branches missed.">				if(doc != null)</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">				if(doc != null)</span>
 				{
-<span class="fc" id="L152">					Vector&lt;Node&gt; list = XmlUtils.getChildNodesByPath(doc.getDocumentElement(), &quot;/datasource&quot;);</span>
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">					if( list != null )</span>
+<span class="fc" id="L137">					Vector&lt;Node&gt; list = XmlUtils.getChildNodesByPath(doc.getDocumentElement(), &quot;/datasource&quot;);</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">					if( list != null )</span>
 					{
 						ConfigurableDataSource ds;
-<span class="fc bfc" id="L156" title="All 2 branches covered.">						for (Node n : list)</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">						for (Node n : list)</span>
 						{
-<span class="fc" id="L158">						    counter++;</span>
-
 							//default values
-<span class="fc" id="L161">							driver = &quot;com.mysql.jdbc.Driver&quot;;</span>
-<span class="fc" id="L162">							username = &quot;user&quot;;</span>
-<span class="fc" id="L163">							password = &quot;pass&quot;;</span>
-<span class="fc" id="L164">							url = &quot;jdbc:mysql://localhost/webjet_web?useUnicode=true&amp;characterEncoding=windows-1250&quot;;</span>
+<span class="fc" id="L144">							driver = &quot;com.mysql.jdbc.Driver&quot;;</span>
+<span class="fc" id="L145">							username = &quot;user&quot;;</span>
+<span class="fc" id="L146">							password = &quot;pass&quot;;</span>
+<span class="fc" id="L147">							url = &quot;jdbc:mysql://localhost/webjet_web?useUnicode=true&amp;characterEncoding=windows-1250&quot;;</span>
 
-<span class="fc" id="L166">							initialSize = 0;</span>
-<span class="fc" id="L167">							minActive = 0;</span>
-<span class="fc" id="L168">							maxActive = 50;</span>
+<span class="fc" id="L149">							minActive = 0;</span>
+<span class="fc" id="L150">							maxActive = 50;</span>
 
-<span class="fc" id="L170">							removeAbandonedTimeout = 5*60;</span>
+<span class="fc" id="L152">							removeAbandonedTimeout = 5*60;</span>
 
-<span class="fc" id="L172">							dbname = XmlUtils.getFirstChildValue(n, &quot;dbname&quot;);</span>
+<span class="fc" id="L154">							dbname = XmlUtils.getFirstChildValue(n, &quot;dbname&quot;);</span>
 
 							//zadane meno zmenime na iwcm aby ho interne WebJET pouzival
 							//riesene kvoli ING kde public node ma iny pripojovaci retazec
-<span class="pc bpc" id="L176" title="1 of 4 branches missed.">							if (Tools.isNotEmpty(systemIwcmDBName) &amp;&amp; systemIwcmDBName.equals(dbname))</span>
+<span class="pc bpc" id="L158" title="2 of 4 branches missed.">							if (Tools.isNotEmpty(systemIwcmDBName) &amp;&amp; systemIwcmDBName.equals(dbname))</span>
 							{
-<span class="fc" id="L178">								Logger.println(DBPool.class, &quot;Changing dbname from &quot;+dbname+&quot; to iwcm&quot;);</span>
-<span class="fc" id="L179">								dbname = &quot;iwcm&quot;;</span>
+<span class="fc" id="L160">								Logger.println(DBPool.class, &quot;Changing dbname from &quot;+dbname+&quot; to iwcm&quot;);</span>
+<span class="fc" id="L161">								dbname = &quot;iwcm&quot;;</span>
 							}
 
-<span class="pc bpc" id="L182" title="3 of 4 branches missed.">							if (&quot;autoincrement&quot;.equals(systemIwcmDBName) &amp;&amp; &quot;iwcm&quot;.equals(dbname))</span>
-                            {
-                                //toto je specialny pripad, ked inicializujeme vsetky spojenia z poolman-conf.xml pre zmenu hesla
-<span class="nc" id="L185">                                dbname = &quot;autoincrement&quot;+counter;</span>
-                            }
+<span class="fc" id="L164">							driver = XmlUtils.getFirstChildValue(n, &quot;driver&quot;);</span>
+<span class="fc" id="L165">							url = XmlUtils.getFirstChildValue(n, &quot;url&quot;);</span>
+<span class="fc" id="L166">							username = XmlUtils.getFirstChildValue(n, &quot;username&quot;);</span>
+<span class="fc" id="L167">							password = XmlUtils.getFirstChildValue(n, &quot;password&quot;);</span>
+<span class="fc" id="L168">							minActive = getIntValue(XmlUtils.getFirstChildValue(n, &quot;minimumSize&quot;), minActive);</span>
+<span class="fc" id="L169">							maxActive = getIntValue(XmlUtils.getFirstChildValue(n, &quot;maximumSize&quot;), maxActive);</span>
 
-							//iwcm1 preskakujeme pre rychlost inicializacie
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">							if (&quot;iwcm1&quot;.equals(dbname)) continue;</span>
+<span class="fc" id="L171">							autoCommit = Tools.getBooleanValue(XmlUtils.getFirstChildValue(n, &quot;autoCommit&quot;), true);</span>
+<span class="fc" id="L172">							readOnly = Tools.getBooleanValue(XmlUtils.getFirstChildValue(n, &quot;readOnly&quot;), false);</span>
+<span class="fc" id="L173">							transactionIsolation = XmlUtils.getFirstChildValue(n, &quot;transactionIsolation&quot;);</span>
 
-<span class="fc" id="L191">							driver = XmlUtils.getFirstChildValue(n, &quot;driver&quot;);</span>
-<span class="fc" id="L192">							url = XmlUtils.getFirstChildValue(n, &quot;url&quot;);</span>
-<span class="fc" id="L193">							username = XmlUtils.getFirstChildValue(n, &quot;username&quot;);</span>
-<span class="fc" id="L194">							password = XmlUtils.getFirstChildValue(n, &quot;password&quot;);</span>
-<span class="fc" id="L195">							initialSize = getIntValue(XmlUtils.getFirstChildValue(n, &quot;initialConnections&quot;), initialSize);</span>
-<span class="fc" id="L196">							minActive = getIntValue(XmlUtils.getFirstChildValue(n, &quot;minimumSize&quot;), minActive);</span>
-<span class="fc" id="L197">							maxActive = getIntValue(XmlUtils.getFirstChildValue(n, &quot;maximumSize&quot;), maxActive);</span>
+<span class="fc" id="L175">							removeAbandonedTimeout = getIntValue(XmlUtils.getFirstChildValue(n, &quot;connectionTimeout&quot;), removeAbandonedTimeout);</span>
 
-<span class="fc" id="L199">							autoCommit = getStringValue(XmlUtils.getFirstChildValue(n, &quot;autoCommit&quot;), autoCommit);</span>
-
-<span class="fc" id="L201">							removeAbandonedTimeout = getIntValue(XmlUtils.getFirstChildValue(n, &quot;connectionTimeout&quot;), removeAbandonedTimeout);</span>
-
-<span class="fc" id="L203">							Logger.println(this,&quot;DATA SET from XML [&quot;+dbname+&quot;], maxActive=&quot;+maxActive);</span>
+<span class="fc" id="L177">							Logger.println(this,&quot;DATA SET from XML [&quot;+dbname+&quot;], maxActive=&quot;+maxActive);</span>
 
 							/**
 							 * ak su premenne pre db nastavene ako parametre jvm/env, pouzi tie
@@ -211,158 +185,168 @@ import static sk.iway.iwcm.Tools.*;
 							 *	-DwebjetDbMinimumSize
 							 *	-DwebjetDbMaximumSize
 							*/
-<span class="fc" id="L214">							String envSuffix = &quot;&quot;;</span>
-<span class="pc bpc" id="L215" title="1 of 2 branches missed.">							if (&quot;iwcm&quot;.equals(dbname)==false) envSuffix = &quot;_&quot;+dbname;</span>
-<span class="pc bpc" id="L216" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbDriver&quot;+envSuffix))</span>
+<span class="fc" id="L188">							String envSuffix = &quot;&quot;;</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">							if (&quot;iwcm&quot;.equals(dbname)==false) envSuffix = &quot;_&quot;+dbname;</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbDriver&quot;+envSuffix))</span>
 							{
-<span class="nc" id="L218">								driver = getSystemProperty(&quot;webjetDbDriver&quot;+envSuffix);</span>
+<span class="nc" id="L192">								driver = getSystemProperty(&quot;webjetDbDriver&quot;+envSuffix);</span>
 							}
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbUserName&quot;+envSuffix))</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbUserName&quot;+envSuffix))</span>
 							{
-<span class="nc" id="L222">								username = getSystemProperty(&quot;webjetDbUserName&quot;+envSuffix);</span>
+<span class="nc" id="L196">								username = getSystemProperty(&quot;webjetDbUserName&quot;+envSuffix);</span>
 							}
-<span class="pc bpc" id="L224" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbPassword&quot;+envSuffix))</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbPassword&quot;+envSuffix))</span>
 							{
-<span class="nc" id="L226">								password = getSystemProperty(&quot;webjetDbPassword&quot;+envSuffix);</span>
+<span class="nc" id="L200">								password = getSystemProperty(&quot;webjetDbPassword&quot;+envSuffix);</span>
 							}
-<span class="pc bpc" id="L228" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbUrl&quot;+envSuffix))</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbUrl&quot;+envSuffix))</span>
 							{
-<span class="nc" id="L230">								url = getSystemProperty(&quot;webjetDbUrl&quot;+envSuffix);</span>
+<span class="nc" id="L204">								url = getSystemProperty(&quot;webjetDbUrl&quot;+envSuffix);</span>
 							}
-<span class="pc bpc" id="L232" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbMaximumSize&quot;+envSuffix))</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">							if(isSystemPropertySet(&quot;webjetDbMaximumSize&quot;+envSuffix))</span>
 							{
-<span class="nc" id="L234">								maxActive = Tools.getIntValue(getSystemProperty(&quot;webjetDbMaximumSize&quot;+envSuffix),60);</span>
+<span class="nc" id="L208">								maxActive = Tools.getIntValue(getSystemProperty(&quot;webjetDbMaximumSize&quot;+envSuffix),60);</span>
 							}
 
-<span class="pc bpc" id="L237" title="1 of 2 branches missed.">							if (&quot;com.mysql.jdbc.Driver&quot;.equals(driver)) driver = &quot;org.mariadb.jdbc.Driver&quot;; //menime driver pre mysql tak aby sa nemuseli prepisovat vsetky poolmany pri update</span>
-<span class="pc bpc" id="L238" title="1 of 2 branches missed.">							if (&quot;COM.mysql.jdbc.Driver&quot;.equals(driver)) driver = &quot;com.mysql.jdbc.Driver&quot;; //ak by blo z nejakeho dovodu treba pouzit mysql driver</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">							if (&quot;com.mysql.jdbc.Driver&quot;.equals(driver)) driver = &quot;org.mariadb.jdbc.Driver&quot;; //menime driver pre mysql tak aby sa nemuseli prepisovat vsetky poolmany pri update</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">							if (&quot;COM.mysql.jdbc.Driver&quot;.equals(driver)) driver = &quot;com.mysql.jdbc.Driver&quot;; //ak by blo z nejakeho dovodu treba pouzit mysql driver</span>
 
-<span class="pc bpc" id="L240" title="1 of 2 branches missed.">							if (&quot;org.mariadb.jdbc.Driver&quot;.equals(driver)) {</span>
-<span class="fc" id="L241">								url = Tools.replace(url, &quot;jdbc:mysql://&quot;, &quot;jdbc:mariadb://&quot;);</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">							if (&quot;org.mariadb.jdbc.Driver&quot;.equals(driver)) {</span>
+<span class="fc" id="L215">								url = Tools.replace(url, &quot;jdbc:mysql://&quot;, &quot;jdbc:mariadb://&quot;);</span>
 							}
 
-<span class="pc bpc" id="L244" title="1 of 2 branches missed.">							if (&quot;iwcm&quot;.equals(dbname))</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">							if (&quot;iwcm&quot;.equals(dbname))</span>
 					      	{
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">								if (driver.indexOf(&quot;oracle&quot;)!=-1)</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">								if (driver.indexOf(&quot;oracle&quot;)!=-1)</span>
 								{
-<span class="nc" id="L248">									Constants.DB_TYPE = Constants.DB_ORACLE;</span>
-<span class="nc" id="L249">									ConfDB.CONF_TABLE_NAME = &quot;webjet_conf&quot;;</span>
-<span class="nc" id="L250">									ConfDB.CONF_PREPARED_TABLE_NAME = &quot;webjet_conf_prepared&quot;;</span>
-<span class="nc" id="L251">									ConfDB.MODULES_TABLE_NAME = &quot;webjet_modules&quot;;</span>
-<span class="nc" id="L252">									ConfDB.ADMINLOG_TABLE_NAME = &quot;webjet_adminlog&quot;;</span>
-<span class="nc" id="L253">									ConfDB.DB_TABLE_NAME = &quot;webjet_db&quot;;</span>
-<span class="nc" id="L254">									ConfDB.PROPERTIES_TABLE_NAME = &quot;webjet_properties&quot;;</span>
+<span class="nc" id="L222">									Constants.DB_TYPE = Constants.DB_ORACLE;</span>
+<span class="nc" id="L223">									ConfDB.CONF_TABLE_NAME = &quot;webjet_conf&quot;;</span>
+<span class="nc" id="L224">									ConfDB.CONF_PREPARED_TABLE_NAME = &quot;webjet_conf_prepared&quot;;</span>
+<span class="nc" id="L225">									ConfDB.MODULES_TABLE_NAME = &quot;webjet_modules&quot;;</span>
+<span class="nc" id="L226">									ConfDB.ADMINLOG_TABLE_NAME = &quot;webjet_adminlog&quot;;</span>
+<span class="nc" id="L227">									ConfDB.DB_TABLE_NAME = &quot;webjet_db&quot;;</span>
+<span class="nc" id="L228">									ConfDB.PROPERTIES_TABLE_NAME = &quot;webjet_properties&quot;;</span>
 								}
-<span class="pc bpc" id="L256" title="2 of 4 branches missed.">								else if (driver.indexOf(&quot;jtds&quot;)!=-1 || driver.indexOf(&quot;microsoft.sqlserver&quot;)!= -1)</span>
+<span class="pc bpc" id="L230" title="2 of 4 branches missed.">								else if (driver.indexOf(&quot;jtds&quot;)!=-1 || driver.indexOf(&quot;microsoft.sqlserver&quot;)!= -1)</span>
 								{
-<span class="nc" id="L258">									Constants.DB_TYPE = Constants.DB_MSSQL;</span>
+<span class="nc" id="L232">									Constants.DB_TYPE = Constants.DB_MSSQL;</span>
 								}
-<span class="pc bpc" id="L260" title="2 of 4 branches missed.">								else if (driver.indexOf(&quot;postgresql&quot;)!=-1 || driver.indexOf(&quot;pgsql&quot;)!= -1)</span>
+<span class="pc bpc" id="L234" title="2 of 4 branches missed.">								else if (driver.indexOf(&quot;postgresql&quot;)!=-1 || driver.indexOf(&quot;pgsql&quot;)!= -1)</span>
 								{
-<span class="nc" id="L262">									Constants.DB_TYPE = Constants.DB_PGSQL;</span>
+<span class="nc" id="L236">									Constants.DB_TYPE = Constants.DB_PGSQL;</span>
 								}
 								else
 								{
-<span class="fc" id="L266">									Constants.DB_TYPE = Constants.DB_MYSQL;</span>
+<span class="fc" id="L240">									Constants.DB_TYPE = Constants.DB_MYSQL;</span>
 								}
 								//minimumSize = System.getProperty(&quot;webjetDbMinimumSize&quot;); //toto sa nikde nepouziva
 							}
 
-<span class="pc bpc" id="L271" title="1 of 2 branches missed.">							if (password == null) password = &quot;&quot;;</span>
-<span class="fc" id="L272">							password = decryptPassword(password);</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">							if (password == null) password = &quot;&quot;;</span>
+<span class="fc" id="L246">							password = decryptPassword(password);</span>
 
-<span class="fc" id="L274">							HikariDataSource hs = new HikariDataSource();</span>
-<span class="fc" id="L275">							hs.setLeakDetectionThreshold(removeAbandonedTimeout*1000l);</span>
+<span class="fc" id="L248">							HikariConfig hc = new HikariConfig();</span>
+<span class="fc" id="L249">							hc.setLeakDetectionThreshold(removeAbandonedTimeout*1000l);</span>
+<span class="fc" id="L250">							hc.setAutoCommit(autoCommit);</span>
+<span class="fc" id="L251">							hc.setReadOnly(readOnly);</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">							if(Tools.isNotEmpty(transactionIsolation)) {</span>
+<span class="nc" id="L253">								hc.setTransactionIsolation(transactionIsolation);</span>
+							}
+<span class="pc bpc" id="L255" title="4 of 6 branches missed.">							if((hc.isAutoCommit() || hc.isReadOnly()) &amp;&amp; Tools.isEmpty(transactionIsolation)) {</span>
+<span class="nc" id="L256">								hc.setTransactionIsolation(&quot;&quot;+Connection.TRANSACTION_READ_COMMITTED);</span>
+							}
 
 							//for jdbc4 drivers we use isValid(), for older drivers we use testQuery
-<span class="fc" id="L278">							String testQuery = XmlUtils.getFirstChildValue(n, &quot;testQuery&quot;);</span>
-<span class="pc bpc" id="L279" title="3 of 4 branches missed.">							if (driver.contains(&quot;jtds&quot;) &amp;&amp; Tools.isEmpty(testQuery)) testQuery = &quot;SELECT 1&quot;;</span>
-<span class="pc bpc" id="L280" title="1 of 2 branches missed.">							if (&quot;true&quot;.equals(testQuery)) testQuery = &quot;SELECT 1&quot;;</span>
-<span class="pc bpc" id="L281" title="2 of 4 branches missed.">							if (testQuery != null &amp;&amp; testQuery.length()&gt;1) {</span>
-<span class="nc" id="L282">								Logger.println(DBPool.class, &quot;Setting testQuery=&quot;+testQuery+&quot; driver=&quot;+driver);</span>
-<span class="nc" id="L283">								hs.setConnectionTestQuery(testQuery);</span>
+<span class="fc" id="L260">							String testQuery = XmlUtils.getFirstChildValue(n, &quot;testQuery&quot;);</span>
+<span class="pc bpc" id="L261" title="3 of 4 branches missed.">							if (Tools.isEmpty(testQuery) || &quot;true&quot;.equals(testQuery)) {</span>
+<span class="fc" id="L262">								testQuery = &quot;SELECT 1&quot;;</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">								if (driver.contains(&quot;oracle&quot;)) testQuery = &quot;SELECT 1 FROM dual&quot;;</span>
+							}
+<span class="pc bpc" id="L265" title="2 of 4 branches missed.">							if (testQuery != null &amp;&amp; testQuery.length()&gt;1) {</span>
+<span class="fc" id="L266">								Logger.println(DBPool.class, &quot;HikariCP testQuery: &quot;+testQuery+&quot;, driver:&quot;+driver);</span>
+<span class="fc" id="L267">								hc.setConnectionTestQuery(testQuery);</span>
+<span class="fc" id="L268">								hc.setConnectionInitSql(testQuery);</span>
 							}
 
-<span class="fc" id="L286">							ds = new WebJetHikariDataSource(hs);</span>
+<span class="fc" id="L271">							Logger.println(DBPool.class, &quot;HikariCP minPoolSize: &quot; + minActive);</span>
+<span class="fc" id="L272">							hc.setMinimumIdle(minActive);</span>
+<span class="fc" id="L273">							Logger.println(DBPool.class, &quot;HikariCP maxPoolSize: &quot; + maxActive);</span>
+<span class="fc" id="L274">							hc.setMaximumPoolSize(maxActive);</span>
+<span class="fc" id="L275">							Constants.setInt(&quot;webjetDbMaximumSize&quot;, maxActive);</span>
 
-<span class="fc" id="L288">							WebJetHikariDataSource source = (WebJetHikariDataSource)ds;</span>
-
-<span class="fc" id="L290">							Logger.println(DBPool.class, &quot;Using HikariCP&quot;);</span>
-<span class="fc" id="L291">							source.setInitialPoolSize(initialSize);</span>
-<span class="fc" id="L292">							Logger.println(DBPool.class, &quot;HikariCP initialPoolSize=&quot; + initialSize);</span>
-
-<span class="fc" id="L294">							source.setMinPoolSize(minActive);</span>
-<span class="fc" id="L295">							Logger.println(DBPool.class, &quot;HikariCP minPoolSize=&quot; + minActive);</span>
-
-<span class="fc" id="L297">							source.setMaxPoolSize(maxActive);</span>
-<span class="fc" id="L298">							Logger.println(DBPool.class, &quot;HikariCP maxPoolSize=&quot; + maxActive);</span>
-
-<span class="pc bpc" id="L300" title="1 of 2 branches missed.">							if (driver.contains(&quot;oracle&quot;)) {</span>
-<span class="nc" id="L301">								source.setConnectionProperty(&quot;SetBigStringTryClob&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L302">								Logger.println(DBPool.class, &quot;HikariCP SetBigStringTryClob=&quot; + true);</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">							if (driver.contains(&quot;oracle&quot;)) {</span>
+<span class="nc" id="L278">								Logger.println(DBPool.class, &quot;HikariCP SetBigStringTryClob=&quot; + true);</span>
+<span class="nc" id="L279">								hc.addDataSourceProperty(&quot;SetBigStringTryClob&quot;, &quot;true&quot;);</span>
 							}
 
+<span class="fc" id="L282">							hc.setDriverClassName(driver);</span>
+<span class="fc" id="L283">							hc.setUsername(username);</span>
+<span class="fc" id="L284">							hc.setPassword(password);</span>
+<span class="fc" id="L285">							hc.setJdbcUrl(url);</span>
 
-							//okrem Oracle mozeme robit takyto validation query
-<span class="fc" id="L307">							ds.setPreferredTestQuery(&quot;SELECT 1&quot;);</span>
-<span class="pc bpc" id="L308" title="1 of 2 branches missed.">							if(driver.contains(&quot;oracle&quot;))</span>
-<span class="nc" id="L309">								ds.setPreferredTestQuery(&quot;select 'validationQuery' from dual&quot;);</span>
+<span class="fc" id="L287">							String hikariProperties = XmlUtils.getFirstChildValue(n, &quot;hikariProperties&quot;);</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">							if (Tools.isNotEmpty(hikariProperties)) {</span>
+								//convert String to properties, construct HikariConfig from it ant use to construct HikariDataSource
+<span class="nc" id="L290">								Properties props = new Properties();</span>
+								try {
+<span class="nc" id="L292">									Logger.println(DBPool.class, &quot;HikariCP properties=&quot; + hikariProperties);</span>
+<span class="nc" id="L293">									props.load(new StringReader(hikariProperties.trim()));</span>
+<span class="nc" id="L294">									PropertyElf.setTargetFromProperties(hc, props);</span>
+<span class="nc" id="L295">								} catch (IOException e) {</span>
+<span class="nc" id="L296">									Logger.error(e);</span>
+<span class="nc" id="L297">								}</span>
+							}
 
-<span class="fc" id="L311">							ds.setInitialPoolSize(initialSize);</span>
-<span class="fc" id="L312">							ds.setDriverClass(driver);</span>
-<span class="fc" id="L313">							ds.setUser(username);</span>
-<span class="fc" id="L314">							ds.setPassword(password);</span>
-<span class="fc" id="L315">							ds.setJdbcUrl(url);</span>
+<span class="fc" id="L300">							HikariDataSource hs = new HikariDataSource(hc);</span>
+<span class="fc" id="L301">							ds = new WebJetHikariDataSource(hs);</span>
+<span class="fc" id="L302">							dataSourcesTable.put(dbname, ds);</span>
 
-<span class="fc" id="L317">					      dataSourcesTable.put(dbname, ds);</span>
+<span class="fc" id="L304">							Logger.println(DBPool.class, &quot;Initialized Datasource &quot; + dbname + &quot; url=&quot; + url);</span>
 
-<span class="fc" id="L319">					      Constants.setInt(&quot;webjetDbMaximumSize&quot;, maxActive);</span>
-<span class="fc" id="L320">							Logger.println(DBPool.class, &quot;Initialized Datasource &quot; + dbname + &quot; url=&quot; + url);</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">							if (availableDatabases == null)</span>
+							{
+<span class="fc" id="L308">								availableDatabases = new StringBuilder(dbname);</span>
+							}
+							else
+							{
+<span class="nc" id="L312">								availableDatabases.append(',').append(dbname);</span>
+							}
 
-<span class="pc bpc" id="L322" title="1 of 2 branches missed.">					      if (availableDatabases == null)</span>
-					      {
-<span class="fc" id="L324">					      	availableDatabases = new StringBuilder(dbname);</span>
-					      }
-					      else
-					      {
-<span class="nc" id="L328">					      	availableDatabases.append(',').append(dbname);</span>
-					      }
-
-<span class="fc" id="L331">						}</span>
+<span class="fc" id="L315">						}</span>
 					}
 				}
 			}
-<span class="nc" id="L335">			catch (SAXParseException ex) {</span>
-<span class="nc" id="L336">				Logger.error(DBPool.class, customPoolmanPath+&quot; is not valid XML file&quot;);</span>
+<span class="nc" id="L319">			catch (SAXParseException ex) {</span>
+<span class="nc" id="L320">				Logger.error(DBPool.class, customPoolmanPath+&quot; is not valid XML file&quot;);</span>
 			}
-<span class="nc" id="L338">			catch (Exception ex)</span>
+<span class="nc" id="L322">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L340">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="pc" id="L341">			}</span>
+<span class="nc" id="L324">				Logger.error(ex);</span>
+<span class="pc" id="L325">			}</span>
 		}
 
-<span class="pc bpc" id="L344" title="1 of 2 branches missed.">		if (availableDatabases != null)</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">		if (availableDatabases != null)</span>
 		{
-<span class="fc" id="L346">			Constants.setString(&quot;availableDatabases&quot;, availableDatabases.toString());</span>
+<span class="fc" id="L330">			Constants.setString(&quot;availableDatabases&quot;, availableDatabases.toString());</span>
 		}
 
-<span class="fc" id="L349">		addExternalDataSources();</span>
-<span class="fc" id="L350">	}</span>
+<span class="fc" id="L333">		addExternalDataSources();</span>
+<span class="fc" id="L334">	}</span>
 
 	private boolean isSystemPropertySet(String name) {
-<span class="fc" id="L353">		String value = System.getProperty(name);</span>
-<span class="pc bpc" id="L354" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(value)) return true;</span>
-<span class="fc" id="L355">		value = System.getenv(name);</span>
-<span class="pc bpc" id="L356" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(value)) return true;</span>
-<span class="fc" id="L357">		return false;</span>
+<span class="fc" id="L337">		String value = System.getProperty(name);</span>
+<span class="pc bpc" id="L338" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(value)) return true;</span>
+<span class="fc" id="L339">		value = System.getenv(name);</span>
+<span class="pc bpc" id="L340" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(value)) return true;</span>
+<span class="fc" id="L341">		return false;</span>
 	}
 
 	private String getSystemProperty(String name) {
-<span class="nc" id="L361">		String value = System.getProperty(name);</span>
-<span class="nc bnc" id="L362" title="All 2 branches missed.">		if (Tools.isNotEmpty(value)) return value;</span>
-<span class="nc" id="L363">		value = System.getenv(name);</span>
-<span class="nc bnc" id="L364" title="All 2 branches missed.">		if (Tools.isNotEmpty(value)) return value;</span>
-<span class="nc" id="L365">		return &quot;&quot;;</span>
+<span class="nc" id="L345">		String value = System.getProperty(name);</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		if (Tools.isNotEmpty(value)) return value;</span>
+<span class="nc" id="L347">		value = System.getenv(name);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (Tools.isNotEmpty(value)) return value;</span>
+<span class="nc" id="L349">		return &quot;&quot;;</span>
 	}
 
 
@@ -373,67 +357,67 @@ import static sk.iway.iwcm.Tools.*;
      */
 	public synchronized void destroy(boolean destroyInstance)
 	{
-<span class="fc" id="L376">		Logger.println(this,&quot;DBPool[&quot;+Constants.getInstallName()+&quot;] destroy&quot;);</span>
+<span class="fc" id="L360">		Logger.println(this,&quot;DBPool[&quot;+Constants.getInstallName()+&quot;] destroy&quot;);</span>
 
-<span class="fc" id="L378">		Enumeration&lt;String&gt; keys = dataSourcesTable.keys();</span>
+<span class="fc" id="L362">		Enumeration&lt;String&gt; keys = dataSourcesTable.keys();</span>
 		String key;
-<span class="fc bfc" id="L380" title="All 2 branches covered.">		while (keys.hasMoreElements())</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">		while (keys.hasMoreElements())</span>
 		{
-<span class="fc" id="L382">			key = keys.nextElement();</span>
-<span class="fc" id="L383">			ConfigurableDataSource ds = dataSourcesTable.get(key);</span>
-<span class="fc" id="L384">			Logger.println(this,&quot;   Active:&quot; + ds.getNumActive()+&quot; Idle:&quot;+ds.getNumIdle());</span>
+<span class="fc" id="L366">			key = keys.nextElement();</span>
+<span class="fc" id="L367">			ConfigurableDataSource ds = dataSourcesTable.get(key);</span>
+<span class="fc" id="L368">			Logger.println(this,&quot;   Active:&quot; + ds.getNumActive()+&quot; Idle:&quot;+ds.getNumIdle());</span>
 			try
 			{
-<span class="fc" id="L387">				ds.destroy();</span>
+<span class="fc" id="L371">				ds.destroy();</span>
 			}
-<span class="nc" id="L389">			catch (SQLException e)</span>
+<span class="nc" id="L373">			catch (SQLException e)</span>
 			{
-<span class="nc" id="L391">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L392">			}</span>
-<span class="fc" id="L393">		}</span>
+<span class="nc" id="L375">				Logger.error(e);</span>
+<span class="fc" id="L376">			}</span>
+<span class="fc" id="L377">		}</span>
 
 		try
 		{
-<span class="pc bpc" id="L397" title="1 of 2 branches missed.">		    if (destroyInstance==false)</span>
+<span class="pc bpc" id="L381" title="1 of 2 branches missed.">		    if (destroyInstance==false)</span>
             {
-<span class="fc bfc" id="L399" title="All 2 branches covered.">                for (Enumeration&lt;Driver&gt; e = DriverManager.getDrivers(); e.hasMoreElements(); )</span>
+<span class="fc bfc" id="L383" title="All 2 branches covered.">                for (Enumeration&lt;Driver&gt; e = DriverManager.getDrivers(); e.hasMoreElements(); )</span>
                 {
-<span class="fc" id="L401">                    Driver driver = e.nextElement();</span>
-<span class="pc bpc" id="L402" title="2 of 4 branches missed.">                    if (driver != null &amp;&amp; driver.getClass().getClassLoader() == getClass().getClassLoader())</span>
+<span class="fc" id="L385">                    Driver driver = e.nextElement();</span>
+<span class="pc bpc" id="L386" title="2 of 4 branches missed.">                    if (driver != null &amp;&amp; driver.getClass().getClassLoader() == getClass().getClassLoader())</span>
                     {
-<span class="fc" id="L404">                        Logger.println(DBPool.class, &quot;Unloading driver &quot; + driver.toString());</span>
-<span class="fc" id="L405">                        DriverManager.deregisterDriver(driver);</span>
+<span class="fc" id="L388">                        Logger.println(DBPool.class, &quot;Unloading driver &quot; + driver.toString());</span>
+<span class="fc" id="L389">                        DriverManager.deregisterDriver(driver);</span>
                     }
-<span class="fc" id="L407">                }</span>
+<span class="fc" id="L391">                }</span>
             }
 		}
-<span class="nc" id="L410">		catch (Exception e)</span>
+<span class="nc" id="L394">		catch (Exception e)</span>
 		{
-<span class="nc" id="L412">			System.err.println(&quot;Failled to cleanup ClassLoader for webapp &quot; + e.getMessage()); //NOSONAR</span>
-<span class="nc" id="L413">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L414">		}</span>
+<span class="nc" id="L396">			System.err.println(&quot;Failled to cleanup ClassLoader for webapp &quot; + e.getMessage()); //NOSONAR</span>
+<span class="nc" id="L397">			Logger.error(e);</span>
+<span class="fc" id="L398">		}</span>
 
-<span class="pc bpc" id="L416" title="1 of 2 branches missed.">		if (destroyInstance) instance = null;</span>
-<span class="fc" id="L417">	}</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">		if (destroyInstance) instance = null;</span>
+<span class="fc" id="L401">	}</span>
 
 	public void logConnections()
 	{
-<span class="nc" id="L421">		Enumeration&lt;String&gt; keys = dataSourcesTable.keys();</span>
+<span class="nc" id="L405">		Enumeration&lt;String&gt; keys = dataSourcesTable.keys();</span>
 		String key;
-<span class="nc bnc" id="L423" title="All 2 branches missed.">		while (keys.hasMoreElements())</span>
+<span class="nc bnc" id="L407" title="All 2 branches missed.">		while (keys.hasMoreElements())</span>
 		{
-<span class="nc" id="L425">			key = keys.nextElement();</span>
+<span class="nc" id="L409">			key = keys.nextElement();</span>
 			try
 			{
-<span class="nc" id="L428">				ConfigurableDataSource ds = dataSourcesTable.get(key);</span>
-<span class="nc" id="L429">				Logger.debug(this,&quot;DBPool[&quot;+key+&quot;] active: &quot; + ds.getNumActive()+&quot; idle=&quot;+ds.getNumIdle());</span>
+<span class="nc" id="L412">				ConfigurableDataSource ds = dataSourcesTable.get(key);</span>
+<span class="nc" id="L413">				Logger.debug(this,&quot;DBPool[&quot;+key+&quot;] active: &quot; + ds.getNumActive()+&quot; idle=&quot;+ds.getNumIdle());</span>
 			}
-<span class="nc" id="L431">			catch (Exception e)</span>
+<span class="nc" id="L415">			catch (Exception e)</span>
 			{
-<span class="nc" id="L433">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L434">			}</span>
+<span class="nc" id="L417">				Logger.error(e);</span>
+<span class="nc" id="L418">			}</span>
 		}
-<span class="nc" id="L436">	}</span>
+<span class="nc" id="L420">	}</span>
 
 	/**
 	 * Ziskanie dataSource z Hashtabulky
@@ -442,20 +426,20 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public DataSource getDataSource(String dbName)
 	{
-<span class="pc bpc" id="L445" title="1 of 2 branches missed.">		if (dataSourcesTable == null)</span>
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">		if (dataSourcesTable == null)</span>
 		{
-<span class="nc" id="L447">			initialize();</span>
+<span class="nc" id="L431">			initialize();</span>
 		}
 
-<span class="fc" id="L450">		DataSource ds = dataSourcesTable.get(dbName);</span>
+<span class="fc" id="L434">		DataSource ds = dataSourcesTable.get(dbName);</span>
 		//Logger.println(DBPool.class, &quot;getDataSource 1, ds=&quot;+ds);
 
-<span class="pc bpc" id="L453" title="1 of 2 branches missed.">		if(ds==null)</span>
-<span class="nc" id="L454">			ds = externalDataSources.get(dbName);</span>
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">		if(ds==null)</span>
+<span class="nc" id="L438">			ds = externalDataSources.get(dbName);</span>
 
 		//Logger.println(DBPool.class, &quot;getDataSource 2, ds=&quot;+ds+&quot; TYPE=&quot;+Constants.DB_TYPE+&quot; conf table=&quot;+ConfDB.CONF_TABLE_NAME);
 
-<span class="fc" id="L458">		return ds;</span>
+<span class="fc" id="L442">		return ds;</span>
 	}
 
 	/**
@@ -465,7 +449,7 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public DataSource getWebJETAbandonedDataSource(String dbName)
 	{
-<span class="fc" id="L468">		return getDataSource(dbName);</span>
+<span class="fc" id="L452">		return getDataSource(dbName);</span>
 	}
 
 
@@ -475,7 +459,7 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static Connection getConnection()
 	{
-<span class="fc" id="L478">		return(getConnection(&quot;iwcm&quot;, false));</span>
+<span class="fc" id="L462">		return(getConnection(&quot;iwcm&quot;, false));</span>
 	}
 
 	/**
@@ -484,12 +468,12 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static Connection getConnectionReadUncommited()
 	{
-<span class="fc" id="L487">		return(getConnection(&quot;iwcm&quot;, true));</span>
+<span class="fc" id="L471">		return(getConnection(&quot;iwcm&quot;, true));</span>
 	}
 
 	public static Connection getConnection(HttpServletRequest request)
 	{
-<span class="fc" id="L492">		return(getConnection(getDBName(request)));</span>
+<span class="fc" id="L476">		return(getConnection(getDBName(request)));</span>
 	}
 
 	/**
@@ -499,7 +483,7 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static Connection getConnection(String dbName)
 	{
-<span class="fc" id="L502">		return getConnection(dbName, false);</span>
+<span class="fc" id="L486">		return getConnection(dbName, false);</span>
 	}
 
 	/**
@@ -509,7 +493,7 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static Connection getConnectionReadUncommited(String dbName)
 	{
-<span class="nc" id="L512">		return getConnection(dbName, false);</span>
+<span class="nc" id="L496">		return getConnection(dbName, false);</span>
 	}
 
 	/**
@@ -520,116 +504,116 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	private static Connection getConnection(String dbName, boolean readUncomitted)
 	{
-<span class="pc bpc" id="L523" title="1 of 2 branches missed.">		if (dbName == null)</span>
+<span class="pc bpc" id="L507" title="1 of 2 branches missed.">		if (dbName == null)</span>
 		{
-<span class="nc" id="L525">			dbName = &quot;iwcm&quot;;</span>
+<span class="nc" id="L509">			dbName = &quot;iwcm&quot;;</span>
 		}
-<span class="pc bpc" id="L527" title="1 of 2 branches missed.">		if (dbName.indexOf('.')!=-1)</span>
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">		if (dbName.indexOf('.')!=-1)</span>
 		{
 			//asi to dalo cele meno servera, osetri
-<span class="nc" id="L530">			dbName = getDBName(dbName);</span>
+<span class="nc" id="L514">			dbName = getDBName(dbName);</span>
 		}
 
 		//skus to cez Data Source
-<span class="fc" id="L534">		DataSource ds = null;</span>
+<span class="fc" id="L518">		DataSource ds = null;</span>
 		try
 		{
-<span class="fc" id="L537">			Connection con = null;</span>
+<span class="fc" id="L521">			Connection con = null;</span>
 
-<span class="fc" id="L539">			ds = DBPool.getInstance().getDataSource(dbName);</span>
+<span class="fc" id="L523">			ds = DBPool.getInstance().getDataSource(dbName);</span>
 
 
-<span class="pc bpc" id="L542" title="1 of 2 branches missed.">			if (ds==null) return(null);</span>
-<span class="fc" id="L543">			con = ds.getConnection();</span>
-<span class="fc" id="L544">			con.setAutoCommit(true);</span>
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">			if (ds==null) return(null);</span>
+<span class="fc" id="L527">			con = ds.getConnection();</span>
+<span class="fc" id="L528">			con.setAutoCommit(true);</span>
 
-<span class="fc bfc" id="L546" title="All 2 branches covered.">			if (readUncomitted) setTransactionIsolationReadUNCommited(con);</span>
-<span class="fc" id="L547">			else setTransactionIsolationReadCommited(con);</span>
+<span class="fc bfc" id="L530" title="All 2 branches covered.">			if (readUncomitted) setTransactionIsolationReadUNCommited(con);</span>
+<span class="fc" id="L531">			else setTransactionIsolationReadCommited(con);</span>
 
-<span class="fc" id="L549">			return(con);</span>
+<span class="fc" id="L533">			return(con);</span>
 		}
-<span class="nc" id="L551">		catch (Exception ex)</span>
+<span class="nc" id="L535">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L553">			Logger.error(DBPool.class,&quot;CHYBA!!: nepodarilo sa ziskat connection do DB.&quot;);</span>
-<span class="nc bnc" id="L554" title="All 6 branches missed.">			if(ex.getMessage() != null &amp;&amp; ex.getMessage().contains(&quot;Cannot get a connection, pool error Timeout waiting for idle object&quot;) &amp;&amp; ds != null)</span>
+<span class="nc" id="L537">			Logger.error(DBPool.class,&quot;CHYBA!!: nepodarilo sa ziskat connection do DB.&quot;);</span>
+<span class="nc bnc" id="L538" title="All 6 branches missed.">			if(ex.getMessage() != null &amp;&amp; ex.getMessage().contains(&quot;Cannot get a connection, pool error Timeout waiting for idle object&quot;) &amp;&amp; ds != null)</span>
 			{
 				 try
 				 {
-<span class="nc" id="L558">					  ConfigurableDataSource cds = (ConfigurableDataSource) ds;</span>
-<span class="nc" id="L559">					  Logger.println(DBPool.class, &quot;  Active: &quot; + cds.getNumActive() + &quot; idle=&quot; + cds.getNumIdle());</span>
-<span class="nc bnc" id="L560" title="All 2 branches missed.">					  if (cds.getNumActive() == Constants.getInt(&quot;webjetDbMaximumSize&quot;))</span>
+<span class="nc" id="L542">					  ConfigurableDataSource cds = (ConfigurableDataSource) ds;</span>
+<span class="nc" id="L543">					  Logger.println(DBPool.class, &quot;  Active: &quot; + cds.getNumActive() + &quot; idle=&quot; + cds.getNumIdle());</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">					  if (cds.getNumActive() == Constants.getInt(&quot;webjetDbMaximumSize&quot;))</span>
 					  {
-<span class="nc bnc" id="L562" title="All 2 branches missed.">							if(hasPrintedStackTrace.compareAndSet(false, true))</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">							if(hasPrintedStackTrace.compareAndSet(false, true))</span>
 							{
-<span class="nc" id="L564">								RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L565" title="All 4 branches missed.">								if(rb != null &amp;&amp; Tools.isNotEmpty(rb.getDomain()))</span>
+<span class="nc" id="L548">								RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L549" title="All 4 branches missed.">								if(rb != null &amp;&amp; Tools.isNotEmpty(rb.getDomain()))</span>
 								{
-<span class="nc" id="L567">									AdminlogNotifyManager.sendNotification(Adminlog.TYPE_SQLERROR, rb, DB.getDbTimestamp(Tools.getNow()),</span>
-<span class="nc bnc" id="L568" title="All 2 branches missed.">															&quot;Na domene &quot; + rb.getDomain() + (ClusterDB.isServerRunningInClusterMode() ? &quot;, node: &quot;+Constants.getString(&quot;clusterMyNodeName&quot;) : &quot;&quot;) +</span>
+<span class="nc" id="L551">									AdminlogNotifyManager.sendNotification(Adminlog.TYPE_SQLERROR, rb, DB.getDbTimestamp(Tools.getNow()),</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">															&quot;Na domene &quot; + rb.getDomain() + (ClusterDB.isServerRunningInClusterMode() ? &quot;, node: &quot;+Constants.getString(&quot;clusterMyNodeName&quot;) : &quot;&quot;) +</span>
 															&quot; bol pravdepodobne dosiahnuty maximalny pocet DB spojeni pre dbName: &quot;+dbName+&quot;. &quot; +
 															&quot;Treba preverit ci nenastavaju DB leaky, alebo ci netreba zvysit maximumSize alebo nastavit korektne socketTimeout v poolman.xml.&quot;, false);
 								}
 							}
 					  }
 				 }
-<span class="nc" id="L575">				 catch (Exception ex2)</span>
+<span class="nc" id="L559">				 catch (Exception ex2)</span>
 				 {
-<span class="nc" id="L577">					  sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L578">				 }</span>
+<span class="nc" id="L561">					  Logger.error(ex2);</span>
+<span class="nc" id="L562">				 }</span>
 			}
-<span class="nc" id="L580">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L564">			Logger.error(ex);</span>
 		}
 
 		//no a teraz je to uplne v prdeli...
-<span class="nc" id="L584">		return(null);</span>
+<span class="nc" id="L568">		return(null);</span>
 	}
 
 	@SuppressWarnings(&quot;unused&quot;)
 	private static void logCaller()
 	{
-<span class="nc" id="L590">		Throwable trace = new Exception().fillInStackTrace();</span>
+<span class="nc" id="L574">		Throwable trace = new Exception().fillInStackTrace();</span>
 		//0 - this, 1 - getConnection, 2 - getConnection, 3 - caller
-<span class="nc bnc" id="L592" title="All 2 branches missed.">		if (trace.getStackTrace().length &gt; 3)</span>
+<span class="nc bnc" id="L576" title="All 2 branches missed.">		if (trace.getStackTrace().length &gt; 3)</span>
 		{
-<span class="nc" id="L594">			String message = String.format(&quot;%s.%s() requested DB connection&quot;, trace.getStackTrace()[3].getClassName(), trace.getStackTrace()[3].getMethodName()</span>
+<span class="nc" id="L578">			String message = String.format(&quot;%s.%s() requested DB connection&quot;, trace.getStackTrace()[3].getClassName(), trace.getStackTrace()[3].getMethodName()</span>
 			);
-<span class="nc" id="L596">			Logger.debug(DBPool.class, message);</span>
+<span class="nc" id="L580">			Logger.debug(DBPool.class, message);</span>
 		}
-<span class="nc" id="L598">	}</span>
+<span class="nc" id="L582">	}</span>
 
 	public static void setTransactionIsolationReadCommited(Connection dbConn)
 	{
-<span class="pc bpc" id="L602" title="1 of 2 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE) return;</span>
+<span class="pc bpc" id="L586" title="1 of 2 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE) return;</span>
 
 		try
 		{
-<span class="pc bpc" id="L606" title="1 of 2 branches missed.">			if (dbConn.getTransactionIsolation()!=Connection.TRANSACTION_READ_COMMITTED)</span>
+<span class="pc bpc" id="L590" title="1 of 2 branches missed.">			if (dbConn.getTransactionIsolation()!=Connection.TRANSACTION_READ_COMMITTED)</span>
 			{
-<span class="fc" id="L608">				dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);</span>
+<span class="fc" id="L592">				dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);</span>
 			}
 		}
-<span class="nc" id="L611">		catch (Exception ex)</span>
+<span class="nc" id="L595">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L613">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L614">		}</span>
-<span class="fc" id="L615">	}</span>
+<span class="nc" id="L597">			Logger.error(ex);</span>
+<span class="fc" id="L598">		}</span>
+<span class="fc" id="L599">	}</span>
 
 	public static void setTransactionIsolationReadUNCommited(Connection dbConn)
 	{
-<span class="pc bpc" id="L619" title="1 of 2 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE) return;</span>
+<span class="pc bpc" id="L603" title="1 of 2 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE) return;</span>
 
 		try
 		{
-<span class="fc bfc" id="L623" title="All 2 branches covered.">			if (dbConn.getTransactionIsolation()!=Connection.TRANSACTION_READ_UNCOMMITTED)</span>
+<span class="fc bfc" id="L607" title="All 2 branches covered.">			if (dbConn.getTransactionIsolation()!=Connection.TRANSACTION_READ_UNCOMMITTED)</span>
 			{
-<span class="fc" id="L625">				dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);</span>
+<span class="fc" id="L609">				dbConn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);</span>
 			}
 		}
-<span class="nc" id="L628">		catch (Exception ex)</span>
+<span class="nc" id="L612">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L630">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L631">		}</span>
-<span class="fc" id="L632">	}</span>
+<span class="nc" id="L614">			Logger.error(ex);</span>
+<span class="fc" id="L615">		}</span>
+<span class="fc" id="L616">	}</span>
 
 	/**
 	 * @de3precated - DBName nie je potrebne
@@ -638,11 +622,11 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static String getDBName(HttpServletRequest request)
 	{
-<span class="pc bpc" id="L641" title="1 of 2 branches missed.">		if (request == null)</span>
+<span class="pc bpc" id="L625" title="1 of 2 branches missed.">		if (request == null)</span>
 		{
-<span class="nc" id="L643">			return(&quot;iwcm&quot;);</span>
+<span class="nc" id="L627">			return(&quot;iwcm&quot;);</span>
 		}
-<span class="fc" id="L645">		return(getDBName(Tools.getServerName(request)));</span>
+<span class="fc" id="L629">		return(getDBName(Tools.getServerName(request)));</span>
 	}
 
 	/**
@@ -652,110 +636,110 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static String getDBName(String domain)
 	{
-<span class="fc" id="L655">		return(&quot;iwcm&quot;);</span>
+<span class="fc" id="L639">		return(&quot;iwcm&quot;);</span>
 	}
 
 	public static String readFileContent()
 	{
-<span class="nc" id="L660">		return readFileContent(null);</span>
+<span class="nc" id="L644">		return readFileContent(null);</span>
 	}
 
 	public static String readFileContent(String customPoolmanPath)
 	{
-<span class="fc" id="L665">		StringBuilder contextFile = new StringBuilder();</span>
+<span class="fc" id="L649">		StringBuilder contextFile = new StringBuilder();</span>
 
-<span class="fc" id="L667">		String poolmanPath = System.getProperty(&quot;webjetPoolmanPath&quot;);</span>
+<span class="fc" id="L651">		String poolmanPath = System.getProperty(&quot;webjetPoolmanPath&quot;);</span>
 
 		try
 		{
 			InputStream is;
 
-<span class="fc bfc" id="L673" title="All 2 branches covered.">			if (Tools.isNotEmpty(customPoolmanPath)) {</span>
-<span class="fc" id="L674">				poolmanPath = customPoolmanPath;</span>
+<span class="pc bpc" id="L657" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(customPoolmanPath)) {</span>
+<span class="fc" id="L658">				poolmanPath = customPoolmanPath;</span>
 			}
 
-<span class="pc bpc" id="L677" title="1 of 4 branches missed.">			if (poolmanPath==null || poolmanPath.length()&lt;1)</span>
+<span class="pc bpc" id="L661" title="2 of 4 branches missed.">			if (poolmanPath==null || poolmanPath.length()&lt;1)</span>
 			{
-<span class="fc" id="L679">				is = DBPool.class.getResourceAsStream(&quot;/poolman.xml&quot;);</span>
-<span class="fc" id="L680">				poolmanPath = &quot;poolman.xml&quot;;</span>
+<span class="nc" id="L663">				is = DBPool.class.getResourceAsStream(&quot;/poolman.xml&quot;);</span>
+<span class="nc" id="L664">				poolmanPath = &quot;poolman.xml&quot;;</span>
 			}
-<span class="pc bpc" id="L682" title="1 of 2 branches missed.">			else if (new File(poolmanPath).exists())</span>
+<span class="pc bpc" id="L666" title="1 of 2 branches missed.">			else if (new File(poolmanPath).exists())</span>
 			{
 				//je to priamo cesta k suboru
-<span class="nc" id="L685">				is = new FileInputStream(poolmanPath);</span>
+<span class="nc" id="L669">				is = new FileInputStream(poolmanPath);</span>
 			}
 			else
 			{
 				//je to cesta v classes adresari (napr. poolman-devel.xml)
-<span class="fc" id="L690">				is = DBPool.class.getResourceAsStream(poolmanPath);</span>
+<span class="fc" id="L674">				is = DBPool.class.getResourceAsStream(poolmanPath);</span>
 			}
-<span class="pc bpc" id="L692" title="1 of 2 branches missed.">			if (is == null) {</span>
+<span class="pc bpc" id="L676" title="1 of 2 branches missed.">			if (is == null) {</span>
 				//ak sa nenasiel, skus este raz /poolman.xml
-<span class="nc" id="L694">				is = DBPool.class.getResourceAsStream(&quot;/poolman.xml&quot;);</span>
-<span class="nc" id="L695">				poolmanPath = &quot;poolman.xml&quot;;</span>
+<span class="nc" id="L678">				is = DBPool.class.getResourceAsStream(&quot;/poolman.xml&quot;);</span>
+<span class="nc" id="L679">				poolmanPath = &quot;poolman.xml&quot;;</span>
 			}
-<span class="pc bpc" id="L697" title="1 of 2 branches missed.">			if (is == null) {</span>
+<span class="pc bpc" id="L681" title="1 of 2 branches missed.">			if (is == null) {</span>
 				//skus natvrdo /WEB-INF/classes/poolman.xml
-<span class="nc" id="L699">				String data = FileTools.readFileContent(&quot;/WEB-INF/classes/poolman.xml&quot;);</span>
-<span class="nc bnc" id="L700" title="All 4 branches missed.">				if (data != null &amp;&amp; data.length()&gt;30) contextFile.append(data);</span>
+<span class="nc" id="L683">				String data = FileTools.readFileContent(&quot;/WEB-INF/classes/poolman.xml&quot;);</span>
+<span class="nc bnc" id="L684" title="All 4 branches missed.">				if (data != null &amp;&amp; data.length()&gt;30) contextFile.append(data);</span>
 			}
 
-<span class="pc bpc" id="L703" title="1 of 2 branches missed.">			if (contextFile.length()&gt;30) {</span>
+<span class="pc bpc" id="L687" title="1 of 2 branches missed.">			if (contextFile.length()&gt;30) {</span>
 				//it's allready readed
 			}
-<span class="pc bpc" id="L706" title="1 of 2 branches missed.">			else if (is != null) {</span>
-<span class="fc" id="L707">				InputStreamReader isr = new InputStreamReader(is);</span>
-<span class="fc" id="L708">				char[] buff = new char[8000];</span>
+<span class="pc bpc" id="L690" title="1 of 2 branches missed.">			else if (is != null) {</span>
+<span class="fc" id="L691">				InputStreamReader isr = new InputStreamReader(is);</span>
+<span class="fc" id="L692">				char[] buff = new char[8000];</span>
 				int len;
 				String line;
-<span class="fc bfc" id="L711" title="All 2 branches covered.">				while ((len = isr.read(buff))!=-1)</span>
+<span class="fc bfc" id="L695" title="All 2 branches covered.">				while ((len = isr.read(buff))!=-1)</span>
 				{
-<span class="fc" id="L713">					line = new String(buff, 0, len);</span>
-<span class="fc" id="L714">					contextFile.append(line);</span>
+<span class="fc" id="L697">					line = new String(buff, 0, len);</span>
+<span class="fc" id="L698">					contextFile.append(line);</span>
 				}
-<span class="fc" id="L716">				isr.close();</span>
-<span class="fc" id="L717">				is.close();</span>
-<span class="fc" id="L718">			} else {</span>
-<span class="nc" id="L719">				sk.iway.iwcm.Logger.error(DBPool.class, poolmanPath+&quot; file doesn't exists&quot;);</span>
+<span class="fc" id="L700">				isr.close();</span>
+<span class="fc" id="L701">				is.close();</span>
+<span class="fc" id="L702">			} else {</span>
+<span class="nc" id="L703">				Logger.error(DBPool.class, poolmanPath+&quot; file doesn't exists&quot;);</span>
 			}
 		}
-<span class="nc" id="L722">		catch (Exception ex)</span>
+<span class="nc" id="L706">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L724">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L725">		}</span>
+<span class="nc" id="L708">			Logger.error(ex);</span>
+<span class="fc" id="L709">		}</span>
 
-<span class="fc" id="L727">		Runtime rt = Runtime.getRuntime();</span>
-<span class="fc" id="L728">	   long free = rt.freeMemory();</span>
-<span class="fc" id="L729">	   long total = rt.totalMemory();</span>
-<span class="fc" id="L730">	   long used = total - free;</span>
-<span class="fc" id="L731">	   long max = rt.maxMemory();</span>
-<span class="fc" id="L732">	   int proces = rt.availableProcessors();</span>
-<span class="fc" id="L733">	   Logger.println(DBPool.class,&quot;Free  = &quot;+(free/1024/1024) +&quot; MB (&quot;+free +&quot; bytes)&lt;br&gt;&quot;);</span>
-<span class="fc" id="L734">	   Logger.println(DBPool.class,&quot;Total = &quot;+(total/1024/1024)+&quot; MB (&quot;+total+&quot; bytes)&lt;br&gt;&quot;);</span>
-<span class="fc" id="L735">	   Logger.println(DBPool.class,&quot;Used = &quot;+(used/1024/1024)+&quot; MB (&quot;+used+&quot; bytes)&lt;br&gt;&quot;);</span>
-<span class="fc" id="L736">	   Logger.println(DBPool.class,&quot;Max  = &quot;+(max/1024/1024)+&quot; MB (&quot;+max+&quot; bytes)&lt;br&gt;&quot;);</span>
-<span class="fc" id="L737">	   Logger.println(DBPool.class,&quot;Processors = &quot;+proces);</span>
+<span class="fc" id="L711">		Runtime rt = Runtime.getRuntime();</span>
+<span class="fc" id="L712">	   long free = rt.freeMemory();</span>
+<span class="fc" id="L713">	   long total = rt.totalMemory();</span>
+<span class="fc" id="L714">	   long used = total - free;</span>
+<span class="fc" id="L715">	   long max = rt.maxMemory();</span>
+<span class="fc" id="L716">	   int proces = rt.availableProcessors();</span>
+<span class="fc" id="L717">	   Logger.println(DBPool.class,&quot;Mem Free   = &quot;+(free/1024/1024) +&quot; MB (&quot;+free +&quot; bytes)&lt;br&gt;&quot;);</span>
+<span class="fc" id="L718">	   Logger.println(DBPool.class,&quot;Mem Total  = &quot;+(total/1024/1024)+&quot; MB (&quot;+total+&quot; bytes)&lt;br&gt;&quot;);</span>
+<span class="fc" id="L719">	   Logger.println(DBPool.class,&quot;Mem Used   = &quot;+(used/1024/1024)+&quot; MB (&quot;+used+&quot; bytes)&lt;br&gt;&quot;);</span>
+<span class="fc" id="L720">	   Logger.println(DBPool.class,&quot;Mem Max    = &quot;+(max/1024/1024)+&quot; MB (&quot;+max+&quot; bytes)&lt;br&gt;&quot;);</span>
+<span class="fc" id="L721">	   Logger.println(DBPool.class,&quot;Processors = &quot;+proces);</span>
 
 		//Logger.println(this,&quot;xml=&quot;+contextFile);
 
-<span class="fc" id="L741">   		return(contextFile.toString());</span>
+<span class="fc" id="L725">   		return(contextFile.toString());</span>
 	}
 
 	private static int getIntValue(String value, int defaultValue)
 	{
-<span class="fc" id="L746">		int ret = defaultValue;</span>
+<span class="fc" id="L730">		int ret = defaultValue;</span>
 		try
 		{
-<span class="pc bpc" id="L749" title="1 of 2 branches missed.">			if (value!=null)</span>
+<span class="pc bpc" id="L733" title="1 of 2 branches missed.">			if (value!=null)</span>
 			{
-<span class="fc" id="L751">				ret = Integer.parseInt(value.trim());</span>
+<span class="fc" id="L735">				ret = Integer.parseInt(value.trim());</span>
 			}
 		}
-<span class="fc" id="L754">		catch (Exception ex)</span>
+<span class="fc" id="L738">		catch (Exception ex)</span>
 		{
 
-<span class="fc" id="L757">		}</span>
-<span class="fc" id="L758">		return(ret);</span>
+<span class="fc" id="L741">		}</span>
+<span class="fc" id="L742">		return(ret);</span>
 	}
 
 	/**
@@ -764,10 +748,10 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static Set&lt;String&gt; getDataSourceNames()
 	{
-<span class="fc" id="L767">		Set&lt;String&gt; dataSourceNames = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L768">		dataSourceNames.addAll(dataSourcesTable.keySet());</span>
-<span class="pc bpc" id="L769" title="1 of 2 branches missed.">		if (externalDataSources != null) dataSourceNames.addAll(externalDataSources.keySet());</span>
-<span class="fc" id="L770">		return dataSourceNames;</span>
+<span class="fc" id="L751">		Set&lt;String&gt; dataSourceNames = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L752">		dataSourceNames.addAll(dataSourcesTable.keySet());</span>
+<span class="pc bpc" id="L753" title="1 of 2 branches missed.">		if (externalDataSources != null) dataSourceNames.addAll(externalDataSources.keySet());</span>
+<span class="fc" id="L754">		return dataSourceNames;</span>
 	}
 
 	/**
@@ -775,36 +759,36 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static void jpaInitialize()
 	{
-<span class="fc" id="L778">		DebugTimer dt = new DebugTimer(&quot;DBPool JPA init&quot;);</span>
-<span class="fc" id="L779">		entityManagerFactories = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L762">		DebugTimer dt = new DebugTimer(&quot;DBPool JPA init&quot;);</span>
+<span class="fc" id="L763">		entityManagerFactories = new HashMap&lt;&gt;();</span>
 
-<span class="fc bfc" id="L781" title="All 2 branches covered.">		for(String name : getDataSourceNames())</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">		for(String name : getDataSourceNames())</span>
 		{
-<span class="pc bpc" id="L783" title="1 of 2 branches missed.">			if (JpaTools.isJPADatasource(name))</span>
+<span class="pc bpc" id="L767" title="1 of 2 branches missed.">			if (JpaTools.isJPADatasource(name))</span>
 			{
-<span class="fc" id="L785">				dt.diff(&quot;START &lt;:--:&gt; &quot;+name);</span>
+<span class="fc" id="L769">				dt.diff(&quot;START &lt;:--:&gt; &quot;+name);</span>
 
-<span class="fc" id="L787">				EntityManagerFactory factory = new WebJETPersistenceProvider().createEntityManagerFactory(name, null);</span>
+<span class="fc" id="L771">				EntityManagerFactory factory = new WebJETPersistenceProvider().createEntityManagerFactory(name, null);</span>
 
-<span class="fc" id="L789">				entityManagerFactories.put(name, factory);</span>
-<span class="fc" id="L790">				dt.diff(&quot;END &lt;:--:&gt; &quot;+name+&quot; factory=&quot;+factory);</span>
+<span class="fc" id="L773">				entityManagerFactories.put(name, factory);</span>
+<span class="fc" id="L774">				dt.diff(&quot;END &lt;:--:&gt; &quot;+name+&quot; factory=&quot;+factory);</span>
 			}
-<span class="fc" id="L792">		}</span>
-<span class="fc" id="L793">		dt.diff(&quot;-----JPA INIT E N D-------&quot;);</span>
-<span class="fc" id="L794">	}</span>
+<span class="fc" id="L776">		}</span>
+<span class="fc" id="L777">		dt.diff(&quot;-----JPA INIT E N D-------&quot;);</span>
+<span class="fc" id="L778">	}</span>
 
 	/**
 	 * zatvorenie entityManagerFactories (vola sa v destroy-i InitServlet-u)
 	 */
 	public static void jpaDestroy()
 	{
-<span class="pc bpc" id="L801" title="1 of 2 branches missed.">	    if (entityManagerFactories==null) return;</span>
-<span class="fc bfc" id="L802" title="All 2 branches covered.">		for (EntityManagerFactory factory : entityManagerFactories.values())</span>
+<span class="pc bpc" id="L785" title="1 of 2 branches missed.">	    if (entityManagerFactories==null) return;</span>
+<span class="fc bfc" id="L786" title="All 2 branches covered.">		for (EntityManagerFactory factory : entityManagerFactories.values())</span>
 		{
-<span class="pc bpc" id="L804" title="1 of 2 branches missed.">			if (factory.isOpen())</span>
-<span class="fc" id="L805">				factory.close();</span>
-<span class="fc" id="L806">		}</span>
-<span class="fc" id="L807">	}</span>
+<span class="pc bpc" id="L788" title="1 of 2 branches missed.">			if (factory.isOpen())</span>
+<span class="fc" id="L789">				factory.close();</span>
+<span class="fc" id="L790">		}</span>
+<span class="fc" id="L791">	}</span>
 
 	/**
 	 * vrati EntityManagerFactory pre zadany nazov DB spojenia
@@ -813,7 +797,7 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	public static EntityManagerFactory getEntityManagerFactory(String dbName)
 	{
-<span class="fc" id="L816">		return entityManagerFactories.get(dbName);</span>
+<span class="fc" id="L800">		return entityManagerFactories.get(dbName);</span>
 	}
 
 	/**
@@ -821,62 +805,63 @@ import static sk.iway.iwcm.Tools.*;
 	 */
 	private static void addExternalDataSources()
 	{
-<span class="fc" id="L824">		Logger.println(DBPool.class, &quot;Adding external datasources&quot;);</span>
+<span class="fc" id="L808">		Logger.println(DBPool.class, &quot;Adding external datasources&quot;);</span>
 
-<span class="fc" id="L826">		Map&lt;String, DataSource&gt; allDataSources = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L827">		Map&lt;String, DataSource&gt; wjDataSources = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L810">		Map&lt;String, DataSource&gt; allDataSources = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L811">		Map&lt;String, DataSource&gt; wjDataSources = new HashMap&lt;&gt;();</span>
 
 		try
 		{
-<span class="fc" id="L831">			addAllExternalDatasources(new InitialContext(), allDataSources, &quot;&quot;);</span>
+<span class="fc" id="L815">			addAllExternalDatasources(new InitialContext(), allDataSources, &quot;&quot;);</span>
 
-<span class="pc bpc" id="L833" title="1 of 2 branches missed.">			for(Entry&lt;String, DataSource&gt; entry : allDataSources.entrySet())</span>
+<span class="pc bpc" id="L817" title="1 of 2 branches missed.">			for(Entry&lt;String, DataSource&gt; entry : allDataSources.entrySet())</span>
 			{
-<span class="nc bnc" id="L835" title="All 2 branches missed.">				if(entry.getKey().contains(&quot;/webjet/&quot;))</span>
+<span class="nc bnc" id="L819" title="All 2 branches missed.">				if(entry.getKey().contains(&quot;/webjet/&quot;))</span>
 				{
-<span class="nc" id="L837">					String dsName = entry.getKey().substring(entry.getKey().lastIndexOf(&quot;/&quot;) + 1);</span>
-<span class="nc" id="L838">					Logger.println(DBPool.class, &quot;Adding JNDI datasource &quot;+entry.getKey()+&quot; dsName=&quot;+dsName);</span>
+<span class="nc" id="L821">					String dsName = entry.getKey().substring(entry.getKey().lastIndexOf(&quot;/&quot;) + 1);</span>
+<span class="nc" id="L822">					Logger.println(DBPool.class, &quot;Adding JNDI datasource &quot;+entry.getKey()+&quot; dsName=&quot;+dsName);</span>
 					//kluc v mape je nazov za poslednim lomitkom /
-<span class="nc" id="L840">					DataSource ds = entry.getValue();</span>
-<span class="nc" id="L841">					wjDataSources.put(dsName, ds);</span>
-<span class="nc bnc" id="L842" title="All 2 branches missed.">					if (&quot;iwcm&quot;.equals(dsName))</span>
+<span class="nc" id="L824">					DataSource ds = entry.getValue();</span>
+<span class="nc" id="L825">					wjDataSources.put(dsName, ds);</span>
+<span class="nc bnc" id="L826" title="All 2 branches missed.">					if (&quot;iwcm&quot;.equals(dsName))</span>
 					{
 						//nastav driver test
 						//Logger.debug(DBPool.class, ds.toString());
-<span class="nc" id="L846">						Connection conn = ds.getConnection();</span>
-<span class="nc" id="L847">						String databaseName = conn.getMetaData().getDatabaseProductName();</span>
+<span class="nc" id="L830">						Connection conn = ds.getConnection();</span>
+<span class="nc" id="L831">						String databaseName = conn.getMetaData().getDatabaseProductName();</span>
 
-<span class="nc" id="L849">						Logger.println(DBPool.class, &quot;Database name: &quot;+databaseName);</span>
+<span class="nc" id="L833">						Logger.println(DBPool.class, &quot;Database name: &quot;+databaseName);</span>
 
-<span class="nc bnc" id="L851" title="All 2 branches missed.">						if (Tools.isNotEmpty(databaseName))</span>
+<span class="nc bnc" id="L835" title="All 2 branches missed.">						if (Tools.isNotEmpty(databaseName))</span>
 						{
-<span class="nc" id="L853">							databaseName = databaseName.toLowerCase();</span>
-<span class="nc bnc" id="L854" title="All 4 branches missed.">							if (databaseName.indexOf(&quot;oracle&quot;)!=-1 || entry.getKey().contains(&quot;/oracle/&quot;))</span>
+<span class="nc" id="L837">							databaseName = databaseName.toLowerCase();</span>
+<span class="nc bnc" id="L838" title="All 4 branches missed.">							if (databaseName.indexOf(&quot;oracle&quot;)!=-1 || entry.getKey().contains(&quot;/oracle/&quot;))</span>
 							{
-<span class="nc" id="L856">								Logger.println(DBPool.class, &quot;Setting ORACLE dialect - &quot;+databaseName);</span>
-<span class="nc" id="L857">								Constants.DB_TYPE = Constants.DB_ORACLE;</span>
-<span class="nc" id="L858">								ConfDB.CONF_TABLE_NAME = &quot;webjet_conf&quot;;</span>
-<span class="nc" id="L859">					      		ConfDB.CONF_PREPARED_TABLE_NAME = &quot;webjet_conf_prepared&quot;;</span>
-<span class="nc" id="L860">					      		ConfDB.MODULES_TABLE_NAME = &quot;webjet_modules&quot;;</span>
-<span class="nc" id="L861">					      		ConfDB.ADMINLOG_TABLE_NAME = &quot;webjet_adminlog&quot;;</span>
-<span class="nc" id="L862">					      		ConfDB.DB_TABLE_NAME = &quot;webjet_db&quot;;</span>
-<span class="nc" id="L863">					      		ConfDB.PROPERTIES_TABLE_NAME = &quot;webjet_properties&quot;;</span>
+<span class="nc" id="L840">								Logger.println(DBPool.class, &quot;Setting ORACLE dialect - &quot;+databaseName);</span>
+<span class="nc" id="L841">								Constants.DB_TYPE = Constants.DB_ORACLE;</span>
+<span class="nc" id="L842">								ConfDB.CONF_TABLE_NAME = &quot;webjet_conf&quot;;</span>
+<span class="nc" id="L843">					      		ConfDB.CONF_PREPARED_TABLE_NAME = &quot;webjet_conf_prepared&quot;;</span>
+<span class="nc" id="L844">					      		ConfDB.MODULES_TABLE_NAME = &quot;webjet_modules&quot;;</span>
+<span class="nc" id="L845">					      		ConfDB.ADMINLOG_TABLE_NAME = &quot;webjet_adminlog&quot;;</span>
+<span class="nc" id="L846">					      		ConfDB.DB_TABLE_NAME = &quot;webjet_db&quot;;</span>
+<span class="nc" id="L847">					      		ConfDB.PROPERTIES_TABLE_NAME = &quot;webjet_properties&quot;;</span>
 							}
-<span class="nc bnc" id="L865" title="All 4 branches missed.">							if (databaseName.indexOf(&quot;microsoft&quot;)!=-1 || entry.getKey().contains(&quot;/mssql/&quot;))</span>
+<span class="nc bnc" id="L849" title="All 4 branches missed.">							if (databaseName.indexOf(&quot;microsoft&quot;)!=-1 || entry.getKey().contains(&quot;/mssql/&quot;))</span>
 							{
-<span class="nc" id="L867">								Logger.println(DBPool.class, &quot;Setting MS SQL dialect - &quot;+databaseName);</span>
-<span class="nc" id="L868">								Constants.DB_TYPE = Constants.DB_MSSQL;</span>
+<span class="nc" id="L851">								Logger.println(DBPool.class, &quot;Setting MS SQL dialect - &quot;+databaseName);</span>
+<span class="nc" id="L852">								Constants.DB_TYPE = Constants.DB_MSSQL;</span>
 							}
 						}
-<span class="nc" id="L871">						conn.close();</span>
+<span class="nc" id="L855">						conn.close();</span>
 					}
 				}
-<span class="nc" id="L874">			}</span>
-		}
-<span class="pc" id="L876">		catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L858">			}</span>
+<span class="nc" id="L859">		} catch(Exception e) {</span>
+<span class="nc" id="L860">            Logger.error(e);</span>
+<span class="fc" id="L861">		}</span>
 
-<span class="fc" id="L878">		externalDataSources = wjDataSources;</span>
-<span class="fc" id="L879">	}</span>
+<span class="fc" id="L863">		externalDataSources = wjDataSources;</span>
+<span class="fc" id="L864">	}</span>
 
 	/**
 	 * ziska vsetky datasourcy z aplikacneho servera a prida ich do mapy
@@ -888,119 +873,120 @@ import static sk.iway.iwcm.Tools.*;
 	{
 		try
 		{
-<span class="fc" id="L891">			String defaultJndiPath = &quot;/jndi/webjet/iwcm&quot;; //NOSONAR</span>
+<span class="fc" id="L876">			String defaultJndiPath = &quot;/jndi/webjet/iwcm&quot;; //NOSONAR</span>
 
-<span class="nc" id="L893">			DataSource dataSource = (DataSource)ctx.lookup(defaultJndiPath);</span>
-<span class="nc" id="L894">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources - &quot;+defaultJndiPath+&quot;, defaultDataSource=&quot;+dataSource);</span>
-<span class="nc bnc" id="L895" title="All 2 branches missed.">			if (dataSource != null)</span>
+<span class="nc" id="L878">			DataSource dataSource = (DataSource)ctx.lookup(defaultJndiPath);</span>
+<span class="nc" id="L879">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources - &quot;+defaultJndiPath+&quot;, defaultDataSource=&quot;+dataSource);</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">			if (dataSource != null)</span>
 			{
-<span class="nc" id="L897">				map.put(defaultJndiPath, dataSource);</span>
+<span class="nc" id="L882">				map.put(defaultJndiPath, dataSource);</span>
 			}
 		}
-<span class="nc" id="L900">		catch (javax.naming.NameNotFoundException e)</span>
+<span class="nc" id="L885">		catch (javax.naming.NameNotFoundException e)</span>
 		{
 			//do nothing
 		}
-<span class="fc" id="L904">		catch (Exception e)</span>
+<span class="fc" id="L889">		catch (Exception e)</span>
 		{
-<span class="fc" id="L906">			Logger.debug(DBPool.class, e.getMessage());</span>
+<span class="fc" id="L891">			Logger.debug(DBPool.class, e.getMessage());</span>
 			//sk.iway.iwcm.Logger.error(e);
-<span class="nc" id="L908">		}</span>
+<span class="nc" id="L893">		}</span>
 
 		try
 		{
-<span class="fc" id="L912">			String defaultJndiPath = &quot;/jdbc/webjet/iwcm&quot;; //NOSONAR</span>
+<span class="fc" id="L897">			String defaultJndiPath = &quot;/jdbc/webjet/iwcm&quot;; //NOSONAR</span>
 
-<span class="nc" id="L914">			DataSource dataSource = (DataSource)ctx.lookup(defaultJndiPath);</span>
-<span class="nc" id="L915">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources - &quot;+defaultJndiPath+&quot;, defaultDataSource=&quot;+dataSource);</span>
-<span class="nc bnc" id="L916" title="All 2 branches missed.">			if (dataSource != null)</span>
+<span class="nc" id="L899">			DataSource dataSource = (DataSource)ctx.lookup(defaultJndiPath);</span>
+<span class="nc" id="L900">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources - &quot;+defaultJndiPath+&quot;, defaultDataSource=&quot;+dataSource);</span>
+<span class="nc bnc" id="L901" title="All 2 branches missed.">			if (dataSource != null)</span>
 			{
-<span class="nc" id="L918">				map.put(defaultJndiPath, dataSource);</span>
+<span class="nc" id="L903">				map.put(defaultJndiPath, dataSource);</span>
 			}
 		}
-<span class="nc" id="L921">		catch (javax.naming.NameNotFoundException e)</span>
+<span class="nc" id="L906">		catch (javax.naming.NameNotFoundException e)</span>
 		{
 			//do nothing
 		}
-<span class="fc" id="L925">		catch (Exception e)</span>
+<span class="fc" id="L910">		catch (Exception e)</span>
 		{
-<span class="fc" id="L927">			Logger.debug(DBPool.class, e.getMessage());</span>
+<span class="fc" id="L912">			Logger.debug(DBPool.class, e.getMessage());</span>
 			//sk.iway.iwcm.Logger.error(e);
-<span class="nc" id="L929">		}</span>
+<span class="nc" id="L914">		}</span>
 
 		try
 		{
-<span class="fc" id="L933">			String defaultJndiPath = &quot;java:comp/env/jdbc/webjet/iwcm&quot;;</span>
+<span class="fc" id="L918">			String defaultJndiPath = &quot;java:comp/env/jdbc/webjet/iwcm&quot;;</span>
 
-<span class="nc" id="L935">			DataSource dataSource = (DataSource)ctx.lookup(defaultJndiPath);</span>
-<span class="nc" id="L936">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources - &quot;+defaultJndiPath+&quot;, defaultDataSource=&quot;+dataSource);</span>
-<span class="nc bnc" id="L937" title="All 2 branches missed.">			if (dataSource != null)</span>
+<span class="nc" id="L920">			DataSource dataSource = (DataSource)ctx.lookup(defaultJndiPath);</span>
+<span class="nc" id="L921">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources - &quot;+defaultJndiPath+&quot;, defaultDataSource=&quot;+dataSource);</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">			if (dataSource != null)</span>
 			{
-<span class="nc" id="L939">				map.put(defaultJndiPath, dataSource);</span>
+<span class="nc" id="L924">				map.put(defaultJndiPath, dataSource);</span>
 			}
 		}
-<span class="nc" id="L942">		catch (javax.naming.NameNotFoundException e)</span>
+<span class="nc" id="L927">		catch (javax.naming.NameNotFoundException e)</span>
 		{
 			//do nothing
 		}
-<span class="fc" id="L946">		catch (Exception e)</span>
+<span class="fc" id="L931">		catch (Exception e)</span>
 		{
-<span class="fc" id="L948">			Logger.debug(DBPool.class, e.getMessage());</span>
+<span class="fc" id="L933">			Logger.debug(DBPool.class, e.getMessage());</span>
 			//sk.iway.iwcm.Logger.error(e);
-<span class="nc" id="L950">		}</span>
+<span class="nc" id="L935">		}</span>
 
 		try
 		{
-<span class="fc" id="L954">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources&quot;);</span>
+<span class="fc" id="L939">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources&quot;);</span>
 
-<span class="nc bnc" id="L956" title="All 2 branches missed.">			String namespace = ctx instanceof InitialContext ? ctx.getNameInNamespace() : &quot;&quot;;</span>
+<span class="nc bnc" id="L941" title="All 2 branches missed.">			String namespace = ctx instanceof InitialContext ? ctx.getNameInNamespace() : &quot;&quot;;</span>
 
-<span class="nc" id="L958">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources, namespace2=&quot;+namespace);</span>
+<span class="nc" id="L943">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources, namespace2=&quot;+namespace);</span>
 
-<span class="nc" id="L960">			NamingEnumeration&lt;NameClassPair&gt; list = ctx.list(namespace);</span>
+<span class="nc" id="L945">			NamingEnumeration&lt;NameClassPair&gt; list = ctx.list(namespace);</span>
 
 			//Object dataSource = ctx.lookup(&quot;java:comp/env/jndi/webjet/iwcm&quot;);
 			//Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources, dataSource=&quot;+dataSource);
 
-<span class="nc" id="L965">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources, list=&quot;+list);</span>
-<span class="nc bnc" id="L966" title="All 2 branches missed.">			while (list.hasMoreElements())</span>
+<span class="nc" id="L950">			Logger.println(DBPool.class, &quot;DBPool: addAllExternalDatasources, list=&quot;+list);</span>
+<span class="nc bnc" id="L951" title="All 2 branches missed.">			while (list.hasMoreElements())</span>
 			{
 				try
 				{
-<span class="nc" id="L970">					NameClassPair next = list.next();</span>
-<span class="nc" id="L971">					String name = next.getName();</span>
-<span class="nc" id="L972">					String jndiPath = namespace + name;</span>
-<span class="nc" id="L973">					Logger.println(DBPool.class, &quot;Scanning &quot;+jndiPath);</span>
+<span class="nc" id="L955">					NameClassPair next = list.next();</span>
+<span class="nc" id="L956">					String name = next.getName();</span>
+<span class="nc" id="L957">					String jndiPath = namespace + name;</span>
+<span class="nc" id="L958">					Logger.println(DBPool.class, &quot;Scanning &quot;+jndiPath);</span>
 
 					//toto na Tomcate scanovalo vsetky subory
-<span class="nc bnc" id="L976" title="All 2 branches missed.">					if (&quot;Resources&quot;.equals(jndiPath)) continue;</span>
+<span class="nc bnc" id="L961" title="All 2 branches missed.">					if (&quot;Resources&quot;.equals(jndiPath)) continue;</span>
 					try
 					{
-<span class="nc" id="L979">						Object tmp = ctx.lookup(jndiPath);</span>
-<span class="nc bnc" id="L980" title="All 2 branches missed.">						if (tmp instanceof Context)</span>
+<span class="nc" id="L964">						Object tmp = ctx.lookup(jndiPath);</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">						if (tmp instanceof Context)</span>
 						{
-<span class="nc" id="L982">							addAllExternalDatasources((Context) tmp, map, fullPath+&quot;/&quot;+jndiPath);</span>
+<span class="nc" id="L967">							addAllExternalDatasources((Context) tmp, map, fullPath+&quot;/&quot;+jndiPath);</span>
 						}
-<span class="nc bnc" id="L984" title="All 2 branches missed.">						else if(tmp instanceof DataSource)</span>
+<span class="nc bnc" id="L969" title="All 2 branches missed.">						else if(tmp instanceof DataSource)</span>
 						{
-<span class="nc" id="L986">							map.put(fullPath+&quot;/&quot;+jndiPath, (DataSource) tmp);</span>
+<span class="nc" id="L971">							map.put(fullPath+&quot;/&quot;+jndiPath, (DataSource) tmp);</span>
 						}
 					}
-<span class="nc" id="L989">					catch (Exception e){}</span>
-				}
-<span class="nc" id="L991">				catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L974">					catch (Exception e){}</span>
+<span class="nc" id="L975">				} catch(Exception e) {</span>
+<span class="nc" id="L976">                    Logger.error(e);</span>
+<span class="nc" id="L977">				}</span>
 			}
 		}
-<span class="nc" id="L994">		catch (javax.naming.NameNotFoundException e)</span>
+<span class="nc" id="L980">		catch (javax.naming.NameNotFoundException e)</span>
 		{
 			//do nothing
 		}
-<span class="fc" id="L998">		catch(Exception e)</span>
+<span class="fc" id="L984">		catch(Exception e)</span>
 		{
-<span class="fc" id="L1000">			Logger.debug(DBPool.class, e.getMessage());</span>
+<span class="fc" id="L986">			Logger.debug(DBPool.class, e.getMessage());</span>
 			//sk.iway.iwcm.Logger.error(e);
-<span class="nc" id="L1002">		}</span>
-<span class="fc" id="L1003">	}</span>
+<span class="nc" id="L988">		}</span>
+<span class="fc" id="L989">	}</span>
 
 	 /**
 	  * Cez reflection zisti, ci existuje trieda na desifrovanie, ak ano pokusi sa desifrovat heslo. Ak nie vrati povodne heslo
@@ -1010,30 +996,30 @@ import static sk.iway.iwcm.Tools.*;
 	  */
 	 private static String decryptPassword(String encryptedPassword)
 	 {
-<span class="pc bpc" id="L1013" title="4 of 6 branches missed.">		  if(Tools.isNotEmpty(encryptedPassword) &amp;&amp; encryptedPassword.startsWith(&quot;sk.iway.&quot;) &amp;&amp; encryptedPassword.contains(&quot;-&quot;))</span>
+<span class="pc bpc" id="L999" title="4 of 6 branches missed.">		  if(Tools.isNotEmpty(encryptedPassword) &amp;&amp; encryptedPassword.startsWith(&quot;sk.iway.&quot;) &amp;&amp; encryptedPassword.contains(&quot;-&quot;))</span>
 		  {
 				try
 				{
-<span class="nc" id="L1017">					 Class&lt;?&gt; c = Class.forName(encryptedPassword.substring(0, encryptedPassword.indexOf(&quot;-&quot;)));</span>
-<span class="nc" id="L1018">					 Object o = c.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L1003">					 Class&lt;?&gt; c = Class.forName(encryptedPassword.substring(0, encryptedPassword.indexOf(&quot;-&quot;)));</span>
+<span class="nc" id="L1004">					 Object o = c.getDeclaredConstructor().newInstance();</span>
 					 Method m;
-<span class="nc" id="L1020">					 Class&lt;?&gt;[] parameterTypes = new Class[] {String.class};</span>
-<span class="nc" id="L1021">					 Object[] arguments = new Object[] {encryptedPassword.substring(encryptedPassword.indexOf(&quot;-&quot;)+1)};</span>
-<span class="nc" id="L1022">					 m = c.getMethod(&quot;decrypt&quot;, parameterTypes);</span>
-<span class="nc" id="L1023">					 String decryptedPassword = (String)m.invoke(o, arguments);</span>
-<span class="nc bnc" id="L1024" title="All 2 branches missed.">					 if(Tools.isNotEmpty(decryptedPassword))</span>
+<span class="nc" id="L1006">					 Class&lt;?&gt;[] parameterTypes = new Class[] {String.class};</span>
+<span class="nc" id="L1007">					 Object[] arguments = new Object[] {encryptedPassword.substring(encryptedPassword.indexOf(&quot;-&quot;)+1)};</span>
+<span class="nc" id="L1008">					 m = c.getMethod(&quot;decrypt&quot;, parameterTypes);</span>
+<span class="nc" id="L1009">					 String decryptedPassword = (String)m.invoke(o, arguments);</span>
+<span class="nc bnc" id="L1010" title="All 2 branches missed.">					 if(Tools.isNotEmpty(decryptedPassword))</span>
 					 {
-<span class="nc" id="L1026">						  Logger.debug(DBPool.class, &quot;Decrypted password used.&quot;);</span>
-<span class="nc" id="L1027">						  return decryptedPassword;</span>
+<span class="nc" id="L1012">						  Logger.debug(DBPool.class, &quot;Decrypted password used.&quot;);</span>
+<span class="nc" id="L1013">						  return decryptedPassword;</span>
 					 }
 				}
-<span class="nc" id="L1030">				catch (Exception ex)</span>
+<span class="nc" id="L1016">				catch (Exception ex)</span>
 				{
-<span class="nc" id="L1032">					 sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1033">					 Logger.debug(DBPool.class, &quot;Default password used.&quot;);</span>
-<span class="nc" id="L1034">				}</span>
+<span class="nc" id="L1018">					 Logger.error(ex);</span>
+<span class="nc" id="L1019">					 Logger.debug(DBPool.class, &quot;Default password used.&quot;);</span>
+<span class="nc" id="L1020">				}</span>
 		  }
-<span class="fc" id="L1036">		  return encryptedPassword;</span>
+<span class="fc" id="L1022">		  return encryptedPassword;</span>
 	 }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

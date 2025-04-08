@@ -21,7 +21,7 @@ Scenario('editacia kde nie su listy - najskor editor', async ({I, DTE, DT}) => {
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
 
-    I.click("#mediaTable tbody tr td:nth-child(3)");
+    I.clickCss("#mediaTable tbody tr td:nth-child(3)");
     I.dontSeeElement("div.DTE_Field_Name_mediaLink input.form-control");
     I.seeElement("#DTE_Field_mediaTitleSk");
     I.dontSeeElement("#DTE_Field_mediaSortOrder")
@@ -48,7 +48,7 @@ Scenario('editacia kde nie su listy - najskor bubble', async ({I, DTE, DT}) => {
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
 
-    I.click("#mediaTable tbody tr td:nth-child(3)");
+    I.clickCss("#mediaTable tbody tr td:nth-child(3)");
     I.dontSeeElement("div.DTE_Field_Name_mediaLink input.form-control");
     I.seeElement("#DTE_Field_mediaTitleSk");
     I.dontSeeElement("#DTE_Field_mediaSortOrder")
@@ -71,7 +71,7 @@ Scenario('editacia kde nie su listy - najskor bubble', async ({I, DTE, DT}) => {
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
 
-    I.click("#mediaTable tbody tr td:nth-child(3)");
+    I.clickCss("#mediaTable tbody tr td:nth-child(3)");
     I.dontSeeElement("div.DTE_Field_Name_mediaLink input.form-control");
     I.seeElement("#DTE_Field_mediaTitleSk");
     I.dontSeeElement("#DTE_Field_mediaSortOrder")
@@ -86,7 +86,7 @@ Scenario('editacia kde su listy - najskor editor', async ({I, DTE, DT}) => {
     DTE.waitForEditor("insertScriptTable");
     I.seeElement("#DTE_Field_name");
     I.seeElement("#DTE_Field_position");
-    I.click("#pills-dt-insertScriptTable-scriptPerms-tab");
+    I.clickCss("#pills-dt-insertScriptTable-scriptPerms-tab");
     I.seeElement("#DTE_Field_validTo")
     DTE.cancel();
 
@@ -95,7 +95,7 @@ Scenario('editacia kde su listy - najskor editor', async ({I, DTE, DT}) => {
     I.wait(1);
 
     //stlpec: umiestnenie
-    I.click("#insertScriptTable tbody tr td:nth-child(3)");
+    I.clickCss("#insertScriptTable tbody tr td:nth-child(3)");
     I.dontSeeElement("#DTE_Field_name");
     I.seeElement("#DTE_Field_position");
     I.dontSeeElement("#DTE_Field_validTo")
@@ -111,7 +111,7 @@ Scenario('editacia kde su listy - najskor editor', async ({I, DTE, DT}) => {
     DTE.waitForEditor("insertScriptTable");
     I.seeElement("#DTE_Field_name");
     I.seeElement("#DTE_Field_position");
-    I.click("#pills-dt-insertScriptTable-scriptPerms-tab");
+    I.clickCss("#pills-dt-insertScriptTable-scriptPerms-tab");
     I.seeElement("#DTE_Field_validTo")
     DTE.cancel();
 });
@@ -123,7 +123,7 @@ Scenario('editacia kde su listy - najskor bubble', async ({I, DTE, DT}) => {
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
 
-    I.click("#insertScriptTable tbody tr td:nth-child(3)");
+    I.clickCss("#insertScriptTable tbody tr td:nth-child(3)");
     I.dontSeeElement("#DTE_Field_name");
     I.seeElement("#DTE_Field_position");
     I.dontSeeElement("#DTE_Field_validTo");
@@ -139,7 +139,7 @@ Scenario('editacia kde su listy - najskor bubble', async ({I, DTE, DT}) => {
     DTE.waitForEditor("insertScriptTable");
     I.seeElement("#DTE_Field_name");
     I.seeElement("#DTE_Field_position");
-    I.click("#pills-dt-insertScriptTable-scriptPerms-tab");
+    I.clickCss("#pills-dt-insertScriptTable-scriptPerms-tab");
     I.seeElement("#DTE_Field_validTo")
     DTE.cancel();
 
@@ -147,7 +147,7 @@ Scenario('editacia kde su listy - najskor bubble', async ({I, DTE, DT}) => {
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
 
-    I.click("#insertScriptTable tbody tr td:nth-child(3)");
+    I.clickCss("#insertScriptTable tbody tr td:nth-child(3)");
     I.dontSeeElement("#DTE_Field_name");
     I.seeElement("#DTE_Field_position");
     I.dontSeeElement("#DTE_Field_validTo");
@@ -176,7 +176,7 @@ Scenario('BUG editacia bunky pouzije staru hodnotu v CKEditore', async ({I, DTE,
     I.click(subpageName, "#datatableInit_wrapper");
     DTE.waitForEditor();
     await DTE.fillCkeditor("<p>Bubble "+subpageName+" - pracovna verzia</p>");
-    I.click("#webpagesSaveCheckbox");
+    I.clickCss("#webpagesSaveCheckbox");
     DTE.save();
     DTE.cancel();
     I.click(".toast-close-button");
@@ -225,7 +225,7 @@ Scenario('BUG okno mimo dosah', ({I, DTE, DT}) => {
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
 
-    I.click("#galleryTable tbody tr td:nth-child(6)");
+    I.clickCss("#galleryTable tbody tr td:nth-child(6)");
     //bubble element must be visible with below CSS class
     I.waitForElement(".DTE_Bubble_Liner", 10);
 });

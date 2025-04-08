@@ -31,7 +31,7 @@ public class ManagementKeywordsEntity {
     @Id
     @Column(name = "seo_keyword_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_seo_keywords")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @Column(name = "name")

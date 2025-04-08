@@ -294,7 +294,7 @@ public class SitemapULAction
 	}
 
 	/**
-	 * Z povodneho nazvu vrati nazov bez <APARAM ako [0] a hodnotu APARAM ako [1] (ak je zadana)
+	 * Z povodneho nazvu vrati nazov bez &lt;APARAM ako [0] a hodnotu APARAM ako [1] (ak je zadana)
 	 * @param navbarName
 	 * @return
 	 */

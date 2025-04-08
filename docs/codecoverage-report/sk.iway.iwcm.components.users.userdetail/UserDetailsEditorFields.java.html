@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsEditorFields.java</span></div><h1>UserDetailsEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsEditorFields.java</span></div><h1>UserDetailsEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +91,7 @@ public class UserDetailsEditorFields extends BaseEditorFields {
     })
     private List&lt;GroupsApproveEntity&gt; groupsApprove;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.writableFolders.label&quot;, tab = &quot;rightsTab&quot;, hidden = true, className = &quot;dt-tree-dir-array&quot;, editor = {
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;user.writableFolders.label&quot;, tab = &quot;rightsTab&quot;, hidden = true, className = &quot;dt-tree-dir-array-root&quot;, editor = {
         @DataTableColumnEditor(attr = {
             @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.menu.writableFolders&quot;),
             @DataTableColumnEditorAttr(key = &quot;data-dt-json-addbutton&quot;, value = &quot;useredit.addGroup&quot;)
@@ -211,168 +211,173 @@ public class UserDetailsEditorFields extends BaseEditorFields {
 <span class="fc bfc" id="L211" title="All 2 branches covered.">            for(GroupsApproveEntity group : groups) {</span>
 <span class="fc" id="L212">                getModeText(group.getApproveMode(), sb, prop);</span>
 <span class="fc" id="L213">                sb.append(&quot; &quot;);</span>
-<span class="pc bpc" id="L214" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(group.getGroup().getDomainName())) sb.append(group.getGroup().getDomainName()).append(&quot;:&quot;);</span>
-<span class="fc" id="L215">                sb.append(group.getGroup().getFullPath()).append(&quot;&lt;br /&gt;&quot;);</span>
-<span class="fc" id="L216">            }</span>
-<span class="fc" id="L217">            groupsApproveShow = sb.toString();</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">                if (group.getGroup()==null) {</span>
+<span class="nc" id="L215">                    sb.append(&quot;???&quot;);</span>
+                } else {
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">                    if (Tools.isNotEmpty(group.getGroup().getDomainName())) sb.append(group.getGroup().getDomainName()).append(&quot;:&quot;);</span>
+<span class="fc" id="L218">                    sb.append(group.getGroup().getFullPath());</span>
+                }
+<span class="fc" id="L220">                sb.append(&quot;&lt;br /&gt;&quot;);</span>
+<span class="fc" id="L221">            }</span>
+<span class="fc" id="L222">            groupsApproveShow = sb.toString();</span>
         }
 
         //Set editable groups Ids into List editableGroups
-<span class="fc" id="L221">        editableGroups = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L222">        int[] editableGroupsIds = Tools.getTokensInt(userDetailsOriginal.getEditableGroups(), &quot;,&quot;);</span>
-<span class="fc bfc" id="L223" title="All 2 branches covered.">        if(editableGroupsIds.length &gt; 0) {</span>
-<span class="fc" id="L224">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L226">        editableGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L227">        int[] editableGroupsIds = Tools.getTokensInt(userDetailsOriginal.getEditableGroups(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        if(editableGroupsIds.length &gt; 0) {</span>
+<span class="fc" id="L229">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="fc bfc" id="L226" title="All 2 branches covered.">            for(int editableGroupId : editableGroupsIds) {</span>
-<span class="fc" id="L227">                GroupDetails tmp = groupsDB.getGroup(editableGroupId);</span>
-<span class="fc bfc" id="L228" title="All 2 branches covered.">                if (tmp != null) editableGroups.add(tmp);</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">            for(int editableGroupId : editableGroupsIds) {</span>
+<span class="fc" id="L232">                GroupDetails tmp = groupsDB.getGroup(editableGroupId);</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                if (tmp != null) editableGroups.add(tmp);</span>
             }
         }
 
         //Set editable pages Ids into List editablePages
-<span class="fc" id="L233">        editablePages = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L234">        int[] editablePagesIds =  Tools.getTokensInt(userDetailsOriginal.getEditablePages(), &quot;,&quot;);</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        if(editablePagesIds.length &gt; 0) {</span>
-<span class="fc" id="L236">            DocDB pagesDB = DocDB.getInstance();</span>
-<span class="fc" id="L237">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L238">        editablePages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L239">        int[] editablePagesIds =  Tools.getTokensInt(userDetailsOriginal.getEditablePages(), &quot;,&quot;);</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">        if(editablePagesIds.length &gt; 0) {</span>
+<span class="fc" id="L241">            DocDB pagesDB = DocDB.getInstance();</span>
+<span class="fc" id="L242">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="fc bfc" id="L239" title="All 2 branches covered.">            for(int editablePageId : editablePagesIds) {</span>
-<span class="fc" id="L240">                DocDetails tmp = pagesDB.getDoc(editablePageId, -1, false);</span>
-<span class="fc bfc" id="L241" title="All 2 branches covered.">                if (tmp != null) {</span>
-<span class="fc" id="L242">                    tmp.setFullPath(GroupsTreeService.addDomainPrefixToFullPath(tmp, groupsDB));</span>
-<span class="fc" id="L243">                    editablePages.add(tmp);</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">            for(int editablePageId : editablePagesIds) {</span>
+<span class="fc" id="L245">                DocDetails tmp = pagesDB.getDoc(editablePageId, -1, false);</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">                if (tmp != null) {</span>
+<span class="fc" id="L247">                    tmp.setFullPath(GroupsTreeService.addDomainPrefixToFullPath(tmp, groupsDB));</span>
+<span class="fc" id="L248">                    editablePages.add(tmp);</span>
                 }
             }
         }
 
-<span class="fc bfc" id="L248" title="All 4 branches covered.">        if (loadSubQueries &amp;&amp; userId &gt; 0) {</span>
+<span class="fc bfc" id="L253" title="All 4 branches covered.">        if (loadSubQueries &amp;&amp; userId &gt; 0) {</span>
             //Set permission groups
-<span class="fc" id="L250">            List&lt;PermissionGroupBean&gt; userPermGroups = UserGroupsDB.getPermissionGroupsFor(userId); //Get actual user perm groups</span>
+<span class="fc" id="L255">            List&lt;PermissionGroupBean&gt; userPermGroups = UserGroupsDB.getPermissionGroupsFor(userId); //Get actual user perm groups</span>
 
             //If group size is bigger than 0, push them into permGroup field (this group will be checked in the list of all group)
-<span class="fc bfc" id="L253" title="All 2 branches covered.">            if(userPermGroups.size() &gt; 0) {</span>
-<span class="fc" id="L254">                permGroups = new Integer[userPermGroups.size()];</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">            if(userPermGroups.size() &gt; 0) {</span>
+<span class="fc" id="L259">                permGroups = new Integer[userPermGroups.size()];</span>
 
-<span class="fc" id="L256">                int userPermGroupsCount = 0;</span>
-<span class="fc bfc" id="L257" title="All 2 branches covered.">                for(PermissionGroupBean userPermGroup : userPermGroups) {</span>
+<span class="fc" id="L261">                int userPermGroupsCount = 0;</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                for(PermissionGroupBean userPermGroup : userPermGroups) {</span>
 
-<span class="fc" id="L259">                    permGroups[userPermGroupsCount] = userPermGroup.getUserPermGroupId();</span>
-<span class="fc" id="L260">                    userPermGroupsCount++;</span>
-<span class="fc" id="L261">                }</span>
+<span class="fc" id="L264">                    permGroups[userPermGroupsCount] = userPermGroup.getUserPermGroupId();</span>
+<span class="fc" id="L265">                    userPermGroupsCount++;</span>
+<span class="fc" id="L266">                }</span>
             }
 
             //Set disabled/non-disabled items
-<span class="fc" id="L265">            Modules modules = Modules.getInstance();</span>
-<span class="fc" id="L266">            List&lt;ModuleInfo&gt; allModuleItems = modules.getUserEditItems(prop);</span>
+<span class="fc" id="L270">            Modules modules = Modules.getInstance();</span>
+<span class="fc" id="L271">            List&lt;ModuleInfo&gt; allModuleItems = modules.getUserEditItems(prop);</span>
 
-<span class="fc" id="L268">            Identity user = new Identity(UsersDB.getUser(userId));</span>
-<span class="fc" id="L269">            UsersDB.loadDisabledItemsFromDB(user, false);</span>
-<span class="fc" id="L270">            String enabledItemsKeysString = &quot;&quot;;</span>
-<span class="fc" id="L271">            Set&lt;String&gt; disabledItems = user.getDisabledItemsTable().keySet();</span>
+<span class="fc" id="L273">            Identity user = new Identity(UsersDB.getUser(userId));</span>
+<span class="fc" id="L274">            UsersDB.loadDisabledItemsFromDB(user, false);</span>
+<span class="fc" id="L275">            String enabledItemsKeysString = &quot;&quot;;</span>
+<span class="fc" id="L276">            Set&lt;String&gt; disabledItems = user.getDisabledItemsTable().keySet();</span>
 
-<span class="fc bfc" id="L273" title="All 2 branches covered.">            if (user.isAdmin()) {</span>
-<span class="fc bfc" id="L274" title="All 2 branches covered.">                for(ModuleInfo modulItem : allModuleItems) {</span>
-<span class="fc" id="L275">                    boolean disabled = false;</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">            if (user.isAdmin()) {</span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">                for(ModuleInfo modulItem : allModuleItems) {</span>
+<span class="fc" id="L280">                    boolean disabled = false;</span>
 
-<span class="fc bfc" id="L277" title="All 2 branches covered.">                    for(String key : disabledItems) {</span>
-<span class="fc bfc" id="L278" title="All 2 branches covered.">                        if(key.equals(modulItem.getItemKey())) {</span>
-<span class="fc" id="L279">                            disabled = true;</span>
-<span class="fc" id="L280">                            break;</span>
+<span class="fc bfc" id="L282" title="All 2 branches covered.">                    for(String key : disabledItems) {</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">                        if(key.equals(modulItem.getItemKey())) {</span>
+<span class="fc" id="L284">                            disabled = true;</span>
+<span class="fc" id="L285">                            break;</span>
                         }
-<span class="fc" id="L282">                    }</span>
+<span class="fc" id="L287">                    }</span>
 
-<span class="fc bfc" id="L284" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(modulItem.getItemKey())) {</span>
-<span class="fc bfc" id="L285" title="All 2 branches covered.">                        if (disabled) enabledItemsKeysString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(&quot;editorFullMenu&quot;);</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(modulItem.getItemKey())) {</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">                        if (disabled) enabledItemsKeysString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(&quot;editorFullMenu&quot;);</span>
                     }
                     else {
-<span class="fc bfc" id="L288" title="All 2 branches covered.">                        if(!disabled) enabledItemsKeysString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(modulItem.getItemKey());</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">                        if(!disabled) enabledItemsKeysString += &quot;,&quot; + MenuService.getPermsIdWithPrefix(modulItem.getItemKey());</span>
                     }
-<span class="fc" id="L290">                }</span>
+<span class="fc" id="L295">                }</span>
             }
-<span class="fc" id="L292">            enabledItems = Tools.getTokens(enabledItemsKeysString, &quot;,&quot;);</span>
+<span class="fc" id="L297">            enabledItems = Tools.getTokens(enabledItemsKeysString, &quot;,&quot;);</span>
 
             //writable_folders - kazdy zaznam na novom riadku
-<span class="fc" id="L295">            String folders[] = Tools.getTokens(userDetailsOriginal.getWritableFolders(), &quot;\n&quot;);</span>
-<span class="fc" id="L296">            writableFolders = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L297" title="All 2 branches covered.">            for (String folder : folders) {</span>
-<span class="fc" id="L298">                folder = Tools.replace(folder, &quot;*&quot;, &quot;&quot;); //ulozeny format je /images/* ale zobrazujeme len images pre jednoduchost</span>
-<span class="fc" id="L299">                DirTreeItem item = new DirTreeItem(folder);</span>
-<span class="fc" id="L300">                writableFolders.add(item);</span>
+<span class="fc" id="L300">            String folders[] = Tools.getTokens(userDetailsOriginal.getWritableFolders(), &quot;\n&quot;);</span>
+<span class="fc" id="L301">            writableFolders = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">            for (String folder : folders) {</span>
+<span class="fc" id="L303">                folder = Tools.replace(folder, &quot;*&quot;, &quot;&quot;); //ulozeny format je /images/* ale zobrazujeme len images pre jednoduchost</span>
+<span class="fc" id="L304">                DirTreeItem item = new DirTreeItem(folder);</span>
+<span class="fc" id="L305">                writableFolders.add(item);</span>
             }
 
             //nastav heslo na Unchanged, aby presla validacia
-<span class="fc" id="L304">            userDetailsOriginal.setPassword(UserTools.PASS_UNCHANGED);</span>
+<span class="fc" id="L309">            userDetailsOriginal.setPassword(UserTools.PASS_UNCHANGED);</span>
         }
 
-<span class="fc" id="L307">        login = userDetailsOriginal.getLogin();</span>
+<span class="fc" id="L312">        login = userDetailsOriginal.getLogin();</span>
 
         //Set this Editor fields
-<span class="fc" id="L310">        userDetailsOriginal.setEditorFields(this);</span>
+<span class="fc" id="L315">        userDetailsOriginal.setEditorFields(this);</span>
 
         //nastav cervene zobrazenie pre userov, ktory nemaju povolene prihlasenie
-<span class="fc bfc" id="L313" title="All 2 branches covered.">        if (UserDetailsService.isUserDisabled(userDetailsOriginal)) addRowClass(&quot;is-disabled&quot;);</span>
-<span class="fc" id="L314">    }</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        if (UserDetailsService.isUserDisabled(userDetailsOriginal)) addRowClass(&quot;is-disabled&quot;);</span>
+<span class="fc" id="L319">    }</span>
 
     public void toUserDetailsEntity(UserDetailsEntity userDetailsOriginal, HttpServletRequest request) {
 
-<span class="pc bpc" id="L318" title="1 of 2 branches missed.">        if (userDetailsOriginal.getEditorFields()==null) return;</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">        if (userDetailsOriginal.getEditorFields()==null) return;</span>
 
-<span class="fc" id="L320">        String userGroupIdsString = UserDetailsService.getUserGroupIds(userDetailsOriginal.getEditorFields().getPermisions(), userDetailsOriginal.getEditorFields().getEmails());</span>
+<span class="fc" id="L325">        String userGroupIdsString = UserDetailsService.getUserGroupIds(userDetailsOriginal.getEditorFields().getPermisions(), userDetailsOriginal.getEditorFields().getEmails());</span>
         //Set new string of selected useg group ids
-<span class="fc" id="L322">        userDetailsOriginal.setUserGroupsIds(userGroupIdsString);</span>
+<span class="fc" id="L327">        userDetailsOriginal.setUserGroupsIds(userGroupIdsString);</span>
 
         //Get editable group ids and add them to string
-<span class="fc" id="L325">        List&lt;GroupDetails&gt; seletedEditableGroups = userDetailsOriginal.getEditorFields().getEditableGroups();</span>
-<span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (seletedEditableGroups != null) {</span>
-<span class="fc" id="L327">            String editableGroupIdsString = &quot;&quot;;</span>
-<span class="fc bfc" id="L328" title="All 2 branches covered.">            for(int i = 0; i &lt; seletedEditableGroups.size(); i++) {</span>
+<span class="fc" id="L330">        List&lt;GroupDetails&gt; seletedEditableGroups = userDetailsOriginal.getEditorFields().getEditableGroups();</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">        if (seletedEditableGroups != null) {</span>
+<span class="fc" id="L332">            String editableGroupIdsString = &quot;&quot;;</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">            for(int i = 0; i &lt; seletedEditableGroups.size(); i++) {</span>
 
-<span class="fc bfc" id="L330" title="All 2 branches covered.">                if(editableGroupIdsString.equals(&quot;&quot;)) {</span>
-<span class="fc" id="L331">                    editableGroupIdsString = &quot;&quot; + seletedEditableGroups.get(i).getGroupId();</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">                if(editableGroupIdsString.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L336">                    editableGroupIdsString = &quot;&quot; + seletedEditableGroups.get(i).getGroupId();</span>
                 } else {
-<span class="fc" id="L333">                    editableGroupIdsString += &quot;,&quot; + seletedEditableGroups.get(i).getGroupId();</span>
+<span class="fc" id="L338">                    editableGroupIdsString += &quot;,&quot; + seletedEditableGroups.get(i).getGroupId();</span>
                 }
             }
             //Set new string of selected editabled groups
-<span class="fc" id="L337">            userDetailsOriginal.setEditableGroups(editableGroupIdsString);</span>
+<span class="fc" id="L342">            userDetailsOriginal.setEditableGroups(editableGroupIdsString);</span>
         }
 
         //Get editable page ids and add them to string
-<span class="fc" id="L341">        List&lt;DocDetails&gt; selectedEditablePages =  userDetailsOriginal.getEditorFields().getEditablePages();</span>
-<span class="pc bpc" id="L342" title="1 of 2 branches missed.">        if (selectedEditablePages != null) {</span>
-<span class="fc" id="L343">            String editablePageIdsString = &quot;&quot;;</span>
-<span class="fc bfc" id="L344" title="All 2 branches covered.">            for(int i = 0; i &lt; selectedEditablePages.size(); i++) {</span>
+<span class="fc" id="L346">        List&lt;DocDetails&gt; selectedEditablePages =  userDetailsOriginal.getEditorFields().getEditablePages();</span>
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">        if (selectedEditablePages != null) {</span>
+<span class="fc" id="L348">            String editablePageIdsString = &quot;&quot;;</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">            for(int i = 0; i &lt; selectedEditablePages.size(); i++) {</span>
 
-<span class="fc bfc" id="L346" title="All 2 branches covered.">                if(editablePageIdsString.equals(&quot;&quot;)) {</span>
-<span class="fc" id="L347">                    editablePageIdsString = &quot;&quot; + selectedEditablePages.get(i).getDocId();</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">                if(editablePageIdsString.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L352">                    editablePageIdsString = &quot;&quot; + selectedEditablePages.get(i).getDocId();</span>
                 } else {
-<span class="fc" id="L349">                    editablePageIdsString += &quot;,&quot; + selectedEditablePages.get(i).getDocId();</span>
+<span class="fc" id="L354">                    editablePageIdsString += &quot;,&quot; + selectedEditablePages.get(i).getDocId();</span>
                 }
             }
             //Set new string of selected editabled pages
-<span class="fc" id="L353">            userDetailsOriginal.setEditablePages(editablePageIdsString);</span>
+<span class="fc" id="L358">            userDetailsOriginal.setEditablePages(editablePageIdsString);</span>
         }
 
         //writableFolders
-<span class="pc bpc" id="L357" title="1 of 2 branches missed.">        if (userDetailsOriginal.getEditorFields().getWritableFolders()!=null) {</span>
-<span class="fc" id="L358">            StringBuilder writableFoldersStr = new StringBuilder();</span>
-<span class="fc bfc" id="L359" title="All 2 branches covered.">            for (DirTreeItem dir : userDetailsOriginal.getEditorFields().getWritableFolders()) {</span>
-<span class="pc bpc" id="L360" title="2 of 4 branches missed.">                if (dir == null || Tools.isEmpty(dir.getVirtualPath())) continue;</span>
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">        if (userDetailsOriginal.getEditorFields().getWritableFolders()!=null) {</span>
+<span class="fc" id="L363">            StringBuilder writableFoldersStr = new StringBuilder();</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">            for (DirTreeItem dir : userDetailsOriginal.getEditorFields().getWritableFolders()) {</span>
+<span class="pc bpc" id="L365" title="2 of 4 branches missed.">                if (dir == null || Tools.isEmpty(dir.getVirtualPath())) continue;</span>
 
-<span class="fc bfc" id="L362" title="All 2 branches covered.">                if (writableFoldersStr.length()&gt;0) writableFoldersStr.append(&quot;\n&quot;);</span>
-<span class="fc" id="L363">                writableFoldersStr.append(dir.getVirtualPath());</span>
-<span class="pc bpc" id="L364" title="1 of 2 branches missed.">                if (dir.getVirtualPath().endsWith(&quot;*&quot;)==false) {</span>
+<span class="fc bfc" id="L367" title="All 2 branches covered.">                if (writableFoldersStr.length()&gt;0) writableFoldersStr.append(&quot;\n&quot;);</span>
+<span class="fc" id="L368">                writableFoldersStr.append(dir.getVirtualPath());</span>
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">                if (dir.getVirtualPath().endsWith(&quot;*&quot;)==false) {</span>
                     //WJ kontroluje /images/* a /images/ ale GUI automaticky predpoklada len format /images/*
-<span class="pc bpc" id="L366" title="1 of 2 branches missed.">                    if (dir.getVirtualPath().endsWith(&quot;/&quot;)==false) writableFoldersStr.append(&quot;/&quot;);</span>
-<span class="fc" id="L367">                    writableFoldersStr.append(&quot;*&quot;);</span>
+<span class="pc bpc" id="L371" title="1 of 2 branches missed.">                    if (dir.getVirtualPath().endsWith(&quot;/&quot;)==false) writableFoldersStr.append(&quot;/&quot;);</span>
+<span class="fc" id="L372">                    writableFoldersStr.append(&quot;*&quot;);</span>
                 }
 
-<span class="fc" id="L370">            }</span>
-<span class="fc" id="L371">            userDetailsOriginal.setWritableFolders(writableFoldersStr.toString());</span>
+<span class="fc" id="L375">            }</span>
+<span class="fc" id="L376">            userDetailsOriginal.setWritableFolders(writableFoldersStr.toString());</span>
         }
 
         //Set login and E-mail from editor fields to original entity
-<span class="pc bpc" id="L375" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(userDetailsOriginal.getEditorFields().getLogin())) userDetailsOriginal.setLogin(userDetailsOriginal.getEditorFields().getLogin());</span>
-<span class="fc" id="L376">    }</span>
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(userDetailsOriginal.getEditorFields().getLogin())) userDetailsOriginal.setLogin(userDetailsOriginal.getEditorFields().getLogin());</span>
+<span class="fc" id="L381">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

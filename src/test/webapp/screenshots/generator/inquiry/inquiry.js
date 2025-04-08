@@ -20,13 +20,13 @@ Scenario('inquiry screeny', async ({I, DT, DTE, Document}) => {
         DTE.waitForEditor("inquiryDataTable");
         Document.screenshot("/redactor/apps/inquiry/inquiry-editor_basic.png");
 
-        I.click("#pills-dt-inquiryDataTable-advanced-tab");
+        I.clickCss("#pills-dt-inquiryDataTable-advanced-tab");
         Document.screenshot("/redactor/apps/inquiry/inquiry-editor_advanced.png");
 
-        I.click("#pills-dt-inquiryDataTable-answers-tab");
+        I.clickCss("#pills-dt-inquiryDataTable-answers-tab");
         Document.screenshot("/redactor/apps/inquiry/inquiry-editor_answers.png");
 
-        I.click("#datatableFieldDTE_Field_editorFields-answers_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
+        I.clickCss("#datatableFieldDTE_Field_editorFields-answers_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success.buttons-divider");
         Document.screenshot("/redactor/apps/inquiry/inquiry-answers_editor.png", "#datatableFieldDTE_Field_editorFields-answers_modal > div > div");
     }
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndexSearcherBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">IndexSearcherBuilder.java</span></div><h1>IndexSearcherBuilder.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IndexSearcherBuilder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.fulltext.lucene</a> &gt; <span class="el_source">IndexSearcherBuilder.java</span></div><h1>IndexSearcherBuilder.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.fulltext.lucene;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -44,14 +44,14 @@ public class IndexSearcherBuilder
 <span class="fc" id="L44">			String key = langauge;</span>
 <span class="fc" id="L45">			boolean close = shouldRefresh; //toto sposobovalo problemy &amp;&amp; (!uses.containsKey(key) || uses.get(key) == 0);</span>
 
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">			if (uses.containsKey(key)) Logger.debug(IndexSearcherBuilder.class, &quot;close=&quot;+close+&quot; shouldRefresh=&quot;+shouldRefresh+&quot; uses.get=&quot;+uses.get(key));</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">			if (uses.containsKey(key)) Logger.debug(IndexSearcherBuilder.class, &quot;close=&quot;+close+&quot; shouldRefresh=&quot;+shouldRefresh+&quot; uses.get=&quot;+uses.get(key));</span>
 
 <span class="pc bpc" id="L49" title="1 of 2 branches missed.">			if (close)</span>
 			{
 				try
 				{
 					//musime pozatvarat vsetko, kedze shouldRefresh nenastavuje jazyk
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">					for (Entry&lt;String, IndexSearcher&gt; searcher : searchers.entrySet() )</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">					for (Entry&lt;String, IndexSearcher&gt; searcher : searchers.entrySet() )</span>
 					{
 						try
 						{
@@ -66,7 +66,7 @@ public class IndexSearcherBuilder
 <span class="nc" id="L66">							sk.iway.iwcm.Logger.error(e);</span>
 <span class="nc" id="L67">						}</span>
 <span class="nc" id="L68">					}</span>
-<span class="fc" id="L69">					shouldRefresh = false;</span>
+<span class="nc" id="L69">					shouldRefresh = false;</span>
 				}
 <span class="nc" id="L71">				catch (Exception e)</span>
 				{
@@ -75,11 +75,11 @@ public class IndexSearcherBuilder
 <span class="nc" id="L75">					uses = new HashMap&lt;String, Integer&gt;();</span>
 
 <span class="nc" id="L77">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L78">				}</span>
+<span class="nc" id="L78">				}</span>
 			}
 
 
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">			if (!searchers.containsKey(key))</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">			if (!searchers.containsKey(key))</span>
 			{
 				try
 				{
@@ -90,9 +90,9 @@ public class IndexSearcherBuilder
 <span class="nc" id="L90">					sk.iway.iwcm.Logger.error(e);</span>
 <span class="fc" id="L91">				}</span>
 			}
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">			if (uses.containsKey(key))</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">			if (uses.containsKey(key))</span>
 			{
-<span class="nc" id="L95">				uses.put(key, uses.get(key) + 1);</span>
+<span class="fc" id="L95">				uses.put(key, uses.get(key) + 1);</span>
 			}
 			else
 			{
@@ -104,11 +104,11 @@ public class IndexSearcherBuilder
 
 	public static void refresh()
 	{
-<span class="fc" id="L107">		synchronized (searchers)</span>
+<span class="nc" id="L107">		synchronized (searchers)</span>
 		{
-<span class="fc" id="L109">			shouldRefresh = true;</span>
-<span class="fc" id="L110">		}</span>
-<span class="fc" id="L111">	}</span>
+<span class="nc" id="L109">			shouldRefresh = true;</span>
+<span class="nc" id="L110">		}</span>
+<span class="nc" id="L111">	}</span>
 	/**
 	 * Zatvori IndexSearcher
 	 * @param indexed

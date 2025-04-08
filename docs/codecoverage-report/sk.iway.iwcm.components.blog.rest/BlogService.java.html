@@ -1,550 +1,114 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BlogService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.blog.rest</a> &gt; <span class="el_source">BlogService.java</span></div><h1>BlogService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.blog.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BlogService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.blog.rest</a> &gt; <span class="el_source">BlogService.java</span></div><h1>BlogService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.blog.rest;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.IntStream;
+import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
-import org.json.JSONObject;
+import org.springframework.data.domain.Page;
 
-import sk.iway.Password;
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.UploadFileTools;
-import sk.iway.iwcm.common.UserTools;
-import sk.iway.iwcm.components.blog.jpa.BloggerBean;
-import sk.iway.iwcm.components.users.AuthorizeUserService;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsEntity;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
-import sk.iway.iwcm.database.ComplexQuery;
-import sk.iway.iwcm.database.Mapper;
-import sk.iway.iwcm.database.SimpleQuery;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.editor.facade.EditorFacade;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.system.ModuleInfo;
-import sk.iway.iwcm.system.Modules;
-import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.system.jpa.JpaTools;
 
 public class BlogService {
 
-    private BlogService() {}
+    private BlogService() { /*private constructor to hide the implicit public one*/ }
 
-    private static final String QUERY_PREFIX_ALL = &quot;SELECT user_id, first_name, last_name, login, email, editable_groups FROM users WHERE&quot;;
-    private static final String QUERY_PREFIX_ID = &quot;SELECT user_id FROM users WHERE&quot;;
-<span class="fc" id="L49">    private static final String DOMAIN_ID = &quot; AND domain_id = &quot; + CloudToolsForCore.getDomainId();</span>
+    public static DatatablePageImpl&lt;DocDetails&gt; getAllItems(GetAllItemsDocOptions options) {
+<span class="fc" id="L30">		Page&lt;DocDetails&gt; page = null;</span>
+<span class="fc" id="L31">		List&lt;Integer&gt; allGroupIds = getBloggerDataList(options.getCurrentUser(), Tools.getIntValue(options.getRequest().getParameter(&quot;groupId&quot;), -1));</span>
+<span class="pc bpc" id="L32" title="2 of 4 branches missed.">		if(allGroupIds == null || allGroupIds.isEmpty()) page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L33">		else page = options.getDocDetailsRepository().findAllByGroupIdIn(allGroupIds.toArray(new Integer[0]), options.getPageable());</span>
 
-    /********************************* GET *********************************************/
-
-    /**
-     * Get BloggerBean by bloggerId
-     * @param bloggerId
-     * @return
-     */
-    public static BloggerBean getBloggerBean(long bloggerId) {
-<span class="nc" id="L59">        StringBuilder query = new StringBuilder(QUERY_PREFIX_ALL);</span>
-<span class="nc" id="L60">        query.append(&quot; user_id = &quot;).append(bloggerId);</span>
-<span class="nc" id="L61">        query.append(DOMAIN_ID);</span>
-
-<span class="nc" id="L63">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L64">        List&lt;BloggerBean&gt; blogger = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L65">        new ComplexQuery().setSql(query.toString()).list(new Mapper&lt;BloggerBean&gt;() {</span>
-			@Override
-			public BloggerBean map(ResultSet rs) throws SQLException {
-<span class="nc" id="L68">				blogger.add( resultSetToBean(rs, groupsDB) );</span>
-<span class="nc" id="L69">                return null;</span>
-			}
-		});
-<span class="nc bnc" id="L72" title="All 2 branches missed.">        return blogger.isEmpty() ? null : blogger.get(0);</span>
+<span class="fc" id="L35">        return WebpagesService.preparePage(page, options);</span>
     }
 
-    /**
-     * Get all bloggers (aka user that belongs to BLOG group)
-     * @return
-     */
-    public static List&lt;BloggerBean&gt; getAllBloggers() {
-<span class="fc" id="L80">        StringBuilder query = new StringBuilder(QUERY_PREFIX_ALL);</span>
-<span class="fc" id="L81">        addQueryConditions(query);</span>
+    private static List&lt;Integer&gt; getBloggerDataList(Identity currentUser, int selectedGroupId) {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">		if(BloggerService.isUserBloggerAdmin(currentUser)) {</span>
+			//It's admin with perms cmp_blog &amp;&amp; cmp_blog_admin -&gt; return all bloggers web pages
+<span class="fc" id="L41">			List&lt;Integer&gt; allGroupIds = BloggerService.getAllBloggersGroupIds();</span>
 
-<span class="fc" id="L83">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L84">        List&lt;BloggerBean&gt; bloggers = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">			if(selectedGroupId == -1) //Docs from all bloggers groups</span>
+<span class="fc" id="L44">				return allGroupIds;</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			else if(allGroupIds.contains(selectedGroupId)) //Docs from specific blogger group</span>
+<span class="nc" id="L46">				return Arrays.asList(selectedGroupId);</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">		} else if(BloggerService.isUserBlogger( currentUser )) {</span>
+			//It's blogger -&gt; return only his web pages
+<span class="fc" id="L49">			int rootGroupId = Tools.getTokensInt(currentUser.getEditableGroups(), &quot;,&quot;)[0];</span>
 
-<span class="fc" id="L86">        new ComplexQuery().setSql(query.toString()).list(new Mapper&lt;BloggerBean&gt;() {</span>
-			@Override
-			public BloggerBean map(ResultSet rs) throws SQLException {
-<span class="fc" id="L89">                bloggers.add( resultSetToBean(rs, groupsDB) );</span>
-<span class="fc" id="L90">				return null;</span>
-			}
-		});
+			//Get groups tree from user editable root group
+<span class="fc" id="L52">			List&lt;GroupDetails&gt; groupsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc" id="L53">			List&lt;Integer&gt; groupIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">			for(GroupDetails group : groupsTree) groupIds.add(group.getGroupId());</span>
 
-<span class="fc" id="L94">        return bloggers;</span>
-    }
+<span class="fc bfc" id="L56" title="All 2 branches covered.">			if(selectedGroupId == -1)</span>
+<span class="fc" id="L57">				return groupIds;</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">			else if(groupIds.contains(selectedGroupId))</span>
+<span class="fc" id="L59">				return Arrays.asList(selectedGroupId);</span>
+		}
 
-    /**
-     * Convert result set to BloggerBean, and return bean
-     * @param rs
-     * @param groupsDB
-     * @return
-     * @throws SQLException
-     */
-    private static BloggerBean resultSetToBean(ResultSet rs, GroupsDB groupsDB) throws SQLException{
-<span class="fc" id="L105">        BloggerBean blogger = new BloggerBean();</span>
-<span class="fc" id="L106">        blogger.setId(rs.getLong(&quot;user_id&quot;));</span>
-<span class="fc" id="L107">        blogger.setFirstName(rs.getString(&quot;first_name&quot;));</span>
-<span class="fc" id="L108">        blogger.setLastName(rs.getString(&quot;last_name&quot;));</span>
-<span class="fc" id="L109">        blogger.setLogin(rs.getString(&quot;login&quot;));</span>
-<span class="fc" id="L110">        blogger.setEmail(rs.getString(&quot;email&quot;));</span>
+		//User has no right or specific groupId is not from his groups tree (or not from any blogger group tree)
+<span class="nc" id="L63">		return null;</span>
+	}
 
-        //Set password as unchanged
-<span class="fc" id="L113">        blogger.setPassword(UserTools.PASS_UNCHANGED);</span>
+	public static void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;DocDetails&gt; root, CriteriaBuilder builder, Identity user) {
+		//Orig logic
+<span class="fc" id="L68">        WebpagesService.addSpecSearch(params, predicates, root, builder, user);</span>
 
-<span class="fc" id="L115">        String editableGroups = rs.getString(&quot;editable_groups&quot;);</span>
-<span class="fc" id="L116">        int[] editableGroupsIds = Tools.getTokensInt(editableGroups, &quot;,&quot;);</span>
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if(editableGroupsIds.length &gt; 0) blogger.setEditableGroup( groupsDB.getGroup(editableGroupsIds[0]) );</span>
+		//remove groupId predicate
+<span class="fc" id="L71">		JpaTools.removePredicateWithName(&quot;groupId&quot;, predicates);</span>
 
-<span class="fc" id="L119">        return blogger;</span>
-    }
+		//Plus our groupId logic
+<span class="fc" id="L74">		List&lt;Integer&gt; bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get(&quot;groupId&quot;), -1));</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">		if(bloggersGroupIds != null)</span>
+<span class="fc" id="L76">			predicates.add(root.get(&quot;groupId&quot;).in(bloggersGroupIds));</span>
+<span class="fc" id="L77">	}</span>
 
-    /********************************* EDIT *********************************************/
+	public static List&lt;LabelValueInteger&gt; getActualBloggerGroups(Identity currentUser) {
+<span class="fc" id="L80">        List&lt;LabelValueInteger&gt; groupsMap = new ArrayList&lt;&gt;();</span>
 
-    /**
-     * Edit blogger -&gt; aka get UserDetailsEntity by bloggerId, and edit/save it
-     * @param bloggerToEdit
-     * @param userDetailsRepository
-     * @return
-     */
-    public static boolean editBlogger(BloggerBean bloggerToEdit, UserDetailsRepository userDetailsRepository, HttpServletRequest request) {
-<span class="nc" id="L131">        UserDetailsEntity userBlogger = userDetailsRepository.getById(bloggerToEdit.getId());</span>
+        //Check if it's blogger ADMIN
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        if(BloggerService.isUserBloggerAdmin( currentUser )) {</span>
+            //Return all bloggers groups
+<span class="fc" id="L85">            List&lt;Integer&gt; bloggersRootGroupsIds = BloggerService.getAllBloggersRootGroupIds();</span>
 
-        //Field's login AND editableGroups CANT BE CHANGE
-        //Copy ONLY remain fields
-<span class="nc" id="L135">        userBlogger.setFirstName( bloggerToEdit.getFirstName() );</span>
-<span class="nc" id="L136">        userBlogger.setLastName( bloggerToEdit.getLastName() );</span>
-<span class="nc" id="L137">        userBlogger.setEmail( bloggerToEdit.getEmail() );</span>
-
-        //Update user
-<span class="nc" id="L140">        userDetailsRepository.save(userBlogger);</span>
-
-        //After save, set password back
-<span class="nc" id="L143">        boolean sendWelcomeEmail = false;</span>
-<span class="nc" id="L144">        String password = bloggerToEdit.getPassword();</span>
-<span class="nc bnc" id="L145" title="All 4 branches missed.">        if (Tools.isEmpty(password) || &quot;*&quot;.equals(password)) {</span>
-<span class="nc" id="L146">            password = Password.generatePassword(8);</span>
-<span class="nc" id="L147">            bloggerToEdit.setPassword( password );</span>
-<span class="nc" id="L148">            sendWelcomeEmail = true;</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            for(Integer rootGroupId : bloggersRootGroupsIds) {</span>
+                //Get groups tree from user editable root group
+<span class="fc" id="L89">				List&lt;GroupDetails&gt; groopsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                for(GroupDetails group : groopsTree)</span>
+<span class="fc" id="L91">                    groupsMap.add( new LabelValueInteger(group.getFullPath(), group.getGroupId()) );</span>
+<span class="fc" id="L92">            }</span>
+<span class="fc" id="L93">            return groupsMap;</span>
         }
 
-        //Now CHANGE password
-<span class="nc" id="L152">        userBlogger.setPassword( bloggerToEdit.getPassword() );</span>
+        //Check if it's blogger with perm
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if(BloggerService.isUserBlogger( currentUser )) {</span>
+            //Root group id
+<span class="fc" id="L99">            int rootGroupId = Tools.getTokensInt(currentUser.getEditableGroups(), &quot;,&quot;)[0];</span>
+<span class="fc" id="L100">            List&lt;GroupDetails&gt; groopsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            for(GroupDetails group : groopsTree) {</span>
+<span class="fc" id="L102">				groupsMap.add( new LabelValueInteger(group.getFullPath(), group.getGroupId()) );</span>
+<span class="fc" id="L103">			}</span>
 
-        //Update user password (if needed)
-<span class="nc" id="L155">        boolean passwordSaved = UserDetailsService.savePassword(bloggerToEdit.getPassword(), userBlogger.getId().intValue());</span>
-
-<span class="nc bnc" id="L157" title="All 4 branches missed.">        if (passwordSaved &amp;&amp; sendWelcomeEmail) {</span>
-            //Send welcome email again
-<span class="nc" id="L159">            AuthorizeUserService.sendInfoEmail(userBlogger, password, UsersDB.getCurrentUser(request), request);</span>
-        }
-<span class="nc" id="L161">        return passwordSaved;</span>
-    }
-
-    /********************************* INSERT *********************************************/
-
-    /**
-     * Perform whooole process of saving new blogger.
-     * Including: creating new user of type blogger (with all needed rights and perms), create bloger structure (root group + 1doc, default sub group + 2doc's) AND send email to user (aka blogger) about adding him to blog group
-     * @param bloggerToSave
-     * @param userDetailsRepository
-     * @param editorFacade
-     * @param request
-     * @return
-     */
-    public static boolean saveBlogger(BloggerBean bloggerToSave, UserDetailsRepository userDetailsRepository, EditorFacade editorFacade, HttpServletRequest request) {
-<span class="fc" id="L176">        UserDetailsEntity newUser = new UserDetailsEntity();</span>
-<span class="fc" id="L177">        newUser.setId((long)-1);</span>
-<span class="fc" id="L178">        newUser.setFirstName( bloggerToSave.getFirstName() );</span>
-<span class="fc" id="L179">        newUser.setLastName( bloggerToSave.getLastName() );</span>
-<span class="fc" id="L180">        newUser.setEmail( bloggerToSave.getEmail() );</span>
-<span class="fc" id="L181">        newUser.setRegDate(new Date());</span>
-
-        //Set loggin and Writable folders
-<span class="fc" id="L184">        String login = bloggerToSave.getLogin();</span>
-<span class="fc" id="L185">        newUser.setLogin( login );</span>
-
-        //Blog groupID (without this group id, user not gonna be showed in blogger's list)
-<span class="fc" id="L188">        newUser.setUserGroupsIds( &quot;&quot; + DocDB.getBlogGroupId() );</span>
-
-        //Need to set
-<span class="fc" id="L191">        newUser.setForumRank(0);</span>
-<span class="fc" id="L192">        newUser.setRatingRank(0);</span>
-<span class="fc" id="L193">        newUser.setParentId(0);</span>
-<span class="fc" id="L194">        newUser.setAdmin(true);</span>
-<span class="fc" id="L195">        newUser.setAuthorized(true);</span>
-
-        //First save password as null for save
-<span class="fc" id="L198">        newUser.setPassword(null);</span>
-
-        //Save new blogger user
-<span class="fc" id="L201">        userDetailsRepository.save(newUser);</span>
-
-        //Get new saved user
-<span class="fc" id="L204">        Integer newUserId = UsersDB.getUserIdByLogin(login);</span>
-<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        if(newUserId == null) return false;</span>
-<span class="fc" id="L206">        newUser.setId( newUserId.longValue() );</span>
-<span class="fc" id="L207">        bloggerToSave.setId( newUserId.longValue() );</span>
-
-        //After save, set password back
-<span class="fc" id="L210">        String password = bloggerToSave.getPassword();</span>
-<span class="pc bpc" id="L211" title="2 of 4 branches missed.">        if (Tools.isEmpty(password) || &quot;*&quot;.equals(password)) password = Password.generatePassword(8);</span>
-<span class="fc" id="L212">        newUser.setPassword( password );</span>
-
-        //Set user rights
-<span class="fc" id="L215">        setUserRights(newUserId);</span>
-
-        //Set user password
-<span class="fc" id="L218">        boolean savedPassword = UserDetailsService.savePassword(password, newUserId);</span>
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if(!savedPassword) return false;</span>
-
-        //MAKE - blogger structure
-<span class="fc" id="L222">        prepareBloggerStructure(newUser, bloggerToSave.getEditableGroup(), userDetailsRepository, editorFacade, request);</span>
-
-        //Send welcome email
-<span class="fc" id="L225">        AuthorizeUserService.sendInfoEmail(newUser, password, UsersDB.getCurrentUser(request), request);</span>
-
-<span class="fc" id="L227">        return true;</span>
-    }
-
-    private static void setUserRights(int userId) {
-<span class="fc" id="L231">        (new SimpleQuery()).execute(&quot;DELETE FROM user_disabled_items WHERE user_id=?&quot;, userId);</span>
-
-<span class="fc" id="L233">        StringBuilder sb = new StringBuilder(&quot;INSERT INTO user_disabled_items VALUES&quot;);</span>
-<span class="fc" id="L234">        List&lt;ModuleInfo&gt; modules = Modules.getInstance().getModules();</span>
-
-<span class="fc" id="L236">        String[] defaulPerm = {&quot;cmp_blog&quot;, &quot;addPage&quot;, &quot;pageSave&quot;, &quot;deletePage&quot;, &quot;addSubdir&quot;, &quot;cmp_diskusia&quot; };</span>
-<span class="fc" id="L237">        String[] bonusPerm = Tools.getTokens( Constants.getString(&quot;bloggerAppPermissions&quot;) , &quot;,&quot;);</span>
-<span class="fc" id="L238">        Set&lt;String&gt; duplicity = new HashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L239" title="All 2 branches covered.">        for(ModuleInfo module : modules){</span>
-            //
-<span class="pc bpc" id="L241" title="2 of 8 branches missed.">            if(module == null || module.getItemKey() == null || Arrays.stream(defaulPerm).anyMatch(module.getItemKey()::equals) || Arrays.stream(bonusPerm).anyMatch(module.getItemKey()::equals)) continue;</span>
-
-            //If duplicity, skip
-<span class="fc bfc" id="L244" title="All 2 branches covered.">            if(duplicity.contains(module.getItemKey())==false) {</span>
-<span class="fc" id="L245">                duplicity.add(module.getItemKey());</span>
-<span class="fc" id="L246">                sb.append(&quot; (&quot;).append(userId).append(&quot;,'&quot;).append(module.getItemKey()).append(&quot;'),&quot;);</span>
-            }
-
-            //Submodules
-<span class="fc bfc" id="L250" title="All 2 branches covered.">            if(module.getSubmenus() == null) continue;</span>
-<span class="fc bfc" id="L251" title="All 2 branches covered.">            for (ModuleInfo subModule : module.getSubmenus()) {</span>
-                //
-<span class="pc bpc" id="L253" title="2 of 8 branches missed.">                if(subModule == null || subModule.getItemKey() == null || Arrays.stream(defaulPerm).anyMatch(subModule.getItemKey()::equals) || Arrays.stream(bonusPerm).anyMatch(subModule.getItemKey()::equals)) continue;</span>
-
-                //If duplicity, skip
-<span class="fc bfc" id="L256" title="All 2 branches covered.">                if(duplicity.contains(subModule.getItemKey())) continue;</span>
-<span class="fc" id="L257">                duplicity.add(subModule.getItemKey());</span>
-
-<span class="fc" id="L259">                sb.append(&quot; (&quot;).append(userId).append(&quot;,'&quot;).append(subModule.getItemKey()).append(&quot;'),&quot;);</span>
-<span class="fc" id="L260">            }</span>
-<span class="fc" id="L261">        }</span>
-
-        //If SB does not contain cmp_blog_admin, add it
-<span class="pc bpc" id="L264" title="1 of 2 branches missed.">        if( sb.indexOf(&quot;(&quot; + userId + &quot;,'cmp_blog_admin'),&quot;) == -1 ) sb.append(&quot; (&quot;).append(userId).append(&quot;,'cmp_blog_admin'),&quot;);</span>
-
-        //Remove last ','
-<span class="fc" id="L267">        sb.deleteCharAt(sb.length() - 1);</span>
-<span class="fc" id="L268">        (new SimpleQuery()).execute(sb.toString());</span>
-<span class="fc" id="L269">    }</span>
-
-    /**
-     * Prepare blogger structure of 2 groups and 3 docs.
-     * @param bloggerUser
-     * @param parentGroup
-     * @param userDetailsRepository
-     * @param editorFacade
-     * @param request
-     */
-    private static void prepareBloggerStructure(UserDetailsEntity bloggerUser, GroupDetails parentGroup, UserDetailsRepository userDetailsRepository, EditorFacade editorFacade, HttpServletRequest request) {
-        //Create root group
-<span class="fc" id="L281">        GroupDetails rootGroup = createGroup(bloggerUser.getLogin(), bloggerUser.getId().intValue(), parentGroup, null);</span>
-        //Check if root group was made right now
-<span class="pc bpc" id="L283" title="1 of 2 branches missed.">        if(rootGroup != null) {</span>
-
-<span class="fc" id="L285">            int authorId = ((Identity) request.getSession().getAttribute(Constants.USER_KEY)).getUserId();</span>
-<span class="fc" id="L286">            Prop prop = Prop.getInstance(request);</span>
-
-<span class="fc" id="L288">            StringBuilder writableFolders = new StringBuilder();</span>
-<span class="fc" id="L289">            writableFolders.append(UploadFileTools.getPageUploadSubDir(-1, rootGroup.getGroupId(), null, &quot;/images&quot;)).append(&quot;/*\n&quot;);</span>
-<span class="fc" id="L290">            writableFolders.append(UploadFileTools.getPageUploadSubDir(-1, rootGroup.getGroupId(), null, &quot;/files&quot;)).append(&quot;/*\n&quot;);</span>
-<span class="fc" id="L291">            writableFolders.append(UploadFileTools.getPageUploadSubDir(-1, rootGroup.getGroupId(), null, &quot;/images/gallery&quot;)).append(&quot;/*\n&quot;);</span>
-
-            //Set for user new editable group (blogger root group)
-<span class="fc" id="L294">            userDetailsRepository.updateEditableGroupsWritableFolders(&quot;&quot;+rootGroup.getGroupId(), writableFolders.toString(), bloggerUser.getId());</span>
-
-            //Create root group NEWS DOC
-<span class="fc" id="L297">            createGroupNewsDoc(editorFacade, rootGroup.getGroupId(), rootGroup.getGroupName(), authorId, bloggerUser.getId().intValue());</span>
-
-            //Create default sub group of root group
-<span class="fc" id="L300">            GroupDetails defaultSubGroup = createGroup(bloggerUser.getLogin(), bloggerUser.getId().intValue(), rootGroup, prop.getText(&quot;components.blog.default_group_name&quot;));</span>
-<span class="pc bpc" id="L301" title="1 of 2 branches missed.">            if (defaultSubGroup != null) {</span>
-                //Create default sub group NEWS DOC
-<span class="fc" id="L303">                createGroupNewsDoc(editorFacade, defaultSubGroup.getGroupId(), defaultSubGroup.getGroupName(), authorId, bloggerUser.getId().intValue());</span>
-
-                // //Create example doc
-<span class="fc" id="L306">                createExampleDoc(editorFacade, defaultSubGroup.getGroupId(), prop.getText(&quot;components.blog.default_page_title&quot;), authorId, bloggerUser.getId().intValue() , prop.getText(&quot;components.blog.default_page_text&quot;));</span>
-            }
-
-            //
-<span class="fc" id="L310">            createDirectoriesBloggerCanAccess( writableFolders.toString() );</span>
-        }
-<span class="fc" id="L312">    }</span>
-
-    /**
-     * Create new group
-     * @param userLogin
-     * @param userId
-     * @param parentGroup
-     * @param groupName
-     * @return
-     */
-    private static GroupDetails createGroup(String userLogin, int userId, GroupDetails parentGroup, String groupName) {
-        //Check if group allready exist
-<span class="fc" id="L324">        GroupDetails newGroup = GroupsDB.getInstance().getGroup(userLogin, parentGroup.getGroupId());</span>
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        if(newGroup != null) return null;</span>
-
-        //Create new root group
-<span class="fc" id="L328">        newGroup = new GroupDetails();</span>
-<span class="fc" id="L329">		newGroup.setParentGroupId( parentGroup.getGroupId() );</span>
-<span class="fc bfc" id="L330" title="All 2 branches covered.">		newGroup.setGroupName( Tools.isEmpty(groupName) ? userLogin : groupName );</span>
-<span class="fc" id="L331">		newGroup.setTempId( parentGroup.getTempId() );</span>
-<span class="fc" id="L332">		newGroup.setFieldA( String.valueOf(userId) );</span>
-<span class="fc" id="L333">		GroupsDB.getInstance().setGroup(newGroup);</span>
-<span class="fc" id="L334">		return newGroup;</span>
-    }
-
-    private static void createGroupNewsDoc(EditorFacade editorFacade, int rootGroupId, String docTitle, int authorId, int bloggerId) {
-<span class="fc" id="L338">        DocDetails groupDoc = editorFacade.getDocForEditor(-1, -1, rootGroupId);</span>
-
-        //Set doc
-<span class="fc" id="L341">        groupDoc.setTitle(docTitle);</span>
-<span class="fc" id="L342">        groupDoc.setNavbar(docTitle);</span>
-<span class="fc" id="L343">        groupDoc.setData(Prop.getInstance().getText(&quot;components.blog.atricles-code&quot;, &quot;&quot;+rootGroupId));</span>
-<span class="fc" id="L344">		groupDoc.setAuthorId(authorId);</span>
-<span class="fc" id="L345">		groupDoc.setAvailable(true);</span>
-<span class="fc" id="L346">		groupDoc.setSearchable(true);</span>
-<span class="fc" id="L347">		groupDoc.setCacheable(false);</span>
-
-        //Save doc
-<span class="fc" id="L350">        editorFacade.save(groupDoc);</span>
-
-<span class="fc" id="L352">        updateAuthorId(groupDoc.getDocId(), bloggerId);</span>
-<span class="fc" id="L353">    }</span>
-
-    private static void updateAuthorId(int docId, int authorId) {
-<span class="fc" id="L356">        (new SimpleQuery()).execute(&quot;UPDATE documents SET author_id=? WHERE doc_id=?&quot;, authorId, docId);</span>
-<span class="fc" id="L357">    }</span>
-
-    private static void createExampleDoc(EditorFacade editorFacade, int rootGroupId, String docTitle, int authorId, int bloggerId, String docData) {
-<span class="fc" id="L360">        DocDetails groupDoc = editorFacade.getDocForEditor(-1, -1, rootGroupId);</span>
-
-        //Set doc
-<span class="fc" id="L363">        groupDoc.setTitle(docTitle);</span>
-<span class="fc" id="L364">        groupDoc.setNavbar(docTitle);</span>
-<span class="fc" id="L365">        groupDoc.setData(docData);</span>
-<span class="fc" id="L366">        groupDoc.setAuthorId(authorId);</span>
-<span class="fc" id="L367">        groupDoc.setAvailable(true);</span>
-<span class="fc" id="L368">		groupDoc.setSearchable(true);</span>
-<span class="fc" id="L369">		groupDoc.setCacheable(false);</span>
-
-        //Save doc
-<span class="fc" id="L372">        editorFacade.save(groupDoc);</span>
-
-<span class="fc" id="L374">        updateAuthorId(groupDoc.getDocId(), bloggerId);</span>
-<span class="fc" id="L375">    }</span>
-
-    private static void createDirectoriesBloggerCanAccess(String writableFolders) {
-<span class="fc" id="L378">        String[] folders = Tools.getTokens(writableFolders, &quot;\n&quot;);</span>
-<span class="fc bfc" id="L379" title="All 2 branches covered.">        for(String folder : folders) {</span>
-<span class="fc" id="L380">            folder = folder.substring(0, folder.lastIndexOf(&quot;/&quot;)+1);</span>
-<span class="fc" id="L381">            IwcmFile file = new IwcmFile(Tools.getRealPath(folder));</span>
-<span class="fc" id="L382">            file.mkdirs();</span>
-        }
-<span class="fc" id="L384">	}</span>
-
-    /********************************* SUPPORT METHODS *********************************************/
-
-    /**
-     * Return groupID's of all users of type bloggers
-     * @return
-     */
-    public static List&lt;Integer&gt; getAllBloggersGroupIds() {
-<span class="fc" id="L393">        List&lt;Integer&gt; allGroupIds = new ArrayList&lt;&gt;();</span>
-
-<span class="fc bfc" id="L395" title="All 2 branches covered.">		for(Integer rootGroupId : getAllBloggersRootGroupIds())</span>
-<span class="fc" id="L396">            addBloggerGroupIds(rootGroupId, allGroupIds);</span>
-
-<span class="fc" id="L398">        return allGroupIds;</span>
-    }
-
-    /**
-     * Get groupTree based on rootGroupId and push groupIds into bloggerGroupIds list
-     * @param bloggerRootGroupId
-     * @param bloggerGroupIds
-     */
-    private static void addBloggerGroupIds(int bloggerRootGroupId, List&lt;Integer&gt; bloggerGroupIds) {
-        //Get groups tree from user editable root group
-<span class="fc" id="L408">		List&lt;GroupDetails&gt; groopsTree = GroupsDB.getInstance().getGroupsTree(bloggerRootGroupId, true, true);</span>
-<span class="fc bfc" id="L409" title="All 2 branches covered.">		for(GroupDetails group : groopsTree) {</span>
-<span class="fc" id="L410">			bloggerGroupIds.add(group.getGroupId());</span>
-<span class="fc" id="L411">		}</span>
-<span class="fc" id="L412">    }</span>
-
-    /**
-     * Get all rootGroupIds (aka editabelGroup) of all users of type bloggers
-     * @return
-     */
-    public static List&lt;Integer&gt; getAllBloggersRootGroupIds() {
-<span class="fc" id="L419">        List&lt;Integer&gt; bloggerIds = getAllBloggersIds();</span>
-<span class="pc bpc" id="L420" title="1 of 2 branches missed.">        if (bloggerIds.isEmpty()) return new ArrayList&lt;&gt;(0);</span>
-
-<span class="fc" id="L422">        StringBuilder bloggerIdsSb = new StringBuilder(&quot;(&quot;);</span>
-<span class="fc bfc" id="L423" title="All 2 branches covered.">        for(Integer bloggerId : bloggerIds) bloggerIdsSb.append(bloggerId).append(&quot;,&quot;);</span>
-        //Remove last ','
-<span class="fc" id="L425">        bloggerIdsSb.deleteCharAt(bloggerIdsSb.length() - 1);</span>
-        //Add enclosing ')'
-<span class="fc" id="L427">        bloggerIdsSb.append(&quot;)&quot;);</span>
-
-        //
-<span class="fc" id="L430">        List&lt;String&gt; rootGroupIdsString = (new SimpleQuery()).forListString(&quot;SELECT editable_groups FROM users WHERE user_id IN &quot; + bloggerIdsSb.toString() + DOMAIN_ID);</span>
-
-        //
-<span class="fc" id="L433">        List&lt;Integer&gt; rootGroupIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L434" title="All 2 branches covered.">        for(String rootGroupId : rootGroupIdsString) {</span>
-<span class="pc bpc" id="L435" title="1 of 2 branches missed.">            if(Tools.isEmpty(rootGroupId)) continue;</span>
-<span class="fc" id="L436">            rootGroupIds.add( Tools.getTokensInt(rootGroupId, &quot;,&quot;)[0] );</span>
-<span class="fc" id="L437">        }</span>
-<span class="fc" id="L438">        return rootGroupIds;</span>
-    }
-
-    /**
-     * Get id of all users of type bloggers
-     * @return
-     */
-    private static List&lt;Integer&gt; getAllBloggersIds() {
-<span class="fc" id="L446">        StringBuilder query = new StringBuilder(QUERY_PREFIX_ID);</span>
-<span class="fc" id="L447">        addQueryConditions(query);</span>
-<span class="fc" id="L448">        return (new SimpleQuery()).forListInteger(query.toString());</span>
-    }
-
-    /**
-     * A LIKE condtion to find by user_group (all combinations)
-     * @param query
-     */
-    private static void addQueryConditions(StringBuilder query) {
-<span class="fc" id="L456">        int blogGroupId = DocDB.getBlogGroupId();</span>
-<span class="fc" id="L457">        query.append(&quot;(user_groups LIKE '&quot;).append(blogGroupId).append(&quot;' OR &quot;);</span>
-<span class="fc" id="L458">        query.append(&quot;user_groups LIKE '%,&quot;).append(blogGroupId).append(&quot;' OR &quot;);</span>
-<span class="fc" id="L459">        query.append(&quot;user_groups LIKE '&quot;).append(blogGroupId).append(&quot;,%' OR &quot;);</span>
-<span class="fc" id="L460">        query.append(&quot;user_groups LIKE '%,&quot;).append(blogGroupId).append(&quot;,%') &quot;);</span>
-<span class="fc" id="L461">        query.append(DOMAIN_ID);</span>
-<span class="fc" id="L462">    }</span>
-
-    /**
-     * User is considerred blogger if he have perm cmp_blog AND he is inside of blog userGroup
-     * @param user
-     * @return
-     */
-    public static boolean isUserBlogger(Identity user) {
-        //FIRST check if user have cmp_blog permission
-<span class="pc bpc" id="L471" title="1 of 2 branches missed.">        if(!user.isEnabledItem(&quot;cmp_blog&quot;)) return false;</span>
-
-        //SECOND check if user is inside of blog userGroup
-<span class="fc" id="L474">        int blogGroupId = DocDB.getBlogGroupId();</span>
-<span class="fc" id="L475">        int[] userGroupIds = Tools.getTokensInt(user.getUserGroupsIds(), &quot;,&quot;);</span>
-<span class="fc bfc" id="L476" title="All 2 branches covered.">        return IntStream.of( userGroupIds ).anyMatch(x -&gt; x == blogGroupId);</span>
-    }
-
-    /**
-     * User is considered blogger admin if he have perm cmp_blog_admin AND he is admin
-     * @param user
-     * @return
-     */
-    public static boolean isUserBloggerAdmin(Identity user) {
-<span class="pc bpc" id="L485" title="1 of 4 branches missed.">        return (user.isAdmin() &amp;&amp; user.isEnabledItem(&quot;cmp_blog_admin&quot;));</span>
-    }
-
-    /**
-     * Verify if user is blogger or blogger admin
-     * @param user
-     * @return
-     */
-    public static boolean isUserBloggerOrBloggerAdmin(Identity user) {
-<span class="pc bpc" id="L494" title="1 of 4 branches missed.">        return isUserBlogger(user) || isUserBloggerAdmin(user);</span>
-    }
-
-    /**
-     * Add new GROUP to blogger structure
-     * @param currentUser
-     * @param customData
-     * @return
-     */
-    public static boolean addNewBloggerGroup(EditorFacade editorFacade, Identity currentUser, String customData) {
-<span class="fc" id="L504">        boolean isBloggerAdmin = BlogService.isUserBloggerAdmin( currentUser );</span>
-<span class="fc" id="L505">        boolean isBlogger = BlogService.isUserBlogger( currentUser );</span>
-
-        //Check perms
-<span class="pc bpc" id="L508" title="2 of 4 branches missed.">        if(isBloggerAdmin==false &amp;&amp; isBlogger==false) return false;</span>
-
-<span class="fc" id="L510">        int groupId = -1;</span>
-<span class="fc" id="L511">        String newGroupName = &quot;&quot;;</span>
-<span class="pc bpc" id="L512" title="2 of 4 branches missed.">        if(customData != null &amp;&amp; !customData.isEmpty()) {</span>
-            try {
-<span class="fc" id="L514">                JSONObject jsonObject = new JSONObject(customData);</span>
-<span class="fc" id="L515">                groupId = Tools.getIntValue((String) jsonObject.get(&quot;groupId&quot;), -1);</span>
-<span class="fc" id="L516">                newGroupName = (String) jsonObject.get(&quot;newGroupName&quot;);</span>
-<span class="nc" id="L517">            } catch (Exception ex) {</span>
-<span class="nc" id="L518">                sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L519">                return false;</span>
-<span class="fc" id="L520">            }</span>
+<span class="fc" id="L105">            return groupsMap;</span>
         }
 
-<span class="fc bfc" id="L523" title="All 2 branches covered.">        if(Tools.isEmpty(newGroupName)) return false;</span>
+		//!! SORT is NOT necessary - we are getting whole tree, so they are already sorted
 
-<span class="pc bpc" id="L525" title="1 of 2 branches missed.">        if(groupId &lt; 1) {</span>
-<span class="nc bnc" id="L526" title="All 2 branches missed.">            if(isBlogger) groupId = Tools.getTokensInt(currentUser.getEditableGroups(), &quot;,&quot;)[0];</span>
-<span class="nc" id="L527">            else return false; //It's admin not casual blogger</span>
-        } else {
-            //Check perms
-
-            //If user is blogger admin, check if group is blogger group
-<span class="pc bpc" id="L532" title="1 of 2 branches missed.">            if(isBloggerAdmin) {</span>
-<span class="nc" id="L533">                List&lt;Integer&gt; allBloggersGroupIds = BlogService.getAllBloggersRootGroupIds();</span>
-<span class="nc bnc" id="L534" title="All 2 branches missed.">                if(Boolean.FALSE.equals( allBloggersGroupIds.contains(groupId) )) return false;</span>
-<span class="nc" id="L535">            } //If user is blogger, check if he has perm to selected group</span>
-<span class="pc bpc" id="L536" title="1 of 2 branches missed.">            else if(GroupsDB.isGroupEditable(currentUser, groupId)==false) {</span>
-<span class="nc" id="L537">                return false;</span>
-            }
-        }
-
-        //All is ok, create group
-<span class="fc" id="L542">        GroupDetails newGroup = createGroup(currentUser.getLogin(), currentUser.getUserId(), GroupsDB.getInstance().getGroup(groupId), newGroupName);</span>
-<span class="pc bpc" id="L543" title="1 of 2 branches missed.">        if (newGroup != null) {</span>
-<span class="fc" id="L544">            createGroupNewsDoc(editorFacade, newGroup.getGroupId(), newGroup.getGroupName(), currentUser.getUserId(), currentUser.getUserId());</span>
-<span class="fc" id="L545">            return true;</span>
-        }
-<span class="nc" id="L547">        return false;</span>
+        //Else return empty map
+<span class="nc" id="L111">        return groupsMap;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

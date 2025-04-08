@@ -50,7 +50,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     DT.waitForLoader();
     //skus pridat
     I.click(DT.btn.add_button);
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("Názov web stránky", auto_webPage);
     DTE.save();
     I.see("Pridať web stránku - nemáte právo na pridanie web stránky");
@@ -60,7 +60,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
     I.click("Nedá sa zmazať", "#datatableInit");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nedá sa zmazať");
     DTE.save();
     I.see("Nemáte právo na editáciu web stránky");
@@ -149,7 +149,7 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
     I.click("Nedá sa zmazať", "#datatableInit");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nedá sa zmazať");
     DTE.save();
     I.dontSee("Nemáte právo na editáciu web stránky");
@@ -270,7 +270,7 @@ Scenario('overenie prav na strukturu - web stranky', ({ I, DTE }) => {
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť"]);
     I.click("Nesmie sa dať presunúť", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nesmie sa dať presunúť");
     DTE.save();
     I.dontSee("Nemáte právo na editáciu web stránky");
@@ -280,7 +280,7 @@ Scenario('overenie prav na strukturu - web stranky', ({ I, DTE }) => {
     /* not possible anymore because of structure not showing root folder anymore
     I.click("Nesmie sa dať presunúť", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("Názov web stránky", "Nesmie sa dať presunúť");
     I.click('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar
     I.waitForElement("div.jsTree-wrapper");

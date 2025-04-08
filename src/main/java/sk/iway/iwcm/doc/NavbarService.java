@@ -276,7 +276,7 @@ public class NavbarService {
 
     /**
 	 * Vrati HTML kod pre Breadcrumb navigaciu vo formate RDF
-	 * http://support.google.com/webmasters/bin/answer.py?hl=en&topic=1088474&hlrm=en&answer=185417&ctx=topic
+	 * http://support.google.com/webmasters/bin/answer.py?hl=en&amp;topic=1088474&amp;hlrm=en&amp;answer=185417&amp;ctx=topic
 	 * @param groupId - ID adresara
 	 * @param docId - ID aktualnej web stranky
 	 * @param session

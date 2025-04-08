@@ -1125,8 +1125,6 @@ public class Tools
 	/**
 	 *  Funkcia, ktora zisti pocet vyskytov vstupneho substringu v retazci
 	 *
-	 *	@author kmarton
-	 *
 	 *	@param  src     	retazec, v ktorom chceme zistit pocet vyskytov
 	 *	@param  subString  co sa ma nahradit
 	 *
@@ -2084,7 +2082,7 @@ public class Tools
 	/**
 	 * Otestuje, ci pole arrOne obsahuje two
 	 * @param arrOne
-	 * @param arrTwo
+	 * @param two
 	 * @return
 	 */
 	public static boolean containsOneItem(int[] arrOne, int two)
@@ -2241,7 +2239,7 @@ public class Tools
 	 * URL + queryString
 	 *
 	 * nieco ako:
-	 * http://www.google.sk/search?q=something&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:sk:official&client=firefox-a
+	 * http://www.google.sk/search?q=something&amp;ie=utf-8&amp;oe=utf-8&amp;aq=t&amp;rls=org.mozilla:sk:official&amp;client=firefox-a
 	 */
 	public static String getRequestedLink(HttpServletRequest request)
 	{
@@ -2392,8 +2390,6 @@ public class Tools
 	/**
 	 * Funkcia vrati objekt typu Date zo vstupneho retazca dateString na zaklade formatu uvedeneho v parametri formatString.
 	 * Napr. Tools.getDateFromString("20091231 235959", "yyyyMMdd HHmmss") vrati objekt Date s nastavenymi hodnotami ako 31.12.2009 23:59:59
-    *
-	 * @author kmarton
 	 *
 	 * @param dateString		vstupny retazec, z ktoreho chceme ziskat objekt Date, napr. "20091231 235959"
 	 * @param formatString	formatovaci retazec, podla ktoreho sa bude formatovat vstupny retazec dateString, napr. "yyyyMMdd HHmmss"
@@ -2684,7 +2680,6 @@ public class Tools
 	 * exception is thrown
 	 * @param l
 	 * @return int representation of longsomhow to
-	 * @author mhalas
 	 */
 	public static int safeLongToInt(long l) {
 	    if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
@@ -2944,7 +2939,7 @@ public class Tools
 	}
 
 	/**
-	 * Odescapuje HTML kod, napr. z &lt; spravi <, je to potrebne napr. pri exporte do Excelu a podobne
+	 * Odescapuje HTML kod, napr. z &amp;lt; spravi &lt;, je to potrebne napr. pri exporte do Excelu a podobne
 	 * @param text
 	 * @return
 	 */

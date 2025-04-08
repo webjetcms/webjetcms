@@ -78,7 +78,7 @@ public class UniversalComponentHelper
 	/**
 	 * instancia DB pre beanClass - potomok JpaDB
 	 *
-	 * @param dbInstance
+	 * @param fqn
 	 * @return
 	 */
 	public UniversalComponentHelper addDbClass(String fqn)
@@ -96,7 +96,7 @@ public class UniversalComponentHelper
 	/**
 	 * Vytvori instanciu DB triedy
 	 *
-	 * @param dbInstance
+	 * @param dbClass
 	 * @return
 	 */
 	public UniversalComponentHelper addDbClass(Class dbClass)

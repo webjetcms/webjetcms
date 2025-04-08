@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocEditorFields.java</span></div><h1>DocEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DocEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">DocEditorFields.java</span></div><h1>DocEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,6 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.rest.DocHistoryDto;
-import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
@@ -30,7 +29,7 @@ import sk.iway.spirit.model.Media;
  */
 @Getter
 @Setter
-<span class="fc" id="L33">public class DocEditorFields extends BaseEditorFields {</span>
+<span class="fc" id="L32">public class DocEditorFields extends BaseEditorFields {</span>
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;webpages.icons.title&quot;,
         hiddenEditor = true, hidden = false, visible = true, sortAfter = &quot;id&quot;, className = &quot;allow-html&quot;, orderable = false
@@ -57,7 +56,7 @@ import sk.iway.spirit.model.Media;
         } )} )
     private List&lt;GroupDetails&gt; groupCopyDetails;
 
-<span class="fc" id="L60">    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = &quot;wrap&quot;, title=&quot;editor.redactor_note&quot;,</span>
+<span class="fc" id="L59">    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = &quot;wrap&quot;, title=&quot;editor.redactor_note&quot;,</span>
         tab = &quot;basic&quot;, visible = false, filter=false, sortAfter = &quot;cacheable&quot;
     )
     private String redactorNote = &quot;&quot;;
@@ -94,7 +93,7 @@ import sk.iway.spirit.model.Media;
     )
     private Integer[] emails;
 
-<span class="fc" id="L97">    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = &quot;&amp;nbsp;&quot;,</span>
+<span class="fc" id="L96">    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = &quot;&amp;nbsp;&quot;,</span>
         tab = &quot;perex&quot;, hidden = true, sortAfter = &quot;publishStartDate&quot;,
         editor = { @DataTableColumnEditor(
             options = {
@@ -105,7 +104,7 @@ import sk.iway.spirit.model.Media;
     })
     private boolean publishAfterStart = false;
 
-<span class="fc" id="L108">    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = &quot;&amp;nbsp;&quot;,</span>
+<span class="fc" id="L107">    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = &quot;&amp;nbsp;&quot;,</span>
         tab = &quot;perex&quot;, hidden = true, sortAfter = &quot;publishEndDate&quot;,
         editor = { @DataTableColumnEditor(
             options = {
@@ -146,21 +145,18 @@ import sk.iway.spirit.model.Media;
     })
     private List&lt;DocHistoryDto&gt; history;
 
-    //zoznam volnych poli
-    public List&lt;Field&gt; fieldsDefinition;
-
     //zoznam CSS stylov
     List&lt;Map&lt;String, String&gt;&gt; styleComboList;
 
     //true - verejne publikovat
     //false - ulozit pracovnu verziu do historie
-<span class="fc" id="L157">    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title=&quot;&quot;,tab=&quot;basic&quot;,hidden = true)</span>
+<span class="fc" id="L153">    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title=&quot;&quot;,tab=&quot;basic&quot;,hidden = true)</span>
     boolean requestPublish=true;
 
     //nastavuje rezim editora podla skupiny sablon
-<span class="fc" id="L161">    private String editingMode = &quot;&quot;;</span>
-<span class="fc" id="L162">    private String editingModeLink = &quot;&quot;;</span>
-<span class="fc" id="L163">    private String baseCssLink = &quot;&quot;;</span>
+<span class="fc" id="L157">    private String editingMode = &quot;&quot;;</span>
+<span class="fc" id="L158">    private String editingModeLink = &quot;&quot;;</span>
+<span class="fc" id="L159">    private String baseCssLink = &quot;&quot;;</span>
 
     //atributy stranky
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;user.admin_edit.atrGroup&quot;,
@@ -185,100 +181,105 @@ import sk.iway.spirit.model.Media;
      * @param doc
      */
     public void fromDocDetails(DocBasic doc, boolean loadSubQueries, boolean addFields) {
-<span class="fc" id="L188">        DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L189">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L190">        GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">        if (group != null) {</span>
-<span class="fc" id="L192">            groupDetails = group;</span>
+<span class="fc" id="L184">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L185">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L186">        GroupDetails group = groupsDB.getGroup(doc.getGroupId());</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        if (group != null) {</span>
+<span class="fc" id="L188">            groupDetails = group;</span>
         }
 
         //hlavna stranka adresara
-<span class="pc bpc" id="L196" title="1 of 6 branches missed.">        if (groupDetails != null &amp;&amp; doc.getDocId()&gt;0 &amp;&amp; groupDetails.getDefaultDocId()==doc.getDocId()) {</span>
-<span class="fc" id="L197">            addRowClass(&quot;is-default-page&quot;);</span>
+<span class="fc bfc" id="L192" title="All 6 branches covered.">        if (groupDetails != null &amp;&amp; doc.getDocId()&gt;0 &amp;&amp; groupDetails.getDefaultDocId()==doc.getDocId()) {</span>
+<span class="fc" id="L193">            addRowClass(&quot;is-default-page&quot;);</span>
         }
 
         //vypnute zobrazovanie
-<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (doc.isAvailable()==false) addRowClass(&quot;is-not-public&quot;);</span>
-<span class="fc" id="L202">        setDisableAfterEnd(doc.isDisableAfterEnd());</span>
-<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (doc.isPublishAfterStart()) setPublishAfterStart(doc.isPublishAfterStart());</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">        if (doc.isAvailable()==false) addRowClass(&quot;is-not-public&quot;);</span>
+<span class="fc" id="L198">        setDisableAfterEnd(doc.isDisableAfterEnd());</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (doc.isPublishAfterStart()) setPublishAfterStart(doc.isPublishAfterStart());</span>
 
         //ikony
-<span class="pc bpc" id="L206" title="1 of 4 branches missed.">        if (group!=null &amp;&amp; group.getDefaultDocId()==doc.getDocId()) addStatusIcon(&quot;ti ti-star&quot;);</span>
-<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (doc.isShowInMenu()) addStatusIcon(&quot;ti ti-map-pin&quot;);</span>
-<span class="fc" id="L208">        else addStatusIcon(&quot;ti ti-map-pin-off&quot;);</span>
-<span class="fc bfc" id="L209" title="All 2 branches covered.">        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon(&quot;ti ti-external-link&quot;);</span>
-<span class="fc bfc" id="L210" title="All 2 branches covered.">        if (doc.isSearchable()==false) addStatusIcon(&quot;ti ti-eye-off&quot;);</span>
-<span class="fc bfc" id="L211" title="All 2 branches covered.">        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon(&quot;ti ti-lock&quot;);</span>
-<span class="pc bpc" id="L212" title="1 of 4 branches missed.">        if (doc.getVirtualPath()!=null &amp;&amp; doc.getVirtualPath().contains(Constants.getString(&quot;ABTestingName&quot;))) addStatusIcon(&quot;ti ti-a-b&quot;);</span>
+<span class="fc bfc" id="L202" title="All 4 branches covered.">        if (group!=null &amp;&amp; group.getDefaultDocId()==doc.getDocId()) addStatusIcon(&quot;ti ti-star&quot;);</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (doc.isShowInMenu()) addStatusIcon(&quot;ti ti-map-pin&quot;);</span>
+<span class="fc" id="L204">        else addStatusIcon(&quot;ti ti-map-pin-off&quot;);</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon(&quot;ti ti-external-link&quot;);</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">        if (doc.isSearchable()==false) addStatusIcon(&quot;ti ti-eye-off&quot;);</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon(&quot;ti ti-lock&quot;);</span>
+<span class="pc bpc" id="L208" title="1 of 4 branches missed.">        if (doc.getVirtualPath()!=null &amp;&amp; doc.getVirtualPath().contains(Constants.getString(&quot;ABTestingName&quot;))) addStatusIcon(&quot;ti ti-a-b&quot;);</span>
 
-<span class="fc" id="L214">        StringBuilder iconsHtml = new StringBuilder();</span>
+<span class="fc" id="L210">        StringBuilder iconsHtml = new StringBuilder();</span>
         //pridaj odkaz na zobrazenie stranky
-<span class="fc" id="L216">        Prop prop = Prop.getInstance();</span>
-<span class="fc" id="L217">        String link = &quot;/showdoc.do?docid=&quot;+doc.getDocId();</span>
-<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (doc instanceof DocHistory) {</span>
+<span class="fc" id="L212">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L213">        String link = &quot;/showdoc.do?docid=&quot;+doc.getDocId();</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">        if (doc instanceof DocHistory) {</span>
             //v history je otocene docid a historyid
-<span class="fc" id="L220">            link = &quot;/showdoc.do?docid=&quot;+doc.getId()+&quot;&amp;historyId=&quot;+doc.getDocId();</span>
+<span class="nc" id="L216">            link = &quot;/showdoc.do?docid=&quot;+doc.getId()+&quot;&amp;historyId=&quot;+doc.getDocId();</span>
         }
-<span class="fc" id="L222">        iconsHtml.append(&quot;&lt;a href=\&quot;&quot;+link+&quot;\&quot; target=\&quot;_blank\&quot; class=\&quot;preview-page-link\&quot; title=\&quot;&quot;+ResponseUtils.filter(prop.getText(&quot;history.showPage&quot;))+&quot;\&quot;&gt;&lt;i class=\&quot;ti ti-eye\&quot;&gt;&lt;/i&gt;&lt;/a&gt; &quot;);</span>
-<span class="fc" id="L223">        iconsHtml.append(getStatusIconsHtml());</span>
-<span class="fc" id="L224">        statusIcons = iconsHtml.toString();</span>
+<span class="fc" id="L218">        iconsHtml.append(&quot;&lt;a href=\&quot;&quot;+link+&quot;\&quot; target=\&quot;_blank\&quot; class=\&quot;preview-page-link\&quot; title=\&quot;&quot;+ResponseUtils.filter(prop.getText(&quot;history.showPage&quot;))+&quot;\&quot;&gt;&lt;i class=\&quot;ti ti-eye\&quot;&gt;&lt;/i&gt;&lt;/a&gt; &quot;);</span>
+<span class="fc" id="L219">        iconsHtml.append(getStatusIconsHtml());</span>
+<span class="fc" id="L220">        statusIcons = iconsHtml.toString();</span>
 
-<span class="fc" id="L226">        int[] pp = Tools.getTokensInt(doc.getPasswordProtected(), &quot;,&quot;);</span>
-<span class="fc" id="L227">        List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(pp);</span>
-<span class="fc" id="L228">        permisions = splitPermsEmails.get(0);</span>
-<span class="fc" id="L229">        emails = splitPermsEmails.get(1);</span>
+<span class="fc" id="L222">        int[] pp = Tools.getTokensInt(doc.getPasswordProtected(), &quot;,&quot;);</span>
+<span class="fc" id="L223">        List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(pp);</span>
+<span class="fc" id="L224">        permisions = splitPermsEmails.get(0);</span>
+<span class="fc" id="L225">        emails = splitPermsEmails.get(1);</span>
 
-<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (loadSubQueries) {</span>
-<span class="fc" id="L232">            List&lt;Integer&gt; slaves = MultigroupMappingDB.getSlaveDocIds(doc.getDocId());</span>
-<span class="pc bpc" id="L233" title="1 of 4 branches missed.">            if (slaves != null &amp;&amp; slaves.size()&gt;0) {</span>
-<span class="fc" id="L234">                groupCopyDetails = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">                for (Integer docId : slaves) {</span>
-<span class="fc" id="L236">                    DocDetails slave = docDB.getBasicDocDetails(docId.intValue(), false);</span>
-<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                    if (slave != null) {</span>
-<span class="fc" id="L238">                        group = groupsDB.getGroup(slave.getGroupId());</span>
-<span class="pc bpc" id="L239" title="1 of 2 branches missed.">                        if (group != null) {</span>
-<span class="fc" id="L240">                            groupCopyDetails.add(group);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        if (loadSubQueries) {</span>
+<span class="fc" id="L228">            List&lt;Integer&gt; slaves = MultigroupMappingDB.getSlaveDocIds(doc.getDocId());</span>
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">            if (slaves != null &amp;&amp; slaves.size()&gt;0) {</span>
+<span class="fc" id="L230">                groupCopyDetails = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">                for (Integer docId : slaves) {</span>
+<span class="fc" id="L232">                    DocDetails slave = docDB.getBasicDocDetails(docId.intValue(), false);</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">                    if (slave != null) {</span>
+<span class="fc" id="L234">                        group = groupsDB.getGroup(slave.getGroupId());</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">                        if (group != null) {</span>
+<span class="fc" id="L236">                            groupCopyDetails.add(group);</span>
                         }
                     }
-<span class="fc" id="L243">                }</span>
+<span class="fc" id="L239">                }</span>
             }
 
-<span class="fc" id="L246">            DocNoteBean note = DocNoteDB.getInstance().getDocNote(doc.getDocId(), -1);</span>
-<span class="pc bpc" id="L247" title="1 of 4 branches missed.">            if (note != null &amp;&amp; Tools.isNotEmpty(note.getNote())) redactorNote = note.getNote();</span>
+<span class="fc" id="L242">            DocNoteBean note = DocNoteDB.getInstance().getDocNote(doc.getDocId(), -1);</span>
+<span class="pc bpc" id="L243" title="1 of 4 branches missed.">            if (note != null &amp;&amp; Tools.isNotEmpty(note.getNote())) redactorNote = note.getNote();</span>
 
-<span class="pc bpc" id="L249" title="1 of 2 branches missed.">            if (doc instanceof DocDetails) {</span>
-<span class="fc" id="L250">                styleComboList = EditorService.getCssListJson(doc);</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">            if (doc instanceof DocDetails) {</span>
+<span class="fc" id="L246">                styleComboList = EditorService.getCssListJson(doc);</span>
             }
         }
 
-<span class="fc bfc" id="L254" title="All 2 branches covered.">        if(addFields == true) {</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        if(addFields == true) {</span>
             //definicia volnych poli
-<span class="fc" id="L256">            int tempId = doc.getTempId();</span>
-<span class="fc bfc" id="L257" title="All 2 branches covered.">            if (loadSubQueries==false) {</span>
+<span class="fc" id="L252">            int tempId = doc.getTempId();</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">            if (loadSubQueries==false) {</span>
                 //getAllItems = we will use template from group, not from the doc
-<span class="fc" id="L259">                GroupDetails docGroup = doc.getGroup();</span>
-<span class="pc bpc" id="L260" title="1 of 2 branches missed.">                if (docGroup != null) {</span>
-<span class="fc" id="L261">                    tempId = doc.getGroup().getTempId();</span>
+<span class="fc" id="L255">                GroupDetails docGroup = doc.getGroup();</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">                if (docGroup != null) {</span>
+<span class="fc" id="L257">                    tempId = doc.getGroup().getTempId();</span>
                 }
             }
-<span class="fc bfc" id="L264" title="All 2 branches covered.">            if (tempId &gt; 0)</span>
+<span class="fc bfc" id="L260" title="All 2 branches covered.">            if (tempId &gt; 0)</span>
             {
                 //nastavenie prefixu klucov podla skupiny sablon
-<span class="fc" id="L267">                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);</span>
-<span class="pc bpc" id="L268" title="3 of 6 branches missed.">                if (temp != null &amp;&amp; temp.getTemplatesGroupId()!=null &amp;&amp; temp.getTemplatesGroupId().longValue() &gt; 0) {</span>
-<span class="fc" id="L269">                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());</span>
-<span class="pc bpc" id="L270" title="1 of 4 branches missed.">                    if (tgb != null &amp;&amp; Tools.isNotEmpty(tgb.getKeyPrefix())) {</span>
-<span class="fc" id="L271">                        RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);</span>
+<span class="fc" id="L263">                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);</span>
+<span class="pc bpc" id="L264" title="3 of 6 branches missed.">                if (temp != null &amp;&amp; temp.getTemplatesGroupId()!=null &amp;&amp; temp.getTemplatesGroupId().longValue() &gt; 0) {</span>
+<span class="fc" id="L265">                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());</span>
+<span class="pc bpc" id="L266" title="1 of 4 branches missed.">                    if (tgb != null &amp;&amp; Tools.isNotEmpty(tgb.getKeyPrefix())) {</span>
+<span class="fc" id="L267">                        RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);</span>
                     }
-<span class="pc bpc" id="L273" title="2 of 4 branches missed.">                    if (tgb != null &amp;&amp; group != null) {</span>
+<span class="pc bpc" id="L269" title="1 of 4 branches missed.">                    if (tgb != null &amp;&amp; group != null) {</span>
                         //nastav typ editora
-<span class="fc" id="L275">                        setEditingMode(doc, temp, tgb, group, docDB);</span>
+<span class="fc" id="L271">                        setEditingMode(doc, temp, tgb, group, docDB);</span>
                     }
                 }
 
-<span class="fc" id="L279">                RequestBean.addTextKeyPrefix(&quot;temp-&quot;+tempId, false);</span>
+<span class="fc" id="L275">                RequestBean.addTextKeyPrefix(&quot;temp-&quot;+tempId, false);</span>
             }
-<span class="fc" id="L281">            fieldsDefinition = getFields(doc, &quot;editor&quot;, 'T');</span>
+
+<span class="fc" id="L278">            setFieldsDefinition( getFields(doc, &quot;editor&quot;, 'T') );</span>
+
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">            if (doc instanceof DocDetails) {</span>
+<span class="fc" id="L281">                styleComboList = EditorService.getCssListJson(doc);</span>
+            }
         }
 
         //TODO: do DB modelu pridat
@@ -291,23 +292,23 @@ import sk.iway.spirit.model.Media;
         // - passwordProtected
 
         //nastav editor URL
-<span class="fc bfc" id="L294" title="All 2 branches covered.">        if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) {</span>
-<span class="pc bpc" id="L295" title="1 of 2 branches missed.">            if (Tools.isEmpty(doc.getEditorVirtualPath())) {</span>
-<span class="nc" id="L296">                int i = doc.getVirtualPath().lastIndexOf(&quot;/&quot;);</span>
-<span class="nc bnc" id="L297" title="All 2 branches missed.">                if (i!=-1) {</span>
-<span class="nc" id="L298">                    String editorPath = doc.getVirtualPath().substring(i);</span>
-<span class="nc bnc" id="L299" title="All 4 branches missed.">                    if (&quot;/&quot;.equals(editorPath)==false &amp;&amp; editorPath.length()&gt;1) {</span>
-<span class="nc" id="L300">                        editorPath = editorPath.substring(1);</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) {</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">            if (Tools.isEmpty(doc.getEditorVirtualPath())) {</span>
+<span class="nc" id="L297">                int i = doc.getVirtualPath().lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">                if (i!=-1) {</span>
+<span class="nc" id="L299">                    String editorPath = doc.getVirtualPath().substring(i);</span>
+<span class="nc bnc" id="L300" title="All 4 branches missed.">                    if (&quot;/&quot;.equals(editorPath)==false &amp;&amp; editorPath.length()&gt;1) {</span>
+<span class="nc" id="L301">                        editorPath = editorPath.substring(1);</span>
                     }
-<span class="nc" id="L302">                    doc.setEditorVirtualPath(editorPath);</span>
+<span class="nc" id="L303">                    doc.setEditorVirtualPath(editorPath);</span>
                 }
-<span class="nc" id="L304">            }</span>
-<span class="fc bfc" id="L305" title="All 2 branches covered.">        } else if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {</span>
-<span class="fc" id="L306">            doc.setEditorVirtualPath(&quot;&quot;);</span>
+<span class="nc" id="L305">            }</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">        } else if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {</span>
+<span class="fc" id="L307">            doc.setEditorVirtualPath(&quot;&quot;);</span>
         } else {
-<span class="fc" id="L308">            doc.setEditorVirtualPath(&quot;&quot;);</span>
+<span class="fc" id="L309">            doc.setEditorVirtualPath(&quot;&quot;);</span>
         }
-<span class="fc" id="L310">    }</span>
+<span class="fc" id="L311">    }</span>
 
     /**
      * Nastavi rezim editacia (normal/pagebuilder) a linku pre iframe pagebuildera
@@ -318,68 +319,68 @@ import sk.iway.spirit.model.Media;
      * @param group
      */
     private void setEditingMode(DocBasic doc, TemplateDetails temp, TemplatesGroupBean tgb, GroupDetails group, DocDB docDB) {
-<span class="fc" id="L321">        editingMode = tgb.getInlineEditingMode();</span>
-<span class="fc bfc" id="L322" title="All 2 branches covered.">        if (Tools.isNotEmpty(temp.getInlineEditingMode())) {</span>
-<span class="fc" id="L323">            editingMode = temp.getInlineEditingMode();</span>
-<span class="pc bpc" id="L324" title="1 of 2 branches missed.">            if (&quot;default&quot;.equals(editingMode)) editingMode = &quot;&quot;;</span>
+<span class="fc" id="L322">        editingMode = tgb.getInlineEditingMode();</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        if (Tools.isNotEmpty(temp.getInlineEditingMode())) {</span>
+<span class="fc" id="L324">            editingMode = temp.getInlineEditingMode();</span>
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">            if (&quot;default&quot;.equals(editingMode)) editingMode = &quot;&quot;;</span>
         }
 
-<span class="fc" id="L327">        baseCssLink = &quot;/templates/&quot;+tgb.getDirectory();</span>
+<span class="fc" id="L328">        baseCssLink = &quot;/templates/&quot;+tgb.getDirectory();</span>
 
         //ak sablona alebo forward obsahuje pboff, tak PageBuilder nebude dostupny
-<span class="pc bpc" id="L330" title="3 of 6 branches missed.">        if (temp.getTempName().contains(&quot;PBoff&quot;) || temp.getForward().contains(&quot;-pboff&quot;) || temp.getForward().contains(&quot;_pboff&quot;)) editingMode = &quot;&quot;;</span>
+<span class="pc bpc" id="L331" title="3 of 6 branches missed.">        if (temp.getTempName().contains(&quot;PBoff&quot;) || temp.getForward().contains(&quot;-pboff&quot;) || temp.getForward().contains(&quot;_pboff&quot;)) editingMode = &quot;&quot;;</span>
 
         //ak sablona alebo forward obsahuje PBon, tak PageBuilder bude aktivovany
-<span class="pc bpc" id="L333" title="2 of 6 branches missed.">        if (temp.getTempName().contains(&quot;PBon&quot;) || temp.getForward().contains(&quot;-pbon&quot;) || temp.getForward().contains(&quot;_pbon&quot;)) editingMode = &quot;pageBuilder&quot;;</span>
+<span class="pc bpc" id="L334" title="2 of 6 branches missed.">        if (temp.getTempName().contains(&quot;PBon&quot;) || temp.getForward().contains(&quot;-pbon&quot;) || temp.getForward().contains(&quot;_pbon&quot;)) editingMode = &quot;pageBuilder&quot;;</span>
 
-<span class="fc bfc" id="L335" title="All 2 branches covered.">        if (Tools.isNotEmpty(editingMode)) {</span>
-<span class="fc" id="L336">            editingModeLink = doc.getVirtualPath();</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (Tools.isNotEmpty(editingMode)) {</span>
+<span class="fc" id="L337">            editingModeLink = doc.getVirtualPath();</span>
 
-<span class="pc bpc" id="L338" title="1 of 4 branches missed.">            if (doc.getDocId()&lt;1 || Tools.isEmpty(editingModeLink)) {</span>
+<span class="pc bpc" id="L339" title="1 of 4 branches missed.">            if (doc.getDocId()&lt;1 || Tools.isEmpty(editingModeLink)) {</span>
                 //asi je to podstranka, otvor fejkovanu hlavnu stranku adresara
-<span class="fc" id="L340">                DocDetails groupDoc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
-<span class="pc bpc" id="L341" title="1 of 2 branches missed.">                if (groupDoc != null) {</span>
-<span class="fc" id="L342">                    editingModeLink = Tools.addParameterToUrlNoAmp(groupDoc.getVirtualPath(), &quot;inlineEditingNewPage&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L341">                DocDetails groupDoc = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">                if (groupDoc != null) {</span>
+<span class="fc" id="L343">                    editingModeLink = Tools.addParameterToUrlNoAmp(groupDoc.getVirtualPath(), &quot;inlineEditingNewPage&quot;, &quot;true&quot;);</span>
                 }
             }
 
-<span class="pc bpc" id="L346" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(editingModeLink)) {</span>
-<span class="fc" id="L347">                editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, &quot;inlineEditorAdmin&quot;, &quot;true&quot;);</span>
-<span class="pc bpc" id="L348" title="1 of 2 branches missed.">                if (doc instanceof DocDetails) {</span>
-<span class="fc" id="L349">                    DocDetails docDocDetails = (DocDetails)doc;</span>
-<span class="fc bfc" id="L350" title="All 2 branches covered.">                    if (docDocDetails.getHistoryId()&gt;0) {</span>
-<span class="fc" id="L351">                        editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, &quot;historyid&quot;, String.valueOf(docDocDetails.getHistoryId()));</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">            if (Tools.isNotEmpty(editingModeLink)) {</span>
+<span class="fc" id="L348">                editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, &quot;inlineEditorAdmin&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L349" title="1 of 2 branches missed.">                if (doc instanceof DocDetails) {</span>
+<span class="fc" id="L350">                    DocDetails docDocDetails = (DocDetails)doc;</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">                    if (docDocDetails.getHistoryId()&gt;0) {</span>
+<span class="fc" id="L352">                        editingModeLink = Tools.addParameterToUrlNoAmp(editingModeLink, &quot;historyid&quot;, String.valueOf(docDocDetails.getHistoryId()));</span>
                     }
-<span class="fc" id="L353">                }</span>
+<span class="fc" id="L354">                }</span>
             } else {
                 //nepodarilo sa najst stranku pre editaciu
-<span class="nc" id="L356">                editingMode = &quot;&quot;;</span>
+<span class="fc" id="L357">                editingMode = &quot;&quot;;</span>
             }
         }
-<span class="fc" id="L359">    }</span>
+<span class="fc" id="L360">    }</span>
 
     /**
      * Nastavi hodnoty atributov nazad do DocDetails objektu
      * @param doc
      */
     public void toDocDetails(DocDetails doc) {
-<span class="fc" id="L366">        doc.setPasswordProtected(UserDetailsService.getUserGroupIds(permisions, emails));</span>
+<span class="fc" id="L367">        doc.setPasswordProtected(UserDetailsService.getUserGroupIds(permisions, emails));</span>
 
-<span class="fc" id="L368">        doc.setGroupId(groupDetails.getGroupId());</span>
+<span class="fc" id="L369">        doc.setGroupId(groupDetails.getGroupId());</span>
 
         //Nastav editorVirtualPath do virtualPath, aby sa vygenerovala cela cesta
-<span class="pc bpc" id="L371" title="1 of 2 branches missed.">        if(Boolean.TRUE.equals(doc.getUrlInheritGroup())) {</span>
-<span class="nc" id="L372">            doc.setVirtualPath(doc.getEditorVirtualPath());</span>
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">        if(Boolean.TRUE.equals(doc.getUrlInheritGroup())) {</span>
+<span class="nc" id="L373">            doc.setVirtualPath(doc.getEditorVirtualPath());</span>
         }
 
         //Ak generateUrlFromTitle je true, vygeneruj hodnotu podla titulku nastavenim virtualPath na prazdnu hodnotu
-<span class="fc bfc" id="L376" title="All 2 branches covered.">        if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {</span>
-<span class="fc" id="L377">            doc.setVirtualPath(&quot;&quot;);</span>
-<span class="fc" id="L378">            doc.setEditorVirtualPath(&quot;&quot;);</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">        if(Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) {</span>
+<span class="fc" id="L378">            doc.setVirtualPath(&quot;&quot;);</span>
+<span class="fc" id="L379">            doc.setEditorVirtualPath(&quot;&quot;);</span>
         }
 
-<span class="fc" id="L381">        doc.setPublishAfterStart(publishAfterStart);</span>
-<span class="fc" id="L382">        doc.setDisableAfterEnd(disableAfterEnd);</span>
-<span class="fc" id="L383">    }</span>
+<span class="fc" id="L382">        doc.setPublishAfterStart(publishAfterStart);</span>
+<span class="fc" id="L383">        doc.setDisableAfterEnd(disableAfterEnd);</span>
+<span class="fc" id="L384">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -23,6 +23,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/dmail/form/editor.png)
 
+- Zrýchlené načítanie údajov aplikácie v editore - dáta sú vložené priamo zo servera, nie je potrebné vykonať volanie REST služby (#57673).
+- Upravený vizuál - názov aplikácie pri vkladaní do stránky presunutý do hlavného okna (namiesto pôvodného nadpisu Aplikácie) pre zväčšenie veľkosti plochy pre nastavenie aplikáciu (#57673).
+
+![](redactor/apps/menu/editor-dialog.png)
+
 ### Hromadný e-mail
 
 - **Presunuté pole Web stránka** – teraz sa nachádza pred poľom **Predmet**, aby sa po výbere stránky predmet automaticky vyplnil podľa názvu zvolenej web stránky (#57541).
@@ -31,6 +36,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
   - Pomocou týchto premenných je možné nastaviť **fixné hodnoty** (napr. názov spoločnosti) pre všetky [kampane](redactor/apps/dmail/campaings/README.md), bez ohľadu na to, kto je prihlásený.
 
 ![](redactor/apps/dmail/campaings/editor.png)
+
+- Hromadný email - optimalizácia tvorby zoznamu príjemcov - karta [skupiny](redactor/apps/dmail/campaings/README.md#pridanie-zo-skupiny) presunutá do dialógového okna. Po zvolení skupiny príjemcov ich ihneď vidíte v karte Príjemcovia a viete ich ľahko upravovať, už nie je potrebné email najskôr uložiť pre zobrazenie príjemcov (#57537).
+
+![](redactor/apps/dmail/campaings/users.png)
 
 ### Kalendár noviniek
 
@@ -59,6 +68,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Hromadný email - pri duplikovaní kampane doplnené duplikovanie zoznamu príjemcov (#57533).
 - Dátové tabuľky - import - upravená logiky **Preskočiť chybné záznamy** pri importe tak, aby sa pri tejto možnosti spracovali aj generické chyby `Runtime` a zabezpečilo sa dokončenie importu bez prerušenia. Tieto chyby sa následne zobrazia používateľovi pomocou notifikácie v priebehu importovania (#57405).
 - Súbory - opravený výpočet veľkosti súborov/priečinkov v pätičke prieskumníka a pri zobrazení detailu priečinka (#57669).
+- Navigácia - opravená navigácia pomocou kariet v mobilnom zobrazení (#57673).
 
 ### Pre programátora
 
@@ -73,6 +83,7 @@ Iné zmeny:
 - Spustenie úloh na pozadí sa vykoná až po kompletnej inicializácii vrátane `Spring` (#43144).
 - Doplnená možnosť nastaviť [všetky vlastnosti HikariCP](install/setup/README.md#vytvorenie-db-schémy) (#54273-61).
 - Doplnená kontrola, či databázový ovládač podporuje nastavenie sekvencií (#54273-61).
+- Upravená funkcia `WJ.headerTabs`, ak počúvate na zmenu karty odporúčame použiť udalosť typu `$('#pills-tabsFilter a[data-wj-toggle="tab"]').on('click', function (e) {`, kde v `e` získate kartu, na ktorú sa kliklo (#56845-20250325).
 
 ### Testovanie
 
@@ -90,11 +101,19 @@ Iné zmeny:
 - Dátové tabuľky - opravené chybné zobrazenie kariet, ktoré sa nemajú zobrazovať pri vytváraní nového záznamu (napr. v šablónach) (#57533).
 - Dátové tabuľky - doplnený limit počtu záznamov pri zobrazení všetky. Hodnota je zhodná s maximálnym počtom riadkov pre exportu, nastavuje sa v konfiguračnej premennej `datatablesExportMaxRows` (#57657-2).
 - Dátové tabuľky - opravený počet záznamov na strane keď stránka obsahuje navigačné karty (#57725-1).
+- Dátové tabuľky - opravený nadpis Duplikovať namiesto Upraviť pri duplikovaní záznamu, upravená ikona tlačidla na duplikovanie (#57725-3).
+- Dátové tabuľky - zjednotený názov `ID` stĺpca z pôvodných `ID, Id, id` na zjednotený `ID`. Pre `DataTableColumnType.ID` nie je potrebné nastaviť `title` atribút, automaticky sa použije kľúč `datatables.id.js`. Niektoré prekladové kľúče zmazané, keďže nie sú potrebné (#49144)
 - Editor obrázkov - pri editácii obrázku zo vzdialeného servera doplnená notifikácia o potrebe stiahnutia obrázka na lokálny server (#57657-2).
 - Web stránky - opravené vloženie bloku obsahujúce aplikáciu (#57657-2).
 - Web stránky - doplnený `ninja` objekt pri vkladaní aplikácie do novej web stránky (#57389).
+- Web stránky - stránky v koši sa už nebudú zobrazovať v karte Neschválené, ak schvaľovateľ klikne na odkaz v emaile zobrazí sa chyba Stránka je v koši, aby sa náhodou neschválila stránka, ktorá bola medzi tým zmazaná (#54273-62).
+- Web stránky - schvaľovanie - opravené načítanie zoznamu v karte Neschválené pri použití databázového servera `Oracle` (#54273-62).
+- Web stránky - opravená aktualizácia nodov clustra pri zmene značiek (#57717).
+- Web stránky - opravené zobrazenie zoznamu stránok ak má používateľ právo iba na vybrané webové stránky (#57725-4).
 - Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Aplikácie - pridaná podpora vkladania nového riadku cez klávesovú skratku `SHIFT+ENTER` do jednoduchého textového editora používaného napr. v Otázky a odpovede (#57725-1).
+- Číselníky - presunutý výber číselníka priamo do nástrojovej lišty dátovej tabuľky (#49144).
+- Novinky - presunutý výber sekcie priamo do nástrojovej lišty dátovej tabuľky (#49144).
 - Prihlásenie - opravená chyba prihlásenia pri exspirovaní časovej platnosti hesla (#54273-57).
 - Prihlásenie - opravené prihlásenie v multiweb inštalácii (#54273-57).
 - GDPR - opravené zobrazenie karty Čistenie databázy pri použití `Oracle/PostgreSQL` databázy (#54273-57).
@@ -102,6 +121,9 @@ Iné zmeny:
 - Bezpečnosť - aktualizovaná knižnica `Swagger UI` na verziu `5.20.0`, doplnené výnimky v `dependency-check-suppressions.xml`.
 - Aktualizácia - doplnené mazanie nepotrebných súborov pri aktualizácii rozbalenej verzie (#57657-4).
 - Multiweb - doplnená kontrola `ID` domény pri registrácii návštevníka web sídla (#57657-4).
+- Používatelia - pridaná možnosť vybrať aj Koreňový priečinok v právach používateľa v sekcii Nahrávanie súborov do adresárov (54273-60).
+- Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
+- Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
 
 ## 2025.0
 
@@ -115,7 +137,10 @@ Iné zmeny:
 
 ### Prelomové zmeny
 
-- Web stránky - zrušená inline editácia. Možnosť priamej editácie stránky v režime jej zobrazenia bola odstránená, keďže využívala staršiu verziu editora, ktorá už nie je podporovaná. Ako alternatívu je možné aktivovať nástrojový panel zobrazovaný v pravom hornom rohu webovej stránky. Tento panel umožňuje rýchly prístup k editoru web stránky, priečinka alebo šablóny. Môžete vypnúť alebo zapnúť pomocou konfiguračnej premennej `disableWebJETToolbar`. Po aktivácii sa začne zobrazovať na web stránke po vstupe do sekcie Webové stránky v administrácii (#57629).
+- Web stránky - zrušená inline editácia. Možnosť priamej editácie stránky v režime jej zobrazenia bola odstránená, keďže využívala staršiu verziu editora, ktorá už nie je podporovaná. Ako alternatívu je možné aktivovať [nástrojový panel](redactor/webpages/editor.md#nástrojový-panel) zobrazovaný v pravom hornom rohu webovej stránky. Tento panel umožňuje rýchly prístup k editoru web stránky, priečinka alebo šablóny. Môžete vypnúť alebo zapnúť pomocou konfiguračnej premennej `disableWebJETToolbar`. Po aktivácii sa začne zobrazovať na web stránke po vstupe do sekcie Webové stránky v administrácii (#57629).
+
+![](redactor/webpages/webjet-toolbar.png)
+
 - Prihlásenie - pre administrátorov nastavená [požiadavka na zmenu hesla](sysadmin/pentests/README.md#pravidlá-hesiel) raz za rok. Hodnotu je možné upraviť v konfiguračnej premennej `passwordAdminExpiryDays`, nastavením na hodnotu 0 sa kontrola vypne (#57629).
 - Úvod - pridaná požiadavka na aktivácii dvojstupňového overovania pre zvýšenie bezpečnosti prihlasovacích údajov. Výzva sa nezobrazuje, ak je overovanie riešené cez `LDAP` alebo ak je prekladový kľúč `overview.2fa.warning` nastavený na prázdnu hodnotu (#57629).
 
@@ -135,10 +160,11 @@ Vo verzii **2025.0** sme priniesli vylepšený **dizajn administrácie**, ktorý
   ![](redactor/webpages/domain-select.png)
 
 **Preorganizované menu položky**:
-  - **SEO** presunuté do sekcie **Prehľady**.
-  - **GDPR a Skripty** presunuté do sekcie **Šablóny**.
-  - **Galéria** je teraz v sekcii **Súbory**.
-  - Niektoré názvy položiek boli upravené, aby lepšie vystihovali ich funkciu.
+
+- **SEO** presunuté do sekcie **Prehľady**.
+- **GDPR a Skripty** presunuté do sekcie **Šablóny**.
+- **Galéria** je teraz v sekcii **Súbory**.
+- Niektoré názvy položiek boli upravené, aby lepšie vystihovali ich funkciu.
 
 ### Web stránky
 

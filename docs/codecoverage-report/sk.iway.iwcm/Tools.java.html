@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Tools.java</span></div><h1>Tools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tools.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm</a> &gt; <span class="el_source">Tools.java</span></div><h1>Tools.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
@@ -357,12 +357,12 @@ import java.util.regex.Pattern;
 <span class="fc" id="L357">		String natUrlTranslate = Constants.getString(&quot;natUrlTranslate&quot;);</span>
 <span class="pc bpc" id="L358" title="1 of 2 branches missed.">		if (Tools.isEmpty(natUrlTranslate)) return url;</span>
 
-<span class="nc" id="L360">		String urlOriginal = url;</span>
-<span class="nc" id="L361">		url = Tools.replaceStrings(url, &quot;natUrlTranslate&quot;, true);</span>
+<span class="fc" id="L360">		String urlOriginal = url;</span>
+<span class="fc" id="L361">		url = Tools.replaceStrings(url, &quot;natUrlTranslate&quot;, true);</span>
 
-<span class="nc" id="L363">		Logger.debug(Tools.class, &quot;natUrl: &quot;+urlOriginal+&quot;-&gt;&quot;+url);</span>
+<span class="fc" id="L363">		Logger.debug(Tools.class, &quot;natUrl: &quot;+urlOriginal+&quot;-&gt;&quot;+url);</span>
 
-<span class="nc" id="L365">		return url;</span>
+<span class="fc" id="L365">		return url;</span>
 	}
 
 	/**
@@ -375,23 +375,23 @@ import java.util.regex.Pattern;
 	public static String replaceStrings(String text, String constantName, boolean replaceWholeLine)
 	{
 <span class="fc" id="L377">		String replaces = Constants.getString(constantName);</span>
-<span class="pc bpc" id="L378" title="1 of 2 branches missed.">		if (Tools.isEmpty(replaces)) return text;</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">		if (Tools.isEmpty(replaces)) return text;</span>
 
 		try
 		{
-<span class="nc" id="L382">			String[] urls = Tools.getTokens(replaces, &quot;\n&quot;);</span>
-<span class="nc bnc" id="L383" title="All 2 branches missed.">			if (urls.length==0) return text;</span>
-<span class="nc bnc" id="L384" title="All 2 branches missed.">			for (String pair : urls)</span>
+<span class="fc" id="L382">			String[] urls = Tools.getTokens(replaces, &quot;\n&quot;);</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">			if (urls.length==0) return text;</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">			for (String pair : urls)</span>
 			{
-<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (Tools.isEmpty(pair)) continue;</span>
-<span class="nc" id="L387">				String[] pairArray = pair.split(&quot;\\|&quot;);</span>
-<span class="nc bnc" id="L388" title="All 4 branches missed.">				if (pairArray==null || pairArray.length!=2) continue;</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">				if (Tools.isEmpty(pair)) continue;</span>
+<span class="fc" id="L387">				String[] pairArray = pair.split(&quot;\\|&quot;);</span>
+<span class="pc bpc" id="L388" title="2 of 4 branches missed.">				if (pairArray==null || pairArray.length!=2) continue;</span>
 
-<span class="nc bnc" id="L390" title="All 2 branches missed.">				if (replaceWholeLine)</span>
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">				if (replaceWholeLine)</span>
 				{
-<span class="nc bnc" id="L392" title="All 4 branches missed.">					if (text.startsWith(pairArray[0]) == true &amp;&amp; text.startsWith(pairArray[1]) == false)</span>
+<span class="pc bpc" id="L392" title="1 of 4 branches missed.">					if (text.startsWith(pairArray[0]) == true &amp;&amp; text.startsWith(pairArray[1]) == false)</span>
 					{
-<span class="nc" id="L394">						text = Tools.replace(text, pairArray[0], pairArray[1]);</span>
+<span class="fc" id="L394">						text = Tools.replace(text, pairArray[0], pairArray[1]);</span>
 					}
 				}
 				else
@@ -402,9 +402,9 @@ import java.util.regex.Pattern;
 		}
 <span class="nc" id="L403">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L405">		}</span>
+<span class="fc" id="L405">		}</span>
 
-<span class="nc" id="L407">		return text;</span>
+<span class="fc" id="L407">		return text;</span>
 	}
 
 	/**
@@ -449,7 +449,7 @@ import java.util.regex.Pattern;
 	 */
 	public static String downloadUrl(String url, javax.servlet.http.Cookie [] cookies)
 	{
-<span class="nc" id="L452">		return(downloadUrl(url, SetCharacterEncodingFilter.getEncoding(), cookies));</span>
+<span class="fc" id="L452">		return(downloadUrl(url, SetCharacterEncodingFilter.getEncoding(), cookies));</span>
 	}
 
 	/**
@@ -519,10 +519,10 @@ import java.util.regex.Pattern;
 				{
 					HttpURLConnection urlConn = (HttpURLConnection)conn;
 				}*/
-<span class="pc bpc" id="L522" title="1 of 2 branches missed.">				if(cookies != null)</span>
+<span class="fc bfc" id="L522" title="All 2 branches covered.">				if(cookies != null)</span>
 				{
-<span class="nc bnc" id="L524" title="All 2 branches missed.">					for (javax.servlet.http.Cookie cookie : cookies) {</span>
-<span class="nc" id="L525">					    conn.addRequestProperty(&quot;Cookie&quot;, cookie.getName() + &quot;=&quot; + cookie.getValue());</span>
+<span class="fc bfc" id="L524" title="All 2 branches covered.">					for (javax.servlet.http.Cookie cookie : cookies) {</span>
+<span class="fc" id="L525">					    conn.addRequestProperty(&quot;Cookie&quot;, cookie.getName() + &quot;=&quot; + cookie.getValue());</span>
 					}
 				}
 
@@ -795,13 +795,13 @@ import java.util.regex.Pattern;
 		{
 <span class="nc" id="L796">			length = decimalFormat.format((lengthLong / (1024D * 1024D))) + &quot; MB&quot;;</span>
 		}
-<span class="fc bfc" id="L798" title="All 2 branches covered.">		else if (lengthLong &gt; 1024)</span>
+<span class="pc bpc" id="L798" title="1 of 2 branches missed.">		else if (lengthLong &gt; 1024)</span>
 		{
 <span class="fc" id="L800">			length = decimalFormat.format((lengthLong / 1024D)) + &quot; kB&quot;;</span>
 		}
 		else
 		{
-<span class="fc" id="L804">			length = decimalFormat.format(lengthLong) + &quot; B&quot;;</span>
+<span class="nc" id="L804">			length = decimalFormat.format(lengthLong) + &quot; B&quot;;</span>
 		}
 <span class="fc" id="L806">		return(length);</span>
 	}
@@ -910,36 +910,36 @@ import java.util.regex.Pattern;
 
 	public static double getDoubleValue(String value, double defaultValue)
 	{
-<span class="fc" id="L913">		double ret = defaultValue;</span>
+<span class="nc" id="L913">		double ret = defaultValue;</span>
 		try
 		{
-<span class="pc bpc" id="L916" title="1 of 2 branches missed.">			if (value!=null)</span>
+<span class="nc bnc" id="L916" title="All 2 branches missed.">			if (value!=null)</span>
 			{
 <span class="nc" id="L918">				ret = Double.parseDouble(value.replace(',', '.').trim());</span>
 			}
 		}
-<span class="fc" id="L921">		catch (Exception ex)</span>
+<span class="nc" id="L921">		catch (Exception ex)</span>
 		{
 
 <span class="nc" id="L924">		}</span>
-<span class="fc" id="L925">		return(ret);</span>
+<span class="nc" id="L925">		return(ret);</span>
 	}
 
 	public static double getDoubleValue(Object value, double defaultValue)
 	{
-<span class="nc" id="L930">		double ret = defaultValue;</span>
+<span class="fc" id="L930">		double ret = defaultValue;</span>
 		try
 		{
-<span class="nc bnc" id="L933" title="All 2 branches missed.">			if (value!=null)</span>
+<span class="pc bpc" id="L933" title="1 of 2 branches missed.">			if (value!=null)</span>
 			{
 <span class="nc" id="L935">				ret = ((Double)value).doubleValue();</span>
 			}
 		}
-<span class="nc" id="L938">		catch (Exception ex)</span>
+<span class="fc" id="L938">		catch (Exception ex)</span>
 		{
 
 <span class="nc" id="L941">		}</span>
-<span class="nc" id="L942">		return(ret);</span>
+<span class="fc" id="L942">		return(ret);</span>
 	}
 
 	/**
@@ -949,7 +949,7 @@ import java.util.regex.Pattern;
 	 * @param defaultValue
 	 * @return
 	 */
-	public static BigDecimal getBigDecimalValue(String value,String defaultValue)
+	public static BigDecimal getBigDecimalValue(String value, String defaultValue)
 	{
 <span class="fc" id="L954">		BigDecimal ret = null;</span>
 		try
@@ -963,12 +963,34 @@ import java.util.regex.Pattern;
 <span class="nc" id="L963">				ret = new BigDecimal(defaultValue);</span>
 			}
 		}
-<span class="nc" id="L966">		catch (Exception ex)</span>
+<span class="fc" id="L966">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L968">			ret = BigDecimal.valueOf(0);</span>
+<span class="fc" id="L968">			ret = BigDecimal.valueOf(0);</span>
 <span class="fc" id="L969">		}</span>
 <span class="fc" id="L970">		return ret;</span>
+	}
 
+	/**
+	 * Get BigDecimal value from object. If value is null or not valid BigDecimal representation, return defaultValue.
+	 * @param value - BigDecimal object or value.toString() will be used to parse
+	 * @param defaultValue - default value to return if parsing fails
+	 */
+	public static BigDecimal getBigDecimalValue(Object value, String defaultValue)
+	{
+		try
+		{
+<span class="nc bnc" id="L982" title="All 2 branches missed.">			if (value!=null)</span>
+			{
+<span class="nc bnc" id="L984" title="All 2 branches missed.">				if (value instanceof BigDecimal) {</span>
+<span class="nc" id="L985">					return ((BigDecimal)value);</span>
+				}
+<span class="nc" id="L987">				return getBigDecimalValue(value.toString(), defaultValue);</span>
+			}
+		}
+<span class="nc" id="L990">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L992">		}</span>
+<span class="nc" id="L993">		return new BigDecimal(defaultValue);</span>
 	}
 
 	/**
@@ -979,24 +1001,24 @@ import java.util.regex.Pattern;
 	 */
 	public static BigDecimal getBigDecimalValue(String value)
 	{
-<span class="fc" id="L982">		return getBigDecimalValue(value, &quot;0&quot;);</span>
+<span class="fc" id="L1004">		return getBigDecimalValue(value, &quot;0&quot;);</span>
 	}
 
 	public static long getLongValue(String value, long defaultValue)
 	{
-<span class="fc" id="L987">		long ret = defaultValue;</span>
+<span class="fc" id="L1009">		long ret = defaultValue;</span>
 		try
 		{
-<span class="pc bpc" id="L990" title="1 of 2 branches missed.">			if (value!=null)</span>
+<span class="fc bfc" id="L1012" title="All 2 branches covered.">			if (value!=null)</span>
 			{
-<span class="fc" id="L992">				ret = Long.parseLong(value.replace(',', '.').trim());</span>
+<span class="fc" id="L1014">				ret = Long.parseLong(value.replace(',', '.').trim());</span>
 			}
 		}
-<span class="fc" id="L995">		catch (Exception ex)</span>
+<span class="fc" id="L1017">		catch (Exception ex)</span>
 		{
 
-<span class="fc" id="L998">		}</span>
-<span class="fc" id="L999">		return(ret);</span>
+<span class="fc" id="L1020">		}</span>
+<span class="fc" id="L1021">		return(ret);</span>
 	}
 
 	/**
@@ -1009,12 +1031,12 @@ import java.util.regex.Pattern;
 	 */
 	public static String getParameter(HttpServletRequest request, String name)
 	{
-<span class="fc" id="L1012">		String ret = request.getParameter(name);</span>
-<span class="pc bpc" id="L1013" title="1 of 4 branches missed.">		if (ret!=null &amp;&amp; ret.indexOf('#')!=-1)</span>
+<span class="fc" id="L1034">		String ret = request.getParameter(name);</span>
+<span class="pc bpc" id="L1035" title="1 of 4 branches missed.">		if (ret!=null &amp;&amp; ret.indexOf('#')!=-1)</span>
 		{
-<span class="nc" id="L1015">			ret = ret.substring(0, ret.indexOf('#'));</span>
+<span class="nc" id="L1037">			ret = ret.substring(0, ret.indexOf('#'));</span>
 		}
-<span class="fc" id="L1017">		return org.apache.struts.util.ResponseUtils.filter(ret);</span>
+<span class="fc" id="L1039">		return org.apache.struts.util.ResponseUtils.filter(ret);</span>
 	}
 
 	/**
@@ -1026,11 +1048,11 @@ import java.util.regex.Pattern;
 	 */
 	public static String getRequestAttribute(HttpServletRequest request, String name, String defaultValue)
 	{
-<span class="pc bpc" id="L1029" title="4 of 6 branches missed.">		if (request !=null &amp;&amp; request.getAttribute(name)!=null &amp;&amp; Tools.isNotEmpty((String)request.getAttribute(name)))</span>
+<span class="pc bpc" id="L1051" title="4 of 6 branches missed.">		if (request !=null &amp;&amp; request.getAttribute(name)!=null &amp;&amp; Tools.isNotEmpty((String)request.getAttribute(name)))</span>
 		{
-<span class="nc" id="L1031">			return (String)request.getAttribute(name);</span>
+<span class="nc" id="L1053">			return (String)request.getAttribute(name);</span>
 		}
-<span class="fc" id="L1033">		return defaultValue;</span>
+<span class="fc" id="L1055">		return defaultValue;</span>
 	}
 
 	/**
@@ -1043,32 +1065,32 @@ import java.util.regex.Pattern;
 	 */
 	public static String replace(String src, String oldStr, String newStr)
 	{
-<span class="fc bfc" id="L1046" title="All 2 branches covered.">		if (src == null)</span>
+<span class="fc bfc" id="L1068" title="All 2 branches covered.">		if (src == null)</span>
 		{
-<span class="fc" id="L1048">			return (null);</span>
+<span class="fc" id="L1070">			return (null);</span>
 		}
 
 		//nemozeme pouzit Tools.isEmpty, pretoze to nam trimne medzery aj crlf a podmienka bude zla
-<span class="pc bpc" id="L1052" title="1 of 4 branches missed.">		if (oldStr == null || oldStr.length()==0) return src;</span>
+<span class="pc bpc" id="L1074" title="1 of 4 branches missed.">		if (oldStr == null || oldStr.length()==0) return src;</span>
 
-<span class="fc bfc" id="L1054" title="All 2 branches covered.">		if (src.indexOf(oldStr) == -1)</span>
+<span class="fc bfc" id="L1076" title="All 2 branches covered.">		if (src.indexOf(oldStr) == -1)</span>
 		{
-<span class="fc" id="L1056">			return (src);</span>
+<span class="fc" id="L1078">			return (src);</span>
 		}
 
-<span class="fc" id="L1059">		StringBuilder result = new StringBuilder(src.length() + 50);</span>
-<span class="fc" id="L1060">		int startIndex = 0;</span>
-<span class="fc" id="L1061">		int endIndex = src.indexOf(oldStr);</span>
-<span class="fc" id="L1062">		int failsafe = 0;</span>
-<span class="fc bfc" id="L1063" title="All 4 branches covered.">		while (endIndex != -1 &amp;&amp; failsafe++&lt;2000)</span>
+<span class="fc" id="L1081">		StringBuilder result = new StringBuilder(src.length() + 50);</span>
+<span class="fc" id="L1082">		int startIndex = 0;</span>
+<span class="fc" id="L1083">		int endIndex = src.indexOf(oldStr);</span>
+<span class="fc" id="L1084">		int failsafe = 0;</span>
+<span class="pc bpc" id="L1085" title="1 of 4 branches missed.">		while (endIndex != -1 &amp;&amp; failsafe++&lt;2000)</span>
 		{
-<span class="fc" id="L1065">			result.append(src.substring(startIndex, endIndex));</span>
-<span class="fc" id="L1066">			result.append(newStr);</span>
-<span class="fc" id="L1067">			startIndex = endIndex + oldStr.length();</span>
-<span class="fc" id="L1068">			endIndex = src.indexOf(oldStr, startIndex);</span>
+<span class="fc" id="L1087">			result.append(src.substring(startIndex, endIndex));</span>
+<span class="fc" id="L1088">			result.append(newStr);</span>
+<span class="fc" id="L1089">			startIndex = endIndex + oldStr.length();</span>
+<span class="fc" id="L1090">			endIndex = src.indexOf(oldStr, startIndex);</span>
 		}
-<span class="fc" id="L1070">		result.append(src.substring(startIndex, src.length()));</span>
-<span class="fc" id="L1071">		return result.toString();</span>
+<span class="fc" id="L1092">		result.append(src.substring(startIndex, src.length()));</span>
+<span class="fc" id="L1093">		return result.toString();</span>
 	}
 
 	/**
@@ -1081,23 +1103,23 @@ import java.util.regex.Pattern;
 	 */
 	public static StringBuilder replace(StringBuilder src, String oldStr, String newStr)
 	{
-<span class="pc bpc" id="L1084" title="1 of 2 branches missed.">		if (src == null)</span>
+<span class="pc bpc" id="L1106" title="1 of 2 branches missed.">		if (src == null)</span>
 		{
-<span class="nc" id="L1086">			return (null);</span>
+<span class="nc" id="L1108">			return (null);</span>
 		}
-<span class="pc bpc" id="L1088" title="1 of 4 branches missed.">		if (src.indexOf(oldStr) == -1 || newStr == null)</span>
+<span class="pc bpc" id="L1110" title="1 of 4 branches missed.">		if (src.indexOf(oldStr) == -1 || newStr == null)</span>
 		{
-<span class="fc" id="L1090">			return (src);</span>
+<span class="fc" id="L1112">			return (src);</span>
 		}
-<span class="fc" id="L1092">		int replaceIndex = src.indexOf(oldStr);</span>
-<span class="fc" id="L1093">		int failsafe = 0;</span>
-<span class="pc bpc" id="L1094" title="1 of 4 branches missed.">		while (replaceIndex != -1 &amp;&amp; failsafe++&lt;300)</span>
+<span class="fc" id="L1114">		int replaceIndex = src.indexOf(oldStr);</span>
+<span class="fc" id="L1115">		int failsafe = 0;</span>
+<span class="fc bfc" id="L1116" title="All 4 branches covered.">		while (replaceIndex != -1 &amp;&amp; failsafe++&lt;300)</span>
 		{
-<span class="fc" id="L1096">			src.replace(replaceIndex, replaceIndex+oldStr.length(), newStr);</span>
-<span class="fc" id="L1097">			replaceIndex = src.indexOf(oldStr, replaceIndex+newStr.length());</span>
+<span class="fc" id="L1118">			src.replace(replaceIndex, replaceIndex+oldStr.length(), newStr);</span>
+<span class="fc" id="L1119">			replaceIndex = src.indexOf(oldStr, replaceIndex+newStr.length());</span>
 		}
 
-<span class="fc" id="L1100">		return src;</span>
+<span class="fc" id="L1122">		return src;</span>
 	}
 
 	/**
@@ -1112,20 +1134,20 @@ import java.util.regex.Pattern;
 	 */
 	public static int getNumberSubstring(String src, String subString)
 	{
-<span class="pc bpc" id="L1115" title="1 of 2 branches missed.">		if (src == null)</span>
-<span class="nc" id="L1116">			return (-1);</span>
+<span class="pc bpc" id="L1137" title="1 of 2 branches missed.">		if (src == null)</span>
+<span class="nc" id="L1138">			return (-1);</span>
 
-<span class="pc bpc" id="L1118" title="3 of 6 branches missed.">		if (src.indexOf(subString) == -1 || src.isEmpty() || subString.isEmpty())</span>
-<span class="nc" id="L1119">			return (0);</span>
+<span class="pc bpc" id="L1140" title="3 of 6 branches missed.">		if (src.indexOf(subString) == -1 || src.isEmpty() || subString.isEmpty())</span>
+<span class="nc" id="L1141">			return (0);</span>
 
-<span class="fc" id="L1121">	   int counter = 0;</span>
-<span class="fc" id="L1122">	   Pattern p = Pattern.compile(&quot;\\b&quot; + subString + &quot;\\b&quot;); // co sa ma matchovat, \\b oznacuje hranicu slova, 'medzibankovy' nezapocita, 'iban:' zapocita</span>
-<span class="fc" id="L1123">	   Matcher m = p.matcher(src); // v com sa to ma matchovat</span>
+<span class="fc" id="L1143">	   int counter = 0;</span>
+<span class="fc" id="L1144">	   Pattern p = Pattern.compile(&quot;\\b&quot; + subString + &quot;\\b&quot;); // co sa ma matchovat, \\b oznacuje hranicu slova, 'medzibankovy' nezapocita, 'iban:' zapocita</span>
+<span class="fc" id="L1145">	   Matcher m = p.matcher(src); // v com sa to ma matchovat</span>
 
-<span class="fc bfc" id="L1125" title="All 2 branches covered.">	   while(m.find())</span>
-<span class="fc" id="L1126">	   	counter++;</span>
+<span class="fc bfc" id="L1147" title="All 2 branches covered.">	   while(m.find())</span>
+<span class="fc" id="L1148">	   	counter++;</span>
 
-<span class="fc" id="L1128">		return (counter);</span>
+<span class="fc" id="L1150">		return (counter);</span>
 	}
 
 	/**
@@ -1137,49 +1159,49 @@ import java.util.regex.Pattern;
 	 */
 	public static String replaceIgnoreCase(String src, String oldStr, String newStr)
 	{
-<span class="pc bpc" id="L1140" title="1 of 2 branches missed.">		if (src == null)</span>
+<span class="pc bpc" id="L1162" title="1 of 2 branches missed.">		if (src == null)</span>
 		{
-<span class="nc" id="L1142">			return (null);</span>
+<span class="nc" id="L1164">			return (null);</span>
 		}
-<span class="fc" id="L1144">		String srcLC = src.toLowerCase();</span>
-<span class="fc" id="L1145">		oldStr = oldStr.toLowerCase();</span>
-<span class="pc bpc" id="L1146" title="1 of 2 branches missed.">		if (srcLC.indexOf(oldStr) == -1)</span>
+<span class="fc" id="L1166">		String srcLC = src.toLowerCase();</span>
+<span class="fc" id="L1167">		oldStr = oldStr.toLowerCase();</span>
+<span class="pc bpc" id="L1168" title="1 of 2 branches missed.">		if (srcLC.indexOf(oldStr) == -1)</span>
 		{
-<span class="fc" id="L1148">			return (src);</span>
+<span class="fc" id="L1170">			return (src);</span>
 		}
-<span class="nc" id="L1150">		StringBuilder result = new StringBuilder(src.length() + 50);</span>
-<span class="nc" id="L1151">		int startIndex = 0;</span>
-<span class="nc" id="L1152">		int endIndex = srcLC.indexOf(oldStr);</span>
-<span class="nc bnc" id="L1153" title="All 2 branches missed.">		while (endIndex != -1)</span>
+<span class="nc" id="L1172">		StringBuilder result = new StringBuilder(src.length() + 50);</span>
+<span class="nc" id="L1173">		int startIndex = 0;</span>
+<span class="nc" id="L1174">		int endIndex = srcLC.indexOf(oldStr);</span>
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">		while (endIndex != -1)</span>
 		{
-<span class="nc" id="L1155">			result.append(src.substring(startIndex, endIndex));</span>
-<span class="nc" id="L1156">			result.append(newStr);</span>
-<span class="nc" id="L1157">			startIndex = endIndex + oldStr.length();</span>
-<span class="nc" id="L1158">			endIndex = srcLC.indexOf(oldStr, startIndex);</span>
+<span class="nc" id="L1177">			result.append(src.substring(startIndex, endIndex));</span>
+<span class="nc" id="L1178">			result.append(newStr);</span>
+<span class="nc" id="L1179">			startIndex = endIndex + oldStr.length();</span>
+<span class="nc" id="L1180">			endIndex = srcLC.indexOf(oldStr, startIndex);</span>
 		}
-<span class="nc" id="L1160">		result.append(src.substring(startIndex, src.length()));</span>
-<span class="nc" id="L1161">		return result.toString();</span>
+<span class="nc" id="L1182">		result.append(src.substring(startIndex, src.length()));</span>
+<span class="nc" id="L1183">		return result.toString();</span>
 	}
 
 	public static String URLEncode(String text) { //NOSONAR
-<span class="pc bpc" id="L1165" title="1 of 2 branches missed.">		if (text == null)</span>
-<span class="nc" id="L1166">			return (&quot;&quot;);</span>
+<span class="pc bpc" id="L1187" title="1 of 2 branches missed.">		if (text == null)</span>
+<span class="nc" id="L1188">			return (&quot;&quot;);</span>
 		try {
-<span class="fc" id="L1168">			text = java.net.URLEncoder.encode(text, SetCharacterEncodingFilter.getEncoding());</span>
-<span class="fc" id="L1169">			text = sk.iway.iwcm.Tools.replace(text, &quot;+&quot;, &quot;%20&quot;);</span>
-<span class="nc" id="L1170">		} catch (UnsupportedEncodingException ex) {</span>
-<span class="nc" id="L1171">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L1172">		}</span>
-<span class="fc" id="L1173">		return (text);</span>
+<span class="fc" id="L1190">			text = java.net.URLEncoder.encode(text, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L1191">			text = sk.iway.iwcm.Tools.replace(text, &quot;+&quot;, &quot;%20&quot;);</span>
+<span class="nc" id="L1192">		} catch (UnsupportedEncodingException ex) {</span>
+<span class="nc" id="L1193">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1194">		}</span>
+<span class="fc" id="L1195">		return (text);</span>
 	}
 
 	public static String URLDecode(String text) { //NOSONAR
 		try {
-<span class="fc" id="L1178">			text = java.net.URLDecoder.decode(text, SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L1179">		} catch (UnsupportedEncodingException|IllegalArgumentException ex) {</span>
-<span class="nc" id="L1180">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L1181">		}</span>
-<span class="fc" id="L1182">		return (text);</span>
+<span class="fc" id="L1200">			text = java.net.URLDecoder.decode(text, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L1201">		} catch (UnsupportedEncodingException|IllegalArgumentException ex) {</span>
+<span class="nc" id="L1202">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1203">		}</span>
+<span class="fc" id="L1204">		return (text);</span>
 	}
 
 	/**
@@ -1190,10 +1212,10 @@ import java.util.regex.Pattern;
 	 */
 	public static String sanitizeHttpHeaderParam(String headerParam)
 	{
-<span class="fc bfc" id="L1193" title="All 2 branches covered.">		if (headerParam == null) return null;</span>
-<span class="fc" id="L1194">		headerParam = headerParam.replace('\n', ' ');</span>
-<span class="fc" id="L1195">		headerParam = headerParam.replace('\r', ' ');</span>
-<span class="fc" id="L1196">		return headerParam;</span>
+<span class="fc bfc" id="L1215" title="All 2 branches covered.">		if (headerParam == null) return null;</span>
+<span class="fc" id="L1216">		headerParam = headerParam.replace('\n', ' ');</span>
+<span class="fc" id="L1217">		headerParam = headerParam.replace('\r', ' ');</span>
+<span class="fc" id="L1218">		return headerParam;</span>
 	}
 
 	/**
@@ -1203,26 +1225,26 @@ import java.util.regex.Pattern;
 	 */
 	public static String getRemoteIP(HttpServletRequest request)
 	{
-<span class="fc" id="L1206">		String ip = request.getRemoteAddr();</span>
+<span class="fc" id="L1228">		String ip = request.getRemoteAddr();</span>
 		//priklad: x-forwarded-for: unknown, 195.168.35.4
-<span class="fc" id="L1208">		String xForwardedFor = request.getHeader(&quot;x-forwarded-for&quot;);</span>
-<span class="pc bpc" id="L1209" title="1 of 6 branches missed.">		if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;) &amp;&amp; xForwardedFor != null &amp;&amp; xForwardedFor.length()&gt;4)</span>
+<span class="fc" id="L1230">		String xForwardedFor = request.getHeader(&quot;x-forwarded-for&quot;);</span>
+<span class="pc bpc" id="L1231" title="2 of 6 branches missed.">		if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;) &amp;&amp; xForwardedFor != null &amp;&amp; xForwardedFor.length()&gt;4)</span>
 		{
-<span class="pc bpc" id="L1211" title="2 of 4 branches missed.">			if (&quot;unknown&quot;.equals(xForwardedFor)==false &amp;&amp; xForwardedFor.indexOf(&quot;.&quot;)!=-1)</span>
+<span class="pc bpc" id="L1233" title="2 of 4 branches missed.">			if (&quot;unknown&quot;.equals(xForwardedFor)==false &amp;&amp; xForwardedFor.indexOf(&quot;.&quot;)!=-1)</span>
 			{
-<span class="fc" id="L1213">				String[] values = Tools.getTokens(xForwardedFor, &quot;,&quot;, true);</span>
-<span class="pc bpc" id="L1214" title="1 of 2 branches missed.">				for (String value : values)</span>
+<span class="fc" id="L1235">				String[] values = Tools.getTokens(xForwardedFor, &quot;,&quot;, true);</span>
+<span class="pc bpc" id="L1236" title="1 of 2 branches missed.">				for (String value : values)</span>
                 {
                     //ak tam nie je bodka, je to asi unknown a to ignorujeme
-<span class="pc bpc" id="L1217" title="1 of 2 branches missed.">                    if (value.indexOf(&quot;.&quot;)&lt;1) continue;</span>
+<span class="pc bpc" id="L1239" title="1 of 2 branches missed.">                    if (value.indexOf(&quot;.&quot;)&lt;1) continue;</span>
                     //bereme prvu hodnotu v poradi
-<span class="fc" id="L1219">                    ip = value.trim();</span>
-<span class="fc" id="L1220">                    break;</span>
+<span class="fc" id="L1241">                    ip = value.trim();</span>
+<span class="fc" id="L1242">                    break;</span>
                 }
 			}
 		}
 
-<span class="fc" id="L1225">		return(ip);</span>
+<span class="fc" id="L1247">		return(ip);</span>
 	}
 
 	/**
@@ -1232,49 +1254,49 @@ import java.util.regex.Pattern;
 	 */
 	public static String getRemoteHost(HttpServletRequest request)
 	{
-<span class="fc" id="L1235">		String ip = getRemoteIP(request);</span>
+<span class="fc" id="L1257">		String ip = getRemoteIP(request);</span>
 
-<span class="pc bpc" id="L1237" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;disableReverseDns&quot;)==true) return ip;</span>
+<span class="pc bpc" id="L1259" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;disableReverseDns&quot;)==true) return ip;</span>
 
-<span class="fc" id="L1239">		String host = null;</span>
+<span class="fc" id="L1261">		String host = null;</span>
 
 		try
 		{
-<span class="fc" id="L1243">			request.getSession().setAttribute(StatDB.REMOTE_IP, ip);</span>
-<span class="fc" id="L1244">			host = (String) request.getSession().getAttribute(sk.iway.iwcm.stat.StatDB.REMOTE_HOST);</span>
+<span class="fc" id="L1265">			request.getSession().setAttribute(StatDB.REMOTE_IP, ip);</span>
+<span class="fc" id="L1266">			host = (String) request.getSession().getAttribute(sk.iway.iwcm.stat.StatDB.REMOTE_HOST);</span>
 		}
-<span class="fc" id="L1246">		catch (Exception e)</span>
+<span class="fc" id="L1268">		catch (Exception e)</span>
 		{
 			//uz nie je platna session
-<span class="fc" id="L1249">		}</span>
+<span class="fc" id="L1271">		}</span>
 
-<span class="fc bfc" id="L1251" title="All 2 branches covered.">		if (host == null)</span>
+<span class="fc bfc" id="L1273" title="All 2 branches covered.">		if (host == null)</span>
 		{
-<span class="fc" id="L1253">			host = ip;</span>
+<span class="fc" id="L1275">			host = ip;</span>
 
 			//ip z privatnych rozsahov nepouzijem
-<span class="pc bpc" id="L1256" title="2 of 4 branches missed.">			if (ip.startsWith(&quot;192.168.&quot;) || ip.startsWith(&quot;10.&quot;)) return host;</span>
+<span class="pc bpc" id="L1278" title="2 of 4 branches missed.">			if (ip.startsWith(&quot;192.168.&quot;) || ip.startsWith(&quot;10.&quot;)) return host;</span>
 
 			//skus zdetekovat ci je to IP adresa, alebo meno
 			try
 			{
-<span class="pc bpc" id="L1261" title="1 of 2 branches missed.">				if (host.indexOf(',')!=-1)</span>
+<span class="pc bpc" id="L1283" title="1 of 2 branches missed.">				if (host.indexOf(',')!=-1)</span>
 				{
-<span class="nc" id="L1263">					host = host.substring(0, host.indexOf(',')).trim();</span>
+<span class="nc" id="L1285">					host = host.substring(0, host.indexOf(',')).trim();</span>
 				}
-<span class="fc" id="L1265">				String domain = host.substring(host.lastIndexOf('.') + 1);</span>
-<span class="fc" id="L1266">				Integer.parseInt(domain);</span>
+<span class="fc" id="L1287">				String domain = host.substring(host.lastIndexOf('.') + 1);</span>
+<span class="fc" id="L1288">				Integer.parseInt(domain);</span>
 				//ok je to cislo, inak by sa to zdrbalo
-<span class="fc" id="L1268">				host = InetAddress.getByName(ip).getHostName();</span>
+<span class="fc" id="L1290">				host = InetAddress.getByName(ip).getHostName();</span>
 
-<span class="fc" id="L1270">				request.getSession().setAttribute(sk.iway.iwcm.stat.StatDB.REMOTE_HOST, host);</span>
+<span class="fc" id="L1292">				request.getSession().setAttribute(sk.iway.iwcm.stat.StatDB.REMOTE_HOST, host);</span>
 			}
-<span class="fc" id="L1272">			catch (Exception ex)</span>
+<span class="fc" id="L1294">			catch (Exception ex)</span>
 			{
 
-<span class="fc" id="L1275">			}</span>
+<span class="fc" id="L1297">			}</span>
 		}
-<span class="fc" id="L1277">		return(host);</span>
+<span class="fc" id="L1299">		return(host);</span>
 	}
 
 	/**
@@ -1284,16 +1306,16 @@ import java.util.regex.Pattern;
 	 */
 	public static String getRemoteHost(String ip)
 	{
-<span class="fc" id="L1287">		String host = ip;</span>
+<span class="fc" id="L1309">		String host = ip;</span>
 		try
 		{
-<span class="fc" id="L1290">			host = InetAddress.getByName(ip).getHostName();</span>
+<span class="fc" id="L1312">			host = InetAddress.getByName(ip).getHostName();</span>
 		}
-<span class="nc" id="L1292">		catch (Exception e)</span>
+<span class="nc" id="L1314">		catch (Exception e)</span>
 		{
 
-<span class="fc" id="L1295">		}</span>
-<span class="fc" id="L1296">		return host;</span>
+<span class="fc" id="L1317">		}</span>
+<span class="fc" id="L1318">		return host;</span>
 	}
 
 	/**
@@ -1304,15 +1326,15 @@ import java.util.regex.Pattern;
 	public static boolean isSecure(HttpServletRequest request)
 	{
 		//tu je mozne dorobit ine detekcie, na zaklade nejakej hlavicky (ak SSL nie je riesene Tomcatom)
-<span class="fc" id="L1307">		String headerName = Constants.getString(&quot;requestIsSecureHeaderName&quot;);</span>
-<span class="pc bpc" id="L1308" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;) &amp;&amp; Tools.isNotEmpty(headerName))</span>
+<span class="fc" id="L1329">		String headerName = Constants.getString(&quot;requestIsSecureHeaderName&quot;);</span>
+<span class="pc bpc" id="L1330" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;) &amp;&amp; Tools.isNotEmpty(headerName))</span>
 		{
-<span class="fc" id="L1310">			String secureHeaderValue = request.getHeader(headerName);</span>
+<span class="fc" id="L1332">			String secureHeaderValue = request.getHeader(headerName);</span>
 			//pre rezim kde je priamo http alebo https
-<span class="pc bpc" id="L1312" title="1 of 2 branches missed.">			if (&quot;https&quot;.equalsIgnoreCase(secureHeaderValue)) return true;</span>
+<span class="pc bpc" id="L1334" title="1 of 2 branches missed.">			if (&quot;https&quot;.equalsIgnoreCase(secureHeaderValue)) return true;</span>
 		}
 
-<span class="fc" id="L1315">		return request.isSecure();</span>
+<span class="fc" id="L1337">		return request.isSecure();</span>
 	}
 
 	/**
@@ -1324,18 +1346,18 @@ import java.util.regex.Pattern;
 	 */
 	public static String getCookieValue(javax.servlet.http.Cookie[] cookies, String name, String defaultValue)
 	{
-<span class="fc bfc" id="L1327" title="All 2 branches covered.">		if (cookies == null) return defaultValue;</span>
+<span class="fc bfc" id="L1349" title="All 2 branches covered.">		if (cookies == null) return defaultValue;</span>
 
 		int i;
-<span class="fc" id="L1330">		int len = cookies.length;</span>
-<span class="fc bfc" id="L1331" title="All 2 branches covered.">		for (i=0; i&lt;len; i++)</span>
+<span class="fc" id="L1352">		int len = cookies.length;</span>
+<span class="fc bfc" id="L1353" title="All 2 branches covered.">		for (i=0; i&lt;len; i++)</span>
 		{
-<span class="fc bfc" id="L1333" title="All 2 branches covered.">			if (name.equals(cookies[i].getName()))</span>
+<span class="fc bfc" id="L1355" title="All 2 branches covered.">			if (name.equals(cookies[i].getName()))</span>
 			{
-<span class="fc" id="L1335">				return(cookies[i].getValue());</span>
+<span class="fc" id="L1357">				return(cookies[i].getValue());</span>
 			}
 		}
-<span class="fc" id="L1338">		return(defaultValue);</span>
+<span class="fc" id="L1360">		return(defaultValue);</span>
 	}
 
 
@@ -1347,7 +1369,7 @@ import java.util.regex.Pattern;
 	 */
 	public static String[] getTokens(String groups, String delimiter)
 	{
-<span class="fc" id="L1350">		return(getTokens(groups, delimiter, true));</span>
+<span class="fc" id="L1372">		return(getTokens(groups, delimiter, true));</span>
 	}
 
 	/**
@@ -1359,38 +1381,38 @@ import java.util.regex.Pattern;
 	 */
 	public static String[] getTokens(String groups, String delimiter, boolean doTrim)
 	{
-<span class="fc" id="L1362">		String[] ret = new String[0];</span>
+<span class="fc" id="L1384">		String[] ret = new String[0];</span>
 		StringTokenizer st;
-<span class="fc" id="L1364">		int i = 0;</span>
+<span class="fc" id="L1386">		int i = 0;</span>
 		String s;
 		try
 		{
-<span class="fc bfc" id="L1368" title="All 2 branches covered.">			if (Tools.isNotEmpty(groups))</span>
+<span class="fc bfc" id="L1390" title="All 2 branches covered.">			if (Tools.isNotEmpty(groups))</span>
 			{
-<span class="fc" id="L1370">				st = new StringTokenizer(groups, delimiter);</span>
-<span class="fc" id="L1371">				ret = new String[st.countTokens()];</span>
-<span class="fc bfc" id="L1372" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
+<span class="fc" id="L1392">				st = new StringTokenizer(groups, delimiter);</span>
+<span class="fc" id="L1393">				ret = new String[st.countTokens()];</span>
+<span class="fc bfc" id="L1394" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
 				{
-<span class="fc" id="L1374">					s = st.nextToken();</span>
-<span class="pc bpc" id="L1375" title="1 of 2 branches missed.">					if (doTrim) s = s.trim();</span>
-<span class="fc" id="L1376">					ret[i++] = s;</span>
+<span class="fc" id="L1396">					s = st.nextToken();</span>
+<span class="pc bpc" id="L1397" title="1 of 2 branches missed.">					if (doTrim) s = s.trim();</span>
+<span class="fc" id="L1398">					ret[i++] = s;</span>
 				}
 			}
 		}
-<span class="nc" id="L1380">		catch (Exception e)</span>
+<span class="nc" id="L1402">		catch (Exception e)</span>
 		{
-<span class="nc" id="L1382">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L1383">		}</span>
-<span class="fc" id="L1384">		return(ret);</span>
+<span class="nc" id="L1404">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L1405">		}</span>
+<span class="fc" id="L1406">		return(ret);</span>
 
 	}
 
 	public String[] split(String groups, String delimiter) {
-<span class="nc" id="L1389">		return split(groups, delimiter, true);</span>
+<span class="nc" id="L1411">		return split(groups, delimiter, true);</span>
 	}
 
 	public String[] split(String groups, String delimiter, boolean doTrim) {
-<span class="nc" id="L1393">		return getTokens(groups, delimiter, doTrim);</span>
+<span class="nc" id="L1415">		return getTokens(groups, delimiter, doTrim);</span>
 	}
 
 	/**
@@ -1401,16 +1423,31 @@ import java.util.regex.Pattern;
 	 */
 	public static int[] getTokensInt(String groups, String delimiter)
 	{
-<span class="fc bfc" id="L1404" title="All 2 branches covered.">		if (Tools.isEmpty(groups)) return new int[0];</span>
-<span class="fc" id="L1405">		String[] retStr = getTokens(groups, delimiter, true);</span>
-<span class="fc" id="L1406">		int[] retInt = new int[retStr.length];</span>
-<span class="fc bfc" id="L1407" title="All 2 branches covered.">		for (int i=0; i&lt;retInt.length; i++)</span>
+<span class="fc bfc" id="L1426" title="All 2 branches covered.">		if (Tools.isEmpty(groups)) return new int[0];</span>
+<span class="fc" id="L1427">		String[] retStr = getTokens(groups, delimiter, true);</span>
+<span class="fc" id="L1428">		int[] retInt = new int[retStr.length];</span>
+<span class="fc bfc" id="L1429" title="All 2 branches covered.">		for (int i=0; i&lt;retInt.length; i++)</span>
 		{
-<span class="fc" id="L1409">			retInt[i] = Tools.getIntValue(retStr[i], 0);</span>
+<span class="fc" id="L1431">			retInt[i] = Tools.getIntValue(retStr[i], 0);</span>
 
 		}
-<span class="fc" id="L1412">		return(retInt);</span>
+<span class="fc" id="L1434">		return(retInt);</span>
 
+	}
+
+	/**
+	 * Vrati pole typu Integer s jednotlivymi polozkami v retazci
+	 * @param groups
+	 * @param delimiter
+	 * @return
+	 */
+	public static Integer[] getTokensInteger(String groups, String delimiter)
+	{
+<span class="fc" id="L1446">		int[] ints = getTokensInt(groups, delimiter);</span>
+
+<span class="fc bfc" id="L1448" title="All 2 branches covered.">		if(ints.length &lt; 1) return new Integer[0];</span>
+
+<span class="fc" id="L1450">		return Arrays.stream(ints).boxed().toArray(Integer[]::new);</span>
 	}
 
 	/**
@@ -1423,14 +1460,14 @@ import java.util.regex.Pattern;
 	 */
 	public static int getDocId(HttpServletRequest request)
 	{
-<span class="fc" id="L1426">		int docId = Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1);</span>
-<span class="fc" id="L1427">      DocDetails docDetails = (DocDetails)request.getAttribute(&quot;docDetails&quot;);</span>
-<span class="fc bfc" id="L1428" title="All 2 branches covered.">      if (docDetails != null)</span>
+<span class="fc" id="L1463">		int docId = Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1);</span>
+<span class="fc" id="L1464">      DocDetails docDetails = (DocDetails)request.getAttribute(&quot;docDetails&quot;);</span>
+<span class="fc bfc" id="L1465" title="All 2 branches covered.">      if (docDetails != null)</span>
       {
       	//Logger.println(Tools.class, &quot;JSP REMAP DOC docId=&quot;+docDetails.getDocId());
-<span class="fc" id="L1431">      	docId = docDetails.getDocId();</span>
+<span class="fc" id="L1468">      	docId = docDetails.getDocId();</span>
       }
-<span class="fc" id="L1433">      return(docId);</span>
+<span class="fc" id="L1470">      return(docId);</span>
 	}
 
 	/**
@@ -1443,18 +1480,18 @@ import java.util.regex.Pattern;
 	{
 		try
 		{
-<span class="nc" id="L1446">			int start = url.indexOf(paramName);</span>
-<span class="nc" id="L1447">			StringTokenizer st = new StringTokenizer(url.substring(start+paramName.length()+1), &quot; &amp;#&quot;);</span>
-<span class="nc bnc" id="L1448" title="All 2 branches missed.">			if (st.hasMoreTokens())</span>
+<span class="nc" id="L1483">			int start = url.indexOf(paramName);</span>
+<span class="nc" id="L1484">			StringTokenizer st = new StringTokenizer(url.substring(start+paramName.length()+1), &quot; &amp;#&quot;);</span>
+<span class="nc bnc" id="L1485" title="All 2 branches missed.">			if (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L1450">				return(st.nextToken().trim());</span>
+<span class="nc" id="L1487">				return(st.nextToken().trim());</span>
 			}
 		}
-<span class="nc" id="L1453">		catch (Exception ex)</span>
+<span class="nc" id="L1490">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1455">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1456">		}</span>
-<span class="nc" id="L1457">		return(null);</span>
+<span class="nc" id="L1492">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1493">		}</span>
+<span class="nc" id="L1494">		return(null);</span>
 	}
 
 	/**
@@ -1466,64 +1503,64 @@ import java.util.regex.Pattern;
 	 */
 	public static String addParameterToUrl(String url, String paramName, String paramValue)
 	{
-<span class="pc bpc" id="L1469" title="2 of 4 branches missed.">		if(paramName == null || paramValue == null) return url;</span>
+<span class="pc bpc" id="L1506" title="2 of 4 branches missed.">		if(paramName == null || paramValue == null) return url;</span>
 
-<span class="fc" id="L1471">		paramName = Tools.URLEncode(paramName);</span>
+<span class="fc" id="L1508">		paramName = Tools.URLEncode(paramName);</span>
 
-<span class="pc bpc" id="L1473" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramName+&quot;=&quot;+Tools.URLEncode(paramValue));</span>
+<span class="pc bpc" id="L1510" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramName+&quot;=&quot;+Tools.URLEncode(paramValue));</span>
 
-<span class="pc bpc" id="L1475" title="3 of 6 branches missed.">		if (url.indexOf(&quot;?&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;amp;&quot;+paramName+&quot;=&quot;)!=-1)</span>
+<span class="pc bpc" id="L1512" title="3 of 6 branches missed.">		if (url.indexOf(&quot;?&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;amp;&quot;+paramName+&quot;=&quot;)!=-1)</span>
 		{
-<span class="nc" id="L1477">			return(url);</span>
+<span class="nc" id="L1514">			return(url);</span>
 		}
 
-<span class="fc bfc" id="L1480" title="All 2 branches covered.">		if (url.indexOf('?')==-1)</span>
+<span class="pc bpc" id="L1517" title="1 of 2 branches missed.">		if (url.indexOf('?')==-1)</span>
 		{
-<span class="fc" id="L1482">			return(url + &quot;?&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
+<span class="fc" id="L1519">			return(url + &quot;?&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
 		}
-<span class="fc" id="L1484">		return(url + &quot;&amp;amp;&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
+<span class="nc" id="L1521">		return(url + &quot;&amp;amp;&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
 	}
 
 	public static String addParameterToUrlNoAmp(String url, String paramName, String paramValue)
 	{
-<span class="pc bpc" id="L1489" title="2 of 4 branches missed.">		if(paramName == null || paramValue == null) return url;</span>
+<span class="pc bpc" id="L1526" title="2 of 4 branches missed.">		if(paramName == null || paramValue == null) return url;</span>
 
-<span class="fc" id="L1491">		paramName = Tools.URLEncode(paramName);</span>
+<span class="fc" id="L1528">		paramName = Tools.URLEncode(paramName);</span>
 
-<span class="pc bpc" id="L1493" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramName+&quot;=&quot;+Tools.URLEncode(paramValue));</span>
+<span class="pc bpc" id="L1530" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramName+&quot;=&quot;+Tools.URLEncode(paramValue));</span>
 
-<span class="pc bpc" id="L1495" title="3 of 6 branches missed.">		if (url.indexOf(&quot;?&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;amp;&quot;+paramName+&quot;=&quot;)!=-1)</span>
+<span class="pc bpc" id="L1532" title="3 of 6 branches missed.">		if (url.indexOf(&quot;?&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;&quot;+paramName+&quot;=&quot;)!=-1 || url.indexOf(&quot;&amp;amp;&quot;+paramName+&quot;=&quot;)!=-1)</span>
 		{
-<span class="nc" id="L1497">			return(url);</span>
+<span class="nc" id="L1534">			return(url);</span>
 		}
 
-<span class="fc bfc" id="L1500" title="All 2 branches covered.">		if (url.indexOf('?')==-1)</span>
+<span class="fc bfc" id="L1537" title="All 2 branches covered.">		if (url.indexOf('?')==-1)</span>
 		{
-<span class="fc" id="L1502">			return(url + &quot;?&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
+<span class="fc" id="L1539">			return(url + &quot;?&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
 		}
-<span class="fc" id="L1504">		return(url + &quot;&amp;&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
+<span class="fc" id="L1541">		return(url + &quot;&amp;&quot; + paramName + &quot;=&quot; + Tools.URLEncode(paramValue));</span>
 	}
 
 	public static String addParametersToUrl(String url, String paramNameValue)
 	{
-<span class="pc bpc" id="L1509" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramNameValue);</span>
+<span class="pc bpc" id="L1546" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramNameValue);</span>
 
-<span class="pc bpc" id="L1511" title="1 of 2 branches missed.">		if (url.indexOf('?')==-1)</span>
+<span class="pc bpc" id="L1548" title="1 of 2 branches missed.">		if (url.indexOf('?')==-1)</span>
 		{
-<span class="fc" id="L1513">			return(url + &quot;?&quot; + paramNameValue);</span>
+<span class="fc" id="L1550">			return(url + &quot;?&quot; + paramNameValue);</span>
 		}
-<span class="nc" id="L1515">		return(url + &quot;&amp;amp;&quot; + paramNameValue);</span>
+<span class="nc" id="L1552">		return(url + &quot;&amp;amp;&quot; + paramNameValue);</span>
 	}
 
 	public static String addParametersToUrlNoAmp(String url, String paramNameValue)
 	{
-<span class="pc bpc" id="L1520" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramNameValue);</span>
+<span class="pc bpc" id="L1557" title="1 of 2 branches missed.">		if (url == null) return(&quot;?&quot;+paramNameValue);</span>
 
-<span class="fc bfc" id="L1522" title="All 2 branches covered.">		if (url.indexOf('?')==-1)</span>
+<span class="fc bfc" id="L1559" title="All 2 branches covered.">		if (url.indexOf('?')==-1)</span>
 		{
-<span class="fc" id="L1524">			return(url + &quot;?&quot; + paramNameValue);</span>
+<span class="fc" id="L1561">			return(url + &quot;?&quot; + paramNameValue);</span>
 		}
-<span class="fc" id="L1526">		return(url + &quot;&amp;&quot; + paramNameValue);</span>
+<span class="fc" id="L1563">		return(url + &quot;&amp;&quot; + paramNameValue);</span>
 	}
 
 	/**
@@ -1533,35 +1570,35 @@ import java.util.regex.Pattern;
 	 */
 	public static String getBaseLink(HttpServletRequest request, String[] skipNames)
 	{
-<span class="nc" id="L1536">		String baseLink = PathFilter.getOrigPath(request);</span>
-<span class="nc" id="L1537">		Enumeration&lt;String&gt; parameters = request.getParameterNames();</span>
-<span class="nc bnc" id="L1538" title="All 2 branches missed.">		while (parameters.hasMoreElements())</span>
+<span class="fc" id="L1573">		String baseLink = PathFilter.getOrigPath(request);</span>
+<span class="fc" id="L1574">		Enumeration&lt;String&gt; parameters = request.getParameterNames();</span>
+<span class="fc bfc" id="L1575" title="All 2 branches covered.">		while (parameters.hasMoreElements())</span>
 		{
-<span class="nc" id="L1540">		   String name = parameters.nextElement();</span>
-<span class="nc bnc" id="L1541" title="All 2 branches missed.">		   if (&quot;docid&quot;.equals(name)) continue;</span>
+<span class="fc" id="L1577">		   String name = parameters.nextElement();</span>
+<span class="pc bpc" id="L1578" title="1 of 2 branches missed.">		   if (&quot;docid&quot;.equals(name)) continue;</span>
 
-<span class="nc" id="L1543">		   boolean skipParam = false;</span>
-<span class="nc bnc" id="L1544" title="All 4 branches missed.">		   if (skipNames!=null &amp;&amp; skipNames.length&gt;0)</span>
+<span class="nc" id="L1580">		   boolean skipParam = false;</span>
+<span class="nc bnc" id="L1581" title="All 4 branches missed.">		   if (skipNames!=null &amp;&amp; skipNames.length&gt;0)</span>
 		   {
-<span class="nc bnc" id="L1546" title="All 2 branches missed.">		   	for (int s=0; s&lt;skipNames.length; s++)</span>
+<span class="nc bnc" id="L1583" title="All 2 branches missed.">		   	for (int s=0; s&lt;skipNames.length; s++)</span>
 		   	{
-<span class="nc bnc" id="L1548" title="All 2 branches missed.">		   		if (skipNames[s].equals(name))</span>
+<span class="nc bnc" id="L1585" title="All 2 branches missed.">		   		if (skipNames[s].equals(name))</span>
 		   		{
-<span class="nc" id="L1550">		   			skipParam = true;</span>
-<span class="nc" id="L1551">		   			break;</span>
+<span class="nc" id="L1587">		   			skipParam = true;</span>
+<span class="nc" id="L1588">		   			break;</span>
 		   		}
 		   	}
 		   }
-<span class="nc bnc" id="L1555" title="All 2 branches missed.">		   if (skipParam) continue;</span>
+<span class="nc bnc" id="L1592" title="All 2 branches missed.">		   if (skipParam) continue;</span>
 
-<span class="nc" id="L1557">		   String[] values = request.getParameterValues(name);</span>
-<span class="nc bnc" id="L1558" title="All 2 branches missed.">		   for (int i=0; i&lt;values.length; i++)</span>
+<span class="nc" id="L1594">		   String[] values = request.getParameterValues(name);</span>
+<span class="nc bnc" id="L1595" title="All 2 branches missed.">		   for (int i=0; i&lt;values.length; i++)</span>
 		   {
-<span class="nc" id="L1560">			   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);</span>
-<span class="nc" id="L1561">			   baseLink = addParameterToUrl(baseLink, name, value);</span>
+<span class="nc" id="L1597">			   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);</span>
+<span class="nc" id="L1598">			   baseLink = addParameterToUrl(baseLink, name, value);</span>
 		   }
-<span class="nc" id="L1563">		}</span>
-<span class="nc" id="L1564">		return baseLink;</span>
+<span class="nc" id="L1600">		}</span>
+<span class="fc" id="L1601">		return baseLink;</span>
 	}
 
 	/**
@@ -1574,28 +1611,28 @@ import java.util.regex.Pattern;
 	public static String getCleanBody(String data, String start, String end)
 	{
 		//odstran vsetko pred &lt;body&gt; a po &lt;/body&gt;
-<span class="nc" id="L1577">		String data_lcase = data.toLowerCase();</span>
-<span class="nc" id="L1578">		start = start.toLowerCase();</span>
-<span class="nc" id="L1579">		end = end.toLowerCase();</span>
-<span class="nc" id="L1580">		int index = data_lcase.indexOf(start);</span>
-<span class="nc bnc" id="L1581" title="All 2 branches missed.">		if (index != -1)</span>
+<span class="nc" id="L1614">		String data_lcase = data.toLowerCase();</span>
+<span class="nc" id="L1615">		start = start.toLowerCase();</span>
+<span class="nc" id="L1616">		end = end.toLowerCase();</span>
+<span class="nc" id="L1617">		int index = data_lcase.indexOf(start);</span>
+<span class="nc bnc" id="L1618" title="All 2 branches missed.">		if (index != -1)</span>
 		{
-<span class="nc bnc" id="L1583" title="All 2 branches missed.">			if (index &gt; 0)</span>
+<span class="nc bnc" id="L1620" title="All 2 branches missed.">			if (index &gt; 0)</span>
 			{
-<span class="nc" id="L1585">				int index2 = data_lcase.indexOf(&quot;&gt;&quot;, index + 1);</span>
-<span class="nc bnc" id="L1586" title="All 4 branches missed.">				if (index2 &gt; index &amp;&amp; index2 &lt; data_lcase.length())</span>
+<span class="nc" id="L1622">				int index2 = data_lcase.indexOf(&quot;&gt;&quot;, index + 1);</span>
+<span class="nc bnc" id="L1623" title="All 4 branches missed.">				if (index2 &gt; index &amp;&amp; index2 &lt; data_lcase.length())</span>
 				{
-<span class="nc" id="L1588">					data = data.substring(index2 + 1);</span>
+<span class="nc" id="L1625">					data = data.substring(index2 + 1);</span>
 				}
 			}
 
-<span class="nc" id="L1592">			index = data.toLowerCase().indexOf(end);</span>
-<span class="nc bnc" id="L1593" title="All 2 branches missed.">			if (index &gt; 0)</span>
+<span class="nc" id="L1629">			index = data.toLowerCase().indexOf(end);</span>
+<span class="nc bnc" id="L1630" title="All 2 branches missed.">			if (index &gt; 0)</span>
 			{
-<span class="nc" id="L1595">				data = data.substring(0, index);</span>
+<span class="nc" id="L1632">				data = data.substring(0, index);</span>
 			}
 		}
-<span class="nc" id="L1598">		return (data);</span>
+<span class="nc" id="L1635">		return (data);</span>
 	}
 	/**
 	 * vrati String a ak je null tak defaultValue
@@ -1605,9 +1642,9 @@ import java.util.regex.Pattern;
 	 */
 	public static String getStringValue(String value, String defaultValue)
 	{
-<span class="fc" id="L1608">		String ret = defaultValue;</span>
-<span class="fc bfc" id="L1609" title="All 2 branches covered.">		if(value != null) ret = value;</span>
-<span class="fc" id="L1610">		return(ret);</span>
+<span class="fc" id="L1645">		String ret = defaultValue;</span>
+<span class="fc bfc" id="L1646" title="All 2 branches covered.">		if(value != null) ret = value;</span>
+<span class="fc" id="L1647">		return(ret);</span>
 	}
 
 	/**
@@ -1618,16 +1655,16 @@ import java.util.regex.Pattern;
 	 */
 	public static List&lt;String&gt; getStringListValue(String[] value)
 	{
-<span class="pc bpc" id="L1621" title="1 of 2 branches missed.">		if (value == null) {</span>
-<span class="nc" id="L1622">			return Collections.emptyList();</span>
+<span class="pc bpc" id="L1658" title="1 of 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L1659">			return Collections.emptyList();</span>
 		}
-<span class="fc" id="L1624">		return Arrays.asList(value);</span>
+<span class="fc" id="L1661">		return Arrays.asList(value);</span>
 	}
 
 	public static void doNotVerifyCertificates()
 	{
-<span class="nc" id="L1629">		doNotVerifyCertificates(null); //NOSONAR</span>
-<span class="nc" id="L1630">	}</span>
+<span class="fc" id="L1666">		doNotVerifyCertificates(null); //NOSONAR</span>
+<span class="fc" id="L1667">	}</span>
 
 	/**
 	 * Nastavi neverifikaciu certifikatov pre SSL spojenie
@@ -1635,73 +1672,73 @@ import java.util.regex.Pattern;
 	@SuppressWarnings({&quot;java:S4830&quot;, &quot;java:S1186&quot;})
 	public static SSLContext doNotVerifyCertificates(String host)
 	{
-<span class="fc" id="L1638">		SSLContext sc = null;</span>
+<span class="fc" id="L1675">		SSLContext sc = null;</span>
 		try
 		{
 			// Create a trust manager that does not validate certificate chains
-<span class="fc" id="L1642">			TrustManager[] trustAllCerts = new TrustManager[]{new X509ExtendedTrustManager()</span>
-<span class="fc" id="L1643">			{</span>
+<span class="fc" id="L1679">			TrustManager[] trustAllCerts = new TrustManager[]{new X509ExtendedTrustManager()</span>
+<span class="fc" id="L1680">			{</span>
 				@Override
 				public X509Certificate[] getAcceptedIssuers() {
-<span class="nc" id="L1646">					return new X509Certificate[]{};</span>
+<span class="nc" id="L1683">					return new X509Certificate[]{};</span>
 				}
 
 				@Override
 				public void checkClientTrusted(X509Certificate[] chain, String authType) {
-<span class="nc" id="L1651">				}</span>
+<span class="nc" id="L1688">				}</span>
 
 				@Override
 				public void checkServerTrusted(X509Certificate[] chain, String authType) {
-<span class="nc" id="L1655">				}</span>
+<span class="nc" id="L1692">				}</span>
 
 				@Override
 				public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {
-<span class="nc" id="L1659">				}</span>
+<span class="nc" id="L1696">				}</span>
 
 				@Override
 				public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {
-<span class="fc" id="L1663">				}</span>
+<span class="fc" id="L1700">				}</span>
 
 				@Override
 				public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
-<span class="nc" id="L1667">				}</span>
+<span class="nc" id="L1704">				}</span>
 
 				@Override
 				public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
-<span class="nc" id="L1671">				}</span>
+<span class="nc" id="L1708">				}</span>
 			}};
 			// Install the all-trusting trust manager
-<span class="fc" id="L1674">			sc = SSLContext.getInstance(&quot;SSL&quot;); //NOSONAR</span>
-<span class="fc" id="L1675">			sc.init(null, trustAllCerts, null);</span>
-<span class="fc" id="L1676">			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());</span>
+<span class="fc" id="L1711">			sc = SSLContext.getInstance(&quot;SSL&quot;); //NOSONAR</span>
+<span class="fc" id="L1712">			sc.init(null, trustAllCerts, null);</span>
+<span class="fc" id="L1713">			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());</span>
 
 			/**
 			 * pri httpS preskakuje kontrolu na verifikaciu hostname s SSL certifikatom
 			 * riesenie chyby javax.net.ssl.SSLHandshakeException: No subject alternative DNS name matching 'moja.domena' found.
 			 * vynimku je mozne zadat cez konf. premennu httpsDnsNameMatchingExceptions
 			 */
-<span class="fc" id="L1683">			String httpsDnsNameMatchingExceptions = Constants.getString(&quot;httpsDnsNameMatchingExceptions&quot;);</span>
-<span class="pc bpc" id="L1684" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(httpsDnsNameMatchingExceptions))</span>
+<span class="fc" id="L1720">			String httpsDnsNameMatchingExceptions = Constants.getString(&quot;httpsDnsNameMatchingExceptions&quot;);</span>
+<span class="pc bpc" id="L1721" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(httpsDnsNameMatchingExceptions))</span>
 			{
-<span class="nc bnc" id="L1686" title="All 2 branches missed.">				if(Tools.isAnyEmpty(host, httpsDnsNameMatchingExceptions) == false)</span>
+<span class="nc bnc" id="L1723" title="All 2 branches missed.">				if(Tools.isAnyEmpty(host, httpsDnsNameMatchingExceptions) == false)</span>
 				{
-<span class="nc" id="L1688">					Logger.debug(Tools.class, &quot;HttpsDnsNameMatchingExceptions: Checking: &quot;+host+&quot; vs &quot;+httpsDnsNameMatchingExceptions);</span>
-<span class="nc bnc" id="L1689" title="All 2 branches missed.">					for(String hostException : Tools.getTokens(httpsDnsNameMatchingExceptions, &quot;,&quot;, true))</span>
+<span class="nc" id="L1725">					Logger.debug(Tools.class, &quot;HttpsDnsNameMatchingExceptions: Checking: &quot;+host+&quot; vs &quot;+httpsDnsNameMatchingExceptions);</span>
+<span class="nc bnc" id="L1726" title="All 2 branches missed.">					for(String hostException : Tools.getTokens(httpsDnsNameMatchingExceptions, &quot;,&quot;, true))</span>
 					{
-<span class="nc bnc" id="L1691" title="All 6 branches missed.">						if(hostException != null &amp;&amp; hostException.length() &gt; 2 &amp;&amp; host.endsWith(hostException))</span>
+<span class="nc bnc" id="L1728" title="All 6 branches missed.">						if(hostException != null &amp;&amp; hostException.length() &gt; 2 &amp;&amp; host.endsWith(hostException))</span>
 						{
-<span class="nc" id="L1693">							HttpsURLConnection.setDefaultHostnameVerifier((s, sslSession) -&gt; true); //NOSONAR</span>
-<span class="nc" id="L1694">							break;</span>
+<span class="nc" id="L1730">							HttpsURLConnection.setDefaultHostnameVerifier((s, sslSession) -&gt; true); //NOSONAR</span>
+<span class="nc" id="L1731">							break;</span>
 						}
 					}
 				}
 			}
 		}
-<span class="nc" id="L1700">		catch (Exception ex)</span>
+<span class="nc" id="L1737">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1702">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L1703">		}</span>
-<span class="fc" id="L1704">		return sc;</span>
+<span class="nc" id="L1739">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1740">		}</span>
+<span class="fc" id="L1741">		return sc;</span>
 	}
 
 	/**
@@ -1712,13 +1749,13 @@ import java.util.regex.Pattern;
 	 */
 	public static String getDayCode(int dayOfWeek)
 	{
-<span class="nc bnc" id="L1715" title="All 2 branches missed.">		if (dayOfWeek==Calendar.SUNDAY) return(&quot;su&quot;);</span>
-<span class="nc bnc" id="L1716" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.MONDAY) return(&quot;mo&quot;);</span>
-<span class="nc bnc" id="L1717" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.TUESDAY) return(&quot;tu&quot;);</span>
-<span class="nc bnc" id="L1718" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.WEDNESDAY) return(&quot;we&quot;);</span>
-<span class="nc bnc" id="L1719" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.THURSDAY) return(&quot;th&quot;);</span>
-<span class="nc bnc" id="L1720" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.FRIDAY) return(&quot;fr&quot;);</span>
-<span class="nc" id="L1721">		else return(&quot;sa&quot;);</span>
+<span class="nc bnc" id="L1752" title="All 2 branches missed.">		if (dayOfWeek==Calendar.SUNDAY) return(&quot;su&quot;);</span>
+<span class="nc bnc" id="L1753" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.MONDAY) return(&quot;mo&quot;);</span>
+<span class="nc bnc" id="L1754" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.TUESDAY) return(&quot;tu&quot;);</span>
+<span class="nc bnc" id="L1755" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.WEDNESDAY) return(&quot;we&quot;);</span>
+<span class="nc bnc" id="L1756" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.THURSDAY) return(&quot;th&quot;);</span>
+<span class="nc bnc" id="L1757" title="All 2 branches missed.">		else if (dayOfWeek==Calendar.FRIDAY) return(&quot;fr&quot;);</span>
+<span class="nc" id="L1758">		else return(&quot;sa&quot;);</span>
 	}
 
 	/**
@@ -1728,25 +1765,25 @@ import java.util.regex.Pattern;
 	 */
 	public static String insertJQuery(HttpServletRequest request)
 	{
-<span class="fc" id="L1731">		boolean alreadyInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryInserted&quot;)) );</span>
-<span class="fc" id="L1732">		request.setAttribute(&quot;jQueryInserted&quot;, &quot;true&quot;);</span>
-<span class="fc bfc" id="L1733" title="All 4 branches covered.">		if (alreadyInserted || &quot;true&quot;.equals(request.getParameter(&quot;isDmail&quot;)))</span>
-<span class="fc" id="L1734">			return &quot;&quot;;</span>
+<span class="fc" id="L1768">		boolean alreadyInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryInserted&quot;)) );</span>
+<span class="fc" id="L1769">		request.setAttribute(&quot;jQueryInserted&quot;, &quot;true&quot;);</span>
+<span class="fc bfc" id="L1770" title="All 4 branches covered.">		if (alreadyInserted || &quot;true&quot;.equals(request.getParameter(&quot;isDmail&quot;)))</span>
+<span class="fc" id="L1771">			return &quot;&quot;;</span>
 		else
 		{
-<span class="fc" id="L1737">			StringBuilder htmlCode = new StringBuilder();</span>
-<span class="pc bpc" id="L1738" title="3 of 4 branches missed.">			if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()) || &quot;iwcm.iway.sk&quot;.equals(request.getServerName())) htmlCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jquery.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
-<span class="nc" id="L1739">			else htmlCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jquery.min.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L1774">			StringBuilder htmlCode = new StringBuilder();</span>
+<span class="pc bpc" id="L1775" title="3 of 4 branches missed.">			if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()) || &quot;iwcm.iway.sk&quot;.equals(request.getServerName())) htmlCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jquery.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L1776">			else htmlCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jquery.min.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
 
-<span class="pc bpc" id="L1741" title="2 of 6 branches missed.">			if (request.getAttribute(&quot;docDetails&quot;)!=null &amp;&amp; request.getAttribute(&quot;pageGroupDetails&quot;)!=null &amp;&amp; request.getAttribute(&quot;commonPageFunctionsInserted&quot;)==null)</span>
+<span class="pc bpc" id="L1778" title="2 of 6 branches missed.">			if (request.getAttribute(&quot;docDetails&quot;)!=null &amp;&amp; request.getAttribute(&quot;pageGroupDetails&quot;)!=null &amp;&amp; request.getAttribute(&quot;commonPageFunctionsInserted&quot;)==null)</span>
 			{
-<span class="fc" id="L1743">				request.setAttribute(&quot;commonPageFunctionsInserted&quot;, &quot;true&quot;);</span>
-<span class="fc" id="L1744">				request.setAttribute(&quot;mailProtection&quot;, true);</span>
-<span class="fc" id="L1745">				htmlCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;).append(PageLng.getUserLng(request)).append(&quot;\&quot; &gt;&lt;/script&gt;&quot;);</span>
-<span class="fc" id="L1746">				htmlCode.append(&quot;&lt;link rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot; media=\&quot;screen\&quot; href=\&quot;/components/form/check_form.css\&quot; /&gt; &quot;);</span>
+<span class="fc" id="L1780">				request.setAttribute(&quot;commonPageFunctionsInserted&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L1781">				request.setAttribute(&quot;mailProtection&quot;, true);</span>
+<span class="fc" id="L1782">				htmlCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;).append(PageLng.getUserLng(request)).append(&quot;\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L1783">				htmlCode.append(&quot;&lt;link rel=\&quot;stylesheet\&quot; type=\&quot;text/css\&quot; media=\&quot;screen\&quot; href=\&quot;/components/form/check_form.css\&quot; /&gt; &quot;);</span>
 			}
 
-<span class="fc" id="L1749">			return htmlCode.toString();</span>
+<span class="fc" id="L1786">			return htmlCode.toString();</span>
 		}
 	}
 
@@ -1757,8 +1794,8 @@ import java.util.regex.Pattern;
 	 */
 	public static String insertJQueryUI(PageContext pageContext, String... modules)
 	{
-<span class="fc" id="L1760">		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
-<span class="fc" id="L1761">		return insertJQueryUI(request, modules);</span>
+<span class="fc" id="L1797">		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();</span>
+<span class="fc" id="L1798">		return insertJQueryUI(request, modules);</span>
 	}
 
 	/**
@@ -1768,116 +1805,116 @@ import java.util.regex.Pattern;
 	 */
 	public static String insertJQueryUI(HttpServletRequest request, String... modules)
 	{
-<span class="fc" id="L1771">		StringBuilder returnCode = new StringBuilder(insertJQuery(request));</span>
-<span class="fc" id="L1772">		boolean coreInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-core-Inserted&quot;)) );</span>
-<span class="fc" id="L1773">		request.setAttribute(&quot;jQueryUI-core-Inserted&quot;, &quot;true&quot;);</span>
-<span class="fc bfc" id="L1774" title="All 2 branches covered.">		if(!coreInserted)</span>
+<span class="fc" id="L1808">		StringBuilder returnCode = new StringBuilder(insertJQuery(request));</span>
+<span class="fc" id="L1809">		boolean coreInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-core-Inserted&quot;)) );</span>
+<span class="fc" id="L1810">		request.setAttribute(&quot;jQueryUI-core-Inserted&quot;, &quot;true&quot;);</span>
+<span class="fc bfc" id="L1811" title="All 2 branches covered.">		if(!coreInserted)</span>
 		{
-<span class="pc bpc" id="L1776" title="1 of 2 branches missed.">			if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()))</span>
-<span class="fc" id="L1777">				returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-core.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="pc bpc" id="L1813" title="1 of 2 branches missed.">			if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()))</span>
+<span class="fc" id="L1814">				returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-core.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
 			else
-<span class="nc" id="L1779">				returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-core.min.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L1816">				returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-core.min.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
 		}
 
-<span class="fc bfc" id="L1782" title="All 2 branches covered.">		if(modules == null)</span>
-<span class="fc" id="L1783">			return returnCode.toString();</span>
+<span class="pc bpc" id="L1819" title="1 of 2 branches missed.">		if(modules == null)</span>
+<span class="nc" id="L1820">			return returnCode.toString();</span>
 
-<span class="fc bfc" id="L1785" title="All 2 branches covered.">		for (String module : modules)</span>
+<span class="fc bfc" id="L1822" title="All 2 branches covered.">		for (String module : modules)</span>
 		{
-<span class="fc" id="L1787">			boolean moduleInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-&quot;+module+&quot;-Inserted&quot;)) );</span>
-<span class="pc bpc" id="L1788" title="1 of 2 branches missed.">			if (moduleInserted==false)</span>
+<span class="fc" id="L1824">			boolean moduleInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-&quot;+module+&quot;-Inserted&quot;)) );</span>
+<span class="pc bpc" id="L1825" title="1 of 2 branches missed.">			if (moduleInserted==false)</span>
 			{
-<span class="fc" id="L1790">				moduleInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-all-Inserted&quot;)) );</span>
+<span class="fc" id="L1827">				moduleInserted = isNotEmpty( (String)(request.getAttribute(&quot;jQueryUI-all-Inserted&quot;)) );</span>
 			}
-<span class="fc" id="L1792">			request.setAttribute(&quot;jQueryUI-&quot;+module+&quot;-Inserted&quot;, &quot;true&quot;);</span>
-<span class="fc bfc" id="L1793" title="All 2 branches covered.">			if(!moduleInserted)</span>
+<span class="fc" id="L1829">			request.setAttribute(&quot;jQueryUI-&quot;+module+&quot;-Inserted&quot;, &quot;true&quot;);</span>
+<span class="fc bfc" id="L1830" title="All 2 branches covered.">			if(!moduleInserted)</span>
 			{
-<span class="pc bpc" id="L1795" title="1 of 2 branches missed.">				if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()))</span>
-<span class="fc" id="L1796">					returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-&quot;).append(module).append(&quot;.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="pc bpc" id="L1832" title="1 of 2 branches missed.">				if (&quot;iwcm.interway.sk&quot;.equals(request.getServerName()))</span>
+<span class="fc" id="L1833">					returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-&quot;).append(module).append(&quot;.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
 				else
-<span class="nc" id="L1798">					returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-&quot;).append(module).append(&quot;.min.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L1835">					returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/jquery-ui-&quot;).append(module).append(&quot;.min.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
 
-<span class="pc bpc" id="L1800" title="1 of 2 branches missed.">				if(&quot;datepicker&quot;.equals(module))</span>
+<span class="fc bfc" id="L1837" title="All 2 branches covered.">				if(&quot;datepicker&quot;.equals(module))</span>
 				{
-<span class="nc" id="L1802">					String lng = &quot;&quot;;</span>
-<span class="nc bnc" id="L1803" title="All 2 branches missed.">					if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
+<span class="fc" id="L1839">					String lng = &quot;&quot;;</span>
+<span class="pc bpc" id="L1840" title="1 of 2 branches missed.">					if (request.getAttribute(&quot;PageLng&quot;)!=null)</span>
 					{
-<span class="nc" id="L1805">						lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
+<span class="fc" id="L1842">						lng = (String)request.getAttribute(&quot;PageLng&quot;);</span>
 					}
 					else
 					{
-<span class="nc" id="L1809">						lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
-<span class="nc bnc" id="L1810" title="All 2 branches missed.">						if (lng != null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
-<span class="nc bnc" id="L1811" title="All 2 branches missed.">						if (lng==null)</span>
+<span class="nc" id="L1846">						lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
+<span class="nc bnc" id="L1847" title="All 2 branches missed.">						if (lng != null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
+<span class="nc bnc" id="L1848" title="All 2 branches missed.">						if (lng==null)</span>
 						{
-<span class="nc" id="L1813">							lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
+<span class="nc" id="L1850">							lng = (String)request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG);</span>
 						}
-<span class="nc bnc" id="L1815" title="All 2 branches missed.">						if (lng == null)</span>
+<span class="nc bnc" id="L1852" title="All 2 branches missed.">						if (lng == null)</span>
 						{
-<span class="nc" id="L1817">							lng = PageLng.getUserLng(request);</span>
+<span class="nc" id="L1854">							lng = PageLng.getUserLng(request);</span>
 						}
 					}
-<span class="nc bnc" id="L1820" title="All 2 branches missed.">					if(Tools.isEmpty(lng))</span>
-<span class="nc" id="L1821">						lng = &quot;sk&quot;;</span>
+<span class="pc bpc" id="L1857" title="1 of 2 branches missed.">					if(Tools.isEmpty(lng))</span>
+<span class="nc" id="L1858">						lng = &quot;sk&quot;;</span>
 
-<span class="nc" id="L1823">					returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/i18n/jqui-datepicker-&quot;).append(lng).append(&quot;.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L1860">					returnCode.append(&quot;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jqui/i18n/jqui-datepicker-&quot;).append(lng).append(&quot;.js\&quot; &gt;&lt;/script&gt;&quot;);</span>
 				}
 			}
 		}
 
-<span class="fc" id="L1828">		return returnCode.toString();</span>
+<span class="fc" id="L1865">		return returnCode.toString();</span>
 	}
 
 	public static String insertAngular2(HttpServletRequest request) {
-<span class="nc" id="L1832">		return insertAngular2(request, true, true);</span>
+<span class="nc" id="L1869">		return insertAngular2(request, true, true);</span>
 	}
 
 	public static String insertAngular2(HttpServletRequest request, boolean minified, boolean insertBaseHref)
 	{
-<span class="nc" id="L1837">		boolean alreadyInserted = Tools.getBooleanValue((String) request.getAttribute(&quot;angular2Inserted&quot;), false);</span>
-<span class="nc" id="L1838">		request.setAttribute(&quot;angular2Inserted&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L1874">		boolean alreadyInserted = Tools.getBooleanValue((String) request.getAttribute(&quot;angular2Inserted&quot;), false);</span>
+<span class="nc" id="L1875">		request.setAttribute(&quot;angular2Inserted&quot;, &quot;true&quot;);</span>
 
-<span class="nc bnc" id="L1840" title="All 2 branches missed.">		if (!alreadyInserted)</span>
+<span class="nc bnc" id="L1877" title="All 2 branches missed.">		if (!alreadyInserted)</span>
 		{
-<span class="nc" id="L1842">			StringBuilder htmlCode = new StringBuilder();</span>
+<span class="nc" id="L1879">			StringBuilder htmlCode = new StringBuilder();</span>
 
-<span class="nc bnc" id="L1844" title="All 2 branches missed.">			if (insertBaseHref) {</span>
-<span class="nc" id="L1845">				DocDetails docDetails = new RequestHelper(request).getDocument();</span>
-<span class="nc bnc" id="L1846" title="All 2 branches missed.">				if (docDetails != null) {</span>
-<span class="nc" id="L1847">					htmlCode.append(&quot;&lt;base href=\&quot;&quot;).append(Tools.getBaseHref(request)).append(docDetails.getDocLink()).append(&quot;/\&quot;&gt;&quot;);</span>
+<span class="nc bnc" id="L1881" title="All 2 branches missed.">			if (insertBaseHref) {</span>
+<span class="nc" id="L1882">				DocDetails docDetails = new RequestHelper(request).getDocument();</span>
+<span class="nc bnc" id="L1883" title="All 2 branches missed.">				if (docDetails != null) {</span>
+<span class="nc" id="L1884">					htmlCode.append(&quot;&lt;base href=\&quot;&quot;).append(Tools.getBaseHref(request)).append(docDetails.getDocLink()).append(&quot;/\&quot;&gt;&quot;);</span>
 				}
 			}
 
-<span class="nc" id="L1851">			String version = Constants.getString(&quot;AngularCDNVersion&quot;);</span>
+<span class="nc" id="L1888">			String version = Constants.getString(&quot;AngularCDNVersion&quot;);</span>
 
-<span class="nc" id="L1853">			htmlCode.append(&quot;&lt;script src=\&quot;https://cdnjs.cloudflare.com/ajax/libs/angular.js/&quot;).append(version).append(&quot;/angular2-polyfills&quot;);</span>
+<span class="nc" id="L1890">			htmlCode.append(&quot;&lt;script src=\&quot;https://cdnjs.cloudflare.com/ajax/libs/angular.js/&quot;).append(version).append(&quot;/angular2-polyfills&quot;);</span>
 
-<span class="nc bnc" id="L1855" title="All 2 branches missed.">			if (minified) {</span>
-<span class="nc" id="L1856">				htmlCode.append(&quot;.min&quot;);</span>
+<span class="nc bnc" id="L1892" title="All 2 branches missed.">			if (minified) {</span>
+<span class="nc" id="L1893">				htmlCode.append(&quot;.min&quot;);</span>
 			}
 
-<span class="nc" id="L1859">			htmlCode.append(&quot;.js\&quot;&gt;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L1896">			htmlCode.append(&quot;.js\&quot;&gt;&lt;/script&gt;&quot;);</span>
 
-<span class="nc" id="L1861">			return htmlCode.toString();</span>
+<span class="nc" id="L1898">			return htmlCode.toString();</span>
 		}
 
-<span class="nc" id="L1864">		return &quot;&quot;;</span>
+<span class="nc" id="L1901">		return &quot;&quot;;</span>
 	}
 
 	public static String getDomainBaseHref(HttpServletRequest request) {
 
-<span class="fc" id="L1869">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L1906">		StringBuilder sb = new StringBuilder();</span>
 
-<span class="fc" id="L1871">		sb.append(&quot;http&quot;);</span>
+<span class="fc" id="L1908">		sb.append(&quot;http&quot;);</span>
 
-<span class="pc bpc" id="L1873" title="1 of 2 branches missed.">		if (Tools.isSecure(request)) {</span>
-<span class="nc" id="L1874">			sb.append(&quot;s&quot;);</span>
+<span class="pc bpc" id="L1910" title="1 of 2 branches missed.">		if (Tools.isSecure(request)) {</span>
+<span class="nc" id="L1911">			sb.append(&quot;s&quot;);</span>
 		}
 
-<span class="fc" id="L1877">		sb.append(&quot;://&quot;);</span>
-<span class="fc" id="L1878">		sb.append(DocDB.getDomain(request));</span>
+<span class="fc" id="L1914">		sb.append(&quot;://&quot;);</span>
+<span class="fc" id="L1915">		sb.append(DocDB.getDomain(request));</span>
 
-<span class="fc" id="L1880">		return sb.toString();</span>
+<span class="fc" id="L1917">		return sb.toString();</span>
 	}
 
 	/**
@@ -1888,69 +1925,69 @@ import java.util.regex.Pattern;
 	 */
 	public static String getBaseHref(HttpServletRequest request)
 	{
-<span class="fc" id="L1891">		String httpServerName = Constants.getString(&quot;httpServerName&quot;);</span>
+<span class="fc" id="L1928">		String httpServerName = Constants.getString(&quot;httpServerName&quot;);</span>
 
-<span class="fc bfc" id="L1893" title="All 2 branches covered.">		if (request == null)</span>
+<span class="fc bfc" id="L1930" title="All 2 branches covered.">		if (request == null)</span>
 		{
-<span class="pc bpc" id="L1895" title="1 of 2 branches missed.">			if (httpServerName.startsWith(&quot;http&quot;)==false) httpServerName = &quot;http://&quot;+httpServerName;</span>
+<span class="pc bpc" id="L1932" title="1 of 2 branches missed.">			if (httpServerName.startsWith(&quot;http&quot;)==false) httpServerName = &quot;http://&quot;+httpServerName;</span>
 
-<span class="pc bpc" id="L1897" title="1 of 2 branches missed.">			if (Tools.isEmpty(httpServerName)) {</span>
+<span class="pc bpc" id="L1934" title="1 of 2 branches missed.">			if (Tools.isEmpty(httpServerName)) {</span>
 				//skus vydedukovat podla requestBeanu
-<span class="nc" id="L1899">				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L1900" title="All 2 branches missed.">				if (rb!=null) return rb.getBaseHref();</span>
-<span class="nc" id="L1901">				return null;</span>
+<span class="nc" id="L1936">				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L1937" title="All 2 branches missed.">				if (rb!=null) return rb.getBaseHref();</span>
+<span class="nc" id="L1938">				return null;</span>
 			}
 
-<span class="fc" id="L1904">			StringBuilder baseHref = new StringBuilder(httpServerName);</span>
+<span class="fc" id="L1941">			StringBuilder baseHref = new StringBuilder(httpServerName);</span>
 
-<span class="pc bpc" id="L1906" title="1 of 2 branches missed.">			if (Constants.getInt(&quot;httpServerPort&quot;) != 80)</span>
+<span class="pc bpc" id="L1943" title="1 of 2 branches missed.">			if (Constants.getInt(&quot;httpServerPort&quot;) != 80)</span>
 			{
-<span class="nc" id="L1908">				baseHref.append(':').append(Constants.getInt(&quot;httpServerPort&quot;));</span>
+<span class="nc" id="L1945">				baseHref.append(':').append(Constants.getInt(&quot;httpServerPort&quot;));</span>
 			}
 
-<span class="fc" id="L1911">			return baseHref.toString();</span>
+<span class="fc" id="L1948">			return baseHref.toString();</span>
 		}
 
-<span class="fc" id="L1914">		StringBuilder baseHref = new StringBuilder();</span>
-<span class="pc bpc" id="L1915" title="1 of 2 branches missed.">		if (Tools.isSecure(request)) baseHref.append(&quot;https&quot;);</span>
-<span class="fc" id="L1916">		else baseHref.append(&quot;http&quot;);</span>
-<span class="fc" id="L1917">		baseHref.append(&quot;://&quot;);</span>
+<span class="fc" id="L1951">		StringBuilder baseHref = new StringBuilder();</span>
+<span class="pc bpc" id="L1952" title="1 of 2 branches missed.">		if (Tools.isSecure(request)) baseHref.append(&quot;https&quot;);</span>
+<span class="fc" id="L1953">		else baseHref.append(&quot;http&quot;);</span>
+<span class="fc" id="L1954">		baseHref.append(&quot;://&quot;);</span>
 
-<span class="pc bpc" id="L1919" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(httpServerName))</span>
+<span class="pc bpc" id="L1956" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(httpServerName))</span>
 		{
-<span class="nc" id="L1921">			baseHref = new StringBuilder(httpServerName);</span>
+<span class="nc" id="L1958">			baseHref = new StringBuilder(httpServerName);</span>
 		}
-<span class="pc bpc" id="L1923" title="2 of 4 branches missed.">		else if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;) &amp;&amp; Tools.isNotEmpty(request.getHeader(&quot;x-forwarded-host&quot;)))</span>
+<span class="pc bpc" id="L1960" title="2 of 4 branches missed.">		else if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;) &amp;&amp; Tools.isNotEmpty(request.getHeader(&quot;x-forwarded-host&quot;)))</span>
 		{
-<span class="nc" id="L1925">			baseHref.append(request.getHeader(&quot;x-forwarded-host&quot;));</span>
+<span class="nc" id="L1962">			baseHref.append(request.getHeader(&quot;x-forwarded-host&quot;));</span>
 		}
 		else
 		{
-<span class="fc" id="L1929">			baseHref.append(Tools.getServerName(request, false));</span>
+<span class="fc" id="L1966">			baseHref.append(Tools.getServerName(request, false));</span>
 		}
 
-<span class="pc bpc" id="L1932" title="1 of 2 branches missed.">        if (Constants.getInt(&quot;httpServerPort&quot;) == -1)</span>
+<span class="pc bpc" id="L1969" title="1 of 2 branches missed.">        if (Constants.getInt(&quot;httpServerPort&quot;) == -1)</span>
         {
             //ak je httpServerPort nastavene na -1 pridame do URL priamo jeho hodnotu (pouziva sa, ked server bezi na viacerych portoch a nie je maskovany navonok)
-<span class="nc bnc" id="L1935" title="All 4 branches missed.">            if (request.getServerPort()!=80 &amp;&amp; request.getServerPort()!=443)</span>
+<span class="nc bnc" id="L1972" title="All 4 branches missed.">            if (request.getServerPort()!=80 &amp;&amp; request.getServerPort()!=443)</span>
             {
-<span class="nc" id="L1937">                baseHref.append(':').append(request.getServerPort());</span>
+<span class="nc" id="L1974">                baseHref.append(':').append(request.getServerPort());</span>
             }
         }
-<span class="pc bpc" id="L1940" title="1 of 2 branches missed.">		else if (Constants.getInt(&quot;httpServerPort&quot;) != 80)</span>
+<span class="pc bpc" id="L1977" title="1 of 2 branches missed.">		else if (Constants.getInt(&quot;httpServerPort&quot;) != 80)</span>
 		{
-<span class="nc" id="L1942">			baseHref.append(':').append(Constants.getInt(&quot;httpServerPort&quot;));</span>
+<span class="nc" id="L1979">			baseHref.append(':').append(Constants.getInt(&quot;httpServerPort&quot;));</span>
 		}
 
-<span class="pc bpc" id="L1945" title="1 of 2 branches missed.">		if (Tools.isEmpty(httpServerName))</span>
+<span class="pc bpc" id="L1982" title="1 of 2 branches missed.">		if (Tools.isEmpty(httpServerName))</span>
 		{
-<span class="pc bpc" id="L1947" title="3 of 4 branches missed.">			if (Tools.isNotEmpty(request.getContextPath()) &amp;&amp; request.getContextPath().equals(&quot;/&quot;)==false)</span>
+<span class="pc bpc" id="L1984" title="3 of 4 branches missed.">			if (Tools.isNotEmpty(request.getContextPath()) &amp;&amp; request.getContextPath().equals(&quot;/&quot;)==false)</span>
 			{
-<span class="nc" id="L1949">				baseHref.append(request.getContextPath());</span>
+<span class="nc" id="L1986">				baseHref.append(request.getContextPath());</span>
 			}
 		}
 
-<span class="fc" id="L1953">		return baseHref.toString();</span>
+<span class="fc" id="L1990">		return baseHref.toString();</span>
 	}
 
 	/**
@@ -1960,18 +1997,18 @@ import java.util.regex.Pattern;
 	 */
 	public static String getBaseHrefLoopback(HttpServletRequest request)
 	{
-<span class="fc" id="L1963">		String baseHref = Constants.getString(&quot;baseHrefLoopback&quot;);</span>
-<span class="pc bpc" id="L1964" title="1 of 2 branches missed.">		if (Tools.isEmpty(baseHref)) baseHref = getBaseHref(request);</span>
-<span class="nc" id="L1965">		else baseHref = Tools.replace(baseHref, &quot;SERVER_NAME&quot;, Tools.getServerName(request));</span>
+<span class="fc" id="L2000">		String baseHref = Constants.getString(&quot;baseHrefLoopback&quot;);</span>
+<span class="pc bpc" id="L2001" title="1 of 2 branches missed.">		if (Tools.isEmpty(baseHref)) baseHref = getBaseHref(request);</span>
+<span class="nc" id="L2002">		else baseHref = Tools.replace(baseHref, &quot;SERVER_NAME&quot;, Tools.getServerName(request));</span>
 
-<span class="fc" id="L1967">		return baseHref;</span>
+<span class="fc" id="L2004">		return baseHref;</span>
 	}
 
 	public static boolean isInteger(String possibleNumber)
 	{
-<span class="fc bfc" id="L1972" title="All 2 branches covered.">		if (possibleNumber == null)</span>
-<span class="fc" id="L1973">			return false;</span>
-<span class="fc" id="L1974">		return possibleNumber.trim().matches(&quot;^-?[0-9]+$&quot;); //NOSONAR</span>
+<span class="fc bfc" id="L2009" title="All 2 branches covered.">		if (possibleNumber == null)</span>
+<span class="fc" id="L2010">			return false;</span>
+<span class="fc" id="L2011">		return possibleNumber.trim().matches(&quot;^-?[0-9]+$&quot;); //NOSONAR</span>
 	}
 
 	/**
@@ -1988,25 +2025,25 @@ import java.util.regex.Pattern;
 	 */
 	public static Calendar extractAgeFrom(String birthId)
 	{
-<span class="nc bnc" id="L1991" title="All 4 branches missed.">		if (birthId == null || birthId.length() &lt; 6)</span>
-<span class="nc" id="L1992">			throw new IllegalArgumentException(&quot;Neplatne rodne cislo: &quot;+birthId);</span>
-<span class="nc" id="L1993">		Calendar now = Calendar.getInstance();</span>
+<span class="nc bnc" id="L2028" title="All 4 branches missed.">		if (birthId == null || birthId.length() &lt; 6)</span>
+<span class="nc" id="L2029">			throw new IllegalArgumentException(&quot;Neplatne rodne cislo: &quot;+birthId);</span>
+<span class="nc" id="L2030">		Calendar now = Calendar.getInstance();</span>
 		//calendar pocita mesiace od 0, ale rodne cislo od 1
-<span class="nc" id="L1995">		now.add(Calendar.MONTH, 1);</span>
+<span class="nc" id="L2032">		now.add(Calendar.MONTH, 1);</span>
 		//pretekajuci kalendar...
-<span class="nc" id="L1997">		now.setLenient(true);</span>
+<span class="nc" id="L2034">		now.setLenient(true);</span>
 		//zistime a odpocitame roky
-<span class="nc bnc" id="L1999" title="All 2 branches missed.">		int birthYear = Integer.parseInt(birthId.substring(0,2)) &gt; (now.get(Calendar.YEAR) - 2000) ?</span>
-<span class="nc" id="L2000">					Integer.parseInt(birthId.substring(0,2)) + 1900 :</span>
-<span class="nc" id="L2001">					Integer.parseInt(birthId.substring(0,2)) + 2000;</span>
-<span class="nc" id="L2002">		now.add(Calendar.YEAR, -birthYear );</span>
+<span class="nc bnc" id="L2036" title="All 2 branches missed.">		int birthYear = Integer.parseInt(birthId.substring(0,2)) &gt; (now.get(Calendar.YEAR) - 2000) ?</span>
+<span class="nc" id="L2037">					Integer.parseInt(birthId.substring(0,2)) + 1900 :</span>
+<span class="nc" id="L2038">					Integer.parseInt(birthId.substring(0,2)) + 2000;</span>
+<span class="nc" id="L2039">		now.add(Calendar.YEAR, -birthYear );</span>
 		//to iste s mesiacmi a dnami
-<span class="nc bnc" id="L2004" title="All 2 branches missed.">		int birthMonth = Integer.parseInt(birthId.substring(2,4)) &gt; 50 ?</span>
-<span class="nc" id="L2005">					Integer.parseInt(birthId.substring(2,4)) - 50:</span>
-<span class="nc" id="L2006">					Integer.parseInt(birthId.substring(2,4));</span>
-<span class="nc" id="L2007">		now.add(Calendar.MONTH,-birthMonth);</span>
-<span class="nc" id="L2008">		now.add(Calendar.DAY_OF_MONTH, - Integer.parseInt(birthId.substring(4,6)));</span>
-<span class="nc" id="L2009">		return now;</span>
+<span class="nc bnc" id="L2041" title="All 2 branches missed.">		int birthMonth = Integer.parseInt(birthId.substring(2,4)) &gt; 50 ?</span>
+<span class="nc" id="L2042">					Integer.parseInt(birthId.substring(2,4)) - 50:</span>
+<span class="nc" id="L2043">					Integer.parseInt(birthId.substring(2,4));</span>
+<span class="nc" id="L2044">		now.add(Calendar.MONTH,-birthMonth);</span>
+<span class="nc" id="L2045">		now.add(Calendar.DAY_OF_MONTH, - Integer.parseInt(birthId.substring(4,6)));</span>
+<span class="nc" id="L2046">		return now;</span>
 	}
 
 	/**
@@ -2018,10 +2055,10 @@ import java.util.regex.Pattern;
 	 */
 	public static int getUserId(HttpServletRequest request)
 	{
-<span class="fc" id="L2021">		int userId = -1;</span>
-<span class="fc" id="L2022">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="fc bfc" id="L2023" title="All 2 branches covered.">		if (user != null) userId = user.getUserId();</span>
-<span class="fc" id="L2024">		return(userId);</span>
+<span class="fc" id="L2058">		int userId = -1;</span>
+<span class="fc" id="L2059">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L2060" title="All 2 branches covered.">		if (user != null) userId = user.getUserId();</span>
+<span class="fc" id="L2061">		return(userId);</span>
 	}
 
 	/**
@@ -2032,16 +2069,16 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean containsOneItem(int[] arrOne, int[] arrTwo)
 	{
-<span class="nc bnc" id="L2035" title="All 8 branches missed.">		if (arrOne==null || arrOne.length==0 || arrTwo==null || arrTwo.length==0) return false;</span>
+<span class="nc bnc" id="L2072" title="All 8 branches missed.">		if (arrOne==null || arrOne.length==0 || arrTwo==null || arrTwo.length==0) return false;</span>
 
-<span class="nc bnc" id="L2037" title="All 2 branches missed.">		for (int one : arrOne)</span>
+<span class="nc bnc" id="L2074" title="All 2 branches missed.">		for (int one : arrOne)</span>
 		{
-<span class="nc bnc" id="L2039" title="All 2 branches missed.">			for (int two : arrTwo)</span>
+<span class="nc bnc" id="L2076" title="All 2 branches missed.">			for (int two : arrTwo)</span>
 			{
-<span class="nc bnc" id="L2041" title="All 2 branches missed.">				if (one == two) return true;</span>
+<span class="nc bnc" id="L2078" title="All 2 branches missed.">				if (one == two) return true;</span>
 			}
 		}
-<span class="nc" id="L2044">		return false;</span>
+<span class="nc" id="L2081">		return false;</span>
 	}
 
 	/**
@@ -2052,13 +2089,13 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean containsOneItem(int[] arrOne, int two)
     {
-<span class="pc bpc" id="L2055" title="1 of 4 branches missed.">        if (arrOne==null || arrOne.length==0) return false;</span>
+<span class="pc bpc" id="L2092" title="1 of 4 branches missed.">        if (arrOne==null || arrOne.length==0) return false;</span>
 
-<span class="fc bfc" id="L2057" title="All 2 branches covered.">        for (int one : arrOne)</span>
+<span class="fc bfc" id="L2094" title="All 2 branches covered.">        for (int one : arrOne)</span>
         {
-<span class="fc bfc" id="L2059" title="All 2 branches covered.">           if (one==two) return true;</span>
+<span class="fc bfc" id="L2096" title="All 2 branches covered.">           if (one==two) return true;</span>
         }
-<span class="fc" id="L2061">        return false;</span>
+<span class="fc" id="L2098">        return false;</span>
     }
 
 	/**
@@ -2069,16 +2106,16 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean containsOneItem(String[] arrOne, String[] arrTwo)
 	{
-<span class="nc bnc" id="L2072" title="All 8 branches missed.">		if (arrOne==null || arrOne.length==0 || arrTwo==null || arrTwo.length==0) return false;</span>
+<span class="nc bnc" id="L2109" title="All 8 branches missed.">		if (arrOne==null || arrOne.length==0 || arrTwo==null || arrTwo.length==0) return false;</span>
 
-<span class="nc bnc" id="L2074" title="All 2 branches missed.">		for (String one : arrOne)</span>
+<span class="nc bnc" id="L2111" title="All 2 branches missed.">		for (String one : arrOne)</span>
 		{
-<span class="nc bnc" id="L2076" title="All 2 branches missed.">			for (String two : arrTwo)</span>
+<span class="nc bnc" id="L2113" title="All 2 branches missed.">			for (String two : arrTwo)</span>
 			{
-<span class="nc bnc" id="L2078" title="All 2 branches missed.">				if (one.equals(two)) return true;</span>
+<span class="nc bnc" id="L2115" title="All 2 branches missed.">				if (one.equals(two)) return true;</span>
 			}
 		}
-<span class="nc" id="L2081">		return false;</span>
+<span class="nc" id="L2118">		return false;</span>
 	}
 
     /**
@@ -2089,13 +2126,13 @@ import java.util.regex.Pattern;
      */
     public static boolean containsOneItem(String[] arrOne, String two)
     {
-<span class="pc bpc" id="L2092" title="3 of 6 branches missed.">        if (arrOne==null || arrOne.length==0 || two==null) return false;</span>
+<span class="pc bpc" id="L2129" title="3 of 6 branches missed.">        if (arrOne==null || arrOne.length==0 || two==null) return false;</span>
 
-<span class="fc bfc" id="L2094" title="All 2 branches covered.">        for (String one : arrOne)</span>
+<span class="fc bfc" id="L2131" title="All 2 branches covered.">        for (String one : arrOne)</span>
         {
-<span class="fc bfc" id="L2096" title="All 2 branches covered.">           if (one.equals(two)) return true;</span>
+<span class="fc bfc" id="L2133" title="All 2 branches covered.">           if (one.equals(two)) return true;</span>
         }
-<span class="fc" id="L2098">        return false;</span>
+<span class="fc" id="L2135">        return false;</span>
     }
 
 	/**
@@ -2103,7 +2140,7 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean doubleEquals(double firstNumber,double secondNumber,double eps)
 	{
-<span class="nc bnc" id="L2106" title="All 2 branches missed.">		return Math.abs( firstNumber - secondNumber ) &lt; eps;</span>
+<span class="nc bnc" id="L2143" title="All 2 branches missed.">		return Math.abs( firstNumber - secondNumber ) &lt; eps;</span>
 	}
 
 	/**
@@ -2114,29 +2151,29 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean doubleEquals(double firstNumber,double secondNumber)
 	{
-<span class="nc" id="L2117">		return doubleEquals(firstNumber, secondNumber,1e-7);</span>
+<span class="nc" id="L2154">		return doubleEquals(firstNumber, secondNumber,1e-7);</span>
 	}
 
 	public static boolean isAnyNotEmpty(String... values)
 	{
-<span class="nc bnc" id="L2122" title="All 2 branches missed.">		for (String value : values)</span>
-<span class="nc bnc" id="L2123" title="All 2 branches missed.">			if (isNotEmpty(value))</span>
-<span class="nc" id="L2124">				return true;</span>
-<span class="nc" id="L2125">		return false;</span>
+<span class="nc bnc" id="L2159" title="All 2 branches missed.">		for (String value : values)</span>
+<span class="nc bnc" id="L2160" title="All 2 branches missed.">			if (isNotEmpty(value))</span>
+<span class="nc" id="L2161">				return true;</span>
+<span class="nc" id="L2162">		return false;</span>
 	}
 
 
 	public static boolean isAnyEmpty(String... values)
 	{
-<span class="fc bfc" id="L2131" title="All 2 branches covered.">		for (String value : values)</span>
-<span class="pc bpc" id="L2132" title="1 of 2 branches missed.">			if (isEmpty(value))</span>
-<span class="nc" id="L2133">				return true;</span>
-<span class="fc" id="L2134">		return false;</span>
+<span class="fc bfc" id="L2168" title="All 2 branches covered.">		for (String value : values)</span>
+<span class="fc bfc" id="L2169" title="All 2 branches covered.">			if (isEmpty(value))</span>
+<span class="fc" id="L2170">				return true;</span>
+<span class="fc" id="L2171">		return false;</span>
 	}
 
 	public static boolean areNotEmpty(String... values)
 	{
-<span class="nc bnc" id="L2139" title="All 2 branches missed.">		return !isAnyEmpty(values);</span>
+<span class="nc bnc" id="L2176" title="All 2 branches missed.">		return !isAnyEmpty(values);</span>
 	}
 
 	/**
@@ -2145,11 +2182,11 @@ import java.util.regex.Pattern;
 	 */
 	public static &lt;T&gt; List&lt;T&gt; filter( List&lt;? extends T&gt; originalList,SelectionFilter&lt;? super T&gt; filter)
 	{
-<span class="nc" id="L2148">		List&lt;T&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L2149" title="All 2 branches missed.">		for (T element : originalList)</span>
-<span class="nc bnc" id="L2150" title="All 2 branches missed.">			if (filter.fullfilsConditions(element))</span>
-<span class="nc" id="L2151">				list.add(element);</span>
-<span class="nc" id="L2152">		return list;</span>
+<span class="nc" id="L2185">		List&lt;T&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L2186" title="All 2 branches missed.">		for (T element : originalList)</span>
+<span class="nc bnc" id="L2187" title="All 2 branches missed.">			if (filter.fullfilsConditions(element))</span>
+<span class="nc" id="L2188">				list.add(element);</span>
+<span class="nc" id="L2189">		return list;</span>
 	}
 
 	/**
@@ -2160,7 +2197,7 @@ import java.util.regex.Pattern;
 	 */
 	public static String getServerName(HttpServletRequest request)
 	{
-<span class="fc" id="L2163">		return getServerName(request, true);</span>
+<span class="fc" id="L2200">		return getServerName(request, true);</span>
 	}
 
 	/**
@@ -2171,28 +2208,32 @@ import java.util.regex.Pattern;
 	 */
 	public static String getServerName(HttpServletRequest request, boolean useAlias)
 	{
-<span class="pc bpc" id="L2174" title="1 of 2 branches missed.">		if (request == null) return null;</span>
+<span class="fc bfc" id="L2211" title="All 2 branches covered.">		if (request == null) return null;</span>
 
-<span class="fc" id="L2176">		String serverName = request.getServerName();</span>
-<span class="pc bpc" id="L2177" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;))</span>
+<span class="fc" id="L2213">		String serverName = request.getServerName();</span>
+<span class="fc bfc" id="L2214" title="All 2 branches covered.">		if (Constants.getBoolean(&quot;serverBeyoundProxy&quot;))</span>
         {
-<span class="fc" id="L2179">			String forwardHost = Tools.sanitizeHttpHeaderParam(request.getHeader(&quot;x-forwarded-host&quot;));</span>
-<span class="pc bpc" id="L2180" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(forwardHost))</span>
+<span class="fc" id="L2216">			String forwardHost = Tools.sanitizeHttpHeaderParam(request.getHeader(&quot;x-forwarded-host&quot;));</span>
+<span class="fc bfc" id="L2217" title="All 2 branches covered.">			if (Tools.isNotEmpty(forwardHost))</span>
 			{
-<span class="nc bnc" id="L2182" title="All 8 branches missed.">				if (forwardHost.contains(&quot;&lt;&quot;)==false &amp;&amp; forwardHost.contains(&quot;&gt;&quot;)==false &amp;&amp; forwardHost.contains(&quot;\&quot;&quot;)==false &amp;&amp; forwardHost.contains(&quot;'&quot;)==false)</span>
+<span class="pc bpc" id="L2219" title="4 of 8 branches missed.">				if (forwardHost.contains(&quot;&lt;&quot;)==false &amp;&amp; forwardHost.contains(&quot;&gt;&quot;)==false &amp;&amp; forwardHost.contains(&quot;\&quot;&quot;)==false &amp;&amp; forwardHost.contains(&quot;'&quot;)==false)</span>
 				{
-<span class="nc" id="L2184">					serverName = forwardHost;</span>
+<span class="fc" id="L2221">					serverName = forwardHost;</span>
 				}
 			}
         }
 
-<span class="fc bfc" id="L2189" title="All 2 branches covered.">		if (useAlias)</span>
+		//sometimes serverName is send with :port at the end by some k8s proxy, remove it
+<span class="fc" id="L2227">		int index = serverName.indexOf(':');</span>
+<span class="fc bfc" id="L2228" title="All 2 branches covered.">		if (index &gt; 0) serverName = serverName.substring(0, index);</span>
+
+<span class="fc bfc" id="L2230" title="All 2 branches covered.">		if (useAlias)</span>
 		{
-<span class="fc" id="L2191">			String domainName = DomainRedirectDB.getDomainFromAlias(serverName);</span>
-<span class="pc bpc" id="L2192" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(domainName)) serverName = domainName;</span>
+<span class="fc" id="L2232">			String domainName = DomainRedirectDB.getDomainFromAlias(serverName);</span>
+<span class="pc bpc" id="L2233" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(domainName)) serverName = domainName;</span>
 		}
 
-<span class="fc" id="L2195">		return (serverName);</span>
+<span class="fc" id="L2236">		return (serverName);</span>
 	}
 
 	/**
@@ -2204,125 +2245,125 @@ import java.util.regex.Pattern;
 	 */
 	public static String getRequestedLink(HttpServletRequest request)
 	{
-<span class="nc" id="L2207">		StringBuilder link = new StringBuilder();</span>
-<span class="nc bnc" id="L2208" title="All 2 branches missed.">		link.append( Tools.isSecure(request) ? &quot;https&quot; : &quot;http&quot; );</span>
-<span class="nc" id="L2209">		link.append(&quot;://&quot;);</span>
-<span class="nc" id="L2210">		link.append(Tools.getServerName(request));</span>
-<span class="nc" id="L2211">		String path = PathFilter.getOrigPath(request);</span>
-<span class="nc bnc" id="L2212" title="All 2 branches missed.">		if (path == null) path = request.getRequestURI();</span>
-<span class="nc" id="L2213">		link.append(path);</span>
-<span class="nc bnc" id="L2214" title="All 2 branches missed.">		if (Tools.isNotEmpty(request.getQueryString()))</span>
+<span class="nc" id="L2248">		StringBuilder link = new StringBuilder();</span>
+<span class="nc bnc" id="L2249" title="All 2 branches missed.">		link.append( Tools.isSecure(request) ? &quot;https&quot; : &quot;http&quot; );</span>
+<span class="nc" id="L2250">		link.append(&quot;://&quot;);</span>
+<span class="nc" id="L2251">		link.append(Tools.getServerName(request));</span>
+<span class="nc" id="L2252">		String path = PathFilter.getOrigPath(request);</span>
+<span class="nc bnc" id="L2253" title="All 2 branches missed.">		if (path == null) path = request.getRequestURI();</span>
+<span class="nc" id="L2254">		link.append(path);</span>
+<span class="nc bnc" id="L2255" title="All 2 branches missed.">		if (Tools.isNotEmpty(request.getQueryString()))</span>
 		{
-<span class="nc" id="L2216">			link.append('?');</span>
-<span class="nc" id="L2217">			link.append(request.getQueryString());</span>
+<span class="nc" id="L2257">			link.append('?');</span>
+<span class="nc" id="L2258">			link.append(request.getQueryString());</span>
 		}
-<span class="nc" id="L2219">		return link.toString();</span>
+<span class="nc" id="L2260">		return link.toString();</span>
 	}
 
 	public static String getRealPath(String virtualPathParam) {
-<span class="fc" id="L2223">		String virtualPath = virtualPathParam;</span>
+<span class="fc" id="L2264">		String virtualPath = virtualPathParam;</span>
 
 		// JDK 8 + Tomcat 8 nezvladaju url cast v ceste k suboru
-<span class="fc bfc" id="L2226" title="All 2 branches covered.">		if (Tools.isNotEmpty(virtualPath)) {</span>
-<span class="fc" id="L2227">			int index = virtualPath.indexOf(&quot;?&quot;);</span>
-<span class="fc bfc" id="L2228" title="All 2 branches covered.">			if (index &gt; 0) {</span>
-<span class="fc" id="L2229">				virtualPath = virtualPath.substring(0, index);</span>
+<span class="fc bfc" id="L2267" title="All 2 branches covered.">		if (Tools.isNotEmpty(virtualPath)) {</span>
+<span class="fc" id="L2268">			int index = virtualPath.indexOf(&quot;?&quot;);</span>
+<span class="fc bfc" id="L2269" title="All 2 branches covered.">			if (index &gt; 0) {</span>
+<span class="fc" id="L2270">				virtualPath = virtualPath.substring(0, index);</span>
 			}
 
-<span class="fc bfc" id="L2232" title="All 2 branches covered.">			if (virtualPath.contains(&quot;:&quot;)) {</span>
-<span class="fc" id="L2233">				virtualPath = Tools.replace(virtualPath, &quot;:&quot;, &quot;-&quot;);</span>
+<span class="fc bfc" id="L2273" title="All 2 branches covered.">			if (virtualPath.contains(&quot;:&quot;)) {</span>
+<span class="fc" id="L2274">				virtualPath = Tools.replace(virtualPath, &quot;:&quot;, &quot;-&quot;);</span>
 			}
 
-<span class="pc bpc" id="L2236" title="1 of 2 branches missed.">			if (virtualPath.contains(&quot;*&quot;)) {</span>
-<span class="nc" id="L2237">				virtualPath = Tools.replace(virtualPath, &quot;*&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L2277" title="All 2 branches covered.">			if (virtualPath.contains(&quot;*&quot;)) {</span>
+<span class="fc" id="L2278">				virtualPath = Tools.replace(virtualPath, &quot;*&quot;, &quot;&quot;);</span>
 			}
 
-<span class="fc" id="L2240">			virtualPath = virtualPath.trim();</span>
+<span class="fc" id="L2281">			virtualPath = virtualPath.trim();</span>
 
-<span class="pc bpc" id="L2242" title="1 of 2 branches missed.">			if (virtualPath.contains(&quot;%&quot;)) {</span>
-<span class="nc" id="L2243">				virtualPath = Tools.URLDecode(virtualPath);</span>
+<span class="pc bpc" id="L2283" title="1 of 2 branches missed.">			if (virtualPath.contains(&quot;%&quot;)) {</span>
+<span class="nc" id="L2284">				virtualPath = Tools.URLDecode(virtualPath);</span>
 			}
 		}
-<span class="fc bfc" id="L2246" title="All 2 branches covered.">		if (virtualPath.startsWith(&quot;/&quot;) == false)</span>
-<span class="fc" id="L2247">			virtualPath = &quot;/&quot; + virtualPath; // NOSONAR</span>
+<span class="fc bfc" id="L2287" title="All 2 branches covered.">		if (virtualPath.startsWith(&quot;/&quot;) == false)</span>
+<span class="fc" id="L2288">			virtualPath = &quot;/&quot; + virtualPath; // NOSONAR</span>
 
 		// pre cloud WebJET posielame inu cestu k suborom
-<span class="fc bfc" id="L2250" title="All 2 branches covered.">		if (FilePathTools.isExternalDir(virtualPath)) {</span>
+<span class="fc bfc" id="L2291" title="All 2 branches covered.">		if (FilePathTools.isExternalDir(virtualPath)) {</span>
 			File file;
-<span class="pc bpc" id="L2252" title="1 of 2 branches missed.">			if (virtualPath.startsWith(&quot;/shared&quot;)</span>
-<span class="pc bpc" id="L2253" title="1 of 2 branches missed.">					|| virtualPath.startsWith(Constants.getString(&quot;thumbServletCacheDir&quot;) + &quot;shared&quot;)) {</span>
+<span class="pc bpc" id="L2293" title="1 of 2 branches missed.">			if (virtualPath.startsWith(&quot;/shared&quot;)</span>
+<span class="pc bpc" id="L2294" title="1 of 2 branches missed.">					|| virtualPath.startsWith(Constants.getString(&quot;thumbServletCacheDir&quot;) + &quot;shared&quot;)) {</span>
 				// ziskaj cestu pre akoby shared domenu
-<span class="nc" id="L2255">				file = new File(FilePathTools.getDomainBaseFolder(&quot;shared&quot;), virtualPath);</span>
-<span class="nc bnc" id="L2256" title="All 4 branches missed.">				if (virtualPath.equals(&quot;/shared&quot;) || virtualPath.equals(&quot;/shared/&quot;)) {</span>
+<span class="nc" id="L2296">				file = new File(FilePathTools.getDomainBaseFolder(&quot;shared&quot;), virtualPath);</span>
+<span class="nc bnc" id="L2297" title="All 4 branches missed.">				if (virtualPath.equals(&quot;/shared&quot;) || virtualPath.equals(&quot;/shared/&quot;)) {</span>
 					try {
 						// vytvor hlavnu strukturu pre shared adresar na sietovom disku, domenove sa
 						// robia automaticky, toto je komplikovanejsie
-<span class="nc bnc" id="L2260" title="All 2 branches missed.">						if (file.exists() == false)</span>
-<span class="nc" id="L2261">							file.mkdirs();</span>
-<span class="nc" id="L2262">					} catch (Exception ex) {</span>
-<span class="nc" id="L2263">					}</span>
+<span class="nc bnc" id="L2301" title="All 2 branches missed.">						if (file.exists() == false)</span>
+<span class="nc" id="L2302">							file.mkdirs();</span>
+<span class="nc" id="L2303">					} catch (Exception ex) {</span>
+<span class="nc" id="L2304">					}</span>
 				}
 			} else {
-<span class="fc" id="L2266">				file = new File(FilePathTools.getDomainBaseFolder(), virtualPath);</span>
+<span class="fc" id="L2307">				file = new File(FilePathTools.getDomainBaseFolder(), virtualPath);</span>
 			}
 			// Logger.debug(Tools.class, &quot;getRealPath, return=&quot;+file.getAbsolutePath()+&quot;
 			// virtualPath=&quot;+virtualPath);
 
-<span class="fc" id="L2271">			String path = file.getAbsolutePath();</span>
-<span class="pc bpc" id="L2272" title="3 of 4 branches missed.">			if (virtualPath.endsWith(&quot;/&quot;) &amp;&amp; path.endsWith(File.separator) == false)</span>
-<span class="nc" id="L2273">				path += File.separator;</span>
-<span class="fc" id="L2274">			return (path);</span>
+<span class="fc" id="L2312">			String path = file.getAbsolutePath();</span>
+<span class="pc bpc" id="L2313" title="3 of 4 branches missed.">			if (virtualPath.endsWith(&quot;/&quot;) &amp;&amp; path.endsWith(File.separator) == false)</span>
+<span class="nc" id="L2314">				path += File.separator;</span>
+<span class="fc" id="L2315">			return (path);</span>
 		}
 
 		// String path = Constants.getServletContext().getRealPath(virtualPath);
-<span class="fc" id="L2278">		String path = null;</span>
+<span class="fc" id="L2319">		String path = null;</span>
 		try {
 			// kvoli Tomcat 8.5 a symlinkam to potrebujeme takto
-<span class="fc" id="L2281">			File f = new File(Constants.getServletContext().getRealPath(&quot;/&quot;));</span>
+<span class="fc" id="L2322">			File f = new File(Constants.getServletContext().getRealPath(&quot;/&quot;));</span>
 			// to musi ist CanonicalPath aby nam nevracalo
 			// /www/tomcat_au2/webapps2/../webapps/iway_2016
-<span class="fc" id="L2284">			String rootPath = f.getCanonicalPath();</span>
-<span class="pc bpc" id="L2285" title="1 of 4 branches missed.">			if (Tools.isEmpty(virtualPath) || &quot;/&quot;.equals(virtualPath))</span>
-<span class="fc" id="L2286">				path = rootPath;</span>
+<span class="fc" id="L2325">			String rootPath = f.getCanonicalPath();</span>
+<span class="pc bpc" id="L2326" title="1 of 4 branches missed.">			if (Tools.isEmpty(virtualPath) || &quot;/&quot;.equals(virtualPath))</span>
+<span class="fc" id="L2327">				path = rootPath;</span>
 			else {
 				// pridavame cestu k root adresaru, to nema zacinat na lomitko
-<span class="fc" id="L2289">				String addPath = Tools.replace(virtualPath, &quot;/&quot;, &quot;&quot; + File.separatorChar).substring(1);</span>
-<span class="fc" id="L2290">				f = new File(rootPath, addPath);</span>
+<span class="fc" id="L2330">				String addPath = Tools.replace(virtualPath, &quot;/&quot;, &quot;&quot; + File.separatorChar).substring(1);</span>
+<span class="fc" id="L2331">				f = new File(rootPath, addPath);</span>
 				// tu musi ist getAbsolutePath aby neprelozilo symlink
-<span class="fc" id="L2292">				path = f.getAbsolutePath();</span>
+<span class="fc" id="L2333">				path = f.getAbsolutePath();</span>
 			}
-<span class="nc" id="L2294">		} catch (Exception ex) {</span>
-<span class="nc" id="L2295">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L2296">		}</span>
+<span class="nc" id="L2335">		} catch (Exception ex) {</span>
+<span class="nc" id="L2336">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L2337">		}</span>
 
-<span class="pc bpc" id="L2298" title="1 of 2 branches missed.">		if (path == null) {</span>
-<span class="nc" id="L2299">			path = Constants.getServletContext().getRealPath(&quot;/&quot;) + Tools.replace(virtualPath, &quot;/&quot;, &quot;&quot; + File.separatorChar);</span>
-<span class="nc" id="L2300">			path = Tools.replace(path, &quot;&quot; + File.separatorChar + File.separatorChar, &quot;&quot; + File.separatorChar);</span>
+<span class="pc bpc" id="L2339" title="1 of 2 branches missed.">		if (path == null) {</span>
+<span class="nc" id="L2340">			path = Constants.getServletContext().getRealPath(&quot;/&quot;) + Tools.replace(virtualPath, &quot;/&quot;, &quot;&quot; + File.separatorChar);</span>
+<span class="nc" id="L2341">			path = Tools.replace(path, &quot;&quot; + File.separatorChar + File.separatorChar, &quot;&quot; + File.separatorChar);</span>
 		}
 
 		// podpora /admin/generate.jsp kde sa volaju subory z ../support/generators
 		// adresara
-<span class="pc bpc" id="L2305" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()) &amp;&amp; virtualPath.startsWith(&quot;..&quot;)</span>
-<span class="nc bnc" id="L2306" title="All 2 branches missed.">				&amp;&amp; virtualPath.indexOf(&quot;/WebContent/&quot;) == -1) {</span>
-<span class="nc" id="L2307">			String myPath = Constants.getServletContext().getRealPath(&quot;/&quot;) + &quot;/&quot; + virtualPath; // NOSONAR</span>
-<span class="nc bnc" id="L2308" title="All 2 branches missed.">			if (myPath.indexOf(&quot;/WebContent/..&quot;) != -1) {</span>
-<span class="nc" id="L2309">				path = Tools.replace(myPath, &quot;/WebContent/..&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L2346" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()) &amp;&amp; virtualPath.startsWith(&quot;..&quot;)</span>
+<span class="nc bnc" id="L2347" title="All 2 branches missed.">				&amp;&amp; virtualPath.indexOf(&quot;/WebContent/&quot;) == -1) {</span>
+<span class="nc" id="L2348">			String myPath = Constants.getServletContext().getRealPath(&quot;/&quot;) + &quot;/&quot; + virtualPath; // NOSONAR</span>
+<span class="nc bnc" id="L2349" title="All 2 branches missed.">			if (myPath.indexOf(&quot;/WebContent/..&quot;) != -1) {</span>
+<span class="nc" id="L2350">				path = Tools.replace(myPath, &quot;/WebContent/..&quot;, &quot;&quot;);</span>
 			}
 		}
 
 		// JDK9 + Tomcat 8 - root path by mala koncit lomitkom (tak to bolo doteraz)
-<span class="pc bpc" id="L2314" title="1 of 4 branches missed.">		if (&quot;/&quot;.equals(virtualPath) &amp;&amp; path.endsWith(File.separator) == false)</span>
-<span class="fc" id="L2315">			path = path + File.separator;</span>
+<span class="pc bpc" id="L2355" title="1 of 4 branches missed.">		if (&quot;/&quot;.equals(virtualPath) &amp;&amp; path.endsWith(File.separator) == false)</span>
+<span class="fc" id="L2356">			path = path + File.separator;</span>
 
-<span class="pc bpc" id="L2317" title="1 of 2 branches missed.">		if (path.contains(&quot;..&quot;))</span>
-<span class="nc" id="L2318">			path = Tools.replace(path, &quot;/webapps2/../webapps/&quot;, &quot;/webapps/&quot;);</span>
+<span class="pc bpc" id="L2358" title="1 of 2 branches missed.">		if (path.contains(&quot;..&quot;))</span>
+<span class="nc" id="L2359">			path = Tools.replace(path, &quot;/webapps2/../webapps/&quot;, &quot;/webapps/&quot;);</span>
 
-<span class="fc" id="L2320">		path = FileTools.symlinkReplaceToRootPath(path);</span>
+<span class="fc" id="L2361">		path = FileTools.symlinkReplaceToRootPath(path);</span>
 
 		//add last slash if it's on virutal path (to directly combine with file name)
-<span class="fc bfc" id="L2323" title="All 4 branches covered.">		if (virtualPath.endsWith(&quot;/&quot;) &amp;&amp; path.endsWith(File.separator) == false) path += File.separator;</span>
+<span class="fc bfc" id="L2364" title="All 4 branches covered.">		if (virtualPath.endsWith(&quot;/&quot;) &amp;&amp; path.endsWith(File.separator) == false) path += File.separator;</span>
 
-<span class="fc" id="L2325">		return path;</span>
+<span class="fc" id="L2366">		return path;</span>
 	}
 
 	/**
@@ -2330,22 +2371,22 @@ import java.util.regex.Pattern;
 	 */
 	public static String capitalize(String source)
 	{
-<span class="nc bnc" id="L2333" title="All 2 branches missed.">		if (isEmpty(source))</span>
-<span class="nc" id="L2334">			return source;</span>
+<span class="nc bnc" id="L2374" title="All 2 branches missed.">		if (isEmpty(source))</span>
+<span class="nc" id="L2375">			return source;</span>
 
-<span class="nc" id="L2336">		Matcher matcher = Pattern.compile(&quot;(\\b)(.)(.*?)(\\b)&quot;).matcher(source); //NOSONAR</span>
+<span class="nc" id="L2377">		Matcher matcher = Pattern.compile(&quot;(\\b)(.)(.*?)(\\b)&quot;).matcher(source); //NOSONAR</span>
 
-<span class="nc bnc" id="L2338" title="All 2 branches missed.">		while (matcher.find())</span>
+<span class="nc bnc" id="L2379" title="All 2 branches missed.">		while (matcher.find())</span>
 		{
-<span class="nc" id="L2340">			String whole = matcher.group(0);</span>
-<span class="nc" id="L2341">			String spaceBefore = matcher.group(1);</span>
-<span class="nc" id="L2342">			String firstLetter = matcher.group(2).toUpperCase();</span>
-<span class="nc" id="L2343">			String remainder = matcher.group(3).toLowerCase();</span>
-<span class="nc" id="L2344">			String spaceAfter = matcher.group(4);</span>
-<span class="nc" id="L2345">			source = source.replace(whole, spaceBefore+firstLetter+remainder+spaceAfter);</span>
-<span class="nc" id="L2346">		}</span>
+<span class="nc" id="L2381">			String whole = matcher.group(0);</span>
+<span class="nc" id="L2382">			String spaceBefore = matcher.group(1);</span>
+<span class="nc" id="L2383">			String firstLetter = matcher.group(2).toUpperCase();</span>
+<span class="nc" id="L2384">			String remainder = matcher.group(3).toLowerCase();</span>
+<span class="nc" id="L2385">			String spaceAfter = matcher.group(4);</span>
+<span class="nc" id="L2386">			source = source.replace(whole, spaceBefore+firstLetter+remainder+spaceAfter);</span>
+<span class="nc" id="L2387">		}</span>
 
-<span class="nc" id="L2348">		return source;</span>
+<span class="nc" id="L2389">		return source;</span>
 	}
 
 	/**
@@ -2361,18 +2402,18 @@ import java.util.regex.Pattern;
 	 */
 	public static Date getDateFromString(String dateString, String formatString)
 	{
-<span class="fc" id="L2364">		Date date = null;</span>
+<span class="fc" id="L2405">		Date date = null;</span>
    	try
    	{
-<span class="fc" id="L2367">   		DateFormat formatter = new SimpleDateFormat(formatString);</span>
-<span class="fc" id="L2368">   		date = formatter.parse(dateString);</span>
+<span class="fc" id="L2408">   		DateFormat formatter = new SimpleDateFormat(formatString);</span>
+<span class="fc" id="L2409">   		date = formatter.parse(dateString);</span>
    	}
-<span class="nc" id="L2370">   	catch (ParseException e)</span>
+<span class="nc" id="L2411">   	catch (ParseException e)</span>
    	{
-<span class="nc" id="L2372">   		sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L2373">   	}</span>
+<span class="nc" id="L2413">   		sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L2414">   	}</span>
 
-<span class="fc" id="L2375">   	return date;</span>
+<span class="fc" id="L2416">   	return date;</span>
 
 	}
 
@@ -2384,28 +2425,28 @@ import java.util.regex.Pattern;
 	 */
 	public static String getMonthNameLocalized(int month, String lng)
 	{
-<span class="nc" id="L2387">		String localizedMonth = &quot;&quot;;</span>
+<span class="nc" id="L2428">		String localizedMonth = &quot;&quot;;</span>
 		Prop prop;
-<span class="nc bnc" id="L2389" title="All 2 branches missed.">		if(lng == null)</span>
-<span class="nc" id="L2390">			prop = Prop.getInstance();</span>
+<span class="nc bnc" id="L2430" title="All 2 branches missed.">		if(lng == null)</span>
+<span class="nc" id="L2431">			prop = Prop.getInstance();</span>
 		else
-<span class="nc" id="L2392">			prop = Prop.getInstance(lng);</span>
-<span class="nc bnc" id="L2393" title="All 13 branches missed.">		switch(month) //NOSONAR</span>
+<span class="nc" id="L2433">			prop = Prop.getInstance(lng);</span>
+<span class="nc bnc" id="L2434" title="All 13 branches missed.">		switch(month) //NOSONAR</span>
 		{
-<span class="nc" id="L2395">			case 0: localizedMonth = prop.getText(&quot;component.calendar.january&quot;);break;</span>
-<span class="nc" id="L2396">			case 1: localizedMonth = prop.getText(&quot;component.calendar.february&quot;);break;</span>
-<span class="nc" id="L2397">			case 2: localizedMonth = prop.getText(&quot;component.calendar.march&quot;);break;</span>
-<span class="nc" id="L2398">			case 3: localizedMonth = prop.getText(&quot;component.calendar.april&quot;);break;</span>
-<span class="nc" id="L2399">			case 4: localizedMonth = prop.getText(&quot;component.calendar.may&quot;);break;</span>
-<span class="nc" id="L2400">			case 5: localizedMonth = prop.getText(&quot;component.calendar.june&quot;);break;</span>
-<span class="nc" id="L2401">			case 6: localizedMonth = prop.getText(&quot;component.calendar.july&quot;);break;</span>
-<span class="nc" id="L2402">			case 7: localizedMonth = prop.getText(&quot;component.calendar.august&quot;);break;</span>
-<span class="nc" id="L2403">			case 8: localizedMonth = prop.getText(&quot;component.calendar.september&quot;);break;</span>
-<span class="nc" id="L2404">			case 9: localizedMonth = prop.getText(&quot;component.calendar.october&quot;);break;</span>
-<span class="nc" id="L2405">			case 10: localizedMonth = prop.getText(&quot;component.calendar.november&quot;);break;</span>
-<span class="nc" id="L2406">			case 11: localizedMonth = prop.getText(&quot;component.calendar.december&quot;);break;</span>
+<span class="nc" id="L2436">			case 0: localizedMonth = prop.getText(&quot;component.calendar.january&quot;);break;</span>
+<span class="nc" id="L2437">			case 1: localizedMonth = prop.getText(&quot;component.calendar.february&quot;);break;</span>
+<span class="nc" id="L2438">			case 2: localizedMonth = prop.getText(&quot;component.calendar.march&quot;);break;</span>
+<span class="nc" id="L2439">			case 3: localizedMonth = prop.getText(&quot;component.calendar.april&quot;);break;</span>
+<span class="nc" id="L2440">			case 4: localizedMonth = prop.getText(&quot;component.calendar.may&quot;);break;</span>
+<span class="nc" id="L2441">			case 5: localizedMonth = prop.getText(&quot;component.calendar.june&quot;);break;</span>
+<span class="nc" id="L2442">			case 6: localizedMonth = prop.getText(&quot;component.calendar.july&quot;);break;</span>
+<span class="nc" id="L2443">			case 7: localizedMonth = prop.getText(&quot;component.calendar.august&quot;);break;</span>
+<span class="nc" id="L2444">			case 8: localizedMonth = prop.getText(&quot;component.calendar.september&quot;);break;</span>
+<span class="nc" id="L2445">			case 9: localizedMonth = prop.getText(&quot;component.calendar.october&quot;);break;</span>
+<span class="nc" id="L2446">			case 10: localizedMonth = prop.getText(&quot;component.calendar.november&quot;);break;</span>
+<span class="nc" id="L2447">			case 11: localizedMonth = prop.getText(&quot;component.calendar.december&quot;);break;</span>
 		}
-<span class="nc" id="L2408">		return localizedMonth;</span>
+<span class="nc" id="L2449">		return localizedMonth;</span>
 	}
 
 	/**
@@ -2415,71 +2456,71 @@ import java.util.regex.Pattern;
 	 */
 	public static String getMonthNameLocalized(int month)
 	{
-<span class="nc" id="L2418">		return getMonthNameLocalized(month, null);</span>
+<span class="nc" id="L2459">		return getMonthNameLocalized(month, null);</span>
 	}
 
 		// This method returns a buffered image with the contents of an image
 	public static BufferedImage toBufferedImage(Image image) {
-<span class="nc bnc" id="L2423" title="All 2 branches missed.">	    if (image instanceof BufferedImage) {</span>
-<span class="nc" id="L2424">	        return (BufferedImage)image;</span>
+<span class="nc bnc" id="L2464" title="All 2 branches missed.">	    if (image instanceof BufferedImage) {</span>
+<span class="nc" id="L2465">	        return (BufferedImage)image;</span>
 	    }
 
 	    // This code ensures that all the pixels in the image are loaded
-<span class="nc" id="L2428">	    image = new ImageIcon(image).getImage();</span>
+<span class="nc" id="L2469">	    image = new ImageIcon(image).getImage();</span>
 
 	    // Determine if the image has transparent pixels; for this method's
 	    // implementation, see Determining If an Image Has Transparent Pixels
 	    //boolean hasAlpha = hasAlpha(image);
 
 	    // Create a buffered image with a format that's compatible with the screen
-<span class="nc" id="L2435">	    BufferedImage bimage = null;</span>
-<span class="nc" id="L2436">	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();</span>
+<span class="nc" id="L2476">	    BufferedImage bimage = null;</span>
+<span class="nc" id="L2477">	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();</span>
 	    try {
 	        // Determine the type of transparency of the new buffered image
-<span class="nc" id="L2439">	        int transparency = Transparency.OPAQUE;</span>
+<span class="nc" id="L2480">	        int transparency = Transparency.OPAQUE;</span>
 //	        if (hasAlpha) {
 //	            transparency = Transparency.BITMASK;
 //	        }
 
 	        // Create the buffered image
-<span class="nc" id="L2445">	        GraphicsDevice gs = ge.getDefaultScreenDevice();</span>
-<span class="nc" id="L2446">	        GraphicsConfiguration gc = gs.getDefaultConfiguration();</span>
-<span class="nc" id="L2447">	        bimage = gc.createCompatibleImage(</span>
-<span class="nc" id="L2448">	            image.getWidth(null), image.getHeight(null), transparency);</span>
-<span class="nc" id="L2449">	    } catch (HeadlessException e) {</span>
+<span class="nc" id="L2486">	        GraphicsDevice gs = ge.getDefaultScreenDevice();</span>
+<span class="nc" id="L2487">	        GraphicsConfiguration gc = gs.getDefaultConfiguration();</span>
+<span class="nc" id="L2488">	        bimage = gc.createCompatibleImage(</span>
+<span class="nc" id="L2489">	            image.getWidth(null), image.getHeight(null), transparency);</span>
+<span class="nc" id="L2490">	    } catch (HeadlessException e) {</span>
 	        // The system does not have a screen
-<span class="nc" id="L2451">	    }</span>
+<span class="nc" id="L2492">	    }</span>
 
-<span class="nc bnc" id="L2453" title="All 2 branches missed.">	    if (bimage == null) {</span>
+<span class="nc bnc" id="L2494" title="All 2 branches missed.">	    if (bimage == null) {</span>
 	        // Create a buffered image using the default color model
-<span class="nc" id="L2455">	        int type = BufferedImage.TYPE_INT_RGB;</span>
+<span class="nc" id="L2496">	        int type = BufferedImage.TYPE_INT_RGB;</span>
 //	        if (hasAlpha) {
 //	            type = BufferedImage.TYPE_INT_ARGB;
 //	        }
-<span class="nc" id="L2459">	        bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);</span>
+<span class="nc" id="L2500">	        bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);</span>
 	    }
 
 	    // Copy image to buffered image
-<span class="nc" id="L2463">	    Graphics g = bimage.createGraphics();</span>
+<span class="nc" id="L2504">	    Graphics g = bimage.createGraphics();</span>
 
 	    // Paint the image onto the buffered image
-<span class="nc" id="L2466">	    g.drawImage(image, 0, 0, null);</span>
-<span class="nc" id="L2467">	    g.dispose();</span>
+<span class="nc" id="L2507">	    g.drawImage(image, 0, 0, null);</span>
+<span class="nc" id="L2508">	    g.dispose();</span>
 
-<span class="nc" id="L2469">	    return bimage;</span>
+<span class="nc" id="L2510">	    return bimage;</span>
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public static &lt;T&gt; T firstNonNull(T...possibilities)
 	{
-<span class="nc bnc" id="L2475" title="All 2 branches missed.">		if (possibilities.length == 0)</span>
-<span class="nc" id="L2476">			return null;</span>
-<span class="nc" id="L2477">		T lastOne = possibilities[possibilities.length - 1];</span>
-<span class="nc bnc" id="L2478" title="All 2 branches missed.">		for (T t : possibilities)</span>
-<span class="nc bnc" id="L2479" title="All 2 branches missed.">			if (t != null)</span>
-<span class="nc" id="L2480">				return t;</span>
+<span class="nc bnc" id="L2516" title="All 2 branches missed.">		if (possibilities.length == 0)</span>
+<span class="nc" id="L2517">			return null;</span>
+<span class="nc" id="L2518">		T lastOne = possibilities[possibilities.length - 1];</span>
+<span class="nc bnc" id="L2519" title="All 2 branches missed.">		for (T t : possibilities)</span>
+<span class="nc bnc" id="L2520" title="All 2 branches missed.">			if (t != null)</span>
+<span class="nc" id="L2521">				return t;</span>
 
-<span class="nc" id="L2482">		return lastOne;</span>
+<span class="nc" id="L2523">		return lastOne;</span>
 	}
 
 	/**
@@ -2490,86 +2531,86 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean getBooleanValue(String value, boolean defaultValue)
 	{
-<span class="fc bfc" id="L2493" title="All 2 branches covered.">		if (value==null)</span>
+<span class="fc bfc" id="L2534" title="All 2 branches covered.">		if (value==null)</span>
 		{
-<span class="fc" id="L2495">			return(defaultValue);</span>
+<span class="fc" id="L2536">			return(defaultValue);</span>
 		}
-<span class="pc bpc" id="L2497" title="2 of 6 branches missed.">		return value.equalsIgnoreCase(&quot;yes&quot;) || value.equalsIgnoreCase(&quot;true&quot;) || value.equalsIgnoreCase(&quot;1&quot;);</span>
+<span class="pc bpc" id="L2538" title="2 of 6 branches missed.">		return value.equalsIgnoreCase(&quot;yes&quot;) || value.equalsIgnoreCase(&quot;true&quot;) || value.equalsIgnoreCase(&quot;1&quot;);</span>
 	}
 
 	/**
 	 * deeply clones a Map by cloning all the values.
 	 */
 	public static Map&lt;String,String&gt; deepCopy(Map&lt;String, String&gt; original) {
-<span class="fc" id="L2504">	    Map&lt;String, String&gt; copy = new HashMap&lt;&gt;(original.size());</span>
-<span class="fc bfc" id="L2505" title="All 2 branches covered.">	    for(Map.Entry&lt;String, String&gt; entry : original.entrySet()) {</span>
-<span class="fc" id="L2506">	        copy.put(entry.getKey(), entry.getValue());</span>
-<span class="fc" id="L2507">	    }</span>
-<span class="fc" id="L2508">	    return copy;</span>
+<span class="fc" id="L2545">	    Map&lt;String, String&gt; copy = new HashMap&lt;&gt;(original.size());</span>
+<span class="fc bfc" id="L2546" title="All 2 branches covered.">	    for(Map.Entry&lt;String, String&gt; entry : original.entrySet()) {</span>
+<span class="fc" id="L2547">	        copy.put(entry.getKey(), entry.getValue());</span>
+<span class="fc" id="L2548">	    }</span>
+<span class="fc" id="L2549">	    return copy;</span>
 	}
 
 
 	public static boolean addCookie(javax.servlet.http.Cookie cookie, HttpServletResponse response, HttpServletRequest request)
 	{
 
-<span class="pc bpc" id="L2515" title="3 of 6 branches missed.">		if (response == null || cookie == null || request == null)</span>
+<span class="pc bpc" id="L2556" title="3 of 6 branches missed.">		if (response == null || cookie == null || request == null)</span>
 		{
-<span class="nc" id="L2517">			Logger.debug(Tools.class,&quot;response or cookie or request is null cookie wasn't add&quot;);</span>
-<span class="nc" id="L2518">			return false;</span>
+<span class="nc" id="L2558">			Logger.debug(Tools.class,&quot;response or cookie or request is null cookie wasn't add&quot;);</span>
+<span class="nc" id="L2559">			return false;</span>
 		}
 
-<span class="fc" id="L2521">		String cookieName = cookie.getName();</span>
-<span class="pc bpc" id="L2522" title="1 of 2 branches missed.">		if (&quot;statBrowserIdNew&quot;.equals(cookieName))</span>
+<span class="fc" id="L2562">		String cookieName = cookie.getName();</span>
+<span class="fc bfc" id="L2563" title="All 2 branches covered.">		if (&quot;statBrowserIdNew&quot;.equals(cookieName))</span>
 		{
-<span class="nc bnc" id="L2524" title="All 2 branches missed.">			if (canSetCookie(&quot;statisticke&quot;, request.getCookies())==false)</span>
+<span class="pc bpc" id="L2565" title="1 of 2 branches missed.">			if (canSetCookie(&quot;statisticke&quot;, request.getCookies())==false)</span>
 			{
-<span class="nc" id="L2526">				Logger.debug(Tools.class,&quot;Nemozem nastavit statBrowserIdNew pretoze nie je povolena skupina statisticke&quot;);</span>
-<span class="nc" id="L2527">				return false;</span>
+<span class="nc" id="L2567">				Logger.debug(Tools.class,&quot;Nemozem nastavit statBrowserIdNew pretoze nie je povolena skupina statisticke&quot;);</span>
+<span class="nc" id="L2568">				return false;</span>
 			}
 		}
 
-<span class="pc bpc" id="L2531" title="3 of 4 branches missed.">		if(canSetAnyCookie(request.getCookies()) || cookie.getName().equalsIgnoreCase(&quot;JSESSIONID&quot;))</span>
+<span class="pc bpc" id="L2572" title="3 of 4 branches missed.">		if(canSetAnyCookie(request.getCookies()) || cookie.getName().equalsIgnoreCase(&quot;JSESSIONID&quot;))</span>
 		{
-<span class="pc bpc" id="L2533" title="3 of 4 branches missed.">			if (Tools.isSecure(request) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;strictTransportSecurity&quot;)))</span>
+<span class="pc bpc" id="L2574" title="3 of 4 branches missed.">			if (Tools.isSecure(request) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;strictTransportSecurity&quot;)))</span>
 			{
-<span class="nc" id="L2535">				cookie.setSecure(true);</span>
+<span class="nc" id="L2576">				cookie.setSecure(true);</span>
 			}
 
-<span class="fc" id="L2538">			response.addCookie(cookie);</span>
-<span class="fc" id="L2539">			return true;</span>
+<span class="fc" id="L2579">			response.addCookie(cookie);</span>
+<span class="fc" id="L2580">			return true;</span>
 		}
 		else
 		{
-<span class="nc" id="L2543">			Logger.debug(Tools.class,&quot;adding cookies is denied  &quot; + cookie.getName());</span>
-<span class="nc" id="L2544">			return false;</span>
+<span class="nc" id="L2584">			Logger.debug(Tools.class,&quot;adding cookies is denied  &quot; + cookie.getName());</span>
+<span class="nc" id="L2585">			return false;</span>
 		}
 	}
 
 	public static boolean canSetCookie(String classification, javax.servlet.http.Cookie[] cookies)
 	{
-<span class="pc bpc" id="L2550" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;gdprAllowAllCookies&quot;)) return true;</span>
+<span class="pc bpc" id="L2591" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;gdprAllowAllCookies&quot;)) return true;</span>
 
-<span class="pc bpc" id="L2552" title="1 of 6 branches missed.">		if(Tools.isEmpty(classification) || &quot;ALWAYS&quot;.equals(classification) || &quot;nutne&quot;.equals(classification))</span>
+<span class="pc bpc" id="L2593" title="1 of 6 branches missed.">		if(Tools.isEmpty(classification) || &quot;ALWAYS&quot;.equals(classification) || &quot;nutne&quot;.equals(classification))</span>
 		{
-<span class="fc" id="L2554">			return true;</span>
+<span class="fc" id="L2595">			return true;</span>
 		}
 
-<span class="fc" id="L2557">		boolean gdprInsertAllScriptsBeforeConsent = Constants.getBoolean(&quot;gdprInsertAllScriptsBeforeAccept&quot;);</span>
-<span class="fc" id="L2558">		String cookieName = Constants.getString(&quot;gdprCookieName&quot;);</span>
-<span class="fc" id="L2559">		String[] enableCookiesClass = Tools.getTokens(Tools.getCookieValue(cookies, cookieName, &quot;&quot;), &quot;_&quot;);</span>
+<span class="fc" id="L2598">		boolean gdprInsertAllScriptsBeforeConsent = Constants.getBoolean(&quot;gdprInsertAllScriptsBeforeAccept&quot;);</span>
+<span class="fc" id="L2599">		String cookieName = Constants.getString(&quot;gdprCookieName&quot;);</span>
+<span class="fc" id="L2600">		String[] enableCookiesClass = Tools.getTokens(Tools.getCookieValue(cookies, cookieName, &quot;&quot;), &quot;_&quot;);</span>
 
 		// LPA https://intra.iway.sk/helpdesk/tickets/detail/32155?comment=2267668
-<span class="pc bpc" id="L2562" title="3 of 4 branches missed.">		if (gdprInsertAllScriptsBeforeConsent &amp;&amp; enableCookiesClass.length == 0) {</span>
-<span class="nc" id="L2563">			return true;</span>
+<span class="pc bpc" id="L2603" title="3 of 4 branches missed.">		if (gdprInsertAllScriptsBeforeConsent &amp;&amp; enableCookiesClass.length == 0) {</span>
+<span class="nc" id="L2604">			return true;</span>
 		}
 
-<span class="pc bpc" id="L2566" title="1 of 2 branches missed.">		for(String enableCookie: enableCookiesClass)</span>
+<span class="fc bfc" id="L2607" title="All 2 branches covered.">		for(String enableCookie: enableCookiesClass)</span>
 		{
-<span class="nc bnc" id="L2568" title="All 2 branches missed.">			if(classification.equals(enableCookie))</span>
-<span class="nc" id="L2569">				return true;</span>
+<span class="fc bfc" id="L2609" title="All 2 branches covered.">			if(classification.equals(enableCookie))</span>
+<span class="fc" id="L2610">				return true;</span>
 		}
 
-<span class="fc" id="L2572">		return false;</span>
+<span class="fc" id="L2613">		return false;</span>
 	}
 
 	/**
@@ -2579,19 +2620,19 @@ import java.util.regex.Pattern;
 	 */
 	private static boolean canSetAnyCookie(javax.servlet.http.Cookie[] actualCookies)
 	{
-<span class="pc bpc" id="L2582" title="2 of 6 branches missed.">		if(actualCookies == null || Tools.isEmpty(Constants.getString(&quot;disableCookiesCookieName&quot;)) || Tools.isEmpty(Constants.getString(&quot;disableCookiesCookieValue&quot;)) )</span>
-<span class="fc" id="L2583">			return true;</span>
+<span class="pc bpc" id="L2623" title="2 of 6 branches missed.">		if(actualCookies == null || Tools.isEmpty(Constants.getString(&quot;disableCookiesCookieName&quot;)) || Tools.isEmpty(Constants.getString(&quot;disableCookiesCookieValue&quot;)) )</span>
+<span class="fc" id="L2624">			return true;</span>
 
-<span class="pc bpc" id="L2585" title="1 of 2 branches missed.">		if(actualCookies.length &gt; 0 )</span>
+<span class="pc bpc" id="L2626" title="1 of 2 branches missed.">		if(actualCookies.length &gt; 0 )</span>
 		{
-<span class="fc bfc" id="L2587" title="All 2 branches covered.">			for (int i = 0; i &lt; actualCookies.length; i++)</span>
+<span class="fc bfc" id="L2628" title="All 2 branches covered.">			for (int i = 0; i &lt; actualCookies.length; i++)</span>
 			{
-<span class="pc bpc" id="L2589" title="1 of 2 branches missed.">				if (actualCookies[i].getName().equals (Constants.getString(&quot;disableCookiesCookieName&quot;))</span>
-<span class="nc bnc" id="L2590" title="All 2 branches missed.">							&amp;&amp; Constants.getString(&quot;disableCookiesCookieValue&quot;).equals(actualCookies[i].getValue()))</span>
-<span class="nc" id="L2591">					return false;</span>
+<span class="pc bpc" id="L2630" title="1 of 2 branches missed.">				if (actualCookies[i].getName().equals (Constants.getString(&quot;disableCookiesCookieName&quot;))</span>
+<span class="nc bnc" id="L2631" title="All 2 branches missed.">							&amp;&amp; Constants.getString(&quot;disableCookiesCookieValue&quot;).equals(actualCookies[i].getValue()))</span>
+<span class="nc" id="L2632">					return false;</span>
 			}
 		}
-<span class="fc" id="L2594">		return true;</span>
+<span class="fc" id="L2635">		return true;</span>
 	}
 
 	/**
@@ -2602,7 +2643,7 @@ import java.util.regex.Pattern;
 	 */
 	public static String html2text(String html)
 	{
-<span class="fc" id="L2605">		return Html2Text.html2text(html);</span>
+<span class="fc" id="L2646">		return Html2Text.html2text(html);</span>
 	}
 
 	/**
@@ -2614,12 +2655,12 @@ import java.util.regex.Pattern;
 	 */
 	public static String getParamAttribute(String name, HttpServletRequest request)
 	{
-<span class="nc" id="L2617">		String ret = request.getParameter(name);</span>
-<span class="nc bnc" id="L2618" title="All 2 branches missed.">		if (ret == null)</span>
+<span class="nc" id="L2658">		String ret = request.getParameter(name);</span>
+<span class="nc bnc" id="L2659" title="All 2 branches missed.">		if (ret == null)</span>
 		{
-<span class="nc" id="L2620">			ret = (String) request.getAttribute(name);</span>
+<span class="nc" id="L2661">			ret = (String) request.getAttribute(name);</span>
 		}
-<span class="nc" id="L2622">		return (ret);</span>
+<span class="nc" id="L2663">		return (ret);</span>
 	}
 
 	/**
@@ -2629,12 +2670,12 @@ import java.util.regex.Pattern;
 	 */
 	public static &lt;T&gt; List&lt;T&gt; copyList(List&lt;T&gt; source)
 	{
-<span class="nc" id="L2632">		List&lt;T&gt; dest = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L2633" title="All 2 branches missed.">		for (T item : source)</span>
+<span class="nc" id="L2673">		List&lt;T&gt; dest = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L2674" title="All 2 branches missed.">		for (T item : source)</span>
 		{
-<span class="nc" id="L2635">			dest.add(item);</span>
-<span class="nc" id="L2636">		}</span>
-<span class="nc" id="L2637">		return dest;</span>
+<span class="nc" id="L2676">			dest.add(item);</span>
+<span class="nc" id="L2677">		}</span>
+<span class="nc" id="L2678">		return dest;</span>
 	}
 
 	/**
@@ -2646,11 +2687,11 @@ import java.util.regex.Pattern;
 	 * @author mhalas
 	 */
 	public static int safeLongToInt(long l) {
-<span class="pc bpc" id="L2649" title="2 of 4 branches missed.">	    if (l &lt; Integer.MIN_VALUE || l &gt; Integer.MAX_VALUE) {</span>
-<span class="nc" id="L2650">	        throw new IllegalArgumentException</span>
+<span class="pc bpc" id="L2690" title="2 of 4 branches missed.">	    if (l &lt; Integer.MIN_VALUE || l &gt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L2691">	        throw new IllegalArgumentException</span>
 	            (l + &quot; cannot be cast to int without changing its value.&quot;);
 	    }
-<span class="fc" id="L2653">	    return (int) l;</span>
+<span class="fc" id="L2694">	    return (int) l;</span>
 	}
 
 
@@ -2663,19 +2704,19 @@ import java.util.regex.Pattern;
 	 */
 	public static String removeDuplicates(String txt, String splitterRegex)
 	{
-<span class="nc" id="L2666">		List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L2667">		String[] splitted = txt.split(splitterRegex);</span>
-<span class="nc" id="L2668">		StringBuilder sb = new StringBuilder();</span>
-<span class="nc bnc" id="L2669" title="All 2 branches missed.">		for (int i = 0; i &lt; splitted.length; ++i)</span>
+<span class="nc" id="L2707">		List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2708">		String[] splitted = txt.split(splitterRegex);</span>
+<span class="nc" id="L2709">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc bnc" id="L2710" title="All 2 branches missed.">		for (int i = 0; i &lt; splitted.length; ++i)</span>
 		{
-<span class="nc bnc" id="L2671" title="All 2 branches missed.">			if (!values.contains(splitted[i]))</span>
+<span class="nc bnc" id="L2712" title="All 2 branches missed.">			if (!values.contains(splitted[i]))</span>
 			{
-<span class="nc" id="L2673">				values.add(splitted[i]);</span>
-<span class="nc" id="L2674">				sb.append(splitterRegex);</span>
-<span class="nc" id="L2675">				sb.append(splitted[i]);</span>
+<span class="nc" id="L2714">				values.add(splitted[i]);</span>
+<span class="nc" id="L2715">				sb.append(splitterRegex);</span>
+<span class="nc" id="L2716">				sb.append(splitted[i]);</span>
 			}
 		}
-<span class="nc" id="L2678">		return sb.substring(1) + &quot;,&quot;;</span>
+<span class="nc" id="L2719">		return sb.substring(1) + &quot;,&quot;;</span>
 	}
 
 	/**
@@ -2689,16 +2730,16 @@ import java.util.regex.Pattern;
 	 */
 	public static boolean containsWholePartInString(String allText, String splitterRegex, String comparableText)
 	{
-<span class="nc" id="L2692">		boolean ret = false;</span>
-<span class="nc" id="L2693">		String[] splitted = allText.split(splitterRegex);</span>
-<span class="nc bnc" id="L2694" title="All 2 branches missed.">		for (int i = 0; i &lt; splitted.length; ++i)</span>
+<span class="nc" id="L2733">		boolean ret = false;</span>
+<span class="nc" id="L2734">		String[] splitted = allText.split(splitterRegex);</span>
+<span class="nc bnc" id="L2735" title="All 2 branches missed.">		for (int i = 0; i &lt; splitted.length; ++i)</span>
 		{
-<span class="nc bnc" id="L2696" title="All 2 branches missed.">			if (comparableText.equals(splitted[i]))</span>
+<span class="nc bnc" id="L2737" title="All 2 branches missed.">			if (comparableText.equals(splitted[i]))</span>
 			{
-<span class="nc" id="L2698">				ret = true;</span>
+<span class="nc" id="L2739">				ret = true;</span>
 			}
 		}
-<span class="nc" id="L2701">		return ret;</span>
+<span class="nc" id="L2742">		return ret;</span>
 	}
 
 	/**
@@ -2712,19 +2753,19 @@ import java.util.regex.Pattern;
 	 */
 	public static String parseStringAddOnStart(String txt, String splitterRegex, String addStringStart)
 	{
-<span class="nc" id="L2715">		List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L2716">		String[] splitted = txt.split(splitterRegex);</span>
-<span class="nc" id="L2717">		StringBuilder sb = new StringBuilder();</span>
-<span class="nc bnc" id="L2718" title="All 2 branches missed.">		for (int i = 0; i &lt; splitted.length; ++i)</span>
+<span class="nc" id="L2756">		List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2757">		String[] splitted = txt.split(splitterRegex);</span>
+<span class="nc" id="L2758">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc bnc" id="L2759" title="All 2 branches missed.">		for (int i = 0; i &lt; splitted.length; ++i)</span>
 		{
-<span class="nc bnc" id="L2720" title="All 2 branches missed.">			if (!values.contains(splitted[i]))</span>
+<span class="nc bnc" id="L2761" title="All 2 branches missed.">			if (!values.contains(splitted[i]))</span>
 			{
-<span class="nc" id="L2722">				values.add(addStringStart + splitted[i]);</span>
-<span class="nc" id="L2723">				sb.append(splitterRegex);</span>
-<span class="nc" id="L2724">				sb.append(addStringStart + splitted[i]);</span>
+<span class="nc" id="L2763">				values.add(addStringStart + splitted[i]);</span>
+<span class="nc" id="L2764">				sb.append(splitterRegex);</span>
+<span class="nc" id="L2765">				sb.append(addStringStart + splitted[i]);</span>
 			}
 		}
-<span class="nc" id="L2727">		return sb.substring(1) + &quot;,&quot;;</span>
+<span class="nc" id="L2768">		return sb.substring(1) + &quot;,&quot;;</span>
 	}
 
 	/**
@@ -2735,7 +2776,7 @@ import java.util.regex.Pattern;
 	 */
 	public List&lt;String&gt; stringToList(String string, String delimiter)
 	{
-<span class="nc" id="L2738">		return new ArrayList&lt;&gt;(Arrays.asList(string.split(delimiter)));</span>
+<span class="nc" id="L2779">		return new ArrayList&lt;&gt;(Arrays.asList(string.split(delimiter)));</span>
 	}
 
 	/**
@@ -2745,13 +2786,13 @@ import java.util.regex.Pattern;
 	 */
 	public static String getPathWithTimestamp(String virtualPath)
 	{
-<span class="nc" id="L2748">		String realPath = PathFilter.getRealPath(virtualPath);</span>
-<span class="nc" id="L2749">		File file = new File(realPath);</span>
-<span class="nc bnc" id="L2750" title="All 2 branches missed.">		if (file.exists())</span>
+<span class="nc" id="L2789">		String realPath = PathFilter.getRealPath(virtualPath);</span>
+<span class="nc" id="L2790">		File file = new File(realPath);</span>
+<span class="nc bnc" id="L2791" title="All 2 branches missed.">		if (file.exists())</span>
 		{
-<span class="nc" id="L2752">			return addParameterToUrl(virtualPath,&quot;time&quot;,String.valueOf(file.lastModified()));</span>
+<span class="nc" id="L2793">			return addParameterToUrl(virtualPath,&quot;time&quot;,String.valueOf(file.lastModified()));</span>
 		}
-<span class="nc" id="L2754">		return virtualPath;</span>
+<span class="nc" id="L2795">		return virtualPath;</span>
 	}
 
 
@@ -2762,33 +2803,33 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static boolean checkIpAccess(HttpServletRequest request,String constantName){
-<span class="fc" id="L2765">		String enabledIPs = Constants.getString(constantName);</span>
+<span class="fc" id="L2806">		String enabledIPs = Constants.getString(constantName);</span>
 
-<span class="pc bpc" id="L2767" title="1 of 2 branches missed.">		if (&quot;*&quot;.equals(enabledIPs)) return true;</span>
+<span class="pc bpc" id="L2808" title="1 of 2 branches missed.">		if (&quot;*&quot;.equals(enabledIPs)) return true;</span>
 
-<span class="pc bpc" id="L2769" title="1 of 2 branches missed.">		if (Tools.isEmpty(enabledIPs))</span>
+<span class="pc bpc" id="L2810" title="1 of 2 branches missed.">		if (Tools.isEmpty(enabledIPs))</span>
 		{
 			//[#44392 - Vystavenie rest služby pre konkrétny formulár] - uloha #15 =&gt;
 			//iba tieto 2 premenne mozu byt prazdne a je to povazovane za OK, ostatne musia mat nastavene * aby sa nestalo, ze kvoli preklepu v nazve premennej sa sluzba otvori navonok
-<span class="nc bnc" id="L2773" title="All 4 branches missed.">			if (&quot;webEnableIPs&quot;.equals(constantName) || &quot;adminEnableIPs&quot;.equals(constantName)) return true;</span>
+<span class="nc bnc" id="L2814" title="All 4 branches missed.">			if (&quot;webEnableIPs&quot;.equals(constantName) || &quot;adminEnableIPs&quot;.equals(constantName)) return true;</span>
 		}
 
-<span class="pc bpc" id="L2776" title="2 of 4 branches missed.">		if (enabledIPs != null &amp;&amp; enabledIPs.length() &gt; 1)</span>
+<span class="pc bpc" id="L2817" title="2 of 4 branches missed.">		if (enabledIPs != null &amp;&amp; enabledIPs.length() &gt; 1)</span>
 		{
-<span class="fc" id="L2778">			StringTokenizer st = new StringTokenizer(enabledIPs, &quot;,&quot;);</span>
+<span class="fc" id="L2819">			StringTokenizer st = new StringTokenizer(enabledIPs, &quot;,&quot;);</span>
 			String ip;
-<span class="fc" id="L2780">			String myIP = Tools.getRemoteIP(request);</span>
-<span class="fc" id="L2781">			Logger.debug(PathFilter.class,&quot;Checking: &quot; + myIP + &quot; vs &quot; + enabledIPs);</span>
-<span class="pc bpc" id="L2782" title="1 of 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="fc" id="L2821">			String myIP = Tools.getRemoteIP(request);</span>
+<span class="fc" id="L2822">			Logger.debug(PathFilter.class,&quot;Checking: &quot; + myIP + &quot; vs &quot; + enabledIPs);</span>
+<span class="pc bpc" id="L2823" title="1 of 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="fc" id="L2784">				ip = st.nextToken();</span>
-<span class="pc bpc" id="L2785" title="1 of 2 branches missed.">				if (myIP.startsWith(ip.trim()))</span>
+<span class="fc" id="L2825">				ip = st.nextToken();</span>
+<span class="pc bpc" id="L2826" title="1 of 2 branches missed.">				if (myIP.startsWith(ip.trim()))</span>
 				{
-<span class="fc" id="L2787">					return true;</span>
+<span class="fc" id="L2828">					return true;</span>
 				}
 			}
 		}
-<span class="nc" id="L2791">		return false;</span>
+<span class="nc" id="L2832">		return false;</span>
 
 	}
 
@@ -2800,35 +2841,35 @@ import java.util.regex.Pattern;
 	 */
 	public static Principal getUserPrincipal(HttpServletRequest request)
 	{
-<span class="nc" id="L2803">		ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
+<span class="nc" id="L2844">		ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();</span>
 		//Logger.debug(Tools.class, &quot;getUserPrincipal() attr: &quot;+attr);
-<span class="nc" id="L2805">		Principal p = attr.getRequest().getUserPrincipal();</span>
+<span class="nc" id="L2846">		Principal p = attr.getRequest().getUserPrincipal();</span>
 		//Logger.debug(Tools.class, &quot;PRINCIPAL attr: &quot; + p);
-<span class="nc bnc" id="L2807" title="All 2 branches missed.">		if (p != null) return p;</span>
+<span class="nc bnc" id="L2848" title="All 2 branches missed.">		if (p != null) return p;</span>
 
-<span class="nc" id="L2809">		return request.getUserPrincipal();</span>
+<span class="nc" id="L2850">		return request.getUserPrincipal();</span>
 	}
 
 	public static String fixURL(String url)
 	{
-<span class="nc bnc" id="L2814" title="All 2 branches missed.">		if (url==null) return(&quot;&quot;);</span>
+<span class="nc bnc" id="L2855" title="All 2 branches missed.">		if (url==null) return(&quot;&quot;);</span>
 
-<span class="nc" id="L2816">		url = DocTools.removeCharsDir(url).toLowerCase();</span>
+<span class="nc" id="L2857">		url = DocTools.removeCharsDir(url).toLowerCase();</span>
 
-<span class="nc" id="L2818">		url = Tools.replace(url, &quot;//&quot;, &quot;/&quot;);</span>
-<span class="nc" id="L2819">		url = Tools.replace(url, &quot;=&quot;, &quot;-&quot;);</span>
-<span class="nc" id="L2820">		url = Tools.replace(url, &quot;_-_&quot;, &quot;_&quot;);</span>
-<span class="nc" id="L2821">		url = Tools.replace(url, &quot;__&quot;, &quot;_&quot;);</span>
-<span class="nc" id="L2822">		url = Tools.replace(url, &quot;___&quot;, &quot;_&quot;);</span>
-<span class="nc" id="L2823">		url = Tools.replace(url, &quot;._&quot;, &quot;_&quot;);</span>
-<span class="nc" id="L2824">		url = Tools.replace(url, &quot;_.html&quot;, &quot;.html&quot;);</span>
-<span class="nc" id="L2825">		url = Tools.replace(url, &quot;.html.html&quot;, &quot;.html&quot;);</span>
+<span class="nc" id="L2859">		url = Tools.replace(url, &quot;//&quot;, &quot;/&quot;);</span>
+<span class="nc" id="L2860">		url = Tools.replace(url, &quot;=&quot;, &quot;-&quot;);</span>
+<span class="nc" id="L2861">		url = Tools.replace(url, &quot;_-_&quot;, &quot;_&quot;);</span>
+<span class="nc" id="L2862">		url = Tools.replace(url, &quot;__&quot;, &quot;_&quot;);</span>
+<span class="nc" id="L2863">		url = Tools.replace(url, &quot;___&quot;, &quot;_&quot;);</span>
+<span class="nc" id="L2864">		url = Tools.replace(url, &quot;._&quot;, &quot;_&quot;);</span>
+<span class="nc" id="L2865">		url = Tools.replace(url, &quot;_.html&quot;, &quot;.html&quot;);</span>
+<span class="nc" id="L2866">		url = Tools.replace(url, &quot;.html.html&quot;, &quot;.html&quot;);</span>
 		//ak mame nahradu spojok a bodiek v URL toto treba
-<span class="nc" id="L2827">		url = Tools.replace(url, &quot;-html.html&quot;, &quot;.html&quot;);</span>
+<span class="nc" id="L2868">		url = Tools.replace(url, &quot;-html.html&quot;, &quot;.html&quot;);</span>
 		//htm je tu kvoli importu web stranok zo zip archivu
-<span class="nc" id="L2829">		url = Tools.replace(url, &quot;.htm.html&quot;, &quot;.htm&quot;);</span>
-<span class="nc" id="L2830">		url = Tools.replace(url, &quot;-htm.html&quot;, &quot;.htm&quot;);</span>
-<span class="nc" id="L2831">		return(url);</span>
+<span class="nc" id="L2870">		url = Tools.replace(url, &quot;.htm.html&quot;, &quot;.htm&quot;);</span>
+<span class="nc" id="L2871">		url = Tools.replace(url, &quot;-htm.html&quot;, &quot;.htm&quot;);</span>
+<span class="nc" id="L2872">		return(url);</span>
 	}
 
 	/**
@@ -2836,12 +2877,12 @@ import java.util.regex.Pattern;
 	 */
 	public static String truncateText(String text, int length){
 
-<span class="nc bnc" id="L2839" title="All 2 branches missed.">		if(text.length() &gt; length){</span>
-<span class="nc" id="L2840">			int index = text.lastIndexOf(&quot; &quot;, length);</span>
-<span class="nc bnc" id="L2841" title="All 2 branches missed.">			if (index &gt; 0) text = text.substring(0, index);</span>
-<span class="nc" id="L2842">			else text = text.substring(0, length);</span>
+<span class="nc bnc" id="L2880" title="All 2 branches missed.">		if(text.length() &gt; length){</span>
+<span class="nc" id="L2881">			int index = text.lastIndexOf(&quot; &quot;, length);</span>
+<span class="nc bnc" id="L2882" title="All 2 branches missed.">			if (index &gt; 0) text = text.substring(0, index);</span>
+<span class="nc" id="L2883">			else text = text.substring(0, length);</span>
 		}
-<span class="nc" id="L2844">		return text;</span>
+<span class="nc" id="L2885">		return text;</span>
 	}
 
 	/**
@@ -2851,26 +2892,26 @@ import java.util.regex.Pattern;
 	 */
 	public static String convertToHtmlTags(String text){
 
-<span class="pc bpc" id="L2854" title="1 of 2 branches missed.">		if (text.contains(&quot;*||&quot;)) text = Tools.replace(text, &quot;*||&quot;, &quot;&lt;/&quot;);</span>
-<span class="pc bpc" id="L2855" title="1 of 2 branches missed.">		if (text.contains(&quot;*|&quot;)) text = Tools.replace(text, &quot;*|&quot;, &quot;&lt;&quot;);</span>
-<span class="pc bpc" id="L2856" title="1 of 2 branches missed.">		if (text.contains(&quot;|*&quot;)) text = Tools.replace(text, &quot;|*&quot;, &quot;&gt;&quot;);</span>
-<span class="fc bfc" id="L2857" title="All 2 branches covered.">		if (text.contains(&quot;&amp;amp;#47;&quot;)) text = Tools.replace(text, &quot;&amp;amp;#47;&quot;, &quot;&amp;#47;&quot;);</span>
+<span class="pc bpc" id="L2895" title="1 of 2 branches missed.">		if (text.contains(&quot;*||&quot;)) text = Tools.replace(text, &quot;*||&quot;, &quot;&lt;/&quot;);</span>
+<span class="pc bpc" id="L2896" title="1 of 2 branches missed.">		if (text.contains(&quot;*|&quot;)) text = Tools.replace(text, &quot;*|&quot;, &quot;&lt;&quot;);</span>
+<span class="pc bpc" id="L2897" title="1 of 2 branches missed.">		if (text.contains(&quot;|*&quot;)) text = Tools.replace(text, &quot;|*&quot;, &quot;&gt;&quot;);</span>
+<span class="fc bfc" id="L2898" title="All 2 branches covered.">		if (text.contains(&quot;&amp;amp;#47;&quot;)) text = Tools.replace(text, &quot;&amp;amp;#47;&quot;, &quot;&amp;#47;&quot;);</span>
 
-<span class="fc" id="L2859">		return  text;</span>
+<span class="fc" id="L2900">		return  text;</span>
 	}
 
 	public static boolean isNumeric(String str)
 	{
-<span class="fc bfc" id="L2864" title="All 2 branches covered.">		if (Tools.isEmpty(str)) return false;</span>
+<span class="fc bfc" id="L2905" title="All 2 branches covered.">		if (Tools.isEmpty(str)) return false;</span>
 		try
 		{
-<span class="nc" id="L2867">			Double.parseDouble(str);</span>
+<span class="nc" id="L2908">			Double.parseDouble(str);</span>
 		}
-<span class="fc" id="L2869">		catch(NumberFormatException nfe)</span>
+<span class="fc" id="L2910">		catch(NumberFormatException nfe)</span>
 		{
-<span class="fc" id="L2871">			return false;</span>
-<span class="nc" id="L2872">		}</span>
-<span class="nc" id="L2873">		return true;</span>
+<span class="fc" id="L2912">			return false;</span>
+<span class="nc" id="L2913">		}</span>
+<span class="nc" id="L2914">		return true;</span>
 	}
 
 	/**
@@ -2879,27 +2920,27 @@ import java.util.regex.Pattern;
 	 * @param delay
 	 */
 	public static void setTimeout(Runnable runnable, int delay){
-<span class="fc" id="L2882">		new Thread(() -&gt; {</span>
+<span class="fc" id="L2923">		new Thread(() -&gt; {</span>
 			try {
-<span class="fc" id="L2884">				Thread.sleep(delay);</span>
-<span class="fc" id="L2885">				runnable.run();</span>
+<span class="fc" id="L2925">				Thread.sleep(delay);</span>
+<span class="fc" id="L2926">				runnable.run();</span>
 			}
-<span class="nc" id="L2887">			catch (Exception e){</span>
-<span class="nc" id="L2888">				Logger.error(Tools.class, e);</span>
-<span class="fc" id="L2889">			}</span>
-<span class="fc" id="L2890">		}).start();</span>
-<span class="fc" id="L2891">	}</span>
+<span class="nc" id="L2928">			catch (Exception e){</span>
+<span class="nc" id="L2929">				Logger.error(Tools.class, e);</span>
+<span class="fc" id="L2930">			}</span>
+<span class="fc" id="L2931">		}).start();</span>
+<span class="fc" id="L2932">	}</span>
 
 	public static String prepositionsAppendNbsp(String text) {
-<span class="nc" id="L2894">		String result = text;</span>
-<span class="nc" id="L2895">		String[] prepositions = Tools.getTokens(Constants.getString(&quot;prepositions&quot;), &quot;,&quot;);</span>
+<span class="nc" id="L2935">		String result = text;</span>
+<span class="nc" id="L2936">		String[] prepositions = Tools.getTokens(Constants.getString(&quot;prepositions&quot;), &quot;,&quot;);</span>
 
-<span class="nc bnc" id="L2897" title="All 2 branches missed.">		for (String preposition : prepositions) {</span>
-<span class="nc" id="L2898">			preposition = preposition.trim();</span>
-<span class="nc" id="L2899">			result = Tools.replace(result, &quot; &quot; + preposition + &quot; &quot;, &quot; &quot; + preposition + &quot;&amp;nbsp;&quot;);</span>
+<span class="nc bnc" id="L2938" title="All 2 branches missed.">		for (String preposition : prepositions) {</span>
+<span class="nc" id="L2939">			preposition = preposition.trim();</span>
+<span class="nc" id="L2940">			result = Tools.replace(result, &quot; &quot; + preposition + &quot; &quot;, &quot; &quot; + preposition + &quot;&amp;nbsp;&quot;);</span>
 		}
 
-<span class="nc" id="L2902">		return result;</span>
+<span class="nc" id="L2943">		return result;</span>
 	}
 
 	/**
@@ -2909,26 +2950,26 @@ import java.util.regex.Pattern;
 	 */
 	public static String unescapeHtmlEntities(String text)
 	{
-<span class="nc" id="L2912">		String returnString = text;</span>
-<span class="nc" id="L2913">		returnString = Tools.replace(returnString, &quot;&amp;lt;&quot;, &quot;&lt;&quot;);</span>
-<span class="nc" id="L2914">		returnString = Tools.replace(returnString, &quot;&amp;gt;&quot;, &quot;&gt;&quot;);</span>
-<span class="nc" id="L2915">		returnString = Tools.replace(returnString, &quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
-<span class="nc" id="L2916">		returnString = Tools.replace(returnString, &quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="nc" id="L2953">		String returnString = text;</span>
+<span class="nc" id="L2954">		returnString = Tools.replace(returnString, &quot;&amp;lt;&quot;, &quot;&lt;&quot;);</span>
+<span class="nc" id="L2955">		returnString = Tools.replace(returnString, &quot;&amp;gt;&quot;, &quot;&gt;&quot;);</span>
+<span class="nc" id="L2956">		returnString = Tools.replace(returnString, &quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
+<span class="nc" id="L2957">		returnString = Tools.replace(returnString, &quot;&amp;quot;&quot;, &quot;\&quot;&quot;);</span>
 
-<span class="nc" id="L2918">		return returnString;</span>
+<span class="nc" id="L2959">		return returnString;</span>
 	}
 
 	public static String escapeHtml(String text) {
-<span class="fc bfc" id="L2922" title="All 2 branches covered.">		if(text != null) {</span>
+<span class="fc bfc" id="L2963" title="All 2 branches covered.">		if(text != null) {</span>
 //			return StringEscapeUtils.escapeHtml(text);
-<span class="fc" id="L2924">			return ResponseUtils.filter(text).replace(&quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
+<span class="fc" id="L2965">			return ResponseUtils.filter(text).replace(&quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
 		} else {
-<span class="fc" id="L2926">			return null;</span>
+<span class="fc" id="L2967">			return null;</span>
 		}
 	}
 
     public static String getJsonUnsafe(String json) {
-<span class="fc" id="L2931">	    return json;</span>
+<span class="fc" id="L2972">	    return json;</span>
     }
 
     /**
@@ -2941,7 +2982,7 @@ import java.util.regex.Pattern;
      * @return unescaped request parameter names
      */
     public static Enumeration&lt;String&gt; getRequestParameterNamesUnsafe(HttpServletRequest request) {
-<span class="nc" id="L2944">        return getRequestParameterNames(request, false);</span>
+<span class="nc" id="L2985">        return getRequestParameterNames(request, false);</span>
     }
 
     /**
@@ -2950,7 +2991,7 @@ import java.util.regex.Pattern;
      * @return escaped request parameter names
      */
     public static Enumeration&lt;String&gt; getRequestParameterNames(HttpServletRequest request) {
-<span class="nc" id="L2953">        return getRequestParameterNames(request, true);</span>
+<span class="nc" id="L2994">        return getRequestParameterNames(request, true);</span>
     }
 
     /**
@@ -2960,19 +3001,19 @@ import java.util.regex.Pattern;
      * @return escaped/unescaped request parameter names
      */
     public static Enumeration&lt;String&gt; getRequestParameterNames(HttpServletRequest request, boolean sanitize) {
-<span class="nc" id="L2963">        Enumeration&lt;String&gt; e = request.getParameterNames();</span>
+<span class="nc" id="L3004">        Enumeration&lt;String&gt; e = request.getParameterNames();</span>
 
-<span class="nc bnc" id="L2965" title="All 2 branches missed.">        if(sanitize) {</span>
-<span class="nc" id="L2966">            List&lt;String&gt; names = Collections.list(e);</span>
+<span class="nc bnc" id="L3006" title="All 2 branches missed.">        if(sanitize) {</span>
+<span class="nc" id="L3007">            List&lt;String&gt; names = Collections.list(e);</span>
 
-<span class="nc bnc" id="L2968" title="All 2 branches missed.">            for(int i = 0; i &lt; names.size(); i++) {</span>
-<span class="nc" id="L2969">                names.set(i, escapeHtml(names.get(i)));</span>
+<span class="nc bnc" id="L3009" title="All 2 branches missed.">            for(int i = 0; i &lt; names.size(); i++) {</span>
+<span class="nc" id="L3010">                names.set(i, escapeHtml(names.get(i)));</span>
             }
 
-<span class="nc" id="L2972">            e = Collections.enumeration(names);</span>
+<span class="nc" id="L3013">            e = Collections.enumeration(names);</span>
         }
 
-<span class="nc" id="L2975">        return e;</span>
+<span class="nc" id="L3016">        return e;</span>
     }
 
     /**
@@ -2986,7 +3027,7 @@ import java.util.regex.Pattern;
      * @return escaped request parameter values
      */
 	public static String[] getRequestParameterValues(HttpServletRequest request, String param) {
-<span class="nc" id="L2989">		return getRequestParameterValues(request, param, true);</span>
+<span class="nc" id="L3030">		return getRequestParameterValues(request, param, true);</span>
 	}
 
     /**
@@ -2997,16 +3038,16 @@ import java.util.regex.Pattern;
      * @return escaped/unescaped request parameter values
      */
 	public static String[] getRequestParameterValues(HttpServletRequest request, String param, boolean sanitize) {
-<span class="nc bnc" id="L3000" title="All 2 branches missed.">		if(sanitize) {</span>
-<span class="nc" id="L3001">			String[] values = request.getParameterValues(param);</span>
-<span class="nc bnc" id="L3002" title="All 2 branches missed.">			if (values == null) return null;</span>
+<span class="nc bnc" id="L3041" title="All 2 branches missed.">		if(sanitize) {</span>
+<span class="nc" id="L3042">			String[] values = request.getParameterValues(param);</span>
+<span class="nc bnc" id="L3043" title="All 2 branches missed.">			if (values == null) return null;</span>
 
-<span class="nc bnc" id="L3004" title="All 2 branches missed.">			for(int i = 0; i &lt; values.length; i++) {</span>
-<span class="nc" id="L3005">				values[i] = escapeHtml(values[i]);</span>
+<span class="nc bnc" id="L3045" title="All 2 branches missed.">			for(int i = 0; i &lt; values.length; i++) {</span>
+<span class="nc" id="L3046">				values[i] = escapeHtml(values[i]);</span>
 			}
-<span class="nc" id="L3007">			return values;</span>
+<span class="nc" id="L3048">			return values;</span>
 		} else {
-<span class="nc" id="L3009">			return request.getParameterValues(param);</span>
+<span class="nc" id="L3050">			return request.getParameterValues(param);</span>
 		}
 	}
 
@@ -3017,7 +3058,7 @@ import java.util.regex.Pattern;
      * @return unescaped request parameter values
      */
 	public static String[] getRequestParameterValuesUnsafe(HttpServletRequest request, String param) {
-<span class="nc" id="L3020">		return getRequestParameterValues(request, param, false);</span>
+<span class="nc" id="L3061">		return getRequestParameterValues(request, param, false);</span>
 	}
 
     /**
@@ -3031,7 +3072,7 @@ import java.util.regex.Pattern;
      * @return escaped request parameter value
      */
 	public static String getRequestParameter(HttpServletRequest request, String param) {
-<span class="fc" id="L3034">		return getRequestParameter(request, param, true);</span>
+<span class="fc" id="L3075">		return getRequestParameter(request, param, true);</span>
 	}
 
     /**
@@ -3041,7 +3082,7 @@ import java.util.regex.Pattern;
      * @@return unescaped request parameter value
      */
     public static String getRequestParameterUnsafe(HttpServletRequest request, String param) {
-<span class="fc" id="L3044">        return getRequestParameter(request, param, false);</span>
+<span class="fc" id="L3085">        return getRequestParameter(request, param, false);</span>
     }
 
     /**
@@ -3052,10 +3093,10 @@ import java.util.regex.Pattern;
      * @return escaped/unescaped request parameter value
      */
 	public static String getRequestParameter(HttpServletRequest request, String param, boolean sanitize) {
-<span class="fc bfc" id="L3055" title="All 2 branches covered.">		if(sanitize) {</span>
-<span class="fc" id="L3056">			return escapeHtml(request.getParameter(param));</span>
+<span class="fc bfc" id="L3096" title="All 2 branches covered.">		if(sanitize) {</span>
+<span class="fc" id="L3097">			return escapeHtml(request.getParameter(param));</span>
 		} else {
-<span class="fc" id="L3058">			return request.getParameter(param);</span>
+<span class="fc" id="L3099">			return request.getParameter(param);</span>
 		}
 	}
 
@@ -3068,12 +3109,12 @@ import java.util.regex.Pattern;
 	 * @throws IOException
 	 */
 	public static void printJSON(JspWriter out, JSONArray json, String callback) throws JSONException, IOException {
-<span class="pc bpc" id="L3071" title="1 of 2 branches missed.">		if (callback == null) {</span>
-<span class="fc" id="L3072">			out.println(Tools.getJsonUnsafe(json.toString(4)));</span>
+<span class="pc bpc" id="L3112" title="1 of 2 branches missed.">		if (callback == null) {</span>
+<span class="fc" id="L3113">			out.println(Tools.getJsonUnsafe(json.toString(4)));</span>
 		} else {
-<span class="nc" id="L3074">			out.println(callback + &quot;(&quot; + Tools.getJsonUnsafe(json.toString(4)) + &quot;);&quot;);</span>
+<span class="nc" id="L3115">			out.println(callback + &quot;(&quot; + Tools.getJsonUnsafe(json.toString(4)) + &quot;);&quot;);</span>
 		}
-<span class="fc" id="L3076">	}</span>
+<span class="fc" id="L3117">	}</span>
 
     /**
      *
@@ -3083,38 +3124,38 @@ import java.util.regex.Pattern;
      * @throws IOException
      */
     public static void printJSON(JspWriter out, JSONArray json) throws JSONException, IOException {
-<span class="fc" id="L3086">        printJSON(out, json, null);</span>
-<span class="fc" id="L3087">    }</span>
+<span class="fc" id="L3127">        printJSON(out, json, null);</span>
+<span class="fc" id="L3128">    }</span>
 
     public static String getRequestURI(HttpServletRequest request) {
-<span class="nc" id="L3090">        return Tools.escapeHtml(request.getRequestURI());</span>
+<span class="nc" id="L3131">        return Tools.escapeHtml(request.getRequestURI());</span>
     }
 
     public static String getRequestQueryString(HttpServletRequest request) {
-<span class="nc" id="L3094">        return Tools.escapeHtml(request.getQueryString());</span>
+<span class="nc" id="L3135">        return Tools.escapeHtml(request.getQueryString());</span>
     }
 
 	public static Calendar nextWorkingDay(Calendar calendar) {
 		do {
-<span class="nc" id="L3099">			calendar.add(Calendar.DAY_OF_YEAR , 1);</span>
-<span class="nc bnc" id="L3100" title="All 2 branches missed.">		} while (!isWorkingDay(calendar));</span>
-<span class="nc" id="L3101">		return calendar;</span>
+<span class="nc" id="L3140">			calendar.add(Calendar.DAY_OF_YEAR , 1);</span>
+<span class="nc bnc" id="L3141" title="All 2 branches missed.">		} while (!isWorkingDay(calendar));</span>
+<span class="nc" id="L3142">		return calendar;</span>
 	}
 
 	public static boolean isWorkingDay(Calendar cal) {
-<span class="nc bnc" id="L3105" title="All 4 branches missed.">		if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {</span>
-<span class="nc" id="L3106">			return false;</span>
+<span class="nc bnc" id="L3146" title="All 4 branches missed.">		if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {</span>
+<span class="nc" id="L3147">			return false;</span>
 		}
-<span class="nc" id="L3108">		int result = new SimpleQuery().forInt(&quot;SELECT holiday_id FROM holidays WHERE hday=? AND hmonth = ? AND (hyear = ? OR hyear is NULL or hyear = '')&quot;, cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH)+1, cal.get(Calendar.YEAR));</span>
-<span class="nc bnc" id="L3109" title="All 2 branches missed.">		if (result &gt; 0)</span>
-<span class="nc" id="L3110">			return false;</span>
-<span class="nc" id="L3111">		return true;</span>
+<span class="nc" id="L3149">		int result = new SimpleQuery().forInt(&quot;SELECT holiday_id FROM holidays WHERE hday=? AND hmonth = ? AND (hyear = ? OR hyear is NULL or hyear = '')&quot;, cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH)+1, cal.get(Calendar.YEAR));</span>
+<span class="nc bnc" id="L3150" title="All 2 branches missed.">		if (result &gt; 0)</span>
+<span class="nc" id="L3151">			return false;</span>
+<span class="nc" id="L3152">		return true;</span>
 	}
 
 	public static String trim(String value) {
-<span class="pc bpc" id="L3115" title="1 of 2 branches missed.">		if (value == null) return value;</span>
+<span class="pc bpc" id="L3156" title="1 of 2 branches missed.">		if (value == null) return value;</span>
 
-<span class="fc" id="L3117">		return value.trim();</span>
+<span class="fc" id="L3158">		return value.trim();</span>
 	}
 
 	/**
@@ -3123,8 +3164,8 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static String toString(StringBuilder builder) {
-<span class="pc bpc" id="L3126" title="1 of 2 branches missed.">		if (builder == null) return null;</span>
-<span class="nc" id="L3127">		return builder.toString();</span>
+<span class="pc bpc" id="L3167" title="1 of 2 branches missed.">		if (builder == null) return null;</span>
+<span class="nc" id="L3168">		return builder.toString();</span>
 	}
 
 	/**
@@ -3134,7 +3175,7 @@ import java.util.regex.Pattern;
 	 */
 	@Deprecated
 	public static String getDomainFromAlias(String aliasedDomainName) {
-<span class="nc" id="L3137">		return DomainRedirectDB.getDomainFromAlias(aliasedDomainName);</span>
+<span class="nc" id="L3178">		return DomainRedirectDB.getDomainFromAlias(aliasedDomainName);</span>
 	}
 
 	/**
@@ -3142,12 +3183,12 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static ApplicationContext getSpringContext() {
-<span class="fc" id="L3145">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc" id="L3186">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
 		ApplicationContext context;
-<span class="fc bfc" id="L3147" title="All 2 branches covered.">      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;);</span>
-<span class="fc" id="L3148">		else context = requestBean.getSpringContext();</span>
+<span class="fc bfc" id="L3188" title="All 2 branches covered.">      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;);</span>
+<span class="fc" id="L3189">		else context = requestBean.getSpringContext();</span>
 
-<span class="fc" id="L3150">		return context;</span>
+<span class="fc" id="L3191">		return context;</span>
 	}
 
 	/**
@@ -3158,12 +3199,12 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static &lt;T&gt; T getSpringBean(String name, Class&lt;T&gt; clazz) {
-<span class="fc" id="L3161">		ApplicationContext springContext = getSpringContext();</span>
-<span class="pc bpc" id="L3162" title="2 of 4 branches missed.">        if (springContext == null || !springContext.containsBean(name)) {</span>
-<span class="nc" id="L3163">            return null;</span>
+<span class="fc" id="L3202">		ApplicationContext springContext = getSpringContext();</span>
+<span class="pc bpc" id="L3203" title="2 of 4 branches missed.">        if (springContext == null || !springContext.containsBean(name)) {</span>
+<span class="nc" id="L3204">            return null;</span>
         }
 
-<span class="fc" id="L3166">        return springContext.getBean(name, clazz);</span>
+<span class="fc" id="L3207">        return springContext.getBean(name, clazz);</span>
     }
 
 	/**
@@ -3172,7 +3213,7 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static boolean isTrue(Boolean b) {
-<span class="fc" id="L3175">		return Boolean.TRUE.equals(b);</span>
+<span class="fc" id="L3216">		return Boolean.TRUE.equals(b);</span>
 	}
 
 	/**
@@ -3181,7 +3222,7 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static boolean isFalse(Boolean b) {
-<span class="fc" id="L3184">		return Boolean.FALSE.equals(b);</span>
+<span class="fc" id="L3225">		return Boolean.FALSE.equals(b);</span>
 	}
 
 	/**
@@ -3190,8 +3231,8 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static String base64Decode(String encoded) {
-<span class="pc bpc" id="L3193" title="1 of 2 branches missed.">		if (Tools.isEmpty(encoded)) return &quot;&quot;;</span>
-<span class="nc" id="L3194">		return new String(Base64.getDecoder().decode(encoded));</span>
+<span class="pc bpc" id="L3234" title="1 of 2 branches missed.">		if (Tools.isEmpty(encoded)) return &quot;&quot;;</span>
+<span class="nc" id="L3235">		return new String(Base64.getDecoder().decode(encoded));</span>
 	}
 
 	/**
@@ -3200,8 +3241,8 @@ import java.util.regex.Pattern;
 	 * @return
 	 */
 	public static String base64Encode(String text) {
-<span class="nc bnc" id="L3203" title="All 2 branches missed.">		if (Tools.isEmpty(text)) return &quot;&quot;;</span>
-<span class="nc" id="L3204">		return Base64.getEncoder().encodeToString(text.getBytes());</span>
+<span class="nc bnc" id="L3244" title="All 2 branches missed.">		if (Tools.isEmpty(text)) return &quot;&quot;;</span>
+<span class="nc" id="L3245">		return Base64.getEncoder().encodeToString(text.getBytes());</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

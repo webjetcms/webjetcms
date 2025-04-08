@@ -1,15 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationAppRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationAppRestController.java</span></div><h1>ReservationAppRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationAppRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationAppRestController.java</span></div><h1>ReservationAppRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
@@ -21,37 +28,142 @@ import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 @RequestMapping(&quot;/rest/reservation-app&quot;)
 public class ReservationAppRestController {
 
-    private final ReservationRepository rr; 
+    private final ReservationRepository rr;
     private final ReservationObjectRepository ror;
     private final ReservationObjectPriceRepository ropr;
 
     @Autowired
-<span class="fc" id="L29">    public ReservationAppRestController(ReservationRepository rr, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {</span>
-<span class="fc" id="L30">        this.rr = rr;</span>
-<span class="fc" id="L31">        this.ror = ror;</span>
-<span class="fc" id="L32">        this.ropr = ropr;</span>
-<span class="fc" id="L33">    }</span>
-    
-    @RequestMapping(value=&quot;/compute-reservation-price&quot;, params={&quot;reservation-date&quot;, &quot;time-range&quot;, &quot;object-id&quot;, &quot;email&quot;})
-    public BigDecimal computeReservationPrice(
+<span class="fc" id="L36">    public ReservationAppRestController(ReservationRepository rr, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {</span>
+<span class="fc" id="L37">        this.rr = rr;</span>
+<span class="fc" id="L38">        this.ror = ror;</span>
+<span class="fc" id="L39">        this.ropr = ropr;</span>
+<span class="fc" id="L40">    }</span>
+
+    @GetMapping(value=&quot;/compute-reservation-price&quot;, params={&quot;reservation-date&quot;, &quot;time-range&quot;, &quot;object-id&quot;, &quot;email&quot;})
+    public BigDecimal computeHoursReservationPrice(
         @RequestParam(&quot;reservation-date&quot;) String reservationDateString,
         @RequestParam(&quot;time-range&quot;) String timeRangeString,
         @RequestParam(&quot;object-id&quot;) String objectId,
         @RequestParam(&quot;email&quot;) String email,
         HttpServletRequest request) {
 
-<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            if(reservationDateString.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;) == false) </span>
-<span class="nc" id="L44">                return new BigDecimal(-1);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">            if(reservationDateString.matches(ReservationService.REGEX_YYYY_MM_DD) == false)</span>
+<span class="nc" id="L51">                return new BigDecimal(-1);</span>
 
-<span class="fc" id="L46">            Date reservationDate = Tools.getDateFromString(reservationDateString, &quot;yyyy-MM-dd&quot;);</span>
-<span class="fc" id="L47">            String[] timeRange = timeRangeString.split(&quot;-&quot;);</span>
-<span class="fc" id="L48">            Date timeFrom = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[0]), 0);</span>
-<span class="fc" id="L49">            Date timeTo = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[1]), 0);</span>
+<span class="fc" id="L53">            Date reservationDate = Tools.getDateFromString(reservationDateString, ReservationService.FE_DATEPICKER_FORMAT);</span>
+<span class="fc" id="L54">            String[] timeRange = timeRangeString.split(&quot;-&quot;);</span>
+<span class="fc" id="L55">            Date timeFrom = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[0]), 0);</span>
+<span class="fc" id="L56">            Date timeTo = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[1]), 0);</span>
 
-            //Its CREATE, reservationId is by default -1 
-<span class="fc" id="L52">            int userId = ReservationService.getUserToPay(email, Long.valueOf(-1), rr, request);</span>
+            //Its CREATE, reservationId is by default -1
+<span class="fc" id="L59">            int userId = ReservationService.getUserToPay(email, Long.valueOf(-1), rr, request);</span>
 
-<span class="fc" id="L54">            return ReservationService.calculateReservationPrice(reservationDate, reservationDate, timeFrom, timeTo, Long.valueOf(objectId), userId, ror, ropr);</span>
+<span class="fc" id="L61">            return ReservationService.calculateReservationPrice(reservationDate, reservationDate, timeFrom, timeTo, Long.valueOf(objectId), userId, ror, ropr);</span>
     }
+
+    @GetMapping(value=&quot;/compute-reservation-price&quot;, params={&quot;reservation-date-from&quot;, &quot;reservation-date-to&quot;, &quot;object-id&quot;, &quot;email&quot;})
+    public BigDecimal computeDaysReservationPrice(
+        @RequestParam(&quot;reservation-date-from&quot;) String reservationDateFromString,
+        @RequestParam(&quot;reservation-date-to&quot;) String reservationDateToString,
+        @RequestParam(&quot;object-id&quot;) String objectId,
+        @RequestParam(&quot;email&quot;) String email,
+        HttpServletRequest request) {
+
+<span class="pc bpc" id="L72" title="2 of 4 branches missed.">            if(!reservationDateFromString.matches(ReservationService.REGEX_YYYY_MM_DD) || !reservationDateToString.matches(ReservationService.REGEX_YYYY_MM_DD))</span>
+<span class="nc" id="L73">                return new BigDecimal(-1);</span>
+
+<span class="fc" id="L75">            Date reservationDateFrom = Tools.getDateFromString(reservationDateFromString, ReservationService.FE_DATEPICKER_FORMAT);</span>
+<span class="fc" id="L76">            Date reservationDateTo = Tools.getDateFromString(reservationDateToString, ReservationService.FE_DATEPICKER_FORMAT);</span>
+
+            //Its CREATE, reservationId is by default -1
+<span class="fc" id="L79">            int userId = ReservationService.getUserToPay(email, Long.valueOf(-1), rr, request);</span>
+
+<span class="fc" id="L81">            return ReservationService.calculateReservationPrice(reservationDateFrom.getTime(), reservationDateTo.getTime(), null, null, Long.valueOf(objectId), userId, ror, ropr);</span>
+    }
+
+    @GetMapping(value=&quot;/calendar-support-values&quot;, params={&quot;reservation-object-id&quot;, &quot;reservation-date&quot;, &quot;email&quot;})
+    public String getCalandarSuspportValues(
+        @RequestParam(&quot;reservation-object-id&quot;) Long reservationObjectId,
+        @RequestParam(&quot;reservation-date&quot;) String reservationDateString,
+        @RequestParam(&quot;email&quot;) String email,
+        HttpServletRequest request
+    ) {
+<span class="fc" id="L91">        JSONObject jsonObject = new JSONObject();</span>
+<span class="fc" id="L92">        Date reservationDate = ReservationService.getReservationDate(reservationDateString, ReservationService.FE_MONTHPICKER_FORMAT);</span>
+
+<span class="fc" id="L94">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L95">        cal.setTime(reservationDate);</span>
+<span class="fc" id="L96">        jsonObject.put(&quot;currentYear&quot;, cal.get(Calendar.YEAR));</span>
+<span class="fc" id="L97">        jsonObject.put(&quot;currentMonth&quot;, cal.get(Calendar.MONTH));</span>
+
+        //Range of showed days in calendar
+<span class="fc" id="L100">        Date startDate = DateTools.getFirstDateOfMonth(reservationDate, 0).getTime();</span>
+<span class="fc" id="L101">        Date endDate = DateTools.getLastDateOfMonth(reservationDate, 1).getTime();</span>
+
+<span class="fc" id="L103">        Map&lt;String, Integer&gt; reservationCountMap = ReservationService.computeReservationUsageByDays(reservationObjectId, startDate, endDate, rr);</span>
+<span class="fc" id="L104">        jsonObject.put(&quot;reservationCountMap&quot;, reservationCountMap);</span>
+
+<span class="fc" id="L106">        List&lt;String&gt; disabledDays = prepareDisabledDays(reservationObjectId, reservationCountMap, jsonObject);</span>
+
+<span class="fc" id="L108">        prepareCheckOutOnlyDays(jsonObject, disabledDays);</span>
+
+<span class="fc" id="L110">        prepareReservationPriceMap(email, startDate, endDate, reservationObjectId, jsonObject, request);</span>
+
+<span class="fc" id="L112">        return jsonObject.toString();</span>
+    }
+
+    private void prepareReservationPriceMap(String email, Date startDate, Date endDate, Long reservationObjectId, JSONObject jsonObject, HttpServletRequest request) {
+        //Its CREATE, reservationId is by default -1
+<span class="fc" id="L117">        int userId = ReservationService.getUserToPay(email, Long.valueOf(-1), rr, request);</span>
+
+        // We MUST ADD 1 day, because map of prices return -1 day (because user last day do not pay, its day of leaving)
+<span class="fc" id="L120">        Map&lt;String, BigDecimal&gt; reservationPriceMap = ReservationService.getMapOfPrices(startDate.getTime(), endDate.getTime() + (24*60*60*1000), null, null, reservationObjectId, userId, ror, ropr);</span>
+<span class="fc" id="L121">        jsonObject.put(&quot;reservationPriceMap&quot;, reservationPriceMap);</span>
+<span class="fc" id="L122">    }</span>
+
+    private List&lt;String&gt; prepareDisabledDays(Long selectedReservationId, Map&lt;String, Integer&gt; reservationCount, JSONObject jsonObject) {
+<span class="fc" id="L125">        int maxReservationCount = ror.getMaxReservationsById(selectedReservationId);</span>
+
+<span class="fc" id="L127">        List&lt;String&gt; disabledDays = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        for(Map.Entry&lt;String, Integer&gt; entry : reservationCount.entrySet()) {</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            if(entry.getValue() &gt;= maxReservationCount) {</span>
+<span class="fc" id="L130">                disabledDays.add(entry.getKey());</span>
+            }
+<span class="fc" id="L132">        }</span>
+
+<span class="fc" id="L134">        jsonObject.put(&quot;disabledDays&quot;, disabledDays);</span>
+<span class="fc" id="L135">        jsonObject.put(&quot;maxReservationCount&quot;, maxReservationCount);</span>
+
+<span class="fc" id="L137">        return disabledDays;</span>
+    }
+
+    /**
+     * Prepare list of days, where user can check-out only and this days remove from list of disabled days.
+     * Then FE login will allow only check-out on this days.
+     * @param jsonObject
+     */
+    private void prepareCheckOutOnlyDays(JSONObject jsonObject, List&lt;String&gt; disabledDays) {
+<span class="fc" id="L146">        List&lt;String&gt; newDisabledDays = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L147">        List&lt;String&gt; checkOutOnlyDays = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        for(String disabledDayId : disabledDays) {</span>
+            //Prepare id of previous day
+<span class="fc" id="L151">            Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L152">            cal.setTime( Tools.getDateFromString(disabledDayId, ReservationService.FE_DATEPICKER_FORMAT) );</span>
+<span class="fc" id="L153">            cal.add(Calendar.DAY_OF_YEAR, -1);</span>
+<span class="fc" id="L154">            String previousDayId = ReservationService.getDateId(cal.getTime(), false);</span>
+
+            //Check that previous day is not disabled
+<span class="fc bfc" id="L157" title="All 2 branches covered.">            if(disabledDays.contains(previousDayId) == false) {</span>
+<span class="fc" id="L158">                checkOutOnlyDays.add(disabledDayId);</span>
+            } else {
+<span class="fc" id="L160">                newDisabledDays.add(disabledDayId);</span>
+            }
+<span class="fc" id="L162">        }</span>
+
+<span class="fc" id="L164">        jsonObject.remove(&quot;disabledDays&quot;);</span>
+<span class="fc" id="L165">        jsonObject.put(&quot;disabledDays&quot;, newDisabledDays);</span>
+<span class="fc" id="L166">        jsonObject.put(&quot;checkOutOnlyDays&quot;, checkOutOnlyDays);</span>
+<span class="fc" id="L167">    } </span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

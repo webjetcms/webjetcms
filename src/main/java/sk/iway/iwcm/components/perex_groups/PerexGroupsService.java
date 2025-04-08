@@ -247,9 +247,9 @@ public class PerexGroupsService {
             }
         }
 
-
 		if (saved != null) {
-			ClusterDB.addRefresh(PerexGroupsService.class);
+            //perex groups are cached in DocDB class, we must refresh it on cluster
+			ClusterDB.addRefresh(DocDB.class);
 		}
 
 		return saved;

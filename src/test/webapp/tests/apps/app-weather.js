@@ -14,8 +14,13 @@ function getDates(){
 }
 
 Scenario("Počasie - test zobrazovania", ({ I }) => {
+    const MIN_INTEGER = -2147483648;
+    const MAX_INTEGER = 2147483647;
+
     I.amOnPage("/apps/pocasie/");
     I.waitForElement(".app-weather");
+    I.dontSee(MIN_INTEGER.toString(), ".pocStupne");
+    I.dontSee(MAX_INTEGER.toString(), ".pocStupne");
     I.seeElement(locate("h1").withText(("Počasie")));
     I.see("Bratislava");
     for(let date of getDates()) {

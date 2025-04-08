@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebPagesListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">WebPagesListener.java</span></div><h1>WebPagesListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebPagesListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.editor.rest</a> &gt; <span class="el_source">WebPagesListener.java</span></div><h1>WebPagesListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.editor.rest;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -176,11 +176,11 @@ import sk.iway.iwcm.users.UsersDB;
                 //overenie, ci ma nieco na schvalenie
                 //List&lt;DocHistory&gt; pagesForApprove = WebApproveService.getAllItems(options, null);
                 try {
-<span class="fc" id="L179">                    List&lt;DocHistory&gt; pagesForApprove = docHistoryRepository.findAll(WebApproveRestController.getToApproveConditions(options.getUserId()));</span>
-<span class="fc bfc" id="L180" title="All 2 branches covered.">                    if (pagesForApprove.isEmpty()==false) hasPagesToApprove = Boolean.TRUE;</span>
-<span class="nc" id="L181">                } catch (Exception ex) {</span>
-<span class="nc" id="L182">                    Logger.error(ex);</span>
-<span class="fc" id="L183">                }</span>
+<span class="nc" id="L179">                    List&lt;DocHistory&gt; pagesForApprove = docHistoryRepository.findAll(WebApproveRestController.getToApproveConditions(options.getUserId()));</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                    if (pagesForApprove.isEmpty()==false) hasPagesToApprove = Boolean.TRUE;</span>
+<span class="fc" id="L181">                } catch (Exception ex) {</span>
+<span class="fc" id="L182">                    Logger.error(ex);</span>
+<span class="nc" id="L183">                }</span>
 
 <span class="fc bfc" id="L185" title="All 2 branches covered.">                if (lastGroupId == 0) request.getSession().removeAttribute(Constants.SESSION_GROUP_ID);</span>
             }
@@ -214,11 +214,13 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L214">            model.addAttribute(&quot;hasSystemTab&quot;, Boolean.valueOf(hasSystemTab));</span>
 <span class="fc" id="L215">            model.addAttribute(&quot;hasTrashTab&quot;, Boolean.valueOf(hasTrashTab));</span>
 
-<span class="nc" id="L217">         } catch (Exception ex) {</span>
-<span class="nc" id="L218">            Logger.error(WebPagesListener.class, ex);</span>
-<span class="fc" id="L219">        }</span>
 
-<span class="fc" id="L221">    }</span>
+<span class="fc" id="L218">            request.getSession().setAttribute(&quot;userWasInWebpages&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L219">         } catch (Exception ex) {</span>
+<span class="nc" id="L220">            Logger.error(WebPagesListener.class, ex);</span>
+<span class="fc" id="L221">        }</span>
+
+<span class="fc" id="L223">    }</span>
 
     /**
      * Fixne problem s JSON objektom vlozenym do HTML kodu, problem je hlavne so &lt;/script&gt; tagom, ktory na urovni HTML parsera ukonci parsing javascript kodu a hodi chybu
@@ -226,10 +228,10 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     private String fixJson(String json) {
-<span class="fc" id="L229">        String fixed = json;</span>
-<span class="fc" id="L230">        fixed = Tools.replace(fixed, &quot;&lt;/script&gt;&quot;, &quot;&lt;\\/script&gt;&quot;);</span>
-<span class="fc" id="L231">        fixed = Tools.replace(fixed, &quot;&lt;/SCRIPT&gt;&quot;, &quot;&lt;\\/SCRIPT&gt;&quot;);</span>
-<span class="fc" id="L232">        return fixed;</span>
+<span class="fc" id="L231">        String fixed = json;</span>
+<span class="fc" id="L232">        fixed = Tools.replace(fixed, &quot;&lt;/script&gt;&quot;, &quot;&lt;\\/script&gt;&quot;);</span>
+<span class="fc" id="L233">        fixed = Tools.replace(fixed, &quot;&lt;/SCRIPT&gt;&quot;, &quot;&lt;\\/SCRIPT&gt;&quot;);</span>
+<span class="fc" id="L234">        return fixed;</span>
     }
 
     /**
@@ -239,69 +241,69 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     private List&lt;JsTreeItem&gt; expandGroupsLastFolder(List&lt;JsTreeItem&gt; rootGroups, int lastGroupId, Identity user, boolean showPages, String click, HttpServletRequest request) {
-<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (lastGroupId &lt; 1) return rootGroups;</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">        if (lastGroupId &lt; 1) return rootGroups;</span>
 
-<span class="fc" id="L244">        List&lt;JsTreeItem&gt; expanded = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L245">        expanded.addAll(rootGroups);</span>
+<span class="fc" id="L246">        List&lt;JsTreeItem&gt; expanded = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L247">        expanded.addAll(rootGroups);</span>
 
         //ziskaj zoznam parent priecinkov
-<span class="fc" id="L248">        List&lt;GroupDetails&gt; parentGroups = GroupsDB.getInstance().getParentGroups(lastGroupId);</span>
-<span class="fc" id="L249">        Collections.reverse(parentGroups);</span>
-<span class="fc" id="L250">        expandGroups(expanded, parentGroups, lastGroupId, 0, user, showPages, click, request);</span>
+<span class="fc" id="L250">        List&lt;GroupDetails&gt; parentGroups = GroupsDB.getInstance().getParentGroups(lastGroupId);</span>
+<span class="fc" id="L251">        Collections.reverse(parentGroups);</span>
+<span class="fc" id="L252">        expandGroups(expanded, parentGroups, lastGroupId, 0, user, showPages, click, request);</span>
 
         //vyresetuj selected atribut
-<span class="fc bfc" id="L253" title="All 2 branches covered.">        for (JsTreeItem item : expanded) {</span>
-<span class="fc bfc" id="L254" title="All 2 branches covered.">            if (item.getId().equals(String.valueOf(lastGroupId))) item.getState().setSelected(true);</span>
-<span class="fc" id="L255">            else item.getState().setSelected(false);</span>
-<span class="fc" id="L256">        }</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        for (JsTreeItem item : expanded) {</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">            if (item.getId().equals(String.valueOf(lastGroupId))) item.getState().setSelected(true);</span>
+<span class="fc" id="L257">            else item.getState().setSelected(false);</span>
+<span class="fc" id="L258">        }</span>
 
-<span class="fc" id="L258">        return expanded;</span>
+<span class="fc" id="L260">        return expanded;</span>
     }
 
     private void expandGroups(List&lt;JsTreeItem&gt; groups, List&lt;GroupDetails&gt; parentGroups, int lastGroupId, int position, Identity user, boolean showPages, String click, HttpServletRequest request) {
 
-<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (position&gt;=parentGroups.size()) return;</span>
-<span class="fc" id="L264">        int addGroupId = parentGroups.get(position).getGroupId();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        if (position&gt;=parentGroups.size()) return;</span>
+<span class="fc" id="L266">        int addGroupId = parentGroups.get(position).getGroupId();</span>
 
         //prevencia ConcurrentModificationException
-<span class="fc" id="L267">        List&lt;JsTreeItem&gt; groupsOriginal = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L268">        groupsOriginal.addAll(groups);</span>
+<span class="fc" id="L269">        List&lt;JsTreeItem&gt; groupsOriginal = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L270">        groupsOriginal.addAll(groups);</span>
 
-<span class="fc bfc" id="L270" title="All 2 branches covered.">        for (JsTreeItem item : groupsOriginal) {</span>
-<span class="pc bpc" id="L271" title="1 of 2 branches missed.">            if (item instanceof GroupsJsTreeItem) {</span>
-<span class="fc" id="L272">                GroupsJsTreeItem gitem = (GroupsJsTreeItem)item;</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        for (JsTreeItem item : groupsOriginal) {</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">            if (item instanceof GroupsJsTreeItem) {</span>
+<span class="fc" id="L274">                GroupsJsTreeItem gitem = (GroupsJsTreeItem)item;</span>
 
-<span class="pc bpc" id="L274" title="1 of 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(gitem.getParent())) {</span>
-<span class="fc" id="L275">                     gitem.setParent(&quot;#&quot;);</span>
+<span class="pc bpc" id="L276" title="1 of 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(gitem.getParent())) {</span>
+<span class="fc" id="L277">                     gitem.setParent(&quot;#&quot;);</span>
                 }
 
-<span class="fc bfc" id="L278" title="All 2 branches covered.">                if (gitem.getGroup().getGroupId()==addGroupId) {</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">                if (gitem.getGroup().getGroupId()==addGroupId) {</span>
                     //nastav stav na neselektnuty a otvoreny
-<span class="fc" id="L280">                    gitem.getState().setSelected(false);</span>
-<span class="fc" id="L281">                    gitem.getState().setOpened(true);</span>
-<span class="fc" id="L282">                    gitem.getState().setLoaded(true);</span>
+<span class="fc" id="L282">                    gitem.getState().setSelected(false);</span>
+<span class="fc" id="L283">                    gitem.getState().setOpened(true);</span>
+<span class="fc" id="L284">                    gitem.getState().setLoaded(true);</span>
 
                     //pridaj child elementy
-<span class="fc" id="L285">                    List&lt;JsTreeItem&gt; childs = groupsTreeService.getItems(user, addGroupId, showPages, click, null, request);</span>
-<span class="fc bfc" id="L286" title="All 2 branches covered.">                    for (JsTreeItem child : childs) {</span>
-<span class="fc" id="L287">                        child.setParent(String.valueOf(addGroupId));</span>
+<span class="fc" id="L287">                    List&lt;JsTreeItem&gt; childs = groupsTreeService.getItems(user, addGroupId, showPages, click, null, request);</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">                    for (JsTreeItem child : childs) {</span>
+<span class="fc" id="L289">                        child.setParent(String.valueOf(addGroupId));</span>
                         //ak je to posledny nastav stav na selectnuty
-<span class="fc bfc" id="L289" title="All 2 branches covered.">                        if (child.getId().equals(String.valueOf(lastGroupId))) child.getState().setSelected(true);</span>
-<span class="fc" id="L290">                    }</span>
-<span class="fc" id="L291">                    groups.addAll(childs);</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">                        if (child.getId().equals(String.valueOf(lastGroupId))) child.getState().setSelected(true);</span>
+<span class="fc" id="L292">                    }</span>
+<span class="fc" id="L293">                    groups.addAll(childs);</span>
 
                     //vyvolaj rekurziu
-<span class="fc" id="L294">                    expandGroups(groups, parentGroups, lastGroupId, position+1, user, showPages, click, request);</span>
+<span class="fc" id="L296">                    expandGroups(groups, parentGroups, lastGroupId, position+1, user, showPages, click, request);</span>
                 }
             }
-<span class="pc bpc" id="L297" title="1 of 2 branches missed.">            if (item instanceof DocumentsJsTreeItem) {</span>
-<span class="nc" id="L298">                DocumentsJsTreeItem ditem = (DocumentsJsTreeItem)item;</span>
-<span class="nc bnc" id="L299" title="All 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(ditem.getParent())) {</span>
-<span class="nc" id="L300">                     ditem.setParent(&quot;#&quot;);</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">            if (item instanceof DocumentsJsTreeItem) {</span>
+<span class="nc" id="L300">                DocumentsJsTreeItem ditem = (DocumentsJsTreeItem)item;</span>
+<span class="nc bnc" id="L301" title="All 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(ditem.getParent())) {</span>
+<span class="nc" id="L302">                     ditem.setParent(&quot;#&quot;);</span>
                 }
             }
-<span class="fc" id="L303">        }</span>
-<span class="fc" id="L304">    }</span>
+<span class="fc" id="L305">        }</span>
+<span class="fc" id="L306">    }</span>
 
     /**
      * Ziska naposledy zobrazene ID priecinka, alebo 0 ak nie je nastavene
@@ -310,41 +312,41 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     public static int getLastGroupId(HttpServletRequest request, int groupId) {
-<span class="fc" id="L313">        int lastGroupId = 0;</span>
+<span class="fc" id="L315">        int lastGroupId = 0;</span>
         try {
-<span class="fc" id="L315">            int docId = Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1);</span>
-<span class="fc bfc" id="L316" title="All 2 branches covered.">            if (docId &gt; 0) {</span>
+<span class="fc" id="L317">            int docId = Tools.getIntValue(request.getParameter(&quot;docid&quot;), -1);</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">            if (docId &gt; 0) {</span>
                 //ak je zadane docid nerobime ziaden preload
-<span class="fc" id="L318">                lastGroupId = groupId;</span>
-<span class="fc bfc" id="L319" title="All 2 branches covered.">            } else if (request.getParameter(&quot;groupid&quot;) != null) {</span>
-<span class="fc" id="L320">                lastGroupId = Integer.parseInt(request.getParameter(&quot;groupid&quot;));</span>
+<span class="fc" id="L320">                lastGroupId = groupId;</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">            } else if (request.getParameter(&quot;groupid&quot;) != null) {</span>
+<span class="fc" id="L322">                lastGroupId = Integer.parseInt(request.getParameter(&quot;groupid&quot;));</span>
             } else {
                 // skus ziskat data zo session
-<span class="fc bfc" id="L323" title="All 2 branches covered.">                if (request.getSession().getAttribute(Constants.SESSION_GROUP_ID) != null) {</span>
-<span class="fc" id="L324">                    lastGroupId = Integer</span>
-<span class="fc" id="L325">                            .parseInt((String) request.getSession().getAttribute(Constants.SESSION_GROUP_ID));</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">                if (request.getSession().getAttribute(Constants.SESSION_GROUP_ID) != null) {</span>
+<span class="fc" id="L326">                    lastGroupId = Integer</span>
+<span class="fc" id="L327">                            .parseInt((String) request.getSession().getAttribute(Constants.SESSION_GROUP_ID));</span>
                 }
 
             }
-<span class="fc" id="L329">        } catch (Exception ex) {</span>
+<span class="fc" id="L331">        } catch (Exception ex) {</span>
             //
-<span class="fc" id="L331">        }</span>
+<span class="fc" id="L333">        }</span>
 
         //ak je zadana hodnota 0 zmaz zo session zapamatanie
-<span class="fc bfc" id="L334" title="All 2 branches covered.">        if (lastGroupId==0) request.getSession().removeAttribute(Constants.SESSION_GROUP_ID);</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (lastGroupId==0) request.getSession().removeAttribute(Constants.SESSION_GROUP_ID);</span>
 
-<span class="fc bfc" id="L336" title="All 2 branches covered.">        if (lastGroupId&gt;0) {</span>
-<span class="fc" id="L337">            GroupDetails group = GroupsDB.getInstance().getGroup(lastGroupId);</span>
-<span class="pc bpc" id="L338" title="2 of 4 branches missed.">            if (group != null &amp;&amp; Tools.isNotEmpty(group.getDomainName())) {</span>
-<span class="fc" id="L339">                String currentDomain = CloudToolsForCore.getDomainName();</span>
-<span class="pc bpc" id="L340" title="2 of 6 branches missed.">                if (Tools.isNotEmpty(currentDomain) &amp;&amp; currentDomain.contains(&quot;.&quot;) &amp;&amp; currentDomain.equals(group.getDomainName())==false) {</span>
-<span class="fc" id="L341">                    lastGroupId = 0;</span>
-<span class="fc" id="L342">                    request.getSession().removeAttribute(Constants.SESSION_GROUP_ID);</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (lastGroupId&gt;0) {</span>
+<span class="fc" id="L339">            GroupDetails group = GroupsDB.getInstance().getGroup(lastGroupId);</span>
+<span class="pc bpc" id="L340" title="2 of 4 branches missed.">            if (group != null &amp;&amp; Tools.isNotEmpty(group.getDomainName())) {</span>
+<span class="fc" id="L341">                String currentDomain = CloudToolsForCore.getDomainName();</span>
+<span class="pc bpc" id="L342" title="2 of 6 branches missed.">                if (Tools.isNotEmpty(currentDomain) &amp;&amp; currentDomain.contains(&quot;.&quot;) &amp;&amp; currentDomain.equals(group.getDomainName())==false) {</span>
+<span class="fc" id="L343">                    lastGroupId = 0;</span>
+<span class="fc" id="L344">                    request.getSession().removeAttribute(Constants.SESSION_GROUP_ID);</span>
                 }
             }
         }
 
-<span class="fc" id="L347">        return lastGroupId;</span>
+<span class="fc" id="L349">        return lastGroupId;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

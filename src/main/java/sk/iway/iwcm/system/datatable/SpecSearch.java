@@ -162,7 +162,7 @@ public class SpecSearch<T> {
 
     /**
 	 * Specialne vyhladavanie podla stavovej ikony
-	 * @param params
+	 * @param statusSearch
 	 * @param predicates
 	 * @param root
 	 * @param builder

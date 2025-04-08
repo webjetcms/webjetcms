@@ -17,7 +17,7 @@ function testVirtualPathChange(I, DTE, urlDirName) {
     //default stranka
     I.click("VirtualPath", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
 
     I.seeElement("div.DTE_Field_Name_virtualPath");
     I.dontSeeElement("div.DTE_Field_Name_editorVirtualPath");
@@ -31,7 +31,7 @@ function testVirtualPathChange(I, DTE, urlDirName) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=25861");
     DTE.waitForEditor();
     I.wait(5); //ckeditor
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.fillField("#DTE_Field_title", "Podľa title");
     I.wait(1);
     I.fillField("#DTE_Field_navbar", "Podľa title");
@@ -41,7 +41,7 @@ function testVirtualPathChange(I, DTE, urlDirName) {
 
     I.click("Podľa title", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
 
     I.seeElement("div.DTE_Field_Name_virtualPath");
     I.dontSeeElement("div.DTE_Field_Name_editorVirtualPath");
@@ -59,14 +59,14 @@ function testVirtualPathChange(I, DTE, urlDirName) {
     I.click("Podľa zmena title", "#datatableInit_wrapper");
 
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/"+urlDirName+"/podla-zmena-title.html");
     DTE.cancel();
 
     //podla url dirDirName
     I.click("Podľa urlDirName", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
 
     I.dontSeeElement("div.DTE_Field_Name_virtualPath");
     I.seeElement("div.DTE_Field_Name_editorVirtualPath");

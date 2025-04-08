@@ -22,7 +22,8 @@ public class ProcessorTools {
     /**
      * Vrati hodnotu zadaneho atributu na hlavnom tagu
      *
-     * @param combineTag
+     * @param tag
+     * @param context
      * @param name
      * @return
      */

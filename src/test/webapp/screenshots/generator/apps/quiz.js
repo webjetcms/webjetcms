@@ -20,10 +20,10 @@ Scenario("Test quiz stat sekcie", async ({ I, DT, DTE, Document }) => {
 
     Document.screenshotElement("#quizDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/quiz/quiz-editor.png");
 
-    I.click("#pills-dt-quizDataTable-questions-tab");
-    I.click("#quizDataTable_modal > div > div > div.DTE_Header.modal-header > div > div.maximize > i.ti.ti-arrows-maximize");
+    I.clickCss("#pills-dt-quizDataTable-questions-tab");
+    I.clickCss("#quizDataTable_modal .ti.ti-arrows-maximize");
     Document.screenshotElement("#quizDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/quiz/quizQuestion-datatable_A.png", 1500, 700);
-    I.clickCss("#quizDataTable_modal > div > div > div.DTE_Header.modal-header > div > div.maximize > i.ti.ti-arrows-minimize");
+    I.clickCss("#quizDataTable_modal .ti.ti-arrows-minimize");
     I.clickCss(quizQuestions + "wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.buttons-create");
     I.waitForElement(quizQuestions + "modal", 10);
     Document.screenshotElement("#datatableFieldDTE_Field_quizQuestions_modal > div > div.DTE_Action_Create", "/redactor/apps/quiz/quizQuestion-editor_A.png", 1000, 800);
@@ -31,9 +31,9 @@ Scenario("Test quiz stat sekcie", async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/quiz/admin/?id=7");
     DTE.waitForEditor("quizDataTable");
     I.clickCss("#pills-dt-quizDataTable-questions-tab");
-    I.clickCss("#quizDataTable_modal > div > div > div.DTE_Header.modal-header > div > div.maximize > i.ti.ti-arrows-maximize");
+    I.clickCss("#quizDataTable_modal .ti.ti-arrows-maximize");
     Document.screenshotElement("#quizDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/quiz/quizQuestion-datatable_B.png", 1500, 700);
-    I.clickCss("#quizDataTable_modal > div > div > div.DTE_Header.modal-header > div > div.maximize > i.ti.ti-arrows-minimize");
+    I.clickCss("#quizDataTable_modal .ti.ti-arrows-minimize");
     I.clickCss(quizQuestions + "wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.buttons-create");
     I.waitForElement(quizQuestions + "modal", 10);
     Document.screenshotElement("#datatableFieldDTE_Field_quizQuestions_modal > div > div.DTE_Action_Create", "/redactor/apps/quiz/quizQuestion-editor_B.png", 1000, 800);

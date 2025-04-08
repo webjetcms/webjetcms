@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReadWriteScriptBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">ReadWriteScriptBean.java</span></div><h1>ReadWriteScriptBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReadWriteScriptBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.tags</a> &gt; <span class="el_source">ReadWriteScriptBean.java</span></div><h1>ReadWriteScriptBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.tags;
 
 import javax.servlet.jsp.tagext.BodyContent;
 
@@ -18,17 +18,17 @@ import sk.iway.iwcm.Tools;
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
 public class ReadWriteScriptBean {
-<span class="fc" id="L21">	private String type = null;</span>
-<span class="fc" id="L22">	private String src = null;</span>
-<span class="fc" id="L23">	private String rel = null;</span>
-<span class="fc" id="L24">	private String href = null;</span>
-<span class="fc" id="L25">	private String flush = null;</span>
-<span class="fc" id="L26">	private String body = null;</span>
-<span class="fc" id="L27">	private String mode = null;</span>
-<span class="fc" id="L28">	private String media = null;</span>
-<span class="fc" id="L29">	private String jspFileName = null;</span>
-<span class="fc" id="L30">	private String charset = null;</span>
-<span class="fc" id="L31">	private String id = null;</span>
+<span class="pc" id="L21">	private String type = null;</span>
+<span class="pc" id="L22">	private String src = null;</span>
+<span class="pc" id="L23">	private String rel = null;</span>
+<span class="pc" id="L24">	private String href = null;</span>
+<span class="pc" id="L25">	private String flush = null;</span>
+<span class="pc" id="L26">	private String body = null;</span>
+<span class="pc" id="L27">	private String mode = null;</span>
+<span class="pc" id="L28">	private String media = null;</span>
+<span class="pc" id="L29">	private String jspFileName = null;</span>
+<span class="pc" id="L30">	private String charset = null;</span>
+<span class="pc" id="L31">	private String id = null;</span>
 
 
 	public ReadWriteScriptBean(String type, String src, String rel, String href, String flush, BodyContent bodyContent, String mode, String media, String jspFileName, String charset, String id)
@@ -50,18 +50,18 @@ public class ReadWriteScriptBean {
 
 	public ReadWriteScriptBean(String type, String src, String rel, String href, String flush, String bodyContent, String mode, String media, String jspFileName)
 	{
-<span class="fc" id="L53">		super();</span>
-<span class="fc" id="L54">		this.type = type;</span>
-<span class="fc" id="L55">		this.src = src;</span>
-<span class="fc" id="L56">		this.rel = rel;</span>
-<span class="fc" id="L57">		this.href = href;</span>
-<span class="fc" id="L58">		this.flush = flush;</span>
-<span class="fc" id="L59">		this.mode = mode;</span>
-<span class="fc" id="L60">		this.media = media;</span>
-<span class="fc" id="L61">		this.jspFileName = jspFileName;</span>
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(bodyContent))</span>
-<span class="fc" id="L63">			this.body = bodyContent;</span>
-<span class="fc" id="L64">	}</span>
+<span class="nc" id="L53">		super();</span>
+<span class="nc" id="L54">		this.type = type;</span>
+<span class="nc" id="L55">		this.src = src;</span>
+<span class="nc" id="L56">		this.rel = rel;</span>
+<span class="nc" id="L57">		this.href = href;</span>
+<span class="nc" id="L58">		this.flush = flush;</span>
+<span class="nc" id="L59">		this.mode = mode;</span>
+<span class="nc" id="L60">		this.media = media;</span>
+<span class="nc" id="L61">		this.jspFileName = jspFileName;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if(Tools.isNotEmpty(bodyContent))</span>
+<span class="nc" id="L63">			this.body = bodyContent;</span>
+<span class="nc" id="L64">	}</span>
 
 	public String getType() {
 <span class="fc" id="L67">		return type;</span>
@@ -88,7 +88,7 @@ public class ReadWriteScriptBean {
 <span class="nc" id="L88">		this.href = href;</span>
 <span class="nc" id="L89">	}</span>
 	public String getFlush() {
-<span class="fc" id="L91">		return flush;</span>
+<span class="nc" id="L91">		return flush;</span>
 	}
 	public void setFlush(String flush) {
 <span class="nc" id="L94">		this.flush = flush;</span>
@@ -109,7 +109,7 @@ public class ReadWriteScriptBean {
 <span class="nc" id="L109">	}</span>
 
 	public String getMedia() {
-<span class="fc" id="L112">		return media;</span>
+<span class="nc" id="L112">		return media;</span>
 	}
 
 	public void setMedia(String media) {
@@ -125,7 +125,7 @@ public class ReadWriteScriptBean {
 <span class="nc" id="L125">	}</span>
 
 	public String getCharset() {
-<span class="fc" id="L128">		return charset;</span>
+<span class="nc" id="L128">		return charset;</span>
 	}
 
 	public void setCharset(String charset) {
@@ -133,7 +133,7 @@ public class ReadWriteScriptBean {
 <span class="nc" id="L133">	}</span>
 
 	public String getId() {
-<span class="fc" id="L136">		return id;</span>
+<span class="nc" id="L136">		return id;</span>
 	}
 
 	public void setId(String id) {

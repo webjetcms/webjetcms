@@ -842,32 +842,6 @@ public class FormDB
 		return new SimpleQuery().forList("SELECT DISTINCT(form_name) FROM forms WHERE create_date IS NULL "+CloudToolsForCore.getDomainIdSqlWhere(true));
 	}
 
-	/**
-	 * Filtruje formy na archivne a nearchivne
-	 * form sa povazuje za archivny ak sa zacina na "Archiv-"
-	 * @param allForms formulare
-	 * @param addArchive true pre archivne
-	 * @return
-	 */
-	/*public static List<FormDetails> filterFormsByArchive(List<FormDetails> allForms, boolean addArchive)
-	{
-		List<FormDetails> ret = new ArrayList<FormDetails>(allForms.size());
-		for (FormDetails form : allForms)
-		{
-			if(addArchive){
-				if(form.getFormName().startsWith("Archiv-")){
-					ret.add(form);
-				}
-			}
-			else{
-				if(!form.getFormName().startsWith("Archiv-")){
-					ret.add(form);
-				}
-			}
-		}
-		return ret;
-	}*/
-
 	public List<String[]> getAllRegularExpression()
 	{
 		String[] regularExp = null;
@@ -1164,7 +1138,7 @@ public class FormDB
 
 	/**
 	 * Odstrani z nazvu formularu pomlcky a podtrhovnik aby vyzeral "ludskejsie"
-	 * @param value
+	 * @param name
 	 * @return
 	 */
 	public static String getValueNoDash(String name)

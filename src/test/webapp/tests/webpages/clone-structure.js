@@ -45,7 +45,7 @@ function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
         I.clickCss("#pills-dt-groups-datatable-template-tab");
         DTE.selectOption("lng", language);
     } else {
-        I.click("#pills-dt-groups-datatable-fields-tab");
+        I.clickCss("#pills-dt-groups-datatable-fields-tab");
         I.fillField("#DTE_Field_fieldA", "field_a_value");
         I.fillField("#DTE_Field_fieldB", "field_b_value");
         I.fillField("#DTE_Field_fieldC", "field_c_value");
@@ -127,7 +127,7 @@ async function hardDeleteFolder(I, DT, DTE, groupName) {
     I.waitForInvisible(  locate("a.jstree-anchor").withText(groupName), 10 );
 
     I.say("HARD DELETE");
-    I.click("#pills-trash-tab");
+    I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
 
     I.say("Sort by id");
@@ -198,7 +198,7 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
         I.click(DT.btn.tree_edit_button);
         DTE.waitForEditor("groups-datatable");
 
-        I.click("#pills-dt-groups-datatable-fields-tab");
+        I.clickCss("#pills-dt-groups-datatable-fields-tab");
         I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldA"), "field_a_value");
         I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldB"), "field_b_value");
         I.seeInField(locate("#groups-datatable_modal").find("#DTE_Field_fieldC"), "field_c_value");
@@ -237,7 +237,7 @@ Scenario("Structure cloning with translate - NO URL TRANSLATE", async ({ I, DTE,
             DTE.cancel();
 
             await editDoc(I, DT, DTE, destGroupChildName_noUrlTranslate);
-            I.click("#pills-dt-datatableInit-basic-tab");
+            I.clickCss("#pills-dt-datatableInit-basic-tab");
             I.seeInField("#DTE_Field_title", destGroupChildName_noUrlTranslate);
             I.seeInField("#DTE_Field_virtualPath", "/" + destGroupName_noUrlTranslate.toLowerCase() + "/"+srcGroupChildName_virtualPath+"/"); //SRC child name no translated URL, just prefix is DIFF
 

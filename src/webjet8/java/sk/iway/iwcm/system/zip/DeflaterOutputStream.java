@@ -57,7 +57,7 @@ public class DeflaterOutputStream extends FilterOutputStream {
      * @param out the output stream
      * @param def the compressor ("deflater")
      * @param size the output buffer size
-     * @exception IllegalArgumentException if size is <= 0
+     * @exception IllegalArgumentException if size is &lt;= 0
      */
     public DeflaterOutputStream(OutputStream out, Deflater def, int size) {
         super(out);

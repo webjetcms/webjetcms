@@ -331,7 +331,7 @@ public class InvoiceDB
 	 * @param userId Identifikator pouzivatela
 	 *
 	 * @return 	Zoznam objektov typu {@link BasketInvoiceBean} - faktury resp. objednavok daneho pouzivatela. <br />
-	 * 			Ak je parameter userId < 1, vrati vsetky faktury zoradene podla datumu zostupne.
+	 * 			Ak je parameter userId &lt; 1, vrati vsetky faktury zoradene podla datumu zostupne.
 	 */
 	public static List<BasketInvoiceBean> getInvoices(int userId)
 	{
@@ -495,7 +495,6 @@ public class InvoiceDB
 	/** Znizi pocet produktov v sklade z objednavky
 	 *
 	 * @param basketInvoiceId
-	 * @author		$Author: $(prau)
 	 * @Ticket 		Number: #16989
 	 */
 	public static void decreaseCountOfProductFromStock(int basketInvoiceId)

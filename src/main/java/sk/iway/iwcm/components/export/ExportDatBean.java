@@ -47,11 +47,7 @@ public class ExportDatBean extends ActiveRecordRepository implements Serializabl
 	@GeneratedValue(generator = "WJGen_export_dat")
 	@TableGenerator(name = "WJGen_export_dat", pkColumnValue = "export_dat")
 	@Column(name = "export_dat_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title="editor.cell.id",
-        renderFormat = "dt-format-selector"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@Column(name = "url_address")

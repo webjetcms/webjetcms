@@ -81,7 +81,8 @@ public class DatabaseDeleteController extends DatatableRestControllerV2<Database
     /**
      * Mapping sluziaci na mazanie zaznamov.
      *
-     * @param entities DatatableRequest objekt obsahujuci datumovi ramec v ktorom sa maju zaznami vymazat.
+     * @param entity DatatableRequest objekt obsahujuci datumovi ramec v ktorom sa maju zaznami vymazat.
+     * @param id     Id zaznamu, ktory sa ma vymazat.
      * @return boolean pre potvrdenie mazania.
      */
     @Override

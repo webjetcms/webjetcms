@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductListRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.rest</a> &gt; <span class="el_source">ProductListRestController.java</span></div><h1>ProductListRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.rest;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.rest.ProductListService.AddingStatus;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
+import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.rest.WebpagesDatatable;
+import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.users.UserDetails;
+
+@Datatable
+@RestController
+@RequestMapping(value = &quot;/admin/rest/eshop/product-list&quot;)
+@PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('cmp_basket')&quot;)
+public class ProductListRestController extends WebpagesDatatable {
+
+    private static final String NOTIFY_TITLE_KEY = &quot;apps.product-list.add_group.title&quot;;
+
+    @Autowired
+    public ProductListRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+<span class="fc" id="L43">        super(docDetailsRepository, editorFacade, docAtrDefRepository);</span>
+<span class="fc" id="L44">    }</span>
+
+    @Override
+    public Page&lt;DocDetails&gt; getAllItems(Pageable pageable) {
+
+<span class="fc" id="L49">        GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());</span>
+<span class="fc" id="L50">        options.setPageable(pageable);</span>
+<span class="fc" id="L51">        options.setDocAtrDefRepository(super.docAtrDefRepository);</span>
+<span class="fc" id="L52">        options.setDocDetailsRepository(super.docDetailsRepository);</span>
+
+<span class="fc" id="L54">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), -1);</span>
+<span class="fc" id="L55">        options.setGroupId(groupId);</span>
+
+<span class="fc" id="L57">        return ProductListService.getAllItems(options);</span>
+    }
+
+    @Override
+    public boolean processAction(DocDetails entity, String action) {
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if(&quot;addProductGroup&quot;.equals(action)) {</span>
+<span class="fc" id="L63">            String customData = getRequest().getParameter(&quot;customData&quot;);</span>
+<span class="fc" id="L64">            AddingStatus status = ProductListService.addProductGroup(getUser(), customData, editorFacade);</span>
+
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if(status == AddingStatus.SUCCESS)</span>
+<span class="fc" id="L67">                addNotify( new NotifyBean(getProp().getText(NOTIFY_TITLE_KEY), getProp().getText(&quot;apps.product-list.add_new_group.success&quot;), NotifyBean.NotifyType.SUCCESS, 60000) );</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            else if(status == AddingStatus.ALREADY_EXIST)</span>
+<span class="fc" id="L69">                addNotify( new NotifyBean(getProp().getText(NOTIFY_TITLE_KEY), getProp().getText(&quot;apps.product-list.add_new_group.already_added&quot;), NotifyBean.NotifyType.ERROR, 60000) );</span>
+            else
+<span class="fc" id="L71">                addNotify( new NotifyBean(getProp().getText(NOTIFY_TITLE_KEY), getProp().getText(&quot;apps.product-list.add_new_group.failed&quot;), NotifyBean.NotifyType.ERROR, 60000) );</span>
+
+<span class="fc" id="L73">            return true;</span>
+        }
+<span class="nc" id="L75">        return false;</span>
+    }
+
+    @Override
+    public DocDetails editItem(DocDetails entity, long id) {
+
+<span class="nc" id="L81">        DocDetails original = DocDB.getInstance().getDoc(entity.getDocId(), -1, false);</span>
+
+<span class="nc bnc" id="L83" title="All 2 branches missed.">        if(super.isImporting()) {</span>
+<span class="nc" id="L84">            original = getOne(id);</span>
+
+            //Only fields, that can be edited during import
+<span class="nc" id="L87">            original.setFieldJ( entity.getFieldJ() );</span>
+<span class="nc" id="L88">            original.setFieldK( entity.getFieldK() );</span>
+<span class="nc" id="L89">            original.setFieldL( entity.getFieldL() );</span>
+<span class="nc" id="L90">            original.setFieldM( entity.getFieldM() );</span>
+<span class="nc" id="L91">            original.setFieldN( entity.getFieldN() );</span>
+<span class="nc" id="L92">            original.setFieldO( entity.getFieldO() );</span>
+
+            //swap
+<span class="nc" id="L95">            entity = original;</span>
+        }
+
+<span class="nc" id="L98">        DocDetails saved = editorFacade.save(entity);</span>
+
+<span class="nc" id="L100">        List&lt;UserDetails&gt; approveByUsers = editorFacade.getApprovers();</span>
+<span class="nc" id="L101">        super.addInsertEditNotify(false, approveByUsers);</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (editorFacade.isForceReload()) setForceReload(true);</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (super.isRefreshMenuRequired(original, saved)) setForceReload(true);</span>
+
+<span class="nc" id="L107">        addNotify(editorFacade.getNotify());</span>
+
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) setForceReload(true);</span>
+
+<span class="nc" id="L111">        return saved;</span>
+    }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;DocDetails&gt; root, CriteriaBuilder builder) {
+        //This order is important
+<span class="fc" id="L117">        int rootGroupId = Tools.getIntValue(params.get(&quot;groupId&quot;), -1);</span>
+<span class="fc" id="L118">        List&lt;Integer&gt; groupIds = ProductListService.getGroupTreeIds( rootGroupId, super.docDetailsRepository );</span>
+<span class="fc" id="L119">        params.remove(&quot;groupId&quot;);</span>
+
+<span class="fc" id="L121">        super.addSpecSearch(params, predicates, root, builder);</span>
+
+<span class="fc" id="L123">        predicates.add(root.get(&quot;groupId&quot;).in(groupIds));</span>
+<span class="fc" id="L124">        predicates.add(root.get(&quot;fieldK&quot;).isNotNull());</span>
+
+<span class="fc" id="L126">        predicates.add(builder.greaterThan(builder.length(root.get(&quot;fieldK&quot;)), 0));</span>
+<span class="fc" id="L127">    }</span>
+
+    @RequestMapping(value=&quot;/product-groups&quot;)
+    public List&lt;LabelValueInteger&gt; getListOfProductsGroups() {
+<span class="fc" id="L131">        return ProductListService.getListOfProductsGroups(super.docDetailsRepository);</span>
+    }
+
+    @RequestMapping(value=&quot;/supported-currencies&quot;)
+    public List&lt;LabelValue&gt; getListOfSupportedCurrencies() {
+<span class="fc" id="L136">        return ProductListService.getListOfSupportedCurrencies();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SyncDirWriterService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.stripes</a> &gt; <span class="el_source">SyncDirWriterService.java</span></div><h1>SyncDirWriterService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.stripes;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import net.sourceforge.stripes.action.ActionBeanContext;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.sync.inport.Numbered;
+
+public class SyncDirWriterService {
+
+	// Private constructor to hide the implicit public one
+	private SyncDirWriterService() {}
+    
+	/**
+	 * Prepare progress div (via writter), where wi will updating the value (progress)
+	 * @param headlineText
+	 * @param valueFieldId
+	 * @param valueFieldText
+	 * @param writer
+	 */
+    public static void prepareProgress(String headlineText, String valueFieldId, String valueFieldText, PrintWriter writer) { 
+<span class="fc" id="L29">		prepareProgress(headlineText, valueFieldId, valueFieldText, &quot;&quot;, writer);</span>
+<span class="fc" id="L30">	}</span>
+
+	/**
+	 * Prepare progress div (via writter), where wi will updating the value (progress)
+	 * @param headlineText
+	 * @param valueFieldId
+	 * @param valueFieldText
+	 * @param addClass - specific class to be add to main div
+	 * @param writer
+	 */
+    public static void prepareProgress(String headlineText, String valueFieldId, String valueFieldText, String addClass, PrintWriter writer) {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">		if(addClass == null) addClass = &quot;&quot;;</span>
+<span class="fc" id="L42">		writer.println(&quot;&lt;div class='padding10 &quot; + addClass + &quot;'&gt;&quot;);</span>
+<span class="fc" id="L43">		writer.println(&quot;&lt;b&gt;&quot; + headlineText + &quot;&lt;/b&gt;&quot;);</span>
+<span class="fc" id="L44">		writer.println(&quot;&lt;p id='&quot; + valueFieldId + &quot;'&gt;&quot; + valueFieldText + &quot;&lt;/p&gt;&quot;);</span>
+<span class="fc" id="L45">		writer.println(&quot;&lt;/div&gt;&quot;);</span>
+<span class="fc" id="L46">		writer.flush();</span>
+<span class="fc" id="L47">	}</span>
+
+	/**
+	 * Update progress value craeted by method {@link #prepareProgress(String, String, String, PrintWriter)}
+	 * @param valueFieldId
+	 * @param valueFieldText
+	 * @param writer
+	 */
+	public static void updateProgress(String valueFieldId, String valueFieldText, PrintWriter writer) {
+<span class="fc" id="L56">		writer.write(&quot;&lt;script language='javascript'&gt; $('p#&quot; + valueFieldId + &quot;').text('&quot; + valueFieldText + &quot;'); &lt;/script&gt;&quot;);</span>
+<span class="fc" id="L57">		writer.flush();</span>
+<span class="fc" id="L58">	}</span>
+
+	/**
+	 * Count how many item datas are in selected
+	 * @param &lt;E&gt;
+	 * @param selected
+	 * @param datas
+	 * @param prefix
+	 * @return
+	 */
+	public static &lt;E&gt; int getCountToHandle(Map&lt;String, String&gt; selected, Iterable&lt;Numbered&lt;E&gt;&gt; datas, String prefix) {
+<span class="nc" id="L69">		int count = 0;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		for (Numbered&lt;E&gt; remoteFile : datas) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (selected.get(prefix + remoteFile.number) != null) { count++; }</span>
+<span class="nc" id="L72">		}</span>
+<span class="nc" id="L73">		return count;</span>
+	}
+
+	/**
+	 * Print status message via writer
+	 * @param textKey
+	 * @param mainTitle
+	 * @param context
+	 * @param request
+	 */
+	public static void printStatusMsg(String textKey, boolean mainTitle, ActionBeanContext context, HttpServletRequest request) {
+		try {
+<span class="fc" id="L85">			HttpServletResponse response = context.getResponse();</span>
+<span class="fc" id="L86">        	PrintWriter writer = response.getWriter();</span>
+<span class="fc" id="L87">			writer.println(&quot;&lt;div class='statusMsg'&gt;&quot;);</span>
+			
+<span class="fc bfc" id="L89" title="All 2 branches covered.">			if(mainTitle)</span>
+<span class="fc" id="L90">				writer.println(&quot;&lt;h3&gt;&quot; + Prop.getInstance(request).getText(textKey)+&quot;&lt;/h3&gt;&quot;);</span>
+			else
+<span class="fc" id="L92">				writer.println(&quot;&lt;b&gt;&quot; + Prop.getInstance(request).getText(textKey)+&quot;&lt;/b&gt;&quot;);</span>
+			
+<span class="fc" id="L94">			writer.println(&quot;&lt;/div&gt;&quot;);</span>
+<span class="fc" id="L95">			writer.flush();</span>
+<span class="nc" id="L96">		} catch (IOException e) {</span>
+<span class="nc" id="L97">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L98">		}</span>
+<span class="fc" id="L99">	}</span>
+
+	public static Map&lt;String, String&gt; getOptionsMap(String prefix, HttpServletRequest request) {
+<span class="fc" id="L102">		Map&lt;String, String&gt; optionsMap = new HashMap&lt;&gt;();</span>
+
+<span class="fc" id="L104">		String[] selected = Tools.getTokens(request.getParameter(prefix + &quot;options&quot;), &quot;,&quot;);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">		if(selected.length &lt; 1) return optionsMap;</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">		for (String el : selected) { optionsMap.put(el, el); }</span>
+
+<span class="fc" id="L108">		return optionsMap;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

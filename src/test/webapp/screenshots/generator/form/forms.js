@@ -29,13 +29,14 @@ Scenario('forms', ({ I , DT, DTE, Document }) => {
 
     I.click("button.btn-export-dialog");
     I.wait(2);
-    I.click("#pills-export-advanced-tab");
+    I.clickCss("#pills-export-advanced-tab");
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit.modal-content", "/redactor/apps/form/export-advanced.png");
 });
 
 Scenario('forms email confirmation', ({ I , DT, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=93982");
     I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.waitForElement('#WebJETEditorBody > form', 10);
     I.doubleClick('#WebJETEditorBody > form');
     I.switchTo();
     I.clickCss('#cke_wjFormAttributes_149');
@@ -46,6 +47,6 @@ Scenario('forms email confirmation', ({ I , DT, Document }) => {
 
     I.amOnPage('/apps/form/admin/#/detail/Formular-doubleoptin');
     DT.waitForLoader();
-    Document.screenshotElement('#forms-list-app .dataTables_scroll', '/redactor/apps/form/forms-list.png', 1280, 350);
+    Document.screenshotElement('#forms-list-app .dt-scroll', '/redactor/apps/form/forms-list.png', 1280, 350);
     I.wjSetDefaultWindowSize();
 });

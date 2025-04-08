@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoicePaymentEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.jpa</a> &gt; <span class="el_source">BasketInvoicePaymentEntity.java</span></div><h1>BasketInvoicePaymentEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.jpa;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@Entity
+@Table(name=&quot;basket_invoice_payments&quot;)
+@Getter
+@Setter
+<span class="fc" id="L32">public class BasketInvoicePaymentEntity implements Serializable {</span>
+
+    @Id
+	@Column(name=&quot;payment_id&quot;)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator=&quot;S_basket_invoice_payments&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title=&quot;ID&quot;)
+    private Long id;
+
+    @ManyToOne
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonBackReference(value=&quot;paymentsBasketInvoice&quot;)
+	@JoinColumn(name=&quot;invoice_id&quot;, insertable = false, updatable = false)
+	BasketInvoiceEntity paymentsBasketInvoice;
+
+    @Column(name=&quot;invoice_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    Long invoiceId;
+
+    @Column(name=&quot;create_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATE,
+        title=&quot;components.basket.invoice.date&quot;
+    )
+	private Date createDate;
+
+    @Column(name=&quot;payment_method&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title=&quot;[[#{components.basket.invoice.payment_method}]]&quot;,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.cash_on_delivery&quot;, value = &quot;cash_on_delivery&quot;),
+					@DataTableColumnEditorAttr(key = &quot;components.basket.order_form.money_transfer&quot;, value = &quot;money_transfer&quot;)
+				}
+			)
+		}
+    )
+	private String paymentMethod;
+
+    @Column(name=&quot;payed_price&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        title=&quot;components.basket.admin_invoices_detail.suma&quot;
+    )
+	private BigDecimal payedPrice;
+
+
+    @Column(name=&quot;closed_date&quot;)
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title=&quot;&quot;,
+        visible = false,
+        hidden = true,
+        hiddenEditor = true
+    )
+	private Date closedDate;
+
+    @Column(name=&quot;confirmed&quot;)
+	private Boolean confirmed;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

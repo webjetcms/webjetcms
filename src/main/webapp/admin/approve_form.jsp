@@ -47,6 +47,13 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 					request.setAttribute("approvedBy", doc.getHistoryApprovedByName());
 				}
 			}
+
+			//stranka je v kosi
+			String trashPath = sk.iway.iwcm.doc.GroupsTreeService.getTrashDirPath();
+			DocDetails currentDoc = docDB.getBasicDocDetails(doc.getDocId(), false);
+			if (currentDoc == null || currentDoc.getGroup().getFullPath().contains(trashPath) || doc.getGroup().getFullPath().contains(trashPath)) {
+				request.setAttribute("isInTrash", "true");
+			}
 		}
 		else
 		{
@@ -85,6 +92,12 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 						<img src="/admin/images/warning.gif" align="absmiddle"/>
 						<iwcm:text key="approve.allready_approved_by"/>:
 						${approvedBy}
+					</span>
+				</c:when>
+				<c:when test="${not empty isInTrash}">
+					<span class="error">
+						<img src="/admin/images/warning.gif" align="absmiddle"/>
+						<iwcm:text key="webpage.is_in_trash"/>
 					</span>
 				</c:when>
 				<c:otherwise>

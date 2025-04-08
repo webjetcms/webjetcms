@@ -41,10 +41,7 @@ public class GroupsApproveEntity implements Serializable {
     @Id
     @Column(name = "approve_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_groups_approve")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title = "datatables.id.js"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @NotNull
@@ -60,9 +57,7 @@ public class GroupsApproveEntity implements Serializable {
 
     @NotNull
     @Column(name = "user_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.HIDDEN
-    )
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private Long userId;
 
     @NotNull

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DateApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.appdate</a> &gt; <span class="el_source">DateApp.java</span></div><h1>DateApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.appdate;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.appdate.DateApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.app-date.title&quot;,
+    descKey = &quot;components.app-date.desc&quot;,
+    itemKey = &quot;cmp_app-date&quot;,
+    imagePath = &quot;/components/app-date/editoricon.png&quot;,
+    galleryImages = &quot;/components/app-date/&quot;,
+    componentPath = &quot;/components/app-date/meniny.jsp,/components/app-date/last_update.jsp,/components/date/last_update.jsp&quot;,
+    customHtml = &quot;/apps/app-date/admin/editor-component.html&quot;
+)
+@Getter
+@Setter
+<span class="fc" id="L25">public class DateApp extends WebjetComponentAbstract {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.cloud.apps.insertToYourSite&quot;,
+        editor = @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;components.app-date.meniny&quot;, value = &quot;meniny&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.last_update&quot;, value = &quot;last_update&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.datum&quot;, value = &quot;!DATUM!&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.date&quot;, value = &quot;!DATE!&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.den_datum&quot;, value = &quot;!DEN_DATUM!&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.den_datum_cz&quot;, value = &quot;!DEN_DATUM_CZ!&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.day_date&quot;, value = &quot;!DAY_DATE!&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.time&quot;, value = &quot;!TIME!&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.date.year&quot;, value = &quot;!YEAR!&quot;)
+            }
+        )
+    )
+    private String field;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        title = &quot;components.date.display_updated_text&quot;,
+        tab = &quot;basic&quot;
+    )
+    private Boolean aktualizovane;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.date.display_date&quot;
+    )
+    private Boolean datum;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
+        tab = &quot;basic&quot;,
+        title = &quot;components.date.display_time&quot;
+    )
+    private Boolean cas;
+
+<span class="fc" id="L68">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.CHECKBOX,
+        title = &quot;components.date.display_date&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;short&quot;)
+                },
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.form.sl.yes&quot;, value = &quot;long&quot;)
+                }
+            )
+        }
+    )
+    private String format = &quot;long&quot;;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

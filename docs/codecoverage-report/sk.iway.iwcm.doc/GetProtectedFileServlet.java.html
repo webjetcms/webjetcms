@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetProtectedFileServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GetProtectedFileServlet.java</span></div><h1>GetProtectedFileServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GetProtectedFileServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.doc</a> &gt; <span class="el_source">GetProtectedFileServlet.java</span></div><h1>GetProtectedFileServlet.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.doc;
 
 import java.io.IOException;
 
@@ -148,14 +148,14 @@ import sk.iway.iwcm.users.UserGroupsDB;
 
 <span class="fc" id="L149">         Logger.println(this,&quot;testujem: &quot; + realPath);</span>
 
-<span class="pc bpc" id="L151" title="1 of 4 branches missed.">         if (inFile != null &amp;&amp; inFile.exists())</span>
+<span class="pc bpc" id="L151" title="2 of 4 branches missed.">         if (inFile != null &amp;&amp; inFile.exists())</span>
          {
 <span class="fc" id="L153">            FilePathTools.writeFileOut(inFile, request, response);</span>
          }
          else
          {
-<span class="fc" id="L157">         	Logger.debug(GetProtectedFileServlet.class, &quot;forwarding to 404.jsp&quot;);</span>
-<span class="fc" id="L158">            getServletContext().getRequestDispatcher(&quot;/404.jsp&quot;).forward(request, response);</span>
+<span class="nc" id="L157">         	Logger.debug(GetProtectedFileServlet.class, &quot;forwarding to 404.jsp&quot;);</span>
+<span class="nc" id="L158">            getServletContext().getRequestDispatcher(&quot;/404.jsp&quot;).forward(request, response);</span>
          }
       }
 <span class="fc" id="L161">   }</span>

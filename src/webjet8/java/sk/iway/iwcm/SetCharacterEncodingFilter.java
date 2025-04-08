@@ -290,9 +290,9 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
     *  Select and set (if specified) the character encoding to be used to
     *  interpret request parameters for this request.
     *
-    *@param  servletRequest               The servlet request we are processing
+    *@param  request               The servlet request we are processing
     *@param  chain                 The filter chain we are processing
-    *@param  servletResponse              Description of the Parameter
+    *@param  response              Description of the Parameter
     *@exception  IOException       if an input/output error occurs
     *@exception  ServletException  if a servlet error occurs
     */
@@ -745,8 +745,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 	/**
     *  Place this filter into service.
     *
-    *@param  filterConfig          The filter configuration object
-    *@exception  ServletException  Description of the Exception
+    * @exception  ServletException  Description of the Exception
     */
 	@Override
    public void initFilterBean() throws ServletException

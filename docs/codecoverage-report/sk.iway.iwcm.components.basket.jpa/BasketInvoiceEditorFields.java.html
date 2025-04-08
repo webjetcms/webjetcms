@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BasketInvoiceEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.basket.jpa</a> &gt; <span class="el_source">BasketInvoiceEditorFields.java</span></div><h1>BasketInvoiceEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.basket.jpa;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
+import sk.iway.iwcm.users.UsersDB;
+
+@Getter
+@Setter
+<span class="fc" id="L20">public class BasketInvoiceEditorFields {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title=&quot;components.basket.sendNotificationToClient&quot;,
+		tab = &quot;basic&quot;,
+        hidden = true,
+        sortAfter = &quot;userNote&quot;
+    )
+	private Boolean sendNotification;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.qa.add_action.sender&quot;,
+		tab = &quot;notify&quot;,
+        hidden = true
+    )
+	private String sender;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;components.qa.add_action.subject&quot;,
+		tab = &quot;notify&quot;,
+        sortAfter = &quot;contactEmail&quot;,
+        hidden = true
+    )
+	private String subject;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.QUILL,
+        title=&quot;components.basket.invoice.body&quot;,
+		tab = &quot;notify&quot;,
+        hidden = true,
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{components.basket.invoice.notify_body}]]&quot;)
+				}
+			)
+		}
+    )
+    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String body;
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private String orderRecapHead;
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private String orderRecapBody;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.basket.invoice.items&quot;,
+		hiddenEditor = true
+    )
+	private Integer itemsCount;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        title=&quot;components.basket.invoice.price&quot;,
+		hiddenEditor = true
+    )
+    private BigDecimal totalPriceVat;
+
+    //AUTH TOKEN  - for getting iframe of invoice_email.jsp
+    @DataTableColumn(visible = false, hidden = true, hiddenEditor = true)
+    private String authToken;
+
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+    tab = &quot;payments&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/eshop/basket-payments?invoiceId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;import&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-full-headline&quot;, value = &quot;components.basket.invoice.payments.headline&quot;)
+            }
+        )
+    })
+    private List&lt;BasketInvoicePaymentEntity&gt; payments;
+
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+    tab = &quot;items&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/eshop/basket-items?invoiceId={id}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,duplicate,import&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-full-headline&quot;, value = &quot;components.basket.invoice.items.headline&quot;)
+            }
+        )
+    })
+    private List&lt;BasketInvoiceItemEntity&gt; items;
+
+    public void fromBasketInvoice(BasketInvoiceEntity originalEntity, HttpServletRequest request) {
+
+<span class="fc" id="L120">        Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc" id="L122">        sender = UsersDB.getCurrentUser(request).getEmail();</span>
+<span class="fc" id="L123">        subject = prop.getText(&quot;components.basket.invoiceDetail.subject&quot;, originalEntity.getBasketInvoiceId() + &quot;&quot;);</span>
+<span class="fc" id="L124">        body = prop.getText(&quot;components.basket.invoiceDetail.body&quot;) + &quot; &lt;p&gt;&amp;nbsp;&lt;/p&gt; {ORDER_DETAILS}&quot;;</span>
+<span class="fc" id="L125">        authToken = originalEntity.getAuthorizationToken();</span>
+<span class="fc" id="L126">        itemsCount = originalEntity.getTotalItems();</span>
+<span class="fc" id="L127">        totalPriceVat = originalEntity.getTotalPriceVat();</span>
+
+<span class="fc" id="L129">        originalEntity.setEditorFields(this);</span>
+<span class="fc" id="L130">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -45,7 +45,7 @@ public class UploadFileTools {
      * Vrati subadresar pre upload obrazkov / suborov pre zadanu stranku, napr. /sk/produkty/webjet8 to sa nasledne prida k /images alebo /files a pouzije sa pre uload k "Aktualna stranka"
      * @param docId
      * @param groupId
-     * @param newPageTitle - nazov novej web stranky, pouzije sa ak docId<1
+     * @param newPageTitle - nazov novej web stranky, pouzije sa ak docId&lt;1
      * @param prefix
      * @return
      */

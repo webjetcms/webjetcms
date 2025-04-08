@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileIndexer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.findexer</a> &gt; <span class="el_source">FileIndexer.java</span></div><h1>FileIndexer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.findexer;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileIndexer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjetcms</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.findexer</a> &gt; <span class="el_source">FileIndexer.java</span></div><h1>FileIndexer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.findexer;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -85,9 +85,9 @@ public class FileIndexer
 
 <span class="fc" id="L86">		disablePagesInDir(dirUrl);</span>
 
-<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (dirUrl.contains(&quot;backup&quot;)) {</span>
-<span class="fc" id="L89">			Logger.error(FileIndexer.class, dirUrl+&quot; is BACKUP, skipping&quot;);</span>
-<span class="fc" id="L90">			return;</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">		if (dirUrl.contains(&quot;backup&quot;)) {</span>
+<span class="nc" id="L89">			Logger.error(FileIndexer.class, dirUrl+&quot; is BACKUP, skipping&quot;);</span>
+<span class="nc" id="L90">			return;</span>
 		}
 
 <span class="fc" id="L93">		IwcmFile dir = new IwcmFile(Tools.getRealPath(dirUrl));</span>
@@ -104,10 +104,10 @@ public class FileIndexer
 
 <span class="fc" id="L105">			Logger.debug(FileIndexer.class, &quot;indexDir, i=&quot;+i+&quot;/&quot;+size+&quot; f=&quot;+f.getAbsolutePath()+&quot; dir=&quot;+f.isDirectory()+&quot; canRead=&quot;+f.canRead());</span>
 
-<span class="fc bfc" id="L107" title="All 2 branches covered.">			if (f.isDirectory())</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">			if (f.isDirectory())</span>
 			{
 				//rekurzia
-<span class="fc" id="L110">				indexDir(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request, out);</span>
+<span class="nc" id="L110">				indexDir(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request, out);</span>
 			}
 <span class="pc bpc" id="L112" title="1 of 2 branches missed.">			else if (f.canRead())</span>
 			{
@@ -120,14 +120,14 @@ public class FileIndexer
 
 <span class="fc" id="L121">				boolean indexed = FileIndexerTools.indexFile(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request);</span>
 
-<span class="pc bpc" id="L123" title="1 of 4 branches missed.">				if (out != null &amp;&amp; indexed)</span>
+<span class="pc bpc" id="L123" title="2 of 4 branches missed.">				if (out != null &amp;&amp; indexed)</span>
 				{
-<span class="fc" id="L125">					out.println(dirUrl + &quot;/&quot; + f.getName());</span>
+<span class="nc" id="L125">					out.println(dirUrl + &quot;/&quot; + f.getName());</span>
 
-<span class="fc" id="L127">					long lastDiff = dt.diff(dirUrl + &quot;/&quot; + f.getName());</span>
-<span class="fc" id="L128">					out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L129">					out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
-<span class="fc" id="L130">					out.flush();</span>
+<span class="nc" id="L127">					long lastDiff = dt.diff(dirUrl + &quot;/&quot; + f.getName());</span>
+<span class="nc" id="L128">					out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L129">					out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L130">					out.flush();</span>
 				}
 			}
 		}
