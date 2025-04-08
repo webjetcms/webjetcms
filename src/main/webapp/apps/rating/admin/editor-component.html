@@ -1,14 +1,7 @@
 <script>
 	function appGetComponentPath(componentPath, datatable) {
 		let field = $("#DTE_Field_ratingType").val();
-		if ("rating_form" === field) {
-			return "/components/rating/rating_form.jsp";
-		} else if ("rating_page" === field) {
-			return "/components/rating/rating_page.jsp";
-		} else if ("rating_top_users" === field) {
-			return "/components/rating/rating_top_users.jsp";
-		}
-		return "/components/rating/rating_top_pages.jsp";
+        return `/components/rating/${field}.jsp`;
 	}
 
 	function appAfterInit(response, datatable) {
@@ -23,13 +16,13 @@
 			fieldElement.on("change", function () {
                 const field = $(this).val();
 				if ("rating_form" === field) {
-                    setFieldsVisibility(['usersLength', 'docsLength', 'period'], ['checkLogon', 'ratingDocId', 'range']);
+                    setFieldsVisibility(['usersLength', 'docsLength', 'period', 'form2Description'], ['form1Description','checkLogon', 'ratingDocId', 'range']);
 				} else if ("rating_page" === field) {
-					setFieldsVisibility(['usersLength', 'docsLength', 'period','checkLogon'], ['ratingDocId', 'range']);
+					setFieldsVisibility(['usersLength', 'docsLength', 'period','checkLogon','form1Description'], ['form2Description','ratingDocId', 'range']);
 				} else if ("rating_top_users" === field) {
-					setFieldsVisibility(['docsLength', 'period', 'ratingDocId', 'range', 'checkLogon'],['usersLength']);
+					setFieldsVisibility(['docsLength', 'period', 'ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['usersLength']);
 				} else {
-                    setFieldsVisibility(['usersLength','ratingDocId', 'range', 'checkLogon'],['docsLength', 'period']);
+                    setFieldsVisibility(['usersLength','ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['docsLength', 'period']);
                 }
 			});
 			fieldElement.trigger("change");

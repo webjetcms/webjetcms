@@ -1,0 +1,33 @@
+<script>
+    function appGetComponentPath(componentPath, datatable) {
+        const field = $("#DTE_Field_mapType").val();
+        return `/components/sitemap/${field}.jsp`;
+    }
+
+    function setFieldsVisibility(fieldsToHide = [], fieldsToShow = []) {
+        fieldsToHide.forEach(name => $(`.DTE_Field_Name_${name}`).hide());
+        fieldsToShow.forEach(name => $(`.DTE_Field_Name_${name}`).show());
+    }
+
+    function appAfterInit(response, datatable) {
+        window.addEventListener("WJ.DTE.opened", function() {
+            const field = $("#DTE_Field_mapType");
+            field.on("change", function() {
+                const mapType = field.val();
+                switch (mapType) {
+                    case "ul_li":
+                        setFieldsVisibility([], ['maxDepth', 'colsNum']);
+                        break;
+                    case "sitemap":
+                    case "treelist":
+                        setFieldsVisibility(['maxDepth', 'colsNum'], []);
+                        break;
+                    default:
+                        setFieldsVisibility(['colsNum'], ['maxDepth']);
+                        break;
+                }
+            });
+            field.trigger("change");
+        });
+    }
+</script>

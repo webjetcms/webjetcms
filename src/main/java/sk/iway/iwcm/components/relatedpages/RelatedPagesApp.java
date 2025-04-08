@@ -37,8 +37,8 @@ public class RelatedPagesApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.news.groupids", tab = "basic", className = "dt-tree-group-array")
     private List<GroupDetails> rootGroups;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.user.root_group_recursive", tab = "basic")
-    private boolean rGroupsRecursive = false;
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.user.root_group_recursive")
+    private Boolean rGroupsRecursive = false;
 
     @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.user.title_name", tab = "basic", editor = {
             @DataTableColumnEditor(options = {

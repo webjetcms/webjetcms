@@ -1,27 +1,36 @@
 <script>
 	function appAfterInit(response, datatable) {
-		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
-			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
-			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
-		};
-
-		window.addEventListener("WJ.DTE.opened", function (e) {
-			const handleChange = function () {
-				const id = $(this).attr("id");
-				const isChecked = $(this).is(":checked");
-				if (isChecked) {
-					if (id === "DTE_Field_titleName_2") {
-						setFieldsVisibility([], ["customName"]);
-					} else if (
-						id === "DTE_Field_titleName_0" ||
-						id === "DTE_Field_titleName_1"
-					) {
-						setFieldsVisibility(["customName"], []);
-					}
+		window.addEventListener("WJ.DTE.opened", function () {
+			const $customNameFieldWrapper = $(".DTE_Field_Name_customName");
+			const $customNameInput = $customNameFieldWrapper.find("input");
+			const $titleNameCustom = $("#DTE_Field_titleName_2");
+			const $titleNameRadios = $(
+				"#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2"
+			);
+			const updateCustomNameVisibility = () => {
+				const isCustom = $titleNameCustom.is(":checked");
+				$customNameFieldWrapper.toggle(isCustom);
+				if (!isCustom) {
+					$customNameInput.val("");
 				}
 			};
-			$("#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2").on("change",handleChange);
-			$("#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2").change();
+			const customNameValue = $customNameInput.val();
+			if (customNameValue && !$titleNameCustom.is(":checked")) {
+				$titleNameCustom.prop("checked", true).trigger("change");
+			}
+			$titleNameRadios.on("change", updateCustomNameVisibility);
+			updateCustomNameVisibility();
 		});
+	}
+	function appGetComponentCode(componentPath, params, datatable) {
+		if (params["titleName"] === "customName") {
+			params["titleName"] = params["customName"];
+		}
+		let include = "!INCLUDE(" + componentPath;
+		if (Object.keys(params).length > 0) {
+			include += ", " + convertObjectToInludeParams(params);
+		}
+		include += ")!";
+		return include;
 	}
 </script>
