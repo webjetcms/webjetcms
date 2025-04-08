@@ -1,0 +1,18 @@
+<script>
+	function appGetComponentCode(componentPath, params, datatable) {
+		let field;
+		$("[id^=DTE_Field_emoticon_]:checked").each(function () {
+			field = $(this).val();
+		});
+		return `<img src='/components/emoticon/admin-styles/${field}.png' border='0'>`;
+	}
+
+	function appAfterInit(response, datatable) {
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			$(document).on("change", "input[id^=DTE_Field_emoticon_]", function () {
+				const checkedValue = $("input[id^=DTE_Field_emoticon_]:checked").val();
+				$("label[for=DTE_Field_emoticon]").text(checkedValue);
+			});
+		});
+	}
+</script>

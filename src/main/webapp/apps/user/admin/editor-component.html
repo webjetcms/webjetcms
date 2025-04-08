@@ -1,0 +1,156 @@
+<script>
+	function appGetComponentPath(componentPath, datatable) {
+		let field = $("#DTE_Field_field").val();
+		if (field.indexOf("!") !== 0) return field;
+		return componentPath;
+	}
+
+	function appGetComponentCode(componentPath, params, datatable) {
+		let field = $("#DTE_Field_field").val();
+		if (field.indexOf("!") == 0) return field;
+		return null;
+	}
+
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const fieldElement = $("#DTE_Field_field");
+			const fields = ["A", "B", "C", "D", "E"];
+
+			fieldElement.on("change", function () {
+				let value = $(this).val();
+				switch (value) {
+					case "/components/user/newuser.jsp":
+						setFieldsVisibility(
+							["regToUserGroups"],
+							[
+								"userGroups",
+								"show",
+								"required",
+								"groupIdsEditable",
+								"emailUnique",
+								"successDocId",
+								"infoemail",
+								"requireEmailVerification",
+								"notAuthorizedEmailDocId",
+								"loginNewUser",
+								"useAjax",
+								"useCustomFields",
+							]
+						);
+						$("#DTE_Field_useCustomFields_0").change();
+						fields.forEach((field) => {
+							$(`#DTE_Field_useCustomField${field}_0`).change();
+						});
+						break;
+					case "/components/user/logon.jsp":
+						setFieldsVisibility(
+							[
+								"userGroups",
+								"show",
+								"required",
+								"groupIdsEditable",
+								"emailUnique",
+								"successDocId",
+								"infoemail",
+								"requireEmailVerification",
+								"notAuthorizedEmailDocId",
+								"loginNewUser",
+								"useAjax",
+								"useCustomFields",
+							],
+							["regToUserGroups"]
+						);
+						setFieldsVisibility(
+							[
+								"useCustomFieldA",
+								"fieldALabel",
+								"useCustomFieldB",
+								"fieldBLabel",
+								"useCustomFieldC",
+								"fieldCLabel",
+								"useCustomFieldD",
+								"fieldDLabel",
+								"useCustomFieldE",
+								"fieldELabel",
+							],
+							[]
+						);
+						break;
+					default:
+						setFieldsVisibility(
+							[
+								"userGroups",
+								"show",
+								"required",
+								"groupIdsEditable",
+								"emailUnique",
+								"successDocId",
+								"infoemail",
+								"requireEmailVerification",
+								"notAuthorizedEmailDocId",
+								"loginNewUser",
+								"useAjax",
+								"useCustomFields",
+								"regToUserGroups",
+							],
+							[]
+						);
+						setFieldsVisibility(
+							[
+								"useCustomFieldA",
+								"fieldALabel",
+								"useCustomFieldB",
+								"fieldBLabel",
+								"useCustomFieldC",
+								"fieldCLabel",
+								"useCustomFieldD",
+								"fieldDLabel",
+								"useCustomFieldE",
+								"fieldELabel",
+							],
+							[]
+						);
+						break;
+				}
+			});
+			fieldElement.change();
+
+			$("#DTE_Field_useCustomFields_0")
+				.on("change", function () {
+					const isChecked = $(this).is(":checked");
+					const fieldNames = fields.map((f) => `useCustomField${f}`);
+					setFieldsVisibility(
+						isChecked ? [] : fieldNames,
+						isChecked ? fieldNames : []
+					);
+					if (!isChecked) {
+						fields.forEach((field) => {
+							const checkboxId = `#DTE_Field_useCustomField${field}_0`;
+							$(checkboxId).prop("checked", false).trigger("change");
+						});
+					}
+				})
+				.change();
+
+			fields.forEach((field) => {
+				const checkboxId = `#DTE_Field_useCustomField${field}_0`;
+				const fieldLabel = `field${field}Label`;
+
+				$(checkboxId)
+					.on("change", function () {
+						const isChecked = $(this).is(":checked");
+						setFieldsVisibility(
+							isChecked ? [] : [fieldLabel],
+							isChecked ? [fieldLabel] : []
+						);
+					})
+					.change();
+			});
+		});
+	}
+</script>

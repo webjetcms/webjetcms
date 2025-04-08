@@ -1,0 +1,23 @@
+<script>
+    function appAfterInit(response, datatable) {
+        const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+            fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+            fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+        };
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            const fieldElement = $("#DTE_Field_forumType");
+
+            fieldElement.on("change", function() {
+                let value = $(this).val();
+                if (value === 'forum') {
+                    setFieldsVisibility(['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum'], ['type', 'usePaging', 'pageSizeForum']);
+                } else {
+                    setFieldsVisibility(['type', 'usePaging', 'pageSizeForum'], ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum']);
+                }
+            });
+
+            fieldElement.change();
+        });
+    }
+</script>
