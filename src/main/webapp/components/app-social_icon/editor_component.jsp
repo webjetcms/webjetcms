@@ -310,7 +310,7 @@ taglib
 				title="<%=prop.getText("components.app-social_icon.editor_components.twitter")%>">
 				<img src="/components/app-social_icon/twitter.png">
 			</div>
-			<div class="col-xs-10"><input type="text" name="twitter_url"r
+			<div class="col-xs-10"><input type="text" name="twitter_url"
 				id="twitter_url" value="<%=twitter_url%>" size="70" maxlength="250" /></div>
 		</div>
 		<div class="form-group clearfix">
