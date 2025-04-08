@@ -59,6 +59,13 @@ public class DataTableColumnsFactory {
 
                     List<DataTableColumn> columnsNested = dtcf.getColumns(nestedFieldPrefix);
 
+                    //If orderable is not set (is null) set to FALSE -> by default nestedColumns do not support ordering
+                    columnsNested.forEach(column -> {
+                        if (column.getOrderable() == null) {
+                            column.setOrderable(false);
+                        }
+                    });
+
                     columns.addAll(columnsNested);
                 }
 

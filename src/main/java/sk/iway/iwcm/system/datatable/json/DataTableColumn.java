@@ -57,6 +57,7 @@ public class DataTableColumn {
     private Boolean array;
 
     private Boolean orderable;
+    private String orderProperty;
 
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
@@ -253,6 +254,10 @@ public class DataTableColumn {
             //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
             this.orderable = false;
         }
+
+        if (Tools.isNotEmpty(annotation.orderProperty())) {
+            orderProperty = annotation.orderProperty();
+        }
     }
 
     private void setEditorPropertiesFromField(Field field) {
@@ -293,7 +298,6 @@ public class DataTableColumn {
             if (Tools.isEmpty(data)) {
                 data = "id";
             }
-            defaultContent = "";
             addClassName("dt-select-td");
             renderFormat = "dt-format-selector";
             if (editor == null) {

@@ -46,6 +46,7 @@ dôležitý je konštruktor, ktorý odovzdáva Spring DATA repozitár ```Redirec
 @DataTableColumn(inputType = DataTableColumnType.ID)
 private Long id;
 ```
+
 !>**Upozornenie:** v dátovej entite **NESMIETE používať primitívne typy** ako ```int```, ```long``` ale objekty ```Integer```, ```Long```, inak nebude fungovať vyhľadávanie. To používa ExampleMatcher, ktorý NULL objekty nevloží do DB dotazu. Pre primitívne typy ale nemôže použiť NULL, nastaví ich na hodnotu 0 a následne pridá do ```WHERE``` podmienky.
 
 Komplexná ukážka aj s kontrolou práv, mazaním súborov a vykonaním špeciálnej akcie:
@@ -773,6 +774,73 @@ Keďže v databáze často ukladáme len ID používateľa, typicky v poli ```us
 ```
 
 Spring repozitár musí rozširovať ```JpaSpecificationExecutor```, ako je uvedené vyššie. Štandardná implementácia v ```DatatableRestControllerV2.addSpecSearch``` už obsahuje hľadanie podľa parametra ```searchUserFullName```, ktoré je typické pre takéto prípady. Ak teda nepotrebujete iné špeciálne hľadanie, bude vám zobrazenie a vyhľadanie podľa mena používateľa fungovať automaticky.
+
+## Usporiadanie
+
+Štandardne sa stĺpec usporiada podľa definovaného stĺpca. Možnosť nastaviť usporiadanie je možné vypnúť nastavením atribútu `@DataTableColumn(orderable = false)`. Štandardne je tento atribút nastavený na `true`, ale pre vnorené atribúty `@DataTableColumnNested editorFields` je vypnutý.
+
+Niekedy je potrebné nastaviť iný stĺpec pre usporiadanie, prípadne pre kompozitné stĺpce nastaviť usporiadanie podľa viacerých stĺpcov. Príklad:
+
+```java
+public class BasketInvoiceEditorFields extends BaseEditorFields {
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title="components.basket.invoice_email.surname",
+		hiddenEditor = true,
+        sortAfter = "id",
+        orderable = true,
+        orderProperty = "contactLastName,deliverySurName"
+    )
+    private String lastName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title="components.basket.invoice.name",
+		hiddenEditor = true,
+        sortAfter = "id",
+        orderable = true,
+        orderProperty = "contactFirstName,deliveryName"
+    )
+    private String firstName;
+}
+```
+
+Ak potrebujete špeciálne usporiadať výsledky je možné prepísať metódu `public Pageable addSpecSort(Map<String, String> params, Pageable pageable)` v ktorej upravíte `Pageable` objekt. Príklad:
+
+```java
+public class BasketInvoiceRestController extends DatatableRestControllerV2<BasketInvoiceEntity, Long> {
+    ...
+    @Override
+    public Pageable addSpecSort(Map<String, String> params, Pageable pageable) {
+
+        Sort modifiedSort = pageable.getSort();
+
+        String[] sortList = Tools.getTokens(params.get("sort"), "\n", true);
+        for (String sort : sortList ) {
+            String[] data = Tools.getTokens(sort, ",", true);
+            if (data.length!=2) continue;
+            String field = data[0];
+            Direction direction;
+            if ("asc".equals(data[1])) {
+                direction = Direction.ASC;
+            } else if ("desc".equals(data[1])) {
+                direction = Direction.DESC;
+            } else {
+                continue;
+            }
+            if ("editorFields.firstName".equals(field)) {
+                modifiedSort = modifiedSort.and(Sort.by(direction, "contactFirstName", "deliveryName"));
+            } else if ("editorFields.lastName".equals(field)) {
+                modifiedSort = modifiedSort.and(Sort.by(direction, "contactLastName", "deliverySurName"));
+            }
+        }
+
+        // create new Pageable object with modified sort
+        Pageable modifiedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), modifiedSort);
+        return super.addSpecSort(params, modifiedPageable);
+    }
+}
+```
 
 ## Validácia / povinné polia
 

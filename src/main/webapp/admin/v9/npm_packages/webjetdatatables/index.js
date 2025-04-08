@@ -2704,23 +2704,30 @@ export const dataTableInit = options => {
             //chceme vsetky zaznamy
             if (pageSize === -1) pageSize = 999999;
 
-            // extract sort information
-            var pageSort = null;
-            if (typeof data.order !== "undefined" && data.order != null) {
-                for (var sort of data.order) {
-                    if (pageSort == null) pageSort = sort.name + "," + sort.dir;
-                    else pageSort += "," + sort.name + "," + sort.dir;
-                }
-            }
-
-            //console.log("Datatable pageSort: '" + pageSort + "'");
-            //console.log(paramMap);
-
             //create new json structure for parameters for REST request
             if (serverSide) {
                 restParams.push({"name": "size", "value": pageSize});
                 restParams.push({"name": "page", "value": pageNum});
-                if (pageSort != null) restParams.push({"name": "sort", "value": pageSort});
+                if (typeof data.order !== "undefined" && data.order != null) {
+                    for (var sort of data.order) {
+                        let sortName = sort.name;
+
+                        //iterate over DATA.columns, search by .data field for custom orderProperty
+                        for (var column of DATA.columns) {
+                            if (column.data === sortName) {
+                                if (column.hasOwnProperty("orderProperty") && column.orderProperty != null && column.orderProperty != "") {
+                                    //console.log("Found custom orderProperty for column: ", column.data, " orderProperty=", column.orderProperty);
+                                    sortName = column.orderProperty;
+                                    break;
+                                }
+                            }
+                        }
+                        //orderProperty name can have multiple columns, split it by , and order by all values
+                        for (let name of sortName.split(",")) {
+                            restParams.push({"name": "sort", "value": name + "," + sort.dir});
+                        }
+                    }
+                }
             }
 
             if (typeof breadcrumbLanguage !== 'undefined') {

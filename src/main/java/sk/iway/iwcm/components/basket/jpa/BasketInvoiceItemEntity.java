@@ -119,6 +119,10 @@ public class BasketInvoiceItemEntity {
 	@DataTableColumnNested
 	private BasketInvoiceItemEditorFields editorFields = null;
 
+	/**
+	 * Return item price without VAT, multiplied by item quantity
+	 * @return
+	 */
 	public BigDecimal getItemPriceQty() {
 		return BigDecimal.valueOf(getItemQty()).multiply(itemPrice);
 	}

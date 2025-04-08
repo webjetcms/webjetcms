@@ -135,6 +135,8 @@ public class ConstantsV9 {
 
 		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
 		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");
+
+		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
 	}
 
 	/**
