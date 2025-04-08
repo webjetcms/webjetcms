@@ -74,7 +74,7 @@ public class AppManager
 				if(user.isDisabledItem(app.getItemKey()))
 				{
 					Logger.debug(AppManager.class, "filterUserAppList, odstranujem: app.getItemKey()="+app.getItemKey());
-					//iiterator.remove();
+					iterator.remove();
 				}
 			}
 
@@ -239,7 +239,7 @@ public class AppManager
 						for (AppBean app : apps) {
 							if (app.getItemKey().equals(itemKey) && isVariantSame(appStore.variant(), app.getVariant())) {
 								Logger.debug("Removing app with itemKey="+itemKey);
-								//apps.remove(app);
+								apps.remove(app);
 								break;
 							}
 						}
