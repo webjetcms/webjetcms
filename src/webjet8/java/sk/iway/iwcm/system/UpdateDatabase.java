@@ -105,6 +105,8 @@ public class UpdateDatabase
 
 		statErrorAddDomainId();
 
+		updateInvoiceContacts();
+
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
 
@@ -2267,4 +2269,28 @@ public class UpdateDatabase
 
 		return domainId;
 	}
+
+	private static String getInvoiceUpdateContact(String colunmnFrom, String columnTo) {
+		return "UPDATE basket_invoice SET " + columnTo + " = " + colunmnFrom + " WHERE " + columnTo + " IS NULL OR " + columnTo + " = ''";
+	}
+
+	private static void updateInvoiceContacts() {
+		String note = "01.04.2025 [sivan] dopln do basket_invoice chybajuce contact udaje dane v delivery";
+		if(isAllreadyUpdated(note)) return;
+
+		try {
+			DB.execute( getInvoiceUpdateContact("delivery_name", "contact_first_name") );
+			DB.execute( getInvoiceUpdateContact("delivery_surname", "contact_last_name") );
+			DB.execute( getInvoiceUpdateContact("delivery_street", "contact_street") );
+			DB.execute( getInvoiceUpdateContact("delivery_city", "contact_city") );
+			DB.execute( getInvoiceUpdateContact("delivery_zip", "contact_zip") );
+			DB.execute( getInvoiceUpdateContact("delivery_country", "contact_country") );
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+
+		saveSuccessUpdate(note);
+	}
+
+	//TODO add update method that will loop ALL invoices and set itemQty, priceNotVat, priceVat
 }

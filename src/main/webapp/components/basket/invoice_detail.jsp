@@ -42,6 +42,8 @@
 	int counter = 1;
 
 	String basketInvoiceServerName = Constants.getString("basketInvoiceServerName", Tools.getServerName(request));
+
+	String countryKey = "stat.countries.tld" + invoice.getContactCountry();
 %>
 
 <logic:notPresent name="basketItems">
@@ -64,7 +66,7 @@
 					</tr>
 					<tr>
 						<td colspan="2">
-							<iwcm:text key="components.basket.orderConfirmationIntroText" param1="<%=Tools.isNotEmpty(invoice.getDeliverySurName()) ? invoice.getDeliverySurName() : invoice.getDeliveryName()%>" param2="<%=String.valueOf(invoice.getBasketInvoiceId()) %>" param3="<%=Tools.formatDateTime(invoice.getCreateDate()) %>"/>
+							<iwcm:text key="components.basket.orderConfirmationIntroText" param1="<%=Tools.isNotEmpty(invoice.getContactLastName()) ? invoice.getContactLastName() : invoice.getContactFirstName()%>" param2="<%=String.valueOf(invoice.getBasketInvoiceId()) %>" param3="<%=Tools.formatDateTime(invoice.getCreateDate()) %>"/>
 							<br/><br/>
 							<strong><iwcm:text key="components.basket.invoice_detail.stav"/>:</strong> <iwcm:text key='<%=("components.basket.invoice.status."+invoice.getStatusId().intValue())%>'/>
 						</td>
@@ -74,33 +76,25 @@
 							<strong><iwcm:text key="components.basket.invoice_email.delivery_address"/></strong>
 							<br/>
 							<table class="invoiceInnerTable">
-						      <tr>
-						         <td><iwcm:text key="components.basket.invoice_email.name"/>:</td>
-						         <td><bean:write name="invoice" property="deliveryName"/></td>
-						      </tr>
-								<logic:notEmpty name="invoice" property="deliverySurName">
-									<tr>
-										<td><iwcm:text key="components.basket.invoice_email.surname"/>:</td>
-										<td><bean:write name="invoice" property="deliverySurName"/></td>
-									</tr>
-								</logic:notEmpty>
-						      <tr>
-						         <td><iwcm:text key="components.basket.invoice_email.street"/>:</td>
-						         <td><bean:write name="invoice" property="deliveryStreet"/></td>
-						      </tr>
-						      <tr>
-						         <td><iwcm:text key="components.basket.invoice_email.city"/>:</td>
-						         <td><bean:write name="invoice" property="deliveryCity"/></td>
-						      </tr>
-						      <tr>
-						         <td><iwcm:text key="components.basket.invoice_email.ZIP"/>:</td>
-						         <td><bean:write name="invoice" property="deliveryZip"/></td>
-						      </tr>
-						      <tr>
-						         <td><iwcm:text key="components.basket.invoice_email.country"/>:</td>
-						         <td><bean:write name="invoice" property="deliveryCountry"/></td>
-						      </tr>
-						     </table>
+								<tr>
+									<td><iwcm:text key="components.basket.invoice_email.street"/>:</td>
+									<td><bean:write name="invoice" property="contactStreet"/></td>
+								</tr>
+								<tr>
+									<td><iwcm:text key="components.basket.invoice_email.city"/>:</td>
+									<td><bean:write name="invoice" property="contactCity"/></td>
+								</tr>
+								<tr>
+									<td><iwcm:text key="components.basket.invoice_email.ZIP"/>:</td>
+									<td><bean:write name="invoice" property="contactZip"/></td>
+								</tr>
+								<tr>
+									<td><iwcm:text key="components.basket.invoice_email.country"/>:</td>
+									<td> <iwcm:text key='<%=countryKey%>'/> </td>
+								</tr>
+						    </table>							
+							 
+							 <hr>
 						     <br/>
 						     <strong><iwcm:text key="components.basket.invoice_email.delivery_method"/>:</strong>
 						     <br/>
@@ -114,6 +108,14 @@
 							<strong><iwcm:text key="components.basket.invoice_email.contact"/></strong>
 							<br/>
 							<table class="invoiceInnerTable">
+							 <tr>
+						         <td><iwcm:text key="components.basket.invoice_email.name"/>:</td>
+						         <td><bean:write name="invoice" property="contactFirstName"/></td>
+						      </tr>				 
+							  <tr>
+						         <td><iwcm:text key="components.basket.invoice_email.surname"/>:</td>
+						         <td><bean:write name="invoice" property="contactLastName"/></td>
+						      </tr>
 						      <tr>
 						         <td><iwcm:text key="components.basket.invoice_email.email"/>:</td>
 						         <td><bean:write name="invoice" property="contactEmail"/></td>
@@ -122,11 +124,24 @@
 						         <td><iwcm:text key="components.basket.invoice_email.phone_number"/>:</td>
 						         <td><bean:write name="invoice" property="contactPhone"/></td>
 						      </tr>
-						      <tr>
-						         <td><iwcm:text key="components.basket.invoice_email.company"/>:</td>
-						         <td><bean:write name="invoice" property="contactCompany"/></td>
-						      </tr>
 						   </table>
+						   	<hr>
+						    <strong><iwcm:text key="components.invoice.company_info"/></strong>
+							<br/>
+							<table class="invoiceInnerTable">
+								<tr>
+									<td><iwcm:text key="components.basket.invoice_email.company"/>:</td>
+									<td><bean:write name="invoice" property="contactCompany"/></td>
+								</tr>
+								<tr>
+									<td><iwcm:text key="components.contact.property.ico"/>:</td>
+									<td><bean:write name="invoice" property="contactIco"/></td>
+								</tr>
+								<tr>
+									<td><iwcm:text key="components.contact.property.vatid"/>:</td>
+									<td><bean:write name="invoice" property="contactDic"/></td>
+								</tr>
+							</table>
 						   <%
 						   String paymentMethodLabelKey = "components.basket.invoice.payment."+invoice.getPaymentMethod();
 						   String paymentMethod = null;
@@ -138,6 +153,7 @@
 							if (Tools.isNotEmpty(paymentMethod))
 							{
 								%>
+								<hr>
 								<br/>
 							   <strong><iwcm:text key="components.basket.invoice_email.payment_method"/>:</strong>
 							   <br/>
@@ -155,6 +171,7 @@
 								totalPriceVat = totalPriceVat.setScale(2,BigDecimal.ROUND_HALF_UP);
 								BigDecimal doplatit = totalPriceVat.subtract(uhradene);
 							%>
+							<hr>
 							<br/>
 							<strong><iwcm:text key="components.basket.invoices_list.platba"/></strong>
 							<br/>

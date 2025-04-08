@@ -19,22 +19,33 @@ public @interface DataTableColumn {
     String renderFormat() default "";
     String renderFormatLinkTemplate() default "";
     String renderFormatPrefix() default "";
-    //tento sa da zapnut na zobrazenie
+    //column default visibility in table, if false, user can set column to visible
     boolean[] visible() default {};
-    //tento sa v DT uplne schova a neda sa ani v nastaveniach DT zobrazit
+    //set to true to hide column in table
     boolean[] hidden() default {};
-    //tento sa v DT EDITORE nezobrazi
+    //set to true to hide column in editor
     boolean[] hiddenEditor() default {};
-    //vypnutie filtra pre stlpec
+    //set to false to disable column filter
     boolean[] filter() default {};
+
     DataTableColumnEditor[] editor() default {};
     DataTableColumnType[] inputType() default {};
     String sortAfter() default "";
     String perms() default "";
     boolean[] orderable() default {};
-    //skratka na nastavenie default hodnoty do editora
+
+    /**
+     * set default value for column in editor for new entity.
+     * Can not be used with fetchOnCreate because it will be overridden by returned entity.
+     */
     String defaultValue() default "";
 
     //if true property is always copied from old object to new object on edit
     boolean[] alwaysCopyProperties() default {};
+
+    /**
+     * specify JPA column for order, can have multiple values, eg.:
+     * orderProperty = "contactFirstName,deliveryName"
+     */
+    String orderProperty() default "";
 }

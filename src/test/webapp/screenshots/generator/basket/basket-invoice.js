@@ -11,8 +11,8 @@ Scenario('Eshop invoice screens', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/basket/admin/");
     Document.screenshot("/redactor/apps/eshop/invoice/datatable.png");
 
-    DT.filter("deliveryName", "Tester_screens");
-    I.click("Tester_screens");
+    DT.filterEquals("editorFields.firstName", "Tester_Screens");
+    I.click("Tester_Screens");
     DTE.waitForEditor("basketInvoiceDataTable");
 
     Document.screenshotElement("#basketInvoiceDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/invoice/editor_basic.png");
@@ -21,6 +21,14 @@ Scenario('Eshop invoice screens', async ({I, DT, DTE, Document}) => {
     I.waitForElement("div.dropdown-menu.show", 5);
 
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/eshop/invoice/editor_basic_status.png");
+
+    I.resizeWindow(1400, 1500);
+    I.clickCss("#pills-dt-basketInvoiceDataTable-personal_info-tab");
+    Document.screenshotElement("#basketInvoiceDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/invoice/editor_personal-info.png");
+    I.resizeWindow(1280, 760);
+
+    I.clickCss("#pills-dt-basketInvoiceDataTable-fields-tab");
+    Document.screenshotElement("#basketInvoiceDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/invoice/editor_fields.png");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-notify-tab");
     Document.screenshotElement("#basketInvoiceDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/invoice/editor_notify.png");
@@ -46,7 +54,12 @@ Scenario('Eshop invoice screens', async ({I, DT, DTE, Document}) => {
     I.waitForElement("div.dropdown-menu.show");
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/eshop/invoice/editor_payments_editor_paymentMethods.png");
 
-    I.fillField("#DTE_Field_payedPrice", 150);
+    I.fillField("#DTE_Field_payedPrice", 15);
+    DTE.save("datatableFieldDTE_Field_editorFields-payments");
+
+    I.click( locate(paymentDataTable).find("button.buttons-create") );
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
+    I.fillField("#DTE_Field_payedPrice", 10);
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
     Document.screenshotElement("#datatableFieldDTE_Field_editorFields-payments_wrapper > div.row.dt-footer-row > div.col-auto.col-sum", "/redactor/apps/eshop/invoice/editor_payments_footer_b.png");
@@ -61,7 +74,7 @@ Scenario('Eshop invoice screens', async ({I, DT, DTE, Document}) => {
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
     Document.screenshot("/redactor/apps/eshop/invoice/editor_items.png");
 
-    I.click("Smasung Galaxy S9 64GB");
+    I.click("Džínsy");
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-items");
     Document.screenshotElement("#datatableFieldDTE_Field_editorFields-items_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/invoice/editor_items_editor.png");
 
@@ -70,5 +83,6 @@ Scenario('Eshop invoice screens', async ({I, DT, DTE, Document}) => {
     Document.screenshotElement("#datatableFieldDTE_Field_editorFields-items_wrapper > div.row.dt-footer-row > div.col-auto.col-sum", "/redactor/apps/eshop/invoice/editor_items_footer.png");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-order_status-tab");
+    I.resizeWindow(850, 1100);
     Document.screenshotElement("#basketInvoiceDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/invoice/editor_order_status.png");
 });
