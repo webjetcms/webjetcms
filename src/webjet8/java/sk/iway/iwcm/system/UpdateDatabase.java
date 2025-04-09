@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,6 +23,9 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -30,6 +34,10 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -44,6 +52,7 @@ import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -66,7 +75,7 @@ public class UpdateDatabase
 	}
 
 	/**
-	 *  Description of the Method
+	 *  This method is called during startup to update database
 	 */
 	public static void update()
 	{
@@ -108,6 +117,15 @@ public class UpdateDatabase
 		updateInvoiceContacts();
 
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
+	}
+
+	/**
+	 * This method is called after full startup where Spring is initialized and JPA entities are available
+	 */
+	public static void updateWithSpringInitialized() {
+		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
+		updateInvoicePrices();
+		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
 
 	/*
@@ -2292,5 +2310,57 @@ public class UpdateDatabase
 		saveSuccessUpdate(note);
 	}
 
-	//TODO add update method that will loop ALL invoices and set itemQty, priceNotVat, priceVat
+	//update method that will loop ALL invoices and set itemQty, priceNotVat, priceVat
+	private static void updateInvoicePrices() {
+		try {
+			String note = "01.04.2025 [sivan] dopln do basket_invoice_items chybajuce itemQty, priceNotVat, priceVat";
+			if(isAllreadyUpdated(note)) return;
+
+			BasketInvoicesRepository bir = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
+			BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+			if (bir == null || biir == null) {
+				Logger.error(UpdateDatabase.class, "BasketInvoicesRepository bean not found");
+				return;
+			}
+
+			DebugTimer dt = new DebugTimer("Updating invoice prices ");
+
+			int pageSize = 100;
+			int pageNumber = 0;
+			int failsafe = 0;
+			Page<BasketInvoiceEntity> page;
+			do {
+				page = bir.findAll(PageRequest.of(pageNumber, pageSize));
+				List<BasketInvoiceEntity> items = page.getContent();
+				dt.diffInfo("[page "+pageNumber+"/"+page.getTotalPages()+"], rows="+items.size());
+				// calculate itemQty, priceNotVat, priceVat
+				for (BasketInvoiceEntity invoice : items) {
+					Integer itemsCount = 0;
+					BigDecimal totalPrice = BigDecimal.ZERO; //NO VAT
+					BigDecimal totalPriceVat = BigDecimal.ZERO; //WITH VAT
+
+					List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(Long.valueOf(invoice.getId()), invoice.getDomainId());
+
+					for(BasketInvoiceItemEntity item : invoiceItems) {
+						itemsCount += item.getItemQty();
+						totalPrice = totalPrice.add( item.getItemPriceQty() );
+						totalPriceVat = totalPriceVat.add( item.getItemPriceVatQty() );
+					}
+
+					//Set and save invoice
+					invoice.setItemQty(itemsCount);
+					invoice.setPriceToPayNoVat(totalPrice);
+					invoice.setPriceToPayVat(totalPriceVat);
+					bir.save(invoice);
+				}
+				pageNumber++;
+			} while (!page.isLast() && failsafe++ < 5000);
+
+			dt.diffInfo("DONE");
+
+			saveSuccessUpdate(note);
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
 }

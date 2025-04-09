@@ -26,7 +26,7 @@
         { id: 'notify', title: '[[#{components.basket.tab.notify}]]'},
         { id: 'payments', title: '[[#{components.basket.invoice.payments.tab}]]'},
         { id: 'items', title: '[[#{components.basket.invoice_items}]]'},
-        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<iframe frameborder="0" id="dataDiv" width="850" height="950" src="about:blank"></iframe>' },
+        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<div class="previewContainer"><iframe id="dataDiv" src="about:blank" width="100%" height="500"></iframe><div>' },
         { id: 'fields', title: '[[#{editor.tab.fields}]]'}
     ];
 
@@ -67,6 +67,27 @@
                     //Refresh footer info
                     setItemsFooter();
                 });
+                itemsDataTable.button().add(2, {
+                    text: '<i class="ti ti-eye"></i>',
+                    action: function (e, dt, node) {
+                        //console.log("btn, e=",e,"dt=",dt,"node=",node);
+                        //ziskaj data selectnuteho riadku
+                        let selectedRows = dt.rows({ selected: true }).data();
+                        //console.log("selectedRows=", selectedRows);
+                        for (let i=0; i<selectedRows.length; i++) {
+                            let row = selectedRows[i];
+                            window.open("/showdoc.do?docid="+row.itemId);
+                        }
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                    },
+                    className: 'btn btn-outline-secondary buttons-item-preview',
+                    attr: {
+                        'title': window.WJ.translate("history.showPage"),
+                        'data-toggle': 'tooltip'
+                    }
+                });
             }
         });
 
@@ -94,6 +115,29 @@
 
                     $("#pills-dt-basketInvoiceDataTable-items-tab").on("click", function(e) { setItemsFooter(); });
                 }
+            }
+        });
+
+        window.addEventListener('WJ.DTE.tabclick', function (e) {
+            //console.log("tabclick, id=", e.detail.id, " e=", e);
+            let id = e.detail.id;
+            //console.log("tab clicked, e=", e, "id=", id);
+            if ("datatableFieldDTE_Field_editorFields-items-itemPreview"===id) {
+                let url = null;
+                try {
+                    let docId = itemsDataTable.EDITOR.field("itemId").get();
+                    if (typeof docId != "undefined" && docId != "-1") {
+                        url = "/showdoc.do?docid="+docId+"&NO_WJTOOLBAR=true&isDmail=true";
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+                if (url == null) {
+                    url = "about:blank";
+                }
+                //console.log("url=", url);
+
+                $("#itemPreviewIframe").attr("src", url);
             }
         });
 

@@ -171,7 +171,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	@DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
 		renderFormat = "dt-format-number--decimal",
-		title = "components.basket.price_with_DPH",
+		title = "components.basket.price_with_dph",
 		hiddenEditor = true
     )
 	private BigDecimal priceToPayVat;

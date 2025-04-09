@@ -1,4 +1,5 @@
-import Quill, { Delta } from 'quill';
+import Quill from 'quill';
+import Delta from 'quill-delta';
 import Embed from 'quill/blots/embed';
 
 //inspired by: https://github.com/slab/quill/issues/4248#issuecomment-2634898120
