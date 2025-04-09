@@ -129,9 +129,10 @@ public class InitServlet extends HttpServlet
 
 			UpdateDatabase.updateWithSpringInitialized();
 
+			SpringAppInitializer.dtDiff("WebJET INIT DONE");
+
 			setWebjetInitialized();
 
-			SpringAppInitializer.dtDiff("WebJET INIT DONE");
 			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
 		}
 	}
