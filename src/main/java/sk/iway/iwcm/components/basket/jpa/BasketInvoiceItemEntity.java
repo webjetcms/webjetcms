@@ -100,6 +100,7 @@ public class BasketInvoiceItemEntity {
 	private int loggedUserId;
 
 	@Column(name="item_id")
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
 	private int itemId;
 
 	@Column(name="item_part_no")

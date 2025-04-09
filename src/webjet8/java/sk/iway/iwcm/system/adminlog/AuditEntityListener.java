@@ -8,6 +8,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -110,6 +111,10 @@ public class AuditEntityListener {
      * @return
      */
     private boolean isDisabled(Object entity) {
+
+        //do not audit during startup/UpdateDatabase call
+        if (InitServlet.isWebjetInitialized() == false) return true;
+
         String auditJpaDisabledEntities = Constants.getString("auditJpaDisabledEntities");
         if ("*".equals(auditJpaDisabledEntities)) return true;
         if (Tools.isEmpty(auditJpaDisabledEntities)) return false;

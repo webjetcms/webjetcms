@@ -673,7 +673,7 @@ public class Logger
 	private static Boolean loggerUseAnsiColors = null;
 	private static String getMessageColorWrapped(String message, String level) {
 
-		if (loggerUseAnsiColors == null && InitServlet.isWebjetInitialized()) {
+		if (loggerUseAnsiColors == null && InitServlet.isSpringInitialized()) {
 			loggerUseAnsiColors = Constants.getBoolean("loggerUseAnsiColors");
 		}
 
