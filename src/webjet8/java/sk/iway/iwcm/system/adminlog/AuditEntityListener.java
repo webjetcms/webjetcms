@@ -196,25 +196,41 @@ public class AuditEntityListener {
 
         Object dbEntity = null;
         if (compareToDb && id != null && id.longValue() > 0) {
-            try {
-                //musime otvotit novy entitymanager aby sme ziskali aktualne data v DB
-                String dbName = "iwcm";
-                Class<?> clazz = entity.getClass();
-                if (clazz.isAnnotationPresent(DataSource.class)) {
-
-                    Annotation annotation = clazz.getAnnotation(DataSource.class);
-                    DataSource dataSource = (DataSource) annotation;
-                    dbName = dataSource.name();
+            //try this as Spring DATA
+            SpringDataHelper springDataHelper = Tools.getSpringBean("springDataHelper", SpringDataHelper.class);
+            if (springDataHelper != null) {
+                try {
+                    dbEntity = springDataHelper.getSpringDataEntity(entity, id.longValue());
+                } catch (Exception ex) {
+                    //it is not Spring DATA entity
+                    //sk.iway.iwcm.Logger.error(ex);
                 }
-                EntityManagerFactory factory = DBPool.getEntityManagerFactory(dbName);
-                //factory.getProperties().put("eclipselink.session.customizer", "sk.iway.webjet.v9.JpaSessionCustomizer");
-
-                JpaEntityManager em = JpaHelper.getEntityManager(factory.createEntityManager());
-                dbEntity = em.find(entity.getClass(), id);
-                em.close();
-            } catch (Exception ex) {
-                sk.iway.iwcm.Logger.error(ex);
             }
+
+            if (dbEntity == null) {
+                try {
+                    //musime otvotit novy entitymanager aby sme ziskali aktualne data v DB
+                    String dbName = "iwcm";
+                    Class<?> clazz = entity.getClass();
+                    if (clazz.isAnnotationPresent(DataSource.class)) {
+                        Annotation annotation = clazz.getAnnotation(DataSource.class);
+                        DataSource dataSource = (DataSource) annotation;
+                        dbName = dataSource.name();
+                    }
+                    EntityManagerFactory factory = DBPool.getEntityManagerFactory(dbName);
+                    //factory.getProperties().put("eclipselink.session.customizer", "sk.iway.webjet.v9.JpaSessionCustomizer");
+
+                    JpaEntityManager em = JpaHelper.getEntityManager(factory.createEntityManager());
+                    dbEntity = em.find(entity.getClass(), id);
+                    em.close();
+                } catch (Exception ex) {
+                    //it is not JPA entity
+                    //sk.iway.iwcm.Logger.error(ex);
+                }
+            }
+
+            //entity not found, for safety show all fields in audit log (same as new entity, do not compare)
+            if (dbEntity == null) compareToDb = false;
         }
 
         BeanWrapperImpl dbEntityWrapper = null;
