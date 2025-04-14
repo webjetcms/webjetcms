@@ -123,7 +123,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.emoticon",
     "sk.iway.iwcm.components.appuser",
     "sk.iway.iwcm.components.video",
-    "sk.iway.iwcm.components.appslitslider"
+    "sk.iway.iwcm.components.appslitslider",
+    "sk.iway.iwcm.components.slider"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

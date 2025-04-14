@@ -1,22 +1,20 @@
 <script>
-	function appAfterInit(response, datatable) {
-		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
-            console.log("hide:", fieldsToHide );
-            console.log("show:", fieldsToShow );
-			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
-			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
-		};
+    function appAfterInit(response, datatable) {
+        const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+            fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+            fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+        };
 
-		window.addEventListener("WJ.DTE.opened", function (e) {
-			const youtube = $("#DTE_Field_field_0");
-			const vimeo = $("#DTE_Field_field_1");
-			const facebook = $("#DTE_Field_field_2");
-			const video = $("#DTE_Field_field_3");
+        window.addEventListener("WJ.DTE.opened", function (e) {
+            const youtube = $("#DTE_Field_field_0");
+            const vimeo = $("#DTE_Field_field_1");
+            const facebook = $("#DTE_Field_field_2");
+            const video = $("#DTE_Field_field_3");
             const fixed = $("#DTE_Field_widthType_0");
             const responsive = $("#DTE_Field_widthType_1");
 
             if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
-                setFieldsVisibility([ "videoAlignFacebook","videoAlignVimeo", "portrait", "byline", "badge","file","widthType","videoAlignYT","width","height","percentageWidth","autoplay","fullscreen","showinfo","controls","branding","rel"], []);
+                setFieldsVisibility([ "videoAlignFacebook", "videoAlignVimeo", "portrait", "byline", "badge", "file", "widthType", "videoAlignYT", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel"], []);
             }
 
             const handleSizeFields = () => {
@@ -41,34 +39,44 @@
                 });
             };
 
-			youtube.off("change").on("change", function () {
-				if ($(this).is(":checked")) {
-					setFieldsVisibility(["videoAlignVimeo", "videoAlignFacebook", "portrait", "byline", "badge"], ["file", "widthType", "videoAlignYT", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel"]);
-                    handleSizeFields();
+            const updateFields = () => {
+                handleSizeFields();
+                fixed.trigger('change');
+                responsive.trigger('change');
+            };
+
+            youtube.off("change").on("change", function () {
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["videoAlignVimeo", "videoAlignFacebook", "portrait", "byline", "badge"], ["file", "widthType", "videoAlignYT", "width", "height", "percentageWidth", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
+                                                                                                                                                                                                
+                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file"));
+                    updateFields();
                 }     
             });
 
             vimeo.off("change").on("change", function () {
-				if ($(this).is(":checked")) {
-					setFieldsVisibility(["videoAlignFacebook", "videoAlignYT", "controls", "branding", "rel"], ["file", "videoAlignVimeo", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
-                    handleSizeFields();    
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["videoAlignFacebook", "videoAlignYT", "controls", "branding", "rel"], ["file", "videoAlignVimeo", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
+                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file_vimeo"));
+                    updateFields();
                 }      
             });
 
             facebook.off("change").on("change", function () {
-				if ($(this).is(":checked")) {
-					setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth"], ['videoAlignFacebook', "file", "width", "widthType", "autoplay", "fullscreen", "showinfo", "byline"]);
-                    handleSizeFields();
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth"], ['videoAlignFacebook', "file", "width", "widthType", "autoplay", "showinfo", "fullscreen", "byline"]);
+                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file_facebook"));
+                    updateFields();
                 }
             });
 
-            video.off("change").on("change", function() {
+            video.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-					setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth", 'videoAlignFacebook', "autoplay", "fullscreen", "showinfo", "byline"], [ "file", "width", "widthType"]);
-                    handleSizeFields();
+                    setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth", 'videoAlignFacebook', "autoplay", "fullscreen", "showinfo", "byline"], ["file", "width", "widthType"]);
+                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file_video"));
+                    updateFields();
                 }
-
-            })
+            });
 
             youtube.trigger('change');
             vimeo.trigger('change');
@@ -76,6 +84,6 @@
             video.trigger('change');
             fixed.trigger('change');
             responsive.trigger('change');
-		});
-	}
+        });
+    }
 </script>

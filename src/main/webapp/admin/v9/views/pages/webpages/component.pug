@@ -256,6 +256,10 @@ block content
                     }
                 }
 
+                if (typeof window.appCodeExecute === "function") {
+                    window.appCodeExecute();
+                }
+
                 if (typeof window.appGetComponentPath === "function") {
                     componentPath = window.appGetComponentPath(componentPath, componentDatatable);
                 }

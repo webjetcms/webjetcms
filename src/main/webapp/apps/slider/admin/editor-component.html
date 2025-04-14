@@ -1,0 +1,23 @@
+<script>
+	function appAfterInit(response, datatable) {
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			function toggleLoopNumber() {
+				const selected = $("#DTE_Field_displayMode").val();
+				if (selected === "2") {
+					$(".DTE_Field_Name_loopNumber").show();
+				} else {
+					$(".DTE_Field_Name_loopNumber").hide();
+				}
+			}
+
+			toggleLoopNumber();
+
+			$("#DTE_Field_displayMode").on("change", toggleLoopNumber);
+
+			$(".col-sm-1.form-group-tooltip > button[aria-label^='<img']").css({
+				"margin-left": "-360px",
+				"padding-right": "0px",
+			});
+		});
+	}
+</script>

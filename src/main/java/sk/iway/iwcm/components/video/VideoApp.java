@@ -66,49 +66,34 @@ public class VideoApp extends WebjetComponentAbstract {
     private Integer height = 355;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.widthPercentage", tab = "basic")
-    private Integer percentageWidth;
+    private Integer percentageWidth = 100;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.autoplay", tab = "basic")
     private Boolean autoplay = false;
     
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.fullscreen", tab = "basic")
-    private Boolean fullscreen = false;
-    
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.showinfo", tab = "basic")
     private Boolean showinfo = false;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.byline", tab = "basic")
+    private boolean byline = false;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.branding", tab = "basic")
+    private Boolean branding = false;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.fullscreen", tab = "basic")
+    private Boolean fullscreen = true;
     
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.controls", tab = "basic")
     private Boolean controls = true;
     
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.branding", tab = "basic")
-    private Boolean branding = true;
-    
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.rel", tab = "basic")
     private Boolean rel = true;
 
-    @DataTableColumn(
-    inputType = DataTableColumnType.BOOLEAN,
-    title = "components.video_player.portrait",
-    tab = "basic"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.portrait", tab = "basic")
     private boolean portrait = true;
 
-    @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
-        title = "components.video_player.byline",
-        tab = "basic"
-    )
-    private boolean byline = true;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
-        title = "components.video_player.badge",
-        tab = "basic"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.badge", tab = "basic")
     private boolean badge = true;
-
-    
-
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
@@ -128,5 +113,4 @@ public class VideoApp extends WebjetComponentAbstract {
 
         return options;
     }
-
 }
