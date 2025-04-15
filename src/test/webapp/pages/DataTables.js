@@ -379,6 +379,34 @@ module.exports = {
         let rows = await I.getTotalRows();
         //console.log(" mam rows=====", rows);
         I.assertAbove(rows+1, 3, "Nedostatocny pocet audit zaznamov");
+        for (let rowIndex = 1; rowIndex <= rows; rowIndex++){
+            const descriptionRow = await I.grabTextFrom(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
+            I.clickCss(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
+            DTE.waitForEditor();
+            const detailText = await I.grabValueFrom("#DTE_Field_description");
+            if (descriptionRow.includes('CREATE:')){
+                I.say("Overujem CREATE záznam...");
+                I.assertTrue(detailText.includes("CREATE:"), 'CREATE záznam neobsahuje úvodný riadok "CREATE:"');
+                I.assertTrue(detailText.includes(description), `CREATE záznam neobsahuje očakávaný name: ${description}`);
+            } else if (descriptionRow.includes('UPDATE:')) {
+                I.say("Overujem UPDATE záznam...");
+                I.assertTrue(detailText.includes("UPDATE:"), 'UPDATE záznam neobsahuje úvodný riadok "UPDATE:"');
+                const expectedLine = `${description} -> ${description}-chan.ge`;
+                I.assertTrue(( detailText.includes(expectedLine)), `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLine}`);
+            } else if (descriptionRow.includes('DELETE:')){
+                I.say("Overujem DELETE záznam...");
+                I.assertTrue(detailText.includes("DELETE:"), 'DELETE záznam neobsahuje úvodný riadok "DELETE:"');
+                I.assertTrue(detailText.includes(description), `CREATE záznam neobsahuje očakávaný name: ${description}`);
+            } else if (descriptionRow.includes('DELETE/HIDE:')){
+                I.say("Overujem DELETE záznam...");
+                I.assertTrue(detailText.includes("DELETE/HIDE:"), 'DELETE záznam neobsahuje úvodný riadok "DELETE:"');
+                I.assertTrue(detailText.includes(description), `CREATE záznam neobsahuje očakávaný name: ${description}`);
+            }
+            DTE.cancel();
+            DT.waitForLoader("#datatableInit_processing");
+
+        }
+
     },
 
     /**
