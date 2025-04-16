@@ -112,7 +112,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
 
     I.say("First check that we dont see ChildEnumerationType and ParentEnumerationData");
     I.amOnPage("/apps/enumeration/admin/");
-    filterEnumDataByType(I, DTE, enumTypeNameA);
+    filterEnumDataByType(I, DTE, DT, enumTypeNameA);
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
@@ -149,7 +149,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.say("*** Phase 3 - NOW DO ENUM DATA TESTS ***");
 
     I.amOnPage("/apps/enumeration/admin/");
-    filterEnumDataByType(I, DTE, enumTypeNameA);
+    filterEnumDataByType(I, DTE, DT, enumTypeNameA);
 
         createEnumData(I, DTE, "A", enumTypeNameB, null, null);
 
@@ -175,7 +175,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
         /* NOW test parent select */
         //For this we must create at least 2 enum data under B enum type
         I.amOnPage("/apps/enumeration/admin/");
-        filterEnumDataByType(I, DTE, enumTypeNameB);
+        filterEnumDataByType(I, DTE, DT, enumTypeNameB);
 
         createEnumData(I, DTE, "B", null, null, "1");
 
@@ -245,7 +245,7 @@ Scenario('Test special import logic', ({I, DTE, DT}) => {
     DT.checkTableRow("enumerationDataDataTable", 3, ["44222", "3", "Three"]);
 
     I.say('Check that DEST enum type has NO data');
-    filterEnumDataByType(I, DTE, dest_enum);
+    filterEnumDataByType(I, DTE, DT, dest_enum);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Import data from SOURCE to DEST enum type as UPDATE");
@@ -266,7 +266,7 @@ Scenario('Test special import logic', ({I, DTE, DT}) => {
     DT.checkTableRow("enumerationDataDataTable", 3, ["", "3", "Three"]);
 
     I.say("Now return to SOURCE enum type and check that data ARE STILL THERE");
-    filterEnumDataByType(I, DTE, source_enum);
+    filterEnumDataByType(I, DTE, DT, source_enum);
     DT.checkTableRow("enumerationDataDataTable", 1, ["44220", "1", "One"]);
     DT.checkTableRow("enumerationDataDataTable", 2, ["44221", "2", "Two"]);
     DT.checkTableRow("enumerationDataDataTable", 3, ["44222", "3", "Three"]);
@@ -386,10 +386,9 @@ function checkToggleLogic(I) {
     I.dontSeeCheckboxIsChecked("#DTE_Field_allowParentEnumerationData_0");
 }
 
-function filterEnumDataByType(I, DTE, typeName) {
-    I.clickCss("#pills-enumerationType-tab");
-    I.fillField('body > div.bs-container.dropdown.bootstrap-select > div > div.bs-searchbox > input', typeName);
-    I.see(typeName);
-    I.click(typeName);
+function filterEnumDataByType(I, DTE, DT, typeName) {
+    I.clickCss(".buttons-select");
+    I.fillField("body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input", typeName);
+    I.clickCss("a[role=option] > span");
     DTE.waitForLoader();
 }
