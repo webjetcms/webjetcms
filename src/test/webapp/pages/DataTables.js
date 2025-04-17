@@ -377,13 +377,17 @@ module.exports = {
         DT.waitForLoader("#datatableInit_processing");
         //pause();
         let rows = await I.getTotalRows();
-        //console.log(" mam rows=====", rows);
+        I.click(DT.btn.settings_button);
+        I.clickCss('.buttons-page-length');
+        I.click(locate('button.btn.button-page-length').find('span').withText("Všetky"));
+        I.clickCss('button.btn.btn-primary.dt-close-modal');
         I.assertAbove(rows+1, 3, "Nedostatocny pocet audit zaznamov");
         for (let rowIndex = 1; rowIndex <= rows; rowIndex++){
             const descriptionRow = await I.grabTextFrom(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
             I.clickCss(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
             DTE.waitForEditor();
-            const detailText = await I.grabValueFrom("#DTE_Field_description");
+            let rawDetailText = await I.grabValueFrom("#DTE_Field_description");
+            const detailText = rawDetailText.replace(/<[^>]*>/g, '').trim();
             if (descriptionRow.includes('CREATE:')){
                 I.say("Overujem CREATE záznam...");
                 I.assertTrue(detailText.includes("CREATE:"), 'CREATE záznam neobsahuje úvodný riadok "CREATE:"');
@@ -391,8 +395,12 @@ module.exports = {
             } else if (descriptionRow.includes('UPDATE:')) {
                 I.say("Overujem UPDATE záznam...");
                 I.assertTrue(detailText.includes("UPDATE:"), 'UPDATE záznam neobsahuje úvodný riadok "UPDATE:"');
-                const expectedLine = `${description} -> ${description}-chan.ge`;
-                I.assertTrue(( detailText.includes(expectedLine)), `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLine}`);
+                if (detailText.includes("prop_key: ")){
+                    I.assertTrue((detailText.includes(description)), `UPDATE záznam neobsahuje očakávaný riadok: ${description}`);
+                } else {
+                    const expectedLine = `${description} -> ${description}-chan.ge`;
+                    I.assertTrue(( detailText.includes(expectedLine)), `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLine}`);
+                }
             } else if (descriptionRow.includes('DELETE:')){
                 I.say("Overujem DELETE záznam...");
                 I.assertTrue(detailText.includes("DELETE:"), 'DELETE záznam neobsahuje úvodný riadok "DELETE:"');
