@@ -26,14 +26,22 @@ export function typeSelectEditable() {
                 let iframeWindow = detail.window;
                 //console.log("iframeWindow=", iframeWindow.location.href);
                 iframeWindow.addEventListener("WJ.DTE.close", function(event) {
-                    //console.log("CLOSE EVENT RECEIVED, event=", event);
-
                     //ulozenie nested modalu nema sposobit zatvorenie okna
                     if (true===event.detail.dte.TABLE.DATA.nestedModal) return;
-
+                
+                    const $select = conf._input;
+                    const oldOptions = Array.from($select[0].options).map(opt => opt.value);
+                
                     WJ.closeIframeModal();
                     //vyvolaj nacitanie JSON optionov
-                    EDITOR.TABLE.wjUpdateOptions();
+                    EDITOR.TABLE.wjUpdateOptions(null, () => {
+                        const newOptions = Array.from($select[0].options).map(opt => opt.value);
+                        const added = newOptions.filter(val => !oldOptions.includes(val));
+                
+                        if (added.length === 1) {
+                            $select.val(added[0]).trigger("change");
+                        }
+                    });
                 });
                 iframeWindow.addEventListener("WJ.DTE.open", function(event) {
                     iframeWindow.$("#modalIframeLoader").css("display", "none");
