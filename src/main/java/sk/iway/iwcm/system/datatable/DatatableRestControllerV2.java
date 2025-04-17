@@ -1007,6 +1007,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		};
 	}
 
+
 	/**
 	 * Doplnenie pecialneho vyhladavanie, interne vola:
 	 * - addSpecSearchUserFullName(searchUserFullName, "userId", predicates, root, builder);
@@ -1528,8 +1529,54 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	@SuppressWarnings("all")
 	public void throwError(String errorKey) {
+		throwError(errorKey, false);
+	}	
+	
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errors
+	 * @param showNotifications - zobrazi notifikacie z vlakna
+	 */
+	@SuppressWarnings("all")
+	public void throwError(String errorKey, boolean showNotifications) {
 		String message = getProp().getText(errorKey);
-		throw new RuntimeException(message);
+
+		if(showNotifications) {
+			throw new EditorException(message, getThreadData().getNotify());
+		} else {
+			throw new RuntimeException(message);
+		}
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errors
+	 * @param params - parametre pre preklad
+	 */
+	@SuppressWarnings("all")
+	public void throwError(String errorKey, String... params) {
+		//no notification
+		throwError(errorKey, false, params);
+	}	
+	
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errors
+	 * @param params - parametre pre preklad
+	 * @param showNotifications - zobrazi notifikacie z vlakna
+	 */
+	@SuppressWarnings("all")
+	public void throwError(String errorKey, boolean showNotifications, String... params) {
+		String message = getProp().getTextWithParams(errorKey, params);
+
+		if(showNotifications) {
+			throw new EditorException(message, getThreadData().getNotify());
+		} else {
+			throw new RuntimeException(message);
+		}
 	}
 
 	/**
@@ -1549,6 +1596,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	@SuppressWarnings("all")
 	public void throwError(List<String> errorKeys) {
+		throwError(errorKeys, false);
+	}
+	
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errorKeys
+	 * @param showNotifications - zobrazi notifikacie z vlakna
+	 */
+	@SuppressWarnings("all")
+	public void throwError(List<String> errorKeys, boolean showNotifications) {
 		//preved z klucov na texy
 		Prop prop = Prop.getInstance();
 		StringBuilder message = new StringBuilder();
@@ -1557,7 +1615,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			message.append(prop.getText(key));
 		}
 
-		throw new RuntimeException(message.toString());
+		if(showNotifications) {
+			throw new EditorException(message.toString(), getThreadData().getNotify());
+		} else {
+			throw new RuntimeException(message.toString());
+		}
 	}
 
 	private static ThreadBean getThreadData() {
@@ -1860,7 +1922,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entity
 	 * @param one
 	 */
-	private void copyEntityIntoOriginal(T entity, T one) {
+	protected void copyEntityIntoOriginal(T entity, T one) {
 		List<String> alwaysCopyProperties = new ArrayList<>();
 		List<String> ignoreProperties = new ArrayList<>();
 

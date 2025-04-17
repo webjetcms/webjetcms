@@ -1,0 +1,44 @@
+<script type="text/javascript" data-th-inline="javascript">
+
+    var categoryManagerDataTable;
+
+    WJ.breadcrumb({
+        id: "category",
+        tabs: [
+            {
+                url: '/apps/file-archive/admin',
+                title: /*[[#{components.file_archiv.title}]]*/ '',
+                active: false
+            },
+            {
+                url: '/apps/file-archive/admin',
+                title: /*[[#{components.file_archiv.manager.category}]]*/ '',
+                active: true
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        let url = "/admin/rest/file-archive-manager?manager-type=category";
+        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.file_archiv.BasicManagerBean")})]*/ [];
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "name", title: '[[\#{components.file_archiv.category_name}]]' });
+        window.WJ.DataTable.mergeColumns(columns, { name: "newName", title: '[[\#{components.file_archiv.new_category_name}]]' });
+
+        categoryManagerDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "categoryManagerDataTable"
+        });
+
+        categoryManagerDataTable.hideButton("create");
+        categoryManagerDataTable.hideButton("duplicate");
+        categoryManagerDataTable.hideButton("import");
+        categoryManagerDataTable.hideButton("export");
+        categoryManagerDataTable.hideButton("celledit");
+    });
+
+</script>
+
+<table id="categoryManagerDataTable" class="datatableInit table"></table>

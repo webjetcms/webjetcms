@@ -184,6 +184,7 @@ Dátumové:
 - ```JSON``` - pole pre výber [adresára](field-json.md)
 - ```DATATABLE``` - [vnorená datatabuľka](field-datatable.md)
 - ```ELFINDER``` - [výber odkazu](field-elfinder.md) na súbor / web stránku
+- ```UPLOAD``` - [nahratie súboru](field-file-upload.md)
 
 ## Možnosti výberového poľa
 

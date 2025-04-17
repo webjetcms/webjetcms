@@ -429,7 +429,7 @@ public class FileIndexerTools {
                         // Publish start as last modified date of the file
                         doc.setPublishStartString( Tools.formatDateTimeSeconds( f.lastModified() ) );
 
-                        boolean searchable = fab == null || fab.getShowFile();
+                        boolean searchable = fab == null || Tools.isTrue(fab.getShowFile());
                         doc.setSearchable(searchable);
                         doc.setAvailable(searchable);
                         doc.setCacheable(false);

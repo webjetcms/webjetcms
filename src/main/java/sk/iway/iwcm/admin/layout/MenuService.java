@@ -324,6 +324,9 @@ public class MenuService {
 
             {"/admin/adminlog/logging/", "/admin/v9/apps/audit-log-levels/"},
 
+            //File archiv
+            {"/components/file_archiv/file_list.jsp", "/apps/file-archive/admin/"},
+
             //Search
             {"/admin/searchall.jsp", "/admin/v9/search/index/"},
             {"/admin/skins/webjet6/searchall.jsp", "/admin/v9/search/index/"}

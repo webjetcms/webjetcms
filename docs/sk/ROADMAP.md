@@ -39,7 +39,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.
 - [ ] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.
 - [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
-- [ ] Archív súborov - prerobiť do dátových tabuliek (#57317).
+- [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
 - [ ] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
 - [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).

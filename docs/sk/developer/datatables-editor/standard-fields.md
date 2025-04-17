@@ -704,3 +704,18 @@ public class InquiryApp extends WebjetComponentAbstract {
 
 }
 ```
+
+## UPLOAD
+
+Typ poľa umožňujúci [nahratie súboru](field-file-upload.md).
+
+![](field-uploadFile.png)
+
+```java
+  @DataTableColumn(
+        inputType = DataTableColumnType.UPLOAD,
+        tab = "basic",
+        title = "fbrowse.file"
+    )
+    private String file = "";
+```

@@ -127,7 +127,27 @@ export default class AutoCompleter {
                         const paramEl = $(autoCompleter.params[param]);
                         var name = paramEl.attr("name");
                         if (typeof name == "undefined") name = autoCompleter.params[param].replaceAll("#", "");
-                        url += "&" + name + "=" + encodeURIComponent(paramEl.val());
+
+                        /**
+                         * Before manual set of tree, it return object. We need to parse value out of it.
+                         */
+                        let val = paramEl.val();
+                        try {
+                            if (val && val.includes("{")) {
+                                const parsedValue = JSON.parse(paramEl.val());
+                                if (parsedValue && typeof parsedValue === "object" && "id" in parsedValue) {
+                                    const valNew = parsedValue["id"];
+                                    if (valNew != null) {
+                                        val = encodeURIComponent(valNew.toString());
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Error parsing JSON value:", error);
+                        }
+
+                        url += "&" + name + "=" + val;
+
                     }
                     $.ajax({
                         url: url,

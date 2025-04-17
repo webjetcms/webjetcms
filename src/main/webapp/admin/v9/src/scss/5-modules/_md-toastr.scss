@@ -41,6 +41,11 @@ $c-toast-error: #e00029;
     opacity: 0.8;
     -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
     filter: alpha(opacity=80);
+
+    // Apply transition only when not hovered
+    &:not(:hover) {
+        transition: opacity 0.8s ease-out;
+    }
   }
   .toast-container > div:hover {
     -moz-box-shadow: 0 0 12px #000000;

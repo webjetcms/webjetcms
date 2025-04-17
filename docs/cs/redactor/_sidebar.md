@@ -37,7 +37,6 @@
   - Průzkum
     - [Průzkum](/redactor/apps/inquiry/README.md)
     - [Statistiky průzkumu](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archivní soubory](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Seznam bannerů](/redactor/apps/banner/README.md)
     - [Statistiky bannerů](/redactor/apps/banner/banner-stat/README.md)

@@ -318,7 +318,7 @@ Přepracované nastavení vlastností aplikace v editoru ze starého kódu v č�
 - Doplněná dokumentace pro [editor obrázků](redactor/image-editor/README.md) (#56969).
 - Aktualizovaná dokumentace pro generování [náhledové obrázky](frontend/thumb-servlet/README.md) a nastavení [bod zájmu](frontend/thumb-servlet/interest-point.md) (#56969).
 - Dokumentace vytvořená pro [práce v editoru stránek](redactor/webpages/working-in-editor/README.md) (#56981).
-- Doplněná dokumentace pro [archiv souborů](redactor/apps/file_archiv/README.md) (#56891).
+<!-- - Doplněná dokumentace pro [archiv souborů](redactor/apps/file_archiv/README.md) (#56891). REMOVE ?? -->
 - Doplněná dokumentace pro [před připraveným blokem](redactor/apps/htmlbox/README.md) (#56981).
 - Přidáno [Česká verze](https://docs.webjetcms.sk/latest/cs/) Dokumentace (#57033).
 - Upraveno generování odkazů na zdrojový kód tak, aby odkazovaly na [Verze pro GitHub](https://github.com/webjetcms/webjetcms/tree/main/src) zdrojový kód (#57033).

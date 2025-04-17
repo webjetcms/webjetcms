@@ -1574,6 +1574,18 @@
                     </string>
                 </void>
             </object>
+        </void>        
+        
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.02.2025</string></void>
+                <void property="desc"><string>file_archiv - zmena typu stlpca date_upload_later na ekvivalent DATETIME</string></void>
+               <void property="mysql"><string>ALTER TABLE file_archiv MODIFY date_upload_later DATETIME NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE file_archiv ALTER COLUMN date_upload_later DATETIME NULL;</string></void>
+                <void property="oracle"><string></string></void>
+                <void property="pgsql"><string>ALTER TABLE file_archiv ALTER COLUMN date_upload_later TYPE TIMESTAMP;</string></void>
+            </object>
         </void>
 
         <void method="add">

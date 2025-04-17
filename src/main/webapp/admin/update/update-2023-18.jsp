@@ -368,6 +368,16 @@ static {
 	//basket - Transition from double to BigDecimal
 	replaces.add(new OptionDto("Math.abs( doc.getPrice() ) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
 	replaces.add(new OptionDto("Math.abs(doc.getPrice()) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
+
+	//file_archiv
+	replaces.add(new OptionDto("/components/file_archiv/file_list.jsp?file_bean_id=", "/admin/v9/file-archive/#dt-open-editor=true&dt-filter-id=", ".jsp"));
+	replaces.add(new OptionDto("/components/file_archiv/file_archiv_upload.jsp?oldId=", "/admin/v9/file-archive/?id=", ".jsp"));
+	replaces.add(new OptionDto("/components/file_archiv/file_archiv_edit.jsp?edit=", "/admin/v9/file-archive/?id=", ".jsp"));
+	replaces.add(new OptionDto("fab.getOrderId() >", "fab.getOrderId().intValue() >", ".jsp"));
+	replaces.add(new OptionDto("maxId = fab.getId();", "maxId = fab.getFileArchiveId();", ".jsp"));
+	replaces.add(new OptionDto("fabParam.getId() == maxId", "fabParam.getFileArchiveId() == maxId", ".jsp"));
+	replaces.add(new OptionDto("public static List<FileArchivatorBean> getReference(int referenceId,", "public static List<FileArchivatorBean> getReference(Long referenceId,", ".jsp"));
+
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

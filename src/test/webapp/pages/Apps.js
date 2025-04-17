@@ -151,5 +151,18 @@ module.exports = {
         I.switchTo();
         if (shouldClickOkButton)
             I.clickCss('.cke_dialog_ui_button_ok');
+    },
+
+    /**
+     * Save editor without closing it
+     */
+    save() {
+        I.pressKey(['CommandOrControl', 's']);
+        DTE.waitForLoader();
+        I.switchTo();
+        I.switchTo();
+        //I.waitForElement("div.toast.toast-success", 20);
+        I.waitForText("bol uložený", 10, "div.toast-success");
+        //I.toastrClose();
     }
 }

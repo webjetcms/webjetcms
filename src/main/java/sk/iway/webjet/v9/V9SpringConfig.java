@@ -94,6 +94,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.gdpr",
     "sk.iway.iwcm.components.sitebrowser",
     "sk.iway.iwcm.components.basket.rest",
+    "sk.iway.iwcm.components.file_archiv",
     "sk.iway.iwcm.components.inquiry",
     "sk.iway.iwcm.components.dmail",
     "sk.iway.iwcm.components.date",

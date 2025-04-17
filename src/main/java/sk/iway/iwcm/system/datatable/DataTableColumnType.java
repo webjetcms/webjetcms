@@ -129,6 +129,10 @@ public enum DataTableColumnType {
      * Static text (no input field)
      */
     STATIC_TEXT,
+    /**
+     * Upload ONE file
+     */
+    UPLOAD,
 
     /**
      * Radio buttons with images

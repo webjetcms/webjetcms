@@ -49,4 +49,5 @@
     "spellright.ignoreRegExpsByClass": {
         "markdown": [ "/\\[[^]*?\\]/g", "/\\([^]*?\\)/g"]
     },
+    "files.trimTrailingWhitespace": true,
 }

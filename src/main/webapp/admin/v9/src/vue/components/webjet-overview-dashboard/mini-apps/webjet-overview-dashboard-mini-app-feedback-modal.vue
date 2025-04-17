@@ -65,8 +65,8 @@
                                                 <span>{FILE_NAME}</span>
                                                 <i class="ti ti-circle-check float-end"></i>
                                                 <i class="ti ti-alert-triangle float-end"></i>
-                                                <i class="ti ti-dots-vertical ti-spin float-end"></i>
-                                                <i class="ti ti-exclamation-circle float-end"></i>
+                                                <i class="ti ti-loader-2 ti-spin float-end"></i>
+                                                <i class="ti ti-alert-circle float-end"></i>
                                                 <svg
                                                     class="fa-progress-bar float-end"
                                                     xmlns="http://www.w3.org/2000/svg"
@@ -218,35 +218,3 @@ export default {
     },
 };
 </script>
-
-<style lang="scss" scoped>
-.modal-body {
-    padding-bottom: 10px !important;
-    &-bg {
-        &::before {
-            bottom: -10px !important;
-        }
-    }
-}
-
-#upload-wrapper {
-    position: relative !important;
-    bottom: 0 !important;
-    right: 0 !important;
-    width: auto !important;
-    box-shadow: 0 5px 9px 0 rgb(0 0 0 / 28%), 0 5px 10px 0 rgb(0 0 0 / 8%) !important;
-}
-
-#toast-container-upload {
-    overflow: hidden !important;
-}
-
-.dropzone {
-    min-height: 50px !important;
-    height: 75px !important;
-    border-radius: 6px !important;
-    .dz-message {
-        margin: 0 0 !important;
-    }
-}
-</style>

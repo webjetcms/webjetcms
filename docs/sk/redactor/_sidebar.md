@@ -38,7 +38,6 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archív súborov](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
     - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)
@@ -138,4 +137,11 @@
     - [Úprava súborov](/redactor/files/fbrowser/file-edit/README.md)
     - [Nastavenie súboru](/redactor/files/fbrowser/file-settings/README.md)
     - [Nastavenie priečinka](/redactor/files/fbrowser/folder-settings/README.md)
+  - Manažér dokumentov
+    - [Dokumenty](/redactor/files/file-archive/README.md)
+    - [Kategórie](/redactor/files/file-archive/category-manager.md)
+    - [Produkty](/redactor/files/file-archive/product-manager.md)
+    - [Export dokumentov](/redactor/files/file-archive/export-files.md)
+    - [Import dokumentov](/redactor/files/file-archive/import-files.md)
+    - [Aplikácia Manažer dokumentov](/redactor/files/file-archive/file-archive-app.md)
   - [Zálohovanie systému](/sysadmin/files/backup/README.md)

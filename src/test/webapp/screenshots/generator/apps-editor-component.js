@@ -33,7 +33,7 @@ function tabLink3Spring(Document, I, DT, DTE) {
     I.click("#pills-dt-editor-component-datatable li:nth-child(3) a");
 }
 
-function screenshotWebAndApp(I, Document, docId, path, webSelector, callback1=null, callback2=null, width, height) {
+function screenshotWebAndApp(I, Document, docId, path, webSelector, callback1=null, callback2=null, width, height, callbackWeb=null) {
     I.amOnPage("/showdoc.do?docid="+docId+"&NO_WJTOOLBAR=true");
     var counter = 1;
     if ("/components/app-docsembed"==path) {
@@ -49,13 +49,27 @@ function screenshotWebAndApp(I, Document, docId, path, webSelector, callback1=nu
          window.location.href="/apps/kalendar-udalosti/?month=8&year=2023&NO_WJTOOLBAR=true";
         });
     }
-    if (webSelector!=null) Document.screenshotElement(webSelector, basePath+path+"/screenshot-"+(counter++)+".jpg", width, height);
-    if(callback1!=null) Document.screenshotAppEditor(docId, basePath+path+"/screenshot-"+(counter++)+".jpg", callback1);
-    if (callback2!=null) Document.screenshotAppEditor(docId, basePath+path+"/screenshot-"+(counter++)+".jpg", callback2);
+    if (typeof callbackWeb == "function" && callbackWeb != null) {
+        callbackWeb(Document, I);
+        I.wait(2);
+    }
+
+    let lngSuffix = I.getConfLng();
+    if ("sk"==lngSuffix) lngSuffix = "";
+    else lngSuffix = "-" + lngSuffix;
+
+    if (webSelector!=null) Document.screenshotElement(webSelector, basePath+path+"/screenshot-"+(counter++)+lngSuffix+".jpg", width, height);
+    if(callback1!=null) Document.screenshotAppEditor(docId, basePath+path+"/screenshot-"+(counter++)+lngSuffix+".jpg", callback1);
+    if (callback2!=null) Document.screenshotAppEditor(docId, basePath+path+"/screenshot-"+(counter++)+lngSuffix+".jpg", callback2);
 }
 
 Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document }) => {
 
+    screenshotWebAndApp(I, Document, 77668, "/apps/file-archiv/mvc/", ".ly-content .container", tabLinkNone, tabLink2Spring, 1000, 1000, function(Document, I) {
+        I.executeScript(() => {
+            $(".collapsible").click();
+        });
+    });
     screenshotWebAndApp(I, Document, 77766, "/components/content-block", ".blueBox", tabLinkNone, null, 640, 480);
     screenshotWebAndApp(I, Document, 25210, "/components/app-cookiebar", ".cookiebar", tabLinkNone, null, 640, 480);
     screenshotWebAndApp(I, Document, 77874, "/components/app-docsembed", ".ly-content .container", tabLinkNone, null);
@@ -89,7 +103,6 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
 
     screenshotWebAndApp(I, Document, 48204, "/components/inquiry", "#resultsDiv-1", tabLink1Spring);
     screenshotWebAndApp(I, Document, 77667, "/components/inquirysimple", ".inquiryBoxDefault", tabLink1, tabLink2);
-    screenshotWebAndApp(I, Document, 77668, "/components/file_archiv", ".documents", tabLinkNone, null, 640, 480);
     screenshotWebAndApp(I, Document, 21343, "/components/banner", ".banner-content", tabLinkNone, tabLink3, 640, 480);
 
     screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1, tabLink2, 800, 600);
@@ -108,7 +121,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.click(DT.btn.recipients_group_button);
     I.waitForElement("#modalIframeIframeElement", 10);
     Document.screenshot(basePath+"/components/dmail/screenshot-3.jpg");
-    I.click(locate("#modalIframe button").withText("OK"));    
+    I.click(locate("#modalIframe button").withText("OK"));
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77768");
     DTE.waitForEditor();

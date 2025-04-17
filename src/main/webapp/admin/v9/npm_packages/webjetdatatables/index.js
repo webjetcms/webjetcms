@@ -47,6 +47,7 @@ import * as fieldTypeIframe from './field-type-iframe';
 import * as fieldTypeColor from './field-type-color';
 import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
+import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
@@ -1007,6 +1008,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.color = fieldTypeColor.typeColor();
         $.fn.dataTable.Editor.fieldTypes.base64 = fieldTypeBase64.typeBase64();
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
+        $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
 
         fieldTypeSelectEditable.typeSelectEditable();
@@ -1311,6 +1313,14 @@ export const dataTableInit = options => {
                     showNotify(json.notify);
                 }
             }, 300);
+        });
+
+        EDITOR.on('submitUnsuccessful', function (e, json) {
+            //console.log("Editor.on submitUnsuccessful, json=", json);
+
+            if(typeof json.notify != "undefined" && json.notify != null) {
+                showNotify(json.notify);
+            }
         });
 
         if (DATA.fetchOnCreate) {

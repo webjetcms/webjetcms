@@ -66,7 +66,11 @@ module.exports = {
      * Vymaže všetky e-maily.
      * Je potrebné zavolať TempMail.login() predtým
      */
-    async destroyInbox(){
+    async destroyInbox(emailAddress = null) {
+        if (emailAddress != null) {
+            this.login(emailAddress);
+        }
+
         I.say('Vymazávam všetky e-maily');
         let numberOfEmails = await I.grabNumberOfVisibleElements("#delete");
         if(numberOfEmails > 0) {

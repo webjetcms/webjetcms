@@ -20,6 +20,10 @@ public class DirTreeItem extends JsTreeItem {
     }
 
     public DirTreeItem(IwcmFile f) {
+        this(f, false);
+    }
+        
+    public DirTreeItem(IwcmFile f, boolean setParent) {
         super();
         setId(f.getVirtualPath());
         setText(f.getName());
@@ -30,6 +34,11 @@ public class DirTreeItem extends JsTreeItem {
 
         setType(JsTreeItemType.DIR);
         setChildren(hasChildren(f));
+        
+        if(setParent == true)
+            setParent( f.getParentFile().getVirtualPath() );
+        else
+            setParent(null);
     }
 
     public DirTreeItem(String virtualPath) {
