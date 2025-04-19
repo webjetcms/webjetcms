@@ -187,6 +187,16 @@ public class SpecSearch<T> {
 					emptyList.add(builder.equal(root.get(column), ""));
 					//and (NULL OR '')
 					predicates.add(builder.or(emptyList.toArray(new Predicate[emptyList.size()])));
+				} else if(value.startsWith("eq:")) {
+					predicates.add(builder.equal(root.get(column), value.substring(3)));
+				} else if(value.startsWith("gt:")) {
+					predicates.add(builder.greaterThan(root.get(column), value.substring(3)));
+				} else if(value.startsWith("gte:")) {
+					predicates.add(builder.greaterThanOrEqualTo(root.get(column), value.substring(4)));
+				} else if(value.startsWith("lt:")) {
+					predicates.add(builder.lessThan(root.get(column), value.substring(3)));
+				} else if(value.startsWith("lte:")) {
+					predicates.add(builder.lessThanOrEqualTo(root.get(column), value.substring(4)));
 				} else if (value.contains("%")) {
 					if (value.startsWith("!")) predicates.add(builder.notLike(root.get(column), value.substring(1)));
 					else predicates.add(builder.like(root.get(column), value));

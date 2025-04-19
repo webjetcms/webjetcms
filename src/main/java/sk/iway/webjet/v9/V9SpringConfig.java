@@ -78,6 +78,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.domain_redirects",
     "sk.iway.iwcm.components.enumerations.rest",
     "sk.iway.iwcm.components.export",
+    "sk.iway.iwcm.components.file_archiv",
     "sk.iway.iwcm.components.form",
     "sk.iway.iwcm.components.forms",
     "sk.iway.iwcm.components.forum.rest",

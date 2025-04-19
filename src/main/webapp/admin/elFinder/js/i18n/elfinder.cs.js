@@ -581,7 +581,7 @@
             'cmdresize'    : 'Editovat',
 			'wjSearchRecursive': 'V podadresářích',
 			'cmdwjeditswitch': 'Upravit',
-			'cmdwjfilearchive': 'Archivace souborů',
+			'cmdwjfilearchive': 'Manažer dokumentů',
 			'cmdwjdirprops'  : 'Nastavení složky',
 			'cmdwjfileprops' : 'Nastavení souboru',
 			'cmdwjmetadata' : 'Bezpečnostní nastavení',

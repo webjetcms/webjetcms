@@ -6,6 +6,7 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*, java.io.*, sk.iway.iwcm.components.file_archiv.*"%>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Date" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -13,7 +14,7 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
-<iwcm:checkLogon admin="true" perms="cmp_file_archiv"/>
+<iwcm:checkLogon admin="true" perms="menuFileArchivExportFiles"/>
 <%
     request.setAttribute("cmpName", "components.file_archiv.name");
     request.setAttribute("dialogTitleKey", "components.file_archiv.export_main_files");
@@ -42,8 +43,6 @@
             }
             FileInputStream in = new FileInputStream(file.getAbsolutePath());
             Logger.debug("export_archiv.jsp", "Adding to archive: " + file.getVirtualPath());
-            outJsp.println(prop.getText("components.file_archiv.add_file_to_zip", file.getVirtualPath())+"<br/>");
-            outJsp.flush();
             out.putNextEntry(new ZipEntry(file.getVirtualPath().substring(replacePathLength + 2)));
             int len;
             while ((len = in.read(tmpBuf)) > 0)
@@ -64,7 +63,12 @@
 <script>
     function Ok()
     {
-        $( "#exportArchiveFileForm" ).submit();
+        let fileForm = $( "#exportArchiveFileForm" );
+
+        if(fileForm != undefined && fileForm != null && fileForm.length > 0)
+            fileForm.submit();
+        else
+            window.close();
     }
     function Delete()
     {
@@ -83,6 +87,11 @@
     }
     else if(request.getParameter("exportBtn") != null)
     {
+        out.print("<p style=\"color: green;\"><b>" + prop2.getText("components.file_archiv.export_in_progress") + "</b></p>");
+
+        boolean includeHistoryFiles = Tools.getBooleanValue(request.getParameter("includeHistoryFiles"), false);
+        boolean includeAwaitingFiles = Tools.getBooleanValue(request.getParameter("includeAwaitingFiles"), false);
+
         String exportFilename = "files_to_export_" + getTodayDateString();
         String XML_FILE_ENCODED_FILE_NAME = "file_archiv_export_objects.xml";
         //priecinok kam budeme kopirovat subory na export
@@ -92,8 +101,14 @@
         if (exportFolder.exists())
             FileTools.deleteDirTree(exportFolder);
         exportFolder.mkdir();
-        List<FileArchivatorBean> filesToExportList = new ArrayList<>(
-                FileArchivatorDB.getMainFileList(true));
+
+        List<FileArchivatorBean> filesToExportList;
+        if(includeHistoryFiles == false) {
+            filesToExportList = new ArrayList<>(FileArchivatorDB.getMainFileList(true, includeAwaitingFiles));
+        } else {
+            filesToExportList = new ArrayList<>(FileArchivatorDB.getMainAndHistoryFiles(true, includeAwaitingFiles));
+        }
+
         Logger.println("export_archiv.jsp", " export path: " + exportFolder.getPath());
         //vytvorime xml subor zo zaznamov v DB
         IwcmFile xmlFile = new IwcmFile(
@@ -101,8 +116,39 @@
         xmlFile.getParentFile().mkdir();
         XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(xmlFile.getPath())));
         //musime z cesty  v beane odstranit defualntny priecinok archivu, lebo v cielovom umiestneni moze byt iny
+
+        out.print("<h2>" + prop2.getText("components.file_archiv.files_to_export") + "</h2>");
+        String mainStr = prop2.getText("components.file_archiv.main_file");
+        String mainStrAwaiting = prop2.getText("components.file_archiv.main_file_awaiting_file");
+        String waitingStr = prop2.getText("components.file_archiv.awaiting_file");
+        String historyStr = prop2.getText("components.file_archiv.history_file");
+        String patternStr = " (" + prop2.getText("components.file_archiv.pattern") + ")";
+        boolean first = true;
         for (FileArchivatorBean fBean : filesToExportList)
         {
+
+            if(fBean.getReferenceId() == -1) {
+                if(fBean.getUploaded() == -1) {
+                    //UPLOADED
+                    if(Tools.isNotEmpty(fBean.getReferenceToMain())) out.print("<span> <b>" + mainStr + patternStr + "</b> : " + fBean.getVirtualPath() +"</span>");
+                    else out.print("<span> <b>" + mainStr + "</b> : " + fBean.getVirtualPath() +"</span>");
+                } else {
+                    // AWAITING UPLOAD
+                    if(Tools.isNotEmpty(fBean.getReferenceToMain())) out.print("<span style='color: #ff4b58 !important;'> <b>" + mainStrAwaiting + patternStr + "</b> : " + fBean.getVirtualPath() +"</span>");
+                    else out.print("<span style='color: #ff4b58 !important;'> <b>" + mainStrAwaiting + "</b> : " + fBean.getVirtualPath() +"</span>");
+                }
+            } else {
+                if(fBean.getDateUploadLater() != null && fBean.getDateUploadLater().after(new Date(Tools.getNow())))
+                    out.print("<span style='color: #ff4b58 !important;'> - " + waitingStr + " : " + fBean.getVirtualPath() +"</span>");
+                else
+                    out.print("<span> - " + historyStr + " : " + fBean.getVirtualPath() +"</span>");
+            }
+            out.print("<br/>");
+
+            //FIX - old version start's without slash "/" , so new version if have slash at start remove it
+            if(fBean.getFilePath().startsWith("/"))
+                fBean.setFilePath(fBean.getFilePath().substring(1));
+
             if (fBean.getFilePath().startsWith(FileArchivatorKit.getArchivPath()) &&
                     fBean.getFilePath().length() >= FileArchivatorKit.getArchivPath().length())
                 fBean.setFilePath(fBean.getFilePath().substring(FileArchivatorKit.getArchivPath().length()));
@@ -129,9 +175,9 @@
             if(FileTools.isFile(src.getVirtualPath()))
             	FileTools.copyFile(src, dest);
         }
-        String zipArchivName = Tools.getRealPath(
-                FileArchivatorKit.getArchivPath() + "file_archiv_export_" + Constants.getInstallName() + "_" +
-                        getTodayDateString() + ".zip");
+
+        String zipId = "file_archiv_export_" + Constants.getInstallName() + "_" + getTodayDateString();
+        String zipArchivName = Tools.getRealPath(FileArchivatorKit.getArchivPath() + zipId + ".zip");
         IwcmFile zipArchiv = new IwcmFile(zipArchivName);
         //zazipujeme
         try
@@ -163,10 +209,13 @@
     else
     {
     	%>
-        <p><iwcm:text key="components.file_archiv.add_file_to_zip_start"/></p>
+
         <form id="exportArchiveFileForm" action="<%=PathFilter.getOrigPath(request) %>" method="POST">
+            <p><label><input type="checkbox" name="includeHistoryFiles" value="true" /> <iwcm:text key="components.file_archiv.export.add_historyFiles"/></label></p>
+            <p><label><input type="checkbox" name="includeAwaitingFiles" value="true" /> <iwcm:text key="components.file_archiv.export.add_awaitingFiles"/></label></p>
             <input type="hidden" name="exportBtn" value="true"/>
         </form>
+
         <%
     }
 %>
