@@ -14,7 +14,6 @@ import org.eclipse.persistence.queries.ReadAllQuery;
 import org.eclipse.persistence.queries.ReadObjectQuery;
 import org.eclipse.persistence.queries.ReadQuery;
 
-import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -112,8 +111,6 @@ public class DomainRedirectDB
 
 	public static DomainRedirectBean update(DomainRedirectBean redir)
 	{
-		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, "Update domain redirect, from="+redir.getRedirectFrom()+" to="+redir.getRedirectTo()+" data="+redir.toString(), redir.getRedirectId(), -1);
-
 		DomainRedirectBean modified =  null;
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
 		em.getTransaction().begin();
@@ -128,8 +125,6 @@ public class DomainRedirectDB
 
 	public static void insert(DomainRedirectBean redir)
 	{
-		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_CREATE, "New domain redirect, from="+redir.getRedirectFrom()+" to="+redir.getRedirectTo()+" data="+redir.toString(), -1, -1);
-
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
 		em.getTransaction().begin();
 		em.persist(redir);
@@ -140,8 +135,6 @@ public class DomainRedirectDB
 
 	public static void delete(Integer id)
 	{
-		if (id != null)  Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, "Delete domain redirect, id="+id, -1, -1);
-
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
 		em.getTransaction().begin();
 		DomainRedirectBean redir = em.find(DomainRedirectBean.class, id);
@@ -161,8 +154,6 @@ public class DomainRedirectDB
 
 	public static boolean delete(DomainRedirectBean redir)
 	{
-		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, "Delete domain redirect, from="+redir.getRedirectFrom()+" to="+redir.getRedirectTo()+" data="+redir.toString(), -1, -1);
-
 		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
 		em.getTransaction().begin();
 		if(redir == null)
