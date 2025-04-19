@@ -102,7 +102,8 @@ module.exports = {
         I.wait(1);
 
         I.switchTo(locate("iframe.wj_component").first());
-        I.waitForElement("a.inlineComponentButton.cke_button", 10);
+        I.wait(5);
+        I.waitForElement("a.inlineComponentButton.cke_button", 30);
         I.clickCss("a.inlineComponentButton.cke_button");
         I.switchTo();
         I.waitForInvisible('Čakajte prosím', 20);

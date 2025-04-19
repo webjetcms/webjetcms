@@ -387,9 +387,8 @@ function checkToggleLogic(I) {
 }
 
 function filterEnumDataByType(I, DTE, typeName) {
-    I.clickCss("#pills-enumerationType-tab");
-    I.fillField('body > div.bs-container.dropdown.bootstrap-select > div > div.bs-searchbox > input', typeName);
-    I.see(typeName);
-    I.click(typeName);
+    I.clickCss(".buttons-select");
+    I.fillField("body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input", typeName);
+    I.clickCss("a[role=option] > span");
     DTE.waitForLoader();
 }
