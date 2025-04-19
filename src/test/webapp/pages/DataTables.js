@@ -368,6 +368,8 @@ module.exports = {
      */
     async testAuditRecords(startTime, description) {
         I.say("Testujem auditne zaznamy");
+        //to see more rows in DT
+        I.resizeWindow(1280, 1300);
         I.amOnPage("/admin/v9/apps/audit-search/");
         let formatted = I.formatDateTime(startTime);
         I.fillField({css: "input.dt-filter-from-createDate"}, formatted);
@@ -377,10 +379,6 @@ module.exports = {
         DT.waitForLoader("#datatableInit_processing");
         //pause();
         let rows = await I.getTotalRows();
-        I.click(DT.btn.settings_button);
-        I.clickCss('.buttons-page-length');
-        I.click(locate('button.btn.button-page-length').find('span').withText("Všetky"));
-        I.clickCss('button.btn.btn-primary.dt-close-modal');
         I.assertAbove(rows+1, 3, "Nedostatocny pocet audit zaznamov");
         for (let rowIndex = 1; rowIndex <= rows; rowIndex++){
             const descriptionRow = await I.grabTextFrom(`#datatableInit  tr:nth-child(${rowIndex}) > td.dt-row-edit`);
@@ -411,10 +409,8 @@ module.exports = {
                 I.assertTrue(detailText.includes(description), `CREATE záznam neobsahuje očakávaný name: ${description}`);
             }
             DTE.cancel();
-            DT.waitForLoader("#datatableInit_processing");
-
         }
-
+        I.wjSetDefaultWindowSize();
     },
 
     /**
