@@ -59,6 +59,11 @@ Pri zobrazení možno vyfiltrovať podľa:
 - **Výrobca**
 ![](editor-items.png)
 
+## Povolené krajiny
+
+Pre dynamické nastavenie povolených krajín, kde sa dá tovar odoslať slúži konštanta `basketInvoiceSupportedCountries`. Konštanta obsahuje čiarkou oddelený zoznam `ccTLD` identifikátorov.
+
+**Príklad**, pre povolenie krajín Slovensko, Česko a Poľsko musí byť konštanta nastavená ako `.sk,.cz,.pl`.
 
 ## Zobrazenie aplikácie
 

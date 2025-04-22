@@ -6,14 +6,18 @@ Aplikácia neumožňuje pridávanie nových objednávok pomocou vytvorenia/dupli
 
 ![](datatable.png)
 
+Môžete si všimnúť, že stĺpce **Meno** a **Priezvisko** majú niektoré hodnoty kombinované. Prvá hodnota **vždy** zobrazuje meno ako kontakt (fakturačné meno). Druhé meno v zátvorke sa zobrazí, iba ak bola zadaná adresa doručenia, ktorá je iná ako fakturačná. Nakoľko fakturačné meno a meno pre doručenie sa môžu líšiť. Pri filtrovaní sa hľadá zhoda pre obe tieto hodnoty. To isté platí aj u stĺpca priezvisko.
+
 ## Úprava objednávky
 
 Okno pre úpravu objednávky pozostáva z kariet:
 - Základné
+- Osobné údaje
 - Notifikácia
 - Platby
 - Položky
 - Zobrazenie objednávky
+- Voliteľné polia
 
 ### Karta - Základné
 
@@ -27,18 +31,21 @@ Dôležitý je parameter **Stav**, ktorý indikuje aktuálny stav objednávky, v
 
 Zobrazené stavy sú automatický dostupné. Ak si želáte pridať nové stavy, môžete tak urobiť pomocou konfiguračnej premennej `basketInvoiceBonusStatuses`. Nový status pridáte ako hodnotu id_statusu|prekladový_kľúč.
 
-!>**Upozornenie:** hodnota id_statusu musí byť rovná alebo väčšia číslu 10. Pridané statusy a menšou hodnotou ako 10 budú od-ignorované.
+!>**Upozornenie:** hodnota id_statusu musí byť rovná alebo väčšia ako číslo 10. Pridané statusy s menšou hodnotou ako 10 budú od-ignorované.
 
 Ak zvolíte možnosť **Odoslať notifikáciu klientovi**, tak notifikácia bude odoslaná pri uložení upravovanej objednávky (prehľad notifikácie v nasledujúcej kapitole).
+
+### Karta - Osobné údaje
+
+Poskytuje prehľad o **adrese doručenia** ako aj **kontaktné informácie** kupujúceho. Hodnoty sú získané z formuláru pri vytváraní objednávky v elektronickom obchode.
+
+![](editor_personal-info.png)
 
 ### Karta - Notifikácia
 
 Poskytuje náhľad emailovej notifikácie na zákazníka, s možnosťou zmeny textu. Notifikácia sa odošle len v prípade zvolenia možnosti **Odoslať notifikáciu klientovi** v karte Základné.
 
 **Odosielateľ** - automatický vyplnená hodnota s emailom aktuálne prihláseného používateľa. Slúži ako email odosielateľa notifikácie a je možné túto adresu zmeniť.
-
-**Príjemca** - hodnota je získaná z formuláru pri vytváraní objednávky v elektronickom obchode. Email príjemcu je možné taktiež zmeniť.
-
 **Predmet** - automatický vyplnená hodnota s textom **Zmena stavu objednávky (id objednávky)**. Slúži ako predmet odoslaného emailu (notifikácie) a je možné ju zmeniť.
 
 **Text notifikácie** - telo/text odoslaného emailu.
@@ -66,6 +73,12 @@ Poskytuje celkový prehľad objednávky, vrátane platieb a položiek. Tento pre
 Pri zmene hodnôt [platieb](#karta-platby) alebo hodnôt [položiek](#karta-položky) sa sa tento prehľad objednávky obnoví a poskytuje tak vždy aktuálne informácie.
 
 ![](editor_order_status.png)
+
+### Karta Voliteľné polia
+
+V karte Voliteľné polia môžete nastavovať hodnoty polí podľa potrieb vašej implementácie.
+
+![](editor_fields.png)
 
 ## Zmena stavu objednávky
 

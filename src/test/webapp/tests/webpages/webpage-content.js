@@ -258,7 +258,7 @@ Scenario('Zmaz strukturu', ({ I }) => {
      I.deleteFolderStructure(randomNumber);
 });
 
-Scenario('Zadanie neexistujúceho docid', ({I}) => {
+Scenario('Zadanie neexistujúceho docid', ({I, DTE}) => {
      const input = '#tree-doc-id';
      const alert = '#toast-container-webjet';
      const errorMessage = 'Zadaná stránka neexistuje v aktuálnom zobrazení adresárovej štruktúry, alebo k nej nemáte prístupové práva.';
@@ -285,6 +285,7 @@ Scenario('Zadanie neexistujúceho docid', ({I}) => {
      I.pressKey('Enter');
      I.say('Testuje zobrazenie hlášky. Nesmie sa zobraziť.');
      I.waitForInvisible(alert, 30);
+     DTE.cancel();
 
      I.say('Zadám do inputu ID dalšieho neexistujúceho dokumentu.');
      I.fillField(input, '123456');

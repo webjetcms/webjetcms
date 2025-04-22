@@ -399,35 +399,35 @@ else {%>
 				<h2><iwcm:text key="components.basket.invoice_email.delivery_address"/></h2>
 				<div class="flex">
 					<div class="form-group">
-						<label for="deliveryNameId"><iwcm:text key="components.basket.invoice_email.name"/>:</label>
-						<input type="text" name="deliveryName" id="deliveryNameId" class="required form-control" size="25" maxlength="255" value="<%=user.getFirstName()%>"/>
+						<label for="contactFirstNameId"><iwcm:text key="components.basket.invoice_email.name"/>:</label>
+						<input type="text" name="contactFirstName" id="contactFirstNameId" class="required form-control" size="25" maxlength="255" value="<%=user.getFirstName()%>"/>
 					</div>
 					<div class="form-group">
-						<label for="deliverySurNameId"><iwcm:text key="reguser.lastname"/>:</label>
-						<input type="text" name="deliverySurName" id="deliverySurNameId" class="required form-control" size="25" maxlength="255" value="<%=user.getLastName()%>"/>
+						<label for="contactLastNameId"><iwcm:text key="reguser.lastname"/>:</label>
+						<input type="text" name="contactLastName" id="contactLastNameId" class="required form-control" size="25" maxlength="255" value="<%=user.getLastName()%>"/>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="deliveryStreetId"><iwcm:text key="components.basket.invoice_email.street"/>:</label>
-					<input type="text" name="deliveryStreet" id="deliveryStreetId" class="required form-control" size="25" maxlength="255" value="<%=user.getAdress()%>"/>
+					<label for="contactStreetId"><iwcm:text key="components.basket.invoice_email.street"/>:</label>
+					<input type="text" name="contactStreet" id="contactStreetId" class="required form-control" size="25" maxlength="255" value="<%=user.getAdress()%>"/>
 				</div>
 				<div class="flex">
 					<div class="form-group">
-						<label for="deliveryCityId"><iwcm:text key="components.basket.invoice_email.city"/>:</label>
-						<input type="text" name="deliveryCity" id="deliveryCityId" class="required form-control" size="25" maxlength="255" value="<%=user.getCity()%>"/>
+						<label for="contactCityId"><iwcm:text key="components.basket.invoice_email.city"/>:</label>
+						<input type="text" name="contactCity" id="contactCityId" class="required form-control" size="25" maxlength="255" value="<%=user.getCity()%>"/>
 					</div>
 					<div class="form-group">
-						<label for="deliveryZipId"><iwcm:text key="components.basket.invoice_email.ZIP"/>:</label>
-						<input type="text" name="deliveryZip" id="deliveryZipId" class="required form-control numbers" size="5" maxlength="5" value="<%=user.getPSC()%>"/>
+						<label for="contactZipId"><iwcm:text key="components.basket.invoice_email.ZIP"/>:</label>
+						<input type="text" name="contactZip" id="contactZipId" class="required form-control numbers" size="5" maxlength="5" value="<%=user.getPSC()%>"/>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="deliveryCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
+					<label for="contactCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
 					<%/*Tento select box nemenit, je tu kvoli pay24 !!! */ %>
-					<select name="deliveryCountry" class="form-control">
-						<option value="SVK"><iwcm:text key="stat.countries.tld.sk"/></option>
-						<option value="CZE" ><iwcm:text key="stat.countries.tld.cz"/></option>
-						<option value="POL"><iwcm:text key="stat.countries.tld.pl"/></option>
+					<select name="contactCountry" class="form-control">
+						<%for (String countryTld : Constants.getArray("basketInvoiceSupportedCountries")) {%>
+							<option value="<%=countryTld%>"><%=prop.getText("stat.countries.tld" + countryTld)%></option>
+						<%}%>
 					</select>
 				</div>
 			</div>

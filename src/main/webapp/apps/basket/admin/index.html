@@ -22,10 +22,12 @@
 
     var tabs = [
         { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
+        { id: 'personal_info', title: '[[#{reservation.reservations.personal_info}]]'},
         { id: 'notify', title: '[[#{components.basket.tab.notify}]]'},
         { id: 'payments', title: '[[#{components.basket.invoice.payments.tab}]]'},
         { id: 'items', title: '[[#{components.basket.invoice_items}]]'},
-        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<iframe frameborder="0" id="dataDiv" width="850" height="950" src="about:blank"></iframe>' }
+        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<div class="previewContainer"><iframe id="dataDiv" src="about:blank" width="100%" height="500"></iframe><div>' },
+        { id: 'fields', title: '[[#{editor.tab.fields}]]'}
     ];
 
     var order = [];
@@ -49,29 +51,42 @@
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
             if(event.detail.conf.id == "DTE_Field_editorFields.payments") {
                 paymentsDataTable = event.detail.conf.datatable;
-
-                paymentsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
-                    //Refresh tab using tab-click
-                    setTimeout(() => {
-                        $("#pills-dt-basketInvoiceDataTable-payments-tab").click();
-                    }, 300);
-
+                paymentsDataTable.on("draw", function() {
                     //Re-call iframe and set new values
                     refreshIframeAndSetValues();
+                    //Refresh footer info
+                    setPaymentsFooter();
                 });
             }
 
             if(event.detail.conf.id == "DTE_Field_editorFields.items") {
                 itemsDataTable = event.detail.conf.datatable;
-
-                itemsDataTable.EDITOR.on('postSubmit', function (e, json, data) {
-                    //Refresh tab using tab-click
-                    setTimeout(() => {
-                        $("#pills-dt-basketInvoiceDataTable-items-tab").click();
-                    }, 300);
-
+                itemsDataTable.on("draw", function() {
                     //Re-call iframe and set new values
                     refreshIframeAndSetValues();
+                    //Refresh footer info
+                    setItemsFooter();
+                });
+                itemsDataTable.button().add(2, {
+                    text: '<i class="ti ti-eye"></i>',
+                    action: function (e, dt, node) {
+                        //console.log("btn, e=",e,"dt=",dt,"node=",node);
+                        //ziskaj data selectnuteho riadku
+                        let selectedRows = dt.rows({ selected: true }).data();
+                        //console.log("selectedRows=", selectedRows);
+                        for (let i=0; i<selectedRows.length; i++) {
+                            let row = selectedRows[i];
+                            window.open("/showdoc.do?docid="+row.itemId);
+                        }
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                    },
+                    className: 'btn btn-outline-secondary buttons-item-preview',
+                    attr: {
+                        'title': window.WJ.translate("history.showPage"),
+                        'data-toggle': 'tooltip'
+                    }
                 });
             }
         });
@@ -87,6 +102,8 @@
             if ("basketInvoiceDataTable" === e.detail.id) {
                 actualCurrent = e.detail.dte.currentJson['currency'];
 
+                $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+
                 if("edit" === e.detail.action) {
                     if($("#dataDiv").length > 0) {
                         $("#dataDiv")[0].src = "/components/basket/invoice_email.jsp?invoiceId=" + e.detail.dte.currentJson['id'] + "&auth=" + e.detail.dte.currentJson['authorizationToken'];
@@ -98,6 +115,29 @@
 
                     $("#pills-dt-basketInvoiceDataTable-items-tab").on("click", function(e) { setItemsFooter(); });
                 }
+            }
+        });
+
+        window.addEventListener('WJ.DTE.tabclick', function (e) {
+            //console.log("tabclick, id=", e.detail.id, " e=", e);
+            let id = e.detail.id;
+            //console.log("tab clicked, e=", e, "id=", id);
+            if ("datatableFieldDTE_Field_editorFields-items-itemPreview"===id) {
+                let url = null;
+                try {
+                    let docId = itemsDataTable.EDITOR.field("itemId").get();
+                    if (typeof docId != "undefined" && docId != "-1") {
+                        url = "/showdoc.do?docid="+docId+"&NO_WJTOOLBAR=true&isDmail=true";
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+                if (url == null) {
+                    url = "about:blank";
+                }
+                //console.log("url=", url);
+
+                $("#itemPreviewIframe").attr("src", url);
             }
         });
 
@@ -119,52 +159,44 @@
             }, 500);
         }
 
-        function getPayments() {
-            if(paymentsDataTable != null) {
-                //If inner table data are not initialized yet, DATA.json is null
-                if(paymentsDataTable.DATA.json != null) return paymentsDataTable.rows().data().toArray();
-            }
-            //Return data from basketInvoiceDataTable)
-            return basketInvoiceDataTable.EDITOR.currentJson.basketPayments;
-        }
-
-        function getItems() {
-            if(itemsDataTable != null)
-              //If inner table data are not initialized yet, DATA.json is null
-              if(itemsDataTable.DATA.json != null) return itemsDataTable.rows().data().toArray();
-
-            //Return data from basketInvoiceDataTable)
-            return basketInvoiceDataTable.EDITOR.currentJson.basketItems;
-        }
-
         function setPaymentsFooter() {
             let colSum = $("#datatableFieldDTE_Field_editorFields-payments_wrapper > div.row.dt-footer-row > div.col-auto.col-sum");
             if(colSum.length > 0) {
-                var payments = getPayments();
-                var items = getItems();
-                var priceToPay = items.reduce((partialSum, a) => partialSum + a.itemPriceVatQty, 0);
-
-                var paymentFooter = WJ.translate('components.basket.invoice.payments.paid_sum.js') + ': ';
-                paymentFooter = paymentFooter + WJ.formatPrice(payments.reduce((partialSum, a) => partialSum + a.payedPrice, 0)) + ' ' + actualCurrent;
-                paymentFooter = paymentFooter + ' ' + WJ.translate('components.basket.invoice.payments.need_to_pay_sum.js');
-                paymentFooter = paymentFooter + ' ' + WJ.formatPrice(priceToPay) + ' ' + actualCurrent;
-                //Set footer
-                colSum.html('<p>' + paymentFooter + '</p>');
+                let paidSumText = WJ.translate('components.basket.invoice.payments.paid_sum.js');
+                let needToPaySum = WJ.translate('components.basket.invoice.payments.need_to_pay_sum.js');
+                $.ajax({
+                    url: url + "/getPriceToPay?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
+                    method: "GET",
+                    success: function (priceToPayVAT) {
+                        //
+                        $.ajax({
+                            url: url + "/getPayedPrice?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
+                            method: "GET",
+                            success: function (payedPrice) {
+                                var paymentFooter = paidSumText + ': ' + WJ.formatPrice(payedPrice) + ' ' + actualCurrent + ' ' + needToPaySum + ': ' + WJ.formatPrice(priceToPayVAT) + ' ' + actualCurrent;
+                                colSum.html('<p>' + paymentFooter + '</p>');
+                            }, error: () => { colSum.html('<p> --- </p>'); }
+                        })
+                    }, error: () => { colSum.html('<p> --- </p>'); }
+                });
             }
         }
 
         function setItemsFooter() {
             let colSum = $("#datatableFieldDTE_Field_editorFields-items_wrapper > div.row.dt-footer-row > div.col-auto.col-sum");
             if(colSum.length > 0) {
-                var items = getItems();
-                var priceToPay = items.reduce((partialSum, a) => partialSum + a.itemPriceVatQty, 0);
-
-                var itemFooter = WJ.translate('components.basket.invoice.items.items_price.js') + ': ' + WJ.formatPrice(priceToPay) + ' ' + actualCurrent;
-                //Set footer
-                colSum.html('<p>' + itemFooter + '</p>');
+                let itemsPriceText = WJ.translate('components.basket.invoice.items.items_price.js');
+                $.ajax({
+                    url: url + "/getPriceToPay?invoiceId=" + basketInvoiceDataTable.EDITOR.currentJson['id'],
+                    method: "GET",
+                    success: function (priceToPayVAT) {
+                        var itemFooter = itemsPriceText + ': ' + WJ.formatPrice(priceToPayVAT) + ' ' + actualCurrent;
+                        //Set footer
+                        colSum.html('<p>' + itemFooter + '</p>');
+                    }, error: () => { colSum.html('<p> --- </p>'); }
+                });
             }
         }
-
     });
 </script>
 

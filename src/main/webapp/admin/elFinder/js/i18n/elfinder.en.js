@@ -581,7 +581,7 @@ if (typeof elFinder === 'function' && elFinder.prototype.i18) {
             'cmdresize'    : 'Edit',
 			'wjSearchRecursive': 'In Subfolders',
 			'cmdwjeditswitch': 'Edit',
-			'cmdwjfilearchive': 'File Archive',
+			'cmdwjfilearchive': 'Document manager',
 			'cmdwjdirprops'  : 'Folder properties',
 			'cmdwjfileprops' : 'File properties',
 			'cmdwjmetadata' : 'Permissions',

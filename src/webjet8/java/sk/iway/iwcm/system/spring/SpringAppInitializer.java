@@ -97,7 +97,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 
 		dtGlobal.diff("Spring onStartup done");
 
-		if (initialized) InitServlet.setWebjetInitialized();
+		if (initialized) InitServlet.setSpringInitialized();
 	}
 
 	private void loadSpringConfigs(List<String> customConfigs, AnnotationConfigWebApplicationContext ctx) {
@@ -153,6 +153,6 @@ public class SpringAppInitializer implements WebApplicationInitializer
 	}
 
 	public static void dtDiff(String message) {
-		if (dtGlobal!=null) dtGlobal.diff(message);
+		if (dtGlobal!=null) dtGlobal.diffInfo(message);
 	}
 }

@@ -3639,7 +3639,7 @@ public class GroupsDB extends DB
 
 	/**
 	 * vrati zoznam nazvov root domen pre ktore ma pouzivatel pravo
-	 * @param editableGroups
+	 * @param user
 	 * @return
 	 */
 	public List<String> getUserRootDomainNames(Identity user)

@@ -1,15 +1,23 @@
 package sk.iway.iwcm.components.file_archiv;
 
-import sk.iway.iwcm.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.List;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
 
 public class FileArchivatorInsertLater
 {
@@ -90,68 +98,69 @@ public class FileArchivatorInsertLater
 	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
 	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
 	 */
-	public static String renameFile(FileArchivatorBean scheduledBean)
-	{
-        //String dirPath, String fileName, FileArchivatorBean oldFileBean
-
+	public static String renameFile(FileArchivatorBean scheduledBean) {
         //get old bean
         FileArchivatorBean oldFileBean = FileArchivatorDB.getInstance().getById(scheduledBean.getReferenceId());
+        String fileUrl = newPath(scheduledBean.getFilePath());
+        String uniqueFileName = FileArchivatorKit.getUniqueFileName(scheduledBean.getFileName(), fileUrl, FileArchivatorKit.getDateStampAsString(scheduledBean.getDateInsert()));
 
-        if (oldFileBean == null) {
-            //it's first file scheduled to publish
-            oldFileBean = new FileArchivatorBean();
-            oldFileBean.setFileName(scheduledBean.getFileName());
-            oldFileBean.setFilePath(newPath(scheduledBean.getFilePath()));
-        }
+        try {
+            //New created file
+            IwcmFile realFile = new IwcmFile( Tools.getRealPath(fileUrl + uniqueFileName) );
 
-		boolean renamed = true;
-		IwcmFile oldFile = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath()+oldFileBean.getFileName()));
-		IwcmFile newFile = new IwcmFile(Tools.getRealPath(scheduledBean.getFilePath()+scheduledBean.getFileName()));
-
-		String uniqueFileName = FileArchivatorKit.getUniqueFileName(oldFileBean.getFileName(), oldFileBean.getFilePath(), FileArchivatorKit.getDateStampAsString(oldFileBean.getDateInsert()));
-        IwcmFile oldFileArchived = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath()+uniqueFileName));
-		try
-		{
-			//copy old file to temp file for later usage
-            if (oldFileBean.getId()>0) {
-                if(FileTools.copyFile(oldFile, oldFileArchived) == false)
-                {
-                    Logger.error(FileArchivatorInsertLater.class, "renameFile1: nepodarilo sa premenovat "+oldFile.getVirtualPath()+" > "+oldFileArchived.getVirtualPath());
-                    renamed = false;
+            if (oldFileBean != null) {
+                //There is OLD copy content of OLD file into new file
+                IwcmFile oldFile = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath() + oldFileBean.getFileName()));
+                if(oldFile.renameTo(realFile) == false) {
+                    //ERR
+                    return null;
                 }
-            }
-			//owerwrite old file with new file
-			if(FileTools.copyFile(newFile, oldFile) == false)
-			{
-				 Logger.error(FileArchivatorInsertLater.class, "renameFile2: nepodarilo sa premenovat "+newFile.getVirtualPath()+" > "+oldFile.getVirtualPath());
-				 renamed = false;
-			}
-            if (renamed) {
+
+                //
+                FileTools.moveFile(scheduledBean.getFilePath() + scheduledBean.getFileName(), fileUrl + scheduledBean.getFileName());
+
+                //NOW edit and save DB records
+                Long originalId = oldFileBean.getId();
                 scheduledBean.setFileName(oldFileBean.getFileName());
-                scheduledBean.setFilePath(oldFileBean.getFilePath());
+
+                oldFileBean.setId(scheduledBean.getId());
+                oldFileBean.setFileName(uniqueFileName);
+                oldFileBean.setReferenceId(originalId);
+
+                scheduledBean.setId(originalId);
+                scheduledBean.setFilePath(fileUrl);
                 scheduledBean.setUploaded(-1);
-                scheduledBean.setReferenceId(-1);
-                scheduledBean.save();
+                scheduledBean.setReferenceId(null);
 
-                Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "EDIT: File Archiv (Planovana aktualizacia existujuceho suboru) ulozenie:\n"+scheduledBean.toString(true), scheduledBean.getId(), -1);
+                if(oldFileBean.save() == true && scheduledBean.save() == true) {
+                    //All good, do increment order id
+		            FileArchivatorKit.incrementOrderId(originalId);
 
-                if (oldFileBean.getId()>0) {
-                    oldFileBean.setFileName(uniqueFileName);
-                    oldFileBean.setReferenceId(scheduledBean.getId());
-                    oldFileBean.save();
-                    FileArchivatorKit.reSetReference(oldFileBean.getId(), scheduledBean.getId());
+                    //Good
+                    return scheduledBean.getFileName();
+                }
+            } else {
+                //ITS main file, there is no old file
+                if(FileTools.moveFile(scheduledBean.getFilePath() + scheduledBean.getFileName(), fileUrl + uniqueFileName) == false) {
+                    //ERR
+                    return null;
                 }
 
-                //delete newFile in archive folder
-			    newFile.delete();
-                return oldFileBean.getFileName();
+                scheduledBean.setFileName(uniqueFileName);
+                scheduledBean.setFilePath(fileUrl);
+                scheduledBean.setUploaded(-1);
+                scheduledBean.setReferenceId(null);
+
+                if(scheduledBean.save() == false) {
+                    Logger.error(FileArchivatorInsertLater.class, "save failed");
+                    return null;
+                }
+
+                return uniqueFileName;
             }
-		}
-		catch(Exception e)
-		{
-			renamed = false;
-			sk.iway.iwcm.Logger.error(e);
-		}
+        } catch (Exception e) {
+            return null;
+        }
 
         return null;
 	}
@@ -227,19 +236,19 @@ public class FileArchivatorInsertLater
             dir = newPath(fab.getFilePath());
 
         if(Tools.isNotEmpty(fab.getVirtualFileName()))
-            text.append(prop.getText("components.file_archiv.FileArchivatorInsertLater.java.virtualne_meno")).append(": ")
+            text.append(prop.getText("components.file_archiv.virtualFileName")).append(": ")
                      .append(fab.getVirtualFileName()).append("<br/>");
-        if(Tools.isNotEmpty(fab.getFileName()))
-            text.append(prop.getText("components.file_archiv.FileArchivatorInsertLater.java.realne_meno")).append(": ")
-                     .append(fab.getFileName()).append("<br/>");
         if(Tools.isNotEmpty(dir))
-            text.append("Adresář: ").append(dir).append("<br/>");
+                     text.append(prop.getText("components.file_archiv.directory")).append(": ").append(dir).append("<br/>");
+        if(Tools.isNotEmpty(fab.getFileName()))
+            text.append(prop.getText("components.gallery.fileName")).append(": ")
+                     .append(fab.getFileName()).append("<br/>");
         if(fab.getValidFrom()!=null)
-            text.append(prop.getText("components.file_archiv.FileArchivatorInsertLater.java.datum_od")).append(": ")
-                     .append(Tools.formatDate(fab.getValidFrom())).append("<br/>");
+            text.append(prop.getText("inquiry.valid_since")).append(": ")
+                     .append(Tools.formatDateTimeSeconds(fab.getValidFrom())).append("<br/>");
         if(fab.getValidTo()!=null)
-            text.append(prop.getText("components.file_archiv.FileArchivatorInsertLater.java.datum_od_1")).append(": ")
-                     .append(Tools.formatDate(fab.getValidTo())).append("<br/>");
+            text.append(prop.getText("inquiry.valid_till")).append(": ")
+                     .append(Tools.formatDateTimeSeconds(fab.getValidTo())).append("<br/>");
         if(Tools.isNotEmpty(fab.getProduct()))
             text.append(prop.getText("components.file_archiv.product")).append(": ")
                      .append(fab.getProduct()).append("<br/>");
@@ -247,9 +256,9 @@ public class FileArchivatorInsertLater
             text.append(prop.getText("components.bazar.category")).append(": ")
                      .append(fab.getCategory()).append("<br/>");
         if(Tools.isNotEmpty(fab.getProductCode()))
-            text.append(prop.getText("components.file_archiv.code")).append(": ")
+            text.append(prop.getText("components.file_archiv.kod_produktu")).append(": ")
                      .append(fab.getProductCode()).append("<br/>");
-        if(fab.getShowFile())
+        if( Tools.isTrue(fab.getShowFile()) )
             text.append(prop.getText("editor.show")).append(":").append(prop.getText("qa.publishOnWeb.yes")).append("<br/>");
 		else
             text.append(prop.getText("editor.show")).append(":").append(prop.getText("qa.publishOnWeb.no")).append("<br />");

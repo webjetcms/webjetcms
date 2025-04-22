@@ -7,7 +7,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -17,14 +19,21 @@ import sk.iway.iwcm.users.UsersDB;
 
 @Getter
 @Setter
-public class BasketInvoiceEditorFields {
+public class BasketInvoiceEditorFields extends BaseEditorFields {
+
+    //USED just for export
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title="components.basket.invoice.price")
+    private BigDecimal exportTotalPriceWithVat;
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, title="components.basket.invoice.items")
+    private Integer exportTotalItemsCount;
 
     @DataTableColumn(
         inputType = DataTableColumnType.CHECKBOX,
         title="components.basket.sendNotificationToClient",
 		tab = "basic",
         hidden = true,
-        sortAfter = "userNote"
+        sortAfter = "userNote",
+        className = "not-export"
     )
 	private Boolean sendNotification;
 
@@ -32,7 +41,8 @@ public class BasketInvoiceEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="components.qa.add_action.sender",
 		tab = "notify",
-        hidden = true
+        hidden = true,
+        className = "not-export"
     )
 	private String sender;
 
@@ -41,7 +51,8 @@ public class BasketInvoiceEditorFields {
         title="components.qa.add_action.subject",
 		tab = "notify",
         sortAfter = "contactEmail",
-        hidden = true
+        hidden = true,
+        className = "not-export"
     )
 	private String subject;
 
@@ -50,6 +61,7 @@ public class BasketInvoiceEditorFields {
         title="components.basket.invoice.body",
 		tab = "notify",
         hidden = true,
+        className = "not-export",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -62,26 +74,11 @@ public class BasketInvoiceEditorFields {
     @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String body;
 
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
     private String orderRecapHead;
 
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
     private String orderRecapBody;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.NUMBER,
-        title="components.basket.invoice.items",
-		hiddenEditor = true
-    )
-	private Integer itemsCount;
-
-    @DataTableColumn(
-        inputType = DataTableColumnType.NUMBER,
-        renderFormat = "dt-format-number--decimal",
-        title="components.basket.invoice.price",
-		hiddenEditor = true
-    )
-    private BigDecimal totalPriceVat;
 
     //AUTH TOKEN  - for getting iframe of invoice_email.jsp
     @DataTableColumn(visible = false, hidden = true, hiddenEditor = true)
@@ -94,8 +91,7 @@ public class BasketInvoiceEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/eshop/basket-payments?invoiceId={id}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-full-headline", value = "components.basket.invoice.payments.headline")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import")
             }
         )
     })
@@ -109,11 +105,31 @@ public class BasketInvoiceEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,duplicate,import"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-full-headline", value = "components.basket.invoice.items.headline")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'itemPreview', 'title': '[[#{editor.preview}]]', 'content': '<div class=\\\"previewContainer\\\"><iframe id=\\\"itemPreviewIframe\\\" src=\\\"about:blank\\\" width=\\\"100%\\\" height=\\\"500\\\"></iframe></div>' }]")
             }
         )
     })
     private List<BasketInvoiceItemEntity> items;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title="components.basket.invoice_email.surname",
+		hiddenEditor = true,
+        sortAfter = "id",
+        orderable = true,
+        orderProperty = "contactLastName,deliverySurName"
+    )
+    private String lastName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title="components.basket.invoice.name",
+		hiddenEditor = true,
+        sortAfter = "id",
+        orderable = true,
+        orderProperty = "contactFirstName,deliveryName"
+    )
+    private String firstName;
 
     public void fromBasketInvoice(BasketInvoiceEntity originalEntity, HttpServletRequest request) {
 
@@ -123,8 +139,15 @@ public class BasketInvoiceEditorFields {
         subject = prop.getText("components.basket.invoiceDetail.subject", originalEntity.getBasketInvoiceId() + "");
         body = prop.getText("components.basket.invoiceDetail.body") + " <p>&nbsp;</p> {ORDER_DETAILS}";
         authToken = originalEntity.getAuthorizationToken();
-        itemsCount = originalEntity.getTotalItems();
-        totalPriceVat = originalEntity.getTotalPriceVat();
+
+        exportTotalItemsCount = originalEntity.getItemQty();
+        exportTotalPriceWithVat = originalEntity.getPriceToPayVat();
+
+        firstName = originalEntity.getContactFirstName();
+        if(Tools.isNotEmpty( originalEntity.getDeliveryName() )) firstName += " (" + originalEntity.getDeliveryName() + ")";
+
+        lastName = originalEntity.getContactLastName();
+        if(Tools.isNotEmpty( originalEntity.getDeliverySurName() )) lastName += " (" + originalEntity.getDeliverySurName() + ")";
 
         originalEntity.setEditorFields(this);
     }

@@ -569,6 +569,10 @@ body.modal-open {
                         display: none;
                     }
                 }
+
+                .tab-pane {
+                    padding-bottom: 0px;
+                }
             }
 
             .DTE_Body.modal-body.modal-body-notabs {

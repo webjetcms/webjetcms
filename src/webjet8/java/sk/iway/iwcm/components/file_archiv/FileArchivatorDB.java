@@ -4,15 +4,14 @@ import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.database.nestedsets.Node;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.jpa.JpaSortOrderEnum;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.jpa.JpaTools.Condition;
-import sk.iway.iwcm.system.jpa.PaginatedBean;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.utils.Pair;
@@ -51,12 +50,31 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 		super(FileArchivatorBean.class);
 	}
 
+	public static List<FileArchivatorBean> getMainAndHistoryFiles(boolean cleanCache, boolean includeAwaiting) {
+		List<FileArchivatorBean> mainFiles = getMainFileList(cleanCache, includeAwaiting);
+
+		List<FileArchivatorBean> allFiles = new ArrayList<>();
+
+		for (FileArchivatorBean file : mainFiles) {
+			//Add main files
+			allFiles.add(file);
+			//Add history files of this main file
+			List<FileArchivatorBean> historyFiles = getByReferenceId(file.getId());
+			if (historyFiles != null && historyFiles.size() > 0) {
+				if(includeAwaiting == true) allFiles.addAll(historyFiles);
+				else allFiles.addAll( historyFiles.stream().filter(fab -> fab.getUploaded() == -1).toList() );
+			}
+		}
+
+		return allFiles;
+	}
+
 	/** Vrati vysledky podla referencie z cache
 	 *
 	 * @param referenceId int
 	 * @return List<FileArchivatorBean>
 	 */
-	public static List<FileArchivatorBean> getByReferenceId(int referenceId)
+	public static List<FileArchivatorBean> getByReferenceId(Long referenceId)
 	{
 		String methodName = "getByReferenceId-";
 		String cacheKey = cachePrefix+methodName+referenceId;
@@ -72,18 +90,6 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));
 		return fabList;
 	}
-
-    public static int getCountByReferenceId(int referenceId)
-    {
-        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
-        em.getTransaction().begin();
-        Query query =  em.createQuery("SELECT COUNT (f)  FROM FileArchivatorBean  f WHERE f.referenceId = :reference", Long.class);
-
-        query.setParameter("reference",referenceId);
-        int count = (int)((long)query.getSingleResult());
-        em.getTransaction().commit();
-        return count;
-    }
 
 	/** Pokusi sa najst v DB hlavne subory s rovnakym hashom. Pozor ! Vracia aj sam seba ;-)
 	 *
@@ -101,29 +107,15 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 	 */
 	public static List<FileArchivatorBean> getMainFileList()
     {
-        return getMainFileList(false);
+        return getMainFileList(false, false);
     }
 
-	public static List<FileArchivatorBean> getPaginatedAndUncachedMainFileList(int page, int pageSize)
-	{
-		ExpressionBuilder builder = new ExpressionBuilder();
-		@SuppressWarnings("unchecked")
-		Expression filter = JpaTools.propertiesToExpression(builder, Pair.of("referenceId", -1), Pair.of("uploaded", -1), Pair.of("domainId", CloudToolsForCore.getDomainId()));
-
-		try {
-			PaginatedBean<FileArchivatorBean> paginatedResult = JpaTools.findPaginatedAndSortedByProperties(FileArchivatorBean.class, filter, page, pageSize, "nnFileArchiveId", JpaSortOrderEnum.ASC);
-
-			if(page > paginatedResult.getTotalPages()) {
-				return null;
-			}
-			return paginatedResult.getData();
-		} catch(Exception e) {
-			return null;
-		}
+	public static List<FileArchivatorBean> getMainFileList(boolean cleanCache) {
+		return getMainFileList(cleanCache, false);
 	}
 
 	@SuppressWarnings("unchecked")
-    public static List<FileArchivatorBean> getMainFileList(boolean cleanCache)
+    public static List<FileArchivatorBean> getMainFileList(boolean cleanCache, boolean includeAwaiting)
 	{
 		String methodName = "getMainFileList-";
 		String cacheKey = cachePrefix+methodName+"-domain_id-"+CloudToolsForCore.getDomainId();
@@ -131,52 +123,17 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
         {
             Object o = Cache.getInstance().getObject(cacheKey);
             if (o != null)
-                return (List<FileArchivatorBean>) o;
+				return includeAwaiting == true ? (List<FileArchivatorBean>) o : filterAwaitingOut((List<FileArchivatorBean>) o);
         }
 		//Logger.debug(FileArchivatorDB.class, "Nacitam z databazy: "+cacheKey);
 		// Pair.of("uploaded", -1) - nezobrazujeme subory, ktore sa maju nahrat neskor
-		List<FileArchivatorBean> fabList =  JpaTools.findByProperties(FileArchivatorBean.class,Pair.of("referenceId", -1), Pair.of("uploaded", -1), Pair.of("domainId", CloudToolsForCore.getDomainId()));
+		List<FileArchivatorBean> fabList =  JpaTools.findByProperties(FileArchivatorBean.class,Pair.of("referenceId", -1), Pair.of("domainId", CloudToolsForCore.getDomainId()));
 		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));
-		return fabList;
+		return includeAwaiting == true ? fabList : filterAwaitingOut(fabList);
 	}
 
-	/** Vrati vsetky subory cakajuce na nahranie v buducnosti
-	 *
-	 * @return List<FileArchivatorBean>
-	 */
-	@SuppressWarnings("unchecked")
-	public static List<FileArchivatorBean> getWaitingFileList()
-	{
-		String methodName = "getWaitingFileList-";
-		String cacheKey = cachePrefix+methodName+"-domainId-"+CloudToolsForCore.getDomainId();
-		Object o = Cache.getInstance().getObject(cacheKey);
-		if(o != null)
-			return (List<FileArchivatorBean>) o;
-
-		Logger.debug(FileArchivatorDB.class, "Nacitam z databazy: "+cacheKey);
-
-		//List<FileArchivatorBean> fabList =  JpaTools.findByProperties(FileArchivatorBean.class, Pair.of("uploaded", 0));
-
-		// .notEqual(-1) aby sme vypisaly skutocne vsetky
-		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
-		List<FileArchivatorBean> fabList = null;
-		try{
-			ExpressionBuilder builder = new ExpressionBuilder();
-			ReadAllQuery dbQuery = new ReadAllQuery(FileArchivatorBean.class, builder);
-			Expression expr = builder.get("uploaded").notEqual(-1);
-			expr = expr.and(builder.get("domainId").equal(CloudToolsForCore.getDomainId()));
-			dbQuery.setSelectionCriteria(expr);
-
-			Query query = em.createQuery(dbQuery);
-			fabList = JpaDB.getResultList(query);
-		}catch (Exception e) {
-			sk.iway.iwcm.Logger.error(e);
-		}finally{
-			em.close();
-		}
-
-		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));
-		return fabList;
+	private static List<FileArchivatorBean> filterAwaitingOut(List<FileArchivatorBean> input) {
+		return input.stream().filter(fab -> fab.getUploaded() == -1).toList();
 	}
 
 	/** Vrati vsetky subory, ktore sa mozu nahrat vzhladom na aktualny cas
@@ -523,7 +480,7 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 				List<FileArchivatorBean> fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of("filePath", path), Pair.of("fileName", fileName));
 				for (FileArchivatorBean fab : fabList)
 				{
-					if (!alsoInactive && !fab.getShowFile()) continue;
+					if (!alsoInactive && Tools.isFalse(fab.getShowFile()) ) continue;
 					if (fab.isValidDates()) return fab;
 				}
 			}
@@ -623,79 +580,6 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 	}
 
 	/**
-	 * vrati posledny nahrany subor vo vlakne
-	 *
-	 * @param fabId int
-	 * @return FileArchivatorBean
-	 */
-	public static FileArchivatorBean getPrevious(int fabId)
-	{
-		List<FileArchivatorBean> list = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of("referenceId", fabId));
-		if(list!=null && list.size()>0)
-		{
-			list.sort(Comparator.comparingInt(FileArchivatorBean::getId).reversed());
-			return list.get(0);
-		}
-		else
-			return null;
-	}
-
-    /**
-     *
-     * @param maxCount - pocet, kolko najnovsich suborov ma vratit
-     * @param fabSearch - nastavit (a zapracovat v metode ak to este nie je :o) )
-     * @return List<FileArchivatorBean>
-     */
-    public static List<FileArchivatorBean> getLatest(int maxCount, FileArchivatorSearchBean fabSearch)
-    {
-        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
-        List<FileArchivatorBean> fabList = null;
-        try{
-            ExpressionBuilder builder = new ExpressionBuilder();
-            ReadAllQuery dbQuery = new ReadAllQuery(FileArchivatorBean.class, builder);
-
-            //ORDER BY
-            if(fabSearch.isAsc())
-                dbQuery.addOrdering(builder.get("nnFileArchiveId").ascending());
-            else
-                dbQuery.addOrdering(builder.get("nnFileArchiveId").descending());
-
-            // only main files ?
-            Expression expr;
-            if(fabSearch.isOnlyMain())
-            {
-                expr = builder.get("referenceId").equal(-1);
-            }
-            else
-            {
-                expr = builder.get("referenceId").notEqual(-1);
-            }
-
-            if(!Tools.isEmpty(fabSearch.getCategory()) && fabSearch.getCategory().iterator().hasNext())
-            {
-                expr = expr.and(builder.get("category").equal(fabSearch.getCategory().iterator().next()));
-            }
-
-            if(fabSearch.getShowFile() != null)
-            {
-				if (Constants.DB_TYPE==Constants.DB_PGSQL) expr = expr.and(builder.get("showFile").equal(fabSearch.getShowFile().booleanValue()));
-                else expr = expr.and(builder.get("showFile").equal(fabSearch.getShowFile().booleanValue() ? 1 : 0));
-            }
-
-            dbQuery.setSelectionCriteria(expr);
-
-            Query query = em.createQuery(dbQuery).setMaxResults(maxCount);
-            fabList = JpaDB.getResultList(query);
-        }catch (Exception e) {
-            sk.iway.iwcm.Logger.error(e);
-        }finally{
-            em.close();
-        }
-
-        return fabList;
-    }
-
-	/**
 	 * vsetky kategorie zvolenej domeny
 	 * @return
 	 */
@@ -787,14 +671,14 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 	 * @param asc true ak ASC
 	 * @return List<FileArchivatorBean>
 	 */
-	public static List<FileArchivatorBean> getReference(int referenceId, String sortByReference, boolean asc)
+	public static List<FileArchivatorBean> getReference(Long referenceId, String sortByReference, boolean asc)
 	{
 		List<FileArchivatorBean> shorFab = new ArrayList<>(FileArchivatorDB.getByReferenceId(referenceId));
 
 		//musime odstranit
 		for(int i = 0; i< shorFab.size(); i++)
 		{
-			if(!shorFab.get(i).getShowFile() || shorFab.get(i).getUploaded() != -1)
+			if( Tools.isFalse(shorFab.get(i).getShowFile()) || shorFab.get(i).getUploaded() != -1)
 			{
 				shorFab.remove(i);
 				i--; //NOSONAR
@@ -950,4 +834,26 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 
 		  }
 	 }
+
+	/***************************** BACKWARD COMPATIBILITY ******************************/
+	public static List<FileArchivatorBean> getByReferenceId(int referenceId) {
+		return getByReferenceId((long) referenceId);
+	}
+
+	public static List<FileArchivatorBean> getReference(int referenceId, String sortByReference, boolean asc) {
+		return getReference((long) referenceId, sortByReference, asc);
+	}
+
+	public static int getCountByReferenceId(Long referenceId)
+    {
+        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
+        em.getTransaction().begin();
+        Query query =  em.createQuery("SELECT COUNT (f) FROM FileArchivatorBean f WHERE f.referenceId = :reference", Long.class);
+
+        query.setParameter("reference",referenceId);
+        int count = (int)((long)query.getSingleResult());
+        em.getTransaction().commit();
+        return count;
+    }
+
 }

@@ -35,16 +35,31 @@ public class DebugTimer
    }
 
    /**
-    *  Description of the Method
-    *
+    *  Log diff using Logger.debug
     *@param  message  Description of the Parameter
     */
-   public long diff(String message)
+   public long diff(String message) {
+      return diff(message, true);
+   }
+
+   /**
+    * Log diff using Logger.info
+    * @param message
+    * @return
+    */
+   public long diffInfo(String message) {
+      return diff(message, false);
+   }
+
+   private long diff(String message, boolean debug)
    {
    	long now = System.currentTimeMillis();
       long diff = now - startTimestamp;
       long lastDiff = now - lastTimestamp;
-      if (enabled) Logger.debug(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
+      if (enabled) {
+         if (debug) Logger.debug(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
+         else Logger.info(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
+      }
       lastTimestamp = now;
 
       return lastDiff;

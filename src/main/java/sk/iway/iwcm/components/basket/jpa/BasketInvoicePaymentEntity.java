@@ -78,7 +78,6 @@ public class BasketInvoicePaymentEntity implements Serializable {
     )
 	private BigDecimal payedPrice;
 
-
     @Column(name="closed_date")
     @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(

@@ -22,6 +22,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
@@ -36,24 +37,26 @@ import sk.iway.tags.CurrencyTag;
 @Datatable
 public class BasketInvoicePaymentRestController extends DatatableRestControllerV2<BasketInvoicePaymentEntity, Long> {
 
-    private final BasketInvoicePaymentsRepository basketInvoicePaymentRepository;
-    private final BasketInvoicesRepository basketInvoicesRepository;
+    private final BasketInvoicePaymentsRepository bipr;
+    private final BasketInvoicesRepository bir;
+    private final BasketInvoiceItemsRepository biir;
     private static final BigDecimal MIN_PAYED_PRICE = BigDecimal.valueOf(0.01);
 
     @Autowired
-    public BasketInvoicePaymentRestController(BasketInvoicePaymentsRepository basketInvoicePaymentRepository, BasketInvoicesRepository basketInvoicesRepository) {
-        super(basketInvoicePaymentRepository);
-        this.basketInvoicePaymentRepository = basketInvoicePaymentRepository;
-        this.basketInvoicesRepository = basketInvoicesRepository;
+    public BasketInvoicePaymentRestController(BasketInvoicePaymentsRepository bipr, BasketInvoicesRepository bir, BasketInvoiceItemsRepository biir) {
+        super(bipr);
+        this.bipr = bipr;
+        this.bir = bir;
+        this.biir = biir;
     }
 
     @Override
     public Page<BasketInvoicePaymentEntity> getAllItems(Pageable pageable) {
         long invoiceId = getInvoiceId();
         if(invoiceId < 1)  return new PageImpl<>(new ArrayList<>());
-        BasketInvoiceEntity invoice = basketInvoicesRepository.findFirstByIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId()).orElse(null);
+        BasketInvoiceEntity invoice = bir.findFirstByIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId()).orElse(null);
         if(invoice == null) return new PageImpl<>(new ArrayList<>());
-        return basketInvoicePaymentRepository.findAllByInvoiceId(invoiceId, pageable);
+        return bipr.findAllByInvoiceId(invoiceId, pageable);
     }
 
     @Override
@@ -85,7 +88,7 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
             if(basketInvoiceId < 1) throwError("Something went wrong.");
         }
 
-        BasketInvoiceEntity invoice = basketInvoicesRepository.findFirstByIdAndDomainId(basketInvoiceId, CloudToolsForCore.getDomainId()).orElse(null);
+        BasketInvoiceEntity invoice = bir.findFirstByIdAndDomainId(basketInvoiceId, CloudToolsForCore.getDomainId()).orElse(null);
         if(invoice==null) {
             throwError("Something went wrong.");
             return;
@@ -105,8 +108,8 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
         cal.set(Calendar.MILLISECOND, 0);
         entity.setCreateDate(cal.getTime());
 
-        BigDecimal totalPriceVat = invoice.getTotalPriceVat(); //Full price to pay
-        BigDecimal totalPayedPrice = invoice.getTotalPayedPrice(); //Already payed
+        BigDecimal totalPriceVat = ProductListService.getPriceToPay(invoice.getId(), biir);
+        BigDecimal totalPayedPrice = ProductListService.getPayedPrice(invoice.getId(), bipr);
 
         if(entity.getId() != null && entity.getId() > 0) {
             //Update
@@ -128,11 +131,11 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
 
     @Override
     public void afterSave(BasketInvoicePaymentEntity entity, BasketInvoicePaymentEntity saved) {
-        Optional<BasketInvoiceEntity> basketInvoice = basketInvoicesRepository.findById((long) entity.getInvoiceId());
+        Optional<BasketInvoiceEntity> basketInvoice = bir.findById((long) entity.getInvoiceId());
 
         if(basketInvoice.isPresent()) {
-            BigDecimal totalPriceVat = basketInvoice.get().getTotalPriceVat();
-            BigDecimal totalPayedPrice = basketInvoice.get().getTotalPayedPrice();
+            BigDecimal totalPriceVat = ProductListService.getPriceToPay(entity.getId(), biir);
+            BigDecimal totalPayedPrice = ProductListService.getPayedPrice(entity.getId(), bipr);
 
             if(CurrencyTag.formatNumber(totalPriceVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))
                 basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_PAID);
@@ -141,17 +144,17 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
             else
                 basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_NEW);
 
-            basketInvoicesRepository.save(basketInvoice.get());
+            bir.save(basketInvoice.get());
         }
     }
 
     @Override
     public void afterDelete(BasketInvoicePaymentEntity entity, long id) {
-        Optional<BasketInvoiceEntity> basketInvoice = basketInvoicesRepository.findById((long) entity.getInvoiceId());
+        Optional<BasketInvoiceEntity> basketInvoice = bir.findById((long) entity.getInvoiceId());
 
         if(basketInvoice.isPresent()) {
-            BigDecimal totalPriceVat = basketInvoice.get().getTotalPriceVat();
-            BigDecimal totalPayedPrice = basketInvoice.get().getTotalPayedPrice();
+            BigDecimal totalPriceVat = ProductListService.getPriceToPay(id, biir);
+            BigDecimal totalPayedPrice = ProductListService.getPayedPrice(id, bipr);
 
             if(CurrencyTag.formatNumber(totalPriceVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))
                 basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_PAID);
@@ -160,7 +163,7 @@ public class BasketInvoicePaymentRestController extends DatatableRestControllerV
             else
                 basketInvoice.get().setStatusId(BasketInvoiceEntity.INVOICE_STATUS_NEW);
 
-            basketInvoicesRepository.save(basketInvoice.get());
+            bir.save(basketInvoice.get());
         }
     }
 

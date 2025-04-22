@@ -102,7 +102,8 @@ module.exports = {
         I.wait(1);
 
         I.switchTo(locate("iframe.wj_component").first());
-        I.waitForElement("a.inlineComponentButton.cke_button", 10);
+        I.wait(5);
+        I.waitForElement("a.inlineComponentButton.cke_button", 30);
         I.clickCss("a.inlineComponentButton.cke_button");
         I.switchTo();
         I.waitForInvisible('Čakajte prosím', 20);
@@ -152,5 +153,18 @@ module.exports = {
         I.switchTo();
         if (shouldClickOkButton)
             I.clickCss('.cke_dialog_ui_button_ok');
+    },
+
+    /**
+     * Save editor without closing it
+     */
+    save() {
+        I.pressKey(['CommandOrControl', 's']);
+        DTE.waitForLoader();
+        I.switchTo();
+        I.switchTo();
+        //I.waitForElement("div.toast.toast-success", 20);
+        I.waitForText("bol uložený", 10, "div.toast-success");
+        //I.toastrClose();
     }
 }

@@ -23,10 +23,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DataTableColumnsFactory {
+
     Class<?> dto;
+    /**
+     * This list prevents circular references.
+     * eg. when you have FileArchivatorBean.FileArchivatorEditorFields with List<FileArchivatorBean> listOfVersions
+     * this is needed to prevent infinite recursion
+     */
+    List<String> circularReferences;
+
     public DataTableColumnsFactory(String clazz) {
         try {
             dto = Class.forName(clazz);
+            circularReferences = new ArrayList<>();
         } catch (ClassNotFoundException e) {
             Logger.error(DataTableColumnsFactory.class, e);
         }
@@ -46,9 +55,30 @@ public class DataTableColumnsFactory {
 
             for (Field declaredField : declaredFields) {
 
-                if (declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested.class)) {
+                if (circularReferences.isEmpty() == false) {
+                    boolean hasCircularReference = false;
+                    String fieldClassName = declaredField.getGenericType().getTypeName();
+                    for (String name : circularReferences) {
+                        //entity with same class or List<EntityClass> or Array<EntityClass>
+                        if (name.equals(fieldClassName) || fieldClassName.contains("<"+name+">") || fieldClassName.contains("["+name+"]")) {
+                            //Logger.debug(this.getClass(), "Has circular reference, name="+name);
+                            hasCircularReference = true;
+                            break;
+                        }
+                    }
+                    if (hasCircularReference) {
+                        //Logger.debug(this.getClass(), "Has circular reference, name="+fieldClassName);
+                        continue;
+                    }
+                }
+
+                if (declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested.class)  && circularReferences.contains(declaredField.getGenericType().getTypeName()) == false) {
+
+                    //circularReferences.add(declaredField.getGenericType().getTypeName());
+
                     //rekurzia
                     DataTableColumnsFactory dtcf = new DataTableColumnsFactory(declaredField.getGenericType().getTypeName());
+                    dtcf.setCircularReferences(circularReferences);
 
                     //ziskaj prefix premennej (aby vzniklo editorFields.allowChangeUrl), defaultne podla mena premennej, alebo z anotacie
                     DataTableColumnNested annotation = declaredField.getAnnotation(DataTableColumnNested.class);
@@ -58,6 +88,13 @@ public class DataTableColumnsFactory {
                     if (Tools.isNotEmpty(fieldPrefix)) nestedFieldPrefix = fieldPrefix + nestedFieldPrefix;
 
                     List<DataTableColumn> columnsNested = dtcf.getColumns(nestedFieldPrefix);
+
+                    //If orderable is not set (is null) set to FALSE -> by default nestedColumns do not support ordering
+                    columnsNested.forEach(column -> {
+                        if (column.getOrderable() == null) {
+                            column.setOrderable(false);
+                        }
+                    });
 
                     columns.addAll(columnsNested);
                 }
@@ -255,5 +292,17 @@ public class DataTableColumnsFactory {
             return translate(key);
         }
         return null;
+    }
+
+    public void setCircularReferences(List<String> circularReferences) {
+        this.circularReferences = circularReferences;
+    }
+
+    public void addCircularReference(String circularReference) {
+        this.circularReferences.add(circularReference);
+    }
+
+    public List<String> getCircularReferences() {
+        return circularReferences;
     }
 }

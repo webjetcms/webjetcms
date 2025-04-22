@@ -241,6 +241,13 @@ export function typeDatatable() {
                     $.each(conf.attr, function (key, value) {
                         const annotation = 'data-dt-field-dt-';
                         const name = key.substring(annotation.length);
+                        if (key.indexOf(annotation + "columns-customize") !== -1) {
+                            if (typeof window[value] === "function") {
+                                columns = window[value](columns);
+                                dtConf.columns = columns;
+                            }
+                            return;
+                        }
                         if (key.indexOf(annotation + "url") !== -1 || key.indexOf(annotation + "columns") !== -1) {
                             return;
                         }

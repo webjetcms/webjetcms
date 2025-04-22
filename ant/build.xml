@@ -504,6 +504,8 @@
             <arg value="-Dfiles=${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar,${artifact.dir}/${artifact.name}-${artifact.version}-components.jar,${artifact.dir}/${artifact.name}-${artifact.version}-javadoc.jar,${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar,${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar"/>
             <arg value="-Dclassifiers=admin,components,javadoc,sources,libs"/>
             <arg value="-Dtypes=jar,jar,jar,jar,jar"/>
+            <arg value="-Dusername=${env.GITHUB_USERNAME}"/>
+            <arg value="-Dpassword=${env.GITHUB_TOKEN}"/>
         </exec>
 
         <echo message="Verify on https://github.com/webjetcms?tab=packages"/>
