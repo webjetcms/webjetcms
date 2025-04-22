@@ -218,15 +218,11 @@ module.exports = {
         }
     },
 
-    async importFile(filePath, moveToPath = false) {
+    async importFile(filePath) {
         I.openNewTab();
         I.amOnPage("/components/file_archiv/import_archiv.jsp");
 
-        if (moveToPath){
-            I.amInPath('../../../build/test/downloads');
-            I.waitForFile(filePath, 30);
-        }
-
+        I.waitForFile(filePath, 30);
         I.attachFile("#xmlFile", filePath);
         I.clickCss("#saveFileForm");
 
