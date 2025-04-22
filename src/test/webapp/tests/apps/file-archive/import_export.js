@@ -89,7 +89,7 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
     await SL.removeFileByElfinder(importFileSelector);
 
     SL.deleteTestFiles();
-    
+
     const fileSelector = ".elfinder-cwd-filename[title^='archive_export_import']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);
     if (wasRemovedByElfinder){

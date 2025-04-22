@@ -393,11 +393,16 @@ module.exports = {
             } else if (descriptionRow.includes('UPDATE:')) {
                 I.say("Overujem UPDATE záznam...");
                 I.assertTrue(detailText.includes("UPDATE:"), 'UPDATE záznam neobsahuje úvodný riadok "UPDATE:"');
-                if (detailText.includes("prop_key: ")){
-                    I.assertTrue((detailText.includes(description)), `UPDATE záznam neobsahuje očakávaný riadok: ${description}`);
+                if (detailText.includes("prop_key: ")) {
+                    I.assertTrue(detailText.includes(description), `UPDATE záznam neobsahuje očakávaný riadok: ${description}`);
                 } else {
-                    const expectedLine = `${description} -> ${description}-chan.ge`;
-                    I.assertTrue(( detailText.includes(expectedLine)), `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLine}`);
+                    const expectedLineArrow = `${description} -> ${description}-chan.ge`;
+                    const expectedLineFatArrow = `${description} => ${description}-chan.ge`;
+
+                    I.assertTrue(
+                        detailText.includes(expectedLineArrow) || detailText.includes(expectedLineFatArrow),
+                        `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLineArrow} alebo ${expectedLineFatArrow}`
+                    );
                 }
             } else if (descriptionRow.includes('DELETE:')){
                 I.say("Overujem DELETE záznam...");
