@@ -421,4 +421,16 @@ public class AdminUploadServlet extends HttpServlet
 		return null;
 	}
 
+    /**
+     * Return original file name. If file is not found, return null.
+     * @param fileKey
+     * @return
+     */
+    public static String getOriginalFileName(String fileKey) {
+        if (temporary.containsKey(fileKey))
+		{
+			return temporary.get(fileKey).getFileName();
+		}
+		return null;
+    }
 }

@@ -38,7 +38,7 @@ module.exports = {
             "Cell Properties": "Vlastnosti bunky",
             "Map": "Mapa",
             "English": "Slovensky",
-            "File archive": "Archív súborov"
+            "File archive": "Manažér dokumentov"
 
         }
     }

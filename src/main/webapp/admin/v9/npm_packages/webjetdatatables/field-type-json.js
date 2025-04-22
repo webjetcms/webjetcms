@@ -22,7 +22,7 @@ export function typeJson() {
 
     return {
         create: function ( conf ) {
-            //console.log("Creating JSON field, conf=", conf);
+            //console.log("Creating JSON field, conf=", conf, "editor=", this);
             var id = $.fn.dataTable.Editor.safeId( conf.id );
             //tato jquery konstrukcia vytvori len pole objektov, nie su to este normalne elementy
             var htmlCode = $('<textarea id="'+id+'" style="display: none;"></textarea><div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
@@ -50,7 +50,9 @@ export function typeJson() {
             if (conf.className.indexOf("dt-tree-dir-simple")!=-1) {
                 //get value from input to allow change of value by user
                 //return json[0].virtualPath;
-                return $("#editorApp"+conf._id+" div.dt-tree-container div.input-group input.form-control").val();
+                let val = $("#"+this.TABLE.DATA.id+"_modal #editorApp"+conf._id+" div.dt-tree-container div.input-group input.form-control").val();
+                //console.log("#"+this.TABLE.DATA.id+"_modal #editorApp"+conf._id+" div.dt-tree-container div.input-group input.form-control=", val);
+                return val;
             }
             if (conf.className.indexOf("-array")==-1) return json[0];
             return json;

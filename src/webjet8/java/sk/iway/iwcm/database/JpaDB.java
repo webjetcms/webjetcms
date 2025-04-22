@@ -61,7 +61,11 @@ public class JpaDB<T extends ActiveRecordBase>
 		return new JpaDB<T>(clazz);
 	}
 
-	public T getById(int id)
+	public T getById(int id) {
+		return getById((long)id);
+	}
+
+	public T getById(Long id)
 	{
 		//musime vyrobit novy EntityManager, pretoze ten threadovy em.find zatvori a potom nemusime mat otvoreny em dalej v kode (napr. v helpdesku)
 		EntityManager threadEm = JpaTools.getEclipseLinkEntityManager(dbName);

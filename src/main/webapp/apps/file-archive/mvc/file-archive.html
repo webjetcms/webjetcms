@@ -1,0 +1,160 @@
+<style type="text/css">
+    .file-archive-app .tabulkaStandard td:nth-child(1) {
+        min-width: 300px;
+    }
+    .file-archive-app .tabulkaStandard td:nth-child(2) {
+        width: 200px;
+        white-space: nowrap;
+        text-align: center;
+    }
+    .file-archive-app .tabulkaStandard td:nth-child(3) {
+        width: 200px;
+        text-align: center;
+    }
+    .file-archive-app .tabulkaStandard td:nth-child(4) {
+        width: 200px;
+        white-space: nowrap;
+        text-align: right;
+    }
+    .file-archive-app .tabulkaStandard td:nth-child(5) {
+        width: 80px;
+        text-align: center;
+    }
+    .file-archive-app .tabulkaStandard td:has(.tabulkaStandard) {
+        padding: 0;
+    }
+</style>
+
+<div class="file-archive-app">
+
+    <div class="table-responsive">
+        <table class="table tabulkaStandard">
+
+            <tr style="background-color: #646979; color: white;">
+                <td><b> <span data-th-text="#{components.file_archiv.virtualFileName}"></span> </b></td>
+                <td><b> <span data-th-text="#{components.file_archiv.valid_from_to}"></span> </b></td>
+                <td><b> <span data-th-text="#{components.file_archiv.file_format}"></span> </b></td>
+                <td><b> <span data-th-text="#{components.file_archiv.file_size}"></span> </b></td>
+                <td>-</td>
+            </tr>
+
+            <div data-th-each="mainFile : ${mainFiles}" data-th-remove="tag">
+                <tr th:id="${mainFile.id}" class="collapsible" th:attr="onclick=|expandDetails('${mainFile.id}')|">
+                    <td> <span data-th-text="${mainFile.virtualFileName}"></span> </td>
+                    <td> <span data-th-text="${mainFile.validityFormatted}"></span> </td>
+                    <td> <span data-th-text="${mainFile.fileType}"></span> </td>
+                    <td> <span data-th-text="${tools.formatFileSize(mainFile.fileSize)}"></span> </td>
+                    <td>
+                        <a data-th-href="${mainFile.downloadPath}" target="_blank">
+                            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-download">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                <path d="M7 11l5 5l5 -5" />
+                                <path d="M12 4l0 12" />
+                            </svg>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Row with two tables -->
+                <tr th:id="'detail_' + ${mainFile.id}" class="content">
+                    <td colspan="5">
+                        <div style="display: flex;">
+                            <table data-th-if="${mainFile.archivFiles!=null}" class="table tabulkaStandard inner-table" style="margin: 5px;">
+                                <tr>
+                                    <th colspan="5"> <span data-th-text="#{components.file_archiv.archiv_files}"></span> </th>
+                                </tr>
+                                <tr data-th-each="archivFile : ${mainFile.archivFiles}">
+                                    <td> <span th:text="${archivFile.virtualFileName}"></span> </td>
+                                    <td> <span data-th-text="${archivFile.validityFormatted}"></span> </td>
+                                    <td> <span data-th-text="${archivFile.fileType}"></span> </td>
+                                    <td> <span data-th-text="${archivFile.fileSizeFormatted}"></span> </td>
+                                    <td>
+                                        <a data-th-href="${mainFile.downloadPath}" target="_blank">
+                                            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-download">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                                <path d="M7 11l5 5l5 -5" />
+                                                <path d="M12 4l0 12" />
+                                            </svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <table data-th-if="${mainFile.patterns!=null}" class="table tabulkaStandard inner-table" style="margin: 5px;">
+                                <tr>
+                                    <th colspan="5"> <span data-th-text="#{components.file_archiv.file_patterns}"></span> </th>
+                                </tr>
+                                <tr data-th-each="pattern : ${mainFile.patterns}">
+                                    <td> <span th:text="${pattern.virtualFileName}"></span> </td>
+                                    <td> <span data-th-text="${pattern.validityFormatted}"></span> </td>
+                                    <td> <span data-th-text="${pattern.fileType}"></span> </td>
+                                    <td> <span data-th-text="${pattern.fileSizeFormatted}"></span> </td>
+                                    <td>
+                                        <a data-th-href="${mainFile.downloadPath}" target="_blank">
+                                            <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-download">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                                <path d="M7 11l5 5l5 -5" />
+                                                <path d="M12 4l0 12" />
+                                            </svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <span data-th-if="${mainFile.archivFiles==null && mainFile.patterns==null}" data-th-text="#{components.file_archiv.no_archiv_or_pattern_files}"></span>
+                    </td>
+                </tr>
+            </div>
+
+        </table>
+
+    </div>
+</div>
+
+<script data-th-inline="javascript">
+/*<![CDATA[*/
+    let showExpanded = /*[[${showExpanded}]]*/ false;
+
+    function expandDetails(thisId) {
+        let content = $("#detail_" + thisId);
+        if(content && content.length > 0) {
+            if (content[0].style.display === "table-row") {
+                content[0].style.display = "none";
+                $("#" + thisId).removeClass("active");
+            } else {
+                content[0].style.display = "table-row";
+                $("#" + thisId).addClass("active");
+            }
+        }
+    }
+
+    if(showExpanded == true) {
+        console.log("showExpanded");
+        $("tr.content").each(function() {
+            expandDetails(this.id.replace("detail_", ""));
+        });
+    }
+/*]]>*/
+</script>
+
+<style>
+    .inner-table {
+        margin: 5px;
+        border: 1px solid;
+        border-color: rgb(209, 209, 209);
+    }
+
+    .collapsible {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .active, .collapsible:hover {
+        background-color: #b3b8c7;
+    }
+
+    .content {
+        display: none;
+    }
+</style>

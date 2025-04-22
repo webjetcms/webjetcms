@@ -167,7 +167,9 @@ module.exports = function () {
     },
 
     toastrClose() {
-      this.clickCss("button.toast-close-button", "#toast-container-webjet");
+      var selector = "#toast-container-webjet button.toast-close-button";
+      this.waitForElement(selector, 10);
+      this.forceClick({css: selector});
     },
 
     clickCss(name, parent=null) {

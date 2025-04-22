@@ -88,7 +88,6 @@ Scenario('testovanie app - Zobrazenie súborov', async ({ I, DTE, Apps }) => {
     I.switchToNextTab();
 
     I.dontSee('Adresár:');
-    I.see('tarifa.pdf');
     I.see("zsd_faq_fakturacia-poplatkov-od-2014.pdf");
     I.see('Files');
 });

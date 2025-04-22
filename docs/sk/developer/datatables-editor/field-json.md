@@ -103,7 +103,7 @@ všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie tex
 
 ```dt-tree-dir``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber adresára v súborovom systéme**
 
-```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```
+```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```. Do ```data-dt-field-skipFolders``` je možné zadať meno konfiguračnej premennej s čiarkou oddeleným zoznamom priečinkov, ktoré sa nezobrazia v stromovej štruktúre.
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 

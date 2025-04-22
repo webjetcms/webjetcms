@@ -604,6 +604,15 @@ public class DataTableColumn {
             editor.setType("staticText");
         }
 
+        if (dataTableColumnType == DataTableColumnType.UPLOAD) {
+            renderFormat = "dt-format-wjupload";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("wjupload");
+            if (hidden == null) hidden = Boolean.TRUE;
+        }
+
         if (dataTableColumnType == DataTableColumnType.IMAGE_RADIO) {
             renderFormat = "dt-format-image-radio";
             if (editor == null) {
@@ -625,7 +634,9 @@ public class DataTableColumn {
                 try {
                     String attrName = "data-dt-field-dt-columns";
                     String classNameAttr = editor.getAttr().get(attrName);
-                    String json = new DataTableColumnsFactory(classNameAttr).getColumnsJson();
+                    DataTableColumnsFactory dtcf = new DataTableColumnsFactory(classNameAttr);
+                    dtcf.addCircularReference(classNameAttr);
+                    String json = dtcf.getColumnsJson();
                     editor.addAttr(attrName, json);
                 } catch (Exception e) {
                     Logger.error(DataTableColumn.class, e);

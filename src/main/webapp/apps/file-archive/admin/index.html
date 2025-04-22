@@ -1,0 +1,342 @@
+<script type="text/javascript" data-th-inline="javascript">
+
+    var fileArchiveDataTable;
+    var isLoadingHistoryFiles = false;
+    var actualAction = "";
+
+    let versionsDataTable = null;
+    let waitingFilesDataTable = null;
+    let patternsDataTable = null;
+    let columns = null;
+
+    /**
+     * Remove editor fields from datatable columns definition - used in Versions, Awaiting and Patterns
+     * @param columns
+     */
+    function removeEditorFields(columns) {
+        let columnsFidex = [];
+        for (let i = 0; i < columns.length; i++) {
+            if (columns[i].name.indexOf("editorFields") == -1) {
+                columnsFidex.push(columns[i]);
+            }
+        }
+        return columnsFidex;
+    }
+
+    window.domReady.add(function () {
+        //window.helpLink = "/redactor/webpages/perexgroups";
+
+        let url = "/admin/rest/file-archive";
+        columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.file_archiv.FileArchivatorBean")})]*/ [];
+
+        var tabs = [
+            { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
+            { id: 'advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false },
+            { id: 'customFields', title: /*[[#{editor.tab.fields}]]*/ '', selected: false },
+            { id: 'listOfVersions', title: /*[[#{components.file_archiv.list_of_version}]]*/ '', selected: false },
+            { id: 'waitingFiles', title: /*[[#{components.file_archiv.waiting_files}]]*/ '', selected: false },
+            { id: 'listOfPattern', title: /*[[#{components.file_archiv.listOfPattern}]]*/ '', selected: false },
+        ];
+
+        var order = [];
+        order.push([1, 'desc']);
+
+        fileArchiveDataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            id: "fileArchiveDataTable",
+            tabs: tabs,
+            order: order,
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            perms: {
+                edit: 'cmp_fileArchiv_edit_del_rollback',
+                remove: 'cmp_fileArchiv_edit_del_rollback'
+            }
+        });
+
+        fileArchiveDataTable.on("draw", function() {
+            //Disable on click event for NON MAIN files
+            $("tr.notMainFile td.dt-select-td").click(function() { return false; });
+        });
+
+        window.onload = function () {
+            setTimeout(function () {
+                $("select.dt-filter-editorFields\\.statusIcons").val('referenceId:eq:-1');
+                $("select.dt-filter-editorFields\\.statusIcons").selectpicker('refresh');
+            }, 100);
+        };
+
+        var buttonCounter = 4;
+        if(WJ.hasPermission("cmp_fileArchiv_edit_del_rollback") == true) {
+            //Add rollback button - if user have permission
+            fileArchiveDataTable.button().add(buttonCounter++, {
+                text: '<i style="color: #FF4B58;" class="ti ti-arrow-back-up"></i>',
+                action: function (e, dt, node) {
+                    fileArchiveDataTable.executeAction("rollback", true, /*[[#{components.file_archiv.list.confirm.make_rollback}]]*/ '');
+                },
+                init: function ( dt, node, config ) {
+                    $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                },
+                className: 'btn btn-outline-secondary buttons-rollback',
+                attr: {
+                    'title': /*[[#{components.file_archiv.rollback_last}]]*/ '',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        }
+
+        if (WJ.hasPermission("menuFileArchivImportFiles") == true) {
+            fileArchiveDataTable.button().add(null, {
+                text: '<i class="ti ti-download"></i>',
+                action: function (e, dt, node) {
+                    WJ.openPopupDialog("/components/file_archiv/import_archiv.jsp");
+                },
+                className: 'btn btn-outline-secondary btn-import-dialog buttons-right buttons-divider',
+                attr: {
+                    'title': /*[[#{components.import_web_pages.import}]]*/ '',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        }
+
+        if (WJ.hasPermission("menuFileArchivExportFiles") == true) {
+            fileArchiveDataTable.button().add(null, {
+                text: '<i class="ti ti-upload"></i>',
+                action: function (e, dt, node) {
+                    WJ.openPopupDialog("/components/file_archiv/export_archiv.jsp");
+                },
+                className: 'btn btn-outline-secondary btn-export-dialog buttons-right',
+                attr: {
+                    'title': /*[[#{formlist.export.export}]]*/ '',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        }
+
+        //
+        fileArchiveDataTable.hideButton("import");
+        fileArchiveDataTable.hideButton("export");
+        fileArchiveDataTable.hideButton("duplicate");
+        fileArchiveDataTable.hideButton("celledit");
+
+        function setCheckboxWarningMsg(fieldName, checkboxName, warning) {
+            $("#DTE_Field_editorFields-" + checkboxName + "_0").on("change", function() {
+                let warningLabel = $(".DTE_Field_Name_editorFields\\." + fieldName).find("label.warningLabel");
+                let labelAlreadyExist = false;
+                if(warningLabel && warningLabel.length > 0) labelAlreadyExist = true;
+
+                if(fileArchiveDataTable.EDITOR.field("editorFields." + checkboxName).val()[0] == true) {
+                    //Check if label is allready there - if no add (duplicity problem solution)
+                    if(labelAlreadyExist == false) {
+                        let input = $(".DTE_Field_Name_editorFields\\." + fieldName).find(".DTE_Field_InputControl");
+                        input.append( "<label class='warningLabel text-danger'>" + warning +  "</label>" );
+                    }
+                } else {
+                    if(labelAlreadyExist) { warningLabel.remove(); }
+                }
+            });
+        }
+
+        function loadHistoryVersions() {
+            $.ajax({
+                url: "/admin/rest/file-archive/history-versions?id=" + fileArchiveDataTable.EDITOR.field("id").val(),
+                type: "GET",
+                dataType: "json",
+                error: function(){ isLoadingHistoryFiles = false; },
+                success: function(result) {
+                    let select = document.getElementById("DTE_Field_editorFields-saveAfterSelect");
+                    //Remove old values
+                    select.options.length = 0;
+                    let firstId = -1;
+                    if(result != undefined && result != null) {
+                        for(let i = 0; i < result.length; i++) {
+                            let version = JSON.parse(result[i]);
+                            let label = version.path + "  (poradie : " + (Number(version.order) + 1) + ")";
+                            select.add(new Option(label, version.id));
+                            if(i == 0) firstId = version.id;
+                        }
+                        //refresh picker
+                        $("#DTE_Field_editorFields-saveAfterSelect").selectpicker('refresh');
+                        //Select id of last file
+                       $("#DTE_Field_editorFields-saveAfterId").val(firstId);
+                    }
+                    isLoadingHistoryFiles = false;
+                }
+            });
+        }
+
+        fileArchiveDataTable.EDITOR.on('open', function (e, type, action) {
+            if(action === "create") {
+                actualAction = 'create';
+
+                //Hide tabs
+                $("#pills-dt-fileArchiveDataTable-listOfVersions-tab").hide();
+                $("#pills-dt-fileArchiveDataTable-waitingFiles-tab").hide();
+                $("#pills-dt-fileArchiveDataTable-listOfPattern-tab").hide();
+
+                fileArchiveDataTable.EDITOR.field("editorFields.file").show();
+                fileArchiveDataTable.EDITOR.field("editorFields.dir").show();
+                fileArchiveDataTable.EDITOR.field("editorFields.saveLater").show();
+                fileArchiveDataTable.EDITOR.field("editorFields.saveAfterSelect").hide();
+            } else if(action === 'edit') {
+                actualAction = 'edit';
+
+                let referenceIdStr = fileArchiveDataTable.EDITOR.field("referenceId").val();
+                let referenceId = Number(referenceIdStr);
+                let referenceToMain = fileArchiveDataTable.EDITOR.field("referenceToMain").val();
+
+                if(fileArchiveDataTable.EDITOR.field("uploaded").val() == -1) {
+                    //When FILE is allready uploaded, DISABLE fields for later upload
+                    //Doe not make sens, to change values after file was uploaded
+                    fileArchiveDataTable.EDITOR.field("dateUploadLater").disable();
+                    fileArchiveDataTable.EDITOR.field("emails").disable();
+                } else {
+                    fileArchiveDataTable.EDITOR.field("dateUploadLater").enable();
+                    fileArchiveDataTable.EDITOR.field("emails").enable();
+                }
+
+                if(referenceId !== -1) {
+                    /*THIS IS HISTORY FILE - old*/
+
+                    //Hide save button
+                    $("div.DTE_Action_Edit").find("button.btn-primary").hide();
+                    //Hide tabs
+                    $("#pills-dt-fileArchiveDataTable-listOfVersions-tab").hide();
+                    $("#pills-dt-fileArchiveDataTable-waitingFiles-tab").hide();
+                    $("#pills-dt-fileArchiveDataTable-listOfPattern-tab").hide();
+                    //Hide whole change actions
+                    $("#panel-body-dt-fileArchiveDataTable-basic").find(".form-group.row.row-headline").hide();
+                    fileArchiveDataTable.EDITOR.field("editorFields.uploadType").hide();
+                } else if(referenceToMain != null && referenceToMain != undefined && referenceToMain.length > 0) {
+                    /*THIS IS PATTERN - of main file*/
+
+                    //Hide tab pattern - Because pattern cant have pattern
+                    $("#pills-dt-fileArchiveDataTable-listOfPattern-tab").hide();
+
+                    //Show whole change actions
+                    $("#panel-body-dt-fileArchiveDataTable-basic").find(".form-group.row.row-headline").show();
+                    fileArchiveDataTable.EDITOR.field("editorFields.uploadType").show()
+                } else {
+                    /*THIS IS MAIN FILE - actual*/
+
+                    //Show whole change actions
+                    $("#panel-body-dt-fileArchiveDataTable-basic").find(".form-group.row.row-headline").show();
+                    fileArchiveDataTable.EDITOR.field("editorFields.uploadType").show();
+                }
+
+                $("#DTE_Field_editorFields-uploadType").on("change", function() {
+                    let selecetedValue = fileArchiveDataTable.EDITOR.field("editorFields.uploadType").val().toLowerCase();
+
+                    if(selecetedValue == undefined || selecetedValue == null) selectedValue = "no_action";
+
+
+                    if("no_action" != selecetedValue) {
+                        fileArchiveDataTable.EDITOR.field("editorFields.file").show();
+                        fileArchiveDataTable.EDITOR.field("editorFields.dir").show();
+
+                        if("new_version" == selecetedValue) {
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveLater").show();
+                        } else {
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveLater").val(false);
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveLater").hide();
+                        }
+
+                        if("history_version" == selecetedValue) {
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveAfterSelect").show();
+
+                            $("#DTE_Field_editorFields-saveAfterSelect").on("change", function() {
+                                let selectedValue = $("#DTE_Field_editorFields-saveAfterSelect").val();
+                                $("#DTE_Field_editorFields-saveAfterId").val(selectedValue);
+                            });
+
+                            if(isLoadingHistoryFiles == false)
+                            {
+                                isLoadingHistoryFiles = true;
+                                loadHistoryVersions();
+                            }
+                        } else {
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveAfterSelect").hide();
+                        }
+                    } else {
+                        if(actualAction === 'edit') {
+                            fileArchiveDataTable.EDITOR.field("editorFields.file").hide();
+                            fileArchiveDataTable.EDITOR.field("editorFields.dir").hide();
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveLater").hide();
+                            fileArchiveDataTable.EDITOR.field("editorFields.saveAfterSelect").hide();
+                        }
+                    }
+                });
+            }
+
+            $("#DTE_Field_editorFields-saveLater_0").on("change", function() {
+                if(fileArchiveDataTable.EDITOR.field("editorFields.saveLater").val()[0] == true) {
+                    fileArchiveDataTable.EDITOR.field("editorFields.dateUploadLater").show();
+                    fileArchiveDataTable.EDITOR.field("editorFields.emails").show();
+                } else {
+                    fileArchiveDataTable.EDITOR.field("editorFields.dateUploadLater").hide();
+                    fileArchiveDataTable.EDITOR.field("editorFields.emails").hide();
+                }
+            });
+
+            $("#DTE_Field_editorFields-renameFile_0").on("change", function() {
+                if(fileArchiveDataTable.EDITOR.field("editorFields.renameFile").val()[0] == true) {
+                    fileArchiveDataTable.EDITOR.field("editorFields.newFileName").show();
+                } else {
+                    fileArchiveDataTable.EDITOR.field("editorFields.newFileName").hide();
+                }
+            });
+            setCheckboxWarningMsg("newFileName", "renameFile", /*[[#{components.file_archiv.rename_warning}]]*/);
+        });
+
+        window.addEventListener('WJ.AdminUpload.success', (e) => {
+            //console.log("Upload success, e=", e);
+            let virtualFileNameField = $("#DTE_Field_virtualFileName");
+            if (virtualFileNameField.val() === "") {
+                let fileName = e.detail.file.name;
+                //remove extension
+                fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+                virtualFileNameField.val(fileName);
+            }
+        });
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id == "DTE_Field_editorFields.listOfVersions") {
+                if(versionsDataTable == null) {
+                    versionsDataTable = event.detail.conf.datatable;
+
+                    versionsDataTable.EDITOR.on('open', function (e, type, action) {
+                        $(".DTE_nested_modal").find("button.btn-primary").hide();
+                    });
+                }
+            } else if(event.detail.conf.id == "DTE_Field_editorFields.waitingFiles") {
+                if(waitingFilesDataTable == null) {
+                    waitingFilesDataTable = event.detail.conf.datatable;
+
+                    waitingFilesDataTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
+                        fileArchiveDataTable.ajax.reload();
+                    });
+                }
+            } else if(event.detail.conf.id == "DTE_Field_editorFields.listOfPattern") {
+                if(patternsDataTable == null) {
+                    patternsDataTable = event.detail.conf.datatable;
+
+                    patternsDataTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
+                        fileArchiveDataTable.ajax.reload();
+                    });
+                }
+            }
+        });
+    })
+</script>
+
+<table id="fileArchiveDataTable" class="datatableInit table"></table>
+
+<style>
+    tr.notMainFile td { background-color: #F3F3F6 !important; }
+    tr.notMainFile td:nth-child(1)::before { display: none !important; }
+
+    tr.waitingForUpload td { color: #FF4B58 !important; }
+    tr.waitingForUpload a { color: #FF4B58 !important; }
+</style>

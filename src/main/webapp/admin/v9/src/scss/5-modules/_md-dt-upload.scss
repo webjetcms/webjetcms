@@ -34,6 +34,62 @@
     margin: 0 !important;
 }
 
+//Inside DTED when it's field in table editor
+.DTED {
+    #upload-wrapper {
+        position: relative !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        width: auto !important;
+        box-shadow: none !important;
+    }
+
+    // .modal-body {
+    //     padding-bottom: 10px !important;
+    //     &-bg {
+    //         &::before {
+    //             bottom: -10px !important;
+    //         }
+    //     }
+    // }
+    
+    #toast-container-upload {
+        overflow: hidden !important;
+        
+        .toast-dzpreview {
+            padding: 0px !important;
+            border: 0px !important;
+        }
+
+        .toast-dzpreview:hover {
+            opacity: 1 !important;
+            background-color: transparent !important;
+        }
+
+        .toast-message {
+            .ti-polaroid {
+                padding-left: 0px !important;
+            }
+
+            span {max-width: 360px;}
+        }
+    } 
+    
+    .dropzone {
+        min-height: 50px !important;
+        height: 75px !important;
+        border-radius: 6px !important;
+        .dz-message {
+            margin: 0 0 !important;
+        }
+    }
+
+    //Hidden all the time
+    .toast-container-progress {
+        display: none !important;
+    }
+}
+
 #upload-wrapper {
     position: fixed;
     z-index: 999999;
@@ -202,11 +258,6 @@
 
     i.ti-spin {
         color: #ffc000;
-        font-size: 20px;
-    }
-
-    i.ti-exclamation-circle {
-        color: #ff4852;
         font-size: 20px;
     }
 

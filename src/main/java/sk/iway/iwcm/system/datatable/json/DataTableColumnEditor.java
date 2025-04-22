@@ -7,6 +7,7 @@ import org.springframework.beans.BeanWrapperImpl;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.enumerations.EnumerationDataDB;
@@ -209,6 +210,25 @@ public class DataTableColumnEditor {
             for (DataTableColumnEditorAttr attr : attrs) {
                 String value = attr.value();
                 String key = attr.key();
+
+                if(value.startsWith("constant:")) {
+                    String constant = value.substring(value.indexOf(":")+1);
+                    if(Tools.isNotEmpty(constant)) {
+                        value = Constants.getString(constant);
+                    }
+                }
+
+                if("data-dt-field-root".equals(key)==true) {
+                    //Make sure path starts with slash
+                    if(Tools.isNotEmpty(value) && "/".equals(value)==false) {
+                        if(value.startsWith("/")==false)
+                            value = "/" + value;
+
+                        if(value.endsWith("/")==true)
+                            value = value.substring(0, value.length()-1);
+                    }
+                }
+
                 if ("data-dt-field-dt-columns".equals(key)==false) {
                     value = DataTableColumnsFactory.translate(value);
                 }

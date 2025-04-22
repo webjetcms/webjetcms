@@ -32,11 +32,25 @@
             let restEndpoint = "/admin/rest/groups/tree";
             if (this.click.indexOf("dt-tree-dir")==0) restEndpoint = "/admin/rest/elfinder/tree";
             if (this.$props.attr != null && typeof this.$props.attr["data-dt-field-dt-url"] != "undefined") restEndpoint = this.$props.attr["data-dt-field-dt-url"];
-            $("#jsTree").attr("data-rest-url", restEndpoint+"?click="+this.click);
+
+            restEndpoint = restEndpoint + "?click=" + this.click;
+
+            //
+            if(this.$props.attr != null && typeof this.$props.attr["data-dt-field-skipFolders"] != "undefined") {
+                restEndpoint = restEndpoint + "&skipFolders=" + this.$props.attr["data-dt-field-skipFolders"];
+            }
+            
             //set root if defined
             if (this.$props.attr != null && typeof this.$props.attr["data-dt-field-root"] != "undefined") {
                 $("#jsTree").attr("data-rest-root", this.$props.attr["data-dt-field-root"]);
+
+                //add root to url
+                restEndpoint = restEndpoint + "&rootFolder=" + this.$props.attr["data-dt-field-root"];
             }
+
+            //SET rest url
+            $("#jsTree").attr("data-rest-url", restEndpoint);
+
             //console.log("mounted 2", $("#jsTree").attr("data-rest-url"));
             this.jsTree = new WebjetJsTree('jsTree');
         },
