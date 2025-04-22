@@ -37,7 +37,7 @@ public class RatingApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.rating.check_logon", tab = "basic")
     private Boolean checkLogon = true;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.rating.rating_doc_id", tab = "basic", className = "dt-tree-page")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.rating.rating_doc_id", tab = "basic", className = "dt-tree-page-null")
     private DocDetails ratingDocId;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.rating.range", tab = "basic")

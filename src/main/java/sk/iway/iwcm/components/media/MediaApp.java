@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.appmedia;
+package sk.iway.iwcm.components.media;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,11 +18,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.spirit.MediaDB;
 import sk.iway.spirit.model.MediaGroupBean;
 
-@WebjetComponent("sk.iway.iwcm.components.appmedia.MediaApp")
+@WebjetComponent("sk.iway.iwcm.components.media.MediaApp")
 @WebjetAppStore(
     nameKey = "components.media.title",
     descKey = "components.media.desc",
-    itemKey = "cmp_media",
+    itemKey = "menuWebpages",
     imagePath = "/components/media/editoricon.png",
     galleryImages = "/components/media/",
     componentPath = "/components/media/media.jsp")
@@ -32,7 +32,7 @@ public class MediaApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.media.editor_component.dostupne_skupiny")
     private String groups;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.popup.docid", tab = "basic", className = "dt-tree-page")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.popup.docid", tab = "basic", className = "dt-tree-page-null")
     private DocDetails docid;
 
     @Override
