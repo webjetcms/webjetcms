@@ -246,7 +246,6 @@ public class ProductListService {
     /**
      * Update invoice stats (items count, total price, total price with VAT)
      * @param invoiceId
-     * @param request
      */
     public static void updateInvoiceStats(int invoiceId) {
         if(invoiceId < 1) return;

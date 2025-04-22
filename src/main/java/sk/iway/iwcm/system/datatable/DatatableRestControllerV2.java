@@ -1537,12 +1537,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@SuppressWarnings("all")
 	public void throwError(String errorKey) {
 		throwError(errorKey, false);
-	}	
-	
+	}
+
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
-	 * @param errors
+	 * @param errorKey
 	 * @param showNotifications - zobrazi notifikacie z vlakna
 	 */
 	@SuppressWarnings("all")
@@ -1559,19 +1559,19 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
-	 * @param errors
+	 * @param errorKey
 	 * @param params - parametre pre preklad
 	 */
 	@SuppressWarnings("all")
 	public void throwError(String errorKey, String... params) {
 		//no notification
 		throwError(errorKey, false, params);
-	}	
-	
+	}
+
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
-	 * @param errors
+	 * @param errorKey
 	 * @param params - parametre pre preklad
 	 * @param showNotifications - zobrazi notifikacie z vlakna
 	 */
@@ -1605,7 +1605,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public void throwError(List<String> errorKeys) {
 		throwError(errorKeys, false);
 	}
-	
+
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
