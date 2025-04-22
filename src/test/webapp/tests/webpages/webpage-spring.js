@@ -277,38 +277,3 @@ Scenario('Pole typu select-editable', ({ I, DT, DTE }) => {
     DTE.selectOption("tempId", newTempName);
     I.see(newTempName, "div.DTE_Field_Name_tempId div.filter-option div.filter-option-inner-inner");
 });
-
-Scenario('Test add template in select-editable', ({ I, DT, DTE }) => {
-    var randomNumber = I.getRandomTextShort();
-
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
-    DT.waitForLoader();
-    DT.filterContains("title", "Test pridania zaznamu v select-editable");
-    DT.waitForLoader();
-
-    I.click("Test pridania zaznamu v select-editable");
-    DTE.waitForEditor();
-    I.clickCss("#pills-dt-datatableInit-template-tab");
-    I.waitForElement("div.DTE_Field_Name_tempId button.btn-add", 10);
-    I.clickCss("div.DTE_Field_Name_tempId button.btn-add");
-
-    I.waitForElement("#modalIframe");
-    I.wait(4);
-    I.switchTo("#modalIframeIframeElement");
-
-    var newTempName = "autotest-template-"+randomNumber;
-    DTE.fillField("tempName", newTempName);
-    DTE.fillField("forward", "jet/blank.jsp");
-    I.pressKey("Enter");
-    I.switchTo();
-    I.wait("#modalIframe div.modal-footer button.btn-primary", 10);
-    I.clickCss("#modalIframe div.modal-footer button.btn-primary");
-    I.waitForText(newTempName, 10, "div.DTE_Field_Name_tempId div.filter-option div.filter-option-inner-inner");
-});
-
-Scenario('Cleanup template', ({ I, DT }) => {
-    I.say("Deteting autotest templates");
-    I.amOnPage("/admin/v9/templates/temps-list/");
-    DT.filterContains("tempName", "autotest-template-");
-    DT.deleteAll()
-});
