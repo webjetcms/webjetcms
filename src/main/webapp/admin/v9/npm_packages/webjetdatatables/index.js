@@ -391,7 +391,7 @@ export const dataTableInit = options => {
             dtWJ.adjustColumns(TABLE);
         }, 100);
 
-        if (DATA.customFieldsUpdateColumns===true && json.data.length>0) {
+        if (DATA.customFieldsUpdateColumns===true && Array.isArray(json.data) && json.data.length>0) {
             let fieldsDefinition = json.data[0]?.editorFields?.fieldsDefinition;
             if (typeof fieldsDefinition != "undefined" && fieldsDefinition != null) {
                 //je to zoznam nazvov volnych poli
