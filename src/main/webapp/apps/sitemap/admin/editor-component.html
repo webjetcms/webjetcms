@@ -1,9 +1,4 @@
 <script>
-    function appGetComponentPath(componentPath, datatable) {
-        const field = $("#DTE_Field_mapType").val();
-        return `/components/sitemap/${field}.jsp`;
-    }
-
     function setFieldsVisibility(fieldsToHide = [], fieldsToShow = []) {
         fieldsToHide.forEach(name => $(`.DTE_Field_Name_${name}`).hide());
         fieldsToShow.forEach(name => $(`.DTE_Field_Name_${name}`).show());
@@ -15,11 +10,11 @@
             field.on("change", function() {
                 const mapType = field.val();
                 switch (mapType) {
-                    case "ul_li":
+                    case "/components/sitemap/ul_li.jsp":
                         setFieldsVisibility([], ['maxDepth', 'colsNum']);
                         break;
-                    case "sitemap":
-                    case "treelist":
+                    case "/components/sitemap/sitemap.jsp":
+                    case "/components/sitemap/treelist.jsp":
                         setFieldsVisibility(['maxDepth', 'colsNum'], []);
                         break;
                     default:

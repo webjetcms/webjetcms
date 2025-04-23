@@ -22,10 +22,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 @Getter
 @Setter
 public class ReservationApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.reservation.editor_component.reservation_type", editor = {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.reservation.editor_component.reservation_type", className = "dt-app-skip dt-app-componentPath", editor = {
             @DataTableColumnEditor(options = {
-                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.reservation_list", value = "1"),
-                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.room_list", value = "2"),
+                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.reservation_list", value = "/components/reservation/reservation_list.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.room_list", value = "/components/reservation/room_list.jsp"),
             })
     })
     private String reservationType;
@@ -35,4 +36,5 @@ public class ReservationApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabListObjects", title = "&nbsp;")
     private String iframe2 = "/components/reservation/admin_object_list.jsp";
+
 }

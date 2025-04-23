@@ -16,15 +16,16 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class SiteMapApp extends WebjetComponentAbstract {
+
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.sitemap.root_group", tab = "basic", className = "dt-tree-group")
     private GroupDetails groupId = new GroupDetails("1");
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.sitemap.map_type", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.sitemap.map_type", className = "dt-app-skip dt-app-componentPath", editor = {
             @DataTableColumnEditor(options = {
-                    @DataTableColumnEditorAttr(key = "components.sitemap.ul_li", value = "ul_li"),
-                    @DataTableColumnEditorAttr(key = "components.sitemap.sitemap", value = "sitemap"),
-                    @DataTableColumnEditorAttr(key = "components.sitemap.treelist", value = "treelist"),
-                    @DataTableColumnEditorAttr(key = "components.sitemap.ul_li_jquery", value = "ul_li_jquery")
+                    @DataTableColumnEditorAttr(key = "components.sitemap.ul_li", value = "/components/sitemap/ul_li.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.sitemap.sitemap", value = "/components/sitemap/sitemap.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.sitemap.treelist", value = "/components/sitemap/treelist.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.sitemap.ul_li_jquery", value = "/components/sitemap/ul_li_jquery.jsp")
             })
     })
     private String mapType;

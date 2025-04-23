@@ -18,12 +18,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 public class RatingApp extends WebjetComponentAbstract {
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.rating.type", tab = "basic", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.rating.type", tab = "basic", className = "dt-app-skip dt-app-componentPath", editor = {
             @DataTableColumnEditor(options = {
-                    @DataTableColumnEditorAttr(key = "components.rating.rating_form", value = "rating_form"),
-                    @DataTableColumnEditorAttr(key = "components.rating.show_rating", value = "rating_page"),
-                    @DataTableColumnEditorAttr(key = "components.rating.top_users", value = "rating_top_users"),
-                    @DataTableColumnEditorAttr(key = "components.rating.top_docid", value = "rating_top_pages")
+                    @DataTableColumnEditorAttr(key = "components.rating.rating_form", value = "/components/rating/rating_form.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.rating.show_rating", value = "/components/rating/rating_page.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.rating.top_users", value = "/components/rating/rating_top_users.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.rating.top_docid", value = "/components/rating/rating_top_pages.jsp")
             })
     })
     private String ratingType;

@@ -1,36 +1,35 @@
 <script>
 	function appAfterInit(response, datatable) {
 		window.addEventListener("WJ.DTE.opened", function () {
-			const $customNameFieldWrapper = $(".DTE_Field_Name_customName");
-			const $customNameInput = $customNameFieldWrapper.find("input");
-			const $titleNameCustom = $("#DTE_Field_titleName_2");
-			const $titleNameRadios = $(
-				"#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2"
+			const $titleNameFieldWrapper = $(".DTE_Field_Name_titleName");
+			const $titleNameInput = $titleNameFieldWrapper.find("input");
+			const $titleTypeRadios = $(
+				"#DTE_Field_titleType_0, #DTE_Field_titleType_1, #DTE_Field_titleType_2"
 			);
 			const updateCustomNameVisibility = () => {
-				const isCustom = $titleNameCustom.is(":checked");
-				$customNameFieldWrapper.toggle(isCustom);
+				const isCustom = $($titleTypeRadios[2]).is(":checked");
+				$titleNameFieldWrapper.toggle(isCustom);
 				if (!isCustom) {
-					$customNameInput.val("");
+					$titleNameInput.val($("input[name=titleType]:checked").val());
+				} else {
+					var currentValue = $titleNameInput.val();
+					if (currentValue === "groupName" || currentValue === "rootGroupName") {
+						$titleNameInput.val("");
+					}
 				}
 			};
-			const customNameValue = $customNameInput.val();
-			if (customNameValue && !$titleNameCustom.is(":checked")) {
-				$titleNameCustom.prop("checked", true).trigger("change");
+			const titleNameValue = $titleNameInput.val();
+			if (titleNameValue && titleNameValue !== "") {
+				if ("groupName"===titleNameValue) {
+					$titleTypeRadios[0].checked = true;
+				} else if ("rootGroupName" === titleNameValue) {
+					$titleTypeRadios[1].checked = true;
+				} else {
+					$titleTypeRadios[2].checked = true;
+				}
 			}
-			$titleNameRadios.on("change", updateCustomNameVisibility);
+			$titleTypeRadios.on("change", updateCustomNameVisibility);
 			updateCustomNameVisibility();
 		});
-	}
-	function appGetComponentCode(componentPath, params, datatable) {
-		if (params["titleName"] === "customName") {
-			params["titleName"] = params["customName"];
-		}
-		let include = "!INCLUDE(" + componentPath;
-		if (Object.keys(params).length > 0) {
-			include += ", " + convertObjectToInludeParams(params);
-		}
-		include += ")!";
-		return include;
 	}
 </script>

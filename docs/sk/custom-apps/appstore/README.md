@@ -518,6 +518,50 @@ public class GalleryApp extends WebjetComponentAbstract {
 }
 ```
 
+Nastavenie skupín polí použitím pripravenej metódy `WebjetComponentAbstract.addOptions`:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.media.MediaApp")
+@WebjetAppStore(
+    nameKey = "components.media.title",
+    descKey = "components.media.desc",
+    itemKey = "menuWebpages",
+    imagePath = "/components/media/editoricon.png",
+    galleryImages = "/components/media/",
+    componentPath = "/components/media/media.jsp")
+@Getter
+@Setter
+public class MediaApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, renderFormat = "dt-format-select", title = "editor.media.group", tab = "basic",
+    editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "unselectedValue", value = "-1")
+            }
+        )
+    })
+    private Integer[] groups;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.popup.docid", tab = "basic", className = "dt-tree-page-null")
+    private DocDetails docid;
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        int groupId = Tools.getIntValue(request.getParameter("groupId"), 0);
+        List<MediaGroupBean> groups;
+        if (groupId < 1) groups = MediaDB.getGroups();
+        else groups = MediaDB.getGroups(groupId);
+
+        options.put("groups", addOptions(groups, "mediaGroupName", "mediaGroupId", false));
+
+        return options;
+    }
+}
+```
+
 ## Karty
 
 Ak potrebujete polia rozdeliť do viacerých kariet je možné ich definovať anotáciou `@DataTableTabs`, môžete aj využiť typ poľa `IFRAME` pre jednoduché vloženie inej stránky, napr. zoznamu fotografií v galérii:
@@ -665,6 +709,104 @@ Ukážkový kód, ktorý reaguje na zmenu výberového poľa:
     }
 
 </script>
+```
+
+### Nastavenie typu podľa názvu JSP súboru
+
+V niektorých prípadoch je potrebné meniť zobrazené polia podľa typu aplikácie, čoho výsledkom je aj iný JSP súbor pre zobrazenie. Príklad je v [RatingApp.java](../../../../src/main/java/sk/iway/iwcm/components/rating/RatingApp.java) a príslušnom HTML súbore. Ak parameter nepotrebujete vo výstupnom `!INCLUDE()` nastavte mu `className = "dt-app-skip"`, v tomto prípade je totiž hodnota nastavená podľa mena JSP súboru.
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.rating.RatingApp")
+@WebjetAppStore(nameKey = "components.rating.title", descKey = "components.rating.desc", itemKey = "cmp_rating", imagePath = "/components/rating/editoricon.png", galleryImages = "/components/rating/", componentPath = "/components/rating/rating_form.jsp,/components/rating/rating_page.jsp,/components/rating/rating_top_users.jsp,/components/rating/rating_top_pages.jsp", customHtml = "/apps/rating/admin/editor-component.html")
+
+@Getter
+@Setter
+public class RatingApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.rating.type", tab = "basic", className = "dt-app-skip", editor = {
+            @DataTableColumnEditor(options = {
+                    @DataTableColumnEditorAttr(key = "components.rating.rating_form", value = "rating_form"),
+                    @DataTableColumnEditorAttr(key = "components.rating.show_rating", value = "rating_page"),
+                    @DataTableColumnEditorAttr(key = "components.rating.top_users", value = "rating_top_users"),
+                    @DataTableColumnEditorAttr(key = "components.rating.top_docid", value = "rating_top_pages")
+            })
+    })
+    private String ratingType;
+    ...
+}
+```
+
+a príslušný [HTML súbor](../../../../src/main/webapp/apps/rating/admin/editor-component.html) v ktorom získate meno JSP súboru z objektu `requestJson`:
+
+```html
+<script>
+	function appGetComponentPath(componentPath, datatable) {
+		let field = $("#DTE_Field_ratingType").val();
+        return `/components/rating/${field}.jsp`;
+	}
+
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const fieldElement = $("#DTE_Field_ratingType");
+
+			fieldElement.on("change", function () {
+                const field = $(this).val();
+				if ("rating_form" === field) {
+                    setFieldsVisibility(['usersLength', 'docsLength', 'period', 'form2Description'], ['form1Description','checkLogon', 'ratingDocId', 'range']);
+				} else if ("rating_page" === field) {
+					setFieldsVisibility(['usersLength', 'docsLength', 'period','checkLogon','form1Description'], ['form2Description','ratingDocId', 'range']);
+				} else if ("rating_top_users" === field) {
+					setFieldsVisibility(['docsLength', 'period', 'ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['usersLength']);
+				} else {
+                    setFieldsVisibility(['usersLength','ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['docsLength', 'period']);
+                }
+			});
+			let originalJspFileName = requestJson.originalJspFileName;
+			if (originalJspFileName != null && originalJspFileName != "") {
+				//grep the file name from the path
+				originalJspFileName = originalJspFileName.substring(originalJspFileName.lastIndexOf("/") + 1, originalJspFileName.lastIndexOf("."));
+				fieldElement.val(originalJspFileName);
+			}
+			fieldElement.trigger("change");
+		});
+	}
+</script>
+```
+
+Pre jednoduché situácie stačí v anotácii nastaviť do `className` hodnotu `dt-app-componentPath`, vtedy sa automaticky meno JSP súboru nastaví do daného objektu a zároveň sa použije. Nie je potrebné manuálne nastavenie pomocou JavaScript kódu ako je uvedené vyššie.
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.reservation.ReservationApp")
+@WebjetAppStore(nameKey = "components.reservation.title", descKey = "components.reservation.desc", itemKey = "cmp_reservation", imagePath = "/components/reservation/editoricon.png", galleryImages = "/components/reservation/", componentPath = "/components/reservation/reservation_list.jsp,/components/reservation/room_list.jsp", customHtml = "/apps/reservation/admin/editor-component.html")
+@DataTableTabs(tabs = {
+        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "componentIframeWindowTabList", title = "components.reservation.reservation_list", content = ""),
+        @DataTableTab(id = "componentIframeWindowTabListObjects", title = "components.reservation.reservationObjectList", content = ""),
+})
+@Getter
+@Setter
+public class ReservationApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.reservation.editor_component.reservation_type", className = "dt-app-skip dt-app-componentPath", editor = {
+            @DataTableColumnEditor(options = {
+                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.reservation_list", value = "/components/reservation/reservation_list.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.room_list", value = "/components/reservation/room_list.jsp"),
+            })
+    })
+    private String reservationType;
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabList", title = "&nbsp;")
+    private String iframe = "/components/reservation/admin_reservation_list.jsp";
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabListObjects", title = "&nbsp;")
+    private String iframe2 = "/components/reservation/admin_object_list.jsp";
+
+}
 ```
 
 ## Implementačné detaily
