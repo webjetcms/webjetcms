@@ -42,10 +42,7 @@ public class DomainRedirectBean implements Serializable
 	@GeneratedValue(generator="WJGen_domain_redirects")
 	@TableGenerator(name="WJGen_domain_redirects",pkColumnValue="domain_redirects")
    @Column(name="redirect_id")
-	@DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title = "components.redirect.label.id"
-   )
+	@DataTableColumn(inputType = DataTableColumnType.ID)
    private Integer redirectId;
 
 	@Column(name="redirect_from")

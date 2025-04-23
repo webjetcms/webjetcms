@@ -323,7 +323,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Doplnená dokumentácia k [editoru obrázkov](redactor/image-editor/README.md) (#56969).
 - Doplnená dokumentácia pre generovanie [náhľadových obrázkov](frontend/thumb-servlet/README.md) a nastavenie [bodu záujmu](frontend/thumb-servlet/interest-point.md) (#56969).
 - Vytvorená dokumentácia pre [prácu v editore stránok](redactor/webpages/working-in-editor/README.md) (#56981).
-- Doplnená dokumentácia k [archívu súborov](redactor/apps/file_archiv/README.md) (#56891).
+- Doplnená dokumentácia k [archívu súborov](redactor/files/file-archive/README.md) (#56891).
 - Doplnená dokumentácia k [pred pripraveným blokom](redactor/apps/htmlbox/README.md) (#56981).
 - Pridaná [česká verzia](https://docs.webjetcms.sk/latest/cs/) dokumentácie (#57033).
 - Upravené generovanie odkazov na zdrojový kód tak, aby smerovali na [GitHub verziu](https://github.com/webjetcms/webjetcms/tree/main/src) zdrojového kódu (#57033).

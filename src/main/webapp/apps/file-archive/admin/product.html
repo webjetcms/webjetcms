@@ -1,0 +1,29 @@
+<script type="text/javascript" data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.file_archiv.BasicManagerBean")})]*/ [];
+</script>
+<script type="text/javascript">
+
+    var productManagerDataTable;
+
+    window.domReady.add(function () {
+        let url = "/admin/rest/file-archive-manager?manager-type=product";
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "name", title: '[[#{components.file_archiv.product_name}]]' });
+        window.WJ.DataTable.mergeColumns(columns, { name: "newName", title: '[[#{components.file_archiv.new_product_name}]]' });
+
+        productManagerDataTable = WJ.DataTable({
+            url: url,
+            serverSide: false,
+            columns: columns,
+            id: "productManagerDataTable"
+        });
+
+        productManagerDataTable.hideButton("create");
+        productManagerDataTable.hideButton("duplicate");
+        productManagerDataTable.hideButton("import");
+        productManagerDataTable.hideButton("export");
+        productManagerDataTable.hideButton("celledit");
+    });
+</script>
+
+<table id="productManagerDataTable" class="datatableInit table"></table>

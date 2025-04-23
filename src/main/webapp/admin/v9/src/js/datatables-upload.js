@@ -222,12 +222,14 @@ function adminUploadInit(options) {
                     //console.log("Setting progress: ", progress);
                     try {
                         //console.log("Progress 1: ",file.toaster.find(".fa-progress-bar__progress"));
-                        file.toaster
-                            .find('.fa-progress-bar__progress')
-                            .css('stroke-dashoffset', Math.round(100 - progress) + 'px');
+                        if (file.toaster!=null) {
+                            file.toaster
+                                .find('.fa-progress-bar__progress')
+                                .css('stroke-dashoffset', Math.round(100 - progress) + 'px');
+                        }
                         updateOverallProgress();
 
-                        if (file.toaster.attr("data-upload-status")!="exist") {
+                        if (file.toaster!=null && file.toaster.attr("data-upload-status")!="exist") {
                             //console.log("progress=", progress);
                             //nastavujeme processing, lebo na serveri sa este nieco deje
                             if (progress == 100) {
@@ -254,6 +256,8 @@ function adminUploadInit(options) {
         $('#upload-wrapper').show();
         $('#dt-upload').css('visibility', 'hidden');
         $('#dt-upload').css('opacity', 0);
+
+        if (typeof toastrMessageTemplate == 'undefined') return null;
 
         var message = toastrMessageTemplate.replace('{FILE_NAME}', file.name);
         let toaster = toastr.info(message, '', {
@@ -318,7 +322,7 @@ function adminUploadInit(options) {
 
     function setStatus(toast, status) {
         //console.log("Setting status ", status, "to", toast);
-        toast.attr("data-upload-status", status);
+        if (toast != null) toast.attr("data-upload-status", status);
     }
 
     function setError(toast, message) {

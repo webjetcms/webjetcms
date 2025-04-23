@@ -179,6 +179,17 @@ module.exports = {
         this.waitForLoader();
     },
 
+    /**
+     * Retrieves the number of records from chosen datatable
+     */
+    async getRecordCount(name) {
+        const text = await I.grabTextFrom('#' + name + '_info');
+        const match = text.match(/z\s(\d+)$/);
+        if (match) {
+            return parseInt(match[1], 10);
+        }
+    },
+
     //zresetuje nastavenie datatabulky (poradie stlpcov, usporiadanie, zoznam stlpcov)
     resetTable(name = "datatableInit") {
       var container = "#"+name+"_wrapper";

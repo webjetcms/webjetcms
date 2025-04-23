@@ -49,7 +49,7 @@ public class DocForumEntity implements Serializable {
     @Id
     @Column(name = "forum_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_document_forum")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab="main")
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab="main")
     private Long id;
 
     @Column(name = "doc_id")

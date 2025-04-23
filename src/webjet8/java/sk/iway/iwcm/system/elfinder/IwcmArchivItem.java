@@ -74,7 +74,7 @@ public class IwcmArchivItem implements FsItem {
     public int getSortPriority()
     {
         if (getFab() != null && getFab().getId() > 0) {
-            return getFab().getId();
+            return getFab().getFileArchiveId();
         }
 
         return 10;

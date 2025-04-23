@@ -57,6 +57,7 @@ public class DataTableColumn {
     private Boolean array;
 
     private Boolean orderable;
+    private String orderProperty;
 
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
@@ -142,9 +143,20 @@ public class DataTableColumn {
 
             if (Tools.isEmpty(title) || "&nbsp;".equals(title)) addClassName("empty-title");
         } else {
-            String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
-            title = prop.getText(titleKey);
-            if (titleKey.equals(title)) title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
+            if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.HIDDEN) {
+                //hidden field doesn't need title
+                title = "&nbsp;";
+            } else {
+                String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
+                title = prop.getText(titleKey);
+                if (titleKey.equals(title)) {
+                    if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
+                        title = prop.getText("datatables.id.js");
+                    } else {
+                        title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
+                    }
+                }
+            }
         }
 
         if (inputType.length > 0 && inputType[0] == DataTableColumnType.STATIC_TEXT) {
@@ -253,6 +265,10 @@ public class DataTableColumn {
             //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
             this.orderable = false;
         }
+
+        if (Tools.isNotEmpty(annotation.orderProperty())) {
+            orderProperty = annotation.orderProperty();
+        }
     }
 
     private void setEditorPropertiesFromField(Field field) {
@@ -293,7 +309,6 @@ public class DataTableColumn {
             if (Tools.isEmpty(data)) {
                 data = "id";
             }
-            defaultContent = "";
             addClassName("dt-select-td");
             renderFormat = "dt-format-selector";
             if (editor == null) {
@@ -589,6 +604,15 @@ public class DataTableColumn {
             editor.setType("staticText");
         }
 
+        if (dataTableColumnType == DataTableColumnType.UPLOAD) {
+            renderFormat = "dt-format-wjupload";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("wjupload");
+            if (hidden == null) hidden = Boolean.TRUE;
+        }
+
         if (dataTableColumnType == DataTableColumnType.IMAGE_RADIO) {
             renderFormat = "dt-format-image-radio";
             if (editor == null) {
@@ -610,7 +634,9 @@ public class DataTableColumn {
                 try {
                     String attrName = "data-dt-field-dt-columns";
                     String classNameAttr = editor.getAttr().get(attrName);
-                    String json = new DataTableColumnsFactory(classNameAttr).getColumnsJson();
+                    DataTableColumnsFactory dtcf = new DataTableColumnsFactory(classNameAttr);
+                    dtcf.addCircularReference(classNameAttr);
+                    String json = dtcf.getColumnsJson();
                     editor.addAttr(attrName, json);
                 } catch (Exception e) {
                     Logger.error(DataTableColumn.class, e);

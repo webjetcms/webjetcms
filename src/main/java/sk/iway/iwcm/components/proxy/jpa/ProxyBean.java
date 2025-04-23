@@ -30,7 +30,7 @@ public class ProxyBean extends ActiveRecordRepository {
     @Id
     @Column(name = "proxy_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_proxy")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
     /*TAB BASIC*/

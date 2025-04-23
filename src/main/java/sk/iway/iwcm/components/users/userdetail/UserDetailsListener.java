@@ -2,6 +2,8 @@ package sk.iway.iwcm.components.users.userdetail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.List;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
@@ -9,6 +11,7 @@ import org.springframework.ui.ModelMap;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
@@ -28,6 +31,7 @@ public class UserDetailsListener {
     }
 
     protected static void setInitialDataImpl(ModelMap model) throws JsonProcessingException {
-        model.addAttribute("jstreePerms", JsonTools.objectToJSON(MenuService.getAllPermissions()));
+        List<JsTreeItem> jstreePerms = MenuService.getAllPermissions();
+        model.addAttribute("jstreePerms", JsonTools.objectToJSON(jstreePerms));
     }
 }

@@ -314,10 +314,6 @@ public class AdminLogonController {
     }
 
     private void determineDefaultWebPagesDirectory(Identity user, HttpSession session) {
-        //nastav predvoleny adresar na Moje Stranky
-        if (user.getEditablePages()!=null && user.getEditablePages().length()>0 && user.isDisabledItem("menuUsers"))
-            session.setAttribute(Constants.SESSION_GROUP_ID, Constants.getInt("systemPagesMyPages"));
-
         //nastav predvoleny adresar Na Schalenie
         DocDB docDB = DocDB.getInstance();
         List<DocDetails> docsToApprove = docDB.getDocsForApprove(user.getUserId());

@@ -79,6 +79,7 @@ public class InitServlet extends HttpServlet
 
 	private static boolean webjetInitialized = false;
 	private static boolean webjetConfigured = false;
+	private static boolean springInitialized = false;
 
 	private static final Date SERVER_START_DATETIME = new Date();
 
@@ -95,7 +96,7 @@ public class InitServlet extends HttpServlet
 	public void init() throws ServletException
 	{
 		//not used anymore, initialized from spring on start
-		if (isWebjetInitialized()) {
+		if (isSpringInitialized()) {
 
 			//run cron4j, it's here because it may need spring classes to run correctly
 			try
@@ -126,8 +127,13 @@ public class InitServlet extends HttpServlet
 				sk.iway.iwcm.Logger.error(e);
 			}
 
-			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
+			UpdateDatabase.updateWithSpringInitialized();
+
 			SpringAppInitializer.dtDiff("WebJET INIT DONE");
+
+			setWebjetInitialized();
+
+			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
 		}
 	}
 
@@ -1621,5 +1627,13 @@ public class InitServlet extends HttpServlet
 
 	public static String getActualVersion() {
 		return actualVersion;
+	}
+
+	public static boolean isSpringInitialized() {
+		return springInitialized;
+	}
+
+	public static void setSpringInitialized() {
+		InitServlet.springInitialized = true;
 	}
 }

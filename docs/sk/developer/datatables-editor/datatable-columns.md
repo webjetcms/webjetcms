@@ -12,14 +12,28 @@ Do JSON sa mapujú všetky polia objektu, ktoré majú anotáciu ```@DataTableCo
 
 Anotácia ```@DataTableColumn``` má rovnaké vlastnosti ako [pôvodný columns objekt](../datatables/README.md). Ďalej je možné nastaviť určité vlastnosti pomocou skratky inputType, ktoré sú definované ```enum dataTableColumnType```.
 
+Vlastnosti pre editor sa nastavujú pomocou anotácie `DataTableColumnEditorAttr`. Hodnotu je možné zadať priamo, alebo pomocou prefixu `constant:` získať z konfiguračnej premennej:
+
+```java
+    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", className = "dt-tree-dir-simple", title="components.file_archiv.target_directory", hidden = true, editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "constant:fileArchivDefaultDirPath"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-skipFolders", value = "fileArchivInsertLaterDirPath"),
+            }
+        )
+    })
+    private String dir;
+```
+
 ## Príklady
 
 ```java
 //TranslationKeyDto
-@DataTableColumn(inputType = {DataTableColumnType.ID})
+@DataTableColumn(inputType = DataTableColumnType.ID)
 private Integer id;
 
-@DataTableColumn(inputType = {DataTableColumnType.OPEN_EDITOR})
+@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR)
 private String key;
 
 @DataTableColumn(renderFormat = "dt-format-text-wrap", editor = {
@@ -184,6 +198,7 @@ Dátumové:
 - ```JSON``` - pole pre výber [adresára](field-json.md)
 - ```DATATABLE``` - [vnorená datatabuľka](field-datatable.md)
 - ```ELFINDER``` - [výber odkazu](field-elfinder.md) na súbor / web stránku
+- ```UPLOAD``` - [nahratie súboru](field-file-upload.md)
 
 ## Možnosti výberového poľa
 

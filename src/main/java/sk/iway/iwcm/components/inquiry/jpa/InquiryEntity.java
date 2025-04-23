@@ -37,7 +37,7 @@ public class InquiryEntity extends ActiveRecordRepository implements Serializabl
     @Id
     @Column(name = "question_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_inquiry")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     @Accessors(chain = false)
     private Long id;
 

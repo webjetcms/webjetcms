@@ -46,11 +46,7 @@ public class EnumerationTypeBean extends ActiveRecordRepository implements Seria
     @GeneratedValue(generator = "WJGen_enumeration_type")
     @TableGenerator(name = "WJGen_enumeration_type", pkColumnValue = "enumeration_type")
     @Column(name = "enumeration_type_id")
-    @DataTableColumn(
-        inputType = DataTableColumnType.ID,
-        title="ID",
-        tab="basic"
-    )
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab="basic")
     private Long id;
 
     @Column(name = "name")

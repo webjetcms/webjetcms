@@ -49,6 +49,28 @@ export class WebjetJsTree {
                                 WJ.notifyError(data.error);
                                 return;
                             }
+
+                            //If its dt-tree-dir-simple, open disabled parent folders in way, that it will not call open event
+                            if(url.indexOf("click=dt-tree-dir-simple") > 0) {
+                                //Get root folder from url
+                                let paramString = url.split('?')[1];
+                                let queryString = new URLSearchParams(paramString);
+                                let rootFolder = queryString.get("rootFolder");
+
+                                data.items.forEach((item) => {
+                                    if(item.state['disabled'] == true || item.icon == "ti ti-folder-x") {
+                                        item.children = [];
+                                        item.state['opened']  = true;
+                                    }
+
+                                    //We must ENABLE rootFolder, can be disabled
+                                    if(rootFolder == item.id) {
+                                        item.icon = 'ti ti-folder';
+                                        item.state['disabled'] = false;
+                                    }
+                                });
+                            }
+
                             callback(data.items);
                         }
                     });

@@ -1,0 +1,75 @@
+<script>
+    function appAfterInit(response, datatable) { 
+        const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+            fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+            fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+        };
+
+        const setFieldsDisability = (fieldsToDisable = [], fieldsToEnable = []) => {
+            fieldsToDisable.forEach((name) => datatable.EDITOR.field(name).disable());
+            fieldsToEnable.forEach((name) => datatable.EDITOR.field(name).enable());
+        };
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            const showArchiv = $("#DTE_Field_archiv_0");
+            showArchiv.on("change", function() {
+                const isChecked = $(this).prop("checked");
+                if(isChecked) {
+                    setFieldsVisibility([], ["asc", "order"]);
+                } else {
+                    setFieldsVisibility(["asc", "order"], []);
+                }
+            });
+            showArchiv.trigger("change");
+
+            const showPatterns = $("#DTE_Field_showPatterns_0");
+            showPatterns.on("change", function() {
+                const isChecked = $(this).prop("checked");
+                if(isChecked) {
+                    setFieldsVisibility([], ["ascPatterns", "orderPatterns"]);
+                } else {
+                    setFieldsVisibility(["ascPatterns", "orderPatterns"], []);
+                }
+            });
+            showPatterns.trigger("change");
+
+            const onlySelectedFiles = $("#DTE_Field_showOnlySelected_0");
+            onlySelectedFiles.on("change", function() {
+                const isChecked = $(this).prop("checked");
+                if(isChecked) {
+                    $("#editorAppDTE_Field_dir  input").prop("disabled", true);
+                    $("button.btn-vue-jstree-item-edit").prop("disabled", true);
+                    //tab with table
+                    $("#pills-dt-component-datatable-filesToShow-tab").show();
+                    setFieldsDisability(["dir", "subDirsInclude", "productCode", "product", "category"], ["globalIds"]);
+                } else {
+                    $("#editorAppDTE_Field_dir  input").prop("disabled", false);
+                    $("button.btn-vue-jstree-item-edit").prop("disabled", false);
+                    //tab with table
+                    $("#pills-dt-component-datatable-filesToShow-tab").hide();
+                    setFieldsDisability(["globalIds"], ["dir", "subDirsInclude", "productCode", "product", "category"]);
+                }
+            });
+            onlySelectedFiles.trigger("change");
+
+
+            let filesInnerTable = null;
+            window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+                console.log(event.detail.conf.id);
+                if(event.detail.conf.id == "DTE_Field_filesToSelect" && filesInnerTable == null) {
+                    filesInnerTable = event.detail.conf.datatable;
+                }
+            });
+
+            const tableTab = $("#pills-dt-component-datatable-filesToShow-tab");
+            tableTab.on("click", function() {
+                if(filesInnerTable != null) {
+                    console.log("reload");
+                    let tableUrl = WJ.urlUpdateParam(filesInnerTable.getAjaxUrl(), "globalIds", $("#DTE_Field_globalIds").val());
+                    filesInnerTable.setAjaxUrl( tableUrl );
+                    filesInnerTable.ajax.reload();
+                }
+            });
+        });
+    }
+</script>

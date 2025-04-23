@@ -37,7 +37,6 @@
   - Survey
     - [Survey](/redactor/apps/inquiry/README.md)
     - [Poll statistics](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archive files](/redactor/apps/file_archiv/README.md)
   - Banner system
     - [List of banners](/redactor/apps/banner/README.md)
     - [Banner statistics](/redactor/apps/banner/banner-stat/README.md)

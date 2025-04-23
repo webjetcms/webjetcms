@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.basket.rest;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,17 +20,23 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
-import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 
 public class ProductListService {
 
@@ -193,10 +200,18 @@ public class ProductListService {
 
         GroupsDB groupsDB = GroupsDB.getInstance();
         String domainName = CloudToolsForCore.getDomainName();
+
+        GroupDetails trashGroup = groupsDB.getTrashGroup();
+        String trashGroupPath = null;
+        if (trashGroup != null) {
+            trashGroupPath = trashGroup.getFullPath();
+        }
+
         for(Integer groupId : groupIds) {
             GroupDetails group = groupsDB.getGroup(groupId);
             if (group == null) continue;
-            if (group.getFullPath().startsWith("/System")) continue;
+            //remove groups in trash
+            if (trashGroupPath != null && group.getFullPath().startsWith(trashGroupPath)) continue;
             //Only current domain and not deleted groups
             if(Tools.isNotEmpty(group.getDomainName()) && domainName.equals(group.getDomainName())==false) continue;
 
@@ -226,5 +241,61 @@ public class ProductListService {
             groupsList.add( new LabelValue(curr, curr) );
 
         return groupsList;
+    }
+
+    /**
+     * Update invoice stats (items count, total price, total price with VAT)
+     * @param invoiceId
+     */
+    public static void updateInvoiceStats(int invoiceId) {
+        if(invoiceId < 1) return;
+
+        //Get repositories
+        BasketInvoicesRepository bir = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
+        BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+
+        Integer domainId = CloudToolsForCore.getDomainId();
+        BasketInvoiceEntity invoice = bir.findFirstByIdAndDomainId(Long.valueOf(invoiceId), domainId).orElse(null);
+        if(invoice == null) return;
+
+        //Get invoice items
+        List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(Long.valueOf(invoiceId), domainId);
+
+        Integer itemsCount = 0;
+        BigDecimal totalPrice = BigDecimal.ZERO; //NO VAT
+        BigDecimal totalPriceVat = BigDecimal.ZERO; //WITH VAT
+
+        for(BasketInvoiceItemEntity item : invoiceItems) {
+            itemsCount += item.getItemQty();
+            totalPrice = totalPrice.add( item.getItemPriceQty() );
+            totalPriceVat = totalPriceVat.add( item.getItemPriceVatQty() );
+        }
+
+        //Set and save invoice
+        invoice.setItemQty(itemsCount);
+        invoice.setPriceToPayNoVat(totalPrice);
+        invoice.setPriceToPayVat(totalPriceVat);
+        bir.save(invoice);
+    }
+
+    public static BigDecimal getPriceToPay(Long invoiceId, BasketInvoiceItemsRepository biir) {
+        if(invoiceId == null || invoiceId < 0) return new BigDecimal(-1);
+
+        List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId());
+        if(invoiceItems == null || invoiceItems.isEmpty()) return BigDecimal.ZERO;
+
+        return invoiceItems.stream()
+                           .map(item -> item.getItemPriceVatQty())
+                           .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public static BigDecimal getPayedPrice(Long invoiceId, BasketInvoicePaymentsRepository bipr) {
+        if(invoiceId == null) return new BigDecimal(-1);
+
+        List<BasketInvoicePaymentEntity> invoicePayments = bipr.findAllByInvoiceId(invoiceId);
+        if(invoicePayments == null || invoicePayments.isEmpty()) return BigDecimal.ZERO;
+        return invoicePayments.stream()
+                              .map(item -> item.getPayedPrice())
+                              .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

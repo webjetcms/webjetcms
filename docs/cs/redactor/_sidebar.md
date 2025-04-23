@@ -37,7 +37,6 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Statistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archiv souborů](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Seznam bannerů](/redactor/apps/banner/README.md)
     - [Statistika bannerů](/redactor/apps/banner/banner-stat/README.md)

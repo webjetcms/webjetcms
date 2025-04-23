@@ -47,6 +47,7 @@ import * as fieldTypeIframe from './field-type-iframe';
 import * as fieldTypeColor from './field-type-color';
 import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
+import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
@@ -390,7 +391,7 @@ export const dataTableInit = options => {
             dtWJ.adjustColumns(TABLE);
         }, 100);
 
-        if (DATA.customFieldsUpdateColumns===true && json.data.length>0) {
+        if (DATA.customFieldsUpdateColumns===true && Array.isArray(json.data) && json.data.length>0) {
             let fieldsDefinition = json.data[0]?.editorFields?.fieldsDefinition;
             if (typeof fieldsDefinition != "undefined" && fieldsDefinition != null) {
                 //je to zoznam nazvov volnych poli
@@ -1012,6 +1013,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.color = fieldTypeColor.typeColor();
         $.fn.dataTable.Editor.fieldTypes.base64 = fieldTypeBase64.typeBase64();
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
+        $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
 
         fieldTypeSelectEditable.typeSelectEditable();
@@ -1316,6 +1318,14 @@ export const dataTableInit = options => {
                     showNotify(json.notify);
                 }
             }, 300);
+        });
+
+        EDITOR.on('submitUnsuccessful', function (e, json) {
+            //console.log("Editor.on submitUnsuccessful, json=", json);
+
+            if(typeof json.notify != "undefined" && json.notify != null) {
+                showNotify(json.notify);
+            }
         });
 
         if (DATA.fetchOnCreate) {
@@ -2709,23 +2719,30 @@ export const dataTableInit = options => {
             //chceme vsetky zaznamy - aby necrashol chrome dame max podla konf. premennej datatablesExportMaxRows
             if (pageSize === -1) pageSize = window.datatablesExportMaxRows;
 
-            // extract sort information
-            var pageSort = null;
-            if (typeof data.order !== "undefined" && data.order != null) {
-                for (var sort of data.order) {
-                    if (pageSort == null) pageSort = sort.name + "," + sort.dir;
-                    else pageSort += "," + sort.name + "," + sort.dir;
-                }
-            }
-
-            //console.log("Datatable pageSort: '" + pageSort + "'");
-            //console.log(paramMap);
-
             //create new json structure for parameters for REST request
             if (serverSide) {
                 restParams.push({"name": "size", "value": pageSize});
                 restParams.push({"name": "page", "value": pageNum});
-                if (pageSort != null) restParams.push({"name": "sort", "value": pageSort});
+                if (typeof data.order !== "undefined" && data.order != null) {
+                    for (var sort of data.order) {
+                        let sortName = sort.name;
+
+                        //iterate over DATA.columns, search by .data field for custom orderProperty
+                        for (var column of DATA.columns) {
+                            if (column.data === sortName) {
+                                if (column.hasOwnProperty("orderProperty") && column.orderProperty != null && column.orderProperty != "") {
+                                    //console.log("Found custom orderProperty for column: ", column.data, " orderProperty=", column.orderProperty);
+                                    sortName = column.orderProperty;
+                                    break;
+                                }
+                            }
+                        }
+                        //orderProperty name can have multiple columns, split it by , and order by all values
+                        for (let name of sortName.split(",")) {
+                            restParams.push({"name": "sort", "value": name + "," + sort.dir});
+                        }
+                    }
+                }
             }
 
             if (typeof breadcrumbLanguage !== 'undefined') {

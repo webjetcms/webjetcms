@@ -971,6 +971,18 @@ export function fixDatatableHeaderInputs(tableInstance) {
         });
     });
 
+    $('#' + dataId + '_wrapper .dt-format-number input.form-control, #' + dataId + '_extfilter .dt-format-number input.form-control, '+
+      '#' + dataId + '_wrapper .dt-format-number--decimal input.form-control, #' + dataId + '_extfilter .dt-format-number--decimal input.form-control'
+    ).each(function (key, input) {
+        let $this = $(input);
+        $this.on("change", function() {
+            if ($this.val() != "") $this.addClass("has-value");
+            else $this.removeClass("has-value");
+
+            tableInstance.columns.adjust();
+        });
+    });
+
     tableInstance.columns.adjust();
 }
 

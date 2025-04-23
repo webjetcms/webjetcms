@@ -48,7 +48,7 @@ public class CalendarService {
                 result = filterByTypes(result, types);
             }
 
-            result.stream().forEach(e-> {
+            result.forEach(e-> {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(e.getTo());
 

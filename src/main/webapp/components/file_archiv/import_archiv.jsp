@@ -13,6 +13,12 @@
 <%@ page import="java.util.*" %>
 <%@ page import="sk.iway.iwcm.i18n.Prop" %>
 <%@ page import="sk.iway.iwcm.*" %>
+<%@ page import="sk.iway.iwcm.common.CloudToolsForCore" %>
+<%@ page import="sk.iway.iwcm.utils.Pair" %>
+
+<%@ page import="sk.iway.iwcm.components.file_archiv.FileArchiveService"%>
+<%@ page import="sk.iway.iwcm.components.file_archiv.FileArchiveRepository"%>
+<%@ page import="sk.iway.iwcm.Tools"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -21,7 +27,7 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
-<iwcm:checkLogon admin="true" perms="cmp_file_archiv"/>
+<iwcm:checkLogon admin="true" perms="menuFileArchivImportFiles"/>
 <%
     request.setAttribute("cmpName", "components.file_archiv.name");
     request.setAttribute("dialogTitleKey", "components.file_archiv.import_main_files");
@@ -129,11 +135,81 @@
         }
         return null;
     }
+
+    public static Long prepareAndSaveBean(FileArchivatorBean farchBean, String tmpArchivPath, String dirUnpack, String fileArchivAllowExt, StringBuilder suffixes, List<String> writtenFiles, List<String> overwrittenFiles, Identity user, HttpServletRequest request, FileArchiveRepository far) {
+        farchBean.setUserId((int) user.getUserId());
+        //nastvime univerzalne aby bolo mozne editovat z lubovolnej domeny
+
+        farchBean.setDomainId(CloudToolsForCore.getDomainId());
+        farchBean.setDateInsert(new Date());
+        farchBean.setGlobalId(FileArchivatorKit.generateNextGlobalId());
+
+        //ak sa nejaka pripona zo zipu nenachadza v archive, pridame ju
+        if(Tools.isNotEmpty(fileArchivAllowExt) &&
+                !fileArchivAllowExt.contains(FileArchivatorKit.getFileExtension(farchBean.getFileName())))
+        {
+            if(Constants.getString("fileArchivAllowExt").endsWith(","))
+            {
+                ConfDB.setName("fileArchivAllowExt", Constants.getString("fileArchivAllowExt") + FileArchivatorKit.getFileExtension(farchBean.getFileName()));
+                suffixes.append(FileArchivatorKit.getFileExtension(farchBean.getFileName()));
+            }
+            else if(Tools.isNotEmpty(Constants.getString("fileArchivAllowExt")))
+            {
+                ConfDB.setName("fileArchivAllowExt", Constants.getString("fileArchivAllowExt") +","+ FileArchivatorKit.getFileExtension(farchBean.getFileName()));
+                suffixes.append(FileArchivatorKit.getFileExtension(farchBean.getFileName()));
+            }
+            else if(Tools.isEmpty(Constants.getString("fileArchivAllowExt")))
+            {
+                ConfDB.setName("fileArchivAllowExt", FileArchivatorKit.getFileExtension(farchBean.getFileName()));
+                suffixes.append(FileArchivatorKit.getFileExtension(farchBean.getFileName()));
+            }
+        }
+
+        String fabParameter = "fab_"+farchBean.getFileArchiveId();
+        //az tu musime nastavit id, pretoze v predoslom forme sa pouziva ID na odoslanie
+        farchBean.setFileArchiveId(-1);
+        IwcmFile src = new IwcmFile(Tools.getRealPath(tmpArchivPath+dirUnpack+farchBean.getFilePath()+farchBean.getFileName()));
+        //pri vytvarani archivu sme satry prefix archivu odstranili, teraz musime pridat novy prefix
+        farchBean.setFilePath(FileArchivatorKit.getArchivPath()+farchBean.getFilePath());
+        IwcmFile dest = new IwcmFile(Tools.getRealPath(/*FileArchivatorKit.getArchivPath()+*/farchBean.getFilePath()+farchBean.getFileName()));
+
+        //Get id of same file from DB, if exist, use this id
+        Long toId = (long)-1;
+        if(far != null) {
+            toId = FileArchiveService.getId(farchBean.getFilePath(), farchBean.getFileName(), far);
+
+            if(toId.longValue() > 0) {
+                farchBean.setId(toId);
+            }
+        }
+        if(FileTools.isFile(dest.getVirtualPath()))
+        {
+            if(Tools.isNotEmpty(Tools.getRequestParameter(request, fabParameter)))
+            {
+                if(FileTools.copyFile(src,dest))
+                {
+                    overwrittenFiles.add(dest.getVirtualPath());
+                    return farchBean.saveAndReturnId();
+                }
+            }
+        }
+        else
+        {
+            if(FileTools.copyFile(src,dest))
+            {
+                writtenFiles.add(dest.getVirtualPath());
+                return farchBean.saveAndReturnId();
+            }
+        }
+
+        return (long)-1;
+    }
 %>
 <%@ include file="/admin/layout_top_dialog.jsp" %>
     <div class="padding10">
     <%
-        Prop prop = Prop.getInstance(request);
+
+    Prop prop = Prop.getInstance(request);
     String dirTmp = "tmp/";
     String dirUnpack = "unpack/";
     String tmpArchivPath =  FileArchivatorKit.getArchivPath()+dirTmp;
@@ -161,62 +237,31 @@
         Logger.debug(null,"import_archiv.jsp Začínam import");
         List<String> writtenFiles = new ArrayList<>();
         List<String> overwrittenFiles = new ArrayList<>();
-        for(FileArchivatorBean farchBean:fileArchivBeans)
-        {
-            farchBean.setUserId(user.getUserId());
-            //nastvime univerzalne aby bolo mozne editovat z lubovolnej domeny
 
-            farchBean.setDomainId(1);
-            farchBean.setDomain("Všetky");
-            farchBean.setOrderId(-1);
-            farchBean.setDateInsert(new Date());
-            farchBean.setGlobalId(FileArchivatorKit.generateNextGlobalId());
-            //ak sa nejaka pripona zo zipu nenachadza v archive, pridame ju
-            if(Tools.isNotEmpty(fileArchivAllowExt) &&
-                    !fileArchivAllowExt.contains(FileArchivatorKit.getFileExtension(farchBean.getFileName())))
-            {
-                if(Constants.getString("fileArchivAllowExt").endsWith(","))
-                {
-                    ConfDB.setName("fileArchivAllowExt", Constants.getString("fileArchivAllowExt") + FileArchivatorKit.getFileExtension(farchBean.getFileName()));
-                    suffixes.append(FileArchivatorKit.getFileExtension(farchBean.getFileName()));
-                }
-                else if(Tools.isNotEmpty(Constants.getString("fileArchivAllowExt")))
-                {
-                    ConfDB.setName("fileArchivAllowExt", Constants.getString("fileArchivAllowExt") +","+ FileArchivatorKit.getFileExtension(farchBean.getFileName()));
-                    suffixes.append(FileArchivatorKit.getFileExtension(farchBean.getFileName()));
-                }
-                else if(Tools.isEmpty(Constants.getString("fileArchivAllowExt")))
-                {
-                    ConfDB.setName("fileArchivAllowExt", FileArchivatorKit.getFileExtension(farchBean.getFileName()));
-                    suffixes.append(FileArchivatorKit.getFileExtension(farchBean.getFileName()));
-                }
+        Map<Long, Pair<Long, Integer>> replacedIds = new Hashtable<>();
+
+        FileArchiveRepository far = Tools.getSpringBean("fileArchiveRepository", FileArchiveRepository.class);
+
+        //First only main files
+        for(FileArchivatorBean farchBean : fileArchivBeans) {
+            if(farchBean.getReferenceId() < 1) {
+                Long oldId = farchBean.getId();
+                Long newId = prepareAndSaveBean(farchBean, tmpArchivPath, dirUnpack, fileArchivAllowExt, suffixes, writtenFiles, overwrittenFiles, user, request, far);
+                if(newId != null && newId > 0) replacedIds.put(oldId, new Pair<Long, Integer>(newId, farchBean.getGlobalId()) );
             }
+        }
 
-            String fabParameter = "fab_"+farchBean.getId();
-            //az tu musime nastavit id, pretoze v predoslom forme sa pouziva ID na odoslanie
-            farchBean.setId(-1);
-            IwcmFile src = new IwcmFile(Tools.getRealPath(tmpArchivPath+dirUnpack+farchBean.getFilePath()+farchBean.getFileName()));
-            //pri vytvarani archivu sme satry prefix archivu odstranili, teraz musime pridat novy prefix
-            farchBean.setFilePath(FileArchivatorKit.getArchivPath()+farchBean.getFilePath());
-            IwcmFile dest = new IwcmFile(Tools.getRealPath(/*FileArchivatorKit.getArchivPath()+*/farchBean.getFilePath()+farchBean.getFileName()));
+        //Now only history files
+        for(FileArchivatorBean farchBean : fileArchivBeans) {
+            if(farchBean.getReferenceId() > 0) {
+                Long oldReferenceId = farchBean.getReferenceId();
+                prepareAndSaveBean(farchBean, tmpArchivPath, dirUnpack, fileArchivAllowExt, suffixes, writtenFiles, overwrittenFiles, user, request, far);
 
-            //System.out.println(Tools.getRequestParameter(request, fabParameter));
-            if(FileTools.isFile(dest.getVirtualPath()))
-            {
-                if(Tools.isNotEmpty(Tools.getRequestParameter(request, fabParameter)))
-                {
-                    if(FileTools.copyFile(src,dest))
-                    {
-                        overwrittenFiles.add(dest.getVirtualPath());
-                        farchBean.save();
-                    }
-                }
-            }
-            else
-            {
-                if(FileTools.copyFile(src,dest))
-                {
-                    writtenFiles.add(dest.getVirtualPath());
+                //Update reference id if found
+                Pair<Long, Integer> pairValues = replacedIds.get(oldReferenceId);
+                if(pairValues != null) {
+                    farchBean.setReferenceId(pairValues.getFirst());
+                    farchBean.setGlobalId(pairValues.getSecond());
                     farchBean.save();
                 }
             }
@@ -273,9 +318,12 @@
         outDir.mkdir();
             %>
         <script type="text/javascript">
-            function Ok()
-            {
+            function Ok() {
                 $('#saveFileForm').click();
+            }
+
+            function showLoadingMsg() {
+                $("#loadingMsg").show();
             }
         </script>
         <div class="padding10">
@@ -284,15 +332,18 @@
                 <iwcm:text key="components.file_archiv.import_archiv.vlozte_vyexportovany_zip_subor_z_exportu_archivu_suborov_"/>
             </h2>
 
+            <h2 id="loadingMsg" style="color: green; display: none;"><iwcm:text key="components.file_archiv.import_in_progress"/></h2>
+
             <iwcm:stripForm name="saveFileForm" id="saveFileForm_ID" action="<%=PathFilter.getOrigPathUpload(request)%>" method="post" beanclass="sk.iway.iwcm.system.ConfImportAction">
                 <div style="width: 350px; height: 400px;">
 
-                    <input type="submit" style="float: right;" class="button" id="saveFileForm" name="saveFile" value="Načítať">
+                    <input type="submit" style="float: right;" class="button" id="saveFileForm" name="saveFile" value="Načítať" onclick="showLoadingMsg()">
                     <div style="overflow: hidden; padding-right: .5em;">
                         <stripes:file name="xmlFile"  id="xmlFile"  />
                     </div>
                 </div>
             </iwcm:stripForm>
+
         </div>
         <%
     }
@@ -310,7 +361,7 @@
         if(objUpdates != null)
             fileArchivBeans = (List<FileArchivatorBean>)objUpdates;
 
-        Map<Integer,FileArchivatorBean> destinationDuplicates = new Hashtable<>();//duplikaty na novom prostredi
+        Map<Long, FileArchivatorBean> destinationDuplicates = new Hashtable<>();//duplikaty na novom prostredi
 
         fileArchivBeans.sort(new SortByName());
         for(FileArchivatorBean fab:fileArchivBeans)
@@ -321,7 +372,7 @@
                 destinationDuplicates.put(fab.getId(),fab);
             }
         }
-        Map<Integer,FileArchivatorBean> uploadDuplicates = new Hashtable<>(destinationDuplicates);//duplikaty na novom prostredi
+        Map<Long, FileArchivatorBean> uploadDuplicates = new Hashtable<>(destinationDuplicates);//duplikaty na novom prostredi
         Logger.debug(null,"import_archiv.jsp Nasli sme "+uploadDuplicates.size()+" duplikátov z "+fileArchivBeans.size()+" súborov");
         request.setAttribute("uploadDuplicates",uploadDuplicates);
         %>
@@ -356,7 +407,7 @@
                 </display:column>
 
                 <display:column titleKey="components.file_archiv.import_archiv.nahradit_aktualny_subor_suborom_zo_zip_archivu">
-                    <input type="checkbox" checked="checked" name="fab_<%=faBean.getId()%>"/> <iwcm:text key="editor.search.replace_with"/>
+                    <input type="checkbox" checked="checked" name="fab_<%=faBean.getFileArchiveId()%>"/> <iwcm:text key="editor.search.replace_with"/>
                 </display:column>
             </display:table>
             <input type="submit" style="display: none" id="btnPokracovatImport" name="send" value="<%=prop.getText("button.continue")%>">

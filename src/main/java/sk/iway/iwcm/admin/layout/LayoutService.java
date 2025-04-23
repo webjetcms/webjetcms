@@ -121,7 +121,7 @@ public class LayoutService
         //tu pouzijeme multiDomainEnabled a nie enableStaticFilesExternalDir aby sa vyberove menu zobrazovalo aj v multidomain prostredi pre filtrovanie vo web strankach
         if (InitServlet.isTypeCloud()==false && Constants.getBoolean("multiDomainEnabled"))
         {
-            userDomains = GroupsDB.getInstance().getUserRootDomainNames(user.getEditableGroups());
+            userDomains = GroupsDB.getInstance().getUserRootDomainNames(user);
         }
         else
         {

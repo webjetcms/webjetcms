@@ -30,7 +30,7 @@ public class QuestionsAnswersEntity implements Serializable{
     @Id
     @Column(name = "qa_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_questions_answers")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab="basic")
+    @DataTableColumn(inputType = DataTableColumnType.ID, tab="basic")
     private Long id;
 
 	@Column(name = "question")
@@ -247,10 +247,7 @@ public class QuestionsAnswersEntity implements Serializable{
 	private String fieldD;
 
 	@Column(name = "domain_id")
-	@DataTableColumn(
-        inputType = DataTableColumnType.HIDDEN,
-		tab="basic"
-    )
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab="basic")
 	private Integer domainId;
 
 	@Transient

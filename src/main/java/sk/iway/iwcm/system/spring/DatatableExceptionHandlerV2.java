@@ -20,6 +20,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableFieldError;
 import sk.iway.iwcm.system.datatable.DatatableResponse;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.EditorException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -168,6 +169,20 @@ public class DatatableExceptionHandlerV2
 		return new ResponseEntity<>(response, null, HttpStatus.OK);
 	}
 
+	@ExceptionHandler(EditorException.class)
+	public ResponseEntity<DatatableResponse<Object>> handleException(EditorException ex) {
+		DatatableResponse<Object> response = new DatatableResponse<>();
+		String message = null;
+
+		message = prepareMessage(message, ex);
+
+		response.setNotify(ex.getNotifyBeans());
+
+		response.setError(message);
+		Logger.error(DatatableExceptionHandlerV2.class, ex);
+		return new ResponseEntity<>(response, null, HttpStatus.OK);
+	}	
+	
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<DatatableResponse<Object>> handleException(Exception ex) {
 		DatatableResponse<Object> response = new DatatableResponse<>();
@@ -176,6 +191,15 @@ public class DatatableExceptionHandlerV2
 			ResponseStatusException ex2 = (ResponseStatusException)ex;
 			message = ex2.getReason();
 		}
+		
+		message = prepareMessage(message, ex);
+
+		response.setError(message);
+		Logger.error(DatatableExceptionHandlerV2.class, ex);
+		return new ResponseEntity<>(response, null, HttpStatus.OK);
+	}
+
+	private String prepareMessage(String message, Exception ex) {
 		if (Tools.isEmpty(message)) message = ex.getMessage();
 		if (Tools.isEmpty(message)) message = Prop.getInstance().getText("datatable.error.unknown");
 
@@ -194,9 +218,7 @@ public class DatatableExceptionHandlerV2
 			}
 		}
 
-		response.setError(message);
-		Logger.error(DatatableExceptionHandlerV2.class, ex);
-		return new ResponseEntity<>(response, null, HttpStatus.OK);
+		return message;
 	}
 
 	/**

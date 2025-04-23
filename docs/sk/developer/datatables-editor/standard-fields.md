@@ -12,7 +12,7 @@ public class CalendarEventsEntity {
     @Id
     @Column(name = "calendar_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_calendar")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
 }
@@ -703,4 +703,19 @@ public class InquiryApp extends WebjetComponentAbstract {
     }
 
 }
+```
+
+## UPLOAD
+
+Typ poľa umožňujúci [nahratie súboru](field-file-upload.md).
+
+![](field-uploadFile.png)
+
+```java
+  @DataTableColumn(
+        inputType = DataTableColumnType.UPLOAD,
+        tab = "basic",
+        title = "fbrowse.file"
+    )
+    private String file = "";
 ```

@@ -63,6 +63,12 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
         throwError(getProp().getText("config.not_permitted_action_err"));
     }
 
+    @Override
+    public void afterSave(BasketInvoiceItemEntity entity, BasketInvoiceItemEntity saved) {
+        //Update invoice stats
+        ProductListService.updateInvoiceStats(entity.getInvoiceId());
+    }
+
     private final long getInvoiceId() {
         return Tools.getLongValue(getRequest().getParameter("invoiceId"), -1);
     }
