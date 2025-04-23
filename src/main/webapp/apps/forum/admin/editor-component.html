@@ -54,8 +54,8 @@
 
     async function appCodeExecute() {
         const structure = $("#DTE_Field_structure").val();
-            if (structure){
-            console.log("struktura" + structure);
+        const fieldElement = $("#DTE_Field_forumType").val();
+        if (Array.isArray(structure) && fieldElement === "forum_mb" && structure.length > 0) {
             const res = await fetch("/apps/forum/createStructure", {
                 method: "POST",
                 headers: {

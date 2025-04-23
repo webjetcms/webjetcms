@@ -17,8 +17,6 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DatatableTools;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
-import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @WebjetComponent("sk.iway.iwcm.components.appslitslider.SlitSliderApp")
 @WebjetAppStore(nameKey = "components.app-slit_slider.title", descKey = "components.app-slit_slider.desc", itemKey = "app-slit_slider", imagePath = "/components/app-slit_slider/editoricon.png", galleryImages = "/components/app-slit_slider/", componentPath = "/components/app-slit_slider/news.jsp")
@@ -35,7 +33,7 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     )
     private String explain;
 
-    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title =  "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth")
+    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title =  "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal")
     private String headAlign;
 
 
@@ -52,14 +50,14 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     )
     private String explain2;
 
-    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth")
+    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal")
     private String subHeadingAlign;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontSize", tab = "basic")
-    private Integer subHeadingSize;
+    private Integer subHeadingSize = 30;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontMarginTop", tab = "basic")
-    private Integer subHeadingMargin;
+    private Integer subHeadingMargin = 0;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {

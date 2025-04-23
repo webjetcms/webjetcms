@@ -49,8 +49,8 @@ public class SliderApp extends WebjetComponentAbstract {
     })
     private String skin;
 
-    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.roots.new.style", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth")
-    private String style;
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "basic", title="&nbsp;")
+    private String styleImageIMG;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
@@ -62,10 +62,7 @@ public class SliderApp extends WebjetComponentAbstract {
 
     // pokrocile
 
-    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "advanced", title = "components.carousel_slider.sliderDimensions")
-    private String label;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.fullWidthSlider", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.fullWidthSlider", tab = "advanced")
     private boolean fullWidthSlider = true;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.slider.sliderWidth", tab = "advanced")
@@ -83,7 +80,7 @@ public class SliderApp extends WebjetComponentAbstract {
     })
     private String arrowStyle = "mouseover";
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.kenBurnsOnSlide", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.kenBurnsOnSlide", tab = "advanced")
     private boolean kenBurnsOnSlide;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.slider.navStyle", tab = "advanced", editor = {
@@ -96,16 +93,16 @@ public class SliderApp extends WebjetComponentAbstract {
     })
     private String navStyle = "bullets";
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.navShowThumb", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.navShowThumb", tab = "advanced")
     private boolean showThumbnails = true;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.touchSwipe", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.touchSwipe", tab = "advanced")
     private boolean touchSwipe = true;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.randomPlay", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.randomPlay", tab = "advanced")
     private boolean randomPlay;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.autoplay", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.autoplay", tab = "advanced")
     private boolean autoplay = true;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.slider.loop", tab = "advanced", editor = {
@@ -125,7 +122,7 @@ public class SliderApp extends WebjetComponentAbstract {
     }))
     private Integer autoplayInterval = 5000;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.showTimer", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.showTimer", tab = "advanced")
     private boolean showCountdown = true;
 
     @DataTableColumn(inputType = DataTableColumnType.COLOR, title = "components.slider.timerColor", tab = "advanced")
@@ -139,16 +136,16 @@ public class SliderApp extends WebjetComponentAbstract {
     })
     private String countdownPosition = "bottom";
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.transitionOnFirstSlide", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.transitionOnFirstSlide", tab = "advanced")
     private boolean transitionOnFirstSlide;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.mouseoverPause", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.mouseoverPause", tab = "advanced")
     private boolean pauseOnMouseover;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.numbering", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.numbering", tab = "advanced")
     private boolean showNumbering;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.slider.showShadow", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.showShadow", tab = "advanced")
     private boolean showShadowBottom = true;
 
     // prechody
@@ -200,5 +197,10 @@ public class SliderApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_3DFlip", editor = @DataTableColumnEditor(message = "<img alt='3D FLIP' src='/components/slider/transitions/3Dflip.gif' class='tooltipContent'>"))
     private boolean transition_threed_flip;
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
+    private String iframe  = "/components/slider/add-item.jsp";
+
+    
 
 }

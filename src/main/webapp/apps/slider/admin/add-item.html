@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Slider Editor</title>
+    <script src="/components/jquery/jquery.min.js"></script>
+</head>
+<body>
+    <div class="tab-page" id="tabMenu3" style="display: block;">
+        <div id="editorWrapper" class="editorWrapper"></div>
+        <input type="button" id="addItem" class="button50 button50grey" value="Pridať položku">
+    </div>
+
+    <script type="text/javascript">
+        function perexImageBlur(input) {
+            $(input)
+                .closest('.item')
+                .find(".imageDiv")
+                .css("background-image", "url(/thumb" + input.value + "?w=100&h=100&ip=5)");
+        }
+
+        var editorItemFields = {
+            image: {
+                title: "Image",
+                type: "image",
+                classes: "editorLeft"
+            },
+            title: {
+                title: 'Názov',
+                type: "text",
+                classes: "editorRight"
+            },
+            description: {
+                title: 'Popis',
+                type: "textArea",
+                classes: "editorRight"
+            },
+            redirectUrl: {
+                title: "Presmerovanie",
+                description: "Odkaz po kliknutí",
+                type: "conditionalText",
+                classes: "editorRight"
+            }
+        };
+
+        $(function () {
+            $("#addItem").on("click", function () {
+                const item = $("<div>").addClass("item").css({
+                    "border": "1px solid #ccc",
+                    "margin": "10px 0",
+                    "padding": "10px"
+                });
+
+                $.each(editorItemFields, function (key, field) {
+                    const wrapper = $("<div>").addClass(field.classes).css("margin-bottom", "10px");
+
+                    const label = $("<label>").text(field.title);
+                    wrapper.append(label);
+
+                    let input;
+
+                    if (field.type === "text") {
+                        input = $("<input>").attr("type", "text").addClass("form-control");
+                    }
+                    else if (field.type === "textArea") {
+                        input = $("<textarea>").addClass("form-control");
+                    }
+                    else if (field.type === "image") {
+                        input = $("<input>").attr("type", "text")
+                            .addClass("form-control")
+                            .on("blur", function () {
+                                perexImageBlur(this);
+                            });
+
+                        const imageDiv = $("<div>").addClass("imageDiv").css({
+                            width: "100px",
+                            height: "100px",
+                            backgroundColor: "#eee",
+                            backgroundSize: "cover",
+                            marginTop: "5px"
+                        });
+
+                        wrapper.append(imageDiv);
+                    }
+                    else {
+                        input = $("<input>").attr("type", "text").addClass("form-control");
+                    }
+
+                    wrapper.append(input);
+                    item.append(wrapper);
+                });
+
+                $("#editorWrapper").append(item);
+            });
+        });
+    </script>
+</body>
+</html>

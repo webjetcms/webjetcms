@@ -29,7 +29,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 @WebjetAppStore(nameKey = "components.forum.title", descKey = "components.forum.desc", itemKey = "cmp_forum", imagePath = "/components/forum/editoricon.png", galleryImages = "/components/forum/", componentPath = "/components/forum/forum.jsp,/components/forum/forum_mb.jsp", customHtml = "/apps/forum/admin/editor-component.html")
 @DataTableTabs(tabs = {
         @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
-        @DataTableTab(id = "componentIframe", title = "components.gallery.images", content = "")
+        @DataTableTab(id = "componentIframeWindowTabList", title = "components.forum.zoznam_diskusii")
 })
 @Getter
 @Setter
@@ -95,6 +95,9 @@ public class ForumApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic")
     Boolean rootGroup=true;
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabList")
+    private String iframe  = "/apps/forum/admin/";
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {

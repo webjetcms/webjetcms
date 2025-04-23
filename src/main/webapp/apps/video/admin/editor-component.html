@@ -49,7 +49,7 @@
                 if ($(this).is(":checked")) {
                     setFieldsVisibility(["videoAlignVimeo", "videoAlignFacebook", "portrait", "byline", "badge"], ["file", "widthType", "videoAlignYT", "width", "height", "percentageWidth", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
                                                                                                                                                                                                 
-                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file"));
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file}]]");
                     updateFields();
                 }     
             });
@@ -57,7 +57,7 @@
             vimeo.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
                     setFieldsVisibility(["videoAlignFacebook", "videoAlignYT", "controls", "branding", "rel"], ["file", "videoAlignVimeo", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
-                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file_vimeo"));
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_vimeo}]]");
                     updateFields();
                 }      
             });
@@ -65,7 +65,7 @@
             facebook.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
                     setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth"], ['videoAlignFacebook', "file", "width", "widthType", "autoplay", "showinfo", "fullscreen", "byline"]);
-                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file_facebook"));
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_facebook}]]");
                     updateFields();
                 }
             });
@@ -73,7 +73,7 @@
             video.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
                     setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth", 'videoAlignFacebook', "autoplay", "fullscreen", "showinfo", "byline"], ["file", "width", "widthType"]);
-                    $(".DTE_Field_Name_file label").text(WJ.translate("components.video_player.file_video"));
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_video}]]");
                     updateFields();
                 }
             });
