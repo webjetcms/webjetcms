@@ -1,4 +1,4 @@
-Feature('webpages.multigroup');
+Feature('webpages.multigroup @current');
 
 var masterDocId = 70837;
 var slaveDocId = 70838;
@@ -106,6 +106,8 @@ Scenario('multigroup - preserve sort order', ({ I, DTE }) => {
     //
     I.say("Changing master sort order");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+masterDocId);
+    I.waitForElement('#DTE_Field_virtualPath', 10);
+    pause();
     DTE.seeInField('virtualPath', '/test-stavov/multigroup/master/multi-page-change.html');
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-menu-tab");
