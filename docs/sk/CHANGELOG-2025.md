@@ -169,6 +169,10 @@ Iné zmeny:
 - Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
 - Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
 
+### Bezpečnosť
+
+- Aktualizovaná knižnica `Apache POI` na verziu 5.4.1 pre opravu zraniteľností `CVE-2025-31672`.
+
 ## 2025.0
 
 > Vo verzii **2025.0** sme priniesli **nový dizajn administrácie** pre ešte lepšiu prehľadnosť a používateľský komfort.
