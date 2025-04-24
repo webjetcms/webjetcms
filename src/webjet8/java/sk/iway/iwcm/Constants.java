@@ -2067,9 +2067,7 @@ public class Constants {
 		setString("logonTokenHeaderName", "x-auth-token", MOD_SECURITY, "Meno HTTP hlavicky v ktorej sa nachadza prihlasovaci token pre API pristup");
 
 		setInt("GroupsDB.parentGroupsCacheMinutes", 60, MOD_PERFORMANCE, "Pocet minut cachovania zoznamu parent priecinkov.");
-        
-        setString("propertiesAdminKeys","components.video_player.*");
-    }
+	}
 
 	/**
 	 * Description of the Field
