@@ -1,4 +1,4 @@
-Feature('webpages.multigroup @current');
+Feature('webpages.multigroup');
 
 var masterDocId = 70837;
 var slaveDocId = 70838;
