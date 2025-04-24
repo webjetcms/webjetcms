@@ -663,3 +663,61 @@ Scenario('media tabulka v stranke-multigroup', async ({I, DataTables, DT, DTE, B
     await verifyMediaInWebpage([mediaTitleMaster, mediaTitleSlave] , "/apps/media/multigroup-media.html", I, false);
     await verifyMediaInWebpage([mediaTitleMaster, mediaTitleSlave], "/apps/media/multigroup/multigroup-media.html", I, false);
 });
+
+Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
+    Apps.insertApp('Médiá', '#components-media-title', null, false);
+
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
+    I.click(locate('.jstree-node.jstree-closed').withText('Média').find('.jstree-icon.jstree-ocl'));
+    I.clickCss('#docId-24008_anchor');
+    I.waitForElement('input[value="/Aplikácie/Média/Média"]', 10);
+    I.switchTo();
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+
+    const defaultParams = {
+        groups: "-1",
+        docid: "24008"
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.seeElement(locate('a').withText('desert'));
+    I.seeElement(locate('a').withText('hydrangeas'));
+    I.seeElement(locate('a').withText('koala-media-all-25-03-05-130051-322'));
+    I.seeElement(locate('a').withText('about'));
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        groups: "2",
+        docid: "24008"
+    };
+
+    DTE.clickSwitch("groups_1");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.dontSeeElement(locate('a').withText('desert'));
+    I.dontSeeElement(locate('a').withText('hydrangeas'));
+    I.dontSeeElement(locate('a').withText('koala-media-all-25-03-05-130051-322'));
+    I.seeElement(locate('a').withText('about'));
+});
