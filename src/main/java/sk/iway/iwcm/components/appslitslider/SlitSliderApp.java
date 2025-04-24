@@ -17,6 +17,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DatatableTools;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @WebjetComponent("sk.iway.iwcm.components.appslitslider.SlitSliderApp")
 @WebjetAppStore(nameKey = "components.app-slit_slider.title", descKey = "components.app-slit_slider.desc", itemKey = "app-slit_slider", imagePath = "/components/app-slit_slider/editoricon.png", galleryImages = "/components/app-slit_slider/", componentPath = "/components/app-slit_slider/news.jsp")
@@ -29,7 +31,8 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     @DataTableColumn(
         inputType = DataTableColumnType.STATIC_TEXT,
         tab = "basic",
-        title="components.app-slit_slider.admin.textHeadingSettings"
+        title="components.app-slit_slider.admin.textHeadingSettings",
+        editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
     )
     private String explain;
 
@@ -46,7 +49,8 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     @DataTableColumn(
         inputType = DataTableColumnType.STATIC_TEXT,
         tab = "basic",
-        title="components.app-slit_slider.admin.textSubHeadingSettings"
+        title="components.app-slit_slider.admin.textSubHeadingSettings",
+        editor = { @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before") } ) }
     )
     private String explain2;
 
