@@ -692,7 +692,7 @@ Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
 
     I.seeElement(locate('a').withText('desert'));
     I.seeElement(locate('a').withText('hydrangeas'));
-    I.seeElement(locate('a').withText('koala-media-all-25-03-05-130051-322'));
+    I.seeElement(locate('a').withText('koala-media-all'));
     I.seeElement(locate('a').withText('about'));
     I.switchToPreviousTab();
     I.closeOtherTabs();
@@ -718,6 +718,6 @@ Scenario('testovanie app - media app', async ({ I, DTE, Apps, Document }) => {
 
     I.dontSeeElement(locate('a').withText('desert'));
     I.dontSeeElement(locate('a').withText('hydrangeas'));
-    I.dontSeeElement(locate('a').withText('koala-media-all-25-03-05-130051-322'));
+    I.dontSeeElement(locate('a').withText('koala-media-all'));
     I.seeElement(locate('a').withText('about'));
 });
