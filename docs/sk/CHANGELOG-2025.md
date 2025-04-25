@@ -39,6 +39,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Hromadný e-mail](redactor/apps/dmail/form/README.md)
 - [Kalendár udalostí](redactor/apps/calendar/README.md)
 - [Kalendár noviniek](redactor/apps/news-calendar/README.md)
+- [Mapa stránok](redactor/apps/sitemap/README.md)
+- [Média](redactor/webpages/media.md)
+- [Príbuzné stránky](redactor/apps/related-pages/README.md)
+- [Rating](redactor/apps/rating/README.md)
+- [Rezervácie](redactor/apps/reservation/reservation-app/README.md)
 
 ![](redactor/apps/dmail/form/editor.png)
 
