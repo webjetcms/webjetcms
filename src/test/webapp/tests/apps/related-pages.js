@@ -1,4 +1,4 @@
-Feature('apps.pribuzne-stranky');
+Feature('apps.related-pages');
 
 Before(({ I, login }) => {
     login('admin');

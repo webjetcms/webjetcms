@@ -5,6 +5,7 @@ Pomocou tejto aplikácie je možné spravovať systém rezervácií. Je potrebn�
 ## Nastavenia aplikácie
 
 V editore je možné zvoliť typ zobrazenia:
+
 - **Zoznam rezervácií**
 - **Zoznam rezervačných objektov**
 
