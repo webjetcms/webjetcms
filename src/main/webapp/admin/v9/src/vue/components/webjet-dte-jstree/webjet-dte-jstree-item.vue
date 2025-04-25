@@ -73,6 +73,8 @@
             removePage() {
                 //console.log("REMOVE PAGE, this.grp=", this.grp); //= handluje to priamo field-type-json.js.remove method
                 if (this.$props.click == "dt-tree-page-null") {
+                    //set also ID, because component.pug use id as priority
+                    this.grp.id=-1;
                     this.grp.docId=-1;
                     this.grp.fullPath = "";
                     this.grp.virtualPath = "";

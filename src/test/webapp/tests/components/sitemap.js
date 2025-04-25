@@ -38,3 +38,55 @@ Scenario('zobrazenie sitemap.xml', ({ I, Browser }) => {
     I.logout();
     testSitemap(I, Browser);
 });
+
+Scenario('testovanie app - Mapa stránok', async ({ I, DTE, Apps, Document }) => {
+    Apps.insertApp('Mapa stránok', '#components-sitemap-title');
+
+    const defaultParams = {
+        "groupId": "1",
+        "maxDepth": "5",
+        "colsNum": "1"
+    }
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.seeElement(locate('a').withText('Úvod'));
+    I.seeElement(locate('a').withText('Zo sveta financií'));
+    I.seeElement(locate('a').withText('Produktová stránka'));
+    I.seeElement(locate('a').withText('Kontakt'));
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        "groupId": "15257",
+        "maxDepth": "1",
+        "colsNum": "2"
+    }
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('a').withText('Aplikácie').withAttr({ role: 'treeitem' }));
+    I.waitForElement('input[value="/Aplikácie"]', 10);
+    DTE.fillField("maxDepth", "1");
+    DTE.fillField("colsNum", "2");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.dontSeeElement(locate('a').withText('Poll'));
+    I.dontSeeElement(locate('a').withText('Telefony'));
+    I.dontSeeElement(locate('a').withText('Úvod'));
+    I.seeElement(locate('a').withText('Anketa'));
+    I.seeNumberOfElements('#sitemap tr:first-child td', 2);
+});

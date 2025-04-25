@@ -1,0 +1,26 @@
+<script>
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const fieldElement = $("#DTE_Field_ratingType");
+
+			fieldElement.on("change", function () {
+                const field = $(this).val();
+				if ("/components/rating/rating_form.jsp" === field) {
+                    setFieldsVisibility(['usersLength', 'docsLength', 'period', 'form2Description'], ['form1Description','checkLogon', 'ratingDocId', 'range']);
+				} else if ("/components/rating/rating_page.jsp" === field) {
+					setFieldsVisibility(['usersLength', 'docsLength', 'period','checkLogon','form1Description'], ['form2Description','ratingDocId', 'range']);
+				} else if ("/components/rating/rating_top_users.jsp" === field) {
+					setFieldsVisibility(['docsLength', 'period', 'ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['usersLength']);
+				} else {
+                    setFieldsVisibility(['usersLength','ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['docsLength', 'period']);
+                }
+			});
+			fieldElement.trigger("change");
+		});
+	}
+</script>

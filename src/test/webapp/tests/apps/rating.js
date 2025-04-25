@@ -93,3 +93,67 @@ Scenario("Rating stat check testing", async ({ I}) => {
     I.see("Hodnotenie: 6.5/10");
     I.see("Hlasovalo: 2");
 });
+
+
+Scenario('Testovanie app - Rating formulár', async ({ I, Apps, DTE, Document }) => {
+    Apps.openAppEditor(70839);
+
+    const defaultParams = {
+        checkLogon: "false",
+        ratingDocId: "70839",
+        range: "10"
+    };
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+    I.see("/10");
+    I.dontSee("Hlasovalo: 0");
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        checkLogon: "true",
+        ratingDocId: "141",
+        range: "5"
+    };
+
+    I.checkOption("#DTE_Field_checkLogon_0");
+    I.clickCss(".btn-vue-jstree-item-remove");
+    DTE.fillField("range", 5);
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
+    I.clickCss('#docId-141_anchor');
+    I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.see("/5");
+    I.see("Hlasovalo: 0");
+});
+
+
+Scenario('Delete page content and restore to default', async ({ Apps, DTE }) => {
+    Apps.clearPageContent("70839");
+
+    await DTE.fillCkeditor(`
+    <h4>Hodnotenie stránky - Formulár</h4>
+
+    !INCLUDE(/components/rating/rating_form.jsp, checkLogon=false, ratingDocId=70839, range=10)!`);
+
+    DTE.save();
+});

@@ -1,6 +1,5 @@
 <script>
     function appAfterInit(response, datatable) {
-        //console.log("appAfterInit, response=", response, "datatable=", datatable);
 
         const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
             fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());

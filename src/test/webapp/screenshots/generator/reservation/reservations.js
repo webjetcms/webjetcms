@@ -196,6 +196,20 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
         I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
 });
 
+Scenario('Reservation app screen', ({ I, DT, Document }) => {
+    Document.screenshotAppEditor(39096, "/redactor/apps/reservation/reservation-app/editor.png", function(Document, I) {
+        I.clickCss("#pills-dt-component-datatable-componentIframeWindowTabList-tab");
+        Document.screenshot("/redactor/apps/reservation/reservation-app/reservation-list.png");
+        I.clickCss("#pills-dt-component-datatable-componentIframeWindowTabListObjects-tab");
+        Document.screenshot("/redactor/apps/reservation/reservation-app/reservation-object-list.png");
+        I.clickCss("#pills-dt-component-datatable-basic-tab");
+    });
+
+    I.amOnPage("apps/rezervacie/");
+    DT.waitForLoader();
+    Document.screenshot("/redactor/apps/reservation/reservation-app/reservation-app.png");
+});
+
 function setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo) {
     //Select our reservation object
     if(reservationObjectName !== null) {
