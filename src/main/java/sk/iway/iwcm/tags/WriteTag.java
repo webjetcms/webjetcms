@@ -2,7 +2,6 @@ package sk.iway.iwcm.tags;
 
 import net.sourceforge.stripes.exception.SourcePageNotFoundException;
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.struts.Globals;
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.context.ApplicationContext;
 import sk.iway.iwcm.*;
@@ -354,11 +353,6 @@ public class WriteTag extends BodyTagSupport
 	{
 		DebugTimer dt = new DebugTimer("WriteTag");
 		StringBuilder buff = new StringBuilder(text);
-
-		if (Constants.getBoolean("editorEnableXHTML"))
-		{
-			pageContext.setAttribute(Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
-		}
 
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
 		HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();

@@ -27,6 +27,13 @@
     </classpath>
   </taskdef>
 
+  <taskdef classname="lombok.delombok.ant.Tasks$Delombok" classpath="./lombok/lombok-1.18.34.jar" name="delombok" />
+
+  <!-- Migrate javax.* to jakarta.*
+  https://github.com/apache/tomcat-jakartaee-migration/blob/main/README.md
+  -->
+  <taskdef name="javax2jakarta" classname="org.apache.tomcat.jakartaee.MigrationTask" classpath="./jakartaee-migration/jakartaee-migration-1.0.9-shaded.jar"/>
+
   <target name="cleanup">
     <delete dir="${root}/WebContent/WEB-INF/generated-sources" />
     <delete dir="${root}/WebContent/WEB-INF/classes" />
@@ -41,6 +48,28 @@
     <delete dir="${root}/resources-saved" />
     <mkdir dir="${root}/resources-saved" />
 
+    <!-- skopiruj nase src -->
+    <copy todir="${root}/src-utf8/" overwrite="true">
+      <fileset dir="${root}/../../src/webjet8/java">
+          <include name="**/*"/>
+      </fileset>
+      <fileset dir="${root}/../../src/main/java">
+          <include name="**/*"/>
+      </fileset>
+      <fileset dir="${root}/../../src/main/aspectj">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <javax2jakarta
+      src="${root}/src-utf8/"
+      dest="${root}/src-utf8-jakarta/"
+      profile="tomcat"
+    />
+
+    <replace dir="${root}/src-utf8-jakarta/" token="javax.persistence." value="jakarta.persistence."/>
+    <replace dir="${root}/src-utf8-jakarta/" token="javax.xml.bind." value="jakarta.xml.bind."/>
+
     <!-- zachovaj .properties subory z classes adresara -->
     <copy todir="${root}/resources-saved/" overwrite="true">
       <fileset dir="${root}/../../src/main/webapp/WEB-INF/classes/">
@@ -52,7 +81,7 @@
 
   <target name="delombok" depends="prepareSrc">
 
-    <exec executable="./gradlew" dir="../">
+    <!--exec executable="./gradlew" dir="../">
         <arg value="delombok"/>
     </exec>
 
@@ -66,7 +95,29 @@
       <fileset dir="${root}/../../src/main/aspectj">
           <include name="**/*"/>
       </fileset>
-    </copy>
+    </copy-->
+
+    <copy file="lombok.config" todir="${root}"/>
+
+    <delombok verbose="true" encoding="UTF-8" from="${root}/src-utf8-jakarta/" to="${root}/src-delombok/">
+      <classpath>
+        <fileset dir="${root}/WebContent/WEB-INF/lib/" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="./servlet-api" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="./mapstruct" >
+          <include name="*.jar" />
+        </fileset>
+        <fileset dir="./libs" >
+            <include name="*.jar" />
+        </fileset>
+        <fileset dir="./lombok" >
+          <include name="*.jar" />
+      </fileset>
+     </classpath>
+    </delombok>
 
   </target>
 

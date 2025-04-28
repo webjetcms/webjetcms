@@ -1,11 +1,5 @@
 package sk.iway.iwcm.components.dictionary;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionMapping;
-
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.dictionary.model.DictionaryBean;
 import sk.iway.iwcm.i18n.Prop;
 
@@ -20,7 +14,7 @@ import sk.iway.iwcm.i18n.Prop;
  *@created      Date: 10.7.2005 19:02:12
  *@modified     $Date: 2005/08/03 06:45:00 $
  */
-public class DictionaryForm extends ActionForm
+public class DictionaryForm
 {
 	private static final long serialVersionUID = 1L;
 
@@ -42,21 +36,6 @@ public class DictionaryForm extends ActionForm
 		this.dictionary = dictionary;
 		dictionaryId = dictionary.getDictionaryId();
 	}
-
-	/**
-	 * Resetnutie formularu - pri update sa znova ziska BannerBean a potom sa mu zmenia hodnoty
-	 */
-	@Override
-	public void reset(ActionMapping mapping, HttpServletRequest request)
-	{
-		//ziskanie objektu, toto tu musi byt ako prve!
-		int id = Tools.getIntValue(request.getParameter("dictionaryId"), -1);
-		if (id > 0)
-		{
-			dictionary = DictionaryDB.getDictionary(id);
-		}
-	}
-
 
 	/**
 	 * Validacia formularu

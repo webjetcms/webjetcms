@@ -2,8 +2,6 @@ package sk.iway.iwcm.users;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.action.ActionMapping;
-
 import sk.iway.iwcm.Tools;
 
 /**
@@ -31,13 +29,6 @@ public class UserGroupDetails
 	private boolean allowUserEdit;
 	private boolean requireEmailVerification = false;
 	private int priceDiscount = 0;
-
-	public void reset(ActionMapping mapping, HttpServletRequest request)
-	{
-		//Logger.println(this,"EditorForm: reset()");
-		requireApprove = false;
-		allowUserEdit = false;
-	}
 
 	public String getUserGroupNameComment()
 	{
