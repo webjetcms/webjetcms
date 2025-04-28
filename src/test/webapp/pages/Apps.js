@@ -103,8 +103,8 @@ module.exports = {
 
         I.switchTo(locate("iframe.wj_component").first());
         I.wait(5);
-        I.waitForElement("a.inlineComponentButton.cke_button", 30);
-        I.clickCss("a.inlineComponentButton.cke_button");
+        I.waitForElement(".inlineComponentEdit", 30);
+        I.click(locate(".inlineComponentEdit").first());
         I.switchTo();
         I.waitForInvisible('Čakajte prosím', 20);
         I.switchTo('.cke_dialog_ui_iframe');
