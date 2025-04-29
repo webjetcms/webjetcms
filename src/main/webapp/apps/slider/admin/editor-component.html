@@ -29,4 +29,13 @@
 			$("#DTE_Field_skin").on("change", updateImageFromSelect);
 		});
 	}
+
+    function appGetComponentCode(componentPath, params, componentDatatable){
+        let include = "!INCLUDE(" + componentPath;
+        if (Object.keys(params).length > 0) {
+            include += ", " + convertObjectToInludeParams(params) + ", editorData=" + localStorage.getItem("tableLines");
+        }
+        include += ")!";
+        return include;
+    }
 </script>

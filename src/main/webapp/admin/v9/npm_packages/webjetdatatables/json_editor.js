@@ -32,7 +32,6 @@ require('datatables.net-bs5');
 require('datatables.net-editor-bs5');
 require('datatables.net-buttons-bs5');
 require('datatables.net-buttons/js/buttons.colVis.js');
-//WebJET fixnuta verzia - problem s prefixButtons a postfixButtons
 require('./buttons.colVis');
 require('datatables.net-buttons/js/buttons.html5.js');
 require('datatables.net-buttons/js/buttons.print.js');
@@ -55,6 +54,117 @@ export const jsonEditorInit = options => {
     }
     */
     var TABLE;
+
+    const decodeJSONData = function(inputData) {
+        try {
+            // Uistite sa, že je vstup platný Base64 reťazec
+            if (!inputData) throw new Error("Input data is empty");
+
+            // Dekódujeme Base64 a dekódujeme URI, pričom nahrádzame '%2B' späť na '+'
+            const parsed = JSON.parse(decodeURI(atob(inputData)).replace(/\%2B/gi, "+"));
+            return parsed;
+        } catch (e) {
+            console.error("Failed to decode JSON data:", e);
+            return null;  // Vráťte null v prípade chyby
+        }
+    };
+
+    const encodeJSONData = function(inputData) {
+        try {
+            // Uistite sa, že inputData nie je undefined alebo null
+            if (inputData === undefined || inputData === null) throw new Error("Input data is null or undefined");
+
+            // Kódujeme JSON do URI a následne Base64, pričom nahrádzame '+' na '%2B'
+            let encoded = encodeURI(JSON.stringify(inputData));
+            encoded = encoded.replace(/\+/gi, "%2B");
+            return btoa(encoded);
+        } catch (e) {
+            console.error("Failed to encode JSON data:", e);
+            return null;  // Vráťte null v prípade chyby
+        }
+    };
+
+    const TableLinesStorage = {
+        key: 'tableLines',
+
+        getParam(){
+            return localStorage.getItem(this.key);
+        },
+
+        load() {
+            try {
+                const stored = decodeJSONData(localStorage.getItem(this.key));
+                return stored ? stored : [];
+            } catch (e) {
+                console.error('Failed to parse localStorage data:', e);
+                return [];
+            }
+        },
+
+        save(data) {
+            try {
+                localStorage.setItem(this.key, encodeJSONData(data));
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+            }
+        },
+
+        create(newItemOrItems) {
+            const data = this.load();
+            let lastId = data.length > 0 ? Math.max(...data.map(item => parseInt(item.id))) : 1;
+
+            if (Array.isArray(newItemOrItems)) {
+                newItemOrItems.forEach(item => {
+                    const existingIndex = data.findIndex(existingItem => existingItem.id === item.id);
+                    if (existingIndex !== -1) {
+                        data[existingIndex] = { ...data[existingIndex], ...item };
+                    } else {
+                        if (!item.id) {
+                            item.id = ++lastId;
+                        }
+                        data.push(item);
+                    }
+                });
+            } else {
+                const existingIndex = data.findIndex(existingItem => existingItem.id === newItemOrItems.id);
+                if (existingIndex !== -1) {
+                    data[existingIndex] = { ...data[existingIndex], ...newItemOrItems };
+                } else {
+                    if (!newItemOrItems.id) {
+                        newItemOrItems.id = ++lastId;
+                    }
+                    data.push(newItemOrItems);
+                }
+            }
+
+            this.save(data);
+        },
+
+        edit(id, updatedItem) {
+            const data = this.load();
+            const index = data.findIndex(item => item.id === id);
+            if (index !== -1) {
+                data[index] = { ...data[index], ...updatedItem };
+                this.save(data);
+            } else {
+                console.warn(`Item with id ${id} not found for edit.`);
+            }
+        },
+
+        remove(id) {
+            const data = this.load();
+            const filtered = data.filter(item => item.id !== id);
+            this.save(filtered);
+        },
+
+        clear() {
+            try {
+                localStorage.removeItem(this.key);
+            } catch (e) {
+                console.error('Failed to clear localStorage:', e);
+            }
+        }
+    };
 
     var DATA = [];
     DATA.id = options.id ? options.id : null;
@@ -256,35 +366,32 @@ export const jsonEditorInit = options => {
     };
 
     function refreshRow(id, callback) {
-        var url = TABLE.getAjaxUrl();
-        var q = url.indexOf("?");
-        if (q === -1) url = url + "/" + id;
-        else url = url.substring(0, q) + "/" + id + url.substring(q);
+        // Načítame dáta z localStorage
+        const data = TableLinesStorage.load();
 
-        //console.log("RefreshRow, url=", url, "id=", id);
+        // Nájdeme riadok podľa id
+        const row = data.find(item => String(item.id) === id);
 
-        $.ajax({
-            url: url,
-            success: function (json) {
-                //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
-                //console.log("refreshRow, id=", json[DATA.editorId], " json=", json);
-                if (typeof json.error != "undefined" && json.error != null && json.error!="") {
-                    WJ.notifyError(json.error);
-                    return;
-                }
-                TABLE.row("#" + json[DATA.editorId]).data(json);
 
-                try {
-                    if (typeof json.editorFields != "undefined" && json.editorFields!=null && typeof json.editorFields.notify != "undefined" && json.editorFields.notify!=null) {
-                        var notifyList = json.editorFields.notify;
-                        showNotify(notifyList);
-                    }
-                } catch (e) {console.log(e);}
+        if (!row) {
+            console.error(`Row with id ${id} not found.`);
+            return;
+        }
 
-                //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
-                callback(json);
+        // Aktualizujeme riadok v tabuľke s novými údajmi
+        TABLE.row("#" + id).data(row);
+
+        // Ak sú v odpovedi notifikácie, zobrazíme ich
+        try {
+            if (row.editorFields && row.editorFields.notify) {
+                showNotify(row.editorFields.notify);
             }
-        });
+        } catch (e) {
+            console.log(e);
+        }
+
+        // Zavoláme callback s aktuálnymi údajmi
+        callback(row);
     }
 
     function showNotify(notifyList) {
@@ -1077,29 +1184,6 @@ export const jsonEditorInit = options => {
         // console.log("DATA.columns", DATA.columns);
 
         var EDITOR = new $.fn.dataTable.Editor({
-            ajax: {
-                url: WJ.urlAddPath(DATA.url, '/editor'),
-                contentType: 'application/json',
-                data: function (d) {
-                    //console.log("d=", d);
-                    //[{"id":1,"groupId":39,"domainId":1,"insertScriptGrId":1},{"id":2,"groupId":25,"domainId":1,"insertScriptGrId":2}]
-                    //[{"id":0,"groupId":39,"domainId":1,"insertScriptGrId":0},{"id":0,"groupId":25,"domainId":1,"insertScriptGrId":0}]
-                    //["groupId":39,"domainId":1},{"groupId":25,"domainId":1}]
-                    var json = JSON.stringify(d);
-                    //console.log("json 1: ", json);
-                    //fix na checkboxy
-                    json = json.replace(/:\[true\]/gi, ":true");
-                    json = json.replace(/:\[false\]/gi, ":false");
-                    //console.log("json 2: ", json);
-                    return json
-                },
-                error: function (xhr, text, err) {
-                    //console.log("error, xhr=", xhr, "text=", text, "err=", err);
-                    if ("timeout"===text || "abort"===text) {
-                        WJ.notifyError(WJ.translate("session.logoff.info.js"), WJ.translate("datatables.error.network.js"));
-                    }
-                },
-            },
             table: dataTableSelector,
             idSrc: DATA.editorId,
             display: "bootstrap",
@@ -1181,28 +1265,12 @@ export const jsonEditorInit = options => {
             // upravi multiple volne polia
             prepareCustomFieldsDataBeforeSend(data)
 
-            /*if (action !== 'remove') {
-
-                $.each($(e.target.dom.wrapper).find("[data-dt-validation]"), function (k, v) {
-                    const name = $(v).attr("id").replace("DTE_Field_", "");
-
-                    const field = me.field(name);
-
-                    if (!field.val()) {
-                        console.log("Mam error, name=", name, "field=", field);
-                        //TODO -  spravit povinnu kontrolu
-                        field.error(
-                            WJ.translate('datatables.field.required.error.js')
-                        );
-                    }
+            if (action === 'remove') {
+                const ids = Object.values(data.data).map(item => item.id);
+                ids.forEach(id => {
+                    TableLinesStorage.remove(id);
                 });
-
-                // If any error was reported, cancel the submission so it can be corrected
-                if (me.inError()) {
-                    console.log("Nasiel som chybu: me=", me);
-                    return false;
-                }
-            }*/
+            }
         });
 
         EDITOR.on('opened', function (e, type, action) {
@@ -1245,33 +1313,16 @@ export const jsonEditorInit = options => {
         });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
             //console.log("Editor.on submitSuccess, json=", json);
-            setTimeout(function() {
-                if (json.forceReload === true) {
-                    //serverSide is reloading by datatable directly
-                    if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
+            TableLinesStorage.create(json.data);
 
-                    //publishni reload event, napr. pre jstree
-                    const eventReload = new CustomEvent('WJ.DTE.forceReload', {
-                        detail: {
-                            e: e,
-                            json: json,
-                            data: data,
-                            action: action,
-                            EDITOR: EDITOR,
-                            TABLE: TABLE
-                        }
-                    });
-                    window.dispatchEvent(eventReload);
-                }
+            if(DATA.updateEditorAfterSave == true) {
+                EDITOR.setJson(data);
+            }
 
-                if(DATA.updateEditorAfterSave == true) {
-                    EDITOR.setJson(data);
-                }
+            if(typeof json.notify != "undefined" && json.notify != null) {
+                showNotify(json.notify);
+            }
 
-                if(typeof json.notify != "undefined" && json.notify != null) {
-                    showNotify(json.notify);
-                }
-            }, 300);
         });
 
         EDITOR.on('submitUnsuccessful', function (e, json) {
@@ -1290,16 +1341,9 @@ export const jsonEditorInit = options => {
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
+                    EDITOR.setJson(json);
+                    resolve(); // Editor continues after this
 
-                    $.ajax({
-                        url: url,
-                        success: function (json) {
-                            //console.log("EDITOR=", EDITOR, " json=", json);
-                            //EDITOR.vals( json );
-                            EDITOR.setJson(json);
-                            resolve(); // Editor continues after this
-                        }
-                    });
                 });
             });
         }
@@ -1764,7 +1808,7 @@ export const jsonEditorInit = options => {
         );
 
         var editButtonExtends = "edit";
-        if (DATA.fetchOnEdit) editButtonExtends = "editRefresh";
+        //if (DATA.fetchOnEdit) editButtonExtends = "editRefresh";
 
 
         var buttonsList = [];
@@ -2726,7 +2770,7 @@ export const jsonEditorInit = options => {
                 }
             }
             if (typeof DATA.initialData != "undefined" && DATA.initialData != null) {
-                //console.log(DATA.id+" initial data: ", DATA.initialData);
+                console.log(DATA.id+" initial data: ", DATA.initialData);
 
                 var sourceData = DATA.initialData;
                 var totalElements = sourceData.totalElements;
@@ -2755,7 +2799,7 @@ export const jsonEditorInit = options => {
                 }, 200);
             }
             else {
-                //console.log(DATA.id+" url=", url, "data=", restParams);
+                console.log(DATA.id+" url=", url, "data=", restParams);
 
                 //finally, make the request
                 $.ajax({
@@ -2764,17 +2808,7 @@ export const jsonEditorInit = options => {
                     "url": url,
                     "data": restParams,
                     "success": function (sourceData) {
-                        //console.log("sourceData=", sourceData);
-
-                        if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
-                                WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
-                                return;
-                            } else {
-                                WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
-                                return;
-                            }
-                        }
+                        sourceData.content = TableLinesStorage.load();
 
                         var totalElements = sourceData.totalElements;
                         var data = {};
@@ -2785,7 +2819,7 @@ export const jsonEditorInit = options => {
                         data.options = sourceData.options || {};
                         data.notify = sourceData.notify || null;
 
-                        //WJ.log("fnCallback2, data=", data);
+                        //console.log("fnCallback2, data=", data);
                         fnCallback(data);
                     }
                 });
@@ -3245,7 +3279,7 @@ export const jsonEditorInit = options => {
     }
 
     TABLE.wjEditFetch = function (row) {
-        //console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
+        console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
         let dataBeforeFetch = null;
         if (typeof row[0].id != "undefined" && row[0].id!="") dataBeforeFetch = TABLE.row("#"+row[0].id).data();
         if (DATA.fetchOnEdit) {

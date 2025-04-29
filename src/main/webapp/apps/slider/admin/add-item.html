@@ -16,30 +16,13 @@
 		let columns =
 			/*[(${layout.getDataTableColumns("sk.iway.iwcm.components.slider.jpa.SliderDTO")})]*/ [];
 
-		const myData = {
-			content: [
-				{
-					id: 1,
-					image: "/images/gallery/chryzanthemum.jpg",
-					title: "Chryzantéma",
-					description: "Cervená",
-					redirectUrl: "/newsletter/testovaci-newsletter.html",
-					language: null,
-				},
-			],
-		};
-
 		sliderItemsDataTable = WJ.JsonEditor({
 			url: "/admin/rest/slider/items",
 			serverSide: false,
 			columns: columns,
 			tabs: tabs,
-			id: "SliderItemsDataTable",
-			fetchOnEdit: false,
-			fetchOnCreate: false,
-			initialData: myData,
+			id: "SliderItemsDataTable"
 		});
-
 	});
 </script>
 
