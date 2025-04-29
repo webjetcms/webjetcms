@@ -497,7 +497,8 @@
             <arg value="-X"/>
             <arg value="gpg:sign-and-deploy-file"/>
             <arg value="-Dgpg.keyname=0x36F2327F"/>
-            <arg value="-Dgpg.useagent=false"/>
+            <arg value="-Dgpg.useagent=true"/>
+            <arg value="-Dgpg.options=--pinentry-mode loopback"/>
             <arg value="-Durl=${github-repository-url}"/>
             <arg value="-DrepositoryId=${github-server-id}"/>
             <arg value="-DpomFile=${artifact.pom}"/>
