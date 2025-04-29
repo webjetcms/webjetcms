@@ -436,7 +436,7 @@ public class StatNewDB
 						"document_id INT,"+
 						"x INT,"+
 						"y INT,"+
-						"day_of_month INT) ENGINE="+Constants.getString("mariaDbDefaultEngine");
+						"day_of_month INT) ENGINE="+Constants.getString("mariaDbDefaultEngine")+";";
 			}
 			else if (DB_TYPE == Constants.DB_MSSQL || DB_TYPE == Constants.DB_PGSQL)
 			{

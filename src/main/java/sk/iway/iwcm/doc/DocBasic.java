@@ -1901,7 +1901,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setExternalLink(String externalLink) {
-		if (isEmpty(externalLink)) return;
 		this.externalLink = externalLink;
 	}
 
