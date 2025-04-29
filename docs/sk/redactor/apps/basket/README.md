@@ -60,12 +60,12 @@ Pri zobrazení možno vyfiltrovať podľa:
 
 ![](editor-items.png)
 
-## Povolené země
+## Povolené krajiny
 
-Pro dynamické nastavení povolených zemí, kde lze zboží odeslat slouží konstanta `basketInvoiceSupportedCountries`. Konstanta obsahuje čárkou oddělený seznam `ccTLD` identifikátorů.
+Pre dynamické nastavenie povolených krajín, kde sa dá tovar odoslať slúži konštanta `basketInvoiceSupportedCountries`. Konštanta obsahuje čiarkou oddelený zoznam `ccTLD` identifikátorov.
 
-**Příklad** pro povolení zemí Slovensko, Česko a Polsko musí být konstanta nastavena jako `.sk,.cz,.pl`.
+**Príklad**, pre povolenie krajín Slovensko, Česko a Poľsko musí byť konštanta nastavená ako `.sk,.cz,.pl`.
 
-## Zobrazení aplikace
+## Zobrazenie aplikácie
 
 ![](basket.png)
