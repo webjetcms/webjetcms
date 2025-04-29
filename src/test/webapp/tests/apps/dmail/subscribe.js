@@ -15,7 +15,7 @@ Scenario('Delete users', async ({ I, DT }) => {
     await deleteDmailUsers(I, DT);
 });
 
-Scenario('Dmail', ({ I, Document, DT, DTE, TempMail }) => {
+Scenario('Dmail', async ({ I, Document, DT, DTE, TempMail }) => {
     const userName = `autotest-name-${randomNumber}`;
     const userSurname = `autotest-surname-${randomNumber}`;
     const userEmail = "webjetcmsdmail@fexpost.com";
@@ -32,7 +32,7 @@ Scenario('Dmail', ({ I, Document, DT, DTE, TempMail }) => {
     I.clickCss("input[name=bSubmit]");
 
     I.say("Checking confirmation email");
-    TempMail.login("webjetcmsdmail");
+    await TempMail.loginAsync("webjetcmsdmail");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.see(userName);
@@ -78,7 +78,7 @@ Scenario('Dmail simple', async ({ I, TempMail, DT, DTE }) => {
     I.assertEqual(lineColor, "rgb(255, 75, 88)");
 
     I.say("Checking confirmation email");
-    TempMail.login("webjetcmsdmailsimple");
+    await TempMail.loginAsync("webjetcmsdmailsimple");
     TempMail.openLatestEmail();
     I.waitForText("Potvrdenie odberu newslettra", 10);
     I.wait(2);
