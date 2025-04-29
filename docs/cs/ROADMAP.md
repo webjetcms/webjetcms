@@ -38,14 +38,14 @@ Vysvětlení použitých piktogramů:
 - [ ] Upravit vymazání konfigurace tak, že při vymazání se jí nastaví původní hodnota definovaná v `Constants`.
 - [ ] Galerie - při duplikování obrázku umožnit změnu "Složka", abychom uměli duplikovat obrázky do jiné než aktuální složky.
 - [ ] Hromadný email - auditovat změny ve skupinách uživatelů.
-- [ ] Archiv souborů - předělat do datových tabulek (#57317).
+- [x] Archiv souborů - předělat do datových tabulek (#57317).
 - [ ] Volitelná pole - přidat možnost výběru více položek pro napojení na číselník.
 - [ ] Elektronický obchod - integrace na platební bránu `GoPay` (#56609).
 - [ ] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizace přes `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost autentifikace vůči `ADFS/SAML` serveru.
 - [x] Rezervace - nová aplikace pro celo denní rezervaci (#57389).
 - [ ] Aplikace - předělat dialog nastavení aplikací v editoru web stránek ze starého JSP na datovou tabulku (#57409).
-- [ ] Hromadný email - optimalizace tvorby seznamu příjemců (#57537).
+- [x] Hromadný email - optimalizace tvorby seznamu příjemců (#57537).
 - [ ] +Úkoly na pozadí - možnost ručně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen.
 - [ ] +Formuláře - zakázat `GET` volání na `FormMail/FormMailAjax`.
 - [ ] +Elektronický obchod - do emailu přidat `JSON-LD` data https://schema.seznam.cz/objednávky/dokumentace/.
@@ -54,13 +54,16 @@ Vysvětlení použitých piktogramů:
 - [ ] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
 - [ ] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu.
 - [ ] +Galerie - pokud nastavuji perex obrázek na obrázek v galerii, stáhnu z fotobanky, a obrázek přejmenuji na existující v databázi (je-li soubor smazán z disku) tak vznikne v `gallery` tabulce duplicitní záznam. Navíc se nepřejmenují ostatní obrázky `o_,s_`. Třeba pamatovat na to, že teoreticky mohu přejmenovat libovolný, mělo by to detekovat, že jsem v galerii a přejmenovat všechny verze.
-- [ ] +Konfigurace - doplnit možnost nastavení `Hikari` přes `poolman.xml/ENV` jako například `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000`.
+- [x] +Konfigurace - doplnit možnost nastavení `Hikari` přes `poolman.xml/ENV` jako například `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
 - [ ] Datatable - opravit počítání označených řádků po jejich vymazání.
 - [ ] +Průzkumník - nastavit vlastnosti složky (indexování, práva) podle rodičovské (rekurzivní) při prvním otevření, pokud složka nemá nastavení v databázi.
 - [ ] +Pro pole typu `DataTableColumnType.JSON`, konkrétně `className = "dt-tree-page-null"` přidat možnost definovat kořenovou složku.
 - [ ] +Přesunout všechny `Converter` třídy jako `DocDetailsNotNullConverter` do samostatného `package` kde nebudou jiné entity aby bylo možné tento `Converter` použít iv projektech kde je použit samostatný `JPA`.
 - [ ] +Přidat možnost nastavit jméno HTTP hlavičky pro `x-forwarded-for` a určit, která z IP adres se použije (první VS poslední).
 - [ ] +Datatabulky - přidat možnost uspořádání podle více sloupců kliknutím s klávesou `SHIFT`.
+- [ ] +Datatabulky - přidat možnost `hideOnDuplicate` pro karty v editoru, nezapomenout i na třídu`DataTableTab` aby to šlo nastavit iv anotaci.
+- [ ] +Průzkumník - do Média této stránky přidat možnost přesunout se do rodičovské složky.
+- [ ] +Konfigurace - v případě `cluster` instalace doplnit možnost nastavit proměnnou pouze pro aktuální uzel (neuložit ji do databáze). Původně to řešilo výběrové pole `applyToAllClusterNodes`.
 
 ## 2024
 

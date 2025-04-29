@@ -1,15 +1,15 @@
 # Informace o šabloně
 
-| Metoda | Typ | Popis
-| ---------------------------------- | -------- | ----------------------------- |
-| ${ninja.temp.basePath}             | *String* | Cesta ke kořenovému adresáři šablony |
-| ${ninja.temp.basePathCss}          | *String* | Cesta k souborům stylů CSS |
-| ${ninja.temp.basePathJs}           | *String* | Cesta ke skriptům JS |
-| ${ninja.temp.basePathImg}          | *String* | Cesta k obrázkům |
-| ${ninja.temp.lngIso}               | *String* | HTML ISO Language Cod |
-| ${ninja.temp.charset}              | *String* | Kódování souborů |
-| ${ninja.temp.insertTouchIconsHtml} | *String* | Nastavení dotykových ikon |
-| ${ninja.temp.templateFolderName}   | *String* | Název složky šablony |
+| Metoda | Typ | Popis |
+ | ---------------------------------- | -------- | ----------------------------- |
+ | ${ninja.temp.basePath}             | *String* | Cesta k root adresáři šablony |
+ | ${ninja.temp.basePathCss}          | *String* | Cesta k CSS stylům |
+ | ${ninja.temp.basePathJs}           | *String* | Cesta k JS skriptům |
+ | ${ninja.temp.basePathImg}          | *String* | Cesta k obrázkům |
+ | ${ninja.temp.lngIso}               | *String* | HTML ISO Language Cod |
+ | ${ninja.temp.charset}              | *String* | Kódování souboru |
+ | ${ninja.temp.insertTouchIconsHtml} | *String* | Nastavení touch ikon |
+ | ${ninja.temp.templateFolderName}   | *String* | Název složky šablony |
 
 ## Cesta k root adresáři šablony *String*
 
