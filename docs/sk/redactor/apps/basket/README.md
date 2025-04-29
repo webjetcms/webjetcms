@@ -57,14 +57,15 @@ Pri zobrazení možno vyfiltrovať podľa:
 - **Stará cena s DPH**
 - **EAN**
 - **Výrobca**
+
 ![](editor-items.png)
 
-## Povolené krajiny
+## Povolené země
 
-Pre dynamické nastavenie povolených krajín, kde sa dá tovar odoslať slúži konštanta `basketInvoiceSupportedCountries`. Konštanta obsahuje čiarkou oddelený zoznam `ccTLD` identifikátorov.
+Pro dynamické nastavení povolených zemí, kde lze zboží odeslat slouží konstanta `basketInvoiceSupportedCountries`. Konstanta obsahuje čárkou oddělený seznam `ccTLD` identifikátorů.
 
-**Príklad**, pre povolenie krajín Slovensko, Česko a Poľsko musí byť konštanta nastavená ako `.sk,.cz,.pl`.
+**Příklad** pro povolení zemí Slovensko, Česko a Polsko musí být konstanta nastavena jako `.sk,.cz,.pl`.
 
-## Zobrazenie aplikácie
+## Zobrazení aplikace
 
 ![](basket.png)

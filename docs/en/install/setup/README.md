@@ -30,11 +30,11 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
     <datasource>
       <dbname>iwcm</dbname>
-      <driver>com.mysql.jdbc.Driver</driver>
-      <url>jdbc:mysql://MENO-SQL-SERVERA/MENO-SCHEMY</url>
+      <driver>org.mariadb.jdbc.Driver</driver>
+      <url>jdbc:mariadb://MENO-SQL-SERVERA/MENO-SCHEMY</url>
       <username>DB-LOGIN</username>
       <password>DB-HESLO</password>
   </datasource>
@@ -46,7 +46,7 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
   <datasource>
       <dbname>iwcm</dbname>
       <driver>net.sourceforge.jtds.jdbc.Driver</driver>
@@ -62,7 +62,7 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
   <datasource>
       <dbname>iwcm</dbname>
       <driver>oracle.jdbc.OracleDriver</driver>
@@ -78,7 +78,7 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
     <datasource>
         <dbname>iwcm</dbname>
         <driver>org.postgresql.Driver</driver>
@@ -97,12 +97,41 @@ The following XML elements are supported:
 - `password` - login password
 
 Optionally, it is possible to set:
-- `initialConnections` - default number of open database connections (default 0)
 - `minimumSize` - minimum number of constantly open database connections (default 0)
 - `maximumSize` - maximum number of open database connections (default 50)
-- `connectionTimeout` - number of seconds when the connection is considered not closed (default 300)
-- `autoCommit` - if set to true is set `connection.setAutoCommit(true);` (default `false`)
+- `autoCommit` - if set to `true` is set `connection.setAutoCommit(true);`, after setting to `false` it is necessary to terminate the transaction programmatically (by default `false`)
+- `readOnly` - set to `true` if the database connection is read-only (by default `false`)
+- `transactionIsolation` - setting [transaction isolation](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#infrequently-used) (empty by default)
+- `connectionTimeout` - the number of seconds when the connection is considered not closed (by default 300), sets the value `LeakDetectionThreshold`
 - `testQuery` - test SQL expression to verify the functionality of the connection. For `JDBC` v4 drivers are used to call `isValid()`, for older drivers need to be set. Value `true` sets the default expression `SELECT 1` (used automatically for `jtds` controller). But it is possible to set your own SQL expression.
+- `hikariProperties` - allows you to set additional properties [HikariCP](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby) in format `properties`
+
+Example of setting specific properties:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<poolman>
+    <datasource>
+        <dbname>iwcm</dbname>
+        <driver>org.mariadb.jdbc.Driver</driver>
+
+        <url>jdbc:mariadb://MENO-SQL-SERVERA/MENO-SCHEMY</url>
+
+        <username>root</username>
+        <password>heslo</password>
+
+        <initialConnections>0</initialConnections>
+        <minimumSize>0</minimumSize>
+        <maximumSize>60</maximumSize>
+        <hikariProperties>
+            maxLifetime=600000
+            connectionTestQuery=SELECT 100
+            connectionInitSql=SELECT 500
+        </hikariProperties>
+    </datasource>
+</poolman>
+```
 
 ## Fulfillment of the DB scheme
 

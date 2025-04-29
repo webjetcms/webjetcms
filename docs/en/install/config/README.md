@@ -31,15 +31,24 @@ For bulk email you can still set up:
 - `dmailWaitTimeout` - speed of sending emails from bulk email in milliseconds. By default it is set to 5000, which means that an email is sent once every 5 seconds. If you lower the value then the web server and SMTP server will be more loaded when sending emails. The value will only take effect after a server restart.
 - `dmailBadEmailSmtpReplyStatuses` - A comma-separated list of expressions returned from the SMTP server for which the email will not attempt to be sent again.
 
+You can set the sender's name and email for different system notifications:
+- `defaultSenderName` - the name of the sender - for example, the name of the company
+- `defaultSenderEmail` - email address of the sender - for example `no-reply@company-name.com`
+
+the configuration value can be set specifically for modules using a prefix, such as `reservationDefaultSenderEmail`. If such a value exists, it shall be used in preference to the value `defaultSenderEmail`. The following prefixes can be used:
+- `dmail` - the sender of the new bulk email.
+- `formmail` - the sender of the notification to the visitor who filled in the form.
+- `reservation` - the sender of the booking approval/denial.
+
 ### Setting up Amazon SES
 
 For bulk email, we recommend using [Amazon Simple Email Services/SES](https://aws.amazon.com/ses/) for better email delivery. Originally WebJET CMS used API access, which was activated by setting the conf. variable `useAmazonSES` to the value of `true`, but currently it is already in use [standard SMTP protocol](https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html) in Amazon SES:
 - Select [the address of the SMTP server](https://docs.aws.amazon.com/general/latest/gr/ses.html) for your region and set it in the conf. variable `smtpServer`, e.g. `email-smtp.eu-west-1.amazonaws.com`. The tables are scrollable on the page, only the US region is visible at first, don't be afraid to scroll the table.
 - Create [login details](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html) to the SMTP server and set them to conf. variables `smtpUser` a `smtpPassword`, select Encrypt for the password.
-- On the page [Amazon SES](https://console.aws.amazon.com/ses/) in the SMTP settings section for the selected region you can also see the individual ports through which it communicates, typically it is necessary to enable communication to port 587 on the firewall.
+- On the page [Amazon SES](https://console.aws.amazon.com/ses/) in section `SMTP settings` the individual ports through which it communicates are also visible for the selected region, typically it is necessary to `firewall` enable communication on port 587.
 - For a new project, after testing, ask for an increase in email sending limits, they are set low by default.
 - Set conf. variable `smtpUseTLS` at `true`.
-- V [Amazon SES](https://console.aws.amazon.com/ses/) in the Identities section you need to verify the domain identity and set `DKIM` Keys.
+- V [Amazon SES](https://console.aws.amazon.com/ses/) in section `Identities` you need to verify the identity of the domain and set `DKIM` Keys.
 - Delete conf. variable `useAmazonSES` if you have it set (for older projects where API access was originally used).
 - Restart the application server.
 - Try sending an email, verify in the email headers that it was actually sent via Amazon SES.

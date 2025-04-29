@@ -117,8 +117,8 @@ Originálny `deepmark` má problém so správnym formátovaním preložených s�
 
 V konfiguračnom súbore **`deepmark.config.mjs`** môžeme nastaviť službu poskytujúcu preklady pomocou premennej **`translationEngine`**. Táto premenná môže nadobúdať jednu z dvoch hodnôt:
 
-- **[`deepl`](https://www.deepl.com/docs-api)** – **DeepL** predvolená služba, ak premenná nie je nastavená
-- **[`google`](https://cloud.google.com/translate)** – **Google Translate API** alternatívna služba pre preklady
+- [`deepl`](https://www.deepl.com/docs-api) – **DeepL** predvolená služba, ak premenná nie je nastavená
+- [`google`](https://cloud.google.com/translate) – **Google Translate API** alternatívna služba pre preklady
 
 Ak premenná **`translationEngine`** nie je definovaná, systém automaticky použije **DeepL**.
 

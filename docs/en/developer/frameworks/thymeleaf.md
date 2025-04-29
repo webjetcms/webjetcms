@@ -2,25 +2,6 @@
 
 [Thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#messages) is a templating framework. In WebJET it is connected with Spring MVC.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Thymeleaf](#thymeleaf)
-  - [URL mapping](#url-mapping)
-  - [Inserting custom objects into the model](#inserting-custom-objects-into-the-model)
-  - [LayoutService](#layoutservice)
-  - [Basic text/attribute listing](#basic-text-attribute-listing)
-  - [Translation text](#translation-text)
-  - [Select box](#select-box)
-  - [Linking strings](#linking-strings)
-  - [Conditional tag display](#conditional-tag-display)
-  - [Obtaining an object from `Constants`](#obtaining-an-object-from-constants)
-  - [Control of rights](#control-of-rights)
-  - [Verification of law](#verification-of-the-right)
-  - [Chyba TemplateProcessingException: Only variable expressions returning numbers or booleans are allowed in this context](#error-templateprocessingexception-only-variable-expressions-returning-numbers-or-booleans-are-allowed-in-this-context)
-
-<!-- /code_chunk_output -->
-
 ## URL mapping
 
 The mapping of the URLs of the admin part is done in [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) Like:

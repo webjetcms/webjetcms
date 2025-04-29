@@ -12,7 +12,7 @@ public class CalendarEventsEntity {
     @Id
     @Column(name = "calendar_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "S_calendar")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
 }
@@ -644,4 +644,76 @@ Display static text at the position of the normal input field, i.e. on the right
         title="components.app-vyhladavanie_info"
     )
     private String explain;
+```
+
+### IMAGE\_RADIO
+
+Display a selection of one of the options based on the image. Used, for example, in the Poll app. Images are retrieved as a list from the file system, they need to be populated into an object `options` REST service responses. The image reference is entered into the object `OptionDto.original`.
+
+By setting up `className = "image-radio-horizontal"` it is possible to switch the display of options to horizontal in the row. By adding a CSS class `image-radio-fullwidth` the display of the label and selection is switched to row instead of column, in this case we recommend not to have any other fields in the tab and to set the value in the tab definition `content = ""` that the card does not have a grey bar in the background underlining the labels.
+
+The implementation is in the file [field-type-imageradio.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-imageradio.js).
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.inquiry.InquiryApp")
+@WebjetAppStore(
+    nameKey = "components.inquiry.title",
+    descKey = "components.inquiry.desc",
+    itemKey= "cmp_inquiry",
+    imagePath = "/components/inquiry/editoricon.png",
+    galleryImages = "/components/inquiry/",
+    componentPath = "/components/inquiry/inquiry.jsp"
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "styleSelectArea", title = "components.roots.new.style", content = ""),
+    @DataTableTab(id = "componentIframeWindowTabList", title = "menu.inquiry", content = ""),
+})
+@Getter
+@Setter
+public class InquiryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = "components.roots.new.style",
+        tab = "styleSelectArea",
+        className = "image-radio-horizontal image-radio-fullwidth"
+    )
+    private String style = "01";
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = "components.catalog.color",
+        tab = "styleSelectArea",
+        className = "image-radio-horizontal image-radio-fullwidth"
+    )
+    private String color = "01";
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        //style & color options
+        options.put("style", DatatableTools.getImageRadioOptions("/components/inquiry/admin-styles/"));
+        options.put("color", DatatableTools.getImageRadioOptions("/components/inquiry/admin-colors/"));
+
+        return options;
+    }
+
+}
+```
+
+## UPLOAD
+
+Field type allowing [file upload](field-file-upload.md).
+
+![](field-uploadFile.png)
+
+```java
+  @DataTableColumn(
+        inputType = DataTableColumnType.UPLOAD,
+        tab = "basic",
+        title = "fbrowse.file"
+    )
+    private String file = "";
 ```

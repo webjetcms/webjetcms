@@ -67,6 +67,8 @@ Below the table of rows, information about the number of records displayed, the 
 
 The automatic setting of the number of table rows is only used in the main window, it is not used in nested tables in the editor (e.g. in the Edit History tab of a web page).
 
+The value of all is limited by the setting of the configuration variable `datatablesExportMaxRows`, that is, the maximum number of rows defined in this configuration variable is actually loaded when All is set. The rows are displayed directly in the browser, and a high number will result in a high CPU load.
+
 ## Keyboard shortcuts
 
 To work more efficiently, you can use the following keyboard shortcuts (`Windows/MacOS`):

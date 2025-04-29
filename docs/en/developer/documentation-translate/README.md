@@ -114,6 +114,34 @@ If you skip listing a part of a file using the above mentioned tags, the skipped
 
 Original `deepmark` has a problem with the correct formatting of the translated files. It adds unnecessary spaces/lines, doesn't translate some symbols correctly or destroys the structure of lists or tables by bad indentation. This problem is in our version `@webjetcms/deepmark` solved by several steps to avoid these errors in the translated files. We will not discuss all the modifications but we will mention that the most important is the method `customizeTranslatedMarkdown` which edits/formats already translated files in a few steps.
 
+### Choosing a translation service
+
+In the configuration file **`deepmark.config.mjs`** we can set the service providing translations using the variable **`translationEngine`**. This variable can take one of two values:
+- [`deepl`](https://www.deepl.com/docs-api) - **DeepL** default service if the variable is not set
+- [`google`](https://cloud.google.com/translate) - **Google Translate API** alternative service for translations
+
+If the variable **`translationEngine`** is not defined, the system will automatically use **DeepL**.
+
+#### Environment variable
+
+To use **Google Translate API**, you need to set the environment variable `GOOGLE_AUTH_KEY` with the authorisation key to **Google Translate API**.
+
+#### Configuration example
+
+Below is a sample configuration using **Google Translate**:
+
+```javascript
+/** @type {import("deepmark").UserConfig} */
+export default {
+    sourceLanguage: 'sk',
+    outputLanguages: ['en-US'],
+    directories: [
+        ['sk', '$langcode$'],
+    ],
+    translationEngine: "google"    // Voľba prekladovej služby
+};
+```
+
 ### Dependency versions
 
 Since `deepmark` uses dependencies whose versions are already obsolete, we have updated most of the dependencies to newer versions. We did not use the most up-to-date versions everywhere, as not all of them were compatible either with other dependencies or with the actual format used in `deepmark`.
@@ -162,7 +190,8 @@ List **Updated** addictions:
 	"micromark-extension-html-comment": "^0.0.1",
 	"micromark-extension-mdxjs": "^3.0.0",
 	"prettier": "^3.3.3",
-	"yaml": "^2.5.0"
+	"yaml": "^2.5.0",
+	"@google-cloud/translate": "^8.5.1"
 },
 ```
 
