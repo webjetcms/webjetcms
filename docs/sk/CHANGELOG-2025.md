@@ -36,6 +36,7 @@
 - Používatelia - pridaná možnosť vybrať aj Koreňový priečinok v právach používateľa v sekcii Nahrávanie súborov do adresárov (54273-60).
 - Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
 - Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
+- Štatistika - opravené vytvorenie tabuľky pre štatistiku kliknutí v teplotnej mape.
 
 ### Bezpečnosť
 
