@@ -1,27 +1,5 @@
 # Práca s Git/Gitlab
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Práca s Git/Gitlab](#práca-s-gitgitlab)
-  - [Inštalácia a nastavenie](#inštalácia-a-nastavenie)
-  - [Naklonovanie repozitára zo servera na váš počítač](#naklonovanie-repozitára-zo-servera-na-váš-počítač)
-  - [Práca vo VS Code](#práca-vo-vs-code)
-  - [Branching](#branching)
-    - [Implementácia novej požiadavky](#implementácia-novej-požiadavky)
-    - [Release do produkcie](#release-do-produkcie)
-    - [Oprava chyby v produkcii](#oprava-chyby-v-produkcii)
-    - [Spojenie (`merge`) branch](#spojenie-merge-branch)
-  - [Akceptovanie zmien (Merge Request)](#akceptovanie-zmien-merge-request)
-    - [Ako a kedy vytvoriť Merge Request](#ako-a-kedy-vytvoriť-merge-request)
-    - [Prechod z Work In Progress](#prechod-z-work-in-progress)
-    - [Overenie merge konfliktov](#overenie-merge-konfliktov)
-    - [Kontrola kvality kódu](#kontrola-kvality-kódu)
-    - [Merge](#merge)
-
-<!-- /code_chunk_output -->
-
 >**`tl;dr`** Vysvetlenie používania GIT: základné pojmy, filozofia práce, workflow. Fungovanie Merge Requestov v Gitlabe, kontrola kvality kódu.
 
 Gitlab je dostupný na adrese https://gitlab.web.iway.local. Ak ste doteraz pracovali len s SVN je potrebné si osvojiť hlavný rozdiel medzi SVN a GITom - **git je distribuovaný** verziovací softvér, každý  má na svojom počítači kópiu repozitára a môže s ním pracovať lokálne. Až keď máte prácu hotovú "pushnete" ju na vzdialený repozitár (na server).

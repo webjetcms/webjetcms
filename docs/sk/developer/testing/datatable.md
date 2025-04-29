@@ -1,19 +1,5 @@
 # Automatické testovanie DataTables
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Automatické testovanie DataTables](#automatické-testovanie-datatables)
-  - [Použitie](#použitie)
-  - [Možnosti nastavenia](#možnosti-nastavenia)
-  - [Spôsob generovania povinných polí](#spôsob-generovania-povinných-polí)
-  - [Testovanie auditných záznamov](#testovanie-auditných-záznamov)
-  - [Testovanie práv](#testovanie-práv)
-  - [Detaily implementácie](#detaily-implementácie)
-
-<!-- /code_chunk_output -->
-
 V administrácii je väčšina testov datatabuľky zhodná vo forme ```CRUD (Create, Read, Update, Delete)``` operácií. Aby sa nemuseli dookola opakovať štandardné postupy testu datatabuľky pripravili sme **automatizované testovanie**. Implementácia je v súbore [DataTables.js](../../../../src/test/webapp/pages/DataTables.js) a zahŕňa nasledovné kroky:
 
 - pridanie nového záznamu
