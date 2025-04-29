@@ -12,7 +12,7 @@ Sestává z několika částí:
 
 ## Panel nástrojů
 
-Panel nástrojů nabízí široký výběr nástrojů/funkcí pro práci se soubory a složkami daných souborů. Každé tlačítko, nabízí jiný jedinečný nastroj. 
+Panel nástrojů nabízí široký výběr nástrojů/funkcí pro práci se soubory a složkami daných souborů. Každé tlačítko, nabízí jiný jedinečný nastroj.
 
 !>**Upozornění:** jednotlivá tlačítka se aktivují pouze za specifických podmínek, takže nejsou vždy dostupná. Panel nástrojů obsahuje také vyhledávání.
 
@@ -33,8 +33,12 @@ Karta Soubor nabízí základní možnosti pro práci jako:
 
   <br>
 
+  <br>
+
 - <button class="btn btn-sm btn-success"><span><i class="ti ti-plus" ></i></span></button>, **Nahrát soubory**, umožní do aktuálně zvolené lokace nahrát soubory.
 - <button class="btn btn-sm btn-success"><span><i class="ti ti-folder-plus" ></i></span></button>, **Nová složka**, umožní v aktuálně zvolené lokaci vytvořit novou složku.
+
+  <br>
 
   <br>
 

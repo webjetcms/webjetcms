@@ -29,12 +29,16 @@ public class ContactApp extends WebjetComponentAbstract {
 The annotation has the following parameters:
 - `nameKey` - translation key **application name** (in the examples it is directly text, but we recommend to use the translation key), e.g. `components.DemoComponent.title`.
 - `descKey` - translation key **description of the application**, if not specified the translation key specified as `nameKey.desc` (if `nameKey` ends at `.title` shall be replaced `.title` For `.desc`).
+- `itemKey` - unique application identifier for access rights, typically `cmp_app_name`.
+- `variant` - by default, only one application with the same `itemKey`. If you need to have multiple apps with the same `itemKey`, you can set a different application variant, for example `variant = "unsubscribe",` for the opt-out variant of the app.
 - `imagePath` - the way to the picture **icons** Application. It can be a file, or it can be a CSS class for an icon [TablerIcons](https://tabler.io/icons) Like `ti ti-meno-ikony`.
 - `galleryImages` - a comma-separated list of images that appear in the app description, e.g. `/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png`.
 - `componentPath` - comma separated list of JSP files for which the application should be displayed (if it is not a Spring application), for example `/components/search/search.jsp,/components/search/lucene_search.jsp`. The first JSP file is used when inserting a new application.
 - `domainName` - if you have a multi-domain installation, you can restrict the application to display only on the specified domain. You can specify multiple domains separated by a comma.
 - `commonSettings` - A parameter that determines whether the View tab for Common Settings appears in the application editor. The default value is `true`, so the card will be displayed.
 - `custom` - set to `true` for your customer applications. It automatically adjusts itself according to whether it is in the package `sk.iway.iwcm`. Customer apps are in the list of apps at the top of the list.
+- `componentPath` - if you are overwriting an older application in JSP code, set the path to this JSP file, for example `componentPath = "/components/calendar/calendar.jsp"`.
+- `customHtml` - if you need to make [additional code](#additional-html-code), edit CSS styles and so on set the path to the HTML file that will be added to the application editing in the web page editor. For example `customHtml = "/apps/calendar/admin/editor-component.html"`.
 
 ![](democomponent-desc.png)
 
@@ -480,19 +484,8 @@ public class GalleryApp extends WebjetComponentAbstract {
 			}
 		}
 
-		//check if the current style is in the list
-		if (Tools.isNotEmpty(getStyle()))
-		{
-			boolean found = false;
-			for (OptionDto option : styleOptions)
-			{
-				if (option.getValue().equals(getStyle())) found = true;
-			}
-			if (found == false)
-			{
-				addPair(getStyle(), styleOptions, prop);
-			}
-		}
+		//check if the current style is in the list (maybe it's customer style)
+		styleOptions = addCurrentValueToOptions(styleOptions, getStyle());
 
         options.put("style", styleOptions);
 
@@ -520,6 +513,50 @@ public class GalleryApp extends WebjetComponentAbstract {
 
 		styleOptions.add(new OptionDto(desc, name, null));
 	}
+}
+```
+
+Setting up groups of fields using a prepared method `WebjetComponentAbstract.addOptions`:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.media.MediaApp")
+@WebjetAppStore(
+    nameKey = "components.media.title",
+    descKey = "components.media.desc",
+    itemKey = "menuWebpages",
+    imagePath = "/components/media/editoricon.png",
+    galleryImages = "/components/media/",
+    componentPath = "/components/media/media.jsp")
+@Getter
+@Setter
+public class MediaApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, renderFormat = "dt-format-select", title = "editor.media.group", tab = "basic",
+    editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "unselectedValue", value = "-1")
+            }
+        )
+    })
+    private Integer[] groups;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "components.popup.docid", tab = "basic", className = "dt-tree-page-null")
+    private DocDetails docid;
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        int groupId = Tools.getIntValue(request.getParameter("groupId"), 0);
+        List<MediaGroupBean> groups;
+        if (groupId < 1) groups = MediaDB.getGroups();
+        else groups = MediaDB.getGroups(groupId);
+
+        options.put("groups", addOptions(groups, "mediaGroupName", "mediaGroupId", false));
+
+        return options;
+    }
 }
 ```
 
@@ -592,12 +629,188 @@ The cache is not used if:
 - there is a parameter in the URL address `page` (not applicable if the value is 1, i.e. for the first page of e.g. the news list)
 - there is a parameter in the URL address `_disableCache=true`
 
+## Additional HTML code
+
+In some cases, additional HTML/JavaScript code must be executed when editing the application properties in the editor. In the annotation `@WebjetAppStore` it is possible to set the path to the additional HTML file in the attribute `customHtml`, for example:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.calendar.CalendarApp")
+@WebjetAppStore(
+    nameKey = "components.calendar.title",
+    descKey = "components.calendar.desc",
+    itemKey = "cmp_calendar",
+    imagePath = "/components/calendar/editoricon.png",
+    galleryImages = "/components/calendar/",
+    componentPath = "/components/calendar/calendar.jsp",
+    customHtml = "/apps/calendar/admin/editor-component.html"
+)
+@Getter
+@Setter
+public class CalendarApp extends WebjetComponentAbstract {
+
+}
+```
+
+The entered HTML code is inserted into the application editor page. It is possible to use the following functions to execute the JavaScript code:
+- `appBeforeXhr(data)` - called before getting information about the editor, `data` contains the object sent to the REST service.
+- `appAfterXhr(response)` - called after getting data from the REST service, it is possible to modify the data (e.g. add an input field) in `response` facility.
+- `appAfterInit(response, datatable)` - called after initializing the datatable, in `datatable` is a datatable/editor instance.
+- `appGetComponentPath(componentPath, componentDatatable)` - called when you embed an application in a page, you can change the path for the embedded `INCLUDE` e.g. based on the selected options.
+- `appGetComponentCode(componentPath, params, componentDatatable)` - called when the application is inserted into the page, it can return the complete code for inserting into the page (it does not have to be directly `!INCLUDE` code).
+
+Sample code that responds to a selection field change:
+
+```html
+<script>
+
+    function appBeforeXhr(data) {
+        console.log("appBeforeXhr, data=", data);
+    }
+
+    function appAfterXhr(response) {
+        console.log("appAfterXhr, response=", response);
+    }
+
+    function appGetComponentPath(componentPath, datatable) {
+        let field = $("#DTE_Field_field").val();
+        if ("last_update" === field) {
+            //change component path to last_update.jsp
+            return "/components/app-date/last_update.jsp";
+        }
+        return componentPath;
+    }
+
+    function appGetComponentCode(componentPath, params, datatable) {
+        //fields like !DATE!, !DATE_TIME! insert directly into page
+        let field = $("#DTE_Field_field").val();
+        if (field.indexOf("!")==0) return field;
+        return null;
+    }
+
+    function appAfterInit(response, datatable) {
+        console.log("appAfterInit, response=", response, "datatable=", datatable);
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            //add event listener to the form
+            $("#DTE_Field_typ_kalendara").on("change", function() {
+                var value = $(this).val();
+                console.log("DTE_Field_typ_kalendara changed, value=", value);
+                if (value === "1") {
+
+                } else {
+
+                }
+            });
+        });
+    }
+
+</script>
+```
+
+### Setting the type by JSP file name
+
+In some cases, it is necessary to change the displayed fields according to the application type, resulting in a different JSP file for display. An example is in [RatingApp.java](../../../../src/main/java/sk/iway/iwcm/components/rating/RatingApp.java) and the corresponding HTML file. If you don't need the parameter in the output `!INCLUDE()` set him `className = "dt-app-skip"`, because in this case the value is set according to the JSP file name.
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.rating.RatingApp")
+@WebjetAppStore(nameKey = "components.rating.title", descKey = "components.rating.desc", itemKey = "cmp_rating", imagePath = "/components/rating/editoricon.png", galleryImages = "/components/rating/", componentPath = "/components/rating/rating_form.jsp,/components/rating/rating_page.jsp,/components/rating/rating_top_users.jsp,/components/rating/rating_top_pages.jsp", customHtml = "/apps/rating/admin/editor-component.html")
+
+@Getter
+@Setter
+public class RatingApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.rating.type", tab = "basic", className = "dt-app-skip", editor = {
+            @DataTableColumnEditor(options = {
+                    @DataTableColumnEditorAttr(key = "components.rating.rating_form", value = "rating_form"),
+                    @DataTableColumnEditorAttr(key = "components.rating.show_rating", value = "rating_page"),
+                    @DataTableColumnEditorAttr(key = "components.rating.top_users", value = "rating_top_users"),
+                    @DataTableColumnEditorAttr(key = "components.rating.top_docid", value = "rating_top_pages")
+            })
+    })
+    private String ratingType;
+    ...
+}
+```
+
+and relevant [HTML file](../../../../src/main/webapp/apps/rating/admin/editor-component.html) in which you get the name of the JSP file from the object `requestJson`:
+
+```html
+<script>
+	function appGetComponentPath(componentPath, datatable) {
+		let field = $("#DTE_Field_ratingType").val();
+        return `/components/rating/${field}.jsp`;
+	}
+
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const fieldElement = $("#DTE_Field_ratingType");
+
+			fieldElement.on("change", function () {
+                const field = $(this).val();
+				if ("rating_form" === field) {
+                    setFieldsVisibility(['usersLength', 'docsLength', 'period', 'form2Description'], ['form1Description','checkLogon', 'ratingDocId', 'range']);
+				} else if ("rating_page" === field) {
+					setFieldsVisibility(['usersLength', 'docsLength', 'period','checkLogon','form1Description'], ['form2Description','ratingDocId', 'range']);
+				} else if ("rating_top_users" === field) {
+					setFieldsVisibility(['docsLength', 'period', 'ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['usersLength']);
+				} else {
+                    setFieldsVisibility(['usersLength','ratingDocId', 'range', 'checkLogon', 'form1Description', 'form2Description'],['docsLength', 'period']);
+                }
+			});
+			let originalJspFileName = requestJson.originalJspFileName;
+			if (originalJspFileName != null && originalJspFileName != "") {
+				//grep the file name from the path
+				originalJspFileName = originalJspFileName.substring(originalJspFileName.lastIndexOf("/") + 1, originalJspFileName.lastIndexOf("."));
+				fieldElement.val(originalJspFileName);
+			}
+			fieldElement.trigger("change");
+		});
+	}
+</script>
+```
+
+For simple situations, just set the annotation to `className` value `dt-app-componentPath`, then the JSP file name is automatically set to the object and used at the same time. There is no need to manually set it using JavaScript code as above.
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.reservation.ReservationApp")
+@WebjetAppStore(nameKey = "components.reservation.title", descKey = "components.reservation.desc", itemKey = "cmp_reservation", imagePath = "/components/reservation/editoricon.png", galleryImages = "/components/reservation/", componentPath = "/components/reservation/reservation_list.jsp,/components/reservation/room_list.jsp", customHtml = "/apps/reservation/admin/editor-component.html")
+@DataTableTabs(tabs = {
+        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "componentIframeWindowTabList", title = "components.reservation.reservation_list", content = ""),
+        @DataTableTab(id = "componentIframeWindowTabListObjects", title = "components.reservation.reservationObjectList", content = ""),
+})
+@Getter
+@Setter
+public class ReservationApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.reservation.editor_component.reservation_type", className = "dt-app-skip dt-app-componentPath", editor = {
+            @DataTableColumnEditor(options = {
+                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.reservation_list", value = "/components/reservation/reservation_list.jsp"),
+                    @DataTableColumnEditorAttr(key = "components.reservation.editor_component.room_list", value = "/components/reservation/room_list.jsp"),
+            })
+    })
+    private String reservationType;
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabList", title = "&nbsp;")
+    private String iframe = "/components/reservation/admin_reservation_list.jsp";
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabListObjects", title = "&nbsp;")
+    private String iframe2 = "/components/reservation/admin_object_list.jsp";
+
+}
+```
+
 ## Implementation details
 
 - The datatable is inserted via `/admin/v9/views/pages/webpages/component.pug`
 - The logic for displaying the administration is in `/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp`, displays either the classic `editor_component.jsp`, this automatic editor via annotation, or list of applications.
 - Added method for getting a list of cards from the property annotation `sk.iway.iwcm.system.datatable.DataTableColumnsFactory`
 - Created new data object for cards `sk.iway.iwcm.system.datatable.json.DataTableTab`
-- Rest controller for application data `sk.iway.iwcm.editor.rest.ComponentsRestController`
+- Service class for application data `sk.iway.iwcm.editor.rest.ComponentsService`
 - New data `request` object for obtaining application data `sk.iway.iwcm.editor.rest.ComponentRequest`
 - The list of applications is searched from the annotations in `sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations`.

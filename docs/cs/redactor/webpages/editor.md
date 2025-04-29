@@ -217,3 +217,21 @@ Doporučujeme, abyste po ukončení práce a uložení/publikování stránky op
 Takovou vlastnost mají také aplikace, postup práce tedy platí pro všechny části, nejen pro editor stránek.
 
 ![](../../developer/datatables-editor/editor-locking.png)
+
+## Nástrojový panel
+
+Při zobrazení web stránky se v pravém horním rohu zobrazuje nástrojový panel WebJET:
+
+![](webjet-toolbar.png)
+
+Kromě data poslední úpravy web stránky nabízí následující možnosti po kliknutí na:
+- DocID web stránky se otevře stránka v editoru web stránek.
+- Název složky se zobrazí složka web stránky.
+- Název šablony se otevře šablona stránky v editoru.
+- Jméno uživatele, který naposledy web stránku změnil otevře novou email zprávu danému redaktorovi.
+
+Nástrojový panel se zobrazuje:
+- Pokud jste před zobrazením stránky tím navštívili sekci Web stránky v administraci.
+- Konfigurační proměnná `disableWebJETToolbar` je nastavena na hodnotu `false`.
+
+Kromě těchto podmínek lze zobrazit panel pomocí URL parametru `?NO_WJTOOLBAR=true` pro jeho vypnutí nebo `?NO_WJTOOLBAR=false` pro jeho zapnutí.`true` se nebude zobrazovat dokud se neodhlásíte z administrace.

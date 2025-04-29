@@ -2,6 +2,8 @@
 
 The datatable field allows you to display a nested datatable in the page editor (e.g. the Media list in the page editor). Note that the datatable is initialized with its own URL. In the parent table object itself, there is no need to send data or receive it afterwards, the data is changed automatically when the nested datatable's REST service is called. Technically it would be possible to work directly with JSON data from the parent table, but this option is not yet implemented.
 
+![](../../redactor/webpages/media.png)
+
 Since the currently inserted datatable works with separate REST services the returned data is an empty array `[]`.
 
 ## Use of annotation
@@ -9,6 +11,7 @@ Since the currently inserted datatable works with separate REST services the ret
 Annotation is used as `DataTableColumnType.DATATABLE`, and the following editor attributes must be set:
 - `data-dt-field-dt-url` - URL of the REST service, can contain macros for inserting values from the parent editor, e.g.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
 - `data-dt-field-dt-columns` - the name of the class (including packages) from which it is to be used [definition of datatable columns](datatable-columns.md), e.g. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
+- `data-dt-field-dt-columns-customize` - the name of the JavaScript function that can be used to modify `columns` object, e.g. `removeEditorFields`. The function must be available directly in `windows` object, as the parameter gets `columns` object and is expected to return it modified. Example `function removeEditorFields(columns) { return columsn; }`.
 - `data-dt-field-dt-tabs` - list of tabs for the editor in JSON format. All names and values of the JSON object need to be wrapped in `'`, translations are replaced automatically. Example: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
 
 Full annotation example:

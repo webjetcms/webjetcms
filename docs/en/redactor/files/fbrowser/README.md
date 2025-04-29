@@ -12,7 +12,9 @@ It consists of several parts:
 
 ## Toolbar
 
-The toolbar offers a wide selection of tools/functions for working with files and file folders. Each button, offers a different unique tool. !>**Warning:** individual buttons are only activated under specific conditions, so they are not always available. The toolbar also includes a search.
+The toolbar offers a wide selection of tools/functions for working with files and file folders. Each button, offers a different unique tool.
+
+!>**Warning:** individual buttons are only activated under specific conditions, so they are not always available. The toolbar also includes a search.
 
 The given tools are divided into 3 tabs by the logic field:
 - File
@@ -70,6 +72,8 @@ Offers advanced tools for working with folders/files.
 | Folder | File |
 | :------------------: | :----------------: |
 | ![](info_folder.png) | ![](info_file.png) |
+
+!>**Warning:** folder size counts the size of files in the given folder, it does not count files in sub-folders.
 
 <br>
 
@@ -142,6 +146,6 @@ As you can see from the previous series of images, the tools displayed vary depe
 
 ## Configuration
 
-- **elfinderMoveConfirm** - by default, a confirmation of the file or folder move is displayed when using drag & drop or copy/paste via the context menu. To disable the file or folder move confirmation, change the value of the configuration variable `elfinderMoveConfirm` at `false`.
+- `elfinderMoveConfirm` - by default, a confirmation of the file or folder move is displayed when using drag & drop or copy/paste via the context menu. To disable the file or folder move confirmation, change the value of the configuration variable `elfinderMoveConfirm` at `false`.
 
 ![](move-confirm.png)

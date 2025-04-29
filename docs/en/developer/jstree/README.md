@@ -2,21 +2,6 @@
 
 Library [jsTree](https://www.jstree.com/) is jquery `plugin`, which displays tree structures in WebJET.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [jsTree](#jstree)
-  - [Basic initialization in cooperation with Spring REST](#basic-initialization-in-cooperation-with-spring-rest)
-  - [Configuration](#Configuration)
-    - [Creating a new REST controller](#creating-a-new-rest-controller)
-    - [Custom object types](#custom-object-types)
-    - [Adjusting the display](#display-adjustment)
-    - [Change the URL of a REST service](#change-the-url-of-the-rest-service)
-  - [Icons and CSS classes](#icons-and-css-classes)
-    - [How to use icons](#how-to-use-icons)
-
-<!-- /code_chunk_output -->
-
 ## Basic initialization in cooperation with Spring REST
 
 The WebJET implementation of jsTree is configured using a JSON object in `app.js`.

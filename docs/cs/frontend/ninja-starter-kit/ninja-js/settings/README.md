@@ -1,6 +1,6 @@
 # Nastavení
 
- | Nastavení | Typ | Přednastaveno | Popis |
+| Nastavení | Typ | Přednastaveno | Popis |
  | ---------- | --------- | ------------- | ---------------------------- |
  | fireTime | *Integer* | 200 | Zpoždění zavolání události |
  | debug | *Boolean* | false | Debug režim |

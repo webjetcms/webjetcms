@@ -2,41 +2,6 @@
 
 For automated E2E testing the framework is used [CodeceptJS](https://codecept.io). Tests are written in JavaScript and practically control the browser in which the test is run. More information on why we chose this framework is in the section [Playwright + CodeceptJS](#playwright--codeceptjs).
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Automated testing](#automated-testing)
-  - [Installation](#installation)
-  - [Start testing](#start-of-testing)
-    - [Codecept UI](#codecept-ui)
-    - [HTML report generation](#html-report-generation)
-  - [Playwright + CodeceptJS](#playwright--codeceptjs)
-    - [Configuration](#Configuration)
-  - [Writing tests](#writing-tests)
-    - [Locators](#locators)
-    - [Within](#within)
-    - [Playwright methods](#playwright-methods)
-    - [WebJET additional features](#webjet-additional-features)
-    - [Waiting for completion](#waiting-for-completion)
-    - [Pause](#pause)
-    - [Login](#login)
-    - [Assert library](#assert-library)
-    - [Page objects](#page-objects)
-    - [Browser detection](#browser-detection)
-  - [Revocation of the right](#revocation-of-the-right)
-  - [Visual testing](#visual-testing)
-  - [Best practices](#best-practices)
-    - [Nomenclature](#nomenclature)
-    - [Test data](#test-data)
-    - [Selectors](#selectors)
-    - [Timing](#timing)
-    - [Scenario length](#length-of-the-scenario)
-    - [Debugging](#debugging)
-  - [Deleting the database](#deleting-the-database)
-  - [Testing REST services](#testing-rest-services)
-
-<!-- /code_chunk_output -->
-
 ## Installation
 
 ```shell
@@ -443,7 +408,7 @@ I.assertAbove(2, 1, 'Target data not above the given value');
 I.assertAbove(1, 2, 'Target data not below the given value');
 ```
 
-If necessary, you can also use [assert](https://www.npmjs.com/package/assert) library. An example of use is in the test [gallery.js](../../../../src/test/webapp/tests/apps/gallery.js):
+If necessary, you can also use [assert](https://www.npmjs.com/package/assert) library. An example of use is in the test [gallery.js](../../../../src/test/webapp/tests/apps/gallery/gallery.js):
 
 ```javascript
 const assert = require('assert');
@@ -742,6 +707,12 @@ DELETE FROM documents_history WHERE doc_id=22955 AND publicable=0;
 UPDATE groups SET sort_priority=10 WHERE parent_group_id IN (15257, 80578);
 DELETE FROM media WHERE media_fk_id NOT IN (259) AND (media_title_sk LIKE '%autotest%' OR media_title_sk LIKE 'image test%' OR media_title_sk LIKE '%onerror=alert%' OR media_title_sk LIKE 'media%');
 OPTIMIZE TABLE media;
+```
+
+If you want to change the passwords in the test database across the board, use:
+
+```sql
+UPDATE users SET password='bcrypt:...', password_salt='bcrypt:...' WHERE user_id>1 AND login NOT IN ('user_sha512', 'user_bcrypt');
 ```
 
 ## Testing REST services

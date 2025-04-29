@@ -121,7 +121,7 @@ Při kontrole se vezmou všechny rezervace nad objektem ve stejný den a testuje
 
 !>**Upozornění:** při kontrole protínání se využívají **pouze schváleno** rezervace nad daným rezervačním objektem.
 
-!>**Upozornění:** na vlastní riziko máte možnost uložit rezervaci i v případě nadměrné rezervace, kdy se překročí maximální počet rezervací. Stačí v kartě **základní** zvolit možnost **Povolit nadrezervace**.
+!>**Upozornění:** na vlastní riziko máte možnost uložit rezervaci i v případě nadměrné rezervace, kdy se překročí maximální počet rezervací. Stačí v kartě **základní** zvolit možnost **Povolit překročení kapacity**.
 
 ## Schvalování rezervací
 

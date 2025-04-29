@@ -120,12 +120,12 @@ Při kombinaci zadaného parametru `groupid` jsou možné následující situace
 **(Kliknutím zobrazíš detail pro funkci)**
 
 | Metody | Gettery | Settery |
-| --------------------------------- | --------------------- | ----------------------- |
-| [init()](#init)                   | [notFound](#notfound) | [id](#id)               |
-| [next()](#další)                   | | [apiUrl](#apiurl)       |
-| [loaded()](#Převzato-z)               | | [idKeyName](#idkeyname) |
-| [inputDataFrom()](#vstupní-data-z) | | |
-| [setInputValue()](#setinputvalue) | | |
+ | --------------------------------- | --------------------- | ----------------------- |
+ | [init()](#init)                   | [notFound](#notfound) | [id](#id)               |
+ | [next()](#next)                   | | [apiUrl](#apiurl)       |
+ | [loaded()](#loaded)               | | [idKeyName](#idkeyname) |
+| [inputDataFrom()](#inputdatafrom) | | |
+ | [setInputValue()](#setinputvalue) | | |
 
 ***
 

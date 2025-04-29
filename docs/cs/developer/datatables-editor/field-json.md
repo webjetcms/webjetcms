@@ -1,18 +1,5 @@
 # Field Type - JSON
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Field Type - JSON](#field-type---json)
-  - [Možnosti className](#možnosti-classname)
-  - [Použití specifických JSON objektů](#použití-specifických-json-objektů)
-  - [Vlastní konfigurace zobrazené stromové struktury](#vlastní-konfigurace-zobrazené-stromové-struktury)
-  - [Zobrazení hodnoty JSON sloupce v Datatable](#zobrazení-hodnoty-json-sloupce-v-datatable)
-  - [Poslech na změnu hodnoty](#poslech-na-změnu-hodnoty)
-  - [Implementační detaily](#implementační-detaily)
-
-<!-- /code_chunk_output -->
-
 Web stránky nebo aplikace Skripty používá mapování 1:N na další objekty. V případě web stránky je to vybrána adresář a kopie web stránky v adresářích a v případě aplikace Skripty je to mapování skriptu na adresáře a web stránky.
 
 Pole typu JSON pro DT Editor implementuje **UI pro zobrazení výběru adresáře nebo web stránky** z JS tree komponenty s možností nastavení JSON objektu pro **jedno pole nebo seznam (List) polí**.
@@ -95,11 +82,13 @@ všimněte si použití atributu `data-dt-json-addbutton` pro nastavení textu t
 
 `dt-tree-dir` - vrácený JSON objekt typu `DirTreeItem` pro **výběr adresáře v souborovém systému**
 
-`dt-tree-dir-simple` - vrácen **řetězec** s hodnotou pro **výběr adresáře v souborovém systému**, lze zadat kořenovou složku jako `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`
+`dt-tree-dir-simple` - vrácen **řetězec** s hodnotou pro **výběr adresáře v souborovém systému**, lze zadat kořenovou složku jako `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`. Do `data-dt-field-skipFolders` je možné zadat jméno konfigurační proměnné s čárkou odděleným seznamem složek, které se nezobrazí ve stromové struktuře.
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
 `dt-tree-dir-array` - vrácený JSON objekt typu `DirTreeItem` pro **výběr seznamu adresářů v souborovém systému**
+
+`dt-tree-dir-array-root` - vrácený JSON objekt typu `DirTreeItem` pro **výběr seznamu adresářů v souborovém systému** včetně možnosti Kořenová složka.
 
 `dt-tree-universal-array` - vrácený univerzální JSON objekt zděděný z typu `JsTreeItem` pro zakázkové zobrazení `jsTree` struktury
 

@@ -12,17 +12,27 @@ The booking editor contains 4 tabs, the functions of which are described in the 
 
 Card **Basic** as the name suggests, contains basic information about the reservation. The list with the selection of the reservation object to which the reservation relates is important.
 
-![](reservation-editor_basic_tab_1.png)
+| Hourly bookings | Day bookings |
+| :-------------------------------------: | :-------------------------------------: |
+| ![](reservation-editor_basic_tab_1.png) | ![](reservation-editor_basic_tab_2.png) |
 
-The tab also contains a date selection from/to and a time selection from/to. There is one important thing to remember about this selection. If you select the days from 01/01/2022 to 03/01/2022 between 08:00 and 16:00, it does not mean that the booking starts on 01/01/2022 at 08:00 and lasts until 03/01/2022 at 16:00 and everything in that range is booked. NO. With these selected values, it means in practice that you book this reservation object from 08:00 to 16:00 for each day separately. The reason for this is simple, this way you can book an object at a specific time for multiple days without having to book the entire interval. If the booking interval for the object is set from 05:00 to 20:00, only the specified time interval is booked for each day and the rest of the interval is not booked, even if the booking lasts for example 3 days.
+The composition of the card will vary depending on whether the selected booking object is all-day or not. For more information see [List of reservation objects](../reservation-objects/README.md).
 
-!>**Warning:** if the reservation object can be reserved [ONLY for the whole day](../reservation-objects/README.md) the following options will be hidden and unavailable:
-- time selection
-- an overview of the booking intervals of the facility for individual days
+**All day reservations**
 
-![](reservation-editor_basic_tab_2.png)
+In this mode, the object is reserved for the whole day. The best example is booking a hotel room. You need to enter the date range of the reservation and the arrival/departure time.
 
-Switch **Show the validity of the reservation being created ?** When selected, a text box will be revealed informing you of the validity of the reservation. This means whether or not a reservation for the selected object can be created in the given range. More information about the possible states in this field is explained in the section [Validation of reservations](#validation-of-reservations). If the reservation is valid, the border of the text box will turn green and if the reservation is not valid, it will turn red.
+!>**Warning:** if the reservation object can only be booked for a whole day, the last day in the date range is not counted because the customer leaves on that day. Therefore, the booking range for full-day bookings must be a minimum of 2 days.
+
+**Hourly bookings**
+
+There is one important thing to remember with this type of booking. If you choose days from 01.01.2022 to 03.01.2022 between 08:00 and 16:00, it does not mean that the reservation starts on 01.01.2022 at 08:00 and lasts until 03.01.2022 at 16:00 and everything in that range is booked. But it is not. With these chosen values, it means in practice that you book this **you book the reservation object from 08:00 to 16:00 for each day separately**. The reason is simple, this way you can book a property at a specific time for multiple days without having to book the entire interval. If the booking interval for a given object is set from 05:00 to 20:00, only the specified time interval is booked for individual days and the rest of the interval is not booked, even if the reservation lasts for example 3 days.
+
+At the bottom of the tab, you can see an overview with the booking intervals for each day of the week. These times are set according to the currently selected booking object. This is a help when creating/editing a reservation if you don't remember exactly when a particular reservation object can be booked for a particular day of the week. This overview is displayed **for hourly bookings only**.
+
+![](reservation-editor_basic_tab_4.png)
+
+Field **Notice** displays information about the validity of the booking being created. That is, whether or not a reservation for the selected object can be created in the given range. More information about the possible states in this field is explained in the section [Validation of reservations](#validation-of-reservations). If the reservation is valid, the border of the text box will turn green and if the reservation is not valid, it will turn red.
 
 **Booking price** displays the current price of the booking being created. The price depends on the selected reservation object, the reservation interval and the special prices set for the reservation object.
 
@@ -33,10 +43,6 @@ Switch **Show the validity of the reservation being created ?** When selected, a
 The booking status and the price of the reservation are updated whenever the date, time or reservation object is changed.
 
 ![](reservation-editor_basic_tab_3.png)
-
-At the bottom of the tab, you can see an overview with the booking intervals for each day of the week. These times are set according to the currently selected booking object. This is a help when creating/editing a reservation if you don't remember exactly when a particular reservation object can be booked for a particular day of the week.
-
-![](reservation-editor_basic_tab_4.png)
 
 ## Personal data
 
@@ -59,7 +65,7 @@ Conditions to view the card:
 - need for approval, the reservation object that the reservation is trying to reserve must have the parameter **Approval is required** and must have the email of the approver entered
 - approver, the card can only be shown to the person who has permission to approve the booking. This means that if the email of the logged-in user matches the email of the approver entered in the booking system and the previous points have been met, the card will be displayed to the user
 
-Once displayed, the tab contains a toggle between the three states that the reservation can enter. When switching from one state to the other, the action of changing the reservation state is triggered as if using the state change buttons. These actions will be better explained in the section **Approval of reservations**.
+Once displayed, the tab contains 3 buttons to change the booking status. These actions will be better explained in the section **Approval of reservations**.
 
 ![](reservation-editor_acceptation_tab.png)
 
@@ -73,23 +79,49 @@ The reservation will not be saved/edited until it meets all validation rules.
 
 The from date must be less than the to date (if the dates are the same, only one day is reserved).
 
+!>**Warning:** in the case of **all-day bookings**, the range shall be **at least 2 days** as the last day of the range is the day of departure and does not count towards the booking as such.
+
 ### Time range
 
-The time from must be sharply less than the time to, as you have to reserve at least 1 minute. At the same time, it is checked whether this time range is greater than or at least equal to the "Minimum reservation length (in minutes)" value set for the reservation object.
+Validation of the time range varies according to the type of reservation.
+
+**All day reservations**
+
+For all-day bookings, the time component is not validated as **Arrival time** / **Departure time** they are not on the same day and it's up to your decision.
+
+!>**Warning:** we strongly recommend that **Arrival time** was greater than **Departure time** otherwise the room will not be bookable for new customers on the day of the old customer's departure.
+
+**Hourly bookings**
+
+**Time from** must be sharply less than **Time to** because you must book a minimum of 1 minute. At the same time, it is checked whether this time range is greater than or at least equal to the specified "Minimum reservation length (in minutes)" value set for the reservation object.
 
 ### Scope in the past
 
 You cannot book the day(s) in the past. If you are trying to make a reservation for today then the time slot cannot be in the past.
 
-### Valid booking range,
+!>**Warning:** at your own risk, you have the option to save the reservation even if the selected range is in the past. Just in the tab **Basic** choose the option **Allow creation in the past**.
 
-Checks whether the specified time range is within the reservation interval of the object. This check is performed for each booked day separately. For example, if you are trying to book a property between 08:00-09:00 for the next 3 days, and even one of these days has a different booking interval, the booking is not valid. Of course, special booking intervals for individual days of the week are also taken into account, for more information see [times by day](../reservation-objects/README.md#times-by-day).
+### Valid booking range
+
+This check shall be carried out only for **hourly reservations**. Checks whether the specified time range is within the object's reservation interval. This check is performed for each booked day separately. For example, if you are trying to book a property between 08:00-09:00 for the next 3 days, and even one of these days has a different booking interval, the booking is not valid. Of course, special booking intervals for individual days of the week are also taken into account, for more information see [times by day](../reservation-objects/README.md#times-by-day).
 
 ### Maximum number of bookings at the same time
 
-In this case, it is checked whether after adding a reservation, multiple reservations will not be crossed at the same time as allowed by the parameter **Maximum number of bookings at the same time** of the object. Reservations are considered overlapping if their time intervals overlap in at least one minute (intervals do not overlap if the beginning of one is the end of the other in the same minute). For example, if you have 4 reservations, and their time intervals are `08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00` so we see that the reservation at the time of `08:00-11:00` intersects with 3 different reserves, but never more than 2 at the same time, because the other 3 reserves do not intersect with each other.
+In this case, it is checked whether after adding a reservation, multiple reservations will not be crossed at the same time as allowed by the parameter **Maximum number of bookings at the same time** of the object. Reservations are considered overlapping if their time intervals overlap in at least one minute (intervals do not overlap if the beginning of one is the end of the other in the same minute).
 
-The check takes all reservations (but only those that have been approved) over the property on the same day and tests whether this limit will be exceeded after adding our reservation. This is tested for each day separately and if even one day exceeds the maximum number of bookings at the same time, the booking will be marked as invalid.
+**All day reservations**
+
+For these bookings we have recommended that **Arrival time** was sharply greater than the time of departure. For example, if the check-in time is always 14:00 and the check-out time is always 10:00, then after the old customer leaves at 10:00 there is still time to clean (or otherwise prepare) the room for the new customer who checks in at 14:00. Such bookings do not overlap and it is possible to book a room on the day another customer leaves. In reality, it looks like the bookings intersect, but this is not the case (since the old customer leaves before the new one arrives).
+
+**Hourly bookings**
+
+For example, if you have 4 reservations, and their time intervals are `08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00` so we see that the reservation at the time of `08:00-11:00` intersects with 3 different reserves, but never more than 2 at the same time, because the other 3 reserves do not intersect with each other.
+
+The check takes all bookings over the property on the same day and tests whether this limit will be exceeded after adding our booking. This is tested for each day separately and if even one day exceeds the maximum number of bookings at the same time, the booking will be marked as invalid.
+
+!>**Warning:** intersection control uses **only approved** reservations above the booking object.
+
+!>**Warning:** you have the option to overbook at your own risk, even in the event of overbooking where the maximum number of bookings is exceeded. Simply tab **Basic** choose the option **Allow capacity overruns**.
 
 ## Approval of reservations
 

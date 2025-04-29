@@ -19,6 +19,7 @@ The names Field A - Field X can be changed in the configuration in the text edit
 - `components.banner.field_x` - for the Banner System application
 - `components.media.field_x` - for the Media app
 - `components.perex.field_x` - for the Brands app
+- `components.invoice.field_x` - for the E-Commerce application
 
 Technical information can be found in [documentation for the programmer](../../../developer/datatables-editor/customfields.md).
 

@@ -217,3 +217,21 @@ We recommend that you leave the page editor when you have finished your work and
 Applications have this property, so the workflow applies to all parts, not just the page editor.
 
 ![](../../developer/datatables-editor/editor-locking.png)
+
+## Toolbar
+
+When you view the web page, the WebJET toolbar is displayed in the upper right corner:
+
+![](webjet-toolbar.png)
+
+In addition to the date of the last modification, the website offers the following options when you click on:
+- DocID web page opens the page in the web page editor.
+- The folder name will display the web page folder.
+- The template name will open the page template in the editor.
+- The name of the user who last changed the web page will open a new email message to that editor.
+
+The toolbar displays:
+- If you have visited the Web pages section in the administration before viewing the team page.
+- Configuration variable `disableWebJETToolbar` is set to `false`.
+
+In addition to these conditions, the panel can be displayed using the URL parameter `?NO_WJTOOLBAR=true` to turn it off or `?NO_WJTOOLBAR=false` to turn it on. When set to `true` will not be displayed until you log out of the administration.
