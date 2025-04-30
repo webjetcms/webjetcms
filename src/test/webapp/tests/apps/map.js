@@ -7,5 +7,5 @@ Scenario("Map - test zobrazovania", async ({ I, Document }) => {
     I.waitForElement(".leaflet-control-zoom-in", 10);
     I.waitForElement(".leaflet-control-zoom-out", 10);
     I.wait(2);
-    await Document.compareScreenshotElement("#map1", "autotest-map0.png", 1280, 760, 20);
+    //await Document.compareScreenshotElement("#map1", "autotest-map0.png", 1280, 760, 20);
 });

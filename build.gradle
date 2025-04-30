@@ -105,6 +105,34 @@ sourceSets {
     }
  }
 
+def allureVersion = "2.25.0"
+def aspectJVersion = '1.9.21'
+
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude group: 'log4j', module: 'log4j'
+    //all*.exclude group: 'xml-apis', module: 'xml-apis'
+
+    //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
+    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
+
+    grettyRunnerTomcat85 {
+
+    }
+    grettyRunnerTomcat9 {
+        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
+        // https://mvnrepository.com/artifact/commons-io/commons-io
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+
+    agent {
+        canBeResolved = true
+        canBeConsumed = true
+    }
+}
+
 dependencies {
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
@@ -248,6 +276,8 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.15.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    testImplementation "io.qameta.allure:allure-junit5"
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
     // used in io.springfox:springfox-swagger2
@@ -261,26 +291,8 @@ dependencies {
     // used in velocity-tools-generic
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
-}
 
-configurations {
-    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
-    all*.exclude group: 'commons-logging', module: 'commons-logging'
-    all*.exclude group: 'log4j', module: 'log4j'
-    //all*.exclude group: 'xml-apis', module: 'xml-apis'
-
-    //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
-    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
-
-    grettyRunnerTomcat85 {
-
-    }
-    grettyRunnerTomcat9 {
-        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
-    }
+    agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
 
 test {
@@ -291,6 +303,7 @@ test {
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', '/poolman-local.xml'
+    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
 }
 
 java {
