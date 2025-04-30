@@ -57,7 +57,7 @@ public class BaseEditorFields {
      */
     public void addStatusIcon(String className) {
         if (statusIconsList == null) statusIconsList = new ArrayList<>();
-        statusIconsList.add(className);
+        if(statusIconsList.contains(className) == false) statusIconsList.add(className);
     }
 
     @JsonIgnore

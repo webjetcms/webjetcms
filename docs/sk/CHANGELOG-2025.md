@@ -76,6 +76,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
 
+### Vyhľadávanie
+
+- Refaktor logiky na svlastný `RestController` a `Service` (#57561).
+
 ### Rezervácie
 
 - **Podpora pre nadmernú rezerváciu** – umožňuje administrátorom vytvoriť viac rezervácií `overbooking` na ten istý termín (#57405).
