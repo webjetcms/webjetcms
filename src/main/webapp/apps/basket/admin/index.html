@@ -26,7 +26,7 @@
         { id: 'notify', title: '[[#{components.basket.tab.notify}]]'},
         { id: 'payments', title: '[[#{components.basket.invoice.payments.tab}]]'},
         { id: 'items', title: '[[#{components.basket.invoice_items}]]'},
-        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<iframe frameborder="0" id="dataDiv" width="850" height="950" src="about:blank"></iframe>' },
+        { id: 'order_status', title: '[[#{components.basket.tab.order}]]', hideOnCreate: true, content: '<div class="previewContainer"><iframe id="dataDiv" src="about:blank" width="100%" height="500"></iframe><div>' },
         { id: 'fields', title: '[[#{editor.tab.fields}]]'}
     ];
 
@@ -51,11 +51,46 @@
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
             if(event.detail.conf.id == "DTE_Field_editorFields.payments") {
                 paymentsDataTable = event.detail.conf.datatable;
+
                 paymentsDataTable.on("draw", function() {
-                    //Re-call iframe and set new values
-                    refreshIframeAndSetValues();
-                    //Refresh footer info
+                    //Update footer value
                     setPaymentsFooter();
+
+                    //Update ifarme so he show actual values
+                    refreshIframeAndSetValues();
+
+                    //Reload invoice table so status could be updated
+                    basketInvoiceDataTable.ajax.reload();
+                });
+
+                let buttonCounter = 4;
+                paymentsDataTable.button().add(buttonCounter++, {
+                    text: '<i class="ti ti-credit-card-refund"></i>',
+                    action: function (e, dt, node) {
+
+                        WJ.prompt({
+                            title: "[[#{components.invoice.payment_refundation_title}]]",
+                            message: "[[#{components.invoice.payment_refundation_msg}]]",
+                            success: function(value) {
+                                paymentsDataTable.executeAction("refundPayment", true, null, null, value);
+                            }
+                        });
+
+                        //Timeout just in case
+                        let input = $("#toast-container-webjet").find(".toastr-input > input");
+                        input[0].type = 'number';
+
+                        let selectedRows = dt.rows({ selected: true }).data();
+                        input.val(selectedRows[0].payedPrice);
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);
+                    },
+                    className: 'btn btn-outline-secondary buttons-refund-payment buttons-divider',
+                    attr: {
+                        'title': '[[#{components.invoice.payment_refundation_title}]]',
+                        'data-toggle': 'tooltip'
+                    }
                 });
             }
 
@@ -67,13 +102,56 @@
                     //Refresh footer info
                     setItemsFooter();
                 });
-            }
-        });
 
-        window.addEventListener("WJ.DTE.close", function(e) {
-            if("basketInvoiceDataTable_modal" == e.detail.dte._bootstrapDisplay.id) {
-                paymentsDataTable = null;
-                itemsDataTable = null;
+                itemsDataTable.button().add(1, {
+                    text: '<i class="ti ti-plus"></i>',
+                    action: function (e, dt, node) {
+                        let url = '/apps/basket/admin/product-list?previewMode=true';
+                        WJ.openIframeModal({
+                            title: "",
+                            url: url,
+                            width: 800,
+                            height: 600,
+                            closeButtonPosition: "close-button-over-nopadding",
+                            buttonTitleKey: "button.add",
+                            okclick: function() {
+                                let selectedRows = $('#modalIframeIframeElement').contents().find("tr.selected");
+                                if(selectedRows != undefined && selectedRows != null && selectedRows.length) {
+                                    let selectedIds = [];
+                                    for(let i = 0; i < selectedRows.length; i++) {
+                                        selectedIds.push( selectedRows[i].id );
+                                    }
+                                    itemsDataTable.executeAction("addItem", true, null, null, JSON.stringify({ invoiceId: basketInvoiceDataTable.EDITOR.currentJson['id'], selectedIds: selectedIds }));
+                                }
+                            }
+                        });
+
+                    },
+                    className: 'btn btn-sm buttons-create btn-success buttons-divider',
+                    attr: {
+                        'title': '[[#{button.add}]]',
+                        'data-toggle': 'tooltip'
+                    }
+                });
+
+                itemsDataTable.button().add(5, {
+                    text: '<i class="ti ti-eye"></i>',
+                    action: function (e, dt, node) {
+                        let selectedRows = dt.rows({ selected: true }).data();
+                        for (let i=0; i<selectedRows.length; i++) {
+                            let row = selectedRows[i];
+                            window.open("/showdoc.do?docid="+row.itemId);
+                        }
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                    },
+                    className: 'btn btn-outline-secondary buttons-history-preview',
+                    attr: {
+                        'title': '[[#{components.basket.show_item_page}]]',
+                        'data-toggle': 'tooltip'
+                    }
+                });
             }
         });
 
@@ -89,8 +167,6 @@
 
                         setInvoiceIframeIntoOrderFields();
                     }
-
-                    $("#pills-dt-basketInvoiceDataTable-payments-tab").on("click", function(e) { setPaymentsFooter(); });
 
                     $("#pills-dt-basketInvoiceDataTable-items-tab").on("click", function(e) { setItemsFooter(); });
                 }
@@ -108,14 +184,15 @@
             setTimeout(() => {
                 var editorValues = basketInvoiceDataTable.EDITOR.val();
                 //Replace orderRecap values
-                editorValues["editorFields.orderRecapBody"] =  $("#dataDiv").contents().find("body").prop('outerHTML');
-                editorValues["editorFields.orderRecapHead"] =  $("#dataDiv").contents().find("head").prop('outerHTML');
+                editorValues["editorFields.orderRecapBody"] = $("#dataDiv").contents().find("body").prop('outerHTML');
+                editorValues["editorFields.orderRecapHead"] = $("#dataDiv").contents().find("head").prop('outerHTML');
                 //Set values back
                 basketInvoiceDataTable.EDITOR.val(editorValues);
             }, 500);
         }
 
         function setPaymentsFooter() {
+            console.log("setPaymentsFooter");
             let colSum = $("#datatableFieldDTE_Field_editorFields-payments_wrapper > div.row.dt-footer-row > div.col-auto.col-sum");
             if(colSum.length > 0) {
                 let paidSumText = WJ.translate('components.basket.invoice.payments.paid_sum.js');
@@ -130,7 +207,19 @@
                             method: "GET",
                             success: function (payedPrice) {
                                 var paymentFooter = paidSumText + ': ' + WJ.formatPrice(payedPrice) + ' ' + actualCurrent + ' ' + needToPaySum + ': ' + WJ.formatPrice(priceToPayVAT) + ' ' + actualCurrent;
-                                colSum.html('<p>' + paymentFooter + '</p>');
+
+                                let bonusText = "";
+                                let diff = priceToPayVAT - payedPrice;
+                                if(diff < 0) {
+                                    diff = Math.abs(diff);
+                                    bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.overpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
+                                } else if(diff > 0) {
+                                    bonusText = " (<span style='color: #FF4B58;'>" + WJ.translate('components.basket.invoice.payments.underpayment.js') + "</span> : " + WJ.formatPrice(diff) + ")";
+                                } else {
+                                    //nothing - all payed good
+                                }
+
+                                colSum.html('<p>' + paymentFooter + bonusText + '</p>');
                             }, error: () => { colSum.html('<p> --- </p>'); }
                         })
                     }, error: () => { colSum.html('<p> --- </p>'); }
@@ -139,6 +228,7 @@
         }
 
         function setItemsFooter() {
+            console.log("setItemsFooter");
             let colSum = $("#datatableFieldDTE_Field_editorFields-items_wrapper > div.row.dt-footer-row > div.col-auto.col-sum");
             if(colSum.length > 0) {
                 let itemsPriceText = WJ.translate('components.basket.invoice.items.items_price.js');
@@ -155,5 +245,11 @@
         }
     });
 </script>
+
+<style>
+    table.datatableInit tbody tr.payment-not-confirmed td {
+        color: #FF4B58;
+    }
+</style>
 
 <table id="basketInvoiceDataTable" class="datatableInit table"></table>

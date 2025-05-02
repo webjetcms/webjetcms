@@ -1,9 +1,11 @@
 package sk.iway.iwcm.components.basket.rest;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -11,6 +13,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 import org.springframework.data.domain.Page;
@@ -18,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
@@ -26,6 +30,8 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
+import sk.iway.iwcm.components.basket.jpa.InvoiceStatus;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -37,6 +43,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.tags.CurrencyTag;
 
 public class ProductListService {
 
@@ -47,9 +54,9 @@ public class ProductListService {
     }
 
     private static Specification<DocDetails> hasGroupIdIn(List<Integer> groupIds) {
-        return (Root<DocDetails> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
-            return root.get("groupId").in(groupIds);
-        };
+        return (Root<DocDetails> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) ->
+            root.get("groupId").in(groupIds);
+
     }
 
     private static Specification<DocDetails> fieldStartsWithDigit(String fieldName) {
@@ -177,15 +184,7 @@ public class ProductListService {
 		groupDoc.setSearchable(true);
 		groupDoc.setCacheable(false);
         groupDoc.setPerexGroup(new String[]{"5"}); //5 - kategoria
-        groupDoc.setData(
-            "<section>\r\n" + //
-            "!INCLUDE(/components/eshop/shop/modules/md-category-header.jsp)!\r\n" + //
-            "\r\n" + //
-            "!INCLUDE(/components/eshop/shop/modules/md-subcategory-selector.jsp)!\r\n" + //
-            "</section>\r\n" + //
-            "\r\n" + //
-            "!INCLUDE(/components/eshop/shop/modules/md-product-list.jsp)!"
-        );
+        groupDoc.setData(Constants.getString("basketNewCategoryHtmlCode"));
 
         //Save doc
         editorFacade.save(groupDoc);
@@ -243,39 +242,56 @@ public class ProductListService {
         return groupsList;
     }
 
+    public static void updateInvoiceStats(Long invoiceId, boolean updateStatus) {
+        updateInvoiceStats(invoiceId, null, updateStatus);
+    }
+
     /**
-     * Update invoice stats (items count, total price, total price with VAT)
-     * @param invoiceId
-     * @param request
+     * Update invoice stats (items count, total price, total price with VAT). After that invoice status will be updated !!
+     * @param invoiceId - find invoiceItems by invoiceId - required
+     * @param browserId - find invoiceItems by browserId (if browser id is ) - can be null
      */
-    public static void updateInvoiceStats(int invoiceId) {
+    public static void updateInvoiceStats(Long invoiceId, Long browserId, boolean updateStatus) {
         if(invoiceId < 1) return;
 
         //Get repositories
         BasketInvoicesRepository bir = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
         BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+        BasketInvoicePaymentsRepository bipr = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
 
         Integer domainId = CloudToolsForCore.getDomainId();
-        BasketInvoiceEntity invoice = bir.findFirstByIdAndDomainId(Long.valueOf(invoiceId), domainId).orElse(null);
+        BasketInvoiceEntity invoice = bir.findFirstByIdAndDomainId(invoiceId, domainId).orElse(null);
         if(invoice == null) return;
 
         //Get invoice items
-        List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(Long.valueOf(invoiceId), domainId);
+        List<BasketInvoiceItemEntity> invoiceItems;
+        if(browserId != null && browserId > 0)
+            invoiceItems = biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+        else
+            invoiceItems = biir.findAllByInvoiceIdAndDomainId(invoiceId, domainId);
 
         Integer itemsCount = 0;
-        BigDecimal totalPrice = BigDecimal.ZERO; //NO VAT
-        BigDecimal totalPriceVat = BigDecimal.ZERO; //WITH VAT
+        BigDecimal priceToPayNoVat = BigDecimal.ZERO; //NO VAT
+        BigDecimal priceToPayVat = BigDecimal.ZERO; //WITH VAT
 
         for(BasketInvoiceItemEntity item : invoiceItems) {
             itemsCount += item.getItemQty();
-            totalPrice = totalPrice.add( item.getItemPriceQty() );
-            totalPriceVat = totalPriceVat.add( item.getItemPriceVatQty() );
+            priceToPayNoVat = priceToPayNoVat.add( item.getItemPriceQty() );
+            priceToPayVat = priceToPayVat.add( item.getItemPriceVatQty() );
         }
 
         //Set and save invoice
         invoice.setItemQty(itemsCount);
-        invoice.setPriceToPayNoVat(totalPrice);
-        invoice.setPriceToPayVat(totalPriceVat);
+        invoice.setPriceToPayNoVat(priceToPayNoVat);
+        invoice.setPriceToPayVat(priceToPayVat);
+        invoice.setBalanceToPay( priceToPayVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ) );
+
+        if(updateStatus) {
+            //SAME time, it can chnage the status of invoice
+            BigDecimal totalPayedPrice = getPayedPrice(invoice.getId(), bipr);
+            invoice.setStatusId( ProductListService.getInvoiceStatusByValues(priceToPayVat, totalPayedPrice) );
+        }
+
         bir.save(invoice);
     }
 
@@ -287,16 +303,68 @@ public class ProductListService {
 
         return invoiceItems.stream()
                            .map(item -> item.getItemPriceVatQty())
-                           .reduce(BigDecimal.ZERO, BigDecimal::add);
+                           .reduce(BigDecimal.ZERO, BigDecimal::add)
+                           .setScale(2, RoundingMode.HALF_UP);
     }
 
     public static BigDecimal getPayedPrice(Long invoiceId, BasketInvoicePaymentsRepository bipr) {
         if(invoiceId == null) return new BigDecimal(-1);
 
-        List<BasketInvoicePaymentEntity> invoicePayments = bipr.findAllByInvoiceId(invoiceId);
+        //ONLY confirmed payments
+        List<BasketInvoicePaymentEntity> invoicePayments = bipr.findAllByInvoiceIdAndConfirmedTrue(invoiceId);
         if(invoicePayments == null || invoicePayments.isEmpty()) return BigDecimal.ZERO;
         return invoicePayments.stream()
                               .map(item -> item.getPayedPrice())
-                              .reduce(BigDecimal.ZERO, BigDecimal::add);
+                              .reduce(BigDecimal.ZERO, BigDecimal::add)
+                              .setScale(2, RoundingMode.HALF_UP);
     }
+
+    public static final Integer getInvoiceStatusByValues(BigDecimal priceToPayVat, BigDecimal totalPayedPrice) {
+        if(CurrencyTag.formatNumber(priceToPayVat).equals(CurrencyTag.formatNumber(totalPayedPrice)))
+            return InvoiceStatus.INVOICE_STATUS_PAID.getValue();
+        else if(totalPayedPrice.compareTo(BigDecimal.valueOf(0)) > 0)
+            return InvoiceStatus.INVOICE_STATUS_PARTIALLY_PAID.getValue();
+        else
+            return InvoiceStatus.INVOICE_STATUS_NEW.getValue();
+    }
+
+    public static void addItemToInvoice(Long invoiceId, List<Integer> itemIdsToAdd, BasketInvoiceItemsRepository biir, int userId, HttpServletRequest request) {
+		DocDB docDB = DocDB.getInstance();
+		int domainId = CloudToolsForCore.getDomainId();
+
+		Long browserId = biir.getBrowserIdByInvoiceId(invoiceId, domainId).orElse(null);
+		if(browserId == null) browserId = Long.valueOf( PkeyGenerator.getNextValue("basket_browser_id") );
+
+		for(Integer itemId : itemIdsToAdd) {
+			DocDetails itemDoc = docDB.getDoc(itemId);
+
+			BasketInvoiceItemEntity item = biir.findByInvoiceIdAndItemIdAndDomainId(invoiceId, Long.valueOf(itemId), domainId).orElse(null);
+
+			if(EshopService.canAddItem(itemDoc, item, 1)) {
+
+				if(item != null) {
+					item.setItemQty(item.getItemQty() + 1);
+					biir.save(item);
+				} else {
+					//Prepare new item
+					BasketInvoiceItemEntity newItem = new BasketInvoiceItemEntity();
+
+					newItem.setBrowserId(browserId);
+					newItem.setLoggedUserId(userId);
+					newItem.setItemId(itemId);
+					newItem.setItemTitle( itemDoc.getTitle() );
+					newItem.setItemPartNo( itemDoc.getFieldA() );
+					newItem.setItemPrice( itemDoc.getPrice(request) );
+					newItem.setItemVat( itemDoc.getVat().intValue() );
+					newItem.setItemQty(1);
+					newItem.setDateInsert(new Date(Tools.getNow()));
+					newItem.setInvoiceId(invoiceId.intValue());
+					newItem.setDomainId(domainId);
+
+					biir.save(newItem);
+				}
+
+			}
+		}
+	}
 }

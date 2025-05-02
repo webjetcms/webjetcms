@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.basket.jpa;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +13,8 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 @Repository
 public interface BasketInvoicesRepository extends DomainIdRepository<BasketInvoiceEntity, Long> {
     Page<BasketInvoiceEntity> findAllByLoggedUserIdAndDomainId(Integer loggedUserId, Integer domainId, Pageable pageable);
+
+    List<BasketInvoiceEntity> findAllByLoggedUserIdAndDomainIdOrderByCreateDateDesc(Integer loggedUserId, Integer domainId);
 
     @Query("SELECT bie.statusId FROM BasketInvoiceEntity bie WHERE bie.id = :id AND bie.domainId = :domainId")
     Integer getStatusId(@Param("id") Long id, @Param("domainId") Integer domainId);

@@ -25,12 +25,10 @@ Scenario('Product list screens', async ({I, DT, DTE, Document}) => {
     Document.screenshotElement("#pills-dateRange-tab", "/redactor/apps/eshop/product-list/select-phones-android.png");
 
     I.amOnPage("/apps/basket/admin/product-list/");
-    Document.screenshotElement("button.buttons-add-folder", "/redactor/apps/eshop/product-list/add-folder-button.png");
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet");
     I.moveCursorTo("#toast-container-webjet");
     Document.screenshotElement("#toast-container-webjet", "/redactor/apps/eshop/product-list/toaster-new-folder.png");
-    Document.screenshotElement( locate("#toast-container-webjet").find("button.btn-primary"), "/redactor/apps/eshop/product-list/toaster-new-folder-button.png");
 
     I.amOnPage("/apps/basket/admin/product-list/");
     doToasterScreen(I, Document, "", "A");

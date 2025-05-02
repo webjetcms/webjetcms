@@ -17,8 +17,6 @@
 <iwcm:checkLogon admin="true" perms="cmp_basket|menuWebpages"/>
 
 <%@page import="java.io.File" %>
-<%@page import="sk.iway.iwcm.ebanking.epayments.ElectronicPayments"%>
-<%@page import="sk.iway.iwcm.ebanking.epayments.PaymentType"%>
 <%@page import="java.util.List"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.util.Collections"%>
@@ -32,6 +30,7 @@
 
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
 	String jspFileName = request.getParameter("jspFileName");
+	int groupId = Tools.getIntValue(request.getParameter("groupId"), 0);
 
 	if (Tools.isNotEmpty(jspFileName) && jspFileName.contains("product_perex")) {
 		pageContext.include("editor_component_perex.jsp");
@@ -67,9 +66,9 @@
 	Okno komponenty sluziacej na vkladanie stranok suvisiacich so shopom.
 	Mozno vlozit: obsah kosiku, zoznam produktov, maly kosik a objednavkovy formular.
 
-	Pouziva: Tools, ElectronicPayments, Constants
+	Pouziva: Tools, Constants
 
-	Suvisiace stranky: products.jsp, order_form.jsp, basket.jsp, basket_small.jsp, order_payment_*, invoices_list.jsp
+	Suvisiace stranky: products.jsp, order_form.jsp, basket.jsp, basket_small.jsp
  --%>
 
 <jsp:include page="/components/top.jsp"/>
@@ -123,8 +122,6 @@ function changeDisplayedDiv()
         $('#productsDiv').show();
     if ("order_form" == selectedValue)
         $('#orderDiv').show();
-   /* if ("invoices_list" == selectedValue)
-        $('#mojeObjednavkyDiv').get(0).style.display = "block";*/
 }
 
 
@@ -134,7 +131,6 @@ $(document).ready(function(){
 <%} %>
 });
 	<%-- musime si vediet dynamicky ziskat zoznam podporovanych elektronickych platieb--%>
-	var electronicPaymentTypes = "<%=ElectronicPayments.getKnownPaymentMethodsToBasketString().toString().replaceAll("[\\[\\] ]","")%>";
 	var modeTransport="";
 
 	function checkChanges()
@@ -216,35 +212,14 @@ function getOrderFormParametersString()
 {
     var notifyEmail = $('#notifyEmail').get(0).value;
     //zistime si, ake sposoby platby nam zaskrtal, a spravime z nich zoznam
-    var displayedPayments = "";
-    if ($('#cashOnDelivery').get(0).checked)
-        displayedPayments +=",cash_on_delivery";
     var account = "";
-    if ($('#moneyTransfer').get(0).checked)	{
-        displayedPayments +=",money_transfer";
-        if ($('#account').get(0).value.length < 10) {alert("Zadajte prosím číslo účtu, kam budú chodiť platby.");return false;}
-        account = "moneyTransferAccount="+"\""+$('#account').get(0).value+"\"";
-    }
     if($('#allowPartialPayments').get(0).checked){
         account = "allowPartialPayments=true";
     }
-    //pre zoznam elektronickych platieb zisti, ci boli zaskrtnute
-    var electronicPayments = electronicPaymentTypes.split(',');
-    for (var paymentIndex = 0; paymentIndex < electronicPayments.length;paymentIndex++){
-        try{
-            checked = $('#'+electronicPayments[paymentIndex]).get(0).checked;
-            if (checked){
-                displayedPayments +=","+electronicPayments[paymentIndex];
-            }
-        }catch(exc){}
-    }
     //odrezeme prvu cairku a pridame na koniec
-    displayedPayments = "\""+displayedPayments.substring(1)+"\"";
     notifyEmail = (notifyEmail.length > 2 ? ", notifyEmail=\""+notifyEmail+"\"" : "" );
-    var moneyTransferNote = $("#moneyTransferNote").get(0).value.length > 0 ?
-        ",moneyTransferNote=\""+$("#moneyTransferNote").get(0).value +"\"": "";
 
-    return account+", displayedPayments="+displayedPayments+moneyTransferNote+notifyEmail;
+    return account+", displayedPayments="+notifyEmail;
 }
 
 	function setParentGroupId(returnValue)
@@ -356,7 +331,7 @@ function getOrderFormParametersString()
 
 	function loadComponentIframe()
 	{
-		var url = "/components/basket/admin_products_list.jsp?include="+encodeURIComponent(getIncludeTextProducts());
+		var url = "/components/basket/admin_products_list.jsp?groupId=<%=groupId%>&include="+encodeURIComponent(getIncludeTextProducts());
 	 	$("#componentIframeWindowTab").attr("src", url);
 	}
 
@@ -603,7 +578,7 @@ function getOrderFormParametersString()
 
 				<%------------------ OBJEDNAVKOVY FORMULAR -------------%>
 
-				<div id="orderDiv" style="display: none;">
+				<div id="orderDiv">
 					<div class="col-sm-12">
 						<div class="col-sm-10 col-sm-offset-1 form-group">
 							<iwcm:text key="components.basket.editor.order_desc"/>
@@ -623,60 +598,6 @@ function getOrderFormParametersString()
 							</div>
 							<div class="col-sm-6">
 								<input type="text" class="email" id="notifyEmail" style="width: 100%; float:right;" value="<%=ResponseUtils.filter(pageParams.getValue("notifyEmail", "")) %>"/>
-							</div>
-						</div>
-						<div class="col-sm-10 col-sm-offset-1">
-							<div class="col-sm-12 form-group">
-								<b><iwcm:text key="components.basket.editor.payment_methods"/></b>
-							</div>
-							<div class="form-group col-sm-12">
-								<div class="col-sm-12">
-									<input type="checkbox" id="cashOnDelivery" <%if (ResponseUtils.filter(pageParams.getValue("displayedPayments", "")).indexOf("cash_on_delivery") != -1)
-										out.print("checked='checked'");%>/>
-									<iwcm:text key="components.basket.editor.cash_on_delivery"/>
-								</div>
-								<div class="col-sm-12">
-									<input type="checkbox" id="moneyTransfer" <%if (ResponseUtils.filter(pageParams.getValue("displayedPayments", "")).indexOf("money_transfer") != -1)
-										out.print("checked='checked'");%>/>
-									<iwcm:text key="components.basket.editor.money_transfer"/>
-								</div>
-							</div>
-							<div class="col-sm-10 col-sm-offset-1 form-group">
-								<div class="col-sm-6">
-									<iwcm:text key="components.basket.editor.account"/>
-								</div>
-								<div class="col-sm-6">
-									<input type="text" id="account" value="<%=ResponseUtils.filter(pageParams.getValue("moneyTransferAccount", ""))%>" style="width: 100%; float:right;" />
-								</div>
-							</div>
-							<div class="col-sm-10 col-sm-offset-1 form-group">
-								<div class="col-sm-6">
-									<iwcm:text key="components.basket.editor.moneyTransferNote"/>
-								</div>
-								<div class="col-sm-6">
-									<textarea rows="5" cols="28" id="moneyTransferNote" style="float:right;" ><%=ResponseUtils.filter(pageParams.getValue("moneyTransferNote", "")) %></textarea>
-								</div>
-							</div>
-						</div>
-						<div class="col-sm-12 form-group">
-							<div class="col-sm-8 col-sm-offset-2">
-								<%  List<PaymentType> paymentMethods = new ArrayList(ElectronicPayments.getKnownPaymentMethods());
-									Collections.sort(paymentMethods);
-									for( PaymentType paymentType: paymentMethods )
-									{
-										if ( ElectronicPayments.isPaymentMethodConfigured( paymentType ) ){	%>
-											<input type="checkbox" id="<%=paymentType.toBasketString() %>" <%if (ResponseUtils.filter(pageParams.getValue("displayedPayments", "")).indexOf("tatraPay") != -1)
-												out.print("checked='checked'");%>/>
-											<%=paymentType.toString() %>
-											<%
-										}else{%>
-											<div class="col-sm-12 form-group">
-												Služba <%=paymentType.toString() %> nie je nakonfigurovaná
-												<input type="button" class="button50" value="Nastav" onclick="window.open('/components/basket/electronic_payments_config/<%=paymentType.getEditorName() %>_config.jsp',null,'scrollbars=1,resizable=1,location=0,menubar=0,status=1,toolbar=0',true)" style="float: right;"/>
-											</div>
-										<%} %>
-
-								<%} %>
 							</div>
 						</div>
 					</div>

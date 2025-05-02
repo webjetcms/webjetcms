@@ -2293,6 +2293,4 @@ public class UpdateDatabase
 
 		saveSuccessUpdate(note);
 	}
-
-	//TODO add update method that will loop ALL invoices and set itemQty, priceNotVat, priceVat
 }

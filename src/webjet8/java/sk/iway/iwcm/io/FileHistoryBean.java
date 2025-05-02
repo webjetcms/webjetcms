@@ -12,11 +12,9 @@ import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.eclipse.persistence.annotations.Converter;
-
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ActiveRecord;
-import sk.iway.iwcm.ebanking.MoneyLongConverter;
+// import sk.iway.iwcm.ebanking.MoneyLongConverter;
 
 
 /**
@@ -33,7 +31,6 @@ import sk.iway.iwcm.ebanking.MoneyLongConverter;
  */
 @Entity
 @Table(name="file_history")
-@Converter(converterClass=MoneyLongConverter.class, name="toMoney")
 public class FileHistoryBean extends ActiveRecord implements Serializable
 {
 	private static final long serialVersionUID = -1L;

@@ -1,0 +1,79 @@
+.basketListTable {
+    width: 100%;
+
+    .basketListTableHeader {
+        background-color: #F3F3F6;
+        font: bold;
+    }
+
+    a.removeItem {
+        background: url(/components/basket/img/basketbox-minus.png) center no-repeat;
+        background-color: #c5c5c5;
+        border-radius: 4px;
+        display: block;
+        float: left;
+        height: 20px;
+        margin: 6px 0 0;
+        text-indent: -10000px;
+        width: 20px;
+    }
+
+    a.addItem {
+        background: url(/components/basket/img/basketbox-plus.png) center no-repeat;
+        background-color: #c5c5c5;
+        border-radius: 4px;
+        display: block;
+        float: left;
+        height: 20px;
+        margin: 6px 0 0;
+        text-indent: -10000px;
+        width: 20px;
+    }
+
+    a.deleteItem {
+        background: url(/components/basket/img/basketbox-delete.png) no-repeat scroll center center rgba(0, 0, 0, 0);
+        display: block;
+        text-indent: -10000px;
+        width: 30px;    
+    }
+
+    a.closeBasket {
+        display: none;
+    }
+
+    input.basketQty {
+        border-style: solid;
+        border-width: 1px;
+        display: block;
+        float: left;
+        font-size: 14px;
+        height: 30px;
+        line-height: 30px;
+        margin: 0 5px;
+        text-align: center;
+        width: 65px;
+    }
+}
+
+.container_basket {
+    text-align: end;
+
+    span.basketPriceText {
+        color: #00a3e0;
+        font-size: 19px;
+        box-sizing: border-box;
+        font-family: "geomanist", sans-serif;
+    }
+    
+    span.basketPrice {
+        color: #00a3e0;
+        font-size: 19px;
+        box-sizing: border-box;
+        font-family: "geomanist", sans-serif;
+    }
+
+    .basketTexts {
+        text-transform: uppercase;
+        padding: 10px 0 20px 0;
+    }
+}

@@ -1,10 +1,14 @@
-
+<%@page import="java.util.List"%><%@page import="java.math.BigDecimal"%>
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
 %>
-<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.jpa.*,sk.iway.iwcm.components.basket.rest.*,java.util.*" %>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+<%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <iwcm:script type="text/javascript" src="/components/basket/jscript.jsp"></iwcm:script>
@@ -32,26 +36,19 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
       orderFormUrl = Tools.addParametersToUrl(orderFormUrl, "basketAct=orderform");
   }
 
-  List<BasketItemBean> basketItems = null;
+  List<BasketInvoiceItemEntity> basketItems = null;
   String act = request.getParameter("act");
   if ("set".equals(act))
   {
-    boolean ok = BasketDB.setItemFromDoc(request);
+    boolean ok = EshopService.getInstance().setItemFromDoc(request);
     if (ok)
     {
-      basketItems = BasketDB.getBasketItems(request);
+      basketItems = EshopService.getInstance().getBasketItems(request);
     %>
          <div>
-        <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=BasketDB.getTotalItems(basketItems)%></span></span>
-        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=BasketDB.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+        <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
+        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
         </div>
-        <iwcm:script type="text/javascript">
-        <!--
-          //prepocitaj hodnoty v parent okne
-          writeHtml("basketSmallItems", getHtml("basketSmallItemsResult"));
-          writeHtml("basketSmallPrice", getHtml("basketSmallPriceResult"));
-        //-->
-        </iwcm:script>
       <%
     }
     else
@@ -63,18 +60,11 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
   }
   else if ("deleteall".equals(act))
   {
-    BasketDB.deleteAll(request);
+    EshopService.getInstance().deleteAll(request);
   }
-  /*
-  else if (("orderform".equals(act) || "saveorder".equals(act)) && orderFormDocId==-1)
-  {
-    pageContext.include("order_form.jsp");
-    return;
-  }
-  */
 
   if (basketItems == null)
-    basketItems = BasketDB.getBasketItems(request);
+    basketItems = EshopService.getInstance().getBasketItems(request);
   if (basketItems.size() > 0)
     request.setAttribute("basketItems", basketItems);
 
@@ -472,24 +462,19 @@ $(".addToBasket").on("click", function(){
 
 
       <logic:present name="basketItems">
-          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.BasketItemBean">
-          <%--
-          <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
-          <input type="hidden" name="basketItemId" class="input" value="<bean:write name="good" property="itemId"/>" />
-          <input type="hidden" name="act" value="set" />
-        --%>
+          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
             <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
               <td class="w-5">
-                <a target="_blank" href="<%=docDB.getDocLink(good.getItemId()) %>"><bean:write name="good" property="title"/></a>
+                <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
               </td>
               <td class="fL w-2">
                 <a href="javascript:void(0)" class="removeItem"><span>remove</span></a>
                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<bean:write name="good" property="itemQty"/>">
                 <a href="javascript:void(0)" class="addItem"><span>add</span></a>
               </td>
-              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
-              <td class="fL w-2"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
+              <td class="fL w-2"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
               <td class="fL" style="padding-right: 20px;"><%= good.getItemNote() %></td>
               <td class="delete w-1">
                 <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>"><span>Delete</span></a>
@@ -506,17 +491,14 @@ $(".addToBasket").on("click", function(){
               Celková cena
             </span>
             <span class="basketPrice">
-               <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-                 <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>
+               <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+                 <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
                </iway:curr>
              </span></h3>
       </div>
       </div>
 
         <div class="row">
-
-
-
 
           <div style="text-align:right" class="pull-xs-4  col-xs-4  col-sm-12 col-md-12 ">
              <span class="basketContinueBtn" id="orderContinurButton">
@@ -525,39 +507,13 @@ $(".addToBasket").on("click", function(){
               </a>
             </span>
 
-
-
-
             <span id="orderButton">
               <a class="btn btn-success" href="<%= orderFormUrl %>">Dokončiť nákup</a>
             </span>
           </div>
+
         </div>
       </div>
-
-      <%--table>
-        <tr class='basketListTableTotalVat'>
-          <td>
-            <span class="basketContinueBtn" id="orderContinurButton">
-              <a href="javascript:void(0)" class="closeBasket">
-                <iwcm:text key="components.basket.continue"/>
-              </a>
-            </span>
-           </td>
-           <td colspan="5">
-             <span class="basketOrderBtn" id="orderButton">
-                <a href="<%= orderFormUrl %>">
-                  <iwcm:text key="components.basket.order"/>
-                </a>
-              </span>
-             <span class="basketPrice">
-               <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-                 <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>
-               </iway:curr>
-             </span>
-          </td>
-        </tr>
-     </table--%>
   </div>
 
   <% } else if("02".equals(style)){ %>
@@ -571,7 +527,7 @@ $(".addToBasket").on("click", function(){
 		      <logic:present name="basketItems">
 
 
-					<logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.BasketItemBean">
+					<logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 
 									<tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
 
@@ -588,7 +544,7 @@ $(".addToBasket").on("click", function(){
 												<%} %>
 												</a>
 												<div class="media-body">
-													<span class="media-meta pull-right"><h4><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></h4></span>
+													<span class="media-meta pull-right"><h4><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></h4></span>
 													<h4 class="title">
 														<bean:write name="good" property="title"/>
 													</h4>
@@ -612,8 +568,8 @@ $(".addToBasket").on("click", function(){
               Celková cena
             </span>
             <span class="basketPrice">
-               <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-                 <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>
+               <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+                 <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
                </iway:curr>
              </span></h3>
       </div>

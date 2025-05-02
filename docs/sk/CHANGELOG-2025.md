@@ -8,6 +8,7 @@
 
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Aplikácia Archív súborov bola prerobená na Spring aplikáciu. Bližšie informácie nájdete v sekcii pre programátora (#57317).
+- Aplikácia Elektronický obchod bola na `BE` časti prerobená. Bližšie informácie nájdete v sekcii pre programátora (#56609).
 
 ### Archív súborov
 
@@ -80,6 +81,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/eshop/invoice/editor_personal-info.png)
 
+- Nová verzia [konfigurácie spôsobov platby](redactor/apps/eshop/payment-methods/README.md) a integrácie na platobné brány. Údaje sú oddelené podľa domén. Pridali sme podporu [platobnej brány GoPay](https://www.gopay.com), čo znamená aj akceptáciu platobných kariet, podporu `Apple/Google Pay`, platby cez internet banking, `PayPal`, `Premium SMS` atď. Okrem toho sú podporované platby prevodom a dobierka. Pre každý typ platby je možné nastaviť aj cenu, ktorá pri zvolení možnosti bude automaticky pripočítaná k objednávke. Nastavené spôsoby platby sa aj automaticky premietnu do možností pri vytváraní objednávky zákazníkom.
+
+![](redactor/apps/eshop/payment-methods/datatable.png)
+
+- Nová aplikácia Zoznam objednávok so zoznamom objednávok aktuálne prihláseného používateľa. Kliknutím na objednávku je možné zobraziť detail objednávky a stiahnuť ju v PDF formáte (#56609).
+
 ### Oprava chýb
 
 - Hromadný email - pri duplikovaní kampane doplnené duplikovanie zoznamu príjemcov (#57533).
@@ -99,6 +106,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Pridané automatické nastavenie filtrovania stĺpca na hodnotu `false`, v prípade že hodnota je `null` (nenastavená) a ide o stĺpec, ktorý je vnorený, ako napr `editorFields` stĺpce (#57685).
 - Pridaná možnosť [špeciálneho usporiadania](developer/datatables/restcontroller.md#usporiadanie) prepísaním metódy `DatatableRestControllerV2.addSpecSort(Map<String, String> params, Pageable pageable)` (#57685).
 - Pridaná možnosť v anotácii `@DataTableColumn` nastaviť atribút `orderProperty` ktorý určí [stĺpce pre usporiadanie](developer/datatables/restcontroller.md#usporiadanie), napr. `orderProperty = "contactLastName,deliverySurName"`. Výhodné pre `EditorFields` triedy, ktoré môžu agregovať dáta z viacerých stĺpcov (#57685).
+- Prerobená aplikácia Elektronický obchod na `BE` časti. Nakoľko sa využívajú už nové triedy, pre správne fungovanie musíte:
+  - využiť aktualizačný skript `/admin/update/update-2023-18.jsp` pre základnú aktualizáciu vašich JSP súborov
+  - nakoľko sa teraz využíva typ `BigDecimnal` namiesto `float`, musíte naviac upraviť všetky porovnania týchto hodnôt. Typ `BigDecimal` sa neporovnáva klasicky pomocou `<, =, >` ale pomocou `BigDecimal.compareTo( BigDecimal )`
+  - musíte odstrániť volania súborov, alebo spätne pridať všetky súbory, ktoré boli odstránené, nakoľko sa nevyužívali
 
 ### Testovanie
 
@@ -139,10 +150,11 @@ Vo verzii **2025.0** sme priniesli vylepšený **dizajn administrácie**, ktorý
   ![](redactor/webpages/domain-select.png)
 
 **Preorganizované menu položky**:
-  - **SEO** presunuté do sekcie **Prehľady**.
-  - **GDPR a Skripty** presunuté do sekcie **Šablóny**.
-  - **Galéria** je teraz v sekcii **Súbory**.
-  - Niektoré názvy položiek boli upravené, aby lepšie vystihovali ich funkciu.
+
+- **SEO** presunuté do sekcie **Prehľady**.
+- **GDPR a Skripty** presunuté do sekcie **Šablóny**.
+- **Galéria** je teraz v sekcii **Súbory**.
+- Niektoré názvy položiek boli upravené, aby lepšie vystihovali ich funkciu.
 
 ### Web stránky
 

@@ -89,7 +89,7 @@ Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => 
     DT.checkTableRow("productListDataTable", 1, ["92892", "", "Smasung Galaxy S9 128GB", "Tester Playwright"]);
 });
 
-Scenario('Creating new folder (cathegory)', async ({I, DT, Document}) => {
+Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
 
     await changeDomain(I, Document, "/apps/basket/admin/product-list");
 
@@ -145,9 +145,9 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, Document}) => {
     I.dontSeeElement( locate(subcategory).withText(newGroupB) );
 
     I.click( locate(subcategory).withText(newGroupA) );
-    I.waitForElement("section.md-subcategory-selector", 10);
-    I.dontSeeElement( locate(subcategory).withText(newGroupA) );
-    I.seeElement( locate(subcategory).withText(newGroupB) );
+    I.waitForElement("div.productsTags", 10);
+    I.dontSeeElement( locate("div.productsTags").withText(newGroupA) );
+    I.seeElement( locate("div.productsTags").withText(newGroupB) );
 
     I.say("Delete structure");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=72080");
@@ -157,6 +157,8 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, Document}) => {
     I.click( locate("div.wp-header-tree").find("button.buttons-remove.noperms-deleteDir") );
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForModalClose("groups-datatable_modal");
+    DT.waitForLoader();
 
     I.dontSee(newGroupA);
     I.dontSee(newGroupB);

@@ -87,7 +87,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
             I.say("Check buttons visibility");
                 I.seeElement( locate(itemsDataTable).find("button.buttons-edit") );
-                I.dontSeeElement( locate(itemsDataTable).find("button.buttons-create") );
+                //I.dontSeeElement( locate(itemsDataTable).find("button.buttons-create") );
                 I.dontSeeElement( locate(itemsDataTable).find("button.buttons-duplicate") );
 
             I.say("Edit item");

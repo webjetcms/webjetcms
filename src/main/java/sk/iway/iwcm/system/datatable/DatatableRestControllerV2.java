@@ -41,9 +41,7 @@ import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
 
-//import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-//import javax.persistence.PersistenceUnit;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Path;
@@ -1007,7 +1005,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		};
 	}
 
-
 	/**
 	 * Doplnenie pecialneho vyhladavanie, interne vola:
 	 * - addSpecSearchUserFullName(searchUserFullName, "userId", predicates, root, builder);
@@ -1530,8 +1527,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@SuppressWarnings("all")
 	public void throwError(String errorKey) {
 		throwError(errorKey, false);
-	}	
-	
+	}
+
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
@@ -1559,8 +1556,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public void throwError(String errorKey, String... params) {
 		//no notification
 		throwError(errorKey, false, params);
-	}	
-	
+	}
+
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
@@ -1598,7 +1595,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	public void throwError(List<String> errorKeys) {
 		throwError(errorKeys, false);
 	}
-	
+
 	/**
 	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
 	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat

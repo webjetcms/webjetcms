@@ -3,12 +3,14 @@ package sk.iway.iwcm.components.basket.jpa;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
@@ -21,6 +23,7 @@ import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -38,12 +41,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Setter
 public class BasketInvoiceEntity extends ActiveRecordRepository implements Serializable {
 
-	public static final Integer INVOICE_STATUS_NEW = Integer.valueOf(1);
-	public static final Integer INVOICE_STATUS_PAID = Integer.valueOf(2);
-	public static final Integer INVOICE_STATUS_CANCELLED = Integer.valueOf(3);
-	public static final Integer INVOICE_STATUS_PARTIALLY_PAID = Integer.valueOf(4);
-	public static final Integer INVOICE_STATUS_ISSUED = Integer.valueOf(5);
-	public static final Integer INVOICE_STATUS_DEPOSIT_PAID = Integer.valueOf(8);
+	@PrePersist
+	public void onPrePersist() {
+		//After insert update invoice stats
+		ProductListService.updateInvoiceStats(this.getId(), this.browserId, true);
+	}
 
     @Id
 	@Column(name="basket_invoice_id")
@@ -80,7 +82,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     @Column(name="create_date")
 	@Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
-        inputType = DataTableColumnType.DATE,
+        inputType = DataTableColumnType.DATETIME,
         title="components.basket.invoice.date_created",
 		tab = "basic",
 		editor = {
@@ -112,15 +114,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title="components.basket.invoice.payment_method",
-		hiddenEditor = true,
-		editor = {
-			@DataTableColumnEditor(
-				options = {
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.cash_on_delivery", value = "cash_on_delivery"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.money_transfer", value = "money_transfer")
-				}
-			)
-		}
+		hiddenEditor = true
     )
 	private String paymentMethod;
 
@@ -144,6 +138,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 
 	//Need for repository
 	@Column(name="logged_user_id")
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
 	private int loggedUserId;
 
 	@Column(name="domain_id")
@@ -176,6 +171,15 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     )
 	private BigDecimal priceToPayVat;
 
+	@Column(name="balance_to_pay")
+	@DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+		renderFormat = "dt-format-number--decimal",
+		title = "components.basket.invoice.items.items_price.js",
+		hiddenEditor = true
+    )
+	private BigDecimal balanceToPay;
+
 	@Column(name="currency")
 	@DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.basket.invoice.currency", hiddenEditor = true)
 	private String currency;
@@ -202,6 +206,9 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	@Column(name="contact_phone")
 	@DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.basket.invoice_email.phone_number", tab = "personal_info", visible = false)
 	private String contactPhone;
+
+	@Column(name="user_lng")
+	private String userLng;
 
 	/****** CONTACT ADRESS ******/
 	@Column(name="contact_street")
@@ -284,6 +291,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	private String deliveryCountry;
 
 	@Column(name="delivery_company")
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.basket.invoice_email.company", tab = "personal_info", visible = false)
 	private String deliveryCompany;
 
 	/****** FIELDS ******/
@@ -341,18 +349,16 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     )
 	private String fieldF;
 
-
 	@Transient
 	@DataTableColumnNested
-	private BasketInvoiceEditorFields editorFields = null;
+	private transient BasketInvoiceEditorFields editorFields = null;
 
+	@Column(name="browser_id")
+	private Long browserId;
 
 	// @Column(name="contact_icdph")
 	// @DataTableColumn(inputType = DataTableColumnType.TEXT, title="", tab = "personal_info", visible = false)
 	// private String contactIcdph;
-
-	// @Column(name="browser_id")
-	// private Long browserId;
 
 	// @Column(name="internal_invoice_id")
 	// private String internalInvoiceId;
@@ -415,7 +421,28 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	}
 
 	public int getBasketInvoiceId() {
-		if (id == null) return 0;
-		return id.intValue();
+		return this.id == null ? -1 : this.id.intValue();
+	}
+
+	public List<BasketInvoiceItemEntity> getBasketItems() {
+		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
+		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+	}
+
+
+	//
+	public BigDecimal getTotalPriceVat() {
+		return priceToPayVat == null ? BigDecimal.ZERO : priceToPayVat;
+	}
+
+	public BigDecimal getTotalPrice() {
+		return priceToPayNoVat == null ? BigDecimal.ZERO : priceToPayNoVat;
+	}
+
+	public int getInvoiceId() {
+		return this.id == null ? -1 : this.id.intValue();
+	}
+	public void setInvoiceId(int invoiceId) {
+		this.id = Long.valueOf(invoiceId);
 	}
 }

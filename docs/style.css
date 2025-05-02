@@ -132,7 +132,8 @@ input[type="checkbox"] {
 /*WebJET CMS design for buttons and TI*/
 .btn {
   border-width: 0;
-  font-size: 14px;
+  font-size: 16px;
+  line-height: 24px;
   outline: none !important;
   background-image: none !important;
   filter: none;
@@ -143,6 +144,7 @@ input[type="checkbox"] {
   color: #13151B !important;
   border-radius: 6px;
   margin-bottom: 2px;
+  padding: 6px 12px;
 }
 
 .ti {
@@ -150,9 +152,9 @@ input[type="checkbox"] {
 }
 
 .btn-sm {
-  padding: 5px 9px 5px 9px;
-  font-size: 13px;
-  line-height: 1.5;
+  padding: 6px 8px 2px 8px;
+  font-size: 14px;
+  line-height: 21px;
 }
 
 .btn-danger {
@@ -204,6 +206,12 @@ input[type="checkbox"] {
   color: #fff;
   background-color: #6c757d;
   border-color: #6c757d;
+}
+
+.btn-primary {
+  color: #fff !important;
+  background-color: rgb(0, 99, 251) !important;
+  border-color: rgb(0, 99, 251) !important;
 }
 
 .youtube-thumbnail {

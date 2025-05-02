@@ -1,4 +1,3 @@
-<%@page import="sk.iway.iwcm.components.basket.BasketDB"%>
 <%@page import="java.util.ArrayList"%>
 <%@page import="sk.iway.tags.CurrencyTag"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
@@ -7,6 +6,7 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*"%>
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -74,7 +74,7 @@ GroupDetails gd = new GroupDetails();
 GroupsDB groupsDB = GroupsDB.getInstance();
 
 
-List<DocDetails> docDetails = BasketDB.getModeOfTransports();
+List<DocDetails> docDetails = EshopService.getInstance().getModeOfTransports();
 request.setAttribute("novinky", docDetails);
 
 Prop prop = Prop.getInstance(request);

@@ -377,6 +377,11 @@ export function renderNumberDecimal(td, type, rowData, row, numberFormat) {
         return parseFloat(td, 10);
 
     } else {
+        //If its string of decinmal number, convert it to float
+        if(typeof td == "string" && td.indexOf(".") > -1) {
+            td = parseFloat(td, 10);
+        }
+
         return renderTd(row, numeral(td).format(numberFormat), rowData);
     }
 

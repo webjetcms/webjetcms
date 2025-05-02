@@ -975,7 +975,7 @@ export function fixDatatableHeaderInputs(tableInstance) {
 export function updateFilterSelect(DATA, fieldName) {
    var fieldNameSelector = fieldName;
    if (fieldNameSelector.indexOf(".")!=-1) fieldNameSelector = fieldNameSelector.replace(/\./gi, "\\.");
-   var select = $("select.dt-filter-" + fieldNameSelector)[0];
+   var select = $("#" + DATA.id + "_wrapper select.dt-filter-" + fieldNameSelector)[0];
    var currentValue = $(select).val();
    //console.log("updateFilterSelect, fieldNameSelector=", fieldNameSelector, " select=", select, "currentValue=", currentValue);
 
