@@ -11,7 +11,6 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@page import="sk.iway.iwcm.components.basket.BasketDB"%>
 <%!
 public class CustomComparatorAsc implements Comparator<DocDetails> {
    public int compare(DocDetails d1, DocDetails d2) {
@@ -31,7 +30,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 
 	Pouziva
 
-	BasketDB, DocDB, DocDetails
+	DocDB, DocDetails
 --%>
 
 <%
@@ -291,7 +290,6 @@ $(document).ready(function(){
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<%@page import="sk.iway.iwcm.components.basket.BasketDB"%>
 	<logic:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
 			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">

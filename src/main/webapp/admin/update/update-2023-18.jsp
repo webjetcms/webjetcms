@@ -386,6 +386,27 @@ static {
 	replaces.add(new OptionDto("fabParam.getId() == maxId", "fabParam.getFileArchiveId() == maxId", ".jsp"));
 	replaces.add(new OptionDto("public static List<FileArchivatorBean> getReference(int referenceId,", "public static List<FileArchivatorBean> getReference(Long referenceId,", ".jsp"));
 
+	//ESHOP
+	replaces.add(new OptionDto("sk.iway.iwcm.components.basket.BasketItemBean", "sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity", ".jsp"));
+	replaces.add(new OptionDto("BasketItemBean", "BasketInvoiceItemEntity", ".jsp"));
+	replaces.add(new OptionDto("sk.iway.iwcm.components.basket.BasketInvoiceBean", "sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity", ".jsp"));
+	replaces.add(new OptionDto("BasketInvoiceBean", "BasketInvoiceEntity", ".jsp"));
+
+	replaces.add(new OptionDto("BasketDB.", "EshopService.", ".jsp"));
+	replaces.add(new OptionDto("EshopService.setItemFromDoc", "EshopService.getInstance().setItemFromDoc", ".jsp"));
+	replaces.add(new OptionDto("EshopService.getBasketItems", "EshopService.getInstance().getBasketItems", ".jsp"));
+	replaces.add(new OptionDto("EshopService.getModeOfTransports()", "EshopService.getInstance().getModeOfTransports()", ".jsp"));
+	replaces.add(new OptionDto("EshopService.getInvoiceById", "EshopService.getInstance().getInvoiceById", ".jsp"));
+	replaces.add(new OptionDto("EshopService.decreaseCountOfProductFromStock", "EshopService.getInstance().decreaseCountOfProductFromStock", ".jsp"));
+	replaces.add(new OptionDto("EshopService.sendInvoiceEmail", "EshopService.getInstance().sendInvoiceEmail", ".jsp"));
+	replaces.add(new OptionDto("EshopService.saveOrder", "EshopService.getInstance().saveOrder", ".jsp"));
+	replaces.add(new OptionDto("EshopService.deleteAll", "EshopService.getInstance().deleteAll", ".jsp"));
+
+	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.pay24.Pay24MerchantAccountBean\"%" + ">", "", ".jsp"));
+	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountBean\"%" + ">", "", ".jsp"));
+	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountActionBean\"%" + ">", "", ".jsp"));
+	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
+	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -503,6 +524,24 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				} else {
 					content = Tools.replace(content, origString, origString + bonusString);
 				}
+			}
+
+
+			if(url.contains("basket") && url.contains(".jsp")) {
+				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
+					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
+
+				if(content.contains("sk.iway.iwcm.components.basket.*")) {
+					//Just replace it
+					content = Tools.replace(content, "sk.iway.iwcm.components.basket.*", "sk.iway.iwcm.components.basket.jpa.*,sk.iway.iwcm.components.basket.rest.*");
+				} else {
+					content = Tools.replace(content, "sk.iway.iwcm.components.basket.BasketDB", "sk.iway.iwcm.components.basket.rest.EshopService");
+				}
+
+				//REPLACE double with BigDecimal when needed
+				content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+
+				hasChange = true;
 			}
 
 			if (hasChange && content.equals(contentOriginal)==false) {

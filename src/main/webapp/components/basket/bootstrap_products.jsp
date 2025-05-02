@@ -5,13 +5,14 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
 
+<%@page import="sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@page import="sk.iway.iwcm.components.basket.BasketDB"%>
 
 <%!
 public class CustomComparatorAsc implements Comparator<DocDetails> {
@@ -32,6 +33,9 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	if("orderform".equalsIgnoreCase(act) || "saveorder".equalsIgnoreCase(act))
 	{
 		pageContext.include("/components/basket/order_form.jsp");
+        return;
+	} else if("afterpay".equalsIgnoreCase(act)) {
+		pageContext.include("/components/basket/order_payment_reply.jsp");
 		return;
 	}
 
@@ -40,7 +44,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 
 	PageParams pageParams = new PageParams(request);
 
-	String groupIds = pageParams.getValue("groupIds", "");
+	String groupIds = pageParams.getValue("groupIds", (String)request.getAttribute("group_id"));
 	String style = pageParams.getValue("style", "01");
 
 	//mame to v takomto formate, takze to convertneme
@@ -225,48 +229,8 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 		Collections.sort(products, new CustomComparatorDesc());
 	}
 
-	GroupsDB groupsDB = GroupsDB.getInstance();
-	StringBuilder navbar = new StringBuilder();
-	GroupDetails pageGroupDetails = (GroupDetails)request.getAttribute("pageGroupDetails");
-	if (pageGroupDetails != null)
-	{
-		int domainId = sk.iway.iwcm.common.CloudToolsForCore.getDomainId();
-
-		int failsafe = 0;
-		GroupDetails actualGroup = pageGroupDetails;
-		int insertedItems = 0;
-		while (failsafe-- < 10)
-		{
-			if (actualGroup == null || actualGroup.getGroupId()==domainId || actualGroup.getParentGroupId()<1) break;
-			if (actualGroup.getDefaultDocId() > 1)
-			{
-				String docLink = docDB.getDocLink(actualGroup.getDefaultDocId(), request);
-				if (Tools.isNotEmpty(docLink) && docLink.indexOf("showdoc.do")==-1)
-				{
-					StringBuilder item = new StringBuilder();
-					item.append("<li><a href='").append(docLink).append("'>").append(actualGroup.getNavbarNameNoAparam()).append("</a></li>\n");
-
-					navbar.insert(0, item);
-					insertedItems++;
-				}
-			}
-
-			actualGroup = groupsDB.getGroup(actualGroup.getParentGroupId());
-		}
-
-		if (insertedItems>1)
-		{
-			%>
-			<div class="productsNavbar">
-				<ul>
-					<%=navbar.toString()	%>
-				</ul>
-			</div>
-			<%
-		}
-	}
-
 	%>
+		<%@ include file="/components/basket/navbar.jsp" %>
 
 	<%
 	if (pageParams.getBooleanValue("showSort", true) && pageParams.getValue("pagingPosition", "both").equals("both") || pageParams.getValue("pagingPosition", "both").equals("top"))
@@ -324,7 +288,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	int groupId = Tools.getIntValue(groupIds,-1);
 	String helpGroupName="";
 	List<GroupDetails> ibaPodPriecinky = new ArrayList<GroupDetails>();
-	ibaPodPriecinky = groupsDB.getGroups(groupId);
+	ibaPodPriecinky = GroupsDB.getInstance().getGroups(groupId);
 	int productCounter = 1;
 
 	//Sub kategorie & rychle tipy
@@ -348,8 +312,6 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<%@page import="sk.iway.iwcm.components.basket.BasketDB"%>
-
 	<logic:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
 			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
@@ -596,7 +558,6 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<%@page import="sk.iway.iwcm.components.basket.BasketDB"%>
 	<logic:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
 			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">

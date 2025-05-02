@@ -2,8 +2,14 @@
 
 if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
-%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+<%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+
+<iwcm:link rel="stylesheet" type="text/css" href="/components/basket/css/basket-page.css"/>
 
 <script type="text/javascript" src="/components/basket/jscript.jsp"></script>
 <%
@@ -15,24 +21,31 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
   PageParams pageParams = new PageParams(request);
   int orderFormDocId = pageParams.getIntValue("orderFormDocId", -1);
-  String orderFormUrl;
-  if (orderFormDocId > 0)
-    orderFormUrl = docDB.getDocLink(orderFormDocId, request);
-  else
-    orderFormUrl = Tools.addParametersToUrl(docDB.getDocLink(Tools.getDocId(request), request), "basketAct=orderform");
 
-  List<BasketItemBean> basketItems = null;
+  String backToOrder = pageParams.getValue("continueShoppingUrl", null);
+  String orderFormUrl = Tools.addParametersToUrl(docDB.getDocLink(Tools.getDocId(request), request), "basketAct=orderform");
+  if (orderFormDocId > 0) {
+    backToOrder = docDB.getDocLink(orderFormDocId, request);
+    orderFormUrl = Tools.addParametersToUrl(backToOrder, "basketAct=orderform");
+  }
+  else if (backToOrder == null) {
+    backToOrder = docDB.getDocLink(Tools.getDocId(request), request);
+  }
+
+
+  List<BasketInvoiceItemEntity> basketItems = null;
   String act = request.getParameter("act");
+  if (act == null) act = request.getParameter("basketAct");
   if ("set".equals(act))
   {
-    boolean ok = BasketDB.setItemFromDoc(request);
+    boolean ok = EshopService.getInstance().setItemFromDoc(request);
     if (ok)
     {
-      basketItems = BasketDB.getBasketItems(request);
+      basketItems = EshopService.getInstance().getBasketItems(request);
     %>
          <div style='display:none'>
-        <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=BasketDB.getTotalItems(basketItems)%></span></span>
-        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=BasketDB.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+        <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
+        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
         </div>
         <script type="text/javascript">
         <!--
@@ -52,7 +65,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
   }
   else if ("deleteall".equals(act))
   {
-    BasketDB.deleteAll(request);
+    EshopService.getInstance().deleteAll(request);
   }
 
   else if (("orderform".equals(act) || "saveorder".equals(act)) && orderFormDocId==-1)
@@ -61,9 +74,8 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
     return;
   }
 
-
   if (basketItems == null)
-    basketItems = BasketDB.getBasketItems(request);
+    basketItems = EshopService.getInstance().getBasketItems(request);
   if (basketItems.size() > 0)
     request.setAttribute("basketItems", basketItems);
 %>
@@ -77,8 +89,8 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
         var defaults = {
         itemQtyMin: 1,
-        itemQtyMax: 100,
-           url: '/components/klaret/basket/basket_ajax.jsp'
+        itemQtyMax: <%=Constants.getInt("basketMaxQty")%>,
+           url: '/components/basket/basket_ajax.jsp'
         }
 
         var plugin = this;
@@ -232,8 +244,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
               });
               $("div.basketBoxInPage .emptyTr").after(html);
 
-              $("tr.basketListTableTotal .basketPrice").html(data.totalLocalPrice);
-              $("tr.basketListTableTotalVat .basketPrice, div.basketListTableTotalVat .basketPrice").html(data.totalLocalPriceVat);
+              $(".container_basket .basketPrice").html(data.totalLocalPriceVat);
             }
 
             if(data.totalItems == 0) {
@@ -338,10 +349,12 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
   //]]>
   </script>
 
+  <%@ include file="/components/basket/navbar.jsp" %>
+
   <div class="basketBoxInPage" style="display:block;">
-     <table class="basketListTable">
+     <table class="basketListTable table tabulkaStandard">
        <tr class="basketListTableHeader">
-          <th>Produkt <%--iwcm:text key="components.basket.cart"/--%></th>
+          <th>Produkt <%--iwcm:text key="components.basket.cart"/--%> </th>
           <th><iwcm:text key="components.basket.count"/></th>
           <th><iwcm:text key="components.basket.price"/> / kus</th>
           <th><iwcm:text key="components.basket.price_with_dph"/></th>
@@ -355,26 +368,20 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
          </td>
        </tr>
 
-
       <logic:present name="basketItems">
-          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.BasketItemBean">
-          <%--
-          <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
-          <input type="hidden" name="basketItemId" class="input" value="<bean:write name="good" property="itemId"/>" />
-          <input type="hidden" name="act" value="set" />
-        --%>
+          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
             <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
               <td class="w-5">
-                <a target="_blank" href="<%=docDB.getDocLink(good.getItemId()) %>"><bean:write name="good" property="title"/></a>
+                <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
               </td>
               <td class="fL w-2">
                 <a href="javascript:void(0)" class="removeItem"><span>remove</span></a>
                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<bean:write name="good" property="itemQty"/>">
                 <a href="javascript:void(0)" class="addItem"><span>add</span></a>
               </td>
-              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+              <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
-              <td class="fL w-2"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
+              <td class="fL w-2"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
               <%--td class="fL" style="padding-right: 20px;"><%= good.getItemNote() %></td--%>
               <td class="delete w-1">
                 <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>"><span>Delete</span></a>
@@ -385,53 +392,30 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
       </table>
 
       <div class="container_basket">
-        <div class="row">
-          <div class="col-md-4">
-            <span class="basketContinueBtn" id="orderContinurButton">
-              <a href="javascript:history.back()" class="closeBasket">
-                <iwcm:text key="components.basket.continue"/>
-              </a>
-            </span>
-          </div>
-          <div class="col-md-6 basketListTableTotalVat">
-            <span class="basketPriceText">
-              Celková cena
-            </span>
-            <span class="basketPrice">
-               <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-                 <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>
-               </iway:curr>
-             </span>
-          </div>
-          <div class="col-md-2">
-            <span class="basketOrderBtn" id="orderButton">
-              <a href="<%= orderFormUrl %>">Dokončiť nákup</a>
-            </span>
-          </div>
+        <div class="basketTexts">
+          <span class="basketPriceText">
+            Celková cena
+          </span>
+          <span class="basketPrice">
+             <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+               <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
+             </iway:curr>
+          </span>
         </div>
-      </div>
+        <div class="basketBtns">
+          <span class="basketContinueBtn" id="orderContinurButton">
+            <a href="<%= backToOrder %>" class="btn btn-secondary closeBasket">
+              <iwcm:text key="components.basket.continue"/>
+            </a>
+          </span>
 
-      <%--table>
-        <tr class='basketListTableTotalVat'>
-          <td>
-            <span class="basketContinueBtn" id="orderContinurButton">
-              <a href="javascript:void(0)" class="closeBasket">
-                <iwcm:text key="components.basket.continue"/>
+          <logic:present name="basketItems">
+            <span class="basketOrderBtn" id="orderButton">
+              <a href="<%= orderFormUrl %>" class="btn btn-primary">
+                <iwcm:text key="components.basket.finish_order"/>
               </a>
             </span>
-           </td>
-           <td colspan="5">
-             <span class="basketOrderBtn" id="orderButton">
-                <a href="<%= orderFormUrl %>">
-                  <iwcm:text key="components.basket.order"/>
-                </a>
-              </span>
-             <span class="basketPrice">
-               <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-                 <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>
-               </iway:curr>
-             </span>
-          </td>
-        </tr>
-     </table--%>
+          </logic:present>
+          </div>
+      </div>
   </div>

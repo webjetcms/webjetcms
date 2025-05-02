@@ -1,5 +1,7 @@
 Feature('apps.basket');
 
+const SL = require("./SL.js");
+
 var randomNumber, testerName;
 
 Before(({ I, login }) => {
@@ -11,85 +13,95 @@ Before(({ I, login }) => {
 });
 
 Scenario('Test sorting', async ({ I }) => {
-    I.amOnPage('/apps/elektronicky-obchod/');
+    I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
     await sortAndCheck(I, 'asc_title',  ['Džínsy' , 'Ponožky', 'Tričko']);
     await sortAndCheck(I, 'desc_title', ['Tričko' , 'Ponožky', 'Džínsy']);
-    await sortAndCheck(I, 'asc_date',   ['Ponožky', 'Tričko' , 'Džínsy']);
-    await sortAndCheck(I, 'desc_date',  ['Džínsy' , 'Tričko' , 'Ponožky']);
+    await sortAndCheck(I, 'desc_date',   ['Džínsy' , 'Ponožky', 'Tričko']);
+    await sortAndCheck(I, 'asc_date',  ['Tričko' , 'Ponožky', 'Džínsy']);
     await sortAndCheck(I, 'asc_price',  ['Ponožky', 'Tričko' , 'Džínsy']);
     await sortAndCheck(I, 'desc_price', ['Džínsy' , 'Tričko' , 'Ponožky']);
 });
 
 Scenario('Verify product list and UI elements in electronic shop', ({ I }) => {
-    I.amOnPage('/apps/elektronicky-obchod/');
+    I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
 
     I.see('Ponožky', '.basket .col-md-3 h4');
-    I.seeElement('.basket .col-md-3 img[src*="s_socks.jpg"]');
+    I.waitForElement('.basket .col-md-3 img[src*="s_socks.jpg"]', 10);
     I.see('8,61', '.basket .col-md-3 .price');
 
     I.see('Tričko', '.basket .col-md-3 h4');
-    I.seeElement('.basket .col-md-3 img[src*="s_tshirt.jpg"]');
+    I.waitForElement('.basket .col-md-3 img[src*="s_tshirt.jpg"]', 10);
     I.see('12,30', '.basket .col-md-3 .price');
 
     I.see('Džínsy', '.basket .col-md-3 h4');
-    I.seeElement('.basket .col-md-3 img[src*="s_jeans.jpg"]');
+    I.waitForElement('.basket .col-md-3 img[src*="s_jeans.jpg"]', 10);
     I.see('30,75', '.basket .col-md-3 .price');
     I.seeElement('.basket .col-md-3 .btn.addToBasket');
 
     I.seeNumberOfVisibleElements('div.productsOrder > select.filterKategorii', 2);
 });
 
-Scenario('Validate basket operations: add, modify, remove, and view', ({ I }) => {
-    I.amOnPage('/apps/elektronicky-obchod/');
+Scenario('Validate basket operations: add, modify, remove, and view', async ({ I }) => {
+    I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
     I.dontSeeElement('.basketSmallBox')
 
     I.say('Adding one product');
-    addToBasket(I, 'Ponožky');
+    SL.addToBasket(I, 'Ponožky');
     checkBasketSmallBox(I, '1', '8,61');
 
     I.say('Adding duplicated product');
-    addToBasket(I, 'Ponožky');
+    SL.addToBasket(I, 'Ponožky');
     checkBasketSmallBox(I, '2', '17,22');
 
     I.say('Adding different products');
-    addToBasket(I, 'Tričko');
-    addToBasket(I, 'Džínsy');
+    SL.addToBasket(I, 'Tričko');
+    SL.addToBasket(I, 'Džínsy');
     checkBasketSmallBox(I, '4', '60,27');
 
     I.say('Opening and closing basket');
-    openBasket(I);
+    SL.openBasket(I);
     I.clickCss('#orderContinurButton > a');
     I.waitForInvisible('.basketBox', 10);
-    openBasket(I);
-    closeBasket(I);
+    SL.openBasket(I);
+    SL.closeBasket(I);
 
     I.say('Removing item from basket');
-    openBasket(I);
+    SL.openBasket(I);
     I.see('60,27\u00A0€','span.basketPrice');
     modifyBasket(I, 'Džínsy', BasketActions.REMOVE);
     I.see('29,52\u00A0€','span.basketPrice');
     checkBasketSmallBox(I, '3', '29,52');
 
     I.say('Decreasing amout of product in basket');
-    checkAmountInBasket(I, 'Ponožky', '2');
+    await checkAmountInBasket(I, 'Ponožky', '2');
     modifyBasket(I, 'Ponožky', BasketActions.DECREASE);
-    checkAmountInBasket(I, 'Ponožky', '1');
+    await checkAmountInBasket(I, 'Ponožky', '1');
 
     I.say('Increasing amout of product in basket');
-    checkAmountInBasket(I, 'Tričko', '1');
+    await checkAmountInBasket(I, 'Tričko', '1');
     modifyBasket(I, 'Tričko', BasketActions.INCREASE);
-    checkAmountInBasket(I, 'Tričko', '2');
+    await checkAmountInBasket(I, 'Tričko', '2');
+
+    I.amOnPage(SL.BASKET);
+    modifyBasket(I, 'Tričko', BasketActions.DECREASE, 'td.w-5> a');
+    await checkAmountInBasket(I);
+
+    modifyBasket(I, 'Ponožky', BasketActions.INCREASE, 'td.w-5> a');
+    await checkAmountInBasket(I);
+
+    modifyBasket(I, 'Ponožky', BasketActions.REMOVE, 'td.w-5> a');
+    await checkAmountInBasket(I);
 });
 
 Scenario('Remove all items from basket', async ({ I }) => {
-    I.amOnPage('/apps/elektronicky-obchod/');
+    I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
     const isBasketVisible = await I.grabNumberOfVisibleElements('.showBasket');
     if(isBasketVisible){
-        openBasket(I);
+        SL.openBasket(I);
         while(await I.grabNumberOfVisibleElements('.deleteItem') > 0){
             I.clickCss('.deleteItem');
             I.wait(0.2);
@@ -98,18 +110,18 @@ Scenario('Remove all items from basket', async ({ I }) => {
 });
 
 Scenario('Create and submit order', async ({ I, DT }) => {
-    I.amOnPage('/apps/elektronicky-obchod/');
+    I.amOnPage(SL.PRODUCTS);
     I.waitForText('ELEKTRONICKÝ OBCHOD');
 
     I.say('Adding products to the basket');
-    addToBasket(I, 'Tričko');
-    addToBasket(I, 'Ponožky');
+    SL.addToBasket(I, 'Tričko');
+    SL.addToBasket(I, 'Ponožky');
     checkBasketSmallBox(I, '2', '20,91');
 
     I.say('Opening basket and filling in delivery details');
-    openBasket(I);
+    SL.openBasket(I);
     I.clickCss('#orderButton > a');
-    fillDeliveryForm(I)
+    SL.fillDeliveryForm(I, testerName);
 
     I.say('Selecting random delivery method');
     const deliveryMethodOptions = await I.grabTextFromAll('select[name="deliveryMethod"] option');
@@ -122,26 +134,21 @@ Scenario('Create and submit order', async ({ I, DT }) => {
     I.waitForText('Objednávka úspešne odoslaná', 20);
 
     I.say('Verifying the order details in the admin panel');
-    I.amOnPage('/apps/basket/admin/');
+    I.amOnPage(SL.BASKET_ADMIN);
     DT.filterEquals('editorFields.firstName', testerName);
     I.dontSeeElement('Nenašli sa žiadne vyhovujúce záznamy');
-    DT.checkTableRow('basketInvoiceDataTable', '1', ['', testerName, getTodayDate(), 'Nová', '', deliveryMethod.split(':')[0], '3', '22,91', 'eur']);
-    // TODO - fix after old JSP start using new Entity
-    // DT.checkTableCell('basketInvoiceDataTable', '1', '2', testerName );
-    // DT.checkTableCell('basketInvoiceDataTable', '1', '4', 'Nová' );
-    // DT.checkTableCell('basketInvoiceDataTable', '1', '6', deliveryMethod );
-    // DT.checkTableCell('basketInvoiceDataTable', '1', '7', '2' );
-    // DT.checkTableCell('basketInvoiceDataTable', '1', '8', '20,91');
+    DT.checkTableRow('basketInvoiceDataTable', 1, ['', testerName, '', null, 'Nová (nezaplatená)', 'Dobierka', deliveryMethod.split(":")[0], '4', '']);
 });
 
 Scenario('Delete order', ({ I, DT, DTE }) => {
-    I.amOnPage('/apps/basket/admin/');
+    I.amOnPage(SL.BASKET_ADMIN);
     DT.waitForLoader();
     DT.filterEquals('editorFields.firstName', testerName);
     I.clickCss('.buttons-select-all');
     I.clickCss('.buttons-edit');
-    DTE.selectOption('statusId', 'Stornovaná');
-    DTE.save();
+    DTE.waitForEditor('basketInvoiceDataTable');
+    I.selectOption('#DTE_Field_statusId', 'Stornovaná');
+    DTE.save('basketInvoiceDataTable');
     I.clickCss('.buttons-remove');
     I.click('Zmazať');
     DT.waitForLoader();
@@ -166,28 +173,9 @@ async function sortAndCheck(I, sortMethod, expectedOrder) {
     I.assertDeepEqual(sortedProducts, expectedOrder, `Items are not sorted correctly according to sort method ${sortMethod}`);
 }
 
-function addToBasket(I, productName){
-    const addToBasketButton = locate('.thumbnail').withText(productName).find('.addToBasket');
-    I.click(addToBasketButton);
-    I.wait(0.2);
-
-}
-
-function openBasket(I) {
-    I.clickCss('.showBasket');
-    I.waitForElement('.basketBox', 10);
-    I.wait(0.2);
-}
-
-function closeBasket(I) {
-    I.clickCss('tr.basketListTableHeader > th > a.closeBasket');
-    I.waitForInvisible('.basketBox', 10);
-    I.wait(0.2);
-}
-
-function modifyBasket(I, nameProduct, action) {
+function modifyBasket(I, nameProduct, action, selector = 'td > a.newWindow') {
     I.click(locate('tr')
-        .withDescendant('td > a.newWindow')
+        .withDescendant(selector)
         .withText(nameProduct)
         .find(action)
     );
@@ -200,22 +188,36 @@ function checkBasketSmallBox(I, expectedNumOfItems, expectedTotalPrice){
     I.see(`${expectedTotalPrice}\u00A0€`,'.basketSmallBox .basketSmallPrice > span');
 }
 
-function checkAmountInBasket(I, nameProduct, expectedAmount){
-    I.seeElement(locate('tr')
-        .withDescendant('td > a.newWindow')
-        .withText(nameProduct)
-        .find('.basketQty')
-        .withAttr({ value: expectedAmount }));
-}
-
-function fillDeliveryForm(I) {
-    I.fillField('#contactFirstNameId', testerName);
-    I.fillField('#contactLastNameId', 'buyer');
-    I.clearField('#contactEmailId');
-    I.fillField('#contactEmailId', 'webjetbasket@fexpost.com');
-    I.fillField('#contactStreetId', 'Mlýnske Nivy 71');
-    I.fillField('#contactCityId', 'Bratislava');
-    I.fillField('#contactZipId', '82105');
+async function checkAmountInBasket(I, nameProduct = null, expectedAmount = null){
+    if (nameProduct){
+        I.seeElement(locate('tr')
+            .withDescendant('td > a.newWindow')
+            .withText(nameProduct)
+            .find('.basketQty')
+            .withAttr({ value: expectedAmount }));
+        I.openNewTab();
+        I.amOnPage(SL.BASKET);
+    }
+    let totalCalculated = 0;
+    const rows = await I.grabNumberOfVisibleElements('.basketListTable .itemTr');
+    for (let i = 1; i <= rows; i++) {
+        const quantity = await I.grabValueFrom(locate('.basketQty').at(i));
+        const unitPriceText = await I.grabTextFrom(locate('.basketPrice').at(i));
+        const totalPriceText = await I.grabTextFrom(locate('tr.itemTr > td:nth-child(4)').at(i));
+        const unitPrice = parseFloat(unitPriceText.replace(',', '.').replace(' €', ''));
+        const totalPrice = parseFloat(totalPriceText.replace(',', '.').replace(' €', ''));
+        const expectedTotal = unitPrice * parseInt(quantity, 10);
+        I.say(`Checking item ${i}: ${quantity} x ${unitPrice} = ${expectedTotal}`);
+        I.assertEqual(totalPrice, expectedTotal, `Total price for item ${i} is incorrect`);
+        totalCalculated += expectedTotal;
+    }
+    const basketTotalText = await I.grabTextFrom('.basketPriceText + .basketPrice');
+    const basketTotal = parseFloat(basketTotalText.replace(',', '.').replace(' €', ''));
+    I.assertEqual(basketTotal, totalCalculated, 'Basket total price is incorrect');
+    if (nameProduct){
+        I.switchToPreviousTab();
+        I.closeOtherTabs();
+    }
 }
 
 function getTodayDate() {

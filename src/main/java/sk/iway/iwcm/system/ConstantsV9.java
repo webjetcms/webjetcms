@@ -52,7 +52,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -139,6 +139,8 @@ public class ConstantsV9 {
 		Constants.setBoolean("loggerUseAnsiColors", false, "adminlog", "If true, logger will use ANSI colors for console output");
 		Constants.setBoolean("fileArchivAllowPatternVersion", true, Constants.MOD_FILE_ARCHIV, "Ak je povolene (true), manažér dokumentov povolí vytváranie verzií pre súbory typu VZOR.");
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
+
+		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
 	}
 
 	/**

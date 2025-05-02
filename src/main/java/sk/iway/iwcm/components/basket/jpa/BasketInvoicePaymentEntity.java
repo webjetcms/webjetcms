@@ -14,6 +14,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,6 +25,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
 @Table(name="basket_invoice_payments")
@@ -32,43 +35,21 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 public class BasketInvoicePaymentEntity implements Serializable {
 
     @Id
-	@Column(name="payment_id")
+    @Column(name="payment_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator="S_basket_invoice_payments")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
-
-    @ManyToOne
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	@JsonBackReference(value="paymentsBasketInvoice")
-	@JoinColumn(name="invoice_id", insertable = false, updatable = false)
-	BasketInvoiceEntity paymentsBasketInvoice;
 
     @Column(name="invoice_id")
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     Long invoiceId;
 
-    @Column(name="create_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    @DataTableColumn(
-        inputType = DataTableColumnType.DATE,
-        title="components.basket.invoice.date"
-    )
-	private Date createDate;
-
     @Column(name="payment_method")
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title="[[#{components.basket.invoice.payment_method}]]",
-		editor = {
-			@DataTableColumnEditor(
-				options = {
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.cash_on_delivery", value = "cash_on_delivery"),
-					@DataTableColumnEditorAttr(key = "components.basket.order_form.money_transfer", value = "money_transfer")
-				}
-			)
-		}
+        title="components.basket.invoice.payment_method"
     )
-	private String paymentMethod;
+    private String paymentMethod;
 
     @Column(name="payed_price")
     @DataTableColumn(
@@ -76,19 +57,68 @@ public class BasketInvoicePaymentEntity implements Serializable {
         renderFormat = "dt-format-number--decimal",
         title="components.basket.admin_invoices_detail.suma"
     )
-	private BigDecimal payedPrice;
+    private BigDecimal payedPrice;
+
+    @Column(name="confirmed")
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title="components.basket.invoice_payments.confirmed"
+    )
+    private Boolean confirmed;
+
+    @Column(name="payment_status")
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title="components.basket.invoice_payments.status.title",
+        hiddenEditor = true
+    )
+    private Integer paymentStatus;
+
+    @Column(name="create_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title="components.basket.invoice.date_created"
+    )
+    private Date createDate;
+
+    @Column(name="payment_description")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title="components.basket.invoice_payments.description",
+        className = "wrap"
+    )
+    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+    private String paymentDescription;
 
     @Column(name="closed_date")
     @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
-        title="",
-        visible = false,
-        hidden = true,
-        hiddenEditor = true
+        title="components.basket.close_date",
+        className = "hide-on-create",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
     )
-	private Date closedDate;
+    private Date closedDate;
 
-    @Column(name="confirmed")
-	private Boolean confirmed;
+    @Column(name="real_payment_id")
+    private String realPaymentId;
+
+    @ManyToOne
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonBackReference(value="paymentsBasketInvoice")
+    @JoinColumn(name="invoice_id", insertable = false, updatable = false)
+    BasketInvoiceEntity paymentsBasketInvoice;
+
+    @Transient
+	@DataTableColumnNested
+	private transient BasketInvoicePaymentEditorFields editorFields = null;
+
+    public int getItemId() {
+        return this.id == null ? -1 : this.id.intValue();
+    }
 }

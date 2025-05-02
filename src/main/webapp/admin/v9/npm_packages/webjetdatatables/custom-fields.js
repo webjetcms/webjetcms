@@ -1,6 +1,8 @@
 import { VueTools } from '../../src/js/libs/tools/vuetools';
 import WJ from '../../src/js/webjet';
 
+import * as fieldTypeQuill from './field-type-quill';
+
 function getEmptyStringFieldValue() {
     return "";
 }
@@ -18,9 +20,13 @@ function getFieldValue(value, action, fieldType) {
         else return "";
     } else if(fieldType === "none") {
         return "";
-    } else if(fieldType === "boolean") {
+    } else if(fieldType === "boolean" || fieldType === "boolean_text") {
         if(value === "1" || value === 1 || (typeof value==="string" && value.toUpperCase() === "TRUE")) return true;
         else return false;
+    } else if(fieldType === "quill") {
+        value = value.replaceAll(/&lt;/gi, "<");
+        value = value.replaceAll(/&gt;/gi, ">");
+        return value;
     } else {
         value = value.replace(/"/gi, "&quot;");
         if(action === "create") return getEmptyStringFieldValue();
@@ -89,6 +95,7 @@ export function update(EDITOR, action) {
 
     let datatable = EDITOR.TABLE;
     let json = EDITOR.currentJson;
+    let booleanTextFields = [];
 
     if (typeof json == "undefined") {
         //je to novy zaznam, ziskaj nastavenia z prveho zaznamu
@@ -118,6 +125,7 @@ export function update(EDITOR, action) {
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
+    var booleanTextTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
     var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid" type="text">';
     var colorTemplate = `
@@ -161,7 +169,7 @@ export function update(EDITOR, action) {
             value = getEmptyStringFieldValue();
         }
         let valueUnescaped = value;
-        if(v.type !== "number" && v.type !== "boolean" && v.type !== "date" && v.type !== "none")
+        if(v.type !== "number" && v.type !== "boolean" && v.type !== "boolean_text" && v.type !== "date" && v.type !== "none")
             value = value.replace(/"/gi, "&quot;");
 
         if("uuid" === v.type) {
@@ -212,6 +220,10 @@ export function update(EDITOR, action) {
             template = numberTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'boolean') {
             template = booleanTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if(v.type == 'boolean_text') {
+            template = booleanTextTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled)).replace(new RegExp('{label_value}', 'g'), v.label);
+            let id = "DTE_Field_{customPrefix}{identifier}".replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier);
+            booleanTextFields.push(id);
         } else if(v.type == 'uuid') {
             template = uuidTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'date') {
@@ -270,14 +282,28 @@ export function update(EDITOR, action) {
                 }
             }
             template = hiddenTemplate.replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), value);
+            //JICH - add end
+        } else if (v.type == 'quill') {
+            let id = "DTE_Field_{customPrefix}{identifier}";
+            id = id.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier);
+
+            let conf = {"id" : id};
+            let quill = fieldTypeQuill.typeQuill();
+            template = quill.create(conf);
+            quill.set(conf, getFieldValue(value, action, v.type));
         } else if (v.type == 'color') {
             template = colorTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         }
-        //JICH - add end
+        
 
         inputBox.html(template);
 
-        if(v.type == 'boolean') {
+        //For every field, remove params s.opts._input AND s.opts.renderFormat -> they can be still set from previous field initialization
+        //If previous field was quill, it will make problem with saving
+        EDITOR.field(customPrefix + identifier).s.opts._input = "";
+        EDITOR.field(customPrefix + identifier).s.opts.renderFormat = "";
+
+        if(v.type == 'boolean' || v.type == 'boolean_text') {
             var origType = EDITOR.field(customPrefix + identifier).s.opts["type"];
             var booleanValue = getFieldValue(value, action, v.type);
             var input;
@@ -329,6 +355,10 @@ export function update(EDITOR, action) {
             if(!isDateEmpty(value)) {
                 $(opts._input).val(value);
             }
+
+        } else if(v.type == 'quill') {
+            EDITOR.field(customPrefix + identifier).s.opts._input = inputBox.find(".ql-editor");
+            EDITOR.field(customPrefix + identifier).s.opts.renderFormat = "dt-format-quill";
 
         } else {
             EDITOR.field(customPrefix + identifier).s.opts._input = inputBox.find('input, select, textarea');
@@ -505,6 +535,13 @@ export function update(EDITOR, action) {
         }
         //JICH - add end
     });
+
+    //Find label of booleanText field and set empty string
+    if(booleanTextFields.length > 0) {
+        booleanTextFields.forEach(function(item) {
+            $("#"+datatable.DATA.id+"_modal label[for='"+item+"'].col-form-label").html("&nbsp;");
+        });
+    }
 
     //zapni zobrazenie varovania pre warninglength
     $("#"+datatable.DATA.id+"_modal input.form-control").each(function(){

@@ -67,6 +67,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appvyhladavanie",
     "sk.iway.iwcm.components.banner",
     "sk.iway.iwcm.components.basket.rest",
+    "sk.iway.iwcm.components.basket.mvc",
+    "sk.iway.iwcm.components.basket.payment_methods.rest",
     "sk.iway.iwcm.components.blog.rest",
     "sk.iway.iwcm.components.calendar",
     "sk.iway.iwcm.components.calendarnews",
