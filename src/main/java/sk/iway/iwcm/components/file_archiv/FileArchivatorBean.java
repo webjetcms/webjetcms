@@ -51,7 +51,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	@GeneratedValue(generator="WJGen_file_archiv")
 	@TableGenerator(name="WJGen_file_archiv",pkColumnValue="file_archiv")
 	@Column(name="file_archiv_id")
-	@DataTableColumn(inputType = DataTableColumnType.ID, title="ID", tab = "basic")
+	@DataTableColumn(inputType = DataTableColumnType.ID, tab = "basic")
 	private Long id;
 
 	@Column(name="virtual_file_name")
