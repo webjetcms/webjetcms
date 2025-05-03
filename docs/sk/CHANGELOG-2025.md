@@ -77,10 +77,6 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
 
-### Vyhľadávanie
-
-- Refaktor logiky na svlastný `RestController` a `Service` (#57561).
-
 ### Rezervácie
 
 - **Podpora pre nadmernú rezerváciu** – umožňuje administrátorom vytvoriť viac rezervácií `overbooking` na ten istý termín (#57405).
@@ -112,6 +108,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![](redactor/apps/eshop/payment-methods/datatable.png)
 
 - Nová aplikácia Zoznam objednávok so zoznamom objednávok aktuálne prihláseného používateľa. Kliknutím na objednávku je možné zobraziť detail objednávky a stiahnuť ju v PDF formáte (#56609).
+
+### Iné menšie zmeny
+
+- Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
 
 ### Oprava chýb
 

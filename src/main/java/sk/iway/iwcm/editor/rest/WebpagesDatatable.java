@@ -47,8 +47,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     protected final EditorFacade editorFacade;
     protected final DocAtrDefRepository docAtrDefRepository;
 
-    private static final String GROUP_ID = "groupId";
-    private static final String ROOT_GROUP_ID = "rootGroupId";
+    private static final String GROUP_ID_PARAM_NAME = "groupId";
 
     @Autowired
     public WebpagesDatatable(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
@@ -112,7 +111,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public DocDetails getOneItem(long id) {
-        int groupId = Tools.getIntValue(getRequest().getParameter(GROUP_ID), Constants.getInt(ROOT_GROUP_ID));
+        int groupId = getGroupIdParamName();
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
 
         List<NotifyBean> notifyList = new ArrayList<>();
@@ -150,13 +149,13 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @Override
     public Page<DocDetails> findByColumns(@RequestParam Map<String, String> params, Pageable pageable, DocDetails search) {
 
-        Integer groupId = Tools.getIntValue(getRequest().getParameter(GROUP_ID), Constants.getInt(ROOT_GROUP_ID));
+        int groupId = getGroupIdParamName();
 
         //ak chcem zobrazit recentPages
         if(groupId == Constants.getInt("systemPagesRecentPages")) {
 
             //Key groupId (and other) must be removed because we set this params in special way inside getAllItems method
-            params.remove(GROUP_ID);
+            params.remove(GROUP_ID_PARAM_NAME);
             params.remove("size");
             params.remove("page");
             params.remove("sort");
@@ -319,7 +318,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public GetAllItemsDocOptions getDefaultOptions(Pageable pageable, boolean checkPerms) {
         GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
-        int groupId = Tools.getIntValue(getRequest().getParameter(GROUP_ID), Constants.getInt(ROOT_GROUP_ID));
+        int groupId = getGroupIdParamName();
         getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
 
         options.setGroupId(groupId);
@@ -339,5 +338,9 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
             }
         }
         return options;
+    }
+
+    private int getGroupIdParamName() {
+        return Tools.getIntValue(getRequest().getParameter(GROUP_ID_PARAM_NAME), Constants.getInt("rootGroupId"));
     }
 }

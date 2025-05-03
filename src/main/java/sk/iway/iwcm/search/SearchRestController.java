@@ -25,6 +25,11 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 
+/**
+ * SearchRestController is responsible for handling search requests related to
+ * DocDetails. It extends WebpagesDatatable and provides functionality to
+ * retrieve and filter DocDetails based on search criteria.
+ */
 @Datatable
 @RestController
 @RequestMapping("/admin/rest/search")
