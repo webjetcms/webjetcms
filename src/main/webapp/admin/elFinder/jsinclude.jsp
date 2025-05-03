@@ -58,7 +58,6 @@ request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"
 	<!-- elfinder languages -->
 	<script src="/admin/elFinder/js/i18n/elfinder.cs.js"></script>
 	<script src="/admin/elFinder/js/i18n/elfinder.de.js"></script>
-	<script src="/admin/elFinder/js/i18n/elfinder.en.js"></script>
 	<script src="/admin/elFinder/js/i18n/elfinder.sk.js"></script>
 
 <% if (Constants.getBoolean("fbrowserShowOnlyWritableFolders") && Tools.isEmpty(Constants.getString("fbrowserAlwaysShowFolders"))) { %>

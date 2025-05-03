@@ -9,10 +9,6 @@
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Upravená inicializácia Spring a JPA, viac informácií v sekcii pre programátora (#43144).
 
-### Prieskumník
-
-- Rýchlejšie načítanie aplikácie **Prieskumník** a nižšie zaťaženie servera optimalizáciou zníženia počtu načítavaných súborov (#56953).
-
 ### Dátové tabuľky
 
 - Pri nastavení filtra číselnej hodnoty od-do sa pole zväčší pre lepšie zobrazenie zadanej hodnoty podobne ako to robí dátumové pole (#57685).
@@ -116,6 +112,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Iné menšie zmeny
 
 - Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
+- Prieskumník - rýchlejšie načítanie a nižšie zaťaženie servera znížením počtu súborov/požiadaviek na server (#56953).
 
 ### Oprava chýb
 
