@@ -18,7 +18,6 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -58,7 +57,6 @@ import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.context.ContextFilter;
-import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
@@ -85,6 +83,17 @@ public class WebpagesService {
 	public static final String DATA_NOT_LOADED = "data not loaded";
 	private static final String ADMIN_SETTINGS_KEY = "jstreeSettings_web-pages-list";
 
+	private static final String GROUP_ID = "groupId";
+	private static final String ROOT_GROUP_ID = "rootGroupId";
+	private static final String PASSWORD_PROTECTED = "passwordProtected";
+	private static final String DOC_ID = "docId";
+	private static final String TITLE = "title";
+	private static final String USER_GROUP_ID = "userGroupId";
+
+	private static final String MENU_TYPE_SAME_AS_NORMAL = "groupedit.menu_type_same_as_normal";
+	private static final String MENU_TYPE_ONLYDEFAULT = "groupedit.menu_type_onlydefault";
+	private static final String MENU_TYPE_HIDDEN = "groupedit.menu_type_hidden";
+
 	public WebpagesService() {}
 
     public WebpagesService(int groupId, Identity user, Prop prop, HttpServletRequest request) {
@@ -92,7 +101,7 @@ public class WebpagesService {
 		if (groupId<1) {
 			//musime vydedukovat korenovy adresar
 			//zoznam web stranok v korenovom/prvom adresari v zozname
-			int rootGroupId = Constants.getInt("rootGroupId");
+			int rootGroupId = Constants.getInt(ROOT_GROUP_ID);
 			//ziskaj zoznam root adresarov
 			GroupsTreeService groupsTreeService = new GroupsTreeService();
 			List<JsTreeItem> rootGroups = groupsTreeService.getItems(user, 0, false, "dt-tree-group-filter-system-trash", null, request);
@@ -426,11 +435,11 @@ public class WebpagesService {
 	 */
 	public List<LabelValueDetails> getOptionsNavbar(boolean isLogged) {
 		List<LabelValueDetails> list = new ArrayList<>();
-		if (isLogged) list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_same_as_normal"), "null"));
+		if (isLogged) list.add(new LabelValueDetails(prop.getText(MENU_TYPE_SAME_AS_NORMAL), "null"));
 		else list.add(new LabelValueDetails(prop.getText("editor.navbar.same_as_menu"), "null"));
 
-		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_onlydefault"), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));
-		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_hidden"), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));
+		list.add(new LabelValueDetails(prop.getText(MENU_TYPE_ONLYDEFAULT), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));
+		list.add(new LabelValueDetails(prop.getText(MENU_TYPE_HIDDEN), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));
 		//list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_nosub"), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));
 		//list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_normal"), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));
 		return list;
@@ -443,11 +452,11 @@ public class WebpagesService {
 	 */
 	public List<LabelValueDetails> getOptionsSitemap(boolean isLogged) {
 		List<LabelValueDetails> list = new ArrayList<>();
-		if (isLogged) list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_same_as_normal"), "null"));
+		if (isLogged) list.add(new LabelValueDetails(prop.getText(MENU_TYPE_SAME_AS_NORMAL), "null"));
 		else list.add(new LabelValueDetails(prop.getText("editor.navbar.same_as_menu"), "null"));
 
-		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_onlydefault"), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));
-		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_hidden"), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));
+		list.add(new LabelValueDetails(prop.getText(MENU_TYPE_ONLYDEFAULT), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));
+		list.add(new LabelValueDetails(prop.getText(MENU_TYPE_HIDDEN), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));
 		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_nosub"), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));
 		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_normal"), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));
 		return list;
@@ -460,9 +469,9 @@ public class WebpagesService {
 	 */
 	public List<LabelValueDetails> getMenuType(boolean isLogged) {
 		List<LabelValueDetails> list = new ArrayList<>();
-		if (isLogged) list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_same_as_normal"), "-1"));
-		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_onlydefault"), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));
-		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_hidden"), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));
+		if (isLogged) list.add(new LabelValueDetails(prop.getText(MENU_TYPE_SAME_AS_NORMAL), "-1"));
+		list.add(new LabelValueDetails(prop.getText(MENU_TYPE_ONLYDEFAULT), String.valueOf(GroupDetails.MENU_TYPE_ONLYDEFAULT)));
+		list.add(new LabelValueDetails(prop.getText(MENU_TYPE_HIDDEN), String.valueOf(GroupDetails.MENU_TYPE_HIDDEN)));
 		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_nosub"), String.valueOf(GroupDetails.MENU_TYPE_NOSUB)));
 		list.add(new LabelValueDetails(prop.getText("groupedit.menu_type_normal"), String.valueOf(GroupDetails.MENU_TYPE_NORMAL)));
 		return list;
@@ -495,9 +504,9 @@ public class WebpagesService {
         try {
 			ps = db_conn.prepareStatement("UPDATE groups SET " + DB.removeSlashes(attributeName) + "=? WHERE group_id IN (" + groupIds + ")");
 
-			if (attributeValue instanceof String) ps.setString(1, (String)attributeValue);
-			else if (attributeValue instanceof Integer) ps.setInt(1, ((Integer)attributeValue).intValue());
-			else if (attributeValue instanceof Boolean) ps.setBoolean(1, ((Boolean)attributeValue).booleanValue());
+			if (attributeValue instanceof String string) ps.setString(1, string);
+			else if (attributeValue instanceof Integer integer) ps.setInt(1, integer);
+			else if (attributeValue instanceof Boolean bool) ps.setBoolean(1, bool);
 			else ps.setObject(1, attributeValue);
 
             ps.execute();
@@ -682,7 +691,7 @@ public class WebpagesService {
 						groupIdsTrash.add(group.getGroupId());
 					}
 					if (groupIdsTrash.isEmpty()==false) {
-						predicates.add(builder.not(root.get("groupId").in(groupIdsTrash)));
+						predicates.add(builder.not(root.get(GROUP_ID).in(groupIdsTrash)));
 						predicates.add(builder.not(root.get("rootGroupL2").in(groupIdsTrash)));
 					}
 				}
@@ -706,15 +715,15 @@ public class WebpagesService {
 		if (recursive) {
 			GroupsDB groupsDB = GroupsDB.getInstance();
 			List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
-			List<Integer> groupIds = subGroups.stream().map(GroupDetails::getGroupId).collect(Collectors.toList());
+			List<Integer> groupIds = subGroups.stream().map(GroupDetails::getGroupId).toList();
 			if (groupIds.size()==1) {
 				//ak sa jedna o posledny uzol daj to ako klasicku where kvoli efektivite
-				predicates.add(builder.equal(root.get("groupId"), groupIds.get(0)));
+				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
 			} else if (groupIds.isEmpty()==false) {
-				predicates.add(root.get("groupId").in(groupIds));
+				predicates.add(root.get(GROUP_ID).in(groupIds));
 			}
 		} else if (groupId>0)  {
-			predicates.add(builder.equal(root.get("groupId"), groupId));
+			predicates.add(builder.equal(root.get(GROUP_ID), groupId));
 		}
 		return predicates;
 	}
@@ -728,7 +737,7 @@ public class WebpagesService {
 	 */
     public static DocBasic processFromEntity(DocBasic entity, ProcessItemAction action,  HttpServletRequest request, boolean addFields) {
 
-        int groupId = Tools.getIntValue(request.getParameter("groupId"), Constants.getInt("rootGroupId"));
+        int groupId = Tools.getIntValue(request.getParameter(GROUP_ID), Constants.getInt(ROOT_GROUP_ID));
 
         if (ProcessItemAction.GETONE.equals(action) && entity==null) {
             entity = new DocDetails();
@@ -805,7 +814,7 @@ public class WebpagesService {
 		   ret.add(allTemps.get(0));
 	   }
 
-	   List<TemplateDetails> sortedRet = ret.stream().sorted((e1, e2) -> e1.getTempName().compareTo(e2.getTempName())).collect(Collectors.toList());
+	   List<TemplateDetails> sortedRet = ret.stream().sorted((e1, e2) -> e1.getTempName().compareTo(e2.getTempName())).toList();
 
 	   return (new ArrayList<TemplateDetails>(sortedRet));
 	}
@@ -856,7 +865,7 @@ public class WebpagesService {
 			if(options.getColumnsSpecification() != null) {
 				spec = spec.and(options.getColumnsSpecification());
 			}
-			page = ((JpaSpecificationExecutor<DocDetails>)options.getDocDetailsRepository()).findAll(spec, options.getPageable());
+			page = options.getDocDetailsRepository().findAll(spec, options.getPageable());
 		} else if(options.isUserGroupIdRequested()) {
             //chceme vratit stranky podla zadaneho ID skupiny pouzivatelov, pouziva sa na zoznam stranok s danou skupinou
             page = options.getDocDetailsRepository().findAllByPasswordProtectedLike(""+options.getUserGroupId(), options.getUserGroupId()+",%", "%,"+options.getUserGroupId(), "%," + options.getUserGroupId() + ",%", options.getPageable());
@@ -869,9 +878,6 @@ public class WebpagesService {
 			if(!options.getCurrentUser().isEnabledItem("cmp_adminlog")) throw new IllegalArgumentException("Access is denied");
 			page = options.getDocDetailsRepository().findAllByOrderByDateCreatedDesc(options.getPageable());
 
-		} else if("true".equals(options.getRequest().getParameter("isSearchVersion"))) {
-			// return empty page, we need to have search text to get data (processed in addSpecSearch)
-			page = new DatatablePageImpl<>(new ArrayList<>());
 		} else {
 			if (GroupsDB.isGroupEditable(options.getCurrentUser(), options.getGroupId())) {
 				Map<String, String> params = new HashMap<>();
@@ -879,7 +885,7 @@ public class WebpagesService {
 					params.putAll(DatatableRestControllerV2.getParamsMap(options.getRequest()));
 				}
 				//override groupId from options
-				params.put("groupId", "" + options.getGroupId());
+				params.put(GROUP_ID, "" + options.getGroupId());
 
 				@SuppressWarnings("java:S1602")
 				Specification<DocDetails> spec = (Specification<DocDetails>) (root, query, builder) -> {
@@ -926,11 +932,11 @@ public class WebpagesService {
         WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());
 
 		pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
-        pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), "title", "docId", false);
-        pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), "title", "docId", false);
-		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), "title", "docId", false);
-        pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", "userGroupId", false);
-        pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", "userGroupId", false);
+        pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), TITLE, DOC_ID, false);
+        pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), TITLE, DOC_ID, false);
+		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), TITLE, DOC_ID, false);
+        pageImpl.addOptions("editorFields.emails", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), "userGroupName", USER_GROUP_ID, false);
+        pageImpl.addOptions("editorFields.permisions", UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), "userGroupName", USER_GROUP_ID, false);
         pageImpl.addOptions("perexGroups", ws.getPerexGroups(options.isRecursiveSubfolders()), "perexGroupName", "perexGroupId", false);
 
 		//optiony pre ikonu
@@ -1063,7 +1069,7 @@ public class WebpagesService {
 	{
 		HttpSession session = request.getSession();
 
-		int group_id = Constants.getInt("rootGroupId");
+		int group_id = Constants.getInt(ROOT_GROUP_ID);
 
 		int groupId = getUserFirstEditableGroup(user);
 		if (groupId > 0)
@@ -1096,15 +1102,17 @@ public class WebpagesService {
 	}
 
 	/**
-	 * Add special conditions to search query based on request parameters
+	 * Get and process params as searchAuthorName, userGroupId etc.
+	 * @param specSearch
+	 * @param params
+	 * @param predicates
+	 * @param root
+	 * @param builder
+	 * @return String value of processed param groupIdList
 	 */
-	public static void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder, Identity user) {
-
-        SpecSearch<DocDetails> specSearch = new SpecSearch<>();
-        GroupsDB groupsDB = GroupsDB.getInstance();
-
+	public static String addBaseSpecSearch(SpecSearch<DocDetails> specSearch, Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
 		//remove groupId predicate which was auto binded, it will be set later in this method depending on recursive attribute
-		JpaTools.removePredicateWithName("groupId", predicates);
+		JpaTools.removePredicateWithName(GROUP_ID, predicates);
 
         //vyhladanie na zaklade Meno autora, hladane v DB tabulke nasledne v stlpci authorId
         String searchAuthorName = params.get("searchAuthorName");
@@ -1113,65 +1121,73 @@ public class WebpagesService {
 
         String permissions = params.get("searchEditorFields.permisions");
         if (permissions != null)
-            specSearch.addSpecSearchPasswordProtected(permissions, "passwordProtected", predicates, root, builder);
+            specSearch.addSpecSearchPasswordProtected(permissions, PASSWORD_PROTECTED, predicates, root, builder);
 
         String emails = params.get("searchEditorFields.emails");
         if (emails != null)
-            specSearch.addSpecSearchPasswordProtected(emails, "passwordProtected", predicates, root, builder);
+            specSearch.addSpecSearchPasswordProtected(emails, PASSWORD_PROTECTED, predicates, root, builder);
 
-        int userGroupId = Tools.getIntValue(params.get("userGroupId"), -1);
+        int userGroupId = Tools.getIntValue(params.get(USER_GROUP_ID), -1);
         if (userGroupId > 0)
-            specSearch.addSpecSearchPasswordProtected(userGroupId, "passwordProtected", predicates, root, builder);
+            specSearch.addSpecSearchPasswordProtected(userGroupId, PASSWORD_PROTECTED, predicates, root, builder);
 
 		String groupIdListParam = params.get("groupIdList");
-		if (Tools.isEmpty(groupIdListParam) && Tools.isNotEmpty(params.get("groupId"))) {
-			groupIdListParam = params.get("groupId");
+		if (Tools.isEmpty(groupIdListParam) && Tools.isNotEmpty(params.get(GROUP_ID))) {
+			groupIdListParam = params.get(GROUP_ID);
 			if ("true".equals(params.get("recursive"))) groupIdListParam+="*";
 		}
 
-		if(Boolean.TRUE.equals( Tools.getBooleanValue(params.get("isSearchVersion"), false) )) {
-			// SEARCH_ALL VERSION
-			SearchService.getWebPagesData(params, user, predicates, builder, root);
-		} else {
-			String[] groupIdListArray = Tools.getTokens(groupIdListParam, ",", true);
-			int groupId;
-			if (groupIdListArray.length>0) {
-				List<Integer> groupIds = new ArrayList<>();
-				for (String id : groupIdListArray) {
-					if (id.endsWith("*") && id.length()>1) {
+		return groupIdListParam;
+	}
 
-						groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);
-						GroupDetails baseGroup = groupsDB.getGroup(groupId);
-						//to filter FullTextIndex of files
-						final boolean baseGroupIsFiles = baseGroup.getFullPath().contains("/files");
-						List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
+	/**
+	 * Add special conditions to search query based on request parameters
+	 */
+	public static void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder, Identity user) {
 
-						groupIds.addAll(subGroups.stream()
-							.filter(g -> baseGroupIsFiles || !g.getFullPath().contains("/files"))
-							.map(g -> g.getGroupId())
-							.collect(Collectors.toList()));
+        SpecSearch<DocDetails> specSearch = new SpecSearch<>();
+        GroupsDB groupsDB = GroupsDB.getInstance();
 
-					} else {
+		String groupIdListParam = addBaseSpecSearch(specSearch, params, predicates, root, builder);
 
-						groupIds.add(Tools.getIntValue(id, -1));
+		String[] groupIdListArray = Tools.getTokens(groupIdListParam, ",", true);
+		int groupId;
+		if (groupIdListArray.length>0) {
+			List<Integer> groupIds = new ArrayList<>();
+			for (String id : groupIdListArray) {
+				if (id.endsWith("*") && id.length()>1) {
 
-					}
+					groupId = Tools.getIntValue(id.substring(0, id.length()-1), -1);
+					GroupDetails baseGroup = groupsDB.getGroup(groupId);
+					//to filter FullTextIndex of files
+					final boolean baseGroupIsFiles = baseGroup.getFullPath().contains("/files");
+					List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, true, true);
+
+					groupIds.addAll(subGroups.stream()
+						.filter(g -> baseGroupIsFiles || !g.getFullPath().contains("/files"))
+						.map(g -> g.getGroupId())
+						.toList());
+
+				} else {
+
+					groupIds.add(Tools.getIntValue(id, -1));
+
 				}
-				if (groupIds.size()==1) {
-					predicates.add(builder.equal(root.get("groupId"), groupIds.get(0)));
-				} else if (groupIds.size()>1) {
-					predicates.add(root.get("groupId").in(groupIds));
-				}
+			}
+			if (groupIds.size()==1) {
+				predicates.add(builder.equal(root.get(GROUP_ID), groupIds.get(0)));
+			} else if (groupIds.size()>1) {
+				predicates.add(root.get(GROUP_ID).in(groupIds));
+			}
 
-				//filter iba hlavnych stranok adresarov
-				String searchStatusIcon = params.get("searchEditorFields.statusIcons");
-				if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
-					//ziskaj zoznam default_doc_id pre zvolene adresare
-					String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-					List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
-					//pridaj to ako predikat
-					predicates.add(root.get("id").in(defaultDocIds));
-				}
+			//filter iba hlavnych stranok adresarov
+			String searchStatusIcon = params.get("searchEditorFields.statusIcons");
+			if ("searchDefaultPage".equals(searchStatusIcon) && groupIds.size()>0) {
+				//ziskaj zoznam default_doc_id pre zvolene adresare
+				String ids = groupIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+				List<Integer> defaultDocIds = (new SimpleQuery()).forListInteger("SELECT DISTINCT default_doc_id FROM groups WHERE group_id IN ("+ids+")");
+				//pridaj to ako predikat
+				predicates.add(root.get("id").in(defaultDocIds));
 			}
 		}
     }

@@ -67,6 +67,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appvyhladavanie",
     "sk.iway.iwcm.components.banner",
     "sk.iway.iwcm.components.basket.rest",
+    "sk.iway.iwcm.components.basket.mvc",
+    "sk.iway.iwcm.components.basket.payment_methods.rest",
     "sk.iway.iwcm.components.blog.rest",
     "sk.iway.iwcm.components.calendar",
     "sk.iway.iwcm.components.calendarnews",
@@ -123,7 +125,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.webjet.v9",
     "sk.iway.iwcm.components.sitemap",
     "sk.iway.iwcm.components.rating",
-    "sk.iway.iwcm.components.relatedpages"
+    "sk.iway.iwcm.components.relatedpages",
+    "sk.iway.iwcm.search"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

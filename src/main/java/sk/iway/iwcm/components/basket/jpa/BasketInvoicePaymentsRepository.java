@@ -10,5 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BasketInvoicePaymentsRepository extends JpaRepository<BasketInvoicePaymentEntity, Long> {
     Page<BasketInvoicePaymentEntity> findAllByInvoiceId(Long invoiceId, Pageable pageable);
+    List<BasketInvoicePaymentEntity> findAllByInvoiceIdAndConfirmedTrue(Long invoiceId);
+
     List<BasketInvoicePaymentEntity> findAllByInvoiceId(Long invoiceId);
+    List<BasketInvoicePaymentEntity> findAllByInvoiceIdAndConfirmed(Long invoiceId, Boolean confirmed);
 }

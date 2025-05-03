@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.io.IwcmFile"%>
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
-<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*,sk.iway.iwcm.components.basket.jpa.*,sk.iway.iwcm.components.basket.rest.*" %>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -15,7 +15,7 @@
 	if (invoiceId < 1)
 		return;
 
-	BasketInvoiceBean invoice = InvoiceDB.getInvoiceById(invoiceId);
+	BasketInvoiceEntity invoice = EshopService.getInstance().getInvoiceById(invoiceId);
 	if (invoice != null)
 		pageContext.setAttribute("lng", invoice.getUserLng());
 
@@ -30,7 +30,7 @@
 
 	request.setAttribute("invoice", invoice);
 
-	List<BasketItemBean> basketItems = invoice.getBasketItems();
+	List<BasketInvoiceItemEntity> basketItems = invoice.getBasketItems();
 	if (basketItems.size() > 0)
 		request.setAttribute("basketItems", basketItems);
 %>

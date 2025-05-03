@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.basket.BasketDB;
+import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -73,12 +73,7 @@ public class BasketInvoiceItemEntity {
 	@DataTableColumn(
 		inputType = DataTableColumnType.NUMBER,
 		renderFormat = "dt-format-number--decimal",
-		title = "components.basket.price_without_DPH",
-		editor = {
-            @DataTableColumnEditor(
-                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
-            )
-        }
+		title = "components.basket.price_without_DPH"
 	)
 	private BigDecimal itemPrice;
 
@@ -90,6 +85,17 @@ public class BasketInvoiceItemEntity {
 	@Min(1)
 	private Integer itemQty;
 
+	@Column(name="item_note")
+	@DataTableColumn(
+		inputType = DataTableColumnType.TEXTAREA,
+		title = "components.basket.item_note"
+	)
+	private String itemNote;
+
+	@Column(name="item_id")
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private Integer itemId;
+
 	@Column(name="item_vat")
 	private Integer itemVat;
 
@@ -97,17 +103,11 @@ public class BasketInvoiceItemEntity {
 	private Long browserId;
 
 	@Column(name="logged_user_id")
-	private int loggedUserId;
-
-	@Column(name="item_id")
 	@DataTableColumn(inputType = DataTableColumnType.HIDDEN)
-	private int itemId;
+	private int loggedUserId;
 
 	@Column(name="item_part_no")
 	private String itemPartNo;
-
-	@Column(name="item_note")
-	private String itemNote;
 
 	@Column(name="date_insert")
 	@Temporal(TemporalType.TIMESTAMP)
@@ -126,6 +126,10 @@ public class BasketInvoiceItemEntity {
 	 */
 	public BigDecimal getItemPriceQty() {
 		return BigDecimal.valueOf(getItemQty()).multiply(itemPrice);
+	}
+
+	public int getBasketItemId() {
+		return getId() == null ? 0 : getId().intValue();
 	}
 
     /**
@@ -160,7 +164,7 @@ public class BasketInvoiceItemEntity {
 	public synchronized DocDetails getDoc() {
 		if (doc == null) {
 			DocDB docDB = DocDB.getInstance();
-			doc = docDB.getDoc(getItemId());
+			doc = docDB.getDoc(getItemIdInt());
 		}
 		return doc;
 	}
@@ -216,7 +220,7 @@ public class BasketInvoiceItemEntity {
 	}
 
 	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request) {
-		return getItemLocalPriceVatQty(request, BasketDB.getDisplayCurrency(request));
+		return getItemLocalPriceVatQty(request, EshopService.getDisplayCurrency(request));
 	}
 
 	public Date getDateInsert() {
@@ -225,6 +229,10 @@ public class BasketInvoiceItemEntity {
 
 	public void setDateInsert(Date dateInsert) {
 		this.dateInsert = dateInsert == null ? null : (Date) dateInsert.clone();
+	}
+
+	public int getItemIdInt() {
+		return getItemId() == null ? -1 : getItemId().intValue();
 	}
 
 	@Override

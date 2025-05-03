@@ -43,9 +43,9 @@ public class BasicManagerBean {
             return NONE;
         }
     }
-    
+
     @Id
-	@DataTableColumn(inputType = DataTableColumnType.ID, title="ID")
+	@DataTableColumn(inputType = DataTableColumnType.ID)
 	private Long id;
 
 	@DataTableColumn(
@@ -58,8 +58,8 @@ public class BasicManagerBean {
         }
     )
     @NotBlank
-	private String name;	
-    
+	private String name;
+
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="",
@@ -72,7 +72,7 @@ public class BasicManagerBean {
     public static List<BasicManagerBean> getEntitiesFromStrings(List<String> values) {
         Long id = 1L;
         List<BasicManagerBean> entities = new ArrayList<>();
-    
+
         for (String value : values) {
             if(Tools.isNotEmpty(value))
                 entities.add(new BasicManagerBean(id++, value));
