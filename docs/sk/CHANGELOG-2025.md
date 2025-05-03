@@ -109,6 +109,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Nová aplikácia Zoznam objednávok so zoznamom objednávok aktuálne prihláseného používateľa. Kliknutím na objednávku je možné zobraziť detail objednávky a stiahnuť ju v PDF formáte (#56609).
 
+### Iné menšie zmeny
+
+- Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
+
 ### Oprava chýb
 
 - Hromadný email - pri duplikovaní kampane doplnené duplikovanie zoznamu príjemcov (#57533).
