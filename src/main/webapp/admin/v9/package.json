@@ -9,7 +9,7 @@
         "dev": "webpack --config webpack.dev.js",
         "prod": "webpack --config webpack.prod.js",
         "watch": "npm run dev -- --watch",
-        "postinstall": "node node_modules/datatables.net-editor/install.js src/js/plugins/Editor-2.3.2.zip && npx replace-in-file exports exportsall node_modules/xlsx/package.json && rm -rf node_modules/jquery-ui/external/jquery*"
+        "postinstall": "./postinstall.sh"
     },
     "keywords": [],
     "author": "",
@@ -44,6 +44,7 @@
         "@popperjs/core": "^2.11.8",
         "@tabler/icons-webfont": "^3.0.1",
         "@webjetcms/tui-image-editor": "^3.15.304",
+        "@webjetcms/elfinder": "^2.1.654",
         "@zxcvbn-ts/core": "^3.0.4",
         "@zxcvbn-ts/language-common": "^3.0.4",
         "@zxcvbn-ts/language-en": "^3.0.2",
