@@ -10,6 +10,8 @@ You can get the source code of the template in [WebJET CMS github repository](ht
 
 The use is the same as for [Bare template](../template-bare/README.md#use-in-webjet-cms), the difference is of course in the names - replace everywhere `bare` For `creative`. The template folder is `src/main/webapp/templates/creative/bootstrap-creative/`, the paths used in the template and template group start at `/templates/creative/bootstrap-creative/`.
 
+![](editor-webpage.png)
+
 ### Template group
 
 Follow the instructions for the Bare template with modified path `/templates/creative/bootstrap-creative/`.

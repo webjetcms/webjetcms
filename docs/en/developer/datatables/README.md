@@ -2,30 +2,6 @@
 
 Library [datatables.net](http://datatables.net) is an advanced table with a connection to REST services.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Datatables](#datatables)
-  - [Basic initialization in cooperation with Spring REST](#basic-initialization-in-cooperation-with-spring-rest)
-  - [Configuration options](#configuration-options)
-    - [Setting columns](#setting-columns)
-    - [HTML code display](#display-html-code)
-  - [Add/remove buttons](#adding-or-removing-buttons)
-  - [Button to perform server action](#button-to-perform-a-server-action)
-  - [Buttons by rights](#buttons-by-rights)
-  - [Line styling](#line-styling)
-  - [Status icons](#status-icons)
-  - [View data based on rights](#rights-based-data-display)
-  - [Arrangement](#Arrangement)
-  - [Search](#Search)
-  - [External filter](#external-filter)
-  - [Export/import](#exportimport)
-  - [API calls](#call-api)
-  - [Code samples](#code-samples)
-    - [Listening for a table refresh event:](#listening-for-a-table-refresh-event)
-
-<!-- /code_chunk_output -->
-
 ## Basic initialization in cooperation with Spring REST
 
 The WebJET implementation of datatables is configured using the JSON object columns. This object contains the column definitions for both the datatable and the datatables editor. The WJ.DataTable constructor is then used to initialize the table.
@@ -739,7 +715,7 @@ TABLE.calculateAutoPageLength(updateLengthSelect)
 
 ## Code samples
 
-### Listening for a table refresh event:
+### Listening for a table refresh event
 
 Click on the button `reload` triggers an event `WJ.DTE.forceReload` to which you can listen and e.g. update the tree structure:
 
@@ -748,4 +724,34 @@ window.addEventListener('WJ.DTE.forceReload', (e) => {
     //console.log("FORCE RELOAD listener, e=", e);
     $('#SomStromcek').jstree(true).refresh();
 }, false);
+```
+
+### Changing selection field values
+
+If you need to dynamically change the selection field options `select` it is necessary, in addition to the change `option` objects also set the attribute `_editor_val`, which is used as the selected value. The example is for a nested datatable where the options needed to be loaded into a selection field based on the value.
+
+```javascript
+var documentItemsEventsBinded = false;
+window.addEventListener("WJ.DTE.opened", function(e) {
+    if ("datatableFieldDTE_Field_documentItems"===e.detail.id) {
+        let select = document.getElementById("DTE_Field_adressId");
+        //reset options
+        select.options.length=0
+        $.ajax({
+            url: "/admin/rest/apps/appname/list/" + $("#DTE_Field_customerId").val(),
+            success: function(data) {
+                if (data) {
+                    $.each(data, function (i, item) {
+                        let option = new Option(item.label, item.value);
+                        //this value is important, DT use this value instead of option.value
+                        option._editor_val = item.value;
+                        select.add(option);
+                    });
+                    //refresh selectpicker
+                    $(select).selectpicker('refresh');
+                }
+            }
+        });
+    }
+});
 ```

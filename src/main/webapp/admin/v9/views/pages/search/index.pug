@@ -25,7 +25,7 @@ block content
 
         // WebPages
         let webPageHasPerm = WJ.hasPermission("menuWebpages");
-        let webPageUrl = "/admin/rest/web-pages";
+        let webPageUrl = "/admin/rest/search";
         let webPageColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})];
         var webPagesDataTable;
 
@@ -36,7 +36,7 @@ block content
         var translationKeysDataTable;
 
         // WebPages
-        let filesUrl = "/admin/rest/web-pages";
+        let filesUrl = "/admin/rest/search";
         let filesColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})];
         var filesDataTable;
 
@@ -108,7 +108,6 @@ block content
                 window.importWebPagesDatatable().then(module => {
 
                     // URL param that says thi is search all version
-                    webPageUrl = WJ.urlAddParam(webPageUrl, "isSearchVersion", true);
                     webPageUrl = WJ.urlAddParam(webPageUrl, "searchType", "docs");
 
                     // search use this columns, so we CANT filter on top of them
@@ -159,7 +158,6 @@ block content
                 window.importWebPagesDatatable().then(module => {
 
                     // URL param that says thi is search all version
-                    filesUrl = WJ.urlAddParam(filesUrl, "isSearchVersion", true);
                     filesUrl = WJ.urlAddParam(filesUrl, "searchType", "files");
 
                     //

@@ -2,27 +2,6 @@
 
 [Thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#messages) je šablónovací framework. Vo WebJETe je spojený so Spring MVC.
 
-
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Thymeleaf](#thymeleaf)
-  - [Mapovanie URL](#mapovanie-url)
-  - [Vloženie vlastných objektov do modelu](#vloženie-vlastných-objektov-do-modelu)
-  - [LayoutService](#layoutservice)
-  - [Základný výpis textu / atribútu](#základný-výpis-textu--atribútu)
-  - [Prekladový text](#prekladový-text)
-  - [Select box](#select-box)
-  - [Spájanie reťazcov](#spájanie-reťazcov)
-  - [Podmienené zobrazenie tagu](#podmienené-zobrazenie-tagu)
-  - [Získanie objektu z `Constants`](#získanie-objektu-z-constants)
-  - [Kontrola práv](#kontrola-práv)
-  - [Overenie práva](#overenie-práva)
-  - [Chyba TemplateProcessingException: Only variable expressions returning numbers or booleans are allowed in this context](#chyba-templateprocessingexception-only-variable-expressions-returning-numbers-or-booleans-are-allowed-in-this-context)
-
-<!-- /code_chunk_output -->
-
 ## Mapovanie URL
 
 Mapovanie URL adries admin časti sa vykonáva v [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) ako:

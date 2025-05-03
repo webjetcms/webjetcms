@@ -2,24 +2,6 @@
 
 [Editor for datatables](http://editor.datatables.net) is an extension for datatables.net. You must be logged in to editor.datatables.net to view the documentation, otherwise you will not see the complete documentation.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Datatables EDITOR](#datatables-editor)
-  - [Tabs in the editor](#tabs-in-the-editor)
-  - [Configuration options for the columns object](#columns-object-configuration-options)
-  - [Events](#events)
-  - [Styling](#styling)
-  - [Special buttons](#special-buttons)
-  - [Code samples](#code-samples)
-    - [Dynamic change of values in the selection field](#dynamic-change-of-values-in-the-selection-field)
-    - [Getting the JSON object before editing](#getting-json-object-before-editing)
-    - [Program editor opening](#program-editor-opening)
-    - [Conditional display of the input field](#conditional-display-of-the-input-field)
-    - [API functions](#api-functions)
-
-<!-- /code_chunk_output -->
-
 ## Tabs in the editor
 
 The WebJET version of the Editor has implemented card support. Each card must have a unique `id`, which is used in the columns definition in the editor section to set the tab to which the field will be moved. If the value `tab` in the columns definition is not set the field is moved to the first tab.
@@ -28,7 +10,7 @@ Optionally, it can `tabs` the definition to contain the attribute `content` with
 
 Possible attributes:
 - `selected` defines the default tab displayed, it should only be set on one tab.
-- `className` allows you to add CSS style to the tab switcher. CSS styles are predefined `hide-on-create` to hide the card when creating a new record, and `hide-on-edit` to hide the tab when editing an existing record.
+- `className` allows you to add CSS style to the tab switcher. CSS styles are predefined `hide-on-create` to hide the card when creating a new record, and `hide-on-edit` to hide the tab when editing an existing record, `hide-on-duplicate` to hide the card when duplicating.
 - `perms` allows to not display the tab if the user does not have the specified right (note, the character `.` in the law is taken as a sign of `_`). The rights in the JavaScript object are checked `nopermsJavascript`.
 - `hideOnCreate` by setting it to `true` hides the tab when creating a new record.
 - `hideOnEdit` by setting it to `true` hides the tab when editing an existing record.

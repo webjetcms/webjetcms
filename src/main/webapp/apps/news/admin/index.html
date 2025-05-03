@@ -57,7 +57,8 @@
                     var order = [];
                     order.push([4, 'desc']);
 
-                    url = WJ.urlAddParam(url, "groupIdList", data[0].value);
+                    if(typeof data !== "undefined" && data !== null && data.length > 0)
+                        url = WJ.urlAddParam(url, "groupIdList", data[0].value);
 
                     let wpdInstance = new module.WebPagesDatatable({
                         url: url,

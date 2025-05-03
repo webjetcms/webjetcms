@@ -119,7 +119,7 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
      * Add options from list type id:label, id will be converted to string and used as value for option.
      * Use in getAppOptions method like:
      *
-     * Map<String, List<OptionDto>> options = new HashMap<>();
+     * Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();
      * options.put("groups", addOptions(MediaDB.getGroups(), "mediaGroupName", "mediaGroupId", false));
      * return options;
      *

@@ -25,8 +25,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.beanutils.BeanUtils;
 
 import sk.iway.iwcm.*;
-import sk.iway.iwcm.common.BasketDBTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -798,13 +798,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 		return parse(str,request);
 	}
 
-	//TODO - !!! temporally solution, need to be deleted !!!
-	//After merge with remastred version of BASKET logic
-	public double getPriceDouble(HttpServletRequest request) { return getPrice(request).doubleValue(); }
-	public double getVatDouble() { return getVat().doubleValue(); }
-	public double getLocalPriceDouble(HttpServletRequest request, String userCurrency) { return getLocalPrice(request, userCurrency).doubleValue(); }
-	public double getLocalPriceDouble(HttpServletRequest request) { return getLocalPrice(request).doubleValue(); }
-
 	/**
 	 * ziska cenu ako string z {@link Constants} na zaklade kluca basketPrice+productType+priceCategory ie. basketPriceObalkaC a pod.
 	 * @param priceCategory pismenko definujuce cenovu kategoriu, bude konvertnute na uppercase
@@ -828,7 +821,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public BigDecimal getLocalPrice(HttpServletRequest request)
 	{
-		return getLocalPrice( request, BasketDBTools.getDisplayCurrency(request) );
+		return getLocalPrice( request, EshopService.getDisplayCurrency(request) );
 	}
 
 	@JsonIgnore
@@ -1901,7 +1894,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setExternalLink(String externalLink) {
-		if (isEmpty(externalLink)) return;
 		this.externalLink = externalLink;
 	}
 

@@ -33,7 +33,6 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
@@ -48,6 +47,8 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     protected final EditorFacade editorFacade;
     protected final DocAtrDefRepository docAtrDefRepository;
 
+    private static final String GROUP_ID_PARAM_NAME = "groupId";
+
     @Autowired
     public WebpagesDatatable(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
         super(docDetailsRepository);
@@ -59,13 +60,6 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @Override
     public Page<DocDetails> getAllItems(Pageable pageable) {
         GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
-
-        if(isSearchVersion()) {
-            //Do not test perms for groupId, it's test later
-            DatatablePageImpl<DocDetails> pageImpl = new DatatablePageImpl<>(getAllItemsIncludeSpecSearch(new DocDetails(), pageable));
-            WebpagesService.addOptions(pageImpl, options);
-            return pageImpl;
-        }
 
         return WebpagesService.getAllItems(options);
     }
@@ -117,7 +111,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public DocDetails getOneItem(long id) {
-        int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        int groupId = getGroupIdParam();
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
 
         List<NotifyBean> notifyList = new ArrayList<>();
@@ -155,13 +149,13 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @Override
     public Page<DocDetails> findByColumns(@RequestParam Map<String, String> params, Pageable pageable, DocDetails search) {
 
-        Integer groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        int groupId = getGroupIdParam();
 
         //ak chcem zobrazit recentPages
         if(groupId == Constants.getInt("systemPagesRecentPages")) {
 
             //Key groupId (and other) must be removed because we set this params in special way inside getAllItems method
-            params.remove("groupId");
+            params.remove(GROUP_ID_PARAM_NAME);
             params.remove("size");
             params.remove("page");
             params.remove("sort");
@@ -324,7 +318,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public GetAllItemsDocOptions getDefaultOptions(Pageable pageable, boolean checkPerms) {
         GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
-        int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        int groupId = getGroupIdParam();
         getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
 
         options.setGroupId(groupId);
@@ -346,7 +340,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         return options;
     }
 
-    private boolean isSearchVersion() {
-        return "true".equals(getRequest().getParameter("isSearchVersion"));
+    private int getGroupIdParam() {
+        return Tools.getIntValue(getRequest().getParameter(GROUP_ID_PARAM_NAME), Constants.getInt("rootGroupId"));
     }
 }

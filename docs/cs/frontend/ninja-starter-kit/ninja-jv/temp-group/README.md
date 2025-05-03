@@ -1,6 +1,6 @@
 # Informace o projektu
 
- | Metoda | Typ | Popis |
+| Metoda | Typ | Popis |
  | ------------------------------ | -------- | ----------------------- |
  | ${ninja.temp.group.siteName}   | *String* | Název projektu |
  | ${ninja.temp.group.autor}      | *String* | Autor |

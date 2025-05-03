@@ -12,14 +12,28 @@ All fields of the object that have an annotation are mapped to JSON `@DataTableC
 
 Annotation `@DataTableColumn` has the same properties as [original columns object](../datatables/README.md). It is also possible to set certain properties using the inputType shortcut, which are defined `enum dataTableColumnType`.
 
+Properties for the editor are set using the annotation `DataTableColumnEditorAttr`. The value can be entered directly or by using the prefix `constant:` get from the configuration variable:
+
+```java
+    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", className = "dt-tree-dir-simple", title="components.file_archiv.target_directory", hidden = true, editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "constant:fileArchivDefaultDirPath"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-skipFolders", value = "fileArchivInsertLaterDirPath"),
+            }
+        )
+    })
+    private String dir;
+```
+
 ## Examples
 
 ```java
 //TranslationKeyDto
-@DataTableColumn(inputType = {DataTableColumnType.ID})
+@DataTableColumn(inputType = DataTableColumnType.ID)
 private Integer id;
 
-@DataTableColumn(inputType = {DataTableColumnType.OPEN_EDITOR})
+@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR)
 private String key;
 
 @DataTableColumn(renderFormat = "dt-format-text-wrap", editor = {
@@ -105,6 +119,7 @@ Optional fields:
   - `DTE_Field_Has_Checkbox` - sets the offset from the bottom to `-14px` so that no gap is left before the next field.
   - `hide-on-create` - hides the field when creating a new record.
   - `hide-on-edit` - hides the field when editing a record.
+  - `hide-on-duplicate` - hides the field when duplicating a record.
   - `not-export` - the field will not be exported.
   - `show-html` - the HTML code in the value is displayed, including entities of type `&#39;`, sets the attribute to the column `entityDecode: false`.
   - `wrap` - enables text wrapping, primarily used in fields of type `textarea`.
@@ -177,6 +192,7 @@ Special:
 - `JSON` - selection field [directory](field-json.md)
 - `DATATABLE` - [nested datatable](field-datatable.md)
 - `ELFINDER` - [link selection](field-elfinder.md) to file/web page
+- `UPLOAD` - [file upload](field-file-upload.md)
 
 ## Selection field options
 

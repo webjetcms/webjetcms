@@ -3,34 +3,6 @@
 
 Knižnica [datatables.net](http://datatables.net) je pokročilá tabuľka s napojením na REST služby.
 
-
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Datatables](#datatables)
-  - [Základná inicializácia v spolupráca s Spring REST](#základná-inicializácia-v-spolupráca-s-spring-rest)
-  - [Možnosti konfigurácie](#možnosti-konfigurácie)
-    - [Nastavenie stĺpcov](#nastavenie-stĺpcov)
-    - [Zobrazenie HTML kódu](#zobrazenie-html-kódu)
-  - [Pridanie/odobratie tlačidiel](#pridanieodobratie-tlačidiel)
-  - [Tlačidlo pre vykonanie serverovej akcie](#tlačidlo-pre-vykonanie-serverovej-akcie)
-  - [Tlačidlá podľa práv](#tlačidlá-podľa-práv)
-  - [Štýlovanie riadku](#štýlovanie-riadku)
-  - [Stavové ikony](#stavové-ikony)
-  - [Zobrazenie dát na základe práv](#zobrazenie-dát-na-základe-práv)
-  - [Usporiadanie](#usporiadanie)
-  - [Vyhľadávania](#vyhľadávania)
-  - [Externý filter](#externý-filter)
-  - [Export/import](#exportimport)
-  - [API volania](#api-volania)
-  - [Ukážky kódu](#ukážky-kódu)
-    - [Počúvanie udalosti obnovenia tabuľky](#počúvanie-udalosti-obnovenia-tabuľky)
-    - [Zmena hodnôt výberového poľa](#zmena-hodnôt-výberového-poľa)
-
-<!-- /code_chunk_output -->
-
-
 ## Základná inicializácia v spolupráca s Spring REST
 
 WebJET implementácia datatables sa konfiguruje pomocou JSON objektu columns. V tomto objekte je definícia stĺpcov pre datatabuľku aj pre datatables editor. Konštruktorom WJ.DataTable sa následne tabuľka inicializuje.

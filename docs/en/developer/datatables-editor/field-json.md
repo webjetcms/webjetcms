@@ -1,18 +1,5 @@
 # Field Type - JSON
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Field Type - JSON](#field-type---json)
-  - [Options className](#classname-options)
-  - [Using specific JSON objects](#use-of-specific-json-objects)
-  - [Custom configuration of the displayed tree structure](#custom-configuration-of-the-displayed-tree-structure)
-  - [Display JSON column value in Datatable](#display-the-json-column-value-in-datatable)
-  - [Listening for a change in value](#listening-for-value-change)
-  - [Implementation details](#implementation-details)
-
-<!-- /code_chunk_output -->
-
 The Scripts web page or application uses a 1:N mapping to other objects. In the case of a Web page, this is the selected directory and a copy of the Web page in the directories, and in the case of a Scripts application, it is a mapping of the script to directories and Web pages.
 
 JSON type field for DT Editor implements **UI for displaying directory or web page selection** from JS tree component with the possibility to set JSON object for **one field or a list (List) of fields**.
@@ -79,7 +66,7 @@ note the use of the attribute `data-dt-json-addbutton` to set the button text in
 
 ## Options className
 
-`dt-tree-group` - returned JSON object of type `GroupDetails` and replaces the current value. If the option to select the root folder should also be available enter `dt-tree-group-root`. ![](field-json-group.png)
+`dt-tree-group` - returned JSON object of type `GroupDetails` and replaces the current value. If the option to select the root folder should also be available enter `dt-tree-group-root`. It is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")` Where `23` is the ID of the folder in the website that you want to use as the root. It is also possible to specify the path to the folder `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")`. ![](field-json-group.png)
 
 `dt-tree-group-null` - returned JSON object of type `GroupDetails` or `NULL` - allows to set no/empty value to a field (e.g. for an optional field), also a trash can icon is displayed in the GUI to delete the value.
 
@@ -87,7 +74,7 @@ note the use of the attribute `data-dt-json-addbutton` to set the button text in
 
 `dt-tree-groupid/dt-tree-groupid-root` - sets only the folder ID in the field, to `data-text` sets the path to the folder (`fullPath`). It is used outside the editor in the statistics application for folder selection.
 
-`dt-tree-page` - returned JSON object of type `DocDetails` and replaces the current value. ![](field-json-page.png)
+`dt-tree-page` - returned JSON object of type `DocDetails` and replaces the current value. It is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")` Where `23` is the ID of the folder in the website that you want to use as the root. It is also possible to specify the path to the folder `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")`. ![](field-json-page.png)
 
 `dt-tree-page-null` - returned JSON object of type `DocDetails` or `NULL` - allows to set no/empty value to a field (e.g. for an optional field), also a trash can icon is displayed in the GUI to delete the value. ![](field-json-page-null.png)
 
@@ -95,11 +82,13 @@ note the use of the attribute `data-dt-json-addbutton` to set the button text in
 
 `dt-tree-dir` - returned JSON object of type `DirTreeItem` For **directory selection in the file system**
 
-`dt-tree-dir-simple` - returned **Chain** with value for **directory selection in the file system**, it is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`
+`dt-tree-dir-simple` - returned **Chain** with value for **directory selection in the file system**, it is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`. Do `data-dt-field-skipFolders` it is possible to specify the name of a configuration variable with a comma-separated list of folders that do not appear in the tree structure.
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
 `dt-tree-dir-array` - returned JSON object of type `DirTreeItem` For **selecting a list of directories in the file system**
+
+`dt-tree-dir-array-root` - returned JSON object of type `DirTreeItem` For **selecting a list of directories in the file system** including the Root Folder option.
 
 `dt-tree-universal-array` - returned universal JSON object inherited from type `JsTreeItem` for custom display `jsTree` structures
 

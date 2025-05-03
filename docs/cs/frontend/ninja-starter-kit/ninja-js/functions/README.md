@@ -1,10 +1,10 @@
 # Funkce
 
 | Funkce | Popis |
-| --------------- | ---------------------- |
-| init(config) | Inicializace pluginu |
-| log(param) | Logování v konzole |
-| isTouchDevice() | Detekování zařízení |
+ | --------------- | ---------------------- |
+ | init(config) | Inicializace pluginu |
+ | log(param) | Logování v konzole |
+ | isTouchDevice() | Detekování zařízení |
 
 ## Inicializace pluginu
 

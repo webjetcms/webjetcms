@@ -707,40 +707,6 @@ div.productsTags a:hover {
     background-color: #eeeeee;
 }
 
-div.productsNavbar {
-    border: 1px solid #d4d4d4;
-    border-radius: 5px;
-    height: 33px;
-    margin-bottom: 15px;
-}
-
-div.productsNavbar ul {
-    height: 33px;
-    margin: 0px;
-    padding: 0px;
-    padding-left: 10px;
-}
-
-div.productsNavbar li {
-    float: left;
-    margin-right: 10px;
-    list-style: none;
-    background: none;
-    line-height: 33px;
-    height: 33px;
-    background: url(/components/basket/img/bg-breadcrumg-li.png) right center no-repeat;
-    padding: 0px;
-}
-
-div.productsNavbar li a {
-    padding: 0 30px 0 10px;
-    display: block;
-}
-
-div.productsNavbar li:before {
-    display: none;
-}
-
 div.products {
     margin: 0 0 0 -35px;
     padding: 15px 0 0;

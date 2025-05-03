@@ -96,6 +96,13 @@ request.setAttribute("includePageParams", includeText);
 PageParams pageParams = new PageParams(request);
 
 String groupIds = pageParams.getValue("groupIds", "");
+if(Tools.isEmpty(groupIds)) {
+	int groupId = Tools.getIntValue(request.getParameter("groupId"), -1);
+	if (groupId > 0)
+	{
+		groupIds = String.valueOf(groupId);
+	}
+}
 
 if(Tools.isEmpty(groupIds)){
 	out.print(prop.getText("components.basket.noGroupAlert"));
@@ -687,7 +694,7 @@ String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";/
 
 								<div class="variantBox"<c:if test="${fn:length(variants) > 0 }"> style="display:block"</c:if>>
 									<strong><iwcm:text key="components.basket.admin_products_list.variants"/>:</strong>
-									<br/>00
+									<br/>
 
 									<table>
 										<tr class="template">

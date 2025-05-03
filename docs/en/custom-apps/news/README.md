@@ -22,22 +22,6 @@ If you don't need to change the folder ID value, you can of course remove the AJ
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "newsBreadcrumb",
-            tabs: [
-                {
-                    url: '/apps/news/admin/',
-                    title: '[[#{components.menu.news}]]',
-                    active: true
-                },
-                {
-                    url: '#newsGroup',
-                    title: '{filter}',
-                    active: false
-                }
-            ]
-        });
-
         function setGroupIdFilterSelect(data) {
             //Get object, select
             let filterSelect = document.getElementById('groupIdFilterSelect');
@@ -58,10 +42,6 @@ If you don't need to change the folder ID value, you can of course remove the AJ
             $("#groupIdFilterSelect").selectpicker('refresh');
         }
 
-        //move filter to top navbar
-        $("#pills-newsGroup-tab").html("");
-        $("div#groupId_extfilter").appendTo("#pills-newsGroup-tab");
-
         let urlGroupIdFilter = "/admin/rest/news/news-list/convertIdsToNamePair?ids=constant:"+idsConstantName;
         let data = {};
         var includeParameter = WJ.urlGetParam("include");
@@ -75,9 +55,9 @@ If you don't need to change the folder ID value, you can of course remove the AJ
             method: "post",
             success: function (data) {
 
-                setGroupIdFilterSelect(data);
+                //console.log("mam data:", data);
 
-                let url = "/admin/rest/web-pages";
+                let url = "/admin/rest/news/news-list";
 
                 //rename title column
                 window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("apps.news.newsTitle.js") });
@@ -92,22 +72,25 @@ If you don't need to change the folder ID value, you can of course remove the AJ
                     var order = [];
                     order.push([4, 'desc']);
 
+                    url = WJ.urlAddParam(url, "groupIdList", data[0].value);
+
                     let wpdInstance = new module.WebPagesDatatable({
-                        url: WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val()),
+                        url: url,
                         columns: webpageColumns,
                         id: "newsDataTable",
                         order: order,
-                        newPageTitleKey: "apps.news.newsTitle.js", //optional, title of new page
-                        showPageTitleKey: "admin.search.showFile.js", //optional, title of Show Page (eye) button
+                        newPageTitleKey: "apps.news.newsTitle.js",
                     });
                     newsDataTable = wpdInstance.createDatatable();
-                });
 
-                $("#groupIdFilterSelect").on("change", function() {
-                    var value = this.value;
-                    var newUrl = WJ.urlAddParam(url, "groupIdList", this.value);
-                    newsDataTable.setAjaxUrl(newUrl);
-                    newsDataTable.ajax.reload();
+                    $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupIdFilterSelect"></select></div>');
+                    setGroupIdFilterSelect(data);
+
+                    $("#groupIdFilterSelect").on("change", function() {
+                        var value = this.value;
+                        newsDataTable.setAjaxUrl(WJ.urlUpdateParam( newsDataTable.getAjaxUrl() , "groupIdList", this.value));
+                        newsDataTable.ajax.reload();
+                    });
                 });
             }
 
@@ -115,23 +98,6 @@ If you don't need to change the folder ID value, you can of course remove the AJ
 
     });
 </script>
-
-<style type="text/css">
-    #pills-newsGroup-tab .bootstrap-select,
-    #pills-newsGroup-tab .bootstrap-select button {
-        min-width: 220px;
-        width: auto;
-    }
-</style>
-
-<div id="groupId_extfilter">
-    <div class="row datatableInit">
-        <div class="col-auto">
-            <select id="groupIdFilterSelect">
-            </select>
-        </div>
-    </div>
-</div>
 
 <table id="newsDataTable" class="datatableInit table"></table>
 ```

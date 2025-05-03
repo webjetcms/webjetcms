@@ -19,7 +19,6 @@ import sk.iway.Html2Text;
 import sk.iway.Password;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
-import sk.iway.iwcm.components.basket.BasketDB;
 import sk.iway.iwcm.components.domainRedirects.DomainRedirectDB;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -2045,8 +2044,7 @@ public class Tools
 	}
 
 	/**
-	 * Vracia id prihlaseneho pouzivatela. Identicka metoda je aj v {@link BasketDB},
-	 * kde nema co robit
+	 * Vracia id prihlaseneho pouzivatela.
 	 *
 	 * @param request
 	 * @return {@link Integer} userId
@@ -3238,5 +3236,32 @@ public class Tools
 	public static String base64Encode(String text) {
 		if (Tools.isEmpty(text)) return "";
 		return Base64.getEncoder().encodeToString(text.getBytes());
+	}
+
+	/**
+	 * Replace all occurrences of regex pattern in source string with newStr, eg:
+	 * content = Tools.replaceRegex(content, "double(\\s*[a-zA-Z0-9]+\\s*=\\s*EshopService\\.)", "BigDecimal $1", false);
+	 * @param source
+	 * @param regexPattern
+	 * @param newStr
+	 * @param isCaseInsensitive
+	 * @return
+	 */
+	public static String replaceRegex(String source, String regexPattern, String newStr, boolean isCaseInsensitive) {
+		if (source == null)
+			return (null);
+
+		//nemozeme pouzit Tools.isEmpty, pretoze to nam trimne medzery aj crlf a podmienka bude zla
+		if (regexPattern == null || regexPattern.isEmpty()) return source;
+
+		Pattern pattern;
+
+		if(isCaseInsensitive)
+			pattern = Pattern.compile(regexPattern, Pattern.CASE_INSENSITIVE);
+		else
+			pattern = Pattern.compile(regexPattern);
+
+		Matcher m = pattern.matcher(source);
+		return m.replaceAll(newStr);
 	}
 }
