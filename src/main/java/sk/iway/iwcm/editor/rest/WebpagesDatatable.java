@@ -111,7 +111,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
 
     @Override
     public DocDetails getOneItem(long id) {
-        int groupId = getGroupIdParamName();
+        int groupId = getGroupIdParam();
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
 
         List<NotifyBean> notifyList = new ArrayList<>();
@@ -149,7 +149,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     @Override
     public Page<DocDetails> findByColumns(@RequestParam Map<String, String> params, Pageable pageable, DocDetails search) {
 
-        int groupId = getGroupIdParamName();
+        int groupId = getGroupIdParam();
 
         //ak chcem zobrazit recentPages
         if(groupId == Constants.getInt("systemPagesRecentPages")) {
@@ -318,7 +318,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
     public GetAllItemsDocOptions getDefaultOptions(Pageable pageable, boolean checkPerms) {
         GetAllItemsDocOptions options = new GetAllItemsDocOptions(getRequest());
 
-        int groupId = getGroupIdParamName();
+        int groupId = getGroupIdParam();
         getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
 
         options.setGroupId(groupId);
@@ -340,7 +340,7 @@ public class WebpagesDatatable extends DatatableRestControllerV2<DocDetails, Lon
         return options;
     }
 
-    private int getGroupIdParamName() {
+    private int getGroupIdParam() {
         return Tools.getIntValue(getRequest().getParameter(GROUP_ID_PARAM_NAME), Constants.getInt("rootGroupId"));
     }
 }
