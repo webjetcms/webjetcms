@@ -21,6 +21,8 @@ public enum FieldType {
     NUMBER,
     BOOLEAN,
     UUID,
+    QUILL,
+    BOOLEAN_TEXT,
     COLOR
     ;
 
@@ -55,7 +57,9 @@ public enum FieldType {
         if ("date".equals(str)) return FieldType.DATE;
         if ("number".equals(str)) return FieldType.NUMBER;
         if ("boolean".equals(str)) return FieldType.BOOLEAN;
+        if ("boolean_text".equals(str)) return FieldType.BOOLEAN_TEXT;
         if ("uuid".equals(str)) return FieldType.UUID;
+        if ("quill".equals(str)) return FieldType.QUILL;
         if ("color".equals(str)) return FieldType.COLOR;
 
         return FieldType.TEXT;

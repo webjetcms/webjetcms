@@ -26,22 +26,59 @@
         $("#pills-dateRange-tab").html("");
         $("div#productListDataTable_extfilter").appendTo("#pills-dateRange-tab");
 
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldK", visible: true });
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldK", title: WJ.translate("apps.product-list.price_without_DPH.js") });
+        window.WJ.DataTable.mergeColumns(columns, {
+            name: "fieldH",
+            visible: true,
+            title: WJ.translate("apps.product-list.price_with_DPH.js"),
+            renderFormat: "dt-format-number--decimal",
+            sortAfter: "fieldL"
+        });
 
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldL", visible: true });
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldL", title: WJ.translate("apps.product-list.VAT.js") });
+        window.WJ.DataTable.mergeColumns(columns, {
+            name: "fieldK",
+            visible: true,
+            title: WJ.translate("apps.product-list.price_without_DPH.js"),
+            renderFormat: "dt-format-number--decimal"
+        });
 
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldM", visible: true });
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldM", title: WJ.translate("apps.product-list.count_of_pieces.js") });
+        window.WJ.DataTable.mergeColumns(columns, {
+            name: "fieldL",
+            visible: true,
+            title: WJ.translate("apps.product-list.VAT.js")
+        });
 
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldH", visible: true });
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldH", title: WJ.translate("apps.product-list.price_with_DPH.js") });
+        window.WJ.DataTable.mergeColumns(columns, {
+            name: "fieldM",
+            visible: true,
+            title: WJ.translate("apps.product-list.count_of_pieces.js")
+        });
 
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldI", visible: true });
-        window.WJ.DataTable.mergeColumns(columns, { name: "fieldI", title: WJ.translate("apps.product-list.currency.js") });
+        window.WJ.DataTable.mergeColumns(columns, {
+            name: "fieldJ",
+            title: WJ.translate("components.basket.invoice.currency")
+        });
 
-        let columnsToExport = ["id", "title", "fieldK", "fieldL", "fieldM", "fieldH", "fieldI"];
+        //console.log("Columns before merge: ", columns);
+
+        if(isPreviewMode() == true) {
+            //console.log("Preview mode - hide buttons");
+
+            window.WJ.DataTable.mergeColumns(columns, {
+                name: "title",
+                sClass: "",
+                renderFormat: "dt-format-text"
+            });
+
+            columns.forEach((element, index, array) => {
+                if(element.name === 'title') {
+                    delete element.renderFormatLinkTemplate;
+                    delete element.renderFormatPrefix;
+                }
+            });
+        }
+
+
+        let columnsToExport = ["id", "title", "fieldK", "fieldL", "fieldM", "fieldH"];
         for(let i = 0; i < columns.length; i++) {
             if(columnsToExport.includes( columns[i]['name'] ) === false) {
                 let className = columns[i]['className'];
@@ -58,29 +95,35 @@
                 url: url,
                 columns: columns,
                 id: "productListDataTable",
-                newPageTitleKey: "apps.product-list.articles.new_article.js",
+                newPageTitleKey: "apps.product-list.articles.new_article.js"
             });
             productListDataTable = wpdInstance.createDatatable();
 
-            productListDataTable.showButton("import");
-            productListDataTable.showButton("export");
 
-            //Add new button with logic -> add folder
-            productListDataTable.button().add(1, {
-                text: '<i class="ti ti-folder-plus"></i>',
-                action: function (e, dt, node) {
-                    addFolderFn();
-                },
-                className: 'btn btn-outline-secondary buttons-divider buttons-add-folder',
-                attr: {
-                    title : "[[#{apps.product-list.add_group.title}]]",
-                    'data-toggle': 'tooltip'
-                }
-            });
+
+            if(isPreviewMode() == true) {
+                productListDataTable.hideButtons(["create", "edit", "remove", "celledit", "duplicate", "abtest", "stat"]);
+            } else {
+                productListDataTable.showButton("import");
+                productListDataTable.showButton("export");
+
+                //Add new button with logic -> add folder
+                productListDataTable.button().add(1, {
+                    text: '<i class="ti ti-folder-plus"></i>',
+                    action: function (e, dt, node) {
+                        addFolderFn();
+                    },
+                    className: 'btn btn-outline-secondary buttons-divider buttons-add-folder',
+                    attr: {
+                        title : "[[#{apps.product-list.add_group.title}]]",
+                        'data-toggle': 'tooltip'
+                    }
+                });
+            }
 
             productListDataTable.EDITOR.on('open', function (e, mode, action) {
-                bloggerDataTable.EDITOR.field("fieldH").disable();
-                bloggerDataTable.EDITOR.field("fieldI").disable();
+                productListDataTable.EDITOR.field("fieldH").disable();
+                // productListDataTable.EDITOR.field("fieldI").disable();
             });
         });
 
@@ -126,6 +169,17 @@
                 },
                 cancel: function() {}
             });
+        }
+
+        function isPreviewMode() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            let isPreview = urlParams.get('previewMode');
+            if(isPreview == undefined || isPreview == null) {
+                return false;
+            }
+
+            return isPreview == "true" ? true : false;
         }
     });
 </script>

@@ -19,11 +19,11 @@ Pridaním novej kategórie sa vytvorí pod-priečinok, ktorý bude umiestnený p
 Príklad.
 Ak máme práve zvolený priečinok ![](select-phones.png ":no-zoom") a vytvoríme nový s názvom **Android**, tak nám vznikne nový priečinok na adrese  ![](select-phones-android.png ":no-zoom")
 
-Nový priečinok pridáme tlačidlom ![](add-folder-button.png ":no-zoom"). Po jeho stlačení sa zobrazí okno pre pridanie priečinka
+Nový priečinok pridáme tlačidlom <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-folder-plus"></i></span></button>. Po jeho stlačení sa zobrazí okno pre pridanie priečinka
 
 ![](toaster-new-folder.png)
 
-Okno obsahuje aj informáciu o tom, pod aký priečinok sa tento nový vytvorí. Po (ne)vyplnení poľa v okne a potvrdenia tlačidlom ![](toaster-new-folder-button.png ":no-zoom") môžu nastať štyri situácie:
+Okno obsahuje aj informáciu o tom, pod aký priečinok sa tento nový vytvorí. Po (ne)vyplnení poľa v okne a potvrdenia tlačidlom <button class="btn btn-primary" type="button">Potvrdiť</button> môžu nastať štyri situácie:
 - ak názov novej kategórie nebude zadaný, vytvorenie sa nepodarí a zobrazená bude hláška
 
 ![](toaster-new-folder-A.png)

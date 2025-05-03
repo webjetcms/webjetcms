@@ -49,11 +49,6 @@
 		<br />
 		<br />
 		
-		<%-- toto je klasicke zobrazenie
-		         <span class="cena"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=product.getLocalPriceVat(request)%></iway:curr></span></p>
-		          --%>
-		<%-- toto je dualne zobrazenie cien (skk a euro)  --%> 
-		
 		<span class="cena"><iway:curr currency="skk"><%= product.getLocalPriceVat(request,"skk")%></iway:curr></span>
 		|
 		<span class="cena"><iway:curr currency="eur"><%= product.getLocalPriceVat(request,"eur")%></iway:curr></span>

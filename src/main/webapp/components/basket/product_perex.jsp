@@ -1,7 +1,6 @@
 <%@page import="java.util.HashMap"%>
 <%@page import="java.util.List"%>
 <%@page import="java.util.Map"%>
-<%@page import="sk.iway.iwcm.ebanking.epayments.PaymentType"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.io.*,java.io.*"%>
@@ -20,14 +19,9 @@ if (doc == null)
 
 String perexImage = doc.getPerexImageNormal();
 String price = doc.getFieldK();
-
 String basketOrder = Tools.getStringValue(request.getParameter("basketAct"), "");
 boolean isbasketOrder = basketOrder.equals("orderform") || "saveorder".equals(request.getParameter("act"));
-boolean isPayPal = basketOrder.equals(PaymentType.PAYPAL.toBasketString());
-
-
 PageParams pageParams = new PageParams(request);
-
 %>
 
 <iwcm:write name="basketSmall"/>
@@ -209,11 +203,7 @@ img {
 <%
 if (isbasketOrder) {
   pageContext.include("/components/basket/order_form.jsp");
-} else if(isPayPal){
-	pageContext.include("/components/basket/order_payment_paypal.jsp");
 }
-
-
 else if (Tools.isNotEmpty(price)) {
 %>
 <link rel="stylesheet" type="text/css" href="/components/basket/css/basket.css"/>

@@ -1574,8 +1574,8 @@
                     </string>
                 </void>
             </object>
-        </void>        
-        
+        </void>
+
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
@@ -1591,12 +1591,111 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>25.04.2023</string></void>
+                <void property="desc"><string>#56609 - pridanie tabulky payment_methods</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE payment_methods (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            payment_method_name VARCHAR(255) NOT NULL,
+                            field_a VARCHAR(255),
+                            field_b VARCHAR(255),
+                            field_c VARCHAR(255),
+                            field_d VARCHAR(255),
+                            field_e VARCHAR(255),
+                            field_f VARCHAR(255),
+                            field_g VARCHAR(255),
+                            field_h VARCHAR(255),
+                            domain_id INT(11) DEFAULT 1 NOT NULL,
+                            UNIQUE (payment_method_name)
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE payment_methods (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            payment_method_name NVARCHAR(255) UNIQUE NOT NULL,
+                            field_a NVARCHAR(255),
+                            field_b NVARCHAR(255),
+                            field_c NVARCHAR(255),
+                            field_d NVARCHAR(255),
+                            field_e NVARCHAR(255),
+                            field_f NVARCHAR(255),
+                            field_g NVARCHAR(255),
+                            field_h NVARCHAR(255),
+                            domain_id int DEFAULT 1 NOT NULL,
+                            UNIQUE(payment_method_name)
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE payment_methods (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            payment_method_name NVARCHAR(255) NOT NULL UNIQUE,
+                            field_a NVARCHAR(255),
+                            field_b NVARCHAR(255),
+                            field_c NVARCHAR(255),
+                            field_d NVARCHAR(255),
+                            field_e NVARCHAR(255),
+                            field_f NVARCHAR(255),
+                            field_g NVARCHAR(255),
+                            field_h NVARCHAR(255),
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE TABLE payment_methods (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL
+                            payment_method_name VARCHAR(255) UNIQUE NOT NULL,
+                            field_a VARCHAR(255),
+                            field_b VARCHAR(255),
+                            field_c VARCHAR(255),
+                            field_d VARCHAR(255),
+                            field_e VARCHAR(255),
+                            field_f VARCHAR(255),
+                            field_g VARCHAR(255),
+                            field_h VARCHAR(255),
+                            domain_id INT DEFAULT 1 NOT NULL,
+                            UNIQUE(payment_method_name)
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
                 <void property="date"><string>24.01.2025</string></void>
                 <void property="desc"><string>reservation_object - pridanie stlpca notif_emails</string></void>
                 <void property="mysql"><string>ALTER TABLE reservation_object ADD notif_emails TEXT</string></void>
                 <void property="mssql"><string>ALTER TABLE reservation_object ADD notif_emails NTEXT</string></void>
                 <void property="oracle"><string>ALTER TABLE reservation_object ADD notif_emails CLOB</string></void>
                 <void property="pgsql"><string>ALTER TABLE reservation_object ADD notif_emails TEXT</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>11.02.2025</string></void>
+                <void property="desc"><string>Pridanie stlpcov real_payment_id, payment_status, payment_description do tabulky basket_invoice_payments</string></void>
+                <void property="mysql">
+                    <string>ALTER TABLE basket_invoice_payments ADD real_payment_id VARCHAR(255), ADD payment_status INT(11) DEFAULT -1, ADD payment_description TEXT;</string>
+                </void>
+                <void property="mssql">
+                    <string>ALTER TABLE basket_invoice_payments ADD real_payment_id NVARCHAR(255), payment_status int DEFAULT -1, payment_description NTEXT;</string>
+                </void>
+                <void property="oracle">
+                    <string>ALTER TABLE basket_invoice_payments ADD (real_payment_id NVARCHAR2(255), payment_status INT DEFAULT -1, payment_description CLOB);</string>
+                </void>
+                <void property="pgsql">
+                    <string>ALTER TABLE basket_invoice_payments ADD COLUMN real_payment_id VARCHAR(255), ADD payment_status INT DEFAULT -1, ADD COLUMN payment_description TEXT;</string>
+                </void>
             </object>
         </void>
 
@@ -1637,6 +1736,74 @@
                 <void property="mssql"><string>UPDATE enumeration_data SET hidden=0 WHERE hidden IS NULL; UPDATE enumeration_type SET hidden=0 WHERE hidden IS NULL;</string></void>
                 <void property="oracle"><string>UPDATE enumeration_data SET hidden=0 WHERE hidden IS NULL; UPDATE enumeration_type SET hidden=0 WHERE hidden IS NULL;</string></void>
                 <void property="pgsql"><string>UPDATE enumeration_data SET hidden=false WHERE hidden IS NULL; UPDATE enumeration_type SET hidden=false WHERE hidden IS NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>07.04.2025</string></void>
+                <void property="desc"><string>Drop unique constraint payment_method_name for table payment_methods</string></void>
+                <void property="mysql"><string>ALTER TABLE payment_methods DROP INDEX payment_method_name;</string></void>
+                <void property="mssql"><string>ALTER TABLE payment_methods DROP CONSTRAINT payment_method_name;</string></void>
+                <void property="oracle"><string>ALTER TABLE payment_methods DROP UNIQUE (payment_method_name);</string></void>
+                <void property="pgsql"><string>ALTER TABLE payment_methods DROP CONSTRAINT payment_method_name;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+            <void property="author"><string>sivan</string></void>
+            <void property="date"><string>09.04.2025</string></void>
+            <void property="desc"><string>Add more custom fields (field_i, field_j, field_k, field_l) to table payment_methods</string></void>
+            <void property="mysql">
+                <string>
+                    ALTER TABLE payment_methods ADD field_i VARCHAR(255), ADD field_j VARCHAR(255), ADD field_k VARCHAR(255), ADD field_l VARCHAR(255);
+                </string>
+            </void>
+            <void property="mssql">
+                <string>
+                    ALTER TABLE payment_methods ADD field_i NVARCHAR(255), field_j NVARCHAR(255), field_k NVARCHAR(255), field_l NVARCHAR(255);
+                </string>
+            </void>
+            <void property="oracle"
+                ><string
+                    >ALTER TABLE payment_methods ADD (field_i NVARCHAR2(255), field_j NVARCHAR2(255), field_k NVARCHAR2(255), field_l NVARCHAR2(255));
+                </string>
+            </void>
+            <void property="pgsql">
+                <string>
+                    ALTER TABLE payment_methods ADD field_i VARCHAR(255), ADD field_j VARCHAR(255), ADD field_k VARCHAR(255), ADD field_l VARCHAR(255);
+                </string>
+            </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>01.06.2025</string></void>
+                <void property="desc"><string>Pridanie stlpcov balance_to_pay</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE basket_invoice ADD balance_to_pay decimal(10,2) DEFAULT 0;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE basket_invoice ADD balance_to_pay decimal(10,2) DEFAULT 0;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE basket_invoice ADD (balance_to_pay decimal(10,2) DEFAULT 0);
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE basket_invoice ADD COLUMN balance_to_pay NUMERIC(10, 2) DEFAULT 0;
+                    </string>
+                </void>
             </object>
         </void>
 
