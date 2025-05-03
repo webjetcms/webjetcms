@@ -1,6 +1,5 @@
 package sk.iway.iwcm.tags;
 
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,10 +7,8 @@ import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.BodyTagSupport;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.struts.taglib.TagUtils;
-import org.apache.struts.taglib.html.Constants;
 import org.apache.struts.util.ResponseUtils;
 
 import sk.iway.iwcm.DB;
@@ -32,7 +29,7 @@ import sk.iway.iwcm.i18n.Prop;
  * @created Date: 16.8.2005 11:34:08
  * @modified $Date: 2010/01/20 11:15:08 $
  */
-public class SelectTag extends org.apache.struts.taglib.html.SelectTag
+public class SelectTag extends BodyTagSupport
 {
 	private static final long serialVersionUID = 2751499992225522333L;
 
@@ -120,6 +117,7 @@ public class SelectTag extends org.apache.struts.taglib.html.SelectTag
 			}
 		}
 
+		/*TODO:
 		if (Tools.isNotEmpty(enableNewText))
 		{
 			HttpServletRequest request= (HttpServletRequest) pageContext.getRequest();
@@ -142,12 +140,14 @@ public class SelectTag extends org.apache.struts.taglib.html.SelectTag
 		// Store this tag itself as a page attribute
 		pageContext.setAttribute(Constants.SELECT_KEY, this);
 		this.calculateMatchValues();
+		*/
 		return (EVAL_BODY_BUFFERED);
 	}
 
 	@Override
 	public int doEndTag() throws JspException
 	{
+		/* TODO
 		// Remove the page scope attributes we created
 		pageContext.removeAttribute(Constants.SELECT_KEY);
 		// Render a tag representing the end of our current form
@@ -162,6 +162,7 @@ public class SelectTag extends org.apache.struts.taglib.html.SelectTag
 		}
 		results.append("</select>");
 		TagUtils.getInstance().write(pageContext, results.toString());
+		*/
 		return (EVAL_PAGE);
 	}
 
@@ -172,6 +173,7 @@ public class SelectTag extends org.apache.struts.taglib.html.SelectTag
 	 */
 	private void calculateMatchValues() throws JspException
 	{
+		/* TODO
 		if (this.value != null)
 		{
 			this.match = new String[1];
@@ -192,11 +194,6 @@ public class SelectTag extends org.apache.struts.taglib.html.SelectTag
 
 				this.match = new String[0];
 				return;
-				/*
-				JspException e = new JspException(messages.getMessage("getter.bean", name));
-				RequestUtils.saveException(pageContext, e);
-				throw e;
-				*/
 			}
 			try
 			{
@@ -229,6 +226,7 @@ public class SelectTag extends org.apache.struts.taglib.html.SelectTag
 				}
 			}
 		}
+		*/
 	}
 
 	/**
