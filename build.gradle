@@ -136,7 +136,7 @@ dependencies {
     //implementation("taglibs:datetime:1.0.1") //taglib datetime:
     implementation("sk.iway:wjdisplaytag:1.2-SNAPSHOT")
     implementation("org.eclipse.persistence:eclipselink:4.0.+")
-    implementation("org.freemarker:freemarker:2.3.32")
+    implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.10.1") //generate.jsp for pagebuilder, refactor to jackson
     implementation("org.hibernate.validator:hibernate-validator:6.0.22.Final")
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
@@ -216,7 +216,9 @@ dependencies {
     providedCompile "javax.servlet:servlet-api:2.5"
     providedCompile "javax.servlet.jsp:javax.servlet.jsp-api:2.3.3"
     providedCompile 'javax.el:javax.el-api:3.0.0'
-    providedCompile 'javax.annotation:jsr250-api:1.0'
+
+    // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
     //  https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring5
     implementation group: 'org.thymeleaf', name: 'thymeleaf-spring5', version: '3.1.2.RELEASE'
