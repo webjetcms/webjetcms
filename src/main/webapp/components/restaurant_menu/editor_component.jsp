@@ -117,7 +117,7 @@ function loadNewMenuIframe()
 
 	<div class="tab-page" id="tabMenu1" style="display: block; padding: 15px;">
 
-		<form name="textForm" style="margin: 0px">
+		<form:form name="textForm" style="margin: 0px">
 
 		<table>
 		<tr><th colspan="2" > <iwcm:text key="components.gis.settingsInfo"/>  </th></tr>

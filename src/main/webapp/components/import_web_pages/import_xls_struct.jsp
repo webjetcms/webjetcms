@@ -13,6 +13,7 @@ request.setAttribute("iconLink", "");
 request.setAttribute("dialogTitle", prop.getText("components.import_web_pages.xls.dialogTitle"));
 request.setAttribute("dialogDesc", prop.getText("components.import_web_pages.xls.dialogDesc"));
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 
 int groupId = Constants.getInt("rootGroupId");
 try

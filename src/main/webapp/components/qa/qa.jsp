@@ -1,4 +1,4 @@
-<%
+<%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.util.*,sk.iway.iwcm.qa.*,sk.iway.iwcm.*"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
@@ -229,7 +229,7 @@ if(displayType==2){ %>
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h4 class="panel-title">
-							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%=count_numer%>">
+							<a class="accordion-toggle" data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-<%=count_numer%>">
 								<jsp:getProperty name="q" property="question"/>
 							</a>
 						</h4>

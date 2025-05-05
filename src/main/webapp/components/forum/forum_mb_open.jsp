@@ -66,7 +66,7 @@ if(request.getAttribute("profileDocId") != null) profileDocId = sk.iway.iwcm.Too
 boolean active = ForumDB.isActive(docId);
 int parentId = Tools.getIntValue(request.getParameter("pId"), 0);
 Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
-Map<String, String> emoticons = new Hashtable<>();
+Hashtable<String, String> emoticons = new Hashtable<>();
 String outStr = "";
 String fTitle = "";
 UserDetails uDet = null;
