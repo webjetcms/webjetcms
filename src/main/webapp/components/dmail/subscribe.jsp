@@ -210,12 +210,12 @@
 </style>
 
 <div>
-	<logic:present name="errors">
+	<iwcm:present name="errors">
 		<strong><iwcm:text key="dmail.subscribe.errors"/>:</strong>
 		<ul style="color: red">
 			<iway:request name="errors"/>
 		</ul>
-	</logic:present>
+	</iwcm:present>
 
 	<form id="subscribeForm" action="<%=PathFilter.getOrigPathDocId(request) %>" style="padding:0px" method="post">
 		<fieldset>

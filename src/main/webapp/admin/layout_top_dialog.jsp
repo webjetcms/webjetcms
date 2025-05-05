@@ -104,10 +104,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 	<head>
 		<title><%=title%></title>
 
-		<logic:present name="mobile">
+		<iwcm:present name="mobile">
 			<meta name="viewport" content="width=100%, minimum-scale=1.0, maximum-scale=1.0" />
 			<meta name="viewport" content="width=device-width, user-scalable=no">
-		</logic:present>
+		</iwcm:present>
 		<%
 		String uaCompatible = (String)request.getAttribute("X-UA-Compatible");
 		if (Tools.isEmpty(uaCompatible)) uaCompatible = Constants.getString("xUaCompatibleAdminValue");
@@ -166,10 +166,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
             div.padding10:before, div.padding10:after { display: table; content: " "; box-sizing: border-box; }
             div.padding10:after { clear: both; }
-			<logic:present name="hideHeaderFooter">
+			<iwcm:present name="hideHeaderFooter">
 				#headerTopRow, #buttonsBottomRow { display: none !important; }
 				div.padding10 {background-color: white;}
-			</logic:present>
+			</iwcm:present>
 
 
 			.padding10 {
@@ -310,7 +310,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		</script>
 	</head>
 
-	<logic:present name="closeTable">
+	<iwcm:present name="closeTable">
 		<body class="closeTableBody" onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 
@@ -334,7 +334,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 					</td>
 				</tr>
 			</table>
-	</logic:present>
+	</iwcm:present>
 
 	<logic:notPresent name="closeTable">
 		<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
@@ -367,10 +367,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 	<head>
 		<title></title>
 
-		<logic:present name="mobile">
+		<iwcm:present name="mobile">
 		<meta name="viewport" content="width=100%, minimum-scale=1.0, maximum-scale=1.0" />
 		<meta name="viewport" content="width=device-width, user-scalable=no">
-	</logic:present>
+	</iwcm:present>
 	<%
 	String uaCompatible = (String)request.getAttribute("X-UA-Compatible");
 	if (Tools.isEmpty(uaCompatible)) uaCompatible = Constants.getString("xUaCompatibleAdminValue");

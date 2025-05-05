@@ -332,7 +332,7 @@ function showCustomFields(){
 		  	<form name="div1Form">
 		  		<div class="form-group" >
 			  		<div class="col-sm-4">
-			  			<logic:present name="groups">
+			  			<iwcm:present name="groups">
 			  	 			<iwcm:text key="components.user.group_id"/>:
 							<div class="scroll_checkboxes">
 								<logic:iterate id="g" name="groups" type="sk.iway.iwcm.users.UserGroupDetails">
@@ -340,7 +340,7 @@ function showCustomFields(){
 									out.print("checked='checked'");%>/><%=g.getUserGroupName()%></label><br>
 							  </logic:iterate>
 							</div>
-				  	 	</logic:present>
+				  	 	</iwcm:present>
 			  		</div>
 			  		<div class="col-sm-4">
 			  			<iwcm:text key="components.user.show_fields"/>:
@@ -520,7 +520,7 @@ function showCustomFields(){
 		  	 		</div>
 		  		</div>
 		  		<div class="col-sm-6 col-sm-offset-3 form-group" style="margin-top:20px;">
-		  			<logic:present name="groups">
+		  			<iwcm:present name="groups">
 		  	 			<iwcm:text key="components.user.group_id"/>
 		  	 			<img src="question.gif" onclick="showHelpGroup(event);"/>
 						<br><br>
@@ -530,7 +530,7 @@ function showCustomFields(){
 								out.print("checked='checked'");%>/><%=g.getUserGroupName()%></label><br>
 						  </logic:iterate>
 						</div>
-		  	 		</logic:present>
+		  	 		</iwcm:present>
 		  		</div>
 		  	</div>
 		  </form>

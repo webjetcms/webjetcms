@@ -83,10 +83,10 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 <head>
 	<title><%=title%></title>
 
-	<logic:present name="mobile">
+	<iwcm:present name="mobile">
 		<meta name="viewport" content="width=100%, minimum-scale=1.0, maximum-scale=1.0" />
 		<meta name="viewport" content="width=device-width, user-scalable=no">
-	</logic:present>
+	</iwcm:present>
 
 	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
 	<meta http-equiv="Content-Type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" />
@@ -136,7 +136,7 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 	</script>
 </head>
 
-<logic:present name="closeTable">
+<iwcm:present name="closeTable">
 	<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 		<table border="0" cellspacing="0" cellpadding="0" width="100%" height="65">
@@ -151,7 +151,7 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 				</td>
 			</tr>
 		</table>
-</logic:present>
+</iwcm:present>
 
 <logic:notPresent name="closeTable">
 	<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">

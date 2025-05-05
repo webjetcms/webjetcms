@@ -14,6 +14,7 @@ request.setAttribute("dialogTitle", prop.getText("components.import_web_pages.xl
 request.setAttribute("dialogDesc", prop.getText("components.import_web_pages.xls.dialogDesc"));
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 
 int groupId = Constants.getInt("rootGroupId");
 try
@@ -83,9 +84,9 @@ catch (Exception ex)
 </script>
 
 <div class="padding10">
-	<logic:present parameter="error">
+	<iwcm:present parameter="error">
 		<b><iwcm:text key="components.import_web_pages.import_error"/>.</b><br><br>
-	</logic:present>
+	</iwcm:present>
 
 
 	<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">

@@ -130,9 +130,9 @@ function highlight(obj,on)
 
 <h3><iwcm:text key="authorize_user.title"/>:</h3>
 
-<logic:present name="emailSendFail">
+<iwcm:present name="emailSendFail">
    <b><iwcm:text key="authorize_user.email_send_fail"/>
-</logic:present>
+</iwcm:present>
 
 <logic:notPresent name="emailSendFail">
    <b><iwcm:text key="authorize_user.authorize_od"/>:</b><br><br>

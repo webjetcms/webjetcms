@@ -99,9 +99,9 @@ String framesetSize = "*,*";
     }
 %>
 
-<logic:present name="isApprove">
+<iwcm:present name="isApprove">
 	<frameset rows="*,100" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
-</logic:present>
+</iwcm:present>
 
 	<frameset cols="<%=framesetSize%>" onload="setupScroll()">
         <logic:empty name="historyEqualsDoc">
@@ -116,10 +116,10 @@ String framesetSize = "*,*";
 		</frameset>
 	</frameset>
 
-<logic:present name="isApprove">
+<iwcm:present name="isApprove">
 		<frame name="approveFormId"  id="approveFormId" src="/admin/approve_form.jsp?historyid=<%=Tools.getRequestParameter(request, "historyid")%>" scrolling="no" >
 	</frameset>
-</logic:present>
+</iwcm:present>
 
 
 <noframes><body bgcolor="#FFFFFF" text="#000000">

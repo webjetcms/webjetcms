@@ -101,9 +101,9 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 					</span>
 				</c:when>
 				<c:otherwise>
-					<logic:present name="wrongApproveId">
+					<iwcm:present name="wrongApproveId">
 						<span class="error"><img src="/admin/images/warning.gif" align="absmiddle"/> <iwcm:text key="approve.allready_approved"/>.</span>
-					</logic:present>
+					</iwcm:present>
 
 					<logic:notPresent name="wrongApproveId">
 						<form action="approve.do" method="post">

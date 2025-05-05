@@ -1,4 +1,4 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 %>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
@@ -334,7 +334,7 @@
        </tr>
 
 
-      <logic:present name="basketItems">
+      <iwcm:present name="basketItems">
           <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 
             <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
@@ -354,7 +354,7 @@
                  </td>
             </tr>
           </logic:iterate>
-       </logic:present>
+       </iwcm:present>
 
 
         <tr class='basketListTableTotalVat'>

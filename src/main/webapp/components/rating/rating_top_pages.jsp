@@ -39,7 +39,7 @@ if (topDocIds.size() > 0)
 <div class="rating">	
 	<!--  TOP STRANKY -->
 	
-	<logic:present name="docIdTopList">
+	<iwcm:present name="docIdTopList">
 	
 		<table style="width:400px;">
 			 <thead>
@@ -66,7 +66,7 @@ if (topDocIds.size() > 0)
 			 </tbody>
 		</table>
 		
-	</logic:present>
+	</iwcm:present>
 	
 </div>
 		

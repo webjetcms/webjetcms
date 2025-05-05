@@ -33,7 +33,7 @@ if (topUsers.size() > 0)
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <div class="rating">
 	<!--  TOP POUZIVATELIA -->	
-	<logic:present name="usersTopList">
+	<iwcm:present name="usersTopList">
 		<table style="width:400px;">
 			 <thead>
 			   <tr>
@@ -68,7 +68,7 @@ if (topUsers.size() > 0)
 					</logic:iterate>  
 			 </tbody>
 		</table>
-	</logic:present>	
+	</iwcm:present>	
 </div>
 			
 	<%		

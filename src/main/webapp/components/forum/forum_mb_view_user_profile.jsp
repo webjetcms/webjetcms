@@ -68,7 +68,7 @@ if (userDet!=null && user!=null && userDet.getUserId()==user.getUserId())
 document.write('<style type="text/css" media="screen">	@import "/components/forum/forum_mb_silver.css"; </style>');
 -->
 </script>
-<logic:present name="userInfo">
+<iwcm:present name="userInfo">
    <h1><iwcm:text key="components.forum.bb.profile.info_about"/> <bean:write name="userDet" property="fullName"/></h1>
 
    <div class="row mobile-fix">
@@ -150,7 +150,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 			</div>
 		</div>
 	</div>
-</logic:present>
+</iwcm:present>
 <logic:notPresent name="userInfo">
    <iwcm:text key="components.forum.view_profile.user_not_found"/>
 </logic:notPresent>

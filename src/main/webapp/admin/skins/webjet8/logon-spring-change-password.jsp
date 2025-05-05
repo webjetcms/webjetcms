@@ -116,9 +116,9 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                                     <iwcm:text key="logon.password.enter_new_password"/><br/>
                                 </c:if>
                             </logic:notPresent>
-                            <logic:present name="errorsList">
+                            <iwcm:present name="errorsList">
                                 <iwcm:text key="user.form.errors"/>
-                            </logic:present>
+                            </iwcm:present>
                         </span>
                     </div>
                     <div class="infotext">
@@ -136,18 +136,18 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                                 <li><iwcm:text key="logon.change_password.used_in_history2"/></li>
                         </ul>
                         </logic:notPresent>
-                        <logic:present name="errors">
+                        <iwcm:present name="errors">
                             <ul>
                                 <li>${errors}</li>
                             </ul>
-                        </logic:present>
-                        <logic:present name="errorsList">
+                        </iwcm:present>
+                        <iwcm:present name="errorsList">
                             <ul>
                                 <c:forEach var="error" items="${errorsList}">
                                     <li>${error.values[0]}</li>
                                 </c:forEach>
                             </ul>
-                        </logic:present>
+                        </iwcm:present>
                     </div>
                 </div>
 

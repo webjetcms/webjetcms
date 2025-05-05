@@ -118,7 +118,7 @@ request.setAttribute("NO WJTOOLBAR", "true");
 			} %>
 		</image>
 		<atom:link href="<%=Tools.getBaseHref(request)%><%=PathFilter.getOrigPathDocId(request) %>" rel="self" type="application/rss+xml" />
-		<logic:present name="novinky">
+		<iwcm:present name="novinky">
 			<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 				<item>
 					<guid><%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request) %></guid>					
@@ -139,6 +139,6 @@ request.setAttribute("NO WJTOOLBAR", "true");
 					%></pubDate>
 				</item>
 			</logic:iterate>
-		</logic:present>
+		</iwcm:present>
 	</channel>
 </rss>

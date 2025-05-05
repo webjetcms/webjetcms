@@ -149,9 +149,9 @@ if(!isAjaxCall)
 %>
 <h3><iwcm:text key="forum.title"/></h3>
 
-<logic:present name="forumClosed">
+<iwcm:present name="forumClosed">
 	<p><span class="forumClosed"><iwcm:text key="components.forum.forum_closed"/>!</span></p>
-</logic:present>
+</iwcm:present>
 
 <div class="row">
 	<div class="col-xs-12 col-sm-12 col-md-12">

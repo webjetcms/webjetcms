@@ -100,7 +100,7 @@ if (docDetails != null)
 			} %>
 		</image>
 		
-		<logic:present name="photos">
+		<iwcm:present name="photos">
 			<logic:iterate id="photo" name="photos" type="sk.iway.iwcm.gallery.GalleryBean">
 				<item>
 					<title><logic:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></logic:empty><logic:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></logic:notEmpty></title>
@@ -132,6 +132,6 @@ if (docDetails != null)
 									
 				</item>
 			</logic:iterate>
-		</logic:present>
+		</iwcm:present>
 	</channel>
 </rss>

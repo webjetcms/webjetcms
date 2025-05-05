@@ -1,4 +1,4 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.io.*, sk.iway.iwcm.system.*, sk.iway.iwcm.i18n.*,sk.iway.iwcm.FileTools" %>
 <%@ page import="sk.iway.iwcm.Tools" %>
 
@@ -41,7 +41,7 @@
 	}
 %>
 
-<logic:present parameter="zipArchivePath" >
+<iwcm:present parameter="zipArchivePath" >
    <script type="text/javascript">
    		window.scrollBy(0,10000);
 		function Ok()
@@ -49,7 +49,7 @@
 			window.close();
 		}
 	</script>
-</logic:present>
+</iwcm:present>
 
 <logic:notPresent parameter="zipArchivePath" >
 	<script type="text/javascript">

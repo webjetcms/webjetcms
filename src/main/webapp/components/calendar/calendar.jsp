@@ -211,9 +211,9 @@ request.setAttribute("calendar.jsp.calendarID", new Integer(myCalendarId+1));
 		document.write('<style type="text/css" media="all">@import url("/components/calendar/calendar.css");</style>');
 
 		var print=false;
-		<logic:present parameter="print">
+		<iwcm:present parameter="print">
 			print = true;
-		</logic:present>
+		</iwcm:present>
 	//-->
 </script>
 

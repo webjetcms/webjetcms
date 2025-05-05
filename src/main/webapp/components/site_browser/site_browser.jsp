@@ -116,11 +116,11 @@ request.setAttribute("fileList", fileList);
 	</div>
 </div>
 
-<logic:present name="valid" >
+<iwcm:present name="valid" >
 	<script type="text/javascript">
 			window.alert("<iwcm:text key="fbrowse.alert_message"/>");
 	</script>
-</logic:present>
+</iwcm:present>
 
 <script type="text/javascript">
 		function noPopup()

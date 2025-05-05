@@ -213,16 +213,16 @@ if(!isAjaxCall)
 }
 %>
 
-<logic:present name="forumClosed">
+<iwcm:present name="forumClosed">
 	<p><span class="forumClosed"><iwcm:text key="components.forum.forum_closed"/>!</span></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="delTimeLimitExpired">
+<iwcm:present name="delTimeLimitExpired">
   <div align="center" >
 		<p><iwcm:text key="components.forum.del_time_limit_expired"/></p>
  </div>
  <%request.removeAttribute("delTimeLimitExpired");%>
-</logic:present>
+</iwcm:present>
 
 <h1 class="maintitle"><%=fTitle%></h1>
 	<div class="row mobile-fix">
@@ -252,7 +252,7 @@ if(!isAjaxCall)
 
 	</div>
 
-<logic:present name="emptyForum">
+<iwcm:present name="emptyForum">
 <table cellspacing="0" cellpadding="0" style="width:100%;" class="forumTableOpen" >
 	<tr>
 	  <td colspan=2>
@@ -260,7 +260,7 @@ if(!isAjaxCall)
 	  </td>
 	</tr>
 </table>
-</logic:present>
+</iwcm:present>
 
 <!--  ******** KOMPONENTA STRANKOVANIA ********  -->
 <%
@@ -271,7 +271,7 @@ if(!isAjaxCall)
  %>
 <!--  ***** KONIEC KOMPONENTY STRANKOVANIA ***** -->
 
-<logic:present name="forum">
+<iwcm:present name="forum">
 
 	<!--table class="forumline table table-striped table-bordered">
 		<thead class="topiclist">
@@ -450,7 +450,7 @@ if(!isAjaxCall)
 		<div class="to-top pull-right"> </div>
 	</div>
 
-</logic:present>
+</iwcm:present>
 
 	<div class="row mobile-fix">
 		<div class="col-md-2 col-xs-12">

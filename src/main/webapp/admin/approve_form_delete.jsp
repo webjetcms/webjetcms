@@ -58,19 +58,19 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 	<div class="toggle_content" style="padding-top: 5px;">
 		<div id="tabMenu1" style="height: 100px;">
 
-			<logic:present name="allreadyRejected">
+			<iwcm:present name="allreadyRejected">
 				<span class="error">
 					<iwcm:text key="approve.del.allready_rejected"/>:
 				</span>
-			</logic:present>
+			</iwcm:present>
 
 
 			<logic:notPresent name="allreadyRejected">
 
-				<logic:present name="allreadyDeleted">
+				<iwcm:present name="allreadyDeleted">
 					<span class="error"><iwcm:text key="approve.del.allready_deleted"/>.</span>
 					<br><br><br><br><br><br>
-				</logic:present>
+				</iwcm:present>
 
 				<logic:notPresent name="wrongApproveId">
 					<form action="approvedel.do" method="post">

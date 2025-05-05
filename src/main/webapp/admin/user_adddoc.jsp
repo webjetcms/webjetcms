@@ -9,7 +9,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
 <%@page import="org.apache.struts.util.ResponseUtils"%>
-<logic:present parameter="docId">
+<iwcm:present parameter="docId">
 <%
 int docId = -1;
 try
@@ -45,7 +45,7 @@ body { overflow: auto }
 </body></html>
 
 
-</logic:present>
+</iwcm:present>
 <logic:notPresent parameter="docId">
 <html>
 <head>

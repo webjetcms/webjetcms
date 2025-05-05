@@ -464,7 +464,7 @@ $(".addToBasket").on("click", function(){
                 </tr>
 
 
-                <logic:present name="basketItems">
+                <iwcm:present name="basketItems">
                     <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
                         <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
                             <td class="w-5">
@@ -493,7 +493,7 @@ $(".addToBasket").on("click", function(){
                             </td>
                         </tr>
                     </logic:iterate>
-                </logic:present>
+                </iwcm:present>
             </table>
             <div class="container_basket">
                 <div class="row">
@@ -539,7 +539,7 @@ $(".addToBasket").on("click", function(){
 						<div class="table-container">
 							<table class="table table-filter">
 								<tbody>
-		      <logic:present name="basketItems">
+		      <iwcm:present name="basketItems">
 
 
 					<logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
@@ -572,7 +572,7 @@ $(".addToBasket").on("click", function(){
            </logic:iterate>
 
 
-       </logic:present>
+       </iwcm:present>
         	</tbody>
 							</table>
 						</div>

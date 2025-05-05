@@ -67,7 +67,7 @@ int doc_id = -1;
 <logic:notPresent name="docHistory">
 &nbsp;&nbsp;<iwcm:text key="history.empty"/>
 </logic:notPresent>
-<logic:present name="docHistory">
+<iwcm:present name="docHistory">
 <table class="history">
 	<tr>
 		<th><iwcm:text key="history.date"/></th>
@@ -88,4 +88,4 @@ int doc_id = -1;
 	</tr>
 </logic:iterate>
 </table>
-</logic:present>
+</iwcm:present>

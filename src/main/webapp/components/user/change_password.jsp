@@ -140,7 +140,7 @@ if (includedIntoPage==false)
 					<c:if test="${success}">
 						<p><strong><iwcm:text key="logon.password.change_successful" /></strong></p>
 					</c:if>
-					<logic:present name="errors">
+					<iwcm:present name="errors">
 					<%-- --------DUPLICATED IN logon.jsp--------%>
 						<%
 							String constStr = "";
@@ -161,7 +161,7 @@ if (includedIntoPage==false)
 							<%}%>
 								<li><iwcm:text key="logon.change_password.used_in_history2"/></li>
 						</ul>
-					</logic:present>
+					</iwcm:present>
 					<c:if test="${!success}">
 						<form action="<%=PathFilter.getOrigPath(request)%>" method="post">
 							<table border="0" cellpadding="2" style="width: 100%">

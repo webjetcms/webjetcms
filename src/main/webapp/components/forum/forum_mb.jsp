@@ -259,7 +259,7 @@ if(!isAjaxCall)
 <p class="mainSubtitle"><bean:write name="perex_data" filter="false"/></p>
 </logic:notPresent>
 
-<logic:present name="rootGroup">
+<iwcm:present name="rootGroup">
 	<%if(showSearchBox==true){%>
 	<div class="forumSearchBox row mobile-fix">
 		<div class="col-md-4 offset-md-8 col-xs-12 pull-right pr-0">
@@ -336,17 +336,17 @@ if(!isAjaxCall)
 			%>
 	   </table>
 	</div>
-</logic:present>
+</iwcm:present>
 <!-- KONIEC HLAVNE FORUM*********************************************************************************** -->
 
-<logic:present name="delTimeLimitExpired">
+<iwcm:present name="delTimeLimitExpired">
 
 <br>
  <div align="center" >
 		<iwcm:text key="components.forum.del_time_limit_expired"/>
  </div>
  <%request.removeAttribute("delTimeLimitExpired");%>
-</logic:present>
+</iwcm:present>
 <logic:notPresent name="rootGroup">
  <%if(advertisementType){%>
     <span class="forumAdvertisement"><iwcm:text key="components.forum.advertisement_type_message"/></span>
@@ -396,7 +396,7 @@ if(!isAjaxCall)
 
 	</div>
 
-<logic:present name="topics">
+<iwcm:present name="topics">
 <!--  ******** KOMPONENTA STRANKOVANIA ********  -->
 <%
 	if(request.getAttribute("offset") != null)
@@ -471,7 +471,7 @@ if(!isAjaxCall)
 			}
 		%>
 	</div>
-</logic:present>
+</iwcm:present>
 </logic:notPresent>
 <%request.removeAttribute("delTimeLimitExpired");%>
 <%if(!isAjaxCall){%>

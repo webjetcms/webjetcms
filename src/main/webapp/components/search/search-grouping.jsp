@@ -112,15 +112,15 @@ if (searchType != null)
  <br>
  <h2><iwcm:text key="components.search.search_results"/></h2>
 
-	<logic:present name="totalResults">
+	<iwcm:present name="totalResults">
 		<div align=right>
 			<iwcm:text key="components.search.number_of_found_results"/>: <iway:request name="totalResults"/>
 			<br><br>
 		</div>
-	</logic:present>
+	</iwcm:present>
 
   <!-- VYSLEDKY VYHLADAVANIA -->
-  <logic:present name="aList">
+  <iwcm:present name="aList">
 			<logic:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
 			   <%
 			   if (Tools.isNotEmpty(groupingField))
@@ -142,23 +142,23 @@ if (searchType != null)
 				<jsp:getProperty name="search" property="link"/>
 				<hr>
 			</logic:iterate>
-   </logic:present>
+   </iwcm:present>
 
 		<p align=right>
-		  <logic:present name="prevHref">
+		  <iwcm:present name="prevHref">
 			 <b><a href="<%=newPrevHref%>">&lt;&lt;&lt; <iwcm:text key="components.search.back"/></a></b>
-		  </logic:present>
+		  </iwcm:present>
 		  &nbsp;&nbsp;&nbsp;
-		  <logic:present name="nextHref">
+		  <iwcm:present name="nextHref">
 			 <b><a href="<%=newNextHref%>"><iwcm:text key="components.search.next"/> &gt;&gt;&gt;</a></b>
-		  </logic:present>
+		  </iwcm:present>
 		</p>
-		<logic:present name="notfound">
+		<iwcm:present name="notfound">
 		  <p align="center"><b><iwcm:text key="components.search.no_matches_found"/><br>(<iwcm:text key="components.search.too_short_string"/>).</b></p>
-		</logic:present>
-		<logic:present name="emptyrequest">
+		</iwcm:present>
+		<iwcm:present name="emptyrequest">
 		  <p align="center"><b><iwcm:text key="components.search.enter_search_string"/> (<iwcm:text key="components.search.min_3"/>)</b></p>
-		</logic:present>
+		</iwcm:present>
 		<br>
 
  <!-- KONIEC VYSLEDKOV VYHLADAVANIA -->

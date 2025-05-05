@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.InitServlet"%><%
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.InitServlet"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.system.msg.*,java.util.*" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
@@ -18,7 +18,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
    }
 %>
 
-<logic:present name="newMessages">
+<iwcm:present name="newMessages">
 	<%="<script type='text/javascript' language='JavaScript'>"%>
 	function popupMessage(id)
 	{
@@ -29,5 +29,5 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		popupMessage(<bean:write name="msg" property="adminMessageId"/>);
 	</logic:iterate>
 	<%="</script>"%>
-</logic:present>
+</iwcm:present>
 &nbsp;

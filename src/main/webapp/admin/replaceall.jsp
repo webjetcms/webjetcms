@@ -336,7 +336,7 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 			<br/>
 
 
-			<logic:present name="replacedPages">
+			<iwcm:present name="replacedPages">
 				<strong>Uravené stránky:</strong>
 				<br>
 				<table cellspacing=2 cellpadding=0>
@@ -356,9 +356,9 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 				</logic:iterate>
 				</table>
 				<br/>
-			</logic:present>
+			</iwcm:present>
 
-			<logic:present name="replacedPages">
+			<iwcm:present name="replacedPages">
 				<strong>Upravené adresáre:</strong>
 				<br>
 				<table cellspacing=2 cellpadding=0>
@@ -375,7 +375,7 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					</tr>
 				</logic:iterate>
 				</table>
-			</logic:present>
+			</iwcm:present>
 		</iwcm:buff>
 	<%
 

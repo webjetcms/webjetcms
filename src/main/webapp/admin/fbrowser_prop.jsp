@@ -32,14 +32,14 @@ boolean useVersioning = IwcmFsDB.useVersioning();
 %>
 <script type="text/javascript">
 $(function(){
-	<logic:present parameter="saved">
+	<iwcm:present parameter="saved">
 		if (typeof window.parent.fbrowserDone == "function") {
 			window.parent.fbrowserDone();
 		}
-	</logic:present>
-	<logic:present parameter="refresh">
+	</iwcm:present>
+	<iwcm:present parameter="refresh">
 		refresh();
-	</logic:present>
+	</iwcm:present>
 
 	showAllowedButtons();
 });
@@ -157,7 +157,7 @@ fieldset {margin-bottom: 10px;}
 			</table>
 		</fieldset>
 
-		<logic:present name="atrs">
+		<iwcm:present name="atrs">
 			<fieldset style="padding:3px; height:100%;"><legend style="height: 15px;"><iwcm:text key="fbrowse.file_atrs"/></legend>
 	               <script type="text/javascript">
 	                  var lastAtrGroupId = 0;
@@ -235,7 +235,7 @@ fieldset {margin-bottom: 10px;}
 	               </tr>
 	               </table>
 	            </fieldset>
-            </logic:present>
+            </iwcm:present>
 
             <div style="display: none;">
 		        <iwcm:menu name="fileIndexer">

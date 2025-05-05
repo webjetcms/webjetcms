@@ -108,7 +108,7 @@ function setValues()
 
 </logic:notPresent>
 
-<logic:present parameter="modify">
+<iwcm:present parameter="modify">
 var myPage = window.opener;
 
 var formName = myPage.selectedForm.name;
@@ -199,7 +199,7 @@ function doForm()
     window.close()
 }
 
-</logic:present>
+</iwcm:present>
 
 function sendByEmailClick()
 {

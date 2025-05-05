@@ -308,7 +308,7 @@ else
 			   <iwcm:text key="captcha.textNotCorrect"/>
 			</logic:equal>
 
-			<logic:present name="showForm">
+			<iwcm:present name="showForm">
 			
 			   <form action="/components/send_link/send_link_form.jsp" method="post" id="sendLinkForm">
 					<div class="container-fluid">
@@ -375,7 +375,7 @@ else
 						<input type="reset" class="reset" name="bReset" onclick="window.close();" value="<iwcm:text key="button.cancel"/>" />
 					</div>
 				</form>
-			</logic:present>
+			</iwcm:present>
 		</div>
 		
 		<script type="text/javascript">

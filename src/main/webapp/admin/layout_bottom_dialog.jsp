@@ -7,9 +7,9 @@
 
 <logic:empty name="inIframe">
 
-	<logic:present name="closeTable">
+	<iwcm:present name="closeTable">
 	   <table border="0" cellspacing="0" cellpadding="0" width="100%" class="closeTable">
-	</logic:present>
+	</iwcm:present>
 
 	<logic:notPresent name="closeTable">
 	      <% if (BrowserDetector.isSmartphoneOrTablet(request)==false) {%></div><% } %>

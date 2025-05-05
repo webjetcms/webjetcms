@@ -31,7 +31,7 @@ if (newMessages!=null && newMessages.size()>0)
 	request.setAttribute("newMessages", newMessages);
 }
 out.println(Tools.getRequestParameter(request, "rnd"));
-%><logic:present name="newMessages">
+%><iwcm:present name="newMessages">
    <%="<script type=\"text/javascript\">"%>
 	<logic:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
 		<%
@@ -44,4 +44,4 @@ out.println(Tools.getRequestParameter(request, "rnd"));
 		<%}%>
 	</logic:iterate>
 	<%="</script>"%>
-</logic:present>
+</iwcm:present>

@@ -290,7 +290,7 @@ $(document).ready(function(){
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
 			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
@@ -300,7 +300,7 @@ $(document).ready(function(){
 			</logic:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
-	</logic:present>
+	</iwcm:present>
 	<!-- koniec strankovania -->
 <%
 	}

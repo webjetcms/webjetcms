@@ -130,7 +130,7 @@ int counter=0;
 
 <% if (paging) { %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 		<div class="news_pages">
 			<iwcm:text key="calendar.page"/>:
 			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
@@ -138,7 +138,7 @@ int counter=0;
 			</logic:iterate>
 		</div>
 		<hr />
-	</logic:present>
+	</iwcm:present>
 	<!-- koniec strankovania -->
 <% }
 

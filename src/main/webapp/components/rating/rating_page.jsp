@@ -30,10 +30,10 @@ request.setAttribute("docIdRating", "true");
 <%@page import="sk.iway.iwcm.components.rating.RatingService"%>
 <div class="rating">
 	<!--  RATING STRANKY -->
-	<logic:present name="docIdRating">
+	<iwcm:present name="docIdRating">
 	     <iwcm:text key="components.rating.hodnotenie" param1='<%=""+rBean.getRatingValueDouble()%>' param2='<%=""+range%>'/><br/>
 		 <iwcm:text key="components.rating.hlasovalo" param1='<%=""+rBean.getTotalUsers()%>'/><br/>
-	</logic:present>
+	</iwcm:present>
 </div>		
 	
 	<%		

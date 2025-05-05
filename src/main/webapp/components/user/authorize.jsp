@@ -45,6 +45,6 @@ else if (userId == -1 && Tools.isNotEmpty(hash))
 <%@page import="sk.iway.iwcm.i18n.Prop"%><logic:notPresent name="authorizeOK">
    <iwcm:text key="user.authorize.fail"/>
 </logic:notPresent>
-<logic:present name="authorizeOK">
+<iwcm:present name="authorizeOK">
    <iwcm:text key="user.authorize.success"/>
-</logic:present>
+</iwcm:present>

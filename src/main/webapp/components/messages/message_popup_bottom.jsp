@@ -27,16 +27,16 @@ if(Tools.getRequestParameter(request, "text")!=null) {
 
 AdminMessageBean mes = MessageDB.getInstance(false).getMessage(messageId);
 %>
-<logic:present parameter="text">
+<iwcm:present parameter="text">
 	<script type="text/javascript">
 		top.window.frames['topFrame'].window.frames['feederIframe'].window.location.reload();
 	</script>
-</logic:present>
-<logic:present parameter="removeAttribute" >
+</iwcm:present>
+<iwcm:present parameter="removeAttribute" >
 	<script type="text/javascript">
 		top.window.close();
 	</script>
-</logic:present>
+</iwcm:present>
 <LINK rel="stylesheet" href="/admin/css/style.css">
 <link rel="stylesheet" href="/components/cmp.css">
 <body>

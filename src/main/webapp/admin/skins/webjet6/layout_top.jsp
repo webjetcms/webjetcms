@@ -1,5 +1,5 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%><%@
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><logic:notPresent name="dontCheckAdmin"><iwcm:checkLogon admin="true"/></logic:notPresent><logic:present name="dontCheckAdmin"><iwcm:checkLogon /></logic:present><%
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><logic:notPresent name="dontCheckAdmin"><iwcm:checkLogon admin="true"/></logic:notPresent><iwcm:present name="dontCheckAdmin"><iwcm:checkLogon /></iwcm:present><%
 if ("true".equals(Tools.getRequestParameter(request, SetCharacterEncodingFilter.PDF_PRINT_PARAM)))
 {
 	pageContext.include("/admin/layout_top_pdf.jsp");

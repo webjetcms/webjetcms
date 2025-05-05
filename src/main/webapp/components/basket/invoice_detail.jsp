@@ -52,7 +52,7 @@
    <iwcm:text key="components.basket.invoice_email.no_products_in_order"/>.
 </logic:notPresent>
 
-<logic:present name="basketItems">
+<iwcm:present name="basketItems">
 
 	<table class="invoiceDetailWrappingTable" border="0" cellspacing="0" cellpadding="20" align="center">
 		<tr>
@@ -207,7 +207,7 @@
 							<br/>
 							<iwcm:text key="components.basket.allreadyPayed"/>: <iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=uhradene %></iway:curr>, <strong><iwcm:text key="components.basket.toPay"/> <iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=doplatit %></iway:curr></strong>
 
-							<logic:present name="basketInvoicePayments">
+							<iwcm:present name="basketInvoicePayments">
 								<br/>
 								<br/>
 								<strong><iwcm:text key="components.basket.admin_invoice_detail.prehlad_platieb"/></strong>
@@ -229,7 +229,7 @@
 									</tr>
 									</logic:iterate>
 								</table>
-							</logic:present>
+							</iwcm:present>
 
 							<%
 							if ("cloud".equals(Constants.getInstallName()))
@@ -328,4 +328,4 @@
 		</tr>
 	</table>
 
-</logic:present>
+</iwcm:present>

@@ -52,7 +52,7 @@ DocDB docDB = DocDB.getInstance();
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
 <%@page import="java.text.DecimalFormat"%>
 <%@page import="sk.iway.iwcm.forum.ForumDB"%>
-<logic:present name="topPages">
+<iwcm:present name="topPages">
 	<table>
 		 <thead>
 		   <tr>
@@ -72,4 +72,4 @@ DocDB docDB = DocDB.getInstance();
 		 </tbody>
 	</table>
 	
-</logic:present>
+</iwcm:present>

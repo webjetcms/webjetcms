@@ -44,7 +44,7 @@ if (isAdmin)
 %>
 <%@page import="sk.iway.iwcm.tags.WriteTag"%>
 
-<logic:present name="permissionDenied">
+<iwcm:present name="permissionDenied">
 
 	<strong>
 	   <span class="forumVulgar">
@@ -58,7 +58,7 @@ if (isAdmin)
 			</logic:equal>
 	   </span>
    </strong>
-</logic:present>
+</iwcm:present>
 
 <logic:notPresent name="permissionDenied">
 	<logic:notPresent name="isVulgar">
@@ -98,19 +98,19 @@ if (isAdmin)
 		   %>
 		   </script>
 		</logic:notPresent>
-	   <logic:present name="errorKey">
+	   <iwcm:present name="errorKey">
 
 		   <iwcm:text key='<%=(String)request.getAttribute("errorKey")%>'/>
-	   </logic:present>
+	   </iwcm:present>
 	</logic:notPresent>
 
-	<logic:present name="isVulgar">
+	<iwcm:present name="isVulgar">
 	   <br><br>
 	   <span class="forumVulgar">
 	   <iwcm:text key="forum.new.invalid_question"/>
 	   </span>
 
-	</logic:present>
+	</iwcm:present>
 </logic:notPresent>
 
 <%

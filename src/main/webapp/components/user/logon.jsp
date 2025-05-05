@@ -85,15 +85,15 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 
 	<div class="panel-body">
 
-		<logic:present name="error.logon.user.unknown">
+		<iwcm:present name="error.logon.user.unknown">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="logon.err.userUnknown"/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="error.logon.user.blocked">
+		<iwcm:present name="error.logon.user.blocked">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="logon.error.blocked"/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="error.logon.wrong.pass">
+		<iwcm:present name="error.logon.wrong.pass">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="logon.err.wrongPass"/></span></p>
 			<form name="passwdSendForm" method="get" action="<%=PathFilter.getOrigPathDocId(request) %>">
 				<iwcm:text key="components.user.forgot_password"/>.
@@ -105,25 +105,25 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				%>" />
 			</form>
 			<br /><br />
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="error.logon.wrong.dateLoginDissabled">
+		<iwcm:present name="error.logon.wrong.dateLoginDissabled">
 			<p><span class='error'><iwcm:text key="logon.err.dateLoginDissabled" param1='<%=(String)request.getAttribute("error.logon.wrong.dateLoginDissabled-start")%>' param2='<%=(String)request.getAttribute("error.logon.wrong.dateLoginDissabled-end")%>'/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="passResultEmail">
+		<iwcm:present name="passResultEmail">
 		   <p class="alert alert-success"><iwcm:text key="logon.lost_password_send_success"/></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="unauthorized">
+		<iwcm:present name="unauthorized">
 			<p class="alert alert-danger"><span class='error'><iwcm:text key="components.user.logon.unauthorized"/></span></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name="captchaNotValid">
+		<iwcm:present name="captchaNotValid">
 			<p class='alert alert-danger'><iwcm:text key="captcha.nie.je.spravna"/></p>
-		</logic:present>
+		</iwcm:present>
 
-		<logic:present name='<%=Constants.USER_KEY+"_changepassword"%>'>
+		<iwcm:present name='<%=Constants.USER_KEY+"_changepassword"%>'>
 			<%
 			Identity user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
 			String constStr = "";
@@ -141,9 +141,9 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				   - <iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=String.valueOf(Constants.getInt("password"+constStr+"MinCountOfSpecialSigns"))%>'/>.<br/>
 				<%}%>
 			</p>
-			<logic:present name="passwordsNotMatch">
+			<iwcm:present name="passwordsNotMatch">
 				<p><span class='error'><iwcm:text key="logon.change_password.password_not_match"/></span></p>
-			</logic:present>
+			</iwcm:present>
 			<form action="/usrlogon.do" method="post" name="logonForm">
 				<fieldset>
 				<p>
@@ -186,7 +186,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				</p>
 				</fieldset>
 			</form>
-		</logic:present>
+		</iwcm:present>
 		<logic:notPresent name='<%=Constants.USER_KEY+"_changepassword"%>'>
 
 			<%

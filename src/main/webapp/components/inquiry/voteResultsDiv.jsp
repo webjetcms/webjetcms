@@ -164,21 +164,21 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
               				if (Tools.isNotEmpty(answer.getUrl())) { out.print(", \"" + ResponseUtils.filter(answer.getUrl()) + "\""); }
               			%>);'>
 							<jsp:getProperty name="answer" property="answerString"/>
-							<logic:present name="displayResults">
+							<iwcm:present name="displayResults">
 							<br />
 							<%
 								if (Tools.isNotEmpty(answer.getImagePath()))
 									out.println("<img src=\"" + answer.getImagePath() + "\" alt=\"\" width=\"100\" />");
 							%>
-							</logic:present>
+							</iwcm:present>
 						</a>
-						<logic:present name="displayResults">
+						<iwcm:present name="displayResults">
 							<div class="bar_style">
 								<div class="bar_fill" style="width:<bean:write name="answer" property="percentageString"/>%">
 								</div>
 							</div>
 							<span><jsp:getProperty name="answer" property="percentageString"/>%</span>
-						</logic:present>
+						</iwcm:present>
 						<div class="clearer">&nbsp;</div>
 					</div>
 					<%clicksTotal += answer.getAnswerClicks();%>
@@ -196,19 +196,19 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 						<label>
 							<input type="checkbox" name="selectedAnswers" value="${answer.answerID}"/>
 							<jsp:getProperty name="answer" property="answerString"/>
-							<logic:present name="displayResults">
+							<iwcm:present name="displayResults">
 							<%
 								if (Tools.isNotEmpty(answer.getImagePath()))
 									out.println("<img src=\"" + answer.getImagePath() + "\" alt=\"\" width=\"100\" />");
 							%>
-							</logic:present>
+							</iwcm:present>
 						</label>
-						<logic:present name="displayResults">
+						<iwcm:present name="displayResults">
 							<div class="bar_style">
 								<div class="bar_fill" style="width:<bean:write name="answer" property="percentageString"/>%">&nbsp;</div>
 							</div>
 							<span><jsp:getProperty name="answer" property="percentageString"/>%</span>
-						</logic:present>
+						</iwcm:present>
 						<div class="clearer">&nbsp;</span></div>
 					</div>
 				</logic:iterate>
@@ -234,12 +234,12 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			<h3><bean:write name="inquiry" property="question" filter="false"/></h3>
 			<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 				<div>
-					<logic:present name="displayResults">
+					<iwcm:present name="displayResults">
 					<%
 						if (Tools.isNotEmpty(answer.getImagePath()))
 							out.println("<img src=\"" + answer.getImagePath() + "\" alt=\"\" />");
 					%>
-					</logic:present>
+					</iwcm:present>
 					<strong>
 						<a href='javascript:anketa("/inquiry.answer.do?qID=<jsp:getProperty name="answer" property="questionID"/>&amp;aID=<jsp:getProperty name="answer" property="answerID"/>", 300, 200,<jsp:getProperty name="answer" property="questionID"/><%
 			  				if (Tools.isNotEmpty(answer.getUrl())) { out.print(", \"" + ResponseUtils.filter(answer.getUrl()) + "\""); }
@@ -247,12 +247,12 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 							<jsp:getProperty name="answer" property="answerString"/>
 						</a>
 					</strong>
-					<logic:present name="displayResults">
+					<iwcm:present name="displayResults">
 					<span class="pull-right"><jsp:getProperty name="answer" property="percentageString"/>%</span>
 					<div class="progress progress-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%> active">
 						<div class="bar" style="width: <bean:write name="answer" property="percentageString"/>%;"></div>
 					</div>
-					</logic:present>
+					</iwcm:present>
 					<%clicksTotal += answer.getAnswerClicks();%>
 				</div>
 			</logic:iterate>
@@ -268,21 +268,21 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 						<div>
 							<label>
-							<logic:present name="displayResults">
+							<iwcm:present name="displayResults">
 							<%
 								if (Tools.isNotEmpty(answer.getImagePath()))
 									out.println("<img src=\"" + answer.getImagePath() + "\" alt=\"\" />");
 							%>
-							</logic:present>
+							</iwcm:present>
 					  				<input type="checkbox" name="selectedAnswers" value="${answer.answerID}"/>
 									<jsp:getProperty name="answer" property="answerString"/>
 							</label>
-							<logic:present name="displayResults">
+							<iwcm:present name="displayResults">
 							<span class="pull-right"><jsp:getProperty name="answer" property="percentageString"/>%</span>
 							<div class="progress progress-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%> active">
 								<div class="bar" style="width: <bean:write name="answer" property="percentageString"/>%;"></div>
 							</div>
-							</logic:present>
+							</iwcm:present>
 						</div>
 					</logic:iterate>
 					<p><input type="hidden" name="questionID" value="<bean:write name="answer" property="questionID" />"/>
@@ -315,24 +315,24 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 				<div id="Main">
 					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 						<div>
-							<logic:present name="displayResults">
+							<iwcm:present name="displayResults">
 							<%
 								if (Tools.isNotEmpty(answer.getImagePath()))
 									out.println("<img src=\"" + answer.getImagePath() + "\" alt=\"\" />");
 							%>
-							</logic:present>
+							</iwcm:present>
 							<a href='javascript:anketa("/inquiry.answer.do?qID=<jsp:getProperty name="answer" property="questionID"/>&amp;aID=<jsp:getProperty name="answer" property="answerID"/>", 300, 200,<jsp:getProperty name="answer" property="questionID"/><%
 			  				if (Tools.isNotEmpty(answer.getUrl())) { out.print(", \"" + ResponseUtils.filter(answer.getUrl()) + "\""); }
 			  				%>);' name="poll_bar" style="
-			  				<logic:present name="displayResults">
+			  				<iwcm:present name="displayResults">
 			  				 width: <bean:write name="answer" property="percentageString"/>%;
-			  				 </logic:present>
+			  				 </iwcm:present>
 			  				 " class="poll_bar btn btn-default btn-sm btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>">
 			  				 	<jsp:getProperty name="answer" property="answerString"/>
 			  				 </a>
-							<logic:present name="displayResults">
+							<iwcm:present name="displayResults">
 								<span name="poll_val"><jsp:getProperty name="answer" property="percentageString"/>%</span>
-							</logic:present>
+							</iwcm:present>
 							<br/>
 						</div>
 						<%clicksTotal += answer.getAnswerClicks();%>
@@ -360,23 +360,23 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 						<div>
 							<label class="inquiry_label">
-								<logic:present name="displayResults">
+								<iwcm:present name="displayResults">
 								<%
 									if (Tools.isNotEmpty(answer.getImagePath()))
 										out.println("<img src=\"" + answer.getImagePath() + "\" alt=\"\" />");
 								%>
-								</logic:present>
+								</iwcm:present>
 								<input type="checkbox" name="selectedAnswers" value="${answer.answerID}"/>
 								<a  name="poll_bar" style="
-									<logic:present name="displayResults">
+									<iwcm:present name="displayResults">
 									width: <bean:write name="answer" property="percentageString"/>%;
-									</logic:present>
+									</iwcm:present>
 									" class="poll_bar btn btn-default btn-sm btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>">
 									<jsp:getProperty name="answer" property="answerString"/>
 								</a>
-								<logic:present name="displayResults">
+								<iwcm:present name="displayResults">
 									<span name="poll_val"><jsp:getProperty name="answer" property="percentageString"/>%</span>
-								</logic:present>
+								</iwcm:present>
 								<br/>
 							</label>
 						</div>

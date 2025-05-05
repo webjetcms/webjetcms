@@ -53,13 +53,13 @@ function resizeWindow()
 
 <body>
 
-<logic:present name="picture">
+<iwcm:present name="picture">
 	<p align="center">
 	   <a href='javascript:window.close()'><img onLoad="resizeWindow()" name="image" id='image' src='<%=bBean.getBannerLocation()%>' border='0' alt='<iwcm:text key="components.banner.banner_preview"/>'></a>
 	</p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="flash">
+<iwcm:present name="flash">
 	<script type="text/javascript">
 	   window.resizeTo(<%=bBean.getWidth()%>+100, <%=bBean.getHeight()%>+100);
 	</script>
@@ -77,11 +77,11 @@ function resizeWindow()
 			</EMBED>
 		</OBJECT>
 	</p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="html">
+<iwcm:present name="html">
 	<%=bBean.getHtmlCode()%>
-</logic:present>
+</iwcm:present>
 
 </body>
 </html>

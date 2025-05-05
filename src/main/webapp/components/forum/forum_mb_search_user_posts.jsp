@@ -82,15 +82,15 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 -->
 </script>
 
-<logic:present name="noUserId">
+<iwcm:present name="noUserId">
   <p align="center"><b><iwcm:text key="components.forum.wrong_user_id"/>. </b></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="noResults">
+<iwcm:present name="noResults">
   <p align="center"><b><iwcm:text key="components.forum.no_posts_for_user"/>.</b></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="searchResults">
+<iwcm:present name="searchResults">
 
 	<h1><iwcm:text key="components.search.search_results"/></h1>
 
@@ -213,7 +213,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 		%>
 	</div>
 	<!--  ***** KONIEC KOMPONENTY STRANKOVANIA ***** -->
-</logic:present>
+</iwcm:present>
 
 <%if(showSearchBox==true){%>
 <div class="forumSearchBox row mobile-fix">

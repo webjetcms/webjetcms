@@ -40,7 +40,7 @@ public String isShow(String show, String name)
 	return " style='display: none;'";
 }
 %>
-<%@page import="org.apache.struts.util.ResponseUtils"%><logic:present parameter="qasend">
+<%@page import="org.apache.struts.util.ResponseUtils"%><iwcm:present parameter="qasend">
 	<%
 	String qasend = Tools.getRequestParameter(request, "qasend");
 	if (Tools.isNotEmpty(qasend))
@@ -64,7 +64,7 @@ public String isShow(String show, String name)
 			window.alert('<%=text%>');
 	</script>
 	<% } %>
-</logic:present>
+</iwcm:present>
 
 
 <script type="text/javascript" src="/components/form/check_form.js"></script>

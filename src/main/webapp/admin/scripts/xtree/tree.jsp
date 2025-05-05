@@ -169,7 +169,7 @@ if (user == null)
 		}%>
 	</logic:iterate>
 
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 	<logic:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
 		<%
 	   folderIcon = "-page";
@@ -220,6 +220,6 @@ if (user == null)
 			action="javascript:xtreeItemPageClick(<bean:write name="doc" property="docId"/>, '<bean:write name="doc" property="sortPriority"/>. <%=titleEscaped %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		} %>
 	</logic:iterate>
-	</logic:present>
+	</iwcm:present>
 
 </tree>

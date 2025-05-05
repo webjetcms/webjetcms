@@ -5,9 +5,9 @@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <logic:notPresent name="dontCheckAdmin">
 	<iwcm:checkLogon admin="true"/>
 </logic:notPresent>
-<logic:present name="dontCheckAdmin">
+<iwcm:present name="dontCheckAdmin">
 	<iwcm:checkLogon />
-</logic:present><%
+</iwcm:present><%
 
 //pomocou parametra id vieme zobrazit staru verziu
 if ((request.getParameter("id")==null || request.getParameter("userlngr")==null)) {

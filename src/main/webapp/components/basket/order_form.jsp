@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.database.JpaDB"%>
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.database.JpaDB"%>
 <%@page import="org.apache.commons.beanutils.BeanUtils"%>
 <%@page import="sk.iway.iwcm.doc.DocDetails"%>
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
@@ -230,7 +230,7 @@ else {%>
 		}
 	%>
 </logic:notPresent>
-<logic:present name="basketItems">
+<iwcm:present name="basketItems">
 	<iwcm:script type="text/javascript" src="/components/form/check_form.js"></iwcm:script>
 
 	<form action="<%=defaultFormActionUrl %>" id="orderFormBasket" method="post">
@@ -484,5 +484,5 @@ else {%>
 
 		<input type="hidden" name="rurl" value="<%=Tools.getBaseHref(request) + PathFilter.getOrigPath(request)%>">
 	</form>
-</logic:present>
+</iwcm:present>
 <%}%>

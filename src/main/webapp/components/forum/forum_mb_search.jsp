@@ -95,11 +95,11 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 -->
 </script>
 
-<logic:present name="noResults">
+<iwcm:present name="noResults">
   <p align="center"><b><iwcm:text key="components.forum.search.no_matches_found"/></b></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="searchResults">
+<iwcm:present name="searchResults">
 	<h2><iwcm:text key="components.search.search_results"/></h2>
 	<div class="forumSearchBox row mobile-fix">
 		<div class="col-md-4 offset-md-8 col-xs-12 pull-right pr-0">
@@ -238,4 +238,4 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 			}
 		%>
 	</div>
-</logic:present>
+</iwcm:present>

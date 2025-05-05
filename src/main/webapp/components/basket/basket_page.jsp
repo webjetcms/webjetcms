@@ -1,4 +1,4 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
@@ -368,7 +368,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
          </td>
        </tr>
 
-      <logic:present name="basketItems">
+      <iwcm:present name="basketItems">
           <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
             <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
               <td class="w-5">
@@ -388,7 +388,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
               </td>
             </tr>
           </logic:iterate>
-       </logic:present>
+       </iwcm:present>
       </table>
 
       <div class="container_basket">
@@ -409,13 +409,13 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
             </a>
           </span>
 
-          <logic:present name="basketItems">
+          <iwcm:present name="basketItems">
             <span class="basketOrderBtn" id="orderButton">
               <a href="<%= orderFormUrl %>" class="btn btn-primary">
                 <iwcm:text key="components.basket.finish_order"/>
               </a>
             </span>
-          </logic:present>
+          </iwcm:present>
           </div>
       </div>
   </div>

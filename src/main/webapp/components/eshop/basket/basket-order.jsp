@@ -115,7 +115,7 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
                   </td>
               </tr>
 
-              <logic:present name="basketItems">
+              <iwcm:present name="basketItems">
                   <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
                       <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
                           <td class="w-5">
@@ -130,7 +130,7 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
 
                       </tr>
                   </logic:iterate>
-              </logic:present>
+              </iwcm:present>
               <tr class="sucet">
                   <td></td>
                   <td></td>

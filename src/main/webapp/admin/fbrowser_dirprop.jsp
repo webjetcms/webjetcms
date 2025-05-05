@@ -11,9 +11,9 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ include file="/admin/layout_top_popup.jsp" %>
 
 <script type="text/javascript">
-<logic:present parameter="refresh">
+<iwcm:present parameter="refresh">
 	refresh();
-</logic:present>
+</iwcm:present>
 
 function refresh() {
 	if (window.parent)
@@ -50,14 +50,14 @@ fieldset {margin-bottom: 10px;}
     <head>
     </head>
 	<body>
-		<logic:present parameter="saveok">
+		<iwcm:present parameter="saveok">
 			<script type="text/javascript">
 				//needs wj2023 window.top.WJ.notifySuccess("", "<iwcm:text key="components.page_update_info.save_ok"/>", 10);
 			</script>
 			<div class="alert alert-success" role="alert">
 				<iwcm:text key="components.page_update_info.save_ok"/>
 			</div>
-		</logic:present>
+		</iwcm:present>
 		<form:form method="post" modelAttribute="fbrowserEditForm" action="/admin/fbrowser/dirprop/" id="fbrowserEditForm" name="fbrowserEditForm" style="margin:0px; padding: 0px;">
 			<div id="userGroupsList1">
 				<fieldset>

@@ -150,20 +150,20 @@ if (!isUlStyle) {
 
 if (paging && (pagingStyle.equals("top") || pagingStyle.equals("both"))) { %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
     <div class="news_pages news_pages_top">
       <iwcm:text key="calendar.page"/>:
-      <logic:present name="prev">
+      <iwcm:present name="prev">
       	${prev.value}${prev.label}</a>
-      </logic:present>
+      </iwcm:present>
       <logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
         <jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
       </logic:iterate>
-      <logic:present name="next">
+      <iwcm:present name="next">
       	${next.value}${next.label}</a>
-      </logic:present>
+      </iwcm:present>
     </div>
-  </logic:present>
+  </iwcm:present>
 	<!-- koniec strankovania -->
 <%
 }
@@ -356,20 +356,20 @@ if (isUlStyle) {
 
 if (paging && (pagingStyle.equals("bottom") || pagingStyle.equals("both"))) { %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
     <div class="news_pages news_pages_bottom">
       <iwcm:text key="calendar.page"/>:
-      <logic:present name="prev">
+      <iwcm:present name="prev">
       	${prev.value}${prev.label}</a>
-      </logic:present>
+      </iwcm:present>
       <logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
         <jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
       </logic:iterate>
-      <logic:present name="next">
+      <iwcm:present name="next">
       	${next.value}${next.label}</a>
-      </logic:present>
+      </iwcm:present>
     </div>
-  </logic:present>
+  </iwcm:present>
 	<!-- koniec strankovania -->
 <%
 }
