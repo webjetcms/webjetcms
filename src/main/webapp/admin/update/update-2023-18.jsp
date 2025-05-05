@@ -407,6 +407,10 @@ static {
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountActionBean\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
+
+	//Replace logic:present with iwcm:present
+	replaces.add(new OptionDto("<" + "logic:present", "<" + "iwcm:present", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:present", "</" + "iwcm:present", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -505,6 +509,26 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 					}
 				}
 			}
+
+			//Struts tag replace with our own tag if needed
+			//if(content.contains("<iwcm")) {
+			//	//Does the fiel contains taglib ?
+			//	if(content.contains("uri=\"/WEB-INF/iwcm.tld\"") == true) {
+			//		//It does, so just remove old taglib if is still there
+			//		content = Tools.replaceRegex(content, "\\<\\s*\\%\\s*\\@\\s*taglib.*\"\\/WEB-INF\\/struts-logic.tld\".*", "", false);
+			//	}
+//
+			//	else {
+			//		//It does not, so we need to add our own taglib OR replace the old one
+			//		if(content.contains("\"/WEB-INF/struts-logic.tld\"") == true) {
+			//			//replace old taglib
+			//			content = Tools.replaceRegex(content, "\\<\\s*\\%\\s*\\@\\s*taglib.*\"\\/WEB-INF\\/struts-logic.tld\".*", "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">", false);
+			//		} else {
+			//			//nothing to replace, add new taglib
+			//			content = "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">" + content;
+			//		}
+			//	}
+			//}
 
 			{
 				String origString = "sk.iway.iwcm.forum.*";
