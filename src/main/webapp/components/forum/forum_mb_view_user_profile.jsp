@@ -26,7 +26,8 @@ if (request.getParameter("rootForumId")==null)
 {
    //vydedukuj
    GroupDetails actualGroup = (GroupDetails)request.getAttribute("pageGroupDetails");
-   GroupDetails parentGroup = GroupsDB.getInstance().getGroup(actualGroup.getParentGroupId());
+   GroupDetails parentGroup = null;
+   if(actualGroup != null) parentGroup = GroupsDB.getInstance().getGroup(actualGroup.getParentGroupId());
    if (parentGroup != null) rootForumId = parentGroup.getDefaultDocId();
 }
 

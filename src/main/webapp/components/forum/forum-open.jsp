@@ -27,8 +27,11 @@ if (Tools.isNotEmpty(paramPageParams))
 PageParams pageParams = new PageParams(request);
 
 paramPageParams = (String)request.getAttribute("includePageParams");
-String base64encoded = new String(b64.encode(paramPageParams.getBytes()));
-base64encoded = Tools.URLEncode(Tools.replace(base64encoded, "=", "|"));
+String base64encoded = "";
+if(Tools.isNotEmpty(paramPageParams)) {
+	base64encoded = new String(b64.encode(paramPageParams.getBytes()));
+	base64encoded = Tools.URLEncode(Tools.replace(base64encoded, "=", "|"));
+}
 
 boolean isAjaxCall = request.getAttribute("docDetails")==null;
 if(isAjaxCall)

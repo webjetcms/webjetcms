@@ -115,7 +115,7 @@ for(int i=0;i<100;i++)
                 FileArchivatorBean fabBean = FileArchivatorDB.getByUrl(uploadedFilePath);
                 if(fabBean != null)
                 {
-                    editId = fabBean.getId();
+                    editId = fabBean.getFileArchiveId();
                 }
             }
             if(editId > 0)
@@ -174,7 +174,7 @@ for(int i=0;i<100;i++)
         fab.setFieldB(Tools.getParameter(request,"fieldB_"+i));
 
         FileArchivatorKit fak = new FileArchivatorKit(Prop.getInstance(request));
-        ResultArchivBean rab = fak.prepareAndValidate(fab, -1, user, isEdit);
+        ResultArchivBean rab = fak.prepareAndValidate(fab, Long.valueOf(-1), user, isEdit);
         if(rab.isSuccess())
         {
             fab.save();
