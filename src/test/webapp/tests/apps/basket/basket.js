@@ -17,7 +17,7 @@ Scenario('Test sorting', async ({ I }) => {
     I.waitForText('ELEKTRONICKÝ OBCHOD');
     await sortAndCheck(I, 'asc_title',  ['Džínsy' , 'Ponožky', 'Tričko']);
     await sortAndCheck(I, 'desc_title', ['Tričko' , 'Ponožky', 'Džínsy']);
-    await sortAndCheck(I, 'desc_date',   ['Džínsy' , 'Ponožky', 'Tričko']);
+    await sortAndCheck(I, 'desc_date',   ['Tričko' , 'Ponožky', 'Džínsy']);
     await sortAndCheck(I, 'asc_date',  ['Tričko' , 'Ponožky', 'Džínsy']);
     await sortAndCheck(I, 'asc_price',  ['Ponožky', 'Tričko' , 'Džínsy']);
     await sortAndCheck(I, 'desc_price', ['Džínsy' , 'Tričko' , 'Ponožky']);
@@ -94,6 +94,12 @@ Scenario('Validate basket operations: add, modify, remove, and view', async ({ I
 
     modifyBasket(I, 'Ponožky', BasketActions.REMOVE, 'td.w-5> a');
     await checkAmountInBasket(I);
+
+    I.amOnPage(SL.PRODUCTS);
+    SL.openBasket(I);
+    modifyBasket(I, 'Tričko', BasketActions.DECREASE, 'td.w-5> a');
+    I.waitForInvisible('.basketSmallBox', 10);
+    I.dontSeeElement(".basketBox");
 });
 
 Scenario('Remove all items from basket', async ({ I }) => {
