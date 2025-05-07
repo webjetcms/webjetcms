@@ -289,3 +289,54 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
         I.assertTrue(false, "The file was not removed by archive and had to be removed by elfinder!");
     }
 });
+
+Scenario('Test non index header in files',async ({ I, DT, DTE }) => {
+    const filePath = "/files/archiv/nonindexheader.pdf";
+    I.amOnPage(SL.fileArchive);
+
+    // First setting - do indexation
+    I.say("First setting - do indexation");
+    setValidationAndIndexation(I, DT, DTE, "", "", true);
+    let response1 = await I.sendGetRequest(filePath);
+    I.assertEqual(response1.headers["x-robots-tag"], undefined);
+
+    // Second setting - indexation turn off
+    I.say("Second setting - indexation turn off");
+    setValidationAndIndexation(I, DT, DTE, "", "", false);
+    let response2 = await I.sendGetRequest(filePath);
+    I.assertEqual(response2.headers["x-robots-tag"], "noindex, nofollow");
+
+    // TODO subor sa nezoabrazi ak cas nie je platny, da to 404 ... chmece to tak alebo nie ?
+
+    // Third setting - indexation turn on BUT not valid date
+    I.say("Third setting - indexation turn on BUT not valid date");
+    setValidationAndIndexation(I, DT, DTE, "01.01.2045 00:00:00", "", true);
+    let response3 = await I.sendGetRequest(filePath);
+    I.assertEqual(response3.headers["x-robots-tag"], "noindex, nofollow");
+
+    // Fourth setting - indexation turn on AND valid date
+    I.say("Fourth setting - indexation turn on AND valid date");
+    setValidationAndIndexation(I, DT, DTE, "01.01.2023 00:00:00", "01.01.2045 00:00:00", true);
+    let response4 = await I.sendGetRequest(filePath);
+    I.assertEqual(response4.headers["x-robots-tag"], undefined);
+});
+
+function setValidationAndIndexation(I, DT, DTE, validFrom, validTo, indexation) {
+    const fileName = "Test non-index header";
+
+    DT.filterEquals("virtualFileName", fileName);
+    I.click(fileName);
+    DTE.waitForEditor('fileArchiveDataTable');
+
+    I.fillField("#DTE_Field_validFrom", validFrom);
+    I.fillField("#DTE_Field_validTo", validTo);
+
+    I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");
+    if(indexation == true) {
+        I.checkOption("#DTE_Field_indexFile_0");
+    } else {
+        I.uncheckOption("#DTE_Field_indexFile_0");
+    }
+
+    DTE.save();
+}
