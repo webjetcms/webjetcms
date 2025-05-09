@@ -931,4 +931,28 @@
           <rtexprvalue>true</rtexprvalue>
       </attribute>
   </tag>
+
+  <tag>
+    <name>empty</name>
+    <tag-class>sk.iway.iwcm.tags.EmptyTag</tag-class>
+    <body-content>JSP</body-content>
+    <description>Evaluate the nested body content of this tag if the requested variable is either null or an empty string.
+    </description>
+    <attribute>
+        <name>name</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>property</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>scope</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
 </taglib>

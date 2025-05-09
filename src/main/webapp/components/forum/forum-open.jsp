@@ -191,9 +191,9 @@ if(!isAjaxCall)
                               <logic:notEmpty name="field" property="authorEmail">
                                   <a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
                               </logic:notEmpty>
-                              <logic:empty name="field" property="authorEmail">
+                              <iwcm:empty name="field" property="authorEmail">
                                   <bean:write name="field" property="authorName"/>
-                              </logic:empty>
+                              </iwcm:empty>
                               <div class="row">
                                   <div class="col-xs-12 col-sm-12 col-md-12">
                                     <jsp:getProperty name="field" property="question"/>
@@ -213,9 +213,9 @@ if(!isAjaxCall)
 							<logic:notEmpty name="field" property="authorEmail">
 								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 							</logic:notEmpty>
-							<logic:empty name="field" property="authorEmail">
+							<iwcm:empty name="field" property="authorEmail">
 								<bean:write name="field" property="authorName"/>
-							</logic:empty>
+							</iwcm:empty>
 <%--
 							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/>--%>
 						 <%if (field.canPost(forumGroupBean, user)) {%>
@@ -269,9 +269,9 @@ if(!isAjaxCall)
 							<logic:notEmpty name="field" property="authorEmail">
 								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 							</logic:notEmpty>
-							<logic:empty name="field" property="authorEmail">
+							<iwcm:empty name="field" property="authorEmail">
 								<bean:write name="field" property="authorName"/>
-							</logic:empty>
+							</iwcm:empty>
 					</td>
 					<td align="right" class="forumOpenTableHeader">
 							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/><br />

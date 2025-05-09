@@ -772,7 +772,7 @@ String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";/
 	</logic:iterate>
 	</table>
 </logic:notEmpty>
-<logic:empty name="novinky">
+<iwcm:empty name="novinky">
 	<div class="no_news"><iwcm:text key="components.news.nonews" /></div>
-</logic:empty>
+</iwcm:empty>
 <%@ include file="/admin/layout_bottom.jsp" %>

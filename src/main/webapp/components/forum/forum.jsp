@@ -153,9 +153,9 @@ if(!isAjaxCall)
 						<logic:notEmpty name="field" property="authorEmail">
 							<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
 						</logic:notEmpty>
-						<logic:empty name="field" property="authorEmail">
+						<iwcm:empty name="field" property="authorEmail">
 							<bean:write name="field" property="authorName"/>
-						</logic:empty>
+						</iwcm:empty>
 					</td>
 					<td>
 						<bean:write name="field" property="prefix" filter="false"/><strong><bean:write name="field" property="subject"/></strong></div>

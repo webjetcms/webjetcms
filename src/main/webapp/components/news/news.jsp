@@ -218,10 +218,10 @@ if (isUlStyle) {
 					<%	} %>
 				</div>
 			</logic:notEmpty>
-			<logic:empty name="doc" property="perexImage">
+			<iwcm:empty name="doc" property="perexImage">
 				<div class="news_no_image">
 				</div>
-			</logic:empty>
+			</iwcm:empty>
 			<% } %>
 
 			<% if (isUlStyle) { %>
@@ -276,10 +276,10 @@ if (isUlStyle) {
 							<%	} %>
 						</div>
 					</logic:notEmpty>
-					<logic:empty name="doc" property="perexImage">
+					<iwcm:empty name="doc" property="perexImage">
 						<div class="news_no_image">
 						</div>
-					</logic:empty>
+					</iwcm:empty>
 					<% } %>
 
 					<div class="news_text"<%=InlineEditor.getEditAttrs(request, doc, "perexPre", true) %>>
@@ -344,9 +344,9 @@ if (isUlStyle) {
 	%>
 
 </logic:notEmpty>
-<logic:empty name="novinky">
+<iwcm:empty name="novinky">
 	<div class="no_news"><iwcm:text key="components.news.nonews" /></div>
-</logic:empty>
+</iwcm:empty>
 
 
 <%

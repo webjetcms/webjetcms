@@ -331,6 +331,6 @@ $(document).ready(function(){
 	</logic:iterate>
 	<span class="cleaner"></span>
 </div>
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.cloud.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>

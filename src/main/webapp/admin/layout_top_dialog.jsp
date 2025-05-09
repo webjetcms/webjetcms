@@ -25,7 +25,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 %>
 
 
-<logic:empty name="inIframe">
+<iwcm:empty name="inIframe">
 	<%
 		if (request.getAttribute("dialogTitleKey")!=null)
 		   request.setAttribute("dialogTitle", prop2.getText((String)request.getAttribute("dialogTitleKey")));
@@ -359,7 +359,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		   		<% if (BrowserDetector.isSmartphoneOrTablet(request)==false) {%><div id="dialogCentralRow" class="calendarPopupStop" style="height: 100vh; width: auto; overflow: auto; padding: 0px; margin:0px; position: relative;"><% } %>
 
 	</iwcm:notPresent>
-</logic:empty>
+</iwcm:empty>
 
 <logic:notEmpty name="inIframe">
 

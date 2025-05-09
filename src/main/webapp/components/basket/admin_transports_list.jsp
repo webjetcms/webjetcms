@@ -224,8 +224,8 @@ if (modeOfTransportGroup!=null)
 	</logic:iterate>
 	</table>
 </logic:notEmpty>
-<logic:empty name="novinky">
+<iwcm:empty name="novinky">
 	<div class="no_news"><iwcm:text key="components.news.nonews" /></div>
-</logic:empty>
+</iwcm:empty>
 
 <%@ include file="/admin/layout_bottom.jsp" %>

@@ -103,7 +103,7 @@ if (docDetails != null)
 		<iwcm:present name="photos">
 			<logic:iterate id="photo" name="photos" type="sk.iway.iwcm.gallery.GalleryBean">
 				<item>
-					<title><logic:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></logic:empty><logic:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></logic:notEmpty></title>
+					<title><iwcm:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></iwcm:empty><logic:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></logic:notEmpty></title>
 					<% out.print("<link>"+Tools.getBaseHref(request) + photo.getImagePath() + "/" + photo.getImageName() +"</link>"); %>
 					<description>			&lt;p&gt;&lt;a href=&quot;<%=Tools.getBaseHref(request)%>&quot;&gt;<logic:notEmpty name="photo" property="author"><bean:write name="photo" property="author"/></logic:notEmpty>&lt;/a&gt; posted a photo:&lt;/p&gt;
 
@@ -124,7 +124,7 @@ if (docDetails != null)
 				                   type="image/jpeg"
 				                   height="612"
 				                   width="612"/>
-				    <media:title><logic:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></logic:empty><logic:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></logic:notEmpty></media:title>
+				    <media:title><iwcm:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></iwcm:empty><logic:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></logic:notEmpty></media:title>
 				
 				    <media:thumbnail url="<%=Tools.getBaseHref(request)%><bean:write name="photo" property="imagePath"/>/s_<bean:write name="photo" property="imageName"/>" height="75" width="75" />
 				    <media:credit role="photographer"><logic:notEmpty name="photo" property="author"><bean:write name="photo" property="author"/></logic:notEmpty></media:credit>

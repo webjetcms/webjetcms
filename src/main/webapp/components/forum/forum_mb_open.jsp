@@ -310,9 +310,9 @@ if(!isAjaxCall)
 					<logic:notEmpty name="field" property="authorEmail">
 						<span class="name"><a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a></span>
 					</logic:notEmpty>
-					<logic:empty name="field" property="authorEmail">
+					<iwcm:empty name="field" property="authorEmail">
 						<span class="name"><bean:write name="field" property="authorName"/></span>
-					</logic:empty>
+					</iwcm:empty>
 					<br/>
 					<span class="postdetails">
 					<%

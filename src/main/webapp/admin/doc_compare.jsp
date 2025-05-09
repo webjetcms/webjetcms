@@ -104,12 +104,12 @@ String framesetSize = "*,*";
 </iwcm:present>
 
 	<frameset cols="<%=framesetSize%>" onload="setupScroll()">
-        <logic:empty name="historyEqualsDoc">
+        <iwcm:empty name="historyEqualsDoc">
 		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1" border="1" frameborder="1" framespacing="0">
 		    <frame name="leftTop" src="/admin/doc_compare_top.jsp?textKey=editor.compare.actual_version&docid=<%=docId %>&historyid=<%=historyId %>&actual=true<%=onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
 			 <frame name="left" id="left"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&NO_WJTOOLBAR=true<%=onlyBody%>">
 		</frameset>
-        </logic:empty>
+        </iwcm:empty>
 		<frameset rows="75,*" cols="*" BORDERCOLOR="#edeff1"  border="1" frameborder="1" framespacing="0">
 			<frame name="rightTop" src="/admin/doc_compare_top.jsp?textKey=<%=rightFrameKey %>&docid=<%=docId %>&historyid=<%=historyId+onlyBody%>" scrolling="no" BORDERCOLOR="#edeff1">
 			<frame name="right"  id="right"  src="/showdoc.do?docid=<%=Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1)%>&historyid=<%=historyId%>&NO_WJTOOLBAR=true<%=onlyBody%>">

@@ -391,9 +391,9 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
 	</div>
 
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>
   		<!-- END PRODUCTS -->
 </div>
 <%} else if("02".equals(style)){ %>
@@ -506,9 +506,9 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 
 	</div>
 
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>
   		<!-- END PRODUCTS -->
 </div>
 <div class="col-sm-5 sideBasket">
@@ -520,9 +520,9 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 </div>
 <%} %>
 
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>
 
 <%
 	if ((pageParams.getBooleanValue("showSort", true) && pageParams.getValue("pagingPosition", "both").equals("both") || pageParams.getValue("pagingPosition", "both").equals("bottom")) && GroupsDB.getInstance().getGroup(groupId)!=null)

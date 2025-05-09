@@ -415,6 +415,10 @@ static {
 	//Replace logic:notPresent with iwcm:notPresent
 	replaces.add(new OptionDto("<" + "logic:notPresent", "<" + "iwcm:notPresent", ".jsp"));
 	replaces.add(new OptionDto("</" + "logic:notPresent", "</" + "iwcm:notPresent", ".jsp"));
+
+	//Replace logic:empty with iwcm:empty
+	replaces.add(new OptionDto("<" + "logic:empty", "<" + "iwcm:empty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:empty", "</" + "iwcm:empty", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

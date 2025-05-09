@@ -5,7 +5,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
-<logic:empty name="inIframe">
+<iwcm:empty name="inIframe">
 
 	<iwcm:present name="closeTable">
 	   <table border="0" cellspacing="0" cellpadding="0" width="100%" class="closeTable">
@@ -165,7 +165,7 @@
 	</script>
 
 	</html>
-</logic:empty>
+</iwcm:empty>
 
 <logic:notEmpty name="inIframe">
 
