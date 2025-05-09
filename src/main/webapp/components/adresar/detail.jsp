@@ -139,7 +139,7 @@ request.setAttribute("user",user);
 				</tr>
 				</iwcm:notEmpty>
 			</table>
-			<iwcm:empty name="user" property="photo"><html:hidden name="user" property="photo"/></iwcm:empty>
+			<iwcm:empty name="user" property="photo"><iwcm:hidden name="user" property="photo"/></iwcm:empty>
 		</td>
 		<td valign="top">
 			<table border="0" cellspacing="0" cellpadding="1">	

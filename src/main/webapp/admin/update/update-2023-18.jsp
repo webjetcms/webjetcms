@@ -434,6 +434,10 @@ static {
 
 	//Replace bean:write with iwcm:strutsWrite
 	replaces.add(new OptionDto("<" + "bean:write", "<" + "iwcm:strutsWrite", ".jsp"));
+
+	//Replace html:hidden with iwcm:hidden
+	replaces.add(new OptionDto("<" + "html:hidden", "<" + "iwcm:hidden", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:hidden", "</" + "iwcm:hidden", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
