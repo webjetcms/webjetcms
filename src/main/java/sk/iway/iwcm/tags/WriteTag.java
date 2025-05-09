@@ -2,8 +2,9 @@ package sk.iway.iwcm.tags;
 
 import net.sourceforge.stripes.exception.SourcePageNotFoundException;
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.struts.Globals;
-import org.apache.struts.util.ResponseUtils;
+
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+
 import org.springframework.context.ApplicationContext;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -75,6 +76,10 @@ public class WriteTag extends BodyTagSupport
 	public static final String INLINE_EDITING_PLACEHOLDER = "<div class='inlineEditingToolbarPlaceholder'></div>";
 
 	private static final String INLINE_EDITING_DISABLE_DELETE_BUTTON = "inlineEditingDisableDeleteButton";
+
+
+
+	public static final String XHTML_KEY = "org.apache.struts.globals.XHTML";
 
 
 	@Override
@@ -357,7 +362,7 @@ public class WriteTag extends BodyTagSupport
 
 		if (Constants.getBoolean("editorEnableXHTML"))
 		{
-			pageContext.setAttribute(Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+			pageContext.setAttribute(XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 		}
 
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
@@ -827,8 +832,8 @@ public class WriteTag extends BodyTagSupport
 
 							if (user != null && user.isAdmin() && user.isEnabledItem("cmp_adminlog") && request.getAttribute("writeTagDontShowError") == null)
 							{
-								content.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + ResponseUtils.filter(ex1.getMessage()) + "<br>");
-								String stackTrace = ResponseUtils.filter(stack);
+								content.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + CustomResponseUtils.filter(ex1.getMessage()) + "<br>");
+								String stackTrace = CustomResponseUtils.filter(stack);
 								content.append(stackTrace + "</div>");
 							}
 

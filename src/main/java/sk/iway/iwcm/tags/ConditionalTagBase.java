@@ -1,7 +1,5 @@
 package sk.iway.iwcm.tags;
 
-import org.apache.struts.util.MessageResources;
-
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
@@ -12,13 +10,6 @@ import javax.servlet.jsp.tagext.TagSupport;
  *          $
  */
 public abstract class ConditionalTagBase extends TagSupport {
-    /**
-     * The message resources for this package.
-     */
-    protected static MessageResources messages =
-        MessageResources.getMessageResources(
-            "org.apache.struts.taglib.logic.LocalStrings");
-
     // ------------------------------------------------------------- Properties
 
     /**

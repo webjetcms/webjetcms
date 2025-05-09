@@ -1,6 +1,6 @@
 package sk.iway.iwcm.tags;
 
-import org.apache.struts.taglib.TagUtils;
+import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -10,13 +10,6 @@ import java.security.Principal;
 
 import java.util.StringTokenizer;
 
-/**
- * Evalute the nested body content of this tag if the specified value is
- * present for this request.
- *
- * @version $Rev$ $Date: 2004-10-16 12:38:42 -0400 (Sat, 16 Oct 2004)
- *          $
- */
 public class PresentTag extends ConditionalTagBase {
     public static final String ROLE_DELIMITER = ",";
 
@@ -76,9 +69,9 @@ public class PresentTag extends ConditionalTagBase {
             present = (principal != null) && user.equals(principal.getName());
         } else {
             JspException e =
-                new JspException(messages.getMessage("logic.selector"));
+                new JspException(CustomTagUtils.getInstance().getMessage("logic.selector"));
 
-            TagUtils.getInstance().saveException(pageContext, e);
+            CustomTagUtils.getInstance().saveException(pageContext, e);
             throw e;
         }
 
@@ -97,10 +90,10 @@ public class PresentTag extends ConditionalTagBase {
         try {
             if (this.property != null) {
                 value =
-                    TagUtils.getInstance().lookup(pageContext, name,
+                    CustomTagUtils.getInstance().lookup(pageContext, name,
                         this.property, scope);
             } else {
-                value = TagUtils.getInstance().lookup(pageContext, name, scope);
+                value = CustomTagUtils.getInstance().lookup(pageContext, name, scope);
             }
         } catch (JspException e) {
             value = null;
