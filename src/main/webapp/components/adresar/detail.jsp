@@ -102,16 +102,16 @@ request.setAttribute("user",user);
 				<iwcm:notEmpty name="user" property="title">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.title"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="title"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="title"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user.firstName"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="firstName"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="firstName"/></td>
 				</tr>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user.lastName"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="lastName"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="lastName"/></td>
 				</tr>
 				<tr>
 					<td><iwcm:text key="reguser.sex"/>:</td>
@@ -135,7 +135,7 @@ request.setAttribute("user",user);
 				<iwcm:notEmpty name="user" property="signature">
 				<tr>
 					<td valign="top"><iwcm:text key="reguser.signature"/>:</td>
-					<td><bean:write name="user" property="signature"/></td>
+					<td><iwcm:strutsWrite name="user" property="signature"/></td>
 				</tr>
 				</iwcm:notEmpty>
 			</table>
@@ -149,35 +149,35 @@ request.setAttribute("user",user);
 				<iwcm:notEmpty name="user" property="title">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.title"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="title"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="title"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<iwcm:notEmpty name="user" property="country">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.country"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="country"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="country"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<iwcm:notEmpty name="user" property="allowLoginStart">
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="settings.in_firm_from"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="allowLoginStart"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="allowLoginStart"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user_details.position"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="position"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="position"/></td>
 				</tr>
 				<iwcm:notEmpty name="user" property="fieldB">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.fieldB"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="fieldB"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldB"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<iwcm:notEmpty name="user" property="fieldC">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.fieldC"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="fieldC"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldC"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<tr>
@@ -186,12 +186,12 @@ request.setAttribute("user",user);
 				</tr>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user.email"/>:</td>
-					<td nowrap="nowrap"><a href="mailto:<bean:write name="user" property="email"/>"><bean:write name="user" property="email"/></a></td>
+					<td nowrap="nowrap"><a href="mailto:<iwcm:strutsWrite name="user" property="email"/>"><iwcm:strutsWrite name="user" property="email"/></a></td>
 				</tr>
 				<iwcm:notEmpty name="user" property="phone">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.phone"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="phone"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="phone"/></td>
 				</tr>
 				</iwcm:notEmpty>
 				<%
@@ -206,19 +206,19 @@ request.setAttribute("user",user);
 					<iwcm:notEmpty name="user" property="fieldA">
 					<tr>
 						<td nowrap="nowrap"><iwcm:text key="user.fieldA"/>:</td>
-						<td nowrap="nowrap"><bean:write name="user" property="fieldA"/></td>
+						<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldA"/></td>
 					</tr>
 					</iwcm:notEmpty>
 					<iwcm:notEmpty name="user" property="fieldD">
 					<tr>
 						<td nowrap="nowrap"><iwcm:text key="user.fieldD"/>:</td>
-						<td nowrap="nowrap"><bean:write name="user" property="fieldD"/></td>
+						<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldD"/></td>
 					</tr>
 					</iwcm:notEmpty>
 					<iwcm:notEmpty name="user" property="fieldE">
 					<tr>
 						<td nowrap="nowrap"><iwcm:text key="user.fieldE"/>:</td>
-						<td nowrap="nowrap"><bean:write name="user" property="fieldE"/></td>
+						<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldE"/></td>
 					</tr>
 					</iwcm:notEmpty>
 				</iwcm:notEmpty>

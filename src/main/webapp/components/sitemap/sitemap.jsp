@@ -39,7 +39,7 @@ if(request.getAttribute("doc_id") != null)
 				rootNodeName="<b><%=rootNodeName%></b>";
 				var Tree = new Array;
 				<iwcm:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
-					Tree[<bean:write name="index"/>] = "<jsp:getProperty name="group" property="groupId"/>|<jsp:getProperty name="group" property="parentGroupId"/>|<jsp:getProperty name="group" property="groupName"/>|<%=link%><jsp:getProperty name="group" property="groupId"/>";
+					Tree[<iwcm:strutsWrite name="index"/>] = "<jsp:getProperty name="group" property="groupId"/>|<jsp:getProperty name="group" property="parentGroupId"/>|<jsp:getProperty name="group" property="groupName"/>|<%=link%><jsp:getProperty name="group" property="groupId"/>";
 				</iwcm:iterate>
 				createTree(Tree, 0, <iway:request name="group_id"/>);
 				-->

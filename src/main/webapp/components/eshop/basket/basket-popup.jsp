@@ -466,16 +466,16 @@ $(".addToBasket").on("click", function(){
 
                 <iwcm:present name="basketItems">
                     <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
-                        <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
+                        <tr class="itemTr itemId_<iwcm:strutsWrite name="good" property="itemId"/> basketId_<iwcm:strutsWrite name="good" property="basketItemId"/>">
                             <td class="w-5">
-                                <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
+                                <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><iwcm:strutsWrite name="good" property="title"/></a>
                             </td>
                             <td class="fL w-2">
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <a href="javascript:void(0)" class="removeItem btn btn-primary btn-sm"><i class="fas fa-minus"></i></a>
                                     </div>
-                                    <input type="text" class="basketQty form-control form-control-sm" name="basketQty" maxlength="3" value="<bean:write name="good" property="itemQty"/>">
+                                    <input type="text" class="basketQty form-control form-control-sm" name="basketQty" maxlength="3" value="<iwcm:strutsWrite name="good" property="itemQty"/>">
                                     <div class="input-group-append">
                                         <a href="javascript:void(0)" class="addItem btn btn-primary btn-sm"><i class="fas fa-plus"></i></a>
                                     </div>
@@ -544,7 +544,7 @@ $(".addToBasket").on("click", function(){
 
 					<iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 
-									<tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
+									<tr class="itemTr itemId_<iwcm:strutsWrite name="good" property="itemId"/> basketId_<iwcm:strutsWrite name="good" property="basketItemId"/>">
 
 										<td>
 										<a href="javascript:void(0)" class="deleteItem"><i class="fa fa-times" aria-hidden="true"></i></a>
@@ -561,9 +561,9 @@ $(".addToBasket").on("click", function(){
 												<div class="media-body">
 													<span class="media-meta pull-right"><h4><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></h4></span>
 													<h4 class="title">
-														<bean:write name="good" property="title"/>
+														<iwcm:strutsWrite name="good" property="title"/>
 													</h4>
-													<p class="summary">Počet kusov: <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<bean:write name="good" property="itemQty"/>"> <%= good.getItemNote() %></p>
+													<p class="summary">Počet kusov: <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<iwcm:strutsWrite name="good" property="itemQty"/>"> <%= good.getItemNote() %></p>
 												</div>
 											</div>
 										</td>

@@ -431,6 +431,9 @@ static {
 	//Replace logic:iterate with iwcm:iterate
 	replaces.add(new OptionDto("<" + "logic:iterate", "<" + "iwcm:iterate", ".jsp"));
 	replaces.add(new OptionDto("</" + "logic:iterate", "</" + "iwcm:iterate", ".jsp"));
+
+	//Replace bean:write with iwcm:strutsWrite
+	replaces.add(new OptionDto("<" + "bean:write", "<" + "iwcm:strutsWrite", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

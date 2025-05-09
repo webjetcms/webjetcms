@@ -21,8 +21,8 @@ request.setAttribute("atrs", atrs);
 <table class="table table-sm tabulkaStandard atrTable">
 <iwcm:iterate name="atrs" id="atr" type="sk.iway.iwcm.doc.AtrBean">
    <tr>
-      <td><bean:write name="atr" property="atrName" filter="false"/></td>
-      <td><bean:write name="atr" property="valueHtml" filter="false"/></td>
+      <td><iwcm:strutsWrite name="atr" property="atrName" filter="false"/></td>
+      <td><iwcm:strutsWrite name="atr" property="valueHtml" filter="false"/></td>
    </tr>
 </iwcm:iterate>
 </table>

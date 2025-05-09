@@ -216,8 +216,8 @@ fieldset {margin-bottom: 10px;}
 	                           }
 	                        %>
 	                        <tr>
-	                           <td>&nbsp;<bean:write name="a" property="atrName"/>:&nbsp;</td>
-	                           <td><bean:write name="a" property="html" filter="false"/></td>
+	                           <td>&nbsp;<iwcm:strutsWrite name="a" property="atrName"/>:&nbsp;</td>
+	                           <td><iwcm:strutsWrite name="a" property="html" filter="false"/></td>
 	                        </tr>
 	                     </iwcm:iterate>
 	                     </table>

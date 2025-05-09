@@ -117,12 +117,12 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
 
               <iwcm:present name="basketItems">
                   <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
-                      <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
+                      <tr class="itemTr itemId_<iwcm:strutsWrite name="good" property="itemId"/> basketId_<iwcm:strutsWrite name="good" property="basketItemId"/>">
                           <td class="w-5">
-                              <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
+                              <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><iwcm:strutsWrite name="good" property="title"/></a>
                           </td>
                           <td class="fL w-2">
-                              <bean:write name="good" property="itemQty"/>
+                              <iwcm:strutsWrite name="good" property="itemQty"/>
                           </td>
                           <td nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 

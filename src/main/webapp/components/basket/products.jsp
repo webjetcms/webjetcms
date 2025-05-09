@@ -310,7 +310,7 @@ $(document).ready(function(){
 	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 		<iwcm:notEmpty name="doc" property="perexImage">
 			<div class="itemDiv" style="height:<%=pageParams.getIntValue("thumbHeight", 190)%>px;">
-			<h2><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h2>
+			<h2><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:strutsWrite name="doc" property="title"/></a></h2>
 				<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>" class="info">
 					<div class="itemImageDiv" style="height:<%=pageParams.getIntValue("thumbHeight", 190)%>px;"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=<%=pageParams.getIntValue("thumbWidth", 190)%>&amp;h=<%=pageParams.getIntValue("thumbHeight", 190)%>&amp;ip=5" alt="" /></div>
 					<%--<p>

@@ -1079,4 +1079,60 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>strutsWrite</name>
+    <tag-class>sk.iway.iwcm.tags.StrutsWriteTag</tag-class>
+    <body-content>empty</body-content>
+    <description>
+      Render the value of the specified bean property to the current JspWriter.
+    </description>
+    <attribute>
+        <name>bundle</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>filter</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+        <type>boolean</type>
+    </attribute>
+    <attribute>
+        <name>format</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>formatKey</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>ignore</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+        <type>boolean</type>
+    </attribute>
+    <attribute>
+        <name>locale</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>name</name>
+        <required>true</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>property</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>scope</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
 </taglib>

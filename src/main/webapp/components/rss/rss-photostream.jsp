@@ -103,12 +103,12 @@ if (docDetails != null)
 		<iwcm:present name="photos">
 			<iwcm:iterate id="photo" name="photos" type="sk.iway.iwcm.gallery.GalleryBean">
 				<item>
-					<title><iwcm:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></iwcm:empty><iwcm:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></iwcm:notEmpty></title>
+					<title><iwcm:empty name="photo" property="shortDescription"><iwcm:strutsWrite name="photo" property="imageName"/></iwcm:empty><iwcm:notEmpty name="photo" property="shortDescription"><![CDATA[<iwcm:strutsWrite name="photo" property="shortDescription"/>]]></iwcm:notEmpty></title>
 					<% out.print("<link>"+Tools.getBaseHref(request) + photo.getImagePath() + "/" + photo.getImageName() +"</link>"); %>
-					<description>			&lt;p&gt;&lt;a href=&quot;<%=Tools.getBaseHref(request)%>&quot;&gt;<iwcm:notEmpty name="photo" property="author"><bean:write name="photo" property="author"/></iwcm:notEmpty>&lt;/a&gt; posted a photo:&lt;/p&gt;
+					<description>			&lt;p&gt;&lt;a href=&quot;<%=Tools.getBaseHref(request)%>&quot;&gt;<iwcm:notEmpty name="photo" property="author"><iwcm:strutsWrite name="photo" property="author"/></iwcm:notEmpty>&lt;/a&gt; posted a photo:&lt;/p&gt;
 
 	
-&lt;p&gt;&lt;a href=&quot;<%=Tools.getBaseHref(request)%><bean:write name="photo" property="imagePath"/>/<bean:write name="photo" property="imageName"/>&quot; title=&quot;<bean:write name="photo" property="imageName"/>&quot;&gt;&lt;img src=&quot;<%=Tools.getBaseHref(request)%><bean:write name="photo" property="imagePath"/>/<bean:write name="photo" property="imageName"/>&quot; alt=&quot;<bean:write name="photo" property="imageName"/>&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;<%=Tools.getBaseHref(request)%><iwcm:strutsWrite name="photo" property="imagePath"/>/<iwcm:strutsWrite name="photo" property="imageName"/>&quot; title=&quot;<iwcm:strutsWrite name="photo" property="imageName"/>&quot;&gt;&lt;img src=&quot;<%=Tools.getBaseHref(request)%><iwcm:strutsWrite name="photo" property="imagePath"/>/<iwcm:strutsWrite name="photo" property="imageName"/>&quot; alt=&quot;<iwcm:strutsWrite name="photo" property="imageName"/>&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
 
 					</description>
 					<pubDate><%
@@ -117,17 +117,17 @@ if (docDetails != null)
 					   	  out.print(formatDate(photo.getUploadDate()));					   	  
 					   } catch (Exception ex) {}
 					%></pubDate>
-					<author><iwcm:notEmpty name="photo" property="author"><bean:write name="photo" property="author"/></iwcm:notEmpty></author>
-					<guid><%=Tools.getBaseHref(request)%><bean:write name="photo" property="imagePath"/>/<bean:write name="photo" property="imageName"/></guid>
+					<author><iwcm:notEmpty name="photo" property="author"><iwcm:strutsWrite name="photo" property="author"/></iwcm:notEmpty></author>
+					<guid><%=Tools.getBaseHref(request)%><iwcm:strutsWrite name="photo" property="imagePath"/>/<iwcm:strutsWrite name="photo" property="imageName"/></guid>
 					
-					<media:content url="<%=Tools.getBaseHref(request)%><bean:write name="photo" property="imagePath"/>/<bean:write name="photo" property="imageName"/>" 
+					<media:content url="<%=Tools.getBaseHref(request)%><iwcm:strutsWrite name="photo" property="imagePath"/>/<iwcm:strutsWrite name="photo" property="imageName"/>" 
 				                   type="image/jpeg"
 				                   height="612"
 				                   width="612"/>
-				    <media:title><iwcm:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></iwcm:empty><iwcm:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></iwcm:notEmpty></media:title>
+				    <media:title><iwcm:empty name="photo" property="shortDescription"><iwcm:strutsWrite name="photo" property="imageName"/></iwcm:empty><iwcm:notEmpty name="photo" property="shortDescription"><![CDATA[<iwcm:strutsWrite name="photo" property="shortDescription"/>]]></iwcm:notEmpty></media:title>
 				
-				    <media:thumbnail url="<%=Tools.getBaseHref(request)%><bean:write name="photo" property="imagePath"/>/s_<bean:write name="photo" property="imageName"/>" height="75" width="75" />
-				    <media:credit role="photographer"><iwcm:notEmpty name="photo" property="author"><bean:write name="photo" property="author"/></iwcm:notEmpty></media:credit>
+				    <media:thumbnail url="<%=Tools.getBaseHref(request)%><iwcm:strutsWrite name="photo" property="imagePath"/>/s_<iwcm:strutsWrite name="photo" property="imageName"/>" height="75" width="75" />
+				    <media:credit role="photographer"><iwcm:notEmpty name="photo" property="author"><iwcm:strutsWrite name="photo" property="author"/></iwcm:notEmpty></media:credit>
 				    <media:category scheme="urn:flickr:tags"></media:category>
 									
 				</item>

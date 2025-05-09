@@ -158,7 +158,7 @@ taglib
 		%> <description><![CDATA[<iwcm:notEmpty name="doc" property="perex"><jsp:getProperty name="doc" property="perex"/></iwcm:notEmpty>]]></description>
 		<author>
 		<iwcm:notEmpty name="doc" property="authorEmail">
-			<bean:write name="doc" property="authorEmail" />(<bean:write
+			<iwcm:strutsWrite name="doc" property="authorEmail" />(<iwcm:strutsWrite
 				name="doc" property="authorName" />)</iwcm:notEmpty></author> <pubDate>
 		<%
 			try

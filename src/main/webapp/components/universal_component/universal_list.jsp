@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.users.UsersDB"%>
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%@page import="sk.iway.iwcm.components.crud.UniversalCrudAction"%>
 <%@page import="java.lang.reflect.Method"%>
 <%@page import="sk.iway.iwcm.utils.Pair"%>
@@ -217,7 +217,7 @@ request.setAttribute("items", items);
 <display:table class="sort_table" export="true" cellspacing="0" cellpadding="0" name="items" uid="row" requestURI="<%=PathFilter.getOrigPath(request)%>" pagesize="30" >
 
 	<display:column titleKey='<%=beanClass.getSimpleName()+"."+idField.getName() %>' sortable="true" sortProperty="<%=idField.getName() %>">
- 		<a href="javascript:edit(<bean:write name="row" property="<%=idField.getName() %>"/>)"><bean:write name="row" property="<%=idField.getName() %>"/></a>
+ 		<a href="javascript:edit(<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>)"><iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/></a>
 	</display:column>
 	<%
   	for (Field field : fields)
@@ -243,8 +243,8 @@ request.setAttribute("items", items);
 	}
    %>
    	<display:column style="text-align:center;" media="html" titleKey="components.captcha.tools">
-   		<a href="javascript:edit(<bean:write name="row" property="<%=idField.getName() %>"/>)" title='<iwcm:text key="components.banner.edit"/>' class="iconEdit">&nbsp;</a>
-		<a href="javascript:confirmDelete(<bean:write name="row" property="<%=idField.getName() %>"/>);" title='<iwcm:text key="button.delete"/>' class="iconDelete">&nbsp;</a>
+   		<a href="javascript:edit(<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>)" title='<iwcm:text key="components.banner.edit"/>' class="iconEdit">&nbsp;</a>
+		<a href="javascript:confirmDelete(<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>);" title='<iwcm:text key="button.delete"/>' class="iconDelete">&nbsp;</a>
  	</display:column>
 
 

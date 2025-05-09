@@ -151,16 +151,16 @@ if(!isAjaxCall)
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td>
 						<iwcm:notEmpty name="field" property="authorEmail">
-							<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
+							<a href="mailto:<iwcm:strutsWrite name="field" property="authorEmail"/>"><iwcm:strutsWrite name="field" property="authorName"/></a>
 						</iwcm:notEmpty>
 						<iwcm:empty name="field" property="authorEmail">
-							<bean:write name="field" property="authorName"/>
+							<iwcm:strutsWrite name="field" property="authorName"/>
 						</iwcm:empty>
 					</td>
 					<td>
-						<bean:write name="field" property="prefix" filter="false"/><strong><bean:write name="field" property="subject"/></strong></div>
+						<iwcm:strutsWrite name="field" property="prefix" filter="false"/><strong><iwcm:strutsWrite name="field" property="subject"/></strong></div>
 					</td>
-					<td><bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/></td>
+					<td><iwcm:strutsWrite name="field" property="questionDateDisplayDate"/> <iwcm:strutsWrite name="field" property="questionDateDisplayTime"/></td>
 				</tr>
 			</iwcm:iterate>
 			</table>

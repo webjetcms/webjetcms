@@ -1,4 +1,4 @@
-<%
+<%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@ 
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@ 
@@ -39,7 +39,7 @@ UserDetails user = null;
 		</display:column>
 		<display:column titleKey="reguser.phone" property="phone" sortable="true"/>
 		<display:column titleKey="reguser.email" sortProperty="email" sortable="true">
-			<a href="mailto:<bean:write name="userTmp" property="email"/>"><bean:write name="userTmp" property="email"/></a>
+			<a href="mailto:<iwcm:strutsWrite name="userTmp" property="email"/>"><iwcm:strutsWrite name="userTmp" property="email"/></a>
 		</display:column>
 		<%
 		String filterList[] = Tools.getTokens(filterValues, "|");

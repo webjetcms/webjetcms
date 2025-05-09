@@ -164,7 +164,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 							int forumId = sr.getForumId();
 							if(sr.getParentId()>0) forumId = sr.getParentId();
 							%><img src="/components/forum/images/subSilver/<%=topicIcon%>" alt=""/>
-						<strong><a href="<%=docDB.getDocLink(sr.getDocId(), request)%>"><bean:write name="sr" property="forumName"/></a></strong></td>
+						<strong><a href="<%=docDB.getDocLink(sr.getDocId(), request)%>"><iwcm:strutsWrite name="sr" property="forumName"/></a></strong></td>
 						<td class="row2 forum-name"><span class="topictitle"><%
 					        if("O".equals(flag)) {%><b><iwcm:text key="components.forum.announcement"/>: </b><%}
 							  else if("D".equals(flag)) {	%><b><iwcm:text key="components.forum.sticky"/>: </b><%}
@@ -209,12 +209,12 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 						</td>
 						<td class="row1 autor">
 						   <% if (sr.getUserId()>0) { %>
-						   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(sr.getDocId()),"uId",String.valueOf(sr.getUserId()))%>&amp;type=view_profile"><bean:write name="sr" property="autorFullName"/></a>
+						   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(sr.getDocId()),"uId",String.valueOf(sr.getUserId()))%>&amp;type=view_profile"><iwcm:strutsWrite name="sr" property="autorFullName"/></a>
 						   <% } else { %>
-						   <bean:write name="sr" property="autorFullName"/>
+						   <iwcm:strutsWrite name="sr" property="autorFullName"/>
 						   <% } %>
 						</td>
-						<td class="row2 lastpost"><bean:write name="sr" property="questionDate"/></td>
+						<td class="row2 lastpost"><iwcm:strutsWrite name="sr" property="questionDate"/></td>
 					</tr>
 				</iwcm:iterate>
 			</table>
@@ -226,7 +226,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><bean:write name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:strutsWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>

@@ -189,10 +189,10 @@ if(!isAjaxCall)
                       <div class="media-body">
                               <iwcm:text key="forum.author"/>:
                               <iwcm:notEmpty name="field" property="authorEmail">
-                                  <a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
+                                  <a href="mailto:<iwcm:strutsWrite name="field" property="authorEmail"/>"><iwcm:strutsWrite name="field" property="authorName"/></a>
                               </iwcm:notEmpty>
                               <iwcm:empty name="field" property="authorEmail">
-                                  <bean:write name="field" property="authorName"/>
+                                  <iwcm:strutsWrite name="field" property="authorName"/>
                               </iwcm:empty>
                               <div class="row">
                                   <div class="col-xs-12 col-sm-12 col-md-12">
@@ -203,7 +203,7 @@ if(!isAjaxCall)
                     </div>
 				<%}else{%>
 
-							<h4 class="media-heading"><bean:write name="field" property="subject"/>
+							<h4 class="media-heading"><iwcm:strutsWrite name="field" property="subject"/>
 								<%if (!active || !field.getActive()) {%>
 									<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
 								<%}%>
@@ -211,15 +211,15 @@ if(!isAjaxCall)
 
 							<iwcm:text key="forum.author"/>:
 							<iwcm:notEmpty name="field" property="authorEmail">
-								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
+								<a href="mailto:<iwcm:strutsWrite name="field" property="authorEmail"/>"><iwcm:strutsWrite name="field" property="authorName"/></a>
 							</iwcm:notEmpty>
 							<iwcm:empty name="field" property="authorEmail">
-								<bean:write name="field" property="authorName"/>
+								<iwcm:strutsWrite name="field" property="authorName"/>
 							</iwcm:empty>
 <%--
-							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/>--%>
+							<iwcm:strutsWrite name="field" property="questionDateDisplayDate"/> <iwcm:strutsWrite name="field" property="questionDateDisplayTime"/>--%>
 						 <%if (field.canPost(forumGroupBean, user)) {%>
-							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
+							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:strutsWrite name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
 						 <%}%>
 
 					<div class="row">
@@ -264,19 +264,19 @@ if(!isAjaxCall)
 			<iwcm:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td style="padding-left:<%=(20 * field.getLevel())%>px;" class="forumOpenTableHeader">
-							<b><bean:write name="field" property="subject"/></b><br />
+							<b><iwcm:strutsWrite name="field" property="subject"/></b><br />
 							<iwcm:text key="forum.author"/>:
 							<iwcm:notEmpty name="field" property="authorEmail">
-								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
+								<a href="mailto:<iwcm:strutsWrite name="field" property="authorEmail"/>"><iwcm:strutsWrite name="field" property="authorName"/></a>
 							</iwcm:notEmpty>
 							<iwcm:empty name="field" property="authorEmail">
-								<bean:write name="field" property="authorName"/>
+								<iwcm:strutsWrite name="field" property="authorName"/>
 							</iwcm:empty>
 					</td>
 					<td align="right" class="forumOpenTableHeader">
-							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/><br />
+							<iwcm:strutsWrite name="field" property="questionDateDisplayDate"/> <iwcm:strutsWrite name="field" property="questionDateDisplayTime"/><br />
 						 <%if (active) {%>
-							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
+							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:strutsWrite name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
 						 <%}%>
 					</td>
 				</tr>

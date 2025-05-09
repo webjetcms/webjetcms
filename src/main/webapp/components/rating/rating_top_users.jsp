@@ -51,7 +51,7 @@ if (topUsers.size() > 0)
 						  <tr>
 								<td><%=index.intValue()+1%>.&nbsp;</td>
 								<td><%=userDet.getLogin()%></td>
-								<td><bean:write name="u" property="ratingStat"/></td>
+								<td><iwcm:strutsWrite name="u" property="ratingStat"/></td>
 								<td>
 									<%									
 										if(userDet.getRatingRank() < 100)

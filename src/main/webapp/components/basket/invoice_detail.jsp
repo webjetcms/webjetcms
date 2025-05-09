@@ -63,7 +63,7 @@
 						<td class="invoiceHeader alignRight"><iwcm:text key="components.basket.orderConfirmation"/></td>
 					</tr>
 					<tr>
-						<td class="noRightBorder"><strong><iwcm:text key="components.basket.invoice_detail.objednavka_cislo"/>:</strong> <bean:write name="invoice" property="basketInvoiceId"/></td>
+						<td class="noRightBorder"><strong><iwcm:text key="components.basket.invoice_detail.objednavka_cislo"/>:</strong> <iwcm:strutsWrite name="invoice" property="basketInvoiceId"/></td>
 						<td class="alignRight"><iwcm:text key="components.basket.invoice_detail.datum_vytvorenia"/>: <%=Tools.formatDateTime(invoice.getCreateDate())%></td>
 					</tr>
 					<tr>
@@ -80,23 +80,23 @@
 							<table class="invoiceInnerTable">
 						      	<tr>
 						         	<td><iwcm:text key="components.basket.invoice_email.name"/>:</td>
-						         	<td><bean:write name="invoice" property="contactFirstName"/></td>
+						         	<td><iwcm:strutsWrite name="invoice" property="contactFirstName"/></td>
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.surname"/>:</td>
-									<td><bean:write name="invoice" property="contactLastName"/></td>
+									<td><iwcm:strutsWrite name="invoice" property="contactLastName"/></td>
 						      	</tr>
 								<tr>
 						         	<td><iwcm:text key="components.basket.price_list.product_title"/>:</td>
-						         	<td><bean:write name="invoice" property="contactTitle"/></td>
+						         	<td><iwcm:strutsWrite name="invoice" property="contactTitle"/></td>
 						      	</tr>
 								<tr>
 						         	<td><iwcm:text key="components.basket.invoice.email"/>:</td>
-						         	<td><bean:write name="invoice" property="contactEmail"/></td>
+						         	<td><iwcm:strutsWrite name="invoice" property="contactEmail"/></td>
 						      	</tr>
 								<tr>
 						         	<td><iwcm:text key="components.basket.invoice_email.phone_number"/>:</td>
-						         	<td><bean:write name="invoice" property="contactPhone"/></td>
+						         	<td><iwcm:strutsWrite name="invoice" property="contactPhone"/></td>
 						      	</tr>
 
 						    </table>
@@ -108,23 +108,23 @@
 							<table class="invoiceInnerTable">
 								<tr>
 						         	<td><iwcm:text key="components.basket.invoice_email.name"/>:</td>
-						         	<td><bean:write name="invoice" property="deliveryName"/>&nbsp;</td>
+						         	<td><iwcm:strutsWrite name="invoice" property="deliveryName"/>&nbsp;</td>
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.surname"/>:</td>
-									<td><bean:write name="invoice" property="deliverySurName"/>&nbsp;</td>
+									<td><iwcm:strutsWrite name="invoice" property="deliverySurName"/>&nbsp;</td>
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.street"/>:</td>
-									<td><bean:write name="invoice" property="deliveryStreet"/>&nbsp;</td>
+									<td><iwcm:strutsWrite name="invoice" property="deliveryStreet"/>&nbsp;</td>
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.city"/>:</td>
-									<td><bean:write name="invoice" property="deliveryCity"/>&nbsp;</td>
+									<td><iwcm:strutsWrite name="invoice" property="deliveryCity"/>&nbsp;</td>
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.ZIP"/>:</td>
-									<td><bean:write name="invoice" property="deliveryZip"/>&nbsp;</td>
+									<td><iwcm:strutsWrite name="invoice" property="deliveryZip"/>&nbsp;</td>
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.country"/>:</td>
@@ -132,7 +132,7 @@
 						      	</tr>
 								<tr>
 									<td><iwcm:text key="components.basket.invoice_email.company"/>:</td>
-									<td><bean:write name="invoice" property="deliveryCompany"/>&nbsp;</td>
+									<td><iwcm:strutsWrite name="invoice" property="deliveryCompany"/>&nbsp;</td>
 						      	</tr>
 							</table>
 						</td>
@@ -143,27 +143,27 @@
 							<table class="invoiceInnerTable">
 							  <tr>
 						         <td><iwcm:text key="components.basket.invoice_email.company"/>:</td>
-						         <td><bean:write name="invoice" property="contactCompany"/></td>
+						         <td><iwcm:strutsWrite name="invoice" property="contactCompany"/></td>
 						      </tr>
 							  <tr>
 						         <td><iwcm:text key="components.contact.property.ico"/>:</td>
-						         <td><bean:write name="invoice" property="contactIco"/></td>
+						         <td><iwcm:strutsWrite name="invoice" property="contactIco"/></td>
 						      </tr>
 							  <tr>
 						         <td><iwcm:text key="components.contact.property.vatid"/>:</td>
-						         <td><bean:write name="invoice" property="contactDic"/></td>
+						         <td><iwcm:strutsWrite name="invoice" property="contactDic"/></td>
 						      </tr>
 						      <tr>
 						         <td><iwcm:text key="components.basket.invoice_email.street"/>:</td>
-						         <td><bean:write name="invoice" property="contactStreet"/></td>
+						         <td><iwcm:strutsWrite name="invoice" property="contactStreet"/></td>
 						      </tr>
 						      <tr>
 						         <td><iwcm:text key="components.basket.invoice_email.city"/>:</td>
-						         <td><bean:write name="invoice" property="contactCity"/></td>
+						         <td><iwcm:strutsWrite name="invoice" property="contactCity"/></td>
 						      </tr>
 						      <tr>
 						         <td><iwcm:text key="components.basket.invoice_email.ZIP"/>:</td>
-						         <td><bean:write name="invoice" property="contactZip"/></td>
+						         <td><iwcm:strutsWrite name="invoice" property="contactZip"/></td>
 						      </tr>
 							  <tr>
 						         <td><iwcm:text key="components.basket.invoice_email.country"/>:</td>
@@ -176,7 +176,7 @@
 							<strong><iwcm:text key="components.basket.invoice_email.delivery_method"/>:</strong>
 							<br/>
 							<br/>
-							<bean:write name="invoice" property="deliveryMethod"/>
+							<iwcm:strutsWrite name="invoice" property="deliveryMethod"/>
 
 						   <%
 
@@ -258,7 +258,7 @@
 			         	<strong><iwcm:text key="components.basket.note"/></strong>
 			         	<br/>
 			         	<br/>
-			         	<bean:write name="invoice" property="userNote"/>
+			         	<iwcm:strutsWrite name="invoice" property="userNote"/>
 			         </td>
 			      </tr>
 			      </iwcm:notEmpty>
@@ -281,21 +281,21 @@
 							         	if (good.getItemIdInt() > 0) docLink = docDB.getDocLink(good.getItemIdInt());
 							         	if (docLink != null && docLink.indexOf("javascript:void(")==-1 && docLink.indexOf("/system")==-1) {
 							         	%>
-							            	<a href="<%=docLink %>" target="_blank"><bean:write name="good" property="title"/></a>
+							            	<a href="<%=docLink %>" target="_blank"><iwcm:strutsWrite name="good" property="title"/></a>
 							            <% } else { %>
-							            	<bean:write name="good" property="title"/>
+							            	<iwcm:strutsWrite name="good" property="title"/>
 							            <% } %>
 											<iwcm:notEmpty name="good" property="itemNote">
 								            <br/>
-								            <iwcm:text key="components.basket.note"/>:&nbsp;<bean:write name="good" property="itemNote"/>
+								            <iwcm:text key="components.basket.note"/>:&nbsp;<iwcm:strutsWrite name="good" property="itemNote"/>
 											</iwcm:notEmpty>
 							         </td>
 							         <td align="center" class="basketPrice" nowrap="nowrap"><iway:curr currency="<%=invoice.getCurrency() %>"><%=good.getLocalPrice(request) %></iway:curr></td>
 							         <td align="center">
-											<bean:write name="good" property="itemQty"/><%
+											<iwcm:strutsWrite name="good" property="itemQty"/><%
 											String qtyTypeFieldName = Constants.getString("basketQuantityTypeField");
 											if (Tools.isNotEmpty(qtyTypeFieldName)) {
-												%>&nbsp;<bean:write name="good" property="<%=\"doc.\"+qtyTypeFieldName%>"/>
+												%>&nbsp;<iwcm:strutsWrite name="good" property="<%=\"doc.\"+qtyTypeFieldName%>"/>
 											<% } %>
 							         </td>
 							         <td align="center" class="basketPrice" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemPriceQty() %></iway:curr></td>

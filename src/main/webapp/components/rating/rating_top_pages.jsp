@@ -58,7 +58,7 @@ if (topDocIds.size() > 0)
 						<tr>
 								<td><%=index.intValue()+1%>.&nbsp;</td>
 								<td><%=docDet.getTitle()%></td>
-								<td><bean:write name="d" property="ratingStat"/></td>
+								<td><iwcm:strutsWrite name="d" property="ratingStat"/></td>
 								<td style="display: contents;"> <%= "" + d.getRatingValueDouble() %>  / <%= "" + range%>  </td>
 						</tr>
 						<%}%>	

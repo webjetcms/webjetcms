@@ -210,7 +210,7 @@ float: left;
 		<iwcm:notEmpty name="actionBean" property="usr.photo">
 			<p>
 				<stripes:label for="usrPhoto" name="usr.photo"><iwcm:text key="components.user.newuser.photo"/>:</stripes:label>
-				<img src="<bean:write name="actionBean" property="usr.photoSmall"/>">
+				<img src="<iwcm:strutsWrite name="actionBean" property="usr.photoSmall"/>">
 			</p>
 		</iwcm:notEmpty>
 		<p<%=isShow(show, "signature")%>>

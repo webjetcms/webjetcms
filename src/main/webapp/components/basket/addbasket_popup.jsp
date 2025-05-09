@@ -1,4 +1,4 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
 
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
@@ -25,7 +25,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title><bean:write name="good" property="title"/></title>
+	<title><iwcm:strutsWrite name="good" property="title"/></title>
 	<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" >
 	<meta http-equiv="Content-language" content="<%=PageLng.getUserLng(request)%>" >
 	<meta name="description" content="WebJET Content Management web site" >
@@ -124,7 +124,7 @@ function recalculateTotal()
 	<td valign="top">
 		<table border=0 cellspacing=0 cellpadding=2>
 			<tr>
-				<td valign="top" class="addbasketName"><bean:write name="good" property="title"/></td>
+				<td valign="top" class="addbasketName"><iwcm:strutsWrite name="good" property="title"/></td>
 			</tr>
 		</table>
 	</td>

@@ -165,7 +165,7 @@ if (user == null)
 			String prefix = viewInfoJSON != null && viewInfoJSON.getBoolean("sortPriority") ? group.getSortPriority() + ". " : "";
 			prefix += viewInfoJSON != null && viewInfoJSON.getBoolean("docId") ? "[#" + group.getGroupId() + "] " : "";
 		%>
-		<tree text="&lt;em&gt;<%= prefix %>&lt;/em&gt;<bean:write name="group" property="groupNameShortNoJS"/>" action="javascript:xtreeItemClick(<bean:write name="group" property="groupId"/>, '<%=groupIdName %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
+		<tree text="&lt;em&gt;<%= prefix %>&lt;/em&gt;<iwcm:strutsWrite name="group" property="groupNameShortNoJS"/>" action="javascript:xtreeItemClick(<iwcm:strutsWrite name="group" property="groupId"/>, '<%=groupIdName %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		}%>
 	</iwcm:iterate>
 
@@ -217,7 +217,7 @@ if (user == null)
 				out.print("[#" + doc.getDocId() + "] ");%>&lt;/em&gt;<%=title%><%
 			if (viewInfoJSON != null && viewInfoJSON.getBoolean("dateCreated"))
 				out.print(" &lt;em&gt;(" + doc.getDateCreatedString() + ")&lt;/em&gt;");%>"
-			action="javascript:xtreeItemPageClick(<bean:write name="doc" property="docId"/>, '<bean:write name="doc" property="sortPriority"/>. <%=titleEscaped %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
+			action="javascript:xtreeItemPageClick(<iwcm:strutsWrite name="doc" property="docId"/>, '<iwcm:strutsWrite name="doc" property="sortPriority"/>. <%=titleEscaped %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		} %>
 	</iwcm:iterate>
 	</iwcm:present>

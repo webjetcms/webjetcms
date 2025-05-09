@@ -355,7 +355,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
       			<div class="basket-label" style="<%=styleAttr%>"><%=doc.getFieldQ() %></div>
       			<%} %>
       			<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=500&h=400&ip=5" alt="" /></a>
-      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h4>
+      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:strutsWrite name="doc" property="title"/></a></h4>
       			<div class="ratings">
 			<%
 				request.setAttribute("ratingForm", "!INCLUDE(/components/rating/rating_form.jsp, ratingDocId="+doc.getDocId()+", range=5)!");
@@ -423,7 +423,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
                   <a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>" class="btn">Zobraziť</a>
                 </div>
               </div>
-              <h3><a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></a></h3>
+              <h3><a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:strutsWrite name="doc" property="title"/></a></a></h3>
              <%  if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
               <div class="pi-price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span> <iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr></div>
@@ -469,7 +469,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
       			<div class="basket-label" style="<%=styleAttr%>"><%=doc.getFieldQ() %></div>
       			<%} %>
       			<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=500&h=400&ip=5" alt="" /></a>
-      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h4>
+      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:strutsWrite name="doc" property="title"/></a></h4>
       			<div class="ratings">
 			<%
 				request.setAttribute("ratingForm", "!INCLUDE(/components/rating/rating_form.jsp, ratingDocId="+doc.getDocId()+", range=5)!");

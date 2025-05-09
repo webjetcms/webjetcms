@@ -133,19 +133,52 @@ public class CustomTagUtils {
       return MessageFormat.format(value, args);
    }
 
-   public void writePrevious(PageContext pageContext, String text)
-        throws JspException {
-        JspWriter writer = pageContext.getOut();
+   /**
+    * Write the specified text as the response to the writer associated with
+    * this page.  <strong>WARNING</strong> - If you are writing body content
+    * from the <code>doAfterBody()</code> method of a custom tag class that
+    * implements <code>BodyTag</code>, you should be calling
+    * <code>writePrevious()</code> instead.
+    *
+    * @param pageContext The PageContext object for this page
+    * @param text The text to be written
+    *
+    * @exception JspException if an input/output error occurs (already saved)
+    */
+   public void write(PageContext pageContext, String text) throws JspException {
+       JspWriter writer = pageContext.getOut();
 
-        if (writer instanceof BodyContent bodyContent) {
-            writer = bodyContent.getEnclosingWriter();
+       try {
+           writer.print(text);
+
+       } catch (IOException e) {
+           this.saveException(pageContext, e);
+           throw new JspException
+                   (getMessage("write.io", e.toString()));
+       }
+   }
+
+       /**
+     * Write the specified text as the response to the writer associated with
+     * the body content for the tag within which we are currently nested.
+     *
+     * @param pageContext The PageContext object for this page
+     * @param text The text to be written
+     *
+     * @exception JspException if an input/output error occurs (already saved)
+     */
+    public void writePrevious(PageContext pageContext, String text) throws JspException {
+        JspWriter writer = pageContext.getOut();
+        if (writer instanceof BodyContent writerB) {
+            writer = writerB.getEnclosingWriter();
         }
 
         try {
             writer.print(text);
         } catch (IOException e) {
-            saveException(pageContext, e);
-            throw new JspException(this.getMessage("write.io", e.toString()), e);
+            this.saveException(pageContext, e);
+            throw new JspException(this.getMessage("write.io", e.toString()));
         }
+
     }
 }

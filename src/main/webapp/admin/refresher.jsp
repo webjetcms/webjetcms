@@ -26,7 +26,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		window.open("/components/messages/message_popup.jsp?messageId="+id,"msgpop"+id,options);
 	}
 	<iwcm:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
-		popupMessage(<bean:write name="msg" property="adminMessageId"/>);
+		popupMessage(<iwcm:strutsWrite name="msg" property="adminMessageId"/>);
 	</iwcm:iterate>
 	<%="</script>"%>
 </iwcm:present>

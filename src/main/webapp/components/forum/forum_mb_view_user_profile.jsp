@@ -69,14 +69,14 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 -->
 </script>
 <iwcm:present name="userInfo">
-   <h1><iwcm:text key="components.forum.bb.profile.info_about"/> <bean:write name="userDet" property="fullName"/></h1>
+   <h1><iwcm:text key="components.forum.bb.profile.info_about"/> <iwcm:strutsWrite name="userDet" property="fullName"/></h1>
 
    <div class="row mobile-fix">
 		<div class="col-md-12 col-xs-12">
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><bean:write name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:strutsWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>
@@ -84,7 +84,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 
 	<div class="panel panel-primary">
 		<div class="panel-heading">
-			<iwcm:text key="components.forum.bb.profile.info_about"/>: <bean:write name="userDet" property="fullName"/>
+			<iwcm:text key="components.forum.bb.profile.info_about"/>: <iwcm:strutsWrite name="userDet" property="fullName"/>
 		</div>
 		<div class="panel-body no-padding">
 			<div class="row">
@@ -94,7 +94,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 				<div class="col-md-9 col-xs-12">
 					<div class="row">
 						<div class="col-md-4 text-right">
-							<b><span class="gen"><iwcm:text key="components.forum.bb.profile.all_about"/> <bean:write name="userDet" property="fullName"/></span></b>
+							<b><span class="gen"><iwcm:text key="components.forum.bb.profile.all_about"/> <iwcm:strutsWrite name="userDet" property="fullName"/></span></b>
 						</div>
 					</div>
 				</div>
@@ -126,7 +126,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 							<span class="gen"><iwcm:text key="components.forum.bb.profile.total_posts"/>:</span>
 						</div>
 						<div class="col-md-8">
-							<span class="gen"><bean:write name="userDet" property="forumRank"/></span> <br /><span class="genmed"><a href="<%=Tools.addParameterToUrl(docDB.getDocLink(docId),"uId",String.valueOf(userDet.getUserId()))%>&amp;type=user_posts"><iwcm:text key="components.forum.user_posts"/></a></span>
+							<span class="gen"><iwcm:strutsWrite name="userDet" property="forumRank"/></span> <br /><span class="genmed"><a href="<%=Tools.addParameterToUrl(docDB.getDocLink(docId),"uId",String.valueOf(userDet.getUserId()))%>&amp;type=user_posts"><iwcm:text key="components.forum.user_posts"/></a></span>
 						</div>
 					</div>
 					<div class="row">
@@ -134,8 +134,8 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 							<span class="gen"><iwcm:text key="components.forum.bb.profile.location"/>:</span>
 						</div>
 						<div class="col-md-8">
-							<span class="gen"><bean:write name="userDet" property="city"/><iwcm:notEmpty name="userDet" property="country">,
-							<bean:write name="userDet" property="country"/></iwcm:notEmpty></span>
+							<span class="gen"><iwcm:strutsWrite name="userDet" property="city"/><iwcm:notEmpty name="userDet" property="country">,
+							<iwcm:strutsWrite name="userDet" property="country"/></iwcm:notEmpty></span>
 						</div>
 					</div>
 					<div class="row">
@@ -143,7 +143,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 							<span class="gen"><iwcm:text key="components.forum.bb.profile.email"/>:</span>
 						</div>
 						<div class="col-md-8">
-							<span class="gen"><a href="mailto:<bean:write name="userDet" property="email"/>"><bean:write name="userDet" property="email"/></a></span>
+							<span class="gen"><a href="mailto:<iwcm:strutsWrite name="userDet" property="email"/>"><iwcm:strutsWrite name="userDet" property="email"/></a></span>
 						</div>
 					</div>
 				</div>
