@@ -33,7 +33,7 @@ if (newMessages!=null && newMessages.size()>0)
 out.println(Tools.getRequestParameter(request, "rnd"));
 %><iwcm:present name="newMessages">
    <%="<script type=\"text/javascript\">"%>
-	<logic:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
+	<iwcm:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
 		<%
 		//zamedzenie duplicitneho otvarania okien
 		if(session.getAttribute("recipient"+msg.getCreateByUserId())==null && request.getAttribute("recipient"+msg.getCreateByUserId())==null)
@@ -42,6 +42,6 @@ out.println(Tools.getRequestParameter(request, "rnd"));
 		%>
 			popupMessage(<bean:write name="msg" property="adminMessageId"/>);
 		<%}%>
-	</logic:iterate>
+	</iwcm:iterate>
 	<%="</script>"%>
 </iwcm:present>

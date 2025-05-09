@@ -112,7 +112,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 				<th class="lastpost"><iwcm:text key="components.forum.forum_post_date"/></th>
 			</tr>
 		</thead>
-	   	<logic:iterate offset="<%= offset%>" length="<%= end%>" name="searchResults" id="sr" type="sk.iway.iwcm.forum.ForumSearchBean" indexId="index">
+	   	<iwcm:iterate offset="<%= offset%>" length="<%= end%>" name="searchResults" id="sr" type="sk.iway.iwcm.forum.ForumSearchBean" indexId="index">
 			<% if ((iMod % 2) == 0) {
 				  out.println("<tr class='even'>");
 			   	}
@@ -191,7 +191,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 			</td>
 			<td class=""><bean:write name="sr" property="questionDate"/></td>
 		</tr>
-		</logic:iterate>
+		</iwcm:iterate>
 	</table>
 </div>
 					<!--  ******** KOMPONENTA STRANKOVANIA ********  -->

@@ -158,7 +158,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			{
 		%>
 			<div class="inquiryBox">
-				<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
+				<iwcm:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 					<div class="inquiryAnswer">
 						<a href='javascript:anketa("/inquiry.answer.do?qID=<jsp:getProperty name="answer" property="questionID"/>&amp;aID=<jsp:getProperty name="answer" property="answerID"/>", 300, 200,<jsp:getProperty name="answer" property="questionID"/><%
               				if (Tools.isNotEmpty(answer.getUrl())) { out.print(", \"" + ResponseUtils.filter(answer.getUrl()) + "\""); }
@@ -182,7 +182,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 						<div class="clearer">&nbsp;</div>
 					</div>
 					<%clicksTotal += answer.getAnswerClicks();%>
-				</logic:iterate>
+				</iwcm:iterate>
 			</div>
 		<%
 			}
@@ -191,7 +191,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 		%>
 			<form action="/inquiry.answer.do" name="inquiryAnswerForm">
 				<div class="inquiryBox">
-				<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
+				<iwcm:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 					<div class="inquiryAnswer">
 						<label>
 							<input type="checkbox" name="selectedAnswers" value="${answer.answerID}"/>
@@ -211,7 +211,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 						</iwcm:present>
 						<div class="clearer">&nbsp;</span></div>
 					</div>
-				</logic:iterate>
+				</iwcm:iterate>
 				</div>
 				<input type="hidden" name="questionID" value="<bean:write name="answer" property="questionID" />"/>
 		      	<input type="button" onclick="anketaMulti(this.form, questionID);" name="maSubmit" value="<iwcm:text key="inquiry.multipleAnswer.submit"/>" class="button100"><br>
@@ -232,7 +232,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 		%>
 		<div class="span6 inquiryBox">
 			<h3><bean:write name="inquiry" property="question" filter="false"/></h3>
-			<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
+			<iwcm:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 				<div>
 					<iwcm:present name="displayResults">
 					<%
@@ -255,7 +255,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 					</iwcm:present>
 					<%clicksTotal += answer.getAnswerClicks();%>
 				</div>
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<%
 			}
@@ -265,7 +265,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			<form action="/inquiry.answer.do" name="inquiryAnswerForm">
 				<div class="span6 inquiryBox">
 					<h3><bean:write name="inquiry" property="question" filter="false"/></h3>
-					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
+					<iwcm:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 						<div>
 							<label>
 							<iwcm:present name="displayResults">
@@ -284,7 +284,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 							</div>
 							</iwcm:present>
 						</div>
-					</logic:iterate>
+					</iwcm:iterate>
 					<p><input type="hidden" name="questionID" value="<bean:write name="answer" property="questionID" />"/>
 			      	<input type="button" onclick="anketaMulti(this.form, questionID);" name="maSubmit" value="<iwcm:text key="inquiry.multipleAnswer.submit"/>" class="btn btn-large btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>"></p>
 				</div>
@@ -313,7 +313,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			</div>
 			<div class="panel-body">
 				<div id="Main">
-					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
+					<iwcm:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 						<div>
 							<iwcm:present name="displayResults">
 							<%
@@ -336,7 +336,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 							<br/>
 						</div>
 						<%clicksTotal += answer.getAnswerClicks();%>
-					</logic:iterate>
+					</iwcm:iterate>
 				</div>
 				<%if (displayTotalClicks){%>
 					<div class="total"><p><iwcm:text key="components.inquiry.total_clicks"/>: <%=clicksTotal %></p></div>
@@ -357,7 +357,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 			</div>
 			<div class="panel-body">
 				<div id="Main">
-					<logic:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
+					<iwcm:iterate id="answer" name="inquiry" property="answers" type="AnswerForm">
 						<div>
 							<label class="inquiry_label">
 								<iwcm:present name="displayResults">
@@ -381,7 +381,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 							</label>
 						</div>
 						<%clicksTotal += answer.getAnswerClicks();%>
-					</logic:iterate>
+					</iwcm:iterate>
 					<p><input type="hidden" name="questionID" value="<bean:write name="answer" property="questionID" />"/>
 			      	<input type="button" onclick="anketaMulti(this.form, questionID);" name="maSubmit" value="<iwcm:text key="inquiry.multipleAnswer.submit"/>" class="btn btn-large btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>"></p>
 				</div>

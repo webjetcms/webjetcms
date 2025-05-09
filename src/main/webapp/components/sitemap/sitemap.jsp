@@ -38,9 +38,9 @@ if(request.getAttribute("doc_id") != null)
 				<!--
 				rootNodeName="<b><%=rootNodeName%></b>";
 				var Tree = new Array;
-				<logic:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
+				<iwcm:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
 					Tree[<bean:write name="index"/>] = "<jsp:getProperty name="group" property="groupId"/>|<jsp:getProperty name="group" property="parentGroupId"/>|<jsp:getProperty name="group" property="groupName"/>|<%=link%><jsp:getProperty name="group" property="groupId"/>";
-				</logic:iterate>
+				</iwcm:iterate>
 				createTree(Tree, 0, <iway:request name="group_id"/>);
 				-->
 			</script>
@@ -51,9 +51,9 @@ if(request.getAttribute("doc_id") != null)
 		<td valign="top">
 			<iwcm:text key="components.sitemap.webPagesInDir"/>:
 			<br /><br />
-			<logic:iterate id="doc" name="docs" type="sk.iway.iwcm.doc.DocDetails">
+			<iwcm:iterate id="doc" name="docs" type="sk.iway.iwcm.doc.DocDetails">
 				<a href="/showdoc.do?docid=<jsp:getProperty name="doc" property="docId"/>"><img src="/components/sitemap/images/page.gif" alt="Page" /><jsp:getProperty name="doc" property="title"/></a><br />
-			</logic:iterate>
+			</iwcm:iterate>
 		</td>
 	</tr>
 </table>

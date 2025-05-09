@@ -133,7 +133,7 @@ count = Tools.getIntValue((String)request.getAttribute("count"),-1);
 
 <table class="displayMainTopics" border="0" cellpadding="0" cellspacing="0">
 <tbody>
-<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 	<%
 
     totalPhorumNum++;
@@ -211,6 +211,6 @@ count = Tools.getIntValue((String)request.getAttribute("count"),-1);
 			counter = 0;
 		}
 	%>
-</logic:iterate>
+</iwcm:iterate>
 </tbody>
 </table>

@@ -35,7 +35,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <iwcm:present name="confValues">
     <h3><iwcm:text key="admin.help.possibleConfigValues"/></h3>
-    <logic:iterate id="conf" name="confValues" type="sk.iway.iwcm.system.ConfDetails">
+    <iwcm:iterate id="conf" name="confValues" type="sk.iway.iwcm.system.ConfDetails">
         <span> - ```<bean:write name="conf" property="name"/>``` - <bean:write name="conf" property="description"/> ( <bean:write name="conf" property="value"/>) </span><br>
-    </logic:iterate>
+    </iwcm:iterate>
 </iwcm:present>

@@ -25,9 +25,9 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		var options = "toolbar=no,scrollbars=no,resizable=yes,width=500,height=400;"
 		window.open("/components/messages/message_popup.jsp?messageId="+id,"msgpop"+id,options);
 	}
-	<logic:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
+	<iwcm:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
 		popupMessage(<bean:write name="msg" property="adminMessageId"/>);
-	</logic:iterate>
+	</iwcm:iterate>
 	<%="</script>"%>
 </iwcm:present>
 &nbsp;

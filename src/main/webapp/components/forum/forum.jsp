@@ -147,7 +147,7 @@ if(!isAjaxCall)
 					<td><iwcm:text key="forum.subject"/></td>
 					<td><iwcm:text key="forum.date"/></td>
 				</tr>
-			<logic:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
+			<iwcm:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td>
 						<iwcm:notEmpty name="field" property="authorEmail">
@@ -162,7 +162,7 @@ if(!isAjaxCall)
 					</td>
 					<td><bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/></td>
 				</tr>
-			</logic:iterate>
+			</iwcm:iterate>
 			</table>
 	<% } %>
   </td>

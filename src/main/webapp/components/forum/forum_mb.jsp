@@ -416,7 +416,7 @@ if(!isAjaxCall)
 			<th class="thCornerR lastpost"><iwcm:text key="components.forum.last_post"/></th>
 		</tr>
 		</thead>
-		<logic:iterate offset="<%= offset%>" length="<%= end%>" name="topics" id="t" type="DocForumEntity" indexId="index">
+		<iwcm:iterate offset="<%= offset%>" length="<%= end%>" name="topics" id="t" type="DocForumEntity" indexId="index">
 
 			<% if ((iMod % 2) == 0) {
 				  out.println("<tr class='even'>");
@@ -459,7 +459,7 @@ if(!isAjaxCall)
 			   <td class="row3 lastpost"><span class="postdetails"><bean:write name="t" property="lastPost"/></span></td>
 
 			</tr>
-		</logic:iterate>
+		</iwcm:iterate>
 	</table>
 </div>
 	<div class="row mobile-fix">

@@ -1,12 +1,15 @@
 package sk.iway.iwcm.tags.support_logic;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.BodyContent;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
@@ -129,4 +132,20 @@ public class CustomTagUtils {
       if (Tools.isEmpty(value)) value = "";
       return MessageFormat.format(value, args);
    }
+
+   public void writePrevious(PageContext pageContext, String text)
+        throws JspException {
+        JspWriter writer = pageContext.getOut();
+
+        if (writer instanceof BodyContent bodyContent) {
+            writer = bodyContent.getEnclosingWriter();
+        }
+
+        try {
+            writer.print(text);
+        } catch (IOException e) {
+            saveException(pageContext, e);
+            throw new JspException(this.getMessage("write.io", e.toString()), e);
+        }
+    }
 }

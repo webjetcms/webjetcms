@@ -19,10 +19,10 @@ List atrs = AtrDB.getAtributes(docId, group, request);
 request.setAttribute("atrs", atrs);
 %>
 <table class="table table-sm tabulkaStandard atrTable">
-<logic:iterate name="atrs" id="atr" type="sk.iway.iwcm.doc.AtrBean">
+<iwcm:iterate name="atrs" id="atr" type="sk.iway.iwcm.doc.AtrBean">
    <tr>
       <td><bean:write name="atr" property="atrName" filter="false"/></td>
       <td><bean:write name="atr" property="valueHtml" filter="false"/></td>
    </tr>
-</logic:iterate>
+</iwcm:iterate>
 </table>

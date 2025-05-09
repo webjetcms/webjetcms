@@ -274,9 +274,9 @@ request.setAttribute("modules", allModules);
 	<input type="checkbox" name="cluster" value="true"> Cluster node TYPE=<%=Constants.getString("clusterMyNodeType") %><br>
 
 	<h2>Vymazanie modulov:</h2>
-	<logic:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
+	<iwcm:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
 		<input type="checkbox" name="m_<bean:write name="m" property="itemKey" <% if (m.isAvailable()==false) out.print(" checked='checked'"); %>/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<bean:write name="m" property="itemKey"/>]<br>
-	</logic:iterate>
+	</iwcm:iterate>
 
 	<h2>Vymazanie komponent:</h2>
 <%

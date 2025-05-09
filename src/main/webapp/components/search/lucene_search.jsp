@@ -152,7 +152,7 @@ if (searchType != null)
   	<!-- VYSLEDKY VYHLADAVANIA -->
 
 	<iwcm:present name="aList">
-		<logic:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
+		<iwcm:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
 				<p>
 					<a href="<%=docDB.getDocLink(search.getDocId(), search.getExternalLink(), request)%>">
 						<strong><jsp:getProperty name="search" property="title"/></strong>
@@ -166,7 +166,7 @@ if (searchType != null)
 					<jsp:getProperty name="search" property="link"/>
 				</dd>
 			</dl>
-		</logic:iterate>
+		</iwcm:iterate>
 	</iwcm:present>
 
 	<iwcm:present name="suggestion">

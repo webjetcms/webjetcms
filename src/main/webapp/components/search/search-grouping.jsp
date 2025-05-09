@@ -121,7 +121,7 @@ if (searchType != null)
 
   <!-- VYSLEDKY VYHLADAVANIA -->
   <iwcm:present name="aList">
-			<logic:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
+			<iwcm:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
 			   <%
 			   if (Tools.isNotEmpty(groupingField))
 			   {
@@ -141,7 +141,7 @@ if (searchType != null)
 				<br>
 				<jsp:getProperty name="search" property="link"/>
 				<hr>
-			</logic:iterate>
+			</iwcm:iterate>
    </iwcm:present>
 
 		<p align=right>

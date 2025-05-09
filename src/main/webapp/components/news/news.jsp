@@ -156,9 +156,9 @@ if (paging && (pagingStyle.equals("top") || pagingStyle.equals("both"))) { %>
       <iwcm:present name="prev">
       	${prev.value}${prev.label}</a>
       </iwcm:present>
-      <logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+      <iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
         <jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-      </logic:iterate>
+      </iwcm:iterate>
       <iwcm:present name="next">
       	${next.value}${next.label}</a>
       </iwcm:present>
@@ -174,7 +174,7 @@ if (isUlStyle) {
 %>
 
 <iwcm:notEmpty name="novinky">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 			<%
 				perexImgClass = "news_img";
 
@@ -332,7 +332,7 @@ if (isUlStyle) {
 				counter = 0;
 			}
 			%>
-	</logic:iterate>
+	</iwcm:iterate>
 
 	<%
 	//ukonci posledny DIV
@@ -362,9 +362,9 @@ if (paging && (pagingStyle.equals("bottom") || pagingStyle.equals("both"))) { %>
       <iwcm:present name="prev">
       	${prev.value}${prev.label}</a>
       </iwcm:present>
-      <logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+      <iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
         <jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-      </logic:iterate>
+      </iwcm:iterate>
       <iwcm:present name="next">
       	${next.value}${next.label}</a>
       </iwcm:present>

@@ -133,9 +133,9 @@ int counter=0;
 	<iwcm:present name="pages">
 		<div class="news_pages">
 			<iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr />
 	</iwcm:present>
@@ -147,7 +147,7 @@ boolean hasLink;
 %>
 
 <iwcm:notEmpty name="novinky">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 		<%
 			if (Tools.isNotEmpty(doc.getPublishStartString())) {
 
@@ -243,7 +243,7 @@ boolean hasLink;
 
 				}
 			%>
-	</logic:iterate>
+	</iwcm:iterate>
 	<%
 		//ukonci posledny DIV
 		if (maxCols>1 && counter!=0) out.println("<div class='clearer'>&nbsp;</div></div>");

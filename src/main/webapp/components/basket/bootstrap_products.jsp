@@ -314,12 +314,12 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
 	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
 				<jsp:getProperty name="page2" property="value"/>
 				<!-- vlozenie cisla stranky a ukoncenie odkazu a -->
 				[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
 	</iwcm:present>
@@ -337,7 +337,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 <div>
     	<!-- BEGIN PRODUCTS -->
     	<div class="row basket style01">
-    <logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+    <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
   		<div class="col-md-3 col-sm-6">
     		<span class="thumbnail clearfix">
@@ -387,7 +387,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
   		 <%   productCounter++;%>
 
-	</logic:iterate>
+	</iwcm:iterate>
 
 	</div>
 
@@ -399,7 +399,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 <%} else if("02".equals(style)){ %>
 
   <div class="row basket style02">
-  <logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+  <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
         <div class="col-md-4">
             <div class="product-item">
@@ -437,7 +437,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
   		 <%   productCounter++;%>
 
-	</logic:iterate>
+	</iwcm:iterate>
 
 
 
@@ -451,7 +451,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 	<div class="col-sm-7">
     	<!-- BEGIN PRODUCTS -->
     	<div class="row">
-    <logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+    <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
   		<div class=" col-md-6 col-sm-6  col-xs-6 col-lg-4 ">
     		<span class="thumbnail">
@@ -502,7 +502,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 
   		 <%   productCounter++;%>
 
-	</logic:iterate>
+	</iwcm:iterate>
 
 	</div>
 
@@ -560,12 +560,12 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
 	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
 				<jsp:getProperty name="page2" property="value"/>
 				<!-- vlozenie cisla stranky a ukoncenie odkazu a -->
 				[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
 	</iwcm:present>

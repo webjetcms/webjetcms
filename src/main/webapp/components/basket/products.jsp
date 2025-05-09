@@ -292,12 +292,12 @@ $(document).ready(function(){
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
 	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
 				<jsp:getProperty name="page2" property="value"/>
 				<!-- vlozenie cisla stranky a ukoncenie odkazu a -->
 				[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
 	</iwcm:present>
@@ -307,7 +307,7 @@ $(document).ready(function(){
 %>
 
 <div class="products">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 		<iwcm:notEmpty name="doc" property="perexImage">
 			<div class="itemDiv" style="height:<%=pageParams.getIntValue("thumbHeight", 190)%>px;">
 			<h2><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h2>
@@ -328,7 +328,7 @@ $(document).ready(function(){
 				}%>
 			</div>
 		</iwcm:notEmpty>
-	</logic:iterate>
+	</iwcm:iterate>
 	<span class="cleaner"></span>
 </div>
 	<iwcm:empty name="novinky">

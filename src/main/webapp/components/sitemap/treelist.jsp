@@ -23,9 +23,9 @@ DocTreeAction.doTree(request);
    rootNodeName="<b><iway:request name="root_name"/></b>";
    var Tree = new Array;
    // nodeId | parentNodeId | nodeName | nodeUrl
-   <logic:iterate id="group" name="tree_list" type="sk.iway.iwcm.doc.DocTreeDetails" indexId="index">
+   <iwcm:iterate id="group" name="tree_list" type="sk.iway.iwcm.doc.DocTreeDetails" indexId="index">
       Tree[<bean:write name="index"/>] = "<jsp:getProperty name="group" property="id"/>|<jsp:getProperty name="group" property="parent"/>|<jsp:getProperty name="group" property="name"/>|<jsp:getProperty name="group" property="link"/>";
-   </logic:iterate>
+   </iwcm:iterate>
 
                createTree(Tree, 0, 4);
 	-->

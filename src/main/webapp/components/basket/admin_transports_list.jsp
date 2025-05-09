@@ -175,7 +175,7 @@ if (modeOfTransportGroup!=null)
 
 <iwcm:notEmpty name="novinky">
 	<table border="0" cellspacing="0" cellpadding="1" class="newsTable">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 		<% if (doc.getDocId()<1) { %>
 		<tr id="rowAddNewItemButton">
 			<td colspan="2">
@@ -221,7 +221,7 @@ if (modeOfTransportGroup!=null)
 			</td>
 		</tr>
 		</form>
-	</logic:iterate>
+	</iwcm:iterate>
 	</table>
 </iwcm:notEmpty>
 <iwcm:empty name="novinky">

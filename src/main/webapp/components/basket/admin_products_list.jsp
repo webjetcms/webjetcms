@@ -628,7 +628,7 @@ String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";/
 <iwcm:notEmpty name="novinky">
 	<table border="0" cellspacing="0" cellpadding="1" class="newsTable">
 	<% int productCounter = 0; %>
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 			<% if (doc.getDocId()<1)
 				{
 					doc.setPerexImage(defaultImage);	%>
@@ -769,7 +769,7 @@ String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";/
 				</td>
 			</tr>
 
-	</logic:iterate>
+	</iwcm:iterate>
 	</table>
 </iwcm:notEmpty>
 <iwcm:empty name="novinky">

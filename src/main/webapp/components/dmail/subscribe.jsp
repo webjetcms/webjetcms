@@ -242,7 +242,7 @@
 		</fieldset>
 
 		<fieldset>
-			<logic:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
+			<iwcm:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
 			<% if (ugd.isAllowUserEdit()) { %>
 			<p>
 				<label for="user_group_id_<bean:write name="ugd" property="userGroupId"/>">
@@ -258,7 +258,7 @@
 			</p>
 
 			<% } %>
-			</logic:iterate>
+			</iwcm:iterate>
 		</fieldset>
 
 		<fieldset>

@@ -116,7 +116,7 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
               </tr>
 
               <iwcm:present name="basketItems">
-                  <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
+                  <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
                       <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
                           <td class="w-5">
                               <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
@@ -129,7 +129,7 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
                           <td><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
 
                       </tr>
-                  </logic:iterate>
+                  </iwcm:iterate>
               </iwcm:present>
               <tr class="sucet">
                   <td></td>

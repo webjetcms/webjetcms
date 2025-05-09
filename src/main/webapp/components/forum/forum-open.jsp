@@ -161,7 +161,7 @@ if(!isAjaxCall)
 	</div>
 </div>
 
-<logic:iterate name="data" id="field" type="DocForumEntity" indexId="index">
+<iwcm:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 <div class="media">
   <div class="media-left">
   	<%
@@ -231,7 +231,7 @@ if(!isAjaxCall)
 
   </div>
 </div>
-</logic:iterate>
+</iwcm:iterate>
 <%--
 <table border="0" cellspacing="0" cellpadding="0" class="forumTable">
 <%if (!active) {%>
@@ -261,7 +261,7 @@ if(!isAjaxCall)
 	<% } else { %>
 		<table border="0" cellspacing="0" cellpadding="0" class="forumOpenTable">
 
-			<logic:iterate name="data" id="field" type="DocForumEntity" indexId="index">
+			<iwcm:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td style="padding-left:<%=(20 * field.getLevel())%>px;" class="forumOpenTableHeader">
 							<b><bean:write name="field" property="subject"/></b><br />
@@ -285,7 +285,7 @@ if(!isAjaxCall)
 						<jsp:getProperty name="field" property="question"/>
 					</td>
 				</tr>
-			</logic:iterate>
+			</iwcm:iterate>
 
 		</table>
 	<% } %>

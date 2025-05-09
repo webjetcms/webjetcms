@@ -107,7 +107,7 @@ if (user == null)
 <tree>
 
 	<%int parentGroupId; String folderIcon; boolean showChilds = false; int systemGroupId=-2; String src; List childs;%>
-	<logic:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
+	<iwcm:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
 		<%
 		canAccess = true;
 		if (Constants.getBoolean("adminCheckUserGroups"))
@@ -167,10 +167,10 @@ if (user == null)
 		%>
 		<tree text="&lt;em&gt;<%= prefix %>&lt;/em&gt;<bean:write name="group" property="groupNameShortNoJS"/>" action="javascript:xtreeItemClick(<bean:write name="group" property="groupId"/>, '<%=groupIdName %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		}%>
-	</logic:iterate>
+	</iwcm:iterate>
 
 	<iwcm:present name="pages">
-	<logic:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
+	<iwcm:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
 		<%
 	   folderIcon = "-page";
 		src = "";
@@ -219,7 +219,7 @@ if (user == null)
 				out.print(" &lt;em&gt;(" + doc.getDateCreatedString() + ")&lt;/em&gt;");%>"
 			action="javascript:xtreeItemPageClick(<bean:write name="doc" property="docId"/>, '<bean:write name="doc" property="sortPriority"/>. <%=titleEscaped %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		} %>
-	</logic:iterate>
+	</iwcm:iterate>
 	</iwcm:present>
 
 </tree>

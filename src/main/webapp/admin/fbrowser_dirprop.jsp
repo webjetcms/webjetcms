@@ -82,7 +82,7 @@ fieldset {margin-bottom: 10px;}
 				<fieldset>
 					<h2><iwcm:text key="editor.group.permissions"/></h2>
 					<%String userGroupId;%>
-					<logic:iterate name="userGroupsList" id="ugl" type="sk.iway.iwcm.users.UserGroupDetails">
+					<iwcm:iterate name="userGroupsList" id="ugl" type="sk.iway.iwcm.users.UserGroupDetails">
 					<%
 						userGroupId = "" + ugl.getUserGroupId();
 						if (ugl.getUserGroupType()==UserGroupDetails.TYPE_PERMS)
@@ -94,7 +94,7 @@ fieldset {margin-bottom: 10px;}
 					</label>
 					<br>
 					<% } %>
-					</logic:iterate>
+					</iwcm:iterate>
 					<div class="loginDocIdBox">
 						<div class="row">
 							<div class="col-xs-12">

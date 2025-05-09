@@ -174,7 +174,7 @@ webFXTreeConfig.loadingText = "<iwcm:text key="groupslist.xtree.loading"/>";
 	<%
 	List<String> allreadyHasGroupParentTable = new ArrayList<>();
 	%>
-	<logic:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index"><%
+	<iwcm:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index"><%
 		boolean canAccess = true;
 		if (Constants.getBoolean("adminCheckUserGroups"))
 		{
@@ -247,7 +247,7 @@ webFXTreeConfig.loadingText = "<iwcm:text key="groupslist.xtree.loading"/>";
 			}
 
 	   %>tree.add(new WebFXLoadTreeItem("<jsp:getProperty name="group" property="sortPriority"/>. <jsp:getProperty name="group" property="groupNameShort"/>", "/admin/scripts/xtree/tree.jsp?<%if (alsoPages) out.print("alsoPages=true&"); %>parent=<bean:write name="group" property="groupId"/>", "javascript:xtreeItemClick(<bean:write name="group" property="groupId"/>, '<jsp:getProperty name="group" property="groupIdName"/>')", null, "images/dtree/folder<%=folderIcon%>.gif", "images/dtree/folderopen<%=folderIcon%>.gif"));<% }
-	%></logic:iterate>
+	%></iwcm:iterate>
 
 	document.write(tree);
 

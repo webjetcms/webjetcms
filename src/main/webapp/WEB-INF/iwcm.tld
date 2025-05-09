@@ -1023,4 +1023,60 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>iterate</name>
+    <tag-class>sk.iway.iwcm.tags.IterateTag</tag-class>
+    <tei-class>sk.iway.iwcm.tags.IterateTei</tei-class>
+    <body-content>JSP</body-content>
+    <description>
+      Repeat the nested body content of this tag over a specified collection.
+    </description>
+    <attribute>
+        <name>collection</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+        <type>java.lang.Object</type>
+    </attribute>
+    <attribute>
+        <name>id</name>
+        <required>true</required>
+        <rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>indexId</name>
+        <required>false</required>
+        <rtexprvalue>false</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>length</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>name</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>offset</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>property</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>scope</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>type</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
 </taglib>

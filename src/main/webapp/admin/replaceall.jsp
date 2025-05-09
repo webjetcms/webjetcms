@@ -347,13 +347,13 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					<th><iwcm:text key="editor.title"/></th>
 					<th>URL</th>
 					</tr>
-				<logic:iterate name="replacedPages" id="doc" type="sk.iway.iwcm.doc.DocDetails">
+				<iwcm:iterate name="replacedPages" id="doc" type="sk.iway.iwcm.doc.DocDetails">
 					<tr>
 					<td><bean:write name="doc" property="docId"/></td>
 					<td><a href="/showdoc.do?docid=<bean:write name="doc" property="docId"/>" target="_blank"><bean:write name="doc" property="title"/></a></td>
 					<td><bean:write name="doc" property="virtualPath"/></td>
 					</tr>
-				</logic:iterate>
+				</iwcm:iterate>
 				</table>
 				<br/>
 			</iwcm:present>
@@ -368,12 +368,12 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					<th>GroupID</th>
 					<th><iwcm:text key="editor.title"/></th>
 					</tr>
-				<logic:iterate name="replacedGroups" id="group" type="sk.iway.iwcm.doc.GroupDetails">
+				<iwcm:iterate name="replacedGroups" id="group" type="sk.iway.iwcm.doc.GroupDetails">
 					<tr>
 					<td><bean:write name="group" property="groupId"/></td>
 					<td><bean:write name="group" property="groupName"/></td>
 					</tr>
-				</logic:iterate>
+				</iwcm:iterate>
 				</table>
 			</iwcm:present>
 		</iwcm:buff>

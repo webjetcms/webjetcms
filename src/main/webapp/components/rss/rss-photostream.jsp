@@ -101,7 +101,7 @@ if (docDetails != null)
 		</image>
 		
 		<iwcm:present name="photos">
-			<logic:iterate id="photo" name="photos" type="sk.iway.iwcm.gallery.GalleryBean">
+			<iwcm:iterate id="photo" name="photos" type="sk.iway.iwcm.gallery.GalleryBean">
 				<item>
 					<title><iwcm:empty name="photo" property="shortDescription"><bean:write name="photo" property="imageName"/></iwcm:empty><iwcm:notEmpty name="photo" property="shortDescription"><![CDATA[<bean:write name="photo" property="shortDescription"/>]]></iwcm:notEmpty></title>
 					<% out.print("<link>"+Tools.getBaseHref(request) + photo.getImagePath() + "/" + photo.getImageName() +"</link>"); %>
@@ -131,7 +131,7 @@ if (docDetails != null)
 				    <media:category scheme="urn:flickr:tags"></media:category>
 									
 				</item>
-			</logic:iterate>
+			</iwcm:iterate>
 		</iwcm:present>
 	</channel>
 </rss>

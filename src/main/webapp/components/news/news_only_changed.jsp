@@ -187,7 +187,7 @@ int pageNewChangedStatus;
 %>
 
 <table border="0" cellspacing="2" cellpadding="5">
-<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
    <tr>
       <td colspan="2">
 	    <table border="0">
@@ -234,5 +234,5 @@ int pageNewChangedStatus;
 	     <div class="right">
             <a href="/showdoc.do?docid=<jsp:getProperty name="doc" property="docId"/>">Viac info &gt;&gt;</a>         </div>      </td>
    </tr>
-</logic:iterate>
+</iwcm:iterate>
 </table>

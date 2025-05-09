@@ -51,24 +51,24 @@ DocDB docDB = DocDB.getInstance();
 %>
 <div class="table-responsive">
    <table class="table table-sm tabulkaStandard atrTable">
-   <logic:iterate id="atrDocBean" name="atrTable" type="sk.iway.iwcm.doc.AtrDocBean" indexId="index">
+   <iwcm:iterate id="atrDocBean" name="atrTable" type="sk.iway.iwcm.doc.AtrDocBean" indexId="index">
       <% if (index.intValue()==0) { %>
          <tr class="atrTableHeader">
             <td>&nbsp;</td>
-            <logic:iterate id="atrBean" name="atrDocBean" property="atrList" type="sk.iway.iwcm.doc.AtrBean">
+            <iwcm:iterate id="atrBean" name="atrDocBean" property="atrList" type="sk.iway.iwcm.doc.AtrBean">
                <td><bean:write name="atrBean" property="atrName"/></td>
-            </logic:iterate>
+            </iwcm:iterate>
          </tr>
       <% }
       counter = 1 - counter;
       %>
       <tr class='atrTableRow<%=counter%>'>
          <td class='atrTableLink'><a href="<%=docDB.getDocLink(atrDocBean.getDocId(), request)%>"><bean:write name="atrDocBean" property="title"/></a></td>
-         <logic:iterate id="atrBean" name="atrDocBean" property="atrList" type="sk.iway.iwcm.doc.AtrBean">
+         <iwcm:iterate id="atrBean" name="atrDocBean" property="atrList" type="sk.iway.iwcm.doc.AtrBean">
             <td align="center"><bean:write name="atrBean" property="valueHtml" filter="false"/></td>
-         </logic:iterate>
+         </iwcm:iterate>
       </tr>
-   </logic:iterate>
+   </iwcm:iterate>
    </table>
    <% if (atrTable.size()<1) { %>
       <iwcm:text key="components.search.no_matches_found"/>

@@ -51,7 +51,7 @@ if (topDocIds.size() > 0)
 			   </tr>
 			 </thead>
 			 <tbody>
-				 <logic:iterate name="docIdTopList" id="d" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
+				 <iwcm:iterate name="docIdTopList" id="d" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 							<% DocDetails docDet = docDB.getDoc(d.getDocId(), -1, false);
 								 if (docDet != null)
 								 {%>
@@ -62,7 +62,7 @@ if (topDocIds.size() > 0)
 								<td style="display: contents;"> <%= "" + d.getRatingValueDouble() %>  / <%= "" + range%>  </td>
 						</tr>
 						<%}%>	
-					</logic:iterate>  
+					</iwcm:iterate>  
 			 </tbody>
 		</table>
 		

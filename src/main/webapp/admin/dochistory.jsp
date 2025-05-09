@@ -75,7 +75,7 @@ int doc_id = -1;
 		<th><iwcm:text key="history.approvedBy"/></th>
 		<th>&nbsp;</th>
 	</tr>
-<logic:iterate name="docHistory" id="docHist" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
+<iwcm:iterate name="docHistory" id="docHist" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
 	<tr <% if(index % 2 == 0) out.println("class=\"even\""); else out.println("class=\"odd\""); %>>
 		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>"><jsp:getProperty name="docHist" property="historySaveDate"/></td>
 		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>"><jsp:getProperty name="docHist" property="authorName"/></td>
@@ -86,6 +86,6 @@ int doc_id = -1;
 			<a href="/admin/doc_compare.jsp?historyid=<jsp:getProperty name="docHist" property="historyId"/>&docid=<%=doc_id%>" target="_blank" class="iconCompare" title="<iwcm:text key="groupslist.compare" />">&nbsp;</a>
 		</td>
 	</tr>
-</logic:iterate>
+</iwcm:iterate>
 </table>
 </iwcm:present>

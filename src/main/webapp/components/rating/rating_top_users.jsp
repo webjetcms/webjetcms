@@ -44,7 +44,7 @@ if (topUsers.size() > 0)
 			   </tr>
 			 </thead>
 			 <tbody>
-				 <logic:iterate name="usersTopList" id="u" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
+				 <iwcm:iterate name="usersTopList" id="u" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 							<% UserDetails userDet = UsersDB.getUser(u.getUserId());
 								 if (userDet != null)
 								 {%>	
@@ -65,7 +65,7 @@ if (topUsers.size() > 0)
 								</td>
 						 </tr>
 							<%}%>	
-					</logic:iterate>  
+					</iwcm:iterate>  
 			 </tbody>
 		</table>
 	</iwcm:present>	

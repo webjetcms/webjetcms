@@ -85,12 +85,12 @@ if(displayType==2)
 		</script>
 
 		<ol class="qa">
-		<logic:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
+		<iwcm:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
 			<li>
 				<span class="question"><jsp:getProperty name="q" property="question"/></span>
 				<span class="answer"><jsp:getProperty name="q" property="answerWeb"/></span>
 			</li>
-		</logic:iterate>
+		</iwcm:iterate>
 		</ol>
 	<% } else { %>
 	<iwcm:text key="displaytag.basic.msg.empty_list"/>
@@ -106,7 +106,7 @@ if(displayType==2)
 				<%
 					int count_numer = 0;
 				%>
-				<logic:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
+				<iwcm:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
 				<%
 					count_numer++;
 				%>
@@ -122,7 +122,7 @@ if(displayType==2)
 						</div>
 					</div>
 				</div>
-				</logic:iterate>
+				</iwcm:iterate>
 			</div>
 		</div>
 	</div>
@@ -222,7 +222,7 @@ if(displayType==2){ %>
 				<%
 					int count_numer = 0;
 				%>
-				<logic:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
+				<iwcm:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
 				<%
 					count_numer++;
 				%>
@@ -240,7 +240,7 @@ if(displayType==2){ %>
 						</div>
 					</div>
 				</div>
-				</logic:iterate>
+				</iwcm:iterate>
 			</div>
 		</div>
 	</div>

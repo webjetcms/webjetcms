@@ -427,6 +427,10 @@ static {
 	//Replace logic:equal with iwcm:equal
 	replaces.add(new OptionDto("<" + "logic:equal", "<" + "iwcm:equal", ".jsp"));
 	replaces.add(new OptionDto("</" + "logic:equal", "</" + "iwcm:equal", ".jsp"));
+
+	//Replace logic:iterate with iwcm:iterate
+	replaces.add(new OptionDto("<" + "logic:iterate", "<" + "iwcm:iterate", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:iterate", "</" + "iwcm:iterate", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

@@ -218,7 +218,7 @@
 							   	   <th><iwcm:text key="components.basket.invoice_email.payment_method"/></th>
 							   	   <th><iwcm:text key="components.basket.admin_invoices_detail.suma"/></th>
 							   	</tr>
-							   	<logic:iterate id="invoicePayment" name="basketInvoicePayments" type="sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity">
+							   	<iwcm:iterate id="invoicePayment" name="basketInvoicePayments" type="sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity">
 									<tr>
 										<td><%=Tools.formatDateTime(invoicePayment.getCreateDate().getTime())%></td>
 										<td><%
@@ -227,7 +227,7 @@
 										</td>
 										<td><iway:curr currency="<%=EshopService.getDisplayCurrency(request)%>"><%=invoicePayment.getPayedPrice()%></iway:curr></td>
 									</tr>
-									</logic:iterate>
+									</iwcm:iterate>
 								</table>
 							</iwcm:present>
 
@@ -273,7 +273,7 @@
 						   	   <th style="width: 70px;"><iwcm:text key="components.basket.DPH"/></th>
 						   	   <th class="lastCell" style="width: 70px;"><iwcm:text key="components.basket.price_with_dph"/></th>
 						   	</tr>
-						      <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
+						      <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 							      <tr>
 							         <td align="center" class="firstCell">
 							         	<%
@@ -302,7 +302,7 @@
 							         <td align="center"><%=(""+Math.round(good.getItemVat()))%>%</td>
 							         <td align="center"><iway:curr currency="<%=invoice.getCurrency() %>" ><%=good.getItemPriceVatQty() %></iway:curr></td>
 							      </tr>
-						      </logic:iterate>
+						      </iwcm:iterate>
 						      <tr class='basketListTableTotal'>
 						         <td colspan="6" class="noBorder alignRight lastCell">
 						         	<iwcm:text key="components.basket.price_without_DPH_complete"/>:

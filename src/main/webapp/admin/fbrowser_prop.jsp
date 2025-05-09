@@ -208,7 +208,7 @@ fieldset {margin-bottom: 10px;}
 	                     %>
 
 	                     <table border=0 cellspacing=0 cellpadding=0 id="atr_group_<%=i%>" style="display: none">
-	                     <logic:iterate name="atrsInGroup" id="a" type="sk.iway.iwcm.filebrowser.FileAtrBean">
+	                     <iwcm:iterate name="atrsInGroup" id="a" type="sk.iway.iwcm.filebrowser.FileAtrBean">
 	                        <%
 	                           if (a.getLink()!=null && a.getLink().length()>1)
 	                           {
@@ -219,7 +219,7 @@ fieldset {margin-bottom: 10px;}
 	                           <td>&nbsp;<bean:write name="a" property="atrName"/>:&nbsp;</td>
 	                           <td><bean:write name="a" property="html" filter="false"/></td>
 	                        </tr>
-	                     </logic:iterate>
+	                     </iwcm:iterate>
 	                     </table>
 
 	                     <%

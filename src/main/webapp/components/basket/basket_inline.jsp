@@ -335,7 +335,7 @@
 
 
       <iwcm:present name="basketItems">
-          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
+          <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 
             <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
                <td>
@@ -353,7 +353,7 @@
                   <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>">Delete</a>
                  </td>
             </tr>
-          </logic:iterate>
+          </iwcm:iterate>
        </iwcm:present>
 
 

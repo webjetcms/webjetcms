@@ -1,4 +1,4 @@
-<%
+<%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" language="java" import="java.net.*,java.util.*,sk.iway.iwcm.system.msg.*,sk.iway.iwcm.users.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -25,7 +25,7 @@ UserDetails ud=UsersDB.getUser(Integer.parseInt(recipient));
 
 String text = Tools.getStringValue(Tools.getRequestParameter(request, "text"),"");
 %>
-<logic:iterate name="messages" id="msg">
+<iwcm:iterate name="messages" id="msg">
 <%
 ud=UsersDB.getUser(((AdminMessageBean)msg).getCreateByUserId().intValue());
 if(ud.getUserId()!=user.getUserId())
@@ -36,7 +36,7 @@ text+=ud.getFullName()+" ("+Tools.formatTime(((AdminMessageBean)msg).getCreateDa
 		((AdminMessageBean)msg).getMessageText()+"<br>";
 messageId=((AdminMessageBean)msg).getAdminMessageId();
 %>
-</logic:iterate>
+</iwcm:iterate>
 <%
 session.setAttribute("messageId",new Integer(messageId));
 //String url = URLEncoder.encode(text,"windows-1250");

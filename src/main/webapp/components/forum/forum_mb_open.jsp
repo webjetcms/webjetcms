@@ -281,7 +281,7 @@ if(!isAjaxCall)
 			</tr>
 		</thead>
 	</table-->
-	<logic:iterate offset="<%= offset%>" length="<%= end%>" name="forum" id="field" type="DocForumEntity" indexId="index">
+	<iwcm:iterate offset="<%= offset%>" length="<%= end%>" name="forum" id="field" type="DocForumEntity" indexId="index">
 
 	<%
 		String trClass = "";
@@ -443,7 +443,7 @@ if(!isAjaxCall)
 	<!-- post -->
 
 
-	</logic:iterate>
+	</iwcm:iterate>
 	<!--/table-->
 
 	<div class="panel-footer post-footer">

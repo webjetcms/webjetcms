@@ -177,11 +177,11 @@
 <div class="subscribe-form-simple">
 	<form id="subscribeForm" action="<%=PathFilter.getOrigPathDocId(request) %>#subscribeForm" method="post">
 		<% boolean hasAnyGroup = false; %>
-		<logic:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
+		<iwcm:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
 		<% if (ugd.isAllowUserEdit() && ugd.isRequireEmailVerification()) { %>
 			<input type="hidden" name="user_group_id" value='<bean:write name="ugd" property="userGroupId"/>' value='checked'/>
 		<% hasAnyGroup = true;  } %>
-		</logic:iterate>
+		</iwcm:iterate>
 		<% if (hasAnyGroup) { %>
 			<input type="hidden" name="save" value="true" />
 			<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(request.getSession())%>

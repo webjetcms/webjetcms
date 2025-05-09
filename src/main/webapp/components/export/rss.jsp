@@ -145,7 +145,7 @@ taglib
 <atom:link
 	href="<%=Tools.getBaseHref(request)%><%=PathFilter.getOrigPathDocId(request)%>"
 	rel="self" type="application/rss+xml" /> <iwcm:present name="novinky">
-	<logic:iterate id="doc" name="novinky"
+	<iwcm:iterate id="doc" name="novinky"
 		type="sk.iway.iwcm.doc.DocDetails">
 		<item>
 		<guid><%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%></guid>
@@ -172,7 +172,7 @@ taglib
 					{
 					}
 		%> </pubDate></item>
-	</logic:iterate>
+	</iwcm:iterate>
 </iwcm:present> </channel> </rss>
 <%
 request.removeAttribute("novinky");
