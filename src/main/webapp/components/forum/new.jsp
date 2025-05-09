@@ -232,9 +232,9 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 		%>
 		<form:hidden path="id"/>
 
-		<logic:present name="setFlag">
+		<iwcm:present name="setFlag">
 			<input type="hidden" name="flag" value="<%=flagStr%>" />
-		</logic:present>
+		</iwcm:present>
 		<div style="display: none;">
 			<input type="submit" id="bSubmit" name="submit" value="<iwcm:text key="forum.new.send"/>"/>
 			<input type="button" onclick="javascript:window.close();" name="cancel" value="<iwcm:text key="forum.new.cancel"/>" />

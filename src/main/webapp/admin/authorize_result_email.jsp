@@ -130,11 +130,11 @@ function highlight(obj,on)
 
 <h3><iwcm:text key="authorize_user.title"/>:</h3>
 
-<logic:present name="emailSendFail">
+<iwcm:present name="emailSendFail">
    <b><iwcm:text key="authorize_user.email_send_fail"/>
-</logic:present>
+</iwcm:present>
 
-<logic:notPresent name="emailSendFail">
+<iwcm:notPresent name="emailSendFail">
    <b><iwcm:text key="authorize_user.authorize_od"/>:</b><br><br>
    <hr>
    <iwcm:text key="authorize_user.sender"/>: <iway:request name="from"/><br>
@@ -142,6 +142,6 @@ function highlight(obj,on)
    <iwcm:text key="authorize_user.subject"/>: <iway:request name="subject"/><br>
    <hr>
    <iway:request name="body"/>
-</logic:notPresent>
+</iwcm:notPresent>
 
 </html:html>

@@ -254,12 +254,12 @@ if(!isAjaxCall)
 }
 %>
 <!-- HLAVNE FORUM*********************************************************************************************** -->
-<logic:notPresent name="rootGroup">
-<h1 class="maintitle"><bean:write name="doc_title"/></h1>
-<p class="mainSubtitle"><bean:write name="perex_data" filter="false"/></p>
-</logic:notPresent>
+<iwcm:notPresent name="rootGroup">
+<h1 class="maintitle"><iwcm:strutsWrite name="doc_title"/></h1>
+<p class="mainSubtitle"><iwcm:strutsWrite name="perex_data" filter="false"/></p>
+</iwcm:notPresent>
 
-<logic:present name="rootGroup">
+<iwcm:present name="rootGroup">
 	<%if(showSearchBox==true){%>
 	<div class="forumSearchBox row mobile-fix">
 		<div class="col-md-4 offset-md-8 col-xs-12 pull-right pr-0">
@@ -336,18 +336,18 @@ if(!isAjaxCall)
 			%>
 	   </table>
 	</div>
-</logic:present>
+</iwcm:present>
 <!-- KONIEC HLAVNE FORUM*********************************************************************************** -->
 
-<logic:present name="delTimeLimitExpired">
+<iwcm:present name="delTimeLimitExpired">
 
 <br>
  <div align="center" >
 		<iwcm:text key="components.forum.del_time_limit_expired"/>
  </div>
  <%request.removeAttribute("delTimeLimitExpired");%>
-</logic:present>
-<logic:notPresent name="rootGroup">
+</iwcm:present>
+<iwcm:notPresent name="rootGroup">
  <%if(advertisementType){%>
     <span class="forumAdvertisement"><iwcm:text key="components.forum.advertisement_type_message"/></span>
  <%} if(!active){%>
@@ -367,7 +367,7 @@ if(!isAjaxCall)
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><bean:write name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:strutsWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>
@@ -396,7 +396,7 @@ if(!isAjaxCall)
 
 	</div>
 
-<logic:present name="topics">
+<iwcm:present name="topics">
 <!--  ******** KOMPONENTA STRANKOVANIA ********  -->
 <%
 	if(request.getAttribute("offset") != null)
@@ -416,7 +416,7 @@ if(!isAjaxCall)
 			<th class="thCornerR lastpost"><iwcm:text key="components.forum.last_post"/></th>
 		</tr>
 		</thead>
-		<logic:iterate offset="<%= offset%>" length="<%= end%>" name="topics" id="t" type="DocForumEntity" indexId="index">
+		<iwcm:iterate offset="<%= offset%>" length="<%= end%>" name="topics" id="t" type="DocForumEntity" indexId="index">
 
 			<% if ((iMod % 2) == 0) {
 				  out.println("<tr class='even'>");
@@ -443,23 +443,23 @@ if(!isAjaxCall)
   			      <span class="topictitle"><%
 			        if("O".equals(flag)) {%><b><iwcm:text key="components.forum.announcement"/>: </b><%}
 					  else if("D".equals(flag)) {	%><b><iwcm:text key="components.forum.sticky"/>: </b><%}
-					%><a href='<%=Tools.addParametersToUrl(docDB.getDocLink(Tools.getIntValue(request.getParameter("docid"), -1)), "pId="+t.getForumId())%>' ><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("<span style=\"color: red;\">");%><bean:write name="t" property="subject"/><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("</span>");%></a></span>
+					%><a href='<%=Tools.addParametersToUrl(docDB.getDocLink(Tools.getIntValue(request.getParameter("docid"), -1)), "pId="+t.getForumId())%>' ><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("<span style=\"color: red;\">");%><iwcm:strutsWrite name="t" property="subject"/><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("</span>");%></a></span>
             </td>
-			   <td class="row2 posts"><span class="postdetails badge"><bean:write name="t" property="statReplies"/></span></td>
+			   <td class="row2 posts"><span class="postdetails badge"><iwcm:strutsWrite name="t" property="statReplies"/></span></td>
 			   <td class="row3 autor">
 			      <span class="name">
 			      <% if (t.getUserId()>0) { %>
-				   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(t.getDocId()),"uId",String.valueOf(t.getUserId()))%>&amp;type=view_profile"><bean:write name="t" property="authorName"/></a>
+				   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(t.getDocId()),"uId",String.valueOf(t.getUserId()))%>&amp;type=view_profile"><iwcm:strutsWrite name="t" property="authorName"/></a>
 				   <% } else { %>
-				   <bean:write name="t" property="authorName"/>
+				   <iwcm:strutsWrite name="t" property="authorName"/>
 				   <% } %>
 			      </span>
 			   </td>
-			   <td class="row2 views"><span class="postdetails badge"><bean:write name="t" property="statViews"/></span></td>
-			   <td class="row3 lastpost"><span class="postdetails"><bean:write name="t" property="lastPost"/></span></td>
+			   <td class="row2 views"><span class="postdetails badge"><iwcm:strutsWrite name="t" property="statViews"/></span></td>
+			   <td class="row3 lastpost"><span class="postdetails"><iwcm:strutsWrite name="t" property="lastPost"/></span></td>
 
 			</tr>
-		</logic:iterate>
+		</iwcm:iterate>
 	</table>
 </div>
 	<div class="row mobile-fix">
@@ -471,8 +471,8 @@ if(!isAjaxCall)
 			}
 		%>
 	</div>
-</logic:present>
-</logic:notPresent>
+</iwcm:present>
+</iwcm:notPresent>
 <%request.removeAttribute("delTimeLimitExpired");%>
 <%if(!isAjaxCall){%>
 </div>

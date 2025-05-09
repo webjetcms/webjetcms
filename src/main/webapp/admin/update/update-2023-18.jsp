@@ -407,6 +407,41 @@ static {
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountActionBean\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
+
+	//Replace logic:present with iwcm:present
+	replaces.add(new OptionDto("<" + "logic:present", "<" + "iwcm:present", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:present", "</" + "iwcm:present", ".jsp"));
+
+	//Replace logic:notPresent with iwcm:notPresent
+	replaces.add(new OptionDto("<" + "logic:notPresent", "<" + "iwcm:notPresent", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:notPresent", "</" + "iwcm:notPresent", ".jsp"));
+
+	//Replace logic:empty with iwcm:empty
+	replaces.add(new OptionDto("<" + "logic:empty", "<" + "iwcm:empty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:empty", "</" + "iwcm:empty", ".jsp"));
+
+	//Replace logic:notEmpty with iwcm:notEmpty
+	replaces.add(new OptionDto("<" + "logic:notEmpty", "<" + "iwcm:notEmpty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:notEmpty", "</" + "iwcm:notEmpty", ".jsp"));
+
+	//Replace logic:equal with iwcm:equal
+	replaces.add(new OptionDto("<" + "logic:equal", "<" + "iwcm:equal", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:equal", "</" + "iwcm:equal", ".jsp"));
+
+	//Replace logic:iterate with iwcm:iterate
+	replaces.add(new OptionDto("<" + "logic:iterate", "<" + "iwcm:iterate", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:iterate", "</" + "iwcm:iterate", ".jsp"));
+
+	//Replace bean:write with iwcm:strutsWrite
+	replaces.add(new OptionDto("<" + "bean:write", "<" + "iwcm:strutsWrite", ".jsp"));
+
+	//Replace html:hidden with iwcm:hidden
+	replaces.add(new OptionDto("<" + "html:hidden", "<" + "iwcm:hidden", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:hidden", "</" + "iwcm:hidden", ".jsp"));
+
+	//Replace html:options with iwcm:options
+	replaces.add(new OptionDto("<" + "html:options", "<" + "iwcm:options", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:options", "</" + "iwcm:options", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -505,6 +540,26 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 					}
 				}
 			}
+
+			//Struts tag replace with our own tag if needed
+			//if(content.contains("<iwcm")) {
+			//	//Does the fiel contains taglib ?
+			//	if(content.contains("uri=\"/WEB-INF/iwcm.tld\"") == true) {
+			//		//It does, so just remove old taglib if is still there
+			//		content = Tools.replaceRegex(content, "\\<\\s*\\%\\s*\\@\\s*taglib.*\"\\/WEB-INF\\/struts-logic.tld\".*", "", false);
+			//	}
+//
+			//	else {
+			//		//It does not, so we need to add our own taglib OR replace the old one
+			//		if(content.contains("\"/WEB-INF/struts-logic.tld\"") == true) {
+			//			//replace old taglib
+			//			content = Tools.replaceRegex(content, "\\<\\s*\\%\\s*\\@\\s*taglib.*\"\\/WEB-INF\\/struts-logic.tld\".*", "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">", false);
+			//		} else {
+			//			//nothing to replace, add new taglib
+			//			content = "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">" + content;
+			//		}
+			//	}
+			//}
 
 			{
 				String origString = "sk.iway.iwcm.forum.*";

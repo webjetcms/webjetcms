@@ -108,21 +108,21 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 <div class="alert-wrapper">
                     <div class="alert alert-danger">
                         <span>
-                            <logic:notPresent name="errorsList">
+                            <iwcm:notPresent name="errorsList">
                                 <c:if test="${empty param.auth}">
                                     <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
                                 </c:if>
                                 <c:if test="${not empty param.auth}">
                                     <iwcm:text key="logon.password.enter_new_password"/><br/>
                                 </c:if>
-                            </logic:notPresent>
-                            <logic:present name="errorsList">
+                            </iwcm:notPresent>
+                            <iwcm:present name="errorsList">
                                 <iwcm:text key="user.form.errors"/>
-                            </logic:present>
+                            </iwcm:present>
                         </span>
                     </div>
                     <div class="infotext">
-                        <logic:notPresent name="errorsList">
+                        <iwcm:notPresent name="errorsList">
                         <ul>
                             <%if (Constants.getInt("password"+constStr+"MinLength") > 0) { %>
                                 <li><iwcm:text key="logon.change_password.min_length" param1='<%=Constants.getString("password"+constStr+"MinLength")%>'/></li>
@@ -135,19 +135,19 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                             <% } %>
                                 <li><iwcm:text key="logon.change_password.used_in_history2"/></li>
                         </ul>
-                        </logic:notPresent>
-                        <logic:present name="errors">
+                        </iwcm:notPresent>
+                        <iwcm:present name="errors">
                             <ul>
                                 <li>${errors}</li>
                             </ul>
-                        </logic:present>
-                        <logic:present name="errorsList">
+                        </iwcm:present>
+                        <iwcm:present name="errorsList">
                             <ul>
                                 <c:forEach var="error" items="${errorsList}">
                                     <li>${error.values[0]}</li>
                                 </c:forEach>
                             </ul>
-                        </logic:present>
+                        </iwcm:present>
                     </div>
                 </div>
 

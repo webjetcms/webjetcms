@@ -23,23 +23,23 @@
 		<article class="ly-content">
 			<div class="container">
 				<h1><iwcm:write name="doc_title"/></h1>
-				<logic:notEmpty name="perex_image">
+				<iwcm:notEmpty name="perex_image">
 
-					<logic:empty name="field_q">
+					<iwcm:empty name="field_q">
 						<div class="row banner">
 							<div class="col-md-8"><img src="/thumb<iwcm:write name="perex_image"/>?w=730&h=400&ip=5" alt="<iwcm:write name="doc_title"/>" /></div>
 							<div class="col-md-4">
 								<iwcm:write>!INCLUDE(/components/banner/banner.jsp, group=&quot;terminovany-vklad&quot;, status=enabled, displayMode=2, refreshRate=0, bannerIndex=&quot;&quot;, showInIframe=false, iframeWidth=, iframeHeight=)!</iwcm:write>
 							</div>
 						</div>
-					</logic:empty>
-					<logic:notEmpty name="field_q">
+					</iwcm:empty>
+					<iwcm:notEmpty name="field_q">
 						<div class="row banner">
 							<div class="col-md-12"><img src="/thumb<iwcm:write name="perex_image"/>?w=1110&h=400&ip=5" alt="<iwcm:write name="doc_title"/>" /></div>
 						</div>
-					</logic:notEmpty>
+					</iwcm:notEmpty>
 
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 				<iwcm:write name="doc_data"/>
 				<iwcm:write name="template_object_a"/>
 			</div>

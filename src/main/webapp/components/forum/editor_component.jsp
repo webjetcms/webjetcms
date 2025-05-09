@@ -226,9 +226,9 @@ function loadListIframe()
 						</div>
 						<div class="col-sm-6">
 							<select name="sortTopicsBy">
-								<logic:iterate id="sort" collection="${sortValues}">
+								<iwcm:iterate id="sort" collection="${sortValues}">
 									<option value="${sort}"><iwcm:text key="components.forum.sortBy.${sort}"/></option>
-								</logic:iterate>
+								</iwcm:iterate>
 							</select>
 						</div>
 					</div>

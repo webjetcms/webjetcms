@@ -52,7 +52,7 @@ DocDB docDB = DocDB.getInstance();
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
 <%@page import="java.text.DecimalFormat"%>
 <%@page import="sk.iway.iwcm.forum.ForumDB"%>
-<logic:present name="topPages">
+<iwcm:present name="topPages">
 	<table>
 		 <thead>
 		   <tr>
@@ -62,14 +62,14 @@ DocDB docDB = DocDB.getInstance();
 		   </tr>
 		 </thead>
 		 <tbody>
-			 <logic:iterate name="topPages" id="r" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
+			 <iwcm:iterate name="topPages" id="r" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 					<tr>
 							<td><%=index.intValue()+1%>.&nbsp;</td>
-							<td><a href="<%=docDB.getDocLink(r.getDocId(), request)%>"><bean:write name="r" property="docTitle"/></a></td>
-							<td><bean:write name="r" property="ratingStat"/></td>							
+							<td><a href="<%=docDB.getDocLink(r.getDocId(), request)%>"><iwcm:strutsWrite name="r" property="docTitle"/></a></td>
+							<td><iwcm:strutsWrite name="r" property="ratingStat"/></td>							
 					</tr>
-				</logic:iterate>  
+				</iwcm:iterate>  
 		 </tbody>
 	</table>
 	
-</logic:present>
+</iwcm:present>

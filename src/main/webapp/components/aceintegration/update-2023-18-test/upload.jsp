@@ -14,7 +14,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <div class="box_toggle">
 	<div class="toggle_content">
 		<div id="tabMenu1">
-			<form action="/admin/importxls.do" name="xlsImportForm" enctype="multipart/form-data">
+			<form action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
 				<table>
 					<tr>
 						<td>Vyberte súbor:</td>

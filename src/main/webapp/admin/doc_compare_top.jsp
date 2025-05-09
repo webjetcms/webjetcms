@@ -79,29 +79,29 @@ function showChanges(checkbox)
 				request.setAttribute("doc", doc);
 				%>
 				 <iwcm:text key="history.changedBy"/>:
-			    <a href="mailto:<bean:write name="doc" property="authorEmail"/>"><bean:write name="doc" property="authorName"/></a>
-			    <bean:write name="doc" property="dateCreatedString"/> <bean:write name="doc" property="timeCreatedString"/>&nbsp;<br />
+			    <a href="mailto:<iwcm:strutsWrite name="doc" property="authorEmail"/>"><iwcm:strutsWrite name="doc" property="authorName"/></a>
+			    <iwcm:strutsWrite name="doc" property="dateCreatedString"/> <iwcm:strutsWrite name="doc" property="timeCreatedString"/>&nbsp;<br />
 				<%
 				if (Tools.isNotEmpty(doc.getPublishStartString()))
 				{
 					if (doc.isPublicable())
 					{
-						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.start.publication"/> <bean:write name="doc" property="publishStartString"/> <bean:write name="doc" property="publishStartTimeString"/></strong><%
+						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.start.publication"/> <iwcm:strutsWrite name="doc" property="publishStartString"/> <iwcm:strutsWrite name="doc" property="publishStartTimeString"/></strong><%
 					}
 					else if (historyId > 0)
 					{
-						%><br/><iwcm:text key="components.reservation.addReservation.date_from"/> <bean:write name="doc" property="publishStartString"/> <bean:write name="doc" property="publishStartTimeString"/><%
+						%><br/><iwcm:text key="components.reservation.addReservation.date_from"/> <iwcm:strutsWrite name="doc" property="publishStartString"/> <iwcm:strutsWrite name="doc" property="publishStartTimeString"/><%
 					}
 				}
 				if (Tools.isNotEmpty(doc.getPublishEndString()))
 				{
 					if (doc.isDisableAfterEnd())
 					{
-						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.end.publication"/> <bean:write name="doc" property="publishEndString"/> <bean:write name="doc" property="publishEndTimeString"/></strong><%
+						%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.end.publication"/> <iwcm:strutsWrite name="doc" property="publishEndString"/> <iwcm:strutsWrite name="doc" property="publishEndTimeString"/></strong><%
 					}
 					else if (historyId > 0)
 					{
-						%><br/><iwcm:text key="components.reservation.addReservation.date_to"/> <bean:write name="doc" property="publishEndString"/> <bean:write name="doc" property="publishEndTimeString"/><%
+						%><br/><iwcm:text key="components.reservation.addReservation.date_to"/> <iwcm:strutsWrite name="doc" property="publishEndString"/> <iwcm:strutsWrite name="doc" property="publishEndTimeString"/><%
 					}
 				}
 			}

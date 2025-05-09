@@ -22,11 +22,11 @@ if(request.getParameter("loginName") != null)
 	boolean ret = Tools.isNotEmpty(loginName) && loginName.contains("@") ? UsersDB.sendPassword(request, null, loginName) : UsersDB.sendPassword(request, loginName, null);
 }
 %>
-<logic:present name="passResultEmailFail">
+<iwcm:present name="passResultEmailFail">
 	<br />
 	<iwcm:text key="logon.name_email_not_exist"/>.
-</logic:present>
-<logic:present name="passResultEmail">
+</iwcm:present>
+<iwcm:present name="passResultEmail">
 	<br />
 	<%if(Constants.getBoolean("passwordUseHash")){%>
 		<iwcm:text key="logon.hash.lost_password_send_success" param1='<%=(String)request.getAttribute("passResultEmail") %>'/>
@@ -34,12 +34,12 @@ if(request.getParameter("loginName") != null)
 		<iwcm:text key="logon.lost_password_send_success" param1='<%=(String)request.getAttribute("passResultEmail") %>'/>
 	<%}%>
 	<br />
-</logic:present>
-<logic:notPresent name="passResultEmail">
-    <logic:present name="error.logon.user.blocked">
+</iwcm:present>
+<iwcm:notPresent name="passResultEmail">
+    <iwcm:present name="error.logon.user.blocked">
         <p class='alert alert-danger'><iwcm:text key="checkform.fail_probablySpamBot"/></p>
-    </logic:present>
-</logic:notPresent>
+    </iwcm:present>
+</iwcm:notPresent>
 
 <form name="passwdSendForm" method="post" action="<%=PathFilter.getOrigPath(request)%>">
 	<%if(Constants.getBoolean("passwordUseHash")){%>

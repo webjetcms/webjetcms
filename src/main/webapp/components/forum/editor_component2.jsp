@@ -131,11 +131,11 @@ function Ok()
 
 
 <form name="textForm" action="editor_component2.jsp">
-<logic:present parameter="useDelTimeLimit" >
+<iwcm:present parameter="useDelTimeLimit" >
 <input type="hidden" name="useDelTimeLimit" value="true">
 <input type="hidden" name="notifyPageAuthor" value="<%=notifyPageAuthor%>">
 <input type="hidden" name="delMinutes" value="<%=Tools.getIntValue(request.getParameter("delMinutes"),10)%>">
-</logic:present>
+</iwcm:present>
 
 <input type="hidden" name="pageSize" value="<%=Tools.getIntValue(request.getParameter("pageSize"),10)%>">
 <input type="hidden" name="pageLinksNum" value="<%=Tools.getIntValue(request.getParameter("pageLinksNum"),10)%>">

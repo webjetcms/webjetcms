@@ -54,8 +54,8 @@ if (rndDoc != null)
 }
 %>
 
-<logic:present name="rndDoc">
-   <a href="/showdoc.do?docid=<bean:write name="rndDoc" property="docId"/>"><bean:write name="rndDoc" property="title"/></a>
+<iwcm:present name="rndDoc">
+   <a href="/showdoc.do?docid=<iwcm:strutsWrite name="rndDoc" property="docId"/>"><iwcm:strutsWrite name="rndDoc" property="title"/></a>
    <br />
-   <bean:write name="rndDoc" property="perex"/>
-</logic:present>
+   <iwcm:strutsWrite name="rndDoc" property="perex"/>
+</iwcm:present>

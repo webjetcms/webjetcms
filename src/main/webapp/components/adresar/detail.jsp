@@ -99,101 +99,101 @@ request.setAttribute("user",user);
 				<tr>
 					<td colspan="2"><strong><iwcm:text key="useredit.personal_info"/></strong></td>
 				</tr>
-				<logic:notEmpty name="user" property="title">
+				<iwcm:notEmpty name="user" property="title">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.title"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="title"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="title"/></td>
 				</tr>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user.firstName"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="firstName"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="firstName"/></td>
 				</tr>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user.lastName"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="lastName"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="lastName"/></td>
 				</tr>
 				<tr>
 					<td><iwcm:text key="reguser.sex"/>:</td>
-					<logic:equal name="user" property="sexMale" value="true">
+					<iwcm:equal name="user" property="sexMale" value="true">
 					<td>
 						<iwcm:text key="reguser.male"/>
 					</td>
-					</logic:equal>
-					<logic:equal name="user" property="sexMale" value="false">
+					</iwcm:equal>
+					<iwcm:equal name="user" property="sexMale" value="false">
 					<td>
 						<iwcm:text key="reguser.female"/>
 					</td>
-					</logic:equal>
+					</iwcm:equal>
 				</tr>
-				<logic:notEmpty name="user" property="photo">
+				<iwcm:notEmpty name="user" property="photo">
 				<tr>
 					<td valign="top"><iwcm:text key="components.user.photo_in_system"/>:&nbsp;</td>
 					<td><img src="<%=Tools.isNotEmpty(user.getPhotoOriginal()) ? "/thumb"+user.getPhotoOriginal()+"?h=150&ip=2" : ""%>"></td>
 				</tr>	
-				</logic:notEmpty>
-				<logic:notEmpty name="user" property="signature">
+				</iwcm:notEmpty>
+				<iwcm:notEmpty name="user" property="signature">
 				<tr>
 					<td valign="top"><iwcm:text key="reguser.signature"/>:</td>
-					<td><bean:write name="user" property="signature"/></td>
+					<td><iwcm:strutsWrite name="user" property="signature"/></td>
 				</tr>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 			</table>
-			<logic:empty name="user" property="photo"><html:hidden name="user" property="photo"/></logic:empty>
+			<iwcm:empty name="user" property="photo"><iwcm:hidden name="user" property="photo"/></iwcm:empty>
 		</td>
 		<td valign="top">
 			<table border="0" cellspacing="0" cellpadding="1">	
 				<tr>
 					<td colspan="2"><strong><iwcm:text key="user.contact"/></strong></td>
 				</tr>
-				<logic:notEmpty name="user" property="title">
+				<iwcm:notEmpty name="user" property="title">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.title"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="title"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="title"/></td>
 				</tr>
-				</logic:notEmpty>
-				<logic:notEmpty name="user" property="country">
+				</iwcm:notEmpty>
+				<iwcm:notEmpty name="user" property="country">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.country"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="country"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="country"/></td>
 				</tr>
-				</logic:notEmpty>
-				<logic:notEmpty name="user" property="allowLoginStart">
+				</iwcm:notEmpty>
+				<iwcm:notEmpty name="user" property="allowLoginStart">
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="settings.in_firm_from"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="allowLoginStart"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="allowLoginStart"/></td>
 				</tr>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user_details.position"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="position"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="position"/></td>
 				</tr>
-				<logic:notEmpty name="user" property="fieldB">
+				<iwcm:notEmpty name="user" property="fieldB">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.fieldB"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="fieldB"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldB"/></td>
 				</tr>
-				</logic:notEmpty>
-				<logic:notEmpty name="user" property="fieldC">
+				</iwcm:notEmpty>
+				<iwcm:notEmpty name="user" property="fieldC">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.fieldC"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="fieldC"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldC"/></td>
 				</tr>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.parent"/>:</td>
 					<td nowrap="nowrap"><%=user.getParentId() > 0 ? UsersDB.getUser(user.getParentId()).getFullName() : prop.getText("user.parent.empty")%></td>
 				</tr>
 				<tr>
 					<td nowrap="nowrap" class="requiredField"><iwcm:text key="user.email"/>:</td>
-					<td nowrap="nowrap"><a href="mailto:<bean:write name="user" property="email"/>"><bean:write name="user" property="email"/></a></td>
+					<td nowrap="nowrap"><a href="mailto:<iwcm:strutsWrite name="user" property="email"/>"><iwcm:strutsWrite name="user" property="email"/></a></td>
 				</tr>
-				<logic:notEmpty name="user" property="phone">
+				<iwcm:notEmpty name="user" property="phone">
 				<tr>
 					<td nowrap="nowrap"><iwcm:text key="user.phone"/>:</td>
-					<td nowrap="nowrap"><bean:write name="user" property="phone"/></td>
+					<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="phone"/></td>
 				</tr>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 				<%
 				String profilCoChcemAbyVedeli = currUser != null && currUser.getSettings().get("co_chcem_aby_vedeli") != null && currUser.getSettings().get("co_chcem_aby_vedeli").getSvalue1() != null ? currUser.getSettings().get("co_chcem_aby_vedeli").getSvalue1() : "";
 				if(Tools.isNotEmpty(profilCoChcemAbyVedeli)){
@@ -202,26 +202,26 @@ request.setAttribute("user",user);
 					<td colspan="2">Čo chcem, aby ostatní o mne vedeli:<br/><%=profilCoChcemAbyVedeli%></td>
 				</tr>
 				<%}%>
-				<logic:notEmpty name="maVolPol">
-					<logic:notEmpty name="user" property="fieldA">
+				<iwcm:notEmpty name="maVolPol">
+					<iwcm:notEmpty name="user" property="fieldA">
 					<tr>
 						<td nowrap="nowrap"><iwcm:text key="user.fieldA"/>:</td>
-						<td nowrap="nowrap"><bean:write name="user" property="fieldA"/></td>
+						<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldA"/></td>
 					</tr>
-					</logic:notEmpty>
-					<logic:notEmpty name="user" property="fieldD">
+					</iwcm:notEmpty>
+					<iwcm:notEmpty name="user" property="fieldD">
 					<tr>
 						<td nowrap="nowrap"><iwcm:text key="user.fieldD"/>:</td>
-						<td nowrap="nowrap"><bean:write name="user" property="fieldD"/></td>
+						<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldD"/></td>
 					</tr>
-					</logic:notEmpty>
-					<logic:notEmpty name="user" property="fieldE">
+					</iwcm:notEmpty>
+					<iwcm:notEmpty name="user" property="fieldE">
 					<tr>
 						<td nowrap="nowrap"><iwcm:text key="user.fieldE"/>:</td>
-						<td nowrap="nowrap"><bean:write name="user" property="fieldE"/></td>
+						<td nowrap="nowrap"><iwcm:strutsWrite name="user" property="fieldE"/></td>
 					</tr>
-					</logic:notEmpty>
-				</logic:notEmpty>
+					</iwcm:notEmpty>
+				</iwcm:notEmpty>
 			</table>
 		</td>
 	</tr>

@@ -17,11 +17,11 @@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%><%@
 taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%><%@
 taglib uri="/WEB-INF/displaytag.tld" prefix="display" %><%!
 
-private HashMap<String, String> getGroupAtrsHtml(List atrs, String htmlName, String htmlId, String htmlClass)
+private Map<String, String> getGroupAtrsHtml(List atrs, String htmlName, String htmlId, String htmlClass)
 {
    Iterator iter = atrs.iterator();
    AtrBean attr;
-   HashMap<String, String> groupAtrsHtml = new HashMap<String, String>();
+   Map<String, String> groupAtrsHtml = new HashMap<String, String>();
 
    while (iter.hasNext()) {
    	attr = (AtrBean)iter.next();
@@ -46,7 +46,7 @@ int docId = docDetails.getDocId();
 List<List<AtrBean>> allGroupsAttrs = AtrDB.getAtributes(docId, request);
 if(allGroupsAttrs == null || allGroupsAttrs.size() < 1) return;
 
-HashMap<String, String> allGroupsAttrsHtml = new HashMap<String, String>();
+Map<String, String> allGroupsAttrsHtml = new HashMap<String, String>();
 for(List atrs : allGroupsAttrs) {
    allGroupsAttrsHtml.putAll( getGroupAtrsHtml(atrs, htmlName, htmlId, htmlClass) );
 }

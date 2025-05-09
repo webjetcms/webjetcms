@@ -376,14 +376,14 @@
         Logger.debug(null,"import_archiv.jsp Nasli sme "+uploadDuplicates.size()+" duplikátov z "+fileArchivBeans.size()+" súborov");
         request.setAttribute("uploadDuplicates",uploadDuplicates);
         %>
-        <logic:empty name="uploadDuplicates">
+        <iwcm:empty name="uploadDuplicates">
             <script type="text/javascript">
                 $(document).ready(function(){
                     $('#btnPokracovatImport').click();
                 });
 
             </script>
-        </logic:empty>
+        </iwcm:empty>
         <form name="archiv_import" method="post">
             <h2><iwcm:text key="components.file_archiv.import_archiv.niektore_z_importovanych_suborov_sa_uz_v_archive_nachadzaju_vyberte_ci_sa_maju_nahradit_"/></h2>
             <display:table name="uploadDuplicates" id="fab" class="sort_table table table-hover table-wj dataTable no-footer">

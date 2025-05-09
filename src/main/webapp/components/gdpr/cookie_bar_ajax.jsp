@@ -86,13 +86,13 @@
 <div class="in-page-nav">
     <ul class="nav nav-tabs">
         <li class="nav-item active">
-            <a class="nav-link active" id="prohlaseni-tab" data-toggle="tab" href="#prohlaseni-o-cookies" data-bs-toggle="tab" data-bs-target="#prohlaseni-o-cookies"
+            <a class="nav-link active" id="prohlaseni-tab" data-bs-toggle="tab" href="#prohlaseni-o-cookies" data-bs-toggle="tab" data-bs-target="#prohlaseni-o-cookies"
                role="tab" aria-controls="prohlaseni-o-cookies" aria-selected="true">
                 <iwcm:text key="cookies.bar.prohlaseni"/>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="o-cookies-tab" data-toggle="tab" href="#o-cookies" role="tab" data-bs-toggle="tab" data-bs-target="#o-cookies"
+            <a class="nav-link" id="o-cookies-tab" data-bs-toggle="tab" href="#o-cookies" role="tab" data-bs-toggle="tab" data-bs-target="#o-cookies"
                aria-controls="o-cookies" aria-selected="false">
                 <iwcm:text key="cookies.bar.ocookies"/>
             </a>

@@ -86,18 +86,18 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 						<a id="userDropdownMenu" href="#" class="dropdown-toggle" data-bs-toggle="dropdown" data-close-others="true">
 							<i class="ti ti-user"></i>
 							<span class="username">
-								<bean:write name="iwcm_useriwcm" property="fullName"/>
+								<iwcm:strutsWrite name="iwcm_useriwcm" property="fullName"/>
 							</span>
 							<i class="ti ti-chevron-down"></i>
 						</a>
 						<ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
 							<li style="display: none;">
-								<a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
+								<a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=<iwcm:strutsWrite name="iwcm_useriwcm" property="userId"/>');">
 									<i class="ti ti-user"></i> <iwcm:text key="components.forum.bb.profile"/>
 								</a>
 							</li>
 							<li>
-								<a href="javascript:openPopupDialogFromLeftMenu('/admin/2factorauth.jsp?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
+								<a href="javascript:openPopupDialogFromLeftMenu('/admin/2factorauth.jsp?userid=<iwcm:strutsWrite name="iwcm_useriwcm" property="userId"/>');">
 									<i class="ti ti-device-mobile-message"></i> <iwcm:text key="user.gauth.title"/>
 								</a>
 							</li>

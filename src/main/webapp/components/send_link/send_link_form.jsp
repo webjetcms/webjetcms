@@ -296,19 +296,19 @@ else
 		--%>
 
 		<div class="send_linka">
-			<logic:equal name="pageSend" value="ok">
+			<iwcm:equal name="pageSend" value="ok">
    				<iwcm:text key="components.send_link.send_ok"/> <%=ResponseUtils.filter(toEmail)%>.
-			</logic:equal>
+			</iwcm:equal>
 
-			<logic:equal name="pageSend" value="fail">
+			<iwcm:equal name="pageSend" value="fail">
 			   <iwcm:text key="components.send_link.send_fail"/>.
-			</logic:equal>
+			</iwcm:equal>
 			
-			<logic:equal name="pageSend" value="captcha">
+			<iwcm:equal name="pageSend" value="captcha">
 			   <iwcm:text key="captcha.textNotCorrect"/>
-			</logic:equal>
+			</iwcm:equal>
 
-			<logic:present name="showForm">
+			<iwcm:present name="showForm">
 			
 			   <form action="/components/send_link/send_link_form.jsp" method="post" id="sendLinkForm">
 					<div class="container-fluid">
@@ -375,7 +375,7 @@ else
 						<input type="reset" class="reset" name="bReset" onclick="window.close();" value="<iwcm:text key="button.cancel"/>" />
 					</div>
 				</form>
-			</logic:present>
+			</iwcm:present>
 		</div>
 		
 		<script type="text/javascript">

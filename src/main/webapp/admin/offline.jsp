@@ -66,7 +66,7 @@
 
 <iwcm:text key="admin.offline.desc"/>. <br /><br />
 
-<logic:notPresent parameter="zipArchivePath">
+<iwcm:notPresent parameter="zipArchivePath">
 	<script type="text/javascript">
 		var archiveDirs = new Array();
 		function makeZipArchiveClick(cb)
@@ -157,7 +157,7 @@
 			return (true);
 		}
 	</script>
-</logic:notPresent>
+</iwcm:notPresent>
 
 <script type="text/javascript">
 	window.scrollBy(0,10000);

@@ -210,12 +210,12 @@
 </style>
 
 <div>
-	<logic:present name="errors">
+	<iwcm:present name="errors">
 		<strong><iwcm:text key="dmail.subscribe.errors"/>:</strong>
 		<ul style="color: red">
 			<iway:request name="errors"/>
 		</ul>
-	</logic:present>
+	</iwcm:present>
 
 	<form id="subscribeForm" action="<%=PathFilter.getOrigPathDocId(request) %>" style="padding:0px" method="post">
 		<fieldset>
@@ -242,23 +242,23 @@
 		</fieldset>
 
 		<fieldset>
-			<logic:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
+			<iwcm:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
 			<% if (ugd.isAllowUserEdit()) { %>
 			<p>
-				<label for="user_group_id_<bean:write name="ugd" property="userGroupId"/>">
-					<strong><bean:write name="ugd" property="userGroupName"/></strong>
-					<logic:notEmpty name="ugd" property="userGroupComment">
+				<label for="user_group_id_<iwcm:strutsWrite name="ugd" property="userGroupId"/>">
+					<strong><iwcm:strutsWrite name="ugd" property="userGroupName"/></strong>
+					<iwcm:notEmpty name="ugd" property="userGroupComment">
 						<br/>
-						<bean:write name="ugd" property="userGroupComment"/>
-					</logic:notEmpty>
+						<iwcm:strutsWrite name="ugd" property="userGroupComment"/>
+					</iwcm:notEmpty>
 				</label>
-				<input type="checkbox" name="user_group_id" id="user_group_id_<bean:write name="ugd" property="userGroupId"/>" value="<bean:write name="ugd" property="userGroupId"/>"<%
+				<input type="checkbox" name="user_group_id" id="user_group_id_<iwcm:strutsWrite name="ugd" property="userGroupId"/>" value="<iwcm:strutsWrite name="ugd" property="userGroupId"/>"<%
 					if (userGroups.indexOf(","+ugd.getUserGroupId()+",")!=-1 || userGroups.length()<2) out.print(" checked='checked'");
 					%> />&nbsp;
 			</p>
 
 			<% } %>
-			</logic:iterate>
+			</iwcm:iterate>
 		</fieldset>
 
 		<fieldset>

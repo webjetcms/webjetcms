@@ -15,7 +15,8 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <iwcm:menu name="cmp_server_monitoring">
 <%
 	String node = Tools.getRequestParameter(request, "node");
-	ClusterDB.addRefresh(node, MonitoringDB.class);
+	//TODO - predpokladám podľa parametrov že toto má byť metóda addRefreshClusterMonitoring, zatiaľ, zakomentujem
+	// ClusterDB.addRefresh(node, MonitoringDB.class);
 %>
 <b><iwcm:text key="components.monitoring.wait_for_refresh" param1="${param.node}" /></b>
 </iwcm:menu>

@@ -39,7 +39,7 @@ if (topDocIds.size() > 0)
 <div class="rating">	
 	<!--  TOP STRANKY -->
 	
-	<logic:present name="docIdTopList">
+	<iwcm:present name="docIdTopList">
 	
 		<table style="width:400px;">
 			 <thead>
@@ -51,22 +51,22 @@ if (topDocIds.size() > 0)
 			   </tr>
 			 </thead>
 			 <tbody>
-				 <logic:iterate name="docIdTopList" id="d" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
+				 <iwcm:iterate name="docIdTopList" id="d" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 							<% DocDetails docDet = docDB.getDoc(d.getDocId(), -1, false);
 								 if (docDet != null)
 								 {%>
 						<tr>
 								<td><%=index.intValue()+1%>.&nbsp;</td>
 								<td><%=docDet.getTitle()%></td>
-								<td><bean:write name="d" property="ratingStat"/></td>
+								<td><iwcm:strutsWrite name="d" property="ratingStat"/></td>
 								<td style="display: contents;"> <%= "" + d.getRatingValueDouble() %>  / <%= "" + range%>  </td>
 						</tr>
 						<%}%>	
-					</logic:iterate>  
+					</iwcm:iterate>  
 			 </tbody>
 		</table>
 		
-	</logic:present>
+	</iwcm:present>
 	
 </div>
 		

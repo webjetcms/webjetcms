@@ -89,13 +89,13 @@
 
 <div class="padding10">
 
-<logic:present parameter="komu">
+<iwcm:present parameter="komu">
 	<script type="text/javascript">
 	<!--
 		window.close();
 	//-->
 	</script>
-</logic:present>
+</iwcm:present>
 
 <script type="text/javascript">
 <!--

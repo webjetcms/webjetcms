@@ -33,7 +33,7 @@ if (topUsers.size() > 0)
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <div class="rating">
 	<!--  TOP POUZIVATELIA -->	
-	<logic:present name="usersTopList">
+	<iwcm:present name="usersTopList">
 		<table style="width:400px;">
 			 <thead>
 			   <tr>
@@ -44,14 +44,14 @@ if (topUsers.size() > 0)
 			   </tr>
 			 </thead>
 			 <tbody>
-				 <logic:iterate name="usersTopList" id="u" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
+				 <iwcm:iterate name="usersTopList" id="u" type="sk.iway.iwcm.components.rating.jpa.RatingEntity" indexId="index" >
 							<% UserDetails userDet = UsersDB.getUser(u.getUserId());
 								 if (userDet != null)
 								 {%>	
 						  <tr>
 								<td><%=index.intValue()+1%>.&nbsp;</td>
 								<td><%=userDet.getLogin()%></td>
-								<td><bean:write name="u" property="ratingStat"/></td>
+								<td><iwcm:strutsWrite name="u" property="ratingStat"/></td>
 								<td>
 									<%									
 										if(userDet.getRatingRank() < 100)
@@ -65,10 +65,10 @@ if (topUsers.size() > 0)
 								</td>
 						 </tr>
 							<%}%>	
-					</logic:iterate>  
+					</iwcm:iterate>  
 			 </tbody>
 		</table>
-	</logic:present>	
+	</iwcm:present>	
 </div>
 			
 	<%		

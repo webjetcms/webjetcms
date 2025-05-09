@@ -97,29 +97,29 @@ session.removeAttribute("updatedDocs");
 session.removeAttribute("editorUsers");
 
 %>
-<logic:present name="approveByUsers">
+<iwcm:present name="approveByUsers">
 	<iwcm:text key="editor.approveRequestGet"/>:
 	<iway:request name="approveByUsers" />
-</logic:present>
+</iwcm:present>
 
-<logic:notPresent name="approveByUsers">
-	<logic:present name="pageSavedToPublic">
+<iwcm:notPresent name="approveByUsers">
+	<iwcm:present name="pageSavedToPublic">
 		<% if (ef.isAvailable()==false) { %>
 			<iwcm:text key="admin.page_toolbar.pozor_stranka_sa_verejne_nezobrazuje"/>
 		<% } else { %>
 			<iwcm:text key="editor.pageSavedToPublic"/>
 		<% } %>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="pageSaved">
+	<iwcm:present name="pageSaved">
 		<iwcm:text key="editor.pageSaved"/>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="pagePublishDate">
+	<iwcm:present name="pagePublishDate">
 				<iwcm:text key="editor.publish.pagesaved" />
 				<iway:request name="pagePublishDate"/>
-	</logic:present>
-</logic:notPresent>
+	</iwcm:present>
+</iwcm:notPresent>
 <%
 EditorDB.cleanSessionData(request);
 %>

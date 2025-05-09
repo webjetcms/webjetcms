@@ -118,18 +118,18 @@ request.setAttribute("NO WJTOOLBAR", "true");
 			} %>
 		</image>
 		<atom:link href="<%=Tools.getBaseHref(request)%><%=PathFilter.getOrigPathDocId(request) %>" rel="self" type="application/rss+xml" />
-		<logic:present name="novinky">
-			<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+		<iwcm:present name="novinky">
+			<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 				<item>
 					<guid><%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request) %></guid>					
-					<title><logic:notEmpty name="doc" property="title"><![CDATA[<jsp:getProperty name="doc" property="title"/>]]></logic:notEmpty></title>
+					<title><iwcm:notEmpty name="doc" property="title"><![CDATA[<jsp:getProperty name="doc" property="title"/>]]></iwcm:notEmpty></title>
 					<% out.print("<link>"+docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, request)+"</link>"); %>					
 					<description>
 						<![CDATA[
-						<logic:notEmpty name="doc" property="perex"><jsp:getProperty name="doc" property="perex"/></logic:notEmpty>
+						<iwcm:notEmpty name="doc" property="perex"><jsp:getProperty name="doc" property="perex"/></iwcm:notEmpty>
 						]]>						
 					</description>
-					<author><logic:notEmpty name="doc" property="authorEmail"><bean:write name="doc" property="authorEmail"/> (<bean:write name="doc" property="authorName"/>)</logic:notEmpty></author>					
+					<author><iwcm:notEmpty name="doc" property="authorEmail"><iwcm:strutsWrite name="doc" property="authorEmail"/> (<iwcm:strutsWrite name="doc" property="authorName"/>)</iwcm:notEmpty></author>					
 					<pubDate><%
 					   try
 					   {
@@ -138,7 +138,7 @@ request.setAttribute("NO WJTOOLBAR", "true");
 					   } catch (Exception ex) {}
 					%></pubDate>
 				</item>
-			</logic:iterate>
-		</logic:present>
+			</iwcm:iterate>
+		</iwcm:present>
 	</channel>
 </rss>

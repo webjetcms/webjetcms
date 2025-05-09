@@ -113,7 +113,7 @@ else vysledok = cislo1 - cislo2;
 
 <iwcm:text key="spamprotectiondisable.introtext"/>
 
-<logic:present name="vysledokNespravny"><iwcm:text key="spamprotectiondisable.resultinvalid" /></logic:present>
+<iwcm:present name="vysledokNespravny"><iwcm:text key="spamprotectiondisable.resultinvalid" /></iwcm:present>
 
 <form action="<%=PathFilter.getOrigPath(request) %>" method="post">
 

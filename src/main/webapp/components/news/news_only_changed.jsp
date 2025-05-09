@@ -187,7 +187,7 @@ int pageNewChangedStatus;
 %>
 
 <table border="0" cellspacing="2" cellpadding="5">
-<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
    <tr>
       <td colspan="2">
 	    <table border="0">
@@ -216,9 +216,9 @@ int pageNewChangedStatus;
 	       </td>
 	</tr>
 	 <tr> <td valign="top">
-      <logic:notEmpty name="doc" property="perexImage">
+      <iwcm:notEmpty name="doc" property="perexImage">
 			<img class="left" height='61' alt="" src="<jsp:getProperty name="doc" property="perexImage"/>" width='58' />
-&nbsp;		</logic:notEmpty>      </td>
+&nbsp;		</iwcm:notEmpty>      </td>
 	   <td valign="top"><%
          String data = doc.getPerexPre();
          if (data == null || data.length()<10)
@@ -234,5 +234,5 @@ int pageNewChangedStatus;
 	     <div class="right">
             <a href="/showdoc.do?docid=<jsp:getProperty name="doc" property="docId"/>">Viac info &gt;&gt;</a>         </div>      </td>
    </tr>
-</logic:iterate>
+</iwcm:iterate>
 </table>

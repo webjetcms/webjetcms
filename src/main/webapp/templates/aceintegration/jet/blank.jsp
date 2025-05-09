@@ -15,8 +15,8 @@ String lng = PageLng.getUserLng(request);
 	<title><iwcm:write name="doc_title"/></title>
 	<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" />
     <meta http-equiv="Content-language" content="<%=PageLng.getUserLng(request)%>" />
-    <logic:notEmpty name="perex_data"><meta name="Description" content="<iwcm:write name="perex_data"/>" /></logic:notEmpty>
-    <logic:notEmpty name="field_a"><meta name="Keywords" content="<iwcm:write name="field_a"/>" /></logic:notEmpty>
+    <iwcm:notEmpty name="perex_data"><meta name="Description" content="<iwcm:write name="perex_data"/>" /></iwcm:notEmpty>
+    <iwcm:notEmpty name="field_a"><meta name="Keywords" content="<iwcm:write name="field_a"/>" /></iwcm:notEmpty>
 	<meta name="author" content="InterWay, a. s. - www.interway.sk" />
 	<meta name="generator" content="WebJET - redakèný systém - www.webjet.sk" />
     <iwcm:write name="group_htmlhead_recursive"/>

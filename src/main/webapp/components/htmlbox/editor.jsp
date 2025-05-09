@@ -93,11 +93,11 @@ function previewDocId()
 	      <td valign="top">
 	      	<iwcm:text key="components.htmlbox.select_object"/>:<br>
 	      	<select name="field" onchange="preview(this);this.form.docid.value='';" size="15" style="width: 250px; background-color: Window;">
-	      	  <logic:present name="docList">	
-	          	 <logic:iterate id="dl" name="docList" type="sk.iway.iwcm.doc.DocDetails">
-	          		<option value='<bean:write name="dl" property="docId"/>'><bean:write name="dl" property="title"/></option>
-	          	 </logic:iterate>  
-	          </logic:present>  
+	      	  <iwcm:present name="docList">	
+	          	 <iwcm:iterate id="dl" name="docList" type="sk.iway.iwcm.doc.DocDetails">
+	          		<option value='<iwcm:strutsWrite name="dl" property="docId"/>'><iwcm:strutsWrite name="dl" property="title"/></option>
+	          	 </iwcm:iterate>  
+	          </iwcm:present>  
 	         </select>
 	         
 	         	<iwcm:text key="components.htmlbox.otherWebPage"/>:

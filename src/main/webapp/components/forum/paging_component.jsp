@@ -139,7 +139,7 @@ if (pageLink.startsWith("/components")) pageLink = ""; //kvoli AJAX nacitaniu, a
 %>
 <%@page import="sk.iway.iwcm.PathFilter"%>
 <%@page import="sk.iway.iwcm.Constants"%>
-<logic:present name="displayPaging">
+<iwcm:present name="displayPaging">
 <div class="col-md-12 col-xs-12">
 	<div class="btn-group float-left pull-left">
 		<span class="count-total">
@@ -222,5 +222,5 @@ if (pageLink.startsWith("/components")) pageLink = ""; //kvoli AJAX nacitaniu, a
 					} %>
 	</div>
 </div>
-</logic:present>
+</iwcm:present>
 <%request.removeAttribute("displayPaging");%>

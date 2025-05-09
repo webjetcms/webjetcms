@@ -69,7 +69,7 @@ int totalInDay = 0;
 
 %>
 
-<logic:iterate id="column" name="statMonth" type="sk.iway.iwcm.stat.Column" indexId="index">
+<iwcm:iterate id="column" name="statMonth" type="sk.iway.iwcm.stat.Column" indexId="index">
 <%
     try
     {
@@ -80,8 +80,8 @@ int totalInDay = 0;
        sk.iway.iwcm.Logger.error(ex);
     }
  %>
-</logic:iterate>
-<logic:iterate id="column" name="statDay" type="sk.iway.iwcm.stat.Column" indexId="index">
+</iwcm:iterate>
+<iwcm:iterate id="column" name="statDay" type="sk.iway.iwcm.stat.Column" indexId="index">
 <%
     try
     {
@@ -92,7 +92,7 @@ int totalInDay = 0;
        sk.iway.iwcm.Logger.error(ex);
     }
  %>
-</logic:iterate>
+</iwcm:iterate>
 
 <%
 out.print("{ \"month\": \""+totalInMonth+"\",\"day\": \""+totalInDay+"\"}");

@@ -150,20 +150,20 @@ if (!isUlStyle) {
 
 if (paging && (pagingStyle.equals("top") || pagingStyle.equals("both"))) { %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
     <div class="news_pages news_pages_top">
       <iwcm:text key="calendar.page"/>:
-      <logic:present name="prev">
+      <iwcm:present name="prev">
       	${prev.value}${prev.label}</a>
-      </logic:present>
-      <logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+      </iwcm:present>
+      <iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
         <jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-      </logic:iterate>
-      <logic:present name="next">
+      </iwcm:iterate>
+      <iwcm:present name="next">
       	${next.value}${next.label}</a>
-      </logic:present>
+      </iwcm:present>
     </div>
-  </logic:present>
+  </iwcm:present>
 	<!-- koniec strankovania -->
 <%
 }
@@ -173,8 +173,8 @@ if (isUlStyle) {
 }
 %>
 
-<logic:notEmpty name="novinky">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+<iwcm:notEmpty name="novinky">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 			<%
 				perexImgClass = "news_img";
 
@@ -204,7 +204,7 @@ if (isUlStyle) {
 			// vlozenie obrazku nad text alebo vlozenie news_no_image odkaz
 			if ("top".equals(image) && !isUlStyle) {
 			%>
-			<logic:notEmpty name="doc" property="perexImage">
+			<iwcm:notEmpty name="doc" property="perexImage">
 				<div class="<%=perexImgClass%>">
 					<% if (hasLink){ %>
 						<a href="<%=perexLink%>">
@@ -217,11 +217,11 @@ if (isUlStyle) {
 						</a>
 					<%	} %>
 				</div>
-			</logic:notEmpty>
-			<logic:empty name="doc" property="perexImage">
+			</iwcm:notEmpty>
+			<iwcm:empty name="doc" property="perexImage">
 				<div class="news_no_image">
 				</div>
-			</logic:empty>
+			</iwcm:empty>
 			<% } %>
 
 			<% if (isUlStyle) { %>
@@ -263,7 +263,7 @@ if (isUlStyle) {
 					// vlozenie obrazku pod nadpis alebo news_no_image odkaz
 					if ("bottom".equals(image)) {
 					%>
-					<logic:notEmpty name="doc" property="perexImage">
+					<iwcm:notEmpty name="doc" property="perexImage">
 						<div class="<%=perexImgClass%>">
 							<% if (hasLink){ %>
 								<a href="<%=perexLink%>">
@@ -275,11 +275,11 @@ if (isUlStyle) {
 								</a>
 							<%	} %>
 						</div>
-					</logic:notEmpty>
-					<logic:empty name="doc" property="perexImage">
+					</iwcm:notEmpty>
+					<iwcm:empty name="doc" property="perexImage">
 						<div class="news_no_image">
 						</div>
-					</logic:empty>
+					</iwcm:empty>
 					<% } %>
 
 					<div class="news_text"<%=InlineEditor.getEditAttrs(request, doc, "perexPre", true) %>>
@@ -332,7 +332,7 @@ if (isUlStyle) {
 				counter = 0;
 			}
 			%>
-	</logic:iterate>
+	</iwcm:iterate>
 
 	<%
 	//ukonci posledny DIV
@@ -343,10 +343,10 @@ if (isUlStyle) {
 	}
 	%>
 
-</logic:notEmpty>
-<logic:empty name="novinky">
+</iwcm:notEmpty>
+<iwcm:empty name="novinky">
 	<div class="no_news"><iwcm:text key="components.news.nonews" /></div>
-</logic:empty>
+</iwcm:empty>
 
 
 <%
@@ -356,20 +356,20 @@ if (isUlStyle) {
 
 if (paging && (pagingStyle.equals("bottom") || pagingStyle.equals("both"))) { %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
     <div class="news_pages news_pages_bottom">
       <iwcm:text key="calendar.page"/>:
-      <logic:present name="prev">
+      <iwcm:present name="prev">
       	${prev.value}${prev.label}</a>
-      </logic:present>
-      <logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+      </iwcm:present>
+      <iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
         <jsp:getProperty name="page2" property="value"/>[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-      </logic:iterate>
-      <logic:present name="next">
+      </iwcm:iterate>
+      <iwcm:present name="next">
       	${next.value}${next.label}</a>
-      </logic:present>
+      </iwcm:present>
     </div>
-  </logic:present>
+  </iwcm:present>
 	<!-- koniec strankovania -->
 <%
 }

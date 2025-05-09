@@ -9,7 +9,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
 <%@page import="org.apache.struts.util.ResponseUtils"%>
-<logic:present parameter="docId">
+<iwcm:present parameter="docId">
 <%
 int docId = -1;
 try
@@ -45,8 +45,8 @@ body { overflow: auto }
 </body></html>
 
 
-</logic:present>
-<logic:notPresent parameter="docId">
+</iwcm:present>
+<iwcm:notPresent parameter="docId">
 <html>
 <head>
    <title><iwcm:text key="editor.link.insert_link"/></title>
@@ -370,4 +370,4 @@ request.setAttribute("ajaxSupportInserted", true);
 </form>
 </body>
 </html>
-</logic:notPresent>
+</iwcm:notPresent>
