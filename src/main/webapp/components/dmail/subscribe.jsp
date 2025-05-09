@@ -247,10 +247,10 @@
 			<p>
 				<label for="user_group_id_<bean:write name="ugd" property="userGroupId"/>">
 					<strong><bean:write name="ugd" property="userGroupName"/></strong>
-					<logic:notEmpty name="ugd" property="userGroupComment">
+					<iwcm:notEmpty name="ugd" property="userGroupComment">
 						<br/>
 						<bean:write name="ugd" property="userGroupComment"/>
-					</logic:notEmpty>
+					</iwcm:notEmpty>
 				</label>
 				<input type="checkbox" name="user_group_id" id="user_group_id_<bean:write name="ugd" property="userGroupId"/>" value="<bean:write name="ugd" property="userGroupId"/>"<%
 					if (userGroups.indexOf(","+ugd.getUserGroupId()+",")!=-1 || userGroups.length()<2) out.print(" checked='checked'");

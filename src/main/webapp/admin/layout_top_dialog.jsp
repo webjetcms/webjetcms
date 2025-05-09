@@ -361,7 +361,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 	</iwcm:notPresent>
 </iwcm:empty>
 
-<logic:notEmpty name="inIframe">
+<iwcm:notEmpty name="inIframe">
 
 	<html class="wjDialogWindow">
 	<head>
@@ -391,9 +391,9 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 	<link rel="stylesheet" type="text/css" href="/admin/css/datepicker.css" media="all"/>
 	<link type="text/css" rel="stylesheet" href="/components/cmp.css" media="all"/>
 
-	<logic:notEmpty name="widgetData">
+	<iwcm:notEmpty name="widgetData">
 		<link rel="stylesheet" href="/css/page.css" />
-	</logic:notEmpty>
+	</iwcm:notEmpty>
 
 	<style type="text/css" media="print">
 		.noprint { display: none; }
@@ -433,10 +433,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
 <body>
 
-	<logic:notEmpty name="widgetData">
+	<iwcm:notEmpty name="widgetData">
 		<div class="gridster gridInModal">
 		<ul>
 		<li data-sizex="3" data-sizey="3" class="gs-w">
-	</logic:notEmpty>
+	</iwcm:notEmpty>
 
-</logic:notEmpty>
+</iwcm:notEmpty>

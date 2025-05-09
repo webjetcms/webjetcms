@@ -173,7 +173,7 @@ if (isUlStyle) {
 }
 %>
 
-<logic:notEmpty name="novinky">
+<iwcm:notEmpty name="novinky">
 	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 			<%
 				perexImgClass = "news_img";
@@ -204,7 +204,7 @@ if (isUlStyle) {
 			// vlozenie obrazku nad text alebo vlozenie news_no_image odkaz
 			if ("top".equals(image) && !isUlStyle) {
 			%>
-			<logic:notEmpty name="doc" property="perexImage">
+			<iwcm:notEmpty name="doc" property="perexImage">
 				<div class="<%=perexImgClass%>">
 					<% if (hasLink){ %>
 						<a href="<%=perexLink%>">
@@ -217,7 +217,7 @@ if (isUlStyle) {
 						</a>
 					<%	} %>
 				</div>
-			</logic:notEmpty>
+			</iwcm:notEmpty>
 			<iwcm:empty name="doc" property="perexImage">
 				<div class="news_no_image">
 				</div>
@@ -263,7 +263,7 @@ if (isUlStyle) {
 					// vlozenie obrazku pod nadpis alebo news_no_image odkaz
 					if ("bottom".equals(image)) {
 					%>
-					<logic:notEmpty name="doc" property="perexImage">
+					<iwcm:notEmpty name="doc" property="perexImage">
 						<div class="<%=perexImgClass%>">
 							<% if (hasLink){ %>
 								<a href="<%=perexLink%>">
@@ -275,7 +275,7 @@ if (isUlStyle) {
 								</a>
 							<%	} %>
 						</div>
-					</logic:notEmpty>
+					</iwcm:notEmpty>
 					<iwcm:empty name="doc" property="perexImage">
 						<div class="news_no_image">
 						</div>
@@ -343,7 +343,7 @@ if (isUlStyle) {
 	}
 	%>
 
-</logic:notEmpty>
+</iwcm:notEmpty>
 <iwcm:empty name="novinky">
 	<div class="no_news"><iwcm:text key="components.news.nonews" /></div>
 </iwcm:empty>

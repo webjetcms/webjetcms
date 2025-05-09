@@ -262,7 +262,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 <div class="row">
 	<div class="productsOrder bootstrap col-sm-12">
 		<%--Zoradit podla: --%>
-		<logic:notEmpty name="novinky">
+		<iwcm:notEmpty name="novinky">
 			<iwcm:text key="components.basket.orderBy"/>:
 			<select name="orderType" class="filterKategorii">
 				<option <%=("asc_price".equals(param_order_type))? "selected":""%> value="asc_price"><iwcm:text key="components.basket.orderBy.priceAsc"/></option>
@@ -277,7 +277,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 				<option <%=("asc_priority".equals(param_order_type))? "selected":""%> value="asc_priority"><iwcm:text key="components.basket.orderBy.priorityAsc"/></option>
 				<option <%=("desc_priority".equals(param_order_type))? "selected":""%> value="desc_priority"><iwcm:text key="components.basket.orderBy.priorityDesc"/></option>
 			</select>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 	</div>
 	<%
 	}
@@ -534,7 +534,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
 	<div class="productsOrder">
 		<%--Zoradit podla: --%>
-		<logic:notEmpty name="novinky">
+		<iwcm:notEmpty name="novinky">
 			<iwcm:text key="components.basket.orderBy"/>:
 			<select name="orderType" class="filterKategorii">
 				<option <%=("asc_price".equals(param_order_type))? "selected":""%> value="asc_price"><iwcm:text key="components.basket.orderBy.priceAsc"/></option>
@@ -549,7 +549,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 				<option <%=("asc_priority".equals(param_order_type))? "selected":""%> value="asc_priority"><iwcm:text key="components.basket.orderBy.priorityAsc"/></option>
 				<option <%=("desc_priority".equals(param_order_type))? "selected":""%> value="desc_priority"><iwcm:text key="components.basket.orderBy.priorityDesc"/></option>
 			</select>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 	</div>
 	<%
 	}

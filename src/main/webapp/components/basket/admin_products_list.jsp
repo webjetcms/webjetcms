@@ -625,7 +625,7 @@ if(mainGroup != null)
 }
 String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";//basket-icon
 %>
-<logic:notEmpty name="novinky">
+<iwcm:notEmpty name="novinky">
 	<table border="0" cellspacing="0" cellpadding="1" class="newsTable">
 	<% int productCounter = 0; %>
 	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
@@ -771,7 +771,7 @@ String defaultImage = "/components/basket/img/default_invoice_photo_thumb.jpg";/
 
 	</logic:iterate>
 	</table>
-</logic:notEmpty>
+</iwcm:notEmpty>
 <iwcm:empty name="novinky">
 	<div class="no_news"><iwcm:text key="components.news.nonews" /></div>
 </iwcm:empty>

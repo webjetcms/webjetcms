@@ -150,16 +150,16 @@ taglib
 		<item>
 		<guid><%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%></guid>
 		<title>
-		<logic:notEmpty name="doc" property="title">
+		<iwcm:notEmpty name="doc" property="title">
 			<![CDATA[<jsp:getProperty name="doc" property="title"/>]]>
-		</logic:notEmpty></title>
+		</iwcm:notEmpty></title>
 		<%
 			out.print("<link>" + docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, request) + "</link>");
-		%> <description><![CDATA[<logic:notEmpty name="doc" property="perex"><jsp:getProperty name="doc" property="perex"/></logic:notEmpty>]]></description>
+		%> <description><![CDATA[<iwcm:notEmpty name="doc" property="perex"><jsp:getProperty name="doc" property="perex"/></iwcm:notEmpty>]]></description>
 		<author>
-		<logic:notEmpty name="doc" property="authorEmail">
+		<iwcm:notEmpty name="doc" property="authorEmail">
 			<bean:write name="doc" property="authorEmail" />(<bean:write
-				name="doc" property="authorName" />)</logic:notEmpty></author> <pubDate>
+				name="doc" property="authorName" />)</iwcm:notEmpty></author> <pubDate>
 		<%
 			try
 					{

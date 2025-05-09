@@ -167,18 +167,18 @@
 	</html>
 </iwcm:empty>
 
-<logic:notEmpty name="inIframe">
+<iwcm:notEmpty name="inIframe">
 
-	<logic:notEmpty name="widgetData">
+	<iwcm:notEmpty name="widgetData">
 		</li>
 		</ul>
 		</div>
 
 
-	</logic:notEmpty>
+	</iwcm:notEmpty>
 
 
 	</body>
 	<iwcm:combine type="js" set="adminStandardJs" />
 
-</logic:notEmpty>
+</iwcm:notEmpty>

@@ -73,9 +73,9 @@ ${ninja.webjet.insertJqueryFake}
 <iwcm:write name="html_head"/>
 <script>
     <!-- DATA LAYER -->
-    <logic:notEmpty name="docDetails" property="fieldQ">
+    <iwcm:notEmpty name="docDetails" property="fieldQ">
     dataLayer.push({'pageCategory': '<c:out value="${docDetails.fieldQ}" />'});
-    </logic:notEmpty>
+    </iwcm:notEmpty>
 </script>
 
 <iwcm:insertScript position="head"/>

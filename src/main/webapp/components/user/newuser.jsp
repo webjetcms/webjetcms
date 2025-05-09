@@ -207,12 +207,12 @@ float: left;
 		 <stripes:label for="userImageId" name="userImage"><iwcm:text key="components.user.newuser.userImage"/>:</stripes:label>
 		 <stripes:file id="userImageId" name="userImage" size="40" />
 		</p>
-		<logic:notEmpty name="actionBean" property="usr.photo">
+		<iwcm:notEmpty name="actionBean" property="usr.photo">
 			<p>
 				<stripes:label for="usrPhoto" name="usr.photo"><iwcm:text key="components.user.newuser.photo"/>:</stripes:label>
 				<img src="<bean:write name="actionBean" property="usr.photoSmall"/>">
 			</p>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 		<p<%=isShow(show, "signature")%>>
 			<stripes:label for="usrSignature" name="usr.signature"><iwcm:text key="components.user.newuser.signature"/>:</stripes:label>
 			<stripes:text class='<%=isReq(required, "signature", "")%>' id="usrSignature" name="usr.signature" size="40" maxlength="255" />

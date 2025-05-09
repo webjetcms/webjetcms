@@ -252,7 +252,7 @@
 							%>
 						</td>
 					</tr>
-					<logic:notEmpty name="invoice" property="userNote">
+					<iwcm:notEmpty name="invoice" property="userNote">
 			      <tr>
 			         <td colspan="2">
 			         	<strong><iwcm:text key="components.basket.note"/></strong>
@@ -261,7 +261,7 @@
 			         	<bean:write name="invoice" property="userNote"/>
 			         </td>
 			      </tr>
-			      </logic:notEmpty>
+			      </iwcm:notEmpty>
 			      <tr>
 			      	<td colspan="2" class="nopadding">
 			      		<table class="basketListTable" border="0" cellspacing="0" cellpadding="0">
@@ -285,10 +285,10 @@
 							            <% } else { %>
 							            	<bean:write name="good" property="title"/>
 							            <% } %>
-											<logic:notEmpty name="good" property="itemNote">
+											<iwcm:notEmpty name="good" property="itemNote">
 								            <br/>
 								            <iwcm:text key="components.basket.note"/>:&nbsp;<bean:write name="good" property="itemNote"/>
-											</logic:notEmpty>
+											</iwcm:notEmpty>
 							         </td>
 							         <td align="center" class="basketPrice" nowrap="nowrap"><iway:curr currency="<%=invoice.getCurrency() %>"><%=good.getLocalPrice(request) %></iway:curr></td>
 							         <td align="center">

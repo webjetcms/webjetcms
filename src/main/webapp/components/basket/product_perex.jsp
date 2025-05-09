@@ -230,9 +230,9 @@ else if (Tools.isNotEmpty(price)) {
         		
         		
           %>
-        <logic:notEmpty name="perexGallery">
+        <iwcm:notEmpty name="perexGallery">
           <iwcm:write name="perexGallery"/>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 		<iwcm:empty name="perexGallery">
 		<img src="/thumb<%=doc.getPerexImage() %>?w=390&ip=1"/>
 		</iwcm:empty>

@@ -22,7 +22,7 @@
 	
 		<article class="ly-content">
 			<h1><iwcm:write name="doc_title"/></h1>
-			<logic:notEmpty name="perex_image"><p><img src="<iwcm:write name="perex_image"/>" alt="<iwcm:write name="doc_title"/>" class="w-100" /></p></logic:notEmpty>	
+			<iwcm:notEmpty name="perex_image"><p><img src="<iwcm:write name="perex_image"/>" alt="<iwcm:write name="doc_title"/>" class="w-100" /></p></iwcm:notEmpty>	
 			<iwcm:write name="doc_data"/>
 		</article>
 	

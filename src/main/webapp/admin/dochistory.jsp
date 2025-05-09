@@ -79,7 +79,7 @@ int doc_id = -1;
 	<tr <% if(index % 2 == 0) out.println("class=\"even\""); else out.println("class=\"odd\""); %>>
 		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>"><jsp:getProperty name="docHist" property="historySaveDate"/></td>
 		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>"><jsp:getProperty name="docHist" property="authorName"/></td>
-		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>"><jsp:getProperty name="docHist" property="historyApprovedByName"/><logic:notEmpty name="docHist" property="historyApproveDate"><br/><jsp:getProperty name="docHist" property="historyApproveDate"/></logic:notEmpty></td>
+		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>"><jsp:getProperty name="docHist" property="historyApprovedByName"/><iwcm:notEmpty name="docHist" property="historyApproveDate"><br/><jsp:getProperty name="docHist" property="historyApproveDate"/></iwcm:notEmpty></td>
 		<td class="active<jsp:getProperty name="docHist" property="historyActual"/>">
 			<a href="/showdoc.do?docid=<%=doc_id%>&historyid=<jsp:getProperty name="docHist" property="historyId"/>" target="_blank" class="iconPreview" title="<iwcm:text key="history.showPage"/>">&nbsp;</a>
 			<a href="javascript:editPage(<jsp:getProperty name="docHist" property="docId"/>, <jsp:getProperty name="docHist" property="historyId"/>)" title="<iwcm:text key="history.editPage"/>" class="iconEdit">&nbsp;</a>

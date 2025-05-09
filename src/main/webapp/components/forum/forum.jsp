@@ -150,9 +150,9 @@ if(!isAjaxCall)
 			<logic:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td>
-						<logic:notEmpty name="field" property="authorEmail">
+						<iwcm:notEmpty name="field" property="authorEmail">
 							<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-						</logic:notEmpty>
+						</iwcm:notEmpty>
 						<iwcm:empty name="field" property="authorEmail">
 							<bean:write name="field" property="authorName"/>
 						</iwcm:empty>

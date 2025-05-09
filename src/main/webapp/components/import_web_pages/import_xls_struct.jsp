@@ -17,6 +17,7 @@ request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 
 int groupId = Constants.getInt("rootGroupId");
 try

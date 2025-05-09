@@ -188,9 +188,9 @@ if(!isAjaxCall)
                       </div>
                       <div class="media-body">
                               <iwcm:text key="forum.author"/>:
-                              <logic:notEmpty name="field" property="authorEmail">
+                              <iwcm:notEmpty name="field" property="authorEmail">
                                   <a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-                              </logic:notEmpty>
+                              </iwcm:notEmpty>
                               <iwcm:empty name="field" property="authorEmail">
                                   <bean:write name="field" property="authorName"/>
                               </iwcm:empty>
@@ -210,9 +210,9 @@ if(!isAjaxCall)
 							</h4>
 
 							<iwcm:text key="forum.author"/>:
-							<logic:notEmpty name="field" property="authorEmail">
+							<iwcm:notEmpty name="field" property="authorEmail">
 								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-							</logic:notEmpty>
+							</iwcm:notEmpty>
 							<iwcm:empty name="field" property="authorEmail">
 								<bean:write name="field" property="authorName"/>
 							</iwcm:empty>
@@ -266,9 +266,9 @@ if(!isAjaxCall)
 					<td style="padding-left:<%=(20 * field.getLevel())%>px;" class="forumOpenTableHeader">
 							<b><bean:write name="field" property="subject"/></b><br />
 							<iwcm:text key="forum.author"/>:
-							<logic:notEmpty name="field" property="authorEmail">
+							<iwcm:notEmpty name="field" property="authorEmail">
 								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-							</logic:notEmpty>
+							</iwcm:notEmpty>
 							<iwcm:empty name="field" property="authorEmail">
 								<bean:write name="field" property="authorName"/>
 							</iwcm:empty>

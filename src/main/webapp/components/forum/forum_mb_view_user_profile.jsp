@@ -134,8 +134,8 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 							<span class="gen"><iwcm:text key="components.forum.bb.profile.location"/>:</span>
 						</div>
 						<div class="col-md-8">
-							<span class="gen"><bean:write name="userDet" property="city"/><logic:notEmpty name="userDet" property="country">,
-							<bean:write name="userDet" property="country"/></logic:notEmpty></span>
+							<span class="gen"><bean:write name="userDet" property="city"/><iwcm:notEmpty name="userDet" property="country">,
+							<bean:write name="userDet" property="country"/></iwcm:notEmpty></span>
 						</div>
 					</div>
 					<div class="row">

@@ -146,7 +146,7 @@ boolean hasPerex;
 boolean hasLink;
 %>
 
-<logic:notEmpty name="novinky">
+<iwcm:notEmpty name="novinky">
 	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 		<%
 			if (Tools.isNotEmpty(doc.getPublishStartString())) {
@@ -158,13 +158,13 @@ boolean hasLink;
 				counter++;
 		%>
 			<% if ("left".equals(image)) { %>
-				<logic:notEmpty name="doc" property="perexImage">
+				<iwcm:notEmpty name="doc" property="perexImage">
 				<div class="news_img_left">
 						<%= "<a href='"+docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)+"'>" %>
 						<img src="<%= doc.getPerexImageSmall()%>" alt="" />
 						</a>
 				</div>
-				</logic:notEmpty>
+				</iwcm:notEmpty>
 			<% } %>
 
 			<div class="news_text">
@@ -228,9 +228,9 @@ boolean hasLink;
 
 			<% if ("right".equals(image)) { %>
 				<div class="news_img_right">
-					<logic:notEmpty name="doc" property="perexImage">
+					<iwcm:notEmpty name="doc" property="perexImage">
 						<img src="<jsp:getProperty name="doc" property="perexImage"/>" alt="" />
-					</logic:notEmpty>
+					</iwcm:notEmpty>
 				</div>
 			<% } %>
 
@@ -250,5 +250,5 @@ boolean hasLink;
 
 	%>
 
-</logic:notEmpty>
+</iwcm:notEmpty>
 </div>

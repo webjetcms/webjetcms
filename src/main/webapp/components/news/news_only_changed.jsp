@@ -216,9 +216,9 @@ int pageNewChangedStatus;
 	       </td>
 	</tr>
 	 <tr> <td valign="top">
-      <logic:notEmpty name="doc" property="perexImage">
+      <iwcm:notEmpty name="doc" property="perexImage">
 			<img class="left" height='61' alt="" src="<jsp:getProperty name="doc" property="perexImage"/>" width='58' />
-&nbsp;		</logic:notEmpty>      </td>
+&nbsp;		</iwcm:notEmpty>      </td>
 	   <td valign="top"><%
          String data = doc.getPerexPre();
          if (data == null || data.length()<10)

@@ -307,9 +307,9 @@ if(!isAjaxCall)
 						<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
 					<%}%>
 
-					<logic:notEmpty name="field" property="authorEmail">
+					<iwcm:notEmpty name="field" property="authorEmail">
 						<span class="name"><a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a></span>
-					</logic:notEmpty>
+					</iwcm:notEmpty>
 					<iwcm:empty name="field" property="authorEmail">
 						<span class="name"><bean:write name="field" property="authorName"/></span>
 					</iwcm:empty>
