@@ -105,15 +105,15 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 						<span class="error"><img src="/admin/images/warning.gif" align="absmiddle"/> <iwcm:text key="approve.allready_approved"/>.</span>
 					</iwcm:present>
 
-					<logic:notPresent name="wrongApproveId">
+					<iwcm:notPresent name="wrongApproveId">
 						<form action="approve.do" method="post">
 							<table border="0" align="left">
 								<tr>
 									<td rowspan="2" valign="top"><font color="red"><iway:request name="message"/></font></td>
-									<logic:notPresent name="user">
+									<iwcm:notPresent name="user">
 										<td><iwcm:text key="user.Name"/></td>
 										<td><iwcm:text key="user.password"/></td>
-									</logic:notPresent>
+									</iwcm:notPresent>
 									<td rowspan="2" valign="bottom">
 										<input type="hidden" name="historyid" value="<%=Tools.getRequestParameter(request, "historyid")%>">
 									</td>
@@ -123,10 +123,10 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 									<td>&nbsp;</td>
 								</tr>
 								<tr>
-									<logic:notPresent name="user">
+									<iwcm:notPresent name="user">
 										<td valign="bottom"><input type="text" name="username" size=10 class="input"></td>
 										<td valign="bottom"><input type="password" name="password" size=10 class="input"></td>
-									</logic:notPresent>
+									</iwcm:notPresent>
 									<td>&nbsp;</td>
 									<td>
 										<input type="submit" name="schval" value="<iwcm:text key="approve.page.approve"/>" class="btn green">
@@ -136,7 +136,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 							</table>
 							<%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
 						</form>
-					</logic:notPresent>
+					</iwcm:notPresent>
 				</c:otherwise>
 			</c:choose>
 

@@ -2,9 +2,9 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@page import="sk.iway.iwcm.tags.WriteTag"%><%@
 taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<logic:notPresent name="dontCheckAdmin">
+<iwcm:notPresent name="dontCheckAdmin">
 	<iwcm:checkLogon admin="true"/>
-</logic:notPresent>
+</iwcm:notPresent>
 <iwcm:present name="dontCheckAdmin">
 	<iwcm:checkLogon />
 </iwcm:present><%

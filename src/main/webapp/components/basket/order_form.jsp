@@ -216,7 +216,7 @@ else
 <iwcm:text key="cloud.basket.testRunMessage"/>
 <%}
 else {%>
-<logic:notPresent name="basketItems">
+<iwcm:notPresent name="basketItems">
 	<%
 		String act = request.getParameter("basketAct");
     	if (act == null) act = request.getParameter("act");
@@ -229,7 +229,7 @@ else {%>
 			<%
 		}
 	%>
-</logic:notPresent>
+</iwcm:notPresent>
 <iwcm:present name="basketItems">
 	<iwcm:script type="text/javascript" src="/components/form/check_form.js"></iwcm:script>
 

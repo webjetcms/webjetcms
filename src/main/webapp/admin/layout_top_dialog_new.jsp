@@ -101,13 +101,13 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 	<style>
 		<jsp:include page="/admin/css/perms-css.jsp"/>
 
-		<logic:notPresent name="closeTable">
+		<iwcm:notPresent name="closeTable">
 			body
 			{
 				cursor: wait;
 				overflow: hidden;
 			}
-		</logic:notPresent>
+		</iwcm:notPresent>
 	</style>
 
 	<script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/common.jsp"></script>
@@ -153,7 +153,7 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 		</table>
 </iwcm:present>
 
-<logic:notPresent name="closeTable">
+<iwcm:notPresent name="closeTable">
 	<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 	<table border="0" cellspacing="0" cellpadding="0" width="100%" height="<%=height%>" style="height: 100%;">
@@ -173,4 +173,4 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 	   		<div id="dialogCentralRow" class="calendarPopupStop" style="height: 100%; width: auto; overflow: auto; padding: 0px; margin:0px; position: relative;">
 				<script type='text/javascript' src='/components/calendar/popcalendar.jsp'></script>
 				<%request.setAttribute("sk.iway.iwcm.tags.CalendarTag.isJsIncluded", "true");%>
-</logic:notPresent>
+</iwcm:notPresent>

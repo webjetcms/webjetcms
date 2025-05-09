@@ -11,11 +11,11 @@
 	   <table border="0" cellspacing="0" cellpadding="0" width="100%" class="closeTable">
 	</iwcm:present>
 
-	<logic:notPresent name="closeTable">
+	<iwcm:notPresent name="closeTable">
 	      <% if (BrowserDetector.isSmartphoneOrTablet(request)==false) {%></div><% } %>
 		</td>
 	</tr>
-	</logic:notPresent>
+	</iwcm:notPresent>
 
 			<tr id="buttonsBottomRow" height="50">
 				<td class="PopupButtons" colspan="2">

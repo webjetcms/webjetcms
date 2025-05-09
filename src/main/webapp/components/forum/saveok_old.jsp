@@ -60,9 +60,9 @@ if (isAdmin)
    </strong>
 </iwcm:present>
 
-<logic:notPresent name="permissionDenied">
-	<logic:notPresent name="isVulgar">
-		<logic:notPresent name="errorKey">
+<iwcm:notPresent name="permissionDenied">
+	<iwcm:notPresent name="isVulgar">
+		<iwcm:notPresent name="errorKey">
 
 		   <iwcm:text key="forum.new.saveok"/>
 		   <script type="text/javascript">
@@ -97,12 +97,12 @@ if (isAdmin)
 		   }
 		   %>
 		   </script>
-		</logic:notPresent>
+		</iwcm:notPresent>
 	   <iwcm:present name="errorKey">
 
 		   <iwcm:text key='<%=(String)request.getAttribute("errorKey")%>'/>
 	   </iwcm:present>
-	</logic:notPresent>
+	</iwcm:notPresent>
 
 	<iwcm:present name="isVulgar">
 	   <br><br>
@@ -111,7 +111,7 @@ if (isAdmin)
 	   </span>
 
 	</iwcm:present>
-</logic:notPresent>
+</iwcm:notPresent>
 
 <%
 if (isAdmin)

@@ -51,7 +51,7 @@
 	</script>
 </iwcm:present>
 
-<logic:notPresent parameter="zipArchivePath" >
+<iwcm:notPresent parameter="zipArchivePath" >
 	<script type="text/javascript">
 		var archiveDirs = new Array();
 		function Ok()
@@ -122,7 +122,7 @@
 			return (true);
 		}
 	</script>
-</logic:notPresent>
+</iwcm:notPresent>
 
 </div>
 

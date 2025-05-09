@@ -35,7 +35,7 @@ if (user!=null)
 
 <script type='text/javascript'>
 
-<logic:notPresent parameter="modify">
+<iwcm:notPresent parameter="modify">
 window.onload = this.focus
 
 function doForm()
@@ -106,7 +106,7 @@ function setValues()
    document.formForm.form_name.value = window.opener.editorForm.title.value;
 }
 
-</logic:notPresent>
+</iwcm:notPresent>
 
 <iwcm:present parameter="modify">
 var myPage = window.opener;

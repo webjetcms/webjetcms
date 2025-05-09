@@ -27,7 +27,7 @@ if (fForward.exists())
 	<b><iwcm:text key="authorize_user.email_send_fail"/>
 </iwcm:present>
 
-<logic:notPresent name="emailSendFail">
+<iwcm:notPresent name="emailSendFail">
 	<b><iwcm:text key="authorize_user.authorize_od"/>:</b><br><br>
 	<hr>
 	<iwcm:text key="authorize_user.sender"/>: <iway:request name="from"/><br>
@@ -35,7 +35,7 @@ if (fForward.exists())
 	<iwcm:text key="authorize_user.subject"/>: <iway:request name="subject"/><br>
 	<hr>
 	<iway:request name="body"/>
-</logic:notPresent>
+</iwcm:notPresent>
 
 
 <%@ include file="layout_bottom.jsp" %>

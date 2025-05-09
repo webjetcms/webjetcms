@@ -151,6 +151,6 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 		</div>
 	</div>
 </iwcm:present>
-<logic:notPresent name="userInfo">
+<iwcm:notPresent name="userInfo">
    <iwcm:text key="components.forum.view_profile.user_not_found"/>
-</logic:notPresent>
+</iwcm:notPresent>

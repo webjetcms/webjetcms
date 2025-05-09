@@ -102,7 +102,7 @@ session.removeAttribute("editorUsers");
 	<iway:request name="approveByUsers" />
 </iwcm:present>
 
-<logic:notPresent name="approveByUsers">
+<iwcm:notPresent name="approveByUsers">
 	<iwcm:present name="pageSavedToPublic">
 		<% if (ef.isAvailable()==false) { %>
 			<iwcm:text key="admin.page_toolbar.pozor_stranka_sa_verejne_nezobrazuje"/>
@@ -119,7 +119,7 @@ session.removeAttribute("editorUsers");
 				<iwcm:text key="editor.publish.pagesaved" />
 				<iway:request name="pagePublishDate"/>
 	</iwcm:present>
-</logic:notPresent>
+</iwcm:notPresent>
 <%
 EditorDB.cleanSessionData(request);
 %>

@@ -108,21 +108,21 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 <div class="alert-wrapper">
                     <div class="alert alert-danger">
                         <span>
-                            <logic:notPresent name="errorsList">
+                            <iwcm:notPresent name="errorsList">
                                 <c:if test="${empty param.auth}">
                                     <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
                                 </c:if>
                                 <c:if test="${not empty param.auth}">
                                     <iwcm:text key="logon.password.enter_new_password"/><br/>
                                 </c:if>
-                            </logic:notPresent>
+                            </iwcm:notPresent>
                             <iwcm:present name="errorsList">
                                 <iwcm:text key="user.form.errors"/>
                             </iwcm:present>
                         </span>
                     </div>
                     <div class="infotext">
-                        <logic:notPresent name="errorsList">
+                        <iwcm:notPresent name="errorsList">
                         <ul>
                             <%if (Constants.getInt("password"+constStr+"MinLength") > 0) { %>
                                 <li><iwcm:text key="logon.change_password.min_length" param1='<%=Constants.getString("password"+constStr+"MinLength")%>'/></li>
@@ -135,7 +135,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                             <% } %>
                                 <li><iwcm:text key="logon.change_password.used_in_history2"/></li>
                         </ul>
-                        </logic:notPresent>
+                        </iwcm:notPresent>
                         <iwcm:present name="errors">
                             <ul>
                                 <li>${errors}</li>

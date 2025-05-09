@@ -106,11 +106,11 @@
 			<iwcm:present name="confirmUnsubscribeText">
 				<div class="unsubscribe-confirm-text">
 					<iway:request name="confirmUnsubscribeText"/>
-					<logic:notPresent name="unsubscribeSuccess">
+					<iwcm:notPresent name="unsubscribeSuccess">
 						<p>
 							<a href="/" class="btn btn-primary"><iwcm:text key="components.dmail.unsubscribe.unsubscribeCancel"/></a>
 						</p>
-					</logic:notPresent>
+					</iwcm:notPresent>
 				</div>
 			</iwcm:present>
 
@@ -129,7 +129,7 @@
 				</div>
 			</iwcm:present>
 
-			<logic:notPresent name="unsubscribeSuccess">
+			<iwcm:notPresent name="unsubscribeSuccess">
 				<p class="email-address">
 					<label for="unsubscribeEmail" class="form-label"><iwcm:text key="dmail.subscribe.email"/>:</label>
 					<input id="unsubscribeEmail" class="emailField form-control" type="text" name="email" value="<%=ResponseUtils.filter(email)%>" <% if (dmspID>0 && Tools.isNotEmpty(email)) out.print("readonly='readonly'"); %> />
@@ -138,7 +138,7 @@
 					<input type="hidden" name="save" value="true" />
 					<input type="submit" class="bSubmit btn btn-secondary" name="bSubmit" value="<iwcm:text key="dmail.unsubscribe.unsubscribe"/>" />
 				</p>
-			</logic:notPresent>
+			</iwcm:notPresent>
 
 			<iwcm:present name="unsubscribeSuccess-showUndelete">
 				<p>

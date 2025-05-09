@@ -64,9 +64,9 @@ int doc_id = -1;
    </style>
 </head>
 <body>
-<logic:notPresent name="docHistory">
+<iwcm:notPresent name="docHistory">
 &nbsp;&nbsp;<iwcm:text key="history.empty"/>
-</logic:notPresent>
+</iwcm:notPresent>
 <iwcm:present name="docHistory">
 <table class="history">
 	<tr>

@@ -142,12 +142,12 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 			<jsp:include page="/admin/css/perms-css.jsp"/>
 
 			<% if (BrowserDetector.isSmartphoneOrTablet(request) == false) {%>
-			<logic:notPresent name="closeTable">
+			<iwcm:notPresent name="closeTable">
 				body
 				{
 					overflow: hidden;
 				}
-			</logic:notPresent>
+			</iwcm:notPresent>
 			<% } %>
 
 
@@ -336,7 +336,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 			</table>
 	</iwcm:present>
 
-	<logic:notPresent name="closeTable">
+	<iwcm:notPresent name="closeTable">
 		<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 		<div class="popupSizeFinder"></div>
@@ -358,7 +358,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 				<td class="main mainTab" valign="top" colspan="2">
 		   		<% if (BrowserDetector.isSmartphoneOrTablet(request)==false) {%><div id="dialogCentralRow" class="calendarPopupStop" style="height: 100vh; width: auto; overflow: auto; padding: 0px; margin:0px; position: relative;"><% } %>
 
-	</logic:notPresent>
+	</iwcm:notPresent>
 </logic:empty>
 
 <logic:notEmpty name="inIframe">

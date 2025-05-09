@@ -48,9 +48,9 @@
 	String deliveryCountryKey = Tools.isEmpty(invoice.getDeliveryCountry()) == true ? "&nbsp;" : prop.getText( "stat.countries.tld" + invoice.getDeliveryCountry() );
 %>
 
-<logic:notPresent name="basketItems">
+<iwcm:notPresent name="basketItems">
    <iwcm:text key="components.basket.invoice_email.no_products_in_order"/>.
-</logic:notPresent>
+</iwcm:notPresent>
 
 <iwcm:present name="basketItems">
 

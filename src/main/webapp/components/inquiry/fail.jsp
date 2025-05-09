@@ -17,7 +17,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <BODY class="inquiryPopup">
 
 <iwcm:present name="spam"><iwcm:text key="components.inquiry.spamDetected"/></iwcm:present>
-<logic:notPresent name="spam"><bean:write name="answerForm" property="answerTextFail"/></logic:notPresent>    
+<iwcm:notPresent name="spam"><bean:write name="answerForm" property="answerTextFail"/></iwcm:notPresent>    
 
 </BODY>
 </HTML>

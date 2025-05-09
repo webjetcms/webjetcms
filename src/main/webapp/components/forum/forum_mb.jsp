@@ -254,10 +254,10 @@ if(!isAjaxCall)
 }
 %>
 <!-- HLAVNE FORUM*********************************************************************************************** -->
-<logic:notPresent name="rootGroup">
+<iwcm:notPresent name="rootGroup">
 <h1 class="maintitle"><bean:write name="doc_title"/></h1>
 <p class="mainSubtitle"><bean:write name="perex_data" filter="false"/></p>
-</logic:notPresent>
+</iwcm:notPresent>
 
 <iwcm:present name="rootGroup">
 	<%if(showSearchBox==true){%>
@@ -347,7 +347,7 @@ if(!isAjaxCall)
  </div>
  <%request.removeAttribute("delTimeLimitExpired");%>
 </iwcm:present>
-<logic:notPresent name="rootGroup">
+<iwcm:notPresent name="rootGroup">
  <%if(advertisementType){%>
     <span class="forumAdvertisement"><iwcm:text key="components.forum.advertisement_type_message"/></span>
  <%} if(!active){%>
@@ -472,7 +472,7 @@ if(!isAjaxCall)
 		%>
 	</div>
 </iwcm:present>
-</logic:notPresent>
+</iwcm:notPresent>
 <%request.removeAttribute("delTimeLimitExpired");%>
 <%if(!isAjaxCall){%>
 </div>

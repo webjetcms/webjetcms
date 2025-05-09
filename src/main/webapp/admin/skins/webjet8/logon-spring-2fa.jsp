@@ -114,11 +114,11 @@
                                 <label class="control-label"><iwcm:text key="user.gauth.enterCodeAfterSetup"/></label>
                             </div>
                         </iwcm:present>
-                        <logic:notPresent name="QRURL" scope="session">
+                        <iwcm:notPresent name="QRURL" scope="session">
                             <div class="form-group">
                                 <label class="control-label"><iwcm:text key="user.gauth.label"/></label>
                             </div>
-                        </logic:notPresent>
+                        </iwcm:notPresent>
                         <div class="form-group">
                             <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
                             <div class="input-icon">

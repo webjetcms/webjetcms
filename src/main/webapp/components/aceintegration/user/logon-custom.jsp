@@ -186,7 +186,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				</fieldset>
 			</form>
 		</iwcm:present>
-		<logic:notPresent name='<%=Constants.USER_KEY+"_changepassword"%>'>
+		<iwcm:notPresent name='<%=Constants.USER_KEY+"_changepassword"%>'>
 
 			<%
 				//user je prihlaseny, ale zobrazil sa mu logon form - nema spravne prava (skupinu)
@@ -268,7 +268,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 
 
 
-		</logic:notPresent>
+		</iwcm:notPresent>
 
 	</div>
 

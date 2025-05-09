@@ -26,7 +26,7 @@ List<IwcmFile> getFiles(String path) {
 
 	return list;
 }
-%><logic:notPresent name="dontCheckAdmin"><iwcm:checkLogon admin="true"/></logic:notPresent><iwcm:present name="dontCheckAdmin"><iwcm:checkLogon /></iwcm:present>
+%><iwcm:notPresent name="dontCheckAdmin"><iwcm:checkLogon admin="true"/></iwcm:notPresent><iwcm:present name="dontCheckAdmin"><iwcm:checkLogon /></iwcm:present>
 <%
 request.setAttribute("elfinderCss", getFiles("/admin/elFinder/css/"));
 request.setAttribute("elfinderUi", getFiles("/admin/elFinder/js/ui/"));

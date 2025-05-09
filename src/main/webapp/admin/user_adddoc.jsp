@@ -46,7 +46,7 @@ body { overflow: auto }
 
 
 </iwcm:present>
-<logic:notPresent parameter="docId">
+<iwcm:notPresent parameter="docId">
 <html>
 <head>
    <title><iwcm:text key="editor.link.insert_link"/></title>
@@ -370,4 +370,4 @@ request.setAttribute("ajaxSupportInserted", true);
 </form>
 </body>
 </html>
-</logic:notPresent>
+</iwcm:notPresent>

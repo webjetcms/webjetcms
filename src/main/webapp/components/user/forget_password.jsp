@@ -35,11 +35,11 @@ if(request.getParameter("loginName") != null)
 	<%}%>
 	<br />
 </iwcm:present>
-<logic:notPresent name="passResultEmail">
+<iwcm:notPresent name="passResultEmail">
     <iwcm:present name="error.logon.user.blocked">
         <p class='alert alert-danger'><iwcm:text key="checkform.fail_probablySpamBot"/></p>
     </iwcm:present>
-</logic:notPresent>
+</iwcm:notPresent>
 
 <form name="passwdSendForm" method="post" action="<%=PathFilter.getOrigPath(request)%>">
 	<%if(Constants.getBoolean("passwordUseHash")){%>
