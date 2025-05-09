@@ -6,8 +6,6 @@ import java.util.Map;
 
 import javax.servlet.jsp.JspException;
 
-import org.apache.struts.taglib.TagUtils;
-
 import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
 /**
@@ -49,17 +47,17 @@ public class EmptyTag extends ConditionalTagBase {
             JspException e =
                 new JspException(CustomTagUtils.getInstance().getMessage("empty.noNameAttribute"));
 
-            TagUtils.getInstance().saveException(pageContext, e);
+            CustomTagUtils.getInstance().saveException(pageContext, e);
             throw e;
         }
 
         Object value = null;
 
         if (this.property == null) {
-            value = TagUtils.getInstance().lookup(pageContext, name, scope);
+            value = CustomTagUtils.getInstance().lookup(pageContext, name, scope);
         } else {
             value =
-                TagUtils.getInstance().lookup(pageContext, name, property, scope);
+                CustomTagUtils.getInstance().lookup(pageContext, name, property, scope);
         }
 
         boolean empty = true;
