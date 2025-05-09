@@ -115,16 +115,16 @@ request.setAttribute("user",user);
 				</tr>
 				<tr>
 					<td><iwcm:text key="reguser.sex"/>:</td>
-					<logic:equal name="user" property="sexMale" value="true">
+					<iwcm:equal name="user" property="sexMale" value="true">
 					<td>
 						<iwcm:text key="reguser.male"/>
 					</td>
-					</logic:equal>
-					<logic:equal name="user" property="sexMale" value="false">
+					</iwcm:equal>
+					<iwcm:equal name="user" property="sexMale" value="false">
 					<td>
 						<iwcm:text key="reguser.female"/>
 					</td>
-					</logic:equal>
+					</iwcm:equal>
 				</tr>
 				<iwcm:notEmpty name="user" property="photo">
 				<tr>

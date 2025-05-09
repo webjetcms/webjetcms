@@ -956,27 +956,71 @@
   </tag>
 
   <tag>
-        <name>notEmpty</name>
-        <tag-class>sk.iway.iwcm.tags.NotEmptyTag</tag-class>
-        <body-content>JSP</body-content>
-        <description>
-          Evaluate the nested body content of this tag if the requested variable is neither null, nor an empty string, nor an empty java.util.Collection (tested by the .isEmpty() method on the java.util.Collection interface).
-        </description>
-        <attribute>
-            <name>name</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>property</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <name>scope</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
+    <name>notEmpty</name>
+    <tag-class>sk.iway.iwcm.tags.NotEmptyTag</tag-class>
+    <body-content>JSP</body-content>
+    <description>
+      Evaluate the nested body content of this tag if the requested variable is neither null, nor an empty string, nor an empty java.util.Collection (tested by the .isEmpty() method on the java.util.Collection interface).
+    </description>
+    <attribute>
+        <name>name</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>property</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>scope</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
+  <tag>
+    <name>equal</name>
+    <tag-class>sk.iway.iwcm.tags.EqualTag</tag-class>
+    <body-content>JSP</body-content>
+    <description>
+      Evaluate the nested body content of this tag if the requested variable is equal to the specified value.
+    </description>
+    <attribute>
+        <name>cookie</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>header</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>name</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>parameter</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>property</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>scope</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>value</name>
+        <required>true</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
 
 </taglib>

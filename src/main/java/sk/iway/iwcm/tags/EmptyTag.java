@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.servlet.jsp.JspException;
 
+import sk.iway.iwcm.tags.support_logic.CustomConditionalTagBase;
 import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
 /**
@@ -16,7 +17,7 @@ import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
  *          $
  * @since Struts 1.1
  */
-public class EmptyTag extends ConditionalTagBase {
+public class EmptyTag extends CustomConditionalTagBase {
     // ------------------------------------------------------ Protected Methods
 
     /**

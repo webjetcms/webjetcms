@@ -50,14 +50,14 @@ if (isAdmin)
 
 	<strong>
 	   <span class="forumVulgar">
-			<logic:equal name="permissionDenied" value="true"><iwcm:text key="components.forum.new.upload_not_allowed"/></logic:equal>
-			<logic:equal name="permissionDenied" value="fileSize"><iwcm:text key="components.forum.new.upload_not_allowed_filesize"/></logic:equal>
-			<logic:equal name="permissionDenied" value="fileType"><iwcm:text key="components.forum.new.upload_not_allowed_filetype"/></logic:equal>
-			<logic:equal name="permissionDenied" value="sameText"><iwcm:text key="components.forum.new.sameText"/></logic:equal>
-			<logic:equal name="permissionDenied" value="postLimit"><iwcm:text key="spam_protection.post_forbidden"
+			<iwcm:equal name="permissionDenied" value="true"><iwcm:text key="components.forum.new.upload_not_allowed"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="fileSize"><iwcm:text key="components.forum.new.upload_not_allowed_filesize"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="fileType"><iwcm:text key="components.forum.new.upload_not_allowed_filetype"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="sameText"><iwcm:text key="components.forum.new.sameText"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="postLimit"><iwcm:text key="spam_protection.post_forbidden"
 				param1='<%=Constants.getInt(SpamProtection.HOURLY_LIMIT_KEY)+""%>'
 				param2='<%=Constants.getInt(SpamProtection.TIMEOUT_KEY)+""%>' />
-			</logic:equal>
+			</iwcm:equal>
 	   </span>
    </strong>
 </iwcm:present>

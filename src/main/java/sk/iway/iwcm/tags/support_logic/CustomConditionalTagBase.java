@@ -1,4 +1,4 @@
-package sk.iway.iwcm.tags;
+package sk.iway.iwcm.tags.support_logic;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -9,7 +9,7 @@ import javax.servlet.jsp.tagext.TagSupport;
  * @version $Rev$ $Date: 2004-10-16 12:38:42 -0400 (Sat, 16 Oct 2004)
  *          $
  */
-public abstract class ConditionalTagBase extends TagSupport {
+public abstract class CustomConditionalTagBase extends TagSupport {
     // ------------------------------------------------------------- Properties
 
     /**
@@ -127,6 +127,7 @@ public abstract class ConditionalTagBase extends TagSupport {
      *
      * @throws JspException if a JSP exception occurs
      */
+    @Override
     public int doStartTag() throws JspException {
         if (condition()) {
             return (EVAL_BODY_INCLUDE);
@@ -140,6 +141,7 @@ public abstract class ConditionalTagBase extends TagSupport {
      *
      * @throws JspException if a JSP exception occurs
      */
+    @Override
     public int doEndTag() throws JspException {
         return (EVAL_PAGE);
     }
@@ -147,6 +149,7 @@ public abstract class ConditionalTagBase extends TagSupport {
     /**
      * Release all allocated resources.
      */
+    @Override
     public void release() {
         super.release();
         cookie = null;

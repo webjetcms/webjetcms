@@ -32,6 +32,6 @@ if (Tools.isNotEmpty(qs))
 <!-- // dialogove okno s funkciami -->
 <jsp:include page="/components/dialog.jsp" /> 
 
-<logic:equal name="showLink" value="true">
+<iwcm:equal name="showLink" value="true">
 	<a class="sendLink" href="javascript:void(0);" onclick="openWJDialog('sendLink', '/components/send_link/send_link_form.jsp?docid=<%=Tools.getDocId(request)%>&sendType=<%=sendType%>&qs=<%=urlParams %>');" title="<iwcm:text key="components.send_link.title" />"><iwcm:text key="components.send_link.title" /></a>
-</logic:equal>
+</iwcm:equal>

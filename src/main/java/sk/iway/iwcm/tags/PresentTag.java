@@ -1,16 +1,16 @@
 package sk.iway.iwcm.tags;
 
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
+import java.security.Principal;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 
-import java.security.Principal;
+import sk.iway.iwcm.tags.support_logic.CustomConditionalTagBase;
+import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
-import java.util.StringTokenizer;
-
-public class PresentTag extends ConditionalTagBase {
+public class PresentTag extends CustomConditionalTagBase {
     public static final String ROLE_DELIMITER = ",";
 
     // ------------------------------------------------------ Protected Methods

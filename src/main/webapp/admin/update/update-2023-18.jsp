@@ -423,6 +423,10 @@ static {
 	//Replace logic:notEmpty with iwcm:notEmpty
 	replaces.add(new OptionDto("<" + "logic:notEmpty", "<" + "iwcm:notEmpty", ".jsp"));
 	replaces.add(new OptionDto("</" + "logic:notEmpty", "</" + "iwcm:notEmpty", ".jsp"));
+
+	//Replace logic:equal with iwcm:equal
+	replaces.add(new OptionDto("<" + "logic:equal", "<" + "iwcm:equal", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:equal", "</" + "iwcm:equal", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
