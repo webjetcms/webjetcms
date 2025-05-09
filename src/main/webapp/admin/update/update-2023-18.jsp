@@ -438,6 +438,10 @@ static {
 	//Replace html:hidden with iwcm:hidden
 	replaces.add(new OptionDto("<" + "html:hidden", "<" + "iwcm:hidden", ".jsp"));
 	replaces.add(new OptionDto("</" + "html:hidden", "</" + "iwcm:hidden", ".jsp"));
+
+	//Replace html:options with iwcm:options
+	replaces.add(new OptionDto("<" + "html:options", "<" + "iwcm:options", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:options", "</" + "iwcm:options", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

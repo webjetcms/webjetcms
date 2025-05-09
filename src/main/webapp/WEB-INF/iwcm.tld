@@ -1297,4 +1297,54 @@
     </attribute>
   </tag>
 
+  <tag>
+    <name>options</name>
+    <tag-class>sk.iway.iwcm.tags.OptionsTag</tag-class>
+    <body-content>empty</body-content>
+    <description>
+      Render a Collection of Select Options
+    </description>
+    <attribute>
+        <name>collection</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>filter</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+        <type>boolean</type>
+    </attribute>
+    <attribute>
+        <name>labelName</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>labelProperty</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>name</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>property</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>style</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+    <attribute>
+        <name>styleClass</name>
+        <required>false</required>
+        <rtexprvalue>true</rtexprvalue>
+    </attribute>
+  </tag>
+
 </taglib>

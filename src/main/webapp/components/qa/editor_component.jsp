@@ -163,7 +163,7 @@ function loadListIframe()
 						<!-- 			sqlQuery="SELECT DISTINCT group_name FROM questions_answers ORDER BY group_name" -->
 						<%pageContext.setAttribute("selectSqlQueryOptions", SettingsAdminDB.filterBeansByUserAllowedCategories(QADB.getQARoots(request),"label",user,"menuQa"));%>
 						<iwcm:select property="groupName" name="groupName" enableNewTextKey="qa.admin_answer.new_group" style="max-width: 500px;">
-			       			<html:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
+			       			<iwcm:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
 			    		</iwcm:select>
 			    	</div>
 				</div>
@@ -216,7 +216,7 @@ function loadListIframe()
 					</div>
 					<div class="col-sm-8">
 						<iwcm:select property="groupName" name="groupName" sqlQuery="SELECT DISTINCT group_name FROM questions_answers ORDER BY group_name" enableNewTextKey="qa.admin_answer.new_group">
-			       			<html:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
+			       			<iwcm:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
 			    		</iwcm:select>
 				    </div>
 				</div>

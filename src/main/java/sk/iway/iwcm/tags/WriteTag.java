@@ -1,12 +1,34 @@
 package sk.iway.iwcm.tags;
 
-import net.sourceforge.stripes.exception.SourcePageNotFoundException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+
 import org.apache.commons.lang.time.StopWatch;
-
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
-
 import org.springframework.context.ApplicationContext;
-import sk.iway.iwcm.*;
+
+import net.sourceforge.stripes.exception.SourcePageNotFoundException;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.SearchTools;
@@ -25,21 +47,8 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetComponentParser;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyTagSupport;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *  vypise string ulozeny v request objekte (vyhodne ked sa to setne v nejakej
