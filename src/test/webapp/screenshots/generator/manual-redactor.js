@@ -418,7 +418,7 @@ Scenario('logon', ({ I, Document, i18n }) => {
     Document.screenshot("/redactor/admin/logon-weak-password.png", 1080, 685);
 });
 
-Scenario('customer zone', ({ I, Document }) => {
+Scenario('customer zone', ({ I, Document, i18n }) => {
     I.logout();
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
     I.wait(30); //password expiry time

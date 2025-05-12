@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('rating screen', ({ I , DT, DTE, Document }) => {
+Scenario('rating screen', ({ I , DT, DTE, Document, i18n }) => {
     let confLng = I.getConfLng();
     let postfix = "";
     let postfix_lng = "";
@@ -43,15 +43,15 @@ Scenario('rating screen', ({ I , DT, DTE, Document }) => {
     Document.editorComponentOpen();
     Document.screenshot("/redactor/apps/rating/rating-form_app.png");
 
-    DTE.selectOption("ratingType", "Rating stránky");
+    DTE.selectOption("ratingType", i18n.get("Page rating"));
     I.wait(1);
     Document.screenshot("/redactor/apps/rating/rating-page_app.png");
 
-    DTE.selectOption("ratingType", "Top používatelia");
+    DTE.selectOption("ratingType", i18n.get("Top users"));
     I.wait(1);
     Document.screenshot("/redactor/apps/rating/rating-top-users_app.png");
 
-    DTE.selectOption("ratingType", "Top stránky");
+    DTE.selectOption("ratingType", i18n.get("Top pages"));
     I.wait(1);
     Document.screenshot("/redactor/apps/rating/rating-top-pages_app.png");
 });
