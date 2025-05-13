@@ -92,7 +92,7 @@ pageContext.setAttribute("doc", doc);
 			<tr>
 			   <td><strong>DocID:</strong></td>
 			   <td>
-			      <a href='/admin/v9/webpages/web-pages-list/?docid=<iwcm:strutsWrite name="doc" property="docId"/>' target="_blank"><iwcm:strutsWrite name="doc" property="docId"/></a>
+			      <a href='/admin/v9/webpages/web-pages-list/?docid=<iwcm:beanWrite name="doc" property="docId"/>' target="_blank"><iwcm:beanWrite name="doc" property="docId"/></a>
 				</td>
 			</tr>
 			<%if(!doc.isAvailable() || "false".equals((String)request.getAttribute("is_available"))){%>
@@ -123,13 +123,13 @@ pageContext.setAttribute("doc", doc);
 
 			<tr>
 				<td><strong><iwcm:text key="history.changedBy"/>:</strong></td>
-				<td><a href="mailto:<iwcm:strutsWrite name="doc" property="authorEmail"/>"><iwcm:strutsWrite name="doc" property="authorName"/></a></td>
+				<td><a href="mailto:<iwcm:beanWrite name="doc" property="authorEmail"/>"><iwcm:beanWrite name="doc" property="authorName"/></a></td>
 			</tr>
 			<tr>
 				<td><strong><iwcm:text key="editor.date"/>:</strong></td>
 			   <td>
-			      <iwcm:strutsWrite name="doc" property="dateCreatedString"/>
-					<iwcm:strutsWrite name="doc" property="timeCreatedString"/>
+			      <iwcm:beanWrite name="doc" property="dateCreatedString"/>
+					<iwcm:beanWrite name="doc" property="timeCreatedString"/>
 			   </td>
 			</tr>
 		</table>

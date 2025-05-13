@@ -1080,8 +1080,8 @@
   </tag>
 
   <tag>
-    <name>strutsWrite</name>
-    <tag-class>sk.iway.iwcm.tags.StrutsWriteTag</tag-class>
+    <name>beanWrite</name>
+    <tag-class>sk.iway.iwcm.tags.BeanWriteTag</tag-class>
     <body-content>empty</body-content>
     <description>
       Render the value of the specified bean property to the current JspWriter.

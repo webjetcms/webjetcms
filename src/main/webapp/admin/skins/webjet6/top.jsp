@@ -117,7 +117,7 @@ page import="sk.iway.iwcm.system.ModuleInfo"%>
 				<a href="<%=Constants.getString("adminLogoffLink") %>" target="_top" class="logoff">&nbsp;<iframe src="<iwcm:cp/>/admin/refresher.jsp" name="refresher" width="1" height="1" marginwidth="0" marginheight="0" frameborder="0" scrolling="no"></iframe></a>
 
 				<span>
-					<iwcm:strutsWrite name="iwcm_useriwcm" property="fullName"/><br/>
+					<iwcm:beanWrite name="iwcm_useriwcm" property="fullName"/><br/>
 				<% if (Tools.isEmpty(Constants.getString("NTLMDomainController"))) { %><a href="javascript:openPopupDialogFromTopFrame('<iwcm:cp/>/admin/edituser.do');" target="mainFrame"><iwcm:text key="admin.top.change_user_details"/></a><% } %>
 				</span>
 

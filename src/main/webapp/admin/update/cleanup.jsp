@@ -275,7 +275,7 @@ request.setAttribute("modules", allModules);
 
 	<h2>Vymazanie modulov:</h2>
 	<iwcm:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
-		<input type="checkbox" name="m_<iwcm:strutsWrite name="m" property="itemKey" <% if (m.isAvailable()==false) out.print(" checked='checked'"); %>/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<iwcm:strutsWrite name="m" property="itemKey"/>]<br>
+		<input type="checkbox" name="m_<iwcm:beanWrite name="m" property="itemKey" <% if (m.isAvailable()==false) out.print(" checked='checked'"); %>/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<iwcm:beanWrite name="m" property="itemKey"/>]<br>
 	</iwcm:iterate>
 
 	<h2>Vymazanie komponent:</h2>

@@ -238,7 +238,7 @@ if(!isAjaxCall)
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:strutsWrite name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:beanWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>
@@ -308,10 +308,10 @@ if(!isAjaxCall)
 					<%}%>
 
 					<iwcm:notEmpty name="field" property="authorEmail">
-						<span class="name"><a href="mailto:<iwcm:strutsWrite name="field" property="authorEmail"/>"><iwcm:strutsWrite name="field" property="authorName"/></a></span>
+						<span class="name"><a href="mailto:<iwcm:beanWrite name="field" property="authorEmail"/>"><iwcm:beanWrite name="field" property="authorName"/></a></span>
 					</iwcm:notEmpty>
 					<iwcm:empty name="field" property="authorEmail">
-						<span class="name"><iwcm:strutsWrite name="field" property="authorName"/></span>
+						<span class="name"><iwcm:beanWrite name="field" property="authorName"/></span>
 					</iwcm:empty>
 					<br/>
 					<span class="postdetails">
@@ -358,14 +358,14 @@ if(!isAjaxCall)
 
 						<div class="row post-head hidden-xs no-margin-bottom">
 							<div class="col-md-8 col-xs-8 author">
-								<span class="postdetails"><iwcm:text key="components.forum.bb.posted"/>: <iwcm:strutsWrite name="field" property="questionDateDisplayDate"/> <iwcm:strutsWrite name="field" property="questionDateDisplayTime"/>
-								<span class="panel-title"><iwcm:text key="components.forum.bb.subject"/>: <iwcm:strutsWrite name="field" property="subject"/></span>
+								<span class="postdetails"><iwcm:text key="components.forum.bb.posted"/>: <iwcm:beanWrite name="field" property="questionDateDisplayDate"/> <iwcm:beanWrite name="field" property="questionDateDisplayTime"/>
+								<span class="panel-title"><iwcm:text key="components.forum.bb.subject"/>: <iwcm:beanWrite name="field" property="subject"/></span>
 							</div>
 							<div class="col-md-4 col-xs-4 no-padding">
 									<div class="btn-toolbar topic-buttons" role="toolbar">
 										<%	if (field.canUpload(user, uploadLimits, forumGroupBean)){%>
 										<div class="btn-group">
-											<a class="btn btn-default" href="javascript:popupNewUpload(<iwcm:strutsWrite name="field" property="forumId"/>, <%=docId%>, <%=parentId%>);">
+											<a class="btn btn-default" href="javascript:popupNewUpload(<iwcm:beanWrite name="field" property="forumId"/>, <%=docId%>, <%=parentId%>);">
 												<iwcm:text key="components.forum.upload"/>
 											</a>
 										</div>
@@ -374,7 +374,7 @@ if(!isAjaxCall)
 										<%if (field.canPost(forumGroupBean, user)) {%>
 										<div class="btn-group">
 											<span>
-												<a class="btn btn-info" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:strutsWrite name="field" property="forumId"/>&parent2=<%=parentId%>&type=mb_open&rootForumId=<%=rootForumId%>&docid=<%=docId%>&isCite=true&pageNum=<%=pageNum%>');">
+												<a class="btn btn-info" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:beanWrite name="field" property="forumId"/>&parent2=<%=parentId%>&type=mb_open&rootForumId=<%=rootForumId%>&docid=<%=docId%>&isCite=true&pageNum=<%=pageNum%>');">
 													<iwcm:text key="components.forum.quote"/>
 												</a>
 											</span>
@@ -465,7 +465,7 @@ if(!isAjaxCall)
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:strutsWrite name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:beanWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>

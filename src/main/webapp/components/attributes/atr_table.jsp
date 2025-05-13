@@ -56,16 +56,16 @@ DocDB docDB = DocDB.getInstance();
          <tr class="atrTableHeader">
             <td>&nbsp;</td>
             <iwcm:iterate id="atrBean" name="atrDocBean" property="atrList" type="sk.iway.iwcm.doc.AtrBean">
-               <td><iwcm:strutsWrite name="atrBean" property="atrName"/></td>
+               <td><iwcm:beanWrite name="atrBean" property="atrName"/></td>
             </iwcm:iterate>
          </tr>
       <% }
       counter = 1 - counter;
       %>
       <tr class='atrTableRow<%=counter%>'>
-         <td class='atrTableLink'><a href="<%=docDB.getDocLink(atrDocBean.getDocId(), request)%>"><iwcm:strutsWrite name="atrDocBean" property="title"/></a></td>
+         <td class='atrTableLink'><a href="<%=docDB.getDocLink(atrDocBean.getDocId(), request)%>"><iwcm:beanWrite name="atrDocBean" property="title"/></a></td>
          <iwcm:iterate id="atrBean" name="atrDocBean" property="atrList" type="sk.iway.iwcm.doc.AtrBean">
-            <td align="center"><iwcm:strutsWrite name="atrBean" property="valueHtml" filter="false"/></td>
+            <td align="center"><iwcm:beanWrite name="atrBean" property="valueHtml" filter="false"/></td>
          </iwcm:iterate>
       </tr>
    </iwcm:iterate>

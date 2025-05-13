@@ -40,31 +40,31 @@ if (doc != null)
 	%>
 	<br/>
 	<iwcm:text key="history.changedBy"/>:
-    <a href="mailto:<iwcm:strutsWrite name="doc" property="authorEmail"/>"><iwcm:strutsWrite name="doc" property="authorName"/></a>
+    <a href="mailto:<iwcm:beanWrite name="doc" property="authorEmail"/>"><iwcm:beanWrite name="doc" property="authorName"/></a>
 
     <iwcm:text key="editor.date"/>:
-    <iwcm:strutsWrite name="doc" property="dateCreatedString"/> <iwcm:strutsWrite name="doc" property="timeCreatedString"/>&nbsp;
+    <iwcm:beanWrite name="doc" property="dateCreatedString"/> <iwcm:beanWrite name="doc" property="timeCreatedString"/>&nbsp;
 	<%
 	if (Tools.isNotEmpty(doc.getPublishStartString()))
 	{
 		if (doc.isPublicable())
 		{
-			%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.start.publication"/> <iwcm:strutsWrite name="doc" property="publishStartString"/> <iwcm:strutsWrite name="doc" property="publishStartTimeString"/></strong><%
+			%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.start.publication"/> <iwcm:beanWrite name="doc" property="publishStartString"/> <iwcm:beanWrite name="doc" property="publishStartTimeString"/></strong><%
 		}
 		else if (historyId > 0)
 		{
-			%><br/><iwcm:text key="components.reservation.addReservation.date_from"/> <iwcm:strutsWrite name="doc" property="publishStartString"/> <iwcm:strutsWrite name="doc" property="publishStartTimeString"/><%
+			%><br/><iwcm:text key="components.reservation.addReservation.date_from"/> <iwcm:beanWrite name="doc" property="publishStartString"/> <iwcm:beanWrite name="doc" property="publishStartTimeString"/><%
 		}
 	}
 	if (Tools.isNotEmpty(doc.getPublishEndString()))
 	{
 		if (doc.isDisableAfterEnd())
 		{
-			%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.end.publication"/> <iwcm:strutsWrite name="doc" property="publishEndString"/> <iwcm:strutsWrite name="doc" property="publishEndTimeString"/></strong><%
+			%><br/><img src="/admin/images/warning.gif" align="absmiddle"/> <strong><iwcm:text key="document.end.publication"/> <iwcm:beanWrite name="doc" property="publishEndString"/> <iwcm:beanWrite name="doc" property="publishEndTimeString"/></strong><%
 		}
 		else if (historyId > 0)
 		{
-			%><br/><iwcm:text key="components.reservation.addReservation.date_to"/> <iwcm:strutsWrite name="doc" property="publishEndString"/> <iwcm:strutsWrite name="doc" property="publishEndTimeString"/><%
+			%><br/><iwcm:text key="components.reservation.addReservation.date_to"/> <iwcm:beanWrite name="doc" property="publishEndString"/> <iwcm:beanWrite name="doc" property="publishEndTimeString"/><%
 		}
 	}
 }

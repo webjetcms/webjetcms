@@ -337,13 +337,13 @@
       <iwcm:present name="basketItems">
           <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 
-            <tr class="itemTr itemId_<iwcm:strutsWrite name="good" property="itemId"/> basketId_<iwcm:strutsWrite name="good" property="basketItemId"/>">
+            <tr class="itemTr itemId_<iwcm:beanWrite name="good" property="itemId"/> basketId_<iwcm:beanWrite name="good" property="basketItemId"/>">
                <td>
-                  <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><iwcm:strutsWrite name="good" property="title"/></a>
+                  <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><iwcm:beanWrite name="good" property="title"/></a>
                </td>
                <td class="fL">
                  <a href="javascript:void(0)" class="removeItem">Remove item</a>
-                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<iwcm:strutsWrite name="good" property="itemQty"/>">
+                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<iwcm:beanWrite name="good" property="itemQty"/>">
                  <a href="javascript:void(0)" class="addItem">Add item</a>
                </td>
                <td style="text-align: right;" class="basketPrice fL" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>

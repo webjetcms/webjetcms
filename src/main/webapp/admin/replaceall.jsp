@@ -349,9 +349,9 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					</tr>
 				<iwcm:iterate name="replacedPages" id="doc" type="sk.iway.iwcm.doc.DocDetails">
 					<tr>
-					<td><iwcm:strutsWrite name="doc" property="docId"/></td>
-					<td><a href="/showdoc.do?docid=<iwcm:strutsWrite name="doc" property="docId"/>" target="_blank"><iwcm:strutsWrite name="doc" property="title"/></a></td>
-					<td><iwcm:strutsWrite name="doc" property="virtualPath"/></td>
+					<td><iwcm:beanWrite name="doc" property="docId"/></td>
+					<td><a href="/showdoc.do?docid=<iwcm:beanWrite name="doc" property="docId"/>" target="_blank"><iwcm:beanWrite name="doc" property="title"/></a></td>
+					<td><iwcm:beanWrite name="doc" property="virtualPath"/></td>
 					</tr>
 				</iwcm:iterate>
 				</table>
@@ -370,8 +370,8 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					</tr>
 				<iwcm:iterate name="replacedGroups" id="group" type="sk.iway.iwcm.doc.GroupDetails">
 					<tr>
-					<td><iwcm:strutsWrite name="group" property="groupId"/></td>
-					<td><iwcm:strutsWrite name="group" property="groupName"/></td>
+					<td><iwcm:beanWrite name="group" property="groupId"/></td>
+					<td><iwcm:beanWrite name="group" property="groupName"/></td>
 					</tr>
 				</iwcm:iterate>
 				</table>

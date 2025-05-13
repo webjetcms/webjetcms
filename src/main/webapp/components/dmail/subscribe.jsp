@@ -245,14 +245,14 @@
 			<iwcm:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
 			<% if (ugd.isAllowUserEdit()) { %>
 			<p>
-				<label for="user_group_id_<iwcm:strutsWrite name="ugd" property="userGroupId"/>">
-					<strong><iwcm:strutsWrite name="ugd" property="userGroupName"/></strong>
+				<label for="user_group_id_<iwcm:beanWrite name="ugd" property="userGroupId"/>">
+					<strong><iwcm:beanWrite name="ugd" property="userGroupName"/></strong>
 					<iwcm:notEmpty name="ugd" property="userGroupComment">
 						<br/>
-						<iwcm:strutsWrite name="ugd" property="userGroupComment"/>
+						<iwcm:beanWrite name="ugd" property="userGroupComment"/>
 					</iwcm:notEmpty>
 				</label>
-				<input type="checkbox" name="user_group_id" id="user_group_id_<iwcm:strutsWrite name="ugd" property="userGroupId"/>" value="<iwcm:strutsWrite name="ugd" property="userGroupId"/>"<%
+				<input type="checkbox" name="user_group_id" id="user_group_id_<iwcm:beanWrite name="ugd" property="userGroupId"/>" value="<iwcm:beanWrite name="ugd" property="userGroupId"/>"<%
 					if (userGroups.indexOf(","+ugd.getUserGroupId()+",")!=-1 || userGroups.length()<2) out.print(" checked='checked'");
 					%> />&nbsp;
 			</p>

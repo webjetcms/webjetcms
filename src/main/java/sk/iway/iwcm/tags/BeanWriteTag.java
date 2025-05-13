@@ -24,7 +24,7 @@ import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
  *
  * @version $Rev$ $Date$
  */
-public class StrutsWriteTag extends TagSupport {
+public class BeanWriteTag extends TagSupport {
 
     //Default formats ...
     public static final String INT_FORMAT = null;

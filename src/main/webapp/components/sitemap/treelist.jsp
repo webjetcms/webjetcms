@@ -24,7 +24,7 @@ DocTreeAction.doTree(request);
    var Tree = new Array;
    // nodeId | parentNodeId | nodeName | nodeUrl
    <iwcm:iterate id="group" name="tree_list" type="sk.iway.iwcm.doc.DocTreeDetails" indexId="index">
-      Tree[<iwcm:strutsWrite name="index"/>] = "<jsp:getProperty name="group" property="id"/>|<jsp:getProperty name="group" property="parent"/>|<jsp:getProperty name="group" property="name"/>|<jsp:getProperty name="group" property="link"/>";
+      Tree[<iwcm:beanWrite name="index"/>] = "<jsp:getProperty name="group" property="id"/>|<jsp:getProperty name="group" property="parent"/>|<jsp:getProperty name="group" property="name"/>|<jsp:getProperty name="group" property="link"/>";
    </iwcm:iterate>
 
                createTree(Tree, 0, 4);

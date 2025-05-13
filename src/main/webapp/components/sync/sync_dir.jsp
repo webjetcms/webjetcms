@@ -342,7 +342,7 @@ function setRequestParam(prefix) {
 					%>
 				</td>
 				<td style="text-align: center;"><input type="checkbox" class="group-checkbox" data-id="group_${remoteGroup.groupId}"<%=checked %>/></td>
-				<td><span class="iconFolder">&nbsp;</span> <strong><iwcm:strutsWrite name="localPath"/></strong></td>
+				<td><span class="iconFolder">&nbsp;</span> <strong><iwcm:beanWrite name="localPath"/></strong></td>
 			</tr>
 			<c:if test="${!empty actionBean.remoteDocs}">
 				<c:forEach items="${actionBean.remoteDocs}" var="remoteDoc">

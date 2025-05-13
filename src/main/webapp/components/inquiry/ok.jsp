@@ -16,7 +16,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 </HEAD>
 <BODY class="inquiryPopup">
 
-    <iwcm:strutsWrite name="answerForm" property="answerTextOk"/>
+    <iwcm:beanWrite name="answerForm" property="answerTextOk"/>
 
 </BODY>
 </HTML>

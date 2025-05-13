@@ -40,7 +40,7 @@ out.println(Tools.getRequestParameter(request, "rnd"));
 		{
 			request.setAttribute("recipient"+msg.getCreateByUserId(), "");
 		%>
-			popupMessage(<iwcm:strutsWrite name="msg" property="adminMessageId"/>);
+			popupMessage(<iwcm:beanWrite name="msg" property="adminMessageId"/>);
 		<%}%>
 	</iwcm:iterate>
 	<%="</script>"%>

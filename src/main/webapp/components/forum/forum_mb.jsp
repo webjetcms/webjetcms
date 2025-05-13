@@ -255,8 +255,8 @@ if(!isAjaxCall)
 %>
 <!-- HLAVNE FORUM*********************************************************************************************** -->
 <iwcm:notPresent name="rootGroup">
-<h1 class="maintitle"><iwcm:strutsWrite name="doc_title"/></h1>
-<p class="mainSubtitle"><iwcm:strutsWrite name="perex_data" filter="false"/></p>
+<h1 class="maintitle"><iwcm:beanWrite name="doc_title"/></h1>
+<p class="mainSubtitle"><iwcm:beanWrite name="perex_data" filter="false"/></p>
 </iwcm:notPresent>
 
 <iwcm:present name="rootGroup">
@@ -367,7 +367,7 @@ if(!isAjaxCall)
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:strutsWrite name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:beanWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>
@@ -443,20 +443,20 @@ if(!isAjaxCall)
   			      <span class="topictitle"><%
 			        if("O".equals(flag)) {%><b><iwcm:text key="components.forum.announcement"/>: </b><%}
 					  else if("D".equals(flag)) {	%><b><iwcm:text key="components.forum.sticky"/>: </b><%}
-					%><a href='<%=Tools.addParametersToUrl(docDB.getDocLink(Tools.getIntValue(request.getParameter("docid"), -1)), "pId="+t.getForumId())%>' ><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("<span style=\"color: red;\">");%><iwcm:strutsWrite name="t" property="subject"/><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("</span>");%></a></span>
+					%><a href='<%=Tools.addParametersToUrl(docDB.getDocLink(Tools.getIntValue(request.getParameter("docid"), -1)), "pId="+t.getForumId())%>' ><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("<span style=\"color: red;\">");%><iwcm:beanWrite name="t" property="subject"/><%if(t != null && (t.isDeleted() || !t.getForumGroupEntity().getActive() || !t.isConfirmed())) out.print("</span>");%></a></span>
             </td>
-			   <td class="row2 posts"><span class="postdetails badge"><iwcm:strutsWrite name="t" property="statReplies"/></span></td>
+			   <td class="row2 posts"><span class="postdetails badge"><iwcm:beanWrite name="t" property="statReplies"/></span></td>
 			   <td class="row3 autor">
 			      <span class="name">
 			      <% if (t.getUserId()>0) { %>
-				   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(t.getDocId()),"uId",String.valueOf(t.getUserId()))%>&amp;type=view_profile"><iwcm:strutsWrite name="t" property="authorName"/></a>
+				   <a href="<%=Tools.addParameterToUrl(docDB.getDocLink(t.getDocId()),"uId",String.valueOf(t.getUserId()))%>&amp;type=view_profile"><iwcm:beanWrite name="t" property="authorName"/></a>
 				   <% } else { %>
-				   <iwcm:strutsWrite name="t" property="authorName"/>
+				   <iwcm:beanWrite name="t" property="authorName"/>
 				   <% } %>
 			      </span>
 			   </td>
-			   <td class="row2 views"><span class="postdetails badge"><iwcm:strutsWrite name="t" property="statViews"/></span></td>
-			   <td class="row3 lastpost"><span class="postdetails"><iwcm:strutsWrite name="t" property="lastPost"/></span></td>
+			   <td class="row2 views"><span class="postdetails badge"><iwcm:beanWrite name="t" property="statViews"/></span></td>
+			   <td class="row3 lastpost"><span class="postdetails"><iwcm:beanWrite name="t" property="lastPost"/></span></td>
 
 			</tr>
 		</iwcm:iterate>

@@ -7,7 +7,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
       session.setAttribute("refreshed", "true");
    }
    out.println(new java.util.Date());
-   
+
    if (InitServlet.isTypeCloud()==false)
    {
 	   List newMessages = MessageDB.getInstance(false).getUnreadedMessages(session);
@@ -26,7 +26,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		window.open("/components/messages/message_popup.jsp?messageId="+id,"msgpop"+id,options);
 	}
 	<iwcm:iterate id="msg" name="newMessages" type="sk.iway.iwcm.system.msg.AdminMessageBean">
-		popupMessage(<iwcm:strutsWrite name="msg" property="adminMessageId"/>);
+		popupMessage(<iwcm:beanWrite name="msg" property="adminMessageId"/>);
 	</iwcm:iterate>
 	<%="</script>"%>
 </iwcm:present>

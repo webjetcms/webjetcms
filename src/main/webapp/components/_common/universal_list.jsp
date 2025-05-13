@@ -267,9 +267,9 @@ request.setAttribute("items", items);
 
 	<display:column titleKey='<%=beanClass.getSimpleName()+"."+idField.getName() %>' sortable="true" sortProperty="<%=idField.getName() %>">
 		<% if (isEnabledEdit) {%>
- 		<a href="javascript:edit(<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>)"><iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/></a>
+ 		<a href="javascript:edit(<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>)"><iwcm:beanWrite name="row" property="<%=idField.getName() %>"/></a>
  		<% } else { %>
- 		<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>
+ 		<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>
  		<% } %>
 	</display:column>
 	<%
@@ -358,8 +358,8 @@ request.setAttribute("items", items);
    	if (isEnabledEdit)
    	{%>
 	   	<display:column style="text-align:center;" media="html" titleKey="components.captcha.tools">
-	   		<a href="javascript:edit(<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>)" title='<iwcm:text key="components.banner.edit"/>' class="iconEdit">&nbsp;</a>
-			<a href="javascript:confirmDelete(<iwcm:strutsWrite name="row" property="<%=idField.getName() %>"/>);" title='<iwcm:text key="button.delete"/>' class="iconDelete">&nbsp;</a>
+	   		<a href="javascript:edit(<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>)" title='<iwcm:text key="components.banner.edit"/>' class="iconEdit">&nbsp;</a>
+			<a href="javascript:confirmDelete(<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>);" title='<iwcm:text key="button.delete"/>' class="iconDelete">&nbsp;</a>
 	 	</display:column>
 	<% } %>
 

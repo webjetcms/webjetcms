@@ -14,7 +14,7 @@
 <%
 	ReservationBean reservation = (ReservationBean) request.getAttribute("reservation");
 	ReservationObjectBean reservationObject = (ReservationObjectBean) request.getAttribute("reservationObject");
-	
+
 	boolean approve = true;
 	if("true".equals(Tools.getParameter(request, "cancel")))
 		approve = false;
@@ -40,7 +40,7 @@
 					<%}%>
 				</tr>
 				<tr>
-					<td class="noRightBorder"><strong><iwcm:text key="components.reservation.number"/>:</strong> <iwcm:strutsWrite name="reservation" property="reservationId"/></td>
+					<td class="noRightBorder"><strong><iwcm:text key="components.reservation.number"/>:</strong> <iwcm:beanWrite name="reservation" property="reservationId"/></td>
 					<td class="alignRight">
 						<%if(approve){%>
 							<iwcm:text key="components.reservation.approved.date"/>: <%=Tools.formatDateTime(new Date())%>
@@ -65,11 +65,11 @@
 						<table class="invoiceInnerTable">
 					      <tr>
 					         <td><iwcm:text key="components.reservation.admin_addObject.name"/></td>
-					         <td><iwcm:strutsWrite name="reservationObject" property="name"/></td>
+					         <td><iwcm:beanWrite name="reservationObject" property="name"/></td>
 					      </tr>
 					      <tr>
 					         <td><iwcm:text key="components.reservation.admin_addObject.description"/></td>
-					         <td><iwcm:strutsWrite name="reservationObject" property="description"/></td>
+					         <td><iwcm:beanWrite name="reservationObject" property="description"/></td>
 					      </tr>
 					     </table><br/>
 				     	<strong><iwcm:text key="components.reservation"/></strong>
@@ -85,18 +85,18 @@
 						     </tr>
 						     <tr>
 						        <td><iwcm:text key="components.reservation.addReservation.purpose"/></td>
-						        <td><iwcm:strutsWrite name="reservation" property="purpose"/></td>
+						        <td><iwcm:beanWrite name="reservation" property="purpose"/></td>
 						     </tr>
 						     <%if(reservationObject.getReservationForAllDay() && Tools.isNotEmpty(reservationObject.getPriceForDayString()))
 						     {%>
 							     <tr>
 							        <td><iwcm:text key="components.reservation.admin_addObject.price_for_day"/>:</td>
-							        <td><iwcm:strutsWrite name="reservationObject" property="priceForDayString"/> €</td>
+							        <td><iwcm:beanWrite name="reservationObject" property="priceForDayString"/> €</td>
 							     </tr>
 							 <%}else if (Tools.isNotEmpty(reservationObject.getPriceForHourString())){%>
 							 	<tr>
 							        <td><iwcm:text key="components.reservation.admin_addObject.price_for_hour"/>:</td>
-							        <td><iwcm:strutsWrite name="reservationObject" property="priceForHourString"/> €</td>
+							        <td><iwcm:beanWrite name="reservationObject" property="priceForHourString"/> €</td>
 							     </tr>
 							 <%}%>
 						  </table>
@@ -107,19 +107,19 @@
 						<table class="invoiceInnerTable">
 					      <tr>
 					         <td><iwcm:text key="components.reservation.addReservation.name"/></td>
-					         <td><iwcm:strutsWrite name="reservation" property="name"/></td>
+					         <td><iwcm:beanWrite name="reservation" property="name"/></td>
 					      </tr>
 					      <tr>
 					         <td><iwcm:text key="components.reservation.addReservation.surname"/></td>
-					         <td><iwcm:strutsWrite name="reservation" property="surname"/></td>
+					         <td><iwcm:beanWrite name="reservation" property="surname"/></td>
 					      </tr>
 					      <tr>
 					         <td><iwcm:text key="components.reservation.addReservation.email"/></td>
-					         <td><iwcm:strutsWrite name="reservation" property="email"/></td>
+					         <td><iwcm:beanWrite name="reservation" property="email"/></td>
 					      </tr>
 					      <tr>
 					         <td><iwcm:text key="components.reservation.addReservation.phoneNumber"/></td>
-					         <td><iwcm:strutsWrite name="reservation" property="phoneNumber"/></td>
+					         <td><iwcm:beanWrite name="reservation" property="phoneNumber"/></td>
 					      </tr>
 					   </table>
 					</td>

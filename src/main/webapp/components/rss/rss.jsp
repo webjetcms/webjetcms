@@ -1,10 +1,10 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/xml");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*,java.text.*"%><%@page import="sk.iway.iwcm.io.IwcmFile"%><%@ page import="java.text.SimpleDateFormat" %><%@ page import="java.util.Locale" %><%@ 
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ 
-taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ 
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ 
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ 
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*,java.text.*"%><%@page import="sk.iway.iwcm.io.IwcmFile"%><%@ page import="java.text.SimpleDateFormat" %><%@ page import="java.util.Locale" %><%@
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
+taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
+taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
+taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
 taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%!
 
 private static SimpleDateFormat sdf;
@@ -17,7 +17,7 @@ static
 
 public synchronized static String formatDate(long date)
 {
-	return sdf.format(new Date(date));	
+	return sdf.format(new Date(date));
 }
 
 %><%
@@ -96,40 +96,40 @@ request.setAttribute("NO WJTOOLBAR", "true");
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 	<channel>
 		<title><%=title %></title>
-		<% out.print("<link>"+Tools.getBaseHref(request)+"/</link>"); //takto je to kvoli validatoru %>		
+		<% out.print("<link>"+Tools.getBaseHref(request)+"/</link>"); //takto je to kvoli validatoru %>
 		<description><%=description %></description>
 		<language><%=PageLng.getUserLng(request) %></language>
 		<pubDate><%
 		try
 	   {
 			out.print(formatDate(Tools.getNow()));
-	   } catch (Exception ex) {}				
+	   } catch (Exception ex) {}
 		%></pubDate>
-		<generator>WebJET Content Management</generator> 
+		<generator>WebJET Content Management</generator>
 		<ttl>60</ttl>
 		<image>
 			<title><%=title %></title>
 			<url><%=Tools.getBaseHref(request)%><%=logo %></url>
-			<% 
+			<%
 			IwcmFile imageFile = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(url));
-			if (imageFile.exists()) 
+			if (imageFile.exists())
 			{
-				out.print("<link>"+Tools.getBaseHref(request)+url+"</link>");	
+				out.print("<link>"+Tools.getBaseHref(request)+url+"</link>");
 			} %>
 		</image>
 		<atom:link href="<%=Tools.getBaseHref(request)%><%=PathFilter.getOrigPathDocId(request) %>" rel="self" type="application/rss+xml" />
 		<iwcm:present name="novinky">
 			<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 				<item>
-					<guid><%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request) %></guid>					
+					<guid><%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request) %></guid>
 					<title><iwcm:notEmpty name="doc" property="title"><![CDATA[<jsp:getProperty name="doc" property="title"/>]]></iwcm:notEmpty></title>
-					<% out.print("<link>"+docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, request)+"</link>"); %>					
+					<% out.print("<link>"+docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), true, request)+"</link>"); %>
 					<description>
 						<![CDATA[
 						<iwcm:notEmpty name="doc" property="perex"><jsp:getProperty name="doc" property="perex"/></iwcm:notEmpty>
-						]]>						
+						]]>
 					</description>
-					<author><iwcm:notEmpty name="doc" property="authorEmail"><iwcm:strutsWrite name="doc" property="authorEmail"/> (<iwcm:strutsWrite name="doc" property="authorName"/>)</iwcm:notEmpty></author>					
+					<author><iwcm:notEmpty name="doc" property="authorEmail"><iwcm:beanWrite name="doc" property="authorEmail"/> (<iwcm:beanWrite name="doc" property="authorName"/>)</iwcm:notEmpty></author>
 					<pubDate><%
 					   try
 					   {

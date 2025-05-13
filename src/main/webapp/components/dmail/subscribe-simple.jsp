@@ -179,7 +179,7 @@
 		<% boolean hasAnyGroup = false; %>
 		<iwcm:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
 		<% if (ugd.isAllowUserEdit() && ugd.isRequireEmailVerification()) { %>
-			<input type="hidden" name="user_group_id" value='<iwcm:strutsWrite name="ugd" property="userGroupId"/>' value='checked'/>
+			<input type="hidden" name="user_group_id" value='<iwcm:beanWrite name="ugd" property="userGroupId"/>' value='checked'/>
 		<% hasAnyGroup = true;  } %>
 		</iwcm:iterate>
 		<% if (hasAnyGroup) { %>

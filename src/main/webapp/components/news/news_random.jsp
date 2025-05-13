@@ -31,15 +31,15 @@ try
 	{
 		int rndValue = (int) ( Math.random() * (double)size);
    	rndDoc = (DocDetails)docs.get(rndValue);
-   	
+
    	//vyradime default stranku adresara (tam je pravdepodobne zoznam noviniek)
    	if (group != null && rndDoc.getDocId()==group.getDefaultDocId()) continue;
-   	
+
    	//vyradime tie ktore nemaju platne datumy
    	long now = Tools.getNow();
    	if (rndDoc.getPublishStart()>now) continue;
    	if (rndDoc.getPublishEnd()>0 && rndDoc.getPublishEnd()<now) continue;
-   	
+
    	break;
    }
 }
@@ -55,7 +55,7 @@ if (rndDoc != null)
 %>
 
 <iwcm:present name="rndDoc">
-   <a href="/showdoc.do?docid=<iwcm:strutsWrite name="rndDoc" property="docId"/>"><iwcm:strutsWrite name="rndDoc" property="title"/></a>
+   <a href="/showdoc.do?docid=<iwcm:beanWrite name="rndDoc" property="docId"/>"><iwcm:beanWrite name="rndDoc" property="title"/></a>
    <br />
-   <iwcm:strutsWrite name="rndDoc" property="perex"/>
+   <iwcm:beanWrite name="rndDoc" property="perex"/>
 </iwcm:present>

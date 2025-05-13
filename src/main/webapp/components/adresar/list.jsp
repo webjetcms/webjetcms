@@ -1,13 +1,13 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@ 
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@ 
-taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@ 
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@ 
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@ 
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@ 
-taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@ 
-taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
+taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
+taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
+taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
+taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
+taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
+taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@page import="sk.iway.iwcm.users.UserDetails"%><%
 
@@ -39,7 +39,7 @@ UserDetails user = null;
 		</display:column>
 		<display:column titleKey="reguser.phone" property="phone" sortable="true"/>
 		<display:column titleKey="reguser.email" sortProperty="email" sortable="true">
-			<a href="mailto:<iwcm:strutsWrite name="userTmp" property="email"/>"><iwcm:strutsWrite name="userTmp" property="email"/></a>
+			<a href="mailto:<iwcm:beanWrite name="userTmp" property="email"/>"><iwcm:beanWrite name="userTmp" property="email"/></a>
 		</display:column>
 		<%
 		String filterList[] = Tools.getTokens(filterValues, "|");
