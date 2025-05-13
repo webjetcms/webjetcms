@@ -541,25 +541,17 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				}
 			}
 
-			//Struts tag replace with our own tag if needed
-			//if(content.contains("<iwcm")) {
-			//	//Does the fiel contains taglib ?
-			//	if(content.contains("uri=\"/WEB-INF/iwcm.tld\"") == true) {
-			//		//It does, so just remove old taglib if is still there
-			//		content = Tools.replaceRegex(content, "\\<\\s*\\%\\s*\\@\\s*taglib.*\"\\/WEB-INF\\/struts-logic.tld\".*", "", false);
-			//	}
-//
-			//	else {
-			//		//It does not, so we need to add our own taglib OR replace the old one
-			//		if(content.contains("\"/WEB-INF/struts-logic.tld\"") == true) {
-			//			//replace old taglib
-			//			content = Tools.replaceRegex(content, "\\<\\s*\\%\\s*\\@\\s*taglib.*\"\\/WEB-INF\\/struts-logic.tld\".*", "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">", false);
-			//		} else {
-			//			//nothing to replace, add new taglib
-			//			content = "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">" + content;
-			//		}
-			//	}
-			//}
+			boolean containIwcmTaglib = content.contains("uri=\"/WEB-INF/iwcm.tld\"");
+			if(content.contains("<" + "iwcm:present") || content.contains("<" + "iwcm:notPresent") || content.contains("<" + "iwcm:empty") || content.contains("<" + "iwcm:notEmpty") || content.contains("<" + "iwcm:equal")
+				|| content.contains("<" + "iwcm:iterate") || content.contains("<" + "iwcm:beanWrite") || content.contains("<" + "iwcm:hidden") || content.contains("<" + "iwcm:options")) {
+				//Needed taglib is missing, add it
+				if(containIwcmTaglib == false) content = "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">" + content;
+			}
+
+			// Remove old Struts taglibs
+			content = Tools.replaceRegex(content, "<\\s*%\\s*@\\s*taglib.*\"/WEB-INF/struts-logic.tld\"\\s*%\\s*>", "", false);
+ 			content = Tools.replaceRegex(content, "<\\s*%\\s*@\\s*taglib.*\"/WEB-INF/struts-bean.tld\"\\s*%\\s*>", "", false);
+			content = Tools.replaceRegex(content, "<\\s*%\\s*@\\s*taglib.*\"/WEB-INF/struts-html.tld\"\\s*%\\s*>", "", false);
 
 			{
 				String origString = "sk.iway.iwcm.forum.*";
