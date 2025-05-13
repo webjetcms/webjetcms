@@ -140,6 +140,8 @@
                         let selectedRows = dt.rows({ selected: true }).data();
                         for (let i=0; i<selectedRows.length; i++) {
                             let row = selectedRows[i];
+                            //If item id is not set, there is nowhere to go
+                            if(row.itemId == null || row.itemId < 1) return;
                             window.open("/showdoc.do?docid="+row.itemId);
                         }
                     },

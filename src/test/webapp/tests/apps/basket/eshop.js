@@ -3,6 +3,12 @@ Feature("apps.basket.eshop");
 const path = require("path");
 const SL = require("./SL");
 
+const GOPAY_CLIENT_ID = process.env.GOPAY_CLIENT_ID;
+const GOPAY_SECRET = process.env.GOPAY_SECRET;
+const GOPAY_GO_ID = process.env.GOPAY_GO_ID;
+//Sandbox url
+const GOPAY_API_URL = "https://gw.sandbox.gopay.com/api/";
+
 let randomNumber;
 
 Before(({ I, login, DT }) => {
@@ -17,7 +23,7 @@ Before(({ I, login, DT }) => {
 
 });
 
-Scenario("Nastav sposoby platby", ({ I, DT, DTE }) => {
+Scenario("Nastav sposoby platby", ({ I, DTE }) => {
   I.amOnPage(SL.METHODS);
 
   //
@@ -36,10 +42,10 @@ Scenario("Nastav sposoby platby", ({ I, DT, DTE }) => {
   I.click(locate("a").withText("GoPay"));
   DTE.waitForEditor("paymentMethodsDataTable");
   DTE.seeInField("paymentMethodName", "GoPay");
-  DTE.fillField("fieldA", "1494406507");
-  DTE.fillField("fieldB", "vFJzstcz");
-  DTE.fillField("fieldC", "https://gw.sandbox.gopay.com/api/");
-  DTE.fillField("fieldD", "8748690720");
+  DTE.fillField("fieldA", GOPAY_CLIENT_ID);
+  DTE.fillField("fieldB", GOPAY_SECRET);
+  DTE.fillField("fieldC", GOPAY_API_URL);
+  DTE.fillField("fieldD", GOPAY_GO_ID);
   DTE.fillField("fieldE", "0,4");
   DTE.fillField("fieldF", "8");
   DTE.fillField("fieldG", "Platba GoPay-om");
@@ -111,8 +117,9 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.see("Dakujeme za platbu GoPay-om");
 
     //
-    I.say("Proceeding to payment");
-    I.click(locate("#wjInline-docdata button").withText("Zaplatiť"));
+    I.say("Proceeding to payment 1");
+    I.waitForVisible(locate("button.btn-primary").withText("Zaplatiť"), 10);
+    I.click(locate("button.btn-primary").withText("Zaplatiť"));
     I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
     I.clickCss("//div[contains(text(), 'Platobná karta')]");
     I.waitForText("Platba kartou");
@@ -126,13 +133,13 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.fillField("#cardCvc", "123");
     I.switchTo();
     I.clickCss("button[data-cy=cardSubmit]");
-    I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 10);
+    I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 30);
 
     //
     I.say("Verifying payment failure");
-    I.wait(5);
-    await I.clickIfVisible("#confirm");
-    //I.waitForText("Platba bola zamietnutá v autorizačnom centre. Ak chcete viac informácií, kontaktujte svoju banku.", 30);
+    I.wait(2);
+    await I.clickIfVisible("#deny");
+    I.waitForVisible('button[data-cy="submitRedirectButton"]', 30);
     I.clickCss('button[data-cy="submitRedirectButton"]');
     I.waitForText("Platba sa nepodarila!", 30);
 
@@ -157,13 +164,12 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     await Document.compareScreenshotElement("body > embed", "invoice.png", 1280, 760, 5);
 
     //
-    I.say("Proceeding to payment");
+    I.say("Proceeding to payment 2");
     I.amOnPage(SL.ORDERS);
     I.waitForElement(locate("h1").withText("Objednávky"), 10);
     I.click(locate("tr").at(2));
     I.clickCss("#payForOrderBtn");
-    I.wait(3);
-    I.click(locate("#wjInline-docdata button").withText("Zaplatiť"));
+    I.click(locate("button.btn-primary").withText("Zaplatiť"));
     I.waitForText("Zvoľte platobnú metódu", 10);
     I.clickCss("//div[contains(text(), 'Bankový prevod')]");
     I.clickCss("//div[contains(text(), 'Tatra banka')]");
@@ -192,8 +198,9 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   I.see("Dakujeme za platbu GoPay-om");
 
   //
-  I.say("Proceeding to payment");
-  I.click(locate("#wjInline-docdata button").withText("Zaplatiť"));
+  I.say("Proceeding to payment 3");
+  I.waitForVisible(locate("button.btn-primary").withText("Zaplatiť"), 10);
+  I.click(locate("button.btn-primary").withText("Zaplatiť"));
   I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
   I.clickCss("//div[contains(text(), 'Platobná karta')]");
   I.waitForText("Platba kartou");
@@ -281,7 +288,7 @@ Scenario("Cash on delivery", async ({ I }) => {
   I.click(locate("input").withAttr({ name: "bSubmit" }));
   I.waitForText("Objednávka úspešne odoslaná", 20);
   I.see("Dakujeme za platbu dobierkou");
-  I.dontSeeElement(locate("#wjInline-docdata button").withText("Zaplatiť"));
+  I.dontSeeElement(locate("button.btn-primary").withText("Zaplatiť"));
 });
 
 Scenario("Bank transfer", async ({ I }) => {
@@ -295,7 +302,7 @@ Scenario("Bank transfer", async ({ I }) => {
   I.waitForText("Objednávka úspešne odoslaná", 20);
   I.see("Vašu objednávku uhradíte prevodom na účet : SK59 1100 0000 0026 1000 1237");
   I.see("Dakujeme za platbu prevodom");
-  I.dontSeeElement(locate("#wjInline-docdata button").withText("Zaplatiť"));
+  I.dontSeeElement(locate("button.btn-primary").withText("Zaplatiť"));
 });
 
 Scenario('Test of name concatenation', ({ I, DT, DTE }) => {
@@ -362,6 +369,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
 
     I.click(DT.btn.editorpayment_add_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
+    DTE.selectOption("paymentMethod", "Dobierka");
     I.checkOption("#DTE_Field_editorFields-saveAsRefund_0");
     DTE.fillField("payedPrice", "-13");
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
