@@ -2,30 +2,6 @@
 
 WebJET v souboru webjet.js zapouzdřuje API použitých knihoven. Cílem je, aby se nepoužívaly přímo API volání z knihoven, ale zapouzdřené volání přes naše funkce. Umožní nám to beze změny API případně vyměnit použitou knihovnu.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [WebJET JavaScript funkce](#webjet-javascript-funkce)
-  - [Notifikace](#notifikace)
-  - [Potvrzení akce](#potvrzení-akce)
-  - [Získání hodnoty](#získání-hodnoty)
-  - [Formátování data a času](#formátování-data-a-času)
-  - [Formátování čísel](#formátování-čísel)
-  - [Iframe dialog](#iframe-dialog)
-  - [Dialog pro výběr souboru/odkazu](#dialog-pro-výběr-souboruodkazu)
-  - [Udržování spojení se serverem (refresher)](#udržování-spojení-se-serverem-refresher)
-  - [Navigační lišta](#navigační-lišta)
-  - [Karty v hlavičce](#karty-v-hlavičce)
-  - [Kontrola práv](#kontrola-práv)
-  - [Markdown parser](#markdown-parser)
-  - [Perzistentní nastavení uživatele](#perzistentní-nastavení-uživatele)
-    - [Použití na frontendu](#použití-na-frontendu)
-    - [Použití na backendu](#použití-na-backende)
-  - [Animace načítání](#animace-načítání)
-  - [Ostatní funkce](#ostatní-funkce)
-
-<!-- /code_chunk_output -->
-
 ## Notifikace
 
 Pro notifikace používáme knihovnu [toastr](https://github.com/CodeSeven/toastr), připraveny jsou následující JS funkce:
@@ -212,7 +188,7 @@ Ochrana pro CSRF tokeny a spojení se serverem je kromě časovače nastavena i 
 
 ## Navigační lišta
 
-Navigační lištu typicky s filrem, nebo návratem zpět, vygenerujete voláním JS funkce `JS.breadcrumb`, ta jako parametr dostává konfigurační JSON objekt ve formátu:
+Navigační lištu typicky s filtrem, nebo návratem zpět, vygenerujete voláním JS funkce `JS.breadcrumb`, ta jako parametr dostává konfigurační JSON objekt ve formátu:
 
 ```javascript
 {
@@ -400,6 +376,39 @@ WJ.headerTabs({
 });
 ```
 
+Pokud inicializujete karty později (po inicializaci WebJETu) je třeba ještě zavolat funkci`window.initSubmenuTabsClick();` pro nastavení událostí. Příklad:
+
+```javascript
+WJ.headerTabs({
+    id: 'tabsFilter',
+    tabs: [
+        { url: "javascript:elfinderTabClick('file')", id: "files", title: '[[\#{fbrowse.file}]]', active: true },
+        { url: "javascript:elfinderTabClick('tools')", id: "tools", title: '[[\#{editor_dir.tools}]]', active: false },
+        { url: "javascript:WJ.openPopupDialog('/components/sync/export_setup.jsp', 650, 500);", id: "export", title: 'Export - Import', active: false }
+    ]
+});
+window.initSubmenuTabsClick();
+```
+
+Na událost změny karty můžete reagovat jako:
+
+```javascript
+$('#pills-linkcheck a[data-wj-toggle="tab"]').on('click', function (e) {
+    let selectedTab = e.target.id;
+
+    if(selectedTab === "pills-brokenLinks-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
+        linkCheckDataTable.ajax.reload();
+    } else if(selectedTab === "pills-hiddenPages-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
+        linkCheckDataTable.ajax.reload();
+    } else if(selectedTab === "pills-emptyPages-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
+        linkCheckDataTable.ajax.reload();
+    }
+});
+```
+
 ## Kontrola práv
 
 Při zobrazení web stránky je vygenerovaný objekt `window.nopermsJavascript` se seznamem práv, které uživatel nemá povoleno. Toto pole nikdy nepoužívejte přímo, pro kontrolu práv použijte API volání:
@@ -551,3 +560,4 @@ Pokud potřebujete skrýt během nahrávání určitý blok můžete mu nastavit
 - `WJ.escapeHtml(string)` - Nahradí nebezpečné znaky v HTML kódu za entity pro jejich bezpečné vypsání.
 - `WJ.base64encode(text)` - zakóduje algoritmem `base64` zadaný text s podporou znaků v `utf-8`.
 - `WJ.base64decode(encodedText)` - dekóduje algoritmem `base64` zadaný text s podporou znaků v `utf-8`.
+- `WJ.debugTimer(message)` - vypíše hlášení s časovým údajem od první zprávy.`WJ.debugTimer(true)`, jinak se nezobrazí. Není tam potřeba zakomentovat všechna hlášení v kódu.

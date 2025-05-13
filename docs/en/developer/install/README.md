@@ -1,16 +1,5 @@
 # Installation and start-up
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Installation and start-up](#installation-and-start-up)
-  - [Webpack build JS, CSS and PUG files](#webpack-build-js-css-and-pug-files)
-  - [Build Java classes and start Tomcat](#build-java-classes-and-start-tomcat)
-  - [Setting up a hosts file](#hosts-file-settings)
-  - [Testing](#testing)
-
-<!-- /code_chunk_output -->
-
 If you don't already have it, install [VS Code with recommended dependencies and extensions](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - follow only the installation part of the extensions, the following chapters `Pull` project from SVN and the Tomcat setup no longer applies to you.
 
 In the project we use [lombok](https://projectlombok.org), install the extension in your development environment - on the web page click on the menu item `Install` and follow the instructions in the IDEs section.

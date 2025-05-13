@@ -1,26 +1,5 @@
 # Working with Git/Gitlab
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Working with Git/Gitlab](#working-with-gitgitlab)
-  - [Installation and setup](#installation-and-setup)
-  - [Cloning the repository from the server to your computer](#cloning-the-repository-from-the-server-to-your-computer)
-  - [Work in VS Code](#work-in-vs-code)
-  - [Branching](#branching)
-    - [Implementation of a new requirement](#implementation-of-a-new-requirement)
-    - [Release to product](#product-release)
-    - [Correction of a bug in production](#correction-of-a-production-error)
-    - [The connection (`merge`) branch](#merge-branch)
-  - [Accepting changes (Merge Request)](#acceptance-of-merge-request-changes)
-    - [How and when to create a Merge Request](#how-and-when-to-create-a-merge-request)
-    - [Transition from Work In Progress](#transition-from-work-in-progress)
-    - [Verification of merge conflicts](#verification-of-merge-conflicts)
-    - [Code quality control](#code-quality-control)
-    - [Merge](#merge)
-
-<!-- /code_chunk_output -->
-
 > **`tl;dr`** Explanation of the use of GIT: basic concepts, work philosophy, workflow. Functioning of Merge Requests in Gitlab, code quality control.
 
 Gitlab is available at https://gitlab.web.iway.local. If you have only worked with SVN so far, you need to understand the main difference between SVN and GIT - **git is distributed** versioning software, everyone has a copy of the repository on their computer and can work with it locally. Only when you have finished the work do you "push" it to the remote repository (on the server).

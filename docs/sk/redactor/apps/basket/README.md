@@ -57,6 +57,7 @@ Pri zobrazení možno vyfiltrovať podľa:
 - **Stará cena s DPH**
 - **EAN**
 - **Výrobca**
+
 ![](editor-items.png)
 
 ## Povolené krajiny

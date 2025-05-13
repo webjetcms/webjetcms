@@ -57,8 +57,16 @@ When displayed, it can be filtered by:
 - **Price with VAT**
 - **Old price with VAT**
 - **EAN**
-- **Producer** View application![](editor-items.png)
+- **Producer**
 
-##
+![](editor-items.png)
+
+## Allowed countries
+
+The `basketInvoiceSupportedCountries` constant is used to dynamically set the allowed countries where goods can be shipped. The constant contains a comma-separated list of `ccTLD` identifiers.
+
+**Example** to allow the countries Slovakia, Czech Republic and Poland, the constant must be set as `.sk,.cz,.pl`.
+
+## Application display
 
 ![](basket.png)

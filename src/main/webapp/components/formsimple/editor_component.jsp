@@ -602,7 +602,7 @@ function updateTextareas() {
             <div class="col-xs-4"> <iwcm:text key="editor.form.forward" /> </div>
             <div class="col-xs-8">
                 <input type="text" size="40" name="attribute_forward" class="" value="<%=attributes.get("forward") != null ? ResponseUtils.filter(attributes.get("forward")) : ""%>" title="<iwcm:text key="editor.form.help.forward"/>" />
-                <input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="forward_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+                <input type="button" class="btn btn-sm btn-outline-secondary button70" value="<iwcm:text key="editor.form.choose"/>"  id="forward_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
             </div>
         </div>
 
@@ -610,7 +610,7 @@ function updateTextareas() {
             <div class="col-xs-4"> <iwcm:text key="editor.form.forward_fail" /> </div>
             <div class="col-xs-8">
                 <input type="text" size="40" name="attribute_forwardFail" class="" value="<%=attributes.get("forwardFail") != null ? ResponseUtils.filter(attributes.get("forwardFail")) : ""%>" title="<iwcm:text key="editor.form.help.forward_fail"/>" />
-                <input type="button" class="button70" value='<iwcm:text key="editor.form.choose" />'  id="forward_fail_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+                <input type="button" class="btn btn-sm btn-outline-secondary button70" value='<iwcm:text key="editor.form.choose" />'  id="forward_fail_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
             </div>
         </div>
 
@@ -629,7 +629,7 @@ function updateTextareas() {
             <div class="col-xs-4"> <iwcm:text key="editor.form.use_form_mail_doc_id" /> </div>
             <div class="col-xs-8">
                 <input type="text" size="5" name="attribute_useFormMailDocId" class="" value="<%=attributes.get("useFormMailDocId") != null ? ResponseUtils.filter(attributes.get("useFormMailDocId")) : ""%>" title="<iwcm:text key="editor.form.help.use_form_mail_doc_id"/>" />
-                <input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_mail_doc_id_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+                <input type="button" class="btn btn-sm btn-outline-secondary button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_mail_doc_id_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
             </div>
         </div>
 
@@ -637,7 +637,7 @@ function updateTextareas() {
             <div class="col-xs-4"> <iwcm:text key="editor.form.send_user_info_doc_id" /> </div>
             <div class="col-xs-8">
                 <input type="text" size="5"  name="attribute_formmail_sendUserInfoDocId" class="inputtext" value="<%=attributes.get("formmail_sendUserInfoDocId") != null ? ResponseUtils.filter(attributes.get("formmail_sendUserInfoDocId")) : ""%>" title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>" />
-                <input type="button" class="button70" value='<iwcm:text key="editor.form.choose"/>'  id="info_docid_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+                <input type="button" class="btn btn-sm btn-outline-secondary button70" value='<iwcm:text key="editor.form.choose"/>'  id="info_docid_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
             </div>
         </div>
 

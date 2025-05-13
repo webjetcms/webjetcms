@@ -79,7 +79,6 @@ WebJET supports setting database connection parameters from system/environment v
 <poolman>
  <datasource>
       <dbname>iwcm</dbname>
-      <jndiName>jndi-iwcm</jndiName>
       <driver>oracle.jdbc.driver.OracleDriver</driver>
       <url></url>
       <username></username>

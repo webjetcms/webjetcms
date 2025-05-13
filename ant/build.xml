@@ -511,6 +511,39 @@
         </exec>
 
         <echo message="Verify on https://github.com/webjetcms?tab=packages"/>
+
+    </target>
+
+    <target name="gitPush" description="push changes in src/main/webapp/WEB-INF/build.properties">
+
+        <!-- Load the properties from the file -->
+        <property file="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
+
+        <exec executable="git">
+            <arg value="config"/>
+            <arg value="user.name"/>
+            <arg value="${env.GITHUB_NAME}"/>
+        </exec>
+        <exec executable="git">
+            <arg value="config"/>
+            <arg value="user.email"/>
+            <arg value="${env.GITHUB_EMAIL}"/>
+        </exec>
+
+        <exec executable="git">
+            <arg value="add"/>
+            <arg value="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
+        </exec>
+        <exec executable="git">
+            <arg value="commit"/>
+            <arg value="-m"/>
+            <arg value="Build ${major.number}.${minor.number} ${build.date}"/>
+        </exec>
+        <exec executable="git">
+            <arg value="push"/>
+            <arg value="https://${env.GITHUB_USERNAME}:${env.GITHUB_TOKEN}@github.com/webjetcms/webjetcms.git"/>
+        </exec>
+
     </target>
 
 </project>

@@ -79,7 +79,6 @@ WebJET podporuje nastavení parametrů databázového spojení ze systémových 
 <poolman>
  <datasource>
       <dbname>iwcm</dbname>
-      <jndiName>jndi-iwcm</jndiName>
       <driver>oracle.jdbc.driver.OracleDriver</driver>
       <url></url>
       <username></username>

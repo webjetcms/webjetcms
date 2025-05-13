@@ -13,7 +13,7 @@ The objects used are practically the same as for [Thymeleaf](../thymeleaf/webjet
 ```jsp
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" %>
+%><%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>

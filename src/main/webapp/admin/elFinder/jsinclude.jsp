@@ -32,36 +32,15 @@ request.setAttribute("elfinderCss", getFiles("/admin/elFinder/css/"));
 request.setAttribute("elfinderUi", getFiles("/admin/elFinder/js/ui/"));
 request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"));
 %>
-<link rel="stylesheet" href="/admin/elFinder/jquery/jquery-ui-1.12.0.css" type="text/css">
 
-	<c:forEach items="${elfinderCss}" var="item">
-		<link rel="stylesheet" href="${item.virtualPath}"    type="text/css">
-	</c:forEach>
-	<%--
-	<link rel="stylesheet" href="/admin/elFinder/css/commands.css"    type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/common.css"      type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/contextmenu.css" type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/cwd.css"         type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/dialog.css"      type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/fonts.css"       type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/navbar.css"      type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/places.css"      type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/quicklook.css"   type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/statusbar.css"   type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/theme.css"       type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/toast.css"       type="text/css">
-	<link rel="stylesheet" href="/admin/elFinder/css/toolbar.css"     type="text/css">
-	--%>
+	<%-- jQuery UI CSS --%>
+	<link rel="stylesheet" href="/components/_common/javascript/jqui/jquery-ui.css" type="text/css">
 
-	<!-- elfinder core -->
-	<script src="/admin/elFinder/js/elFinder.js"></script>
-	<script src="/admin/elFinder/js/elFinder.version.js"></script>
-	<script src="/admin/elFinder/js/jquery.elfinder.js"></script>
-	<script src="/admin/elFinder/js/elFinder.options.js"></script>
-	<script src="/admin/elFinder/js/elFinder.options.netmount.js"></script>
-	<script src="/admin/elFinder/js/elFinder.history.js"></script>
-	<script src="/admin/elFinder/js/elFinder.command.js"></script>
-	<script src="/admin/elFinder/js/elFinder.resources.js"></script>
+	<%-- elFinder CSS --%>
+	<link rel="stylesheet" href="/admin/elFinder/css/elfinder.full.css" type="text/css">
+
+	<!-- elFinder JS-->
+	<script src="/admin/elFinder/js/elfinder.full.js"></script>
 
 	<!-- elfinder dialog -->
 	<script src="/admin/elFinder/js/jquery.dialogelfinder.js"></script>
@@ -71,44 +50,15 @@ request.setAttribute("elfinderCommands", getFiles("/admin/elFinder/js/commands/"
 		<script src="${item.virtualPath}"></script>
 	</c:forEach>
 
-	<%--
-	<script src="/admin/elFinder/js/ui/button.js"></script>
-	<script src="/admin/elFinder/js/ui/contextmenu.js"></script>
-	<script src="/admin/elFinder/js/ui/cwd.js"></script>
-	<script src="/admin/elFinder/js/ui/dialog.js"></script>
-	<script src="/admin/elFinder/js/ui/fullscreenbutton.js"></script>
-	<script src="/admin/elFinder/js/ui/mkdirbutton.js"></script>
-	<script src="/admin/elFinder/js/ui/navbar.js"></script>
-	<script src="/admin/elFinder/js/ui/overlay.js"></script>
-	<script src="/admin/elFinder/js/ui/panel.js"></script>
-	<script src="/admin/elFinder/js/ui/path.js"></script>
-	<script src="/admin/elFinder/js/ui/places.js"></script>
-	<script src="/admin/elFinder/js/ui/searchbutton.js"></script>
-	<script src="/admin/elFinder/js/ui/sortbutton.js"></script>
-	<script src="/admin/elFinder/js/ui/stat.js"></script>
-	<script src="/admin/elFinder/js/ui/toast.js"></script>
-	<script src="/admin/elFinder/js/ui/toolbar.js"></script>
-	<script src="/admin/elFinder/js/ui/tree.js"></script>
-	<script src="/admin/elFinder/js/ui/uploadButton.js"></script>
-	<script src="/admin/elFinder/js/ui/viewbutton.js"></script>
-	<script src="/admin/elFinder/js/ui/workzone.js"></script>
-	--%>
-
 	<!-- elfinder commands -->
 	<c:forEach items="${elfinderCommands}" var="item">
 		<script src="${item.virtualPath}"></script>
 	</c:forEach>
 
 	<!-- elfinder languages -->
-	<script src="/admin/elFinder/js/i18n/elfinder.cs.js.jsp" charset="UTF-8"></script>
+	<script src="/admin/elFinder/js/i18n/elfinder.cs.js"></script>
 	<script src="/admin/elFinder/js/i18n/elfinder.de.js"></script>
-	<script src="/admin/elFinder/js/i18n/elfinder.en.js"></script>
-	<script src="/admin/elFinder/js/i18n/elfinder.sk.js.jsp" charset="UTF-8"></script>
-
-	<!-- elfinder 1.x connector API support
-	<script src="/admin/elFinder/js/proxy/elFinderSupportVer1.js"></script>
-	-->
-
+	<script src="/admin/elFinder/js/i18n/elfinder.sk.js"></script>
 
 <% if (Constants.getBoolean("fbrowserShowOnlyWritableFolders") && Tools.isEmpty(Constants.getString("fbrowserAlwaysShowFolders"))) { %>
 <style>

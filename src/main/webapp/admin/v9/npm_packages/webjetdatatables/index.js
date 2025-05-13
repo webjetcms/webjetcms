@@ -263,12 +263,29 @@ export const dataTableInit = options => {
      * Upravi multiple select polia osahujuce ako hodnotu pole na string oddeleny pomocou |
      * @param data data z preSubmit
      */
-    function prepareCustomFieldsDataBeforeSend(data) {
+    function prepareCustomFieldsDataBeforeSend(data, me) {
+        //Array of fields (field names)
+        var fields = me.fields();
+
         var letters = 'ABCDEFGHIJKLMNOPQRST';
         for(var i in data.data) {
             for(var letter in letters) {
                 if(Array.isArray(data.data[i]['field' + letters[letter]])) {
                     data.data[i]['field' + letters[letter]] = data.data[i]['field' + letters[letter]].join('|')
+                }
+
+                let fieldName = 'field' + letters[letter];
+                if(fields.includes(fieldName)) {
+                    let field = me.field(fieldName);
+                    let renderFormat = field.s.opts.renderFormat;
+
+                    //Its quill editor - get html content and set into data as value
+                    if("dt-format-quill" == renderFormat) {
+                        let input = field.s.opts._input;
+                        let value = input.html();
+                        if ("<p><br></p>"==value) value = "";
+                        data.data[i][fieldName] = value;
+                    }
                 }
             }
         }
@@ -1225,7 +1242,7 @@ export const dataTableInit = options => {
             const me = this;
 
             // upravi multiple volne polia
-            prepareCustomFieldsDataBeforeSend(data)
+            prepareCustomFieldsDataBeforeSend(data, me);
 
             /*if (action !== 'remove') {
 

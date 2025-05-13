@@ -2,41 +2,6 @@
 
 Pro automatizované E2E testování je používán framework [CodeceptJS](https://codecept.io). Testy se píší v JavaScriptu a prakticky ovládají prohlížeč, ve kterém test probíhá. Více informací proč jsme zvolili tento framework je v sekci [Playwright + CodeceptJS](#playwright--codeceptjs).
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Automatizované testování](#automatizované-testování)
-  - [Instalace](#instalace)
-  - [Spuštění testování](#spuštění-testování)
-    - [Codecept UI](#codecept-ui)
-    - [Generování HTML reportu](#generování-html-reportu)
-  - [Playwright + CodeceptJS](#playwright--codeceptjs)
-    - [Konfigurace](#konfigurace)
-  - [Psaní testů](#psaní-testů)
-    - [Lokátory](#lokátory)
-    - [Within](#within)
-    - [Playwright metody](#playwright-metody)
-    - [WebJET doplňkové funkce](#webjet-doplňkové-funkce)
-    - [Čekání na dokončení](#čekání-na-dokončení)
-    - [Pause](#pause)
-    - [Přihlašování](#přihlašování)
-    - [Assert knihovna](#assert-knihovna)
-    - [Page objekty](#page-objekty)
-    - [Detekce prohlížeče](#detekce-prohlížeče)
-  - [Odebrání práva](#odebrání-práva)
-  - [Vizuální testování](#vizuální-testování)
-  - [Best practices](#best-practices)
-    - [Názvosloví](#názvosloví)
-    - [Testovací data](#testovací-data)
-    - [Selektory](#selektory)
-    - [Časování](#časování)
-    - [Délka scénáře](#délka-scénáře)
-    - [Debugování](#debugování)
-  - [Smazání databáze](#smazání-databáze)
-  - [Testování REST služeb](#testování-rest-služeb)
-
-<!-- /code_chunk_output -->
-
 ## Instalace
 
 ```shell

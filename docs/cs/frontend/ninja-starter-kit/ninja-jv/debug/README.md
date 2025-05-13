@@ -1,6 +1,6 @@
 # Debug režim
 
- | Metoda | Typ | Popis |
+| Metoda | Typ | Popis |
  | -------------- | --------- | ----------- |
  | ${ninja.debug} | *Boolean* | Debug režim |
 

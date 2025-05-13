@@ -26,6 +26,8 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
+import sk.iway.iwcm.components.basket.jpa.InvoiceStatus;
+import sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -52,10 +54,13 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
         this.biir = biir;
         this.bipr = bipr;
     }
+
     @Override
     public Page<BasketInvoiceEntity> getAllItems(Pageable pageable) {
-        //Pagebale SORT is automatically removed in DatatableRestControllerV2
         DatatablePageImpl<BasketInvoiceEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new BasketInvoiceEntity(), pageable));
+
+        page.addOptions("paymentMethod", PaymentMethodsService.getConfiguredPaymentMethodsLabels(getProp()), "label", "value", false);
+
         fillStatusSelect(page);
         prepareCountriesSelect(page);
         processFromEntity(page, ProcessItemAction.GETALL);
@@ -126,7 +131,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     @Override
     public void afterSave(BasketInvoiceEntity entity, BasketInvoiceEntity saved) {
         //Update invoice stats
-        ProductListService.updateInvoiceStats(entity.getId().intValue());
+        ProductListService.updateInvoiceStats(entity.getId(), false);
 
         BasketInvoiceEditorFields bied = entity.getEditorFields();
         if(bied != null && Boolean.TRUE.equals(bied.getSendNotification())) {
@@ -150,6 +155,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
            BasketInvoiceEditorFields bief = new BasketInvoiceEditorFields();
            bief.fromBasketInvoice(entity, getRequest());
 
+           //Set fields definition
            bief.setFieldsDefinition(bief.getFields(entity, "components.invoice", 'F'));
         }
         return entity;
@@ -158,7 +164,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     @Override
     public boolean deleteItem(BasketInvoiceEntity entity, long id) {
         //DELETE action is allowed only if basketInvoiced is set as CANCELLED
-        if(entity.getStatusId().equals(BasketInvoiceEntity.INVOICE_STATUS_CANCELLED) ) {
+        if(InvoiceStatus.fromValue(entity.getStatusId()) == InvoiceStatus.INVOICE_STATUS_CANCELLED ) {
             return super.deleteItem(entity, id);
         } else {
             //Reject delete

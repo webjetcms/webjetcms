@@ -1,5 +1,8 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
-<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+<%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -20,42 +23,42 @@
 
 	if ("add".equals(request.getParameter("act")))
 	{
-		ok = BasketDB.setItemFromDoc(request);
+		ok = EshopService.getInstance().setItemFromDoc(request);
 	}
 
 	if ("set".equals(request.getParameter("act")))
 	{
-		ok = BasketDB.setItemFromDoc(request);
+		ok = EshopService.getInstance().setItemFromDoc(request);
 	}
 
 	if (ok)
 	{
-		List<BasketItemBean> items = BasketDB.getBasketItems(request);
+		List<BasketInvoiceItemEntity> items = EshopService.getInstance().getBasketItems(request);
 		DocDB docDB = DocDB.getInstance();
 
 		%>{
 			"itemId": 					"<%= itemId %>",
-			"totalItems": 				"<%= BasketDB.getTotalItems(items) %>",
-			"displayCurrency": 		"<%= BasketDB.getDisplayCurrency(request) %>",
-			"totalLocalPrice": 	"<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= BasketDB.getTotalLocalPrice(items,request) %></iway:curr>",
-			"totalLocalPriceVat": 	"<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= BasketDB.getTotalLocalPriceVat(items,request) %></iway:curr>",
+			"totalItems": 				"<%= EshopService.getTotalItems(items) %>",
+			"displayCurrency": 		"<%= EshopService.getDisplayCurrency(request) %>",
+			"totalLocalPrice": 	"<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= EshopService.getTotalLocalPrice(items,request) %></iway:curr>",
+			"totalLocalPriceVat": 	"<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= EshopService.getTotalLocalPriceVat(items,request) %></iway:curr>",
 			"items": [
 				<%
 				boolean isFirst = true;
-				for (BasketItemBean item : items)
+				for (BasketInvoiceItemEntity item : items)
 				{
 				%><%= (!isFirst) ? "," : "" %>{
-				 		"id": "<%= item.getItemId() %>",
+				 		"id": "<%= item.getItemIdInt() %>",
 				 		"image": "<%= item.getDoc().getPerexImage() %>",
 				 		"basketId": "<%= item.getBasketItemId() %>",
-						"link": "<%= docDB.getDocLink(item.getItemId()) %>",
+						"link": "<%= docDB.getDocLink(item.getItemIdInt()) %>",
 						"title": "<%= item.getItemTitle() %>",
-						"price": "<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= item.getItemPriceVat() %></iway:curr>",
-						"priceQty": "<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= item.getItemPriceQty() %></iway:curr>",
+						"price": "<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= item.getItemPriceVat() %></iway:curr>",
+						"priceQty": "<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= item.getItemPriceQty() %></iway:curr>",
 						"qty": "<%= item.getItemQty() %>",
 						"vat": "<%= Math.round(item.getItemVat()) %>",
 						"itemNote": "<%= item.getItemNote() %>",
-						"priceVatQty": "<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= item.getItemPriceVatQty() %></iway:curr>"
+						"priceVatQty": "<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%= item.getItemPriceVatQty() %></iway:curr>"
 					}<%
 					isFirst=false;
 				}

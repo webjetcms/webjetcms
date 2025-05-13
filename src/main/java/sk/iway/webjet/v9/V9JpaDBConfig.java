@@ -74,6 +74,7 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
         "sk.iway.iwcm.components.blog.jpa",
         "sk.iway.iwcm.system.elfinder",
         "sk.iway.iwcm.components.basket.jpa",
+        "sk.iway.iwcm.components.basket.payment_methods.jpa",
         "sk.iway.iwcm.components.file_archiv"
     }
 ) // package s repozitarmi
@@ -137,6 +138,7 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.blog.jpa",
                             "sk.iway.iwcm.system.elfinder",
                             "sk.iway.iwcm.components.basket.jpa",
+                            "sk.iway.iwcm.components.basket.payment_methods.jpa",
                             "sk.iway.iwcm.components.file_archiv"
         );
 

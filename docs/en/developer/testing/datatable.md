@@ -1,18 +1,5 @@
 # Automatic DataTables testing
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Automatic DataTables testing](#automatic-testing-of-datatables)
-  - [Use](#use)
-  - [Setting options](#setting-options)
-  - [Method of generating mandatory fields](#method-of-generating-mandatory-fields)
-  - [Testing of audit trails](#testing-of-audit-trails)
-  - [Rights testing](#rights-testing)
-  - [Implementation details](#implementation-details)
-
-<!-- /code_chunk_output -->
-
 In the administration, most of the datatable tests are identical in form `CRUD (Create, Read, Update, Delete)` operations. To avoid repeating the standard datatable test procedures over and over again, we have prepared **automated testing**. The implementation is in the file [DataTables.js](../../../../src/test/webapp/pages/DataTables.js) and includes the following steps:
 - adding a new record
   - verification of mandatory fields

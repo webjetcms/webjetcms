@@ -10,6 +10,8 @@ Zdrojový kód šablony můžete získat ve [WebJET CMS github repozitáři](htt
 
 Použití je stejné jako při [Bare šabloně](../template-bare/README.md#použití-ve-webjet-cms), rozdíl je samozřejmě v názvech - všude nahraďte `bare` za `creative`. Složka se šablonou je `src/main/webapp/templates/creative/bootstrap-creative/`, použité cesty v šabloně a skupině šablon začínají na `/templates/creative/bootstrap-creative/`.
 
+![](editor-webpage.png)
+
 ### Skupina šablon
 
 Postupujte podle návodu pro Bare šablonu s upravenou cestou `/templates/creative/bootstrap-creative/`.

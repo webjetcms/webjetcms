@@ -2,16 +2,6 @@
 
 Sample code for creating a new CRUD application in the administration.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Sample code](#sample-code)
-  - [Pug file](#pug-file)
-  - [Spring DATA repository and JPA Entity/Bean](#spring-data-repository-and-jpa-entitabean)
-  - [Rest service](#rest-service)
-
-<!-- /code_chunk_output -->
-
 ## Pug file
 
 Create a pug file with the HTML code of the page. We recommend that you copy the code from e.g. [audit-notifications.pug](../../../src/main/webapp/admin/v9/views/pages/apps/audit-notifications.pug). Place the file in the directory `settings` if it is a setting, or to a directory `apps` if it is a standard application.
