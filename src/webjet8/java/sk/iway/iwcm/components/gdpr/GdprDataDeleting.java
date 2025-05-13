@@ -124,7 +124,7 @@ public class GdprDataDeleting {
         long count;
         JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
         em.getTransaction().begin();
-        Query query = em.createQuery("SELECT COUNT(b) FROM BasketInvoiceBean b WHERE b.createDate < :createDate ",Long.class);
+        Query query = em.createQuery("SELECT COUNT(b) FROM BasketInvoiceEntity b WHERE b.createDate < :createDate ",Long.class);
         query.setParameter("createDate",getCalendarBeforeDate(Constants.getInt("gdprDeleteUserBasketOrdersAfterYears")*365).getTime());
         count = (Long)query.getSingleResult();
         em.getTransaction().commit();
