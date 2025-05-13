@@ -15,6 +15,7 @@ public class IterateTei extends TagExtraInfo {
     /**
      * Return information about the scripting variables to be created.
      */
+    @Override
     public VariableInfo[] getVariableInfo(TagData data) {
         // prime this array with the maximum potential variables.
         // will be arraycopy'd out to the final array based on results.

@@ -2,7 +2,6 @@ package sk.iway.iwcm.tags.support_logic;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,34 +12,21 @@ import javax.servlet.jsp.tagext.BodyContent;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 
 public class CustomTagUtils {
 
-   //private static CustomTagUtils instance = new CustomTagUtils();
-   private static final Map<String, Integer> scopes = new HashMap<>();
 
+   private static final Map<String, Integer> scopes = new HashMap<>();
    private static final String CUSTOM_TAG_UTILS = "CustomTagUtils";
 
-   private static final String CACHE_KEY = "CustomTagUtils.LocalStrings";
-   private static final Map<String, String> keyValueMap;
 
-   static {
-      Cache c = Cache.getInstance();
-
-      @SuppressWarnings("unchecked")
-      Map<String, String> keyValueMapTmp = (Map<String, String>) c.getObject(CACHE_KEY);
-
-      if(keyValueMapTmp == null) {
-         //Keys not loaded yet
-         keyValueMap = MessageResource.getAllKeyMap();
-         c.setObjectSeconds(CACHE_KEY, keyValueMap, 28800); // 28800 = 8 hodin
-      } else {
-         keyValueMap = keyValueMapTmp;
-      }
-   }
+   /* Keys gonna be only in EN version.
+   *  Original struts had keys only in EN and ESP version, so there is no meaning to create CS and SK version.
+   */
+   private static final Prop prop = Prop.getInstance("en");
+   private static final String STRUTS_KEYS_PREFIX = "struts.";
 
    public static CustomTagUtils getInstance() {
       javax.servlet.ServletContext servletContext = Constants.getServletContext();
@@ -109,28 +95,27 @@ public class CustomTagUtils {
    }
 
    public String getMessage(String key) {
-      return this.getMessage(key, new Object[]{});
+      if(key.startsWith(STRUTS_KEYS_PREFIX) == false) key = STRUTS_KEYS_PREFIX + key;
+      return prop.getText(key);
    }
    public String getMessage(String key, Object arg0) {
-      return this.getMessage(key, new Object[]{arg0});
+      if(key.startsWith(STRUTS_KEYS_PREFIX) == false) key = STRUTS_KEYS_PREFIX + key;
+      return prop.getText(key, String.valueOf(arg0));
    }
 
    public String getMessage(String key, Object arg0, Object arg1) {
-      return this.getMessage(key, new Object[]{arg0, arg1});
+      if(key.startsWith(STRUTS_KEYS_PREFIX) == false) key = STRUTS_KEYS_PREFIX + key;
+      return prop.getText(key, String.valueOf(arg0), String.valueOf(arg1));
    }
 
    public String getMessage(String key, Object arg0, Object arg1, Object arg2) {
-      return this.getMessage(key, new Object[]{arg0, arg1, arg2});
+      if(key.startsWith(STRUTS_KEYS_PREFIX) == false) key = STRUTS_KEYS_PREFIX + key;
+      return prop.getText(key, String.valueOf(arg0), String.valueOf(arg1), String.valueOf(arg2));
    }
 
    public String getMessage(String key, Object arg0, Object arg1, Object arg2, Object arg3) {
-      return this.getMessage(key, new Object[]{arg0, arg1, arg2, arg3});
-   }
-
-   public String getMessage(String key, Object[] args) {
-      String value = keyValueMap.get(key);
-      if (Tools.isEmpty(value)) value = "";
-      return MessageFormat.format(value, args);
+      if(key.startsWith(STRUTS_KEYS_PREFIX) == false) key = STRUTS_KEYS_PREFIX + key;
+      return prop.getText(key, String.valueOf(arg0), String.valueOf(arg1), String.valueOf(arg2), String.valueOf(arg3));
    }
 
    /**
@@ -179,6 +164,5 @@ public class CustomTagUtils {
             this.saveException(pageContext, e);
             throw new JspException(this.getMessage("write.io", e.toString()));
         }
-
     }
 }

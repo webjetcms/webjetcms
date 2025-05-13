@@ -21,6 +21,7 @@ public class NotEmptyTag extends EmptyTag {
      *
      * @throws JspException if a JSP exception occurs
      */
+    @Override
     protected boolean condition()
         throws JspException {
         return (condition(false));
