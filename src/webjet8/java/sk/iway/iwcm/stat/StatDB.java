@@ -25,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
@@ -42,6 +40,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  Description of the Class
@@ -336,7 +335,7 @@ public class StatDB extends DB
 	public static String getStatKeyValue(int id)
 	{
 		StatDB statDB = StatDB.getInstance();
-		return ResponseUtils.filter(statDB.getValue(id));
+		return CustomResponseUtils.filter(statDB.getValue(id));
 	}
 
 	/**

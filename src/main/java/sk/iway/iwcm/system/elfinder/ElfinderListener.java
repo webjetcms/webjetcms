@@ -4,7 +4,6 @@ import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
@@ -18,6 +17,7 @@ import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 @Component
@@ -81,7 +81,7 @@ public class ElfinderListener {
         FileTools.createDefaultStaticContentFolders();
 
         //File value
-        model.addAttribute("actualFile", ResponseUtils.filter(actualFile));
+        model.addAttribute("actualFile", CustomResponseUtils.filter(actualFile));
 
         model.addAttribute("lng", Prop.getLng(request, false));
         model.addAttribute("insertJQuery", Tools.insertJQuery(request));

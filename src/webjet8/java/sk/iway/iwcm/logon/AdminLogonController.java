@@ -10,7 +10,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -43,6 +42,7 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
@@ -307,7 +307,7 @@ public class AdminLogonController {
 
 
     private void determineLanguage(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
-        String lng = ResponseUtils.filter(request.getParameter("language"));
+        String lng = CustomResponseUtils.filter(request.getParameter("language"));
         if (Tools.isEmpty(lng)) lng = Constants.getString("defaultLanguage");
         PageLng.setUserLng(request, response, lng);
         session.setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);

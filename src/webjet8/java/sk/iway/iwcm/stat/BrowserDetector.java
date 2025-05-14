@@ -4,10 +4,9 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.seo.SeoManager;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 import javax.servlet.http.HttpServletRequest;
-
-import org.apache.struts.util.ResponseUtils;
 
 import java.io.Serializable;
 import java.util.StringTokenizer;
@@ -402,12 +401,12 @@ public class BrowserDetector implements Serializable {
 	public String getBrowserName() {
 		if (Tools.isEmpty(browserName) || "Other".equals(browserName)) return "Unknown";
 		if ("IE".equals(browserName)) return "MSIE";
-		return ResponseUtils.filter(browserName);
+		return CustomResponseUtils.filter(browserName);
 	}
 
 	public String getBrowserPlatform() {
 		if (Tools.isEmpty(browserPlatform) || "Other".equals(browserPlatform)) return "unknown";
-		return ResponseUtils.filter(browserPlatform);
+		return CustomResponseUtils.filter(browserPlatform);
 	}
 
 	public String getBrowserVersion() {
@@ -424,11 +423,11 @@ public class BrowserDetector implements Serializable {
 	}
 
 	public String getUserAgentString() {
-		return ResponseUtils.filter(userAgentString);
+		return CustomResponseUtils.filter(userAgentString);
 	}
 
 	public String getBrowserSubplatform() {
-		return ResponseUtils.filter(browserSubplatform);
+		return CustomResponseUtils.filter(browserSubplatform);
 	}
 
 	public boolean isAmp() {
@@ -470,7 +469,7 @@ public class BrowserDetector implements Serializable {
 	}
 
 	public String getBrowserDeviceType() {
-		return ResponseUtils.filter(browserDeviceType);
+		return CustomResponseUtils.filter(browserDeviceType);
 	}
 
 	public int getBrowserUaId() {
@@ -491,6 +490,6 @@ public class BrowserDetector implements Serializable {
 	 * @return
 	 */
 	public String getCountry() {
-		return ResponseUtils.filter(country);
+		return CustomResponseUtils.filter(country);
 	}
 }

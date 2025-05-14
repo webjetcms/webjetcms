@@ -4,13 +4,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
-
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  Tag pre vypis stringu z requestu v JSP stranke
@@ -79,7 +77,7 @@ public class TextTag extends TagSupport
 			}
 			else
 			{
-				lng = ResponseUtils.filter(request.getParameter("language"));
+				lng = CustomResponseUtils.filter(request.getParameter("language"));
 				if (lng!=null && lng.length()>3) lng = null;
 				if (lng != null && request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG)==null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);
 				if (lng==null)
@@ -132,8 +130,8 @@ public class TextTag extends TagSupport
 				if (iwayProperties.containsKey(key+"."+param1))
 				{
 					key = key+"."+param1;
-				} 
-				else 
+				}
+				else
 				{
 					boolean keyFound = false;
 					for (String lKey : iwayProperties.keySet())

@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.Tag;
 
-import org.apache.struts.util.ResponseUtils;
 import org.displaytag.localization.I18nResourceProvider;
 import org.displaytag.localization.LocaleResolver;
 
@@ -14,6 +13,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  DislpayTagLocaleResolver.java - resolver pre ResourceBundle
@@ -40,14 +40,14 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
    public Locale resolveLocale(HttpServletRequest request)
    {
        Locale userLocale = request.getLocale();
-       
+
        String lng = getLng(null, request);
        if (Tools.isNotEmpty(lng))
        {
       	 if ("cz".equals(lng)) lng = "cs";
       	 userLocale = new Locale(lng);
        }
-       
+
        Logger.debug(this,"resolveLocale, lng="+lng+" locale="+userLocale);
 
        return userLocale;
@@ -58,19 +58,19 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
     */
    @Override
    public String getResource(String resourceKey, String defaultValue, Tag tag, PageContext pageContext)
-   {   		
+   {
       // if titleKey isn't defined either, use property
       String key = (resourceKey != null) ? resourceKey : defaultValue;
-      
+
       if (key.indexOf("basic.msg.empty_list")!=-1)
       {
       	System.out.println("------------------ MAM TO -----------------");
-      }      
-       
+      }
+
       HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
-		
+
       String lng = getLng(pageContext, request);
-      
+
 		boolean needRefresh = false;
 		if (request.getSession().getAttribute("userlngr") != null)
 		{
@@ -105,16 +105,16 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
 		{
 			prop = Prop.getInstance(Constants.getServletContext(), lng, false);
 		}
-		
+
 		Logger.debug(this,"resolver ("+lng+"): "+key);
-		
+
 		String text = prop.getText(key);
 		//text = prop.getText(key);
 		if (text != null)
 		{
 			return(text);
 		}
-       
+
        return key;
    }
 
@@ -131,7 +131,7 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
 		}
 		else
 		{
-			lng = ResponseUtils.filter(request.getParameter("language"));
+			lng = CustomResponseUtils.filter(request.getParameter("language"));
 			if (lng != null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);
 			if (lng == null)
 			{
@@ -140,10 +140,10 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
 			if (lng == null)
 			{
 				lng = sk.iway.iwcm.Constants.getString("defaultLanguage");
-			}			
+			}
 		}
-		
+
 		return lng;
    }
-	
+
 }

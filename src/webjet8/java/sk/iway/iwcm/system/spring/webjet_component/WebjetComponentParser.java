@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -36,6 +35,7 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.WebjetComponentParserInterface;
 import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -432,8 +432,8 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
             ex.printStackTrace(new PrintWriter(sw));
             String stack = sw.toString();
 
-            content.append("<div class=\"component-error\" style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + ResponseUtils.filter(ex.getMessage()) + "<br>");
-            String stackTrace = ResponseUtils.filter(stack);
+            content.append("<div class=\"component-error\" style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + CustomResponseUtils.filter(ex.getMessage()) + "<br>");
+            String stackTrace = CustomResponseUtils.filter(stack);
             content.append(stackTrace + "</div>");
         }
 

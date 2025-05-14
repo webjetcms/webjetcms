@@ -6,14 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  PropDB.java
@@ -197,7 +196,7 @@ public class PropDB
 		String propAllowedTags = Constants.getString("propAllowedTags");
 		if ("*".equals(propAllowedTags)) return newValue;
 
-		String escapedValue = ResponseUtils.filter(newValue);
+		String escapedValue = CustomResponseUtils.filter(newValue);
 		//odporucane v penteste
 		escapedValue = Tools.replace(escapedValue, "(", "&#x28;");
 		escapedValue = Tools.replace(escapedValue, ")", "&#x29;");

@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.struts.util.ResponseUtils;
-
 import net.sourceforge.stripes.action.ActionBean;
 import net.sourceforge.stripes.controller.DefaultActionBeanPropertyBinder;
 import net.sourceforge.stripes.controller.ParameterName;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  XssSafeActionBeanPropertyBinder.java
@@ -33,11 +32,11 @@ public class XssSafeActionBeanPropertyBinder extends DefaultActionBeanPropertyBi
 		Map<String, String[]> requestParameters = actionBean.getContext().getRequest().getParameterMap();
       SortedMap<ParameterName, String[]> parameters = new TreeMap<ParameterName,String[]>();
       String url = PathFilter.getOrigPath(actionBean.getContext().getRequest());
-      
+
       boolean xssFiltering = true;
-      
+
       String[] noFilteringPaths = Constants.getString("stripesXssNoFilteringPaths").split(";");
-      
+
       for (String path:noFilteringPaths)
       {
       	if (url.startsWith(path))
@@ -46,18 +45,18 @@ public class XssSafeActionBeanPropertyBinder extends DefaultActionBeanPropertyBi
       		break;
       	}
       }
-      
-      
-      
-      for (Map.Entry<String,String[]> entry : requestParameters.entrySet()) 
+
+
+
+      for (Map.Entry<String,String[]> entry : requestParameters.entrySet())
       {
-         
+
       	 if (xssFiltering)
 			{
 				List<String> values = new ArrayList<String>();
 				for (String val : entry.getValue())
 				{
-					values.add(ResponseUtils.filter(val));
+					values.add(CustomResponseUtils.filter(val));
 				}
 				parameters.put(new ParameterName(entry.getKey().trim()), values.toArray(new String[values.size()]));
 			}
@@ -65,7 +64,7 @@ public class XssSafeActionBeanPropertyBinder extends DefaultActionBeanPropertyBi
       	 {
       		 parameters.put(new ParameterName(entry.getKey().trim()),entry.getValue());
       	 }
-          
+
       }
 
       return parameters;

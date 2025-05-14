@@ -8,14 +8,13 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.tags.SelectTag;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  Bean popisujuci atribut stranky (vratane definicii)
@@ -128,7 +127,7 @@ public class AtrBean implements Serializable
             {
                selected = "";
             }
-            ret.append("<option value='").append(ResponseUtils.filter(tmp)).append('\'').append(selected).append('>').append(tmp).append("</option>");
+            ret.append("<option value='").append(CustomResponseUtils.filter(tmp)).append('\'').append(selected).append('>').append(tmp).append("</option>");
          }
          if(!onWebPage)
          {
@@ -193,7 +192,7 @@ public class AtrBean implements Serializable
 		            {
 		               selected = "";
 		            }
-						ret.append("<option value='").append(ResponseUtils.filter(value)).append('\'').append(selected).append('>').append(value).append("</option>");
+						ret.append("<option value='").append(CustomResponseUtils.filter(value)).append('\'').append(selected).append('>').append(value).append("</option>");
 					}
 					rs.close();
 					ps.close();
@@ -257,7 +256,7 @@ public class AtrBean implements Serializable
 		         if (getAtrType()==AtrDB.TYPE_INT) ret.append(" onKeyUp='inputCheckNumberKey(this);' onBlur='inputCheckNumber(this);'");
 		         else if (getAtrType()==AtrDB.TYPE_DOUBLE) ret.append(" onKeyUp='inputCheckNumberKeyFloat(this);' onBlur='inputCheckNumberKeyFloat(this);'");
 		         else ret.append(" length='128' ");
-		         ret.append( " value='"+ResponseUtils.filter(actualValue)+"'>");
+		         ret.append( " value='"+CustomResponseUtils.filter(actualValue)+"'>");
 	         }
       	}
       }
@@ -621,7 +620,7 @@ public class AtrBean implements Serializable
             {
                selected = "";
             }
-            ret.append("<option value='").append(ResponseUtils.filter(tmp)).append('\'').append(selected).append('>').append(tmp).append("</option>");
+            ret.append("<option value='").append(CustomResponseUtils.filter(tmp)).append('\'').append(selected).append('>').append(tmp).append("</option>");
          }
          ret.append("</select>");
       }
@@ -676,7 +675,7 @@ public class AtrBean implements Serializable
 		            {
 		               selected = "";
 		            }
-						ret.append("<option value='").append(ResponseUtils.filter(value)).append('\'').append(selected).append('>').append(value).append("</option>");
+						ret.append("<option value='").append(CustomResponseUtils.filter(value)).append('\'').append(selected).append('>').append(value).append("</option>");
 					}
 					rs.close();
 					ps.close();
@@ -733,7 +732,7 @@ public class AtrBean implements Serializable
 		         ret = new StringBuilder("<input name='atr_").append(atrId+"'");
 		         if (getAtrType()==AtrDB.TYPE_INT) ret.append(" onKeyUp='inputCheckNumberKey(this);' onBlur='inputCheckNumber(this);'");
 		         else if (getAtrType()==AtrDB.TYPE_DOUBLE) ret.append(" onKeyUp='inputCheckNumberKeyFloat(this);' onBlur='inputCheckNumberKeyFloat(this);'");
-		         ret.append(" value='").append(ResponseUtils.filter(actualValue)).append("'>");
+		         ret.append(" value='").append(CustomResponseUtils.filter(actualValue)).append("'>");
 	         }
       	}
       }

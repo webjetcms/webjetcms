@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -16,6 +14,7 @@ import sk.iway.iwcm.components.gdpr.model.GdprDB;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
 import sk.iway.iwcm.components.gdpr.model.QuestionsAnswersDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 public enum GdprModule {
     WEB_STRANKY,
@@ -114,9 +113,9 @@ public enum GdprModule {
                         }
 
                         //sb.append(text.substring(start, end));
-                        sb.append(ResponseUtils.filter(text.substring(start, wordBegin )));
-                        sb.append("<span title=\"").append(regexp.getRegexpName()).append("\" class=\"yellow_color\">").append(ResponseUtils.filter(text.substring(wordBegin , wordEnd)));
-                        sb.append("</span>").append(ResponseUtils.filter(text.substring(wordEnd, end)));
+                        sb.append(CustomResponseUtils.filter(text.substring(start, wordBegin )));
+                        sb.append("<span title=\"").append(regexp.getRegexpName()).append("\" class=\"yellow_color\">").append(CustomResponseUtils.filter(text.substring(wordBegin , wordEnd)));
+                        sb.append("</span>").append(CustomResponseUtils.filter(text.substring(wordEnd, end)));
 
                         if (end < text.length())
                         {

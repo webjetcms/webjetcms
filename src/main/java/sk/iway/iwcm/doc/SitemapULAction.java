@@ -6,11 +6,10 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  Zobrazi dokumenty v stromovej strukture
@@ -386,7 +385,7 @@ public class SitemapULAction
 				String title = doc.getTitle();
 
 				docsHtmlCode.append(spacer).append("<li").append("><a href=\"").append(docDB.getDocLink(doc.getDocId(), request)).append('\"').append('>');
-				docsHtmlCode.append(ResponseUtils.filter(title) + "</a></li>\n");
+				docsHtmlCode.append(CustomResponseUtils.filter(title) + "</a></li>\n");
 			}
 
 			//ak je default stranka adresara oznacena ako NOT searchable nedaj cely adresar do mapy stranok
@@ -397,7 +396,7 @@ public class SitemapULAction
 			if (defaultDoc != null) title = defaultDoc.getTitle();
 			if (Tools.isNotEmpty(group.getGroupName())) title = group.getGroupName();
 			htmlCode.append(spacer).append("<li").append("><a href=\"").append(docDB.getDocLink(group.getDefaultDocId(), request)).append('\"').append('>');
-			htmlCode.append(ResponseUtils.filter(title));
+			htmlCode.append(CustomResponseUtils.filter(title));
 			htmlCode.append("</a>\n");
 
 			if (subGroupsHtmlCode.length()>0 || docsHtmlCode.length()>0)

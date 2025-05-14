@@ -4,7 +4,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +15,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -45,7 +45,7 @@ public class FeedbackRestController {
         //Handle text
         StringBuilder feedbackText = new StringBuilder();
         feedbackText.append("<p>")
-            .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), "\n", "<br/>\n"))
+            .append(Tools.replace(CustomResponseUtils.filter(params.get(textKey)[0]), "\n", "<br/>\n"))
             .append("</p>\n<p>");
 
         //Handle isAnonymous
@@ -57,10 +57,10 @@ public class FeedbackRestController {
             mailHelper.setFromEmail(user.getEmail());
 
             //Add info about sender (user) to feedback text
-            feedbackText.append("Login: " + ResponseUtils.filter(user.getLogin()) + "<br/>");
-            feedbackText.append("Name: " + ResponseUtils.filter(user.getFullName()) + "<br/>");
-            feedbackText.append("Email: " + ResponseUtils.filter(user.getEmail()) + "<br/>");
-            feedbackText.append("User-Agent: " + ResponseUtils.filter(request.getHeader("User-Agent")) + "<br/>");
+            feedbackText.append("Login: " + CustomResponseUtils.filter(user.getLogin()) + "<br/>");
+            feedbackText.append("Name: " + CustomResponseUtils.filter(user.getFullName()) + "<br/>");
+            feedbackText.append("Email: " + CustomResponseUtils.filter(user.getEmail()) + "<br/>");
+            feedbackText.append("User-Agent: " + CustomResponseUtils.filter(request.getHeader("User-Agent")) + "<br/>");
         } else {
             //Set anonymous
             mailHelper.setFromName("Anonymous");
@@ -68,9 +68,9 @@ public class FeedbackRestController {
         }
 
         //Add more info
-        feedbackText.append("Domain: ").append(ResponseUtils.filter(Tools.getServerName(request))).append("<br/>");
-        feedbackText.append("IP: ").append(ResponseUtils.filter(Tools.getRemoteIP(request))).append("<br/>");
-        feedbackText.append("Date: ").append(ResponseUtils.filter(Tools.formatDateTimeSeconds(Tools.getNow()))).append("<br/>");
+        feedbackText.append("Domain: ").append(CustomResponseUtils.filter(Tools.getServerName(request))).append("<br/>");
+        feedbackText.append("IP: ").append(CustomResponseUtils.filter(Tools.getRemoteIP(request))).append("<br/>");
+        feedbackText.append("Date: ").append(CustomResponseUtils.filter(Tools.formatDateTimeSeconds(Tools.getNow()))).append("<br/>");
 
         feedbackText.append("\n</p>");
 

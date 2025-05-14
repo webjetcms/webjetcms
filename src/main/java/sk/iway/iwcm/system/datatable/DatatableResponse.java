@@ -3,10 +3,9 @@ package sk.iway.iwcm.system.datatable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.struts.util.ResponseUtils;
-
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  * Title        webjet8
@@ -39,7 +38,7 @@ public class DatatableResponse<T> {
 	}
 
 	public String getError() {
-		return ResponseUtils.filter(error);
+		return CustomResponseUtils.filter(error);
 	}
 
 	public void setError(String error) {

@@ -20,7 +20,6 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.generic.DateTool;
@@ -60,6 +59,7 @@ import sk.iway.iwcm.system.stripes.BindPageParams;
 import sk.iway.iwcm.system.stripes.PageParamOnly;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
 import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -477,7 +477,7 @@ public class NewsActionBean extends WebJETActionBean
 				if (alsoSubGroups)
 				{
 					//All subgroups
-					if(subGroupsDepth < 1) { 
+					if(subGroupsDepth < 1) {
 						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
 						for (GroupDetails g : groupList) {
 							groupIdsExpanded.add(g.getGroupId());
@@ -783,8 +783,8 @@ public class NewsActionBean extends WebJETActionBean
 					user = getCurrentUser();
 					if (user != null && user.isAdmin() && getRequest().getAttribute("writeTagDontShowError")==null)
 					{
-						swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ ResponseUtils.filter(e.getMessage())+"<br>");
-						String stackTrace = ResponseUtils.filter(sw.toString());
+						swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ CustomResponseUtils.filter(e.getMessage())+"<br>");
+						String stackTrace = CustomResponseUtils.filter(sw.toString());
 						swOut.append(stackTrace + "</div>");
 					}
 
@@ -854,8 +854,8 @@ public class NewsActionBean extends WebJETActionBean
 				user = getCurrentUser();
 				if (user != null && user.isAdmin() && getRequest().getAttribute("writeTagDontShowError")==null)
 				{
-					swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ ResponseUtils.filter(e.getMessage())+"<br>");
-					String stackTrace = ResponseUtils.filter(sw.toString());
+					swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ CustomResponseUtils.filter(e.getMessage())+"<br>");
+					String stackTrace = CustomResponseUtils.filter(sw.toString());
 					swOut.append(stackTrace + "</div>");
 				}
 

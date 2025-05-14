@@ -19,7 +19,6 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.RowSetDynaClass;
-import org.apache.struts.util.ResponseUtils;
 
 import oracle.jdbc.driver.OracleConnection;
 import oracle.sql.CLOB;
@@ -27,6 +26,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 /**
  *  nadtrieda DB tried, ma zakladne uzitocne funkcie
@@ -87,7 +87,7 @@ public class DB
 
 
 	/**
-	 * vrati prekodovany a trimnuty string z result setu (povodne sa pouzivalo kvoli Oracle), ak je filter true vykona aj ResponseUtils.filter
+	 * vrati prekodovany a trimnuty string z result setu (povodne sa pouzivalo kvoli Oracle), ak je filter true vykona aj CustomResponseUtils.filter
 	 * @param db_result
 	 * @param fieldName
 	 * @param filter
@@ -141,7 +141,7 @@ public class DB
 
 		if (data.contains("<") || data.contains(">"))
 		{
-			return ResponseUtils.filter(data);
+			return CustomResponseUtils.filter(data);
 		}
 		return data;
 	}

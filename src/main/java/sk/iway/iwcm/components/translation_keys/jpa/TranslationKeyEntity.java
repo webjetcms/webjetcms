@@ -14,8 +14,6 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import org.apache.struts.util.ResponseUtils;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -23,6 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 
 @Entity
 @Table(name = "_properties_")
@@ -295,7 +294,7 @@ public class TranslationKeyEntity {
     public String getKey() {
         if (key==null) return null;
         //ochrana pred XSS ak kluc nie je citany z DB nie je chraneny
-        if (key.contains("<") || key.contains(">")) return ResponseUtils.filter(key).trim();
+        if (key.contains("<") || key.contains(">")) return CustomResponseUtils.filter(key).trim();
         return key.trim();
     }
 

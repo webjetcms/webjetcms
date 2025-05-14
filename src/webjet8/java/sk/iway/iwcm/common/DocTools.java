@@ -1,7 +1,6 @@
 package sk.iway.iwcm.common;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.struts.util.ResponseUtils;
 import org.outerj.daisy.diff.HtmlCleaner;
 import org.outerj.daisy.diff.XslFilter;
 import org.outerj.daisy.diff.html.HTMLDiffer;
@@ -22,6 +21,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -424,7 +424,7 @@ public class DocTools {
         if (ret == null) ret = "";
 
         if (filter) {
-            ret = ResponseUtils.filter(ret);
+            ret = CustomResponseUtils.filter(ret);
             ret = Tools.replace(ret, "\n", " ");
             ret = Tools.replace(ret, "\r", " ");
             ret = Tools.replace(ret, "&amp;", "&");
@@ -449,7 +449,7 @@ public class DocTools {
             ret = "";
         }
         //ochrana pred XSS
-        ret = ResponseUtils.filter(ret);
+        ret = CustomResponseUtils.filter(ret);
         return (ret);
     }
 

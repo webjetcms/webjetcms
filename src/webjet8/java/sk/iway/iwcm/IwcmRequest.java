@@ -9,8 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.struts.util.ResponseUtils;
-
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.iwcm.utils.MapUtils;
 
 /**
@@ -54,7 +53,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 
 		//[#32245 - Penetracni testy novy web] - osetrenie formlarovych parametrov aby nemohli obsahovat HTML kod
 		//testovaci payload zadany do inputu: <input type="text" oncopy="prompt(1)" value="Try to copy this text">
-		return ResponseUtils.filter(super.getParameter(parameter));
+		return CustomResponseUtils.filter(super.getParameter(parameter));
 	}
 	@Override
 	public Map<String, String[]> getParameterMap()
@@ -76,13 +75,13 @@ public class IwcmRequest extends HttpServletRequestWrapper
 		String[] values = super.getParameterValues(parameter);
 		if (values==null || values.length<1) return values;
 
-		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje ResponseUtils.filter
+		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje CustomResponseUtils.filter
 		String[] valuesFiltered = new String[values.length];
 		if (values!=null && values.length>0)
 		{
 			for (int i=0; i<values.length; i++)
 			{
-				valuesFiltered[i] = ResponseUtils.filter(values[i]);
+				valuesFiltered[i] = CustomResponseUtils.filter(values[i]);
 			}
 		}
 

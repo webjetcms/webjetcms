@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.struts.util.ResponseUtils;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -23,6 +21,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
 import sk.iway.spirit.model.Media;
 /**
  * Doplnkove data fieldy potrebne pre editor
@@ -215,7 +214,7 @@ public class DocEditorFields extends BaseEditorFields {
             //v history je otocene docid a historyid
             link = "/showdoc.do?docid="+doc.getId()+"&historyId="+doc.getDocId();
         }
-        iconsHtml.append("<a href=\""+link+"\" target=\"_blank\" class=\"preview-page-link\" title=\""+ResponseUtils.filter(prop.getText("history.showPage"))+"\"><i class=\"ti ti-eye\"></i></a> ");
+        iconsHtml.append("<a href=\""+link+"\" target=\"_blank\" class=\"preview-page-link\" title=\""+CustomResponseUtils.filter(prop.getText("history.showPage"))+"\"><i class=\"ti ti-eye\"></i></a> ");
         iconsHtml.append(getStatusIconsHtml());
         statusIcons = iconsHtml.toString();
 
