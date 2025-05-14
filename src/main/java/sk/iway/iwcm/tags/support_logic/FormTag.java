@@ -1,30 +1,20 @@
 package sk.iway.iwcm.tags.support_logic;
 
-import java.io.IOException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.TagSupport;
-// import org.apache.struts.action.ActionForm;
-// import org.apache.struts.action.ActionMapping;
-// import org.apache.struts.action.ActionServlet;
-// import org.apache.struts.config.ActionConfig;
-// import org.apache.struts.config.FormBeanConfig;
-// import org.apache.struts.config.ModuleConfig;
-// import org.apache.struts.taglib.TagUtils;
-// import org.apache.struts.util.MessageResources;
-// import org.apache.struts.util.RequestUtils;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 @Getter
 @Setter
 public class FormTag extends TagSupport {
    private static final long serialVersionUID = 1L;
+   public static final String TRANSACTION_TOKEN_KEY = "org.apache.struts.action.TOKEN";
+   public static final String TOKEN_KEY = "org.apache.struts.taglib.html.TOKEN";
+
    protected static String lineEnd = System.getProperty("line.separator");
-   //protected static MessageResources messages = MessageResources.getMessageResources("org.apache.struts.taglib.html.LocalStrings");
    protected String action = null;
    private String autocomplete = null;
    private String postbackAction = null;
@@ -32,7 +22,7 @@ public class FormTag extends TagSupport {
    protected String enctype = null;
    protected String focus = null;
    protected String focusIndex = null;
-   //protected ActionMapping mapping = null;
+   protected ActionMapping mapping = null;
    protected String method = null;
    protected String onreset = null;
    protected String onsubmit = null;
@@ -54,4 +44,34 @@ public class FormTag extends TagSupport {
    protected String type = null;
    protected String scope = null;
 
+   protected String renderToken() {
+      StringBuffer results = new StringBuffer();
+      HttpSession session = pageContext.getSession();
+
+      if (session != null) {
+            String token =
+               (String) session.getAttribute(TRANSACTION_TOKEN_KEY);
+
+            if (token != null) {
+               results.append("<div><input type=\"hidden\" name=\"");
+               results.append(TOKEN_KEY);
+               results.append("\" value=\"");
+               results.append(CustomResponseUtils.filter(token));
+
+               if (this.isXhtml()) {
+                  results.append("\" />");
+               } else {
+                  results.append("\">");
+               }
+
+               results.append("</div>");
+            }
+      }
+
+      return results.toString();
+   }
+
+   private boolean isXhtml() {
+      return CustomTagUtils.getInstance().isXhtml(this.pageContext);
+   }
 }

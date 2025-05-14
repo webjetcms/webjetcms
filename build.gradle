@@ -208,11 +208,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-impl
     runtimeOnly 'org.apache.taglibs:taglibs-standard-impl:1.2.5'
 
+    //Added for our custom struts tablib
     implementation 'commons-validator:commons-validator:1.7'
-
-    implementation("sk.iway.wjstruts:wjstruts-core:1.3.10")
-    implementation("sk.iway.wjstruts:wjstruts-taglib:1.3.10")
-        implementation("commons-digester:commons-digester:2.0") //update to 2.0 version
 
     implementation("sk.iway:wjdaisydiff:1.1-SNAPSHOT-shaded")
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit

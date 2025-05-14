@@ -1,11 +1,11 @@
 package sk.iway;
 
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.crypto.Rijndael;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support_logic.action.ActionMessage;
+import sk.iway.iwcm.tags.support_logic.action.ActionMessages;
 import sk.iway.iwcm.users.PasswordsHistoryDB;
 
 import javax.servlet.http.HttpSession;

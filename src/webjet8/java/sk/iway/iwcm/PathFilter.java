@@ -1,7 +1,6 @@
 package sk.iway.iwcm;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.struts.util.TokenProcessor;
 import org.springframework.web.util.NestedServletException;
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
@@ -25,6 +24,7 @@ import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.tags.support_logic.TokenProcessor;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.*;

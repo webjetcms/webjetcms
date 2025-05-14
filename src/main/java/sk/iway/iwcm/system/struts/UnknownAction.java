@@ -6,14 +6,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.struts.action.Action;
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionForward;
-import org.apache.struts.action.ActionMapping;
-
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.ShowDoc;
+
+import sk.iway.iwcm.tags.support_logic.action.Action;
+import sk.iway.iwcm.tags.support_logic.action.ActionForm;
+import sk.iway.iwcm.tags.support_logic.action.ActionForward;
+import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 /**
  * It take unknow Action and change path postfix from .do to .struts, because we probably allready delete maping from xml struts confing file and replace it with Spring mapping.
@@ -23,9 +23,9 @@ public class UnknownAction extends Action {
 
 	@Override
 	public ActionForward execute(ActionMapping mapping,
-	         ActionForm form,
-	         HttpServletRequest request,
-	         HttpServletResponse response) throws IOException, ServletException {
+	        ActionForm form,
+	        HttpServletRequest request,
+	        HttpServletResponse response) throws IOException, ServletException {
 
 	  String path = PathFilter.getOrigPath(request);
 	  String doShowdocAction = request.getParameter("doShowdocAction");
@@ -34,6 +34,5 @@ public class UnknownAction extends Action {
 
 	  request.getRequestDispatcher(Tools.replace(path, ".do", ".struts")).forward(request, response);
 	  return null;
-
    }
 }

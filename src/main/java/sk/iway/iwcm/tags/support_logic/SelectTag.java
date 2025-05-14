@@ -11,7 +11,7 @@ public class SelectTag extends CustomBaseHandlerTag {
 
     protected String[] match = null;
     protected String multiple = null;
-    protected String name = "org.apache.struts.taglib.html.BEAN";
+    protected String name = ".taglib.html.BEAN";
     protected String property = null;
     protected String saveBody = null;
     protected String size = null;
