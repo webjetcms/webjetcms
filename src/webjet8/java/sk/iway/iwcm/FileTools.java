@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.upload.FormFile;
+import sk.iway.iwcm.tags.support_logic.FormFile;
 
 import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;

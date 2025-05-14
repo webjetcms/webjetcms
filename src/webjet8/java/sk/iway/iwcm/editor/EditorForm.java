@@ -11,7 +11,7 @@ import java.util.StringTokenizer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.struts.upload.FormFile;
+import sk.iway.iwcm.tags.support_logic.FormFile;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;

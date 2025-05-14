@@ -1,12 +1,12 @@
 package sk.iway.iwcm.xls;
 
-import org.apache.struts.upload.FormFile;
+import sk.iway.iwcm.tags.support_logic.FormFile;
 
 public class ImportXLSForm {
-    
+
     FormFile file;
 
-	public FormFile getFile() 
+	public FormFile getFile()
     {
 		return file;
 	}
