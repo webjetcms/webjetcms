@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,6 +86,6 @@ public class JsTreeItem {
     }
 
     public String getText() {
-        return getTextIconHtmlCode() + CustomResponseUtils.filter(text);
+        return getTextIconHtmlCode() + ResponseUtils.filter(text);
     }
 }

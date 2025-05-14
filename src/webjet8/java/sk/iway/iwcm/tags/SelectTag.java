@@ -16,7 +16,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
 /**
@@ -75,12 +75,12 @@ public class SelectTag extends sk.iway.iwcm.tags.support_logic.SelectTag
 				{
 					if (queryType == 1)
 					{
-						label = CustomResponseUtils.filter(DB.getDbString(rs, "label"));
-						value = CustomResponseUtils.filter(DB.getDbString(rs, "value"));
+						label = ResponseUtils.filter(DB.getDbString(rs, "label"));
+						value = ResponseUtils.filter(DB.getDbString(rs, "value"));
 					}
 					else
 					{
-						label = CustomResponseUtils.filter(rs.getString(1));
+						label = ResponseUtils.filter(rs.getString(1));
 						value = label;
 					}
 					options.add(new LabelValueDetails(label, value));

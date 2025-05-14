@@ -35,7 +35,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 /**
  *  StatNewDB.java
@@ -2031,7 +2031,7 @@ public class StatNewDB
 				//iteruj cez riadky
 				while (rs.next())
 				{
-					String key = CustomResponseUtils.filter(DB.getDbString(rs, "referer_server_name"));
+					String key = ResponseUtils.filter(DB.getDbString(rs, "referer_server_name"));
 					Number currentValue = map.get(key);
 
 					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt("ref_views")));

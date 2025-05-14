@@ -34,7 +34,7 @@ import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -1557,7 +1557,7 @@ public class EditorForm implements Serializable
 
 	public String getNote()
 	{
-		return CustomResponseUtils.filter(getNoteUntouched());
+		return ResponseUtils.filter(getNoteUntouched());
 	}
 
 	@JsonIgnore

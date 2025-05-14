@@ -11,7 +11,7 @@ import net.sourceforge.stripes.controller.DefaultActionBeanPropertyBinder;
 import net.sourceforge.stripes.controller.ParameterName;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 /**
  *  XssSafeActionBeanPropertyBinder.java
@@ -56,7 +56,7 @@ public class XssSafeActionBeanPropertyBinder extends DefaultActionBeanPropertyBi
 				List<String> values = new ArrayList<String>();
 				for (String val : entry.getValue())
 				{
-					values.add(CustomResponseUtils.filter(val));
+					values.add(ResponseUtils.filter(val));
 				}
 				parameters.put(new ParameterName(entry.getKey().trim()), values.toArray(new String[values.size()]));
 			}

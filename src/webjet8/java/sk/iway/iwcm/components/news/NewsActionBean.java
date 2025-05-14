@@ -59,7 +59,7 @@ import sk.iway.iwcm.system.stripes.BindPageParams;
 import sk.iway.iwcm.system.stripes.PageParamOnly;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
 import sk.iway.iwcm.tags.WriteTag;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -783,8 +783,8 @@ public class NewsActionBean extends WebJETActionBean
 					user = getCurrentUser();
 					if (user != null && user.isAdmin() && getRequest().getAttribute("writeTagDontShowError")==null)
 					{
-						swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ CustomResponseUtils.filter(e.getMessage())+"<br>");
-						String stackTrace = CustomResponseUtils.filter(sw.toString());
+						swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ ResponseUtils.filter(e.getMessage())+"<br>");
+						String stackTrace = ResponseUtils.filter(sw.toString());
 						swOut.append(stackTrace + "</div>");
 					}
 
@@ -854,8 +854,8 @@ public class NewsActionBean extends WebJETActionBean
 				user = getCurrentUser();
 				if (user != null && user.isAdmin() && getRequest().getAttribute("writeTagDontShowError")==null)
 				{
-					swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ CustomResponseUtils.filter(e.getMessage())+"<br>");
-					String stackTrace = CustomResponseUtils.filter(sw.toString());
+					swOut.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>"+ ResponseUtils.filter(e.getMessage())+"<br>");
+					String stackTrace = ResponseUtils.filter(sw.toString());
 					swOut.append(stackTrace + "</div>");
 				}
 

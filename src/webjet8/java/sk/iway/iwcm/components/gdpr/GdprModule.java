@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.gdpr.model.GdprDB;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
 import sk.iway.iwcm.components.gdpr.model.QuestionsAnswersDB;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 public enum GdprModule {
     WEB_STRANKY,
@@ -113,9 +113,9 @@ public enum GdprModule {
                         }
 
                         //sb.append(text.substring(start, end));
-                        sb.append(CustomResponseUtils.filter(text.substring(start, wordBegin )));
-                        sb.append("<span title=\"").append(regexp.getRegexpName()).append("\" class=\"yellow_color\">").append(CustomResponseUtils.filter(text.substring(wordBegin , wordEnd)));
-                        sb.append("</span>").append(CustomResponseUtils.filter(text.substring(wordEnd, end)));
+                        sb.append(ResponseUtils.filter(text.substring(start, wordBegin )));
+                        sb.append("<span title=\"").append(regexp.getRegexpName()).append("\" class=\"yellow_color\">").append(ResponseUtils.filter(text.substring(wordBegin , wordEnd)));
+                        sb.append("</span>").append(ResponseUtils.filter(text.substring(wordEnd, end)));
 
                         if (end < text.length())
                         {

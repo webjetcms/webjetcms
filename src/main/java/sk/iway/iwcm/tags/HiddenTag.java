@@ -3,7 +3,7 @@ package sk.iway.iwcm.tags;
 import javax.servlet.jsp.JspException;
 
 import sk.iway.iwcm.tags.support_logic.CustomBaseInputTag;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
 /**
@@ -101,7 +101,7 @@ public class HiddenTag extends CustomBaseInputTag {
         String results = null;
 
         if (value != null) {
-            results = CustomResponseUtils.filter(value);
+            results = ResponseUtils.filter(value);
         } else {
             Object value =
                 CustomTagUtils.getInstance().lookup(pageContext, name, property, null);
@@ -109,7 +109,7 @@ public class HiddenTag extends CustomBaseInputTag {
             if (value == null) {
                 results = "";
             } else {
-                results = CustomResponseUtils.filter(value.toString());
+                results = ResponseUtils.filter(value.toString());
             }
         }
 
@@ -195,6 +195,6 @@ public class HiddenTag extends CustomBaseInputTag {
             return "";
         }
 
-        return CustomResponseUtils.filter(value.toString());
+        return ResponseUtils.filter(value.toString());
     }
 }

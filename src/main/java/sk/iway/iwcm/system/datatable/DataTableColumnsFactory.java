@@ -14,7 +14,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -216,7 +216,7 @@ public class DataTableColumnsFactory {
     }
 
     private static String escapeSpecialChars(String translated) {
-        return CustomResponseUtils.filter(translated);
+        return ResponseUtils.filter(translated);
     }
 
     /**

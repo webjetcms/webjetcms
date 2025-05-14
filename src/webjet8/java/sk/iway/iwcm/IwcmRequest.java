@@ -9,7 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.utils.MapUtils;
 
 /**
@@ -53,7 +53,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 
 		//[#32245 - Penetracni testy novy web] - osetrenie formlarovych parametrov aby nemohli obsahovat HTML kod
 		//testovaci payload zadany do inputu: <input type="text" oncopy="prompt(1)" value="Try to copy this text">
-		return CustomResponseUtils.filter(super.getParameter(parameter));
+		return ResponseUtils.filter(super.getParameter(parameter));
 	}
 	@Override
 	public Map<String, String[]> getParameterMap()
@@ -81,7 +81,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 		{
 			for (int i=0; i<values.length; i++)
 			{
-				valuesFiltered[i] = CustomResponseUtils.filter(values[i]);
+				valuesFiltered[i] = ResponseUtils.filter(values[i]);
 			}
 		}
 

@@ -1,6 +1,6 @@
 package sk.iway.iwcm.tags.support_logic;
 
-public class CustomRequestUtils {
+public class RequestUtils {
 
     public static Class applicationClass(String className) throws ClassNotFoundException {
         return applicationClass(className, (ClassLoader)null);
@@ -10,7 +10,7 @@ public class CustomRequestUtils {
         if (classLoader == null) {
             classLoader = Thread.currentThread().getContextClassLoader();
             if (classLoader == null) {
-                classLoader = CustomRequestUtils.class.getClassLoader();
+                classLoader = RequestUtils.class.getClassLoader();
             }
         }
 

@@ -29,7 +29,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -1036,7 +1036,7 @@ public class Tools
 		{
 			ret = ret.substring(0, ret.indexOf('#'));
 		}
-		return CustomResponseUtils.filter(ret);
+		return ResponseUtils.filter(ret);
 	}
 
 	/**
@@ -1592,7 +1592,7 @@ public class Tools
 		   String[] values = request.getParameterValues(name);
 		   for (int i=0; i<values.length; i++)
 		   {
-			   String value = CustomResponseUtils.filter(values[i]);
+			   String value = ResponseUtils.filter(values[i]);
 			   baseLink = addParameterToUrl(baseLink, name, value);
 		   }
 		}
@@ -1841,7 +1841,7 @@ public class Tools
 					}
 					else
 					{
-						lng = CustomResponseUtils.filter(request.getParameter("language"));
+						lng = ResponseUtils.filter(request.getParameter("language"));
 						if (lng != null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);
 						if (lng==null)
 						{
@@ -2956,7 +2956,7 @@ public class Tools
 	public static String escapeHtml(String text) {
 		if(text != null) {
 //			return StringEscapeUtils.escapeHtml(text);
-			return CustomResponseUtils.filter(text).replace("&amp;", "&");
+			return ResponseUtils.filter(text).replace("&amp;", "&");
 		} else {
 			return null;
 		}

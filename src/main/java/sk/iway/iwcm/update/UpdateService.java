@@ -42,7 +42,7 @@ import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 public class UpdateService {
@@ -357,7 +357,7 @@ public class UpdateService {
    			Logger.error(UpdateService.class, "Unable to delete file/dir: " + archiveRealPath);
 
    		out.println("<br><br>" + prop.getText("update.update_files_count") + ": " + updateFilesCount);
-   		out.println("<br><br><a href='/admin/update/restart?version=" + CustomResponseUtils.filter(versionDir) + "'>" + prop.getText("update.restart") + "</a>");
+   		out.println("<br><br><a href='/admin/update/restart?version=" + ResponseUtils.filter(versionDir) + "'>" + prop.getText("update.restart") + "</a>");
 		out.println("</body></html>");
 		out.flush();
 

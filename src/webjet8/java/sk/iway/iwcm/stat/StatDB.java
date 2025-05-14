@@ -40,7 +40,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 /**
  *  Description of the Class
@@ -335,7 +335,7 @@ public class StatDB extends DB
 	public static String getStatKeyValue(int id)
 	{
 		StatDB statDB = StatDB.getInstance();
-		return CustomResponseUtils.filter(statDB.getValue(id));
+		return ResponseUtils.filter(statDB.getValue(id));
 	}
 
 	/**

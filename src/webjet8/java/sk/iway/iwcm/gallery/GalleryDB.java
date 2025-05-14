@@ -84,7 +84,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.spirit.MediaDB;
 
 /**
@@ -655,7 +655,7 @@ public class GalleryDB
 						if (param.equals("gpage") || param.equals("gpsize")) continue;
 						if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && param.equals("docid")) continue;
 
-						params.append("&amp;").append(CustomResponseUtils.filter(param)).append('=').append(CustomResponseUtils.filter(request.getParameter(param)));
+						params.append("&amp;").append(ResponseUtils.filter(param)).append('=').append(ResponseUtils.filter(request.getParameter(param)));
 					}
 					int counter = 1;
 					while (start < end)

@@ -41,7 +41,7 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.tags.support_logic.action.ActionMessage;
 import sk.iway.iwcm.tags.support_logic.action.ActionMessages;
 
@@ -309,7 +309,7 @@ public class AdminLogonController {
 
 
     private void determineLanguage(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
-        String lng = CustomResponseUtils.filter(request.getParameter("language"));
+        String lng = ResponseUtils.filter(request.getParameter("language"));
         if (Tools.isEmpty(lng)) lng = Constants.getString("defaultLanguage");
         PageLng.setUserLng(request, response, lng);
         session.setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);

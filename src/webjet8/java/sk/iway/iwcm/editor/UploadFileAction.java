@@ -27,7 +27,7 @@ import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.context.ContextFilter;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.UploadedFile;
 
@@ -147,7 +147,7 @@ public class UploadFileAction {
 				fileURL = request.getContextPath() + fileURL;
 				fileURL = Tools.replace(fileURL, "//", "/");
 
-				out.print("{\"fileName\":\""+CustomResponseUtils.filter(fileName)+"\",\"uploaded\":1,\"url\":\""+ Tools.replace(fileURL, "/", "\\/") +"\",\"error\":{\"number\"" +
+				out.print("{\"fileName\":\""+ResponseUtils.filter(fileName)+"\",\"uploaded\":1,\"url\":\""+ Tools.replace(fileURL, "/", "\\/") +"\",\"error\":{\"number\"" +
 						":201,\"message\":\"A file with the same name is already available. The uploaded file was renamed to \\\"847" +
 						"(2).jpg\\\".\"}}");
 			}

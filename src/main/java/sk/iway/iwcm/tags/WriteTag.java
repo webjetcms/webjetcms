@@ -47,7 +47,7 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetComponentParser;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -841,8 +841,8 @@ public class WriteTag extends BodyTagSupport
 
 							if (user != null && user.isAdmin() && user.isEnabledItem("cmp_adminlog") && request.getAttribute("writeTagDontShowError") == null)
 							{
-								content.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + CustomResponseUtils.filter(ex1.getMessage()) + "<br>");
-								String stackTrace = CustomResponseUtils.filter(stack);
+								content.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + ResponseUtils.filter(ex1.getMessage()) + "<br>");
+								String stackTrace = ResponseUtils.filter(stack);
 								content.append(stackTrace + "</div>");
 							}
 

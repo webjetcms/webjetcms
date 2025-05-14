@@ -12,7 +12,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 import sk.iway.iwcm.tags.support_logic.IteratorAdapter;
 
@@ -317,7 +317,7 @@ public class OptionsTag extends TagSupport {
         sb.append("<option value=\"");
 
         if (filter) {
-            sb.append(CustomResponseUtils.filter(value));
+            sb.append(ResponseUtils.filter(value));
         } else {
             sb.append(value);
         }
@@ -330,20 +330,20 @@ public class OptionsTag extends TagSupport {
 
         if (style != null) {
             sb.append(" style=\"");
-            sb.append(CustomResponseUtils.filter(style));
+            sb.append(ResponseUtils.filter(style));
             sb.append("\"");
         }
 
         if (styleClass != null) {
             sb.append(" class=\"");
-            sb.append(CustomResponseUtils.filter(styleClass));
+            sb.append(ResponseUtils.filter(styleClass));
             sb.append("\"");
         }
 
         sb.append(">");
 
         if (filter) {
-            sb.append(CustomResponseUtils.filter(label));
+            sb.append(ResponseUtils.filter(label));
         } else {
             sb.append(label);
         }

@@ -13,7 +13,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 /**
  *  DislpayTagLocaleResolver.java - resolver pre ResourceBundle
@@ -131,7 +131,7 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
 		}
 		else
 		{
-			lng = CustomResponseUtils.filter(request.getParameter("language"));
+			lng = ResponseUtils.filter(request.getParameter("language"));
 			if (lng != null) request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);
 			if (lng == null)
 			{

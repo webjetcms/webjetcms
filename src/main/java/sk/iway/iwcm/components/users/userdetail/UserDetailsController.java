@@ -41,7 +41,7 @@ import sk.iway.iwcm.system.datatable.NotifyButton;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.PermissionGroupDB;
 import sk.iway.iwcm.users.UserGroupDetails;
@@ -146,7 +146,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
             String header = saved.getLogin()+":"+apiKey;
             header = Constants.getString("logonTokenHeaderName") + ":" + Base64.encodeBase64String(header.getBytes());
-            addNotify(new NotifyBean(getProp().getText("components.user.apiKey.notifyTitle"), getProp().getText("components.user.apiKey.notifyText", CustomResponseUtils.filter(apiKey), header), NotifyType.SUCCESS));
+            addNotify(new NotifyBean(getProp().getText("components.user.apiKey.notifyTitle"), getProp().getText("components.user.apiKey.notifyText", ResponseUtils.filter(apiKey), header), NotifyType.SUCCESS));
         }
 
         boolean saveSuccess = userDetailsService.afterSave(entity, saved);

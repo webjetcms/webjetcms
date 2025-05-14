@@ -2,9 +2,9 @@ package sk.iway.iwcm.tags.support_logic;
 
 import sk.iway.iwcm.Tools;
 
-public class CustomResponseUtils {
+public class ResponseUtils {
 
-    private CustomResponseUtils() {
+    private ResponseUtils() {
         // Private constructor to prevent instantiation
     }
 

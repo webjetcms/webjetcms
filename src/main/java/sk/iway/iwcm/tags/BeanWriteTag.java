@@ -14,7 +14,7 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.admin.layout.LayoutService;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
 
 /**
@@ -177,7 +177,7 @@ public class BeanWriteTag extends TagSupport {
 
         // Print this property value to our output writer, suitably filtered
         if (filter) {
-            CustomTagUtils.getInstance().write(pageContext, CustomResponseUtils.filter(output));
+            CustomTagUtils.getInstance().write(pageContext, ResponseUtils.filter(output));
         } else {
             CustomTagUtils.getInstance().write(pageContext, output);
         }

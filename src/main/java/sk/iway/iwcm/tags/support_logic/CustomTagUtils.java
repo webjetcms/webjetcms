@@ -21,7 +21,7 @@ public class CustomTagUtils {
 
    private static final Map<String, Integer> scopes = new HashMap<>();
    private static final String CUSTOM_TAG_UTILS = "CustomTagUtils";
-   private static final String XHTML_KEY = "org.apache.struts.globals.XHTML";
+   public static final String XHTML_KEY = "org.apache.struts.globals.XHTML";
 
 
    /* Keys gonna be only in EN version.

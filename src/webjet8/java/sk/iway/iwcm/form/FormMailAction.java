@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.WriteTag;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.DiskMultiPartRequestHandler;
@@ -1650,7 +1650,7 @@ public class FormMailAction extends HttpServlet
 							while (st.hasMoreTokens())
 							{
 								field = st.nextToken();
-								value = CustomResponseUtils.filter(DB.internationalToEnglish(recode(request.getParameter(field)))).replace("\n", " ").replace("\r", " ");
+								value = ResponseUtils.filter(DB.internationalToEnglish(recode(request.getParameter(field)))).replace("\n", " ").replace("\r", " ");
 								msg.setHeader(field, value);
 							}
 						}
@@ -2248,8 +2248,8 @@ public class FormMailAction extends HttpServlet
 						if (DocTools.testXss(paramValue)) paramValue = "";
 						if (DocTools.testXss(fieldName)) fieldName = "";
 
-						paramValue = CustomResponseUtils.filter(paramValue);
-						fieldName = CustomResponseUtils.filter(fieldName);
+						paramValue = ResponseUtils.filter(paramValue);
+						fieldName = ResponseUtils.filter(fieldName);
 
 						if (context!=null)
 						{

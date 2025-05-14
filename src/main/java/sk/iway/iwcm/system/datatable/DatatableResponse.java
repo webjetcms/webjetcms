@@ -5,7 +5,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 /**
  * Title        webjet8
@@ -38,7 +38,7 @@ public class DatatableResponse<T> {
 	}
 
 	public String getError() {
-		return CustomResponseUtils.filter(error);
+		return ResponseUtils.filter(error);
 	}
 
 	public void setError(String error) {

@@ -17,7 +17,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 
 import javax.servlet.http.HttpServletRequest;
@@ -1296,7 +1296,7 @@ public class GroupsDB extends DB
 			group = findGroup(currentGroupId);
 			if (group != null)
 			{
-				path.insert(0, "/<a class='groups' href='/admin/v9/webpages/web-pages-list/?groupid="+group.getGroupId()+forwardLink+"'>" + CustomResponseUtils.filter(group.getGroupName()) + "</a>");
+				path.insert(0, "/<a class='groups' href='/admin/v9/webpages/web-pages-list/?groupid="+group.getGroupId()+forwardLink+"'>" + ResponseUtils.filter(group.getGroupName()) + "</a>");
 				currentGroupId = group.getParentGroupId();
 			}
 			else

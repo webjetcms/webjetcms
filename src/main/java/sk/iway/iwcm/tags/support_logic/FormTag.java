@@ -56,7 +56,7 @@ public class FormTag extends TagSupport {
                results.append("<div><input type=\"hidden\" name=\"");
                results.append(TOKEN_KEY);
                results.append("\" value=\"");
-               results.append(CustomResponseUtils.filter(token));
+               results.append(ResponseUtils.filter(token));
 
                if (this.isXhtml()) {
                   results.append("\" />");

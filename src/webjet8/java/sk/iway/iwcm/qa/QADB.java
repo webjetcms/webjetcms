@@ -37,7 +37,7 @@ import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.captcha.Captcha;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -391,7 +391,7 @@ public class QADB
 			while (rs.next())
 			{
 				lvd = new LabelValueDetails();
-				lvd.setLabel(CustomResponseUtils.filter(DB.getDbString(rs, "group_name")));
+				lvd.setLabel(ResponseUtils.filter(DB.getDbString(rs, "group_name")));
 				lvd.setValue(Integer.toString(rs.getInt("qa_count")));
 				ret.add(lvd);
 			}
@@ -937,7 +937,7 @@ public class QADB
 			message.append("<a href='");
 			message.append(url+"?id=").append(qa.getQaId()).append("&hash=").append(qa.getHash());
 			if (request.getParameter("lng")!=null)
-				message.append("&lng="+CustomResponseUtils.filter(request.getParameter("lng")));
+				message.append("&lng="+ResponseUtils.filter(request.getParameter("lng")));
 
 			message.append("'>");
 			message.append(prop.getText("components.qa.add_action.for_answer_click_here"));

@@ -101,9 +101,9 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
             this.triedJstlInit = true;
 
             try {
-                this.loopTagClass = CustomRequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTag");
+                this.loopTagClass = RequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTag");
                 this.loopTagGetStatus = this.loopTagClass.getDeclaredMethod("getLoopStatus", (Class[])null);
-                this.loopTagStatusClass = CustomRequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTagStatus");
+                this.loopTagStatusClass = RequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTagStatus");
                 this.loopTagStatusGetIndex = this.loopTagStatusClass.getDeclaredMethod("getIndex", (Class[])null);
                 this.triedJstlSuccess = true;
             } catch (ClassNotFoundException var8) {

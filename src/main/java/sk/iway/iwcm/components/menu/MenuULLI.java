@@ -14,7 +14,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 //import sk.iway.iwcm.Logger;
@@ -371,7 +371,7 @@ public class MenuULLI
 						{
 							navbarName = navbarName.substring(0, itemMaxLen);
 						}
-						outDocs.append(Tools.convertToHtmlTags(CustomResponseUtils.filter(navbarName)) + "</a></li>\n");
+						outDocs.append(Tools.convertToHtmlTags(ResponseUtils.filter(navbarName)) + "</a></li>\n");
 						hasLi = true;
 					}
 				}
@@ -602,7 +602,7 @@ public class MenuULLI
 							if (itemMaxLen > 0 && itemMaxLen < navbarName.length()) {
 								navbarName = navbarName.substring(0, itemMaxLen);
 							}
-							navbarName = CustomResponseUtils.filter(navbarName);
+							navbarName = ResponseUtils.filter(navbarName);
 							navbarName = Tools.convertToHtmlTags(navbarName);
 
 							if (menuIncludePerex && level >= menuIncludePerexLevel) {

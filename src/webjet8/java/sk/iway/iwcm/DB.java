@@ -26,7 +26,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 /**
  *  nadtrieda DB tried, ma zakladne uzitocne funkcie
@@ -141,7 +141,7 @@ public class DB
 
 		if (data.contains("<") || data.contains(">"))
 		{
-			return CustomResponseUtils.filter(data);
+			return ResponseUtils.filter(data);
 		}
 		return data;
 	}

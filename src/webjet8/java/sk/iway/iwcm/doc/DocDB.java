@@ -23,7 +23,7 @@ import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
-import sk.iway.iwcm.tags.support_logic.CustomResponseUtils;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -1678,7 +1678,7 @@ public class DocDB extends DB
 			String value;
 			while (e.hasMoreElements())
 			{
-				name = CustomResponseUtils.filter(e.nextElement());
+				name = ResponseUtils.filter(e.nextElement());
 				value = Tools.URLEncode(request.getParameter(name));
 				//znak _ je tam kvoli system parametrom ako _writePerfStat, aby sa nahodou nestalo, ze sa ulozi do cache
 				if ("docid".equals(name) || pageParamName.equals(name) || name.startsWith("_")) continue;
@@ -5994,30 +5994,30 @@ public class DocDB extends DB
 			else j.put("groupId", String.valueOf(d.getGroupId()));
 
 			j.put("sortPriority", d.getSortPriority());
-			j.put("title", CustomResponseUtils.filter(d.getTitle()));
-			j.put("authorName", CustomResponseUtils.filter(notNull(d.getAuthorName())));
-			j.put("templateName", CustomResponseUtils.filter(tempName));
+			j.put("title", ResponseUtils.filter(d.getTitle()));
+			j.put("authorName", ResponseUtils.filter(notNull(d.getAuthorName())));
+			j.put("templateName", ResponseUtils.filter(tempName));
 			j.put("templateId", d.getTempId());
-			j.put("fieldA", CustomResponseUtils.filter(d.getFieldA()));
-			j.put("fieldB", CustomResponseUtils.filter(d.getFieldB()));
-			j.put("fieldC", CustomResponseUtils.filter(d.getFieldC()));
-			j.put("fieldD", CustomResponseUtils.filter(d.getFieldD()));
-			j.put("fieldE", CustomResponseUtils.filter(d.getFieldE()));
-			j.put("fieldF", CustomResponseUtils.filter(d.getFieldF()));
-			j.put("fieldG", CustomResponseUtils.filter(d.getFieldG()));
-			j.put("fieldH", CustomResponseUtils.filter(d.getFieldH()));
-			j.put("fieldI", CustomResponseUtils.filter(d.getFieldI()));
-			j.put("fieldJ", CustomResponseUtils.filter(d.getFieldJ()));
-			j.put("fieldK", CustomResponseUtils.filter(d.getFieldK()));
-			j.put("fieldL", CustomResponseUtils.filter(d.getFieldL()));
-			j.put("fieldM", CustomResponseUtils.filter(d.getFieldM()));
-			j.put("fieldN", CustomResponseUtils.filter(d.getFieldN()));
-			j.put("fieldO", CustomResponseUtils.filter(d.getFieldO()));
-			j.put("fieldP", CustomResponseUtils.filter(d.getFieldP()));
-			j.put("fieldQ", CustomResponseUtils.filter(d.getFieldQ()));
-			j.put("fieldR", CustomResponseUtils.filter(d.getFieldR()));
-			j.put("fieldS", CustomResponseUtils.filter(d.getFieldS()));
-			j.put("fieldT", CustomResponseUtils.filter(d.getFieldT()));
+			j.put("fieldA", ResponseUtils.filter(d.getFieldA()));
+			j.put("fieldB", ResponseUtils.filter(d.getFieldB()));
+			j.put("fieldC", ResponseUtils.filter(d.getFieldC()));
+			j.put("fieldD", ResponseUtils.filter(d.getFieldD()));
+			j.put("fieldE", ResponseUtils.filter(d.getFieldE()));
+			j.put("fieldF", ResponseUtils.filter(d.getFieldF()));
+			j.put("fieldG", ResponseUtils.filter(d.getFieldG()));
+			j.put("fieldH", ResponseUtils.filter(d.getFieldH()));
+			j.put("fieldI", ResponseUtils.filter(d.getFieldI()));
+			j.put("fieldJ", ResponseUtils.filter(d.getFieldJ()));
+			j.put("fieldK", ResponseUtils.filter(d.getFieldK()));
+			j.put("fieldL", ResponseUtils.filter(d.getFieldL()));
+			j.put("fieldM", ResponseUtils.filter(d.getFieldM()));
+			j.put("fieldN", ResponseUtils.filter(d.getFieldN()));
+			j.put("fieldO", ResponseUtils.filter(d.getFieldO()));
+			j.put("fieldP", ResponseUtils.filter(d.getFieldP()));
+			j.put("fieldQ", ResponseUtils.filter(d.getFieldQ()));
+			j.put("fieldR", ResponseUtils.filter(d.getFieldR()));
+			j.put("fieldS", ResponseUtils.filter(d.getFieldS()));
+			j.put("fieldT", ResponseUtils.filter(d.getFieldT()));
 
 			if(group.getLng()!=null){
 				j.put("lang", group.getLng());
@@ -6061,9 +6061,9 @@ public class DocDB extends DB
 			j.put("properties", properties);
 
 			j.put("link", d.getDocLink());
-			j.put("groupName", CustomResponseUtils.filter(group.getGroupName()));
-			j.put("category", CustomResponseUtils.filter(category));
-			j.put("subcategory", CustomResponseUtils.filter(subCategory));
+			j.put("groupName", ResponseUtils.filter(group.getGroupName()));
+			j.put("category", ResponseUtils.filter(category));
+			j.put("subcategory", ResponseUtils.filter(subCategory));
 
 			try {
 				j.put("externalLink", notNull(d.getExternalLink()));
@@ -6072,9 +6072,9 @@ public class DocDB extends DB
 				j.put("externalLink", "");
 			}
 
-			j.put("perex", CustomResponseUtils.filter(d.getPerex()));
-			j.put("perexPlace", CustomResponseUtils.filter(d.getPerexPlace()));
-			j.put("perexImage", CustomResponseUtils.filter(d.getPerexImage()));
+			j.put("perex", ResponseUtils.filter(d.getPerex()));
+			j.put("perexPlace", ResponseUtils.filter(d.getPerexPlace()));
+			j.put("perexImage", ResponseUtils.filter(d.getPerexImage()));
 
 			try
 			{
