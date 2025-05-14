@@ -17,6 +17,28 @@ public class SelectTag extends CustomBaseHandlerTag {
     protected String size = null;
     protected String value = null;
 
+    /**
+    * Does the specified value match one of those we are looking for?
+    *
+    * @param value Value to be compared.
+    */
+    public boolean isMatched(String value) {
+        if ((this.match == null) || (value == null)) {
+            return false;
+        }
+
+        for (int i = 0; i < this.match.length; i++) {
+            if (value.equals(this.match[i])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Create an appropriate select start element based on our parameters.
+     */
     protected String renderSelectStartElement() throws JspException {
         StringBuffer results = new StringBuffer("<select");
         this.prepareAttribute(results, "name", this.prepareName());
