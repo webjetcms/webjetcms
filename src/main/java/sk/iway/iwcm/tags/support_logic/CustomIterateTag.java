@@ -9,12 +9,14 @@ import java.util.Iterator;
 import java.util.Map;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyTagSupport;
-import org.apache.struts.taglib.TagUtils;
-import org.apache.struts.util.IteratorAdapter;
-import org.apache.struts.util.MessageResources;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class CustomIterateTag extends BodyTagSupport {
-   protected static MessageResources messages = MessageResources.getMessageResources("org.apache.struts.taglib.logic.LocalStrings");
+
    protected Iterator iterator = null;
    protected int lengthCount = 0;
    protected int lengthValue = 0;
@@ -38,84 +40,20 @@ public class CustomIterateTag extends BodyTagSupport {
       this.collection = collection;
    }
 
-   public String getId() {
-      return this.id;
-   }
-
-   public void setId(String id) {
-      this.id = id;
-   }
-
    public int getIndex() {
       return this.started ? this.offsetValue + this.lengthCount - 1 : 0;
-   }
-
-   public String getIndexId() {
-      return this.indexId;
-   }
-
-   public void setIndexId(String indexId) {
-      this.indexId = indexId;
-   }
-
-   public String getLength() {
-      return this.length;
-   }
-
-   public void setLength(String length) {
-      this.length = length;
-   }
-
-   public String getName() {
-      return this.name;
-   }
-
-   public void setName(String name) {
-      this.name = name;
-   }
-
-   public String getOffset() {
-      return this.offset;
-   }
-
-   public void setOffset(String offset) {
-      this.offset = offset;
-   }
-
-   public String getProperty() {
-      return this.property;
-   }
-
-   public void setProperty(String property) {
-      this.property = property;
-   }
-
-   public String getScope() {
-      return this.scope;
-   }
-
-   public void setScope(String scope) {
-      this.scope = scope;
-   }
-
-   public String getType() {
-      return this.type;
-   }
-
-   public void setType(String type) {
-      this.type = type;
    }
 
    public int doStartTag() throws JspException {
       Object collection = this.collection;
       if (collection == null) {
-         collection = TagUtils.getInstance().lookup(this.pageContext, this.name, this.property, this.scope);
+         collection = CustomTagUtils.getInstance().lookup(this.pageContext, this.name, this.property, this.scope);
       }
 
       JspException e;
       if (collection == null) {
-         e = new JspException(messages.getMessage("iterate.collection"));
-         TagUtils.getInstance().saveException(this.pageContext, e);
+         e = new JspException( CustomTagUtils.getInstance().getMessage("iterate.collection") );
+         CustomTagUtils.getInstance().saveException(this.pageContext, e);
          throw e;
       } else {
          if (collection.getClass().isArray()) {
@@ -139,8 +77,8 @@ public class CustomIterateTag extends BodyTagSupport {
             this.iterator = ((Map)collection).entrySet().iterator();
          } else {
             if (!(collection instanceof Enumeration)) {
-               e = new JspException(messages.getMessage("iterate.iterator"));
-               TagUtils.getInstance().saveException(this.pageContext, e);
+               e = new JspException( CustomTagUtils.getInstance().getMessage("iterate.iterator") );
+               CustomTagUtils.getInstance().saveException(this.pageContext, e);
                throw e;
             }
 
@@ -154,7 +92,7 @@ public class CustomIterateTag extends BodyTagSupport {
             try {
                this.offsetValue = Integer.parseInt(this.offset);
             } catch (NumberFormatException var7) {
-               lengthObject = (Integer)TagUtils.getInstance().lookup(this.pageContext, this.offset, (String)null);
+               lengthObject = (Integer)CustomTagUtils.getInstance().lookup(this.pageContext, this.offset, (String)null);
                if (lengthObject == null) {
                   this.offsetValue = 0;
                } else {
@@ -173,7 +111,7 @@ public class CustomIterateTag extends BodyTagSupport {
             try {
                this.lengthValue = Integer.parseInt(this.length);
             } catch (NumberFormatException var6) {
-               lengthObject = (Integer)TagUtils.getInstance().lookup(this.pageContext, this.length, (String)null);
+               lengthObject = (Integer)CustomTagUtils.getInstance().lookup(this.pageContext, this.length, (String)null);
                if (lengthObject == null) {
                   this.lengthValue = 0;
                } else {
@@ -217,7 +155,7 @@ public class CustomIterateTag extends BodyTagSupport {
 
    public int doAfterBody() throws JspException {
       if (this.bodyContent != null) {
-         TagUtils.getInstance().writePrevious(this.pageContext, this.bodyContent.getString());
+         CustomTagUtils.getInstance().writePrevious(this.pageContext, this.bodyContent.getString());
          this.bodyContent.clearBody();
       }
 

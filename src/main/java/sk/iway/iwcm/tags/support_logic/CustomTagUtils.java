@@ -11,7 +11,6 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.struts.Globals;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -22,6 +21,7 @@ public class CustomTagUtils {
 
    private static final Map<String, Integer> scopes = new HashMap<>();
    private static final String CUSTOM_TAG_UTILS = "CustomTagUtils";
+   private static final String XHTML_KEY = "org.apache.struts.globals.XHTML";
 
 
    /* Keys gonna be only in EN version.
@@ -174,7 +174,7 @@ public class CustomTagUtils {
    public boolean isXhtml(PageContext pageContext) {
       String xhtml;
       try {
-            xhtml = (String) lookup(pageContext, Globals.XHTML_KEY, null);
+            xhtml = (String) lookup(pageContext, XHTML_KEY, null);
             return "true".equalsIgnoreCase(xhtml);
       } catch (JspException e) {
             Logger.error(CustomTagUtils.class,"Failed xhtml lookup", e);
