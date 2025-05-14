@@ -11,8 +11,10 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.struts.Globals;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.i18n.Prop;
 
 public class CustomTagUtils {
@@ -143,26 +145,40 @@ public class CustomTagUtils {
        }
    }
 
-       /**
-     * Write the specified text as the response to the writer associated with
-     * the body content for the tag within which we are currently nested.
-     *
-     * @param pageContext The PageContext object for this page
-     * @param text The text to be written
-     *
-     * @exception JspException if an input/output error occurs (already saved)
-     */
-    public void writePrevious(PageContext pageContext, String text) throws JspException {
-        JspWriter writer = pageContext.getOut();
-        if (writer instanceof BodyContent writerB) {
+    /**
+    * Write the specified text as the response to the writer associated with
+    * the body content for the tag within which we are currently nested.
+    *
+    * @param pageContext The PageContext object for this page
+    * @param text The text to be written
+    *
+    * @exception JspException if an input/output error occurs (already saved)
+    */
+   public void writePrevious(PageContext pageContext, String text) throws JspException {
+      JspWriter writer = pageContext.getOut();
+      if (writer instanceof BodyContent writerB) {
             writer = writerB.getEnclosingWriter();
-        }
+      }
 
-        try {
+      try {
             writer.print(text);
-        } catch (IOException e) {
+      } catch (IOException e) {
             this.saveException(pageContext, e);
             throw new JspException(this.getMessage("write.io", e.toString()));
-        }
-    }
+      }
+   }
+
+   /**
+    * Returns true if the custom tags are in XHTML mode.
+    */
+   public boolean isXhtml(PageContext pageContext) {
+      String xhtml;
+      try {
+            xhtml = (String) lookup(pageContext, Globals.XHTML_KEY, null);
+            return "true".equalsIgnoreCase(xhtml);
+      } catch (JspException e) {
+            Logger.error(CustomTagUtils.class,"Failed xhtml lookup", e);
+            throw new RuntimeException(e);
+      }
+   }
 }
