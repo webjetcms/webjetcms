@@ -3,9 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="windows-1250"
 import="sk.iway.iwcm.inquiry.*,sk.iway.iwcm.*,java.io.*" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%
 String lng = PageLng.getUserLng(request);
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

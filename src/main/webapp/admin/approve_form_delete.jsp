@@ -3,8 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
+<iwcm:checkLogon admin="true"/>
 
 <html>
 <head>
@@ -102,7 +101,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 							</td>
 						</tr>
 					</table>
-					<%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
+					<%=sk.iway.iwcm.tags.support_logic.FormTag.renderToken(session)%>
 					</form>
 				</iwcm:notPresent>
 

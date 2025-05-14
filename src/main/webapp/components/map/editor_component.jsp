@@ -1,10 +1,9 @@
-<%
+<%@page import="java.util.Map"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*,sk.iway.iwcm.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 <%
 
 request.setAttribute("cmpName", "map");

@@ -5,9 +5,8 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*,sk.iway.iwcm.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="cmp_diskusia"/>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 
 <% request.setAttribute("cmpName", "forum"); %>
 <jsp:include page="/components/top.jsp"/>

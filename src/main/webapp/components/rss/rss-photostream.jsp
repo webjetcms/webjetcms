@@ -2,10 +2,7 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/xml");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*,java.text.*"%><%@page import="sk.iway.iwcm.io.IwcmFile"%><%@ page import="java.text.SimpleDateFormat" %><%@ page import="java.util.Locale" %><%@page import="sk.iway.iwcm.gallery.*"%><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%!
+taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%!
 
 /**
 * RSS export fotografii podla vzoru flickr

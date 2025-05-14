@@ -5,7 +5,7 @@ response.setHeader("Pragma","No-Cache");
 response.setDateHeader("Expires",0);
 response.setHeader("Cache-Control","no-Cache");
 
-%><%@ page pageEncoding="utf-8" import="org.json.JSONException,org.json.JSONObject,sk.iway.iwcm.Constants, sk.iway.iwcm.Identity, sk.iway.iwcm.Tools" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@page import="sk.iway.iwcm.doc.DocDB"%><%@ page import="sk.iway.iwcm.doc.GroupsDB" %><%@
+%><%@ page pageEncoding="utf-8" import="org.json.JSONException,org.json.JSONObject,sk.iway.iwcm.Constants, sk.iway.iwcm.Identity, sk.iway.iwcm.Tools" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@page import="sk.iway.iwcm.doc.DocDB"%><%@ page import="sk.iway.iwcm.doc.GroupsDB" %><%@
         page import="sk.iway.iwcm.tags.JSEscapeTag" %><%@
         page import="sk.iway.iwcm.users.SettingsAdminBean" %><%@
         page import="sk.iway.iwcm.users.UserDetails" %><%@

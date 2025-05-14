@@ -7,8 +7,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.doc.TemplateDetails" %>
 <%@ page import="sk.iway.iwcm.doc.TemplatesDB" %>
 <%@ page import="sk.iway.iwcm.doc.groups.GroupsController" %>
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><iwcm:checkLogon admin="true"/>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/>
 <script type="text/javascript">
 	function documentReady(f){
 	    if(document.readyState !== "complete"){

@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@page import="org.apache.commons.codec.binary.Base64"%><%@ page import="sk.iway.iwcm.i18n.Prop" %><%@ page import="sk.iway.iwcm.components.forum.jpa.DocForumEntity" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -201,7 +198,7 @@ if(!isAjaxCall)
 	<form method="get" action="<%=PathFilter.getOrigPath(request) %>" name="actionForm" style="display: none;">
 		<div>
 	    <input type="hidden" name="act" />
-	    <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
+	    <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docid"))%>" />
 		 <input type="hidden" name="forumId" />
 		 <input type="hidden" name="pId" />
 		 <input type="hidden" name="pageNum" value="<%=pageNum%>" />

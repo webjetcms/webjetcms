@@ -2,12 +2,10 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.users.*,java.util.*"%>
 <%@ page import="sk.iway.iwcm.tags.WriteTag" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 PageParams pageParams = new PageParams(request);
 //TODO: joruz - pridat to do komponenty pre vkladanie
 String emailLogon = pageParams.getValue("emailLogon", "false");
@@ -31,7 +29,7 @@ pageContext.setAttribute("lng", lng);
 if(request.getParameter("loginName") != null)
 {	
 	//posli heslo emailom
-	String loginName = org.apache.struts.util.ResponseUtils.filter(request.getParameter("loginName"));
+	String loginName = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("loginName"));
 	//nastavime URL na zaslanie hesla na aktualnu login stranku, kde potom includneme podla parametrov form na zmenu hesla
 	if (pageParams.getBooleanValue("sendPasswordUrlSameAsLogin", true))
 	{
@@ -100,10 +98,10 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 			<form name="passwdSendForm" method="get" action="<%=PathFilter.getOrigPathDocId(request) %>">
 				<iwcm:text key="components.user.forgot_password"/>.
 				<a href="javascript:document.passwdSendForm.submit();"><iwcm:text key="components.user.send_login_info"/></a>.
-				<input class="input" type="hidden" name="loginName" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("username"))%>" />
+				<input class="input" type="hidden" name="loginName" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("username"))%>" />
 				<input type="hidden" name="docid" value="<%
-				if (request.getParameter("origDocId")!=null) out.print(org.apache.struts.util.ResponseUtils.filter(request.getParameter("origDocId")));
-				else out.print(org.apache.struts.util.ResponseUtils.filter(request.getParameter("docId")));
+				if (request.getParameter("origDocId")!=null) out.print(sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("origDocId")));
+				else out.print(sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docId")));
 				%>" />
 			</form>
 			<br /><br />
@@ -176,8 +174,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 						   String values[] = request.getParameterValues(name);
 						   for (int i=0; i<values.length; i++)
 						   {
-							   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);
-							   out.println("<input type='hidden' name='"+org.apache.struts.util.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
+							   String value = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(values[i]);
+							   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
 						   }
 						}
 						%>
@@ -209,7 +207,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				  <div class="form-group">
 					<label id="loginLabelName" for="name" class="col-md-2 control-label"><iwcm:text key="logon.name"/>:</label>
 					<div class="col-md-12">
-					  <input type="text" name="username" size="16" maxlength="64" class="form-control" id="name" value="<% if (request.getParameter("username")!=null) out.print(org.apache.struts.util.ResponseUtils.filter(request.getParameter("username"))); %>" />
+					  <input type="text" name="username" size="16" maxlength="64" class="form-control" id="name" value="<% if (request.getParameter("username")!=null) out.print(sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("username"))); %>" />
 					</div>
 				  </div>
 				  <div class="form-group">
@@ -256,8 +254,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 							   String values[] = request.getParameterValues(name);
 							   for (int i=0; i<values.length; i++)
 							   {
-								   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);
-								   out.println("<input type='hidden' name='"+org.apache.struts.util.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
+								   String value = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(values[i]);
+								   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
 							   }
 							}
 							%>

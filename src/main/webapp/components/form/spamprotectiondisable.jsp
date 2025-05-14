@@ -1,12 +1,9 @@
-<%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="org.apache.struts.util.ResponseUtils"%><%@page import="sk.iway.iwcm.*"%><%@page import="sk.iway.iwcm.common.DocTools"%><%@page import="sk.iway.iwcm.doc.DocDB"%><%@page import="sk.iway.iwcm.system.stripes.CSRF"%><%
+<%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%@page import="sk.iway.iwcm.*"%><%@page import="sk.iway.iwcm.common.DocTools"%><%@page import="sk.iway.iwcm.doc.DocDB"%><%@page import="sk.iway.iwcm.system.stripes.CSRF"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.util.Random" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%

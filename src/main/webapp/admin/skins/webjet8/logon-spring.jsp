@@ -1,6 +1,5 @@
 <%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
-%><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
 %><%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"

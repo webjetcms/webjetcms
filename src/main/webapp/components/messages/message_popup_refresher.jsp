@@ -3,9 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" language="java" import="java.net.*,java.util.*,sk.iway.iwcm.system.msg.*,sk.iway.iwcm.users.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
 int messageId = Tools.getIntValue(session.getAttribute("messageId").toString(), -1);

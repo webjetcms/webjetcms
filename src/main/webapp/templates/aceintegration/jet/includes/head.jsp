@@ -1,4 +1,4 @@
-<%@ page import="sk.iway.iwcm.editor.InlineEditor" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ page import="sk.iway.iwcm.editor.InlineEditor" %>
 <%@ page pageEncoding="windows-1250" %>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="${ninja.temp.charset}">

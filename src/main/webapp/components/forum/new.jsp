@@ -5,9 +5,7 @@ session.setMaxInactiveInterval(60*60*2);
 <%@ page import="sk.iway.iwcm.i18n.Prop" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%!
 	public boolean isAdmin(Identity user,int forumId) {
 		String ids = ForumDB.getForum(forumId).getAdminGroups();
@@ -29,7 +27,7 @@ if (session.getAttribute("forum-shown")==null) {
 }
 
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -208,16 +206,16 @@ if (fgb != null && fgb.canPostMessage(user)==false)
             <div class="form-group">
 
                 <form:hidden path="parentId"/>
-                <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
-                <input type="hidden" name="docId" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
-                <input type="hidden" name="parent2" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("parent2"))%>" />
+                <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docid"))%>" />
+                <input type="hidden" name="docId" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docid"))%>" />
+                <input type="hidden" name="parent2" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("parent2"))%>" />
                 <input type="hidden" name="pageNum" value="<%=Tools.getIntValue(request.getParameter("pageNum"), 1)%>" />
-                <input type="hidden" name="pageParams" value="<%=org.apache.struts.util.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"))%>" />
+                <input type="hidden" name="pageParams" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"))%>" />
             <%
             if(Tools.isNotEmpty(request.getParameter("type")))
             {
             %>
-                <input type="hidden" name="type" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("type")) %>" />
+                <input type="hidden" name="type" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("type")) %>" />
             <%
             }
             %>
@@ -226,7 +224,7 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 		if(Tools.isNotEmpty(request.getParameter("rootForumId")))
 		{
 		%>
-			<input type="hidden" name="rootForumId" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("rootForumId")) %>" />
+			<input type="hidden" name="rootForumId" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("rootForumId")) %>" />
 		<%
 		}
 		%>

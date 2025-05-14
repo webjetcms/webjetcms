@@ -6,10 +6,7 @@
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/a-inline.js", null, request, response);
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" import="sk.iway.iwcm.common.WriteTagToolsForCore" %><%@ page import="sk.iway.iwcm.stat.BrowserDetector"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%@ page import="com.sun.org.apache.bcel.internal.classfile.Constant"%><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
+taglib uri="/WEB-INF/iway.tld" prefix="iway" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 */
 
 <%

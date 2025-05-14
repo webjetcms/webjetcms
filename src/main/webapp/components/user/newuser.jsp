@@ -9,9 +9,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib uri="/WEB-INF/displaytag.tld" prefix="display" %><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
@@ -51,7 +48,7 @@ if (Tools.isNotEmpty(hash))
 	return;
 }
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 
 
 

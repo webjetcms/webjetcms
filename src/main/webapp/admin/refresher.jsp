@@ -1,7 +1,6 @@
 <%@page import="java.util.List"%><%@page import="sk.iway.iwcm.InitServlet"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.system.msg.*,java.util.*" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.system.msg.*,java.util.*" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%
    if (session!=null)
    {
       session.setAttribute("refreshed", "true");

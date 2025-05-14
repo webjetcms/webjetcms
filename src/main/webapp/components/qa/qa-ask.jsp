@@ -4,8 +4,6 @@
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%
@@ -40,7 +38,7 @@ public String isShow(String show, String name)
 	return " style='display: none;'";
 }
 %>
-<%@page import="org.apache.struts.util.ResponseUtils"%><iwcm:present parameter="qasend">
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><iwcm:present parameter="qasend">
 	<%
 	String qasend = Tools.getRequestParameter(request, "qasend");
 	if (Tools.isNotEmpty(qasend))

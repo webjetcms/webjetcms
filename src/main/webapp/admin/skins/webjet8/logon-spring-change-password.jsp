@@ -2,7 +2,6 @@
 <%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
-%><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
 %><%
@@ -181,7 +180,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                         <div class="form-group">
                             <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.submit"/><i class="ti ti-arrow-right"></i></button>
-                            <input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(lng)%>"/>
+                            <input type="hidden" name="language" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(lng)%>"/>
                             <form:hidden path="login"/>
                             <form:hidden path="auth"/>
                             <%--<form:button name="login-submit" value="Submit">Submit</form:button>--%>

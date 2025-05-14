@@ -1,8 +1,7 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="org.apache.struts.util.ResponseUtils"%>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 int pageSize = 10;
 if(request.getAttribute("pageSize") != null)
@@ -212,8 +211,8 @@ if (pageLink.startsWith("/components")) pageLink = ""; //kvoli AJAX nacitaniu, a
 									<option value="<%=j%>" <%if(actualPageNum==j)out.println("selected");%>><%=j%></option>
 									<% } %>
 								</select>
-								<input type="hidden" name="forumDocId" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("forumDocId"))%>" >
-								<input type="hidden" name="words" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("words"))%>" >
+								<input type="hidden" name="forumDocId" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("forumDocId"))%>" >
+								<input type="hidden" name="words" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("words"))%>" >
 							</form>
 					<%	}
 					} %>

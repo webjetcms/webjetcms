@@ -4,10 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -87,7 +83,7 @@ if (searchType != null)
 %>
 
 
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 <%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
 <%@ page import="sk.iway.iwcm.common.SearchTools" %>
 <form class="smallSearchForm" action="<%=url%>" method="get">

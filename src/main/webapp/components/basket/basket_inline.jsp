@@ -6,9 +6,7 @@
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
-<script type="text/javascript" src="/components/basket/jscript.jsp"></script>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><script type="text/javascript" src="/components/basket/jscript.jsp"></script>
 <%
   //Vypis obsahu nakupneho kosika
   String lng = PageLng.getUserLng(request);

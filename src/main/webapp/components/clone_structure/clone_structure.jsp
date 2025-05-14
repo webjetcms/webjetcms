@@ -3,10 +3,6 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <iwcm:menu notName="cmp_clone_structure">
 <%
 	response.sendRedirect("/admin/403.jsp");
@@ -60,7 +56,7 @@
 
 <div class="padding10">
 
-	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post" ><%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
+	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post" ><%=sk.iway.iwcm.tags.support_logic.FormTag.renderToken(session)%>
 		<table>
 			<tr>
 				<td><label for="srcGroupId1"><iwcm:text key="admin.clone.source_dir_id"/></label></td>

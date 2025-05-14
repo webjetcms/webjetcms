@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*,java.net.*,sk.iway.iwcm.doc.*,java.util.*,java.sql.*,sk.iway.iwcm.system.*,sk.iway.Password"%><%@page import="org.apache.commons.codec.binary.Base64"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 //Formular na odoslanie stranky/linky
 
@@ -285,7 +282,7 @@ else
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%@page import="sk.iway.iwcm.system.captcha.Captcha"%>
 
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 		
  		<%@include file="/components/_common/cleditor/jquery.cleditor.js.jsp" %>
  		<script type="text/javascript" src="/components/form/check_form.js"></script>

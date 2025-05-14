@@ -9,7 +9,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
    } 
 	else if (request.getParameter("url")!=null) 
 	{ %>
-		window.opener.location.href="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("url"))%>";
+		window.opener.location.href="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("url"))%>";
 <% } else { %>
 
 		//test na IE dialog - musime spravit reload

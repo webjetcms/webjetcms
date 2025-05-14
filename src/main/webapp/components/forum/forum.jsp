@@ -2,9 +2,7 @@
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@ page import="sk.iway.iwcm.doc.DocDB"%>
+<%@ page import="sk.iway.iwcm.doc.DocDB"%>
 <%
 	session.setAttribute("forum-shown", Boolean.TRUE);
 
@@ -91,7 +89,7 @@
 	boolean active = ForumDB.isActive(docId);
 	pageContext.setAttribute("forum", forum);
 %>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 
 <%
 if(!isAjaxCall)
