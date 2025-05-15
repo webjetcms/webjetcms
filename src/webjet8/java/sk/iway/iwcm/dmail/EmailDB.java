@@ -344,6 +344,56 @@ public class EmailDB
 		return email;
 	}
 
+    /**
+	 * Vrati emailId pre zadane email z tabulky emails
+	 * @param email
+	 * @return
+	 */
+    public static Integer getEmailId(String email)
+    {
+        Integer emailId = null;
+
+        Connection db_conn = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try
+        {
+            db_conn = DBPool.getConnection();
+            ps = db_conn.prepareStatement(
+                "SELECT email_id FROM emails WHERE recipient_email=? AND domain_id=?"
+            );
+            ps.setString(1, email);
+            ps.setInt(2, CloudToolsForCore.getDomainId());
+
+            rs = ps.executeQuery();
+
+            if (rs.next())
+            {
+                emailId = rs.getInt("email_id");
+            }
+        }
+        catch (Exception ex)
+        {
+            sk.iway.iwcm.Logger.error(ex);
+        }
+        finally
+        {
+            try
+            {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (db_conn != null) db_conn.close();
+            }
+            catch (Exception ex2)
+            {
+                sk.iway.iwcm.Logger.error(ex2);
+            }
+        }
+
+        return emailId;
+    }
+
 	/**
 	 * Vymaze odhlasene emaily z danej kampane, je potrebne vykonat pred znovaspustenim kampane
 	 * @param campaignId

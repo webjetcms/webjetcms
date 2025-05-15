@@ -821,7 +821,7 @@ public class Sender extends TimerTask
 	 * @param emailId
 	 * @return
 	 */
-	private static String getClickHash(int emailId) {
+	public static String getClickHash(int emailId) {
 		String hash = (new SimpleQuery()).forString("SELECT click_hash FROM emails WHERE email_id=?", emailId);
 		if (Tools.isEmpty(hash)) {
 			hash = String.valueOf(emailId) + Password.generateStringHash(16);
