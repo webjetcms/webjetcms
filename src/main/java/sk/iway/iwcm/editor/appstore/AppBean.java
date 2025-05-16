@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.io.IwcmFile;
 
@@ -66,25 +68,37 @@ public class AppBean
 		if (lastSlash > 0)
 		{
 			String basePath = imagePath.substring(0, lastSlash);
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            String lng = rb.getLng();
+            String lngSuffix = switch (lng) {
+                case "en" -> "-en";
+                case "cz" -> "-cs";
+                default -> "";
+            };
 
-			for (int i=0; i<10; i++)
-			{
-				String imagePathJpg = basePath+"/screenshot-"+i+".jpg";
-				String imagePathGif = basePath+"/screenshot-"+i+".gif";
-				String imagePathPng = basePath+"/screenshot-"+i+".png";
-				if (FileTools.isFile(imagePathJpg))
-				{
-					images.add(imagePathJpg);
-				}
-				else if (FileTools.isFile(imagePathGif))
-				{
-					images.add(imagePathGif);
-				}
-				else if (FileTools.isFile(imagePathPng))
-				{
-					images.add(imagePathPng);
-				}
-			}
+            for (int i = 0; i < 10; i++) {
+                String[] extensions = {".jpg", ".gif", ".png"};
+                boolean found = false;
+
+                for (String ext : extensions) {
+                    String imagePathWithSuffix = basePath + "/screenshot-" + i + lngSuffix + ext;
+                    if (FileTools.isFile(imagePathWithSuffix)) {
+                        images.add(imagePathWithSuffix);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    for (String ext : extensions) {
+                        String imagePathWithoutSuffix = basePath + "/screenshot-" + i + ext;
+                        if (FileTools.isFile(imagePathWithoutSuffix)) {
+                            images.add(imagePathWithoutSuffix);
+                            break;
+                        }
+                    }
+                }
+            }
 		}
 
 		galleryImages = images;
