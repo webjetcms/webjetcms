@@ -87,6 +87,13 @@
       </fileset>
     </copy>
 
+    <!-- skopiruj SRC do TEST verzie -->
+    <copy todir="${root}/../../../webjetcms_jakarta/src/main/java/" overwrite="true">
+      <fileset dir="${root}/src-utf8-jakarta/">
+          <include name="**/*"/>
+      </fileset>
+    </copy>
+
   </target>
 
   <target name="delombok" depends="prepareSrc">
