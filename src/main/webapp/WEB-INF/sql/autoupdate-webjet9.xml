@@ -1751,7 +1751,6 @@
             </object>
         </void>
 
-        <!-- TODO, indexovat aj VZORY by default ??  -->
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
             <void property="author"><string>sivan</string></void>
