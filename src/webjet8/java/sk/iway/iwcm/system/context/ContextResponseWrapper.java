@@ -214,14 +214,6 @@ public class ContextResponseWrapper extends HttpServletResponseWrapper
 	protected int statusCode = 0;
 	protected String statusMessage = null;
 	@Override
-	@SuppressWarnings("deprecation")
-	public void setStatus(int sc, String sm)
-	{
-		super.setStatus(sc, sm);
-		statusCode = sc;
-		statusMessage = sm;
-	}
-	@Override
 	public void setStatus(int sc)
 	{
 		super.setStatus(sc);
