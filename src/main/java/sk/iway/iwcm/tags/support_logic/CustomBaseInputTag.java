@@ -17,6 +17,7 @@ public class CustomBaseInputTag extends CustomBaseHandlerTag {
     protected String value = null;
     protected String name = "org.apache.struts.taglib.html.BEAN";
 
+    @Override
     protected String prepareName() throws JspException {
         if (this.property == null) {
             return null;

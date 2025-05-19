@@ -13,17 +13,16 @@ public class ActionMessages implements Serializable {
     /**
      * <p>Compares ActionMessageItem objects.</p>
      */
-    private static final Comparator ACTION_ITEM_COMPARATOR =
-        new Comparator() {
-            public int compare(Object o1, Object o2) {
-                return ((ActionMessageItem) o1).getOrder()
-                - ((ActionMessageItem) o2).getOrder();
+    private static final Comparator<ActionMessageItem> ACTION_ITEM_COMPARATOR =
+        new Comparator<ActionMessageItem>() {
+            public int compare(ActionMessageItem o1, ActionMessageItem o2) {
+                return o1.getOrder() - o2.getOrder();
             }
         };
 
     public static final String GLOBAL_MESSAGE = "org.apache.struts.action.GLOBAL_MESSAGE";
     protected boolean accessed = false;
-    protected HashMap messages = new HashMap();
+    protected HashMap<String, ActionMessageItem> messages = new HashMap<>();
     protected int iCount = 0;
 
     public ActionMessages() {
@@ -36,11 +35,11 @@ public class ActionMessages implements Serializable {
     }
 
     public void add(String property, ActionMessage message) {
-        ActionMessageItem item = (ActionMessageItem) messages.get(property);
-        List list;
+        ActionMessageItem item = messages.get(property);
+        List<ActionMessage> list;
 
         if (item == null) {
-            list = new ArrayList();
+            list = new ArrayList<>();
             item = new ActionMessageItem(list, iCount++, property);
 
             messages.put(property, item);
@@ -57,16 +56,16 @@ public class ActionMessages implements Serializable {
         }
 
         // loop over properties
-        Iterator props = actionMessages.properties();
+        Iterator<String> props = actionMessages.properties();
 
         while (props.hasNext()) {
-            String property = (String) props.next();
+            String property = props.next();
 
             // loop over messages for each property
-            Iterator msgs = actionMessages.get(property);
+            Iterator<ActionMessage> msgs = actionMessages.get(property);
 
             while (msgs.hasNext()) {
-                ActionMessage msg = (ActionMessage) msgs.next();
+                ActionMessage msg =  msgs.next();
 
                 this.add(property, msg);
             }
@@ -81,17 +80,17 @@ public class ActionMessages implements Serializable {
         return (messages.isEmpty());
     }
 
-    public Iterator get() {
+    public Iterator<ActionMessage> get() {
         this.accessed = true;
 
         if (messages.isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
+            return Collections.<ActionMessage>emptyList().iterator();
         }
 
-        ArrayList results = new ArrayList();
-        ArrayList actionItems = new ArrayList();
+        ArrayList<ActionMessage> results = new ArrayList<>();
+        ArrayList<ActionMessageItem> actionItems = new ArrayList<>();
 
-        for (Iterator i = messages.values().iterator(); i.hasNext();) {
+        for (Iterator<ActionMessageItem> i = messages.values().iterator(); i.hasNext();) {
             actionItems.add(i.next());
         }
 
@@ -99,10 +98,10 @@ public class ActionMessages implements Serializable {
         // property/key was added to ActionMessages.
         Collections.sort(actionItems, ACTION_ITEM_COMPARATOR);
 
-        for (Iterator i = actionItems.iterator(); i.hasNext();) {
-            ActionMessageItem ami = (ActionMessageItem) i.next();
+        for (Iterator<ActionMessageItem> i = actionItems.iterator(); i.hasNext();) {
+            ActionMessageItem ami = i.next();
 
-            for (Iterator msgsIter = ami.getList().iterator();
+            for (Iterator<ActionMessage> msgsIter = ami.getList().iterator();
                 msgsIter.hasNext();) {
                 results.add(msgsIter.next());
             }
@@ -111,13 +110,13 @@ public class ActionMessages implements Serializable {
         return results.iterator();
     }
 
-    public Iterator get(String property) {
+    public Iterator<ActionMessage> get(String property) {
         this.accessed = true;
 
-        ActionMessageItem item = (ActionMessageItem) messages.get(property);
+        ActionMessageItem item = messages.get(property);
 
         if (item == null) {
-            return (Collections.EMPTY_LIST.iterator());
+            return Collections.<ActionMessage>emptyList().iterator();
         } else {
             return (item.getList().iterator());
         }
@@ -127,15 +126,15 @@ public class ActionMessages implements Serializable {
         return this.accessed;
     }
 
-    public Iterator properties() {
+    public Iterator<String> properties() {
         if (messages.isEmpty()) {
-            return Collections.EMPTY_LIST.iterator();
+            return Collections.<String>emptyList().iterator();
         }
 
-        ArrayList results = new ArrayList();
-        ArrayList actionItems = new ArrayList();
+        ArrayList<String> results = new ArrayList<>();
+        ArrayList<ActionMessageItem> actionItems = new ArrayList<>();
 
-        for (Iterator i = messages.values().iterator(); i.hasNext();) {
+        for (Iterator<ActionMessageItem> i = messages.values().iterator(); i.hasNext();) {
             actionItems.add(i.next());
         }
 
@@ -143,8 +142,8 @@ public class ActionMessages implements Serializable {
         // property/key was added to ActionMessages.
         Collections.sort(actionItems, ACTION_ITEM_COMPARATOR);
 
-        for (Iterator i = actionItems.iterator(); i.hasNext();) {
-            ActionMessageItem ami = (ActionMessageItem) i.next();
+        for (Iterator<ActionMessageItem> i = actionItems.iterator(); i.hasNext();) {
+            ActionMessageItem ami = i.next();
 
             results.add(ami.getProperty());
         }
@@ -155,8 +154,8 @@ public class ActionMessages implements Serializable {
     public int size() {
         int total = 0;
 
-        for (Iterator i = messages.values().iterator(); i.hasNext();) {
-            ActionMessageItem ami = (ActionMessageItem) i.next();
+        for (Iterator<ActionMessageItem> i = messages.values().iterator(); i.hasNext();) {
+            ActionMessageItem ami = i.next();
 
             total += ami.getList().size();
         }
@@ -165,7 +164,7 @@ public class ActionMessages implements Serializable {
     }
 
     public int size(String property) {
-        ActionMessageItem item = (ActionMessageItem) messages.get(property);
+        ActionMessageItem item = messages.get(property);
 
         return (item == null) ? 0 : item.getList().size();
     }
@@ -175,21 +174,21 @@ public class ActionMessages implements Serializable {
     }
 
     protected class ActionMessageItem implements Serializable {
-        protected List list = null;
+        protected List<ActionMessage> list = null;
         protected int iOrder = 0;
         protected String property = null;
 
-        public ActionMessageItem(List list, int iOrder, String property) {
+        public ActionMessageItem(List<ActionMessage> list, int iOrder, String property) {
             this.list = list;
             this.iOrder = iOrder;
             this.property = property;
         }
 
-        public List getList() {
+        public List<ActionMessage> getList() {
             return list;
         }
 
-        public void setList(List list) {
+        public void setList(List<ActionMessage> list) {
             this.list = list;
         }
 

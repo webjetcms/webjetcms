@@ -1,6 +1,5 @@
 package sk.iway.iwcm.tags.support_logic;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -17,9 +16,9 @@ public interface FormFile {
 
    void setFileName(String var1);
 
-   byte[] getFileData() throws FileNotFoundException, IOException;
+   byte[] getFileData() throws IOException;
 
-   InputStream getInputStream() throws FileNotFoundException, IOException;
+   InputStream getInputStream() throws IOException;
 
    void destroy();
 }

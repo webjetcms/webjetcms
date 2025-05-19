@@ -2,11 +2,15 @@ package sk.iway.iwcm.tags.support_logic;
 
 public class RequestUtils {
 
-    public static Class applicationClass(String className) throws ClassNotFoundException {
+    private RequestUtils() {
+        // Private constructor to prevent instantiation
+    }
+
+    public static Class<?> applicationClass(String className) throws ClassNotFoundException {
         return applicationClass(className, (ClassLoader)null);
     }
 
-    public static Class applicationClass(String className, ClassLoader classLoader) throws ClassNotFoundException {
+    public static Class<?> applicationClass(String className, ClassLoader classLoader) throws ClassNotFoundException {
         if (classLoader == null) {
             classLoader = Thread.currentThread().getContextClassLoader();
             if (classLoader == null) {

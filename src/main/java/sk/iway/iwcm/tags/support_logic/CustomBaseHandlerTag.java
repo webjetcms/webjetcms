@@ -50,10 +50,10 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
     private String lang = null;
     private String dir = null;
     private String titleKey = null;
-    private Class loopTagClass = null;
-    private Method loopTagGetStatus = null;
-    private Class loopTagStatusClass = null;
-    private Method loopTagStatusGetIndex = null;
+    private Class<?> loopTagClass = null;
+    private transient Method loopTagGetStatus = null;
+    private Class<?> loopTagStatusClass = null;
+    private transient Method loopTagStatusGetIndex = null;
     private boolean triedJstlInit = false;
     private boolean triedJstlSuccess = false;
 
@@ -102,13 +102,11 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
 
             try {
                 this.loopTagClass = RequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTag");
-                this.loopTagGetStatus = this.loopTagClass.getDeclaredMethod("getLoopStatus", (Class[])null);
+                this.loopTagGetStatus = ((Class<?>)this.loopTagClass).getDeclaredMethod("getLoopStatus", (Class<?>[])null);
                 this.loopTagStatusClass = RequestUtils.applicationClass("javax.servlet.jsp.jstl.core.LoopTagStatus");
-                this.loopTagStatusGetIndex = this.loopTagStatusClass.getDeclaredMethod("getIndex", (Class[])null);
+                this.loopTagStatusGetIndex = ((Class<?>)this.loopTagStatusClass).getDeclaredMethod("getIndex", (Class<?>[])null);
                 this.triedJstlSuccess = true;
-            } catch (ClassNotFoundException var8) {
-            } catch (NoSuchMethodException var9) {
-            }
+            } catch (ClassNotFoundException | NoSuchMethodException ex) {}
         }
 
         if (this.triedJstlSuccess) {
@@ -261,5 +259,7 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
         return this.isXhtml() ? " />" : ">";
     }
 
-    protected void prepareOtherAttributes(StringBuffer handlers) {}
+    protected void prepareOtherAttributes(StringBuffer handlers) {
+        //So tag can override this after extending
+    }
 }

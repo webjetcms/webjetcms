@@ -10,36 +10,15 @@ import javax.servlet.jsp.JspException;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-/**
- * Abstract base class for comparison tags.  Concrete subclasses need only
- * define values for desired1 and desired2.
- *
- * @version $Rev$ $Date: 2004-10-16 12:38:42 -0400 (Sat, 16 Oct 2004)
- *          $
- */
 public abstract class CustomCompareTagBase extends CustomConditionalTagBase{
-    // ----------------------------------------------------- Instance Variables
 
-    /**
-     * We will do a double/float comparison.
-     */
     protected static final int DOUBLE_COMPARE = 0;
 
-    /**
-     * We will do a long/int comparison.
-     */
     protected static final int LONG_COMPARE = 1;
 
-    /**
-     * We will do a String comparison.
-     */
     protected static final int STRING_COMPARE = 2;
 
-    /**
-    * The value to which the variable specified by other attributes of this
-    * tag will be compared.
-    */
-    public String value = null;
+    private String value = null;
 
     public String getValue() {
         return (this.value);
@@ -49,27 +28,8 @@ public abstract class CustomCompareTagBase extends CustomConditionalTagBase{
         this.value = value;
     }
 
-    /**
-     * Evaluate the condition that is being tested by this particular tag, and
-     * return <code>true</code> if the nested body content of this tag should
-     * be evaluated, or <code>false</code> if it should be skipped. This
-     * method must be implemented by concrete subclasses.
-     *
-     * @throws JspException if a JSP exception occurs
-     */
-    protected abstract boolean condition()
-        throws JspException;
+    protected abstract boolean condition() throws JspException;
 
-    /**
-     * Evaluate the condition that is being tested by this particular tag, and
-     * return <code>true</code> if the nested body content of this tag should
-     * be evaluated, or <code>false</code> if it should be skipped. This
-     * method must be implemented by concrete subclasses.
-     *
-     * @param desired1 First desired value for a true result (-1, 0, +1)
-     * @param desired2 Second desired value for a true result (-1, 0, +1)
-     * @throws JspException if a JSP exception occurs
-     */
     protected boolean condition(int desired1, int desired2) throws JspException {
         // Acquire the value and determine the test type
         int type = -1;
@@ -82,18 +42,14 @@ public abstract class CustomCompareTagBase extends CustomConditionalTagBase{
             try {
                 doubleValue = Double.parseDouble(value);
                 type = DOUBLE_COMPARE;
-            } catch (NumberFormatException e) {
-                ;
-            }
+            } catch (NumberFormatException e) {}
         }
 
         if ((type < 0) && Tools.isNotEmpty(value) ) {
             try {
                 longValue = Long.parseLong(value);
                 type = LONG_COMPARE;
-            } catch (NumberFormatException e) {
-                ;
-            }
+            } catch (NumberFormatException e) {}
         }
 
         if (type < 0) {

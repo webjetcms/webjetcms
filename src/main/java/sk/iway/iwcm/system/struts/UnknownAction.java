@@ -19,6 +19,10 @@ import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
  * It take unknow Action and change path postfix from .do to .struts, because we probably allready delete maping from xml struts confing file and replace it with Spring mapping.
  * Spring mapping use .struts postfix because .doc postrfix path could not be catched in Spring.
  */
+
+ // TODO - potrebujemdedit od ACTION ?? aj tak nic nepouzije a len Overridne jednu metodu
+
+ // TODO - treba otestovat tuto akciu lne neviem ako ju vyvolat, skusal som volat nezname .do akcie ale ani to tu nedoslo
 public class UnknownAction extends Action {
 
 	@Override

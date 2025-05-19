@@ -50,6 +50,7 @@
 
   </action-mappings>
 
+  <!-- TODO : tot tu este ostava ? Preniest RequestProcessor k nam ? Je to mega velky file -->
   <controller processorClass="org.apache.struts.action.RequestProcessor" debug="0" contentType="text/html" maxFileSize="5G"/>
 
 </struts-config>

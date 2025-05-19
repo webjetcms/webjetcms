@@ -44,45 +44,45 @@ public class CustomIterateTag extends BodyTagSupport {
       return this.started ? this.offsetValue + this.lengthCount - 1 : 0;
    }
 
+   @Override
    public int doStartTag() throws JspException {
-      Object collection = this.collection;
-      if (collection == null) {
-         collection = CustomTagUtils.getInstance().lookup(this.pageContext, this.name, this.property, this.scope);
+      Object localCollection = this.collection;
+      if (localCollection == null) {
+         localCollection = CustomTagUtils.getInstance().lookup(this.pageContext, this.name, this.property, this.scope);
       }
 
       JspException e;
-      if (collection == null) {
+      if (localCollection == null) {
          e = new JspException( CustomTagUtils.getInstance().getMessage("iterate.collection") );
          CustomTagUtils.getInstance().saveException(this.pageContext, e);
          throw e;
       } else {
-         if (collection.getClass().isArray()) {
+         if (localCollection.getClass().isArray()) {
             try {
-               this.iterator = Arrays.asList((Object[])((Object[])collection)).iterator();
+               this.iterator = Arrays.asList((Object[])localCollection).iterator();
             } catch (ClassCastException var8) {
-               int length = Array.getLength(collection);
-               ArrayList c = new ArrayList(length);
-
-               for(int i = 0; i < length; ++i) {
-                  c.add(Array.get(collection, i));
+               int localCollectionLength = Array.getLength(localCollection);
+               ArrayList<Object> c = new ArrayList<>(localCollectionLength);
+               for(int i = 0; i < localCollectionLength; ++i) {
+                  c.add(Array.get(localCollection, i));
                }
 
                this.iterator = c.iterator();
             }
-         } else if (collection instanceof Collection) {
-            this.iterator = ((Collection)collection).iterator();
-         } else if (collection instanceof Iterator) {
-            this.iterator = (Iterator)collection;
-         } else if (collection instanceof Map) {
-            this.iterator = ((Map)collection).entrySet().iterator();
+         } else if (localCollection instanceof Collection<?> collectionCollection) {
+            this.iterator = collectionCollection.iterator();
+         } else if (localCollection instanceof Iterator<?> collectionIterator) {
+            this.iterator = collectionIterator;
+         } else if (localCollection instanceof Map<?, ?> collectionMap) {
+            this.iterator = collectionMap.entrySet().iterator();
          } else {
-            if (!(collection instanceof Enumeration)) {
+            if (!(localCollection instanceof Enumeration)) {
                e = new JspException( CustomTagUtils.getInstance().getMessage("iterate.iterator") );
                CustomTagUtils.getInstance().saveException(this.pageContext, e);
                throw e;
             }
 
-            this.iterator = new IteratorAdapter((Enumeration)collection);
+            this.iterator = new IteratorAdapter((Enumeration)localCollection);
          }
 
          Integer lengthObject;
@@ -143,7 +143,7 @@ public class CustomIterateTag extends BodyTagSupport {
             ++this.lengthCount;
             this.started = true;
             if (this.indexId != null) {
-               this.pageContext.setAttribute(this.indexId, new Integer(this.getIndex()));
+               this.pageContext.setAttribute(this.indexId, Integer.valueOf(this.getIndex()));
             }
 
             return 2;
@@ -153,6 +153,7 @@ public class CustomIterateTag extends BodyTagSupport {
       }
    }
 
+   @Override
    public int doAfterBody() throws JspException {
       if (this.bodyContent != null) {
          CustomTagUtils.getInstance().writePrevious(this.pageContext, this.bodyContent.getString());
@@ -171,7 +172,7 @@ public class CustomIterateTag extends BodyTagSupport {
 
          ++this.lengthCount;
          if (this.indexId != null) {
-            this.pageContext.setAttribute(this.indexId, new Integer(this.getIndex()));
+            this.pageContext.setAttribute(this.indexId, this.getIndex());
          }
 
          return 2;
@@ -180,12 +181,14 @@ public class CustomIterateTag extends BodyTagSupport {
       }
    }
 
+   @Override
    public int doEndTag() throws JspException {
       this.started = false;
       this.iterator = null;
       return 6;
    }
 
+   @Override
    public void release() {
       super.release();
       this.iterator = null;
