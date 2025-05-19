@@ -171,11 +171,26 @@ module.exports = {
         this.waitForLoader();
     },
 
-    filterSelect(name, text) {
+    filterSelect(name, text, containerSelector = null) {
         if (name.indexOf(".") != -1) name = name.replace(/\./gi, "\\.");
-        I.click({ css: "div.dt-scroll-headInner div.dt-filter-" + name + " button.btn-outline-secondary" });
+
+        const expandOption = () => { I.click({ css: "div.dt-scroll-headInner div.dt-filter-" + name + " button.btn-outline-secondary" }); };
+        const selectOption = () => { I.click({ css: "div.dt-scroll-headInner button.dt-filtrujem-" + name }); };
+
+        if(containerSelector) {
+            within(containerSelector, expandOption);
+        } else {
+            expandOption();
+        }
+
         I.click(locate('div.dropdown-menu.show .dropdown-item').withText(text));
-        I.click({ css: "div.dt-scroll-headInner button.dt-filtrujem-" + name });
+
+        if(containerSelector) {
+            within(containerSelector, selectOption);
+        } else {
+            selectOption();
+        }
+        
         this.waitForLoader();
     },
 

@@ -1,7 +1,11 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 %>
-<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+<%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <script type="text/javascript" src="/components/basket/jscript.jsp"></script>
@@ -20,18 +24,18 @@
   else
     orderFormUrl = Tools.addParametersToUrl(docDB.getDocLink(Tools.getDocId(request), request), "basketAct=orderform");
 
-  List<BasketItemBean> basketItems = null;
+  List<BasketInvoiceItemEntity> basketItems = null;
   String act = request.getParameter("act");
   if ("set".equals(act))
   {
-    boolean ok = BasketDB.setItemFromDoc(request);
+    boolean ok = EshopService.getInstance().setItemFromDoc(request);
     if (ok)
     {
-      basketItems = BasketDB.getBasketItems(request);
+      basketItems = EshopService.getInstance().getBasketItems(request);
     %>
          <div style='display:none'>
-        <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=BasketDB.getTotalItems(basketItems)%></span></span>
-        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=BasketDB.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
+        <span id='basketSmallItemsResult'><iwcm:text key="components.basket.total_items"/>: <span><%=EshopService.getTotalItems(basketItems)%></span></span>
+        <span id='basketSmallPriceResult'><iwcm:text key="components.basket.total_price"/>: <span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=EshopService.getTotalLocalPriceVat(basketItems,request)%></iway:curr></span></span>
         </div>
         <script type="text/javascript">
         <!--
@@ -51,18 +55,11 @@
   }
   else if ("deleteall".equals(act))
   {
-    BasketDB.deleteAll(request);
+    EshopService.getInstance().deleteAll(request);
   }
-  /*
-  else if (("orderform".equals(act) || "saveorder".equals(act)) && orderFormDocId==-1)
-  {
-    pageContext.include("order_form.jsp");
-    return;
-  }
-  */
 
   if (basketItems == null)
-    basketItems = BasketDB.getBasketItems(request);
+    basketItems = EshopService.getInstance().getBasketItems(request);
   if (basketItems.size() > 0)
     request.setAttribute("basketItems", basketItems);
 %>
@@ -78,7 +75,7 @@
 
         var defaults = {
         itemQtyMin: 1,
-        itemQtyMax: 100,
+        itemQtyMax: <%=Constants.getInt("basketMaxQty")%>,
            url: '/components/basket/basket_ajax.jsp'
         }
 
@@ -338,24 +335,20 @@
 
 
       <logic:present name="basketItems">
-          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.BasketItemBean">
-          <%--
-          <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
-          <input type="hidden" name="basketItemId" class="input" value="<bean:write name="good" property="itemId"/>" />
-          <input type="hidden" name="act" value="set" />
-        --%>
+          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
+
             <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
                <td>
-                  <a target="_blank" href="<%=docDB.getDocLink(good.getItemId()) %>"><bean:write name="good" property="title"/></a>
+                  <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
                </td>
                <td class="fL">
                  <a href="javascript:void(0)" class="removeItem">Remove item</a>
                  <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<bean:write name="good" property="itemQty"/>">
                  <a href="javascript:void(0)" class="addItem">Add item</a>
                </td>
-               <td style="text-align: right;" class="basketPrice fL" nowrap="nowrap"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+               <td style="text-align: right;" class="basketPrice fL" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
-               <td class="fL" style="text-align: right; padding-right: 150px;"><span class="mob">/</span><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
+               <td class="fL" style="text-align: right; padding-right: 150px;"><span class="mob">/</span><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
                <td class="delete">
                   <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>">Delete</a>
                  </td>
@@ -379,8 +372,8 @@
                 </a>
               </span>
              <span class="basketPrice">
-               <iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-                 <%=BasketDB.getTotalLocalPriceVat(basketItems,request)%>
+               <iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+                 <%=EshopService.getTotalLocalPriceVat(basketItems,request)%>
                </iway:curr>
              </span>
           </td>

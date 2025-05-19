@@ -127,13 +127,13 @@ function saveAttributes(that)
 
 		<tr><td><iwcm:text key="editor.form.forward" /></td>
 		<td><input type="text" size="40" name="attribute_forward" class="" value="${formAttributes['forward']}" title="<iwcm:text key="editor.form.help.forward"/>" />
-			<input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="forward_button"
+			<input type="button" class="btn btn-sm btn-outline-secondary button70" value="<iwcm:text key="editor.form.choose"/>"  id="forward_button"
 				 onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
 		</td></tr>
 
 		<tr><td><iwcm:text key="editor.form.forward_fail" /></td>
 		<td><input type="text" size="40" name="attribute_forwardFail" class="" value="${formAttributes['forwardFail']}" title="<iwcm:text key="editor.form.help.forward_fail"/>" />
-			<input type="button" class="button70" value='<iwcm:text key="editor.form.choose" />'  id="forward_fail_button"
+			<input type="button" class="btn btn-sm btn-outline-secondary button70" value='<iwcm:text key="editor.form.choose" />'  id="forward_fail_button"
 				 onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
 		</td></tr>
 
@@ -147,13 +147,13 @@ function saveAttributes(that)
 
 		<tr><td><iwcm:text key="editor.form.use_form_doc_id" /></td>
 		<td><input type="text" size="4"  name="attribute_useFormDocId" class="" value="${formAttributes['useFormDocId']}" title="<iwcm:text key="editor.form.help.use_form_doc_id"/>" />
-			<input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_doc_id_button"
+			<input type="button" class="btn btn-sm btn-outline-secondary button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_doc_id_button"
 				 onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
 		</td></tr>
 
 		<tr><td><iwcm:text key="editor.form.use_form_mail_doc_id" /></td>
 		<td><input type="text" size="4" name="attribute_useFormMailDocId" class="" value="${formAttributes['useFormMailDocId']}" title="<iwcm:text key="editor.form.help.use_form_mail_doc_id"/>" />
-			<input type="button" class="button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_mail_doc_id_button"
+			<input type="button" class="btn btn-sm btn-outline-secondary button70" value="<iwcm:text key="editor.form.choose"/>"  id="use_form_mail_doc_id_button"
 				 onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
 		</td></tr>
 
@@ -196,7 +196,7 @@ function saveAttributes(that)
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>"><iwcm:text key="editor.form.send_user_info_doc_id" /></label></td>
 			<td><input type="docid" size="4"  name="attribute_formmail_sendUserInfoDocId" class="inputtext" value="${formAttributes['formmail_sendUserInfoDocId']}" title="<iwcm:text key="editor.form.help.send_user_info_doc_id"/>" />
-		   <input type="button" class="button70" value='<iwcm:text key="editor.form.choose"/>'  id="info_docid_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
+		   <input type="button" class="btn btn-sm btn-outline-secondary button70" value='<iwcm:text key="editor.form.choose"/>'  id="info_docid_button" onclick='lastPressed=this; popupFromDialog("/admin/user_adddoc.jsp", 450, 340);'/>
 		</td></tr>
 
 		<tr><td><label title="<iwcm:text key="editor.form.help.fields_emaiL_header"/>"><iwcm:text key="editor.form.fields_email_header" /></label></td>

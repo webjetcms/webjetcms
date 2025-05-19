@@ -1,6 +1,9 @@
 <%@page import="sk.iway.iwcm.helpers.RequestHelper"%>
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
-<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+<%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -11,20 +14,17 @@
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 
 <%
-  //Maly vypis poloziek nakupneho kosika v tvare:
-  //Pocet poloziek:
-  //Celkova cena:
-
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
 
-    String act = request.getParameter("basketAct");
-    if (act == null) act = request.getParameter("act");
-    if("orderform".equalsIgnoreCase(act) || "saveorder".equalsIgnoreCase(act))
-    {
-        pageContext.include("/components/basket/order_form.jsp");
-        return;
-    }
+  String act = request.getParameter("basketAct");
+  if (act == null) act = request.getParameter("act");
+  if("orderform".equalsIgnoreCase(act) || "saveorder".equalsIgnoreCase(act))
+  {
+    pageContext.include("/components/basket/order_form.jsp");
+    return;
+  } 
+
 
   PageParams pageParams = new PageParams(request);
   int orderFormDocId = pageParams.getIntValue("orderFormDocId", -1);
@@ -44,7 +44,7 @@
   if(showSmallBasket)
   {
 
-  List<BasketItemBean> items = BasketDB.getBasketItems(request);
+  List<BasketInvoiceItemEntity> items = EshopService.getInstance().getBasketItems(request);
 
   String basket = "!INCLUDE(/components/basket/basket.jsp, orderFormDocId="+orderFormDocId+", orderFormMainPageDocId="+orderFormMainPageDocId+")!";
   request.setAttribute("basket", basket);
@@ -57,13 +57,13 @@
 
 <div class="basketSmallBox" <%= items.size() == 0 ? "style=\"display: none;\"" : "" %>>
     <span class='basketSmallItems showBasketBlock'>
-      <span><%=BasketDB.getTotalItems(items)%></span>
+      <span><%=EshopService.getTotalItems(items)%></span>
     </span>
 
     <span class='basketSmallPrice showBasketBlock'>
       <span>
-        <iway:curr currency="<%= BasketDB.getDisplayCurrency(request) %>">
-          <%= BasketDB.getTotalLocalPriceVat(items, request) %>
+        <iway:curr currency="<%= EshopService.getDisplayCurrency(request) %>">
+          <%= EshopService.getTotalLocalPriceVat(items, request) %>
         </iway:curr>
       </span>
     </span>
