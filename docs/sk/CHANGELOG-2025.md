@@ -37,6 +37,9 @@
 - Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
 - Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
 - Štatistika - opravené vytvorenie tabuľky pre štatistiku kliknutí v teplotnej mape.
+- Prekladač - implementácia inteligentného oneskorenia pre prekladač `DeepL` ako ochrana proti chybe `HTTP 429: too many requests`, ktorá spôsobovala výpadok prekladov (#57833).
+- Klonovanie štruktúry - opravené nechcené prekladanie implementácie aplikácií `!INCLUDE(...)!`, pri automatickom preklade tela stránky (#57833).
+- Klonovanie štruktúry - pridaný preklad perex anotácie automatickom preklade stránok (#57833).
 
 ### Bezpečnosť
 
