@@ -272,6 +272,17 @@ public class DocMirroringServiceV9 {
       //regenerate URL based on title
       doc.setVirtualPath("");
 
+      //translate doc body
+      translateDocBody(source, doc, translator);
+   }
+
+   /**
+    * Translate doc body using translator. Before translation, parse out all !INCLUDE()! and replace them with placeholders.
+    * After translation, replace placeholders with original !INCLUDE()! text.
+    * 
+    * IF during replacing something goes wrong, we wil translate original doc data without replacing.
+    */
+   private static void translateDocBody(DocDetails source, DocDetails doc, TranslationService translator) {
       Map<Integer, String> replacedIncludes = new HashMap<>();
       String docData = source.getData();
       try {
