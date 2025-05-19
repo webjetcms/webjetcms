@@ -45,12 +45,13 @@
 
 	// Unsubscribe z mailingu
 	if (dmspID > 0) {
-        Sender.debugin();
 		String emailDmsp = EmailDB.getEmail(dmspID);
 		boolean saveOK = EmailDB.addUnsubscribedEmail(emailDmsp);
 
 		if (saveOK) {
 			request.setAttribute("unsubscribeSuccess", prop.getText("dmail.unsubscribe.emailunsubscribed", emailDmsp));
+			request.setAttribute("unsubscribeSuccess-showUndelete", "true");
+
 		} else {
 			request.setAttribute("unsubscribeErrors", prop.getText("dmail.unsubscribe.error_unsubscribe_email"));
 		}
@@ -70,7 +71,7 @@
 		    String unsubscribedUrl = safeHref + "/newsletter/odhlasenie-z-newsletra.html?" + Constants.getString("dmailStatParam") + "=" + hash;
 
 		    String fromName = "WebjetCMS";
-		    String fromEmail = "tvoj@email.sk";
+		    String fromEmail = "tester@balat.sk";
 		    String toEmail = email;
 		    String subject = "Overenie mailu pre odhlásenie";
 		    String message = prop.getText("dmail.unsubscribe.bodyNew", unsubscribedUrl);
