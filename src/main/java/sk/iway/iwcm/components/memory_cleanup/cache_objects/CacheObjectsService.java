@@ -18,7 +18,7 @@ import sk.iway.iwcm.tags.CombineTag;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.utils.Pair;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.util.*;
 

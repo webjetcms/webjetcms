@@ -3,14 +3,14 @@ package sk.iway.iwcm.components.inquiry.jpa;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 
@@ -51,7 +51,7 @@ public class InquiryEntity extends ActiveRecordRepository implements Serializabl
     )
     @NotEmpty
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String questionText;
 
     @Column(name = "question_active")

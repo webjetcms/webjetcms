@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.blog.jpa;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 import javax.validation.constraints.NotBlank;
 
 import lombok.Getter;

@@ -3,8 +3,8 @@
 import java.util.Calendar;
 import java.util.Date;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 @Converter
 public class DefaultTimeValueConverter implements AttributeConverter<Date, Date> {

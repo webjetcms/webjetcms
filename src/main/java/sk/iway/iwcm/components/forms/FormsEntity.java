@@ -2,7 +2,7 @@ package sk.iway.iwcm.components.forms;
 
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "forms")

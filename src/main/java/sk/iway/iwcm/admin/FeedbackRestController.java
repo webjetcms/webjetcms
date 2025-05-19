@@ -2,7 +2,7 @@ package sk.iway.iwcm.admin;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.security.access.prepost.PreAuthorize;

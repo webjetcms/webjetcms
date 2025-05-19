@@ -3,7 +3,7 @@ package net.sourceforge.stripes.controller;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
 
 /**

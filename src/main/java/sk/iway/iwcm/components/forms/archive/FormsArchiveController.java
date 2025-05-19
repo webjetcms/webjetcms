@@ -21,7 +21,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @Datatable

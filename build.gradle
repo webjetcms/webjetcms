@@ -43,6 +43,7 @@ ext {
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
     springVersion = "7.0.+";
+    springDataVersion = "3.5.+";
     springSecurityVersion = "5.8.+";
 }
 
@@ -100,7 +101,7 @@ sourceSets {
     main {
         java {
             srcDirs 'src/main/java'
-            srcDirs 'src/webjet8/java'
+            //srcDirs 'src/webjet8/java'
         }
     }
  }
@@ -168,8 +169,8 @@ dependencies {
     implementation("org.springframework:spring-aop:${springVersion}")
     implementation("org.springframework:spring-beans:${springVersion}")
     implementation("org.springframework:spring-context:${springVersion}")
-    implementation("org.springframework.data:spring-data-commons:2.6.1")
-    implementation("org.springframework.data:spring-data-jpa:2.6.1")
+    implementation("org.springframework.data:spring-data-commons:${springDataVersion}")
+    implementation("org.springframework.data:spring-data-jpa:${springDataVersion}")
     implementation("org.springframework:spring-orm:${springVersion}")
     implementation("org.springframework:spring-tx:${springVersion}")
     implementation("org.springframework.security:spring-security-core:${springSecurityVersion}")
@@ -212,10 +213,9 @@ dependencies {
         // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
         implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
-    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-    providedCompile "javax.servlet:servlet-api:2.5"
-    providedCompile "javax.servlet.jsp:javax.servlet.jsp-api:2.3.3"
-    providedCompile 'javax.el:javax.el-api:3.0.0'
+    providedCompile 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:3.1.1'
+    providedCompile 'jakarta.el:jakarta.el-api:5.0.1'
 
     // https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
@@ -384,7 +384,7 @@ gretty {
     reloadOnClassChange = false
     debugSuspend = false
 
-    extraResourceBase 'src/webjet8/webapp'
+    //extraResourceBase 'src/webjet8/webapp'
 
     //JVM parametre
     jvmArgs = [

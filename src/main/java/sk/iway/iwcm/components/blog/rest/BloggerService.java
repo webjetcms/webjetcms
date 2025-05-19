@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.json.JSONObject;
 

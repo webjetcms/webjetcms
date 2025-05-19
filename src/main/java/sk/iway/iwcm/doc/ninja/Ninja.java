@@ -10,9 +10,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.users.UserDetails;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -16,12 +16,12 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
@@ -814,7 +814,7 @@ public class DocForumService {
 	 * @param request
 	 * @return - path to file (forward)
 	 */
-	public static String uploadForumFile(CommonsMultipartFile uploadFile, HttpServletRequest request) {
+	public static String uploadForumFile(MultipartFile uploadFile, HttpServletRequest request) {
 		int forumId = Tools.getIntValue(request.getParameter("forumId") , -1);
 		if(forumId == -1 || uploadFile == null || uploadFile.isEmpty()) return null;
 
@@ -831,7 +831,7 @@ public class DocForumService {
 		return SAVE_FORUM_SUCCESS;
 	}
 
-	private static String uploadForumFileLogic(CommonsMultipartFile uploadedFile, DocForumEntity docForum, HttpServletRequest request) throws IOException {
+	private static String uploadForumFileLogic(MultipartFile uploadedFile, DocForumEntity docForum, HttpServletRequest request) throws IOException {
 		//Check logged user
 		Identity user = UsersDB.getCurrentUser(request);
 		if (user == null) {

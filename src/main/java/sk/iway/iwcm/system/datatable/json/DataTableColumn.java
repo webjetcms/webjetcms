@@ -13,8 +13,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
-import javax.persistence.Transient;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Transient;
+import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @Datatable

@@ -5,20 +5,20 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
-import javax.persistence.TableGenerator;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
@@ -203,7 +203,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 			tab = "advanced",
 			visible = false
 		)
-		@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+		@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 		private String htmlCode;
 
 
@@ -258,7 +258,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 			className = "banner-type banner-type-4",
 			tab = "advanced"
 		)
-		@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+		@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 		private String descriptionText;
 
 		//Primary link

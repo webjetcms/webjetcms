@@ -1,14 +1,14 @@
 package sk.iway.iwcm.components.forum.rest;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.components.forum.jpa.DocForumEntity;
 
@@ -28,7 +28,7 @@ public class ForumController {
     }
 
     @PostMapping("/saveForumFile")
-    public String saveForumFile(@RequestParam("uploadedFile") CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
+    public String saveForumFile(@RequestParam("uploadedFile") MultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
         try {
             return DocForumService.uploadForumFile(uploadFile, request);
         } catch(Exception e) {

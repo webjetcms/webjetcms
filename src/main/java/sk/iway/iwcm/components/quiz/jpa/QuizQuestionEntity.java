@@ -3,18 +3,18 @@ package sk.iway.iwcm.components.quiz.jpa;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -58,7 +58,7 @@ public class QuizQuestionEntity implements Serializable {
 			)
 		}
     )
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     @Size(max = 500)
     private String question;
 
@@ -88,7 +88,7 @@ public class QuizQuestionEntity implements Serializable {
 		className = "image",
 		renderFormat = "dt-format-image"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     @Size(max = 255)
     private String imageUrl;
 
@@ -130,7 +130,7 @@ public class QuizQuestionEntity implements Serializable {
         title = "components.quiz.option_1"
     )
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String option1;
 
     @Column(name = "rate1")
@@ -152,7 +152,7 @@ public class QuizQuestionEntity implements Serializable {
         title = "components.quiz.option_2"
     )
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String option2;
 
     @Column(name = "rate2")
@@ -174,7 +174,7 @@ public class QuizQuestionEntity implements Serializable {
         title = "components.quiz.option_3"
     )
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String option3;
 
     @Column(name = "rate3")
@@ -196,7 +196,7 @@ public class QuizQuestionEntity implements Serializable {
         title = "components.quiz.option_4"
     )
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String option4;
 
     @Column(name = "rate4")
@@ -218,7 +218,7 @@ public class QuizQuestionEntity implements Serializable {
         title = "components.quiz.option_5"
     )
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String option5;
 
     @Column(name = "rate5")
@@ -240,7 +240,7 @@ public class QuizQuestionEntity implements Serializable {
         title = "components.quiz.option_6"
     )
     @Size(max = 255)
-    @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
+    @jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String option6;
 
     @Column(name = "rate6")

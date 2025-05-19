@@ -3,7 +3,7 @@ package sk.iway.iwcm.dmail.jpa;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
 
 import org.springframework.beans.BeanWrapperImpl;

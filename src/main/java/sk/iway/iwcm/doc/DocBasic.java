@@ -10,13 +10,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -75,7 +75,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			}
 	)
 	@NotBlank
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String title;
 
 	@Column(name = "navbar")
@@ -93,7 +93,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			}
 	)
 	@NotBlank
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String navbar;
 
 	@Column(name = "virtual_path")
@@ -104,7 +104,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 			visible = false,
 			className = "DTE_Field_Has_Checkbox"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String virtualPath = "";
 
 	@Column(name = "editor_virtual_path ")
@@ -173,7 +173,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 					)
 			}
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String externalLink = "";
 
 	@Column(name = "available")
@@ -633,7 +633,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title="editor.tab.html_header",
 	tab = "template", visible = false, sortAfter = "tempFieldDDocId"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlHead = "";
 
 	@Column(name = "publish_start")
@@ -666,7 +666,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = "wrap", title="editor.tab.perex",
 		tab = "perex", visible = false, sortAfter = "eventDateDate"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlData = "";
 
 	@Column(name = "perex_place")
@@ -686,7 +686,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		},
 		renderFormat = "dt-format-image"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String perexImage = "";
 
 	@Transient
@@ -702,11 +702,11 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@DataTableColumn(inputType = DataTableColumnType.WYSIWYG, title="components.news.template_html",
 		hidden = true, tab="content"
 	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String data;
 
 	@Column(name = "data_asc")
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String dataAsc;
 
 	@Column(name = "author_id")
@@ -751,7 +751,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	//Must be change from Transient to Column, because we need save this method
 	// @Size(max = 255)
 	@Column(name = "file_name")
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	@jakarta.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String fileName;
 
 	@Transient

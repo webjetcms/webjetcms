@@ -6,8 +6,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
@@ -60,7 +60,7 @@ public class EshopService {
 
 
 	public static EshopService getInstance() {
-		javax.servlet.ServletContext servletContext = Constants.getServletContext();
+		jakarta.servlet.ServletContext servletContext = Constants.getServletContext();
 		EshopService service = (EshopService) servletContext.getAttribute(EshopService.class.getName());
 		if(service == null) {
 			service = new EshopService(
