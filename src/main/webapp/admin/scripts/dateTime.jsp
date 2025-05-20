@@ -4,55 +4,7 @@ sk.iway.iwcm.PathFilter.setStaticContentHeaders("/assets/dateTime.js", null, req
 %><%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
-
-function openDialogDate(date, func)
-{
-   openDialog("/admin/calendar_popup.jsp?date="+date, 140, 140, func)
-}
-
-function openDialogTimeStart(date, func)
-{      
-      openDialog("/admin/time_popup.jsp?time="+date, 100, 180, func);
-}
-
-
-function checkDate(vstup)
-{   
-   if (vstup.value.length == 0) return;
-   
-   test_date = vstup.value;      
-   test_date = test_date.replace(",", ".");
-   test_date = test_date.replace(" ", ".");
-   test_date = test_date.replace(":", ".");
-   test_date = test_date.replace("-", ".");
-   vstup.value = test_date;
-   
-   test_date = vstup.value;
-   test_date = test_date.replace(",", ".");
-   test_date = test_date.replace(" ", ".");
-   test_date = test_date.replace(":", ".");
-   test_date = test_date.replace("-", ".");
-   vstup.value = test_date;
-   
-   var text
-   var index
-   var tecka
-   var den
-   var mesic
-   var rok
-   var ch
-   text=""
-   
-   den=""
-   mesic=""
-   rok=""
-   tecka=0
-   
-   for (index = 0; index < vstup.value.length; index++) 
+< vstup.value.length; index++) 
    {
       ch = vstup.value.charAt(index);
       if (ch != "0" && ch != "1" && ch != "2" && ch != "3" && ch != "4" && ch != "5" && ch != "6" && ch != "7" && ch != "8" && ch != "9" && ch != ".") 

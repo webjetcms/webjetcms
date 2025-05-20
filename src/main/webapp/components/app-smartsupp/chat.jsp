@@ -1,5 +1,5 @@
 <%@page import="sk.iway.iwcm.system.cache.PersistentCacheDB"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 <%
 
 //[#18339 - app livechat] vloženie aplikacie do stránky. Ak nieje zadaný kód, aplikacia sa nevloží
@@ -12,8 +12,6 @@ org.w3c.dom.*,
 java.io.*,
 java.text.*,
 java.util.*"%>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%

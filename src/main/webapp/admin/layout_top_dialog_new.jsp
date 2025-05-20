@@ -1,10 +1,7 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%><%@
 page import="sk.iway.iwcm.*,java.io.*,sk.iway.iwcm.i18n.Prop" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/><%	response.setHeader("Pragma","No-Cache");
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/><%	response.setHeader("Pragma","No-Cache");
 	response.setDateHeader("Expires",0);
 	response.setHeader("Cache-Control","no-Cache");
 
@@ -83,10 +80,10 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 <head>
 	<title><%=title%></title>
 
-	<logic:present name="mobile">
+	<iwcm:present name="mobile">
 		<meta name="viewport" content="width=100%, minimum-scale=1.0, maximum-scale=1.0" />
 		<meta name="viewport" content="width=device-width, user-scalable=no">
-	</logic:present>
+	</iwcm:present>
 
 	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
 	<meta http-equiv="Content-Type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" />
@@ -101,13 +98,13 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 	<style>
 		<jsp:include page="/admin/css/perms-css.jsp"/>
 
-		<logic:notPresent name="closeTable">
+		<iwcm:notPresent name="closeTable">
 			body
 			{
 				cursor: wait;
 				overflow: hidden;
 			}
-		</logic:notPresent>
+		</iwcm:notPresent>
 	</style>
 
 	<script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/common.jsp"></script>
@@ -136,7 +133,7 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 	</script>
 </head>
 
-<logic:present name="closeTable">
+<iwcm:present name="closeTable">
 	<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 		<table border="0" cellspacing="0" cellpadding="0" width="100%" height="65">
@@ -151,9 +148,9 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 				</td>
 			</tr>
 		</table>
-</logic:present>
+</iwcm:present>
 
-<logic:notPresent name="closeTable">
+<iwcm:notPresent name="closeTable">
 	<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 	<table border="0" cellspacing="0" cellpadding="0" width="100%" height="<%=height%>" style="height: 100%;">
@@ -173,4 +170,4 @@ import="sk.iway.iwcm.stat.BrowserDetector"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD H
 	   		<div id="dialogCentralRow" class="calendarPopupStop" style="height: 100%; width: auto; overflow: auto; padding: 0px; margin:0px; position: relative;">
 				<script type='text/javascript' src='/components/calendar/popcalendar.jsp'></script>
 				<%request.setAttribute("sk.iway.iwcm.tags.CalendarTag.isJsIncluded", "true");%>
-</logic:notPresent>
+</iwcm:notPresent>

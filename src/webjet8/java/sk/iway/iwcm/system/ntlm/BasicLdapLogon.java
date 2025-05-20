@@ -11,12 +11,12 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.beanutils.PropertyUtils;
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
 
 import sk.iway.Password;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.tags.support_logic.action.ActionMessage;
+import sk.iway.iwcm.tags.support_logic.action.ActionMessages;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 

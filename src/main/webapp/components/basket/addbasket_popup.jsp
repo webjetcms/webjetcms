@@ -1,4 +1,4 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
 
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
@@ -6,14 +6,10 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
-	
+
 	int itemId = Tools.getIntValue(request.getParameter("basketItemId"), -1);
 	if (itemId == -1)
 		return;
@@ -25,7 +21,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title><bean:write name="good" property="title"/></title>
+	<title><iwcm:beanWrite name="good" property="title"/></title>
 	<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" >
 	<meta http-equiv="Content-language" content="<%=PageLng.getUserLng(request)%>" >
 	<meta name="description" content="WebJET Content Management web site" >
@@ -43,26 +39,26 @@
 	if ("add".equals(request.getParameter("act")))
 	{
 		boolean ok = EshopService.getInstance().setItemFromDoc(request);
-		
+
 		if (ok)
 		{
 		   List<BasketInvoiceItemEntity> items = EshopService.getInstance().getBasketItems(request);
 			%>
 				<iwcm:text key="components.basket.addbasket_popup.product_added"/>
-	
+
 				<br /><br />
 				<span id='basketSmallItems'>
 					<iwcm:text key="components.basket.total_items"/>: <span class="pocet"><%=EshopService.getTotalItems(items)%></span>
 				</span>
 				<span id='basketSmallPrice'>
-					<iwcm:text key="components.basket.total_price"/>: 
+					<iwcm:text key="components.basket.total_price"/>:
 					<span class="cena">
 						<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
 							<%=EshopService.getTotalLocalPriceVat(items,request)%>
 						</iway:curr>
 					</span>
 				</span>
-				
+
 				<script type="text/javascript">
 				<!--
 					setTimeout("window.close();", 1000);
@@ -124,7 +120,7 @@ function recalculateTotal()
 	<td valign="top">
 		<table border=0 cellspacing=0 cellpadding=2>
 			<tr>
-				<td valign="top" class="addbasketName"><bean:write name="good" property="title"/></td>
+				<td valign="top" class="addbasketName"><iwcm:beanWrite name="good" property="title"/></td>
 			</tr>
 		</table>
 	</td>
@@ -133,7 +129,7 @@ function recalculateTotal()
 	<td valign="bottom">
 
         <form action="addbasket_popup.jsp" name="addBasketForm" style="margin: 0px;">
-		<table border="0" cellspacing="0" cellpadding="2" width="100%">		
+		<table border="0" cellspacing="0" cellpadding="2" width="100%">
 			<tr>
 				<td><iwcm:text key="components.basket.addbasket_popup.price"/>:</td>
 				<td width="70%" nowrap><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
@@ -162,7 +158,7 @@ function recalculateTotal()
 						 <option value="-1"><iwcm:text key="components.basket.different"/></option>
 					 </select>
 				</td>
-			</tr>			
+			</tr>
 			<tr>
 				<td><iwcm:text key="components.basket.note"/>:</td>
 				<td colspan=2><input type="text" name="basketUserNote" size="20" maxlength="255"/></td>
@@ -170,7 +166,7 @@ function recalculateTotal()
 			<tr>
 				<td><iwcm:text key="components.basket.addbasket_popup.all"/>:</td>
 				<td id="tdTotal" colspan=2><b><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></b></td>
-			</tr>		
+			</tr>
 		</table>
 		</form>
 		<script type="text/javascript">

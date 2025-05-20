@@ -7,8 +7,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.doc.TemplateDetails" %>
 <%@ page import="sk.iway.iwcm.doc.TemplatesDB" %>
 <%@ page import="sk.iway.iwcm.doc.groups.GroupsController" %>
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><iwcm:checkLogon admin="true"/>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/>
 <script type="text/javascript">
 	function documentReady(f){
 	    if(document.readyState !== "complete"){
@@ -92,7 +91,7 @@ pageContext.setAttribute("doc", doc);
 			<tr>
 			   <td><strong>DocID:</strong></td>
 			   <td>
-			      <a href='/admin/v9/webpages/web-pages-list/?docid=<bean:write name="doc" property="docId"/>' target="_blank"><bean:write name="doc" property="docId"/></a>
+			      <a href='/admin/v9/webpages/web-pages-list/?docid=<iwcm:beanWrite name="doc" property="docId"/>' target="_blank"><iwcm:beanWrite name="doc" property="docId"/></a>
 				</td>
 			</tr>
 			<%if(!doc.isAvailable() || "false".equals((String)request.getAttribute("is_available"))){%>
@@ -123,13 +122,13 @@ pageContext.setAttribute("doc", doc);
 
 			<tr>
 				<td><strong><iwcm:text key="history.changedBy"/>:</strong></td>
-				<td><a href="mailto:<bean:write name="doc" property="authorEmail"/>"><bean:write name="doc" property="authorName"/></a></td>
+				<td><a href="mailto:<iwcm:beanWrite name="doc" property="authorEmail"/>"><iwcm:beanWrite name="doc" property="authorName"/></a></td>
 			</tr>
 			<tr>
 				<td><strong><iwcm:text key="editor.date"/>:</strong></td>
 			   <td>
-			      <bean:write name="doc" property="dateCreatedString"/>
-					<bean:write name="doc" property="timeCreatedString"/>
+			      <iwcm:beanWrite name="doc" property="dateCreatedString"/>
+					<iwcm:beanWrite name="doc" property="timeCreatedString"/>
 			   </td>
 			</tr>
 		</table>

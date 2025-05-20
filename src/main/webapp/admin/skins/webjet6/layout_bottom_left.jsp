@@ -1,4 +1,4 @@
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%
 
 %>
 

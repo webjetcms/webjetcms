@@ -42,6 +42,6 @@
             function gtag(){dataLayer.push(arguments)};
             gtag('consent', 'default', gtagGetConsentJson('nutne'));
             <% if (Tools.isNotEmpty(Tools.getCookieValue(request.getCookies(), "enableCookieCategory", ""))) { %>
-               gtag('consent', 'update', gtagGetConsentJson('<%=org.apache.struts.util.ResponseUtils.filter(Tools.getCookieValue(request.getCookies(), "enableCookieCategory", ""))%>'));
+               gtag('consent', 'update', gtagGetConsentJson('<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(Tools.getCookieValue(request.getCookies(), "enableCookieCategory", ""))%>'));
             <% } %>
         </script>

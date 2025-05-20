@@ -2,9 +2,8 @@ package sk.iway.iwcm.users;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.action.ActionMapping;
-
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 /**
  *  Informacie o skupine pouzivatelov

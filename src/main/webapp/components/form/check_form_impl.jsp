@@ -2,7 +2,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" import="sk.iway.iwcm.Constants, sk.iway.iwcm.PageLng, sk.iway.iwcm.Tools" %><%@ page import="sk.iway.iwcm.form.FormDB"%><%@ page import="java.util.ArrayList"%>
     <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-    <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
     <%
     String lng = PageLng.getUserLng(request);
 

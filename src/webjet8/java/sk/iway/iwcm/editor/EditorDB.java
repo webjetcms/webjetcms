@@ -19,7 +19,7 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import org.apache.struts.upload.FormFile;
+import sk.iway.iwcm.tags.support_logic.FormFile;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;

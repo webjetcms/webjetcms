@@ -2,12 +2,11 @@ package sk.iway.iwcm.components.dictionary;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionMapping;
-
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.dictionary.model.DictionaryBean;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support_logic.action.ActionForm;
+import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 /**
  *  DictionaryForm.java

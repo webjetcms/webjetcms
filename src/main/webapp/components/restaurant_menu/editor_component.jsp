@@ -7,10 +7,9 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="cmp_restaurant_menu"/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 <%
 request.setAttribute("cmpName", "restaurant_menu");
 request.setAttribute("descKey", "components.restaurant_menu.desc");
@@ -117,7 +116,7 @@ function loadNewMenuIframe()
 
 	<div class="tab-page" id="tabMenu1" style="display: block; padding: 15px;">
 
-		<form name="textForm" style="margin: 0px">
+		<form:form name="textForm" style="margin: 0px">
 
 		<table>
 		<tr><th colspan="2" > <iwcm:text key="components.gis.settingsInfo"/>  </th></tr>

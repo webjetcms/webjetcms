@@ -4,14 +4,25 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 import="sk.iway.iwcm.i18n.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);
 request.setAttribute("iconLink", "");
 request.setAttribute("dialogTitle", prop.getText("components.import_web_pages.xls.dialogTitle"));
 request.setAttribute("dialogDesc", prop.getText("components.import_web_pages.xls.dialogDesc"));
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
+request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 
 int groupId = Constants.getInt("rootGroupId");
@@ -82,9 +93,9 @@ catch (Exception ex)
 </script>
 
 <div class="padding10">
-	<logic:present parameter="error">
+	<iwcm:present parameter="error">
 		<b><iwcm:text key="components.import_web_pages.import_error"/>.</b><br><br>
-	</logic:present>
+	</iwcm:present>
 
 
 	<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">

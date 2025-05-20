@@ -1,12 +1,8 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-
 <jsp:useBean id="answerForm" type="sk.iway.iwcm.inquiry.AnswerForm" scope="request"/>
 <HTML>
 <HEAD>
@@ -16,8 +12,8 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 </HEAD>
 <BODY class="inquiryPopup">
 
-<logic:present name="spam"><iwcm:text key="components.inquiry.spamDetected"/></logic:present>
-<logic:notPresent name="spam"><bean:write name="answerForm" property="answerTextFail"/></logic:notPresent>    
+<iwcm:present name="spam"><iwcm:text key="components.inquiry.spamDetected"/></iwcm:present>
+<iwcm:notPresent name="spam"><iwcm:beanWrite name="answerForm" property="answerTextFail"/></iwcm:notPresent>
 
 </BODY>
 </HTML>

@@ -1,10 +1,7 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@ 
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ 
-taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ 
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ 
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ 
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/><?xml version="1.0" encoding="<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>"?>
+taglib uri="/WEB-INF/iway.tld" prefix="iway" %><iwcm:checkLogon admin="true"/><?xml version="1.0" encoding="<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
         "http://www.w3.org/TR/2000/REC-xhtml1-20000126/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<%=PageLng.getUserLng(request)%>" lang="<%=PageLng.getUserLng(request)%>">

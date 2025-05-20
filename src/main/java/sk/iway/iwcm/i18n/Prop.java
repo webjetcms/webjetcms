@@ -1,7 +1,6 @@
 package sk.iway.iwcm.i18n;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.struts.util.ResponseUtils;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.translation_keys.jpa.MissingKeysDto;
 import sk.iway.iwcm.database.ComplexQuery;
@@ -12,6 +11,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;

@@ -3,10 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*, sk.iway.iwcm.users.*,java.util.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 //stranka pre includnutie noviniek
 
@@ -133,7 +129,7 @@ count = Tools.getIntValue((String)request.getAttribute("count"),-1);
 
 <table class="displayMainTopics" border="0" cellpadding="0" cellspacing="0">
 <tbody>
-<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 	<%
 
     totalPhorumNum++;
@@ -211,6 +207,6 @@ count = Tools.getIntValue((String)request.getAttribute("count"),-1);
 			counter = 0;
 		}
 	%>
-</logic:iterate>
+</iwcm:iterate>
 </tbody>
 </table>

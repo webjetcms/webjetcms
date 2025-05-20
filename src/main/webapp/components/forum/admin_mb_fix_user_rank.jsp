@@ -3,9 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.util.*,sk.iway.iwcm.*,java.sql.*,org.apache.commons.beanutils.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms="cmp_diskusia"/>
+<iwcm:checkLogon admin="true" perms="cmp_diskusia"/>
 <%@ include file="/admin/layout_top.jsp" %>
 <%
 //nastavi forum_rating v tabulke users podla poctu prispevkov vo fore

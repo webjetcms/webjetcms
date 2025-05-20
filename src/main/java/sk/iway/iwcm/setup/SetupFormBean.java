@@ -2,12 +2,11 @@ package sk.iway.iwcm.setup;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.action.ActionMapping;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 @Getter
 @Setter

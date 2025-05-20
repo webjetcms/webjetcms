@@ -2,21 +2,19 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.doc.*, java.util.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
-<% 
-	request.setAttribute("cmpName", "htmlbox"); 
+<%
+	request.setAttribute("cmpName", "htmlbox");
 
    GroupsDB groupsDB = GroupsDB.getInstance();
    GroupDetails grpDet = groupsDB.getGroup("htmlbox");
-   DocDB docDB = DocDB.getInstance();            
-   List docList = null; 
+   DocDB docDB = DocDB.getInstance();
+   List docList = null;
    if(grpDet != null)
-   {            	
+   {
    	docList = docDB.getDocByGroup(grpDet.getGroupId());
    	if(docList.size() > 0)
-   		request.setAttribute("docList", docList);            	
+   		request.setAttribute("docList", docList);
    }
 %>
 <jsp:include page="/components/top.jsp"/>
@@ -43,10 +41,10 @@ function doOK()
 } // End function
 
 function Ok()
-{		
+{
 	var docId = document.textForm.field.value
 	if (document.textForm.docid.value != "") docId = document.textForm.docid.value;
-	var htmlCode = ""; 
+	var htmlCode = "";
 	if (document.textForm.insertType[1].checked)
 	{
 		htmlCode = "!INCLUDE(/components/htmlbox/showdoc.jsp, docid="+docId+")!";
@@ -55,7 +53,7 @@ function Ok()
 	{
 		htmlCode = previewWindow.document.getElementById("_iframeHtmlData").value;
 	}
-	
+
 	oEditor.FCK.InsertHtml(htmlCode);
 	oEditor.FCK.WJToogleBordersCommand_thisRef.RefreshBorders();
 	return true ;
@@ -63,7 +61,7 @@ function Ok()
 
 if (isFck)
 {
-	
+
 }
 else
 {
@@ -79,7 +77,7 @@ function preview(select)
 function setStandardDoc(doc_id)
 {
    document.textForm.docid.value = doc_id;
-   previewDocId();	
+   previewDocId();
 }
 function previewDocId()
 {
@@ -93,13 +91,13 @@ function previewDocId()
 	      <td valign="top">
 	      	<iwcm:text key="components.htmlbox.select_object"/>:<br>
 	      	<select name="field" onchange="preview(this);this.form.docid.value='';" size="15" style="width: 250px; background-color: Window;">
-	      	  <logic:present name="docList">	
-	          	 <logic:iterate id="dl" name="docList" type="sk.iway.iwcm.doc.DocDetails">
-	          		<option value='<bean:write name="dl" property="docId"/>'><bean:write name="dl" property="title"/></option>
-	          	 </logic:iterate>  
-	          </logic:present>  
+	      	  <iwcm:present name="docList">
+	          	 <iwcm:iterate id="dl" name="docList" type="sk.iway.iwcm.doc.DocDetails">
+	          		<option value='<iwcm:beanWrite name="dl" property="docId"/>'><iwcm:beanWrite name="dl" property="title"/></option>
+	          	 </iwcm:iterate>
+	          </iwcm:present>
 	         </select>
-	         
+
 	         	<iwcm:text key="components.htmlbox.otherWebPage"/>:
 	         	<br/>
 	         	<iwcm:text key="components.popup.docid"/>: <input type="text" name="docid" value="" size="5" onblur="previewDocId();"/> <input type="button" value="<iwcm:text key="groupedit.select"/>" name="bSelDoc" onClick='popupFromDialog("/admin/user_adddoc.jsp", 450, 340);' class="button50" />
@@ -109,11 +107,11 @@ function previewDocId()
 	         	<label><input type="radio" name="insertType" value="static" checked="checked"/> <iwcm:text key="components.htmlbox.insertType.static"/></label>
 	         	<br/>
 	         	<label><input type="radio" name="insertType" value="dynamic" id="insertType"/> <iwcm:text key="components.htmlbox.insertType.dynamic"/></label>
-	         
+
 	      </td>
 		   <td valign="top">
 		      <br>
-				<iframe ID="previewWindow" name="previewWindow" align="top" style="width:340px; height:291px; bgcolor: silver" src="iframe.jsp"></iframe>				
+				<iframe ID="previewWindow" name="previewWindow" align="top" style="width:340px; height:291px; bgcolor: silver" src="iframe.jsp"></iframe>
 	      </td>
 	   </tr>
 	</table>

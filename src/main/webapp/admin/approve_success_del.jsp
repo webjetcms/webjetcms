@@ -2,7 +2,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/>
 
 <html>
@@ -19,25 +18,25 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 </head>
 <body bgcolor="#FFFFFF" text="#000000" style="margin: 10px; font-weight: bold;" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
 
-<logic:present name="approved">
+<iwcm:present name="approved">
 	<img src="/admin/images/warning.gif" align="absmiddle"/>
    <iwcm:text key="approve.del.approved"/>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="approvedToNextLevel">
+<iwcm:present name="approvedToNextLevel">
 	<img src="/admin/images/warning.gif" align="absmiddle"/>
    <iway:request name="approvedToNextLevel"/>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="approveFail">
+<iwcm:present name="approveFail">
 	<img src="/admin/images/warning.gif" align="absmiddle"/>
    <iwcm:text key="approve.del.approveFail"/>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="rejected">
+<iwcm:present name="rejected">
 	<img src="/admin/images/warning.gif" align="absmiddle"/>
    <iwcm:text key="approve.del.rejected"/>
-</logic:present>
+</iwcm:present>
 
 </table>
 </body>

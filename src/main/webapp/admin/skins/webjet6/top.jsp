@@ -1,11 +1,8 @@
-<%
+<%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,java.util.*,java.io.*" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
@@ -117,7 +114,7 @@ page import="sk.iway.iwcm.system.ModuleInfo"%>
 				<a href="<%=Constants.getString("adminLogoffLink") %>" target="_top" class="logoff">&nbsp;<iframe src="<iwcm:cp/>/admin/refresher.jsp" name="refresher" width="1" height="1" marginwidth="0" marginheight="0" frameborder="0" scrolling="no"></iframe></a>
 
 				<span>
-					<bean:write name="iwcm_useriwcm" property="fullName"/><br/>
+					<iwcm:beanWrite name="iwcm_useriwcm" property="fullName"/><br/>
 				<% if (Tools.isEmpty(Constants.getString("NTLMDomainController"))) { %><a href="javascript:openPopupDialogFromTopFrame('<iwcm:cp/>/admin/edituser.do');" target="mainFrame"><iwcm:text key="admin.top.change_user_details"/></a><% } %>
 				</span>
 

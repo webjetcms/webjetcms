@@ -2,7 +2,6 @@
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
 <%@ page import="sk.iway.iwcm.editor.InlineEditor" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 

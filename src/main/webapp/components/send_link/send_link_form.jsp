@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*,java.net.*,sk.iway.iwcm.doc.*,java.util.*,java.sql.*,sk.iway.iwcm.system.*,sk.iway.Password"%><%@page import="org.apache.commons.codec.binary.Base64"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 //Formular na odoslanie stranky/linky
 
@@ -285,7 +282,7 @@ else
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%@page import="sk.iway.iwcm.system.captcha.Captcha"%>
 
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
 		
  		<%@include file="/components/_common/cleditor/jquery.cleditor.js.jsp" %>
  		<script type="text/javascript" src="/components/form/check_form.js"></script>
@@ -296,19 +293,19 @@ else
 		--%>
 
 		<div class="send_linka">
-			<logic:equal name="pageSend" value="ok">
+			<iwcm:equal name="pageSend" value="ok">
    				<iwcm:text key="components.send_link.send_ok"/> <%=ResponseUtils.filter(toEmail)%>.
-			</logic:equal>
+			</iwcm:equal>
 
-			<logic:equal name="pageSend" value="fail">
+			<iwcm:equal name="pageSend" value="fail">
 			   <iwcm:text key="components.send_link.send_fail"/>.
-			</logic:equal>
+			</iwcm:equal>
 			
-			<logic:equal name="pageSend" value="captcha">
+			<iwcm:equal name="pageSend" value="captcha">
 			   <iwcm:text key="captcha.textNotCorrect"/>
-			</logic:equal>
+			</iwcm:equal>
 
-			<logic:present name="showForm">
+			<iwcm:present name="showForm">
 			
 			   <form action="/components/send_link/send_link_form.jsp" method="post" id="sendLinkForm">
 					<div class="container-fluid">
@@ -375,7 +372,7 @@ else
 						<input type="reset" class="reset" name="bReset" onclick="window.close();" value="<iwcm:text key="button.cancel"/>" />
 					</div>
 				</form>
-			</logic:present>
+			</iwcm:present>
 		</div>
 		
 		<script type="text/javascript">
