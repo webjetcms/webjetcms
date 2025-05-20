@@ -150,6 +150,14 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
     )
 	private Boolean showFile = true;
 
+	@Column(name="index_file")
+	@DataTableColumn(
+		inputType = DataTableColumnType.BOOLEAN_TEXT,
+		title = "components.file_archiv.allow_indexing",
+		tab = "advanced"
+	)
+	Boolean indexFile;
+
 	@Column(name="priority")
 	@DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
@@ -311,6 +319,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		uploaded = -1;
 		referenceId = Long.valueOf(-1);
 		orderId = -1;
+		indexFile = true;
 	}
 
 	/**
@@ -318,14 +327,13 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	 */
 	public boolean isValidDates()
 	{
-		if (validFrom == null || validTo == null) return true;
+		if (validFrom == null && validTo == null) return true;
 
 		Date now = new Date(Tools.getNow());
+		if (validFrom != null && validFrom.after(now)) return false;
+		if (validTo != null && validTo.before(now)) return false;
 
-		if (validFrom.after(now)) return false;
-		if (validTo.before(now)) return false;
-
-		return false;
+		return true;
 	}
 
 	public int getFileArchiveId()
@@ -399,7 +407,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 				UserDetails user = UsersDB.getUser(userId);
 			 	//indexujem bud iba hlavny subor, alebo ked je povolene, tak vsetky
 			 	boolean index = getReferenceId().longValue() < 1 || Constants.getBoolean("fileArchivIndexOnlyMainFiles") == false;
-				if(index)
+				if(index && indexFile)
 					FileIndexerTools.indexFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath(), user);
 			}
 		}
@@ -513,4 +521,5 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	public Integer getOrderId() { return orderId == null ? -1 : orderId; }
 	public Integer getPriority() { return priority == null ? 0 : priority; }
 	public Boolean getShowFile() { return Tools.isTrue(showFile); }
+	public Boolean getIndexFile() { return Tools.isTrue(indexFile); }
 }

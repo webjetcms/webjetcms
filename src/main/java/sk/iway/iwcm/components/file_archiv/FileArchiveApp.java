@@ -57,10 +57,19 @@ public class FileArchiveApp extends WebjetComponentAbstract {
         private List<FileArchivatorDTO> archivFiles;
         private List<FileArchivatorDTO> patterns;
 
-        private FileArchivatorDTO(FileArchivatorBean file, Prop prop) {
-
+        private FileArchivatorDTO(FileArchivatorBean file) {
             //copy all properties from FileArchivatorBean
             NullAwareBeanUtils.copyProperties(file, this);
+
+            String virtualPath = file.getVirtualPath();
+            if(virtualPath.startsWith(FileArchivSupportMethodsService.SEPARATOR) == false) virtualPath = FileArchivSupportMethodsService.SEPARATOR + virtualPath;
+            this.downloadPath = virtualPath + "?v=" + file.getDateInsert().getTime();
+        }
+
+
+        private FileArchivatorDTO(FileArchivatorBean file, Prop prop) {
+
+            this(file);
 
             //set validityFormatted depending of validity dates
             if (file.getValidFrom() != null && file.getValidTo() != null) {
@@ -73,14 +82,10 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                 this.validityFormatted = prop.getText("components.file_archiv.validNone");
             }
 
-            String virtualPath = file.getVirtualPath();
-            if(virtualPath.startsWith(FileArchivSupportMethodsService.SEPARATOR) == false) virtualPath = FileArchivSupportMethodsService.SEPARATOR + virtualPath;
-            this.downloadPath = virtualPath + "?v=" + file.getDateInsert().getTime();
-
             if(Tools.isTrue(archiv)) {
-                List<FileArchivatorBean> patternFiles = getHistoryFiles(file.getId());
-                this.archivFiles = patternFiles.stream()
-                    .map(f -> new FileArchivatorDTO(f, prop))
+                List<FileArchivatorBean> archivFilesTmp = getHistoryFiles(file.getId());
+                this.archivFiles = archivFilesTmp.stream()
+                    .map(f -> new FileArchivatorDTO(f))
                     .toList();
             }
             if(Tools.isEmpty(archivFiles)) this.archivFiles = null;
@@ -88,7 +93,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
             if(Tools.isTrue(showPatterns)) {
                 List<FileArchivatorBean> patternFiles = getMainPatterns(file.getVirtualPath());
                 this.patterns = patternFiles.stream()
-                    .map(f -> new FileArchivatorDTO(f, prop))
+                    .map(f -> new FileArchivatorDTO(f))
                     .toList();
             }
             if(Tools.isEmpty(patterns)) this.patterns = null;

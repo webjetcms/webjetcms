@@ -439,6 +439,8 @@ public class FileArchiveService extends FileArchivSupportMethodsService {
 		fabOld.setFileName(uniqueFileName);
 		fabOld.setReferenceId(referenceId);
 		fabOld.setDateInsert(new Date());
+		// File is now Historic version, turn off indexing of file
+		fabOld.setIndexFile(false);
 		if(fabOld.saveWithDebugLog(getClass(), UPLOAD_NEW_FILE_VERSION) == false) {
 			return DB_SAVE_FAILED;
 		}

@@ -49,6 +49,7 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 - **Kategória** - zadajte ľubovoľný názov kategórie. Pole Vám bude automatický ponúkať iné už zadefinované kategórie v manažéri. Na správu môžete využiť sekciu [Kategórie](./category-manager.md).
 - **Kód produktu** - zadajte ľubovoľný názov kódu produktu
 - **Zobraziť** - nastavenie pre zobrazenie dokumentu na stránke (ak nechcete dokumentu na stránke zobraziť, odškrtnite toto nastavenie)
+- **Indexovať súbor** - umožňuje povoliť indexovanie súborov. Nové súbory majú túto možnosť predvolene zapnutú. Ak sa súbor stane **historickou verziou**, toto povolenie sa automaticky deaktivuje, avšak je možné ho opätovne povoliť podľa potreby.
 - **Priorita** - pomocou priority viete ľubovoľne nastaviť poradie zobrazenia dokumentov na stránke
 - **Hlavný dokument** - referencia na hlavný dokument. Pole ponúka cesty k jednotlivým hlavným dokumentom, na ktoré sa aktuálny dokument môže odkazovať, čím sa stáva **vzorom**. Ponúkané sú iba cesty dokumentov, ktoré spĺňajú:
   - nejde o rovnaký dokument, ktorý sa upravuje
