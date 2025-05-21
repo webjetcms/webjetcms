@@ -224,4 +224,8 @@ public class PerexGroupsEntity implements Serializable {
 		tab = "fields"
     )
 	private String fieldF;
+
+    @Column(name="domain_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private Integer domainId;
 }
