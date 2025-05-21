@@ -70,7 +70,7 @@ public class ForumApp extends WebjetComponentAbstract {
     private String type;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.forum.paging", tab = "basic")
-    private Boolean usePaging;
+    private Boolean noPaging;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.forum.page_size", tab = "basic")
     private Integer pageSize = 10;
@@ -114,11 +114,11 @@ public class ForumApp extends WebjetComponentAbstract {
         GroupsDB groupsDB = GroupsDB.getInstance();
         DocDB docDB = DocDB.getInstance();
         List<GroupDetails> groups = groupsDB.getGroups(Tools.getIntValue(request.getSession().getAttribute("iwcm_group_id").toString(), -1));
-        
+
         if (!groups.isEmpty()) sampleOptions.clear();
         for (GroupDetails gd : groups) {
             sampleOptions.add(new OptionDto(gd.getGroupName(), gd.getGroupName(), null));
-        
+
             List<DocDetails> docs = docDB.getDocByGroup(gd.getGroupId());
             for (DocDetails dd : docs) {
                 sampleOptions.add(new OptionDto("↳ " + dd.getTitle(), "↳ " + dd.getTitle(), null));

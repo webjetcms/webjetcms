@@ -13,12 +13,12 @@
                 if (value === 'forum') {
                     setFieldsVisibility(
                         ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum', 'structure'],
-                        ['type', 'usePaging']
+                        ['type', 'noPaging']
                     );
                     updateUsePagingVisibility();
                 } else {
                     setFieldsVisibility(
-                        ['type', 'usePaging', 'pageSizeForum'],
+                        ['type', 'noPaging', 'pageSizeForum'],
                         ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum','structure']
                     );
                     updateUseDelTimeLimitVisibility();
@@ -26,7 +26,7 @@
             });
 
             const updateUsePagingVisibility = () => {
-                if ($("#DTE_Field_usePaging_0").is(":checked")) {
+                if ($("#DTE_Field_noPaging_0").is(":checked")) {
                     setFieldsVisibility([], ['pageSizeForum']);
                 } else {
                     setFieldsVisibility(['pageSizeForum'], []);
@@ -44,12 +44,12 @@
             updateUsePagingVisibility();
             updateUseDelTimeLimitVisibility();
 
-            $("#DTE_Field_usePaging_0").on("change", updateUsePagingVisibility);
+            $("#DTE_Field_noPaging_0").on("change", updateUsePagingVisibility);
             $("#DTE_Field_useDelTimeLimit_0").on("change", updateUseDelTimeLimitVisibility);
 
             fieldElement.trigger("change");
         });
-        
+
     }
 
     async function appCodeExecute() {
@@ -77,7 +77,7 @@
         }
     }
 
-    function appGetComponentPath(componentPath, componentDatatable){   
+    function appGetComponentPath(componentPath, componentDatatable){
         let field = $("#DTE_Field_forumType").val();
         if ("forum" === field) {
             return "/components/forum/forum.jsp";
