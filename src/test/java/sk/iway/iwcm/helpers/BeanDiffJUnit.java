@@ -71,7 +71,7 @@ public class BeanDiffJUnit extends BaseWebjetTest
 		changed.setGroupName("changed");
 		BeanDiff diff = new BeanDiff().whitelist("groupName", "groupId", "defaultDocId").setOriginal(original).setNew(changed);
 		String html = new BeanDiffPrinter(diff).toHtml();
-		assertTrue(html.contains("Original => changed"));
+		assertTrue(html.contains("Original -> changed"));
 	}
 
 }

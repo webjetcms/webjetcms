@@ -53,4 +53,30 @@
         "markdown": [ "/\\[[^]*?\\]/g", "/\\([^]*?\\)/g"]
     },
     "files.trimTrailingWhitespace": true,
+    "github.copilot.chat.commitMessageGeneration.instructions":[
+        {
+            "text": "Use conventional commit message format."
+        },
+        {
+            "text": "Use imperative mood."
+        },
+        {
+            "text": "Use present tense."
+        },
+        {
+            "text": "Be concise and clear."
+        },
+        {
+            "text": "Use a maximum of 72 characters."
+        },
+        {
+            "text": "Use a single line."
+        },
+        {
+            "text": "Use a period at the end."
+        },
+        {
+            "text": "Ensure commit messages are relevant to the changes made."
+        }
+    ]
 }

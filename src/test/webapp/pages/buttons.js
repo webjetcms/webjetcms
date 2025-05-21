@@ -36,11 +36,13 @@ const actions = {
   stat_button: 'buttons-statistics',
   settings_button: 'buttons-settings',
   import_export_button: 'buttons-import-export',
+  refund_button: 'buttons-refund-payment',
   import_button: 'btn-import-dialog',
   export_button: 'btn-export-dialog',
   resend_button: 'buttons-resend',
   group_button :'btn-add-group',
   remove_group_button: 'buttons-removeGroupFromAll',
+  preview_button: 'buttons-history-preview'
 };
 
 const getButtonSelector = (context, action) => {

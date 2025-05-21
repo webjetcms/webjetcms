@@ -1,0 +1,35 @@
+<script>
+	function appAfterInit(response, datatable) {
+		window.addEventListener("WJ.DTE.opened", function () {
+			const $titleNameFieldWrapper = $(".DTE_Field_Name_titleName");
+			const $titleNameInput = $titleNameFieldWrapper.find("input");
+			const $titleTypeRadios = $(
+				"#DTE_Field_titleType_0, #DTE_Field_titleType_1, #DTE_Field_titleType_2"
+			);
+			const updateCustomNameVisibility = () => {
+				const isCustom = $($titleTypeRadios[2]).is(":checked");
+				$titleNameFieldWrapper.toggle(isCustom);
+				if (!isCustom) {
+					$titleNameInput.val($("input[name=titleType]:checked").val());
+				} else {
+					var currentValue = $titleNameInput.val();
+					if (currentValue === "groupName" || currentValue === "rootGroupName") {
+						$titleNameInput.val("");
+					}
+				}
+			};
+			const titleNameValue = $titleNameInput.val();
+			if (titleNameValue && titleNameValue !== "") {
+				if ("groupName"===titleNameValue) {
+					$titleTypeRadios[0].checked = true;
+				} else if ("rootGroupName" === titleNameValue) {
+					$titleTypeRadios[1].checked = true;
+				} else {
+					$titleTypeRadios[2].checked = true;
+				}
+			}
+			$titleTypeRadios.on("change", updateCustomNameVisibility);
+			updateCustomNameVisibility();
+		});
+	}
+</script>

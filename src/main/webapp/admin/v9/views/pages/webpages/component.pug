@@ -19,16 +19,20 @@ block content
         let componentDatatable = null,
             componentClass,
             componentPath = null,
-            componentColumns = null;
+            componentColumns = null,
+            componentJson = null,
+            requestJson = null,
+            multidata = null,
+            jsonData = null,
+            originalJspFileName = null;
 
         //WJ.debugTimer(true);
         WJ.debugTimer("component.pug");
 
         window.domReady.add(function () {
-            var componentJson = [(${componentJson})];
-            var requestJson = [(${requestJson})];
-            var requestJsonTest = [(${requestJsonTest})];
-            //console.log("componentJson=", componentJson, "requestJson=", requestJson, "requestJsonTest=", requestJsonTest);
+            componentJson = [(${componentJson})];
+            requestJson = [(${requestJson})];
+            //console.log("componentJson=", componentJson, "requestJson=", requestJson);
 
             if (componentJson == null || requestJson == null) {
                 return;
@@ -40,7 +44,7 @@ block content
             let groupId = requestJson.groupId;
             let title = requestJson.pageTitle;
             let originalComponentName = requestJson.originalComponentName;
-            let originalJspFileName = requestJson.originalJspFileName;
+            originalJspFileName = requestJson.originalJspFileName;
 
             componentPath = componentClass;
 
@@ -102,11 +106,12 @@ block content
             });
 
             response.data['id'] = 1;
-            var multidata = convertMultichoiseData(response.data);
+            //console.log("response.data=", response.data);
+            multidata = convertMultichoiseData(response.data);
             //console.log("multidata=", multidata, "original=", response.data);
 
             //create json data for editor, prevent call to REST service using "forceData": true
-            let jsonData = {
+            jsonData = {
                 "content": [
                     multidata
                 ],
@@ -196,6 +201,15 @@ block content
                 }
             }
 
+            window.addEventListener("WJ.DTE.opened", function () {
+                //set componentPath to select if exists
+                let $appComponentPathSelect = $(".DTED.show .dt-app-componentPath select");
+                if ($appComponentPathSelect.length > 0) {
+                    $appComponentPathSelect.selectpicker("val", originalJspFileName);
+                    $appComponentPathSelect.trigger("change");
+                }
+            });
+
             if (typeof window.appAfterInit === "function") {
                 window.appAfterInit(response, componentDatatable);
             }
@@ -262,6 +276,11 @@ block content
 
                 if (typeof window.appGetComponentPath === "function") {
                     componentPath = window.appGetComponentPath(componentPath, componentDatatable);
+                } else {
+                    let $appComponentPathSelect = $(".DTED.show .dt-app-componentPath select");
+                    if ($appComponentPathSelect.length > 0) {
+                        componentPath = $appComponentPathSelect.val();
+                    }
                 }
 
                 let include = "!INCLUDE(" + componentPath;
@@ -307,8 +326,14 @@ block content
                     continue;
                 }
 
-                if (typeof column.className != "undefined" && column.className != null && column.className.indexOf("dt-style-base64")!=-1) {
-                    value = WJ.base64encode(value);
+                if (typeof column.className != "undefined" && column.className != null) {
+                    if (column.className.indexOf("dt-app-skip")!=-1) {
+                        //skip this columns, it's just supporting column not used in include
+                        continue;
+                    }
+                    else if (column.className.indexOf("dt-style-base64")!=-1) {
+                        value = WJ.base64encode(value);
+                    }
                 }
 
                 // boolean prichadza ako array

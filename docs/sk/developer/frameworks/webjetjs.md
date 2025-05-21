@@ -2,32 +2,6 @@
 
 WebJET v súbore webjet.js zapúzdruje API použitých knižníc. Cieľom je, aby sa nepoužívali priamo API volania z knižníc, ale zapúzdrené volania cez naše funkcie. Umožní nám to bez zmeny API prípadne vymeniť použitú knižnicu.
 
-
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [WebJET JavaScript funkcie](#webjet-javascript-funkcie)
-  - [Notifikácie](#notifikácie)
-  - [Potvrdenie akcie](#potvrdenie-akcie)
-  - [Získanie hodnoty](#získanie-hodnoty)
-  - [Formátovanie dátumu a času](#formátovanie-dátumu-a-času)
-  - [Formátovanie čísel](#formátovanie-čísel)
-  - [Iframe dialóg](#iframe-dialóg)
-  - [Dialóg pre výber súboru/odkazu](#dialóg-pre-výber-súboruodkazu)
-  - [Udržiavanie spojenia so serverom (refresher)](#udržiavanie-spojenia-so-serverom-refresher)
-  - [Navigačná lišta](#navigačná-lišta)
-  - [Karty v hlavičke](#karty-v-hlavičke)
-  - [Kontrola práv](#kontrola-práv)
-  - [Markdown parser](#markdown-parser)
-  - [Perzistentné nastavenia používateľa](#perzistentné-nastavenia-používateľa)
-    - [Použitie na frontende](#použitie-na-frontende)
-    - [Použitie na backende](#použitie-na-backende)
-  - [Animácia načítania](#animácia-načítania)
-  - [Ostatné funkcie](#ostatné-funkcie)
-
-<!-- /code_chunk_output -->
-
 ## Notifikácie
 
 Pre notifikácie používame knižnicu [toastr](https://github.com/CodeSeven/toastr), pripravené sú nasledovné JS funkcie:

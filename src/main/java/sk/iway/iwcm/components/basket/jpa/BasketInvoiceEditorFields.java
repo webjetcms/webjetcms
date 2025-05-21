@@ -28,7 +28,7 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
     private Integer exportTotalItemsCount;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.CHECKBOX,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title="components.basket.sendNotificationToClient",
 		tab = "basic",
         hidden = true,
@@ -91,7 +91,7 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/eshop/basket-payments?invoiceId={id}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "import")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "celledit,import")
             }
         )
     })
@@ -104,7 +104,7 @@ public class BasketInvoiceEditorFields extends BaseEditorFields {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/eshop/basket-items?invoiceId={id}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,duplicate,import"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,celledit,duplicate,import"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'itemPreview', 'title': '[[#{editor.preview}]]', 'content': '<div class=\\\"previewContainer\\\"><iframe id=\\\"itemPreviewIframe\\\" src=\\\"about:blank\\\" width=\\\"100%\\\" height=\\\"500\\\"></iframe></div>' }]")
             }
         )

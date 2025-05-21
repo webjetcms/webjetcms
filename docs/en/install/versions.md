@@ -13,6 +13,7 @@ ext {
 ```
 
 Currently there are the following versions of WebJET:
+- `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
 - `2025.0` - Stabilized version 2025.0, no daily changes added
 - `2024.52` - stabilized version 2024.52, no daily changes added
 - `2024.0.52` - Stabilized version 2024.0.52 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
@@ -55,6 +56,39 @@ View Full Version `YEAR.0.x` is therefore not fundamentally changed, it contains
 But at the same time, the version does not have to be `YEAR.0.x` the safest. If the library used in WebJET needs to be updated and it contains major changes, we cannot make this change in `YEAR.0.x` version, as it would break compatibility.
 
 It is therefore true that `YEAR.0.x` Is **most stable** in terms of changes and `YEAR.0-SNAPSHOT` Is **safest** in terms of vulnerabilities.
+
+## Changes in the transition to 2025.0-SNAPSHOT
+
+View Full Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), you therefore need to add the configuration to your `build.gradle` file:
+
+```gradle
+repositories {
+    mavenCentral()
+    maven {
+        url "https://pd4ml.tech/maven2/"
+    }
+    maven {
+        name = "github"
+        url = uri("https://maven.pkg.github.com/webjetcms/webjetcms")
+        credentials {
+            //define in gradle.properties or as environment variables
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+            password = project.findProperty("gpr.api-key") ?: System.getenv("GPR_API_KEY")
+        }
+    }
+    flatDir {
+       dirs 'libs'
+   }
+}
+```
+
+Unfortunately GitHub Packages are not publicly available, so you need to set up a login `gpr.user` a `gpr.api-key` in the file `gradle.properties` or via `ENV` Variables. We will provide login details on request.
+
+!> **Warning:** modified initialization of Spring and JPA:
+- JPA entities are in `package sk.iway.INSTALL-NAME` do not initialize automatically, a gradual transition to Spring DATA is assumed. If you need `@Entity` initialize set configuration variable `jpaAddPackages` to the necessary value - for example `sk.iway.INSTALL-NAME`. Only classes containing an annotation are initialized `@Entity` or `@Converter`.
+- In `web.xml` initialization is no longer required `Apache Struts`, delete the entire `<servlet>` a section containing `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` Containing `<servlet-name>action</servlet-name>`.
+- Modified Spring initialization order - initialization of WebJET classes is done before customer classes `SpringConfig`.
+- Modified initialization `Swagger` - if the configuration variable is not set `swaggerEnabled` to the value of `true` nor does it perform a scan of Java classes at startup.
 
 ## Changes in the transition to 2024.0-SNAPSHOT
 

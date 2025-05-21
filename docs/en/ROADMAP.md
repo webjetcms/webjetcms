@@ -38,14 +38,14 @@ Explanation of the pictograms used:
 - [ ] Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants`.
 - [ ] Gallery - when duplicating an image, enable the "Folder" change to allow us to duplicate images to a folder other than the current folder.
 - [ ] Bulk email - audit changes in user groups.
-- [ ] Archive files - rebuild into data tables (#57317).
+- [x] Archive files - rebuild into data tables (#57317).
 - [ ] Optional fields - add the option to select multiple items to link to the dial.
 - [ ] eCommerce - integration to payment gateway `GoPay` (#56609).
 - [ ] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Authorisation via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.
-- [ ] Reservations - new app for all day reservations (#57389).
+- [x] Reservations - new app for all-day reservations (#57389).
 - [ ] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
-- [ ] Bulk email - optimizing recipient list creation (#57537).
+- [x] Bulk email - optimizing recipient list creation (#57537).
 - [ ] +Background Tasks - option to manually run the task on `node` that has the task set, now it will run on `node` where the user is logged in.
 - [ ] +Forms - disable `GET` call to `FormMail/FormMailAjax`.
 - [ ] +Ecommerce - add to email `JSON-LD` Data https://schema.seznam.cz/objednavky/dokumentace/.
@@ -54,6 +54,16 @@ Explanation of the pictograms used:
 - [ ] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
 - [ ] +Photobank - add option to set file name before downloading from photobank, automatically set by search term.
 - [ ] +Gallery - if I set the perex image to an image in the gallery, download from the photo library, and rename the image to an existing one in the database (if the file is deleted from the disk) it will be created in `gallery` duplicate record in the table. Additionally, other images are not renamed `o_,s_`. The thing to remember is that theoretically I can rename any, it should detect that I'm in the gallery and rename all versions.
+- [x] +Configuration - add setting option `Hikari` via `poolman.xml/ENV` such as `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000` (#54273-61).
+- [ ] Datatable - fix counting of selected rows after their deletion.
+- [ ] +Search Engine - set folder properties (indexing, rights) according to the parent (recursively) on first opening, if the folder has no settings in the database.
+- [ ] +For a field of type `DataTableColumnType.JSON` specifically `className = "dt-tree-page-null"` add the option to define a root folder.
+- [ ] +Move all `Converter` classes such as. `DocDetailsNotNullConverter` into a separate `package` where there will be no other entities to make this `Converter` can also be used in projects where a separate `JPA`.
+- [ ] +Add the option to set the HTTP header name for `x-forwarded-for` and determine which of the IP addresses to use (first VS last).
+- [ ] +Tables - add the option to arrange by multiple columns by clicking with the key `SHIFT`.
+- [ ] +Tables - add option `hideOnDuplicate` for cards in the editor, not forgetting also the class `DataTableTab` so that it can also be set in the annotation.
+- [ ] +Add the option to move to the parent folder in the Media of this page.
+- [ ] +Configuration - if `cluster` add the option to set the variable only for the current node (do not save it to the database). Originally this was handled by the selection field `applyToAllClusterNodes`.
 
 ## 2024
 

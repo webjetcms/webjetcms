@@ -2,24 +2,6 @@
 
 Knižnica [jsTree](https://www.jstree.com/) je jquery ```plugin```, ktorým zobrazujeme stromové štruktúry vo WebJETe.
 
-
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [jsTree](#jstree)
-  - [Základná inicializácia v spolupráca so Spring REST](#základná-inicializácia-v-spolupráca-so-spring-rest)
-  - [Konfigurácia](#konfigurácia)
-    - [Vytvorenie nového REST controllera](#vytvorenie-nového-rest-controllera)
-    - [Vlastné typy objektov](#vlastné-typy-objektov)
-    - [Úprava zobrazenia](#úprava-zobrazenia)
-    - [Zmena URL adresy REST služby](#zmena-url-adresy-rest-služby)
-  - [Ikony a CSS triedy](#ikony-a-css-triedy)
-    - [Spôsob použitia ikon](#spôsob-použitia-ikon)
-
-<!-- /code_chunk_output -->
-
-
 ## Základná inicializácia v spolupráca so Spring REST
 
 WebJET implementácia jsTree sa konfiguruje pomocou JSON objektu v ```app.js```.

@@ -43,15 +43,15 @@ Scenario('rating screen', ({ I , DT, DTE, Document }) => {
     Document.editorComponentOpen();
     Document.screenshot("/redactor/apps/rating/rating-form_app.png");
 
-    I.selectOption('select[name=ratingType]', 'rating_page');
+    DTE.selectOption("ratingType", "Rating stránky");
     I.wait(1);
     Document.screenshot("/redactor/apps/rating/rating-page_app.png");
 
-    I.selectOption('select[name=ratingType]', 'rating_top_users');
+    DTE.selectOption("ratingType", "Top používatelia");
     I.wait(1);
     Document.screenshot("/redactor/apps/rating/rating-top-users_app.png");
 
-    I.selectOption('select[name=ratingType]', 'rating_top_pages_new');
+    DTE.selectOption("ratingType", "Top stránky");
     I.wait(1);
     Document.screenshot("/redactor/apps/rating/rating-top-pages_app.png");
 });

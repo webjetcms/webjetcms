@@ -46,7 +46,7 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     I.see('Hlavný dokument : files/archiv/archive_export_import.pdf');
     I.see('Hlavný dokument : files/archiv/archive_replace.pdf');
     I.see('Naplanovaný hlavný dokument : files/archiv/files/archiv_insert_later/files/archiv/archive_file_test_fifth.pdf');
-    I.handleDownloads("downloads/" + exportedZipFileName);
+    I.handleDownloads(`downloads/${exportedZipFileName}`);
     I.clickCss("//div[@id='dialogCentralRow']//p//a[contains(@href, '.zip')]");
 
     // 3. Vymazanie súboru a nahradenie
@@ -63,7 +63,8 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
 
     // 4. Importovanie
     I.say("Phase4 - Importing the file");
-    await SL.importFile("../../../build/test/downloads/" + exportedZipFileName, true);
+    I.amInPath('../../../build/test/downloads');
+    await SL.importFile(exportedZipFileName);
 
     // 5. Verifikovanie
     I.say("Phase5 - Verification");
@@ -89,7 +90,7 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
     await SL.removeFileByElfinder(importFileSelector);
 
     SL.deleteTestFiles();
-    
+
     const fileSelector = ".elfinder-cwd-filename[title^='archive_export_import']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);
     if (wasRemovedByElfinder){

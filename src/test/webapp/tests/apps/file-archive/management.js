@@ -87,7 +87,9 @@ function manageProductCategory(I, DT, DTE, entityType, entityName, action){
         I.click(DT.btn[`${entityType}_edit_button`]);
         DTE.waitForEditor(`${entityType}ManagerDataTable`);
         DTE.fillField("newName", entityName + "-chan.ge");
-        DTE.save(`${entityType}ManagerDataTable`);
+        I.click({ css: `#${entityType}ManagerDataTable_modal` + ".DTED.show div.DTE_Footer.modal-footer button.btn.btn-primary" });
+        DT.waitForLoader();
+        //DTE.save(`${entityType}ManagerDataTable`);
         DT.checkTableCell(`${entityType}ManagerDataTable`, 1, 2, entityName + "-chan.ge");
     } else if (action === "delete") {
         DT.deleteAll(`${entityType}ManagerDataTable`);

@@ -2,31 +2,6 @@
 
 Knihovna [datatables.net](http://datatables.net) je pokročilá tabulka s napojením na REST služby.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Datatables](#datatables)
-  - [Základní inicializace v spolupráce s Spring REST](#základní-inicializace-v-spolupráce-s-spring-rest)
-  - [Možnosti konfigurace](#možnosti-konfigurace)
-    - [Nastavení sloupců](#nastavení-sloupců)
-    - [Zobrazení HTML kódu](#zobrazení-html-kódu)
-  - [Přidání/odebrání tlačítek](#přidání-odebrání-tlačítek)
-  - [Tlačítko pro provedení serverové akce](#tlačítko-pro-provedení-serverové-akce)
-  - [Tlačítka podle práv](#tlačítka-podle-práv)
-  - [Stylování řádku](#stylování-řádku)
-  - [Stavové ikony](#stavové-ikony)
-  - [Zobrazení dat na základě práv](#zobrazení-dat-na-základě-práv)
-  - [Uspořádání](#uspořádání)
-  - [Vyhledávání](#vyhledávání)
-  - [Externí filtr](#externí-filtr)
-  - [Export/import](#exportimport)
-  - [API volání](#api-volání)
-  - [Ukázky kódu](#ukázky-kódu)
-    - [Poslech události obnovení tabulky](#poslech-události-obnovení-tabulky)
-    - [Změna hodnot výběrového pole](#změna-hodnot-výběrového-pole)
-
-<!-- /code_chunk_output -->
-
 ## Základní inicializace v spolupráce s Spring REST
 
 WebJET implementace datatables se konfiguruje pomocí JSON objektu columns. V tomto objektu je definice sloupců pro datatabulku i pro datatables editor. Konstruktorem WJ.DataTable se následně tabulka inicializuje.

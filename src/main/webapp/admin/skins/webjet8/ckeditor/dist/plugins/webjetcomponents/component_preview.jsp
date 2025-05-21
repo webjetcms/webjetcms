@@ -150,6 +150,7 @@ else
 			}
 
 			request.setAttribute("doc_id", Integer.valueOf(doc.getDocId()));
+			request.setAttribute("group_id", Integer.toString(doc.getGroupId()));
 			request.setAttribute("doc_title", doc.getTitle());
 			request.setAttribute("doc_title_original", doc.getTitle());
 			if (Constants.getBoolean("docTitleIncludePath"))

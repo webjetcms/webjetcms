@@ -1,16 +1,5 @@
 # Instalace a spuštění
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [Instalace a spuštění](#instalace-a-spuštění)
-  - [Webpack build JS, CSS a PUG souborů](#webpack-build-js-css-a-pug-souborů)
-  - [Build Java tříd a spuštění Tomcatu](#build-java-tříd-a-spuštění-tomcatu)
-  - [Nastavení hosts souboru](#nastavení-hosts-souboru)
-  - [Testování](#testování)
-
-<!-- /code_chunk_output -->
-
 Pokud ještě nemáte, nainstalujte si [VS Code s doporučenými závislostmi a rozšířeními](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - postupujte pouze po část instalace rozšíření, následné kapitoly `Pull` projektu z SVN a nastavení Tomcat-u se vás už netýká.
 
 V projektu používáme [lombok](https://projectlombok.org), nainstalujte si rozšíření do vašeho vývojového prostředí - na web stránce klikněte na menu položku `Install` av sekci IDEs postupuje podle návodu.

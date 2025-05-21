@@ -394,7 +394,7 @@ module.exports = {
                 I.say("Overujem UPDATE záznam...");
                 I.assertTrue(detailText.includes("UPDATE:"), 'UPDATE záznam neobsahuje úvodný riadok "UPDATE:"');
                 if (detailText.includes("prop_key: ")){
-                    I.assertTrue((detailText.includes(description)), `UPDATE záznam neobsahuje očakávaný riadok: ${description}`);
+                    I.assertTrue(detailText.includes(description), `UPDATE záznam neobsahuje očakávaný riadok: ${description}`);
                 } else {
                     const expectedLine = `${description} -> ${description}-chan.ge`;
                     I.assertTrue(( detailText.includes(expectedLine)), `UPDATE záznam neobsahuje očakávaný riadok: ${expectedLine}`);

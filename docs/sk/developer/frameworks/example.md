@@ -2,18 +2,6 @@
 
 Ukážkový kód vytvorenia novej CRUD aplikácie v administrácii.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Ukážkový kód](#ukážkový-kód)
-  - [Pug súbor](#pug-súbor)
-  - [Spring DATA repozitár a JPA Entita/Bean](#spring-data-repozitár-a-jpa-entitabean)
-  - [Rest služba](#rest-služba)
-
-<!-- /code_chunk_output -->
-
-
 ## Pug súbor
 
 Vytvorte si pug súbor s HTML kódom stránky. Odporúčame vám skopírovať kód napr. z [audit-notifications.pug](../../../src/main/webapp/admin/v9/views/pages/apps/audit-notifications.pug). Súbor umiestnite do adresára `settings` ak sa jedná o nastavenia, alebo do adresára `apps` ak sa jedná o štandardnú aplikáciu.

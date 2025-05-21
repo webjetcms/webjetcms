@@ -298,7 +298,7 @@
                 "reveal": "silent",
                 "clear": true,
                 "showReuseMessage": false,
-                "close": true
+                "close": false
             }
         },
         {

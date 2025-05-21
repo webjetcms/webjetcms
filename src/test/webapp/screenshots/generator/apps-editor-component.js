@@ -164,7 +164,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     screenshotWebAndApp(I, Document, 77776, "/components/related-pages", ".ly-content .container", tabLinkNone, null, 800, 600);
     screenshotWebAndApp(I, Document, 77868, "/components/app-impress_slideshow", "#jms-slideshow", tabLink1, tabLink2, 800, 600);
     screenshotWebAndApp(I, Document, 70839, "/components/rating", ".ly-content .container", tabLinkNone, null, 800, 600);
-    screenshotWebAndApp(I, Document, 39096, "/components/reservation", ".ly-content .container", tabLink2, tabLink3);
+    screenshotWebAndApp(I, Document, 39096, "/components/reservation", ".ly-content .container", tabLink2Spring, tabLink3Spring);
 
     screenshotWebAndApp(I, Document, 74621, "/components/restaurant_menu", ".restaurant-menu", tabLink1, tabLink2);
     I.amOnPage("/apps/restaurant-menu/?NO_WJTOOLBAR=true&week=2023-W48");

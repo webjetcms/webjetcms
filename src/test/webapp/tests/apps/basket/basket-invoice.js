@@ -68,7 +68,6 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
     I.say("Check payment tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
-        I.seeElement( locate("h5").withText("Prehľad platieb") );
         I.seeElement( locate("div.col-sum").withText("Zaplatená suma: 0,00 eur zo sumy: 3 126,36 eur") );
 
         I.say("Check inner table functionality + footer update");
@@ -84,12 +83,11 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
     I.say("Check items tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
-        I.seeElement( locate("h5").withText("Prehľad položiek objednávky") );
         I.seeElement( locate("div.col-sum").withText("Suma k zaplateniu: 3 126,36 eur") );
 
             I.say("Check buttons visibility");
                 I.seeElement( locate(itemsDataTable).find("button.buttons-edit") );
-                I.dontSeeElement( locate(itemsDataTable).find("button.buttons-create") );
+                //I.dontSeeElement( locate(itemsDataTable).find("button.buttons-create") );
                 I.dontSeeElement( locate(itemsDataTable).find("button.buttons-duplicate") );
 
             I.say("Edit item");

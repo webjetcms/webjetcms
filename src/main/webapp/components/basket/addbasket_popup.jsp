@@ -1,5 +1,8 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
-<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.components.basket.*,java.util.*" %>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
+
+<%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
+<%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -39,23 +42,23 @@
 <%
 	if ("add".equals(request.getParameter("act")))
 	{
-		boolean ok = BasketDB.setItemFromDoc(request);
+		boolean ok = EshopService.getInstance().setItemFromDoc(request);
 		
 		if (ok)
 		{
-		   List<BasketItemBean> items = BasketDB.getBasketItems(request);
+		   List<BasketInvoiceItemEntity> items = EshopService.getInstance().getBasketItems(request);
 			%>
 				<iwcm:text key="components.basket.addbasket_popup.product_added"/>
 	
 				<br /><br />
 				<span id='basketSmallItems'>
-					<iwcm:text key="components.basket.total_items"/>: <span class="pocet"><%=BasketDB.getTotalItems(items)%></span>
+					<iwcm:text key="components.basket.total_items"/>: <span class="pocet"><%=EshopService.getTotalItems(items)%></span>
 				</span>
 				<span id='basketSmallPrice'>
 					<iwcm:text key="components.basket.total_price"/>: 
 					<span class="cena">
-						<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>">
-							<%=BasketDB.getTotalLocalPriceVat(items,request)%>
+						<iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>">
+							<%=EshopService.getTotalLocalPriceVat(items,request)%>
 						</iway:curr>
 					</span>
 				</span>
@@ -133,7 +136,7 @@ function recalculateTotal()
 		<table border="0" cellspacing="0" cellpadding="2" width="100%">		
 			<tr>
 				<td><iwcm:text key="components.basket.addbasket_popup.price"/>:</td>
-				<td width="70%" nowrap><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
+				<td width="70%" nowrap><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 				<td valign="top" rowspan=2 align="right">
 					<input type="submit" id="bSubmit" name="bSubmit" value="<iwcm:text key="components.basket.addbasket_popup.add"/>">
 					<input type="hidden" name="basketItemId" value="<%=itemId%>" />
@@ -166,7 +169,7 @@ function recalculateTotal()
 			</tr>
 			<tr>
 				<td><iwcm:text key="components.basket.addbasket_popup.all"/>:</td>
-				<td id="tdTotal" colspan=2><b><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></b></td>
+				<td id="tdTotal" colspan=2><b><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></b></td>
 			</tr>		
 		</table>
 		</form>

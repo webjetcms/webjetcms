@@ -1,6 +1,5 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
+<%@page import="java.math.BigDecimal"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
-<%@ page import="sk.iway.iwcm.components.basket.BasketDB" %>
 
 <%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 <%@ taglib prefix="iway" uri="/WEB-INF/iway.tld" %>

@@ -41,9 +41,7 @@ import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
 
-//import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-//import javax.persistence.PersistenceUnit;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Path;
@@ -1006,7 +1004,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			return builder.and(predicates.toArray(new Predicate[predicates.size()]));
 		};
 	}
-
 
 	/**
 	 * Doplnenie pecialneho vyhladavanie, interne vola:

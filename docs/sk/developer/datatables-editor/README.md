@@ -2,27 +2,6 @@
 
 [Editor pre datatables](http://editor.datatables.net) je rozšírenie pre datatables.net. Pre zobrazenie dokumentácie musíte byť prihlásený na stránke editor.datatables.net, inak neuvidíte kompletnú dokumentáciu.
 
-
-<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Datatables EDITOR](#datatables-editor)
-  - [Karty v editore](#karty-v-editore)
-  - [Možnosti konfigurácie columns objektu](#možnosti-konfigurácie-columns-objektu)
-  - [Udalosti](#udalosti)
-  - [Štýlovanie](#štýlovanie)
-  - [Špeciálne tlačidlá](#špeciálne-tlačidlá)
-  - [Ukážky kódu](#ukážky-kódu)
-    - [Dynamická zmena hodnôt vo výberovom poli](#dynamická-zmena-hodnôt-vo-výberovom-poli)
-    - [Získanie JSON objektu pred editáciou](#získanie-json-objektu-pred-editáciou)
-    - [Programové otvorenie editora](#programové-otvorenie-editora)
-    - [Podmienené zobrazenie vstupného poľa](#podmienené-zobrazenie-vstupného-poľa)
-    - [API funkcie](#api-funkcie)
-
-<!-- /code_chunk_output -->
-
-
 ## Karty v editore
 
 WebJET verzia Editora má implementovanú podporu kariet. Každá karta musí mať unikátne ``id``, na ktoré sa v columns definícii v časti editor nastavuje karta, do ktorej sa presunie dané pole. Ak hodnota ```tab``` v columns definícii nie je nastavená pole sa presunie do prvej karty.

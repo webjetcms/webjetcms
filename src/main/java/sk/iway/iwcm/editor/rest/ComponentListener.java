@@ -51,7 +51,6 @@ public class ComponentListener {
         String className = event.getSource().getRequest().getParameter("className");
         String componentJson = "null";
         String requestJson = "null";
-        String requestJsonTest = "null";
         if (Tools.isNotEmpty(className)) {
             try {
                 ComponentRequest componentRequest = new ComponentRequest();
@@ -72,6 +71,5 @@ public class ComponentListener {
         }
         model.addAttribute("componentJson", componentJson);
         model.addAttribute("requestJson", requestJson);
-        model.addAttribute("requestJsonTest", requestJsonTest);
     }
 }

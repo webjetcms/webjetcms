@@ -49,7 +49,7 @@ Scenario('multigroup - change URL by title', ({ I, DT, DTE }) => {
         if (docId == masterDocId) url += "master";
         else url += "slave";
         url += "/"+title.toLowerCase().replace(/ /g, "-");
-        I.seeInField("#DTE_Field_virtualPath", url);
+        I.waitForElement(locate("#DTE_Field_virtualPath", url), 10)
 
         DTE.cancel();
     }
@@ -106,6 +106,7 @@ Scenario('multigroup - preserve sort order', ({ I, DTE }) => {
     //
     I.say("Changing master sort order");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+masterDocId);
+    I.waitForElement('#DTE_Field_virtualPath', 10);
     DTE.seeInField('virtualPath', '/test-stavov/multigroup/master/multi-page-change.html');
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-menu-tab");

@@ -112,6 +112,12 @@ You insert links/references to other pages in the same way as a link to a docume
 - Select the text (word) to be clickable as a link. Then click on the Link icon ![](link.png ":no-zoom") or by using the shortcut `CTRL+ k`. This will open a dialog box in which you need to select **Web pages** and search the tree structure for the page you want to link to. When you click on the page name, the address of the selected page will be copied into the URL address field. By confirming `OK` a link to the selected web page will be created on the page.
 - If you want to insert a link to a page located on another website (link to an external website), enter its address directly into the URL address field (including the prefix `https://`). At the same time, the field is automatically changed **Goal** (in the Target tab) to the value **New window (`_blank`)** &#x77;hich will ensure that when you click on this link, the page will open in a new browser window/tab. The  field **Goal** down to the value of **New window (`_blank`)** is also set if you want to create a link to the document for download. If you do not want the link to open in a new window, the parameter **Goal** set to **The same window `_self`**. However, for links to external websites and documents, opening the link in a new window is recommended.
 
+## Buttons
+
+If a link or button is inserted in a web page that has a CSS style set containing an expression `btn-` or CSS style has a value set `display` Containing `block`, thus also for example `inline-block` clicking on such a link in the editor will display the button settings window. In it, you can easily change the button text and set the link after clicking. Alternatively, you can also change the background color, font and corner rounding, but by default we do not recommend changing these values - they should be set according to the CSS styles of the web page.
+
+![](link_dialog_button.png)
+
 ## Inserting images
 
 To insert an image on the page, place the cursor on the row or cell of the table where the image is to be located and click on the icon to insert the image ![](image.png ":no-zoom").

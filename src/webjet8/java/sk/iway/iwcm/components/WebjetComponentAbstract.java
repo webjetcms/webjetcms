@@ -1,11 +1,15 @@
 package sk.iway.iwcm.components;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.BeanWrapperImpl;
+
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.OptionDto;
@@ -109,6 +113,45 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
             }
         }
         return options;
+    }
+
+    /**
+     * Add options from list type id:label, id will be converted to string and used as value for option.
+     * Use in getAppOptions method like:
+     *
+     * Map&lt;String, List&lt;OptionDto&gt;&gt; options = new HashMap&lt;&gt;();
+     * options.put("groups", addOptions(MediaDB.getGroups(), "mediaGroupName", "mediaGroupId", false));
+     * return options;
+     *
+     * @param options - list of objects
+     * @param labelProperty - name of label property in options list
+     * @param valueProperty - name of value property in options list
+     * @param includeOriginalObject - if true, original object will be added to OptionDto
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public List<OptionDto> addOptions(List options, String labelProperty, String valueProperty, boolean includeOriginalObject) {
+        List<OptionDto> fieldOptions = new ArrayList<>();
+        for (Object o : options) {
+            BeanWrapperImpl bw = new BeanWrapperImpl(o);
+
+            String label;
+            String value;
+
+            if(Tools.isEmpty(labelProperty) && Tools.isEmpty(valueProperty)) {
+                label = (String)o;
+                value = (String)o;
+            } else {
+                label = String.valueOf(bw.getPropertyValue(labelProperty));
+                value = String.valueOf(bw.getPropertyValue(valueProperty));
+            }
+
+            Object original;
+            if (includeOriginalObject) original = o;
+            else original = null;
+            fieldOptions.add(new OptionDto(label, value, original));
+        }
+        return fieldOptions;
     }
 
     @Override

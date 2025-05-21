@@ -1,0 +1,212 @@
+<script type="text/javascript" src="/components/_common/html2pdf/index.js"></script>
+<link rel="stylesheet" type="text/css" href="/components/basket/css/invoice-detail.css" />
+
+<div class="basket-invoice-list-app">
+    <div class="table-responsive" style="display: contents;">
+
+        <table id="listOfInvoices" class="table tabulkaStandard">
+            <tr class="invoice-tr-header bg-light">
+                <td data-th-text="#{components.basket.invoices_list.cislo_objednavky}" >id</td>
+                <td data-th-text="#{components.basket.invoice.date_created}" >createDate</td>
+                <td data-th-text="#{components.basket.invoice.price}" >price</td>
+                <td data-th-text="#{components.basket.invoice.currency}" >currency</td>
+                <td data-th-text="#{components.basket.invoice.state}" >status</td>
+            </tr>
+            <tr data-th-each="data : ${dataList}" data-th-id="${data.invoiceId}" class="invoice-tr" th:attr="onclick=|showInvoiceDetails('${data.invoiceId}','${data.authorizationToken}', '${data.balanceToPay}')|">
+                <td data-th-text="${data.invoiceId}">invoiceId</td>
+                <td data-th-text="${tools.formatDateTime(data.createDate)}">createDate</td>
+                <td data-th-text="${currencyTag.formatNumber(data.priceToPayVat)}">price</td>
+                <td data-th-text="${data.currency}">currency</td>
+                <td data-th-with="statusKey='components.basket.invoice.status.' + ${data.statusId}" data-th-text="#{${statusKey}}">status</td>
+            </tr>
+        </table>
+
+        <div id="invoice-detail">
+            <div class="row detail-buttons-div">
+                <button class="btn btn-primary" onclick="$('#invoice-detail').hide(); $('table').show();">
+                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-left">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M5 12l14 0" />
+                        <path d="M5 12l4 4" />
+                        <path d="M5 12l4 -4" />
+                    </svg>
+                    <span data-th-text="#{components.search.back}">Back to list of invoices</span>
+                </button>
+
+                <button id="downloadInvoiceDetails" class="btn btn-primary">
+                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-file-download">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                        <path d="M12 17v-6" />
+                        <path d="M9.5 14.5l2.5 2.5l2.5 -2.5" /></svg>
+                    <span data-th-text="#{components.basket.download_invoice}">Download invoice details</span>
+                </button>
+
+                <button id="payForOrderBtn" class="btn btn-primary">
+                    <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-wallet">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 1 -2 -2v-12" />
+                        <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4" />
+                    </svg>
+                    <span data-th-text="#{components.basket.pay_for_oder}">Pay for order</span>
+                </button>
+            </div>
+
+            <iframe frameborder="0" id="dataDiv" width="95%" height="950px" src="about:blank"></iframe>
+        </div>
+
+        <div id="paymentDiv"></div>
+
+        <form id="payForOrderForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${toPayOrder}" method="post" style="display: none;">
+            <input type="text" class="form-control" id="invoiceId" data-th-field="*{invoiceId}">
+            <input type="text" class="form-control" id="authorizationToken" data-th-field="*{authorizationToken}">
+            <button type="submit" class="btn btn-primary" id="saveFormBtn" name="saveForm" style="display: none;">Submit</button>
+        </form>
+    </div>
+
+    <style>
+        .invoice-tr-header {
+            td {
+                font-size: 16px;
+            }
+        }
+
+        .invoice-tr {
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            line-height: 24px;
+            font-size: 16px;
+            font-family: Arial;
+
+            td {
+                font-size: 16px !important;
+            }
+        }
+
+        .invoice-tr:hover {
+            background-color: #0063FB;
+            color: white;
+        }
+
+        .detail-buttons-div {
+            padding-bottom: 10px;
+            display: flex;
+            /* justify-content: space-between; */
+
+            button {
+                padding: 0px 7px;
+                margin: 5px;
+            }
+        }
+
+        #paymentDiv {
+            p, span {
+                font-size: 16px;
+                font-family: Arial;
+            }
+        }
+    </style>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+            var action = /*[[${act}]]*/ "view";
+            console.log("action: " + action);
+
+            let destination = /*[[${request.getAttribute('ninja').page.urlPathQString}]]*/ "";
+            console.log("destination: " + destination);
+
+            $("#invoice-detail").hide();
+
+            if("view" == action) {
+                $("#paymentDiv").hide();
+            }
+            else if("pay" == action) {
+                console.log("pay action");
+
+                $("#listOfInvoices").hide();
+                $("#paymentDiv").show();
+
+                let cellId = $("#invoiceId").val();
+                let cellToken = $("#authorizationToken").val();
+
+                $.ajax({
+                    type:'GET',
+                    url: "/components/basket/repeat_payment.jsp?invoiceId=" + cellId + "&auth=" + cellToken + "&destination=" + destination,
+                    success:function(data)
+                    {
+                        $("#paymentDiv").html(data);
+                    }
+                });
+            }
+            else if("afterpay" == action) {
+                console.log("afterPay action");
+
+                $("#listOfInvoices").hide();
+                $("#paymentDiv").show();
+
+                let invoicePaymentId = /*[[${invoicePaymentId}]]*/ "";
+                let realPaymentId = /*[[${realPaymentId}]]*/ "";
+
+                $.ajax({
+                    type:'GET',
+                    url: "/components/basket/order_payment_reply.jsp?invoicePaymentId=" + invoicePaymentId + "&id=" + realPaymentId,
+                    success:function(data)
+                    {
+                        $("#paymentDiv").html(data);
+                    }
+                });
+            }
+
+            function downloadInvoiceDetails(invoiceId) {
+                const iframe = document.getElementById("dataDiv");
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const toExport = iframeDoc.body.getElementsByClassName("invoiceDetailWrappingTable")[0];
+
+                const clonedContent = toExport.cloneNode(true);
+                clonedContent.style.margin = "0px";
+                clonedContent.style.padding = "0px";
+
+                html2pdf(clonedContent, {
+                    margin: [0, 0, 0, 0],
+                    filename: "invoice_" + invoiceId + ".pdf",     // PDF file name
+                    image: { type: "jpeg", quality: 1.0 }, // Use highest quality
+                    html2canvas: { scale: 3 , useCORS: true }, // Increase scale for better quality (default is 1)
+                    jsPDF: { format: "a4", orientation: "portrait" }, // Set PDF format
+                    pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+                });
+            }
+
+            function showInvoiceDetails(cellId, cellToken, balanceToPay) {
+                //Show/hide AND set payForOrder button
+                var num = parseFloat(balanceToPay);
+                if(num > 0) {
+                    $("#payForOrderBtn").show();
+                    $("#payForOrderBtn").on('click', function(){
+                        //window.open("/components/basket/basket_small.jsp?invoiceId=" + cellId + "&auth=" + cellToken, '_blank');
+                        payForOrder(cellId, cellToken);
+                    });
+                } else {
+                    $("#payForOrderBtn").hide();
+                }
+
+                //Download invoice details button
+                $("#downloadInvoiceDetails").on('click', function(){
+                    downloadInvoiceDetails(cellId);
+                });
+
+                $("table").hide();
+                $("#invoice-detail").show();
+                $("#dataDiv")[0].src = "/components/basket/invoice_email.jsp?invoiceId=" + cellId + "&auth=" + cellToken;
+            }
+
+            function payForOrder(cellId, cellToken) {
+                $("#invoiceId").val(cellId);
+                $("#authorizationToken").val(cellToken);
+                $("#saveFormBtn").click();
+            }
+        /*]]>*/
+    </script>
+</div>

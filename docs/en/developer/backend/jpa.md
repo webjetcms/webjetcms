@@ -2,8 +2,6 @@
 
 Our insights and guidance on the JPA.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
 ## Succession in JPA entities
 
 If two or more tables contain a larger number of identical columns that we do not want to declare multiple times, we can use Inheritance. An example is a table `documents` a `documents_history` that have most of the columns identical, but we want to work with them as two independent entities.

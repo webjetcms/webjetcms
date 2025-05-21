@@ -50,7 +50,7 @@ public class BeanDiffPrinter
 
 				if (diff.hasOriginal()) {
 					output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
-					append(" => ").
+					append(" -> ").
 					append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
 				} else {
 					output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));

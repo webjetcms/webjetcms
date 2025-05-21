@@ -2,30 +2,6 @@
 
 WebJET encapsulates the APIs of the libraries used in the webjet.js file. The goal is not to use API calls from the libraries directly, but to encapsulate the calls through our functions. This will allow us to possibly replace the library used without changing the API.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-- [WebJET JavaScript functions](#webjet-javascript-functions)
-  - [Notifications](#notifications)
-  - [Confirmation of action](#confirmation-of-action)
-  - [Getting value](#obtaining-value)
-  - [Date and time formatting](#date-and-time-formatting)
-  - [Number formatting](#number-formatting)
-  - [Iframe dialogue](#iframe-dialogue)
-  - [Dialogue for selecting a file/link](#dialog-for-selecting-a-filelink)
-  - [Maintaining a connection to the server (refresher)](#maintaining-the-connection-to-the-refresher-server)
-  - [Navigation bar](#navigation-bar)
-  - [Cards in the header](#cards-in-the-header)
-  - [Control of rights](#control-of-rights)
-  - [Markdown parser](#markdown-parser)
-  - [Persistent user settings](#persistent-user-settings)
-    - [Use on the frontend](#use-on-the-frontend)
-    - [Use on the backend](#use-on-the-backend)
-  - [Loading animation](#loading-animation)
-  - [Other features](#other-functions)
-
-<!-- /code_chunk_output -->
-
 ## Notifications
 
 For notifications we use the library [toastr](https://github.com/CodeSeven/toastr), the following JS functions are ready:
@@ -400,6 +376,39 @@ WJ.headerTabs({
 });
 ```
 
+If you initialize the cards later (after initializing WebJET), you still need to call the function `window.initSubmenuTabsClick();` for setting events. Example:
+
+```javascript
+WJ.headerTabs({
+    id: 'tabsFilter',
+    tabs: [
+        { url: "javascript:elfinderTabClick('file')", id: "files", title: '[[\#{fbrowse.file}]]', active: true },
+        { url: "javascript:elfinderTabClick('tools')", id: "tools", title: '[[\#{editor_dir.tools}]]', active: false },
+        { url: "javascript:WJ.openPopupDialog('/components/sync/export_setup.jsp', 650, 500);", id: "export", title: 'Export - Import', active: false }
+    ]
+});
+window.initSubmenuTabsClick();
+```
+
+You can respond to a card change event as:
+
+```javascript
+$('#pills-linkcheck a[data-wj-toggle="tab"]').on('click', function (e) {
+    let selectedTab = e.target.id;
+
+    if(selectedTab === "pills-brokenLinks-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
+        linkCheckDataTable.ajax.reload();
+    } else if(selectedTab === "pills-hiddenPages-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
+        linkCheckDataTable.ajax.reload();
+    } else if(selectedTab === "pills-emptyPages-tab") {
+        linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
+        linkCheckDataTable.ajax.reload();
+    }
+});
+```
+
 ## Control of rights
 
 When the web page is displayed, an object is generated `window.nopermsJavascript` with a list of rights that the user is not allowed. Never use this field directly, use the API call to check the rights:
@@ -551,3 +560,4 @@ If you need to hide a block during upload, you can set its CSS class `hide-while
 - `WJ.escapeHtml(string)` - Replaces unsafe characters in the HTML code with entities to safely output them.
 - `WJ.base64encode(text)` - encoded by the algorithm `base64` the specified text with character support in `utf-8`.
 - `WJ.base64decode(encodedText)` - decoded by algorithm `base64` the specified text with character support in `utf-8`.
+- `WJ.debugTimer(message)` - prints a report with the time since the first message. The reports must be turned on by calling `WJ.debugTimer(true)`, otherwise they will not appear. There is no need to comment out all the messages in the code.
