@@ -66,6 +66,12 @@ scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/te
 ls -la ../../../build/test
 ls -la ../../../build/test/allure-results/history
 
+ORIGINAL_DIR=$(pwd)
+cd ../../..
+./gradlew test
+echo "$ORIGINAL_DIR"
+cd "$ORIGINAL_DIR"
+
 NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure --steps
 RET_CODE=$?
 
