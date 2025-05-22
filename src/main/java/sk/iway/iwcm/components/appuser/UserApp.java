@@ -15,6 +15,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.components.banner.BannerDB;
 import sk.iway.iwcm.components.banner.model.BannerGroupBean;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
@@ -27,12 +28,11 @@ import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
 @WebjetComponent("sk.iway.iwcm.components.appuser.UserApp")
-@WebjetAppStore(nameKey = "menu.users", descKey = "components.user.desc", itemKey = "cmp_user", imagePath = "/components/user/editoricon.png", galleryImages = "/components/user/", componentPath = "/components/user/newuser.jsp,/components/user/logon.jsp,/components/user/forget_password.jsp", customHtml = "/apps/user/admin/editor-component.html"
-)
+@WebjetAppStore(nameKey = "menu.users", descKey = "components.user.desc", itemKey = "cmp_user", imagePath = "/components/user/editoricon.png", galleryImages = "/components/user/", componentPath = "/components/user/newuser.jsp,/components/user/logon.jsp,/components/user/forget_password.jsp", customHtml = "/apps/user/admin/editor-component.html")
 @Getter
 @Setter
 public class UserApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.user.field", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.user.field", className = "dt-app-skip dt-app-componentPath", editor = {
             @DataTableColumnEditor(options = {
                     @DataTableColumnEditorAttr(key = "components.user.reg_form", value = "/components/user/newuser.jsp"),
                     @DataTableColumnEditorAttr(key = "components.user.logon_form", value = "/components/user/logon.jsp"),
@@ -63,7 +63,7 @@ public class UserApp extends WebjetComponentAbstract {
     private String field;
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.group_id")
-    private List<Integer> userGroups;
+    private Integer[] userGroups;
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.show_fields", editor = {
             @DataTableColumnEditor(options = {
@@ -83,9 +83,8 @@ public class UserApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.user.country", value = "country"),
                     @DataTableColumnEditorAttr(key = "components.user.phone", value = "phone")
             }) })
-    private List<String> show = new ArrayList<>(
-            Arrays.asList("login", "password", "password2", "firstName", "lastName", "email"));
-            
+    private String[] show = {"login", "password", "password2", "firstName", "lastName", "email"};
+
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.required_fields", editor = {
             @DataTableColumnEditor(options = {
                     @DataTableColumnEditorAttr(key = "components.user.login", value = "login"),
@@ -104,17 +103,16 @@ public class UserApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.user.country", value = "country"),
                     @DataTableColumnEditorAttr(key = "components.user.phone", value = "phone")
             }) })
-    private List<String> required = new ArrayList<>(Arrays.asList("login", "password", "password2", "firstName",
-            "lastName", "email", "sexMale", "address", "city", "zip", "country"));
+    private String[] required = {"login", "password", "password2", "firstName", "lastName", "email", "sexMale", "address", "city", "zip", "country"};
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.editableGroupIds")
-    private List<Integer> groupIdsEditable;
-    
+    private Integer[] groupIdsEditable;
+
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.email_must_be_unique")
     private Boolean emailUnique;
-    
+
     @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", title = "components.newuser.success_docid", className = "dt-tree-page")
-    private Integer successDocId;
+    private DocDetails successDocId;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.infoemail")
     private String infoemail;
@@ -126,7 +124,7 @@ public class UserApp extends WebjetComponentAbstract {
     private Integer notAuthorizedEmailDocId;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.login_new_user")
-    private Boolean loginNewUser;    
+    private Boolean loginNewUser;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.send_using_ajax")
     private Boolean useAjax;
@@ -164,14 +162,14 @@ public class UserApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.custom_field_E_label")
     private String fieldELabel;
 
-    
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.group_id", 
+
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.group_id",
     editor = {
         @DataTableColumnEditor(
             message = "components.user.loguser_groups_ids"
         )
     })
-    private List<Integer> regToUserGroups;
+    private Integer[] regToUserGroups;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {

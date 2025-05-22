@@ -8,7 +8,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('testovanie app - Jednoducha diskusia @current', async ({ I, Apps }) => {
+Scenario('testovanie app - Jednoducha diskusia', async ({ I, Apps }) => {
     Apps.insertApp('Diskusia', '#components-forum-title');
 
     const defaultParams = {
