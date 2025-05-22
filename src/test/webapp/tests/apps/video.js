@@ -16,7 +16,7 @@ Scenario("Video - test zobrazovania", ({ I }) => {
     });
 });
 
-Scenario('testovanie app - Video @current', async ({ I, Apps, Document, DTE }) => {
+Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
     Apps.insertApp('Video', '#components-video-title', null, false);
 
     const defaultParams = {
