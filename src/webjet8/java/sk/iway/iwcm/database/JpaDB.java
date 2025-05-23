@@ -61,7 +61,11 @@ public class JpaDB<T extends ActiveRecordBase>
 		return new JpaDB<T>(clazz);
 	}
 
-	public T getById(int id)
+	public T getById(int id) {
+		return getById((long)id);
+	}
+
+	public T getById(Long id)
 	{
 		//musime vyrobit novy EntityManager, pretoze ten threadovy em.find zatvori a potom nemusime mat otvoreny em dalej v kode (napr. v helpdesku)
 		EntityManager threadEm = JpaTools.getEclipseLinkEntityManager(dbName);
@@ -70,18 +74,19 @@ public class JpaDB<T extends ActiveRecordBase>
 		T obj;
 		Long idLong = null;
 		//pre ActiveRecordRepository musime posielat ID ako long
+        Integer idInt = Integer.valueOf(id.intValue());
 		if (clazz.getSuperclass().isAssignableFrom(ActiveRecordRepository.class)) idLong = Long.valueOf(id);
 
 		if((InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")) && Constants.getString("jpaFilterByDomainIdBeanList").indexOf(clazz.getName()) != -1)
 		{
 			Map<String,Object>  hashMap = new HashMap<String,Object>();
 			hashMap.put("domainId", CloudToolsForCore.getDomainId());
-			if (idLong == null) obj = em.find(clazz, id, hashMap);
+			if (idLong == null) obj = em.find(clazz, idInt, hashMap);
 			else obj = em.find(clazz, idLong, hashMap);
 		}
 		else
 		{
-			if (idLong == null) obj = em.find(clazz, id);
+			if (idLong == null) obj = em.find(clazz, idInt);
 			else obj = em.find(clazz, idLong);
 		}
 

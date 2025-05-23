@@ -72,6 +72,13 @@ body.modal-open {
             margin-bottom: 0px;
         }
 
+        //Field definition BOOLEAN_TEXT
+        .form-group.row.DTE_Field_Type_text {
+            label.form-check-label {
+                margin-left: .75em;
+            }
+        }
+
         .form-group.row.row-full-headline {
             background-color: $nice-gray;
             margin: 0px;
@@ -568,6 +575,10 @@ body.modal-open {
                     &::before {
                         display: none;
                     }
+                }
+
+                .tab-pane {
+                    padding-bottom: 0px;
                 }
             }
 

@@ -276,7 +276,7 @@ public class ConfDB
 				{
 					StringBuilder message = new StringBuilder("Nastavena konfiguracna premenna: ").append(name).append('\n');
 					if (Tools.isNotEmpty(Constants.getString(name)))
-						message.append(Constants.getString(name)).append(" => ");
+						message.append(Constants.getString(name)).append(" -> ");
 					message.append(value);
 					Adminlog.add(Adminlog.TYPE_CONF_UPDATE, message.toString(), -1, -1);
 				}

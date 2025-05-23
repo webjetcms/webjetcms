@@ -971,6 +971,18 @@ export function fixDatatableHeaderInputs(tableInstance) {
         });
     });
 
+    $('#' + dataId + '_wrapper .dt-format-number input.form-control, #' + dataId + '_extfilter .dt-format-number input.form-control, '+
+      '#' + dataId + '_wrapper .dt-format-number--decimal input.form-control, #' + dataId + '_extfilter .dt-format-number--decimal input.form-control'
+    ).each(function (key, input) {
+        let $this = $(input);
+        $this.on("change", function() {
+            if ($this.val() != "") $this.addClass("has-value");
+            else $this.removeClass("has-value");
+
+            tableInstance.columns.adjust();
+        });
+    });
+
     tableInstance.columns.adjust();
 }
 
@@ -982,7 +994,7 @@ export function fixDatatableHeaderInputs(tableInstance) {
 export function updateFilterSelect(DATA, fieldName) {
    var fieldNameSelector = fieldName;
    if (fieldNameSelector.indexOf(".")!=-1) fieldNameSelector = fieldNameSelector.replace(/\./gi, "\\.");
-   var select = $("select.dt-filter-" + fieldNameSelector)[0];
+   var select = $("#" + DATA.id + "_wrapper select.dt-filter-" + fieldNameSelector)[0];
    var currentValue = $(select).val();
    //console.log("updateFilterSelect, fieldNameSelector=", fieldNameSelector, " select=", select, "currentValue=", currentValue);
 

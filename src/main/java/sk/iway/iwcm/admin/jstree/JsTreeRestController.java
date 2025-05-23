@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -40,6 +41,9 @@ public abstract class JsTreeRestController<T> {
     @PostMapping("/tree")
     public ResponseEntity<Map<String, Object>> tree(@RequestBody JsTreeMoveItem item) {
         Map<String, Object> result = new HashMap<>();
+
+        item.setSkipFoldersConst( Tools.getStringValue(request.getParameter("skipFolders"), null) );
+        item.setRootFolder( Tools.getStringValue(request.getParameter("rootFolder"), null) );
 
         tree(result, item);
 

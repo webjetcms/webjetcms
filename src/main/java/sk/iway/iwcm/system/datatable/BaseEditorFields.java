@@ -57,7 +57,7 @@ public class BaseEditorFields {
      */
     public void addStatusIcon(String className) {
         if (statusIconsList == null) statusIconsList = new ArrayList<>();
-        statusIconsList.add(className);
+        if(statusIconsList.contains(className) == false) statusIconsList.add(className);
     }
 
     @JsonIgnore
@@ -172,7 +172,13 @@ public class BaseEditorFields {
                     fieldType = FieldType.TEXT;
                 }
 
-                String value = (String) method.invoke(bean);
+                String value;
+                Object returnValue = method.invoke(bean);
+                if(returnValue != null) {
+                    value = returnValue.toString();
+                } else {
+                    value = "";
+                }
 
                 //	TAN: textovym retazcom je mozne zadat maximalnu dlzku znakov v inpute alebo validaciu s odporucanym maximalnym poctom znakov inputu
                 // priklad zadania textoveho kluca: text-120, warningLength-80

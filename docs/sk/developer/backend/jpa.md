@@ -2,8 +2,6 @@
 
 Naše postrehy a návody k JPA.
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
 ## Dedenie v JPA entitách
 
 V prípade ak dve alebo viaceré tabuľky obsahujú väčšie množstvo rovnakých stĺpcov, ktoré nechceme deklarovať viacnásobne, môžeme použiť dedenie (Inheritance). Príklad je tabuľka ```documents``` a ```documents_history```, ktoré majú väčšinu stĺpcov zhodných, ale chceme s nimi pracovať ako s dvoma nezávislými entitami.

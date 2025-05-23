@@ -318,7 +318,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Supplemented documentation for [image editor](redactor/image-editor/README.md) (#56969).
 - Updated documentation for generation [preview images](frontend/thumb-servlet/README.md) and setting [point of interest](frontend/thumb-servlet/interest-point.md) (#56969).
 - Documentation created for [work in the page editor](redactor/webpages/working-in-editor/README.md) (#56981).
-- Supplemented documentation for [file archive](redactor/apps/file_archiv/README.md) (#56891).
+- Supplemented documentation for [file archive](redactor/files/file-archive/README.md) (#56891).
 - Supplemented documentation for [in front of the prepared block](redactor/apps/htmlbox/README.md) (#56981).
 - Added [Czech version](https://docs.webjetcms.sk/latest/cs/) Documentation (#57033).
 - Modified the generation of links to source code to point to [GitHub version](https://github.com/webjetcms/webjetcms/tree/main/src) source code (#57033).

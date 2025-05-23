@@ -1,20 +1,20 @@
 # Informace o stránce
 
-| Metoda | Typ | Popis
-| ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| ${ninja.page.seoTitle}       | *String*     | Název |
-| ${ninja.page.seoDescription} | *String*     | Popis |
-| ${ninja.page.seoImage}       | *String*     | Odkaz na obrázek |
-| ${ninja.page.url}            | *String*     | Url adresa |
-| ${ninja.page.urlDomain}      | *String*     | Doména |
-| ${ninja.page.urlPath}        | *String*     | Virtuální adresa |
-| ${ninja.page.urlParameters}  | *Map*        | Parametry z adresy URL |
-| ${ninja.page.robots}         | *String*     | Nastavení indexování |
-| ${ninja.page.doc}            | *DocDetails* | Všechny vlastnosti |
-| ${ninja.page.title}          | *String*     | Název stránky s mezerou za názvem `&nbsp;` entita za spojkou (`Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero`) |
-| ${ninja.page.perex}          | *String*     | Stránky Perex s mezerou za `&nbsp;` entita po spojení |
-| ${ninja.page.perexPlace}     | *String*     | Perex namísto stránky s mezerou za názvem `&nbsp;` entita po spojení |
-| ${ninja.abVariant}           | *String*     | Identifikátor reprezentující verzi stránky ve tvaru znaku a/b |
+| Metoda | Typ | Popis |
+ | ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+ | ${ninja.page.seoTitle}       | *String*     | Název |
+ | ${ninja.page.seoDescription} | *String*     | Popis |
+ | ${ninja.page.seoImage}       | *String*     | Odkaz na obrázek |
+ | ${ninja.page.url}            | *String*     | Url adresa |
+ | ${ninja.page.urlDomain}      | *String*     | Doména |
+ | ${ninja.page.urlPath}        | *String*     | Virtuální adresa |
+ | ${ninja.page.urlParameters}  | *Map*        | Parametry z URL adresy |
+ | ${ninja.page.robots}         | *String*     | Nastavení indexování |
+ | ${ninja.page.doc}            | *DocDetails* | Všechny vlastnosti |
+ | ${ninja.page.title}          | *String*     | Titulek stránky s nahrazenou mezerou za `&nbsp;` entitu po spojce (`Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero`) |
+ | ${ninja.page.perex}          | *String*     | Perex stránky s nahrazenou mezerou za `&nbsp;` entitu po spojce |
+ | ${ninja.page.perexPlace}     | *String*     | Perex místo stránky s nahrazenou mezerou za `&nbsp;` entitu po spojce |
+ | ${ninja.abVariant}           | *String*     | Identifikátor reprezentující verzi stránky ve formě znaku a/b |
 
 !>**Poznámka**: náhradu mezery po spojce za `&nbsp;` entitu lze nastavit v konfigurační proměnné `ninjaNbspReplaceRegex`. Na prvním řádku je regex výraz, na druhém je text náhrady.
 

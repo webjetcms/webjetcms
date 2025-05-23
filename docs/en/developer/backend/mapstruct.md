@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class DocHistoryDto {
 
-    @DataTableColumn(inputType = DataTableColumnType.ID, renderFormat = "dt-format-selector", title = "editor.cell.id")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id; //historyId
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER, title = "components.forum.docid")

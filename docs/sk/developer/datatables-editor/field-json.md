@@ -1,20 +1,5 @@
 # Field Type - JSON
 
-<!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
-
-<!-- code_chunk_output -->
-
-- [Field Type - JSON](#field-type---json)
-  - [Možnosti className](#možnosti-classname)
-  - [Použitie špecifických JSON objektov](#použitie-špecifických-json-objektov)
-  - [Vlastná konfigurácia zobrazenej stromovej štruktúry](#vlastná-konfigurácia-zobrazenej-stromovej-štruktúry)
-  - [Zobrazenie hodnoty JSON stĺpca v Datatable](#zobrazenie-hodnoty-json-stĺpca-v-datatable)
-  - [Počúvanie na zmenu hodnoty](#počúvanie-na-zmenu-hodnoty)
-  - [Implementačné detaily](#implementačné-detaily)
-
-<!-- /code_chunk_output -->
-
-
 Web stránky alebo aplikácia Skripty používa mapovanie 1:N na ďalšie objekty. V prípade web stránky je to vybraná adresár a kópia web stránky v adresároch a v prípade aplikácie Skripty je to mapovanie skriptu na adresáre a web stránky.
 
 Pole typu JSON pre DT Editor implementuje **UI pre zobrazenie výberu adresára alebo web stránky** z JS tree komponenty s možnosťou nastavenia JSON objektu pre **jedno pole alebo zoznam (List) polí**.
@@ -103,7 +88,7 @@ všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie tex
 
 ```dt-tree-dir``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber adresára v súborovom systéme**
 
-```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```
+```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```. Do ```data-dt-field-skipFolders``` je možné zadať meno konfiguračnej premennej s čiarkou oddeleným zoznamom priečinkov, ktoré sa nezobrazia v stromovej štruktúre.
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 

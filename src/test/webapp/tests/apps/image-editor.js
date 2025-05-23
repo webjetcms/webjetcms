@@ -29,6 +29,8 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     I.waitForElement('.pixabayBox .col-xs-3 a:first-child', 10);
     I.click('.pixabayBox .col-xs-3 a:first-child');
     DTE.waitForModal('imageModal');
+    I.seeInField("#imageWidth", "1280")
+    I.seeInField("#imageHeight", "904");
     I.clickCss('button.btn.btn-primary.saveImage');
     DTE.waitForModalClose('imageModal');
     I.switchTo();
@@ -92,7 +94,7 @@ Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Docu
     I.clickCss("div.tui-image-editor-button.apply");
     I.waitForInvisible("div.tui-image-editor-menu-crop");
 
-    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-croped_image.png", null, null, 10);
+    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-croped_image.png", 1280, 904, 20);
 
     I.say("Save Change");
     I.clickCss('.DTE_Form_Buttons > button.btn-primary');
@@ -117,7 +119,7 @@ Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Docu
 
     I.wait(2);
 
-    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-croped_image.png", null, null, 20);
+    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-croped_image.png", 1280, 904, 20);
 
     I.say("Change are of interest");
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");

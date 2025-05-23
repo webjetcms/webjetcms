@@ -38,7 +38,6 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archív súborov](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
     - [Štatistika bannerov](/redactor/apps/banner/banner-stat/README.md)
@@ -58,6 +57,7 @@
     - [Položky](/redactor/apps/eshop/invoice/items.md)
     - [Zoznam produktov](/redactor/apps/eshop/product-list/README.md)
     - [Nastavenie aplikácie](/redactor/apps/basket/README.md)
+    - [Spôsoby platby](/redactor/apps/eshop/payment-methods/README.md)
   - [Emotikony](/redactor/apps/emoticon/README.md)
   - [Export dát](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)
@@ -118,6 +118,7 @@
     - [Zoznam rezervácií](/redactor/apps/reservation/reservations/README.md)
     - [Štatistika rezervácií](/redactor/apps/reservation/reservations-stat/README.md)
     - [Zoznam rezervačných objektov](/redactor/apps/reservation/reservation-objects/README.md)
+    - [Aplikácia Rezervácie](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikácia Rezervácia času](/redactor/apps/reservation/time-book-app/README.md)
     - [Aplikácia Rezervácia dní](/redactor/apps/reservation/day-book-app/README.md)
   - [SEO](/redactor/apps/seo/README.md)
@@ -138,4 +139,11 @@
     - [Úprava súborov](/redactor/files/fbrowser/file-edit/README.md)
     - [Nastavenie súboru](/redactor/files/fbrowser/file-settings/README.md)
     - [Nastavenie priečinka](/redactor/files/fbrowser/folder-settings/README.md)
+  - Manažér dokumentov
+    - [Dokumenty](/redactor/files/file-archive/README.md)
+    - [Kategórie](/redactor/files/file-archive/category-manager.md)
+    - [Produkty](/redactor/files/file-archive/product-manager.md)
+    - [Export dokumentov](/redactor/files/file-archive/export-files.md)
+    - [Import dokumentov](/redactor/files/file-archive/import-files.md)
+    - [Aplikácia Manažer dokumentov](/redactor/files/file-archive/file-archive-app.md)
   - [Zálohovanie systému](/sysadmin/files/backup/README.md)

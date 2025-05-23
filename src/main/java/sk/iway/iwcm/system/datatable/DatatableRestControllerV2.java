@@ -10,6 +10,8 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -39,9 +41,7 @@ import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
 
-//import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
-//import javax.persistence.PersistenceUnit;
 import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Path;
@@ -384,7 +384,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		for (Map.Entry<String, String[]> entry : paramsMulti.entrySet()) {
 			String[] value = entry.getValue();
 			if (value != null && value.length>0) {
- 				params.put(entry.getKey(), value[0]);
+				if ("sort".equals(entry.getKey())) {
+					//you can sort using shift for multiple columns, we need to handle it
+					params.put(entry.getKey(), String.join("\n", value));
+				} else {
+ 					params.put(entry.getKey(), value[0]);
+				}
 			}
 		}
 		return params;
@@ -489,6 +494,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		for (Map.Entry<String, String> paramsEntry : params.entrySet()) {
 			String key = getCleanKey(paramsEntry.getKey());
 
+			//this is not search property
+			if ("size".equals(key) || "page".equals(key) || "sort".equals(key)) {
+				continue;
+			}
+
 			if (!searchWrapped.isReadableProperty(key)) {
 				Logger.debug(DatatableRestControllerV2.class, "Property is not readable, key; "+key);
 				continue;
@@ -544,6 +554,23 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		final Map<String, String> searchProperties = new HashMap<>();
 		matcher = getSearchProperties(params, searchProperties, searchWrapped, matcher, isExampleSearch);
+
+		//Check pageable sort - remove editor fileds type of sort
+		if(pageable != null) {
+			Sort sort = pageable.getSort();
+			//remove all sort for fields starting with editorFields.
+			if(sort != null && sort.isSorted()) {
+				Iterator<Order> iter = sort.iterator();
+				while(iter.hasNext()) {
+					Sort.Order order = iter.next();
+					//remove sort, this editorFields sort will cause error
+					if(order.getProperty().startsWith("editorFields.")) {
+						iter.remove();
+						iter = sort.iterator();
+					}
+				}
+			}
+		}
 
 		Page<T> page;
 		if (isExampleSearch) {
@@ -1012,6 +1039,15 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		}
 	}
 
+	/**
+	 * You can create new Pageable object where you can add custom sorting
+	 * @param params
+	 * @param pageable
+	 */
+	public Pageable addSpecSort(Map<String, String> params, Pageable pageable) {
+		return pageable;
+	}
+
 	/********************************* REST METODY *********************************/
 
 	/**
@@ -1028,6 +1064,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		else {
 			setExporting(false);
 		}
+
+		pageable = addSpecSort(getParamsMap(getRequest()), pageable);
 
 		Page<T> page = this.getAllItems(pageable);
 
@@ -1054,6 +1092,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@GetMapping("/search/findByColumns")
 	public Page<T> findByColumns(@RequestParam Map<String, String> params, Pageable pageable, T search) {
 		clearThreadData();
+
+		//fix multiple sort - replace params single value with multi value from request
+		if (getRequest()!=null && getRequest().getParameter("sort")!=null) {
+			String[] sort = getRequest().getParameterValues("sort");
+			if (sort.length > 1) {
+				params.put("sort", String.join("\n", sort));
+			}
+		}
+
+		pageable = addSpecSort(params, pageable);
+
 		if ("true".equals(request.getParameter("export"))) {
 			setExporting(true);
 			Adminlog.add(Adminlog.TYPE_FORM_EXPORT, request.getRequestURI(),-1, -1);
@@ -1484,8 +1533,54 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	@SuppressWarnings("all")
 	public void throwError(String errorKey) {
+		throwError(errorKey, false);
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errorKey
+	 * @param showNotifications - zobrazi notifikacie z vlakna
+	 */
+	@SuppressWarnings("all")
+	public void throwError(String errorKey, boolean showNotifications) {
 		String message = getProp().getText(errorKey);
-		throw new RuntimeException(message);
+
+		if(showNotifications) {
+			throw new EditorException(message, getThreadData().getNotify());
+		} else {
+			throw new RuntimeException(message);
+		}
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errorKey
+	 * @param params - parametre pre preklad
+	 */
+	@SuppressWarnings("all")
+	public void throwError(String errorKey, String... params) {
+		//no notification
+		throwError(errorKey, false, params);
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errorKey
+	 * @param params - parametre pre preklad
+	 * @param showNotifications - zobrazi notifikacie z vlakna
+	 */
+	@SuppressWarnings("all")
+	public void throwError(String errorKey, boolean showNotifications, String... params) {
+		String message = getProp().getTextWithParams(errorKey, params);
+
+		if(showNotifications) {
+			throw new EditorException(message, getThreadData().getNotify());
+		} else {
+			throw new RuntimeException(message);
+		}
 	}
 
 	/**
@@ -1505,6 +1600,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	@SuppressWarnings("all")
 	public void throwError(List<String> errorKeys) {
+		throwError(errorKeys, false);
+	}
+
+	/**
+	 * Vyvola vseobecnu vynimku ulozenia (ked napr. v editItem nastane nejaka vseobecna chyba)
+	 * Chybove hlasenie sa zobrazi v editore pri tlacitku odoslat
+	 * @param errorKeys
+	 * @param showNotifications - zobrazi notifikacie z vlakna
+	 */
+	@SuppressWarnings("all")
+	public void throwError(List<String> errorKeys, boolean showNotifications) {
 		//preved z klucov na texy
 		Prop prop = Prop.getInstance();
 		StringBuilder message = new StringBuilder();
@@ -1513,7 +1619,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			message.append(prop.getText(key));
 		}
 
-		throw new RuntimeException(message.toString());
+		if(showNotifications) {
+			throw new EditorException(message.toString(), getThreadData().getNotify());
+		} else {
+			throw new RuntimeException(message.toString());
+		}
 	}
 
 	private static ThreadBean getThreadData() {
@@ -1816,7 +1926,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @param entity
 	 * @param one
 	 */
-	private void copyEntityIntoOriginal(T entity, T one) {
+	protected void copyEntityIntoOriginal(T entity, T one) {
 		List<String> alwaysCopyProperties = new ArrayList<>();
 		List<String> ignoreProperties = new ArrayList<>();
 

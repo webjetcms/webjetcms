@@ -149,7 +149,7 @@ keysTable.put("mail", "E-mail klient");
 keysTable.put("menu.fbrowser", "Správa súborov a adresárov v administrácii");
 keysTable.put("mcalendar", "Pracovný kalendár");
 keysTable.put("helpdesk", "HelpDesk");
-keysTable.put("file_archiv", "Archív súborov");
+keysTable.put("file_archiv", "Manažér dokumentov");
 keysTable.put("organization", "Organizačná štruktúra");
 keysTable.put("kanban", "Kanban");
 keysTable.put("enumerations", "Číselníky");

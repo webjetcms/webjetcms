@@ -47,6 +47,16 @@ public class JsTreeMoveItem {
      */
     private JsTreeItem node;
 
+    /**
+     * Name of constant that holds paths of folders, that should be skipped (not showed in tree)
+     */
+    private String skipFoldersConst;
+
+    /**
+     * Root PERMITTED folder for tree, everthynig above will be disabled but showed.
+     */
+    private String rootFolder;
+
     public int getIdInt() {
         return Tools.getIntValue(id, 0);
     }

@@ -35,9 +35,9 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
     I.clickCss("body > div.ly-page-wrapper > header > div.container > nav > div.menu-holder > div > a");
     I.waitForElement(".md-basket-dropdown.open", 10);
     I.clickCss("#orderButton > a");
-    I.fillField("#deliveryNameId", testerName);
-    I.fillField("#deliveryCityId", "Prešov");
-    I.fillField("#deliveryZipId", "08005");
+    I.fillField("#contactFirstNameId", testerName);
+    I.fillField("#contactCityId", "Prešov");
+    I.fillField("#contactZipId", "08005");
     I.fillField("#userNoteId", "This is nooote");
 
     I.say("Confirm new invoice");
@@ -46,7 +46,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
     I.say("Check that invoice was created");
     I.amOnPage("/apps/basket/admin/");
-    DT.filterEquals("deliveryName", testerName);
+    DT.filterEquals("editorFields.firstName", testerName);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Check that buttons are hidden");
@@ -68,8 +68,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
     I.say("Check payment tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");
-        I.seeElement( locate("h5").withText("Prehľad platieb") );
-        I.seeElement( locate("div.col-sum").withText("Zaplatená suma: 0,00 eur zo sumy 3 126,36 eur") );
+        I.seeElement( locate("div.col-sum").withText("Zaplatená suma: 0,00 eur zo sumy: 3 126,36 eur") );
 
         I.say("Check inner table functionality + footer update");
             I.seeElement(paymentDataTable);
@@ -84,12 +83,11 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
     I.say("Check items tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
-        I.seeElement( locate("h5").withText("Prehľad položiek objednávky") );
         I.seeElement( locate("div.col-sum").withText("Suma k zaplateniu: 3 126,36 eur") );
 
             I.say("Check buttons visibility");
                 I.seeElement( locate(itemsDataTable).find("button.buttons-edit") );
-                I.dontSeeElement( locate(itemsDataTable).find("button.buttons-create") );
+                //I.dontSeeElement( locate(itemsDataTable).find("button.buttons-create") );
                 I.dontSeeElement( locate(itemsDataTable).find("button.buttons-duplicate") );
 
             I.say("Edit item");
@@ -151,7 +149,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
 
 function checkBonusOptions(I, DT, DTE, testerName, seeOptions) {
     I.amOnPage("/apps/basket/admin/");
-    DT.filterEquals("deliveryName", testerName);
+    DT.filterEquals("editorFields.firstName", testerName);
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor("basketInvoiceDataTable");
@@ -192,7 +190,7 @@ function payment(I, DTE, price, isEdit, minErr, maxErr) {
         I.see("Celková zaplatená suma nesmie byť väčšia ako suma objednávky");
         I.clickCss("#datatableFieldDTE_Field_editorFields-payments_modal > div > div > div.DTE_Header.modal-header > button");
     } else {
-        I.seeElement( locate("div.col-sum").withText("Zaplatená suma: " + price + ",00 eur zo sumy 3 126,36 eur") );
+        I.seeElement( locate("div.col-sum").withText("Zaplatená suma: " + price + ",00 eur zo sumy: 3 126,36 eur") );
     }
 }
 

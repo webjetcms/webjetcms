@@ -37,7 +37,6 @@
   - Anketa
     - [Anketa](/redactor/apps/inquiry/README.md)
     - [Statistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archiv souborů](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Seznam bannerů](/redactor/apps/banner/README.md)
     - [Statistika bannerů](/redactor/apps/banner/banner-stat/README.md)
@@ -117,6 +116,7 @@
     - [Seznam rezervací](/redactor/apps/reservation/reservations/README.md)
     - [Statistika rezervací](/redactor/apps/reservation/reservations-stat/README.md)
     - [Seznam rezervačních objektů](/redactor/apps/reservation/reservation-objects/README.md)
+    - [Aplikace Rezervace](/redactor/apps/reservation/reservation-app/README.md)
     - [Aplikace Rezervace času](/redactor/apps/reservation/time-book-app/README.md)
     - [Aplikace Rezervace dní](/redactor/apps/reservation/day-book-app/README.md)
   - [SEO](/redactor/apps/seo/README.md)
@@ -137,4 +137,11 @@
     - [Úprava souborů](/redactor/files/fbrowser/file-edit/README.md)
     - [Nastavení souboru](/redactor/files/fbrowser/file-settings/README.md)
     - [Nastavení složky](/redactor/files/fbrowser/folder-settings/README.md)
+  - Manažer dokumentů
+    - [Dokumenty](/redactor/files/file-archive/README.md)
+    - [Kategorie](/redactor/files/file-archive/category-manager.md)
+    - [Produkty](/redactor/files/file-archive/product-manager.md)
+    - [Export dokumentů](/redactor/files/file-archive/export-files.md)
+    - [Import dokumentů](/redactor/files/file-archive/import-files.md)
+    - [Aplikace Manažer dokumentů](/redactor/files/file-archive/file-archive-app.md)
   - [Zálohování systému](/sysadmin/files/backup/README.md)

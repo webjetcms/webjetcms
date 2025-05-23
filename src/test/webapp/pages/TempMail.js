@@ -22,6 +22,24 @@ module.exports = {
     },
 
     /**
+     * Prihlási sa do TempMailu a zobrazí e-maily, nepouzije sa funkcia I.amOnPage.
+     * @param {string} name - Názov e-mailového účtu.
+     * @param {string} [emailDomain="fexpost.com"] - Doména e-mailového účtu, predvolene "fexpost.com".
+     */
+    async loginAsync(name, emailDomain = "fexpost.com"){
+        I.say('Prihlasujem sa do TempMail-u');
+        await I.executeScript(() => {
+            window.location.href = 'https://tempmail.plus';
+        });
+        await I.wait(5);
+        I.switchTo();
+        I.fillField('input#pre_button', name);
+        I.clickCss('button#domain');
+        I.click(locate("button.dropdown-item").withText(emailDomain));
+        I.wait(1);
+    },
+
+    /**
      * Otvorí najnovší email v inboxe.
      * Je potrebné zavolať TempMail.login() predtým
      */
@@ -66,7 +84,11 @@ module.exports = {
      * Vymaže všetky e-maily.
      * Je potrebné zavolať TempMail.login() predtým
      */
-    async destroyInbox(){
+    async destroyInbox(emailAddress = null) {
+        if (emailAddress != null) {
+            this.login(emailAddress);
+        }
+
         I.say('Vymazávam všetky e-maily');
         let numberOfEmails = await I.grabNumberOfVisibleElements("#delete");
         if(numberOfEmails > 0) {

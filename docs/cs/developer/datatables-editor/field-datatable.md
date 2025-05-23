@@ -2,6 +2,8 @@
 
 Pole datatable umožňuje v editoru stránek zobrazit vnořenou datatabulku (např. seznam Médii v editoru stránek). Je třeba si uvědomit, že datatabulka je inicializována s vlastní URL adresou. V samotném objektu rodičovské tabulky není třeba data posílat ani je následně přijímat, data se mění automaticky při volání REST služby vnořené datatabulky. Technicky by bylo možné pracovat přímo s JSON daty z rodičovské tabulky, zatím tato možnost není implementována.
 
+![](../../redactor/webpages/media.png)
+
 Jelikož aktuálně vložená datatabulka pracuje se samostatnými REST službami vrácená data jsou prázdné pole `[]`.
 
 ## Použití anotace
@@ -9,6 +11,7 @@ Jelikož aktuálně vložená datatabulka pracuje se samostatnými REST službam
 Anotace se používá jako `DataTableColumnType.DATATABLE`, přičemž je třeba nastavit následující atributy editoru:
 - `data-dt-field-dt-url` - URL adresa REST služby, může obsahovat makra pro vložení hodnoty z rodičovského editoru, např.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
 - `data-dt-field-dt-columns` - jméno třídy (včetně packages) ze které se použije [definice sloupců datatabulky](datatable-columns.md) Např. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
+- `data-dt-field-dt-columns-customize` - jméno JavaScript funkce, která může být použita k úpravě`columns` objektu, například `removeEditorFields`. Funkce musí být dostupná přímo ve `windows` objektu, jak parametr dostane`columns` objekt a očekává se, že jej vrátí upravený. Příklad `function removeEditorFields(columns) { return columsn; }`.
 - `data-dt-field-dt-tabs` - seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
 
 Kompletní příklad anotace:

@@ -131,7 +131,7 @@
 			'cmdgetfile'   : 'Vybrat soubory',
 			'cmdhelp'      : 'O softwaru',
 			'cmdhome'      : 'Domů',
-			'cmdinfo'      : 'Zobrazit informace',
+			'cmdinfo'      : 'Získat info', //WEBJET UPDATED
 			'cmdmkdir'     : 'Nová složka',
 			'cmdmkdirin'   : 'Do nové složky', // from v2.1.7 added 19.2.2016
 			'cmdmkfile'    : 'Nový soubor',
@@ -581,7 +581,7 @@
             'cmdresize'    : 'Editovat',
 			'wjSearchRecursive': 'V podadresářích',
 			'cmdwjeditswitch': 'Upravit',
-			'cmdwjfilearchive': 'Archivace souborů',
+			'cmdwjfilearchive': 'Manažer dokumentů',
 			'cmdwjdirprops'  : 'Nastavení složky',
 			'cmdwjfileprops' : 'Nastavení souboru',
 			'cmdwjmetadata' : 'Bezpečnostní nastavení',
@@ -591,4 +591,3 @@
 		}
 	};
 }));
-

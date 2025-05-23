@@ -10,7 +10,13 @@ Email can be sent to visitors who are registered in the admin part of the Web JE
 
 ## Basic
 
-When creating a new record, we have in the tab **Basic** there is only one tab to choose from with the basic information we need to fill in, namely "Subject" and "Web page". The sender details will be filled in automatically according to the logged in user, but you can of course change them.
+When creating a new record, we have in the tab **Basic** to choose only one card with the basic information we need to fill in, namely **Subject** a **Web page**.
+
+**Subject** is automatically filled in after selecting **Web page with email text**. The name of the web page will be preset in the subject, which you can of course change. If you change the value **Web page with email text** a **Subject** already contains a value, you will be prompted by a notification if you wish to change the current object for a new one.
+
+![](subject_confirm.png)
+
+The sender details will be filled in automatically according to the logged-in user, but you can of course change them. If you want to use other values as default, you can use configuration variables `dmailDefaultSenderName` a `dmailDefaultSenderEmail`.
 
 The text of the email is taken from the selected web page (including its design). We recommend creating a folder in the Web pages section, e.g. `Newsletter` with the appropriate template set. In this folder, first create a web page with the text of the email and then select it in the campaign.
 
@@ -53,21 +59,9 @@ You can attach up to 3 attachments (files) to your email.
 
 ![](advanced.png)
 
-## Groups
-
-In the charts **Groups** selecting/checking a specific user group will **after saving the campaign** add users belonging to these groups as recipients. Which means they will receive emails from this campaign.
-
-Actions to watch out for:
-- when changing the list of beneficiaries, it is necessary **re-save the campaign** (if it has not been saved yet), for correct counting of recipients and sent emails.
-- if you change the recipient list AFTER the emails are sent, the resulting statistics will not be correct and may give the impression of a sending problem.
-
-When the campaign is saved, the real list of recipients and already sent emails is calculated from the database table `emails`.
-
-![](users.png)
-
 ## Beneficiaries
 
-In the charts **Beneficiaries** we can see an overview of all recipients who will receive the campaign emails. Recipients can be added, edited, duplicated or deleted in the table.
+In the charts **Beneficiaries** we can see an overview of all recipients who will receive the campaign emails. Recipients can be added, edited, duplicated or deleted in the table. When the campaign is saved, the real list of recipients and already sent emails from the database table is added `emails`
 
 ![](receivers.png)
 
@@ -75,6 +69,8 @@ In the charts **Beneficiaries** we can see an overview of all recipients who wil
 - Duplication protection, checking for duplication in the entered emails as well as with those already existing in the campaign
 - protection against inappropriate email, the email must comply with the standard format **meno@domena.sk** (special exception for [Import from xlsx](#import-from-xlsx))
 - protection against unsubscribed emails, it is not possible to add a recipient whose email address is in the list [Unsubscribed emails](../unsubscribed/README.md)
+
+!>**Warning,** if you change the recipient list AFTER the emails are sent, the resulting statistics will not be correct and may give the impression of a sending problem.
 
 ### Email status
 
@@ -109,6 +105,22 @@ Since only 3 of the 5 emails were matched, only 3 recipients were added to the c
 
 ![](recipients_B.png)
 
+### Adding from a group
+
+To add emails to the campaign in bulk, use the button ![](users_from_group_button.png ":no-zoom"). Click to display a dialog box with the available user groups.
+
+After selecting/ticking the desired group (or multiple groups), you must confirm your choice by pressing the ![](users_from_group_OK_button.png ":no-zoom"). If you do not want to save your change, you must close the dialog box.
+
+![](users.png)
+
+!>**Warning:** your changes **shall be saved immediately**. This means that you are not waiting for the campaign to be saved! Beware of this, as even if you don't save the edited campaign, the recipients added/removed by selecting the group will remain changed.
+
+Your changes are immediately reflected in the tab **Beneficiaries**. Emails added from a group will always contain a value in the **Groups**. It can happen that there are emails among the recipients that belong to a group even if no group has been added to the campaign. The situation occurs if you manually add an email belonging to a group. WebJET will automatically recognize it and display it in the column **Group** all the groups under which it belongs.
+
+![](receivers_B.png)
+
+!>**Warning:** some emails may belong to more than one group. Only one of these groups needs to be added for the email to be added to the recipients. If an email belongs to 3 groups and you add them all, **no duplication of emails** as duplicate emails are not allowed.
+
 ### Import from xlsx
 
 The bulk way to add/update recipients is via a standard import of recipients from an xlsx file.
@@ -126,7 +138,7 @@ You can get the correct import file simply by exporting the recipients. You can 
 !>**Warning:**
 
 - Importing from an xlxs file does not support adding multiple emails in one cell as in the case of manual addition. There must only ever be one email address in a cell.
-- Importing from an xlxs file supports the email format exception. When manually adding, each mail must have the format **meno@domena.sk**. However, if you are copying emails from e.g. Outlook, the copied value may have the format `"Ján Tester <jan_tester@test.com>"`. If the value contains characters `<>`, **(in that exact order)**, the value in between shall be used. In this case, it would just be the value `jan_tester@test.com`. This value must have the format **meno@domena.sk**.
+- Importing from an xlxs file supports the email format exception. When manually adding, each mail must have the format **meno@domena.sk**. However, if you are copying emails from e.g. `Outlook`, the copied value can have the format `"Ján Tester <jan_tester@test.com>"`. If the value contains characters `<>`, **(in that exact order)**, the value in between shall be used. In this case, it would just be the value `jan_tester@test.com`. This value must have the format **meno@domena.sk**.
 
 ## Openings
 

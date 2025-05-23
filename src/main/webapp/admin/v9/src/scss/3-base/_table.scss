@@ -1043,6 +1043,10 @@ div.dt-button-collection div.btn-group button:last-child {
         &[data-filter-type="number-decimal"] {
             .form-control-sm {
                 min-width: 45px;
+                padding-right: 0px;
+            }
+            .form-control-sm.has-value {
+                min-width: 80px;
             }
         }
 

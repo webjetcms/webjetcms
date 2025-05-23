@@ -66,20 +66,20 @@ public class GalleryListener {
             currentPath.append("/").append(path);
             List<GalleryJsTreeItem> items = galleryTreeService.getItems(currentPath.toString());
             if (isRoot) {
-                items.stream().forEach((item) -> {
+                items.forEach((item) -> {
                     //root item
                     item.setParent("#");
                 });
                 isRoot = false;
             } else {
-                items.stream().forEach((item) -> {
+                items.forEach((item) -> {
                     item.setParent(currentPath.toString());
                 });
             }
             treeInitialJson.addAll(items);
         }
         //set opened and selected state
-        treeInitialJson.stream().forEach((item) -> {
+        treeInitialJson.forEach((item) -> {
             if (url.startsWith(item.getId())) item.getState().setOpened(true);
             if (url.equals(item.getId())) item.getState().setSelected(true);
         });

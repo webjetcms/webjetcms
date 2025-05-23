@@ -4,10 +4,10 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('zoznam noviniek', ({ I, DT, DTE, Document }) => {
+Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
 
     I.amOnPage("/apps/news/admin/");
-    I.click({ css: "#pills-newsGroup-tab button.btn-outline-secondary" });
+    I.clickCss('button[data-id="groupIdFilterSelect"]')
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText("/English/News"));
 
     I.see("McGregor sales force");
@@ -16,7 +16,7 @@ Scenario('zoznam noviniek', ({ I, DT, DTE, Document }) => {
 
     //
     var pageName = "Trhy sú naďalej vydesené";
-    I.click({ css: "#pills-newsGroup-tab button.btn-outline-secondary" });
+    I.clickCss('button[data-id="groupIdFilterSelect"]')
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText("/Jet portal 4/Zo sveta financií"));
     DT.waitForLoader();
     I.dontSee("McGregor sales force");
@@ -135,7 +135,7 @@ Scenario('Test of permissions and filtering select by permissions', async ({ I, 
     DT.waitForLoader();
 
     I.say("Check that user see folder to select");
-    I.click( locate("#pills-newsGroup-tab").find("button.dropdown-toggle") );
+    I.clickCss('button[data-id="groupIdFilterSelect"]')
     I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") ) );
     I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/English/News") ) );
 
@@ -146,7 +146,7 @@ Scenario('Test of permissions and filtering select by permissions', async ({ I, 
     DT.waitForLoader();
 
     I.say("Check that user see folder to select");
-    I.click( locate("#pills-newsGroup-tab").find("button.dropdown-toggle") );
+    I.clickCss('button[data-id="groupIdFilterSelect"]');
     I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") ) );
     I.dontSeeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/English/News") ) );
 
@@ -160,7 +160,7 @@ Scenario('Test of permissions and filtering select by permissions', async ({ I, 
     I.see("Prístup na adresár zamietnutý", "#toast-container-webjet > .toast-error > .toast-message");
 
     I.say("Check that user DONT have groups to select");
-    I.click( locate("#pills-newsGroup-tab").find("button.dropdown-toggle") );
+    I.clickCss('button[data-id="groupIdFilterSelect"]')
     const numberOfGroups = await I.grabNumberOfVisibleElements( locate("div.dropdown-menu").find( locate("a.dropdown-item > span") ) );
     I.assertEqual(0, numberOfGroups, "ERROR - User should not see any group to select");
 });

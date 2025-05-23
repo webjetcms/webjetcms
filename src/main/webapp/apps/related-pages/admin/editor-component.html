@@ -1,27 +1,35 @@
 <script>
 	function appAfterInit(response, datatable) {
-		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
-			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
-			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
-		};
-
-		window.addEventListener("WJ.DTE.opened", function (e) {
-			const handleChange = function () {
-				const id = $(this).attr("id");
-				const isChecked = $(this).is(":checked");
-				if (isChecked) {
-					if (id === "DTE_Field_titleName_2") {
-						setFieldsVisibility([], ["customName"]);
-					} else if (
-						id === "DTE_Field_titleName_0" ||
-						id === "DTE_Field_titleName_1"
-					) {
-						setFieldsVisibility(["customName"], []);
+		window.addEventListener("WJ.DTE.opened", function () {
+			const $titleNameFieldWrapper = $(".DTE_Field_Name_titleName");
+			const $titleNameInput = $titleNameFieldWrapper.find("input");
+			const $titleTypeRadios = $(
+				"#DTE_Field_titleType_0, #DTE_Field_titleType_1, #DTE_Field_titleType_2"
+			);
+			const updateCustomNameVisibility = () => {
+				const isCustom = $($titleTypeRadios[2]).is(":checked");
+				$titleNameFieldWrapper.toggle(isCustom);
+				if (!isCustom) {
+					$titleNameInput.val($("input[name=titleType]:checked").val());
+				} else {
+					var currentValue = $titleNameInput.val();
+					if (currentValue === "groupName" || currentValue === "rootGroupName") {
+						$titleNameInput.val("");
 					}
 				}
 			};
-			$("#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2").on("change",handleChange);
-			$("#DTE_Field_titleName_0, #DTE_Field_titleName_1, #DTE_Field_titleName_2").change();
+			const titleNameValue = $titleNameInput.val();
+			if (titleNameValue && titleNameValue !== "") {
+				if ("groupName"===titleNameValue) {
+					$titleTypeRadios[0].checked = true;
+				} else if ("rootGroupName" === titleNameValue) {
+					$titleTypeRadios[1].checked = true;
+				} else {
+					$titleTypeRadios[2].checked = true;
+				}
+			}
+			$titleTypeRadios.on("change", updateCustomNameVisibility);
+			updateCustomNameVisibility();
 		});
 	}
 </script>

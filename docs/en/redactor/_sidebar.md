@@ -37,7 +37,6 @@
   - Survey
     - [Survey](/redactor/apps/inquiry/README.md)
     - [Poll statistics](/redactor/apps/inquiry/inquiry-stat.md)
-  - [Archive files](/redactor/apps/file_archiv/README.md)
   - Banner system
     - [List of banners](/redactor/apps/banner/README.md)
     - [Banner statistics](/redactor/apps/banner/banner-stat/README.md)
@@ -92,6 +91,7 @@
     - [Configure event types](/redactor/apps/calendar/calendar-types/README.md)
     - [Unauthorised events](/redactor/apps/calendar/non-approved-events/README.md)
     - [Event recommendation](/redactor/apps/calendar/suggest-events/README.md)
+  - [News calendar](/redactor/apps/news-calendar/README.md)
   - [Contact](/redactor/apps/contact/README.md)
   - [Map](/redactor/apps/map/README.md)
   - [Site Map](/redactor/apps/sitemap/README.md)
@@ -116,7 +116,9 @@
     - [List of reservations](/redactor/apps/reservation/reservations/README.md)
     - [Reservation statistics](/redactor/apps/reservation/reservations-stat/README.md)
     - [List of reservation objects](/redactor/apps/reservation/reservation-objects/README.md)
+    - [Booking app](/redactor/apps/reservation/reservation-app/README.md)
     - [Time Reservation app](/redactor/apps/reservation/time-book-app/README.md)
+    - [Booking days app](/redactor/apps/reservation/day-book-app/README.md)
   - [SEO](/redactor/apps/seo/README.md)
   - [Scripts](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)
@@ -135,4 +137,11 @@
     - [Editing files](/redactor/files/fbrowser/file-edit/README.md)
     - [File settings](/redactor/files/fbrowser/file-settings/README.md)
     - [Folder settings](/redactor/files/fbrowser/folder-settings/README.md)
+  - Document Manager
+    - [Documents](/redactor/files/file-archive/README.md)
+    - [Categories](/redactor/files/file-archive/category-manager.md)
+    - [Products](/redactor/files/file-archive/product-manager.md)
+    - [Export of documents](/redactor/files/file-archive/export-files.md)
+    - [Import of documents](/redactor/files/file-archive/import-files.md)
+    - [Document Manager application](/redactor/files/file-archive/file-archive-app.md)
   - [System backup](/sysadmin/files/backup/README.md)

@@ -691,7 +691,7 @@ public class ContactPlaceEntity {
     @Id
     @GeneratedValue(generator = "WJGen_ContactPlace")
     @TableGenerator(name = "WJGen_ContactPlace", pkColumnValue = "ContactPlace")
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID", renderFormat = "dt-format-selector")
+    @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
     @JoinColumn(name = "CATEGORY_ID")
@@ -773,6 +773,73 @@ Since we often store only the user ID in the database, typically in the `user_id
 ```
 
 Spring repository must extend `JpaSpecificationExecutor` as above. Standard implementation in `DatatableRestControllerV2.addSpecSearch` already includes search by parameter `searchUserFullName` which is typical of such cases. So if you don't need any other special search, the display and search by user name will work automatically.
+
+## Arrangement
+
+By default, the column is arranged according to the defined column. The option to set the ordering can be disabled by setting the attribute `@DataTableColumn(orderable = false)`. By default, this attribute is set to `true`, but for nested attributes `@DataTableColumnNested editorFields` is off.
+
+Sometimes it is necessary to set a different column for the layout, or for composite columns to set the layout by multiple columns. Example:
+
+```java
+public class BasketInvoiceEditorFields extends BaseEditorFields {
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title="components.basket.invoice_email.surname",
+		hiddenEditor = true,
+        sortAfter = "id",
+        orderable = true,
+        orderProperty = "contactLastName,deliverySurName"
+    )
+    private String lastName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title="components.basket.invoice.name",
+		hiddenEditor = true,
+        sortAfter = "id",
+        orderable = true,
+        orderProperty = "contactFirstName,deliveryName"
+    )
+    private String firstName;
+}
+```
+
+If you need to specially arrange the results it is possible to override the method `public Pageable addSpecSort(Map<String, String> params, Pageable pageable)` in which you edit `Pageable` object. Example:
+
+```java
+public class BasketInvoiceRestController extends DatatableRestControllerV2<BasketInvoiceEntity, Long> {
+    ...
+    @Override
+    public Pageable addSpecSort(Map<String, String> params, Pageable pageable) {
+
+        Sort modifiedSort = pageable.getSort();
+
+        String[] sortList = Tools.getTokens(params.get("sort"), "\n", true);
+        for (String sort : sortList ) {
+            String[] data = Tools.getTokens(sort, ",", true);
+            if (data.length!=2) continue;
+            String field = data[0];
+            Direction direction;
+            if ("asc".equals(data[1])) {
+                direction = Direction.ASC;
+            } else if ("desc".equals(data[1])) {
+                direction = Direction.DESC;
+            } else {
+                continue;
+            }
+            if ("editorFields.firstName".equals(field)) {
+                modifiedSort = modifiedSort.and(Sort.by(direction, "contactFirstName", "deliveryName"));
+            } else if ("editorFields.lastName".equals(field)) {
+                modifiedSort = modifiedSort.and(Sort.by(direction, "contactLastName", "deliverySurName"));
+            }
+        }
+
+        // create new Pageable object with modified sort
+        Pageable modifiedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), modifiedSort);
+        return super.addSpecSort(params, modifiedPageable);
+    }
+}
+```
 
 ## Validation / mandatory fields
 

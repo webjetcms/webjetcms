@@ -287,7 +287,7 @@ Scenario('Zadanie neexistujúceho docid', ({I}) => {
      I.waitForInvisible(alert, 30);
 
      I.say('Zadám do inputu ID dalšieho neexistujúceho dokumentu.');
-     I.fillField(input, '123456');
+     I.fillField(input, '1234567');
      I.say('Testuje zobrazenie hlášky. Nesmie sa zobraziť.');
      I.waitForInvisible(alert, 30);
 

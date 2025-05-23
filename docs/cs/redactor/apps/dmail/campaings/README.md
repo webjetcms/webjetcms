@@ -59,21 +59,9 @@ K emailu můžete přiložit maximálně 3 přílohy (soubory).
 
 ![](advanced.png)
 
-## Skupiny
-
-V kartě **Skupiny** vybráním/zaškrtnutím konkrétní skupiny uživatelů se **po uložení kampaně** přidají uživatelé patřící pod tyto skupiny mezi příjemce. Což znamená, že budou dostávat emaily této kampaně.
-
-Akce na které je třeba si dát pozor:
-- při změně seznamu příjemců je nezbytné **opětovné uložení kampaně** (pokud ještě uložena nebyla), pro korektní přepočítávání příjemců a odeslaných emailů.
-- změníte-li seznam příjemců PO odeslání emailů, výsledná statistika nebude správná a může vzbudit dojem problému při odesílání.
-
-Při uložení kampaně se spočítá reálný seznam příjemců a již odeslaných emailů z databázové tabulky `emails`.
-
-![](users.png)
-
 ## Příjemci
 
-V kartě **Příjemci** vidíme přehled všech příjemců, kteří budou dostavět emaily kampaně. Příjemce lze v tabulce přidat, upravit, duplikovat nebo smazat.
+V kartě **Příjemci** vidíme přehled všech příjemců, kteří budou dostavět emaily kampaně. Příjemce lze v tabulce přidat, upravit, duplikovat nebo smazat. Při uložení kampaně se spočítá reálný seznam příjemců a již odeslaných emailů z databázové tabulky `emails`
 
 ![](receivers.png)
 
@@ -81,6 +69,7 @@ V kartě **Příjemci** vidíme přehled všech příjemců, kteří budou dosta
 - ochrana proti duplicitě, kontroluje se duplicita v zadaných emailech i s těmi, které již existují v kampani
 - ochrana proti nevhodnému emailu, email musí splňovat standardní formát **jméno@domena.sk** (speciální výjimka při [Import z xlsx](#import-z-xlsx))
 - ochrana proti odhlášeným emailům, nelze přidat příjemce, jehož emailová adresa je v seznamu [Odhlášené e-maily](../unsubscribed/README.md)
+!>**Upozornění,** změníte-li seznam příjemců PO odeslání emailů, výsledná statistika nebude správná a může vzbudit dojem problému při odesíláním.
 
 ### Stav E-mailu
 
@@ -114,6 +103,22 @@ Uložení skončilo na třetím emailu `Test13Wrong` kvůli hodnotě v nesprávn
 Jelikož ze zadaných pěti byly pouze 3 emaily vyhovující, tak se přidali pouze tři příjemci ke kampani.
 
 ![](recipients_B.png)
+
+### Přidání ze skupiny
+
+Pro hromadné přidání emailů do kampaně slouží tlačítko ![](users_from_group_button.png ":no-zoom"). Po kliknutí zobrazí dialogové okno s dostupnými skupinami uživatelů.
+
+Po vybrání/zaškrtnutí požadované skupiny (nebo více skupin) musíte svou volbu potvrdit stisknutím tlačítka ![](users_from_group_OK_button.png ":no-zoom"). Pokud nechcete svou změnu uložit, musíte zavřít dialogové okno.
+
+![](users.png)
+
+!>**Upozornění:** vaše změny **se uloží okamžitě**. To znamená, že se nečeká na uložení kampaně! Je třeba si na to dát pozor, jelikož i když neuložíte upravovanou kampaň, příjemci přidáni/odstraněni výběrem skupiny zůstanou změněni.
+
+Vaše změny se okamžitě projeví v kartě **Příjemci**. Emaily přidané ze skupiny budou vždy obsahovat nějakou hodnotu ve sloupci **Skupiny**. Může nastat situace, že mezi příjemci jsou emaily, které spadají pod nějakou skupinu i když žádná skupina kampani nebyla přidána. Situace nastává, pokud ručně přidáte email patřící pod nějakou skupinu. WebJET jej automaticky rozpozná a bude zobrazovat ve sloupci **Skupina** všechny skupiny, pod které patří.
+
+![](receivers_B.png)
+
+!>**Upozornění:** některé emaily mohou patřit do více skupin. Aby se email přidal k příjemcům stačí, aby byla přidána pouze jedna z těchto skupin. Pokud email patří do 3 skupin a vy je přidáte všechny, **nenastane duplicita emailů**, protože duplicita emailů není povolena.
 
 ### Import z xlsx
 

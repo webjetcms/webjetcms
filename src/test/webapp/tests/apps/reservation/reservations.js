@@ -429,6 +429,31 @@ Scenario('cleanup', ({ I, DT, DTE }) => {
 });
 
 
+Scenario('Testovanie app -  Rezervácie', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Rezervácie', '#components-reservation-title');
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.see("Vyhľadávanie v rezerváciách");
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    DTE.selectOption("reservationType", "Zoznam izieb");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+    I.see("Vyberte si izbu");
+});
+
 /**
  * Selects a specific date from a date picker.
  *
