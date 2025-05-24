@@ -149,7 +149,7 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
     @Bean(name = "multipartResolver")
     public CommonsMultipartResolver multipartResolver() {
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-        multipartResolver.setMaxUploadSize(-1);
+        //multipartResolver.setMaxUploadSize(-1);
         return multipartResolver;
     }
 
