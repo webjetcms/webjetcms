@@ -14,6 +14,7 @@ import java.util.Set;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -51,7 +52,7 @@ public class ContextRequest implements HttpServletRequest
 		this.contextPath = original.getContextPath();
 		this.original = original;
 	}
-	
+
 	@Override
 	public String getParameter(String parameter)
 	{
@@ -66,7 +67,7 @@ public class ContextRequest implements HttpServletRequest
 		{
 			newMap.put(me.getKey(), removeCp(me.getValue()));
 		}
-		
+
 		return newMap;
 	}
 	@Override
@@ -78,8 +79,8 @@ public class ContextRequest implements HttpServletRequest
 	public String[] getParameterValues(String parameter)
 	{
 		return removeCp(original.getParameterValues(parameter));
-	}	
-	
+	}
+
 	/**
 	 * Odstrani context path z celej sady parametrov
 	 * @param values
@@ -94,7 +95,7 @@ public class ContextRequest implements HttpServletRequest
 		}
 		return newValues;
 	}
-			
+
 	//-----------------DELEGATE METHODS--------------------------
 	@Override
 	public Object getAttribute(String attribute)
@@ -222,11 +223,6 @@ public class ContextRequest implements HttpServletRequest
 		return original.getReader();
 	}
 	@Override
-	public String getRealPath(String localPath)
-	{
-		return original.getRealPath(localPath);
-	}
-	@Override
 	public String getRemoteAddr()
 	{
 		return original.getRemoteAddr();
@@ -307,11 +303,6 @@ public class ContextRequest implements HttpServletRequest
 		return original.isRequestedSessionIdFromCookie();
 	}
 	@Override
-	public boolean isRequestedSessionIdFromUrl()
-	{
-		return original.isRequestedSessionIdFromUrl();
-	}
-	@Override
 	public boolean isRequestedSessionIdFromURL()
 	{
 		return original.isRequestedSessionIdFromURL();
@@ -346,7 +337,7 @@ public class ContextRequest implements HttpServletRequest
 	{
 		original.setCharacterEncoding(encoding);
 	}
-	
+
 	@Override
 	public boolean authenticate(HttpServletResponse res) throws IOException,
 			ServletException {
@@ -429,6 +420,21 @@ public class ContextRequest implements HttpServletRequest
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public String getProtocolRequestId() {
+		return original.getProtocolRequestId();
+	}
+
+	@Override
+	public String getRequestId() {
+		return original.getRequestId();
+	}
+
+	@Override
+	public ServletConnection getServletConnection() {
+		return original.getServletConnection();
 	}
 
 }

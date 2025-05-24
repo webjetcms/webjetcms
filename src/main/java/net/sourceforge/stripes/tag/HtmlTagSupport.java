@@ -175,21 +175,21 @@ public abstract class HtmlTagSupport extends StripesTagSupport implements Dynami
         try {
             writer.print("<");
             writer.print(tag);
-
+            
             //WebJET - automaticky nastaveny autocomplete na login formoch
             if (sk.iway.iwcm.Constants.getBoolean("formLoginProtect"))
             {
 	            String type = get("type");
 	            String name = get("name");
 	            if (name != null) name = name.toLowerCase();
-
+	            
 	            boolean setAutocompleteOff = false;
 	            if (type != null && type.equals("password")) setAutocompleteOff = true;
 	            if (name != null && (name.indexOf("email")!=-1 || name.indexOf("login")!=-1)) setAutocompleteOff = true;
-
+	            
 	            if (setAutocompleteOff) set("autocomplete", "off");
-            }
-
+            }            
+            
             writeAttributes(writer);
             writer.print(" />");
         }
@@ -235,10 +235,8 @@ public abstract class HtmlTagSupport extends StripesTagSupport implements Dynami
     @SuppressWarnings({ "unchecked", "deprecation" })
 	protected <R> R evaluateExpression(String expression, Class<R> resultType) throws StripesJspException {
         try {
-            return (R)
-                this.pageContext
-                    .getExpressionEvaluator()
-                    .evaluate(expression, resultType, this.pageContext.getVariableResolver(), null);
+            return (R) this.pageContext.getExpressionEvaluator().
+                evaluate(expression, resultType, this.pageContext.getVariableResolver(), null);
         }
         catch (jakarta.servlet.jsp.el.ELException ele) {
             throw new StripesJspException

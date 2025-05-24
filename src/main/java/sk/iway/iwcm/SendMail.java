@@ -9,9 +9,9 @@ import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.utils.Pair;
 
-import javax.activation.DataHandler;
-import javax.activation.FileDataSource;
-import javax.activation.URLDataSource;
+import jakarta.activation.DataHandler;
+import jakarta.activation.FileDataSource;
+import jakarta.activation.URLDataSource;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import jakarta.servlet.http.HttpServletRequest;

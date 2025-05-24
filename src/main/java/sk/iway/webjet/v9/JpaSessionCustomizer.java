@@ -4,9 +4,10 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.persistence.config.SessionCustomizer;
+import org.eclipse.persistence.sessions.SessionCustomizer;
 import org.eclipse.persistence.descriptors.ClassDescriptor;
 import org.eclipse.persistence.sessions.Session;
+import org.eclipse.persistence.sequencing.Sequence;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
@@ -46,9 +47,8 @@ public class JpaSessionCustomizer implements SessionCustomizer {
             /**
              * Replace default EclipseLink.TableSequence with our WJGenSequence using PkeyGenerator
              */
-            @SuppressWarnings("unchecked")
-            Set<Map.Entry<String, Object>> entrySet = session.getLogin().getDatasourcePlatform().getSequences().entrySet();
-            for (Map.Entry<String, Object> entry : entrySet) {
+            Set<Map.Entry<String, Sequence>> entrySet = session.getLogin().getDatasourcePlatform().getSequences().entrySet();
+            for (Map.Entry<String, Sequence> entry : entrySet) {
                 Logger.debug(getClass(), "sequence=" + entry.getKey() + " " + entry.getValue().getClass());
 
                 if (entry.getValue() instanceof org.eclipse.persistence.sequencing.TableSequence) {

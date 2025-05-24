@@ -30,9 +30,9 @@ import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.DiskMultiPartRequestHandler;
 import sk.iway.upload.UploadedFile;
 
-import javax.activation.DataHandler;
-import javax.activation.FileDataSource;
-import javax.activation.MimetypesFileTypeMap;
+import jakarta.activation.DataHandler;
+import jakarta.activation.FileDataSource;
+import jakarta.activation.MimetypesFileTypeMap;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import jakarta.servlet.ServletException;
