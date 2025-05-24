@@ -8,7 +8,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('Base screens', ({ I, DT, DTE, Document }) => {
+Scenario('Base screens', ({ I, DT, DTE, Document, i18n }) => {
     const invalidPngFileName = 'archive_file_invalid_format.png';
     const validPdfFileName = 'screenshot_file.pdf';
 
@@ -16,7 +16,7 @@ Scenario('Base screens', ({ I, DT, DTE, Document }) => {
 
     Document.screenshot("/redactor/files/file-archive/datatable.png");
 
-    DT.filterSelect("editorFields.statusIcons", 'Všetky verzie dokumentu');
+    DT.filterSelect("editorFields.statusIcons", i18n.get('All document versions'));
     Document.screenshot("/redactor/files/file-archive/datatable_allFiles.png");
 
     I.clickCss('#fileArchiveDataTable_wrapper .buttons-create');
@@ -27,7 +27,7 @@ Scenario('Base screens', ({ I, DT, DTE, Document }) => {
     I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");
     Document.screenshotElement("div.DTE_Action_Create", "/redactor/files/file-archive/editor_advanced.png");
 
-    I.clickCss("#pills-dt-fileArchiveDataTable-translationKeys-tab");
+    I.clickCss("#pills-dt-fileArchiveDataTable-customFields-tab");
     Document.screenshotElement("div.DTE_Action_Create", "/redactor/files/file-archive/editor_customFields.png");
 
     I.say("Invalid type file");
@@ -51,7 +51,7 @@ Scenario('Base screens', ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("div.toast-container div.toast", "/redactor/files/file-archive/file-duplicity-notif.png");
 });
 
-Scenario('Edit and actions screens', ({ I, DT, DTE, Document }) => {
+Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
     const mainBase = "ScreenshotFile_C";
 
     I.amOnPage('/apps/file-archive/admin/');
@@ -70,12 +70,12 @@ Scenario('Edit and actions screens', ({ I, DT, DTE, Document }) => {
     I.resizeWindow(1280, 850);
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/editor_edit_base.png");
 
-    I.selectOption('select#DTE_Field_editorFields-uploadType', "Nahradiť aktuálny dokument");
+    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Replace current document"));
     I.resizeWindow(1280, 450);
     I.scrollTo("#DTE_Field_editorFields-file");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/action_replace_file.png");
 
-    I.selectOption('select#DTE_Field_editorFields-uploadType', "Pridať do histórie verzií");
+    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Add to version history"));
     I.resizeWindow(1280, 550);
     I.scrollTo("#DTE_Field_editorFields-saveAfterSelect");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/action_move_behind.png");
@@ -85,7 +85,7 @@ Scenario('Edit and actions screens', ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/files/file-archive/action_move_behind_options.png");
     I.click(locate(".DTE_Field_Name_editorFields\\.saveAfterSelect").find("button"));
 
-    I.selectOption('select#DTE_Field_editorFields-uploadType', "Nahrať novú verziu");
+    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Upload a new version"));
     I.resizeWindow(1280, 500);
     I.scrollTo(".DTE_Field_Name_editorFields\\.saveLater");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/action_new_version.png");
@@ -122,7 +122,7 @@ Scenario('Upload file field for DOC', ({ I, DTE, Document }) => {
     Document.screenshotElement("div.DTE_Field_Type_wjupload", "/developer/datatables-editor/field-uploadFile-loading.png");
 
     I.say("Screen file is loaded");
-    I.waitForElement("//button[normalize-space(text())='Pridať' and not(@disabled)]", 10);
+    I.waitForElement(`//button[normalize-space(text())='${i18n.get("Add")}' and not(@disabled)]`, 10);
     Document.screenshotElement("div.DTE_Field_Type_wjupload", "/developer/datatables-editor/field-uploadFile-loaded.png");
 });
 
@@ -133,7 +133,7 @@ Scenario('Managers screens', ({ I, Document }) => {
     Document.screenshot("/redactor/files/file-archive/product-manager.png");
 });
 
-Scenario('Export', ({ I, Document }) => {
+Scenario('Export', ({ I, Document, i18n }) => {
     I.say("EXPORT - only main files");
         I.resizeWindow(1280, 500);
         I.amOnPage("/components/file_archiv/export_archiv.jsp");
@@ -141,12 +141,12 @@ Scenario('Export', ({ I, Document }) => {
         Document.screenshot("/redactor/files/file-archive/export_base.png");
 
         I.clickCss("input#btnOk");
-        I.waitForText("Čakajte prosím, priebieha EXPORT dokumentov a môže trvať niekoľko minút.", 30);
+        I.waitForText(i18n.get("Please wait, EXPORT of documents is in progress and may take several minutes."), 30);
         Document.screenshot("/redactor/files/file-archive/export_main_only.png");
 
         I.say("Remove file");
         I.click( locate("#dialogCentralRow").find("input.button100") );
-        I.waitForText("bol úspešne vymazaný", 30);
+        I.waitForText(i18n.get("was successfully deleted"), 30);
         Document.screenshot("/redactor/files/file-archive/export_removed.png");
 
     I.say("Export main + awaiting files");
@@ -156,12 +156,12 @@ Scenario('Export', ({ I, Document }) => {
         I.click( locate("#exportArchiveFileForm").find("input[name='includeAwaitingFiles']") );
 
         I.clickCss("input#btnOk");
-        I.waitForText("Čakajte prosím, priebieha EXPORT dokumentov a môže trvať niekoľko minút.", 30);
+        I.waitForText(i18n.get("Please wait, EXPORT of documents is in progress and may take several minutes."), 30);
         Document.screenshot("/redactor/files/file-archive/export_with_awaiting.png");
 
         I.say("Remove file");
         I.click( locate("#dialogCentralRow").find("input.button100") );
-        I.waitForText("bol úspešne vymazaný", 30);
+        I.waitForText(i18n.get("was successfully deleted"), 30);
 
     I.say("Export main + history files");
         I.resizeWindow(1280, 570);
@@ -170,12 +170,12 @@ Scenario('Export', ({ I, Document }) => {
         I.click( locate("#exportArchiveFileForm").find("input[name='includeHistoryFiles']") );
 
         I.clickCss("input#btnOk");
-        I.waitForText("Čakajte prosím, priebieha EXPORT dokumentov a môže trvať niekoľko minút.", 30);
+        I.waitForText(i18n.get("Please wait, EXPORT of documents is in progress and may take several minutes."), 30);
         Document.screenshot("/redactor/files/file-archive/export_with_history.png");
 
         I.say("Remove file");
         I.click( locate("#dialogCentralRow").find("input.button100") );
-        I.waitForText("bol úspešne vymazaný", 30);
+        I.waitForText(i18n.get("was successfully deleted"), 30);
 
     I.say("EXPORT - all files");
         I.resizeWindow(1280, 590);
@@ -185,12 +185,12 @@ Scenario('Export', ({ I, Document }) => {
         I.click( locate("#exportArchiveFileForm").find("input[name='includeAwaitingFiles']") );
 
         I.clickCss("input#btnOk");
-        I.waitForText("Čakajte prosím, priebieha EXPORT dokumentov a môže trvať niekoľko minút.", 30);
+        I.waitForText(i18n.get("Please wait, EXPORT of documents is in progress and may take several minutes."), 30);
         Document.screenshot("/redactor/files/file-archive/export_all.png");
 
         I.say("Remove file");
         I.click( locate("#dialogCentralRow").find("input.button100") );
-        I.waitForText("bol úspešne vymazaný", 30);
+        I.waitForText(i18n.get("was successfully deleted"), 30);
 });
 
 Scenario('Import', async ({ I, Document }) => {
@@ -229,7 +229,7 @@ Scenario('Import', async ({ I, Document }) => {
     Document.screenshot("/redactor/files/file-archive/import_replace_done.png");
 });
 
-Scenario('File archive editor app', async ({ I, DTE,  Document }) => {
+Scenario('File archive editor app', async ({ I, DTE,  Document, i18n }) => {
     let confLng = I.getConfLng();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77668");
@@ -242,23 +242,11 @@ Scenario('File archive editor app', async ({ I, DTE,  Document }) => {
     I.switchTo("iframe.cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.fillField("#search", "Manažér dokumentov");
+    I.fillField("#search", i18n.get("Document manager"));
     I.waitForVisible("#components-file_archiv-name");
     I.clickCss("#components-file_archiv-name");
 
-    switch (confLng) {
-        case "sk":
-            I.waitForText('Aplikácia pre manažment dokumentov a ich verzionovanie na jednom mieste.');
-            break;
-        case "en":
-            I.waitForText('An application for file management and versioning in one place.');
-            break;
-        case "cs":
-            I.waitForText('Aplikace pro management souborů a jejich verzionování na jednom místě.');
-            break;
-        default:
-            I.click('Unknown action');
-    }
+    I.waitForElement(locate(".app-name > h2").withText(i18n.get("Document manager")), 10);
 
     Document.screenshot("/redactor/files/file-archive/file-archiv-app-insert.png");
 

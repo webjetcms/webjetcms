@@ -36,7 +36,7 @@ Scenario('monitoring - node based', ({ I, Document }) => {
     Document.screenshotElement("div.dropdown-menu.show" ,"/sysadmin/monitoring/select-options.png");
 
     //Change selected node
-    I.click(locate("a.dropdown-item").withText("webjet4b"));
+    I.click(locate("a.dropdown-item").withText("webjet2b"));
     I.wait(1);
 
     //Call node refresh data (other then actual node)

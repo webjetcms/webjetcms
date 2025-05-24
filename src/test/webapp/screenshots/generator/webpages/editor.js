@@ -119,13 +119,11 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
             I.clickCss('button[type="submit"]');
             I.switchTo();
             Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay.png');
-
             I.switchTo("#wjImagePixabayIframeElement");
-            I.clickCss('img[src="https://cdn.pixabay.com/photo/2015/06/03/13/38/plymouth-796441_150.jpg"]');
+            I.clickCss('img[src="https://cdn.pixabay.com/photo/2012/04/12/23/47/car-30984_150.png"]');
             I.waitForVisible("#imageModal > div.modal-dialog");
             I.switchTo();
             Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay-add.png');
-
             I.switchTo("#wjImagePixabayIframeElement");
             I.fillField(locate("#imageModal").find("#imageWidth"), 800);
             I.switchTo();
@@ -172,7 +170,9 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
         I.clickCss('#cke_38');
         Document.screenshotElement(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last(),'/redactor/webpages/working-in-editor/table_preview.png');
         I.switchTo(locate('.cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_ltr').last());
-        I.switchTo('iframe');
+        I.switchTo();
+        I.switchTo("#cke_624_frame");
+        I.waitForElement('.cke_colormore', 10);
         I.clickCss('.cke_colormore');
         I.switchTo();
         Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(),'/redactor/webpages/working-in-editor/table_dialog.png');
@@ -221,7 +221,7 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     I.clickCss(".cke_dialog_ui_button_cancel");
 });
 
-Scenario('remove Pixabay image', ({ I, Document }) => {
+Scenario('remove Pixabay image', ({ I, Document, i18n }) => {
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy90ZXN0LXN0YXZvdi9tYW51YWx0ZXN0cGFnZQ_E_E");
 
     I.waitForElement(`.elfinder-cwd-filename`);
@@ -240,8 +240,8 @@ Scenario('remove Pixabay image', ({ I, Document }) => {
     I.rightClick(`.elfinder-cwd-filename`);
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss("span.elfinder-button-icon.elfinder-button-icon-rm");
-    I.waitForVisible( locate("div.ui-dialog-titlebar > span.elfinder-dialog-title").withText("Vymazať") );
-    I.click( locate("button.ui-button > span.ui-button-text").withText("Vymazať") );
+    I.waitForElement(".elfinder-dialog-confirm");
+    I.click( locate("button.ui-button > span.ui-button-text").withText(i18n.get("Delete")) );
     I.waitForInvisible(`.elfinder-cwd-filename`);
 });
 

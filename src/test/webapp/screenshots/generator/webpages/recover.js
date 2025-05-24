@@ -5,7 +5,7 @@ Before(({ I }) => {
 });
 
 
-Scenario('recover screens', ({ I, DT, DTE, Document }) => {
+Scenario('recover screens', ({ I, DT, DTE, Document, i18n }) => {
     let confLng = I.getConfLng();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
@@ -43,28 +43,16 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
 
     I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
     Document.screenshotElement(DT.btn.recovery_button, "/redactor/webpages/recover-button.png");
-    I.fillField("#folderIdInputWrapper", "");
+    //I.fillField("#folderIdInputWrapper", "");
     Document.screenshotElement("#folderIdInputWrapper", "/redactor/webpages/recover-folder-id-1.png");
     I.click(DT.btn.recovery_button);
 
-    switch (confLng) {
-        case "sk":
-            I.see("Nenašli sa žiadne vyhovujúce záznamy");
-            break;
-        case "en":
-            I.see("No matching records found");
-            break;
-        case "cs":
-            I.see("Nenašly se žádné vyhovující záznamy");
-            break;
-        default:
-            I.see("No matching records found");
-    }
+    I.waitForText(i18n.get("No matching records found"));
 
 
     I.moveCursorTo("div.toast-success");
     Document.screenshotElement("div.toast-success", "/redactor/webpages/recover-page-success.png");
-
+    pause();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
     I.click( locate("a.jstree-anchor").withText("recoverSubFolderOne") );
     I.click(DT.btn.tree_delete_button);
@@ -84,7 +72,6 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
             I.click('Unknown action');
     }
 
-
     DTE.waitForLoader();
     I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
@@ -92,7 +79,7 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     I.pressKey('Enter');
     DT.waitForLoader();
     Document.screenshotElement("#folderIdInputWrapper", "/redactor/webpages/recover-folder-id-2.png");
-    I.click(DT.btn.recovery_button);
+    I.click(DT.btn.tree_recovery_button);
     I.waitForElement("div.toast-info");
 
     switch (confLng) {

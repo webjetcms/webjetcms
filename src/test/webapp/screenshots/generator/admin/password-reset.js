@@ -72,21 +72,21 @@ function doScreens(I, Document, TempMail, isAdmin) {
 
     I.fillField('input[type="password"][name="newPassword"]', "asd");
     I.fillField(retypeInput, "asddd");
-    Document.screenshotElement("#login > div.container > div > div.content", basePath + screensPrefix + "-recovery-form-1.png");
+    Document.screenshotElement(".container", basePath + screensPrefix + "-recovery-form-1.png");
 
     I.clickCss(submitBtn);
-    Document.screenshotElement("#login > div.container > div > div.content", basePath + screensPrefix + "-recovery-form-2.png");
+    Document.screenshotElement(".container", basePath + screensPrefix + "-recovery-form-2.png");
 
     I.fillField('input[type="password"][name="newPassword"]', "asd");
     I.fillField(retypeInput, "asd");
     I.clickCss(submitBtn);
-    Document.screenshotElement("#login > div.container > div > div.content", basePath + screensPrefix + "-recovery-form-3.png");
+    Document.screenshotElement(".container", basePath + screensPrefix + "-recovery-form-3.png");
 
     const randomPassword = 'password_P' + I.getRandomText();
     I.fillField('input[type="password"][name="newPassword"]', randomPassword);
     I.fillField(retypeInput, randomPassword);
     I.clickCss(submitBtn);
-    Document.screenshot(basePath + screensPrefix + "-recovery-form-4.png", 700, 400);
+    Document.screenshot(".container", basePath + screensPrefix + "-recovery-form-4.png");
 
     I.closeCurrentTab();
     I.click("Ak si chcete zmeniť heslo, kliknite sem do 30 minút.");

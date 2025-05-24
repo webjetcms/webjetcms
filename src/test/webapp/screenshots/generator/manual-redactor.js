@@ -398,6 +398,7 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
 Scenario('logon', ({ I, Document, i18n }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
     I.amOnPage('/admin/logon/?language='+I.getConfLng()+'&id=2');
+    I.selectOption("#language", i18n.get("English"));
 
     I.fillField("#password", "12345");
     Document.screenshot("/redactor/admin/logon.png", 1080, 685);
@@ -418,7 +419,7 @@ Scenario('logon', ({ I, Document, i18n }) => {
     Document.screenshot("/redactor/admin/logon-weak-password.png", 1080, 685);
 });
 
-Scenario('customer zone', ({ I, Document }) => {
+Scenario('customer zone', ({ I, Document, i18n }) => {
     I.logout();
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
     I.wait(30); //password expiry time
