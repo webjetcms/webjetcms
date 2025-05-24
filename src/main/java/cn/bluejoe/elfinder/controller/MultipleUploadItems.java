@@ -12,8 +12,8 @@ import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload2.core.FileItemStream;
+import org.apache.commons.fileupload2.core.FileUploadException;
 import org.apache.commons.io.IOUtils;
 
 /**

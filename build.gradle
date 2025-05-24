@@ -127,7 +127,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
     implementation 'com.zaxxer:HikariCP:5.1.0'
 
-    implementation("commons-fileupload:commons-fileupload:1.+")
+    implementation("org.apache.commons:commons-fileupload2-jakarta:2.0.0-M1")
     implementation("commons-io:commons-io:2.18.0")
     implementation("commons-lang:commons-lang:2.6") //v2 is used in displaytag
     implementation("org.apache.commons:commons-lang3:3.12.0")

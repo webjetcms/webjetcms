@@ -1,6 +1,6 @@
 package sk.iway.upload;
 
-import org.apache.commons.fileupload.ProgressListener;
+import org.apache.commons.fileupload2.core.ProgressListener;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 
