@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.List;
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg", commonSettings = true)
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg,/components/app-cookiebar/screenshot-2.jpg", commonSettings = true)
 @Getter
 @Setter
 public class DemoComponent extends WebjetComponentAbstract {
