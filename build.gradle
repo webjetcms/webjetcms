@@ -44,6 +44,8 @@ ext {
     mapstructVersion = "1.6.1";
     springVersion = "5.3.+";
     springSecurityVersion = "5.8.+";
+    allureVersion = "2.24.0";
+    aspectJVersion = '1.9.21';
 }
 
 lombok {
@@ -105,8 +107,6 @@ sourceSets {
     }
  }
 
-def allureVersion = "2.24.0"
-def aspectJVersion = '1.9.21'
 
 configurations {
     all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
@@ -131,7 +131,7 @@ configurations {
         canBeResolved = true
         canBeConsumed = true
     }
-}
+ }
 
 dependencies {
 
