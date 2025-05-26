@@ -2,21 +2,21 @@
 <%
 	sk.iway.iwcm.Encoding
 			.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%><%@ 
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,sk.iway.iwcm.i18n.Prop"%><%@
 taglib
-	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@ 
+	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"
-	uri="/WEB-INF/iway.tld"%><%@ 
+	uri="/WEB-INF/iway.tld"%><%@
 taglib prefix="bean"
-	uri="/WEB-INF/struts-bean.tld"%><%@ 
+	uri="/WEB-INF/struts-bean.tld"%><%@
 taglib prefix="html"
-	uri="/WEB-INF/struts-html.tld"%><%@ 
+	uri="/WEB-INF/struts-html.tld"%><%@
 taglib prefix="logic"
-	uri="/WEB-INF/struts-logic.tld"%><%@ 
+	uri="/WEB-INF/struts-logic.tld"%><%@
 taglib prefix="display"
-	uri="/WEB-INF/displaytag.tld"%><%@ 
+	uri="/WEB-INF/displaytag.tld"%><%@
 taglib prefix="stripes"
-	uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+	uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib
 	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%
@@ -26,23 +26,26 @@ taglib
 	int docId = ((doc==null)? -1 : doc.getDocId());
 	String docTitle = ((doc==null)? " " : doc.getTitle());
 	String docLink = ((doc==null)? " " : doc.getDocLink());
-	
+
 	PageParams pageParams = new PageParams(request);
 
 	String login = Tools.replace(pageParams.getValue("login",""), ".disqus.com", "");
-	login = Tools.replace(login, "https://", "");	
+	login = Tools.replace(login, "https://", "");
 %>
 
 
 <div id="disqus_thread"></div>
 <script type="text/javascript">
 /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-var disqus_shortname = '<%=login %>'; 
+var disqus_shortname = '<%=login %>';
 var disqus_identifier = '<%=docId%>';
 var disqus_title = '<%=docTitle%>';
 var disqus_url = '<%=Tools.getBaseHref(request)%><%=docLink%>';
 
 /* * * DON'T EDIT BELOW THIS LINE * * */
+var disqus_config = function () {
+  this.language = '<%=lng%>';
+};
 (function() {
 var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
 dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
