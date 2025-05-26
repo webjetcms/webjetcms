@@ -556,7 +556,7 @@ public class UserDetailsService {
                 errors.rejectValue("errorField.password", "403", errorText);
             }
         } else if (Tools.isEmpty(entity.getPassword())) {
-            errors.rejectValue("errorField.password", "403", prop.getText("javax.validation.constraints.NotBlank.message"));
+            errors.rejectValue("errorField.password", "403", prop.getText("jakarta.validation.constraints.NotBlank.message"));
         }
     }
 

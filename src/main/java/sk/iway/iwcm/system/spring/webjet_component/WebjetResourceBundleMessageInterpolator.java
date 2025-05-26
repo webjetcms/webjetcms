@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 import jakarta.el.ELManager;
 import jakarta.el.ExpressionFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ValidationException;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.ValidationException;
 
 import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTerm;
 import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTermType;
@@ -24,8 +24,8 @@ import org.hibernate.validator.internal.engine.messageinterpolation.parser.Token
 import org.hibernate.validator.internal.util.ConcurrentReferenceHashMap;
 import org.hibernate.validator.internal.util.logging.Log;
 import org.hibernate.validator.internal.util.logging.LoggerFactory;
-import org.hibernate.validator.internal.util.privilegedactions.GetClassLoader;
-import org.hibernate.validator.internal.util.privilegedactions.SetContextClassLoader;
+import org.hibernate.validator.internal.util.actions.GetClassLoader;
+import org.hibernate.validator.internal.util.actions.SetContextClassLoader;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.hibernate.validator.resourceloading.PlatformResourceBundleLocator;
 import org.hibernate.validator.spi.resourceloading.ResourceBundleLocator;

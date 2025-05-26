@@ -15,7 +15,7 @@ import sk.iway.iwcm.users.UsersDB;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
 import java.util.StringTokenizer;

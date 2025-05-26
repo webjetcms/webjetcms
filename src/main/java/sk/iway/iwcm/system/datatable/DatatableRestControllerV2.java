@@ -49,7 +49,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
-import javax.validation.*;
+import jakarta.validation.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -1864,7 +1864,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		String errCause = firstViolation.getMessageTemplate();
 		if(Tools.isNotEmpty(errCause) && errCause.startsWith("{") && errCause.endsWith("}")) {
-			//For example {javax.validation.constraints.NotBlank.message}
+			//For example {jakarta.validation.constraints.NotBlank.message}
 			errCause = errCause.substring(1, errCause.length() - 1);
 			errCause = Prop.getInstance().getText( errCause );
 		} else {

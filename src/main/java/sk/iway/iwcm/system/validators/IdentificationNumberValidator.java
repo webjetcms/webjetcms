@@ -1,7 +1,7 @@
 package sk.iway.iwcm.system.validators;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 import sk.iway.iwcm.BirthNumber;
 import sk.iway.iwcm.system.annotations.validations.IdentificationNumberConstraint;

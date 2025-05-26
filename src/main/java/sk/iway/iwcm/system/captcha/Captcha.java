@@ -209,7 +209,7 @@ public class Captcha
 		double minimalScore = Tools.getDoubleValue(Constants.getString("recaptchaMinScore"), 0.5);
 
 		if (response.getStatusCode() != HttpStatus.OK) {
-			Logger.debug("reCaptchaV3Validate - Google response status not ok: {}", response.getStatusCode().name());
+			Logger.debug("reCaptchaV3Validate - Google response status not ok: {}", response.getStatusCode().toString());
 			return false;
 		}
 

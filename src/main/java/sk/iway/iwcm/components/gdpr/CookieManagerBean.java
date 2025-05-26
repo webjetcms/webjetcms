@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import sk.iway.iwcm.database.ActiveRecord;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;

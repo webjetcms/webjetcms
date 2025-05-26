@@ -9,8 +9,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -45,7 +45,7 @@ public class InquiryAnswerEntity extends ActiveRecordRepository implements Seria
             attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
         )
     )
-    @javax.validation.constraints.NotNull
+    @jakarta.validation.constraints.NotNull
     private Integer questionId;
 
     @Column(name = "answer_text")

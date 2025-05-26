@@ -15,8 +15,8 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
 import jakarta.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;

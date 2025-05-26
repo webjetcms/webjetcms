@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Table;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;

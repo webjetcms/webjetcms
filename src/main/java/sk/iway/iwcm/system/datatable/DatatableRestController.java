@@ -5,12 +5,12 @@ import java.util.Set;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceUnit;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -94,7 +94,7 @@ public abstract class DatatableRestController<T, ID extends Serializable>
 				T modified = em.merge(entity);
 				em.getTransaction().commit();
 				em.close();
-				return new ResponseEntity<>(modified, null, HttpStatus.OK);
+				return new ResponseEntity<>(modified, HttpStatus.OK);
 		  }
 	 }
 
@@ -124,6 +124,6 @@ public abstract class DatatableRestController<T, ID extends Serializable>
 				}
 		  }
 
-		  return new ResponseEntity<>(response, null, HttpStatus.OK);
+		  return new ResponseEntity<>(response, HttpStatus.OK);
 	 }
 }

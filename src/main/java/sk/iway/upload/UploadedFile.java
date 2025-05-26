@@ -26,62 +26,62 @@ import sk.iway.iwcm.io.IwcmInputStream;
  */
 public class UploadedFile
 {
-	
+
 	private DiskFileItem diskFileItem = null;
 	private IwcmFile localFile = null;
-	
+
 	public UploadedFile(DiskFileItem file)
 	{
 		this.diskFileItem = file;
 	}
-	
+
 	public String getFilePath()
 	{
 		if (localFile!=null)
 			return localFile.getAbsolutePath();
 		if (diskFileItem != null)
-			return diskFileItem.getStoreLocation().getAbsolutePath();
+			return diskFileItem.getPath().toAbsolutePath().toString();
 		else
 			return "";
 	}
 
-	
+
 	public String getContentType()
-	{		
+	{
 		return diskFileItem.getContentType();
-		
+
 	}
 
-	
+
 	public byte[] getFileData() throws FileNotFoundException, IOException
 	{
 		if (localFile!=null && localFile.exists())
 		{
 			IOUtils.toByteArray(new IwcmInputStream(localFile));
 		}
-		
+
 		return diskFileItem.get();
-		
-	}
-	
-	public String getFileName()
-	{		
-		return diskFileItem.getName();		
+
 	}
 
-	
+	public String getFileName()
+	{
+		return diskFileItem.getName();
+	}
+
+
 	public int getFileSize()
 	{
 		if (localFile!=null && localFile.exists())
 		{
 			return Tools.safeLongToInt(new File(localFile.getAbsolutePath()).length());
 		}
-		
+
 			return (int)diskFileItem.getSize();
-		
+
 	}
 
-	
+
 	public InputStream getInputStream() throws FileNotFoundException, IOException
 	{
 		if (localFile!=null && localFile.exists())
@@ -91,12 +91,16 @@ public class UploadedFile
 		return diskFileItem.getInputStream();
 
 	}
-	
+
 	public void destroy()
 	{
 		if (localFile!=null && localFile.exists()) localFile.delete();
 
-		diskFileItem.delete();
+		try {
+			diskFileItem.delete();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 	}
 

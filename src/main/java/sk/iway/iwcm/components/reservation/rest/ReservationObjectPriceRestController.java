@@ -70,9 +70,9 @@ public class ReservationObjectPriceRestController  extends DatatableRestControll
         if(target.getAction().equals("create") || target.getAction().equals("edit")) {
 
             if(entity.getDateFrom() == null)
-                errors.rejectValue("errorField.dateFrom", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                errors.rejectValue("errorField.dateFrom", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
             if(entity.getDateTo() == null)
-                errors.rejectValue("errorField.dateTo", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                errors.rejectValue("errorField.dateTo", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
 
             //both dates must be set
             if(entity.getDateFrom() == null || entity.getDateTo() == null) return;

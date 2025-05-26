@@ -145,7 +145,10 @@ dependencies {
     implementation("org.eclipse.persistence:eclipselink:4.0.+")
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.10.1") //generate.jsp for pagebuilder, refactor to jackson
-    implementation("org.hibernate.validator:hibernate-validator:6.0.22.Final")
+
+    implementation("org.hibernate.validator:hibernate-validator:9.0.0.Final")
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.13")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.+")

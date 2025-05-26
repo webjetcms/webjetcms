@@ -170,7 +170,7 @@ public abstract class BasePaymentMethod {
             if(fieldMapAttr.isRequired() == true) {
                 String fieldValue = getPaymentFieldValue(paymentMethod, fieldMapAttr.fieldAlphabet());
                 if(Tools.isAnyEmpty(fieldValue) == true) {
-                    errors.rejectValue("errorField.field" + fieldMapAttr.fieldAlphabet(), null, prop.getText("javax.validation.constraints.NotBlank.message"));
+                    errors.rejectValue("errorField.field" + fieldMapAttr.fieldAlphabet(), null, prop.getText("jakarta.validation.constraints.NotBlank.message"));
                 }
             }
         }

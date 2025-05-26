@@ -284,7 +284,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if(!valid) errors.rejectValue("errorField.editorFields.docDetails", null, getProp().getText("media.doc_tree_select.required"));
 
             //also show validate error for title
-            if (Tools.isEmpty(entity.getMediaTitleSk())) errors.rejectValue("errorField.mediaTitleSk", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+            if (Tools.isEmpty(entity.getMediaTitleSk())) errors.rejectValue("errorField.mediaTitleSk", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
         }
     }
 

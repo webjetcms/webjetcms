@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.fileupload2.core.FileItemHeaders;
-
+import org.apache.commons.fileupload2.core.FileItemHeadersProvider;
 import org.apache.commons.fileupload2.core.FileUploadException;
 import org.apache.commons.fileupload2.core.DiskFileItemFactory;
 import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
@@ -42,6 +43,7 @@ import sk.iway.iwcm.users.UsersDB;
  *@created      Date: 26.3.2007 9:52:29
  *@modified     $Date: 2009/09/11 06:54:19 $
  */
+@SuppressWarnings("rawtypes")
 public class MultipartWrapper implements net.sourceforge.stripes.controller.multipart.MultipartWrapper //NOSONAR
 {
 	private HttpServletRequest request;
@@ -106,11 +108,11 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		try
 		{
 			Logger.debug(MultipartWrapper.class, "Build IMPL");
-			DiskFileItemFactory factory = new DiskFileItemFactory();
-			factory.setRepository(tempDir);
+			DiskFileItemFactory factory = DiskFileItemFactory.builder().setPath(tempDir.toPath()).get();
+			//factory.setRepository(tempDir);
 
 			JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
-			upload.setHeaderEncoding(SetCharacterEncodingFilter.getEncoding());
+			upload.setHeaderCharset(Charset.forName(SetCharacterEncodingFilter.getEncoding()));
 
 			// MBO FIX: po upgrade Stripes niekedy davno:) prestali ist uploady
 			// velkych suborov, maxPostSize sa ktovie odkial bral a mal hodnotu
@@ -132,10 +134,10 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
                         values = new ArrayList<>();
                         params.put(item.getFieldName(), values);
                     }
-                    values.add(item.getString(SetCharacterEncodingFilter.getEncoding()));
+                    values.add(item.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding())));
 
                     if (item.getFieldName().equalsIgnoreCase("upload_path[]")) {
-                        uploadPaths.add(item.getString(SetCharacterEncodingFilter.getEncoding()));
+                        uploadPaths.add(item.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding())));
                     }
                 }
             }
@@ -220,10 +222,6 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 			slowdownUpload();
 
 			isParsed = true;
-		}
-		catch (javax.naming.SizeLimitExceededException slee)
-		{
-			throw new FileUploadLimitExceededException(maxPostSize, maxPostSize);
 		}
 		catch (FileUploadException fue)
 		{
@@ -433,8 +431,8 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public String getString(String paramString) throws UnsupportedEncodingException {
-			return item.getString(paramString);
+		public String getString(Charset toCharset) throws IOException {
+			return item.getString(toCharset);
 		}
 
 		@Override
@@ -443,15 +441,13 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public void write(File paramFile) throws Exception {
-			item.write(paramFile);
-
+		public FileItem write(Path paramFile) throws IOException {
+			return item.write(paramFile);
 		}
 
 		@Override
-		public void delete() {
-			item.delete();
-
+		public FileItem delete() throws IOException {
+			return item.delete();
 		}
 
 		@Override
@@ -460,9 +456,8 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public void setFieldName(String paramString) {
-			item.setFieldName(paramString);
-
+		public FileItem setFieldName(String paramString) {
+			return item.setFieldName(paramString);
 		}
 
 		@Override
@@ -471,9 +466,8 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public void setFormField(boolean paramBoolean) {
-			item.setFormField(paramBoolean);
-
+		public FileItem setFormField(boolean paramBoolean) {
+			return item.setFormField(paramBoolean);
 		}
 
 		@Override
@@ -487,9 +481,8 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 		}
 
 		@Override
-		public void setHeaders(FileItemHeaders arg0) {
-			item.setHeaders(arg0);
-
+		public FileItemHeadersProvider setHeaders(FileItemHeaders arg0) {
+			return item.setHeaders(arg0);
 		}
 
    }

@@ -383,24 +383,24 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
             if(Tools.isTrue(allDay)) {
                 if(entity.getEditorFields().getArrivingTime() == null) {
-                    //errors.rejectValue("errorField.editorFields.arrivingTime", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                    //errors.rejectValue("errorField.editorFields.arrivingTime", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
                     if (entity.getEditorFields().getReservationTimeFrom() != null) entity.getEditorFields().setArrivingTime(entity.getEditorFields().getReservationTimeFrom());
                     else entity.getEditorFields().setArrivingTime(ReservationService.getArrivalTime(entity));
                 }
                 if(entity.getEditorFields().getDepartureTime() == null) {
-                    //errors.rejectValue("errorField.editorFields.departureTime", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                    //errors.rejectValue("errorField.editorFields.departureTime", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
                     if (entity.getEditorFields().getReservationTimeTo() != null) entity.getEditorFields().setDepartureTime(entity.getEditorFields().getReservationTimeTo());
                     else entity.getEditorFields().setDepartureTime(ReservationService.getDepartureTime(entity));
                 }
             } else {
                 if(entity.getEditorFields().getReservationTimeFrom() == null)
-                    errors.rejectValue("errorField.editorFields.reservationTimeFrom", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                    errors.rejectValue("errorField.editorFields.reservationTimeFrom", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
                 if(entity.getEditorFields().getReservationTimeTo() == null)
-                    errors.rejectValue("errorField.editorFields.reservationTimeTo", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
+                    errors.rejectValue("errorField.editorFields.reservationTimeTo", null, getProp().getText("jakarta.validation.constraints.NotBlank.message"));
             }
 
             if(Tools.isNotEmpty(entity.getEmail()) && Tools.isEmail(entity.getEmail())==false) {
-                errors.rejectValue("errorField.email", null, getProp().getText("javax.validation.constraints.Email.message"));
+                errors.rejectValue("errorField.email", null, getProp().getText("jakarta.validation.constraints.Email.message"));
             }
         }
 

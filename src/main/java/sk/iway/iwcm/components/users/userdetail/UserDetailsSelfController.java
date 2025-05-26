@@ -97,7 +97,7 @@ public class UserDetailsSelfController extends DatatableRestControllerV2<UserDet
 
         //not empty aby pri prazdnej hlasilo v editore, ze to je povinne pole
         if (Tools.isNotEmpty(entity.getEmail()) && Tools.isEmail(entity.getEmail())==false) {
-            errors.rejectValue("errorField.email", null, prop.getText("javax.validation.constraints.Email.message"));
+            errors.rejectValue("errorField.email", null, prop.getText("jakarta.validation.constraints.Email.message"));
         }
 
     }

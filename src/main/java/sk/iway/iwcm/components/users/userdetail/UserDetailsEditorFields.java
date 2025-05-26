@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

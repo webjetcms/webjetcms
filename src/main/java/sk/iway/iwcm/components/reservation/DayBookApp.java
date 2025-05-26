@@ -8,7 +8,7 @@ import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
@@ -101,7 +101,7 @@ public class DayBookApp extends WebjetComponentAbstract {
         List<ObjectError> errors = new ArrayList<>( result.getAllErrors() );
 
         if(!Tools.isEmail(entity.getEmail())) {
-            errors.add(new FieldError("entity", "email", Prop.getInstance(request).getText("javax.validation.constraints.Email.message")));
+            errors.add(new FieldError("entity", "email", Prop.getInstance(request).getText("jakarta.validation.constraints.Email.message")));
         }
 
         if(Tools.isEmpty(errors)) {
