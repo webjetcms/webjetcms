@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     itemKey = "cmp_restaurant_menu",
     imagePath = "/components/restaurant_menu/editoricon.png",
     galleryImages = "/components/restaurant_menu/",
-    componentPath = "/components/restaurant_menu/related_pages.jsp")
+    componentPath = "/components/restaurant_menu/menu.jsp")
 @Getter
 @Setter
 @DataTableTabs(tabs = {
@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     @DataTableTab(id = "newMenuIframeWindowTab", title = "components.restaurant_menu.newMenu", content = "")
 })
 public class RestaurantMenuApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.restaurant_menu.mena", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.restaurant_menu.mena", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth" )
     private String mena = "€";
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.restaurant_menu.visualSettings", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth")

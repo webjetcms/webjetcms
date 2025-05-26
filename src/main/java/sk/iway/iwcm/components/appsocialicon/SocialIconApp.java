@@ -33,38 +33,38 @@ public class SocialIconApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "basic", title = "components.app-social_icon.editor_components.info")
     private String label;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.facebook")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.facebook", className = "dt-style-base64")
     private String facebook_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.instagram")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.instagram", className = "dt-style-base64")
     private String instagram_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.linkedin")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.linkedin", className = "dt-style-base64")
     private String linkedin_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.youtube")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.youtube", className = "dt-style-base64")
     private String youtube_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.twitter")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.twitter", className = "dt-style-base64")
     private String twitter_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.mail")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.mail", className = "dt-style-base64")
     private String mail_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.blog")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.blog", className = "dt-style-base64")
     private String blog_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.flickr")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.flickr", className = "dt-style-base64")
     private String flickr_url;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.rss")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.app-social_icon.editor_components.rss", className = "dt-style-base64")
     private String rss_url;
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.news.visualStyle", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
     private String style = "01";
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.roots.new.style", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
-    private String socialIconAlign = "center";
+    private String socialIconAlign = "left";
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
