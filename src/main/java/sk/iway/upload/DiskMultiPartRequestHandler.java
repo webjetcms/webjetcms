@@ -12,7 +12,7 @@ import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.fileupload2.core.FileUploadException;
 import org.apache.commons.fileupload2.core.DiskFileItem;
 import org.apache.commons.fileupload2.core.DiskFileItemFactory;
-import org.apache.commons.fileupload2.core.servlet.ServletFileUpload;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
 
 import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
@@ -60,7 +60,7 @@ public class DiskMultiPartRequestHandler
     */
    public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException
    {
-		ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
+		JakartaServletFileUpload upload = new JakartaServletFileUpload(new DiskFileItemFactory());
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 

@@ -16,10 +16,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.fileupload2.core.FileItemHeaders;
-import org.apache.commons.fileupload2.core.FileUploadBase;
+
 import org.apache.commons.fileupload2.core.FileUploadException;
 import org.apache.commons.fileupload2.core.DiskFileItemFactory;
-import org.apache.commons.fileupload2.core.servlet.ServletFileUpload;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
 
 import net.sourceforge.stripes.action.FileBean;
 import net.sourceforge.stripes.controller.FileUploadLimitExceededException;
@@ -109,7 +109,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 			factory.setRepository(tempDir);
 
-			ServletFileUpload upload = new ServletFileUpload(factory);
+			JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
 			upload.setHeaderEncoding(SetCharacterEncodingFilter.getEncoding());
 
 			// MBO FIX: po upgrade Stripes niekedy davno:) prestali ist uploady
@@ -221,7 +221,7 @@ public class MultipartWrapper implements net.sourceforge.stripes.controller.mult
 
 			isParsed = true;
 		}
-		catch (FileUploadBase.SizeLimitExceededException slee)
+		catch (javax.naming.SizeLimitExceededException slee)
 		{
 			throw new FileUploadLimitExceededException(maxPostSize, maxPostSize);
 		}
