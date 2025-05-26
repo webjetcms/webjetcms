@@ -27,7 +27,6 @@ import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.FilterHeaderDto;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stat.jpa.DocNewDTO;
-import sk.iway.iwcm.stat.jpa.InOutDTO;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -189,43 +188,6 @@ public class DocNewRestController extends DatatableRestControllerV2<DocNewDTO, L
         filter.setChartType(ChartType.LINE);
         List<DocNewDTO> bVariantChartData = getBvariantData(Integer.valueOf(docId), percentual, filter);
         return bVariantChartData;
-    }
-
-    @RequestMapping(value="/incoming", params={"docId", "dayDate"})
-    @ResponseBody
-    public Page<InOutDTO> getInLineChartData(
-                        @RequestParam("docId") String docId,
-                        @RequestParam("dayDate") String stringRange) {
-        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);
-        List<Column> incomingStats = StatNewDB.getIncomingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1], null, getRequest());
-        DatatablePageImpl<InOutDTO> page = new DatatablePageImpl<>(columnsToInOutItems(incomingStats));
-        return page;
-    }
-
-    @RequestMapping(value="/outgoing", params={"docId", "dayDate"})
-    @ResponseBody
-    public Page<InOutDTO> getOutLineChartData(
-                        @RequestParam("docId") String docId,
-                        @RequestParam("dayDate") String stringRange) {
-        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);
-        List<Column> incomingStats = StatNewDB.getOutgoingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1]);
-        DatatablePageImpl<InOutDTO> page = new DatatablePageImpl<>(columnsToInOutItems(incomingStats));
-        return page;
-    }
-
-    private List<InOutDTO> columnsToInOutItems(List<Column> columns) {
-        List<InOutDTO> items = new ArrayList<>();
-
-        int order = 1;
-        for(Column column : columns) {
-            InOutDTO item = new InOutDTO();
-            item.setOrder(order);
-            item.setName(column.getColumn1());
-            item.setCount(column.getIntColumn2());
-            items.add(item);
-            order++;
-        }
-        return items;
     }
 
     @RequestMapping(value="/doc-title", params={"docId"}, produces = "text/plain;charset=UTF-8")
