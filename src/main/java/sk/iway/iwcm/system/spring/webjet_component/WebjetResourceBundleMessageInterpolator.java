@@ -1,7 +1,6 @@
 package sk.iway.iwcm.system.spring.webjet_component;
 
 import java.lang.invoke.MethodHandles;
-import java.security.PrivilegedAction;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -217,10 +216,10 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
             Logger.debug(WebjetResourceBundleMessageInterpolator.class, "Loaded expression factory via original TCCL");
             return expressionFactory;
         } else {
-            ClassLoader originalContextClassLoader = run(GetClassLoader.fromContext());
+            ClassLoader originalContextClassLoader = GetClassLoader.fromContext();
 
             try {
-                run(SetContextClassLoader.action(ResourceBundleMessageInterpolator.class.getClassLoader()));
+                SetContextClassLoader.action(ResourceBundleMessageInterpolator.class.getClassLoader());
                 ExpressionFactory expressionFactory;
                 ExpressionFactory var2;
                 if (canLoadExpressionFactory()) {
@@ -230,7 +229,7 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
                     return var2;
                 }
 
-                run(SetContextClassLoader.action(ELManager.class.getClassLoader()));
+                SetContextClassLoader.action(ELManager.class.getClassLoader());
                 if (canLoadExpressionFactory()) {
                     expressionFactory = ELManager.getExpressionFactory();
                     Logger.debug(WebjetResourceBundleMessageInterpolator.class, "Loaded expression factory via EL classloader");
@@ -240,7 +239,7 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
             } catch (Exception var6) {
                 throw LOG.getUnableToInitializeELExpressionFactoryException(var6);
             } finally {
-                run(SetContextClassLoader.action(originalContextClassLoader));
+                SetContextClassLoader.action(originalContextClassLoader);
             }
 
             throw LOG.getUnableToInitializeELExpressionFactoryException((Throwable)null);
@@ -254,9 +253,5 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
         } catch (Exception var1) {
             return false;
         }
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        return action.run();
     }
 }

@@ -853,13 +853,13 @@ public class DocForumService {
 		}
 
 		//Check uploaded file size limit
-		if (uploadLimits.getInt1() > 0 && (uploadLimits.getInt1() * 1024) < uploadedFile.getFileItem().getSize()) {
+		if (uploadLimits.getInt1() > 0 && (uploadLimits.getInt1() * 1024) < uploadedFile.getSize()) {
 			setPermissionDenied(request, "fileSize");
 			return SAVE_FORUM_SUCCESS;
 		}
 
 		//Check the file rights
-		String fileName = DocTools.removeChars(uploadedFile.getFileItem().getName()).toLowerCase();
+		String fileName = DocTools.removeChars(uploadedFile.getOriginalFilename()).toLowerCase();
 
 		//Check the suffix
 		if (fileName.endsWith(".jsp") || fileName.endsWith(".class")) {
@@ -899,14 +899,14 @@ public class DocForumService {
 		//zapis subor na disk
 		int bytesRead = 0;
 		byte[] buffer = new byte[8192];
-		BufferedInputStream buffReader = new BufferedInputStream(uploadedFile.getFileItem().getInputStream());
+		BufferedInputStream buffReader = new BufferedInputStream(uploadedFile.getInputStream());
 		FileOutputStream fos = new FileOutputStream(f);
 		while ((bytesRead = buffReader.read(buffer, 0, 8192)) != -1)
 			fos.write(buffer, 0, bytesRead);
 
 		buffReader.close();
 		fos.close();
-		uploadedFile.getFileItem().delete();
+		//TODO: JAKARTA uploadedFile.getFileItem().delete();
 
 		//ak prepise existujuci subor, aby sa to neobjavilo v zozname viac krat
 		if (fileAllreadyExists == false) {
@@ -918,7 +918,7 @@ public class DocForumService {
 			if (Tools.isNotEmpty(docForum.getSubject()))
 				m.setMediaTitleSk(docForum.getSubject());
 			else
-				m.setMediaTitleSk(uploadedFile.getFileItem().getName());
+				m.setMediaTitleSk(uploadedFile.getOriginalFilename());
 
 			m.setMediaLink(baseDir + fileName);
 			m.setMediaSortOrder(10);

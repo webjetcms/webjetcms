@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -71,7 +70,6 @@ public class UploadFileAction {
 		int groupId = Tools.getIntValue(request.getParameter("groupId"), -1);
 		int docId = Tools.getIntValue(request.getParameter("docId"), -1);
 		String title = request.getParameter("title");
-		FileItem file = multipartFile.getFileItem();
 		String fileURL = "";
 		String realPath = null;
 		String fileName = null;
@@ -79,17 +77,17 @@ public class UploadFileAction {
 		long fileSize = multipartFile.getSize();
 
 		//Check file size for upload, upload type id fix ckeditor, we dont use this method for other upload type's
-		if (!isFileAllowed("ckeditor", file, user, request, fileSize)) return FILE_NOT_ALLOWED;
+		if (!isFileAllowed("ckeditor", multipartFile.getOriginalFilename(), fileSize, user, request)) return FILE_NOT_ALLOWED;
 
-		if (file != null) {
+		if (multipartFile.getSize() > 0) {
 			//Retrieve the file name
-			fileName = file.getName().trim();
+			fileName = multipartFile.getOriginalFilename().trim();
 
 			//Check file name
 			if (!Tools.isEmpty(fileName)) {
 
 				String extension = FileTools.getFileExtension(fileName);
-				ImageInfo ii = new ImageInfo(file.getInputStream());
+				ImageInfo ii = new ImageInfo(multipartFile.getInputStream());
 				Logger.debug(UploadFileAction.class, "ckeditor upload, extension=" + extension + " ii=" + ii.getFormatName());
 
 				String extensionII = ii.getFormatName();
@@ -123,7 +121,7 @@ public class UploadFileAction {
 					IwcmFile f2 = new IwcmFile(realPath);
 
 					//Save main file
-					IwcmFsDB.writeFiletoDest(file.getInputStream(), new File(f2.getPath()), (int)fileSize);
+					IwcmFsDB.writeFiletoDest(multipartFile.getInputStream(), new File(f2.getPath()), (int)fileSize);
 
 					Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "file upload: " + realPath, -1, -1);
 				}
@@ -154,27 +152,6 @@ public class UploadFileAction {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Check is the file is allowed
-	 * @param uploadType
-	 * @param file
-	 * @param user
-	 * @param request
-	 * @param fileSize
-	 * @return
-	 */
-	public static boolean isFileAllowed(String uploadType, FileItem file, Identity user, HttpServletRequest request, Long fileSize) {
-
-		if (file == null) return false;
-
-		//Prep file name
-		String fileName = file.getName().trim();
-		fileName = fileName.toLowerCase();
-
-		//
-		return UploadFileTools.isFileAllowed(uploadType, fileName, fileSize, user, request);
 	}
 
 	public static boolean isFileAllowed(UploadedFile formFile, Identity user, String uploadType, HttpServletRequest request)

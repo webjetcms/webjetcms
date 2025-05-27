@@ -1,6 +1,8 @@
 package sk.iway.upload;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -58,9 +60,11 @@ public class DiskMultiPartRequestHandler
     * @throws FileUploadException
 	 * @throws UnsupportedEncodingException
     */
-   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException
+   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException, IOException
    {
-		JakartaServletFileUpload upload = new JakartaServletFileUpload(new DiskFileItemFactory());
+		DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
+
+		JakartaServletFileUpload upload = new JakartaServletFileUpload(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
 
@@ -75,7 +79,7 @@ public class DiskMultiPartRequestHandler
 
 				if (diskFile.isFormField())
 				{
-					Logger.debug(DiskMultiPartRequestHandler.class, "name="+diskFile.getFieldName()+" value="+diskFile.getString(SetCharacterEncodingFilter.getEncoding())+" isFormField="+diskFile.isFormField()+" inMemory="+diskFile.isInMemory());
+					Logger.debug(DiskMultiPartRequestHandler.class, "name="+diskFile.getFieldName()+" value="+diskFile.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding()))+" isFormField="+diskFile.isFormField()+" inMemory="+diskFile.isInMemory());
 				}
 				else
 				{
@@ -87,7 +91,7 @@ public class DiskMultiPartRequestHandler
 				Logger.debug(DiskMultiPartRequestHandler.class, "setting");
 
 				String name = diskFile.getFieldName();
-				String value = diskFile.getString(SetCharacterEncodingFilter.getEncoding());
+				String value = diskFile.getString(Charset.forName(SetCharacterEncodingFilter.getEncoding()));
 
 				//aby nam fungovalo aj request.getParameterValues()
 				List<String> valuesList = paramsTable.get(name);
@@ -156,7 +160,7 @@ public class DiskMultiPartRequestHandler
 	{
 		for (FileItem item : files)
 		{
-			item.delete();
+			//TODO: JAKARTA item.delete();
 		}
 	}
 }
