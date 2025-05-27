@@ -1,9 +1,5 @@
 package sk.iway.iwcm.setup;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.struts.action.ActionMapping;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.DB;
@@ -32,11 +28,6 @@ public class SetupFormBean {
 
 	//Param just to inform BE what language is used in FE
 	private String pageLngIndicator = "sk";
-
-	public void reset(ActionMapping arg0, HttpServletRequest arg1)
-	{
-		dbUseSuperuser = false;
-	}
 
 	/**
 	 * @param conf_installName The conf_installName to set.
