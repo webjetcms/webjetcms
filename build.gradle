@@ -139,8 +139,8 @@ dependencies {
     implementation("sk.iway:wjcron4j:2.2.5-SNAPSHOT")
     //implementation("taglibs:datetime:1.0.1") //taglib datetime:
 
-    // https://mvnrepository.com/artifact/com.themightystags/displaytag-jakarta
-    implementation("com.themightystags:displaytag-jakarta:2.5.1.0")
+    // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
+    implementation("com.github.hazendaz:displaytag:3.2.0")
 
     implementation("org.eclipse.persistence:eclipselink:4.0.+")
     implementation("org.freemarker:freemarker:2.3.34")
@@ -644,4 +644,6 @@ task writePom() {
 
 tasks.withType(JavaCompile) {
     options.failOnError = false
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
 }

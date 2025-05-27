@@ -247,7 +247,11 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 			for (long i = 0; i < _numberOfParts; i++)
 			{
-				_parts.get(i)._content.delete();
+				try {
+					_parts.get(i)._content.delete();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
