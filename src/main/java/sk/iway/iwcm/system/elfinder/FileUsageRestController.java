@@ -20,7 +20,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RestController
 @Datatable
 @RequestMapping("/admin/rest/elfinder/file-usage")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_elfinder')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuFbrowser')")
 public class FileUsageRestController extends DatatableRestControllerV2<FileUsageDTO, Long> {
 
     @Autowired
