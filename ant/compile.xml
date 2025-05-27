@@ -103,6 +103,22 @@
     <replace dir="${root}/src-utf8-jakarta/" token="org.apache.commons.fileupload." value="org.apache.commons.fileupload2.core."/>
     <replace dir="${root}/src-utf8-jakarta/" token="org.hibernate.validator.internal.util.privilegedactions." value="org.hibernate.validator.internal.util.actions."/>
 
+    <replace dir="${root}/src-utf8-jakarta/" token="org.thymeleaf.spring5." value="org.thymeleaf.spring6."/>
+
+    <replace dir="${root}/src-utf8-jakarta/" token="io.swagger.annotations.ApiOperation" value="io.swagger.v3.oas.annotations.Operation"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="io.swagger.annotations.ApiParam" value="io.swagger.v3.oas.annotations.Parameter"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="springfox.documentation.annotations.ApiIgnore" value="io.swagger.v3.oas.annotations.Hidden"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="io.swagger.annotations.ApiModelProperty" value="io.swagger.v3.oas.annotations.media.Schema"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="io.swagger.annotations.ApiModel" value="io.swagger.v3.oas.annotations.media.Schema"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="io.swagger.annotations.Api" value="io.swagger.v3.oas.annotations.tags.Tag"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="@Api(description" value="@Tag(name=&quot;&quot;, description" />
+    <replace dir="${root}/src-utf8-jakarta/" token="@ApiOperation(value" value="@Operation(summary" />
+    <replace dir="${root}/src-utf8-jakarta/" token="@ApiParam(value" value="@Parameter(description" />
+    <replace dir="${root}/src-utf8-jakarta/" token="@ApiIgnore(" value="@Hidden(" />
+    <replace dir="${root}/src-utf8-jakarta/" token="@ApiModelProperty(dataType" value="@Schema(type" />
+    <replace dir="${root}/src-utf8-jakarta/" token="@ApiModelProperty(" value="@Schema(" />
+    <replace dir="${root}/src-utf8-jakarta/" token="@ApiModel(" value="@Schema(" />
+
     <!-- zachovaj .properties subory z classes adresara -->
     <copy todir="${root}/resources-saved/" overwrite="true">
       <fileset dir="${root}/../../src/main/webapp/WEB-INF/classes/">

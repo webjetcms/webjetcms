@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -31,21 +32,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import freemarker.core.Configurable;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FreemarkerHelpers;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import springfox.documentation.builders.ApiInfoBuilder;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
-@EnableSwagger2
 @EnableWebMvc
 @EnableAsync
 @ComponentScan({
@@ -81,31 +76,30 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     }
 
     @Bean
-    public Docket api() {
+    public GroupedOpenApi api() {
 
         Predicate<String> paths;
-        if (Constants.getBoolean("swaggerEnabled")) paths = PathSelectors.any();
-        else paths = PathSelectors.none();
+        //TODO: JAKARTA if (Constants.getBoolean("swaggerEnabled")) paths = PathSelectors.any();
+        //else paths = PathSelectors.none();
 
         Logger.println(BaseSpringConfig.class, "-------> Docket api()");
         SpringAppInitializer.dtDiff("Docket api() START");
 
-        Docket docket = new Docket(DocumentationType.SWAGGER_2)
-                .select()
-                .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))
-                .paths(paths)
-                .build().apiInfo(apiInfo());
+        GroupedOpenApi docket = GroupedOpenApi.builder()
+                .group("webjet-api")
+                .addOpenApiMethodFilter(method -> method.isAnnotationPresent(RestController.class))
+                .build();
 
         SpringAppInitializer.dtDiff("Docket api() END");
         return docket;
     }
 
-    private ApiInfo apiInfo() {
-        ApiInfo apiInfo = new ApiInfoBuilder()
-                .title("WebJET API")
+    @Bean
+    public OpenAPI apiInfo() {
+        OpenAPI apiInfo = new OpenAPI()
+                .info(new Info().title("WebJET API")
                 .description("For more info visit https://docs.webjetcms.sk or http://github.com/webjetcms/webjetcms/")
-                .version(InitServlet.getActualVersion())
-                .build();
+                .version(InitServlet.getActualVersion()));
         return apiInfo;
     }
 
