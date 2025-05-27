@@ -40,6 +40,9 @@
 - Prekladač - implementácia inteligentného oneskorenia pre prekladač `DeepL` ako ochrana proti chybe `HTTP 429: too many requests`, ktorá spôsobovala výpadok prekladov (#57833).
 - Klonovanie štruktúry - opravené nechcené prekladanie implementácie aplikácií `!INCLUDE(...)!`, pri automatickom preklade tela stránky (#57833).
 - Klonovanie štruktúry - pridaný preklad perex anotácie automatickom preklade stránok (#57833).
+- Prieskumník - opravené práva nastavenia vlastností priečinku a súboru (#57833).
+- Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
+- Web stránky - doplnený prepínač domén aj keď nie je nastavená konfiguračná premenna `enableStaticFilesExternalDir` ale len `multiDomainEnabled` (#57833).
 
 ### Bezpečnosť
 

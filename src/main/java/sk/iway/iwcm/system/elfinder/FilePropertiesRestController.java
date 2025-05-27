@@ -24,12 +24,12 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
 @RequestMapping("/admin/rest/elfinder/file-properties/")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_elfinder')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuFbrowser')")
 @Datatable
 public class FilePropertiesRestController extends DatatableRestControllerV2<FilePropertiesDTO, Long> {
 
     private HttpServletResponse response;
-    
+
     @Autowired
     public FilePropertiesRestController(HttpServletResponse response) {
         super(null);
@@ -48,7 +48,7 @@ public class FilePropertiesRestController extends DatatableRestControllerV2<File
 
     @Override
     public void beforeSave(FilePropertiesDTO entity) {
-        if(getUser().isFolderWritable(entity.getDirPath() + "/") == false)   
+        if(getUser().isFolderWritable(entity.getDirPath() + "/") == false)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
