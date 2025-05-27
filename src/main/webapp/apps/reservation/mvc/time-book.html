@@ -46,38 +46,38 @@
                 <span data-th-text="${saveMsg}">After save message</span>
             </div>
 
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.reservations.time_range}" for="timeRange">Reservation time range</label>
-                    <input id="timeRange" name="timeRange" type="text" class="form-control" readonly="readonly">
+                    <input id="timeRange" name="timeRange" type="text" class="form-control readonly-input" readonly="readonly">
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.reservations.price}" for="price">Price</label>
                     <input id="price" type="number" class="form-control" data-th-field="*{price}" disabled>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.firstName}" for="name">Name</label>
                     <input type="text" class="form-control" data-th-field="*{name}" required>
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.lastName}" for="surname">Surname</label>
                     <input type="text" class="form-control" data-th-field="*{surname}" required>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group col-md-6 col-12">
+            <div class="row">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.email}" for="email">Email</label>
                     <input type="email" id="email" class="form-control" data-th-field="*{email}" required>
                 </div>
-                <div class="form-group col-md-6 col-12">
+                <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.formsimple.label.telefon}" for="phoneNumber">Phone Number</label>
                     <input type="text" class="form-control" data-th-field="*{phoneNumber}">
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group col-12">
+            <div class="row">
+                <div class="form-group">
                     <label class="form-label" data-th-text="#{components.reservation.reservation_list.purpose}" for="purpose">Purpose</label>
                     <textarea class="form-control" data-th-field="*{purpose}"></textarea>
                 </div>
@@ -90,15 +90,35 @@
     </div>
 
     <style>
-        .unsupported { background-color: #63697A; }
-        .free { background-color: #00BE9F; }
-        .free:hover { background-color: #0063FB; }
-        .full { background-color: #b3b8c7; }
-        .tableCell { border: 1px solid white; }
-        .selectedTableCell {
-            background-color: #0063FB !important;
-            color: white !important;
+        .form-group {
+            padding: 12px;
         }
+
+        .tableCell {
+            border: 1px solid #fff;
+            transition: background-color 0.2s, color 0.2s;
+            cursor: pointer;
+        }
+        .tableCell.unsupported {
+            background-color: #63697A;
+            cursor: not-allowed;
+        }
+        .tableCell.free {
+            background-color: #00BE9F !important;
+        }
+        .tableCell.free:hover {
+            background-color: #0063FB !important;
+        }
+        .tableCell.full {
+            background-color: #b3b8c7;
+            cursor: not-allowed;
+        }
+        .tableCell.selectedTableCell {
+            background-color: #0063FB !important;
+            color: #fff;
+            box-shadow: 0 0 0 2px #0051c3 inset;
+        }
+
         .dateHeader {
             margin: 5px;
             display: flex;
@@ -118,6 +138,12 @@
         .dateHeader input#reservationDate {
             margin-left: 5px;
             margin-right: 5px;
+        }
+
+        .readonly-input {
+            background-color: #e9ecef;
+            opacity: 1;
+            cursor: default;
         }
     </style>
 

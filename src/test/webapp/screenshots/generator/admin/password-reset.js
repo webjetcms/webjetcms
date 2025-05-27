@@ -47,6 +47,21 @@ function doScreens(I, Document, TempMail, isAdmin) {
     I.amOnPage(logonLink);
     I.waitForVisible(lostPasswordBtn);
 
+    const confLng = I.getConfLng();
+
+    I.waitForVisible("#language");
+    switch (confLng) {
+        case "sk":
+        case "cs":
+            I.selectOption("#language", "Česky");
+            break;
+        case "en":
+            I.selectOption("#language", "English");
+            break;
+        default:
+            throw new Error("Unknown language: " + confLng);
+    }
+
     Document.screenshotElement(lostPasswordBtn, basePath + screensPrefix + "-recover-password-btn.png");
 
     I.clickCss(lostPasswordBtn);
@@ -57,7 +72,14 @@ function doScreens(I, Document, TempMail, isAdmin) {
 
     I.fillField('input[name="loginName"]', "sameMail@fexpost.com");
     I.clickCss('button#register-submit-btn');
-    I.see('Ak Vaše konto existuje heslo Vám bolo zaslané na e-mailovú adresu.');
+
+    switch (confLng) {
+        case "sk": I.see('Ak Vaše konto existuje heslo Vám bolo zaslané na e-mailovú adresu.'); break;
+        case "cs": I.see("Pokud Vaše konto existuje heslo Vám bylo zasláno na e-mailovou adresu."); break;
+        case "en": I.see("If your account exists password has been sent to your email address."); break;
+        default:
+            throw new Error("Unknown language: " + confLng);
+    }
 
     Document.screenshot(basePath + screensPrefix + "-recovery-page-notif.png", 1080, 685);
 
@@ -67,8 +89,18 @@ function doScreens(I, Document, TempMail, isAdmin) {
     Document.screenshotElement("#info", basePath + "email.png");
 
     I.say("Go change password");
-    I.click("Ak si chcete zmeniť heslo, kliknite sem do 30 minút.");
+    switch (confLng) {
+        case "sk": I.click('Ak si chcete zmeniť heslo, kliknite sem do 30 minút'); break;
+        case "cs": I.click('Pokud si chcete heslo změnit, klikněte do 30 minut sem'); break;
+        case "en": I.click('To change your password, click here to 30 minutes'); break;
+        default:
+            throw new Error("Unknown language: " + confLng);
+    }
+
+    I.wait(1);
     I.switchToNextTab();
+
+    pause();
 
     I.fillField('input[type="password"][name="newPassword"]', "asd");
     I.fillField(retypeInput, "asddd");
@@ -89,7 +121,16 @@ function doScreens(I, Document, TempMail, isAdmin) {
     Document.screenshot(".container", basePath + screensPrefix + "-recovery-form-4.png");
 
     I.closeCurrentTab();
-    I.click("Ak si chcete zmeniť heslo, kliknite sem do 30 minút.");
+
+    switch (confLng) {
+        case "sk": I.click('Ak si chcete zmeniť heslo, kliknite sem do 30 minút'); break;
+        case "cs": I.click('Pokud si chcete heslo změnit, klikněte do 30 minut sem'); break;
+        case "en": I.click('To change your password, click here to 30 minutes'); break;
+        default:
+            throw new Error("Unknown language: " + confLng);
+    }
+
+    I.wait(1);
     I.switchToNextTab();
     Document.screenshot(basePath + screensPrefix + "-recovery-form-notWorking.png", 700, 400);
 
@@ -107,7 +148,13 @@ function doScreens(I, Document, TempMail, isAdmin) {
     TempMail.login("sameMail");
     TempMail.openLatestEmail();
 
-    I.click("Ak ste nepožiadali o zmenu hesla môžete túto akciu zrušiť kliknutím sem.");
+    switch (confLng) {
+        case "sk": I.click('Ak ste nepožiadali o zmenu hesla môžete túto akciu zrušiť kliknutím sem'); break;
+        case "cs": I.click('Pokud si chcete heslo změnit, klikněte do 30 minut sem'); break;
+        case "en": I.click('To change your password, click here to 30 minutes'); break;
+        default:
+            throw new Error("Unknown language: " + confLng);
+    }
     I.switchToNextTab();
 
     Document.screenshot(basePath + screensPrefix + "-recovery-form-cancel.png", 700, 400);

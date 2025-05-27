@@ -208,7 +208,9 @@ public class UserChangePasswordService {
 
 			if (request !=null && request.getAttribute("sendPasswordUrl") != null) pageUrl = (String)request.getAttribute("sendPasswordUrl");
 
-			pageUrl = Tools.getBaseHref(request) + pageUrl + "?login="+loginHash+"&auth="+auth;
+            String currentLng = (request != null) ? Prop.getLng(request, false) : Constants.getString("defaultLanguage");
+
+			pageUrl = Tools.getBaseHref(request) + pageUrl + "?language=" + currentLng + "&login="+loginHash+"&auth="+auth;
 
             String cancelActionLink = pageUrl + "&act=" + CANCEL_ACTION;
 
