@@ -195,6 +195,7 @@ if (includedIntoPage==false)
 											<input type="submit" class="button btn btn-info" value="<iwcm:text key="button.submit"/>"/>
 											<input type="hidden" name="login" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("login")) %>" />
 											<input type="hidden" name="auth" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("auth")) %>" />
+											<input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("language")) %>" />
 										</div>
 									</td>
 								</tr>
