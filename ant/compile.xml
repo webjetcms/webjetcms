@@ -92,6 +92,9 @@
     <replace dir="${root}/src-utf8-jakarta/" token="ServletFileUpload upload = new ServletFileUpload(" value="JakartaServletFileUpload upload = new JakartaServletFileUpload("/>
     <replace dir="${root}/src-utf8-jakarta/" token="FileUploadBase.SizeLimitExceededException" value="javax.naming.SizeLimitExceededException"/>
     <replace dir="${root}/src-utf8-jakarta/" token=".getStoreLocation().getAbsolutePath()" value=".getPath().toAbsolutePath().toString()"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getSize()" value="uploadedFile.getSize()"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getName()" value="uploadedFile.getOriginalFilename()"/>
+    <replace dir="${root}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getInputStream()" value="uploadedFile.getInputStream()"/>
     <replace dir="${root}/src-utf8-jakarta/">
       <replacetoken><![CDATA[ResponseEntity<>(response, null, HttpStatus.OK)]]></replacetoken>
       <replacevalue><![CDATA[ResponseEntity<>(response, HttpStatus.OK)]]></replacevalue>
