@@ -698,8 +698,6 @@ public class DocTools {
             }
 
             text = updateUserCodes(user, text);
-
-
         }
         catch (Exception ex)
         {
