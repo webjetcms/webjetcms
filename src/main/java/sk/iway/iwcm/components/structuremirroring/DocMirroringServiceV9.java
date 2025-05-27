@@ -3,11 +3,7 @@ package sk.iway.iwcm.components.structuremirroring;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.LabelValueDetails;
@@ -273,55 +269,7 @@ public class DocMirroringServiceV9 {
       doc.setVirtualPath("");
 
       //translate doc body
-      translateDocBody(source, doc, translator);
-   }
-
-   /**
-    * Translate doc body using translator. Before translation, parse out all !INCLUDE()! and replace them with placeholders.
-    * After translation, replace placeholders with original !INCLUDE()! text.
-    * 
-    * IF during replacing something goes wrong, we wil translate original doc data without replacing.
-    */
-   private static void translateDocBody(DocDetails source, DocDetails doc, TranslationService translator) {
-      Map<Integer, String> replacedIncludes = new HashMap<>();
-      String docData = source.getData();
-      try {
-         String regex = "(!INCLUDE\\([^)]+\\)!)";
-         Pattern pattern = Pattern.compile(regex);
-         Matcher matcher = pattern.matcher(docData);
-
-         int findIncludes = 1;
-         while (matcher.find()) {
-            String replaceText = "__INCLUDE_PLACEHOLDER_" + findIncludes + "__";
-            replacedIncludes.put(findIncludes, matcher.group());
-            docData = docData.replaceFirst(Pattern.quote(matcher.group()), Matcher.quoteReplacement(replaceText));
-            findIncludes++;
-         }
-         doc.setData( docData );
-      } catch (Exception ex) {
-         //Something went wrong, we will not doc data
-         Logger.debug(DocMirroringServiceV9.class, "Error while extracting !INLCUDE()! from doc data.", ex);
-         replacedIncludes.clear();
-      }
-
-      if(replacedIncludes.isEmpty() == true) {
-        //Translate without include replenish
-        doc.setData(translator.translate(source.getData()));
-      } else {
-         try {
-            String translatedDocData = translator.translate(docData);
-            for(Map.Entry<Integer, String> entry : replacedIncludes.entrySet()) {
-               String replaceText = "__INCLUDE_PLACEHOLDER_" + entry.getKey() + "__";
-               translatedDocData = translatedDocData.replace(replaceText, Matcher.quoteReplacement(entry.getValue()));
-            }
-            doc.setData(translatedDocData);
-         } catch (Exception ex) {
-            //Something went wrong, we will not doc data
-            Logger.debug(DocMirroringServiceV9.class, "Error while returning !INLCUDE()! in doc data after translate. Use doc data translation without replacing.", ex);
-            // Translate default doc data
-            doc.setData(translator.translate(source.getData()));
-         }
-      }
+      doc.setData(translator.translate(source.getData()));
    }
 
    /**
