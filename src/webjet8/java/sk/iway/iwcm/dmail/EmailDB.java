@@ -361,7 +361,7 @@ public class EmailDB
         {
             db_conn = DBPool.getConnection();
             ps = db_conn.prepareStatement(
-                "SELECT email_id FROM emails WHERE recipient_email=? AND domain_id=?"
+                "SELECT max(email_id) AS email_id FROM emails WHERE recipient_email=? AND domain_id=?"
             );
             ps.setString(1, email);
             ps.setInt(2, CloudToolsForCore.getDomainId());
@@ -392,6 +392,30 @@ public class EmailDB
         }
 
         return emailId;
+    }
+
+    /**
+	 * Vlozi email do tabulky emails, ak tam este nie je, aby sa mohol vygenerovat hash
+	 * @param email
+	 * @return
+	 */
+    public static void insertEmail(String email){
+
+        Integer emailId = getEmailId(email);
+        if (emailId != 0) return;
+        try (Connection db_conn = DBPool.getConnection();
+            PreparedStatement ps = db_conn.prepareStatement(
+                "INSERT INTO emails (recipient_email, sender_email, domain_id, create_date) VALUES (?, ?, ?, NOW())"
+            )) {
+
+            ps.setString(1, email);
+            ps.setString(2, email);
+            ps.setInt(3, CloudToolsForCore.getDomainId());
+            ps.executeUpdate();
+
+        } catch (Exception ex) {
+            sk.iway.iwcm.Logger.error(ex);
+        }
     }
 
 	/**

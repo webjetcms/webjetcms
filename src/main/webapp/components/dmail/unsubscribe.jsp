@@ -64,23 +64,22 @@
 		String baseHref = Constants.getString("dmailListUnsubscribeBaseHref", baseDomain );
 		String safeHref = Tools.replace(baseHref, "http://", "https://");
 
-
+        // aby mal hash aj uzivatel ktory nie je v tabulke emails
+        EmailDB.insertEmail(email);
 		Integer emailId = EmailDB.getEmailId(email);
-        if (emailId != null) {
-            String hash = Sender.getClickHash(emailId);
-		    String unsubscribedUrl = safeHref + "/newsletter/odhlasenie-z-newsletra.html?" + Constants.getString("dmailStatParam") + "=" + hash;
 
-		    String fromName = "WebjetCMS";
-		    String fromEmail = "tester@balat.sk";
-		    String toEmail = email;
-		    String subject = "Overenie mailu pre odhlásenie";
-		    String message = prop.getText("dmail.unsubscribe.bodyNew", unsubscribedUrl);
-		    String serverRoot = "http://" + Tools.getServerName(request);
+        String hash = Sender.getClickHash(emailId);
+        String unsubscribedUrl = safeHref + "/newsletter/odhlasenie-z-newsletra.html?" + Constants.getString("dmailStatParam") + "=" + hash;
 
-		    boolean ok = SendMail.sendLater(fromName, fromEmail, toEmail, null, null, null, subject, message, serverRoot, null, null);
-            request.setAttribute("pageSend", ok ? "ok" : "fail");
-        }
+        String fromName = "WebjetCMS";
+        String fromEmail = "tester@balat.sk";
+        String toEmail = email;
+        String subject = "Overenie mailu pre odhlásenie";
+        String message = prop.getText("dmail.unsubscribe.bodyNew", unsubscribedUrl);
+        String serverRoot = "http://" + Tools.getServerName(request);
 
+        boolean ok = SendMail.sendLater(fromName, fromEmail, toEmail, null, null, null, subject, message, serverRoot, null, null);
+        request.setAttribute("pageSend", ok ? "ok" : "fail");
 
 		request.setAttribute("unsubscribeSuccess-showEmailSent", "true");
 	}
