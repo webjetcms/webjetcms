@@ -31,6 +31,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -166,7 +167,7 @@ public class DashboardListener {
 
             boolean show2FARecommendation = false;
             String overview2fawarning = prop.getText("overview.2fa.warning");
-            if (Tools.isEmpty(Constants.getString("ldapProviderUrl")) && Tools.isEmpty(Constants.getString("adminLogonMethod")) && Tools.isNotEmpty(overview2fawarning) && overview2fawarning.length() > 2) {
+            if (Tools.isEmpty(Constants.getString("ldapProviderUrl")) && Tools.isEmpty(Constants.getString("adminLogonMethod")) && AuthenticationFilter.weTrustIIS()==false && Tools.isNotEmpty(overview2fawarning) && overview2fawarning.length() > 2) {
                 String mobileDevice = userDetailsRepository.getMobileDeviceByUserId((long)user.getUserId());
                 if (Tools.isEmpty(mobileDevice)) {
                     show2FARecommendation = true;
