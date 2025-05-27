@@ -110,7 +110,7 @@ Scenario('reservation screens - admin section', ({ I, DTE, Document }) => {
     Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/reservation/time-book-app/app-adding.png");
 });
 
-Scenario('reservation screens - PAGE section @current', ({ I, Document }) => {
+Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     I.amOnPage("/apps/rezervacie/rezervacia-tenisovych-kurtov.html?NO_WJTOOLBAR=true&language="+I.getConfLng());
     I.waitForVisible("#reservationDate");
 
@@ -165,7 +165,7 @@ Scenario('reservation screens - PAGE section @current', ({ I, Document }) => {
     Document.screenshotElement("div.alert.alert-success", "/redactor/apps/reservation/time-book-app/app-reservation-saved-awaiting-approve.png");
 });
 
-Scenario('Remove crated reservations @current', ({ I, DT, DTE }) => {
+Scenario('Remove crated reservations', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/reservation/admin/");
     DT.filterContains("editorFields.selectedReservation", "Tenisovy kurt");
 
