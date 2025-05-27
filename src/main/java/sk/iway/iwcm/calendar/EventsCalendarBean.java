@@ -17,7 +17,7 @@ import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import sk.iway.iwcm.database.ActiveRecord;
 
 @Entity
@@ -40,13 +40,13 @@ public class EventsCalendarBean extends ActiveRecord implements Serializable {
     private String description;
 
     @NotNull(message = "validation.not_null.error")
-    @ApiModelProperty(dataType = "long", value="1521154800000")
+    @Schema(type = "long", defaultValue="1521154800000")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_from")
     private Date from;
 
     @NotNull(message = "validation.not_null.error")
-    @ApiModelProperty(dataType = "long", value="1521154800000")
+    @Schema(type = "long", defaultValue="1521154800000")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_to")
     private Date to;

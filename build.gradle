@@ -43,7 +43,7 @@ ext {
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
     springVersion = "7.0.+";
-    springDataVersion = "3.5.+";
+    springDataVersion = "4.0.+";
     springSecurityVersion = "6.4.+";
 }
 
@@ -191,8 +191,17 @@ dependencies {
     //implementation("org.springframework:spring-messaging:${springVersion}")
     implementation("org.springframework.plugin:spring-plugin-core:2.0.0.RELEASE")
     implementation("org.springframework.plugin:spring-plugin-metadata:2.0.0.RELEASE")
-    implementation("io.springfox:springfox-swagger2:3.0.0")
-        implementation("io.swagger.core.v3:swagger-annotations:2.1.12") //update to 2.1.12
+
+    //implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-common
+    //implementation("org.springdoc:springdoc-openapi-starter-common:2.8.8")
+    // https://mvnrepository.com/artifact/org.webjars/swagger-ui
+    implementation("org.webjars:swagger-ui:5.22.0")
+    // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations-jakarta
+    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.30")
+    // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-models-jakarta
+    implementation("io.swagger.core.v3:swagger-models-jakarta:2.2.30")
+
     implementation("net.sourceforge.stripes:stripes:1.6.0-JakartaEE10")
     implementation("net.sf.trove4j:trove4j:2.1.0")  //TODO: test DocDB hashing with Integer maps
     //implementation("net.sf.uadetector:uadetector-core:0.9.22")
@@ -230,7 +239,7 @@ dependencies {
     implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
     //  https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring5
-    implementation group: 'org.thymeleaf', name: 'thymeleaf-spring5', version: '3.1.2.RELEASE'
+    implementation group: 'org.thymeleaf', name: 'thymeleaf-spring6', version: '3.1.3.RELEASE'
 
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
     implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20240325.1'

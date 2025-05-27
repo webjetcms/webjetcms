@@ -18,13 +18,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import sk.iway.iwcm.database.JpaDB;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
-@Api(description = "Vracia eventy z kalendaru udalosti")
+@Tag(name="", description = "Vracia eventy z kalendaru udalosti")
 @RestController
 @RequestMapping(path = "/rest/events-calendar")
 public class CalendarService {
@@ -69,11 +69,11 @@ public class CalendarService {
         return Collections.emptyList();
     }
 
-    @ApiOperation(value = "getEventsForMonth", notes = "Vrati eventy pre /rok/mesiac/")
+    @Operation(summary = "getEventsForMonth", description = "Vrati eventy pre /rok/mesiac/")
     @RequestMapping(path="/{year}/{month}", method={RequestMethod.GET})
     public List<EventsCalendarBean> getEventsForMonth(
-            @ApiParam(value = "Rok, napr. '2018'", required = true) @PathVariable int year,
-            @ApiParam(value = "Mesiac, od 1 do 12, napr. '7'", required = true) @PathVariable int month
+            @Parameter(description = "Rok, napr. '2018'", required = true) @PathVariable int year,
+            @Parameter(description = "Mesiac, od 1 do 12, napr. '7'", required = true) @PathVariable int month
     )
     {
         Month selectedMonth = new Month(year, month - 1);
@@ -83,12 +83,12 @@ public class CalendarService {
         return JpaDB.getResultList(query);
     }
 
-    @ApiOperation(value = "getEventsByTypeForMonth", notes = "Vrati eventy pre /rok/mesiac/id1,id2,id3 kde id1..idX su idcka konkretnych CalendarTypeBean")
+    @Operation(summary = "getEventsByTypeForMonth", description = "Vrati eventy pre /rok/mesiac/id1,id2,id3 kde id1..idX su idcka konkretnych CalendarTypeBean")
     @RequestMapping(path="/{year}/{month}/{types}", method={RequestMethod.GET})
     public List<EventsCalendarBean> getEventsByTypeForMonth(
-            @ApiParam(value = "Rok, napr. '2018'", required = true) @PathVariable int year,
-            @ApiParam(value = "Mesiac, od 1 do 12, napr. '7'", required = true) @PathVariable int month,
-            @ApiParam(value = "Idecka typov udalosti, napr. '1,2,3'", required = true) @PathVariable List<Integer> types
+            @Parameter(description = "Rok, napr. '2018'", required = true) @PathVariable int year,
+            @Parameter(description = "Mesiac, od 1 do 12, napr. '7'", required = true) @PathVariable int month,
+            @Parameter(description = "Idecka typov udalosti, napr. '1,2,3'", required = true) @PathVariable List<Integer> types
     )
     {
         List<EventsCalendarBean> result = getEventsForMonth(year, month);
@@ -117,7 +117,7 @@ public class CalendarService {
         return result.stream().filter(i -> types.indexOf(i.getType().getId()) >= 0).collect(Collectors.toList());
     }
 
-    @ApiOperation(value = "getEventTypes", notes = "Vrati typy eventov")
+    @Operation(summary = "getEventTypes", description = "Vrati typy eventov")
     @RequestMapping(path="/types", method={RequestMethod.GET})
     public List<CalendarTypeBean> getEventTypes()
     {
