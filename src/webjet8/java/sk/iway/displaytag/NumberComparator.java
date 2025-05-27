@@ -97,7 +97,7 @@ public class NumberComparator extends DefaultComparator implements Serializable
       }
       catch (ObjectLookupException e)
       {
-          throw new RuntimeLookupException(getClass(), this.property, e);
+          throw new RuntimeLookupException(RowSorter.class, this.property, e);
       }
 
 
