@@ -8,6 +8,7 @@ import org.displaytag.exception.RuntimeLookupException;
 import org.displaytag.model.Cell;
 import org.displaytag.model.DefaultComparator;
 import org.displaytag.model.Row;
+import org.displaytag.model.RowSorter;
 import org.displaytag.util.LookupUtil;
 
 import sk.iway.iwcm.Tools;

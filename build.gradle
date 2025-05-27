@@ -644,4 +644,6 @@ task writePom() {
 
 tasks.withType(JavaCompile) {
     options.failOnError = false
+    //prevent warning messages during compile
+    options.compilerArgs += ['-Xlint:none']
 }
