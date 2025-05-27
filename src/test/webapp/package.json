@@ -32,7 +32,7 @@
     "scr": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail",
     "scr:en": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail",
     "scr:cs": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_LNG=cs CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail",
-    "scr:current": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_LNG=cs CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current' --debug",
+    "scr:current": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current' --debug",
     "ff:scr:current": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_BROWSER=firefox CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "scr:current:prod": "CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
     "scr:current:en": "CODECEPT_URL='http://iwcm.interway.sk' CODECEPT_LNG=en CODECEPT_AUTODELAY='true' codeceptjs run --override '{ \"tests\": \"./screenshots/generator/**/*.js\"}' --steps -p pauseOnFail --grep '@current'",
