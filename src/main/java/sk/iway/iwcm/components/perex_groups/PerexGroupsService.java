@@ -21,16 +21,12 @@ public class PerexGroupsService {
         // Private constructor to prevent instantiation
     }
 
-    private static final String PEREX_GROUPS_REPOSITORY = "perexGroupsRepository";
-    private static final String PEREX_GROUPS_DOC_REPOSITORY ="perexGroupDocRepository";
-
     /**
      * Get all perex groups via repo
      * @return
      */
     public static List<PerexGroupsEntity> getPerexGroups() {
-        PerexGroupsRepository perexGroupsRepository = Tools.getSpringBean(PEREX_GROUPS_REPOSITORY, PerexGroupsRepository.class);
-        return perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
+        return getPerexGroupsRepository().findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
     }
 
     /**
@@ -40,15 +36,13 @@ public class PerexGroupsService {
      * @param availableGroups
      */
     public static PerexGroupsEntity savePerexGroup(int groupId, String groupName, String availableGroups) {
-        PerexGroupsRepository perexGroupsRepository = Tools.getSpringBean(PEREX_GROUPS_REPOSITORY, PerexGroupsRepository.class);
-
         //Prepare entity
         PerexGroupsEntity perexGroupsEntity = new PerexGroupsEntity();
         perexGroupsEntity.setId( Long.valueOf(groupId) );
         perexGroupsEntity.setPerexGroupName(groupName);
         perexGroupsEntity.setAvailableGroups(availableGroups);
 
-        return save(perexGroupsEntity, perexGroupsRepository);
+        return save(perexGroupsEntity, getPerexGroupsRepository());
     }
 
     /**
@@ -56,8 +50,7 @@ public class PerexGroupsService {
      * @param id
      */
     public static void deletePerexGroup(int id) {
-        PerexGroupsRepository perexGroupsRepository = Tools.getSpringBean(PEREX_GROUPS_REPOSITORY, PerexGroupsRepository.class);
-        perexGroupsRepository.deleteById(Long.valueOf(id));
+        getPerexGroupsRepository().deleteById(Long.valueOf(id));
     }
 
     /**
@@ -67,15 +60,13 @@ public class PerexGroupsService {
      * @param prerexGroupIds - array of perexGroupIds
      */
     public static void insertPerexGroupDocs(int docId, String[] prerexGroupIds) {
-        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(PEREX_GROUPS_DOC_REPOSITORY, PerexGroupDocRepository.class);
-
         for (String perexGroupId : prerexGroupIds) {
             if(Tools.getIntValue(perexGroupId, -1) > 0) {
                 //Prepare entity
                 PerexGroupDocEntity perexGroupDocEntity = new PerexGroupDocEntity();
                 perexGroupDocEntity.setDocId(Long.valueOf(docId));
                 perexGroupDocEntity.setPerexGroupId(Long.valueOf(perexGroupId));
-                perexGroupDocRepository.save(perexGroupDocEntity);
+                getPerexGroupDocRepository().save(perexGroupDocEntity);
             }
         }
     }
@@ -85,8 +76,7 @@ public class PerexGroupsService {
      * @param perexGroupId
      */
     public static void deletePerexGroupDocsByPerexGroupId(int perexGroupId)  {
-        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(PEREX_GROUPS_DOC_REPOSITORY, PerexGroupDocRepository.class);
-        perexGroupDocRepository.deleteAllByPerexGroupId(Long.valueOf(perexGroupId));
+        getPerexGroupDocRepository().deleteAllByPerexGroupId(Long.valueOf(perexGroupId));
     }
 
     /**
@@ -94,8 +84,7 @@ public class PerexGroupsService {
      * @param docId
      */
     public static void deletePerexGroupDocsByDocId(int docId)  {
-        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(PEREX_GROUPS_DOC_REPOSITORY, PerexGroupDocRepository.class);
-        perexGroupDocRepository.deleteAllByDocId(Long.valueOf(docId));
+        getPerexGroupDocRepository().deleteAllByDocId(Long.valueOf(docId));
     }
 
     /**
@@ -104,7 +93,7 @@ public class PerexGroupsService {
      * @param perexGroupIds
      */
     public static void savePerexGroupsDoc(int docId, int[] perexGroupIds) {
-        PerexGroupDocRepository perexGroupDocRepository = Tools.getSpringBean(PEREX_GROUPS_DOC_REPOSITORY, PerexGroupDocRepository.class);
+        PerexGroupDocRepository perexGroupDocRepository = getPerexGroupDocRepository();
 
         List<PerexGroupDocEntity> perexGroupDocs = perexGroupDocRepository.findAllByDocId(Long.valueOf(docId));
         //delete not found in perexGroupIds
@@ -260,5 +249,13 @@ public class PerexGroupsService {
 		}
 
 		return saved;
+    }
+
+    private static PerexGroupsRepository getPerexGroupsRepository() {
+        return Tools.getSpringBean("perexGroupsRepository", PerexGroupsRepository.class);
+    }
+
+    private static PerexGroupDocRepository getPerexGroupDocRepository() {
+        return Tools.getSpringBean("perexGroupDocRepository", PerexGroupDocRepository.class);
     }
 }
