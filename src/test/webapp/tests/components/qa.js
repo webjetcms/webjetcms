@@ -150,14 +150,6 @@ Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) =>
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Before(({ I, login }) => {
-    login('admin');
-
-    if (typeof randomNumber == "undefined") {
-        randomNumber = I.getRandomText();
-    }
-});
-
 Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, Apps, Document }) => {
     Apps.insertApp('Otázky a odpovede', '#components-qa-title', null, false);
     I.switchTo('.cke_dialog_ui_iframe');
