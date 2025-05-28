@@ -54,6 +54,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/menu/editor-dialog.png)
 
+- Doplnené fotky obrazovky aplikácií v českej jazykovej mutácii pre väčšinu aplikácií (#57785).
+
 ### Hromadný e-mail
 
 - **Presunuté pole Web stránka** – teraz sa nachádza pred poľom **Predmet**, aby sa po výbere stránky predmet automaticky vyplnil podľa názvu zvolenej web stránky (#57541).
