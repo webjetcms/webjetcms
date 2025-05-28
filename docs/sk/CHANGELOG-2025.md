@@ -159,6 +159,7 @@ Iné zmeny:
 - Web stránky - doplnený test vytvorenia novej stránky s publikovaním v budúcnosti (#57625).
 - Galéria - doplnený test vodoznaku s porovnaním obrázku, doplnený test kontroly práv (#57625).
 - Web stránky - doplnený test voliteľných polí pri vytváraní web stránky (#57625).
+- Allure - doplnené výsledky jUnit testov do spoločného Allure reportu (#57801).
 
 ## 2025.0.x
 
