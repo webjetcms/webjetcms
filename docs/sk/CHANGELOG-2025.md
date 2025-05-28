@@ -8,6 +8,7 @@
 
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Upravená inicializácia Spring a JPA, viac informácií v sekcii pre programátora (#43144).
+- Prerobená backend časť aplikácie elektronický obchod, viac v sekcii pre programátora (#57685).
 
 ### Dátové tabuľky
 

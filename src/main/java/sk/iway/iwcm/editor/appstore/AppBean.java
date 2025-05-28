@@ -63,14 +63,18 @@ public class AppBean
 	 */
 	public List<String> getGalleryImages()
 	{
+		return getGalleryImages(imagePath);
+	}
+
+	private List<String> getGalleryImages(String galleryImagesPath) {
 		if (galleryImages != null) return galleryImages;
 
 		List<String> images = new ArrayList<>();
 
-		int lastSlash = imagePath.lastIndexOf('/');
+		int lastSlash = galleryImagesPath.lastIndexOf('/');
 		if (lastSlash > 0)
 		{
-			String basePath = imagePath.substring(0, lastSlash);
+			String basePath = galleryImagesPath.substring(0, lastSlash);
 
             for (int i = 0; i < 10; i++) {
                 String[] extensions = {".jpg", ".gif", ".png"};
@@ -184,7 +188,7 @@ public class AppBean
 		if (images.endsWith("/")) {
 			//reset to null, it will be populated in getGalleryImages() with correct language
 			galleryImages = null;
-			getGalleryImages();
+			getGalleryImages(images);
 		} else if (Tools.isNotEmpty(images)) {
 			galleryImages = new ArrayList<>();
             String[] galleryImagesArr = Tools.getTokens(images, ",", true);
