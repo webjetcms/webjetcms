@@ -52,7 +52,6 @@ Scenario('recover screens', ({ I, DT, DTE, Document, i18n }) => {
 
     I.moveCursorTo("div.toast-success");
     Document.screenshotElement("div.toast-success", "/redactor/webpages/recover-page-success.png");
-    pause();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
     I.click( locate("a.jstree-anchor").withText("recoverSubFolderOne") );
     I.click(DT.btn.tree_delete_button);

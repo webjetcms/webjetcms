@@ -137,8 +137,6 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     I.clickCss("td[id='2560_13'].free");
     Document.screenshotElement("td[id='2560_13'].free.selectedTableCell", "/redactor/apps/reservation/time-book-app/app-cell-selected.png");
 
-    pause();
-
     I.clickCss("td[id='2560_14'].free");
     I.clickCss("td[id='2560_15'].free");
 

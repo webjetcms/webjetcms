@@ -908,7 +908,6 @@ async function verifyPageInTrashIsNotApprovable(docId, historyId, I, DT, DTE) {
         DT.waitForLoader();
         I.wait(1);
         I.dontSee(title, "#datatableInit_wrapper div.dt-scroll-body");
-        pause();
     }
 
     I.say("Check email link");
