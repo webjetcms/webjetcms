@@ -65,16 +65,8 @@ public class FileIndexerTools {
      */
     public static boolean deleteIndexedFile(String url)
     {
-
         try
         {
-            TemplatesDB tempDB = TemplatesDB.getInstance();
-            TemplateDetails temp = tempDB.getTemplate("files");
-            if (temp == null)
-            {
-                temp = tempDB.getTemplates().get(0);
-            }
-
             //vymaz Stranku s tymto suborom
             StringTokenizer st = new StringTokenizer(getUrlForGroupsTokenize(url), "/");
             int parentDirId = 0;
@@ -165,9 +157,10 @@ public class FileIndexerTools {
         try
         {
             db_conn = DBPool.getConnection();
-            ps = db_conn.prepareStatement("SELECT doc_id FROM documents WHERE title=? AND group_id=?");
+            ps = db_conn.prepareStatement("SELECT doc_id FROM documents WHERE (title=? OR virtual_path LIKE ?) AND group_id=?");
             ps.setString(1, fileName);
-            ps.setInt(2, dirId);
+            ps.setString(2, "%/" + fileName + ".html"); //Special case for file archive, where title do not contain file name but custom name
+            ps.setInt(3, dirId);
             rs = ps.executeQuery();
             if (rs.next())
             {

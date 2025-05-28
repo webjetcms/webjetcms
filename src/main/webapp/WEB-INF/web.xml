@@ -17,11 +17,6 @@
     <filter-class>sk.iway.iwcm.system.context.ContextFilter</filter-class>
   </filter>
 
-  <filter>
-    <filter-name>File archiv Filter</filter-name>
-    <filter-class>sk.iway.iwcm.io.FileArchivFilter</filter-class>
-  </filter>
-
   <filter-mapping>
      <filter-name>ContextFilter</filter-name>
      <url-pattern>/*</url-pattern>
@@ -38,11 +33,6 @@
 		<servlet-name>StripesDispatcher</servlet-name>
 		<dispatcher>REQUEST</dispatcher>
 	</filter-mapping>
-
-  <filter-mapping>
-    <filter-name>File archiv Filter</filter-name>
-    <url-pattern>/*</url-pattern>
- </filter-mapping>
 
   <filter-mapping>
      <filter-name>Virtual Path Filter</filter-name>

@@ -151,10 +151,15 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	private Boolean showFile = true;
 
 	@Column(name="index_file")
-	@DataTableColumn(
-		inputType = DataTableColumnType.BOOLEAN_TEXT,
-		title = "components.file_archiv.allow_indexing",
-		tab = "advanced"
+	@DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title="editor.searchable_enabled", tab="advanced",
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = "editor.searchable_enabled_label", value = "true")
+				}
+			)
+		}
 	)
 	Boolean indexFile;
 
@@ -359,13 +364,6 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		return id;
 	}
 
-	private void deleteIndexedFile(String url)
-	{
-		int docId = DocDB.getInstance().getDocIdFromURLImpl(url+".html", GroupsDB.getInstance().getGroup(getDomainId()).getDomainName());
-		if (docId > 0)
-			DocDB.deleteDoc(docId, null);
-	}
-
 	public Long saveAndReturnId() {
 		save();
 		return getId();
@@ -407,8 +405,12 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 				UserDetails user = UsersDB.getUser(userId);
 			 	//indexujem bud iba hlavny subor, alebo ked je povolene, tak vsetky
 			 	boolean index = getReferenceId().longValue() < 1 || Constants.getBoolean("fileArchivIndexOnlyMainFiles") == false;
-				if(index && indexFile)
+				if(index && Tools.isTrue(indexFile))
 					FileIndexerTools.indexFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath(), user);
+				else {
+					//remove index file if exist
+					FileIndexerTools.deleteIndexedFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath());
+				}
 			}
 		}
 		return save;
@@ -421,7 +423,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		FileArchivatorKit.deleteFileArchiveCache();
 
 		//zmazem index
-		deleteIndexedFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath());
+		FileIndexerTools.deleteIndexedFile(FileArchivSupportMethodsService.SEPARATOR + getVirtualPath());
 
       	Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "DELETE: File Archiv mazeme subor: "+getVirtualPath()+" "+this, this.getFileArchiveId(), -1);
 		return super.delete();
