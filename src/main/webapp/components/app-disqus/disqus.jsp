@@ -41,11 +41,10 @@ var disqus_shortname = '<%=login %>';
 var disqus_identifier = '<%=docId%>';
 var disqus_title = '<%=docTitle%>';
 var disqus_url = '<%=Tools.getBaseHref(request)%><%=docLink%>';
-
-/* * * DON'T EDIT BELOW THIS LINE * * */
 var disqus_config = function () {
   this.language = '<%=lng%>';
 };
+/* * * DON'T EDIT BELOW THIS LINE * * */
 (function() {
 var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
 dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';

@@ -90,8 +90,6 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     Identity user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
     String constStr = "Admin";
     String lng = Prop.getLng(request, false);
-    if (Tools.isEmpty(lng)) lng = (String)session.getAttribute(Prop.SESSION_I18N_PROP_LNG);
-    if (Tools.isEmpty(lng)) lng = "sk";
 %>
 <div class="container">
     <div class="container-inner">

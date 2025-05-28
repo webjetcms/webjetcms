@@ -46,54 +46,50 @@
                 <span data-th-text="${saveMsg}">After save message</span>
             </div>
 
-            <div class="row">
+            <div class="mb-3 row">
                 <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.reservations.time_range}" for="timeRange">Reservation time range</label>
-                    <input id="timeRange" name="timeRange" type="text" class="form-control readonly-input" readonly="readonly">
+                    <input id="timeRange" name="timeRange" type="text" class="form-control readonly-input" readonly />
                 </div>
                 <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.reservation.reservations.price}" for="price">Price</label>
-                    <input id="price" type="number" class="form-control" data-th-field="*{price}" disabled>
+                    <input id="price" type="number" class="form-control" data-th-field="*{price}" disabled />
                 </div>
             </div>
-            <div class="row">
+            <div class="mb-3 row">
                 <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.firstName}" for="name">Name</label>
-                    <input type="text" class="form-control" data-th-field="*{name}" required>
+                    <input type="text" class="form-control" data-th-field="*{name}" required />
                 </div>
                 <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.lastName}" for="surname">Surname</label>
-                    <input type="text" class="form-control" data-th-field="*{surname}" required>
+                    <input type="text" class="form-control" data-th-field="*{surname}" required />
                 </div>
             </div>
-            <div class="row">
+            <div class="mb-3 row">
                 <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.user.newuser.email}" for="email">Email</label>
-                    <input type="email" id="email" class="form-control" data-th-field="*{email}" required>
+                    <input type="email" id="email" class="form-control" data-th-field="*{email}" required />
                 </div>
                 <div class="form-group col-sm-12 col-md-6 col-lg-6">
                     <label class="form-label" data-th-text="#{components.formsimple.label.telefon}" for="phoneNumber">Phone Number</label>
                     <input type="text" class="form-control" data-th-field="*{phoneNumber}">
                 </div>
             </div>
-            <div class="row">
+            <div class="mb-3 row">
                 <div class="form-group">
                     <label class="form-label" data-th-text="#{components.reservation.reservation_list.purpose}" for="purpose">Purpose</label>
                     <textarea class="form-control" data-th-field="*{purpose}"></textarea>
                 </div>
             </div>
 
-            <input id="reservationObjectId" name ="reservationObjectId" type="hidden" class="form-control" readonly="readonly">
-            <input id="reservationDateHidden" name="reservationDateHidden" type="hidden" class="form-control" readonly="readonly">
+            <input id="reservationObjectId" name ="reservationObjectId" type="hidden" class="form-control" readonly />
+            <input id="reservationDateHidden" name="reservationDateHidden" type="hidden" class="form-control" readonly />
             <button type="submit" class="btn btn-primary" data-th-text="#{components.reservation.reservation_app.save_button}" name="saveForm" style="display: none;">Submit</button>
         </form>
     </div>
 
     <style>
-        .form-group {
-            padding: 12px;
-        }
-
         .tableCell {
             border: 1px solid #fff;
             transition: background-color 0.2s, color 0.2s;
@@ -141,7 +137,7 @@
         }
 
         .readonly-input {
-            background-color: #e9ecef;
+            background-color: var(--bs-secondary-bg);
             opacity: 1;
             cursor: default;
         }

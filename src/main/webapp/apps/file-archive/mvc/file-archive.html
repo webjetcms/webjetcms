@@ -30,12 +30,12 @@
     <div class="table-responsive">
         <table class="table tabulkaStandard">
 
-            <tr style="background-color: #646979; color: white;">
-                <td><b> <span data-th-text="#{components.file_archiv.virtualFileName}"></span> </b></td>
-                <td><b> <span data-th-text="#{components.file_archiv.valid_from_to}"></span> </b></td>
-                <td><b> <span data-th-text="#{components.file_archiv.file_format}"></span> </b></td>
-                <td><b> <span data-th-text="#{components.file_archiv.file_size}"></span> </b></td>
-                <td>-</td>
+            <tr>
+                <th><span data-th-text="#{components.file_archiv.virtualFileName}"></span></th>
+                <th><span data-th-text="#{components.file_archiv.valid_from_to}"></span></th>
+                <th><span data-th-text="#{components.file_archiv.file_format}"></span></th>
+                <th><span data-th-text="#{components.file_archiv.file_size}"></span></th>
+                <th></th>
             </tr>
 
             <div data-th-each="mainFile : ${mainFiles}" data-th-remove="tag">
@@ -60,7 +60,7 @@
                 <tr th:id="'detail_' + ${mainFile.id}" class="content">
                     <td colspan="5">
                         <div style="display: flex;">
-                            <table data-th-if="${mainFile.archivFiles!=null}" class="table tabulkaStandard inner-table" style="margin: 5px;">
+                            <table data-th-if="${mainFile.archivFiles!=null}" class="table tabulkaStandard inner-table">
                                 <tr>
                                     <th colspan="5"> <span data-th-text="#{components.file_archiv.archiv_files}"></span> </th>
                                 </tr>
@@ -81,7 +81,7 @@
                                     </td>
                                 </tr>
                             </table>
-                            <table data-th-if="${mainFile.patterns!=null}" class="table tabulkaStandard inner-table" style="margin: 5px;">
+                            <table data-th-if="${mainFile.patterns!=null}" class="table tabulkaStandard inner-table">
                                 <tr>
                                     <th colspan="5"> <span data-th-text="#{components.file_archiv.file_patterns}"></span> </th>
                                 </tr>
@@ -152,17 +152,23 @@
 
     .active, .collapsible:hover {
         background-color: #b3b8c7;
+        cursor: pointer;
     }
 
     .content {
         display: none;
     }
 
-    .table td {
-        background-color: transparent !important;
+    .file-archive-app > .table-responsive > .tabulkaStandard > tbody > tr > th {
+        background-color: #646979;
+        color: white;
+    }
+
+    .file-archive-app .tabulkaStandard td {
+        background-color: transparent;
     }
 
     .file-archive-app .tabulkaStandard tbody tr:nth-child(1) td {
-        color: white !important;
+        color: white;
     }
 </style>

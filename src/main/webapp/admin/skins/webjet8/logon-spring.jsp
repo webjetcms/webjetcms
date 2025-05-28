@@ -6,7 +6,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"
 %><%
 
-    String lng = PageLng.getUserLng(request);
+    String lng = Prop.getLng(request, false);
     Prop prop = Prop.getInstance(request);
     String brandSuffix = InitServlet.getBrandSuffix();
     //brandSuffix = "net";
