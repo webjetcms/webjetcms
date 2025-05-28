@@ -142,7 +142,7 @@ public abstract class ExecutionTimeMonitor
 	public List<ExecutionEntry> generateStats()
 	{
 		if (!Constants.getBoolean("serverMonitoringEnablePerformance"))
-			throw new IllegalStateException(Prop.getInstance().getText("components.monitoring.not_enabled"));
+			throw new IllegalStateException(Prop.getInstance().getText("components.monitor.disabled.performance"));
 
 		List<ExecutionEntry> stats = new ArrayList<>(executionDurations.values());
 		Collections.sort(stats);

@@ -262,9 +262,13 @@ public class DocMirroringServiceV9 {
 
       doc.setNavbar(translator.translate(source.getNavbar()));
 
+      // translate perex
+      doc.setHtmlData(translator.translate(source.getHtmlData()));
+
       //regenerate URL based on title
       doc.setVirtualPath("");
 
+      //translate doc body
       doc.setData(translator.translate(source.getData()));
    }
 

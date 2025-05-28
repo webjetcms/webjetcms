@@ -8,7 +8,12 @@ var srcGroupChildName = "Subfolder-autotest";
 var destGroupName = "clone-dest-autotest-";
 var newDocName = "New page-autotest-";
 var doc_a_child_sk = '<p> auto strom </p>';
+var doc_a_child_sk_perex = 'Toto je perex.';
 var doc_b_sk = '<p> nový starý najstarší </p>';
+var doc_b_sk_perex = 'Aj toto je perex.';
+
+var fake_include = "!INCLUDE(Falošná aplikácia, vložená aplikácia sa nemôže prekladať)!";
+var fake_include_html = "<p> Text pred " + fake_include + " text po</p>";
 
 //NO TRANSLATE URL cloning test variables
 var srcGroupName_noUrlTranslate = "clone-src-noUrlTranslate-autotest-";
@@ -55,10 +60,16 @@ function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
     DTE.save();
 }
 
-async function fillDocBody(I, DTE, DT, body) {
+async function fillDocBody(I, DTE, DT, body, perex) {
     I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
     I.click(DT.btn.edit_button);
 
+    I.say("Filling perex");
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+    I.fillField("#DTE_Field_htmlData", perex);
+
+    I.say("Filling body");
+    I.clickCss("#pills-dt-datatableInit-content-tab");
     I.waitForElement("iframe.cke_wysiwyg_frame");
     await DTE.fillCkeditor(body);
     DTE.save();
@@ -72,14 +83,24 @@ async function editDoc(I, DT, DTE, title) {
     DTE.waitForEditor();
 }
 
-async function checkBodyEN(I, DT, DTE, title, values) {
+async function checkBodyEN(I, DT, DTE, Apps, title, values, perex) {
     await editDoc(I, DT, DTE, title);
 
+    I.say("Switch editor type to HTML");
+    Apps.switchEditor('html');
+
     I.say("Check EN translated body");
-    I.switchTo("iframe.cke_wysiwyg_frame");
-    for(var i = 0; i < values.length; i++)
-        I.see( values[i] );
-    I.switchTo();
+    within('.CodeMirror-code', () => {
+        for(var i = 0; i < values.length; i++)
+            I.see( values[i] );
+        
+        //This include must be unchanged !!!
+        I.see( fake_include );
+    });
+
+    I.say("Check EN translated perex");
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+    I.seeInField("#DTE_Field_htmlData", perex);
 
     DTE.cancel();
 }
@@ -148,7 +169,7 @@ async function hardDeleteFolder(I, DT, DTE, groupName) {
     DT.waitForLoader();
 }
 
-Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  => {
+Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT, Apps })  => {
     I.say("Preparing source folder");
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
         DT.waitForLoader();
@@ -161,11 +182,16 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
         I.say("Create new doc in root group");
             I.click(DT.btn.add_button);
             DTE.waitForEditor();
+            //Add name
             I.waitForVisible("#DTE_Field_title");
             I.fillField("#DTE_Field_title", newDocName);
+            //Add perex
+            I.clickCss("#pills-dt-datatableInit-perex-tab");
+            I.fillField("#DTE_Field_htmlData", doc_a_child_sk_perex);
+            //Fill body
             I.clickCss("#pills-dt-datatableInit-content-tab");
             I.waitForElement("iframe.cke_wysiwyg_frame");
-            await DTE.fillCkeditor(doc_a_child_sk);
+            await DTE.fillCkeditor(doc_a_child_sk + fake_include_html);
             DTE.save();
 
         //
@@ -173,7 +199,7 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
         createGroup(I, DTE, DT, srcGroupChildName, "Slovenský", false);
 
         I.jstreeClick(srcGroupChildName);
-        await fillDocBody(I, DTE, DT, doc_b_sk);
+        await fillDocBody(I, DTE, DT, doc_b_sk + fake_include_html, doc_b_sk_perex);
 
     I.say("Preparing dest folder");
         createGroup(I, DTE, DT, destGroupName, "Anglický", true);
@@ -187,11 +213,12 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
 
-        await checkBodyEN(I, DT, DTE, "New", ["car", "tree"]);
+
+        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "This is a perex.");
 
         I.click( locate("a.jstree-anchor").withText("Subfolder") );
 
-        await checkBodyEN(I, DT, DTE, "Subfolder", ["new", "old", "oldest"]);
+        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "This is also a perex.");
 
         I.say("Check folder optional fields");
         I.jstreeNavigate([destGroupName, srcGroupChildName]);

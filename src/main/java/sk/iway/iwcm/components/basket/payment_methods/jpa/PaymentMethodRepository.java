@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.basket.payment_methods.jpa;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,4 +19,6 @@ public interface PaymentMethodRepository extends DomainIdRepository<PaymentMetho
 
     @Transactional
     void deleteByPaymentMethodNameAndDomainId(String paymentMethodName, Integer domainId);
+
+    List<PaymentMethodEntity> findAllByDomainIdOrderBySortPriorityAsc(Integer domainId);
 }

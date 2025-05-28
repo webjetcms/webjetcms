@@ -176,6 +176,7 @@ Iné zmeny:
 - Web stránky - schvaľovanie - opravené načítanie zoznamu v karte Neschválené pri použití databázového servera `Oracle` (#54273-62).
 - Web stránky - opravená aktualizácia nodov clustra pri zmene značiek (#57717).
 - Web stránky - opravené zobrazenie zoznamu stránok ak má používateľ právo iba na vybrané webové stránky (#57725-4).
+- Web stránky - doplnený prepínač domén aj keď nie je nastavená konfiguračná premenná `enableStaticFilesExternalDir` ale len `multiDomainEnabled` (#57833).
 - Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Aplikácie - pridaná podpora vkladania nového riadku cez klávesovú skratku `SHIFT+ENTER` do jednoduchého textového editora používaného napr. v Otázky a odpovede (#57725-1).
 - Číselníky - presunutý výber číselníka priamo do nástrojovej lišty dátovej tabuľky (#49144).
@@ -191,6 +192,12 @@ Iné zmeny:
 - Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
 - Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
 - Štatistika - opravené vytvorenie tabuľky pre štatistiku kliknutí v teplotnej mape.
+- Prekladač - implementácia inteligentného oneskorenia pre prekladač `DeepL` ako ochrana proti chybe `HTTP 429: too many requests`, ktorá spôsobovala výpadok prekladov (#57833).
+- Klonovanie štruktúry - opravené nechcené prekladanie implementácie aplikácií `!INCLUDE(...)!`, pri automatickom preklade tela stránky (#57833).
+- Klonovanie štruktúry - pridaný preklad perex anotácie automatickom preklade stránok (#57833).
+- Prieskumník - opravené práva nastavenia vlastností priečinku a súboru (#57833).
+- Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
+- Úvod - opravené zobrazenie požiadavky na dvojstupňové overovanie pri integrácii cez `IIS` (#57833).
 
 ### Bezpečnosť
 

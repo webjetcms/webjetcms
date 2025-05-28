@@ -26,10 +26,10 @@ import sk.iway.iwcm.users.UserGroupsDB;
 
 @RestController
 @RequestMapping("/admin/rest/elfinder/folder-properties/")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_elfinder')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuFbrowser')")
 @Datatable
 public class FolderPropertiesRestController extends DatatableRestControllerV2<FolderPropertiesEntity, Long> {
-    
+
     private final FolderPropertiesRepository folderPropertiesRepository;
     private HttpServletResponse response;
 
@@ -54,7 +54,7 @@ public class FolderPropertiesRestController extends DatatableRestControllerV2<Fo
 
     @Override
     public void beforeSave(FolderPropertiesEntity entity) {
-        if(getUser().isFolderWritable(entity.getDirUrl() + "/") == false)   
+        if(getUser().isFolderWritable(entity.getDirUrl() + "/") == false)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         if(entity.getLogonDocId() == null) entity.setLogonDocId( -1 );

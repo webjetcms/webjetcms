@@ -53,7 +53,7 @@ Scenario('testovanie app - app-vyhladavanie', async ({ I, DTE, Apps }) => {
     I.closeOtherTabs();
     I.switchTo();
 
-    Apps.openAppEditor();
+    Apps.openAppEditor(undefined, undefined, true);
 
     const changedParams = {
         customSearchId :  'b26e7934939764ed1'

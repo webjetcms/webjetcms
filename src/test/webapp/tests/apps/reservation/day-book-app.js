@@ -23,7 +23,7 @@ Scenario('Delete reservations', async ({ I, DT }) => {
     await deleteFilteredReservations(DT, I, 'editorFields.selectedReservation', 'Spa celodenné');
 });
 
-Scenario('Verifying elements of day book app', ({ I }) => {
+Scenario('Verifying elements of day book app', async ({ I }) => {
     I.amOnPage("/apps/rezervacie/rezervacie-vsetko.html");
     I.waitForVisible("#calendar > .vc-controls");
 
@@ -34,9 +34,9 @@ Scenario('Verifying elements of day book app', ({ I }) => {
     I.clickCss("button.vc-year");
 
     I.say('Verify calendar behaviour');
-    setDate(I, 2031, 1);
-    setDate(I, 2038, 1);
-    setDate(I, 2042, 10);
+    await setDate(I, 2031, 1);
+    await setDate(I, 2038, 1);
+    await setDate(I, 2042, 10);
 
     checkCalendarDates(I, 'Október', '2042', 'November', '2042');
     I.clickCss('.vc-arrow.vc-arrow_next');
@@ -45,7 +45,7 @@ Scenario('Verifying elements of day book app', ({ I }) => {
     checkCalendarDates(I, 'December', '2042', 'Január' ,'2043');
     I.clickCss('.vc-arrow.vc-arrow_next');
     checkCalendarDates(I, 'Január', '2043', 'Február', '2043');
-    setDate(I, 2044, 1);
+    await setDate(I, 2044, 1);
     checkCalendarDates(I, 'Január', '2044', 'Február', '2044');
     I.clickCss('.vc-arrow.vc-arrow_prev');
     checkCalendarDates(I, 'December', '2043', 'Január', '2044');
@@ -57,9 +57,9 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
     I.selectOption('#reservationObjectId', 'Spa celodenné');
 
     I.say("Set date in future");
-    setDate(I, 2031, 1);
-    setDate(I, 2038, 1);
-    setDate(I, 2045, 1);
+    await setDate(I, 2031, 1);
+    await setDate(I, 2038, 1);
+    await setDate(I, 2045, 1);
 
     I.say("Check table composition");
     for (let day = 1; day <= 31; day++) {
@@ -76,7 +76,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
         "Spa celodenné", "01.01.2045", "14:00", "07.01.2045",
         "10:30", "760,00", "Schválená" ]);
 
-    setDate(I, 2045, 1);
+    await setDate(I, 2045, 1);
     clickDate(I, 2045, 1, 5);
     clickDate(I, 2045, 1, 11);
     I.seeInField('#price', '720');
@@ -177,11 +177,11 @@ Scenario('Selecting two random objects and verify only these objects are display
     assert.deepStrictEqual(cleanedActualOptions, chosenOptions, 'Options are not same');
 });
 
-Scenario('Verify discount on user in discount group 40 percent', ({ I, DT }) => {
+Scenario('Verify discount on user in discount group 40 percent', async ({ I, DT }) => {
     I.relogin('tester3');
     I.amOnPage('/apps/rezervacie/rezervacia-spa.html');
     I.waitForVisible("#calendar > .vc-controls");
-    setDate(I, 2030, 12);
+    await setDate(I, 2030, 12);
     clickDate(I, 2030, 12, 10);
     clickDate(I, 2030, 12, 13);
     I.seeInField('#price', 120*3*0.6);
@@ -194,10 +194,10 @@ Scenario('Verify discount on user in discount group 40 percent', ({ I, DT }) => 
     ]);
 });
 
-Scenario('Verify reservation creation and price validation based on user type and date range selection in the calendar works correctly', ({ I, DT }) => {
+Scenario('Verify reservation creation and price validation based on user type and date range selection in the calendar works correctly', async ({ I, DT }) => {
     I.amOnPage('/apps/rezervacie/rezervacia-spa.html');
     I.waitForVisible("#calendar > .vc-controls");
-    setDate(I, 2030, 12);
+    await setDate(I, 2030, 12);
 
     clickDate(I, 2030, 12, 24);
     clickDate(I, 2030, 12, 25);
@@ -222,7 +222,7 @@ Scenario('Verify reservation creation and price validation based on user type an
     ]);
 });
 
-Scenario('Check emails - need approve', ({ I, DT, DTE, TempMail }) => {
+Scenario('Check emails - need approve', async ({ I, DT, DTE, TempMail }) => {
     let reservationObjectNameB = "screenshotReservationB";
     let authorName = "autotest-A-" + randomNumber;
 
@@ -241,7 +241,7 @@ Scenario('Check emails - need approve', ({ I, DT, DTE, TempMail }) => {
         I.relogin("tester2");
         I.amOnPage('/apps/rezervacie/rezervacia-screenshotreservationb.html');
         I.waitForVisible("#calendar > .vc-controls");
-        setDate(I, 2032, 4);
+        await setDate(I, 2032, 4);
 
         clickDate(I, 2032, 4, 8);
         clickDate(I, 2032, 4, 10);
@@ -278,7 +278,7 @@ Scenario('Check emails - need approve', ({ I, DT, DTE, TempMail }) => {
     TempMail.deleteCurrentEmail();
 });
 
-Scenario('Check emails - DONT need approve', ({ I, DT, DTE, TempMail }) => {
+Scenario('Check emails - DONT need approve', async ({ I, DT, DTE, TempMail }) => {
     I.relogin("tester");
 
     let reservationObjectNameB = "screenshotReservationB";
@@ -298,7 +298,7 @@ Scenario('Check emails - DONT need approve', ({ I, DT, DTE, TempMail }) => {
     I.say("Create reseravtion as approver");
         I.amOnPage('/apps/rezervacie/rezervacia-screenshotreservationb.html');
         I.waitForVisible("#calendar > .vc-controls");
-        setDate(I, 2032, 4);
+        await setDate(I, 2032, 4);
 
         clickDate(I, 2032, 4, 8);
         clickDate(I, 2032, 4, 10);
@@ -396,11 +396,21 @@ function checkCheckOutOnly(I, year, month, day) {
  * @param {number} year
  * @param {number} month - starts from 1
  */
-function setDate(I, year, month) {
+async function setDate(I, year, month) {
+    I.wait(2);
     I.clickCss("button.vc-year");
     I.waitForVisible(".vc-years");
-    I.clickCss("button[data-vc-years-year='" + year + "']");
-    I.waitForInvisible(".vc-years");
+
+    const yearSelector = `button[data-vc-years-year='${year}']`;
+
+    for (let i = 0; i < 12; i++) {
+    if (await I.grabNumberOfVisibleElements(yearSelector)) {
+        await I.clickCss(yearSelector);
+        break;
+    }
+    await I.clickCss('.vc-arrow.vc-arrow_next');
+    await I.wait(0.5);
+    }
 
     I.clickCss("button.vc-month");
     I.waitForVisible("button.vc-months__month[data-vc-months-month='" + (month - 1) + "']");
