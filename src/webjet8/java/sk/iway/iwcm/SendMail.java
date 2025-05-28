@@ -618,7 +618,7 @@ public class SendMail
 						continue;
 					}
 					//Logger.println(this,src);
-					att.add(src);
+					if (att.contains(src)==false) att.add(src);
 				}
 				//jeeff: test na atribut background
 				if (elem.getAttributes().getAttribute(HTML.Attribute.BACKGROUND) != null)
@@ -629,7 +629,7 @@ public class SendMail
 						continue;
 					}
 					//Logger.println(this,src);
-					att.add(src);
+					if (att.contains(src)==false) att.add(src);
 				}
 			}
 		}

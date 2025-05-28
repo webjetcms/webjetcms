@@ -37,7 +37,9 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
+import sk.iway.iwcm.components.basket.rest.ProductListService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -2318,7 +2320,8 @@ public class UpdateDatabase
 
 			BasketInvoicesRepository bir = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
 			BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
-			if (bir == null || biir == null) {
+			BasketInvoicePaymentsRepository bipr = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
+			if (bir == null || biir == null || bipr == null) {
 				Logger.error(UpdateDatabase.class, "BasketInvoicesRepository bean not found");
 				return;
 			}
@@ -2339,7 +2342,7 @@ public class UpdateDatabase
 					BigDecimal totalPrice = BigDecimal.ZERO; //NO VAT
 					BigDecimal totalPriceVat = BigDecimal.ZERO; //WITH VAT
 
-					List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(Long.valueOf(invoice.getId()), invoice.getDomainId());
+					List<BasketInvoiceItemEntity> invoiceItems = biir.findAllByInvoiceIdAndDomainId(invoice.getId(), invoice.getDomainId());
 
 					for(BasketInvoiceItemEntity item : invoiceItems) {
 						itemsCount += item.getItemQty();
@@ -2351,6 +2354,8 @@ public class UpdateDatabase
 					invoice.setItemQty(itemsCount);
 					invoice.setPriceToPayNoVat(totalPrice);
 					invoice.setPriceToPayVat(totalPriceVat);
+					invoice.setBalanceToPay( totalPriceVat.subtract( ProductListService.getPayedPrice(invoice.getId(), bipr) ) );
+
 					bir.save(invoice);
 				}
 				pageNumber++;

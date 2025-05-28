@@ -37,7 +37,7 @@ Scenario('Remove old reservations for new screens', async ({ I, DT, Document }) 
             default:
                 throw new Error('Unsupported language code');
         }
-        
+
     }
 });
 
@@ -56,8 +56,8 @@ Scenario('reservation screens - admin section', ({ I, DTE, Document }) => {
         default:
             throw new Error(`Unsupported language code: ${I.getConfLng()}`);
         }
-    
-    
+
+
     let appId = "#components-reservation-time_book-title";
 
 
@@ -103,7 +103,7 @@ Scenario('reservation screens - admin section', ({ I, DTE, Document }) => {
         default:
             throw new Error(`Unsupported language code: ${I.getConfLng()}`);
     }
-    
+
     I.switchTo();
     I.switchTo();
 
@@ -144,8 +144,11 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
 
     Document.screenshot("/redactor/apps/reservation/time-book-app/app-ready-reservation.png");
 
+
+
     I.fillField("#reservationDate", "03-01-2045");
     I.clickCss("td[id='2560_13'].free");
+
     I.waitForVisible("button.btn.btn-primary", 1);
     I.clickCss("button.btn.btn-primary");
     I.waitForVisible( locate("div.alert.alert-success"));
@@ -158,4 +161,30 @@ Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     I.waitForVisible( locate("div.alert.alert-success"));
 
     Document.screenshotElement("div.alert.alert-success", "/redactor/apps/reservation/time-book-app/app-reservation-saved-awaiting-approve.png");
+});
+
+Scenario('Remove crated reservations', ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/reservation/admin/");
+    DT.filterContains("editorFields.selectedReservation", "Tenisovy kurt");
+
+    I.fillField({css: "input.dt-filter-from-dateFrom"}, "03.01.2045");
+    I.fillField({css: "input.dt-filter-to-dateFrom"}, "03.01.2045");
+    I.clickCss("button.dt-filtrujem-dateFrom");
+    I.clickCss("button.dt-filtrujem-dateFrom");
+    DT.waitForLoader();
+
+    I.clickCss("button.buttons-select-all");
+    I.clickCss("button.custom-buttons-remove");
+
+    let confLng = I.getConfLng();
+
+    if("sk" === confLng) {
+        I.click("Zmazať", "div.DTE_Action_Remove");
+    } else if("en" === confLng) {
+        I.click("Delete", "div.DTE_Action_Remove");
+    } else if ("cs" === confLng){
+        I.click("Smazat", "div.DTE_Action_Remove")
+    }
+
+    DTE.waitForModalClose("forumDataTable_modal");
 });
