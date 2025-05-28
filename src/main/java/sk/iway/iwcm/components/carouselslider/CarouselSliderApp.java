@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @WebjetComponent("sk.iway.iwcm.components.carouselslider.CarouselSliderApp")
-@WebjetAppStore(nameKey = "components.app-carousel_slider.title", descKey = "components.app-carousel_slider.desc", itemKey = "carousel_slider", imagePath = "/components/carousel_slider/editoricon.png", galleryImages = "/components/carousel_slider/", componentPath = "/components/carousel_slider/carousel_slider.jsp")
+@WebjetAppStore(nameKey = "components.app-carousel_slider.title", descKey = "components.app-carousel_slider.desc", itemKey = "carousel_slider", imagePath = "/components/carousel_slider/editoricon.png", galleryImages = "/components/carousel_slider/", componentPath = "/components/carousel_slider/carousel_slider.jsp", customHtml = "/apps/carousel_slider/admin/editor-component.html")
 @DataTableTabs(tabs = {
         @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
         @DataTableTab(id = "advanced", title = "editor.tab.advanced", content = ""),
@@ -41,18 +41,10 @@ public class CarouselSliderApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.stylish", value = "Stylish")
             })
     })
-    private String classes = "basic";
+    private String skin = "basic";
 
-    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.roots.new.style", tab = "basic", className = "image-radio-horizontal image-radio-fullwidth")
-    private String style;
-
-    @Override
-    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
-        Map<String, List<OptionDto>> options = new HashMap<>();
-
-        options.put("style", DatatableTools.getImageRadioOptions("/components/carousel_slider/admin-styles/"));
-        return options;
-    }
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "basic", title="&nbsp;")
+    private String styleImageIMG;
 
     // dalsia strana
 
@@ -99,7 +91,7 @@ public class CarouselSliderApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.carousel_slider.rowNumber", tab = "advanced")
     private Integer rowNumber;
-    
+
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title = "components.carousel_slider.navStyle", editor = {
         @DataTableColumnEditor(options = {
             @DataTableColumnEditorAttr(key = "components.carousel_slider.none", value = "none"),
@@ -137,7 +129,7 @@ public class CarouselSliderApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "advanced", title = "components.carousel_slider.interval", editor = {
     })
-    private Integer autoplay_interval;  
+    private Integer autoplay_interval;
 
 
 

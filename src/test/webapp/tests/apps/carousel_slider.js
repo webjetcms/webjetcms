@@ -1,5 +1,12 @@
 Feature('apps.carousel_slider');
 
+Before(({ I, login }) => {
+    login('admin');
+    if (typeof randomNumber == "undefined") {
+        randomNumber = I.getRandomText();
+    }
+});
+
 Scenario("Carousel slider - test zobrazovania", async ({ I }) => {
     I.amOnPage("/apps/carousel-slider/");
     I.waitForElement("#amazingcarousel-container-1");
@@ -41,6 +48,79 @@ Scenario("Carousel slider - test zobrazovania", async ({ I }) => {
     });
     I.clickCss("#html5-close");
     I.waitForInvisible("#carousel-html5-lightbox");
+});
+
+Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, Apps, Document }) => {
+    Apps.insertApp('Carousel Slider', '#components-app-carousel_slider-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    const defaultParams = {
+        skin: "AutoScroller",
+        carouselWidth: "",
+        carouselHeight: "",
+        imageWidth: "",
+        imageHeight: "",
+        imgPerSlide: "1",
+        direction: "horizontal",
+        showLightbox: "true",
+        rowNumber: "",
+        nav_style: "none",
+        arrow_style: "none",
+        touch_swipe: "true",
+        random_play: "false",
+        autoplay: "true",
+        pause_on_mouse_over: "false",
+        circular: "true",
+        show_shadow_bottom: "false",
+        autoplay_interval: ""
+    };
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+    I.clickCss("#pills-dt-component-datatable-style-tab");
+
+    const changedParams = {
+        skin: "AutoScroller",
+        carouselWidth: "",
+        carouselHeight: "",
+        imageWidth: "",
+        imageHeight: "",
+        imgPerSlide: "1",
+        direction: "horizontal",
+        showLightbox: "true",
+        rowNumber: "",
+        nav_style: "none",
+        arrow_style: "none",
+        touch_swipe: "true",
+        random_play: "false",
+        autoplay: "true",
+        pause_on_mouse_over: "false",
+        circular: "true",
+        show_shadow_bottom: "false",
+        autoplay_interval: ""
+    };
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
 });
 
 function seeLightboxImage(I, expectedImage) {
