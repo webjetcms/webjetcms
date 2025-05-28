@@ -45,7 +45,7 @@ ext {
     springVersion = "5.3.+";
     springSecurityVersion = "5.8.+";
     allureVersion = "2.24.0";
-    aspectJVersion = '1.9.21';
+    aspectJVersion = '1.9.19';
 }
 
 lombok {
@@ -53,7 +53,6 @@ lombok {
     //zrusene kvoli zbytocnym problemom s ActiveRecord config['lombok.accessors.chain'] = 'true'
     //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
-
 
 war {
     zip64 = true
