@@ -8,14 +8,11 @@ let linksFromEmail = [];
 Before(async ({ I, DT, login }) => {
     login('admin');
     if (typeof randomName_1 == "undefined") {
-        let randomNumber1 = I.getRandomText();
-        let randomNumber2 = I.getRandomText();
-        let randomNumber3 = I.getRandomText();
-        let randomNumber4 = I.getRandomText();
-        randomName_1 = `autotest-${randomNumber1}`;
-        randomName_2 = `autotest-${randomNumber2}`;
-        randomName_3 = `autotest-${randomNumber3}`;
-        randomName_4 = `autotest-${randomNumber4}`;
+        let randomNumber = I.getRandomText();
+        randomName_1 = `autotest-1-${randomNumber}`;
+        randomName_2 = `autotest-2-${randomNumber}`;
+        randomName_3 = `autotest-3-${randomNumber}`;
+        randomName_4 = `autotest-4-${randomNumber}`;
         baseUrl = await I.grabCurrentUrl();
    }
    DT.addContext('recipients','#datatableFieldDTE_Field_recipientsTab_wrapper');
@@ -173,7 +170,7 @@ async function handleTempMailSubmission(I, TempMail) {
     TempMail.login(randomName_1);
     TempMail.openLatestEmail();
     I.waitForElement('#info > div > p > a[href*="newsletter/odhlasenie"]', 10);
-    const url = await I.grabTextFrom('#info > div > p > a[href*="newsletter/odhlasenie"]');
+    const url = await I.grabAttributeFrom('#info > div > p > a[href*="newsletter/odhlasenie"]', 'href');
     I.amOnPage(url.replace("https", "http"));
 }
 

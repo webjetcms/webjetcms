@@ -46,7 +46,8 @@
 	// Unsubscribe z mailingu
 	if (dmspID > 0) {
 		String emailDmsp = EmailDB.getEmail(dmspID);
-		boolean saveOK = EmailDB.addUnsubscribedEmail(emailDmsp);
+		boolean saveOK = false;
+		if (Tools.isEmail(emailDmsp)) saveOK = EmailDB.addUnsubscribedEmail(emailDmsp);
 
 		if (saveOK) {
 			request.setAttribute("unsubscribeSuccess", prop.getText("dmail.unsubscribe.emailunsubscribed", emailDmsp));
@@ -60,25 +61,13 @@
 	// Odoslanie overovacieho mailu pre odhlásenie
 	boolean saveRequested = "true".equals(request.getParameter("save"));
 	if (Tools.isNotEmpty(email) && dmspID < 0 && saveRequested) {
-        String baseDomain = Tools.getBaseHrefLoopback(request);
-		String baseHref = Constants.getString("dmailListUnsubscribeBaseHref", baseDomain );
-		String safeHref = Tools.replace(baseHref, "http://", "https://");
+		String baseHref = Constants.getString("dmailListUnsubscribeBaseHref", Tools.getBaseHref(request));
+        String unsubscribedUrl = PathFilter.getOrigPathDocId(request);
 
-        // aby mal hash aj uzivatel ktory nie je v tabulke emails
-        EmailDB.insertEmail(email);
-		Integer emailId = EmailDB.getEmailId(email);
-
-        String hash = Sender.getClickHash(emailId);
-        String unsubscribedUrl = safeHref + "/newsletter/odhlasenie-z-newsletra.html?" + Constants.getString("dmailStatParam") + "=" + hash;
-
-        String fromName = "WebjetCMS";
-        String fromEmail = "tester@balat.sk";
-        String toEmail = email;
-        String subject = "Overenie mailu pre odhlásenie";
+        String subject = prop.getText("dmail.subscribe.subject");
         String message = prop.getText("dmail.unsubscribe.bodyNew", unsubscribedUrl);
-        String serverRoot = "http://" + Tools.getServerName(request);
 
-        boolean ok = SendMail.sendLater(fromName, fromEmail, toEmail, null, null, null, subject, message, serverRoot, null, null);
+        boolean ok = SendMail.sendLater(SendMail.getDefaultSenderName("dmail", email), SendMail.getDefaultSenderEmail("dmail", email), email, null, null, null, subject, message, baseHref, null, null);
         request.setAttribute("pageSend", ok ? "ok" : "fail");
 
 		request.setAttribute("unsubscribeSuccess-showEmailSent", "true");

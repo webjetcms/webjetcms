@@ -808,6 +808,8 @@ public class Sender extends TimerTask
 						newLink = Tools.addParameterToUrlNoAmp(oldLink, param, value);
 					}
 					body = Tools.replace(body, "href=\"" + oldLink + "\"", "href=\"" + newLink + "\"");
+					//replace also text of link
+					body = Tools.replace(body, ">" + oldLink + "<", ">" + newLink + "<");
 				}
 			}
 			start = body.indexOf("href=\"", end);
@@ -821,7 +823,7 @@ public class Sender extends TimerTask
 	 * @param emailId
 	 * @return
 	 */
-	public static String getClickHash(int emailId) {
+	private static String getClickHash(int emailId) {
 		String hash = (new SimpleQuery()).forString("SELECT click_hash FROM emails WHERE email_id=?", emailId);
 		if (Tools.isEmpty(hash)) {
 			hash = String.valueOf(emailId) + Password.generateStringHash(16);
