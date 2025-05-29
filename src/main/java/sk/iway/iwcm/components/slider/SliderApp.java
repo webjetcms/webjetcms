@@ -201,6 +201,7 @@ public class SliderApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
     private String iframe  = "/components/slider/add-item.jsp";
 
-    
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
+    private String editorData;
 
 }

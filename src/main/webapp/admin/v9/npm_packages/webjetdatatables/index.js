@@ -272,6 +272,7 @@ export const dataTableInit = options => {
     DATA.editorLocking = (typeof options.editorLocking !== "undefined") ? options.editorLocking : true;
 
     //console.log("options=", options);
+    let jsonEditorFields;
 
     //pre podporu multi tabuliek a editora potrebujeme mat unikatne ID pre kazdu DT a editor
     if (DATA.id === null) {
@@ -1266,8 +1267,13 @@ export const dataTableInit = options => {
             }
         }
 
-        // console.log("DATA.fields", DATA.fields);
-        // console.log("DATA.columns", DATA.columns);
+
+        const fields = DATA.fields;
+        jsonEditorFields = fields.filter(field => {
+            return field.className && field.className.includes('dt-json-editor');
+        });
+        //console.log("DATA.fields", DATA.fields);
+        //console.log("DATA.columns", DATA.columns);
 
         let ajaxDeclaration;
         if (DATA.jsonEditor === false){
@@ -3030,6 +3036,10 @@ export const dataTableInit = options => {
                     .on('xhr.dt', function (e, settings, json, xhr) {
 
                         //ak neprisli options (napr. pri vyhladavani) zachovaj povodne
+                        if (jsonEditorFields.length > 0) {
+                            const jsonVariableName = jsonEditorFields[0].name;
+                            localStorage.setItem("tableLines", json.data[0][jsonVariableName]);
+                        }
                         //console.log("DATA.json=", DATA.json, "json=", json);
                         //if (DATA.json != null) console.log("DATA.json.options=", DATA.json.options);
                         if (DATA.json != null && typeof DATA.json.options != "undefined" && DATA.json.options != null) {

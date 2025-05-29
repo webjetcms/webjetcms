@@ -32,8 +32,9 @@
 
     function appGetComponentCode(componentPath, params, componentDatatable){
         let include = "!INCLUDE(" + componentPath;
+        params.editorData = localStorage.getItem("tableLines");
         if (Object.keys(params).length > 0) {
-            include += ", " + convertObjectToInludeParams(params) + ", editorData=" + localStorage.getItem("tableLines");
+            include += ", " + convertObjectToInludeParams(params);
         }
         include += ")!";
         return include;
