@@ -128,7 +128,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.sitemap",
     "sk.iway.iwcm.components.rating",
     "sk.iway.iwcm.components.relatedpages",
-    "sk.iway.iwcm.search"
+    "sk.iway.iwcm.search",
+    "sk.iway.iwcm.components.appweather"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

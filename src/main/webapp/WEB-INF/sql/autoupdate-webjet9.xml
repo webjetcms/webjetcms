@@ -1795,26 +1795,22 @@
                 <void property="author"><string>lbalat</string></void>
                 <void property="date"><string>01.06.2025</string></void>
                 <void property="desc"><string>Pridanie stlpcov balance_to_pay</string></void>
-                <void property="mysql">
-                    <string>
-                        ALTER TABLE basket_invoice ADD balance_to_pay decimal(10,2) DEFAULT 0;
-                    </string>
-                </void>
-                <void property="mssql">
-                    <string>
-                        ALTER TABLE basket_invoice ADD balance_to_pay decimal(10,2) DEFAULT 0;
-                    </string>
-                </void>
-                <void property="oracle">
-                    <string>
-                        ALTER TABLE basket_invoice ADD (balance_to_pay decimal(10,2) DEFAULT 0);
-                    </string>
-                </void>
-                <void property="pgsql">
-                    <string>
-                        ALTER TABLE basket_invoice ADD COLUMN balance_to_pay NUMERIC(10, 2) DEFAULT 0;
-                    </string>
-                </void>
+                <void property="mysql"><string>ALTER TABLE basket_invoice ADD balance_to_pay decimal(10,2) DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE basket_invoice ADD balance_to_pay decimal(10,2) DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE basket_invoice ADD (balance_to_pay decimal(10,2) DEFAULT 0);</string></void>
+                <void property="pgsql"><string>ALTER TABLE basket_invoice ADD COLUMN balance_to_pay NUMERIC(10, 2) DEFAULT 0;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>12.05.2025</string></void>
+                <void property="desc"><string>Pridanie stlpcu sort_priority do tabulky payment_methods</string></void>
+                <void property="mysql"><string>ALTER TABLE payment_methods ADD sort_priority INT DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE payment_methods ADD sort_priority INT DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE payment_methods ADD sort_priority INT DEFAULT 0;</string></void>
+                <void property="pgsql"><string>ALTER TABLE payment_methods ADD COLUMN sort_priority INT DEFAULT 0;</string></void>
             </object>
         </void>
 

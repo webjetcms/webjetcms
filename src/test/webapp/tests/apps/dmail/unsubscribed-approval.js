@@ -8,14 +8,11 @@ let linksFromEmail = [];
 Before(async ({ I, DT, login }) => {
     login('admin');
     if (typeof randomName_1 == "undefined") {
-        let randomNumber1 = I.getRandomText();
-        let randomNumber2 = I.getRandomText();
-        let randomNumber3 = I.getRandomText();
-        let randomNumber4 = I.getRandomText();
-        randomName_1 = `autotest-${randomNumber1}`;
-        randomName_2 = `autotest-${randomNumber2}`;
-        randomName_3 = `autotest-${randomNumber3}`;
-        randomName_4 = `autotest-${randomNumber4}`;
+        let randomNumber = I.getRandomText();
+        randomName_1 = `autotest-1-${randomNumber}`;
+        randomName_2 = `autotest-2-${randomNumber}`;
+        randomName_3 = `autotest-3-${randomNumber}`;
+        randomName_4 = `autotest-4-${randomNumber}`;
         baseUrl = await I.grabCurrentUrl();
    }
    DT.addContext('recipients','#datatableFieldDTE_Field_recipientsTab_wrapper');
@@ -43,7 +40,7 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
 });
 
 
-Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I }) => {
+Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I, TempMail }) => {
     await setUnsubscribeText(Apps, DTE, I, defaultText);
 
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
@@ -52,6 +49,8 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
     I.seeElement(locate('a').withText('Nie, chcem zostať'));
     I.see(defaultText);
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
+    I.waitForText("Bol Vám zaslaný e-mail, v ktorom prosím potvrďte Vašu voľbu.");
+    await handleTempMailSubmission(I, TempMail, randomName_1);
     I.waitForElement(locate('fieldset > .alert.alert-success').withText('Email úspešne odhlásený.'), 10);
 
     await setUnsubscribeText(Apps, DTE, I, '');
@@ -61,6 +60,8 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
     I.dontSeeElement(locate('a').withText('Nie, chcem zostať'));
     I.dontSee(defaultText);
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
+    I.waitForText("Bol Vám zaslaný e-mail, v ktorom prosím potvrďte Vašu voľbu.");
+    await handleTempMailSubmission(I, TempMail, randomName_2);
     I.waitForElement(locate('fieldset > .alert.alert-success').withText('Email úspešne odhlásený.'), 10);
 
     await setUnsubscribeText(Apps, DTE, I, changedText);
@@ -161,6 +162,14 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
 
     await setUnsubscribeText(Apps, DTE, I, defaultText);
 });
+
+async function handleTempMailSubmission(I, TempMail, login) {
+    TempMail.login(login);
+    TempMail.openLatestEmail();
+    I.waitForElement('#info > div > p > a[href*="newsletter/odhlasenie"]', 10);
+    const url = await I.grabAttributeFrom('#info > div > p > a[href*="newsletter/odhlasenie"]', 'href');
+    I.amOnPage(url.replace("https", "http"));
+}
 
 async function setConfirmation(Apps, DTE, I, shouldBeChecked ){
     I.closeOtherTabs();

@@ -43,8 +43,8 @@ Scenario('testovanie app - CookieBar', async ({ I, DTE, Apps, Document }) => {
     I.see(defaultParams.cookie_ButtonText);
     I.see(defaultParams.cookie_ButtonTextDecline);
     I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1', 'background-color')), '#e2e3e5');
-    I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1 h2', 'color')), '#383d41');
-    I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1 p', 'color')), '#383d41');
+    I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1 h2', 'color')), '#2b2f32');
+    I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1 p', 'color')), '#2b2f32');
     I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1 button.btn.btn-primary.cookie-btn', 'background-color')), '#00a3e0');
     I.assertEqual(rgbToHex(await I.grabCssPropertyFrom('#cookiebar-1 button.btn.btn-primary.cookie-btn', 'color')), '#ffffff');
     I.assertEqual(await I.grabCssPropertyFrom('#cookiebar-1 div.container', 'padding-top'), `${defaultParams.padding_top}px`);

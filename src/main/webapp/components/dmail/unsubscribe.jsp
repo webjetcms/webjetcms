@@ -8,6 +8,7 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 
 <%@page import="sk.iway.iwcm.dmail.EmailDB"%>
+<%@page import="sk.iway.iwcm.dmail.Sender"%>
 <%@page import="org.apache.struts.util.ResponseUtils"%>
 
 <%
@@ -15,7 +16,7 @@
 	pageContext.setAttribute("lng", lng);
 	Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), lng, false);
 
-	//Registracia do mailing listu, umozni zadat meno, email a skupiny emailov, ktore chce dostavat
+	// odhlasenie z mailing listu
 	PageParams pageParams = new PageParams(request);
 	boolean confirmUnsubscribe = pageParams.getBooleanValue("confirmUnsubscribe", false);
 	String confirmUnsubscribeText = pageParams.getValue("confirmUnsubscribeText", "");
@@ -48,8 +49,24 @@
 		String emailDmsp = EmailDB.getEmail(dmspID);
 
 		boolean saveOK = false;
-		if (email.equalsIgnoreCase(emailDmsp) || (dmspID < 0))
-		{
+		if (dmspID < 0) {
+			//direct entry of email into form - send conformation email to user with link to unsubscribe
+			String baseHref = Constants.getString("dmailListUnsubscribeBaseHref", Tools.getBaseHref(request));
+			String unsubscribedUrl = Tools.addParameterToUrl(PathFilter.getOrigPathDocId(request), "email", email);
+			//skip confirmation on click (user just added email to unsubscribe so do not ask for confirmation again)
+			unsubscribedUrl = Tools.addParameterToUrl(unsubscribedUrl, "save", "true");
+
+			String subject = prop.getText("dmail.subscribe.subject");
+			String message = prop.getText("dmail.unsubscribe.bodyNew", unsubscribedUrl);
+
+			boolean ok = SendMail.sendLater(SendMail.getDefaultSenderName("dmail", email), SendMail.getDefaultSenderEmail("dmail", email), email, null, null, null, subject, message, baseHref, null, null);
+			if (ok) {
+				request.setAttribute("unsubscribeSuccess-showEmailSent", "true");
+				request.removeAttribute("confirmUnsubscribeText");
+			} else {
+				request.setAttribute("unsubscribeErrors", prop.getText("dmail.unsubscribe.error_unsubscribe_email"));
+			}
+		} else if (email.equalsIgnoreCase(emailDmsp)) {
 			saveOK = EmailDB.addUnsubscribedEmail(email);
 			if (saveOK) {
 				request.setAttribute("unsubscribeSuccess", prop.getText("dmail.unsubscribe.emailunsubscribed", email));
@@ -103,6 +120,12 @@
 <div class="unsubscribeForm">
 	<form action="<%=Tools.replace(PathFilter.getOrigPathDocId(request), "email=", "em=") %>" method="post">
 		<fieldset>
+			<logic:present name="unsubscribeSuccess-showEmailSent">
+				<div class="alert alert-info" role="alert">
+					<iwcm:text key="dmail.unsubscribe.confirm_email_sent"/>
+				</div>
+			</logic:present>
+
 			<logic:present name="confirmUnsubscribeText">
 				<div class="unsubscribe-confirm-text">
 					<iway:request name="confirmUnsubscribeText"/>

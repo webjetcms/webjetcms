@@ -14,14 +14,13 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @WebjetAppStore(
     nameKey = "components.app-weather.title",
     descKey = "components.app-weather.desc",
-    itemKey = "cmp_pocasie", 
+    itemKey = "cmp_pocasie",
     imagePath = "/components/app-weather/editoricon.png",
     galleryImages = "/components/app-weather/",
     componentPath = "/components/app-weather/xml-pocasie.jsp")
 @Getter
 @Setter
 public class WeatherApp extends WebjetComponentAbstract {
-
     @Min(1)
     @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
