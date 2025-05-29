@@ -41,7 +41,6 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
 
 
 Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I, TempMail }) => {
-
     await setUnsubscribeText(Apps, DTE, I, defaultText);
 
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');

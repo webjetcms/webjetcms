@@ -808,7 +808,7 @@ public class Sender extends TimerTask
 						newLink = Tools.addParameterToUrlNoAmp(oldLink, param, value);
 					}
 					body = Tools.replace(body, "href=\"" + oldLink + "\"", "href=\"" + newLink + "\"");
-					//replace also text of link
+					//replace also text of a link
 					body = Tools.replace(body, ">" + oldLink + "<", ">" + baseHref + newLink + "<");
 				}
 			}

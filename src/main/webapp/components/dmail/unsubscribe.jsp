@@ -60,10 +60,12 @@
 			String message = prop.getText("dmail.unsubscribe.bodyNew", unsubscribedUrl);
 
 			boolean ok = SendMail.sendLater(SendMail.getDefaultSenderName("dmail", email), SendMail.getDefaultSenderEmail("dmail", email), email, null, null, null, subject, message, baseHref, null, null);
-			request.setAttribute("pageSend", ok ? "ok" : "fail");
-
-			request.setAttribute("unsubscribeSuccess-showEmailSent", "true");
-			request.removeAttribute("confirmUnsubscribeText");
+			if (ok) {
+				request.setAttribute("unsubscribeSuccess-showEmailSent", "true");
+				request.removeAttribute("confirmUnsubscribeText");
+			} else {
+				request.setAttribute("unsubscribeErrors", prop.getText("dmail.unsubscribe.error_unsubscribe_email"));
+			}
 		} else if (email.equalsIgnoreCase(emailDmsp)) {
 			saveOK = EmailDB.addUnsubscribedEmail(email);
 			if (saveOK) {
