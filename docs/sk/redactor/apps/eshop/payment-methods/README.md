@@ -10,11 +10,18 @@ Vytváranie nových spôsobov platieb (alebo ich duplikovanie) nie je možné ce
 
 ## Úprava/konfigurácia spôsobu platby
 
-Táto aplikácia je špeciálna v tom, že editor každej platby môže vyzerať úplne inak, nakoľko každá platobná metóda môže vyžadovať iné vstupné hodnoty (ich počet, typ, formát ...). Napríklad pri platbe typu **Prevodom**, vyzerá editor takto:
+Táto aplikácia je špeciálna v tom, že editor každej platby môže vyzerať úplne inak, nakoľko každá platobná metóda môže vyžadovať iné vstupné hodnoty (ich počet, typ, formát ...).
+
+Stále sú iba polia:
+
+- **Spôsob platby**, nezmeniteľná hodnota reprezentujúca názov spôsobu platby
+- **Poradie usporiadania**, číselná hodnota k usporiadaniu spôsobu platby. Čím menšia hodnota, tým bude plaba vyššie v zozname zoznamu platieb napr. v elektronickom obchode alebo v administrácií.
+
+Príklad editora  spôsobu platby **Prevodom**:
 
 ![](editor_A.png)
 
-zatiaľ čo pri platbe typu [GoPay](https://www.gopay.com), vyzerá editor takto:
+editor pre spôsob platby [GoPay](https://www.gopay.com), vyzerá takto:
 
 ![](editor_B.png)
 

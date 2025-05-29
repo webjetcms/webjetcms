@@ -25,10 +25,10 @@ import sk.iway.iwcm.users.UsersDB;
 
 @RestController
 @RequestMapping("/admin/rest/elfinder/file-history/")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_elfinder')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuFbrowser')")
 @Datatable
 public class FileHistoryRestController extends DatatableRestControllerV2<FileHistoryEntity, Long> {
-    
+
     private final FileHistoryRepository fileHistoryRepository;
 
     @Autowired
@@ -64,7 +64,7 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
     public boolean processAction(FileHistoryEntity entity, String action) {
         if ("rollBack".equals(action)) {
             IwcmFile historyFile = new IwcmFile( Tools.getRealPath( entity.getHistoryPath() + entity.getId() ) );
-            
+
             if(historyFile.exists() == false){
                 addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("elfinder.file_prop.rollback.src_file_not_found.err"), NotifyType.ERROR, 15000));
                 return true;
@@ -75,10 +75,10 @@ public class FileHistoryRestController extends DatatableRestControllerV2<FileHis
                 addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("elfinder.file_prop.rollback.src_file_not_found.err"), NotifyType.ERROR, 15000));
                 return true;
             }
-            
+
             if(FileTools.copyFile(historyFile, currentFile) == true) addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("elfinder.file_prop.rollback.success"), NotifyType.SUCCESS, 15000));
             else addNotify(new NotifyBean(getProp().getText("elfinder.file_prop.rollback.title"), getProp().getText("elfinder.file_prop.rollback.error"), NotifyType.ERROR, 15000));
-            
+
             return true;
         }
 

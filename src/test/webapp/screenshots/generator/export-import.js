@@ -12,9 +12,6 @@ Scenario('export-users', ({ I, Document }) => {
     //export
     I.click("button[data-dtbtn=export]");
     Document.screenshot("/redactor/datatables/export-dialog.png", 1280, 430);
-
-    I.clickCss("#pills-export-advanced-tab");
-    Document.screenshotElement("#datatableExportModal > div > div.DTE_Action_Edit", "/redactor/datatables/export-dialog-advanced.png");
 });
 
 Scenario('import-users', ({ I, Document }) => {
@@ -39,7 +36,7 @@ Scenario('import-users', ({ I, Document }) => {
         default:
             throw new Error("Unknown language: " + I.getConfLng());
     }
-    
+
 
     Document.screenshot("/redactor/datatables/import-dialog.png", 1280, 500);
 });

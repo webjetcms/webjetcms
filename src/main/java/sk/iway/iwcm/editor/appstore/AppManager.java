@@ -98,7 +98,8 @@ public class AppManager
 	public static List<AppBean> getAppsList(HttpServletRequest request)
 	{
 
-		String CACHE_KEY = "cloud.AppManager.appsList";
+		String lng = Prop.getLngForJavascript(request);
+		String CACHE_KEY = "cloud.AppManager.appsList." + lng;
 		@SuppressWarnings("unchecked")
 		List<AppBean> appsList = (List<AppBean>) c.getObject(CACHE_KEY);
 		if (appsList != null)
@@ -143,7 +144,7 @@ public class AppManager
 						continue;
 					}
 
-					app = new AppBean();
+					app = new AppBean(lng);
 					app.setItemKey(mi.getItemKey());
 					app.setNameKey(mi.getNameKey());
 					app.setComponentClickAction(mi.getPath().substring(mi.getPath().lastIndexOf("/") + 1));
@@ -156,7 +157,7 @@ public class AppManager
 				{
 					for (LabelValueDetails lvd : mi.getComponents())
 					{
-						app = new AppBean();
+						app = new AppBean(lng);
 						app.setItemKey(mi.isUserItem() ? mi.getItemKey() : "");
 						app.setNameKey(lvd.getLabel());
 						if("cloud".equals(Constants.getInstallName())) app.setComponentClickAction(lvd.getValue().substring(lvd.getValue().lastIndexOf("cloud")+6,lvd.getValue().lastIndexOf('/')));
@@ -178,7 +179,7 @@ public class AppManager
 		{
 			if (f.isDirectory() && f.getName().startsWith("app-"))
 			{
-				app = new AppBean();
+				app = new AppBean(lng);
 				String nameKey = "components."+Constants.getInstallName()+"." + f.getName() + ".title";
 
 				String imgPath = "/components/"+Constants.getInstallName()+"/" + f.getName() + "/editoricon.png";
@@ -194,7 +195,7 @@ public class AppManager
 			}
 		}
 
-        scanAnnotations(appsList);
+        scanAnnotations(appsList, lng);
 
 		c.setObjectSeconds(CACHE_KEY, appsList, 120 * 60, true);
 
@@ -209,7 +210,7 @@ public class AppManager
 		return variant1.equals(variant2);
 	}
 
-    private static void scanAnnotations(List<AppBean> apps) {
+    private static void scanAnnotations(List<AppBean> apps, String lng) {
 
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
         provider.addIncludeFilter(new AnnotationTypeFilter(WebjetAppStore.class));
@@ -245,7 +246,7 @@ public class AppManager
 						}
 					}
 
-					AppBean app = new AppBean();
+					AppBean app = new AppBean(lng);
 					app.setComponentClickAction(cl.getCanonicalName());
 					app.setNameKey(appStore.nameKey());
 					app.setDescKey(appStore.descKey());

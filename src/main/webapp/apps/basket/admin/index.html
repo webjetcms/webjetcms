@@ -102,27 +102,6 @@
                     //Refresh footer info
                     setItemsFooter();
                 });
-                itemsDataTable.button().add(2, {
-                    text: '<i class="ti ti-eye"></i>',
-                    action: function (e, dt, node) {
-                        //console.log("btn, e=",e,"dt=",dt,"node=",node);
-                        //ziskaj data selectnuteho riadku
-                        let selectedRows = dt.rows({ selected: true }).data();
-                        //console.log("selectedRows=", selectedRows);
-                        for (let i=0; i<selectedRows.length; i++) {
-                            let row = selectedRows[i];
-                            window.open("/showdoc.do?docid="+row.itemId);
-                        }
-                    },
-                    init: function ( dt, node, config ) {
-                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
-                    },
-                    className: 'btn btn-outline-secondary buttons-item-preview',
-                    attr: {
-                        'title': window.WJ.translate("history.showPage"),
-                        'data-toggle': 'tooltip'
-                    }
-                });
 
                 itemsDataTable.button().add(1, {
                     text: '<i class="ti ti-plus"></i>',
@@ -161,6 +140,8 @@
                         let selectedRows = dt.rows({ selected: true }).data();
                         for (let i=0; i<selectedRows.length; i++) {
                             let row = selectedRows[i];
+                            //If item id is not set, there is nowhere to go
+                            if(row.itemId == null || row.itemId < 1) return;
                             window.open("/showdoc.do?docid="+row.itemId);
                         }
                     },

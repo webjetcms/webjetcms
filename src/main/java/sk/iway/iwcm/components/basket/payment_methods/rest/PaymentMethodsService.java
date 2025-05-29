@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -140,9 +141,9 @@ public class PaymentMethodsService {
     // STATIC version for FE use, where I cant Autowire this service
     public static final Map<String, String> getConfiguredPaymentMethodsMap(Prop prop) {
         PaymentMethodRepository pmr = Tools.getSpringBean("paymentMethodRepository", PaymentMethodRepository.class);
-        List<PaymentMethodEntity> allMethods = pmr.findAllByDomainId(CloudToolsForCore.getDomainId());
+        List<PaymentMethodEntity> allMethods = pmr.findAllByDomainIdOrderBySortPriorityAsc(CloudToolsForCore.getDomainId());
 
-        Map<String, String> configuredMethods = new HashMap<>();
+        LinkedHashMap<String, String> configuredMethods = new LinkedHashMap<>();
         for(PaymentMethodEntity paymentMethod : allMethods) {
             try {
                 BasePaymentMethod basePaymentMethod = getBasePaymentMethod(paymentMethod.getPaymentMethodName());
@@ -162,14 +163,6 @@ public class PaymentMethodsService {
         for(Map.Entry<String, String> entry : configuredMethods.entrySet()) {
             labelValues.add(new LabelValue(entry.getValue(), entry.getKey()));
         }
-
-        //TODO: add sort_priority to DB and sort by admin preferences
-        //Sort by label
-        labelValues.sort((o1, o2) -> {
-            if(o1.getLabel() == null) return -1;
-            if(o2.getLabel() == null) return 1;
-            return o1.getLabel().compareToIgnoreCase(o2.getLabel());
-        });
 
         return labelValues;
     }
@@ -336,7 +329,7 @@ public class PaymentMethodsService {
         }
     }
 
-    public static String getPaymentMethosLabel(String paymentMethod, HttpServletRequest request) {
+    public static String getPaymentMethodLabel(String paymentMethod, HttpServletRequest request) {
         if(Tools.isEmpty(paymentMethod)) return "";
 
         try {
