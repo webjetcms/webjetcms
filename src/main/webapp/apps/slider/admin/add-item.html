@@ -12,16 +12,18 @@
 			},
 		];
 
-		let url = "/admin/rest/slider/items";
 		let columns =
 			/*[(${layout.getDataTableColumns("sk.iway.iwcm.components.slider.jpa.SliderDTO")})]*/ [];
 
-		sliderItemsDataTable = WJ.JsonEditor({
+		sliderItemsDataTable = WJ.DataTable({
 			url: "/admin/rest/slider/items",
 			serverSide: false,
 			columns: columns,
 			tabs: tabs,
-			id: "SliderItemsDataTable"
+			id: "SliderItemsDataTable",
+			fetchOnEdit: false,
+			fetchOnCreate: false,
+            jsonEditor: true
 		});
 	});
 </script>

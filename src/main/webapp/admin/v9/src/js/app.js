@@ -120,8 +120,6 @@ window.JSZip = JSZip;
 
 import { dataTableInit } from '../../npm_packages/webjetdatatables/index';
 window.WJ.DataTable = dataTableInit;
-import { jsonEditorInit } from '../../npm_packages/webjetdatatables/json_editor.js';
-window.WJ.JsonEditor = jsonEditorInit;
 import { CellVisibilityService } from './libs/data-tables-extends/';
 window.dataTableCellVisibilityService = new CellVisibilityService();
 
