@@ -767,7 +767,7 @@ public class Sender extends TimerTask
 	 * @param body
 	 * @return
 	 */
-	public static String addClickInfo(String body, int emailId,String baseHref)
+	public static String addClickInfo(String body, int emailId, String baseHref)
 	{
 		if (emailId < 1) return(body);
 
@@ -809,7 +809,7 @@ public class Sender extends TimerTask
 					}
 					body = Tools.replace(body, "href=\"" + oldLink + "\"", "href=\"" + newLink + "\"");
 					//replace also text of link
-					body = Tools.replace(body, ">" + oldLink + "<", ">" + newLink + "<");
+					body = Tools.replace(body, ">" + oldLink + "<", ">" + baseHref + newLink + "<");
 				}
 			}
 			start = body.indexOf("href=\"", end);

@@ -51,7 +51,7 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
     I.see(defaultText);
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
     I.waitForText("Bol Vám zaslaný e-mail, v ktorom prosím potvrďte Vašu voľbu.");
-    await handleTempMailSubmission(I, TempMail);
+    await handleTempMailSubmission(I, TempMail, randomName_1);
     I.waitForElement(locate('fieldset > .alert.alert-success').withText('Email úspešne odhlásený.'), 10);
 
     await setUnsubscribeText(Apps, DTE, I, '');
@@ -62,7 +62,7 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
     I.dontSee(defaultText);
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
     I.waitForText("Bol Vám zaslaný e-mail, v ktorom prosím potvrďte Vašu voľbu.");
-    await handleTempMailSubmission(I, TempMail);
+    await handleTempMailSubmission(I, TempMail, randomName_2);
     I.waitForElement(locate('fieldset > .alert.alert-success').withText('Email úspešne odhlásený.'), 10);
 
     await setUnsubscribeText(Apps, DTE, I, changedText);
@@ -113,8 +113,6 @@ Scenario('Email - unsubscribe with confirmation', async ({ I, Document, TempMail
     I.seeElement(locate('a').withText('Nie, chcem zostať'));
     I.seeElement(locate('input#unsubscribeEmail').withAttr({'readonly':'readonly'}));
     I.click(locate('.bSubmit').withAttr({'value':'Odhlásiť sa z odberu'}));
-    I.waitForText("Bol Vám zaslaný e-mail, v ktorom prosím potvrďte Vašu voľbu.");
-    await handleTempMailSubmission(I, TempMail);
     I.waitForText('Email úspešne odhlásený.', 10);
 });
 
@@ -166,8 +164,8 @@ Scenario('Revert - remove autotest subscribers and set default unsubscribe text'
     await setUnsubscribeText(Apps, DTE, I, defaultText);
 });
 
-async function handleTempMailSubmission(I, TempMail) {
-    TempMail.login(randomName_1);
+async function handleTempMailSubmission(I, TempMail, login) {
+    TempMail.login(login);
     TempMail.openLatestEmail();
     I.waitForElement('#info > div > p > a[href*="newsletter/odhlasenie"]', 10);
     const url = await I.grabAttributeFrom('#info > div > p > a[href*="newsletter/odhlasenie"]', 'href');

@@ -61,7 +61,7 @@ async function handleTempMailSubmission(I, TempMail, email) {
     I.waitForText("Email úspešne odhlásený.", 10);
 }
 
-Scenario("Unsubscibed emails @current", async ({I, DT, DTE, Document, TempMail}) => {
+Scenario("Unsubscibed emails", async ({I, DT, DTE, Document, TempMail}) => {
     var random = I.getRandomText();
     var email1 = "autotest-demo-"+random+"@fexpost.com";
     var email2 = "autotest-test23-"+random+"@fexpost.com";
