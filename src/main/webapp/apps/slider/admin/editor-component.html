@@ -19,6 +19,14 @@
 				"padding-right": "0px",
 			});
 
+            $('.btn-tooltip').on('shown.bs.tooltip', function () {
+                $('.tooltip-inner').css({
+                    "max-width": "none",
+                    "width": "auto",
+                    "display": "inline-block"
+                });
+            });
+
 			function updateImageFromSelect() {
 				var selectedValue = $("#DTE_Field_skin").val();
 				var newImage = '<img id="DTE_Field_styleImageIMG" src="/components/slider/admin-styles/' + selectedValue + '.jpg" style="width: 100%; margin-top: 7px; border: 4px solid #4286f4;">';
