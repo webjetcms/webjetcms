@@ -44,6 +44,7 @@
 - Prieskumník - opravené práva nastavenia vlastností priečinku a súboru (#57833).
 - Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
 - Úvod - opravené zobrazenie požiadavky na dvojstupňové overovanie pri integrácii cez `IIS` (#57833).
+- Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
 
 ### Bezpečnosť
 
