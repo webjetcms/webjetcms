@@ -66,6 +66,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Prieskumník - do Média tejto stránky pridať možnosť presunúť sa do rodičovského priečinka.
 - [ ] +Konfigurácia - v prípade `cluster` inštalácie doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy). Pôvodne to riešilo výberové pole `applyToAllClusterNodes`.
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach.
+- [ ] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html
 
 ## 2024
 

@@ -63,8 +63,8 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
 
     // 4. Importovanie
     I.say("Phase4 - Importing the file");
-    I.amInPath('../../../build/test/downloads');
-    await SL.importFile(exportedZipFileName);
+    //I.amInPath('../../../build/test/downloads');
+    await SL.importFile('../../../build/test/downloads/'+exportedZipFileName);
 
     // 5. Verifikovanie
     I.say("Phase5 - Verification");

@@ -137,13 +137,16 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.say("Check pdf invoice");
     I.handleDownloads("downloads/invoice-" + randomNumber + ".pdf");
     I.clickCss("#downloadInvoiceDetails");
-    I.amInPath("../../../build/test/downloads");
-    I.waitForFile("invoice-" + randomNumber + ".pdf", 30);
+    //I.amInPath("../../../build/test/downloads");
+    I.waitForFile("../../../build/test/downloads/invoice-" + randomNumber + ".pdf", 30);
     const filePath = path.resolve(
       "../../../build/test/downloads/invoice-" + randomNumber + ".pdf"
     );
-    I.amOnPage("file://" + filePath);
-    await Document.compareScreenshotElement("body > embed", "invoice.png", 1280, 760, 5);
+
+    if (Document.isPdfViewerEnabled()) {
+      I.amOnPage("file://" + filePath);
+      await Document.compareScreenshotElement("body > embed", "invoice.png", 1280, 760, 5);
+    }
 
     //
     I.say("Proceeding to payment 2");

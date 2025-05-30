@@ -55,6 +55,10 @@ module.exports = {
     },
 
     async doGoPayCardPayment(I, shouldBeSuccess = true) {
+        const GOPAY_CARD_PAN = process.env.GOPAY_CARD_PAN;
+        const GOPAY_CARD_EXP = process.env.GOPAY_CARD_EXP;
+        const GOPAY_CARD_CVC = process.env.GOPAY_CARD_CVC;
+
         I.say("GoPay payment");
 
         I.waitForText("Platba kartou");
@@ -62,9 +66,9 @@ module.exports = {
         I.say("Entering card details");
         I.switchTo('iframe[data-cy="cardCommIframe"]');
         I.waitForElement("#cardPan", 10);
-        I.fillField("#cardPan", "5447380000000006");
-        I.fillField("#cardExp", "1230");
-        I.fillField("#cardCvc", "123");
+        I.fillField("#cardPan", GOPAY_CARD_PAN);
+        I.fillField("#cardExp", GOPAY_CARD_EXP);
+        I.fillField("#cardCvc", GOPAY_CARD_CVC);
         I.switchTo();
         I.clickCss("button[data-cy=cardSubmit]");
 
@@ -73,7 +77,7 @@ module.exports = {
         I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 15);
 
         // Now, there is change, that payment test gate give us chnace to allow/blockk payment
-        I.wait(2);
+        I.wait(5);
 
         I.say("Check, if bonus approval / denial is needed");
         const num = await I.grabNumberOfVisibleElements("button#confirm");
@@ -88,8 +92,8 @@ module.exports = {
                 I.clickCss("button#deny");
             }
 
-            I.waitForVisible(locate("div").withText("Dokončovanie platby…"), 10);
-            I.waitForInvisible(locate("div").withText("Dokončovanie platby…"), 5);
+            I.waitForVisible(locate("div").withText("Dokončovanie platby…"), 20);
+            I.waitForInvisible(locate("div").withText("Dokončovanie platby…"), 20);
         }
 
         I.say("Waiting for bank response");
