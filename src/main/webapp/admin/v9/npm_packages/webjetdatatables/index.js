@@ -223,7 +223,7 @@ export const dataTableInit = options => {
         //always show basic tab
         { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true }
     ];
-    DATA.url = options.url;
+    DATA.url = options.url || "";
     DATA.editorId = options.editorId ? options.editorId : "id";
     DATA.onXhr = options.onXhr ? options.onXhr : null;
     DATA.onPreXhr = options.onPreXhr ? options.onPreXhr : null;
@@ -2987,18 +2987,26 @@ export const dataTableInit = options => {
             }
             else {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
-
-                //finally, make the request
-                $.ajax({
-                    "dataType": 'json',
-                    "type": "GET",
-                    "url": url,
-                    "data": restParams,
-                    "success": function (sourceData) {
-                        //console.log("sourceData=", sourceData);
-                        if (DATA.jsonEditor){
-                            sourceData.content = TableLinesStorage.load();
-                        } else {
+                if (DATA.jsonEditor){
+                    const data = {
+                        data: TableLinesStorage.load(),
+                        recordsTotal: 0,
+                        recordsFiltered: 0,
+                        options: {},
+                        notify: null
+                    };
+                    setTimeout(() => {
+                        fnCallback(data);
+                    }, 100);
+                } else {
+                    //finally, make the request
+                    $.ajax({
+                        "dataType": 'json',
+                        "type": "GET",
+                        "url": url,
+                        "data": restParams,
+                        "success": function (sourceData) {
+                            //console.log("sourceData=", sourceData);
                             if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
                                 if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
                                     WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
@@ -3008,21 +3016,21 @@ export const dataTableInit = options => {
                                     return;
                                 }
                             }
+
+                            var totalElements = sourceData.totalElements;
+                            var data = {};
+                            data.data = sourceData.content;
+
+                            data.recordsTotal = totalElements;
+                            data.recordsFiltered = totalElements;
+                            data.options = sourceData.options || {};
+                            data.notify = sourceData.notify || null;
+
+                            //WJ.log("fnCallback2, data=", data);
+                            fnCallback(data);
                         }
-
-                        var totalElements = sourceData.totalElements;
-                        var data = {};
-                        data.data = sourceData.content;
-
-                        data.recordsTotal = totalElements;
-                        data.recordsFiltered = totalElements;
-                        data.options = sourceData.options || {};
-                        data.notify = sourceData.notify || null;
-
-                        //WJ.log("fnCallback2, data=", data);
-                        fnCallback(data);
-                    }
-                });
+                    });
+                }
             }
         }
 
