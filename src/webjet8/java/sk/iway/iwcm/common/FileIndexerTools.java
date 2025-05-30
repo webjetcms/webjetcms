@@ -28,15 +28,15 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.file_archiv.FileArchivSupportMethodsService;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.TemplateDetails;
-import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.findexer.Excel;
 import sk.iway.iwcm.findexer.FileIndexer;
 import sk.iway.iwcm.findexer.PDF;
@@ -717,6 +717,14 @@ public class FileIndexerTools {
             return false;
         }
 
+        //check file archivator
+        String faArchivPathPrefix = FileArchivSupportMethodsService.normalizePath( FileArchivatorKit.getArchivPath() );
+		if(fileUrl.startsWith(faArchivPathPrefix)) {
+            FileArchivatorBean validateFile = FileArchivatorDB.getByUrl(fileUrl);
+            if (validateFile==null) return false;
+            return Tools.isTrue(validateFile.getIndexFile());
+        }
+
         String testDir = fileUrl;
 
         int i = testDir.lastIndexOf("/");
@@ -731,7 +739,6 @@ public class FileIndexerTools {
             cachedMap = new HashMap<>();
             c.setObjectSeconds(key, cachedMap, 300);
         }
-
 
         int failsafe = 0;
         while (testDir.length() > 0 && failsafe++<50) {

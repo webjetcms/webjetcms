@@ -49,7 +49,7 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 - **Kategória** - zadajte ľubovoľný názov kategórie. Pole Vám bude automatický ponúkať iné už zadefinované kategórie v manažéri. Na správu môžete využiť sekciu [Kategórie](./category-manager.md).
 - **Kód produktu** - zadajte ľubovoľný názov kódu produktu
 - **Zobraziť** - nastavenie pre zobrazenie dokumentu na stránke (ak nechcete dokumentu na stránke zobraziť, odškrtnite toto nastavenie)
-- **Prehľadávaťr** - umožňuje povoliť indexovanie súborov. Nové súbory majú túto možnosť predvolene zapnutú. Viac
+- **Prehľadávať** - umožňuje povoliť indexovanie súborov. Nové súbory majú túto možnosť predvolene zapnutú. Viac
 - **Priorita** - pomocou priority viete ľubovoľne nastaviť poradie zobrazenia dokumentov na stránke
 - **Hlavný dokument** - referencia na hlavný dokument. Pole ponúka cesty k jednotlivým hlavným dokumentom, na ktoré sa aktuálny dokument môže odkazovať, čím sa stáva **vzorom**. Ponúkané sú iba cesty dokumentov, ktoré spĺňajú:
   - nejde o rovnaký dokument, ktorý sa upravuje
@@ -234,8 +234,8 @@ Ako aj pri mazaní vzorov, tieto naplánované verzie sa dajú vymazať **IBA** 
 
 ## Vyhľadávanie a indexovanie
 
-Zvolením možnosti **Prehľadávať** povolíte vyhľadávanie dokoumnetu cez aplikáciu **Vyhľadávanie** a indexovanie v externých vyhľadávačoch. Predvolene, táto možnosť je povolená pre nové dokumnety. Ak sa dokument stane **historickou verziou**, toto povolenie sa automaticky deaktivuje, avšak je možné ho opätovne povoliť podľa potreby.
+Zvolením možnosti **Prehľadávať** povolíte vyhľadávanie dokumentu cez aplikáciu **Vyhľadávanie** a indexovanie v externých vyhľadávačoch. Predvolene, táto možnosť je povolená pre nové dokumenty. Ak sa dokument stane **historickou verziou**, toto povolenie sa automaticky deaktivuje, avšak je možné ho opätovne povoliť podľa potreby.
 
 ### Vyhľadávače typu Google
 
-Ak možnosť **Prehľadávať** nie je povolená, pre takýto dokumnet sa pridá `HTTP` hlavička `X-Robots-Tag` s hodnotou `noindex, nofollow`, aby sa zabránilo indexovaniu takéhoto dokumnetu.
+Ak možnosť **Prehľadávať** nie je povolená, pre takýto dokument sa pridá `HTTP` hlavička `X-Robots-Tag` s hodnotou `noindex, nofollow`, aby sa zabránilo indexovaniu takéhoto dokumentu vo vyhľadávačoch typu Google.

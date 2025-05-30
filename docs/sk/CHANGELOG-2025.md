@@ -29,7 +29,7 @@
 ![](redactor/files/file-archive/export_all.png)
 
 - **Import hlavných súborov** bol opravený a upravený, aby dokázal pracovať s rozšírenými možnosťami exportu. Viac sa dočítate v časti [Import hlavných súborov](redactor/files/file-archive/import-files.md) (#57317).
-- **Indexovanie** dokumentov vo vyhľadávačoch typu `Google` upravené tak, aby sa prednastavené neindexovali staré/historické verzie dokumentov a dokumenty mimo dátum platnosti. Indexovanie týchto dokumentov sa dá povoliť v editore dokumentu (#57805).
+- **Indexovanie** dokumentov vo vyhľadávačoch typu `Google` upravené tak, aby sa neindexovali staré/historické verzie dokumentov a dokumenty mimo dátum platnosti. Indexovanie týchto dokumentov sa dá povoliť v editore dokumentu (#57805).
 
 ### Aplikácie
 

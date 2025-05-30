@@ -114,6 +114,8 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             if("/".equals(nextParent.getVirtualPath())) {
                 //Root
                 newItem.setParent("#");
+                newItem.setText(getProp().getText("stat_settings.group_id"));
+                newItem.setIcon("ti ti-home-x");
                 items.add(0, newItem);
                 break;
             } else {

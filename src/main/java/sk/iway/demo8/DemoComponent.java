@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -13,6 +14,8 @@ import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -79,8 +82,62 @@ public class DemoComponent extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "docDetailsList", tab = "json", className = "dt-tree-page-array")
     private List<GroupDetails> docDetailsList;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimple", tab = "json", className = "dt-tree-dir-simple")
+	@DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimple", tab = "json", className = "dt-tree-dir-simple")
     private String dirSimple;
+
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.JSON,
+		className = "dt-tree-page-null",
+		title = "docDetailsRootCustomFields",
+		tab = "json-root",
+		editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "7625")
+				}
+			)
+		}
+	)
+	private DocDetailsDto docDetailsRootCustomFields;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.JSON,
+		className = "dt-tree-page-null",
+		title = "docDetailsRootCustomFields",
+		tab = "json-root",
+		editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")
+				}
+			)
+		}
+	)
+	private DocDetailsDto docDetailsRootByPath;
+
+
+	@DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimpleGallery", tab = "json-root", className = "dt-tree-dir-simple",
+		editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")
+				}
+			)
+		}
+	)
+    private String dirSimpleGallery;
+
+	@DataTableColumn(inputType = DataTableColumnType.JSON, tab = "json-root", className = "dt-tree-dir-simple", title="components.file_archiv.target_directory", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "constant:fileArchivDefaultDirPath"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-skipFolders", value = "fileArchivInsertLaterDirPath"),
+            }
+        )
+    })
+    private String dirFileArchivSkipFolders;
+
 
 	@DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "Types", title = "HEX Color empty")
 	private String colorEmpty = "";
