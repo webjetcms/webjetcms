@@ -111,8 +111,7 @@ export const dataTableInit = options => {
             const parsed = JSON.parse(decodeURI(atob(inputData)).replace(/\%2B/gi, "+"));
             return parsed;
         } catch (e) {
-            console.error("Failed to decode JSON data:", e);
-            return null;  // Vráťte null v prípade chyby
+            return null;
         }
     };
 

@@ -19,11 +19,17 @@ import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @WebjetComponent("sk.iway.iwcm.components.appslitslider.SlitSliderApp")
-@WebjetAppStore(nameKey = "components.app-slit_slider.title", descKey = "components.app-slit_slider.desc", itemKey = "app-slit_slider", imagePath = "/components/app-slit_slider/editoricon.png", galleryImages = "/components/app-slit_slider/", componentPath = "/components/app-slit_slider/news.jsp")
+@WebjetAppStore(nameKey = "components.app-slit_slider.title", descKey = "components.app-slit_slider.desc", itemKey = "app-slit_slider", imagePath = "/components/app-slit_slider/editoricon.png", galleryImages = "/components/app-slit_slider/", componentPath = "/components/app-slit_slider/news.jsp", customHtml = "/apps/app-slit_slider/admin/editor-component.html")
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "files", title = "components.slider.files"),
+})
 public class SlitSliderApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "editor.table.height", tab = "basic")
     private Integer nivoSliderHeight = 500;
@@ -62,6 +68,12 @@ public class SlitSliderApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontMarginTop", tab = "basic")
     private Integer subHeadingMargin = 0;
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
+    private String iframe  = "/components/app-slit_slider/add-item.jsp";
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
+    private String editorData;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
