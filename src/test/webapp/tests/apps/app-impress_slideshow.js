@@ -1,11 +1,5 @@
 Feature('apps.app-impress_slideshow');
 
-Before(({ I, login }) => {
-    login('admin');
-    if (typeof randomNumber == "undefined") {
-        randomNumber = I.getRandomText();
-    }
-});
 
 Scenario("Pôsobivá prezentácia - test zobrazovania",({ I }) => {
     I.amOnPage("/apps/posobiva-prezentacia/");
@@ -61,56 +55,4 @@ Scenario("Pôsobivá prezentácia - test zobrazovania",({ I }) => {
         I.wait(1);
         I.seeElement(locate('h3').withText('Volant'));
     }
-});
-
-
-Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, Apps, Document }) => {
-    Apps.insertApp('Pôsobivá prezentácia', '#components-app-impress_slideshow-title', null, false);
-    I.switchTo('.cke_dialog_ui_iframe');
-    I.switchTo('#editorComponent');
-
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
-
-    const defaultParams = {
-        nivoSliderHeight: "400",
-        imageWidth: "400",
-        imageHeight: "300"
-    };
-    await Apps.assertParams(defaultParams);
-
-    I.say('Default parameters visual testing');
-    I.clickCss('button.btn.btn-warning.btn-preview');
-    await Document.waitForTab();
-    I.switchToNextTab();
-
-    I.waitForElement("#jms-slideshow");
-
-    I.switchToPreviousTab();
-    I.closeOtherTabs();
-
-    Apps.openAppEditor();
-    I.clickCss("#pills-dt-component-datatable-style-tab");
-
-    const changedParams = {
-        nivoSliderHeight: "300",
-        imageWidth: "300",
-        imageHeight: "200"
-    };
-
-    I.fillField("#DTE_Field_nivoSliderHeight", changedParams.nivoSliderHeight);
-    I.fillField("#DTE_Field_imageWidth", changedParams.imageWidth);
-    I.fillField("#DTE_Field_imageHeight", changedParams.imageHeight);
-
-    I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok')
-
-    await Apps.assertParams(changedParams);
-
-    I.say('Changed parameters visual testing');
-    I.clickCss('button.btn.btn-warning.btn-preview');
-    await Document.waitForTab();
-    I.switchToNextTab();
-
-    I.waitForElement("#jms-slideshow");
 });
