@@ -133,6 +133,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.rating",
     "sk.iway.iwcm.components.relatedpages",
     "sk.iway.iwcm.search",
+    "sk.iway.iwcm.components.appimpressslideshow",
+    "sk.iway.iwcm.components.carouselslider",
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
