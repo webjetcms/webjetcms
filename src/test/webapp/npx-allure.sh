@@ -83,7 +83,7 @@ cd ../../..
 echo "$ORIGINAL_DIR"
 cd "$ORIGINAL_DIR"
 
-NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure --steps
+NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure
 RET_CODE=$?
 
 #skopiruj konfiguracne subory pre allure z gitu do test adresara
