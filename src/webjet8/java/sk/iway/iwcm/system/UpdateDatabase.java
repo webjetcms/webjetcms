@@ -14,8 +14,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -138,6 +138,8 @@ public class UpdateDatabase
 		updateInvoicePrices();
 
 		setExportDatDomainId();
+
+		setAndHandlePerexGroupDomains();
 
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
@@ -2406,5 +2408,234 @@ public class UpdateDatabase
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
+	}
+
+	private static void setAndHandlePerexGroupDomains() {
+		try {
+			String note = "03.06.2025 [sivan] pridanie podpory domainId pre perexGroups + uprava všetky zavislosti k tomu";
+			PerexGroupsRepository pgr = Tools.getSpringBean("perexGroupsRepository", PerexGroupsRepository.class);
+			DocDetailsRepository ddr = Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class);
+			GalleryRepository gr = Tools.getSpringBean("galleryRepository", GalleryRepository.class);
+
+			if(pgr == null) { Logger.error(UpdateDatabase.class, "Inicializacia DocDetailsRepository zlyhala"); return; }
+			if(ddr == null) { Logger.error(UpdateDatabase.class, "Inicializacia PerexGroupsRepository alebo DocDetailsRepository zlyhala"); return; }
+			if(gr == null) { Logger.error(UpdateDatabase.class, "Inicializacia GalleryRepository zlyhala"); return; }
+
+			DebugTimer dt = new DebugTimer("Updating perex groups and dependencies");
+
+			Integer defaultDomainId = CloudToolsForCore.getDomainId();
+
+			//Prepare domain name - id combination map
+			Map<String, Integer> domainsMap = new Hashtable<>();
+			for(String domainName : GroupsDB.getInstance().getAllDomainsList()) {
+				domainsMap.putIfAbsent(domainName, GroupsDB.getDomainId(domainName));
+			}
+
+			//Perex groups for everzy domain
+			preparePerexGroupsForEveryDomain(pgr, defaultDomainId, domainsMap);
+
+			// prepare map
+			Map<String, PerexGroupsEntity> domainPerexGroupsMap = new Hashtable<>();
+			for(PerexGroupsEntity perex : pgr.findAll()) {
+				if(perex.getDomainId().equals(defaultDomainId)) {
+					perex.setAvailableGroups(null);
+				}
+				domainPerexGroupsMap.put(perex.getPerexGroupName() + "-" + perex.getDomainId(), perex);
+			}
+
+			// Handle documents perex groups (if doc have perex group from another domain, find and set equivalent perex group for its domain)
+			handleDocs(domainsMap, domainPerexGroupsMap, ddr);
+
+			// Handle gallery perex groups (if gallery have perex group from another domain, find and set equivalent perex group for its domain)
+			handleGallery(domainsMap, domainPerexGroupsMap, gr);
+
+			dt.diffInfo("DONE");
+
+			saveSuccessUpdate(note);
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
+	private static void handleGallery(Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, GalleryRepository gr) {
+		DocDB docDB = DocDB.getInstance();
+
+		int pageSize = 100;
+		int pageNumber = 0;
+		int failsafe = 0;
+		Page<GalleryEntity> page;
+		do {
+			page = gr.findAllByPerexGroupIsNotNull(PageRequest.of(pageNumber, pageSize));
+			List<GalleryEntity> items = page.getContent();
+
+			for(GalleryEntity galleryEntity : items) {
+				boolean needSave = getPerexGroupsForDomain(galleryEntity, domainsMap, domainPerexGroupsMap, docDB);
+				if(needSave == true) gr.save(galleryEntity);
+			}
+
+			pageNumber++;
+		} while (!page.isLast() && failsafe++ < 5000);
+	}
+
+	private static void handleDocs(Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDetailsRepository ddr) {
+
+		int pageSize = 100;
+		int pageNumber = 0;
+		int failsafe = 0;
+		Page<DocDetails> page;
+		do {
+			page = ddr.findAllByPerexGroupsIsNotNull(PageRequest.of(pageNumber, pageSize));
+			List<DocDetails> items = page.getContent();
+
+			for(DocDetails doc : items) {
+				boolean needSave = getPerexGroupsForDomain(doc, domainsMap, domainPerexGroupsMap);
+				if(needSave == true) ddr.save(doc);
+			}
+
+			pageNumber++;
+		} while (!page.isLast() && failsafe++ < 5000);
+	}
+
+	private static boolean getPerexGroupsForDomain(GalleryEntity ge, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDB docDB) {
+		if(ge.getPerexGroup().isEmpty() == true) return false; // dont neeed save
+
+		Integer domainId = ge.getDomainId();
+		Integer[] perexGroupIds = Tools.getTokensInteger(ge.getPerexGroup(), ",");
+
+		List<Integer> newPerexGroups = new ArrayList<>();
+		for(int perexGroupId : perexGroupIds) {
+			String perexGroupName = docDB.convertPerexGroupIdToName( perexGroupId );
+			// Find perexGroup with same name but for domain of doc
+
+			if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
+				Logger.debug("Perex group with name: " + perexGroupName + " was not found in domain: " + domainId);
+			} else {
+				newPerexGroups.add( domainPerexGroupsMap.get(perexGroupName + "-" + domainId).getId().intValue() );
+			}
+		}
+
+		//Compare old and new ids, if there is change
+		if(comapreListAndArray(newPerexGroups, perexGroupIds) == false) {
+			//Replace values and return TRUE, so change will be saved
+			ge.setPerexGroup(
+				String.join(",", newPerexGroups.stream()
+					.map(String::valueOf)
+					.toArray(String[]::new))
+			);
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean getPerexGroupsForDomain(DocDetails doc, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap) {
+		if(doc.getPerexGroups().length < 1) return false; // dont neeed save
+
+		Integer domainId = domainsMap.get( doc.getGroup().getDomainName() );
+
+		List<Integer> newPerexGroups = new ArrayList<>();
+		for(String perexGroupName : doc.getPerexGroupNames()) {
+			// Find perexGroup with same name but for domain of doc
+
+			if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
+				Logger.debug("Perex group with name: " + perexGroupName + " was not found in domain: " + domainId);
+				return false;
+			} else {
+				newPerexGroups.add( domainPerexGroupsMap.get(perexGroupName + "-" + domainId).getId().intValue() );
+			}
+		}
+
+		//Compare old and new ids, if there is change
+		if(comapreListAndArray(newPerexGroups, doc.getPerexGroups()) == false) {
+			//Replace values and return TRUE, so change will be saved
+			doc.setPerexGroups( newPerexGroups.toArray(new Integer[0]) );
+			return true;
+		}
+
+		return false;
+	}
+
+	private static void preparePerexGroupsForEveryDomain(PerexGroupsRepository pgr, Integer defaultDomainId, Map<String, Integer> domainsMap) {
+		List<PerexGroupsEntity> allOriginalPerexGroups = pgr.findAll(); //Find all no matter the domain
+
+		GroupsDB groupsDB = GroupsDB.getInstance();
+
+		// Set all existing perexes to default domain AND save them
+		allOriginalPerexGroups.forEach(perex -> perex.setDomainId(defaultDomainId));
+		pgr.saveAll(allOriginalPerexGroups);
+
+		// Create duplicated for every other domain
+		domainsMap.forEach((domainName, domainId) -> {
+			if(domainId.equals(defaultDomainId) == false) {
+				pgr.saveAll( getDeepCopy(allOriginalPerexGroups, domainId, domainsMap, groupsDB) );
+			}
+		});
+
+		// At end, handle available groups for default domain
+		for(PerexGroupsEntity originalPerex : allOriginalPerexGroups)
+			handlePerexAvailableGroups(originalPerex, domainsMap, groupsDB);
+		pgr.saveAll(allOriginalPerexGroups);
+	}
+
+	private static List<PerexGroupsEntity> getDeepCopy(List<PerexGroupsEntity> allOriginalPerexGroups, Integer domainId, Map<String, Integer> domainsMap, GroupsDB groupsDB) {
+		List<PerexGroupsEntity> newPerexGroups = new ArrayList<>();
+		for(PerexGroupsEntity origPerex : allOriginalPerexGroups) {
+			PerexGroupsEntity newPerex = new PerexGroupsEntity();
+
+			// Must be set before handling available groups
+			newPerex.setDomainId(domainId);
+
+			newPerex.setPerexGroupName( origPerex.getPerexGroupName() );
+			newPerex.setPerexGroupNameSk( origPerex.getPerexGroupNameSk() );
+			newPerex.setPerexGroupNameEn( origPerex.getPerexGroupNameEn() );
+			newPerex.setPerexGroupNameCz( origPerex.getPerexGroupNameCz() );
+			newPerex.setPerexGroupNameDe( origPerex.getPerexGroupNameDe() );
+			newPerex.setPerexGroupNameHu( origPerex.getPerexGroupNameHu() );
+			newPerex.setPerexGroupNamePl( origPerex.getPerexGroupNamePl() );
+			newPerex.setPerexGroupNameRu( origPerex.getPerexGroupNameRu() );
+			newPerex.setPerexGroupNameEsp( origPerex.getPerexGroupNameEsp() );
+			newPerex.setPerexGroupNameCho( origPerex.getPerexGroupNameCho() );
+
+			newPerex.setFieldA( origPerex.getFieldA() );
+			newPerex.setFieldB( origPerex.getFieldB() );
+			newPerex.setFieldC( origPerex.getFieldC() );
+			newPerex.setFieldD( origPerex.getFieldD() );
+			newPerex.setFieldE( origPerex.getFieldE() );
+			newPerex.setFieldF( origPerex.getFieldF() );
+
+			// Set available groups for this perex
+			newPerex.setAvailableGroups( origPerex.getAvailableGroups() );
+			handlePerexAvailableGroups(newPerex, domainsMap, groupsDB);
+
+			newPerexGroups.add(newPerex);
+		}
+		return newPerexGroups;
+	}
+
+	private static void handlePerexAvailableGroups(PerexGroupsEntity perexGroup, Map<String, Integer> domainsMap, GroupsDB groupsDB) {
+		int[] availableGroups = Tools.getTokensInt(perexGroup.getAvailableGroups(), ",");
+		perexGroup.setAvailableGroups(null);
+
+		for(int availableGroup : availableGroups) {
+			String groupDomainName = groupsDB.getDomain(availableGroup);
+			Integer groupDomainId = domainsMap.get(groupDomainName);
+
+			if(groupDomainId.equals(perexGroup.getDomainId()))
+				perexGroup.addAvailableGroup(availableGroup);
+		}
+	}
+
+	private static boolean comapreListAndArray(List<Integer> list, Integer[] array) {
+		if(list == null && array == null) return true;
+		else if(list == null || array == null) return false;
+
+		List<Integer> arrayAsList = new ArrayList<>();
+		for (int num : array)
+			arrayAsList.add(num);
+
+		Collections.sort(arrayAsList);
+		Collections.sort(list);
+
+		return arrayAsList.equals(list);
 	}
 }

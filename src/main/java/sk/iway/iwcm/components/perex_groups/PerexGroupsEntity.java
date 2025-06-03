@@ -225,4 +225,12 @@ public class PerexGroupsEntity implements Serializable {
     @Column(name="domain_id")
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
 	private Integer domainId;
+
+    public void addAvailableGroup(int availableGroupId) {
+        if(Tools.isEmpty(availableGroups)) availableGroups = "" + availableGroupId;
+        else {
+            if(availableGroups.endsWith(",")) availableGroups += availableGroupId;
+            else availableGroups += "," + availableGroupId;
+        }
+    }
 }
