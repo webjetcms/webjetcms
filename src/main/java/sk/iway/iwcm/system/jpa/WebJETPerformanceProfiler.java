@@ -137,7 +137,7 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
               long totalTimeIncludingProfiling = profileEndTime - profileStartTime;// Try to remove the profiling time from the total time.
               profile.setProfileTime(totalTimeIncludingProfiling - profile.getTotalTime());
               writeProfile(sb, profile);
-              sb.append(Helper.cr());
+              sb.append('\n');
               sb.append("SQL: " + translatedSql);
 
               if (sb.toString().contains("AdminMessageBean")==false && sb.toString().contains("UrlRedirectBean")==false)
@@ -173,13 +173,13 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
           }
       }
       catch (org.eclipse.persistence.exceptions.DatabaseException e){
-      	sb.append("ERROR: Exception occuerd while performing SQL query: "+Helper.cr()+sql);
+      	sb.append("ERROR: Exception occuerd while performing SQL query: \n"+sql);
       	Logger.println(this, sb.toString());
       	sk.iway.iwcm.Logger.error(e);
       	throw e;
       }
       catch (Exception e) {
-      	sb.append("ERROR: Exception occuerd while performing SQL query: "+Helper.cr()+sql);
+      	sb.append("ERROR: Exception occuerd while performing SQL query: \n"+sql);
       	Logger.println(this, sb.toString());
       	sk.iway.iwcm.Logger.error(e);
       }
@@ -234,7 +234,7 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
 		}
 		if (profile.getQueryClass() != null)
 		{
-			sb.append(" - " + Helper.getShortClassName(profile.getQueryClass()) + "," + cr);
+			sb.append(" - " + Helper.getShortClassName(profile.getQueryClass().getClass().getName()) + "," + cr);
 		}
 		else
 		{

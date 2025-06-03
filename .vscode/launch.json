@@ -26,7 +26,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "webjetcms_jakarta"
         },
         {
             "type": "java",

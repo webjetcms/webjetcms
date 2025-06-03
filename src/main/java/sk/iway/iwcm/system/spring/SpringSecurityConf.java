@@ -20,49 +20,49 @@ public class SpringSecurityConf {
 
 	private static boolean basicAuthEnabled = false;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
+	@Bean
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+		Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
 		SpringAppInitializer.dtDiff("configureSecurity START");
 
-        Logger.debug(SpringSecurityConf.class, "SpringSecurityConf - configure auth provider");
-        http.authenticationProvider(new WebjetAuthentificationProvider());
+		Logger.debug(SpringSecurityConf.class, "SpringSecurityConf - configure auth provider");
+		http.authenticationProvider(new WebjetAuthentificationProvider());
 
-		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
+		// Enable Basic Auth if configured
 		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
 		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
 			basicAuthEnabled = true;
-			http.httpBasic();
+			http.httpBasic(customizer -> {});
 		}
 
-		//toto nastavuje WebJET - https://docs.spring.io/spring-security/site/docs/4.2.x/reference/html/headers.html
-        http.headers().xssProtection().disable();
-		http.headers().frameOptions().disable();
-		http.headers().contentTypeOptions().disable();
-		http.headers().httpStrictTransportSecurity().disable();
-		http.csrf().disable();
+		// Disable headers and CSRF as per original config
+		http.headers(headers -> {
+			headers.xssProtection(xss -> xss.disable());
+			headers.frameOptions(frame -> frame.disable());
+			headers.contentTypeOptions(contentType -> contentType.disable());
+			headers.httpStrictTransportSecurity(hsts -> hsts.disable());
+		});
+		http.csrf(csrf -> csrf.disable());
 
 		// configure security from BaseSpringConfig
 		configureSecurity(http, "sk.iway.iwcm.system.spring.BaseSpringConfig");
 
-		if (Tools.isNotEmpty(Constants.getInstallName()))
-		{
+		if (Tools.isNotEmpty(Constants.getInstallName())) {
 			//WebJET 9
 			configureSecurity(http, "sk.iway.webjet.v9.V9SpringConfig");
 			//custom InstallName config
 			configureSecurity(http, "sk.iway." + Constants.getInstallName() + ".SpringConfig");
 		}
 
-		if (Tools.isNotEmpty(Constants.getLogInstallName()))
-		{
+		if (Tools.isNotEmpty(Constants.getLogInstallName())) {
 			configureSecurity(http, "sk.iway." + Constants.getLogInstallName() + ".SpringConfig");
 		}
 
-        SecurityFilterChain chain = http.build();
+		SecurityFilterChain chain = http.build();
 		SpringAppInitializer.dtDiff("configureSecurity END");
 		return chain;
-    }
+	}
 
     @Bean
 	public HttpFirewall webjetHttpFirewall() {

@@ -28,6 +28,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
@@ -62,15 +63,11 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         SpringAppInitializer.dtDiff("Configure security START");
 
         http
-                .authorizeHttpRequests()
-                    .requestMatchers("/private/rest/**","/webjars/**").authenticated()
-                    .requestMatchers("/swagger-ui**", "/admin/rest/**").hasRole("Group_admin")
-                    //toto nemoze byt, pokazi to custom SpringConfig kde sa nastavuje security .anyRequest().permitAll()
-                /*.and()
-                    .formLogin()
-                    .loginPage("/admin/logon/")
-                    .loginProcessingUrl("/admin/logon/")*/
-                ;
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/private/rest/**", "/webjars/**").authenticated()
+                .requestMatchers("/swagger-ui**", "/admin/rest/**").hasRole("Group_admin")
+                .anyRequest().permitAll()
+            );
 
         SpringAppInitializer.dtDiff("Configure security DONE");
     }
@@ -177,4 +174,9 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         configurer.enable();
         SpringAppInitializer.dtDiff("configureDefaultServletHandling DONE");
     }
+
+    /*@Override
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        configurer.setUseTrailingSlashMatch(true); // Povolí zlučovanie trailing slash
+    }*/
 }

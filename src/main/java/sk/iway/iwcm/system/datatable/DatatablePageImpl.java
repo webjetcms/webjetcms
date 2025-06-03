@@ -8,6 +8,9 @@ import java.util.Map;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 import sk.iway.iwcm.Tools;
 
 public class DatatablePageImpl<T> extends PageImpl<T> {
@@ -19,7 +22,7 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
     private List<NotifyBean> notify;
 
     public DatatablePageImpl(List<T> content) {
-        super(content);
+        super(content, PageRequest.of(0, content.size(), Sort.unsorted()), content.size());
     }
 
     public DatatablePageImpl(Page<T> page) {
