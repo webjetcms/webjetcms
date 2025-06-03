@@ -124,7 +124,7 @@ public class GdprDataDeleting {
         long count;
         JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
         em.getTransaction().begin();
-        Query query = em.createQuery("SELECT COUNT(b) FROM BasketInvoiceBean b WHERE b.createDate < :createDate ",Long.class);
+        Query query = em.createQuery("SELECT COUNT(b) FROM BasketInvoiceEntity b WHERE b.createDate < :createDate ",Long.class);
         query.setParameter("createDate",getCalendarBeforeDate(Constants.getInt("gdprDeleteUserBasketOrdersAfterYears")*365).getTime());
         count = (Long)query.getSingleResult();
         em.getTransaction().commit();
@@ -136,7 +136,7 @@ public class GdprDataDeleting {
         Adminlog.add(Adminlog.TYPE_GDPR_BASKET_INVOICES_DELETE,getUserId(),"GDPR "+cronSignature+" Hromadne mazem "+getOldBasketOrdersCount()+" zaznamov z objednavok / kosiku, starsich ako "+Constants.getInt("gdprDeleteUserBasketOrdersAfterYears")+" rokov",-1,-1);
         JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
         em.getTransaction().begin();
-        Query query = em.createQuery("DELETE FROM BasketInvoiceBean b WHERE b.createDate < :createDate");
+        Query query = em.createQuery("DELETE FROM BasketInvoiceEntity b WHERE b.createDate < :createDate");
         query.setParameter("createDate",getCalendarBeforeDate(Constants.getInt("gdprDeleteUserBasketOrdersAfterYears")*365).getTime());
         query.executeUpdate();
         em.getTransaction().commit();

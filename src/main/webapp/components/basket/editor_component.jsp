@@ -24,9 +24,7 @@
 <%@page import="sk.iway.iwcm.gallery.*"%>
 
 <%
-	String lng = PageLng.getUserLng(request);
 	request.setAttribute("cmpName", "basket");
-	pageContext.setAttribute("lng", lng);
 
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
 	String jspFileName = request.getParameter("jspFileName");
@@ -36,7 +34,6 @@
 		pageContext.include("editor_component_perex.jsp");
 		return;
 	}
-
 
 	if(Tools.isNotEmpty(jspFileName)){
 		int slash = jspFileName.lastIndexOf("/");

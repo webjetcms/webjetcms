@@ -64,6 +64,7 @@ jobs:
         CODECEPT_DEFAULT_PASSWORD: ${{ secrets.CODECEPT_DEFAULT_PASSWORD }}
         CODECEPT_DEFAULT_AUTH_TOKEN: ${{ secrets.CODECEPT_DEFAULT_AUTH_TOKEN }}
         CODECEPT_DEFAULT_DOMAIN_NAME: ${{ vars.CODECEPT_DEFAULT_DOMAIN_NAME }}
+        DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
       run: |
         webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 

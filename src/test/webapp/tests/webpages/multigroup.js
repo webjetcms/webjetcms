@@ -49,7 +49,7 @@ Scenario('multigroup - change URL by title', ({ I, DT, DTE }) => {
         if (docId == masterDocId) url += "master";
         else url += "slave";
         url += "/"+title.toLowerCase().replace(/ /g, "-");
-        I.seeInField("#DTE_Field_virtualPath", url);
+        I.waitForElement(locate("#DTE_Field_virtualPath", url), 10)
 
         DTE.cancel();
     }

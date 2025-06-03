@@ -289,3 +289,93 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
         I.assertTrue(false, "The file was not removed by archive and had to be removed by elfinder!");
     }
 });
+
+Scenario('Test google non index header in files',async ({ I, DT, DTE }) => {
+    const filePath = "/files/archiv/nonindexheader.pdf";
+    I.amOnPage(SL.fileArchive);
+
+    // First setting - do indexation
+    I.say("First setting - do indexation");
+    setValidationAndIndexation(I, DT, DTE, "", "", true);
+    let response1 = await I.sendGetRequest(filePath);
+    I.assertEqual(response1.headers["x-robots-tag"], undefined);
+
+    // Second setting - indexation turn off
+    I.say("Second setting - indexation turn off");
+    setValidationAndIndexation(I, DT, DTE, "", "", false);
+    let response2 = await I.sendGetRequest(filePath);
+    I.assertEqual(response2.headers["x-robots-tag"], "noindex, nofollow");
+
+    // Third setting - indexation turn on BUT not valid date
+    I.say("Third setting - indexation turn on BUT not valid date -> forward to 404 page");
+    setValidationAndIndexation(I, DT, DTE, "01.01.2045 00:00:00", "", true);
+    I.amOnPage(filePath);
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    // Fourth setting - indexation turn on AND valid date
+    I.say("Fourth setting - indexation turn on AND valid date");
+    I.amOnPage(SL.fileArchive);
+    setValidationAndIndexation(I, DT, DTE, "01.01.2023 00:00:00", "01.01.2045 00:00:00", true);
+    let response4 = await I.sendGetRequest(filePath);
+    I.assertEqual(response4.headers["x-robots-tag"], undefined);
+});
+
+Scenario('Test full text indexation', ({ I, DT, DTE }) => {
+    const fileName = "Test non-index header";
+    const fileBody = "File to test inserting of non index header";
+
+    I.amOnPage(SL.fileArchive);
+
+    I.say("Set file for indexation");
+    setValidationAndIndexation(I, DT, DTE, "", "", true);
+
+    I.say("Check, that indexation file was crated");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=69200");
+    DT.waitForLoader();
+    DT.filterEquals("title", fileName);
+    I.see(fileName);
+
+    I.say("Now try find indexed file by body text");
+    I.amOnPage("/apps/vyhladavanie/vyhladavanie-files.html");
+    I.waitForElement("#searchWords", 10);
+    I.fillField("#searchWords", fileBody);
+    I.clickCss("input.smallSearchSubmit");
+    I.waitForText(fileBody, 10);
+
+    I.say("Now, turn off indexation");
+    I.amOnPage(SL.fileArchive);
+    setValidationAndIndexation(I, DT, DTE, "", "", false);
+
+    I.say("Check, that we wont find indexation file");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=69200");
+    DT.waitForLoader();
+    DT.filterEquals("title", fileName);
+    I.dontSee(fileName);
+
+    I.say("Check that we wont find indexed file by body text");
+    I.amOnPage("/apps/vyhladavanie/vyhladavanie-files.html");
+    I.waitForElement("#searchWords", 10);
+    I.fillField("#searchWords", fileBody);
+    I.clickCss("input.smallSearchSubmit");
+    I.waitForText("Neboli nájdené žiadne stránky vyhovujúce zadaným kritériám.", 10);
+});
+
+function setValidationAndIndexation(I, DT, DTE, validFrom, validTo, indexation) {
+    const fileName = "Test non-index header";
+
+    DT.filterEquals("virtualFileName", fileName);
+    I.click(fileName);
+    DTE.waitForEditor('fileArchiveDataTable');
+
+    I.fillField("#DTE_Field_validFrom", validFrom);
+    I.fillField("#DTE_Field_validTo", validTo);
+
+    I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");
+    if(indexation == true) {
+        I.checkOption("#DTE_Field_indexFile_0");
+    } else {
+        I.uncheckOption("#DTE_Field_indexFile_0");
+    }
+
+    DTE.save();
+}

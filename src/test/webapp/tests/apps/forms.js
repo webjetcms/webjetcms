@@ -425,8 +425,8 @@ async function handleDownload(I, fileName, ext, url=null) {
             window.location.href=url;
         }, url);
     }
-    I.amInPath('../../../build/test/downloads');
-    await I.waitForFile(fileName+"-"+randomNumber+ext, 30);
+    //I.amInPath('../../../build/test/downloads');
+    await I.waitForFile('../../../build/test/downloads/'+fileName+"-"+randomNumber+ext, 30);
 }
 
 Scenario("form attachments", async ({ I }) => {

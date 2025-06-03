@@ -14,6 +14,7 @@ Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/
 
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Upravená inicializácia Spring a JPA, viac informácií v sekcii pre programátora (#43144).
+- Prerobená backend časť aplikácie elektronický obchod, viac v sekcii pre programátora (#57685).
 
 ### Dátové tabuľky
 
@@ -34,6 +35,7 @@ Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/
 ![](redactor/files/file-archive/export_all.png)
 
 - **Import hlavných súborov** bol opravený a upravený, aby dokázal pracovať s rozšírenými možnosťami exportu. Viac sa dočítate v časti [Import hlavných súborov](redactor/files/file-archive/import-files.md) (#57317).
+- **Indexovanie** dokumentov vo vyhľadávačoch typu `Google` upravené tak, aby sa neindexovali staré/historické verzie dokumentov a dokumenty mimo dátum platnosti (nastavená HTTP hlavička `X-Robots-Tag=noindex, nofollow`). Indexovanie týchto dokumentov sa dá povoliť v editore v manažérovi dokumentov (#57805).
 
 ### Aplikácie
 
@@ -59,6 +61,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/menu/editor-dialog.png)
 
+- Doplnené fotky obrazovky aplikácií v českej jazykovej mutácii pre väčšinu aplikácií (#57785).
+
 ### Hromadný e-mail
 
 - **Presunuté pole Web stránka** – teraz sa nachádza pred poľom **Predmet**, aby sa po výbere stránky predmet automaticky vyplnil podľa názvu zvolenej web stránky (#57541).
@@ -72,6 +76,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/dmail/campaings/users.png)
 
+- Odhlásenie - pri priamom zadaní emailu na odhlásenie (nie kliknutie na odkaz v emaile) je zaslaný na zadanú email adresu potvrdzujúci email. V ňom je potrebné kliknúť na odkaz pre odhlásenie. Pôvodná verzia nekontrolovala žiadnym spôsobom platnosť/vlastníctvo email adresy a bolo možné odhlásiť aj cudzí email (#57665).
+
 ### Kalendár noviniek
 
 - Kalendár noviniek oddelený ako samostatná aplikácia, pôvodne to bola možnosť v aplikácii Kalendár (#57409).
@@ -82,6 +88,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Monitorovanie servera
 
 - Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
+- Doplnená informácia o verzii knižníc `Spring (Core, Data, Security)` do sekcie Monitorovanie servera-Aktuálne hodnoty (#57793).
 
 ### Rezervácie
 
@@ -162,6 +169,7 @@ Iné zmeny:
 - Web stránky - doplnený test vytvorenia novej stránky s publikovaním v budúcnosti (#57625).
 - Galéria - doplnený test vodoznaku s porovnaním obrázku, doplnený test kontroly práv (#57625).
 - Web stránky - doplnený test voliteľných polí pri vytváraní web stránky (#57625).
+- Allure - doplnené výsledky jUnit testov do spoločného Allure reportu (#57801).
 
 ## 2025.0.x
 
@@ -181,6 +189,7 @@ Iné zmeny:
 - Web stránky - schvaľovanie - opravené načítanie zoznamu v karte Neschválené pri použití databázového servera `Oracle` (#54273-62).
 - Web stránky - opravená aktualizácia nodov clustra pri zmene značiek (#57717).
 - Web stránky - opravené zobrazenie zoznamu stránok ak má používateľ právo iba na vybrané webové stránky (#57725-4).
+- Web stránky - doplnený prepínač domén aj keď nie je nastavená konfiguračná premenná `enableStaticFilesExternalDir` ale len `multiDomainEnabled` (#57833).
 - Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Aplikácie - pridaná podpora vkladania nového riadku cez klávesovú skratku `SHIFT+ENTER` do jednoduchého textového editora používaného napr. v Otázky a odpovede (#57725-1).
 - Číselníky - presunutý výber číselníka priamo do nástrojovej lišty dátovej tabuľky (#49144).
@@ -196,6 +205,13 @@ Iné zmeny:
 - Používatelia - upravené nastavenie práv - zjednodušené nastavenie práv administrátorov a registrovaných používateľov (už nie je potrebné zvoliť aj právo Používatelia), opravené duplicitné položky, upravené zoskupenie v sekcii Šablóny (#57725-4).
 - Prieskumník - doplnené lepšie hlásenia pri chybe vytvorenia ZIP archívu (#56058).
 - Štatistika - opravené vytvorenie tabuľky pre štatistiku kliknutí v teplotnej mape.
+- Prekladač - implementácia inteligentného oneskorenia pre prekladač `DeepL` ako ochrana proti chybe `HTTP 429: too many requests`, ktorá spôsobovala výpadok prekladov (#57833).
+- Klonovanie štruktúry - opravené nechcené prekladanie implementácie aplikácií `!INCLUDE(...)!`, pri automatickom preklade tela stránky (#57833).
+- Klonovanie štruktúry - pridaný preklad perex anotácie automatickom preklade stránok (#57833).
+- Prieskumník - opravené práva nastavenia vlastností priečinku a súboru (#57833).
+- Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
+- Úvod - opravené zobrazenie požiadavky na dvojstupňové overovanie pri integrácii cez `IIS` (#57833).
+- Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
 
 ### Bezpečnosť
 
