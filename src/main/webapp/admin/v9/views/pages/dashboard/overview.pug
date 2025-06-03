@@ -47,6 +47,9 @@ block content
             vueOverviewApp.config.globalProperties.$cacheItems = '[[\#{components.monitoring.cache_items}]]';
             vueOverviewApp.config.globalProperties.$sessionsTotal = '[[\#{components.monitoring.sessions_total}]]';
             vueOverviewApp.config.globalProperties.$swJavaVendor = '[[\#{components.monitoring.sw_java_vendor}]]';
+            vueOverviewApp.config.globalProperties.$swSpringVersion = 'Spring Core';
+            vueOverviewApp.config.globalProperties.$swSpringDataVersion = 'Spring Data';
+            vueOverviewApp.config.globalProperties.$swSpringSecurityVersion = 'Spring Security';
             vueOverviewApp.config.globalProperties.$swRuntime = '[[\#{components.monitoring.sw_runtime}]]';
             vueOverviewApp.config.globalProperties.$swVmName = '[[\#{components.monitoring.sw_vm_name}]]';
             vueOverviewApp.config.globalProperties.$swJavaVersion = '[[\#{components.monitoring.sw_java_version}]]';
@@ -63,6 +66,9 @@ block content
 
             vueOverviewApp.config.globalProperties.$uptime= '[[\#{components.monitor.monitoring.basic.server.uptime.date}]]';
             vueOverviewApp.config.globalProperties.$uptimeSeconds= '[[\#{components.monitor.monitoring.basic.server.uptime.date.sec}]]';
+
+            vueOverviewApp.config.globalProperties.$licenseExpirationDate = '[[#{components.monitoring.license_expiration_date}]]';
+            vueOverviewApp.config.globalProperties.$wjVersion = '[[#{admin.top.webjet_version}]]';
 
             vueOverviewApp.config.globalProperties.$myLastPages = '[[\#{admin.fck.last_pages}]]';
             vueOverviewApp.config.globalProperties.$changedWebPages = '[[\#{components.adminlog.changedWebPages}]]';

@@ -82,6 +82,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Monitorovanie servera
 
 - Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
+- Doplnená informácia o verzii knižníc `Spring (Core, Data, Security)` do sekcie Monitorovanie servera-Aktuálne hodnoty (#57793).
 
 ### Rezervácie
 
