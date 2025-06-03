@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -34,16 +35,24 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.export.ExportDatBean;
+import sk.iway.iwcm.components.export.ExportDatRepository;
+import sk.iway.iwcm.components.gallery.GalleryEntity;
+import sk.iway.iwcm.components.gallery.GalleryRepository;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.service.WebpagesService;
@@ -127,6 +136,9 @@ public class UpdateDatabase
 	public static void updateWithSpringInitialized() {
 		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
 		updateInvoicePrices();
+
+		setExportDatDomainId();
+
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
 
@@ -2364,6 +2376,33 @@ public class UpdateDatabase
 			dt.diffInfo("DONE");
 
 			saveSuccessUpdate(note);
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
+	private static void setExportDatDomainId() {
+		try {
+			String note = "29.05.2025 [sivan] nastavenie pridaneho stlpca domain_id podla zvoleneho adresara";
+			if(isAllreadyUpdated(note)) return;
+
+			ExportDatRepository edr = Tools.getSpringBean("exportDatRepository", ExportDatRepository.class);
+			if(edr == null) {
+				Logger.error(UpdateDatabase.class, "ExportDatRepository bean not found");
+				return;
+			}
+
+			GroupsDB groupsDB = GroupsDB.getInstance();
+
+			// Get all no matter the domain
+			for(ExportDatBean exportDat : edr.findAll()) {
+				int[] groupIds = Tools.getTokensInt(exportDat.getGroupIds(), ",+");
+				if(groupIds.length > 0) {
+					String domainName = groupsDB.getDomain(groupIds[0]);
+					exportDat.setDomainId(GroupsDB.getDomainId(domainName));
+					edr.save(exportDat);
+				}
+			}
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
