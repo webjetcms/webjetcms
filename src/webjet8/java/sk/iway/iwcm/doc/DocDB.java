@@ -4820,7 +4820,7 @@ public class DocDB extends DB
 				List<GroupDetails> parentGroups = groupsDB.getParentGroups(groupId);
 
 				//get all perex groups
-				List<PerexGroupBean> allPerexGroups = getPerexGroups();
+				List<PerexGroupBean> allPerexGroups = getPerexGroups(true);
 
 				if(allPerexGroups != null && allPerexGroups.size() > 0)
 				{
