@@ -45,6 +45,8 @@ ext {
     springVersion = "7.0.+";
     springDataVersion = "4.0.+";
     springSecurityVersion = "6.4.+";
+    allureVersion = "2.24.0";
+    aspectJVersion = '1.9.19';
 }
 
 lombok {
@@ -52,7 +54,6 @@ lombok {
     //zrusene kvoli zbytocnym problemom s ActiveRecord config['lombok.accessors.chain'] = 'true'
     //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
-
 
 war {
     zip64 = true
@@ -103,6 +104,29 @@ sourceSets {
             srcDirs 'src/main/java'
             //srcDirs 'src/webjet8/java'
         }
+    }
+ }
+
+
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude group: 'log4j', module: 'log4j'
+    //all*.exclude group: 'xml-apis', module: 'xml-apis'
+
+    //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
+    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
+
+    grettyRunnerTomcat10 {
+        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
+        // https://mvnrepository.com/artifact/commons-io/commons-io
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+
+    agent {
+        canBeResolved = true
+        canBeConsumed = true
     }
  }
 
@@ -218,8 +242,8 @@ dependencies {
     implementation("org.slf4j:log4j-over-slf4j:1.7.36")
     implementation("org.apache.logging.log4j:log4j-to-slf4j:2.17.1")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("org.aspectj:aspectjrt:1.9.19")
-    implementation("org.aspectj:aspectjweaver:1.9.19")
+    implementation("org.aspectj:aspectjrt:${aspectJVersion}")
+    implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
     // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-spec
     implementation 'org.apache.taglibs:taglibs-standard-spec:1.2.5'
@@ -263,6 +287,8 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.15.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    testImplementation "io.qameta.allure:allure-junit5"
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
     // used in io.springfox:springfox-swagger2
@@ -279,23 +305,8 @@ dependencies {
 
     implementation 'cz.gopay:gp-java-api-v3-common:3.8.1'
     implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.8.1'
-}
 
-configurations {
-    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
-    all*.exclude group: 'commons-logging', module: 'commons-logging'
-    all*.exclude group: 'log4j', module: 'log4j'
-    //all*.exclude group: 'xml-apis', module: 'xml-apis'
-
-    //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
-    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
-
-    grettyRunnerTomcat10 {
-        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
-    }
+    agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
 
 test {
@@ -306,6 +317,7 @@ test {
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', '/poolman-local.xml'
+    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
 }
 
 java {

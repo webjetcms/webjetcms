@@ -36,7 +36,6 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 public class ComponentsService {
 
-
     public static Map<String, Object> getComponentResponse(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
 
@@ -108,6 +107,7 @@ public class ComponentsService {
                 continue;
             }
             Method writeMethod = propertyDescriptor.getWriteMethod();
+            Object value = null;
             try {
                 java.lang.reflect.Field field = getDeclaredFiledRecursive(targetClass, paramName);
                 DataTableColumn annotation = null;
@@ -115,9 +115,9 @@ public class ComponentsService {
                     annotation = field.getAnnotation(DataTableColumn.class);
                 }
 
-                Object value = retypeValue(propertyDescriptor.getPropertyType(), pageParams.getValue(paramName, ""), field, annotation);
+                value = retypeValue(propertyDescriptor.getPropertyType(), pageParams.getValue(paramName, ""), field, annotation);
                 writeMethod.invoke(bean, value);
-            } catch (IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchFieldException | IllegalArgumentException e) {
                 sk.iway.iwcm.Logger.error(e);
             }
         }
@@ -220,9 +220,9 @@ public class ComponentsService {
                 return group;
             }
 
-            if (parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.doc.DocDetails")) {
+            if (parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.doc.DocDetails") || parameterType.getTypeName().equalsIgnoreCase("sk.iway.iwcm.admin.layout.DocDetailsDto")) {
                 int docId = Tools.getIntValue(value, 0);
-                if (docId == 0) {
+                if (docId == 0 || docId == -1) {
                     return null;
                 }
                 DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);

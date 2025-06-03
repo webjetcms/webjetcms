@@ -45,6 +45,22 @@ public class PaymentMethodEntity {
     @Size(max = 255)
     private String paymentMethodName;
 
+    @Column(name = "sort_priority")
+	@DataTableColumn(
+		inputType = DataTableColumnType.NUMBER,
+		title = "editor.sort_order",
+		visible = false,
+		editor = {
+			@DataTableColumnEditor(
+				message = "components.invoice_payment.sort_help",
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+				}
+			)
+		}
+	)
+	private Integer sortPriority = 0;
+
     @Transient //JUST to show status of method
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,

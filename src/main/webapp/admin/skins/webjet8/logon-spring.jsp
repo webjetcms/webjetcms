@@ -4,6 +4,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
 %><%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"
 %><%
+
+    String lng = Prop.getLng(request, false);
     Prop prop = Prop.getInstance(request);
     String brandSuffix = InitServlet.getBrandSuffix();
     //brandSuffix = "net";
@@ -29,6 +31,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     }
     pageContext.setAttribute("title", title);
     pageContext.setAttribute("subtitle", subtitle);
+
+    pageContext.setAttribute("lng", lng);
 %><!DOCTYPE html>
 <html>
 <head>
@@ -139,6 +143,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                             </span>
                         </div>
                     </c:if>
+
                     <logic:present name="passResultEmail">
                         <div class="alert alert-success">
                             <span><iwcm:text key="logon.lost_password_send_success"/></span>
@@ -183,6 +188,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <div class="input-icon">
                             <i class="ti ti-user"></i>
                             <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
+                            <input type="text" name="language" value="${lng}" class="form-control" hidden/>
                         </div>
                         <div class="password-strength-info"><iwcm:text key="logon.recoverPassword.tooltip"/></div>
                     </div>

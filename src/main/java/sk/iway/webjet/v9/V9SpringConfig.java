@@ -19,8 +19,10 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.FileArchivFilter;
 import sk.iway.iwcm.system.spring.ApiTokenAuthFilter;
 import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 
@@ -126,7 +128,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.sitemap",
     "sk.iway.iwcm.components.rating",
     "sk.iway.iwcm.components.relatedpages",
-    "sk.iway.iwcm.search"
+    "sk.iway.iwcm.search",
+    "sk.iway.iwcm.components.appweather"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
@@ -170,6 +173,9 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
         http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);
 
         //add SetCharacterEncodingFilter for setting RequestBean and other system stuff, must be after ApiTokenAuthFilter because it needs logged user
-        http.addFilterAfter(new sk.iway.iwcm.SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);
+        http.addFilterAfter(new SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);
+
+        // filter for setting non filter header for files "X-Robots-Tag","noindex, nofollow"
+        http.addFilterAfter(new FileArchivFilter(), SetCharacterEncodingFilter.class);
     }
 }

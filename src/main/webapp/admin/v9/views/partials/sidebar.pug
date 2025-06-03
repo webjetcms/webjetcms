@@ -22,6 +22,6 @@ div.menu-wrapper(data-scrollbar)
                 div.md-main-menu__item__sub-menu__item(data-th-each="thirdMenuItem : ${subMenuItem.childrens}" data-th-classappend="${thirdMenuItem.active} ? 'md-main-menu\\_\\_item\\_\\_sub-menu\\_\\_item--active'")
                     a.md-main-menu__item__sub-menu__item__link(data-th-href="${thirdMenuItem.href}" data-th-text="${thirdMenuItem.text}")
 
-.js-domain-toggler(data-th-if="${layout.isTypeCloud()==false && layout.getConstantBoolean('enableStaticFilesExternalDir')}")
+.js-domain-toggler(data-th-if="${layout.isTypeCloud()==false && (layout.getConstantBoolean('enableStaticFilesExternalDir') || layout.getConstantBoolean('multiDomainEnabled'))}")
     select(data-th-field="${layout.header.currentDomain}" onchange="WJ.changeDomain(this);" data-th-data-previous="${layout.header.currentDomain}" data-live-search="false" class="domain-toggler-select")
         option(data-th-each="domain : ${layout.header.domains}" data-th-text="${domain}" data-th-value="${domain}" data-icon="ti-device-desktop")

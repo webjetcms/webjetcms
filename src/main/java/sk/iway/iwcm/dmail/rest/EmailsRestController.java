@@ -72,7 +72,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 page = new DatatablePageImpl<>(emailsRepository.findAllByCampainIdAndDomainIdAndSeenDateIsNotNull(campainId, CloudToolsForCore.getDomainId(), pageable));
             } else {
                 //Empty page
-                page = new DatatablePageImpl<>(new ArrayList<>());   
+                page = new DatatablePageImpl<>(new ArrayList<>());
             }
         } else {
             page = new DatatablePageImpl<>(emailsRepository.findAll(pageable));
@@ -81,6 +81,9 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
         processFromEntity(page, ProcessItemAction.GETALL);
 
         page.addOptions("groupIds", UserGroupsDB.getInstance().getUserGroups(), "userGroupName", "userGroupId", false);
+
+        //reset last fetched ID to check all emails to send again
+        Sender.resetSenderWait();
 
         return page;
     }
@@ -223,7 +226,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
             }
 
             Sender.resetSenderWait();
-        } 
+        }
         else if("addRecipients".equals(action)) {
             String customData = getRequest().getParameter("customData");
 
@@ -257,7 +260,7 @@ public class EmailsRestController extends DatatableRestControllerV2<EmailsEntity
                 int[] selectedGroups = Tools.getTokensInt(selectedGroupsString, ",");
                 int[] originalGroups = Tools.getTokensInt(campain.getUserGroupsIds(), ",");
                 DmailService.handleEmails(selectedGroups, originalGroups, campain, emailsRepository, userDetailsRepository, getRequest());
-                
+
                 if(campaingId > 0) {
                     //Update campain user groups (if campain is allready created)
                     campaingsRepository.updateUserGroups(selectedGroupsString, campaingId, CloudToolsForCore.getDomainId());

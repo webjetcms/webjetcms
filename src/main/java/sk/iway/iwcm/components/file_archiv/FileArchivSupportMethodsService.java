@@ -255,7 +255,7 @@ public abstract class FileArchivSupportMethodsService {
 		return 120;
 	}
 
-	protected String normalizePath(String path) {
+	public static String normalizePath(String path) {
 		if(Tools.isEmpty(path)) return path;
 
 		if(path.startsWith(SEPARATOR) == false) path = SEPARATOR + path;

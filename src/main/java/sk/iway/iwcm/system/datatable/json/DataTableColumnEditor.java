@@ -219,8 +219,9 @@ public class DataTableColumnEditor {
                 }
 
                 if("data-dt-field-root".equals(key)==true) {
-                    //Make sure path starts with slash
-                    if(Tools.isNotEmpty(value) && "/".equals(value)==false) {
+                    //Make sure path starts with slash (do not apply to numbers)
+                    int valueNumber = Tools.getIntValue(value, -5);
+                    if(Tools.isNotEmpty(value) && "/".equals(value)==false && valueNumber == -5) {
                         if(value.startsWith("/")==false)
                             value = "/" + value;
 
