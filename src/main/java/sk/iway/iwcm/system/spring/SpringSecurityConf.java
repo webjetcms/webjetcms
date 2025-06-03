@@ -48,14 +48,16 @@ public class SpringSecurityConf {
 		// configure security from BaseSpringConfig
 		configureSecurity(http, "sk.iway.iwcm.system.spring.BaseSpringConfig");
 
-		if (Tools.isNotEmpty(Constants.getInstallName())) {
+		if (Tools.isNotEmpty(Constants.getInstallName()))
+		{
 			//WebJET 9
 			configureSecurity(http, "sk.iway.webjet.v9.V9SpringConfig");
 			//custom InstallName config
 			configureSecurity(http, "sk.iway." + Constants.getInstallName() + ".SpringConfig");
 		}
 
-		if (Tools.isNotEmpty(Constants.getLogInstallName())) {
+		if (Tools.isNotEmpty(Constants.getLogInstallName()))
+		{
 			configureSecurity(http, "sk.iway." + Constants.getLogInstallName() + ".SpringConfig");
 		}
 

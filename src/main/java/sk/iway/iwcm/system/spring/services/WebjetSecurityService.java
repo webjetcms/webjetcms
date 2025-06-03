@@ -51,12 +51,6 @@ public class WebjetSecurityService {
 
     protected boolean hasAuthority(String authority) {
         Authentication auth = getAuthentication();
-        if (authority.contains("export")) {
-            //print all authorities for debug
-            for (GrantedAuthority a : auth.getAuthorities()) {
-                Logger.debug(this.getClass(), "Authority: " + a.getAuthority());
-            }
-        }
         return auth != null && auth.getAuthorities().stream().anyMatch(g-> g.getAuthority().equalsIgnoreCase(authority));
     }
 

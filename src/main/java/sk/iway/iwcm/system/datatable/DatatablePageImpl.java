@@ -22,6 +22,7 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
     private List<NotifyBean> notify;
 
     public DatatablePageImpl(List<T> content) {
+        //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
         super(content, PageRequest.of(0, content.size(), Sort.unsorted()), content.size());
     }
 
