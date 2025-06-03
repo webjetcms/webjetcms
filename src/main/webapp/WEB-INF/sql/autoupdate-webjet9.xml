@@ -1827,5 +1827,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>03.06.2025</string></void>
+                <void property="desc"><string>perex_groups - drop column related_pages</string></void>
+                <void property="mysql"><string>ALTER TABLE perex_groups DROP COLUMN related_pages;</string></void>
+                <void property="mssql"><string>ALTER TABLE perex_groups DROP COLUMN related_pages;</string></void>
+                <void property="oracle"><string>ALTER TABLE perex_groups DROP COLUMN related_pages;</string></void>
+                <void property="pgsql"><string>ALTER TABLE perex_groups DROP COLUMN related_pages;</string></void>
+            </object>
+        </void>
+
     </object>
 </java>
