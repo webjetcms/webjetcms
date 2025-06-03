@@ -1,5 +1,11 @@
 # Zoznam zmien verzia 2025
 
+## Jakarta/Spring 7
+
+Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7 (#57793).
+
+- URL adresy - pre URL adresy Spring zaviedol presné zhody, ak REST služba definuje URL adresu s lomkou na konci, musí byť takto použitá. Je rozdiel v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
+
 ## 2025-SNAPSHOT
 
 > Vývojová verzia
