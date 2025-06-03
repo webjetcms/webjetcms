@@ -50,7 +50,7 @@ public class ExportDatRestController extends DatatableRestControllerAvailableGro
 
         List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
 
-        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "perexGroupId", false);
+        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
         page.addOptions("format", getFormatOptions(), null, null, false);
 
         return page;

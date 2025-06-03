@@ -93,7 +93,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         DatatablePageImpl<GalleryEntity> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
 
         List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
-        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "perexGroupId", false);
+        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
 
         return page;
     }
