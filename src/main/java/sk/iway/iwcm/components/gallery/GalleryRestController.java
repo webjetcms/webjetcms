@@ -89,13 +89,9 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 
     @Override
-    public Page<GalleryEntity> searchItem(Map<String, String> params, Pageable pageable, GalleryEntity search) {
-        DatatablePageImpl<GalleryEntity> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
-
+    public void getOptions(DatatablePageImpl<GalleryEntity> page) {
         List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByOrderByPerexGroupNameAsc();
         page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
-
-        return page;
     }
 
     @Override
@@ -106,7 +102,6 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             gef.fromGalleryEntity(entity);
             entity.setEditorFields(gef);
         }
-
         return entity;
     }
 
