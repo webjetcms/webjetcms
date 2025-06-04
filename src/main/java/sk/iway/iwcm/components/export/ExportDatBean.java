@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Transient;
@@ -14,6 +15,7 @@ import javax.validation.constraints.NotBlank;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -42,6 +44,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 public class ExportDatBean extends ActiveRecordRepository implements Serializable
 {
 	private static final long serialVersionUID = -1L;
+
+    @PrePersist
+	public void prePersist() {
+		if(domainId == null) domainId = CloudToolsForCore.getDomainId();
+	}
 
 	@Id
 	@GeneratedValue(generator = "WJGen_export_dat")
@@ -148,6 +155,9 @@ public class ExportDatBean extends ActiveRecordRepository implements Serializabl
     @Transient
     @DataTableColumnNested
     private ExportDatEditorFields editorFields = null;
+
+    @Column(name = "domain_id")
+    private Integer domainId;
 
     public Long getId() {
         return id;
@@ -268,5 +278,11 @@ public class ExportDatBean extends ActiveRecordRepository implements Serializabl
         this.editorFields = editorFields;
     }
 
+    public Integer getDomainId() {
+        return domainId;
+    }
 
+    public void setDomainId(Integer domainId) {
+        this.domainId = domainId;
+    }
 }

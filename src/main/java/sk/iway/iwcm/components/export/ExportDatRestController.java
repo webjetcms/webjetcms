@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.PerexGroupBean;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -29,11 +30,13 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 public class ExportDatRestController extends DatatableRestControllerAvailableGroups<ExportDatBean, Long> {
 
     private final ExportDatRepository exportDatBeanRepository;
+    private final PerexGroupsRepository perexGroupsRepository;
 
     @Autowired
-    public ExportDatRestController(ExportDatRepository exportDatBeanRepository) {
+    public ExportDatRestController(ExportDatRepository exportDatBeanRepository, PerexGroupsRepository perexGroupsRepository) {
         super(exportDatBeanRepository, "id", "groupIds");
         this.exportDatBeanRepository = exportDatBeanRepository;
+        this.perexGroupsRepository = perexGroupsRepository;
     }
 
     @Override
@@ -45,9 +48,9 @@ public class ExportDatRestController extends DatatableRestControllerAvailableGro
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
-        List<PerexGroupBean> perexList = DocDB.getInstance().getPerexGroups(Constants.getInt("rootGroupId"));
+        List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
 
-        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "perexGroupId", false);
+        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
         page.addOptions("format", getFormatOptions(), null, null, false);
 
         return page;

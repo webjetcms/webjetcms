@@ -50,9 +50,6 @@ public class PerexGroupsEntity implements Serializable {
     @NotBlank
     private String perexGroupName;
 
-    @Column(name = "related_pages")
-    private String relatedPages;
-
     @Size(max = 255)
     @Column(name = "available_groups")
     private String availableGroups;
@@ -224,4 +221,16 @@ public class PerexGroupsEntity implements Serializable {
 		tab = "fields"
     )
 	private String fieldF;
+
+    @Column(name="domain_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+	private Integer domainId;
+
+    public void addAvailableGroup(int availableGroupId) {
+        if(Tools.isEmpty(availableGroups)) availableGroups = "" + availableGroupId;
+        else {
+            if(availableGroups.endsWith(",")) availableGroups += availableGroupId;
+            else availableGroups += "," + availableGroupId;
+        }
+    }
 }
