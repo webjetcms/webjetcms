@@ -12,6 +12,8 @@
   - [List of websites/news](/custom-apps/news/)
   - [Users](/custom-apps/apps/user/README.md)
   - [Configuration](/custom-apps/config/README.md)
+  - Ecommerce
+    - [Payment methods](/custom-apps/apps/eshop/payment-methods/README.md)
 - Spring MVC
   - [Application in the web page](/custom-apps/spring-mvc/)
   - [Admin with file upload](/custom-apps/spring-mvc/admin-with-upload.md)
