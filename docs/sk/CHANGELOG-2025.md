@@ -4,7 +4,7 @@
 
 > Vývojová verzia
 
-## 2025.0.x
+## 2025.0.23
 
 > Opravná verzia pôvodnej verzie 2025.0.
 
