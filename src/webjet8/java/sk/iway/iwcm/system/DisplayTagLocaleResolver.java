@@ -2,9 +2,9 @@ package sk.iway.iwcm.system;
 
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.jsp.PageContext;
+import jakarta.servlet.jsp.tagext.Tag;
 
 import org.apache.struts.util.ResponseUtils;
 import org.displaytag.localization.I18nResourceProvider;
@@ -37,17 +37,17 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
     * @see LocaleResolver#resolveLocale(HttpServletRequest)
     */
    @Override
-   public Locale resolveLocale(HttpServletRequest request)
+   public Locale resolveLocale(PageContext pageContext)
    {
-       Locale userLocale = request.getLocale();
-       
-       String lng = getLng(null, request);
+       Locale userLocale = pageContext.getRequest().getLocale();
+
+       String lng = getLng(null, (HttpServletRequest)pageContext.getRequest());
        if (Tools.isNotEmpty(lng))
        {
       	 if ("cz".equals(lng)) lng = "cs";
       	 userLocale = new Locale(lng);
        }
-       
+
        Logger.debug(this,"resolveLocale, lng="+lng+" locale="+userLocale);
 
        return userLocale;
@@ -58,19 +58,19 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
     */
    @Override
    public String getResource(String resourceKey, String defaultValue, Tag tag, PageContext pageContext)
-   {   		
+   {
       // if titleKey isn't defined either, use property
       String key = (resourceKey != null) ? resourceKey : defaultValue;
-      
+
       if (key.indexOf("basic.msg.empty_list")!=-1)
       {
       	System.out.println("------------------ MAM TO -----------------");
-      }      
-       
+      }
+
       HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
-		
+
       String lng = getLng(pageContext, request);
-      
+
 		boolean needRefresh = false;
 		if (request.getSession().getAttribute("userlngr") != null)
 		{
@@ -105,16 +105,16 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
 		{
 			prop = Prop.getInstance(Constants.getServletContext(), lng, false);
 		}
-		
+
 		Logger.debug(this,"resolver ("+lng+"): "+key);
-		
+
 		String text = prop.getText(key);
 		//text = prop.getText(key);
 		if (text != null)
 		{
 			return(text);
 		}
-       
+
        return key;
    }
 
@@ -140,10 +140,10 @@ public class DisplayTagLocaleResolver implements I18nResourceProvider, LocaleRes
 			if (lng == null)
 			{
 				lng = sk.iway.iwcm.Constants.getString("defaultLanguage");
-			}			
+			}
 		}
-		
+
 		return lng;
    }
-	
+
 }
