@@ -48,6 +48,7 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     I.see('Naplanovaný hlavný dokument : files/archiv/files/archiv_insert_later/files/archiv/archive_file_test_fifth.pdf');
     I.handleDownloads(`downloads/${exportedZipFileName}`);
     I.clickCss("//div[@id='dialogCentralRow']//p//a[contains(@href, '.zip')]");
+    I.wait(5);
 
     // 3. Vymazanie súboru a nahradenie
     I.say("Phase3 - Deleting the file");
