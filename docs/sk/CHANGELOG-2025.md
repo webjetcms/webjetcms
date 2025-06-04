@@ -4,6 +4,14 @@
 
 > Vývojová verzia
 
+## 2025.18
+
+> Verzia **2025.18** prináša kompletne prerobený modul **Elektronického obchodu** s podporou **platobnej brány GoPay** a vylepšeným zoznamom objednávok. Aplikácia **Kalendár noviniek** bola oddelená ako **samostatná aplikácia** a zároveň sme prerobili nastavenia viacerých aplikácii v editore stránok do nového dizajnu. **Manažér dokumentov** (pôvodne Archív súborov) prešiel **vizuálnym aj funkčným reštartom** vrátane nových nástrojov na správu, export a import dokumentov.
+>
+> Vylepšený bol aj systém **Hromadného e-mailu** s novými možnosťami pre odosielateľa a pohodlnejším výberom príjemcov. **Rezervácie** získali nové možnosti ako **nadmerné rezervácie**, vytváranie rezervácií spätne do minulosti a zasielanie notifikácií na špecifické emaily pre každý rezervačný objekt.
+>
+> Optimalizovali sme počet súborov v **Prieskumníku**, čo vedie k **rýchlejšiemu načítaniu** a pridali nové informácie do **Monitorovania servera**.
+
 ### Prelomové zmeny
 
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
@@ -164,6 +172,8 @@ Iné zmeny:
 - Galéria - doplnený test vodoznaku s porovnaním obrázku, doplnený test kontroly práv (#57625).
 - Web stránky - doplnený test voliteľných polí pri vytváraní web stránky (#57625).
 - Allure - doplnené výsledky jUnit testov do spoločného Allure reportu (#57801).
+
+![meme](_media/meme/2025-18.jpg ":no-zoom")
 
 ## 2025.0.x
 
