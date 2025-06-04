@@ -126,9 +126,14 @@
       </fileset>
     </copy>
 
-    <!-- skopiruj SRC do TEST verzie -->
+    <!-- skopiruj SRC do JAKARTA verzie -->
     <copy todir="${root}/../../../webjetcms_jakarta/src/main/java/" overwrite="true">
       <fileset dir="${root}/src-utf8-jakarta/">
+          <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy todir="${root}/../../../webjetcms_jakarta/src/main/webapp/" overwrite="true">
+      <fileset dir="${root}/../../src/main/webapp/">
           <include name="**/*"/>
       </fileset>
     </copy>
