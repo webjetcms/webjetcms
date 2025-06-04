@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.gallery;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -88,9 +89,14 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 
     @Override
-    public void getOptions(DatatablePageImpl<GalleryEntity> page) {
+    public Page<GalleryEntity> searchItem(Map<String, String> params, Pageable pageable, GalleryEntity search) {
+        DatatablePageImpl<GalleryEntity> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
+
+        //this can't be in getOptions method becase getAll is never called
         List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByOrderByPerexGroupNameAsc();
         page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
+
+        return page;
     }
 
     @Override
