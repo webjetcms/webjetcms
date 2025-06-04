@@ -56,6 +56,7 @@
     - [Items](/redactor/apps/eshop/invoice/items.md)
     - [List of products](/redactor/apps/eshop/product-list/README.md)
     - [Application settings](/redactor/apps/basket/README.md)
+    - [Payment methods](/redactor/apps/eshop/payment-methods/README.md)
   - [Emoticons](/redactor/apps/emoticon/README.md)
   - [Export of data](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)
