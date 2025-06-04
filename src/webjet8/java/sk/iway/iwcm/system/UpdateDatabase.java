@@ -2458,6 +2458,11 @@ public class UpdateDatabase
 		}
 	}
 
+	/**
+	 * Loop through all gallery and check if perex groups are valid.
+	 * If not, find equivalent perexGroups for gallery domain and set them.
+	 * If there is change, save the gallery.
+	 */
 	private static void handleGallery(Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, GalleryRepository gr) {
 		DocDB docDB = DocDB.getInstance();
 
@@ -2470,7 +2475,7 @@ public class UpdateDatabase
 			List<GalleryEntity> items = page.getContent();
 
 			for(GalleryEntity galleryEntity : items) {
-				boolean needSave = getPerexGroupsForDomain(galleryEntity, domainsMap, domainPerexGroupsMap, docDB);
+				boolean needSave = getValidPerexGroupsForGallery(galleryEntity, domainsMap, domainPerexGroupsMap, docDB);
 				if(needSave == true) gr.save(galleryEntity);
 			}
 
@@ -2478,8 +2483,12 @@ public class UpdateDatabase
 		} while (!page.isLast() && failsafe++ < 5000);
 	}
 
+	/**
+	 * Loop through all documents and check if perex groups are valid.
+	 * If not, find equivalent perexGroups for doc domain and set them.
+	 * If there is change, save the document.
+	 */
 	private static void handleDocs(Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDetailsRepository ddr) {
-
 		int pageSize = 100;
 		int pageNumber = 0;
 		int failsafe = 0;
@@ -2489,7 +2498,7 @@ public class UpdateDatabase
 			List<DocDetails> items = page.getContent();
 
 			for(DocDetails doc : items) {
-				boolean needSave = getPerexGroupsForDomain(doc, domainsMap, domainPerexGroupsMap);
+				boolean needSave = getValidPerexGroupsForDoc(doc, domainsMap, domainPerexGroupsMap);
 				if(needSave == true) ddr.save(doc);
 			}
 
@@ -2497,7 +2506,12 @@ public class UpdateDatabase
 		} while (!page.isLast() && failsafe++ < 5000);
 	}
 
-	private static boolean getPerexGroupsForDomain(GalleryEntity ge, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDB docDB) {
+	/**
+	 * Check if perex groups for gallery are valid (are in same domain as gallery).
+	 * If not, find equivalent perexGroups for gallery domain and set them.
+	 * If there is change, return TRUE.
+	 */
+	private static boolean getValidPerexGroupsForGallery(GalleryEntity ge, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDB docDB) {
 		if(ge.getPerexGroup().isEmpty() == true) return false; // dont neeed save
 
 		Integer domainId = ge.getDomainId();
@@ -2529,7 +2543,12 @@ public class UpdateDatabase
 		return false;
 	}
 
-	private static boolean getPerexGroupsForDomain(DocDetails doc, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap) {
+	/**
+	 * Check if perex groups for doc are valid (are in same domain as doc).
+	 * If not, find equivalent perexGroups for doc domain and set them.
+	 * If there is change, return TRUE.
+	 */
+	private static boolean getValidPerexGroupsForDoc(DocDetails doc, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap) {
 		if(doc.getPerexGroups().length < 1) return false; // dont neeed save
 
 		Integer domainId = domainsMap.get( doc.getGroup().getDomainName() );
@@ -2556,31 +2575,40 @@ public class UpdateDatabase
 		return false;
 	}
 
+	/**
+	 * Prepare perex groups for every domain.
+	 * This will create deep copy of original perex groups and set domainId to new one.
+	 * Also handle available groups for each perex group.
+	 */
 	private static void preparePerexGroupsForEveryDomain(PerexGroupsRepository pgr, Integer defaultDomainId, Map<String, Integer> domainsMap) {
-		List<PerexGroupsEntity> allOriginalPerexGroups = pgr.findAll(); //Find all no matter the domain
+		List<PerexGroupsEntity> originalPerexGroups = pgr.findAll(); //Find all no matter the domain
 
 		GroupsDB groupsDB = GroupsDB.getInstance();
 
 		// Set all existing perexes to default domain AND save them
-		allOriginalPerexGroups.forEach(perex -> perex.setDomainId(defaultDomainId));
-		pgr.saveAll(allOriginalPerexGroups);
+		originalPerexGroups.forEach(perex -> perex.setDomainId(defaultDomainId));
+		pgr.saveAll(originalPerexGroups);
 
-		// Create duplicated for every other domain
+		// Create and save duplicated for every other domain (set correct available groups)
 		domainsMap.forEach((domainName, domainId) -> {
 			if(domainId.equals(defaultDomainId) == false) {
-				pgr.saveAll( getDeepCopy(allOriginalPerexGroups, domainId, domainsMap, groupsDB) );
+				pgr.saveAll( getDeepCopy(originalPerexGroups, domainId, domainsMap, groupsDB) );
 			}
 		});
 
 		// At end, handle available groups for default domain
-		for(PerexGroupsEntity originalPerex : allOriginalPerexGroups)
+		for(PerexGroupsEntity originalPerex : originalPerexGroups)
 			handlePerexAvailableGroups(originalPerex, domainsMap, groupsDB);
-		pgr.saveAll(allOriginalPerexGroups);
+		pgr.saveAll(originalPerexGroups);
 	}
 
-	private static List<PerexGroupsEntity> getDeepCopy(List<PerexGroupsEntity> allOriginalPerexGroups, Integer domainId, Map<String, Integer> domainsMap, GroupsDB groupsDB) {
+	/**
+	 * Create deep copy of original perex groups and set domainId to new one.
+	 * Also handle available groups for each perex group.
+	 */
+	private static List<PerexGroupsEntity> getDeepCopy(List<PerexGroupsEntity> originalPerexGroups, Integer domainId, Map<String, Integer> domainsMap, GroupsDB groupsDB) {
 		List<PerexGroupsEntity> newPerexGroups = new ArrayList<>();
-		for(PerexGroupsEntity origPerex : allOriginalPerexGroups) {
+		for(PerexGroupsEntity origPerex : originalPerexGroups) {
 			PerexGroupsEntity newPerex = new PerexGroupsEntity();
 
 			// Must be set before handling available groups
@@ -2613,6 +2641,9 @@ public class UpdateDatabase
 		return newPerexGroups;
 	}
 
+	/**
+	 * Loop perexGroup available groups and check if they are in the same domain as perexGroup. If yes keep them, if not remove them.
+	 */
 	private static void handlePerexAvailableGroups(PerexGroupsEntity perexGroup, Map<String, Integer> domainsMap, GroupsDB groupsDB) {
 		int[] availableGroups = Tools.getTokensInt(perexGroup.getAvailableGroups(), ",");
 		perexGroup.setAvailableGroups(null);
@@ -2621,11 +2652,16 @@ public class UpdateDatabase
 			String groupDomainName = groupsDB.getDomain(availableGroup);
 			Integer groupDomainId = domainsMap.get(groupDomainName);
 
-			if(groupDomainId.equals(perexGroup.getDomainId()))
+			if(perexGroup.getDomainId().equals(groupDomainId))
 				perexGroup.addAvailableGroup(availableGroup);
 		}
 	}
 
+	/**
+	 * Transform array to list, sort both lists and compare them.
+
+	 * @return true if both lists are equal, false otherwise.
+	 */
 	private static boolean comapreListAndArray(List<Integer> list, Integer[] array) {
 		if(list == null && array == null) return true;
 		else if(list == null || array == null) return false;
