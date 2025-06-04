@@ -2,6 +2,8 @@ package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,6 +24,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -29,6 +33,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -41,11 +46,13 @@ import sk.iway.iwcm.users.UsersDB;
 public class GalleryRestController extends DatatableRestControllerV2<GalleryEntity, Long> {
 
     private final GalleryRepository repository;
+    private final PerexGroupsRepository perexGroupsRepository;
 
     @Autowired
-    public GalleryRestController(GalleryRepository repository, HttpServletRequest request) {
+    public GalleryRestController(GalleryRepository repository, PerexGroupsRepository perexGroupsRepository, HttpServletRequest request) {
         super(repository);
         this.repository = repository;
+        this.perexGroupsRepository = perexGroupsRepository;
     }
 
     @Override
@@ -79,6 +86,37 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         }
 
         return super.getOneItem(id);
+    }
+
+    @Override
+    public Page<GalleryEntity> searchItem(Map<String, String> params, Pageable pageable, GalleryEntity search) {
+        DatatablePageImpl<GalleryEntity> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
+
+        //this can't be in getOptions method becase getAll is never called
+        List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByOrderByPerexGroupNameAsc();
+        page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
+
+        return page;
+    }
+
+    @Override
+    public GalleryEntity processFromEntity(GalleryEntity entity, ProcessItemAction action) {
+        if(entity == null) entity = new GalleryEntity();
+        if(entity.getEditorFields() == null) {
+            GalleryEditorFields gef = new GalleryEditorFields();
+            gef.fromGalleryEntity(entity);
+            entity.setEditorFields(gef);
+        }
+        return entity;
+    }
+
+    @Override
+    public GalleryEntity processToEntity(GalleryEntity entity, ProcessItemAction action) {
+        if(entity != null) {
+            GalleryEditorFields gef = new GalleryEditorFields();
+            gef.toGalleryEntity(entity);
+        }
+        return entity;
     }
 
     /**
