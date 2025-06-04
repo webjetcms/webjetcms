@@ -224,4 +224,12 @@ public class PerexGroupsEntity implements Serializable {
 		tab = "fields"
     )
 	private String fieldF;
+
+    public void addAvailableGroup(int availableGroupId) {
+        if(Tools.isEmpty(availableGroups)) availableGroups = "" + availableGroupId;
+        else {
+            if(availableGroups.endsWith(",")) availableGroups += availableGroupId;
+            else availableGroups += "," + availableGroupId;
+        }
+    }
 }
