@@ -355,6 +355,8 @@ Scenario('Test full text indexation', ({ I, DT, DTE }) => {
     I.say("Check that we wont find indexed file by body text");
     I.amOnPage("/apps/vyhladavanie/vyhladavanie-files.html");
     I.waitForElement("#searchWords", 10);
+    //spam protection
+    I.wait(10);
     I.fillField("#searchWords", fileBody);
     I.clickCss("input.smallSearchSubmit");
     I.waitForText("Neboli nájdené žiadne stránky vyhovujúce zadaným kritériám.", 10);
