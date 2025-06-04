@@ -22,7 +22,7 @@
 - Web stránky - schvaľovanie - opravené načítanie zoznamu v karte Neschválené pri použití databázového servera `Oracle` (#54273-62).
 - Web stránky - opravená aktualizácia nodov clustra pri zmene značiek (#57717).
 - Web stránky - opravené zobrazenie zoznamu stránok ak má používateľ právo iba na vybrané webové stránky (#57725-4).
-- Web stránky - doplnený prepínač domén aj keď nie je nastavená konfiguračná premenna `enableStaticFilesExternalDir` ale len `multiDomainEnabled` (#57833).
+- Web stránky - doplnený prepínač domén aj keď nie je nastavená konfiguračná premenná `enableStaticFilesExternalDir` ale len `multiDomainEnabled` (#57833).
 - Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Aplikácie - pridaná podpora vkladania nového riadku cez klávesovú skratku `SHIFT+ENTER` do jednoduchého textového editora používaného napr. v Otázky a odpovede (#57725-1).
 - Číselníky - presunutý výber číselníka priamo do nástrojovej lišty dátovej tabuľky (#49144).
@@ -45,6 +45,8 @@
 - Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
 - Úvod - opravené zobrazenie požiadavky na dvojstupňové overovanie pri integrácii cez `IIS` (#57833).
 - Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
+- Galéria - doplnené chýbajúce značky (#57837).
+- Značky - opravené nastavenie priečinkov existujúcej značky v sekcii Zobraziť pre (#57837).
 
 ### Bezpečnosť
 
