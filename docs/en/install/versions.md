@@ -13,7 +13,7 @@ ext {
 ```
 
 Currently there are the following versions of WebJET:
-- `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
+- `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
 - `2025.18` - Stabilized version 2025.18, no daily changes are added.
 - `2025.0.23` - Stabilized version 2025.0.23 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
 - `2025.0` - Stabilized version 2025.0, no daily changes are added.
@@ -61,7 +61,7 @@ It is therefore true that `YEAR.0.x` Is **most stable** in terms of changes and 
 
 ## Changes in the transition to 2025.0-SNAPSHOT
 
-View Full Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), you therefore need to add the configuration to your `build.gradle` file:
+View Full Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), you therefore need to add the configuration to your `build.gradle` file:
 
 ```gradle
 repositories {

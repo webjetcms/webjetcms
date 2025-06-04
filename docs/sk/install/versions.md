@@ -14,7 +14,7 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
-- ```2025.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
+- ```2025.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
 - ```2025.18``` - stabilizovaná verzia 2025.18, nepribúdajú do nej denné zmeny.
 - ```2025.0.23``` - stabilizovaná verzia 2025.0.23 s opravami chýb voči verzii 2025.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - ```2025.0``` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny.
@@ -63,7 +63,7 @@ Platí teda, že `YEAR.0.x` je **najstabilnejšia** z pohľadu zmien a `YEAR.0-S
 
 ## Zmeny pri prechode na 2025.0-SNAPSHOT
 
-Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:
+Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:
 
 ```gradle
 repositories {
