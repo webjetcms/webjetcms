@@ -60,6 +60,9 @@
         vueMonitoringApp.config.globalProperties.$cacheItems = '[[#{components.monitoring.cache_items}]]';
         vueMonitoringApp.config.globalProperties.$sessionsTotal = '[[#{components.monitoring.sessions_total}]]';
         vueMonitoringApp.config.globalProperties.$swJavaVendor = '[[#{components.monitoring.sw_java_vendor}]]';
+        vueMonitoringApp.config.globalProperties.$swSpringVersion = 'Spring Core';
+        vueMonitoringApp.config.globalProperties.$swSpringDataVersion = 'Spring Data';
+        vueMonitoringApp.config.globalProperties.$swSpringSecurityVersion = 'Spring Security';
         vueMonitoringApp.config.globalProperties.$swRuntime = '[[#{components.monitoring.sw_runtime}]]';
         vueMonitoringApp.config.globalProperties.$swVmName = '[[#{components.monitoring.sw_vm_name}]]';
         vueMonitoringApp.config.globalProperties.$swJavaVersion = '[[#{components.monitoring.sw_java_version}]]';
@@ -78,6 +81,7 @@
         vueMonitoringApp.config.globalProperties.$uptimeSeconds= '[[#{components.monitor.monitoring.basic.server.uptime.date.sec}]]';
 
         vueMonitoringApp.config.globalProperties.$licenseExpirationDate = '[[#{components.monitoring.license_expiration_date}]]';
+        vueMonitoringApp.config.globalProperties.$wjVersion = '[[#{admin.top.webjet_version}]]';
 
         vueMonitoringApp.config.globalProperties.$clusterNodeName = '[[#{components.monitoring.node_name}]]';
         vueMonitoringApp.config.globalProperties.$memTotal = '[[#{components.monitoring.mem_total}]]';

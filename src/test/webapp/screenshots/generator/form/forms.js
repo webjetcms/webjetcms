@@ -21,7 +21,7 @@ Scenario('forms', ({ I , DT, DTE, Document }) => {
         default:
             throw new Error(`Unsupported language code: ${I.getConfLng()}`);
     }
-    
+
 
     Document.screenshot("/redactor/apps/form/detail-editnote.png");
 

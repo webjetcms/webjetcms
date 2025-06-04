@@ -8,6 +8,7 @@
 
 - Aplikácia Kalendár noviniek oddelená do samostatnej aplikácie, ak kalendár noviniek používate je potrebné upraviť cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Upravená inicializácia Spring a JPA, viac informácií v sekcii pre programátora (#43144).
+- Prerobená backend časť aplikácie elektronický obchod, viac v sekcii pre programátora (#57685).
 
 ### Dátové tabuľky
 
@@ -28,6 +29,7 @@
 ![](redactor/files/file-archive/export_all.png)
 
 - **Import hlavných súborov** bol opravený a upravený, aby dokázal pracovať s rozšírenými možnosťami exportu. Viac sa dočítate v časti [Import hlavných súborov](redactor/files/file-archive/import-files.md) (#57317).
+- **Indexovanie** dokumentov vo vyhľadávačoch typu `Google` upravené tak, aby sa neindexovali staré/historické verzie dokumentov a dokumenty mimo dátum platnosti (nastavená HTTP hlavička `X-Robots-Tag=noindex, nofollow`). Indexovanie týchto dokumentov sa dá povoliť v editore v manažérovi dokumentov (#57805).
 
 ### Aplikácie
 
@@ -53,6 +55,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/menu/editor-dialog.png)
 
+- Doplnené fotky obrazovky aplikácií v českej jazykovej mutácii pre väčšinu aplikácií (#57785).
+
 ### Hromadný e-mail
 
 - **Presunuté pole Web stránka** – teraz sa nachádza pred poľom **Predmet**, aby sa po výbere stránky predmet automaticky vyplnil podľa názvu zvolenej web stránky (#57541).
@@ -66,6 +70,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/dmail/campaings/users.png)
 
+- Odhlásenie - pri priamom zadaní emailu na odhlásenie (nie kliknutie na odkaz v emaile) je zaslaný na zadanú email adresu potvrdzujúci email. V ňom je potrebné kliknúť na odkaz pre odhlásenie. Pôvodná verzia nekontrolovala žiadnym spôsobom platnosť/vlastníctvo email adresy a bolo možné odhlásiť aj cudzí email (#57665).
+
 ### Kalendár noviniek
 
 - Kalendár noviniek oddelený ako samostatná aplikácia, pôvodne to bola možnosť v aplikácii Kalendár (#57409).
@@ -76,6 +82,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Monitorovanie servera
 
 - Doplnená tabuľka s informáciou o databázových spojeniach a obsadenej pamäti (#54273-61).
+- Doplnená informácia o verzii knižníc `Spring (Core, Data, Security)` do sekcie Monitorovanie servera-Aktuálne hodnoty (#57793).
 
 ### Rezervácie
 
@@ -157,6 +164,7 @@ Iné zmeny:
 - Web stránky - doplnený test vytvorenia novej stránky s publikovaním v budúcnosti (#57625).
 - Galéria - doplnený test vodoznaku s porovnaním obrázku, doplnený test kontroly práv (#57625).
 - Web stránky - doplnený test voliteľných polí pri vytváraní web stránky (#57625).
+- Allure - doplnené výsledky jUnit testov do spoločného Allure reportu (#57801).
 
 ## 2025.0.x
 
@@ -198,6 +206,7 @@ Iné zmeny:
 - Prieskumník - opravené práva nastavenia vlastností priečinku a súboru (#57833).
 - Monitorovanie servera - opravené hlásenie o nastavení konfiguračnej premennej pre Aplikácie, WEB stránky a SQL dotazy (#57833).
 - Úvod - opravené zobrazenie požiadavky na dvojstupňové overovanie pri integrácii cez `IIS` (#57833).
+- Klonovanie/zrkadlenie štruktúry - opravené nastavenie URL adresy priečinku (odstránenie diakritiky a medzier) (#57657-7).
 
 ### Bezpečnosť
 

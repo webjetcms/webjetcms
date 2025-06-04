@@ -45,7 +45,6 @@ Scenario('editor-nastavenie navbaru', ({ I, DTE }) => {
     setCheckValueRecursive(I, DTE, ["Aplikácie", "Navbar", "Podadresár 2"], "Pod-podadresár 1", "showInNavbar", "Zobraziť", "forceNavbarSubfolders");
     setCheckValueRecursive(I, DTE, ["Aplikácie", "Navbar", "Podadresár 2"], "Pod-podadresár 1", "showInNavbar", "Rovnako ako menu", "forceNavbarSubfolders");
 
-    //pause();
     setCheckValueRecursive(I, DTE, ["Aplikácie", "Navbar", "Podadresár 2"], "Pod-podadresár 1", "loggedShowInNavbar", "Nezobraziť", "forceLoggedNavbarSubfolders");
     setCheckValueRecursive(I, DTE, ["Aplikácie", "Navbar", "Podadresár 2"], "Pod-podadresár 1", "loggedShowInNavbar", "Rovnako ako pre neprihláseného", "forceLoggedNavbarSubfolders");
 });

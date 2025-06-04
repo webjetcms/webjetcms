@@ -1742,6 +1742,17 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
+                <void property="date"><string>06.05.2025</string></void>
+                <void property="desc"><string>Pridanie stlpca index_file do tabulky file_archiv a nastav hodnotu indexovania na 0 ak ide o historicku verziu.</string></void>
+                <void property="mysql"><string>ALTER TABLE file_archiv ADD index_file tinyint(1) DEFAULT 1; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1;</string></void>
+                <void property="mssql"><string>ALTER TABLE file_archiv ADD index_file INT DEFAULT 1; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1;</string></void>
+                <void property="oracle"><string>ALTER TABLE file_archiv ADD index_file SMALLINT DEFAULT 1; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1;</string></void>
+                <void property="pgsql"><string>ALTER TABLE file_archiv ADD COLUMN index_file BOOLEAN DEFAULT TRUE; UPDATE file_archiv SET index_file = 0 WHERE reference_id > -1;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="date"><string>07.04.2025</string></void>
                 <void property="desc"><string>Drop unique constraint payment_method_name for table payment_methods</string></void>
                 <void property="mysql"><string>ALTER TABLE payment_methods DROP INDEX payment_method_name;</string></void>

@@ -17,6 +17,7 @@ Before(({ I, login, DT }) => {
 Scenario('Delete reservations', async ({ I, DT }) => {
     I.amOnPage('/apps/reservation/admin/');
     DT.waitForLoader();
+    I.closeOtherTabs();
 
     await deleteFilteredReservations(DT, I, 'name', 'autotest-');
     I.refreshPage();

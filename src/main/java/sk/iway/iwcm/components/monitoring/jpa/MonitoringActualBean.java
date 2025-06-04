@@ -78,6 +78,11 @@ public class MonitoringActualBean {
     private String swServerOs;
     private String swServerOsVersion;
     private String licenseExpirationDate;
+    private String swSpringVersion;
+    private String swSpringDataVersion;
+    private String swSpringSecurityVersion;
+
+    private String wjVersion;
 
     public MonitoringActualBean() {
         /** volne miesto na disku **/
@@ -171,5 +176,35 @@ public class MonitoringActualBean {
         {
             licenseExpirationDate = Tools.formatDate(new Date(licenseExpirationTimeInMillis), "dd.MM.yyyy");
         }
+
+        //get spring version
+        try {
+            swSpringVersion = org.springframework.core.SpringVersion.getVersion();
+        } catch (Throwable e) {
+            // spring nie je v classpath, takze ignorujeme
+            swSpringVersion = "not available";
+        }
+        try {
+            swSpringDataVersion = getLibraryVersion(Class.forName("org.springframework.data.repository.Repository"));
+        } catch (ClassNotFoundException e) {
+            swSpringDataVersion = "not available";
+        }
+        try {
+            swSpringSecurityVersion = getLibraryVersion(Class.forName("org.springframework.security.core.Authentication"));
+        } catch (ClassNotFoundException e) {
+            swSpringSecurityVersion = "not available";
+        }
+
+        wjVersion = InitServlet.getActualVersionLong();
+        int i = wjVersion.indexOf("(");
+        if (i > 0) wjVersion = wjVersion.substring(0, i).trim();
+    }
+
+    private static String getLibraryVersion(Class<?> clazz) {
+        Package pkg = clazz.getPackage();
+        if (pkg != null && pkg.getImplementationVersion() != null) {
+            return pkg.getImplementationVersion();
+        }
+        return "not available";
     }
 }

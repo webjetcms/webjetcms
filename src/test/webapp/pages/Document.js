@@ -324,4 +324,13 @@ module.exports = {
     }, selector);
   return tagName;
   },
+
+  /**
+   * Returns true if PDF viewer is enabled, otherwise false.
+   * In headless mode, PDF viewer is disabled in chromium.
+   * @returns
+   */
+  isPdfViewerEnabled() {
+    return "false"!==process.env.CODECEPT_SHOW;
+  }
 }

@@ -3,7 +3,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('Live chat (SmartsUpp)', ({ I, DT, DTE, Document }) => {
+Scenario('Live chat (SmartsUpp)', ({ I, DT, Document }) => {
     I.amOnPage("/apps/live-chat-smartsupp");
     DT.waitForLoader();
     I.switchTo('#widgetButtonFrame');
@@ -12,5 +12,3 @@ Scenario('Live chat (SmartsUpp)', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/app-smartsupp/app-smartsupp.png");
     Document.screenshotAppEditor(105920, "/redactor/apps/app-smartsupp/editor.png");
 });
-
-
