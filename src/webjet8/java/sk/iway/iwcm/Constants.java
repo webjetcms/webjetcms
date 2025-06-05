@@ -489,7 +489,7 @@ public class Constants {
 		setBoolean("uploadDisableNotAllowedDirs", false, "security;editor",
 				"ak je nastavene na true, tak pouzivatel nevidi adresare, na ktore nema prava v dialogu pre vlozenie linky a obrazku");
 
-		setString("pdfFontDirectory", "file://WEB-INF/fonts", MOD_CONFIG, "adresar s fontami pre generovanie PDF");
+		setString("pdfFontDirectory", "file://{ROOT_PATH}WEB-INF/fonts", MOD_CONFIG, "adresar s fontami pre generovanie PDF");
 
 		setString("propInstallNames", "", MOD_CONFIG,
 				"ak je nastavene na neprazdnu hodnotu bude sa pri starte nacitavat takyto zoznam custom properties suborov, ak je prazdne pouzije sa podla INSTALL_NAME");
@@ -2336,9 +2336,11 @@ public class Constants {
 	 * - {HTTP_PROTOCOL}
 	 * - {HTTP_PORT}
 	 * - {SERVER_NAME}
+	 * - {ROOT_PATH}
 	 */
 	public static String executeMacro(String value) {
 		value = Tools.replace(value, "{INSTALL_NAME}", getInstallName());
+		value = Tools.replace(value, "{ROOT_PATH}", Tools.getRealPath("/"));
 
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb != null) {
