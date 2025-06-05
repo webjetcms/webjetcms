@@ -145,7 +145,7 @@ dependencies {
     //implementation("com.amazonaws:aws-java-sdk-core:1.12.+")
     //implementation("com.amazonaws:aws-java-sdk-ses:1.12.+")
     //implementation("bsf:bsf:2.4.0")
-    implementation("commons-beanutils:commons-beanutils:1.9.4")
+    implementation("commons-beanutils:commons-beanutils:1.11.0")
     implementation("commons-chain:commons-chain:1.2") //wjstruts
     //implementation("org.apache.commons:commons-collections4:4.4") //poi includes 4.4
     implementation("org.apache.commons:commons-compress:1.26.1")

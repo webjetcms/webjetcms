@@ -1,8 +1,13 @@
 {
     "news": [
         {
+            "title": "Version 2025.18",
+            "perex": "Version **2025.18** brings a completely redesigned **Electronic store** module with support for **GoPay payment gateway** and an improved order list. The **News Calendar** application has been separated as a **standalone application** and we have also redesigned the settings of several applications in the page editor to a new design. The **Document Manager** (originally File Archive) has undergone a **visual and functional reboot**, including new tools for managing, exporting and importing documents.\n\nThe **Bulk Email** system has also been improved with new options for the sender and more convenient selection of recipients. **Reservations** have gained new options such as **overbooking**, creating reservations retroactively and sending notifications to specific emails for each reservation object.\n\nWe have optimized the number of files in **Explorer**, which leads to **faster loading** and added new information to **Server Monitoring**.",
+            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_202518"
+        },
+        {
             "title": "Version 2025.0",
-            "perex": "In version **2025.0** we have introduced a **new administration design** for even better clarity and user comfort. \\n\\nOne of the main changes is the move of the **second level menu** to **tabs in the page header**, which simplifies navigation. In websites, we have also **merged folder and website tabs** so that you have everything clearly in one place. If the header does not contain tabs, tables will automatically adjust and display an **extra row**.",
+            "perex": "In version **2025.0** we have introduced a **new administration design** for even better clarity and user comfort. \n\nOne of the main changes is the move of the **second level menu** to **tabs in the page header**, which simplifies navigation. In websites, we have also **merged folder and website tabs** so that you have everything clearly in one place. If the header does not contain tabs, tables will automatically adjust and display an **extra row**.",
             "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2025?id=_20250"
         },
         {
@@ -19,11 +24,6 @@
             "title": "Version 2024.18",
             "perex": "WebJET 2024.18 contains a **new set of icons**, Form easily supplemented with **advanced settings** (recipients, redirects...), applications AB Testing, Audit (awaiting publication, changed pages), Blog, Questionnaires, Calendar of events (approval). Adds **MultiWeb installation support** (separation of domain data) in Templates, Bulk Email and other applications. New library for **browser detection**, there will be minor differences in Statistics-Browsers, but we record browser data anonymously even without Cookies consent.",
             "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202418"
-        },
-        {
-            "title": "Version 2024.0",
-            "perex": "WebJET version 2024.0 is identical to version 2023.52",
-            "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_202352"
         }
     ]
 }

@@ -69,6 +69,7 @@ V kartě **Příjemci** vidíme přehled všech příjemců, kteří budou dosta
 - ochrana proti duplicitě, kontroluje se duplicita v zadaných emailech i s těmi, které již existují v kampani
 - ochrana proti nevhodnému emailu, email musí splňovat standardní formát **jméno@domena.sk** (speciální výjimka při [Import z xlsx](#import-z-xlsx))
 - ochrana proti odhlášeným emailům, nelze přidat příjemce, jehož emailová adresa je v seznamu [Odhlášené e-maily](../unsubscribed/README.md)
+
 !>**Upozornění,** změníte-li seznam příjemců PO odeslání emailů, výsledná statistika nebude správná a může vzbudit dojem problému při odesíláním.
 
 ### Stav E-mailu
