@@ -1,6 +1,9 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.i18n.*" %>
 
+<%@page import="sk.iway.iwcm.system.translation.TranslationService"%>
+<%@page import="org.json.JSONObject"%>
+
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
@@ -19,6 +22,17 @@
 	request.setAttribute("iconLink", "");
 	request.setAttribute("dialogTitle", prop.getText("admin.clone.dialogTitle"));
 	request.setAttribute("dialogDesc", prop.getText("admin.clone.dialogDesc")+ ".");
+
+	JSONObject translationInfo = TranslationService.getTranslationInfo();
+	String engineName;
+	Long freeCharacters;
+	if(translationInfo == null) {
+		engineName = "---";
+		freeCharacters = -1L;
+	} else {
+		engineName = translationInfo.getString("engineName");
+		freeCharacters = translationInfo.getLong("numberOfFreeCharacters");
+	}
 %>
 
 <jsp:include page="/admin/layout_top_dialog.jsp" />
@@ -98,6 +112,39 @@
 			</tr>
 		</table>
 	</form>
+
+	<div class="tranlator-info">
+		<%if(translationInfo != null) {%>
+			<h2 style="color: #00be9f;"><iwcm:text key="components.translation_engine.found"/></h2>
+			<table>
+				<tr>
+					<td><iwcm:text key="components.translation_engine.name"/>:</td>
+					<td><b><%=engineName%></b></td>
+				</tr>
+				<tr>
+					<td><iwcm:text key="components.translation_engine.free_characters"/>:</td>
+					<td><%=freeCharacters%></td>
+				</tr>
+			</table>
+
+			<%if((long) freeCharacters < 1) {%>
+				<p style="color: #ff4b58"><iwcm:text key="components.translation_engine.no_free_characters.msg"/></p>
+			<% } %>
+		<% } else { %>
+			<h2 style="color: #ff4b58"><iwcm:text key="components.translation_engine.not_found"/></h2>
+			<p><iwcm:text key="components.translation_engine.not_found.msg"/></p>
+		<% } %>
+
+	</div>
 </div>
+
+<style>
+	.tranlator-info {
+		background: #edeff6;
+		margin: 15px 0;
+		padding: 20px;
+		border-radius: 10px;
+	}
+</style>
 
 <jsp:include page="/admin/layout_bottom_dialog.jsp" />

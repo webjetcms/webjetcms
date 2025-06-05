@@ -2,7 +2,7 @@
 
 Pomocou Klonovania štruktúry môžeme naklonovať celý obsah adresára v stránkach do iného adresára bez potreby znovu vytvárania celej adresárovej štruktúry. Táto možnosť je dostupná v sekcií **Web stránky** ako **Klonovanie štruktúry**. Po výbere tejto možnosti sa zobrazí okno k akcií klonovania. Typicky sa používa na vytvorenie novej jazykovej mutácie web sídla z existujúcej verzie. Jazyk sa preberie z nastavenia zdrojového a cieľového priečinka.
 
-![](clone_structure.png)
+![](clone_structure_set_translator.png)
 
 Pre vykonanie akcie klonovania je potrebné zadať ID zdrojového priečinka (ktorý priečinok klonujeme) a ID cieľového priečinka (kam na naklonuje zdrojový priečinok). ID priečinkov môžete zadať priamo, ak si ich pamätáte, alebo môže využiť možnosť **Vybrať**, ktorá otvorí nové okno so stromovou štruktúrou priečinkov, kde si konkrétny priečinok volíte kliknutím na jeho názov.
 
@@ -35,3 +35,9 @@ Ak použijeme klonovanie štruktúry **bez ponechania URL**, z priečinka SK do 
 Ak použijeme klonovanie štruktúry **s ponechaním URL**, z priečinka SK do priečinka EN, kópia tejto stránky bude mať URL **/en/majetok/**. Ako vidíme, url nebola preložená, zmenil sa iba prefix zo /sk na /en, čo reprezentuje nadradený priečinok.
 
 ![](clone_structure_result.png)
+
+## Prekladač
+
+Nakoľko klonovanie využíva [Automatický preklad](../../../admin/setup/translation.md), zobrazuje sa informácia, aký prekladač je nakonfigurovaný a koľko voľných znakov na preklad ešte ostáva. Ak žiaden prekladač nakonfigurovaný nie je (napr ak nie je zadaný licenčný kľúč pre prekladač `DeepL`) alebo už neostávajú žiadne voľné znaky na preklad, budeme pri klonovaní upozornený. V takom prípade sa **nebude** automaticky prekladať klonovaná štruktúra.
+
+![](clone_structure_no_set_translator.png)

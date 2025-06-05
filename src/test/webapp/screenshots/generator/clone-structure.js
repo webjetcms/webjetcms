@@ -21,10 +21,17 @@ Before(({ I, login }) => {
 });
 
 Scenario("Structure clone screenshots", async ({ I, Document })  => {
+    I.say("Without key, no set translators");
+    Document.setConfigValue("deepl_auth_key", "");
+
     I.amOnPage("/components/clone_structure/clone_structure.jsp");
-    Document.screenshot("/redactor/apps/clone-structure/clone_structure.png", 750, 500);
-    //I.clickCss("#dialogCentralRow > div > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input.button50");
-    //Document.screenshot("/redactor/apps/clone-structure/clone_structure_2.png");
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure_no_set_translator.png", 750, 500);
+
+    I.say("Set key, now with set translator");
+    Document.setConfigValue("deepl_auth_key", process.env.DEEPL_AUTH_KEY);
+
+    I.amOnPage("/components/clone_structure/clone_structure.jsp");
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure_set_translator.png", 750, 500);
 });
 
 //COPYED from test, only added screen shot
