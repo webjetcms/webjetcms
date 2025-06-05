@@ -175,6 +175,13 @@ Iné zmeny:
 
 ![meme](_media/meme/2025-18.jpg ":no-zoom")
 
+## 2025.0.x
+
+> Opravná verzia pôvodnej verzie 2025.0.
+
+- PDF - opravené nastavenie cesty do `fonts` priečinka s písmami. Je potrebné zadať plnú cestu na disku servera (#57657).
+- Aktualizovaná knižnica `Apache Commons BeanUtils` na verziu 1.11.0.
+
 ## 2025.0.23
 
 > Opravná verzia pôvodnej verzie 2025.0.
