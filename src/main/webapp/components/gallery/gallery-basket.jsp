@@ -7,7 +7,6 @@
 	import="sk.iway.iwcm.i18n.Prop"
 	import="sk.iway.iwcm.gallery.*"
 %>
-<%@page import="org.apache.struts.util.ImageButtonBean"%>
 <%@page import="sk.iway.iwcm.io.IwcmFileFilter"%>
 <%@page import="sk.iway.iwcm.io.IwcmFsDB"%>
 <%@page import="java.text.Normalizer"%><%@

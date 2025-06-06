@@ -44,6 +44,13 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	String groupIds = pageParams.getValue("groupIds", (String)request.getAttribute("group_id"));
 	String style = pageParams.getValue("style", "01");
 
+
+	if(Tools.isEmpty(groupIds))
+	{
+		//Dont know, just return ??
+		return;
+	}
+
 	//mame to v takomto formate, takze to convertneme
 	groupIds = groupIds.replace('+', ',');
 

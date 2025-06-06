@@ -10,6 +10,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/admin/layout_top.jsp" %>
 <%!
 public boolean isTextFile(String file1) {
+	if(file1==null) return false;
 	String[] textFiles = {"txt","html","htm","xml","jsp","java","css","js","properties","sql","log"};
 	for (String textFile : textFiles) {
 		if (file1.contains("."+textFile)) return true;
@@ -18,6 +19,7 @@ public boolean isTextFile(String file1) {
 }
 
 public boolean isImageFile(String file1) {
+	if(file1==null) return false;
 	String[] imageFiles = {"jpg","jpeg","gif","png","bmp"};
 	for (String imageFile : imageFiles) {
 		if (file1.contains("."+imageFile)) return true;

@@ -31,15 +31,19 @@
 	List<UserDetails> usersList = (List<UserDetails>) request.getAttribute("users");
 %>
 
-<% for(UserDetails contact:usersList) {%>
+<%
+if(usersList != null) {
 
-<div class="col-lg-3 col-sm-6">
-	<p>
-		<img src="/thumb<%if((contact.getPhotoOriginal()).equals("")){out.print("/images/gallery/user/admin.jpg");}else {out.print(GalleryDB.getImagePathOriginal(contact.getPhotoOriginal()));} %>?w=160&h=160&ip=5" alt="<%=contact.getFullName()%>">
-	</p>
-	<p data-aos="fade-up" data-aos-duration="600"><strong><%=contact.getFullName()%></strong>
-		<br><%=contact.getPosition()%>
-	</p>
-</div>
+	for(UserDetails contact:usersList) {%>
 
-<%} %>
+	<div class="col-lg-3 col-sm-6">
+		<p>
+			<img src="/thumb<%if((contact.getPhotoOriginal()).equals("")){out.print("/images/gallery/user/admin.jpg");}else {out.print(GalleryDB.getImagePathOriginal(contact.getPhotoOriginal()));} %>?w=160&h=160&ip=5" alt="<%=contact.getFullName()%>">
+		</p>
+		<p data-aos="fade-up" data-aos-duration="600"><strong><%=contact.getFullName()%></strong>
+			<br><%=contact.getPosition()%>
+		</p>
+	</div>
+
+	<%}
+} %>

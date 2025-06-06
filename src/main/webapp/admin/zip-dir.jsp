@@ -38,7 +38,8 @@ private void getFilesFromDir(String rootDir, ServletContext servletContext, ZipO
    if (file.isDirectory())
    {
    	IwcmFile[] files = file.listFiles();
-   	int size = files.length;
+	if(files!=null) {
+   		int size = files.length;
 		for (i=0; i<size; i++)
 		{
 			if (files[i].isDirectory())
@@ -90,6 +91,7 @@ private void getFilesFromDir(String rootDir, ServletContext servletContext, ZipO
 				}
 			}
 		}
+	}
    }
    else
    {

@@ -58,7 +58,7 @@ Prop prop = Prop.getInstance(Constants.getServletContext(), request);
 
 String[] files = request.getParameterValues("files");
 
-if (files.length == 0) {
+if (files == null ||files.length == 0) {
 	out.print("No files");
 	return;
 }

@@ -61,8 +61,9 @@ public boolean hasSubdirs(IwcmFile f, Identity user)
 		for(IwcmFile writableFile: user.getWritableFoldersList())
 		{
 			//System.out.println("compare: "+writableFile.getVirtualPath()+" vs: "+files[i].getVirtualPath()+" "+writableFile.getVirtualPath().startsWith(files[i].getVirtualPath()));
-			if(writableFile.getVirtualPath().startsWith(files[i].getVirtualPath()))
-				canShow = true;
+			if(writableFile.getVirtualPath() != null && files[i].getVirtualPath() != null)
+				if(writableFile.getVirtualPath().startsWith(files[i].getVirtualPath()))
+					canShow = true;
 		}
 
 		if(user.isFolderWritable(files[i].getVirtualPath()))

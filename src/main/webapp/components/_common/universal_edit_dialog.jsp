@@ -25,6 +25,12 @@ Prop prop = Prop.getInstance(request);
 String beanName = (String)request.getAttribute("universal_component_beanName");
 Class<ActiveRecord> beanClass = (Class)request.getAttribute("universal_component_beanClass");
 JpaDB dbInstance = (JpaDB)request.getAttribute("universal_component_dbInstance");
+if (dbInstance==null)
+{
+	out.print("Cannot instantiate DB class.");
+	return;
+}
+
 if (beanClass==null)
 {
 	beanClass = (Class) ((ParameterizedType) dbInstance.getClass().getGenericSuperclass()).getActualTypeArguments()[0];

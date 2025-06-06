@@ -16,7 +16,7 @@ function Ok()
 
 if (isFck)
 {
-	
+
 }
 else
 {
@@ -44,56 +44,59 @@ if (dirPath!=null)
    File dir = new File(dirPath);
    File image;
    File files[] = dir.listFiles();
-   int size = files.length;
-   int maxCols = 20;
-   int i;
-   boolean hasMenuIcon = false;
-   int colCounter = 0;
-   for (i=0; i<size; i++)
-   {
-      image = files[i];
-      if (image.isFile()==false)
-      {
-         continue;
-      }
-      if (image.getName().endsWith(".gif")==false)
-      {
-         continue;
-      }
-      if (image.getName().equals("menuicon.gif") || image.getName().equals("editoricon.gif"))
-      {
-         continue;
-      }
 
-      if ((i+1)<size)
+   if(files != null) {
+      int size = files.length;
+      int maxCols = 20;
+      int i;
+      boolean hasMenuIcon = false;
+      int colCounter = 0;
+      for (i=0; i<size; i++)
       {
-         out.println("<td><img src='"+image.getName()+"' onclick=setLabelValue('"+image.getName()+"')></td>");
-      }
-      else
-      {
-         //dopo
-         out.println("<td>&nbsp;</td>");
-      }
-      colCounter++;
+         image = files[i];
+         if (image.isFile()==false)
+         {
+            continue;
+         }
+         if (image.getName().endsWith(".gif")==false)
+         {
+            continue;
+         }
+         if (image.getName().equals("menuicon.gif") || image.getName().equals("editoricon.gif"))
+         {
+            continue;
+         }
 
-      if (colCounter == maxCols)
-      {
-         out.println("</tr>\n");
          if ((i+1)<size)
          {
-            out.println("<tr>");
+            out.println("<td><img src='"+image.getName()+"' onclick=setLabelValue('"+image.getName()+"')></td>");
          }
-         colCounter = 0;
-      }
-   }
+         else
+         {
+            //dopo
+            out.println("<td>&nbsp;</td>");
+         }
+         colCounter++;
 
-   if (colCounter>0)
-   {
-      for (i=colCounter; i<maxCols; i++)
-      {
-         out.println("<td>&nbsp;</td>");
+         if (colCounter == maxCols)
+         {
+            out.println("</tr>\n");
+            if ((i+1)<size)
+            {
+               out.println("<tr>");
+            }
+            colCounter = 0;
+         }
       }
-      out.println("</tr>\n");
+
+      if (colCounter>0)
+      {
+         for (i=colCounter; i<maxCols; i++)
+         {
+            out.println("<td>&nbsp;</td>");
+         }
+         out.println("</tr>\n");
+      }
    }
 }
 

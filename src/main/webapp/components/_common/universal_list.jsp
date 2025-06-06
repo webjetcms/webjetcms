@@ -40,7 +40,9 @@ JpaDB dbInstance = (JpaDB)request.getAttribute("universal_component_dbInstance")
 if (dbInstance==null)
 {
 	out.print("Cannot instantiate DB class.");
+	return;
 }
+
 if (beanClass==null)
 {
 	beanClass = (Class) ((ParameterizedType) dbInstance.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
@@ -184,7 +186,7 @@ List<Pair<String,Object>> filterArgs=null;
 	        	  	else
 	        	  	{
 		        	  	%>
-						<td><label for="<%=filterFieldName %>"><iwcm:text key="<%=beanClass.getSimpleName()+"."+filterFieldName %>"/>:</label></td>
+						<td><label for="<%=filterFieldName %>"><iwcm:text key='<%=beanClass.getSimpleName()+"."+filterFieldName %>'/>:</label></td>
 						<td><input type="text" name="<%=filterFieldName %>" id="<%=filterFieldName %>" value="<%=filterValue %>" /></td>
 		        		<%
 	        	  	}

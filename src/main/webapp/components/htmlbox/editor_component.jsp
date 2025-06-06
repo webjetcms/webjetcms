@@ -247,27 +247,30 @@
 				   if (dir.exists() && dir.canRead())
 				   {
 				      IwcmFile files[] = FileTools.sortFilesByName(dir.listFiles());
-				      int size = files.length;
-				      IwcmFile f;
-				      for (int i=0; i<size; i++)
-				      {
-				         f = files[i];
-				         if (f.isDirectory())
-				         {
-				        	 dirName = f.getName();
 
-				        	 String dirNameDecoded = "";
-				             if (BrowseAction.hasForbiddenSymbol(dirName))
-				            	continue;
+					  if(files != null) {
+						int size = files.length;
+						IwcmFile f;
+						for (int i=0; i<size; i++)
+						{
+							f = files[i];
+							if (f.isDirectory())
+							{
+								dirName = f.getName();
 
-								try
-								{
-									dirNameDecoded = dirName.replace('_', ' ');
-								}
-								catch (Exception ex){}
-								out.print("<option value='"+Tools.escapeHtml(dirName)+"'>"+Tools.escapeHtml(dirNameDecoded)+"</option>");
-				         }
-				      }
+								String dirNameDecoded = "";
+								if (BrowseAction.hasForbiddenSymbol(dirName))
+									continue;
+
+									try
+									{
+										dirNameDecoded = dirName.replace('_', ' ');
+									}
+									catch (Exception ex){}
+									out.print("<option value='"+Tools.escapeHtml(dirName)+"'>"+Tools.escapeHtml(dirNameDecoded)+"</option>");
+							}
+						}
+					  }
 				   }
 	            %>
 			</select>

@@ -1,4 +1,4 @@
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ page import="sk.iway.iwcm.editor.InlineEditor" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ page import="sk.iway.iwcm.editor.InlineEditor,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ page pageEncoding="windows-1250" %>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="${ninja.temp.charset}">
@@ -33,7 +33,8 @@ String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
 PageParams pageParams = new PageParams(request);
 DocDetails doc = (DocDetails)request.getAttribute("docDetails");
-GroupsDB groupsDB = GroupsDB.getInstance(); String fieldA = groupsDB.getPropertyRecursive(doc.getGroupId(), "fieldA");
+GroupsDB groupsDB = GroupsDB.getInstance();
+String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -1, "fieldA");
 
     InlineEditor.setEditingMode(InlineEditor.EditingMode.pageBuilder, request);
 %>

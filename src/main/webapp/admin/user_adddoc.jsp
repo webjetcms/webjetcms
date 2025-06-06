@@ -309,7 +309,7 @@ request.setAttribute("ajaxSupportInserted", true);
 							                        var selected = event.data.selected;
 
 							                        var files = elfinderInstance.selectedFiles();
-							                        if (files.length == 1) {
+							                        if (files != null && files.length == 1) {
 							                        	if(files[0].mime != 'directory') {
 							                        		console.log(files[0]);
 							                            	selectLink(files[0].url.split(":").pop());

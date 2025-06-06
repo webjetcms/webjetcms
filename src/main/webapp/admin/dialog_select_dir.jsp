@@ -21,7 +21,7 @@ public boolean hasSubfolder(IwcmFile f, Identity user)
 		{
 			for(IwcmFile file: user.getWritableFoldersList())
 			{
-				if(file.getVirtualPath().startsWith(files[i].getVirtualPath()))
+				if(file.getVirtualPath() != null && file.getVirtualPath().startsWith(files[i].getVirtualPath()))
 					canShow = true;
 			}
 			return canShow || user.isFolderWritable(files[i].getVirtualPath());

@@ -22,6 +22,11 @@ String listPath = (String)request.getAttribute("universal_component_list");
 
 Class<ActiveRecord> beanClass = (Class)request.getAttribute("universal_component_beanClass");
 JpaDB dbInstance = (JpaDB)request.getAttribute("universal_component_dbInstance");
+if (dbInstance==null)
+{
+	out.print("Cannot instantiate DB class.");
+	return;
+}
 
 Class<ActionBean> stripesClass = (Class)request.getAttribute("universal_component_stripesClass");
 if (stripesClass==null)
