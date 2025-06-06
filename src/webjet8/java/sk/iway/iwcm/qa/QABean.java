@@ -1,10 +1,6 @@
 package sk.iway.iwcm.qa;
 
-import javax.servlet.http.HttpServletRequest;
-
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.tags.support_logic.action.ActionForm;
-import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 /**
  *  Description of the Class
@@ -17,7 +13,7 @@ import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
  *@created      Piatok, 2003, január 17
  *@modified     $Date: 2004/02/25 22:09:55 $
  */
-public class QABean extends ActionForm
+public class QABean
 {
 	private static final long serialVersionUID = -1805144846544468397L;
 
@@ -62,19 +58,6 @@ public class QABean extends ActionForm
 		}
 		//Logger.println(this,"Recoding: "+input);
 		return (input.trim());
-	}
-
-	/**
-	 *  Description of the Method
-	 *
-	 *@param  mapping  Description of the Parameter
-	 *@param  request  Description of the Parameter
-	 */
-	@Override
-	public void reset(ActionMapping mapping, HttpServletRequest request)
-	{
-		publishOnWeb = false;
-		allowPublishOnWeb = false;
 	}
 
 	/**

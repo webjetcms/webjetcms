@@ -5,7 +5,6 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 @Getter
 @Setter
@@ -18,16 +17,13 @@ public class FormTag extends TagSupport {
    protected String action = null;
    private String autocomplete = null;
    private String postbackAction = null;
-   //protected ModuleConfig moduleConfig = null;
    protected String enctype = null;
    protected String focus = null;
    protected String focusIndex = null;
-   protected ActionMapping mapping = null;
    protected String method = null;
    protected String onreset = null;
    protected String onsubmit = null;
    protected boolean scriptLanguage = true;
-   //protected ActionServlet servlet = null;
    protected String style = null;
    protected String styleClass = null;
    protected String styleId = null;
@@ -44,32 +40,34 @@ public class FormTag extends TagSupport {
    protected String type = null;
    protected String scope = null;
 
-   protected String renderToken() {
-      StringBuffer results = new StringBuffer();
-      HttpSession session = pageContext.getSession();
+    protected String renderToken() {
 
-      if (session != null) {
+        HttpSession session = pageContext.getSession();
+
+        return renderToken(session);
+    }
+
+    public static String renderToken(HttpSession session)
+    {
+        StringBuffer results = new StringBuffer();
+        if (session != null) {
             String token =
-               (String) session.getAttribute(TRANSACTION_TOKEN_KEY);
+            (String) session.getAttribute(TRANSACTION_TOKEN_KEY);
 
             if (token != null) {
-               results.append("<div><input type=\"hidden\" name=\"");
-               results.append(TOKEN_KEY);
-               results.append("\" value=\"");
-               results.append(ResponseUtils.filter(token));
+                results.append("<div style=\"display: none;\"><input type=\"hidden\" name=\"");
+                results.append(TOKEN_KEY);
+                results.append("\" value=\"");
+                results.append(token);
 
-               if (this.isXhtml()) {
-                  results.append("\" />");
-               } else {
-                  results.append("\">");
-               }
+                results.append("\" />");
 
-               results.append("</div>");
+                results.append("</div>");
             }
-      }
+        }
 
-      return results.toString();
-   }
+        return results.toString();
+    }
 
    private boolean isXhtml() {
       return CustomTagUtils.getInstance().isXhtml(this.pageContext);

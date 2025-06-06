@@ -1,11 +1,7 @@
 package sk.iway.iwcm.inquiry;
 
-import javax.servlet.http.HttpServletRequest;
-
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.tags.support_logic.action.ActionForm;
-import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 /**
  *  AnswerForm.java
@@ -18,7 +14,7 @@ import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
  *@created      Date: 22.11.2004 20:41:19
  *@modified     $Date: 2004/08/09 08:42:03 $
  */
-public class AnswerForm extends ActionForm
+public class AnswerForm
 {
    private static final long serialVersionUID = 1L;
 
@@ -87,11 +83,6 @@ public class AnswerForm extends ActionForm
 	public void setMultiple(boolean multiple)
 	{
 		this.multiple = multiple;
-	}
-	@Override
-	public void reset(ActionMapping mapping, HttpServletRequest request)
-	{
-		active = false;
 	}
 
    /**

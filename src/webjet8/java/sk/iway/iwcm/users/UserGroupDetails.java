@@ -1,9 +1,6 @@
 package sk.iway.iwcm.users;
 
-import javax.servlet.http.HttpServletRequest;
-
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.tags.support_logic.action.ActionMapping;
 
 /**
  *  Informacie o skupine pouzivatelov
@@ -30,13 +27,6 @@ public class UserGroupDetails
 	private boolean allowUserEdit;
 	private boolean requireEmailVerification = false;
 	private int priceDiscount = 0;
-
-	public void reset(ActionMapping mapping, HttpServletRequest request)
-	{
-		//Logger.println(this,"EditorForm: reset()");
-		requireApprove = false;
-		allowUserEdit = false;
-	}
 
 	public String getUserGroupNameComment()
 	{
