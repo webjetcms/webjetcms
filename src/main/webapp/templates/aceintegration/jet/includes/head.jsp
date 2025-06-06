@@ -1,5 +1,5 @@
 <%@ page import="sk.iway.iwcm.editor.InlineEditor" %>
-<%@ page pageEncoding="windows-1250" %>
+<%@ page pageEncoding="utf-8" %>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="${ninja.temp.charset}">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">

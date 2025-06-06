@@ -1,6 +1,6 @@
 # Aplikace Manažer dokumentů
 
-Aplikace slouží k přehlednému zobrazení zvolených (filtrovaných) dokumentů z [Manažera dokumentů](./README.md).
+Aplikace slouží k přehlednému zobrazení zvolených (filtrovaných) dokumentů z[Manažera dokumentů](./README.md).
 
 ## Použití aplikace
 
@@ -29,14 +29,14 @@ Karta **Základní** slouží k nastavení filtrování dokumentů pro zobrazen�
 - **Adresář** - umíte nastavit, zobrazení dokumentů pouze z konkrétní složky. Přednastavená hodnota je kořenová složka pro nahrání dokumentů. Můžete tuto hodnotu změnit, ale nemůžete jít výše než kořenovou složku.
 - **Výpis dokumentů včetně pod-dokumentů** - přednastaveno je zobrazení dokumentů **POUZE** ze zvoleného (bez podsložek).**všechny** dokumenty ze zvolené složky ale **AJ** pod-složek.
 
-!>**Upozornění:** zvolením možnosti **Výpis dokumentů včetně pod-dokumentů** na složce, která je vysoko ve stromové struktuře se vystavujete riziku práce s velkým množstvím dat. Proto se tato možnost doporučuje při menších množstvích nebo s užším filtrováním.
+!>**Upozornění:** zvolením možnosti**Výpis dokumentů včetně pod-dokumentů** na složce, která je vysoko ve stromové struktuře se vystavujete riziku práce s velkým množstvím dat. Proto se tato možnost doporučuje při menších množstvích nebo s užším filtrováním.
 - **Kód produktu** - zobrazíte pouze dokumenty s daným kódem produktu.
 - **Produkt** - pole automatický nabízí zadefinované produkty v manažeru, podle kterých můžete filtrovat.
 - **Kategorie** - pole automatický nabízí zadefinované kategorie v manažeru, podle kterých můžete filtrovat.
 
 ![](file-archiv-app-tab-base.png)
 
-**Zobrazit jen vybrané dokumenty** - jedná se o speciální možnost, kdy se budou ignorovat všechny dosavadní filtry jako **Adresář** / **Kód produktu** atd., a zobrazí se pouze dokumenty, které mají zadané `globalId` v poli **Zobrazit jen vybrané dokumenty**
+**Zobrazit jen vybrané dokumenty** - jedná se o speciální možnost, kdy se budou ignorovat všechny dosavadní filtry jako**Adresář** / **Kód produktu** atd., a zobrazí se pouze dokumenty, které mají zadané `globalId` v poli **Zobrazit jen vybrané dokumenty**
 
 Všechny dosavadní filtry si zachovají hodnoty, ale nemají žádný vliv a jsou zablokovány. Navíc se ještě zobrazí nová karta **Vybrané dokumenty**.
 

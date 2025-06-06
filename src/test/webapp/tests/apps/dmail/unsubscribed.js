@@ -22,11 +22,15 @@ Scenario('unsubscribed-zakladne testy @baseTest', async ({I, DataTables}) => {
     });
 });
 
-function unsubscribeEmail(I, url, email) {
+async function unsubscribeEmail(I, TempMail, url, email) {
     I.amOnPage(url);
     I.fillField("div.unsubscribeForm input.emailField", email);
     I.amAcceptingPopups();
     I.click("div.unsubscribeForm .bSubmit");
+
+    I.waitForText("Bol Vám zaslaný e-mail, v ktorom prosím potvrďte Vašu voľbu.");
+
+    await handleTempMailSubmission(I, TempMail, email);
 }
 
 function verifyUnsubscribed(I, DT, emailCorrect, emailNotFound) {
@@ -47,15 +51,25 @@ function deleteUnsubscribed(I, DT, DTE, email) {
     I.click("Zmazať", "div.DTE_Action_Remove");
 }
 
-Scenario("Unsubscibed emails", ({I, DT, DTE, Document}) => {
-    var random = I.getRandomText();
-    var email1 = "autotest-unsub-webjet9-"+random+"@balat.sk";
-    var email2 = "autotest-unsub-test23-"+random+"@balat.sk";
+async function handleTempMailSubmission(I, TempMail, email) {
+    TempMail.login(email);
+    TempMail.openLatestEmail();
+    I.waitForElement('#info > div > p > a[href*=".html"]', 10);
+    const url = await I.grabAttributeFrom('#info > div > p > a[href*=".html"]', 'href');
+    TempMail.deleteCurrentEmail();
+    I.amOnPage(url.replace("https", "http"));
+    I.waitForText("Email úspešne odhlásený.", 10);
+}
 
-    unsubscribeEmail(I, "/newsletter/odhlasenie-z-newsletra.html", email1);
+Scenario("Unsubscibed emails", async ({I, DT, DTE, Document, TempMail}) => {
+    var random = I.getRandomText();
+    var email1 = "autotest-demo-"+random+"@fexpost.com";
+    var email2 = "autotest-test23-"+random+"@fexpost.com";
+
+    await unsubscribeEmail(I, TempMail, "/newsletter/odhlasenie-z-newsletra.html", email1);
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
     Document.switchDomain("test23.tau27.iway.sk");
-    unsubscribeEmail(I, "/test23-newsletter/email-unsubscribe.html", email2);
+    await unsubscribeEmail(I, TempMail, "/test23-newsletter/email-unsubscribe.html", email2);
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
     Document.switchDomain(I.getDefaultDomainName());
 

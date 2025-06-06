@@ -18,11 +18,11 @@ Přidáním nové kategorie se vytvoří podsložka, která bude umístěna pod 
 
 Příklad. Máme-li právě zvolená složka ![](select-phones.png ":no-zoom") a vytvoříme nový s názvem **Android**, tak nám vznikne nová složka na adrese ![](select-phones-android.png ":no-zoom")
 
-Novou složku přidáme tlačítkem ![](add-folder-button.png ":no-zoom"). Po jeho stisknutí se zobrazí okno pro přidání složky
+Novou složku přidáme tlačítkem <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-folder-plus" ></i></span></button>. Po jeho stisknutí se zobrazí okno pro přidání složky
 
 ![](toaster-new-folder.png)
 
-Okno obsahuje také informaci o tom, pod jakou složku se tato nová vytvoří. Po (ne)vyplnění pole v okně a potvrzení tlačítkem ![](toaster-new-folder-button.png ":no-zoom") mohou nastat čtyři situace:
+Okno obsahuje také informaci o tom, pod jakou složku se tato nová vytvoří. Po (ne)vyplnění pole v okně a potvrzení tlačítkem <button class="btn btn-primary" type="button">Potvrdit</button> mohou nastat čtyři situace:
 - pokud název nové kategorie nebude zadán, vytvoření se nezdaří a zobrazena bude hláška
 
 ![](toaster-new-folder-A.png)

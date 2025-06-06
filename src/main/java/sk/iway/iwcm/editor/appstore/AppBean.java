@@ -2,12 +2,10 @@ package sk.iway.iwcm.editor.appstore;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.io.IwcmFile;
 
 /**
  *  AppBean.java
@@ -35,6 +33,13 @@ public class AppBean
 	private boolean custom = false;
 	private String componentPath;
 
+	private String lng;
+
+	public AppBean(String lng)
+	{
+		this.lng = lng;
+	}
+
 	public boolean isFree()
 	{
 		if (priceEur == null || priceEur.intValue()==0) return true;
@@ -58,33 +63,42 @@ public class AppBean
 	 */
 	public List<String> getGalleryImages()
 	{
+		return getGalleryImages(imagePath);
+	}
+
+	private List<String> getGalleryImages(String galleryImagesPath) {
 		if (galleryImages != null) return galleryImages;
 
 		List<String> images = new ArrayList<>();
 
-		int lastSlash = imagePath.lastIndexOf('/');
+		int lastSlash = galleryImagesPath.lastIndexOf('/');
 		if (lastSlash > 0)
 		{
-			String basePath = imagePath.substring(0, lastSlash);
+			String basePath = galleryImagesPath.substring(0, lastSlash);
 
-			for (int i=0; i<10; i++)
-			{
-				String imagePathJpg = basePath+"/screenshot-"+i+".jpg";
-				String imagePathGif = basePath+"/screenshot-"+i+".gif";
-				String imagePathPng = basePath+"/screenshot-"+i+".png";
-				if (FileTools.isFile(imagePathJpg))
-				{
-					images.add(imagePathJpg);
-				}
-				else if (FileTools.isFile(imagePathGif))
-				{
-					images.add(imagePathGif);
-				}
-				else if (FileTools.isFile(imagePathPng))
-				{
-					images.add(imagePathPng);
-				}
-			}
+            for (int i = 0; i < 10; i++) {
+                String[] extensions = {".jpg", ".gif", ".png"};
+                boolean found = false;
+
+                for (String ext : extensions) {
+                    String imagePathWithSuffix = basePath + "/screenshot-" + i + "-" + lng + ext;
+                    if (FileTools.isFile(imagePathWithSuffix)) {
+                        images.add(imagePathWithSuffix);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    for (String ext : extensions) {
+                        String imagePathWithoutSuffix = basePath + "/screenshot-" + i + ext;
+                        if (FileTools.isFile(imagePathWithoutSuffix)) {
+                            images.add(imagePathWithoutSuffix);
+                            break;
+                        }
+                    }
+                }
+            }
 		}
 
 		galleryImages = images;
@@ -172,18 +186,23 @@ public class AppBean
     public void setGalleryImages(String images)
     {
 		if (images.endsWith("/")) {
-			//list all images with name screenshot-X.jpg in images folder
-			IwcmFile dir = new IwcmFile(Tools.getRealPath(images));
-			IwcmFile[] files = FileTools.sortFilesByName(dir.listFiles());
-			this.galleryImages = new ArrayList<>();
-			for (IwcmFile file : files) {
-				if (file.getName().startsWith("screenshot-")) {
-					this.galleryImages.add(images + file.getName());
-				}
-			}
+			//reset to null, it will be populated in getGalleryImages() with correct language
+			galleryImages = null;
+			getGalleryImages(images);
 		} else if (Tools.isNotEmpty(images)) {
+			galleryImages = new ArrayList<>();
             String[] galleryImagesArr = Tools.getTokens(images, ",", true);
-            this.galleryImages = Arrays.asList(galleryImagesArr);
+			for (String image : galleryImagesArr) {
+				//try to add -lng suffix to the image path like screenshot-1.jpg->screenshot-1-lng.jpg, check if exists otherwise use the original image path
+				int lastDot = image.lastIndexOf('.');
+				if (lastDot > 0) {
+					String imageWithLng = image.substring(0, lastDot) + "-" + lng + image.substring(lastDot);
+					if (FileTools.isFile(imageWithLng)) {
+						image = imageWithLng;
+					}
+				}
+				galleryImages.add(image);
+			}
         }
     }
 

@@ -335,7 +335,7 @@
             <h2 id="loadingMsg" style="color: green; display: none;"><iwcm:text key="components.file_archiv.import_in_progress"/></h2>
 
             <iwcm:stripForm name="saveFileForm" id="saveFileForm_ID" action="<%=PathFilter.getOrigPathUpload(request)%>" method="post" beanclass="sk.iway.iwcm.system.ConfImportAction">
-                <div style="width: 350px; height: 400px;">
+                <div style="width: 400px; height: 400px;">
 
                     <input type="submit" style="float: right;" class="button" id="saveFileForm" name="saveFile" value="Načítať" onclick="showLoadingMsg()">
                     <div style="overflow: hidden; padding-right: .5em;">

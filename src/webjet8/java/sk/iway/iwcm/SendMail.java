@@ -1,5 +1,6 @@
 package sk.iway.iwcm;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
@@ -534,7 +535,7 @@ public class SendMail
 			Connection db_conn = DBPool.getConnection();
 			try
 			{
-				PreparedStatement ps = db_conn.prepareStatement("INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				PreparedStatement ps = db_conn.prepareStatement("INSERT INTO emails (recipient_email, recipient_name, sender_name, sender_email, subject, url, attachments, retry, sent_date, created_by_user_id, create_date, send_at, message, reply_to, cc_email, bcc_email, domain_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 				try
 				{
 					int counter = 1;
@@ -568,6 +569,7 @@ public class SendMail
 					ps.setString(counter++, replyTo);
 					ps.setString(counter++, ccEmail);
 					ps.setString(counter++, bccEmail);
+					ps.setInt(counter, CloudToolsForCore.getDomainId());
 					ps.execute();
 				}
 				finally { ps.close(); }
@@ -618,7 +620,7 @@ public class SendMail
 						continue;
 					}
 					//Logger.println(this,src);
-					att.add(src);
+					if (att.contains(src)==false) att.add(src);
 				}
 				//jeeff: test na atribut background
 				if (elem.getAttributes().getAttribute(HTML.Attribute.BACKGROUND) != null)
@@ -629,7 +631,7 @@ public class SendMail
 						continue;
 					}
 					//Logger.println(this,src);
-					att.add(src);
+					if (att.contains(src)==false) att.add(src);
 				}
 			}
 		}

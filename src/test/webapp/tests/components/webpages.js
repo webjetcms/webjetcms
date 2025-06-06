@@ -255,6 +255,7 @@ Scenario('Overenie zalozky Na schvalenie', ({ I, DT }) => {
     DT.waitForLoader();
     DT.resetTable();
     //nemame prilis ine co otestovat
+    DT.filterContains("title", "Čakajúce na schválenie-zmena titulku")
     I.waitForText("Čakajúce na schválenie-zmena titulku", 10, "#datatableInit_wrapper");
 
     //prepni domenu a over, ze tam nie je nic ine

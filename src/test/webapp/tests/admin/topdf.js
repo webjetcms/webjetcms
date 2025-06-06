@@ -2,7 +2,7 @@ Feature('admin.topdf');
 
 Scenario("topdf print", async ({ I, Document }) => {
     //chromium PDF viewer is not working in headless mode
-    if ("false"!==process.env.CODECEPT_SHOW) {
+    if (Document.isPdfViewerEnabled()) {
         I.logout();
         I.wait(5);
         I.resizeWindow(1280, 350);

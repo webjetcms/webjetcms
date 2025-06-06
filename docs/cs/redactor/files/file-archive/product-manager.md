@@ -1,6 +1,6 @@
 # Produkty
 
-Sekce produkty slouží k řízení **již existujících** produktů, které byly definovány v [Manažeři dokumentů](./README.md). Povoleny jsou jen 2 akce a to **úprava** a **mazání**. Pro práci s touto sekcí potřebujete právo Manažer dokumentů-Kategorie (`menuFileArchivManagerCategory`).
+Sekce produkty slouží k řízení **již existujících** produktů, které byly definovány v [Manažeři dokumentů](./README.md). Povoleny jsou jen 2 akce a to**úprava** a **mazání**. Pro práci s touto sekcí potřebujete právo Manažer dokumentů-Kategorie (`menuFileArchivManagerCategory`).
 
 ![](product-manager.png)
 

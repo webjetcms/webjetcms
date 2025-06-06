@@ -1,6 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250"
+%><%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.inquiry.*,sk.iway.iwcm.*,java.io.*" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@

@@ -63,10 +63,10 @@ When displayed, it can be filtered by:
 
 ## Allowed countries
 
-The `basketInvoiceSupportedCountries` constant is used to dynamically set the allowed countries where goods can be shipped. The constant contains a comma-separated list of `ccTLD` identifiers.
+For dynamic setting of allowed countries where goods can be shipped there is a constant `basketInvoiceSupportedCountries`. The constant contains a comma-separated list of `ccTLD` identifiers.
 
-**Example** to allow the countries Slovakia, Czech Republic and Poland, the constant must be set as `.sk,.cz,.pl`.
+**Example**, for the permit countries Slovakia, Czech Republic and Poland the constant must be set as `.sk,.cz,.pl`.
 
-## Application display
+## View application
 
 ![](basket.png)

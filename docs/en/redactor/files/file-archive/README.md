@@ -49,6 +49,7 @@ The tab contains basic information for inserting a document.
 - **Category** - enter any category name. The field will automatically offer you other already defined categories in the manager. You can use the management section [Categories](./category-manager.md).
 - **Product code** - enter any product code name
 - **View** - setting to display the document on the page (if you do not want to display the document on the page, uncheck this setting)
+- **Browse** - allows you to enable file indexing. New files have this option enabled by default. Read more
 - **Priority** - using priority you can set the order of documents on the page
 - **Main document** - reference to the main document. The field provides paths to the individual master documents that the current document can reference, making it **By**. Only document paths that meet:
   - it is not the same document that is regulated
@@ -228,3 +229,11 @@ Deleting the main document (which is not a pattern) will also delete all histori
 !>**Warning:** the main document cannot be deleted if it has a pending version to upload.
 
 As with deleting patterns, these scheduled versions can be deleted **IBA** using the table in the tab **Pending**.
+
+## Searching and indexing
+
+By selecting the option **Browse** enable document search via the app **Search** and indexing in external search engines. By default, this option is enabled for new documents. If a document becomes **historical version**, this permission is automatically deactivated, but can be re-enabled as required.
+
+### Google search engines
+
+If the option **Browse** is not allowed, for such a document, the `HTTP` Header `X-Robots-Tag` with value `noindex, nofollow` to prevent such a document from being indexed by search engines such as Google.

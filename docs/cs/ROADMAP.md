@@ -64,6 +64,9 @@ Vysvětlení použitých piktogramů:
 - [ ] +Datatabulky - přidat možnost `hideOnDuplicate` pro karty v editoru, nezapomenout i na třídu`DataTableTab` aby to šlo nastavit iv anotaci.
 - [ ] +Průzkumník - do Média této stránky přidat možnost přesunout se do rodičovské složky.
 - [ ] +Konfigurace - v případě `cluster` instalace doplnit možnost nastavit proměnnou pouze pro aktuální uzel (neuložit ji do databáze). Původně to řešilo výběrové pole `applyToAllClusterNodes`.
+- [ ] +Číselníky - přidat možnost definovat typ pole pro řetězec jako máme ve volitelných polích.
+- [ ] +Statistika - do sekce návštěvnost přidat sumární počet Vidění a Návštěv pro snadný přehled celkové návštěvnosti za zvolené období (součet čísel v tabulce). Mohlo by jít doplnit `footerCallback` - https://datatables.net/examples/advanced\_init/footer\_callback.html
+- [ ] +Zrcadlení struktury - přidat možnost vymazat `sync_id` hodnoty pro zvolenou složku (rekurzivní). Aby bylo snadno možné zrušit/resetovat synchronizaci. Také existuje problém, že naklonuju `SK,DE,EN` pak vypnu `DE` a chci mít jen `EN` ale zrcadlení stále aplikuje změny i na `DE` složku.
 
 ## 2024
 

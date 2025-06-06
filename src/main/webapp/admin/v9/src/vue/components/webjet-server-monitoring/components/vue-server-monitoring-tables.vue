@@ -3,7 +3,7 @@
         <h6 class="server-monitoring-table-header mt-2"><i :class="displayData.icon" style="margin: 0px 10px"></i> {{ displayData.tableName }}</h6>
         <table class="monitoring-table">
             <tr v-for="(data, key, index) in sortedData" :key="index" class="table-data" :data-index="index">
-                <td v-text="translate(key)"></td>
+                <td v-text="translate(key)" style="white-space: nowrap"></td>
                 <td>
                     <strong v-if="['serverActualTime', 'remoteIP', 'serverIP', 'cacheItems', 'serverCpus', 'dbIdle', 'sessionsTotal'].includes(key)">{{ data }}</strong>
                     <span v-else>{{ data }}</span>
@@ -58,6 +58,8 @@
 
                 if (this.keyIndex == 0) {
                     this.sortedData = {
+                        'wjVersion': this.formatedData.wjVersion,
+                        'licenseExpirationDate': this.formatedData.licenseExpirationDate,
                         'serverActualTime': this.formatedData.serverActualTime,
                         'serverStartTime': this.formatedData.serverStartTime,
                         'serverRuntime': this.formatedData.serverRuntime,
@@ -75,10 +77,12 @@
                         'swVmName': this.formatedData.swVmName,
                         'swJavaVersion': this.formatedData.swJavaVersion,
                         'swJavaVendor': this.formatedData.swJavaVendor,
+                        'swSpringVersion': this.formatedData.swSpringVersion,
+                        'swSpringDataVersion': this.formatedData.swSpringDataVersion,
+                        'swSpringSecurityVersion': this.formatedData.swSpringSecurityVersion,
                         'swServerName': this.formatedData.swServerName,
                         'swServerOs': this.formatedData.swServerOs,
-                        'swServerOsVersion': this.formatedData.swServerOsVersion,
-                        'licenseExpirationDate': this.formatedData.licenseExpirationDate
+                        'swServerOsVersion': this.formatedData.swServerOsVersion
                     }
                 } else if (this.keyIndex == 2) {
                     this.sortedData = {

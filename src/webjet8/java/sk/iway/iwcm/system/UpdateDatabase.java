@@ -484,6 +484,7 @@ public class UpdateDatabase
 								message.contains("porušenie jedinečného obmedzenia") ||
 								message.contains("already indexed") ||
 								(message.contains("can't drop column") && message.contains("check that it exists")) ||
+								(message.contains("can't drop index") && message.contains("check that it exists")) ||
 								message.contains("ora-01442 ") || message.contains("stĺpec, ktorý má byť modifikovaný na not null, je už not null") ||
 								//mssql premenovanie stlpca, ktory uz je premenovany
 								message.contains("either the parameter @objname is ambiguous or the claimed @objtype (column) is wrong") ||

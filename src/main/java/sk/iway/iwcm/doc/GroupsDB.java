@@ -3741,7 +3741,8 @@ public class GroupsDB extends DB
 			ctxGroup.setHtmlHead("");
 			ctxGroup.setGroupName(newGroupName);
 			ctxGroup.setNavbar(newGroupName);
-			ctxGroup.setUrlDirName(newGroupName);
+			//set url dirname to blank and call getUrlDirName() to set it to default value
+			ctxGroup.setUrlDirName("");
 			ctxGroup.setUrlDirName(ctxGroup.getUrlDirName());
 
 			ctxGroup.setSortPriority(GroupsDB.getInstance().getDefaultSortPriority(parentGroupId));
