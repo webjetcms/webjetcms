@@ -56,6 +56,7 @@
     - [Položky](/redactor/apps/eshop/invoice/items.md)
     - [Seznam produktů](/redactor/apps/eshop/product-list/README.md)
     - [Nastavení aplikace](/redactor/apps/basket/README.md)
+    - [Způsoby platby](/redactor/apps/eshop/payment-methods/README.md)
   - [Emotikony](/redactor/apps/emoticon/README.md)
   - [Export dat](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)

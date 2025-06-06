@@ -53,4 +53,59 @@ module.exports = {
         const elementSelector = locate("#datatableFieldDTE_Field_editorFields-payments tbody tr:nth-child("+row+") td:nth-child("+col+")");
         return await I.grabCssPropertyFrom(elementSelector, 'color');
     },
+
+    async doGoPayCardPayment(I, shouldBeSuccess = true) {
+        const GOPAY_CARD_PAN = process.env.GOPAY_CARD_PAN;
+        const GOPAY_CARD_EXP = process.env.GOPAY_CARD_EXP;
+        const GOPAY_CARD_CVC = process.env.GOPAY_CARD_CVC;
+
+        I.say("GoPay payment");
+
+        I.waitForText("Platba kartou");
+
+        I.say("Entering card details");
+        I.switchTo('iframe[data-cy="cardCommIframe"]');
+        I.waitForElement("#cardPan", 10);
+        I.fillField("#cardPan", GOPAY_CARD_PAN);
+        I.fillField("#cardExp", GOPAY_CARD_EXP);
+        I.fillField("#cardCvc", GOPAY_CARD_CVC);
+        I.switchTo();
+        I.clickCss("button[data-cy=cardSubmit]");
+
+        // Payment is in process of authorization
+        I.waitForVisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 10);
+        I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 15);
+
+        // Now, there is change, that payment test gate give us chnace to allow/blockk payment
+        I.wait(5);
+
+        I.say("Check, if bonus approval / denial is needed");
+        const num = await I.grabNumberOfVisibleElements("button#confirm");
+        if(num > 0) {
+            I.say("neede, do bonus logic.");
+
+            if(shouldBeSuccess == true) {
+                I.say("Approving payment");
+                I.clickCss("button#confirm");
+            } else {
+                I.say("Denying payment");
+                I.clickCss("button#deny");
+            }
+
+            I.waitForVisible(locate("div").withText("Dokončovanie platby…"), 20);
+            I.waitForInvisible(locate("div").withText("Dokončovanie platby…"), 20);
+        }
+
+        I.say("Waiting for bank response");
+        //Just in case
+        I.wait(2);
+        await I.clickIfVisible('button[data-cy="submitRedirectButton"]');
+
+        I.say("Check payment returned message");
+        if(shouldBeSuccess == true) {
+            I.waitForText("Platba prebehla úspešne.", 20);
+        } else {
+            I.waitForText("Platba sa nepodarila!", 20);
+        }
+    },
 }

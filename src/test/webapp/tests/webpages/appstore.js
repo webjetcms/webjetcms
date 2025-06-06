@@ -255,3 +255,37 @@ Scenario('reset text', ({ I, DTE, Document }) => {
     I.switchTo();
     DTE.save();
 });
+
+Scenario('Should not cache SK gallery images after logout and language switch to CZ for annotated applications', ({ I, DT, DTE }) => {
+    openAppstore(I, DT, DTE);
+
+    I.seeElementInDOM('.app-components-app-cookiebar-title img[src="/components/app-cookiebar/screenshot-1.jpg"]');
+    I.seeElementInDOM('.app-components-app-cookiebar-title img[src="/components/app-cookiebar/screenshot-2.jpg"]');
+    I.seeElementInDOM('.app-demo-komponenta img[src="/components/app-cookiebar/screenshot-2.jpg"]');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_cancel');
+    DTE.cancel("datatableInit");
+    I.relogin("admin", true, true, language = "cs");
+
+    openAppstore(I, DT, DTE);
+
+    I.seeElementInDOM('.app-components-app-cookiebar-title img[src="/components/app-cookiebar/screenshot-1-cs.jpg"]');
+    I.seeElementInDOM('.app-components-app-cookiebar-title img[src="/components/app-cookiebar/screenshot-2-cs.jpg"]');
+    I.seeElementInDOM('.app-demo-komponenta img[src="/components/app-cookiebar/screenshot-2-cs.jpg"]');
+});
+
+function openAppstore(I, DT, DTE){
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.waitForElement(".cke_wysiwyg_frame.cke_reset");
+    I.wait(1);
+
+    I.clickCss('#pills-dt-datatableInit-content-tab');
+    I.clickCss('.cke_button.cke_button__components.cke_button_off');
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.waitForElement('#editorComponent', 10);
+    I.switchTo('#editorComponent');
+    I.waitForElement('#search', 10);
+}

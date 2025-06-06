@@ -66,15 +66,28 @@ scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/te
 ls -la ../../../build/test
 ls -la ../../../build/test/allure-results/history
 
-NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure --steps
+#vygeneruj enviroment.properties subor
+#rm ../../../build/test/environment.properties
+pwd
+printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODECEPT_URL\n" > ../../../build/test/allure-results/environment.properties
+echo -n "java.version=" >> ../../../build/test/allure-results/environment.properties
+java --version | head -n 1 >> ../../../build/test/allure-results/environment.properties
+echo -n "node.version=" >> ../../../build/test/allure-results/environment.properties
+node --version | head -n 1 >> ../../../build/test/allure-results/environment.properties
+echo -n "codeceptjs.version=" >> ../../../build/test/allure-results/environment.properties
+npx codeceptjs --version | head -n 1 >> ../../../build/test/allure-results/environment.properties
+
+ORIGINAL_DIR=$(pwd)
+cd ../../..
+./gradlew test
+echo "$ORIGINAL_DIR"
+cd "$ORIGINAL_DIR"
+
+NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure
 RET_CODE=$?
 
 #skopiruj konfiguracne subory pre allure z gitu do test adresara
 cp -r allure/ ../../../build/test/allure-results
-
-#vygeneruj enviroment.properties subor
-#rm ../../../build/test/environment.properties
-printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODECEPT_URL" >> ../../../build/test/allure-results/environment.properties
 
 #vygeneruj report do test-results adresara
 npx allure generate --clean ../../../build/test/allure-results -o ../../../build/test-results

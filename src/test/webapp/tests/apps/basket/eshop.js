@@ -122,26 +122,8 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.click(locate("button.btn-primary").withText("Zaplatiť"));
     I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
     I.clickCss("//div[contains(text(), 'Platobná karta')]");
-    I.waitForText("Platba kartou");
 
-    //
-    I.say("Entering card details");
-    I.switchTo('iframe[data-cy="cardCommIframe"]');
-    I.waitForElement("#cardPan", 10);
-    I.fillField("#cardPan", "5447380000000006");
-    I.fillField("#cardExp", "1230");
-    I.fillField("#cardCvc", "123");
-    I.switchTo();
-    I.clickCss("button[data-cy=cardSubmit]");
-    I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 30);
-
-    //
-    I.say("Verifying payment failure");
-    I.wait(2);
-    await I.clickIfVisible("#deny");
-    I.waitForVisible('button[data-cy="submitRedirectButton"]', 30);
-    I.clickCss('button[data-cy="submitRedirectButton"]');
-    I.waitForText("Platba sa nepodarila!", 30);
+    await SL.doGoPayCardPayment(I, false);
 
     //
     I.say("Verifying invoice");
@@ -153,15 +135,18 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
 
     //
     I.say("Check pdf invoice");
-    I.handleDownloads("downloads/invoice-" + randomNumber + ".pdf");
+    I.handleDownloads("invoice-" + randomNumber + ".pdf");
     I.clickCss("#downloadInvoiceDetails");
-    I.amInPath("../../../build/test/downloads");
-    I.waitForFile("invoice-" + randomNumber + ".pdf", 30);
+    //I.amInPath("../../../build/test/downloads");
+    I.waitForFile("../../../build/test/invoice-" + randomNumber + ".pdf", 30);
     const filePath = path.resolve(
-      "../../../build/test/downloads/invoice-" + randomNumber + ".pdf"
+      "../../../build/test/invoice-" + randomNumber + ".pdf"
     );
-    I.amOnPage("file://" + filePath);
-    await Document.compareScreenshotElement("body > embed", "invoice.png", 1280, 760, 5);
+
+    if (Document.isPdfViewerEnabled()) {
+      I.amOnPage("file://" + filePath);
+      await Document.compareScreenshotElement("body > embed", "invoice.png", 1280, 760, 5);
+    }
 
     //
     I.say("Proceeding to payment 2");
@@ -203,21 +188,9 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   I.click(locate("button.btn-primary").withText("Zaplatiť"));
   I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
   I.clickCss("//div[contains(text(), 'Platobná karta')]");
-  I.waitForText("Platba kartou");
 
-  //
-  I.say("Entering card details");
-  I.switchTo('iframe[data-cy="cardCommIframe"]');
-  I.waitForElement("#cardPan", 10);
-  I.fillField("#cardPan", "5447380000000006");
-  I.fillField("#cardExp", "1230");
-  I.fillField("#cardCvc", "123");
-  I.switchTo();
-  I.clickCss("button[data-cy=cardSubmit]");
-  I.waitForInvisible(locate("div").withText("Prebieha komunikácia s vašou bankou…"), 10);
-  I.wait(2);
-  await I.clickIfVisible("#confirm");
-  I.waitForText("Platba prebehla úspešne.", 30);
+  // GoPay payment
+  await SL.doGoPayCardPayment(I, true);
 
   //
   I.say("Verifying invoice");
@@ -463,6 +436,8 @@ Scenario("Delete", async ({ I, DT, DTE }) => {
     I.click(DT.btn.basket_delete_button);
     I.waitForVisible(".DTE.modal-content.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
+    I.waitForInvisible("div.DTE_Action_Remove");
+    DT.waitForLoader();
   }
 });
 

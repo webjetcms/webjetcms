@@ -42,6 +42,7 @@
 
     "spellright.language": [
         "cs_CZ",
+        "en_US",
         "sk_SK"
     ],
     "spellright.groupDictionaries": false,

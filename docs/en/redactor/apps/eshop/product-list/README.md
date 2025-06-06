@@ -18,11 +18,11 @@ Adding a new category will create a sub-folder that will be placed under the cur
 
 Example. If we have just selected a folder ![](select-phones.png ":no-zoom") and create a new one called **Android**, a new folder will be created at ![](select-phones-android.png ":no-zoom")
 
-Add a new folder by clicking ![](add-folder-button.png ":no-zoom"). When you press it, the window for adding a folder appears.
+Add a new folder by clicking <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-folder-plus" ></i></span></button>. When you press it, the window for adding a folder appears.
 
 ![](toaster-new-folder.png)
 
-The window also contains information about under which folder this new one will be created. After (un)filling in the fields in the window and confirming with the button ![](toaster-new-folder-button.png ":no-zoom") four situations can occur:
+The window also contains information about under which folder this new one will be created. After (un)filling in the fields in the window and confirming with the button <button class="btn btn-primary" type="button">Confirm</button> four situations can occur:
 - if a new category name is not entered, the creation will fail and a message will be displayed
 
 ![](toaster-new-folder-A.png)

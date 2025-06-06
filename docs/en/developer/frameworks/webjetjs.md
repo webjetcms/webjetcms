@@ -188,7 +188,7 @@ Protection for CSRF tokens and the connection to the server is set in addition t
 
 ## Navigation bar
 
-You can generate a navigation bar, typically with a filter or rollback, by calling a JS function `JS.breadcrumb`, which receives as a parameter a JSON configuration object in the format:
+You can generate a navigation bar, typically with a filter or a return, by calling a JS function `JS.breadcrumb`, which receives as a parameter a JSON configuration object in the format:
 
 ```javascript
 {

@@ -26,7 +26,7 @@ Scenario('Add new file and edit', async ({ I, DT, DTE }) => {
     I.say("Phase2 - Editing the added file");
     DT.filterEquals('virtualFileName', editablePdfVirtualFileName);
     I.clickCss('button.buttons-select-all');
-    const validFrom = SL.getFutureTimestamp(120);
+    const validFrom = SL.getFutureTimestamp(0);
     const validTo = SL.getFutureTimestamp(240);
     SL.editFile(editablePdfVirtualFileName+'-chan.ge', null, validFrom, validTo, null);
     DTE.save('fileArchiveDataTable');
@@ -43,7 +43,7 @@ Scenario('Add new file and edit', async ({ I, DT, DTE }) => {
     DTE.save('fileArchiveDataTable');
     I.waitForElement("div.toast-message", 10);
     I.see("Dokument bol úspešne premenovaný.", "div.toast-message");
-    
+
     // 5. Overenie, že sa súbor premenoval a funguje a obsah sa nezmenil
     I.say("Phase5 - Verifying that the file was renamed, is functioning, and its content remains unchanged");
     I.amOnPage(SL.elfinder);
