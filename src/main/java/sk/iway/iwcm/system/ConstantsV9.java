@@ -25,6 +25,7 @@ public class ConstantsV9 {
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
+		Constants.setString("deepl_api_usage_url", "https://api-free.deepl.com/v2/usage", "translations", "");
 
 		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, "forms"),
 				"Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.");
@@ -141,6 +142,8 @@ public class ConstantsV9 {
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
+
+		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "translations", "");
 	}
 
 	/**

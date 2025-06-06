@@ -1,13 +1,18 @@
 package sk.iway.iwcm.system.translation;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.json.JSONObject;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
@@ -27,6 +32,40 @@ public class TranslationService {
         return translate(text, fromLanguage, toLanguage);
     }
 
+    private static TranslationEngine getTranslationEngine() {
+        //In future maybe some logic to choose translation engine
+
+        String[] engineClasses = Constants.getArray("translationEngineClasses");
+        if(engineClasses == null || engineClasses.length == 0) return null;
+
+        List<TranslationEngine> configuredWithoutFreeCharacters = new ArrayList<>();
+        for(String engineClass : engineClasses) {
+            try {
+                Class<?> clazz = Class.forName(engineClass);
+                if (TranslationEngine.class.isAssignableFrom(clazz)) {
+                    TranslationEngine instance = (TranslationEngine) clazz.getDeclaredConstructor().newInstance();
+                    if(instance.isConfigured() == true) {
+                        if(instance.numberOfFreeCharacters() == null || instance.numberOfFreeCharacters() <= 0) {
+                            // Engine is configured, but has no free characters, we will not use it
+                            configuredWithoutFreeCharacters.add(instance);
+                        } else {
+                            // Engine is configured and has free characters, we can use it
+                            return instance;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Logger.error(TranslationService.class, "Error while initializing translation engine: " + engineClass, e);
+            }
+        }
+
+        //There is no configured translation engine with free characters, we will return the first one without free characters (if exists)
+        if(configuredWithoutFreeCharacters.size() > 0)
+            return configuredWithoutFreeCharacters.get(0);
+
+        return null;
+    }
+
     /**
      * Prelozi zadany text (slovo/veta/HTML kod) zo zdrojoveho do cieloveho jazyka (2 pismenovy kod)
      * @param text
@@ -35,53 +74,55 @@ public class TranslationService {
      * @return
      */
     public static String translate(String text, String fromLanguage, String toLanguage) {
-
         try {
 
             if (Tools.isEmpty(text) || text.contains("autotest")) return text;
             if (Tools.isEmpty(fromLanguage) || Tools.isEmpty(toLanguage) || fromLanguage.equalsIgnoreCase(toLanguage)) return text;
 
-            if (DeepL.isConfigured()) {
+            TranslationEngine translationEngine = getTranslationEngine();
+            if(translationEngine == null) {
+                Logger.warn(TranslationService.class, "No translation engine was found or configured.");
+                return text;
+            }
 
-                // FInd and replace all !INCLUDE()! with __INCLUDE_PLACEHOLDER_x value (x is number)
-                String textToTranslate = text;
-                Map<Integer, String> replacedIncludes = new HashMap<>();
+            // FInd and replace all !INCLUDE()! with __INCLUDE_PLACEHOLDER_x value (x is number)
+            String textToTranslate = text;
+            Map<Integer, String> replacedIncludes = new HashMap<>();
+            try {
+                String regex = "(!INCLUDE\\([^)]+\\)!)";
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(textToTranslate);
+
+                int findIncludes = 1;
+                while (matcher.find()) {
+                    String replaceText = "__INCLUDE_PLACEHOLDER_" + findIncludes + "__";
+                    replacedIncludes.put(findIncludes, matcher.group());
+                    textToTranslate = textToTranslate.replaceFirst(Pattern.quote(matcher.group()), Matcher.quoteReplacement(replaceText));
+                    findIncludes++;
+                }
+            } catch (Exception ex) {
+                //Something went wrong, we will not doc data
+                Logger.debug(DocMirroringServiceV9.class, "Error while extracting !INLCUDE()! from doc data.", ex);
+                replacedIncludes.clear();
+            }
+
+            if(replacedIncludes.isEmpty() == true) {
+                //Translate without include replenish, because there is nothing to replace
+                return translationEngine.translate(text, fromLanguage, toLanguage);
+            } else {
                 try {
-                    String regex = "(!INCLUDE\\([^)]+\\)!)";
-                    Pattern pattern = Pattern.compile(regex);
-                    Matcher matcher = pattern.matcher(textToTranslate);
-
-                    int findIncludes = 1;
-                    while (matcher.find()) {
-                        String replaceText = "__INCLUDE_PLACEHOLDER_" + findIncludes + "__";
-                        replacedIncludes.put(findIncludes, matcher.group());
-                        textToTranslate = textToTranslate.replaceFirst(Pattern.quote(matcher.group()), Matcher.quoteReplacement(replaceText));
-                        findIncludes++;
+                    String translatedText = translationEngine.translate(textToTranslate, fromLanguage, toLanguage);
+                    for(Map.Entry<Integer, String> entry : replacedIncludes.entrySet()) {
+                        String replaceText = "__INCLUDE_PLACEHOLDER_" + entry.getKey() + "__";
+                        translatedText = translatedText.replace(replaceText, Matcher.quoteReplacement(entry.getValue()));
                     }
+                    return translatedText;
+
                 } catch (Exception ex) {
                     //Something went wrong, we will not doc data
-                    Logger.debug(DocMirroringServiceV9.class, "Error while extracting !INLCUDE()! from doc data.", ex);
-                    replacedIncludes.clear();
-                }
-
-                if(replacedIncludes.isEmpty() == true) {
-                    //Translate without include replenish, because there is nothing to replace
-                    return DeepL.translate(text, fromLanguage, toLanguage);
-                } else {
-                    try {
-                        String translatedText = DeepL.translate(textToTranslate, fromLanguage, toLanguage);
-                        for(Map.Entry<Integer, String> entry : replacedIncludes.entrySet()) {
-                            String replaceText = "__INCLUDE_PLACEHOLDER_" + entry.getKey() + "__";
-                            translatedText = translatedText.replace(replaceText, Matcher.quoteReplacement(entry.getValue()));
-                        }
-                        return translatedText;
-
-                    } catch (Exception ex) {
-                        //Something went wrong, we will not doc data
-                        Logger.debug(DocMirroringServiceV9.class, "Error while returning !INLCUDE()! in doc data after translate. Use doc data translation without replacing.", ex);
-                        // Translate default text
-                        return DeepL.translate(text, fromLanguage, toLanguage);
-                    }
+                    Logger.debug(DocMirroringServiceV9.class, "Error while returning !INLCUDE()! in doc data after translate. Use doc data translation without replacing.", ex);
+                    // Translate default text
+                    return translationEngine.translate(text, fromLanguage, toLanguage);
                 }
             }
 
@@ -90,5 +131,17 @@ public class TranslationService {
         }
 
         return text;
+    }
+
+    public static JSONObject getTranslationInfo() {
+        TranslationEngine translationEngine = getTranslationEngine();
+
+        if(translationEngine == null) return null;
+
+        JSONObject object = new JSONObject();
+        object.put("engineName", translationEngine.engineName());
+        object.put("numberOfFreeCharacters", translationEngine.numberOfFreeCharacters());
+
+        return object;
     }
 }
