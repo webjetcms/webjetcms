@@ -1,28 +1,8 @@
-<%@ page pageEncoding="utf-8" contentType="text/javascript" %><%
+<%@page import="java.util.Map"%><%@ page pageEncoding="utf-8" contentType="text/javascript" %><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 %><%@ page import="sk.iway.iwcm.Constants" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-/*
- * Javascript WYSIWYG HTML control
- * Version 0.2
- *
- * Copyright (c) 2004 Paul James
- * All rights reserved.
- *
- * This software is covered by the BSD License, please find a copy of this
- * license at http://peej.co.uk/sandbox/wysiwyg/
- */
-
-// these are constants but IE doesn't like the const keyword
-var WYSIWYG_VALUE_NONE = 0;
-var WYSIWYG_VALUE_PROMPT = 1;
-var WYSIWYG_VALUE_FUNCTION = 2;
-var WYSIWYG_BUTTONS_AS_FORM_ELEMENTS = false;
-
 <%
 String forumWysiwygIcons = Constants.getString("forumWysiwygIcons");
 %>

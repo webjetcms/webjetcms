@@ -8,13 +8,10 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="java.io.StringWriter" %>
 <%@ page import="java.io.PrintWriter" %>
 <%@ page import="java.util.*" %>
-<%@ page import="org.apache.struts.util.ResponseUtils" %>
+<%@ page import="sk.iway.iwcm.tags.support_logic.ResponseUtils" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -407,6 +404,50 @@ static {
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountActionBean\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
+
+	//Replace logic:present with iwcm:present
+	replaces.add(new OptionDto("<" + "logic:present", "<" + "iwcm:present", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:present", "</" + "iwcm:present", ".jsp"));
+
+	//Replace logic:notPresent with iwcm:notPresent
+	replaces.add(new OptionDto("<" + "logic:notPresent", "<" + "iwcm:notPresent", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:notPresent", "</" + "iwcm:notPresent", ".jsp"));
+
+	//Replace logic:empty with iwcm:empty
+	replaces.add(new OptionDto("<" + "logic:empty", "<" + "iwcm:empty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:empty", "</" + "iwcm:empty", ".jsp"));
+
+	//Replace logic:notEmpty with iwcm:notEmpty
+	replaces.add(new OptionDto("<" + "logic:notEmpty", "<" + "iwcm:notEmpty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:notEmpty", "</" + "iwcm:notEmpty", ".jsp"));
+
+	//Replace logic:equal with iwcm:equal
+	replaces.add(new OptionDto("<" + "logic:equal", "<" + "iwcm:equal", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:equal", "</" + "iwcm:equal", ".jsp"));
+
+	//Replace logic:iterate with iwcm:iterate
+	replaces.add(new OptionDto("<" + "logic:iterate", "<" + "iwcm:iterate", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:iterate", "</" + "iwcm:iterate", ".jsp"));
+
+	//Replace bean:write with iwcm:beanWrite
+	replaces.add(new OptionDto("<" + "bean:write", "<" + "iwcm:beanWrite", ".jsp"));
+
+	//Replace html:hidden with iwcm:hidden
+	replaces.add(new OptionDto("<" + "html:hidden", "<" + "iwcm:hidden", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:hidden", "</" + "iwcm:hidden", ".jsp"));
+
+	//Replace html:options with iwcm:options
+	replaces.add(new OptionDto("<" + "html:options", "<" + "iwcm:options", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:options", "</" + "iwcm:options", ".jsp"));
+
+	//REplace old Struts imports with new ones
+	replaces.add(new OptionDto("import=\"org.apache.struts.util.ResponseUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.ResponseUtils\"", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.util.ResponseUtils", "sk.iway.iwcm.tags.support_logic.ResponseUtils", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.taglib.html.FormTag.", "sk.iway.iwcm.tags.support_logic.FormTag.", ".jsp"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.util.RequestUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.RequestUtils\"", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY", ".jsp"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessages\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessages\"", ".jsp"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessage\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessage\"", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -504,6 +545,25 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 						content = Tools.replace(content, "<html:file property=\"file\"", "<input type=\"file\" name=\"file\"");
 					}
 				}
+			}
+
+			boolean containIwcmTaglib = content.contains("uri=\"/WEB-INF/iwcm.tld\"");
+			if(content.contains("<" + "iwcm:present") || content.contains("<" + "iwcm:notPresent") || content.contains("<" + "iwcm:empty") || content.contains("<" + "iwcm:notEmpty") || content.contains("<" + "iwcm:equal")
+				|| content.contains("<" + "iwcm:iterate") || content.contains("<" + "iwcm:beanWrite") || content.contains("<" + "iwcm:hidden") || content.contains("<" + "iwcm:options")) {
+				//Needed taglib is missing, add it
+				if(containIwcmTaglib == false) {
+					hasChange = true;
+					content = "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">" + content;
+				}
+			}
+
+			if(content.contains("") || content.contains("") || content.contains("")) {
+				hasChange = true;
+
+				// Remove old Struts taglibs
+				content = Tools.replaceRegex(content, "<\\s*%\\s*@[^<>]*uri=\"/WEB-INF/struts-logic.tld\"[^<]*", "", false);
+				content = Tools.replaceRegex(content, "<\\s*%\\s*@[^<>]*uri=\"/WEB-INF/struts-bean.tld\"[^<]*", "", false);
+				content = Tools.replaceRegex(content, "<\\s*%\\s*@[^<>]*uri=\"/WEB-INF/struts-html.tld\"[^<]*", "", false);
 			}
 
 			{
@@ -682,7 +742,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	<div style="white-space: pre"><%
 		if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
 			checkDir("/admin/", saveFile, compileFile, out, request, response);
-			checkDir("/components/", saveFile, compileFile, out, request, response);
+
 			checkDir("/apps/", saveFile, compileFile, out, request, response);
 			checkDir("/templates/", saveFile, compileFile, out, request, response);
 		}

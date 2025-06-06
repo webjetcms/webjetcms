@@ -3,9 +3,6 @@ java.beans.XMLEncoder,java.io.BufferedOutputStream,java.io.FileOutputStream,sk.i
 net.sourceforge.stripes.action.Resolution,sk.iway.iwcm.users.*"%><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
 taglib uri="/WEB-INF/displaytag.tld" prefix="display" %><iwcm:checkLogon admin="true" perms="menuConfig"/><%!
 /**
  * Skonvertuje objekt do XML streamu

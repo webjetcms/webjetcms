@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.users.UsersDB"%>
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%@page import="sk.iway.iwcm.components.crud.UniversalCrudAction"%>
 <%@page import="java.lang.reflect.Method"%>
 <%@page import="sk.iway.iwcm.utils.Pair"%>
@@ -11,9 +11,6 @@
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*, java.util.*" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"
@@ -25,6 +22,11 @@ String listPath = (String)request.getAttribute("universal_component_list");
 
 Class<ActiveRecord> beanClass = (Class)request.getAttribute("universal_component_beanClass");
 JpaDB dbInstance = (JpaDB)request.getAttribute("universal_component_dbInstance");
+if (dbInstance==null)
+{
+	out.print("Cannot instantiate DB class.");
+	return;
+}
 
 Class<ActionBean> stripesClass = (Class)request.getAttribute("universal_component_stripesClass");
 if (stripesClass==null)
@@ -217,7 +219,7 @@ request.setAttribute("items", items);
 <display:table class="sort_table" export="true" cellspacing="0" cellpadding="0" name="items" uid="row" requestURI="<%=PathFilter.getOrigPath(request)%>" pagesize="30" >
 
 	<display:column titleKey='<%=beanClass.getSimpleName()+"."+idField.getName() %>' sortable="true" sortProperty="<%=idField.getName() %>">
- 		<a href="javascript:edit(<bean:write name="row" property="<%=idField.getName() %>"/>)"><bean:write name="row" property="<%=idField.getName() %>"/></a>
+ 		<a href="javascript:edit(<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>)"><iwcm:beanWrite name="row" property="<%=idField.getName() %>"/></a>
 	</display:column>
 	<%
   	for (Field field : fields)
@@ -243,8 +245,8 @@ request.setAttribute("items", items);
 	}
    %>
    	<display:column style="text-align:center;" media="html" titleKey="components.captcha.tools">
-   		<a href="javascript:edit(<bean:write name="row" property="<%=idField.getName() %>"/>)" title='<iwcm:text key="components.banner.edit"/>' class="iconEdit">&nbsp;</a>
-		<a href="javascript:confirmDelete(<bean:write name="row" property="<%=idField.getName() %>"/>);" title='<iwcm:text key="button.delete"/>' class="iconDelete">&nbsp;</a>
+   		<a href="javascript:edit(<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>)" title='<iwcm:text key="components.banner.edit"/>' class="iconEdit">&nbsp;</a>
+		<a href="javascript:confirmDelete(<iwcm:beanWrite name="row" property="<%=idField.getName() %>"/>);" title='<iwcm:text key="button.delete"/>' class="iconDelete">&nbsp;</a>
  	</display:column>
 
 

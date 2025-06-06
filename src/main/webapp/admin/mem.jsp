@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.database.SimpleQuery"%>
+<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.database.SimpleQuery"%>
 <%@ page contentType="text/html" import="java.util.*,java.io.*,sk.iway.iwcm.*" %>
 <%@page import="sk.iway.iwcm.stat.SessionHolder"%>
 <%@page import="sk.iway.iwcm.system.dbpool.ConfigurableDataSource"%><%!
@@ -62,7 +62,7 @@ body
        out.println("Cache = <b>"+cacheSize+"</b><br>");
        out.println("Sessions = <b>"+openSessions+"</b><br>");
        out.println("Remote IP = <b>"+Tools.getRemoteIP(request)+"</b><br>");
-       out.println("X-forwarded-for = <b>"+ org.apache.struts.util.ResponseUtils.filter(request.getHeader("X-forwarded-for")) +"</b><br>");
+       out.println("X-forwarded-for = <b>"+ sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getHeader("X-forwarded-for")) +"</b><br>");
        out.println("Node = <b>"+Constants.getString("clusterMyNodeName")+"</b><br>");
 
        Locale l = Locale.getDefault();

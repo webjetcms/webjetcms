@@ -4,10 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.Tools" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 BannerBean bBean = new BannerBean();
 
@@ -53,13 +49,13 @@ function resizeWindow()
 
 <body>
 
-<logic:present name="picture">
+<iwcm:present name="picture">
 	<p align="center">
 	   <a href='javascript:window.close()'><img onLoad="resizeWindow()" name="image" id='image' src='<%=bBean.getBannerLocation()%>' border='0' alt='<iwcm:text key="components.banner.banner_preview"/>'></a>
 	</p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="flash">
+<iwcm:present name="flash">
 	<script type="text/javascript">
 	   window.resizeTo(<%=bBean.getWidth()%>+100, <%=bBean.getHeight()%>+100);
 	</script>
@@ -77,11 +73,11 @@ function resizeWindow()
 			</EMBED>
 		</OBJECT>
 	</p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="html">
+<iwcm:present name="html">
 	<%=bBean.getHtmlCode()%>
-</logic:present>
+</iwcm:present>
 
 </body>
 </html>

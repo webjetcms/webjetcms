@@ -3,9 +3,7 @@
 
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
+<%@
 		taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
 		taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %><iwcm:checkLogon admin="true" perms="cmp_news"/>
 <%@page import="sk.iway.iwcm.Tools"%>
@@ -18,7 +16,7 @@ request.setAttribute("perexGroupsNot", request.getAttribute("perexGroups"));
 
 
 <%--<html:select property="perexGroupNot" styleId="real" multiple="true" size="6">--%>
-   <%--<html:options collection="perexGroupsNot" property="perexGroupId" labelProperty="perexGroupNameId"/>--%>
+   <%--<iwcm:options collection="perexGroupsNot" property="perexGroupId" labelProperty="perexGroupNameId"/>--%>
 <%--</html:select>--%>
 <select name="perexGroupNot" multiple="true" size="6">
 	<c:forEach items="${perexGroupsNot}" var="option"><%sk.iway.iwcm.doc.PerexGroupBean option = (sk.iway.iwcm.doc.PerexGroupBean)pageContext.getAttribute("option");%>

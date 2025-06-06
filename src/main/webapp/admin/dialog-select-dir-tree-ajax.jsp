@@ -6,7 +6,7 @@ response.setHeader("Pragma","No-Cache");
 response.setDateHeader("Expires",0);
 response.setHeader("Cache-Control","no-Cache");
 
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,java.util.*" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/><%
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,java.util.*" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/><%
 String parentId = Tools.getRequestParameter(request, "parentId");
 String path = Tools.getRequestParameter(request, "path");
 
@@ -61,8 +61,9 @@ public boolean hasSubdirs(IwcmFile f, Identity user)
 		for(IwcmFile writableFile: user.getWritableFoldersList())
 		{
 			//System.out.println("compare: "+writableFile.getVirtualPath()+" vs: "+files[i].getVirtualPath()+" "+writableFile.getVirtualPath().startsWith(files[i].getVirtualPath()));
-			if(writableFile.getVirtualPath().startsWith(files[i].getVirtualPath()))
-				canShow = true;
+			if(writableFile.getVirtualPath() != null && files[i].getVirtualPath() != null)
+				if(writableFile.getVirtualPath().startsWith(files[i].getVirtualPath()))
+					canShow = true;
 		}
 
 		if(user.isFolderWritable(files[i].getVirtualPath()))

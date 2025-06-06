@@ -2,16 +2,16 @@
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
+<iwcm:checkLogon admin="true"/>
 <%@ page import="sk.iway.iwcm.Tools"%>
 <%@ page import="sk.iway.iwcm.PageParams" %>
 <%@ page import="sk.iway.iwcm.Constants" %>
 <%@ page import="java.util.List" %>
 <%
 int groupId = -1;
-DocDetails doc = DocDB.getInstance().getDoc(Tools.getIntValue((String)request.getAttribute("docid"), -1));
+
+DocDetails doc = request.getAttribute("docid") != null ? DocDB.getInstance().getDoc(Tools.getIntValue((String)request.getAttribute("docid"), -1)) : null;
+
 if(doc != null && doc.getDocId() > 0)
 {
 	groupId = doc.getGroupId();
@@ -19,10 +19,10 @@ if(doc != null && doc.getDocId() > 0)
 }
 else
 {
-	if(request.getAttribute("groupId") != null)
-		groupId = (Integer)request.getAttribute("groupId");
-	else if(session.getAttribute("groupId") != null)
-		groupId = (Integer)session.getAttribute("groupId");
+	if(request.getAttribute("groupId") != null){
+		groupId = Tools.getIntValue((String)request.getAttribute("groupId"), -1);
+	} else if(session.getAttribute("groupId") != null)
+		groupId = Tools.getIntValue((String)session.getAttribute("groupId"), -1);
 }
 
 PageParams pageParams = new PageParams(request);
@@ -32,7 +32,7 @@ if (groupId < 1) {
 }
 if (groupId < 1)
 {
-	groupId = Tools.getIntValue((String)session.getAttribute(Constants.SESSION_GROUP_ID), -1);
+	groupId = session.getAttribute(Constants.SESSION_GROUP_ID) != null ? Tools.getIntValue((String)session.getAttribute(Constants.SESSION_GROUP_ID), -1) : -1;
 }
 
 System.out.println("--------- groupId="+groupId+" groupIds="+pageParams.getValue("groupIds", "-1"));
@@ -79,7 +79,8 @@ request.setAttribute("perexGroups", perexGroups);
 
 <select name="perexGroup" id="real" multiple="true" size="6" style="display: none;">
 	<%
-		String perexGroupsString = (String)request.getAttribute("perexGroup");
+		String perexGroupsString = request.getAttribute("perexGroup") != null ? (String)request.getAttribute("perexGroup") : null;
+
 		//System.out.println("perexGroupsString: "+perexGroupsString);
 		for (PerexGroupBean perexGroup: perexGroups)
 		{

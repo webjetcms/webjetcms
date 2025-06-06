@@ -11,8 +11,7 @@ import java.util.StringTokenizer;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.apache.struts.upload.FormFile;
-import org.apache.struts.util.ResponseUtils;
+import sk.iway.iwcm.tags.support_logic.FormFile;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -35,6 +34,7 @@ import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
 
 /**

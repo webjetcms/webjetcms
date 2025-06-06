@@ -9,8 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.struts.util.ResponseUtils;
-
+import sk.iway.iwcm.tags.support_logic.ResponseUtils;
 import sk.iway.iwcm.utils.MapUtils;
 
 /**
@@ -76,7 +75,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 		String[] values = super.getParameterValues(parameter);
 		if (values==null || values.length<1) return values;
 
-		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje ResponseUtils.filter
+		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje CustomResponseUtils.filter
 		String[] valuesFiltered = new String[values.length];
 		if (values!=null && values.length>0)
 		{

@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.upload.FormFile;
+import sk.iway.iwcm.tags.support_logic.FormFile;
 
 import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;
@@ -48,6 +48,7 @@ import sk.iway.iwcm.io.JarPackaging;
 import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.users.UserDetails;
 
 /**
  *  FileTools.java - podporne nastroje pre pracu so subormi
@@ -482,6 +483,16 @@ public class FileTools
 			else length = decimalFormatBezMiest.format(lengthLong) + " B";
 		}
 		return(length);
+	}
+
+	/**
+	 * Metoda vrati zoznam stranok (url+nazov) a suborov kde sa nachadza
+	 * @param url - url adresa suboru, napr. /images/wjlogo.gif
+	 * @return
+	 */
+	public static List<Column> getFileUsage(String url, UserDetails user) {
+		//Back compatibility
+		return getFileUsage(url, new Identity(user));
 	}
 
 	/**

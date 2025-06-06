@@ -2,7 +2,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <iwcm:checkLogon admin="true"/>
 <jsp:useBean id="iwcm_useriwcm" scope="session" type="sk.iway.iwcm.Identity"/>
 
@@ -39,8 +38,8 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		      <tr>
 		         <td colspan="2" align="right" style="padding-top: 8px;" class="hmskinTopInfo">
 		            <img src="images/hmskin/icon_logged_user.gif" width="16" height="16" align="absmiddle">
-		            <iwcm:text key="top.logged_user"/>: <% if (Tools.isEmpty(Constants.getString("NTLMDomainController"))) { %><a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do');" target="mainFrame"><% } %><bean:write name="iwcm_useriwcm" property="fullName"/></a>
-		            &nbsp;&nbsp;&nbsp;		            
+		            <iwcm:text key="top.logged_user"/>: <% if (Tools.isEmpty(Constants.getString("NTLMDomainController"))) { %><a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do');" target="mainFrame"><% } %><iwcm:beanWrite name="iwcm_useriwcm" property="fullName"/></a>
+		            &nbsp;&nbsp;&nbsp;
 		            <a href="javascript:m_click_help()"><img src="images/hmskin/icon_help.gif" width="19" height="20" align="absmiddle" border=0> <iwcm:text key="menu.top.help"/></a>
 		            &nbsp;&nbsp;&nbsp;
 		            <a href="logoff.do" target="_top"><img src="images/hmskin/icon_logoff.gif" width="16" height="16" align="absmiddle" border=0> <iwcm:text key="menu.logout"/></a>

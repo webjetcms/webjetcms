@@ -1,3 +1,4 @@
+<%@page import="java.util.List"%>
 <%@ page pageEncoding="utf-8" %>
 
 <h1>Forms</h1>
@@ -1979,10 +1980,10 @@
             <div class="row">
                 <div class="col-4">
                     <div class="list-group" id="list-tab" role="tablist">
-                        <a class="list-group-item list-group-item-action active" id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">Home</a>
-                        <a class="list-group-item list-group-item-action" id="list-profile-list" data-toggle="list" href="#list-profile" role="tab" aria-controls="profile">Profile</a>
-                        <a class="list-group-item list-group-item-action" id="list-messages-list" data-toggle="list" href="#list-messages" role="tab" aria-controls="messages">Messages</a>
-                        <a class="list-group-item list-group-item-action" id="list-settings-list" data-toggle="list" href="#list-settings" role="tab" aria-controls="settings">Settings</a>
+                        <a class="list-group-item list-group-item-action active" id="list-home-list" data-bs-toggle="list" href="#list-home" role="tab" aria-controls="home">Home</a>
+                        <a class="list-group-item list-group-item-action" id="list-profile-list" data-bs-toggle="list" href="#list-profile" role="tab" aria-controls="profile">Profile</a>
+                        <a class="list-group-item list-group-item-action" id="list-messages-list" data-bs-toggle="list" href="#list-messages" role="tab" aria-controls="messages">Messages</a>
+                        <a class="list-group-item list-group-item-action" id="list-settings-list" data-bs-toggle="list" href="#list-settings" role="tab" aria-controls="settings">Settings</a>
                     </div>
                 </div>
                 <div class="col-8">
@@ -2001,10 +2002,10 @@
     &lt;div class=&quot;row&quot;&gt;
       &lt;div class=&quot;col-4&quot;&gt;
         &lt;div class=&quot;list-group&quot; id=&quot;list-tab&quot; role=&quot;tablist&quot;&gt;
-          &lt;a class=&quot;list-group-item list-group-item-action active&quot; id=&quot;list-home-list&quot; data-toggle=&quot;list&quot; href=&quot;#list-home&quot; role=&quot;tab&quot; aria-controls=&quot;home&quot;&gt;Home&lt;/a&gt;
-          &lt;a class=&quot;list-group-item list-group-item-action&quot; id=&quot;list-profile-list&quot; data-toggle=&quot;list&quot; href=&quot;#list-profile&quot; role=&quot;tab&quot; aria-controls=&quot;profile&quot;&gt;Profile&lt;/a&gt;
-          &lt;a class=&quot;list-group-item list-group-item-action&quot; id=&quot;list-messages-list&quot; data-toggle=&quot;list&quot; href=&quot;#list-messages&quot; role=&quot;tab&quot; aria-controls=&quot;messages&quot;&gt;Messages&lt;/a&gt;
-          &lt;a class=&quot;list-group-item list-group-item-action&quot; id=&quot;list-settings-list&quot; data-toggle=&quot;list&quot; href=&quot;#list-settings&quot; role=&quot;tab&quot; aria-controls=&quot;settings&quot;&gt;Settings&lt;/a&gt;
+          &lt;a class=&quot;list-group-item list-group-item-action active&quot; id=&quot;list-home-list&quot; data-bs-toggle=&quot;list&quot; href=&quot;#list-home&quot; role=&quot;tab&quot; aria-controls=&quot;home&quot;&gt;Home&lt;/a&gt;
+          &lt;a class=&quot;list-group-item list-group-item-action&quot; id=&quot;list-profile-list&quot; data-bs-toggle=&quot;list&quot; href=&quot;#list-profile&quot; role=&quot;tab&quot; aria-controls=&quot;profile&quot;&gt;Profile&lt;/a&gt;
+          &lt;a class=&quot;list-group-item list-group-item-action&quot; id=&quot;list-messages-list&quot; data-bs-toggle=&quot;list&quot; href=&quot;#list-messages&quot; role=&quot;tab&quot; aria-controls=&quot;messages&quot;&gt;Messages&lt;/a&gt;
+          &lt;a class=&quot;list-group-item list-group-item-action&quot; id=&quot;list-settings-list&quot; data-bs-toggle=&quot;list&quot; href=&quot;#list-settings&quot; role=&quot;tab&quot; aria-controls=&quot;settings&quot;&gt;Settings&lt;/a&gt;
         &lt;/div&gt;
       &lt;/div&gt;
       &lt;div class=&quot;col-8&quot;&gt;
@@ -2027,7 +2028,7 @@
     <hr>
     <div class="row">
         <div class="col-12">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-target="#exampleModal">
                 Launch demo modal
             </button>
 
@@ -2036,7 +2037,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -2044,7 +2045,7 @@
                             Woohoo, you're reading this text in a modal!
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="button" class="btn btn-primary">Save changes</button>
                         </div>
                     </div>
@@ -2055,7 +2056,7 @@
     <pre class="m-0 col-12">
     <code class="collapse html">
     &lt;!-- Button trigger modal --&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-toggle=&quot;modal&quot; data-target=&quot;#exampleModal&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;modal&quot; data-target=&quot;#exampleModal&quot;&gt;
       Launch demo modal
     &lt;/button&gt;
 
@@ -2065,7 +2066,7 @@
         &lt;div class=&quot;modal-content&quot;&gt;
           &lt;div class=&quot;modal-header&quot;&gt;
             &lt;h5 class=&quot;modal-title&quot; id=&quot;exampleModalLabel&quot;&gt;Modal title&lt;/h5&gt;
-            &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;close&quot; data-bs-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
               &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
             &lt;/button&gt;
           &lt;/div&gt;
@@ -2073,7 +2074,7 @@
             ...
           &lt;/div&gt;
           &lt;div class=&quot;modal-footer&quot;&gt;
-            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
             &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot;&gt;Save changes&lt;/button&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -2089,7 +2090,7 @@
     <div class="row">
         <div class="col-12">
             <!-- Button trigger modal -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalLong">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-target="#exampleModalLong">
                 Launch demo modal
             </button>
 
@@ -2099,7 +2100,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -2124,7 +2125,7 @@
                             <p>Aenean lacinia bibendum nulla sed consectetur. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Donec sed odio dui. Donec ullamcorper nulla non metus auctor fringilla.</p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="button" class="btn btn-primary">Save changes</button>
                         </div>
                     </div>
@@ -2135,7 +2136,7 @@
     <pre class="m-0 col-12">
     <code class="collapse html">
     &lt;!-- Button trigger modal --&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-toggle=&quot;modal&quot; data-target=&quot;#exampleModalLong&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;modal&quot; data-target=&quot;#exampleModalLong&quot;&gt;
       Launch demo modal
     &lt;/button&gt;
 
@@ -2145,7 +2146,7 @@
         &lt;div class=&quot;modal-content&quot;&gt;
           &lt;div class=&quot;modal-header&quot;&gt;
             &lt;h5 class=&quot;modal-title&quot; id=&quot;exampleModalLongTitle&quot;&gt;Modal title&lt;/h5&gt;
-            &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;close&quot; data-bs-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
               &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
             &lt;/button&gt;
           &lt;/div&gt;
@@ -2153,7 +2154,7 @@
             ...
           &lt;/div&gt;
           &lt;div class=&quot;modal-footer&quot;&gt;
-            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
             &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot;&gt;Save changes&lt;/button&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -2169,7 +2170,7 @@
     <div class="row">
         <div class="col-12">
             <!-- Button trigger modal -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-target="#exampleModalCenter">
                 Launch demo modal
             </button>
 
@@ -2179,7 +2180,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalCenterTitle">Modal title</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -2187,7 +2188,7 @@
                             ...
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="button" class="btn btn-primary">Save changes</button>
                         </div>
                     </div>
@@ -2198,7 +2199,7 @@
     <pre class="m-0 col-12">
     <code class="collapse html">
     &lt;!-- Button trigger modal --&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-toggle=&quot;modal&quot; data-target=&quot;#exampleModalCenter&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;modal&quot; data-target=&quot;#exampleModalCenter&quot;&gt;
       Launch demo modal
     &lt;/button&gt;
 
@@ -2208,7 +2209,7 @@
         &lt;div class=&quot;modal-content&quot;&gt;
           &lt;div class=&quot;modal-header&quot;&gt;
             &lt;h5 class=&quot;modal-title&quot; id=&quot;exampleModalCenterTitle&quot;&gt;Modal title&lt;/h5&gt;
-            &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;close&quot; data-bs-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
               &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
             &lt;/button&gt;
           &lt;/div&gt;
@@ -2216,7 +2217,7 @@
             ...
           &lt;/div&gt;
           &lt;div class=&quot;modal-footer&quot;&gt;
-            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
             &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot;&gt;Save changes&lt;/button&gt;
           &lt;/div&gt;
         &lt;/div&gt;
@@ -2231,7 +2232,7 @@
     <hr>
     <div class="row">
         <div class="col-12">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalTooptip">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-target="#exampleModalTooptip">
                 Launch demo modal
             </button>
 
@@ -2240,19 +2241,19 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <h5>Popover in a modal</h5>
-                            <p>This <a href="#" role="button" class="btn btn-secondary popover-test" data-toggle="popover" title="Popover title" data-content="Popover body content is set in this attribute.">button</a> triggers a popover on click.</p>
+                            <p>This <a href="#" role="button" class="btn btn-secondary popover-test" data-bs-toggle="popover" title="Popover title" data-content="Popover body content is set in this attribute.">button</a> triggers a popover on click.</p>
                             <hr>
                             <h5>Tooltips in a modal</h5>
-                            <p><a href="#" class="tooltip-test" data-toggle="tooltip" title="Tooltip">This link</a> and <a href="#" class="tooltip-test" data-toggle="tooltip" title="Tooltip">that link</a> have tooltips on hover.</p>
+                            <p><a href="#" class="tooltip-test" data-bs-toggle="tooltip" title="Tooltip">This link</a> and <a href="#" class="tooltip-test" data-bs-toggle="tooltip" title="Tooltip">that link</a> have tooltips on hover.</p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="button" class="btn btn-primary">Save changes</button>
                         </div>
                     </div>
@@ -2264,10 +2265,10 @@
     <code class="collapse html">
     &lt;div class=&quot;modal-body&quot;&gt;
       &lt;h5&gt;Popover in a modal&lt;/h5&gt;
-      &lt;p&gt;This &lt;a href=&quot;#&quot; role=&quot;button&quot; class=&quot;btn btn-secondary popover-test&quot; data-toggle=&quot;popover&quot; title=&quot;Popover title&quot; data-content=&quot;Popover body content is set in this attribute.&quot;&gt;button&lt;/a&gt; triggers a popover on click.&lt;/p&gt;
+      &lt;p&gt;This &lt;a href=&quot;#&quot; role=&quot;button&quot; class=&quot;btn btn-secondary popover-test&quot; data-bs-toggle=&quot;popover&quot; title=&quot;Popover title&quot; data-content=&quot;Popover body content is set in this attribute.&quot;&gt;button&lt;/a&gt; triggers a popover on click.&lt;/p&gt;
       &lt;hr&gt;
       &lt;h5&gt;Tooltips in a modal&lt;/h5&gt;
-      &lt;p&gt;&lt;a href=&quot;#&quot; class=&quot;tooltip-test&quot; data-toggle=&quot;tooltip&quot; title=&quot;Tooltip&quot;&gt;This link&lt;/a&gt; and &lt;a href=&quot;#&quot; class=&quot;tooltip-test&quot; data-toggle=&quot;tooltip&quot; title=&quot;Tooltip&quot;&gt;that link&lt;/a&gt; have tooltips on hover.&lt;/p&gt;
+      &lt;p&gt;&lt;a href=&quot;#&quot; class=&quot;tooltip-test&quot; data-bs-toggle=&quot;tooltip&quot; title=&quot;Tooltip&quot;&gt;This link&lt;/a&gt; and &lt;a href=&quot;#&quot; class=&quot;tooltip-test&quot; data-bs-toggle=&quot;tooltip&quot; title=&quot;Tooltip&quot;&gt;that link&lt;/a&gt; have tooltips on hover.&lt;/p&gt;
     &lt;/div&gt;
     </code>
   </pre>
@@ -2279,14 +2280,14 @@
     <div class="row">
         <div class="col-12">
             <!-- Large modal -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-lg">Large modal</button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-target=".bd-example-modal-lg">Large modal</button>
 
             <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title h4" id="myLargeModalLabel">Large modal</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -2298,14 +2299,14 @@
             </div>
 
             <!-- Small modal -->
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-sm">Small modal</button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-target=".bd-example-modal-sm">Small modal</button>
 
             <div class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-sm">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title h4" id="myLargeModalLabel">Small modal</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
@@ -2320,7 +2321,7 @@
     <pre class="m-0 col-12">
     <code class="collapse html">
     &lt;!-- Large modal --&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-toggle=&quot;modal&quot; data-target=&quot;.bd-example-modal-lg&quot;&gt;Large modal&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;modal&quot; data-target=&quot;.bd-example-modal-lg&quot;&gt;Large modal&lt;/button&gt;
 
     &lt;div class=&quot;modal fade bd-example-modal-lg&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; aria-labelledby=&quot;myLargeModalLabel&quot; aria-hidden=&quot;true&quot;&gt;
       &lt;div class=&quot;modal-dialog modal-lg&quot;&gt;
@@ -2331,7 +2332,7 @@
     &lt;/div&gt;
 
     &lt;!-- Small modal --&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-toggle=&quot;modal&quot; data-target=&quot;.bd-example-modal-sm&quot;&gt;Small modal&lt;/button&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;modal&quot; data-target=&quot;.bd-example-modal-sm&quot;&gt;Small modal&lt;/button&gt;
 
     &lt;div class=&quot;modal fade bd-example-modal-sm&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; aria-labelledby=&quot;mySmallModalLabel&quot; aria-hidden=&quot;true&quot;&gt;
       &lt;div class=&quot;modal-dialog modal-sm&quot;&gt;
@@ -2685,7 +2686,7 @@
                     <a class="nav-link active" href="#">Active</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="#">Action</a>
                         <a class="dropdown-item" href="#">Another action</a>
@@ -2710,7 +2711,7 @@
         &lt;a class=&quot;nav-link active&quot; href=&quot;#&quot;&gt;Active&lt;/a&gt;
       &lt;/li&gt;
       &lt;li class=&quot;nav-item dropdown&quot;&gt;
-        &lt;a class=&quot;nav-link dropdown-toggle&quot; data-toggle=&quot;dropdown&quot; href=&quot;#&quot; role=&quot;button&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;Dropdown&lt;/a&gt;
+        &lt;a class=&quot;nav-link dropdown-toggle&quot; data-bs-toggle=&quot;dropdown&quot; href=&quot;#&quot; role=&quot;button&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;Dropdown&lt;/a&gt;
         &lt;div class=&quot;dropdown-menu&quot;&gt;
           &lt;a class=&quot;dropdown-item&quot; href=&quot;#&quot;&gt;Action&lt;/a&gt;
           &lt;a class=&quot;dropdown-item&quot; href=&quot;#&quot;&gt;Another action&lt;/a&gt;
@@ -2740,7 +2741,7 @@
                     <a class="nav-link active" href="#">Active</a>
                 </li>
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dropdown</a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="#">Action</a>
                         <a class="dropdown-item" href="#">Another action</a>
@@ -2765,7 +2766,7 @@
         &lt;a class=&quot;nav-link active&quot; href=&quot;#&quot;&gt;Active&lt;/a&gt;
       &lt;/li&gt;
       &lt;li class=&quot;nav-item dropdown&quot;&gt;
-        &lt;a class=&quot;nav-link dropdown-toggle&quot; data-toggle=&quot;dropdown&quot; href=&quot;#&quot; role=&quot;button&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;Dropdown&lt;/a&gt;
+        &lt;a class=&quot;nav-link dropdown-toggle&quot; data-bs-toggle=&quot;dropdown&quot; href=&quot;#&quot; role=&quot;button&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;Dropdown&lt;/a&gt;
         &lt;div class=&quot;dropdown-menu&quot;&gt;
           &lt;a class=&quot;dropdown-item&quot; href=&quot;#&quot;&gt;Action&lt;/a&gt;
           &lt;a class=&quot;dropdown-item&quot; href=&quot;#&quot;&gt;Another action&lt;/a&gt;
@@ -2794,7 +2795,7 @@
         <div class="col-12">
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <a class="navbar-brand" href="#">Navbar</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -2807,7 +2808,7 @@
                             <a class="nav-link" href="#">Link</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Dropdown
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -2833,7 +2834,7 @@
     <code class="collapse html">
     &lt;nav class=&quot;navbar navbar-expand-lg navbar-light bg-light&quot;&gt;
       &lt;a class=&quot;navbar-brand&quot; href=&quot;#&quot;&gt;Navbar&lt;/a&gt;
-      &lt;button class=&quot;navbar-toggler&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#navbarSupportedContent&quot; aria-controls=&quot;navbarSupportedContent&quot; aria-expanded=&quot;false&quot; aria-label=&quot;Toggle navigation&quot;&gt;
+      &lt;button class=&quot;navbar-toggler&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#navbarSupportedContent&quot; aria-controls=&quot;navbarSupportedContent&quot; aria-expanded=&quot;false&quot; aria-label=&quot;Toggle navigation&quot;&gt;
         &lt;span class=&quot;navbar-toggler-icon&quot;&gt;&lt;/span&gt;
       &lt;/button&gt;
 
@@ -2846,7 +2847,7 @@
             &lt;a class=&quot;nav-link&quot; href=&quot;#&quot;&gt;Link&lt;/a&gt;
           &lt;/li&gt;
           &lt;li class=&quot;nav-item dropdown&quot;&gt;
-            &lt;a class=&quot;nav-link dropdown-toggle&quot; href=&quot;#&quot; id=&quot;navbarDropdown&quot; role=&quot;button&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+            &lt;a class=&quot;nav-link dropdown-toggle&quot; href=&quot;#&quot; id=&quot;navbarDropdown&quot; role=&quot;button&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
               Dropdown
             &lt;/a&gt;
             &lt;div class=&quot;dropdown-menu&quot; aria-labelledby=&quot;navbarDropdown&quot;&gt;
@@ -2899,7 +2900,7 @@
     <div class="row">
         <div class="col-12">
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
@@ -2926,7 +2927,7 @@
     <pre class="m-0 col-12">
     <code class="collapse html">
     &lt;nav class=&quot;navbar navbar-expand-lg navbar-light bg-light&quot;&gt;
-      &lt;button class=&quot;navbar-toggler&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#navbarTogglerDemo01&quot; aria-controls=&quot;navbarTogglerDemo01&quot; aria-expanded=&quot;false&quot; aria-label=&quot;Toggle navigation&quot;&gt;
+      &lt;button class=&quot;navbar-toggler&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#navbarTogglerDemo01&quot; aria-controls=&quot;navbarTogglerDemo01&quot; aria-expanded=&quot;false&quot; aria-label=&quot;Toggle navigation&quot;&gt;
         &lt;span class=&quot;navbar-toggler-icon&quot;&gt;&lt;/span&gt;
       &lt;/button&gt;
       &lt;div class=&quot;collapse navbar-collapse&quot; id=&quot;navbarTogglerDemo01&quot;&gt;
@@ -3214,39 +3215,39 @@
     <hr>
     <div class="row">
         <div class="col-12">
-            <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+            <button type="button" class="btn btn-secondary" data-container="body" data-bs-toggle="popover" data-placement="top" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
                 Popover on top
             </button>
 
-            <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="right" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+            <button type="button" class="btn btn-secondary" data-container="body" data-bs-toggle="popover" data-placement="right" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
                 Popover on right
             </button>
 
-            <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="bottom" data-content="Vivamus
+            <button type="button" class="btn btn-secondary" data-container="body" data-bs-toggle="popover" data-placement="bottom" data-content="Vivamus
       sagittis lacus vel augue laoreet rutrum faucibus.">
                 Popover on bottom
             </button>
 
-            <button type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="left" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+            <button type="button" class="btn btn-secondary" data-container="body" data-bs-toggle="popover" data-placement="left" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
                 Popover on left
             </button>
         </div>
     </div>
     <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-toggle=&quot;popover&quot; data-placement=&quot;top&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-bs-toggle=&quot;popover&quot; data-placement=&quot;top&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
       Popover on top
     &lt;/button&gt;
 
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-toggle=&quot;popover&quot; data-placement=&quot;right&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-bs-toggle=&quot;popover&quot; data-placement=&quot;right&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
       Popover on right
     &lt;/button&gt;
 
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-toggle=&quot;popover&quot; data-placement=&quot;bottom&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-bs-toggle=&quot;popover&quot; data-placement=&quot;bottom&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
       Popover on bottom
     &lt;/button&gt;
 
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-toggle=&quot;popover&quot; data-placement=&quot;left&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-container=&quot;body&quot; data-bs-toggle=&quot;popover&quot; data-placement=&quot;left&quot; data-content=&quot;Vivamus sagittis lacus vel augue laoreet rutrum faucibus.&quot;&gt;
       Popover on left
     &lt;/button&gt;
     </code>
@@ -3258,12 +3259,12 @@
     <hr>
     <div class="row">
         <div class="col-12">
-            <a tabindex="0" class="btn btn-lg btn-danger" role="button" data-toggle="popover" data-trigger="focus" title="Dismissible popover" data-content="And here's some amazing content. It's very engaging. Right?">Dismissible popover</a>
+            <a tabindex="0" class="btn btn-lg btn-danger" role="button" data-bs-toggle="popover" data-trigger="focus" title="Dismissible popover" data-content="And here's some amazing content. It's very engaging. Right?">Dismissible popover</a>
         </div>
     </div>
     <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;a tabindex=&quot;0&quot; class=&quot;btn btn-lg btn-danger&quot; role=&quot;button&quot; data-toggle=&quot;popover&quot; data-trigger=&quot;focus&quot; title=&quot;Dismissible popover&quot; data-content=&quot;And here's some amazing content. It's very engaging. Right?&quot;&gt;Dismissible popover&lt;/a&gt;
+    &lt;a tabindex=&quot;0&quot; class=&quot;btn btn-lg btn-danger&quot; role=&quot;button&quot; data-bs-toggle=&quot;popover&quot; data-trigger=&quot;focus&quot; title=&quot;Dismissible popover&quot; data-content=&quot;And here's some amazing content. It's very engaging. Right?&quot;&gt;Dismissible popover&lt;/a&gt;
     </code>
   </pre>
 </section>
@@ -3273,14 +3274,14 @@
     <hr>
     <div class="row">
         <div class="col-12">
-      <span class="d-inline-block" data-toggle="popover" data-content="Disabled popover">
+      <span class="d-inline-block" data-bs-toggle="popover" data-content="Disabled popover">
         <button class="btn btn-primary" style="pointer-events: none;" type="button" disabled>Disabled button</button>
       </span>
         </div>
     </div>
     <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;span class=&quot;d-inline-block&quot; data-toggle=&quot;popover&quot; data-content=&quot;Disabled popover&quot;&gt;
+    &lt;span class=&quot;d-inline-block&quot; data-bs-toggle=&quot;popover&quot; data-content=&quot;Disabled popover&quot;&gt;
       &lt;button class=&quot;btn btn-primary&quot; style=&quot;pointer-events: none;&quot; type=&quot;button&quot; disabled&gt;Disabled button&lt;/button&gt;
     &lt;/span&gt;
     </code>
@@ -3462,40 +3463,40 @@
   <hr>
   <div class="row">
     <div class="col-12">
-      <button type="button" class="btn btn-secondary mr-2" data-toggle="tooltip" data-placement="top" title="Tooltip on top">
+      <button type="button" class="btn btn-secondary mr-2" data-bs-toggle="tooltip" data-placement="top" title="Tooltip on top">
         Tooltip on top
       </button>
-      <button type="button" class="btn btn-secondary mr-2" data-toggle="tooltip" data-placement="right" title="Tooltip on right">
+      <button type="button" class="btn btn-secondary mr-2" data-bs-toggle="tooltip" data-placement="right" title="Tooltip on right">
         Tooltip on right
       </button>
-      <button type="button" class="btn btn-secondary mr-2" data-toggle="tooltip" data-placement="bottom" title="Tooltip on bottom">
+      <button type="button" class="btn btn-secondary mr-2" data-bs-toggle="tooltip" data-placement="bottom" title="Tooltip on bottom">
         Tooltip on bottom
       </button>
-      <button type="button" class="btn btn-secondary mr-2" data-toggle="tooltip" data-placement="left" title="Tooltip on left">
+      <button type="button" class="btn btn-secondary mr-2" data-bs-toggle="tooltip" data-placement="left" title="Tooltip on left">
         Tooltip on left
       </button>
-      <button type="button" class="btn btn-secondary mr-2" data-toggle="tooltip" data-html="true" title="<em>Tooltip</em> <u>with</u> <b>HTML</b>">
+      <button type="button" class="btn btn-secondary mr-2" data-bs-toggle="tooltip" data-html="true" title="<em>Tooltip</em> <u>with</u> <b>HTML</b>">
         Tooltip with HTML
       </button>
     </div>
   </div>
   <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-toggle=&quot;tooltip&quot; data-placement=&quot;top&quot; title=&quot;Tooltip on top&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-toggle=&quot;tooltip&quot; data-placement=&quot;top&quot; title=&quot;Tooltip on top&quot;&gt;
       Tooltip on top
     &lt;/button&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-toggle=&quot;tooltip&quot; data-placement=&quot;right&quot; title=&quot;Tooltip on right&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-toggle=&quot;tooltip&quot; data-placement=&quot;right&quot; title=&quot;Tooltip on right&quot;&gt;
       Tooltip on right
     &lt;/button&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-toggle=&quot;tooltip&quot; data-placement=&quot;bottom&quot; title=&quot;Tooltip on bottom&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-toggle=&quot;tooltip&quot; data-placement=&quot;bottom&quot; title=&quot;Tooltip on bottom&quot;&gt;
       Tooltip on bottom
     &lt;/button&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-toggle=&quot;tooltip&quot; data-placement=&quot;left&quot; title=&quot;Tooltip on left&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-toggle=&quot;tooltip&quot; data-placement=&quot;left&quot; title=&quot;Tooltip on left&quot;&gt;
       Tooltip on left
     &lt;/button&gt;
 
     &lt;!-- With Custom HTML --&gt;
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-toggle=&quot;tooltip&quot; data-html=&quot;true&quot; title=&quot;&lt;em&gt;Tooltip&lt;/em&gt; &lt;u&gt;with&lt;/u&gt; &lt;b&gt;HTML&lt;/b&gt;&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot; data-bs-toggle=&quot;tooltip&quot; data-html=&quot;true&quot; title=&quot;&lt;em&gt;Tooltip&lt;/em&gt; &lt;u&gt;with&lt;/u&gt; &lt;b&gt;HTML&lt;/b&gt;&quot;&gt;
       Tooltip with HTML
     &lt;/button&gt;
     </code>

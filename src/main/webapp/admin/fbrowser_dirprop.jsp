@@ -5,15 +5,13 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.filebrowser.*,java.io.*,sk.iway.iwcm.users.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ include file="/admin/layout_top_popup.jsp" %>
 
 <script type="text/javascript">
-<logic:present parameter="refresh">
+<iwcm:present parameter="refresh">
 	refresh();
-</logic:present>
+</iwcm:present>
 
 function refresh() {
 	if (window.parent)
@@ -50,14 +48,14 @@ fieldset {margin-bottom: 10px;}
     <head>
     </head>
 	<body>
-		<logic:present parameter="saveok">
+		<iwcm:present parameter="saveok">
 			<script type="text/javascript">
 				//needs wj2023 window.top.WJ.notifySuccess("", "<iwcm:text key="components.page_update_info.save_ok"/>", 10);
 			</script>
 			<div class="alert alert-success" role="alert">
 				<iwcm:text key="components.page_update_info.save_ok"/>
 			</div>
-		</logic:present>
+		</iwcm:present>
 		<form:form method="post" modelAttribute="fbrowserEditForm" action="/admin/fbrowser/dirprop/" id="fbrowserEditForm" name="fbrowserEditForm" style="margin:0px; padding: 0px;">
 			<div id="userGroupsList1">
 				<fieldset>
@@ -82,7 +80,7 @@ fieldset {margin-bottom: 10px;}
 				<fieldset>
 					<h2><iwcm:text key="editor.group.permissions"/></h2>
 					<%String userGroupId;%>
-					<logic:iterate name="userGroupsList" id="ugl" type="sk.iway.iwcm.users.UserGroupDetails">
+					<iwcm:iterate name="userGroupsList" id="ugl" type="sk.iway.iwcm.users.UserGroupDetails">
 					<%
 						userGroupId = "" + ugl.getUserGroupId();
 						if (ugl.getUserGroupType()==UserGroupDetails.TYPE_PERMS)
@@ -94,7 +92,7 @@ fieldset {margin-bottom: 10px;}
 					</label>
 					<br>
 					<% } %>
-					</logic:iterate>
+					</iwcm:iterate>
 					<div class="loginDocIdBox">
 						<div class="row">
 							<div class="col-xs-12">
