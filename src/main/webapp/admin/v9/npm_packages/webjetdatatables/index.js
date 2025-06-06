@@ -102,6 +102,116 @@ export const dataTableInit = options => {
     */
     var TABLE;
 
+    const decodeJSONData = function(inputData) {
+        try {
+            // Uistite sa, že je vstup platný Base64 reťazec
+            if (!inputData) throw new Error("Input data is empty");
+
+            // Dekódujeme Base64 a dekódujeme URI, pričom nahrádzame '%2B' späť na '+'
+            const parsed = JSON.parse(decodeURI(atob(inputData)).replace(/\%2B/gi, "+"));
+            return parsed;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const encodeJSONData = function(inputData) {
+        try {
+            // Uistite sa, že inputData nie je undefined alebo null
+            if (inputData === undefined || inputData === null) throw new Error("Input data is null or undefined");
+
+            // Kódujeme JSON do URI a následne Base64, pričom nahrádzame '+' na '%2B'
+            let encoded = encodeURI(JSON.stringify(inputData));
+            encoded = encoded.replace(/\+/gi, "%2B");
+            return btoa(encoded);
+        } catch (e) {
+            console.error("Failed to encode JSON data:", e);
+            return null;  // Vráťte null v prípade chyby
+        }
+    };
+
+    const TableLinesStorage = {
+        key: 'tableLines',
+
+        getParam(){
+            return localStorage.getItem(this.key);
+        },
+
+        load() {
+            try {
+                const stored = decodeJSONData(localStorage.getItem(this.key));
+                return stored ? stored : [];
+            } catch (e) {
+                console.error('Failed to parse localStorage data:', e);
+                return [];
+            }
+        },
+
+        save(data) {
+            try {
+                localStorage.setItem(this.key, encodeJSONData(data));
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+            }
+        },
+
+        create(newItemOrItems) {
+            const data = this.load();
+            let lastId = data.length > 0 ? Math.max(...data.map(item => parseInt(item.id))) : 1;
+
+            if (Array.isArray(newItemOrItems)) {
+                newItemOrItems.forEach(item => {
+                    const existingIndex = data.findIndex(existingItem => existingItem.id === item.id);
+                    if (existingIndex !== -1) {
+                        data[existingIndex] = { ...data[existingIndex], ...item };
+                    } else {
+                        if (!item.id) {
+                            item.id = ++lastId;
+                        }
+                        data.push(item);
+                    }
+                });
+            } else {
+                const existingIndex = data.findIndex(existingItem => existingItem.id === newItemOrItems.id);
+                if (existingIndex !== -1) {
+                    data[existingIndex] = { ...data[existingIndex], ...newItemOrItems };
+                } else {
+                    if (!newItemOrItems.id) {
+                        newItemOrItems.id = ++lastId;
+                    }
+                    data.push(newItemOrItems);
+                }
+            }
+
+            this.save(data);
+        },
+
+        edit(id, updatedItem) {
+            const data = this.load();
+            const index = data.findIndex(item => item.id === id);
+            if (index !== -1) {
+                data[index] = { ...data[index], ...updatedItem };
+                this.save(data);
+            } else {
+                console.warn(`Item with id ${id} not found for edit.`);
+            }
+        },
+
+        remove(id) {
+            const data = this.load();
+            const filtered = data.filter(item => item.id !== id);
+            this.save(filtered);
+        },
+
+        clear() {
+            try {
+                localStorage.removeItem(this.key);
+            } catch (e) {
+                console.error('Failed to clear localStorage:', e);
+            }
+        }
+    };
+
     var DATA = [];
     DATA.id = options.id ? options.id : null;
     DATA.removeColumns = options.removeColumns ? options.removeColumns : null;
@@ -112,12 +222,13 @@ export const dataTableInit = options => {
         //always show basic tab
         { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true }
     ];
-    DATA.url = options.url;
+    DATA.url = options.url || "";
     DATA.editorId = options.editorId ? options.editorId : "id";
     DATA.onXhr = options.onXhr ? options.onXhr : null;
     DATA.onPreXhr = options.onPreXhr ? options.onPreXhr : null;
     DATA.json = null;
     DATA.jsonOptions = null;
+    DATA.jsonEditor = options.jsonEditor ? options.jsonEditor : false;
     DATA.noAll = options.noAll;
     DATA.hideTable = options.hideTable || false;
     DATA.fetchOnCreate = options.fetchOnCreate ? options.fetchOnCreate : false;
@@ -160,6 +271,7 @@ export const dataTableInit = options => {
     DATA.editorLocking = (typeof options.editorLocking !== "undefined") ? options.editorLocking : true;
 
     //console.log("options=", options);
+    let jsonEditorFields;
 
     //pre podporu multi tabuliek a editora potrebujeme mat unikatne ID pre kazdu DT a editor
     if (DATA.id === null) {
@@ -265,26 +377,29 @@ export const dataTableInit = options => {
      */
     function prepareCustomFieldsDataBeforeSend(data, me) {
         //Array of fields (field names)
-        var fields = me.fields();
-
+        if (typeof(me) !== "undefined"){
+            var fields = me.fields();
+        }
         var letters = 'ABCDEFGHIJKLMNOPQRST';
         for(var i in data.data) {
             for(var letter in letters) {
                 if(Array.isArray(data.data[i]['field' + letters[letter]])) {
                     data.data[i]['field' + letters[letter]] = data.data[i]['field' + letters[letter]].join('|')
                 }
+                if (typeof(me) !== "undefined"){
 
-                let fieldName = 'field' + letters[letter];
-                if(fields.includes(fieldName)) {
-                    let field = me.field(fieldName);
-                    let renderFormat = field.s.opts.renderFormat;
+                    let fieldName = 'field' + letters[letter];
+                    if(fields.includes(fieldName)) {
+                        let field = me.field(fieldName);
+                        let renderFormat = field.s.opts.renderFormat;
 
-                    //Its quill editor - get html content and set into data as value
-                    if("dt-format-quill" == renderFormat) {
-                        let input = field.s.opts._input;
-                        let value = input.html();
-                        if ("<p><br></p>"==value) value = "";
-                        data.data[i][fieldName] = value;
+                        //Its quill editor - get html content and set into data as value
+                        if("dt-format-quill" == renderFormat) {
+                            let input = field.s.opts._input;
+                            let value = input.html();
+                            if ("<p><br></p>"==value) value = "";
+                            data.data[i][fieldName] = value;
+                        }
                     }
                 }
             }
@@ -319,35 +434,50 @@ export const dataTableInit = options => {
     };
 
     function refreshRow(id, callback) {
-        var url = TABLE.getAjaxUrl();
-        var q = url.indexOf("?");
-        if (q === -1) url = url + "/" + id;
-        else url = url.substring(0, q) + "/" + id + url.substring(q);
-
-        //console.log("RefreshRow, url=", url, "id=", id);
-
-        $.ajax({
-            url: url,
-            success: function (json) {
-                //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
-                //console.log("refreshRow, id=", json[DATA.editorId], " json=", json);
-                if (typeof json.error != "undefined" && json.error != null && json.error!="") {
-                    WJ.notifyError(json.error);
-                    return;
+        if (DATA.jsonEditor) {
+            const data = TableLinesStorage.load();
+            const row = data.find(item => String(item.id) === id);
+            TABLE.row("#" + id).data(row);
+            try {
+                if (row.editorFields && row.editorFields.notify) {
+                    showNotify(row.editorFields.notify);
                 }
-                TABLE.row("#" + json[DATA.editorId]).data(json);
-
-                try {
-                    if (typeof json.editorFields != "undefined" && json.editorFields!=null && typeof json.editorFields.notify != "undefined" && json.editorFields.notify!=null) {
-                        var notifyList = json.editorFields.notify;
-                        showNotify(notifyList);
-                    }
-                } catch (e) {console.log(e);}
-
-                //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
-                callback(json);
+            } catch (e) {
+                console.log(e);
             }
-        });
+            callback(row);
+        } else {
+
+            var url = TABLE.getAjaxUrl();
+            var q = url.indexOf("?");
+            if (q === -1) url = url + "/" + id;
+            else url = url.substring(0, q) + "/" + id + url.substring(q);
+
+            //console.log("RefreshRow, url=", url, "id=", id);
+
+            $.ajax({
+                url: url,
+                success: function (json) {
+                    //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
+                    //console.log("refreshRow, id=", json[DATA.editorId], " json=", json);
+                    if (typeof json.error != "undefined" && json.error != null && json.error!="") {
+                        WJ.notifyError(json.error);
+                        return;
+                    }
+                    TABLE.row("#" + json[DATA.editorId]).data(json);
+
+                    try {
+                        if (typeof json.editorFields != "undefined" && json.editorFields!=null && typeof json.editorFields.notify != "undefined" && json.editorFields.notify!=null) {
+                            var notifyList = json.editorFields.notify;
+                            showNotify(notifyList);
+                        }
+                    } catch (e) {console.log(e);}
+
+                    //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
+                    callback(json);
+                }
+            });
+        }
     }
 
     function showNotify(notifyList) {
@@ -1136,11 +1266,17 @@ export const dataTableInit = options => {
             }
         }
 
-        // console.log("DATA.fields", DATA.fields);
-        // console.log("DATA.columns", DATA.columns);
 
-        var EDITOR = new $.fn.dataTable.Editor({
-            ajax: {
+        const fields = DATA.fields;
+        jsonEditorFields = fields.filter(field => {
+            return field.className && field.className.includes('dt-json-editor');
+        });
+        //console.log("DATA.fields", DATA.fields);
+        //console.log("DATA.columns", DATA.columns);
+
+        let ajaxDeclaration;
+        if (DATA.jsonEditor === false){
+            ajaxDeclaration = {
                 url: WJ.urlAddPath(DATA.url, '/editor'),
                 contentType: 'application/json',
                 data: function (d) {
@@ -1162,7 +1298,11 @@ export const dataTableInit = options => {
                         WJ.notifyError(WJ.translate("session.logoff.info.js"), WJ.translate("datatables.error.network.js"));
                     }
                 },
-            },
+            }
+        }
+
+        var EDITOR = new $.fn.dataTable.Editor({
+            ajax: ajaxDeclaration,
             table: dataTableSelector,
             idSrc: DATA.editorId,
             display: "bootstrap",
@@ -1242,8 +1382,16 @@ export const dataTableInit = options => {
             const me = this;
 
             // upravi multiple volne polia
-            prepareCustomFieldsDataBeforeSend(data, me);
+            if (DATA.jsonEditor){
+                prepareCustomFieldsDataBeforeSend(data)
 
+                if (action === 'remove') {
+                    const ids = Object.values(data.data).map(item => item.id);
+                    ids.forEach(id => {
+                        TableLinesStorage.remove(id);
+                    });
+                }
+        } else {
             /*if (action !== 'remove') {
 
                 $.each($(e.target.dom.wrapper).find("[data-dt-validation]"), function (k, v) {
@@ -1266,6 +1414,7 @@ export const dataTableInit = options => {
                     return false;
                 }
             }*/
+        }
         });
 
         EDITOR.on('opened', function (e, type, action) {
@@ -1308,7 +1457,19 @@ export const dataTableInit = options => {
         });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
             //console.log("Editor.on submitSuccess, json=", json);
-            setTimeout(function() {
+            if (DATA.jsonEditor){
+                TableLinesStorage.create(json.data);
+
+                if(DATA.updateEditorAfterSave == true) {
+                    EDITOR.setJson(data);
+                }
+
+                if(typeof json.notify != "undefined" && json.notify != null) {
+                    showNotify(json.notify);
+                }
+            }
+            else {
+                setTimeout(function() {
                 if (json.forceReload === true) {
                     //serverSide is reloading by datatable directly
                     if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
@@ -1335,6 +1496,7 @@ export const dataTableInit = options => {
                     showNotify(json.notify);
                 }
             }, 300);
+            }
         });
 
         EDITOR.on('submitUnsuccessful', function (e, json) {
@@ -1353,7 +1515,11 @@ export const dataTableInit = options => {
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
-
+                    if (DATA.jsonEditor){
+                        EDITOR.setJson(json);
+                        resolve(); // Editor continues after this
+                    }
+                    else {
                     $.ajax({
                         url: url,
                         success: function (json) {
@@ -1363,6 +1529,7 @@ export const dataTableInit = options => {
                             resolve(); // Editor continues after this
                         }
                     });
+                    }
                 });
             });
         }
@@ -2819,39 +2986,50 @@ export const dataTableInit = options => {
             }
             else {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
-
-                //finally, make the request
-                $.ajax({
-                    "dataType": 'json',
-                    "type": "GET",
-                    "url": url,
-                    "data": restParams,
-                    "success": function (sourceData) {
-                        //console.log("sourceData=", sourceData);
-
-                        if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
-                                WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
-                                return;
-                            } else {
-                                WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
-                                return;
-                            }
-                        }
-
-                        var totalElements = sourceData.totalElements;
-                        var data = {};
-                        data.data = sourceData.content;
-
-                        data.recordsTotal = totalElements;
-                        data.recordsFiltered = totalElements;
-                        data.options = sourceData.options || {};
-                        data.notify = sourceData.notify || null;
-
-                        //WJ.log("fnCallback2, data=", data);
+                if (DATA.jsonEditor){
+                    const data = {
+                        data: TableLinesStorage.load(),
+                        recordsTotal: 0,
+                        recordsFiltered: 0,
+                        options: {},
+                        notify: null
+                    };
+                    setTimeout(() => {
                         fnCallback(data);
-                    }
-                });
+                    }, 100);
+                } else {
+                    //finally, make the request
+                    $.ajax({
+                        "dataType": 'json',
+                        "type": "GET",
+                        "url": url,
+                        "data": restParams,
+                        "success": function (sourceData) {
+                            //console.log("sourceData=", sourceData);
+                            if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
+                                if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
+                                    WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
+                                    return;
+                                } else {
+                                    WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
+                                    return;
+                                }
+                            }
+
+                            var totalElements = sourceData.totalElements;
+                            var data = {};
+                            data.data = sourceData.content;
+
+                            data.recordsTotal = totalElements;
+                            data.recordsFiltered = totalElements;
+                            data.options = sourceData.options || {};
+                            data.notify = sourceData.notify || null;
+
+                            //WJ.log("fnCallback2, data=", data);
+                            fnCallback(data);
+                        }
+                    });
+                }
             }
         }
 
@@ -2865,6 +3043,10 @@ export const dataTableInit = options => {
                     .on('xhr.dt', function (e, settings, json, xhr) {
 
                         //ak neprisli options (napr. pri vyhladavani) zachovaj povodne
+                        if (jsonEditorFields.length > 0) {
+                            const jsonVariableName = jsonEditorFields[0].name;
+                            localStorage.setItem("tableLines", json.data[0][jsonVariableName]);
+                        }
                         //console.log("DATA.json=", DATA.json, "json=", json);
                         //if (DATA.json != null) console.log("DATA.json.options=", DATA.json.options);
                         if (DATA.json != null && typeof DATA.json.options != "undefined" && DATA.json.options != null) {

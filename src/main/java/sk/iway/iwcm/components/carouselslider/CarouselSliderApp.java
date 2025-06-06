@@ -1,0 +1,133 @@
+package sk.iway.iwcm.components.carouselslider;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.editor.rest.ComponentRequest;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DatatableTools;
+import sk.iway.iwcm.system.datatable.OptionDto;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+
+@WebjetComponent("sk.iway.iwcm.components.carouselslider.CarouselSliderApp")
+@WebjetAppStore(nameKey = "components.app-carousel_slider.title", descKey = "components.app-carousel_slider.desc", itemKey = "carousel_slider", imagePath = "/components/carousel_slider/editoricon.png", galleryImages = "/components/carousel_slider/", componentPath = "/components/carousel_slider/carousel_slider.jsp", customHtml = "/apps/carousel_slider/admin/editor-component.html")
+@DataTableTabs(tabs = {
+        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "advanced", title = "editor.tab.advanced", content = ""),
+})
+@Getter
+@Setter
+public class CarouselSliderApp extends WebjetComponentAbstract {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.menu.class_type", editor = {
+            @DataTableColumnEditor(options = {
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.autoScroller", value = "AutoScroller"),
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.classic", value = "Classic"),
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.fashion", value = "Fashion"),
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.gallery", value = "Gallery"),
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.rotator", value = "Rotator"),
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.simplicity", value = "Simplicity"),
+                    @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.stylish", value = "Stylish")
+            })
+    })
+    private String skin = "basic";
+
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "basic", title="&nbsp;")
+    private String styleImageIMG;
+
+    // dalsia strana
+
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "advanced", title = "components.carousel_slider.sliderDimensions")
+    private String label;
+
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.carousel_slider.carouselWidth", tab = "advanced")
+    private Integer carouselWidth;
+
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.carousel_slider.carouselHeight", tab = "advanced")
+    private Integer carouselHeight;
+
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "advanced", title = "components.carousel_slider.thumbQuality")
+    private String label2;
+
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.carousel_slider.imageWidth", tab = "advanced")
+    private Integer imageWidth;
+
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.carousel_slider.imageHeight", tab = "advanced")
+    private Integer imageHeight;
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title = "components.menu.class_type", editor = {
+            @DataTableColumnEditor(options = {
+                    @DataTableColumnEditorAttr(key = "1", value = "1"),
+                    @DataTableColumnEditorAttr(key = "2", value = "2"),
+                    @DataTableColumnEditorAttr(key = "3", value = "3"),
+                    @DataTableColumnEditorAttr(key = "4", value = "4"),
+                    @DataTableColumnEditorAttr(key = "5", value = "5"),
+                    @DataTableColumnEditorAttr(key = "6", value = "6")
+            })
+    })
+    private Integer imgPerSlide;
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title = "components.carousel_slider.direction", editor = {
+        @DataTableColumnEditor(options = {
+                @DataTableColumnEditorAttr(key = "components.carousel_slider.direction.horizontal", value = "horizontal"),
+                @DataTableColumnEditorAttr(key = "components.carousel_slider.direction.vertical", value = "vertical")
+        })
+    })
+    private String direction;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.showLightbox")
+    private boolean showLightbox = true;
+
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.carousel_slider.rowNumber", tab = "advanced")
+    private Integer rowNumber;
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title = "components.carousel_slider.navStyle", editor = {
+        @DataTableColumnEditor(options = {
+            @DataTableColumnEditorAttr(key = "components.carousel_slider.none", value = "none"),
+            @DataTableColumnEditorAttr(key = "components.carousel_slider.bullets", value = "bullets"),
+        })
+    })
+    private String nav_style;
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "advanced", title = "components.carousel_slider.displayArrows", editor = {
+        @DataTableColumnEditor(options = {
+            @DataTableColumnEditorAttr(key = "components.carousel_slider.none", value = "none"),
+            @DataTableColumnEditorAttr(key = "components.carousel_slider.always", value = "always"),
+            @DataTableColumnEditorAttr(key = "components.carousel_slider.mouseover", value = "mouseover"),
+        })
+    })
+    private String arrow_style;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.touchSwipe")
+    private boolean touch_swipe = true;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.randomPlay")
+    private boolean random_play;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.autoplay")
+    private boolean autoplay = true;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.mouseoverPause")
+    private boolean pause_on_mouse_over;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.circular")
+    private boolean circular = true;
+
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "advanced", title="components.carousel_slider.showShadow")
+    private boolean show_shadow_bottom;
+
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "advanced", title = "components.carousel_slider.interval", editor = {
+    })
+    private Integer autoplay_interval;
+}

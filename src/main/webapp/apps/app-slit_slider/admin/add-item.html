@@ -1,0 +1,27 @@
+<script type="text/javascript" data-th-inline="javascript">
+	var sliderItemsDataTable;
+
+	window.domReady.add(function () {
+		window.helpLink = "/redactor/apps/calendar/README";
+
+		var tabs = [
+			{
+				id: "basic",
+				title: /*[[#{calendar_events.tab.basic}]]*/ "basic",
+				selected: true,
+			},
+		];
+
+		let columns =
+            /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.appslitslider.jpa.SlitSliderDTO")})]*/ [];
+
+		sliderItemsDataTable = WJ.DataTable({
+			columns: columns,
+			tabs: tabs,
+			id: "sliderItemsDataTable",
+            jsonEditor: true
+		});
+	});
+</script>
+
+<table id="sliderItemsDataTable" class="datatableInit table"></table>

@@ -1,0 +1,50 @@
+<script>
+	function appAfterInit(response, datatable) {
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			function toggleLoopNumber() {
+				const selected = $("#DTE_Field_displayMode").val();
+				if (selected === "2") {
+					$(".DTE_Field_Name_loopNumber").show();
+				} else {
+					$(".DTE_Field_Name_loopNumber").hide();
+				}
+			}
+
+			toggleLoopNumber();
+
+			$("#DTE_Field_displayMode").on("change", toggleLoopNumber);
+
+			$(".col-sm-1.form-group-tooltip > button[aria-label^='<img']").css({
+				"margin-left": "-360px",
+				"padding-right": "0px",
+			});
+
+            $('.btn-tooltip').on('shown.bs.tooltip', function () {
+                $('.tooltip-inner').css({
+                    "max-width": "none",
+                    "width": "auto",
+                    "display": "inline-block"
+                });
+            });
+
+			function updateImageFromSelect() {
+				var selectedValue = $("#DTE_Field_skin").val();
+				var newImage = '<img id="DTE_Field_styleImageIMG" src="/components/slider/admin-styles/' + selectedValue + '.jpg" style="width: 100%; margin-top: 7px; border: 4px solid #4286f4;">';
+                $("#DTE_Field_styleImageIMG").replaceWith(newImage);
+			}
+
+            updateImageFromSelect();
+			$("#DTE_Field_skin").on("change", updateImageFromSelect);
+		});
+	}
+
+    function appGetComponentCode(componentPath, params, componentDatatable){
+        let include = "!INCLUDE(" + componentPath;
+        params.editorData = localStorage.getItem("tableLines");
+        if (Object.keys(params).length > 0) {
+            include += ", " + convertObjectToInludeParams(params);
+        }
+        include += ")!";
+        return include;
+    }
+</script>
