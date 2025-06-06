@@ -1,0 +1,17 @@
+<script>
+	function appAfterInit(response, datatable) {
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const socialNetworks = ["facebook", "instagram", "linkedin", "youtube", "twitter", "mail", "blog", "flickr", "rss"];
+
+			socialNetworks.forEach(socialNetwork => {
+				const iconHtml =
+					`<img src="/components/app-social_icon/${socialNetwork}.png" style="width: auto; height: auto;">`;
+
+				const label = $(`.DTE_Field_Name_${socialNetwork}_url label`);
+				if (label.find("img").length === 0) {
+					label.html(iconHtml);
+				}
+			});
+		});
+	}
+</script>
