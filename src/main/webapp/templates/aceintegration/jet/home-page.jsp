@@ -1,4 +1,4 @@
-<%@ page pageEncoding="windows-1250" trimDirectiveWhitespaces="true" %>
+<%@ page pageEncoding="utf-8" trimDirectiveWhitespaces="true" %>
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>

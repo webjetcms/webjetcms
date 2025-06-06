@@ -1,5 +1,6 @@
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ page import="sk.iway.iwcm.editor.InlineEditor,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
-<%@ page pageEncoding="windows-1250" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+<%@ page import="sk.iway.iwcm.editor.InlineEditor,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
+<%@ page pageEncoding="utf-8" %>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="${ninja.temp.charset}">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">

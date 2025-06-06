@@ -24,6 +24,7 @@
 - [ ] Dokumentácia - v `docs/sk/redactor/admin/password-recovery/README.md` sú obrázky `admin-recovery-form-1.png` a iné, ktoré nie sú nikde v testoch a teda sa nikdy nevygenerujú.
 - [ ] Titulok - doplniť kontrolu názvu stránky v titulku vo formáte `názov | WebJET CMS`.
 - [ ] Hromadný e-mail - otestovať prihlásenie do hromadného emailu, vrátane `simple` verzie.
+- [ ] `DemoComponent` - doplniť testy na kontrolu koreňových priečinkov pre `docDetailsRootCustomFields,dirSimpleGallery` a doplniť aj iné varianty nastavenia `data-dt-field-root` podľa dokumentácie.
 
 ## PostgreSQL
 

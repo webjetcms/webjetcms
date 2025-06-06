@@ -1,4 +1,5 @@
-<%@page import="java.util.List"%><%@ page pageEncoding="windows-1250" %>
+<%@page import="java.util.List"%>
+<%@ page pageEncoding="utf-8" %>
 
 <h1>Forms</h1>
 

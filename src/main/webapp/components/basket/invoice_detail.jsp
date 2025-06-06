@@ -176,7 +176,7 @@
 
 						   <%
 
-							String paymentMethod = PaymentMethodsService.getPaymentMethosLabel(invoice.getPaymentMethod(), request);
+							String paymentMethod = PaymentMethodsService.getPaymentMethodLabel(invoice.getPaymentMethod(), request);
 							if (Tools.isNotEmpty(paymentMethod))
 							{
 								%>

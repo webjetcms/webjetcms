@@ -44,6 +44,8 @@ ext {
     mapstructVersion = "1.6.1";
     springVersion = "5.3.+";
     springSecurityVersion = "5.8.+";
+    allureVersion = "2.24.0";
+    aspectJVersion = '1.9.19';
 }
 
 lombok {
@@ -51,7 +53,6 @@ lombok {
     //zrusene kvoli zbytocnym problemom s ActiveRecord config['lombok.accessors.chain'] = 'true'
     //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
-
 
 war {
     zip64 = true
@@ -105,6 +106,32 @@ sourceSets {
     }
  }
 
+
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+    all*.exclude group: 'log4j', module: 'log4j'
+    //all*.exclude group: 'xml-apis', module: 'xml-apis'
+
+    //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
+    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
+
+    grettyRunnerTomcat85 {
+
+    }
+    grettyRunnerTomcat9 {
+        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
+        // https://mvnrepository.com/artifact/commons-io/commons-io
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+
+    agent {
+        canBeResolved = true
+        canBeConsumed = true
+    }
+ }
+
 dependencies {
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
@@ -118,7 +145,7 @@ dependencies {
     //implementation("com.amazonaws:aws-java-sdk-core:1.12.+")
     //implementation("com.amazonaws:aws-java-sdk-ses:1.12.+")
     //implementation("bsf:bsf:2.4.0")
-    implementation("commons-beanutils:commons-beanutils:1.9.4")
+    implementation("commons-beanutils:commons-beanutils:1.11.0")
     implementation("commons-chain:commons-chain:1.2") //wjstruts
     //implementation("org.apache.commons:commons-collections4:4.4") //poi includes 4.4
     implementation("org.apache.commons:commons-compress:1.26.1")
@@ -200,8 +227,8 @@ dependencies {
     implementation("org.slf4j:log4j-over-slf4j:1.7.36")
     implementation("org.apache.logging.log4j:log4j-to-slf4j:2.17.1")
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
-    implementation("org.aspectj:aspectjrt:1.9.19")
-    implementation("org.aspectj:aspectjweaver:1.9.19")
+    implementation("org.aspectj:aspectjrt:${aspectJVersion}")
+    implementation("org.aspectj:aspectjweaver:${aspectJVersion}")
 
     // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-spec
     implementation 'org.apache.taglibs:taglibs-standard-spec:1.2.5'
@@ -247,6 +274,8 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.15.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    testImplementation "io.qameta.allure:allure-junit5"
 
     //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
     // used in io.springfox:springfox-swagger2
@@ -263,26 +292,8 @@ dependencies {
 
     implementation 'cz.gopay:gp-java-api-v3-common:3.8.1'
     implementation 'cz.gopay:gp-java-api-v3-apache-http-client:3.8.1'
-}
 
-configurations {
-    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-    all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
-    all*.exclude group: 'commons-logging', module: 'commons-logging'
-    all*.exclude group: 'log4j', module: 'log4j'
-    //all*.exclude group: 'xml-apis', module: 'xml-apis'
-
-    //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
-    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
-
-    grettyRunnerTomcat85 {
-
-    }
-    grettyRunnerTomcat9 {
-        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
-    }
+    agent "org.aspectj:aspectjweaver:$aspectJVersion"
 }
 
 test {
@@ -293,6 +304,7 @@ test {
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', '/poolman-local.xml'
+    jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
 }
 
 java {

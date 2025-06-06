@@ -192,6 +192,7 @@ if (includedIntoPage==false)
 											<input type="submit" class="button btn btn-info" value="<iwcm:text key="button.submit"/>"/>
 											<input type="hidden" name="login" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("login")) %>" />
 											<input type="hidden" name="auth" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("auth")) %>" />
+											<input type="hidden" name="language" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("language")) %>" />
 										</div>
 									</td>
 								</tr>

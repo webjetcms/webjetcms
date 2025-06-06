@@ -380,7 +380,7 @@ Scenario('Verify reservation data in the table after applying filters', async ({
     let isFromFilteredCorrectly = columnDataFrom.every(date => new Date(date) >= new Date(filterDateFrom));
     I.assertTrue(isFromFilteredCorrectly, 'Nesprávne filtrované hodnoty v Dátum od');
     let columnDataTo = await getTableColumnData(I, 'Dátum do');
-    let isToFilteredCorrectly = columnDataTo.every(date => new Date(date) <= new Date(filterDateTo));
+    let isToFilteredCorrectly = columnDataTo.every(date => new Date(date) <= new Date(filterDateTo + " 23:59:59"));
     I.assertTrue(isToFilteredCorrectly, 'Nesprávne filtrované hodnoty v Dátum do:');
 });
 

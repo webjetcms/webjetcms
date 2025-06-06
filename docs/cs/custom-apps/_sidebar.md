@@ -12,6 +12,8 @@
   - [Seznam web stránek/novinek](/custom-apps/news/)
   - [Uživatelé](/custom-apps/apps/user/README.md)
   - [Konfigurace](/custom-apps/config/README.md)
+  - Elektronický obchod
+    - [Způsoby platby](/custom-apps/apps/eshop/payment-methods/README.md)
 - Spring MVC
   - [Aplikace ve web stránce](/custom-apps/spring-mvc/)
   - [Admin s nahráním souboru](/custom-apps/spring-mvc/admin-with-upload.md)

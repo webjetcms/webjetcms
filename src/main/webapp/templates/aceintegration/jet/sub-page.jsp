@@ -1,4 +1,4 @@
-<%@ page pageEncoding="windows-1250" trimDirectiveWhitespaces="true" %>
+<%@ page pageEncoding="utf-8" trimDirectiveWhitespaces="true" %>
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -10,19 +10,19 @@
         <%@ include file="includes/head.jsp" %>
     </head>
     <body class="<%= fieldA %>">
-	
+
 		<iwcm:insertScript position="after-body"/>
-	
+
 		<header class="ly-header" data-aos="fade-down" data-aos-duration="600">
 			<%@ include file="includes/header.jsp" %>
 		</header>
-	
+
 		<article class="ly-content">
 			<h1><iwcm:write name="doc_title"/></h1>
-			<iwcm:notEmpty name="perex_image"><p><img src="<iwcm:write name="perex_image"/>" alt="<iwcm:write name="doc_title"/>" class="w-100" /></p></iwcm:notEmpty>	
+			<iwcm:notEmpty name="perex_image"><p><img src="<iwcm:write name="perex_image"/>" alt="<iwcm:write name="doc_title"/>" class="w-100" /></p></iwcm:notEmpty>
 			<iwcm:write name="doc_data"/>
 		</article>
-	
+
 		<footer class="ly-footer" id="blindBlock-footer">
 			<%@ include file="includes/footer.jsp" %>
 		</footer>

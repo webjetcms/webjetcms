@@ -289,6 +289,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 								</button>
 							</div>
 						</div>
+						<input type="hidden" name="language" value="<%=lng%>" />
 					</form>
 				</fieldset>
 			</div>

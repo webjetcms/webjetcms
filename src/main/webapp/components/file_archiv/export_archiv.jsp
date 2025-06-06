@@ -174,8 +174,9 @@
         }
 
         String zipId = "file_archiv_export_" + Constants.getInstallName() + "_" + getTodayDateString();
-        String zipArchivName = Tools.getRealPath(FileArchivatorKit.getArchivPath() + zipId + ".zip");
+        String zipArchivName = Tools.getRealPath("/files/protected/archiv/" + zipId + ".zip");
         IwcmFile zipArchiv = new IwcmFile(zipArchivName);
+        zipArchiv.getParentFile().mkdirs();
         //zazipujeme
         try
         {

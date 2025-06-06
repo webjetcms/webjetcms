@@ -1,4 +1,5 @@
-<%@page import="java.util.List"%><%@ page pageEncoding="windows-1250" %>
+<%@page import="java.util.List"%>
+<%@ page pageEncoding="utf-8" %>
 
 <link rel="stylesheet" href="/templates/webjet8/ninja-starter-kit/assets/css/highlight.css">
 <script src="/templates/webjet8/ninja-starter-kit/assets/js/plugins/highlight.js"></script>
@@ -112,9 +113,9 @@
       this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
       e.preventDefault();
     });
-    
+
     var sectionToScroll = window.location.href.split("#")[1];
-    
+
     setTimeout(function(){
       if(sectionToScroll != null){
         $("html, body").animate({
@@ -148,7 +149,7 @@
   var lastHId;
 
   function generateStructure() {
-    
+
     $(".bootstrap-example-wrapper :header").not("section .row .col-12 :header").each(function (index) {
       $(this).attr("id", "section-" + index);
       $(this).addClass("override-style");
