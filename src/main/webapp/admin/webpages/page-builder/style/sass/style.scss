@@ -43,7 +43,7 @@ $empty-placeholder-width: 1px;
 $modal-color: #152942;
 $modal-radius: 6px;
 $modal-padding: 12px;
-$modal-index: $minimum-index + 1000;
+$modal-index: $minimum-index + 2030;
 
 $library-index: $minimum-index + 2000;
 $notify-index: $minimum-index + 3000;
@@ -61,17 +61,17 @@ $notify-index: $minimum-index + 3000;
 @import "library";
 
 
-body {
-    padding: 100px 0;
-}
-
 section,
 .container {
     //margin-bottom: 100px;
 }
 
 .#{$prefix}-column { padding:0; }
-.#{$prefix}-column__content { position: relative; padding:0 15px; overflow: hidden; }
+.#{$prefix}-column__content {
+	position: relative;
+	/*padding: 0 15px; this is only problematic in simple col-12 with text and cursor hover*/
+	overflow: hidden;
+}
 
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
@@ -85,41 +85,6 @@ $c-primary: #ea3457;
 $c-secondary: #252525;
 $npb-light: #fff;
 $npb-dark: #e6e6e6;
-
-.btn {
-	font-size: 15px;
-	font-weight: 700;
-	min-width: 180px;
-	padding: 0 20px;
-	height: 52px;
-	line-height: 52px;
-	border-radius: 0;
-	opacity: 1;
-	color: #fff;
-	text-transform: uppercase;
-}
-
-.btn-primary {
-	background: $c-primary;
-	border-color: $c-primary;
-	&:hover {
-		background: darken($c-primary,10);
-		border-color: darken($c-primary,10);
-	}
-}
-
-.btn-secondary {
-	background: $c-secondary;
-	border-color: $c-secondary;
-	&:hover {
-		background: darken($c-secondary,10);
-		border-color: darken($c-secondary,10);
-	}
-}
-
-.btn + .btn {
-	margin: 0 0 0 16px;
-}
 
 .#{$prefix}-light {
 	background: $npb-light;
@@ -214,6 +179,7 @@ $npb-dark: #e6e6e6;
 
 .#{$prefix}-grid-element.#{$prefix}-is-blinking {
 	animation: blinking .5s infinite;
+	outline: 4px solid #ea4c7f;
 }
 
 @keyframes blinking {
@@ -262,6 +228,9 @@ $npb-dark: #e6e6e6;
 	font-style: normal;
 	background-color: rgba(100, 100, 100, 0.7);
 	top: 0px;
+	padding-left: 4px;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
 }
 .pb-library__content .library-tab-content .library-tab-item span.library-full-width-item {
 	display: block;
@@ -270,10 +239,141 @@ $npb-dark: #e6e6e6;
 	background-size: initial;
 	background-repeat: no-repeat;
 	background-color: white;
-	background-position-y: 8px;
+	background-position-y: 20px;
 	border: 2px solid white;
 }
 .pb-library__content .library-tab-content .library-tab-item span.library-full-width-item:hover {
 	border-color: #283c55;
 	background-color: unset;
+}
+
+.pb-section > .pb-toolbar:before {
+   width: auto;
+   height: auto;
+ }
+
+.pb-toolbar {
+   font-size: 12px;
+ }
+.pb-size-changer {
+   line-height: 15px;
+ }
+.pb-container .pb-highlighter__top { top: 2px; left: 2px; right: 2px; }
+.pb-container .pb-highlighter__bottom { bottom: 2px; left: 2px; right: 2px;}
+.pb-container .pb-highlighter__left { left: 2px; top: 2px; bottom: 2px; }
+.pb-container .pb-highlighter__right { right: 2px; top: 2px; bottom: 2px;}
+.pb-container > .pb-toolbar { right: 2px; top: -30px; }
+.pb-container > .pb-plus-button.pb-prepend { top: 4px; }
+.pb-column .pb-highlighter__top { top: 4px; left: 4px; right: 4px;}
+.pb-column .pb-highlighter__bottom { bottom: 4px; left: 4px; right: 4px;}
+.pb-column .pb-highlighter__left { left: 4px; top: 4px; bottom: 4px;}
+.pb-column .pb-highlighter__right { right: 4px; top: 4px; bottom: 4px;}
+.pb-column > .pb-toolbar { top: -28px; }
+.pb-column > .pb-plus-button { right: 4px !important; }
+
+div.pb-column.pb-not-editable.pb-always-mark > .pb-highlighter {
+  opacity: 0.2;
+}
+
+body.is-edit-mode section .container:hover { outline: none; }
+body.is-edit-mode div.editableElement:focus { outline: 1px dotted #ccc; }
+
+.pb-notify__content span {
+  color: white;
+}
+
+/*# podpora autotabov a accordionov */
+div.pb-is-moving-column .tab-content>.tab-pane, div.pb-is-moving-container .tab-content>.tab-pane {
+  display: block;
+  opacity: 1;
+}
+div.pb-custom-container {
+  padding-left: 15px;
+  padding-right: 15px;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+div.pb-autoaccordion .card {
+  border: 0px;
+  border-radius: 0px;
+  border-top: 1px solid #d9d9d9;
+}
+div.pb-autoaccordion .card .card-header {
+  background-color: transparent;
+  border: 0px;
+  border-radius: 0px;
+  color: #333 !important;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+div.pb-autoaccordion .card .card-header a {
+  cursor: pointer;
+}
+div.pb-autoaccordion .card .card-header p {
+  padding: 0px;
+}
+div.pb-autoaccordion .card .card-body {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+div.pb-col-12 {
+  width: 100%;
+}
+div.container div.pb-custom-container {
+  margin: 0px;
+}
+.md-tabs .tab-content div.pb-tab-title div.column-content {
+  min-height: auto;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  padding-left: 10px;
+}
+
+.tab-content > .pb-empty-placeholder .pb-empty-placeholder__button {
+  background-color: #fe1a69;
+  opacity: 1 }
+.tab-content > .pb-empty-placeholder .pb-empty-placeholder__button::after {
+  border-color: #fe1a69; }
+
+.pb-autoaccordion > .pb-empty-placeholder .pb-empty-placeholder__button {
+    background-color: #fe1a69;
+    opacity: 1 }
+.pb-autoaccordion > .pb-empty-placeholder .pb-empty-placeholder__button::after {
+    border-color: #fe1a69; }
+
+.pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button,
+.pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
+  background-color: #2bb6f9;
+}
+.pb-wrapper > .pb-empty-placeholder .pb-empty-placeholder__button::after {
+  border-color: #2bb6f9;
+}
+
+/* podpora carrousel - zobrazenie toolbaru */
+div.carousel-inner {
+  overflow: visible;
+}
+
+/* prepinac editora */
+div.exit-inline-editor {
+  display: block;
+  position: absolute;
+  bottom: 3px;
+  right: 0px;
+  padding-right: 10px;
+  padding-left: 4px;
+  z-index: 101;
+  background-color: #f5f5f5;
+  font-family: "Asap", sans-serif, Arial, Helvetica;
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 19px;
+}
+div.exit-inline-editor select {
+  border-radius: 6px;
+  padding: 3px;
+  border: 1px solid #868ea5;
+  background-color: white;
+  padding: 4px;
 }

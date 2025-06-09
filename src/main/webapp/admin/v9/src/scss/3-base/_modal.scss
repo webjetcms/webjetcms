@@ -794,11 +794,14 @@ div.DTE_Bubble_Background {
     z-index: 1055;
 }
 
-/* max-height to use full screen modal in small notebook screens */
-@media (max-width: ($bp-tablet - 1)), (max-height: 760px) {
+@media (max-width: ($bp-tablet - 1)) {
     html:not(.in-iframe-show-table) .jstree {
         height: auto !important;
     }
+}
+
+/* max-height to use full screen modal in small notebook screens */
+@media (max-width: ($bp-tablet - 1)), (max-height: 760px) {
     .modal.DTED {
         .modal-dialog {
             max-width: 100%;
