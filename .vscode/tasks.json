@@ -322,7 +322,7 @@
             "options": {
                 "cwd": "src/main/webapp/admin/webpages/page-builder/style/sass/"
             },
-            "command": "sass --style=expanded style.scss ../style.css; perl -pi -0777 -e 's/\\n\\}/ \\}/g' ../style.css;",
+            "command": "sass --style=expanded --watch style.scss:../style.css",
             "group": "build",
             "presentation": {
                 "clear": true,
