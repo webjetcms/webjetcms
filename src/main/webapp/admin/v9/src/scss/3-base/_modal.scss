@@ -794,7 +794,8 @@ div.DTE_Bubble_Background {
     z-index: 1055;
 }
 
-@media (max-width: ($bp-tablet - 1)) {
+/* max-height to use full screen modal in small notebook screens */
+@media (max-width: ($bp-tablet - 1)), (max-height: 760px) {
     html:not(.in-iframe-show-table) .jstree {
         height: auto !important;
     }
@@ -831,7 +832,7 @@ div.DTE_Bubble_Background {
         .modal-dialog-scrollable {
             margin: 0px;
             width: 100%;
-            max-width: 100%;
+            max-width: 100% !important;
             height: 100%;
             max-height: 100%;
 
