@@ -1667,7 +1667,7 @@
 
 .pb-column__content {
   position: relative;
-  /*padding: 0 15px; this is only problematic in simple col-12 with text and cursor hover*/
+  padding: 0 5px; /*this is only problematic in simple col-12 with text and cursor hover*/
   overflow: hidden;
 }
 
