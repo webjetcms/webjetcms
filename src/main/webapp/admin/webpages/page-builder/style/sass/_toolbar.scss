@@ -83,7 +83,7 @@
             }
 
             &:hover {
-                background-color: darken($toolbar-content-color,15%);
+                background-color: $primary;
             }
         }
     }

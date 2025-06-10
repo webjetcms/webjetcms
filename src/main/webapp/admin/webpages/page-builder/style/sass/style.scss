@@ -1,3 +1,23 @@
+/* WJ admin variables from ninja.scss */
+$primary: #0063FB;
+$primary-hover: #0054d5;
+$nice-primary: #0090FC;
+$secondary: #13151B;
+
+$nice-gray: #F3F3F6;
+$nice-gray-100: #DDDFE6;
+$nice-gray-200: #B2B8C8;
+$nice-gray-300: #868EA5;
+
+$nice-black: #1f2022;
+
+$dark-60: #686F83;
+
+$sidebar-bg: #353944;
+$sidebar-active-bg: #23262E;
+
+/* Page Builder variables */
+
 $prefix: "pb";
 
 $color-gray: #8a8e93;
@@ -17,7 +37,8 @@ $toolbar-icon-size: 12px;
 $toolbar-index: $minimum-index + 1000;
 $toolbar-radius: 6px;
 
-$toolbar-content-color: #2a3342;
+$toolbar-content-color: $sidebar-bg;
+$toolbar-btn-hover-bg: $sidebar-active-bg;
 $toolbar-content-gap: 8px;
 $toolbar-content-radius: 6px;
 $toolbar-content-button-size: 36px;
@@ -40,14 +61,18 @@ $empty-placeholder-button-index: $minimum-index + 100;
 $empty-placeholder-min-height: 48px;
 $empty-placeholder-width: 1px;
 
-$modal-color: #152942;
+$modal-color: $nice-gray;
+$modal-boder-color: rgba(0, 0, 0, 0.175);
 $modal-radius: 6px;
 $modal-padding: 12px;
 $modal-index: $minimum-index + 2030;
 
+$modal-box-shadow: 0px 2px 20px 0px rgba(0, 0, 0, 0.9);
+$modal-body-background: #ffffff99;
+$modal-body-filter: blur(12px);
+
 $library-index: $minimum-index + 2000;
 $notify-index: $minimum-index + 3000;
-
 
 @import "grid-element";
 @import "highlighter";
@@ -59,12 +84,6 @@ $notify-index: $minimum-index + 3000;
 @import "modal";
 @import "notify";
 @import "library";
-
-
-section,
-.container {
-    //margin-bottom: 100px;
-}
 
 .#{$prefix}-column { padding:0; }
 .#{$prefix}-column__content {
@@ -81,8 +100,6 @@ input[type=number]::-webkit-outer-spin-button {
 
 //JURKOVE STYLY
 
-$c-primary: #ea3457;
-$c-secondary: #252525;
 $npb-light: #fff;
 $npb-dark: #e6e6e6;
 
@@ -133,7 +150,6 @@ $npb-dark: #e6e6e6;
 	}
 }
 
-
 .#{$prefix}-light {
   background: #fff; }
 
@@ -158,24 +174,24 @@ $npb-dark: #e6e6e6;
     position: absolute;
     top: 0;
     background: url(https://cdn.pixabay.com/photo/2015/10/12/15/46/fallow-deer-984573_960_720.jpg) no-repeat center;
-    background-size: cover; }
+    background-size: cover;
+}
 
 .section.npg-img-left .column-content {
-  padding: 0 0 0 80px; }
+  padding: 0 0 0 80px;
+}
 
 .section.npg-img-left .img {
-  left: 0; }
+  left: 0;
+}
 
 .section.npg-img-right .column-content {
-  padding: 0 80px 0 0; }
+  padding: 0 80px 0 0;
+}
 
 .section.npg-img-right .img {
-	right: 0; }
-
-	img {
-		//margin-bottom: 20px !important;
-	}
-
+	right: 0;
+}
 
 .#{$prefix}-grid-element.#{$prefix}-is-blinking {
 	animation: blinking .5s infinite;
@@ -197,24 +213,7 @@ $npb-dark: #e6e6e6;
 	}
 }
 
-
 /* JEEFF zmeny pre library */
-.pb-library {
-	position: fixed;
-	top: 0px;
-	left: 0px;
-	width: 370px;
-	height: 100%;
-	border-radius: 0px;
-	border-right: 2px solid #152942;
-}
-.pb-library__content {
-	overflow-y: scroll;
-	height: 100%;
-	max-height: 85%;
-	background-color: white;
-
-}
 .pb-library__content .library-tab-content {
 	border-radius: 0px;
 	padding-top: 10px;
@@ -222,29 +221,6 @@ $npb-dark: #e6e6e6;
 }
 .library-tab-item-group {
 	color: white;
-}
-.pb-library__content .library-tab-content .library-tab-item span.library-full-width-item i {
-	color: black;
-	font-style: normal;
-	background-color: rgba(100, 100, 100, 0.7);
-	top: 0px;
-	padding-left: 4px;
-	border-top-left-radius: 4px;
-	border-top-right-radius: 4px;
-}
-.pb-library__content .library-tab-content .library-tab-item span.library-full-width-item {
-	display: block;
-	width: 330px;
-	height: 200px;
-	background-size: initial;
-	background-repeat: no-repeat;
-	background-color: white;
-	background-position-y: 20px;
-	border: 2px solid white;
-}
-.pb-library__content .library-tab-content .library-tab-item span.library-full-width-item:hover {
-	border-color: #283c55;
-	background-color: unset;
 }
 
 .pb-section > .pb-toolbar:before {
@@ -277,10 +253,6 @@ div.pb-column.pb-not-editable.pb-always-mark > .pb-highlighter {
 
 body.is-edit-mode section .container:hover { outline: none; }
 body.is-edit-mode div.editableElement:focus { outline: 1px dotted #ccc; }
-
-.pb-notify__content span {
-  color: white;
-}
 
 /*# podpora autotabov a accordionov */
 div.pb-is-moving-column .tab-content>.tab-pane, div.pb-is-moving-container .tab-content>.tab-pane {

@@ -7,6 +7,7 @@
 ### Web stránky
 
 - AB Testovanie - pridaná možnosť zobrazovať AB verziu podľa stavu prihláseného používateľa - neprihlásenému používateľovi sa zobrazí A verzia a prihlásenému B verzia. Režim aktivujete nastavením konfiguračnej premennej `ABTestingForLoggedUser` na hodnotu `true` (#57893).
+- Page Builder - upravený vizuál aby lepšie zapadal do aktuálneho dizajnu WebJET CMS (#57893).
 
 ### Aplikácie
 
