@@ -273,7 +273,11 @@ public class UpdateDatabase
 		try
 		{
 			IwcmFile f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate.xml"));
-			autoUpdateDatabase(f, "iwcm");
+			if(f.exists())
+			{
+				autoUpdateDatabase(f, "iwcm");
+			}
+
 
 			f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate-"+Constants.getInstallName()+".xml"));
 			if (f.exists())
