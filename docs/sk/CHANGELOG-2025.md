@@ -103,6 +103,11 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/reservation/day-book-app/app-table_B.png)
 
+### Galéria
+
+- **Podpora pre zmenu hodnoty Priečinok** - pridaná podpora pre zmenu priečinka obrázka umožňuje [presunutie obrázka](redactor/apps/gallery/README.md#) pri úprave alebo duplikovaní (#57885).
+- **Automatické nastavenie neexistujúceho priečinka** - ak sa pri presúvaní obrázka zadala cesta neexistujúci priečinka, po vytvorení sa mu automatický nastavia nastavenia najbližšieho rodiča (#57885).
+
 ### Elektronický obchod
 
 !> **Upozornenie:** z dôvodu aktualizácie databázy môže prvý štart servera trvať dlhšie - do databázy sa vypočítajú hodnoty pre počet položiek a cenu pre rýchlejšie načítanie zoznamu objednávok.
@@ -128,6 +133,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
 - Prieskumník - rýchlejšie načítanie a nižšie zaťaženie servera znížením počtu súborov/požiadaviek na server (#56953).
+- `dt-tree-dir-simple` - pridaná podpora na skrytie rodičovských adresárov v zobrazenej stromovej štruktúre atribútom `data-dt-field-hideRootParents` (#57885).
 
 ### Oprava chýb
 
