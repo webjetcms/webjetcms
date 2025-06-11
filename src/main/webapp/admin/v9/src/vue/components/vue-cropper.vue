@@ -82,7 +82,7 @@
         data() {
             return {
                 galleryTable: galleryTable,
-                imagePath: $("#DTE_Field_imagePath").val(),
+                imagePath: galleryTable.EDITOR.field("imagePath").val(),
                 imageName: $("#DTE_Field_imageName").val(),
                 imageIsReady: false,
                 coordinates: {
@@ -108,7 +108,7 @@
                     return url;
                 },
                 set() {
-                    this.imagePath = $("#DTE_Field_imagePath").val();
+                    this.imagePath = galleryTable.EDITOR.field("imagePath").val();
                     this.imageName = $("#DTE_Field_imageName").val();
                 }
             }
@@ -153,7 +153,7 @@
             refreshImgSrc() {
                 const newImageSrc = {
                     imageName: $("#DTE_Field_imageName").val(),
-                    imagePath: $("#DTE_Field_imagePath").val()
+                    imagePath: galleryTable.EDITOR.field("imagePath").val()
                 }
                 if (this.imageName != newImageSrc.imageName) this.imageName = newImageSrc.imageName;
                 if (this.imagePath != newImageSrc.imagePath) this.imagePath = newImageSrc.imagePath;

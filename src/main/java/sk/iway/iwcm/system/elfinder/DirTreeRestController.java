@@ -76,7 +76,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
 
             //Prepare parents only if we want local root childs
             if(loadParents) {
-                prepareParents(parentPath, items);
+                prepareParents(parentPath, items, item.isHideRootParents());
             }
         }
 
@@ -90,7 +90,7 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
      * @param treeRootPath
      * @param items
      */
-    private void prepareParents(String treeRootPath, List<DirTreeItem> items) {
+    private void prepareParents(String treeRootPath, List<DirTreeItem> items, boolean hideRootParents) {
         //Check if we even need to prepare parents
         if(items == null || items.size() == 0) return;
 
@@ -109,9 +109,13 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
             newItem.getState().setOpened(false);
             newItem.getState().setDisabled(true);
             newItem.setParent(nextParent.getVirtualParent());
-            newItem.setIcon("ti ti-folder-x");
 
-            if("/".equals(nextParent.getVirtualPath())) {
+            if(hideRootParents == true && treeRootPath.equals(nextParent.getVirtualPath())) {
+                // Root for us
+                newItem.setParent("#");
+                items.add(0, newItem);
+                break;
+            } else if("/".equals(nextParent.getVirtualPath())) {
                 //Root
                 newItem.setParent("#");
                 newItem.setText(getProp().getText("stat_settings.group_id"));

@@ -66,16 +66,11 @@ public class GalleryEntity {
 
     @Size(max = 255)
     @Column(name = "image_path")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="admin.temp_group_list.directory", tab = "metadata",
-        editor = {
-            @DataTableColumnEditor(attr = {
-                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
-            })
-    })
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private String imagePath;
 
     @Column(name = "image_source")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata", sortAfter = "editorFields.dirSimpleGallery",
         editor = {
             @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
@@ -302,7 +297,8 @@ public class GalleryEntity {
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
             tab = "metadata",
-            title = "components.gallery.author"
+            title = "components.gallery.author",
+            sortAfter = "imageSource"
         )
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String author;
@@ -311,12 +307,13 @@ public class GalleryEntity {
     @Temporal(TemporalType.TIMESTAMP)
     @DataTableColumn(
             tab = "metadata",
-            title = "components.gallery.metadata.uploadDateTime"
+            title = "components.gallery.metadata.uploadDateTime",
+            sortAfter = "author"
     )
     public Date uploadDatetime;
 
     @Column(name = "sort_priority")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "metadata", title = "gallery.sort_priority")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "metadata", title = "gallery.sort_priority", sortAfter = "uploadDatetime")
     private Integer sortPriority;
 
     @Column(name = "selected_height")
