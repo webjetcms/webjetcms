@@ -1334,6 +1334,11 @@ export const dataTableInit = options => {
                 if(typeof json.notify != "undefined" && json.notify != null) {
                     showNotify(json.notify);
                 }
+
+                //nastav checkboxy, toto treba ppo kazdom SUBMIT-e, pretoze sa nam menia moznosti select boxov
+                $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
+                $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').addClass("form-check-input");
+                $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
             }, 300);
         });
 
