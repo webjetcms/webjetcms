@@ -40,6 +40,35 @@ block content
             }
         ];
 
+
+        var customInitialData = dtWJ.getEmptyData(true);
+
+        let perexGroupsOptionsRaw = "[(${perexGroupsOptions})]";
+        var perexGroupsOptions = [];
+        if(perexGroupsOptionsRaw != null && perexGroupsOptionsRaw != undefined && perexGroupsOptionsRaw.length > 0) {
+            // Remove curly braces
+            const trimmed = perexGroupsOptionsRaw.slice(1, -1);
+
+            // Split into key-value pairs
+            const entries = trimmed.split(', ').map(pair => {
+                const [key, value] = pair.split('=');
+                return [key.trim(), value.trim()];
+            });
+
+            // Prepare options
+            entries.forEach(([key, value]) => {
+                perexGroupsOptions.push({
+                    label: value,
+                    value: key,
+                    original: null
+                });
+            });
+        }
+
+        customInitialData.options = {
+            "editorFields.perexGroupsIds": perexGroupsOptions
+        }
+
         window.domReady.add(function () {
             galleryTable = WJ.DataTable( {
                 url: url,
@@ -50,7 +79,7 @@ block content
                 fetchOnCreate: true,
                 fetchOnEdit: true,
                 idAutoOpener: true,
-                initialData: dtWJ.getEmptyData(true),
+                initialData: customInitialData,
                 onPreXhr: function(TABLE, e, settings, data) {
                     data.fixed_searchImagePath = imagePath;
                     data.fixed_searchImageName = imageName;
@@ -96,6 +125,10 @@ block content
                     WJ.notifyError("[[\#{components.chat.error}]]", "[[\#{image_editor.imageIsOnRemoteServer}]]");
                     $(".DTE_Footer .btn-primary").hide();
                 }
+
+                // Image editor has no permission to chnage dirSimpleGallery
+                galleryTable.EDITOR.field("editorFields.dirSimpleGallery").disable();
+                $("#editorAppDTE_Field_editorFields-dirSimpleGallery").find("button.btn-vue-jstree-item-edit").prop( "disabled", true );
 
                 $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                 //console.log("Reseting imageEditorInstance");
