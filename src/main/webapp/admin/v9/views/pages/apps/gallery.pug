@@ -134,7 +134,7 @@ block content
                     if (typeof size == "undefined" || size == null) {
                         size = "S";
                     }
-                    
+
                     if (size != '') {
                         setDatatableInitSize(size);
                     };
@@ -172,7 +172,7 @@ block content
                         let arr = $("table.datatableInit");
                         for(let i = 0; i < arr.length; i++) {
                             //Skip searchTable (filter)
-                            if($(arr[i]).prop('id') != "jstreeSearchTable") 
+                            if($(arr[i]).prop('id') != "jstreeSearchTable")
                                 $(arr[i]).addClass('cardView cardView'+size);
                         }
                     }
@@ -489,7 +489,11 @@ block content
 
                     galleryTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
                         if (imageEditorInstance != null) imageEditorInstance.onPostEditedImage('/admin/upload/chunk');
+
+                        // Edit with move or duplicate can create new structure, so we need to refresh tree
+                        window.jstree.jstree(true).refresh(false, true);
                     });
+
                     galleryTable.EDITOR.on('open', function (e, type, action) {
                         $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                         //console.log("Reseting imageEditorInstance");
@@ -542,6 +546,7 @@ block content
                 const initializeImageEditor = event => {
                     //dynamicky vytvaram image editor
                     //TODO: upravit aby sa neinicializoval zakazdym, ale len prepouzil
+
                     imageEditor().then(module => {
                         let now = (new Date()).getTime();
                         const options = {
@@ -550,7 +555,7 @@ block content
                                 resizePresetDimensions: getResizeValues(),
                                 menuBarPosition: 'left',
                                 loadImage: {
-                                    path: `${$("#DTE_Field_imagePath").val()}/o_${$("#DTE_Field_imageName").val()}?v=${now}`,
+                                    path: `${galleryTable.EDITOR.field("imagePath").val()}/o_${$("#DTE_Field_imageName").val()}?v=${now}`,
                                     name: $("#DTE_Field_imageName").val(),
                                 },
                                 menu: ['resize', 'crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
@@ -688,7 +693,7 @@ block content
                         } else {
                              let now = (new Date()).getTime();
                              imageEditorInstance.loadImageFromURL(
-                                  `${$("#DTE_Field_imagePath").val()}/o_${$("#DTE_Field_imageName").val()}?v=${now}`,
+                                  `${galleryTable.EDITOR.field("imagePath").val()}/o_${$("#DTE_Field_imageName").val()}?v=${now}`,
                                    $("#DTE_Field_imageName").val(),
                              ).then(()=> {
                                     imageEditorInstance.clearUndoStack();
