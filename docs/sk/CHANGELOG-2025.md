@@ -27,6 +27,10 @@
 
 - Ak [menu web stránky](redactor/apps/menu/README.md) nemá zadaný koreňový priečinok (hodnota je nastavená na 0), automaticky sa použije koreňový priečinok pre aktuálne zobrazenú web stránku. Je to výhodné ak sa zobrazuje menu vo viacerých jazykových mutáciách kde každá je koreňový priečinok - nemusíte mať menu/hlavičky pre každý jazyk samostatne, stačí jedna spoločná (#57893).
 
+### Dokumentácia
+
+- Doplnená dokumentácia pre nastavenie a používanie [dvoj stupňového overovania/autorizácie](redactor/admin/logon.md#dvojstupňové-overovanie) (#57889).
+
 ## 2025.18
 
 > Verzia **2025.18** prináša kompletne prerobený modul **Elektronického obchodu** s podporou **platobnej brány GoPay** a vylepšeným zoznamom objednávok. Aplikácia **Kalendár noviniek** bola oddelená ako **samostatná aplikácia** a zároveň sme prerobili nastavenia viacerých aplikácii v editore stránok do nového dizajnu. **Manažér dokumentov** (pôvodne Archív súborov) prešiel **vizuálnym aj funkčným reštartom** vrátane nových nástrojov na správu, export a import dokumentov.
