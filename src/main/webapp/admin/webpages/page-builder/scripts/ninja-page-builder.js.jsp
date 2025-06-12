@@ -2629,6 +2629,7 @@
                     $('.tab-content .tab-item').removeClass('active');
                     $('.tab-content .tab-item[data-tab-id="'+id+'"]').addClass('active');
 
+                    //select first menu tab
                     $('.tab-content .tab-item[data-tab-id="'+id+'"] .tab-item-button').first().trigger('click');
                 }
             });
