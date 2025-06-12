@@ -152,6 +152,7 @@ $(document).ready(function()
            });
 	   }else{
            $("#gauthCheckbox").prop( "checked", false );
+           $("#qrImage").html("");
            $("#qrImage").hide();
            $("#scratchCodeCell").hide();
            $("#scratchCode").text("");

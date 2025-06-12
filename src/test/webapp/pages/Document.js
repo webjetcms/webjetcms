@@ -37,8 +37,8 @@ module.exports = {
     }
   },
 
-  screenshot(screenshotFilePath, width, height) {
-      this.screenshotElement(null, screenshotFilePath, width, height);
+  screenshot(screenshotFilePath, width, height, selectorToHighlight) {
+      this.screenshotElement(null, screenshotFilePath, width, height, selectorToHighlight);
   },
 
   screenshotElement(selector, screenshotFilePath, width, height, selectorToHighlight) {
@@ -64,7 +64,13 @@ module.exports = {
 
         this.unhighlightElement(selectorToHighlight);
       }
-      else I.saveScreenshot(path);
+      else {
+        this.highlightElement(selectorToHighlight);
+
+        I.saveScreenshot(path);
+
+        this.unhighlightElement(selectorToHighlight);
+      }
 
       I.say("windows resized=" + windowResized);
       if (windowResized) I.wjSetDefaultWindowSize();
