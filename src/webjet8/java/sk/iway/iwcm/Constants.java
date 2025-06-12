@@ -619,7 +619,7 @@ public class Constants {
 		// zoznam XSS hodnot pre test filtra
 		// hodnoty <xml|<?xml som zmazal kvoli detekcii pri vkladani
 		setString("xssTestValues",
-				"<script|javascript:|javascript&colon;|onmouse|onload|onerror|onfocus|onblur|onclick|onchange|onselect|ondoubleclick|ondblclick|onkeydown|onkeypress|onkeyup|set-cookie|expression(|&#|<meta|<iframe|<layer|<link|<style|<frame|<base|<object|<embed|<jscript|activexobject|ecmascript|vbscript:|.fromcharcode|x-javascript|@import|alert(|/web-inf/",
+				"<script|javascript:|javascript&colon;|onmouse|onload|onerror|onfocus|onblur|onclick|onchange|onselect|ondoubleclick|ondblclick|onkeydown|onkeypress|onkeyup|set-cookie|expression(|&#|<meta|<iframe|<layer|<link|<style|<frame|<base|<object|<embed|<jscript|activexobject|ecmascript|vbscript:|.fromcharcode|x-javascript|@import|alert(|/web-inf/|onwebkit",
 				MOD_SECURITY, "zoznam testovanych XSS vyrazov");
 
 		setString("webEnableIPs", "", MOD_SECURITY,
