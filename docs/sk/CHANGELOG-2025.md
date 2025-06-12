@@ -7,15 +7,25 @@
 ### Web stránky
 
 - AB Testovanie - pridaná možnosť zobrazovať AB verziu podľa stavu prihláseného používateľa - neprihlásenému používateľovi sa zobrazí A verzia a prihlásenému B verzia. Režim aktivujete nastavením konfiguračnej premennej `ABTestingForLoggedUser` na hodnotu `true` (#57893).
-- Page Builder - upravený vizuál aby lepšie zapadal do aktuálneho dizajnu WebJET CMS (#57893).
+- [Page Builder](redactor/webpages/pagebuilder.md) - upravený vizuál, aby lepšie zapadal do aktuálneho dizajnu WebJET CMS (#57893).
+
+![](redactor/webpages/pagebuilder-style.png)
+
+### Používateľské rozhranie
+
+- Pri použití malého monitora (výška okna menej ako 760 bodov) sa zobrazí okno automaticky na celú plochu a zmenší sa hlavička a pätička (titulok okna je menším písmom). Zvýši sa tak zobrazené množstvo informácií, čo je potrebné hlavne v sekcii web stránky. Používa sa pri oknách používajúcich CSS triedu `modal-xl`, čo sú aktuálne web stránky, foto galéria, editor obrázkov a používatelia (#57893).
+
+![](redactor/webpages/pagebuilder.png)
 
 ### Aplikácie
 
-- Pridaná možnosť zobraziť aplikáciu len prihlásenému/neprihlásenému používateľovi. Režim sa nastavuje v karte Zobrazenie nastavenia aplikácie v editore stránok (#57893).
+- Pridaná možnosť zobraziť aplikáciu len prihlásenému/neprihlásenému používateľovi. Režim sa nastavuje v karte [Zobrazenie nastavenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie) v editore stránok (#57893).
+
+![](custom-apps/appstore/common-settings-tab.png)
 
 ### Menu
 
-- Ak menu nemá zadaný koreňový priečinok automaticky sa získa podľa aktuálne zobrazenej web stránky. Je to výhodné ak sa zobrazuje menu vo viacerých jazykových mutáciách kde každá je koreňový priečinok - nemusíte mať samostatné menu/hlavičky pre každý jazyk samostatne, stačí jedna spoločná (#57893).
+- Ak menu nemá zadaný koreňový priečinok (hodnota je nastavená na 0), automaticky sa použije koreňový priečinok pre aktuálne zobrazenú web stránku. Je to výhodné ak sa zobrazuje menu vo viacerých jazykových mutáciách kde každá je koreňový priečinok - nemusíte mať menu/hlavičky pre každý jazyk samostatne, stačí jedna spoločná (#57893).
 
 ## 2025.18
 

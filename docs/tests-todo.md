@@ -25,7 +25,7 @@
 - [ ] Titulok - doplniť kontrolu názvu stránky v titulku vo formáte `názov | WebJET CMS`.
 - [ ] Hromadný e-mail - otestovať prihlásenie do hromadného emailu, vrátane `simple` verzie.
 - [ ] `DemoComponent` - doplniť testy na kontrolu koreňových priečinkov pre `docDetailsRootCustomFields,dirSimpleGallery` a doplniť aj iné varianty nastavenia `data-dt-field-root` podľa dokumentácie.
-- [ ] Aplikácie - zobrazenie pre prihláseného/neprihláseného používateľa, v Banner zobrazenie Obsahový banner v náhľade stránky (kontrola nastavenia URL adresy).
+- [ ] Aplikácie - zobrazenie pre prihláseného/neprihláseného používateľa, v Banner zobrazenie Obsahový banner v náhľade stránky (kontrola nastavenia URL adresy - chybne použilo `/admin/webpages/preview` namiesto URL adresy stránky).
 
 ## PostgreSQL
 
