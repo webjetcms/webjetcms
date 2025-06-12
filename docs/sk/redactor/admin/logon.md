@@ -40,11 +40,11 @@ Ak používate overovanie voči `ActiveDirectory/SSO` serveru, môžete funkcion
 
 ### Nastavenie dvojstupňového overovania
 
-Nastavenie `2FA` nájdete v admin sekcií kliknutím na meno používateľa v pravej hornej časti
+Nastavenie `2FA` nájdete kliknutím na meno používateľa v pravej hornej časti
 
 ![](2fa_part_1.png)
 
-následne sa zobrazí lišta, v ktorej zvolíte možnosť **Dvojstupňové overovanie**
+následne sa zobrazí menu, v ktorej zvolíte možnosť **Dvojstupňové overovanie**
 
 ![](2fa_part_2.png)
 
@@ -57,22 +57,22 @@ Pre ďalší krok, budete potrebovať nainštalovanú aplikáciu. V okne už sú
 - <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605" target="_blank">Google Authenticator pre iOS</a>
 - <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank">Google Authenticator pre Android</a>
 
-ale môžete stiahnuť a používať aj `Microsoft Authenticator`
+ale môžete používať aj `Microsoft Authenticator` alebo inú aplikáciu podporujúcu `TOTP` kódy.
 
 - <a href="https://apps.apple.com/us/app/microsoft-authenticator/id983156458" target="_blank">Microsoft Authenticator pre iOS</a>
 - <a href="https://play.google.com/store/search?q=microsoft%20auth&c=apps" target="_blank">Microsoft Authenticator pre Android</a>
 
-Následne v okne povoľte možnosť **Povoliť dvojstupňové overovanie**, čím sa Vám vygeneruje `QR` kód. Pomocou stiahnutej aplikácie `Google Authenticator` (alebo `Microsoft Authenticator`) naskenujte tento `QR` kód, prípadne pridajte overenie vygenerovaným kľúčom.
+Následne v okne povoľte možnosť **Povoliť dvojstupňové overovanie**, čím sa Vám zobrazí `QR` kód. Pomocou stiahnutej aplikácie naskenujte tento `QR` kód, prípadne pridajte overenie vygenerovaným kľúčom.
 
 ![](2fa_part_4.png)
 
 !>**Upozornenie:** nezabudnite stlačiť **OK** pre uloženie nastavenia.
 
-Pri nasledujúcom pokuse o prihlásenie vyžite svoje bežné prihlasovacie údaje
+Pri nasledujúcom pokuse o prihlásenie zadáte svoje štandardné prihlasovacie údaje
 
 ![](2fa_part_5.png)
 
-ak sa **dvojstupňové overovanie** úspešne nastavilo, po prihlásení budete ešte vyzvaný na zadanie kódu z autentifikačnej aplikácie `Google Authenticator` (alebo `Microsoft Authenticator`).
+ak sa **dvojstupňové overovanie** úspešne nastavilo, po prihlásení budete ešte vyzvaný na zadanie kódu z autentifikačnej aplikácie.
 
 ![](2fa_part_6.png)
 
@@ -84,4 +84,4 @@ Ak zadáte platný kód, budete úspešne prihlásený.
 
 ### Odporúčanie
 
-Pri strate zariadenia môžete stratiť prístup k účtu, preto odporúčame použitie záložných kódov alebo zálohu `2FA` aplikácie.
+Pri strate zariadenia môžete stratiť prístup k účtu, preto odporúčame v aplikácii nastaviť zálohovanie dát.
