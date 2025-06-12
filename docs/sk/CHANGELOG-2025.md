@@ -4,6 +4,11 @@
 
 > Vývojová verzia
 
+## 2025.0.xx
+
+- Inicializácia - doplnená kontrola existencie súboru `autoupdate.xml`, aby na verejných uzloch clustra nepísalo chybu pri štarte WebJETu (#54273-68).
+- Bezpečnosť - doplnená kontrola výrazu `onwebkit` pri URL parametroch pre zamedzenie vykonania XSS útoku (#54273-68).
+
 ## 2025.0.23
 
 > Opravná verzia pôvodnej verzie 2025.0.
