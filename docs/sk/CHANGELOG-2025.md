@@ -4,8 +4,12 @@
 
 > Vývojová verzia
 
-## 2025.0.xx
+## 2025.0.x
 
+> Opravná verzia pôvodnej verzie 2025.0.
+
+- PDF - opravené nastavenie cesty do `fonts` priečinka s písmami. Je potrebné zadať plnú cestu na disku servera (#57657).
+- Aktualizovaná knižnica `Apache Commons BeanUtils` na verziu 1.11.0.
 - Inicializácia - doplnená kontrola existencie súboru `autoupdate.xml`, aby na verejných uzloch clustra nepísalo chybu pri štarte WebJETu (#54273-68).
 - Bezpečnosť - doplnená kontrola výrazu `onwebkit` pri URL parametroch pre zamedzenie vykonania XSS útoku (#54273-68).
 
