@@ -62,26 +62,28 @@ ale môžete používať aj `Microsoft Authenticator` alebo inú aplikáciu podp
 - <a href="https://apps.apple.com/us/app/microsoft-authenticator/id983156458" target="_blank">Microsoft Authenticator pre iOS</a>
 - <a href="https://play.google.com/store/search?q=microsoft%20auth&c=apps" target="_blank">Microsoft Authenticator pre Android</a>
 
-Následne v okne povoľte možnosť **Povoliť dvojstupňové overovanie**, čím sa Vám zobrazí `QR` kód. Pomocou stiahnutej aplikácie naskenujte tento `QR` kód, prípadne pridajte overenie vygenerovaným kľúčom.
+Následne v okne zaškrtnite možnosť **Povoliť dvojstupňové overovanie**, čím sa Vám zobrazí `QR` kód. Pomocou mobilnej aplikácie naskenujte tento `QR` kód, prípadne pridajte overenie zadaním vygenerovaného kľúča.
 
 ![](2fa_part_4.png)
 
 !>**Upozornenie:** nezabudnite stlačiť **OK** pre uloženie nastavenia.
 
-Pri nasledujúcom pokuse o prihlásenie zadáte svoje štandardné prihlasovacie údaje
+### Prihlásenie so zadaním kódu
+
+Pri nasledujúcom prihlásení zadáte svoje štandardné prihlasovacie údaje
 
 ![](2fa_part_5.png)
 
-ak sa **dvojstupňové overovanie** úspešne nastavilo, po prihlásení budete ešte vyzvaný na zadanie kódu z autentifikačnej aplikácie.
+a ak sa **dvojstupňové overovanie** úspešne nastavilo, po zadaní mena a hesla budete ešte vyzvaný na zadanie kódu z autentifikačnej aplikácie.
 
 ![](2fa_part_6.png)
 
-môže nastať situácia, kedy zadanému kód vyprší platnosť, kým sa stihnete prihlásiť. V takom prípade musíte zadať nový kód vygenerovaný aplikáciou.
+Môže nastať situácia, kedy zadanému kód vyprší platnosť, kým sa stihnete prihlásiť. V takom prípade musíte zadať nový kód vygenerovaný aplikáciou.
 
 ![](2fa_part_7.png)
 
 Ak zadáte platný kód, budete úspešne prihlásený.
 
-### Odporúčanie
+### Strata mobilného zariadenia
 
-Pri strate zariadenia môžete stratiť prístup k účtu, preto odporúčame v aplikácii nastaviť zálohovanie dát.
+Pri strate zariadenia môžete stratiť prístup k účtu, preto odporúčame v aplikácii nastaviť zálohovanie dát, pre ich jednoduchú obnovu na novom zariadení. Ak používate viacej zariadení, je možné QR kód pri nastavení dvoj faktorovej autentifikácie pridať do viacerých zariadení, alebo rôznych aplikácií naraz.

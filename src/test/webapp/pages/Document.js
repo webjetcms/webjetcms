@@ -56,21 +56,16 @@ module.exports = {
         path = path.replace(/\//gi, '\\');
       }
       I.wait(2);
+      this.highlightElement(selectorToHighlight);
+
       if (typeof selector != "undefined" && selector != null && selector != "") {
-
-        this.highlightElement(selectorToHighlight);
-
         I.saveElementScreenshot(selector, path);
-
-        this.unhighlightElement(selectorToHighlight);
       }
       else {
-        this.highlightElement(selectorToHighlight);
-
         I.saveScreenshot(path);
-
-        this.unhighlightElement(selectorToHighlight);
       }
+
+      this.unhighlightElement(selectorToHighlight);
 
       I.say("windows resized=" + windowResized);
       if (windowResized) I.wjSetDefaultWindowSize();
