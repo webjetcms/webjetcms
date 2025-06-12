@@ -105,6 +105,11 @@ public class MenuULLI
 			minLiItems = Tools.getIntValue((String)request.getAttribute("ulLiMinLiItems"), -1);
 		}
 
+		if (rootGroup == 0 && doc != null) {
+			//get root group from doc
+			rootGroup = groupsDB.getRoot(doc.getGroupId());
+		}
+
 		GroupDetails rootGroupDetails = groupsDB.getGroup(rootGroup);
 		if (rootGroupDetails!=null)
 		{

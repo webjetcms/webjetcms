@@ -1546,9 +1546,6 @@ public class Constants {
 				"/admin/FCKeditor/editor_set_user.jsp|/admin/refresher.jsp|/components/media/get_media.jsp", MOD_EDITOR,
 				"Zoznam URL pre ktore sa nebude zobrazovat loader pri ajax dotazoch");
 
-		setBoolean("adminDualFactorLogonEnabled", false, MOD_SECURITY,
-				"Zapnutie dvoj faktorovej autorizacie cez mobilnu aplikaciu");
-
 		setString("googleMapsApiKey", "", MOD_CONFIG, "Možnosť globálneho nastavenia API kľúču pre Google mapy");
 		setString("canBeShownForUserAgent", "", MOD_CONFIG,
 				"Výnimka pre konštantu showOnlyActualPublishedDoc na hlavičku User-Agent obsahujúcu reťazce v tejto premennej oddelenej , alebo |, napr. facebookexternalhit,Facebot");
