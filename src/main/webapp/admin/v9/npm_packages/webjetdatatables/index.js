@@ -3140,8 +3140,11 @@ export const dataTableInit = options => {
 
             //Reset field after removed
             $('#' + DATA.id + '_wrapper .dt-filter-labels').on('click', '.dt-filter-labels__link', function () {
+
                 var index = $(this).attr("data-dt-column");
                 var th = $('#' + DATA.id + '_wrapper .dt-scroll-headInner tr:last-child th[data-dt-column="' + index + '"]');
+
+                //console.log("Reset filter for column index=", index, " th=", th);
 
                 $(th).find(".form-control-sm").val("");
                 //console.log("Selectpickers=", $(th).find("select"), " index=", index);
@@ -3149,8 +3152,19 @@ export const dataTableInit = options => {
                 $(th).find("select").selectpicker("val", "contains");
                 $(th).find(".min").val("");
                 $(th).find(".max").val("");
+
+                //reset extfilter
+                var extfilter = $('#' + DATA.id + '_extfilter div[data-dt-column="' + index + '"]')
+                extfilter.find("select").val("");
+
                 TABLE.column(index).search("");
-                $(th).find(".filtrujem").click();
+                var searchBtn = $(th).find(".filtrujem");
+                if (searchBtn.length > 0) {
+                    searchBtn.trigger("click")
+                } else if (extfilter.length > 0) {
+                    //try extfilter
+                    extfilter.find(".filtrujem").trigger("click");
+                }
 
                 dtWJ.fixTableSize(TABLE);
             });

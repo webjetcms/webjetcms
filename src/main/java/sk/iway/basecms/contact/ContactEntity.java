@@ -16,6 +16,8 @@ import lombok.Setter;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 /**
  * Ukazkova JPA entita pre pouzitie v datatabulke
@@ -66,5 +68,21 @@ public class ContactEntity {
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.contact.property.phone")
     private String phone;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title="Typ firmy",
+        filter = false,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "s.r.o.", value = "1"),
+                    @DataTableColumnEditorAttr(key = "a.s.", value = "2"),
+                    @DataTableColumnEditorAttr(key = "živnosť", value = "3")
+                }
+            )
+        }
+    )
+    private Integer type;
 
 }
