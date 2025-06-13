@@ -75,6 +75,15 @@
         }
     }
 
+    div.input-group div.bootstrap-select button.dropdown-toggle {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        min-width: 100px;
+        width: auto;
+        font-size: 16px;
+        line-height: 23px;
+    }
+
     .breadcrumb-language-select {
         font-size: 15px;
         line-height: 30px;
