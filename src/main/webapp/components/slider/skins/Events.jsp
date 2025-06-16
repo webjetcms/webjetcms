@@ -646,8 +646,8 @@ jQuery(document).ready(function(){
             perspectiveorigin:"right"
 
         },
-        
-        transition: "<%=pageParams.getValue("transitions_all","fade")%>",
+
+        transition: "<%=pageParams.getValue("transitionStyle","fade")%>",
 
         scalemode:"fill",
 

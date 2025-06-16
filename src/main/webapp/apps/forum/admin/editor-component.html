@@ -1,0 +1,88 @@
+<script>
+    function appAfterInit(response, datatable) {
+        const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+            fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+            fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+        };
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            const fieldElement = $("#DTE_Field_forumType");
+
+            fieldElement.on("change", function() {
+                let value = $(this).val();
+                if (value === 'forum') {
+                    setFieldsVisibility(
+                        ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum', 'structure'],
+                        ['type', 'noPaging']
+                    );
+                    updateUsePagingVisibility();
+                } else {
+                    setFieldsVisibility(
+                        ['type', 'noPaging', 'pageSizeForum'],
+                        ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum','structure']
+                    );
+                    updateUseDelTimeLimitVisibility();
+                }
+            });
+
+            const updateUsePagingVisibility = () => {
+                if ($("#DTE_Field_noPaging_0").is(":checked")) {
+                    setFieldsVisibility([], ['pageSizeForum']);
+                } else {
+                    setFieldsVisibility(['pageSizeForum'], []);
+                }
+            };
+
+            const updateUseDelTimeLimitVisibility = () => {
+                if ($("#DTE_Field_useDelTimeLimit_0").is(":checked")) {
+                    setFieldsVisibility([], ['delMinutes']);
+                } else {
+                    setFieldsVisibility(['delMinutes'], []);
+                }
+            };
+
+            updateUsePagingVisibility();
+            updateUseDelTimeLimitVisibility();
+
+            $("#DTE_Field_noPaging_0").on("change", updateUsePagingVisibility);
+            $("#DTE_Field_useDelTimeLimit_0").on("change", updateUseDelTimeLimitVisibility);
+
+            fieldElement.trigger("change");
+        });
+
+    }
+
+    async function appCodeExecute() {
+        const structure = $("#DTE_Field_structure").val();
+        const fieldElement = $("#DTE_Field_forumType").val();
+        if (Array.isArray(structure) && fieldElement === "forum_mb" && structure.length > 0) {
+            const res = await fetch("/apps/forum/createStructure", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    data: structure
+                })
+            });
+
+            const responseData = await res.json();
+            alert(responseData.message);
+
+            try { window.parent.parent.reloadWebpagesTree(); } catch (e) {}
+            try { await window.parent.reloadParentWindow(); } catch (e) {}
+
+            try { window.parent.parent.parent.$('#SomStromcek').jstree(true).refresh(); } catch (e) {}
+            try { window.parent.Cancel(); } catch (e) {}
+        }
+    }
+
+    function appGetComponentPath(componentPath, componentDatatable){
+        let field = $("#DTE_Field_forumType").val();
+        if ("forum" === field) {
+            return "/components/forum/forum.jsp";
+        } else {
+            return "/components/forum/forum_mb.jsp";
+        }
+    }
+</script>

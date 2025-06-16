@@ -1,0 +1,28 @@
+<script type="text/javascript" data-th-inline="javascript">
+	var carouselSliderItemsDataTable;
+
+	window.domReady.add(function () {
+
+		var tabs = [
+			{
+				id: "basic",
+				title: /*[[#{datatable.tab.basic}]]*/ "basic",
+				selected: true,
+			},
+		];
+
+		let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.carouselslider.jpa.CarouselSliderDTO")})]*/ [];
+
+		carouselSliderItemsDataTable = WJ.DataTable({
+			columns: columns,
+			tabs: tabs,
+			id: "carouselSliderItemsDataTable",
+            jsonEditor: true
+
+			//For now didsabled, because then I cant click on id checkbox
+			//rowReorder: true allow reorder rows in table
+		});
+	});
+</script>
+
+<table id="carouselSliderItemsDataTable" class="datatableInit table"></table>

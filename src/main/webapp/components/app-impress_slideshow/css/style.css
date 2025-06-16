@@ -13,7 +13,7 @@
 	background-color: #fff;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
 	-webkit-background-clip: padding;
-	-moz-background-clip: padding;     
+	-moz-background-clip: padding;
 	background-clip: padding-box;
 	/*border: 10px solid #fff;*/
 	/*border: 10px solid rgba(255, 255, 255, 0.9);*/
@@ -39,7 +39,7 @@
 .color-5{
 	background-color: #C1E6E5;
 }
-.step {	
+.step {
 	width: 900px;
     height: 420px;
 	display: block;
@@ -69,7 +69,6 @@
 	line-height: 50px;
 }
 .step p {
-	color: #fff;
 	text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
 	font-size: 34px;
 	font-weight: normal;
@@ -137,8 +136,8 @@ a.jms-link{
 	background: #777;
 	margin: 3px;
 	cursor: pointer;
-	box-shadow: 
-		1px 1px 1px rgba(0,0,0,0.1) inset, 
+	box-shadow:
+		1px 1px 1px rgba(0,0,0,0.1) inset,
 		1px 1px 1px rgba(255,255,255,0.3);
 }
 .jms-dots span.jms-dots-current:after{

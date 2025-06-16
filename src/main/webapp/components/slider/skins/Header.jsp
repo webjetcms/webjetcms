@@ -56,7 +56,7 @@ jQuery(document).ready(function(){
         videohidecontrols:false,
 
         fullwidth:<%=pageParams.getBooleanValue("fullWidthSlider",false)%>,
-        
+
         donotresize:false,
 
         enabletouchswipe: <%=pageParams.getBooleanValue("touch_swipe",true)%>,
@@ -647,7 +647,7 @@ jQuery(document).ready(function(){
 
         },
 
-        transition: "<%=pageParams.getValue("transitions_all","fade")%>",
+        transition: "<%=pageParams.getValue("transitionStyle","fade")%>",
 
         scalemode:"fill",
 
