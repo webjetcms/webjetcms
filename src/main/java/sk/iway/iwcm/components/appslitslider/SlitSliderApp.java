@@ -31,6 +31,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
         @DataTableTab(id = "files", title = "components.slider.files"),
 })
 public class SlitSliderApp extends WebjetComponentAbstract {
+
+    private static final String ICON_ALIGN_LEFT = "icon_align_left";
+    private static final String ICON_ALIGN_RIGHT = "icon_align_right";
+    private static final String ICON_ALIGN_CENTER = "icon_align_center";
+
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "editor.table.height", tab = "basic")
     private Integer nivoSliderHeight = 500;
 
@@ -43,7 +48,7 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     private String explain;
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title =  "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal")
-    private String headAlign;
+    private String headAlign = ICON_ALIGN_LEFT;
 
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontSize", tab = "basic")
@@ -61,7 +66,7 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     private String explain2;
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal")
-    private String subHeadingAlign;
+    private String subHeadingAlign = ICON_ALIGN_LEFT;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontSize", tab = "basic")
     private Integer subHeadingSize = 30;
@@ -82,9 +87,9 @@ public class SlitSliderApp extends WebjetComponentAbstract {
         List<OptionDto> optionsMap = DatatableTools.getImageRadioOptions("/components/_common/custom_styles/images/align/");
         optionsMap.sort(Comparator.comparingInt(option -> {
             switch (option.getValue()) {
-                case "icon_align_left": return 1;
-                case "icon_align_center": return 2;
-                case "icon_align_right": return 3;
+                case ICON_ALIGN_LEFT: return 1;
+                case ICON_ALIGN_CENTER: return 2;
+                case ICON_ALIGN_RIGHT: return 3;
                 default: return 99;
             }
         }));

@@ -1,7 +1,12 @@
 <script>
     function appGetComponentCode(componentPath, params, componentDatatable){
         let include = "!INCLUDE(" + componentPath;
-        params.editorData = localStorage.getItem("tableLines");
+
+        // JTVCJTVE is base64 for []
+		let editorData = localStorage.getItem("tableLines");
+		if(editorData == undefined || editorData == null || editorData == "null") editorData = "JTVCJTVE";
+        params.editorData = editorData;
+
         if (Object.keys(params).length > 0) {
             include += ", " + convertObjectToInludeParams(params);
         }
