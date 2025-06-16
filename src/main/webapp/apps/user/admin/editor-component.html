@@ -19,7 +19,6 @@
 
 		window.addEventListener("WJ.DTE.opened", function (e) {
 			const fieldElement = $("#DTE_Field_field");
-			const fields = ["A", "B", "C", "D", "E"];
 
 			fieldElement.on("change", function () {
 				let value = $(this).val();
@@ -28,7 +27,7 @@
 						setFieldsVisibility(
 							["regToUserGroups"],
 							[
-								"userGroups",
+								"groupIds",
 								"show",
 								"required",
 								"groupIdsEditable",
@@ -42,15 +41,15 @@
 								"useCustomFields",
 							]
 						);
-						$("#DTE_Field_useCustomFields_0").change();
-						fields.forEach((field) => {
-							$(`#DTE_Field_useCustomField${field}_0`).change();
-						});
+
+						$("#pills-dt-component-datatable-showed-tab").show();
+						$("#pills-dt-component-datatable-required-tab").show();
+
 						break;
 					case "/components/user/logon.jsp":
 						setFieldsVisibility(
 							[
-								"userGroups",
+								"groupIds",
 								"show",
 								"required",
 								"groupIdsEditable",
@@ -65,21 +64,10 @@
 							],
 							["regToUserGroups"]
 						);
-						setFieldsVisibility(
-							[
-								"useCustomFieldA",
-								"fieldALabel",
-								"useCustomFieldB",
-								"fieldBLabel",
-								"useCustomFieldC",
-								"fieldCLabel",
-								"useCustomFieldD",
-								"fieldDLabel",
-								"useCustomFieldE",
-								"fieldELabel",
-							],
-							[]
-						);
+
+						$("#pills-dt-component-datatable-showed-tab").hide();
+						$("#pills-dt-component-datatable-required-tab").hide();
+
 						break;
 					default:
 						setFieldsVisibility(
@@ -100,57 +88,15 @@
 							],
 							[]
 						);
-						setFieldsVisibility(
-							[
-								"useCustomFieldA",
-								"fieldALabel",
-								"useCustomFieldB",
-								"fieldBLabel",
-								"useCustomFieldC",
-								"fieldCLabel",
-								"useCustomFieldD",
-								"fieldDLabel",
-								"useCustomFieldE",
-								"fieldELabel",
-							],
-							[]
-						);
+
+						$("#pills-dt-component-datatable-showed-tab").hide();
+						$("#pills-dt-component-datatable-required-tab").hide();
+
 						break;
 				}
 			});
+
 			fieldElement.change();
-
-			$("#DTE_Field_useCustomFields_0")
-				.on("change", function () {
-					const isChecked = $(this).is(":checked");
-					const fieldNames = fields.map((f) => `useCustomField${f}`);
-					setFieldsVisibility(
-						isChecked ? [] : fieldNames,
-						isChecked ? fieldNames : []
-					);
-					if (!isChecked) {
-						fields.forEach((field) => {
-							const checkboxId = `#DTE_Field_useCustomField${field}_0`;
-							$(checkboxId).prop("checked", false).trigger("change");
-						});
-					}
-				})
-				.change();
-
-			fields.forEach((field) => {
-				const checkboxId = `#DTE_Field_useCustomField${field}_0`;
-				const fieldLabel = `field${field}Label`;
-
-				$(checkboxId)
-					.on("change", function () {
-						const isChecked = $(this).is(":checked");
-						setFieldsVisibility(
-							isChecked ? [] : [fieldLabel],
-							isChecked ? [fieldLabel] : []
-						);
-					})
-					.change();
-			});
 		});
 	}
 </script>

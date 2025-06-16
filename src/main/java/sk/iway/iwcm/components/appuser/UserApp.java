@@ -1,7 +1,6 @@
 package sk.iway.iwcm.components.appuser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
-import sk.iway.iwcm.components.banner.BannerDB;
-import sk.iway.iwcm.components.banner.model.BannerGroupBean;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
@@ -24,11 +19,18 @@ import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 
 @WebjetComponent("sk.iway.iwcm.components.appuser.UserApp")
 @WebjetAppStore(nameKey = "menu.users", descKey = "components.user.desc", itemKey = "cmp_user", imagePath = "/components/user/editoricon.png", galleryImages = "/components/user/", componentPath = "/components/user/newuser.jsp,/components/user/logon.jsp,/components/user/forget_password.jsp", customHtml = "/apps/user/admin/editor-component.html")
+@DataTableTabs(tabs = {
+        @DataTableTab(id = "basic", title = "editor.tab.basic_info", selected = true),
+        @DataTableTab(id = "showed", title = "components.user_app.tab.showed"),
+        @DataTableTab(id = "required", title = "components.user_app.tab.required")
+})
 @Getter
 @Setter
 public class UserApp extends WebjetComponentAbstract {
@@ -52,58 +54,72 @@ public class UserApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.user.country", value = "!LOGGED_USER_COUNTRY!"),
                     @DataTableColumnEditorAttr(key = "components.user.zip", value = "!LOGGED_USER_ZIP!"),
                     @DataTableColumnEditorAttr(key = "components.user.id", value = "!LOGGED_USER_ID!"),
-                    @DataTableColumnEditorAttr(key = "components.user.use_custom_field_A", value = "!LOGGED_USER_FIELDA!"),
-                    @DataTableColumnEditorAttr(key = "components.user.use_custom_field_B", value = "!LOGGED_USER_FIELDB!"),
-                    @DataTableColumnEditorAttr(key = "components.user.use_custom_field_C", value = "!LOGGED_USER_FIELDC!"),
-                    @DataTableColumnEditorAttr(key = "components.user.use_custom_field_D", value = "!LOGGED_USER_FIELDD!"),
-                    @DataTableColumnEditorAttr(key = "components.user.use_custom_field_E", value = "!LOGGED_USER_FIELDE!"),
+                    @DataTableColumnEditorAttr(key = "user.field_a", value = "!LOGGED_USER_FIELDA!"),
+                    @DataTableColumnEditorAttr(key = "user.field_b", value = "!LOGGED_USER_FIELDB!"),
+                    @DataTableColumnEditorAttr(key = "user.field_c", value = "!LOGGED_USER_FIELDC!"),
+                    @DataTableColumnEditorAttr(key = "user.field_d", value = "!LOGGED_USER_FIELDD!"),
+                    @DataTableColumnEditorAttr(key = "user.field_e", value = "!LOGGED_USER_FIELDE!"),
                     @DataTableColumnEditorAttr(key = "user.admin.editUserGroups", value = "!LOGGED_USER_GROUPS!")
             })
     })
     private String field;
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.group_id")
-    private Integer[] userGroups;
+    private Integer[] groupIds;
 
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.show_fields", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "showed", title = "components.user.show_fields", editor = {
             @DataTableColumnEditor(options = {
-                    @DataTableColumnEditorAttr(key = "components.user.login", value = "login"),
-                    @DataTableColumnEditorAttr(key = "components.user.password", value = "password"),
-                    @DataTableColumnEditorAttr(key = "components.user.newuser.password2", value = "password2"),
-                    @DataTableColumnEditorAttr(key = "user.title", value = "title"),
-                    @DataTableColumnEditorAttr(key = "user.firstName", value = "firstName"),
-                    @DataTableColumnEditorAttr(key = "user.lastName", value = "lastName"),
-                    @DataTableColumnEditorAttr(key = "components.user.company", value = "company"),
-                    @DataTableColumnEditorAttr(key = "components.user.email", value = "email"),
-                    @DataTableColumnEditorAttr(key = "components.user.newuser.dateOfBirth", value = "dateOfBirth"),
-                    @DataTableColumnEditorAttr(key = "components.user.newuser.signature", value = "signature"),
-                    @DataTableColumnEditorAttr(key = "user.address", value = "adress"),
-                    @DataTableColumnEditorAttr(key = "components.user.city", value = "city"),
-                    @DataTableColumnEditorAttr(key = "components.user.zip", value = "zip"),
-                    @DataTableColumnEditorAttr(key = "components.user.country", value = "country"),
-                    @DataTableColumnEditorAttr(key = "components.user.phone", value = "phone")
+                @DataTableColumnEditorAttr(key = "components.user.login", value = "login"),
+                @DataTableColumnEditorAttr(key = "components.user.password", value = "password"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.password2", value = "password2"),
+                @DataTableColumnEditorAttr(key = "user.title", value = "title"),
+                @DataTableColumnEditorAttr(key = "user.firstName", value = "firstName"),
+                @DataTableColumnEditorAttr(key = "user.lastName", value = "lastName"),
+                @DataTableColumnEditorAttr(key = "components.user.company", value = "company"),
+                @DataTableColumnEditorAttr(key = "components.user.email", value = "email"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.dateOfBirth", value = "dateOfBirth"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.sexMale", value = "sexMale"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.userImage", value = "userImage"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.signature", value = "signature"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.adress", value = "adress"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.city", value = "city"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.zip", value = "zip"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.country", value = "country"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.phone", value = "phone"),
+                @DataTableColumnEditorAttr(key = "user.field_a", value = "fieldA"),
+                @DataTableColumnEditorAttr(key = "user.field_b", value = "fieldB"),
+                @DataTableColumnEditorAttr(key = "user.field_c", value = "fieldC"),
+                @DataTableColumnEditorAttr(key = "user.field_d", value = "fieldD"),
+                @DataTableColumnEditorAttr(key = "user.field_e", value = "fieldE")
             }) })
-    private String[] show = {"login", "password", "password2", "firstName", "lastName", "email"};
+    private String[] show = {"login", "password", "password2", "firstName", "lastName", "email", "sexMale", "adress", "city", "zip", "country"};
 
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.required_fields", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "required", title = "components.user.required_fields", editor = {
             @DataTableColumnEditor(options = {
-                    @DataTableColumnEditorAttr(key = "components.user.login", value = "login"),
-                    @DataTableColumnEditorAttr(key = "components.user.password", value = "password"),
-                    @DataTableColumnEditorAttr(key = "components.user.newuser.password2", value = "password2"),
-                    @DataTableColumnEditorAttr(key = "user.title", value = "title"),
-                    @DataTableColumnEditorAttr(key = "user.firstName", value = "firstName"),
-                    @DataTableColumnEditorAttr(key = "user.lastName", value = "lastName"),
-                    @DataTableColumnEditorAttr(key = "components.user.company", value = "company"),
-                    @DataTableColumnEditorAttr(key = "components.user.email", value = "email"),
-                    @DataTableColumnEditorAttr(key = "components.user.newuser.dateOfBirth", value = "dateOfBirth"),
-                    @DataTableColumnEditorAttr(key = "components.user.newuser.signature", value = "signature"),
-                    @DataTableColumnEditorAttr(key = "user.address", value = "adress"),
-                    @DataTableColumnEditorAttr(key = "components.user.city", value = "city"),
-                    @DataTableColumnEditorAttr(key = "components.user.zip", value = "zip"),
-                    @DataTableColumnEditorAttr(key = "components.user.country", value = "country"),
-                    @DataTableColumnEditorAttr(key = "components.user.phone", value = "phone")
+                @DataTableColumnEditorAttr(key = "components.user.login", value = "login"),
+                @DataTableColumnEditorAttr(key = "components.user.password", value = "password"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.password2", value = "password2"),
+                @DataTableColumnEditorAttr(key = "user.title", value = "title"),
+                @DataTableColumnEditorAttr(key = "user.firstName", value = "firstName"),
+                @DataTableColumnEditorAttr(key = "user.lastName", value = "lastName"),
+                @DataTableColumnEditorAttr(key = "components.user.company", value = "company"),
+                @DataTableColumnEditorAttr(key = "components.user.email", value = "email"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.dateOfBirth", value = "dateOfBirth"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.sexMale", value = "sexMale"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.userImage", value = "userImage"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.signature", value = "signature"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.adress", value = "adress"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.city", value = "city"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.zip", value = "zip"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.country", value = "country"),
+                @DataTableColumnEditorAttr(key = "components.user.newuser.phone", value = "phone"),
+                @DataTableColumnEditorAttr(key = "user.field_a", value = "fieldA"),
+                @DataTableColumnEditorAttr(key = "user.field_b", value = "fieldB"),
+                @DataTableColumnEditorAttr(key = "user.field_c", value = "fieldC"),
+                @DataTableColumnEditorAttr(key = "user.field_d", value = "fieldD"),
+                @DataTableColumnEditorAttr(key = "user.field_e", value = "fieldE")
             }) })
-    private String[] required = {"login", "password", "password2", "firstName", "lastName", "email", "sexMale", "address", "city", "zip", "country"};
+    private String[] required = {"login", "password", "password2", "firstName", "lastName", "email"};
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.editableGroupIds")
     private Integer[] groupIdsEditable;
@@ -127,41 +143,7 @@ public class UserApp extends WebjetComponentAbstract {
     private Boolean loginNewUser;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.send_using_ajax")
-    private Boolean useAjax;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.use_custom_fields")
-    private Boolean useCustomFields;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.use_custom_field_A")
-    private Boolean useCustomFieldA;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.custom_field_A_label")
-    private String fieldALabel;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.use_custom_field_B")
-    private Boolean useCustomFieldB;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.custom_field_B_label")
-    private String fieldBLabel;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.use_custom_field_C")
-    private Boolean useCustomFieldC;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.custom_field_C_label")
-    private String fieldCLabel;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.use_custom_field_D")
-    private Boolean useCustomFieldD;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.custom_field_D_label")
-    private String fieldDLabel;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.use_custom_field_E")
-    private Boolean useCustomFieldE;
-
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.custom_field_E_label")
-    private String fieldELabel;
-
+    private Boolean useAjax = true;
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.group_id",
     editor = {
@@ -185,11 +167,10 @@ public class UserApp extends WebjetComponentAbstract {
             userGroupOptions.add(new OptionDto(userGroupName, userGroupId, null));
         }
 
-        options.put("userGroups", userGroupOptions);
+        options.put("groupIds", userGroupOptions);
         options.put("groupIdsEditable", userGroupOptions);
         options.put("regToUserGroups" , userGroupOptions);
 
         return options;
     }
-
 }
