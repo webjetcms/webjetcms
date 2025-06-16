@@ -2,7 +2,6 @@
 	var sliderItemsDataTable;
 
 	window.domReady.add(function () {
-		window.helpLink = "/redactor/apps/calendar/README";
 
 		var tabs = [
 			{
@@ -12,14 +11,14 @@
 			},
 		];
 
-		let columns =
-			/*[(${layout.getDataTableColumns("sk.iway.iwcm.components.slider.jpa.SliderDTO")})]*/ [];
+		let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.slider.jpa.SliderDTO")})]*/ [];
 
 		sliderItemsDataTable = WJ.DataTable({
 			columns: columns,
 			tabs: tabs,
 			id: "sliderItemsDataTable",
-            jsonEditor: true
+            jsonEditor: true,
+			rowReorder: true //allow reorder rows in table
 		});
 	});
 </script>

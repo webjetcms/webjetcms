@@ -82,7 +82,7 @@ jQuery(document).ready(function(){
         slideinterval: <%=pageParams.getIntValue("autoplay_interval",5000)%>,
 
         fullwidth:<%=pageParams.getBooleanValue("fullWidthSlider",false)%>,
-        
+
         randomplay: <%=pageParams.getBooleanValue("random_play",false)%>,
 
         scalemode:"fill",
@@ -647,7 +647,7 @@ jQuery(document).ready(function(){
 
         },
 
-        transition: "<%=pageParams.getValue("transitions_all","fade")%>",
+        transition: "<%=pageParams.getValue("transitionStyle","fade")%>",
 
         scalemode:"fill",
 

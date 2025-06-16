@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.slider.jpa;
 
-import javax.persistence.Column;
 import javax.persistence.Id;
 
 import lombok.Getter;
@@ -17,7 +16,12 @@ public class SliderDTO {
     @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
     private Long id;
 
-    @DataTableColumn(inputType = DataTableColumnType.GALLERY_IMAGE, title = "editor.perex.image")
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        className = "image",
+        title = "editor.perex.image",
+        renderFormat = "dt-format-image"
+    )
     private String image;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.app-cookiebar.cookiebar_title")

@@ -150,56 +150,36 @@ public class SliderApp extends WebjetComponentAbstract {
 
     // prechody
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_fade", editor = @DataTableColumnEditor(message = "<img alt='FADE' src='/components/slider/transitions/fade.gif' class='tooltipContent'>"))
-    private boolean transition_fade;
+@DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "transitions", title = "components.slider.transition_style", editor = {
+    @DataTableColumnEditor(options = {
+                @DataTableColumnEditorAttr(key = "components.slider.transition_fade", value = "transition_fade"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_crossFade", value = "transition_cross_fade"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_slide", value = "transition_slide"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_elastic", value = "transition_elastic"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_slice", value = "transition_slice"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_blinds", value = "transition_blinds"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_blocks", value = "transition_blocks"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_shuffle", value = "transition_shuffle"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_tiles", value = "transition_tiles"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_flip", value = "transition_flip"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_flipWithZoom", value = "transition_flip_with_zoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3D", value = "transition_threed"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DHorizontal", value = "transition_threed_horizontal"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DWithZoom", value = "transition_threed_with_zoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DHorizontalWithZoom", value = "transition_threed_horizontal_with_zoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DFlip", value = "transition_threed_flip"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DFlipWithZoom", value = "transition_threed_flip_with_zoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DTiles", value = "transition_threed_tiles"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_kenBurns", value = "transition_ken_burns")
+    })
+    })
+    private String transitionStyle;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_crossFade", editor = @DataTableColumnEditor(message = "<img alt='CROSS FADE' src='/components/slider/transitions/cross_fade.gif' class='tooltipContent'>"))
-    private boolean transition_cross_fade;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_slide", editor = @DataTableColumnEditor(message = "<img alt='SLIDE' src='/components/slider/transitions/slide.gif' class='tooltipContent'>"))
-    private boolean transition_slide;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_elastic", editor = @DataTableColumnEditor(message = "<img alt='ELASTIC' src='/components/slider/transitions/elastic.gif' class='tooltipContent'>"))
-    private boolean transition_elastic;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_slice", editor = @DataTableColumnEditor(message = "<img alt='SLICE' src='/components/slider/transitions/slice.gif' class='tooltipContent'>"))
-    private boolean transition_slice;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_blinds", editor = @DataTableColumnEditor(message = "<img alt='BLINDS' src='/components/slider/transitions/blinds.gif' class='tooltipContent'>"))
-    private boolean transition_blinds;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_blocks", editor = @DataTableColumnEditor(message = "<img alt='BLOCKS' src='/components/slider/transitions/blocks.gif' class='tooltipContent'>"))
-    private boolean transition_blocks;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_shuffle", editor = @DataTableColumnEditor(message = "<img alt='SHUFFLE' src='/components/slider/transitions/shuffle.gif' class='tooltipContent'>"))
-    private boolean transition_shuffle;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_tiles", editor = @DataTableColumnEditor(message = "<img alt='TILES' src='/components/slider/transitions/tiles.gif' class='tooltipContent'>"))
-    private boolean transition_tiles;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_flip", editor = @DataTableColumnEditor(message = "<img alt='FLIP' src='/components/slider/transitions/flip.gif' class='tooltipContent'>"))
-    private boolean transition_flip;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_flipWithZoom", editor = @DataTableColumnEditor(message = "<img alt='FLIP WITH ZOOM' src='/components/slider/transitions/flipWithZoom.gif' class='tooltipContent'>"))
-    private boolean transition_flip_with_zoom;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_3D", editor = @DataTableColumnEditor(message = "<img alt='3D' src='/components/slider/transitions/3D.gif' class='tooltipContent'>"))
-    private boolean transition_threed;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_3DHorizontal", editor = @DataTableColumnEditor(message = "<img alt='3D HORIZONTAL' src='/components/slider/transitions/3Dhorizontal.gif' class='tooltipContent'>"))
-    private boolean transition_threed_horizontal;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_3DWithZoom", editor = @DataTableColumnEditor(message = "<img alt='3D WITH ZOOM' src='/components/slider/transitions/3DwithZoom.gif' class='tooltipContent'>"))
-    private boolean transition_threed_with_zoom;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_3DHorizontalWithZoom", editor = @DataTableColumnEditor(message = "<img alt='3D HORIZONTAL WITH ZOOM' src='/components/slider/transitions/3DflipWithZoom.gif' class='tooltipContent'>"))
-    private boolean transition_threed_horizontal_with_zoom;
-
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "transitions", title = "components.slider.transition_3DFlip", editor = @DataTableColumnEditor(message = "<img alt='3D FLIP' src='/components/slider/transitions/3Dflip.gif' class='tooltipContent'>"))
-    private boolean transition_threed_flip;
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "transitions", title="&nbsp;")
+    private String transitionStyleGif;
 
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
-    private String iframe  = "/components/slider/add-item.jsp";
+    private String iframe  = "/apps/slider/admin/add-item/";
 
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
     private String editorData;
