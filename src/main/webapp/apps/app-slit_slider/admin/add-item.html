@@ -2,24 +2,25 @@
 	var sliderItemsDataTable;
 
 	window.domReady.add(function () {
-		window.helpLink = "/redactor/apps/calendar/README";
 
 		var tabs = [
 			{
 				id: "basic",
-				title: /*[[#{calendar_events.tab.basic}]]*/ "basic",
+				title: /*[[#{datatable.tab.basic}]]*/ "basic",
 				selected: true,
 			},
 		];
 
-		let columns =
-            /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.appslitslider.jpa.SlitSliderDTO")})]*/ [];
+		let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.appslitslider.jpa.SlitSliderDTO")})]*/ [];
 
 		sliderItemsDataTable = WJ.DataTable({
 			columns: columns,
 			tabs: tabs,
 			id: "sliderItemsDataTable",
             jsonEditor: true
+
+			//For now didsabled, because then I cant click on id checkbox
+			//rowReorder: true allow reorder rows in table
 		});
 	});
 </script>

@@ -75,7 +75,7 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     private Integer subHeadingMargin = 0;
 
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
-    private String iframe  = "/components/app-slit_slider/add-item.jsp";
+    private String iframe  = "/apps/app-slit_slider/admin/add-item/";
 
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
     private String editorData;
