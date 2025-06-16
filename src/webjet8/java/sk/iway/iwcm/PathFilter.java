@@ -305,9 +305,7 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
-				path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok
-				req.getRequestURI().indexOf("//")!=-1 || path.indexOf('\\')!=-1 || path.indexOf("/../")!=-1)
+			if (req.getRequestURI().indexOf("//")!=-1 || isPathSafe(path)==false)
 			{
 				if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictGetUrlException")==false)
 				{
@@ -447,12 +445,12 @@ public class PathFilter implements Filter
                         else
                         {
                         	//ak nie je user prihlaseny a zacina to na /components a neobsahuje rest, tak posli na 403.jsp kde ho moze redirectnut do admin casti (na logon)
-									if (path.startsWith("/components") && path.contains("rest")==false)
-									{
-										res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-										forwardSafely("/403.jsp", req, res);
-										return;
-									}
+							if (path.startsWith("/components") && path.contains("rest")==false)
+							{
+								res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+								forwardSafely("/403.jsp", req, res);
+								return;
+							}
                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                            return;
                         }
@@ -1983,7 +1981,10 @@ public class PathFilter implements Filter
 
 	public static String getOrigPath(HttpServletRequest request)
 	{
-		return((String)request.getAttribute("path_filter_orig_path"));
+		String origPath = (String)request.getAttribute("path_filter_orig_path");
+		//check for unsafe chars like "'`
+		if (isPathSafe(origPath)) return origPath;
+		return "";
 	}
 
 	/**
@@ -2657,5 +2658,16 @@ public class PathFilter implements Filter
 		} catch (Exception ex) {
 			Logger.error(PathFilter.class, ex);
 		}
+	}
+
+	private static boolean isPathSafe(String path) {
+		if (path == null || path.length() < 1) return true;
+
+		if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
+			path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok
+			path.indexOf('\\')!=-1 || path.indexOf("/../")!=-1
+		) return false;
+
+		return true;
 	}
 }

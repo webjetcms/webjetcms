@@ -63,7 +63,7 @@ function pbGenerateTabs(tabNavId) {
         if ($(this).hasClass("active") && isOneActive == false) tabHtmlCode += " active";
         tabHtmlCode += "\"><a class=\"nav-link";
         if ($(this).hasClass("active") && isOneActive == false) tabHtmlCode += " active show";
-        tabHtmlCode += "\" data-toggle=\"tab\" role=\"tab\" href=\"#" + id + "\">" + title + "</a></li>";
+        tabHtmlCode += "\" data-toggle=\"tab\" data-bs-toggle=\"tab\" role=\"tab\" href=\"#" + id + "\">" + title + "</a></li>";
 
         if ($(this).hasClass("active")) {
             if (isOneActive == false) isOneActive = true;
@@ -103,7 +103,10 @@ function pbGenerateAccordion(accordionId) {
         var collapseId = "collapse-" + id;
 
         header.attr("id", id);
-        header.find(".accordionLink").attr("data-target", "#" + collapseId);
+        var btn = header.find(".accordion-button, .accordionLink");
+        btn.attr("data-target", "#" + collapseId);
+        btn.attr("data-bs-target", "#" + collapseId);
+        btn.attr("aria-controls", "#" + collapseId);
 
         var collapse = card.find("div.collapse");
         collapse.attr("id", collapseId);

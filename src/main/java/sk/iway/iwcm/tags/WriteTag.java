@@ -633,16 +633,17 @@ public class WriteTag extends BodyTagSupport
 							Logger.debug(WriteTag.class, "attempt to include non component file: " + includeFileName + ", include denied");
 						}
 
-						//Only if banner can be included
-						boolean checkDeviceType = true;
+						boolean inPreviewMode = request.getAttribute("inPreviewMode")!=null;
+
+						//Only if app can be included
+						final String regexIncludeParam = "([^\";, ]*)";
 						final String deviceParam = "device=";
 						//In preview mode it does not matter what type of device we use (we want see all banners)
-						if (request.getAttribute("inPreviewMode")!=null) checkDeviceType = false;
 
 						/** Check if this app can be included in current device type **/
-						if(canInclude && checkDeviceType && includeText.contains(deviceParam)) {
-							final String regex = "([^\";, ]*)";
-							Pattern pattern = Pattern.compile(deviceParam + regex);
+						if(canInclude && inPreviewMode==false && includeText.contains(deviceParam)) {
+
+							Pattern pattern = Pattern.compile(deviceParam + regexIncludeParam);
 							Matcher matcher = pattern.matcher(Tools.replace(includeText, "&quot;", ""));
 
 							//Is deviceParam presented in include ? -> NO, then do nothing
@@ -671,6 +672,22 @@ public class WriteTag extends BodyTagSupport
 											break;
 										}
 									}
+								}
+							}
+						}
+
+						if(canInclude && inPreviewMode==false && includeText.contains("showForLoggedUser=")) {
+							Pattern pattern = Pattern.compile("showForLoggedUser=" + regexIncludeParam);
+							Matcher matcher = pattern.matcher(Tools.replace(includeText, "&quot;", ""));
+							if(matcher.find()) {
+								String value = matcher.group(1);
+								if ("onlyLogged".equals(value) && user == null)
+								{
+									canInclude = false;
+								}
+								else if ("onlyNotLogged".equals(value) && user != null)
+								{
+									canInclude = false;
 								}
 							}
 						}

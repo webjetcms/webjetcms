@@ -102,6 +102,8 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     const deliveryMethodName = "Kuriér";
     const paymentMethodName = "GoPay";
 
+    SL.clearBasket(I);
+
     //
     I.say("Starting GoPay unsuccessful payment test");
     I.amOnPage(SL.PRODUCTS);

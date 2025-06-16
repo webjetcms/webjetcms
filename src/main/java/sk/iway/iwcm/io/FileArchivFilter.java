@@ -45,21 +45,27 @@ public class FileArchivFilter implements Filter
 			if(isPasswordProtected(path,request,response)) {
 				return;
 			}
-			FileArchivatorBean validateFile = FileArchivatorDB.getByUrl(path);
-			if(validateFile == null)
-			{
-				Logger.debug(this,"File not found, or is not accsessable or valid dates: "+path);
-				String qs=ResponseUtils.filter(request.getQueryString());
-				if(qs == null) {
-					qs="";
+
+			IwcmFile file = new IwcmFile(Tools.getRealPath(path));
+			//if file doen't exist, process to PathFilter for standard handling and URL checking
+			if (file.exists()) {
+				//getByUrl also check for file validity dates and visibility
+				FileArchivatorBean validateFile = FileArchivatorDB.getByUrl(path);
+				if(validateFile == null)
+				{
+					Logger.debug(this,"File not found, or is not accsessable or valid dates: "+path);
+					String qs=ResponseUtils.filter(request.getQueryString());
+					if(qs == null) {
+						qs="";
+					}
+					req.setAttribute("path_filter_query_string",qs);
+					req.setAttribute("path_filter_orig_path",path);
+					response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+					request.getRequestDispatcher("/404.jsp").forward(req,res);
+					return;
+				} else if (Tools.isFalse(validateFile.getIndexFile())) {
+					response.setHeader("X-Robots-Tag","noindex, nofollow");
 				}
-				req.setAttribute("path_filter_query_string",qs);
-				req.setAttribute("path_filter_orig_path",path);
-				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				request.getRequestDispatcher("/404.jsp").forward(req,res);
-				return;
-			} else if (Tools.isFalse(validateFile.getIndexFile())) {
-				response.setHeader("X-Robots-Tag","noindex, nofollow");
 			}
 		}
 		chain.doFilter(req,res);

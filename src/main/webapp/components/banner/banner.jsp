@@ -97,7 +97,7 @@ try
 {
 
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
-	String url = (String)request.getAttribute("path_filter_orig_path");
+	String url = PathFilter.getOrigPath(request);
 	if (Tools.isNotEmpty(paramPageParams))
 	{
 		paramPageParams = Tools.replace(paramPageParams, "|", "=");
@@ -444,7 +444,7 @@ try
 		out.println("<head>");
 		if (refreshRate != 0)
 		{
-			url = (String)request.getAttribute("path_filter_orig_path");
+			url = PathFilter.getOrigPath(request);
 			//out.println("<META HTTP-EQUIV=Refresh CONTENT='" +refreshRate+ "; URL="+url+"'>");
 			out.println("<META HTTP-EQUIV=Refresh CONTENT='" +refreshRate+ "'>");
 		}

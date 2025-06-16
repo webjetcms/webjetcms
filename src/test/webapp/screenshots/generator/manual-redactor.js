@@ -503,12 +503,32 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
 
     //add PB classes to simulate mouse over
     await I.executeScript(()=>{
-        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first()
-        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active")
-        pbElement.find("aside.pb-toolbar").trigger("click")
+        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
+        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active");
+        pbElement.find("aside.pb-toolbar").trigger("click");
     });
 
     Document.screenshot("/redactor/webpages/pagebuilder.png");
+
+    await I.executeScript(()=>{
+        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
+        pbElement.find(".pb-toolbar-button__style.pb-toolbar-button").trigger("click");
+    });
+
+    Document.screenshot("/redactor/webpages/pagebuilder-style.png");
+
+    await I.executeScript(()=>{
+        var mainWindow = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow;
+        mainWindow.$(".pb-modal .pb-modal__footer__button-close").trigger("click");
+        var pbElement = mainWindow.$("section.pb-section.pb-grid-element").first();
+        pbElement.addClass("pb-has-toolbar-active");
+        pbElement.children("aside.pb-toolbar").first().trigger("click");
+        pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
+        mainWindow.$(".library-tab-link[data-library-type='library']").trigger("click");
+        mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
+    });
+
+    Document.screenshot("/redactor/webpages/pagebuilder-library.png");
 
     I.switchTo();
     Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");

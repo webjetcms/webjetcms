@@ -505,6 +505,19 @@ else
 				</div>
 				<%
 			}
+			String showForLoggedUser = myPageParams.getValue("showForLoggedUser", null);
+			if (Tools.isNotEmpty(showForLoggedUser)) {
+				Prop prop = Prop.getInstance(origLng);
+
+				showForLoggedUser = Tools.replace(showForLoggedUser, "onlyLogged", prop.getText("apps.showForLoggedUser.onlyLogged"));
+				showForLoggedUser = Tools.replace(showForLoggedUser, "onlyNotLogged", prop.getText("apps.showForLoggedUser.onlyNotLogged"));
+				%>
+				<div class="deviceInfo">
+					<span class="deviceInfoTitle"><%=prop.getText("apps.showForLoggedUser.title")%>:</span>
+					<span class="deviceInfoTypes"><%=showForLoggedUser%></span>
+				</div>
+				<%
+			}
 			%>
 
 			<div id="componentCodeDiv">
