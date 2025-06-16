@@ -11,7 +11,7 @@
 
 ![](redactor/webpages/pagebuilder-style.png)
 
-- Povolené zobrazenie stránok obsahujúcich `404.html` v URL adrese zo systémových priečinkov, aby vám takáto technická stránka nezavadzala medzi štandardnými web stránkami (#57657-8).
+- Povolené zobrazenie stránok obsahujúcich `404.html` v URL adrese zo systémových priečinkov, aby vám takáto technická stránka neprekážala medzi štandardnými web stránkami (#57657-8).
 
 ### Používateľské rozhranie
 
