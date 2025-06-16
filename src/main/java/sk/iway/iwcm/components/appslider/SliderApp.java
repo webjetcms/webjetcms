@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.slider;
+package sk.iway.iwcm.components.appslider;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
-@WebjetComponent("sk.iway.iwcm.components.slider.SliderApp")
+@WebjetComponent("sk.iway.iwcm.components.appslider.SliderApp")
 @WebjetAppStore(nameKey = "components.slider.title", descKey = "components.slider.desc", itemKey = "cmp_slider", imagePath = "/components/slider/editoricon.png", galleryImages = "/components/slider/", componentPath = "/components/slider/slider.jsp", customHtml = "/apps/slider/admin/editor-component.html")
 @DataTableTabs(tabs = {
         @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),

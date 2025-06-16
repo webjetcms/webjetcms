@@ -6,19 +6,21 @@
 		var tabs = [
 			{
 				id: "basic",
-				title: /*[[#{calendar_events.tab.basic}]]*/ "basic",
+				title: /*[[#{datatable.tab.basic}]]*/ "basic",
 				selected: true,
 			},
 		];
 
-		let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.slider.jpa.SliderDTO")})]*/ [];
+		let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.appslider.jpa.SliderDTO")})]*/ [];
 
 		sliderItemsDataTable = WJ.DataTable({
 			columns: columns,
 			tabs: tabs,
 			id: "sliderItemsDataTable",
-            jsonEditor: true,
-			rowReorder: true //allow reorder rows in table
+            jsonEditor: true
+
+			//For now didsabled, because then I cant click on id checkbox
+			//rowReorder: true allow reorder rows in table
 		});
 	});
 </script>
