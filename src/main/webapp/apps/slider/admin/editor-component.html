@@ -2,17 +2,17 @@
 	function appAfterInit(response, datatable) {
 		window.addEventListener("WJ.DTE.opened", function (e) {
 			function toggleLoopNumber() {
-				const selected = $("#DTE_Field_displayMode").val();
+				const selected = $("#DTE_Field_display_mode").val();
 				if (selected === "2") {
-					$(".DTE_Field_Name_loopNumber").show();
+					$(".DTE_Field_Name_loop_number").show();
 				} else {
-					$(".DTE_Field_Name_loopNumber").hide();
+					$(".DTE_Field_Name_loop_number").hide();
 				}
 			}
 
 			toggleLoopNumber();
 
-			$("#DTE_Field_displayMode").on("change", toggleLoopNumber);
+			$("#DTE_Field_display_mode").on("change", toggleLoopNumber);
 
 			$(".col-sm-1.form-group-tooltip > button[aria-label^='<img']").css({
 				"margin-left": "-360px",

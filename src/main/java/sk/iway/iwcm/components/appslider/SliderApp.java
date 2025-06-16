@@ -78,10 +78,10 @@ public class SliderApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.slider.mouseover", value = "mouseover")
             })
     })
-    private String arrowStyle = "mouseover";
+    private String arrow_style = "mouseover";
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.kenBurnsOnSlide", tab = "advanced")
-    private boolean kenBurnsOnSlide;
+    private boolean ken_burns_on_slide;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.slider.navStyle", tab = "advanced", editor = {
             @DataTableColumnEditor(options = {
@@ -91,16 +91,16 @@ public class SliderApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.slider.thumbnails", value = "thumbnails")
             })
     })
-    private String navStyle = "bullets";
+    private String nav_style = "bullets";
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.navShowThumb", tab = "advanced")
-    private boolean showThumbnails = true;
+    private boolean show_thumbnails = true;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.touchSwipe", tab = "advanced")
-    private boolean touchSwipe = true;
+    private boolean touch_swipe = true;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.randomPlay", tab = "advanced")
-    private boolean randomPlay;
+    private boolean random_play;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.autoplay", tab = "advanced")
     private boolean autoplay = true;
@@ -111,22 +111,19 @@ public class SliderApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.slider.loopEndAfter", value = "2")
             })
     })
-    private String displayMode = "1";
+    private String display_mode = "1";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "&nbsp;", tab = "advanced")
-    private Integer loopNumber = 0;
+    private Integer loop_number = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.slider.interval", tab = "advanced", editor = @DataTableColumnEditor(options = {
-            @DataTableColumnEditorAttr(key = "min", value = "500"),
-            @DataTableColumnEditorAttr(key = "step", value = "1")
-    }))
-    private Integer autoplayInterval = 5000;
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.slider.interval", tab = "advanced")
+    private Integer autoplay_interval = 5000;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.showTimer", tab = "advanced")
-    private boolean showCountdown = true;
+    private boolean show_countdown = true;
 
     @DataTableColumn(inputType = DataTableColumnType.COLOR, title = "components.slider.timerColor", tab = "advanced")
-    private String autoplayCountdownColor = "#ffffff";
+    private String autoplay_countdown_color = "#ffffff";
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.slider.timerPosition", tab = "advanced", editor = {
             @DataTableColumnEditor(options = {
@@ -134,19 +131,19 @@ public class SliderApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.slider.bottom", value = "bottom")
             })
     })
-    private String countdownPosition = "bottom";
+    private String countdown_position = "bottom";
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.transitionOnFirstSlide", tab = "advanced")
-    private boolean transitionOnFirstSlide;
+    private boolean transition_on_first_slide;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.mouseoverPause", tab = "advanced")
-    private boolean pauseOnMouseover;
+    private boolean pause_on_mousover;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.numbering", tab = "advanced")
-    private boolean showNumbering;
+    private boolean show_numbering;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.slider.showShadow", tab = "advanced")
-    private boolean showShadowBottom = true;
+    private boolean show_shadow_bottom = true;
 
     // prechody
 
