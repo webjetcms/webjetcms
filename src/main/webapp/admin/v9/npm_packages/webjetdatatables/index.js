@@ -78,7 +78,7 @@ require('datatables.net-colreorder-bs5');
 //require('datatables.net-keytable-bs5');
 //require('datatables.net-responsive-bs5');
 //require('datatables.net-rowgroup-bs5');
-//require('datatables.net-rowreorder-bs5');
+require('datatables.net-rowreorder-bs5');
 //require('datatables.net-scroller-bs5');
 require('datatables.net-select-bs5');
 require('datatables.net-datetime');
@@ -269,6 +269,9 @@ export const dataTableInit = options => {
 
     //allow editor locking notifications
     DATA.editorLocking = (typeof options.editorLocking !== "undefined") ? options.editorLocking : true;
+
+    //Allows to move row in table (change position) - default false
+    DATA.rowReorder = (typeof options.rowReorder !== "undefined") ? options.rowReorder : false;
 
     //console.log("options=", options);
     let jsonEditorFields;
@@ -3085,6 +3088,7 @@ export const dataTableInit = options => {
                         rowId: DATA.editorId,
                         order: DATA.order,
                         paging: DATA.paging,
+                        rowReorder: DATA.rowReorder,
                         rowCallback: function (row, data, displayNum) {
                             //pozor, tato funkcia je tu 2x pre ajax aj normal load
                             //console.log("createdRow, displayNum=", displayNum, " data=", data, "row=", row);
@@ -3115,6 +3119,7 @@ export const dataTableInit = options => {
                     data: DATA.src.data,
                     columns: DATA.columns,
                     order: DATA.order,
+                    rowReorder: DATA.rowReorder,
                     rowCallback: function (row, data, displayNum) {
 
                         if (displayNum % 2 == 0) $(row).attr("class", "odd");
