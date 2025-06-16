@@ -3155,7 +3155,15 @@ export const dataTableInit = options => {
 
                 //reset extfilter
                 var extfilter = $('#' + DATA.id + '_extfilter div[data-dt-column="' + index + '"]')
-                extfilter.find("select").val("");
+                if (extfilter.length > 0) {
+                    var extfilterSelect = extfilter.find("select");
+                    extfilterSelect.val("");
+                    //console.log("Resetting extfilter=", extfilter, " selectpicker=", extfilterSelect.data("selectpicker"));
+                    if (typeof extfilterSelect.data("selectpicker") !== "undefined") {
+                        //console.log("Updating selectpicker 2");
+                        extfilterSelect.selectpicker('refresh');
+                    }
+                }
 
                 TABLE.column(index).search("");
                 var searchBtn = $(th).find(".filtrujem");
