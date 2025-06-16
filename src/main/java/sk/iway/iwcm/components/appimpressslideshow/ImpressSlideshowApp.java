@@ -16,11 +16,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     itemKey = "cmp_app-impress_slideshow",
     imagePath = "/components/app-impress_slideshow/editoricon.png",
     galleryImages = "/components/app-impress_slideshow/",
-    componentPath = "/components/app-impress_slideshow/news.jsp"
+    componentPath = "/components/app-impress_slideshow/news.jsp",
+    customHtml = "/apps/app-impress_slideshow/admin/editor-component.html"
 )
 @DataTableTabs(tabs = {
-    @DataTableTab(id = "style", title = "components.news.styleAndSettings", content = ""),
-    @DataTableTab(id = "tabLink2", title = "components.news.items", selected = true),
+    @DataTableTab(id = "style", title = "components.news.styleAndSettings", selected = true),
+    @DataTableTab(id = "tabLink2", title = "components.news.items"),
 })
 @Getter
 @Setter
@@ -34,7 +35,9 @@ public class ImpressSlideshowApp  extends WebjetComponentAbstract{
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "style", title = "components.app-impress_slideshow.imageHeight")
     private Integer imageHeight = 300;
 
-    //TODO json editor
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "tabLink2", title="&nbsp;")
-    private String iframe  = "";
+    private String iframe = "/apps/app-impress_slideshow/admin/add-item/";
+
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
+    private String editorData;
 }
