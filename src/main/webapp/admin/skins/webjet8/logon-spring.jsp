@@ -144,7 +144,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                     </c:if>
 
-                    <logic:present name="passResultEmail">
+                    <iwcm:present name="passResultEmail">
                         <div class="alert alert-success">
                             <span><iwcm:text key="logon.lost_password_send_success"/></span>
                         </div>

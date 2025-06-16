@@ -5,7 +5,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+
 PageParams pageParams = new PageParams(request);
 //TODO: joruz - pridat to do komponenty pre vkladanie
 String emailLogon = pageParams.getValue("emailLogon", "false");

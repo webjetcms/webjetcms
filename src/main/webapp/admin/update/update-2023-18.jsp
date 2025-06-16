@@ -746,8 +746,8 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	<div style="white-space: pre"><%
 		if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
 			checkDir("/admin/", saveFile, compileFile, out, request, response);
-
 			checkDir("/apps/", saveFile, compileFile, out, request, response);
+			checkDir("/components/", saveFile, compileFile, out, request, response);
 			checkDir("/templates/", saveFile, compileFile, out, request, response);
 		}
 		else if ("admin".equals(subdir) || "*".equals(subdir)) {

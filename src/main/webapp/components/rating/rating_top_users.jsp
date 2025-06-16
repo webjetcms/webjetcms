@@ -13,7 +13,7 @@ pageContext.setAttribute("lng", lng);
 %>
 <%
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+
 PageParams pageParams = new PageParams(request);
 
 int usersLength = pageParams.getIntValue("usersLength", 10);

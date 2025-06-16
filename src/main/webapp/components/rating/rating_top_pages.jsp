@@ -15,7 +15,7 @@ PageParams pageParams = new PageParams(request);
 %>
 <%
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+
 int range = pageParams.getIntValue("range", 10);
 DocDB docDB = DocDB.getInstance();
 
