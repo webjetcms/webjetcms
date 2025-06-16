@@ -3,7 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="org.apache.commons.beanutils.BeanUtils" %><%@
 page import="org.apache.commons.codec.binary.Base64" %><%@
 page import="org.apache.commons.codec.binary.StringUtils" %><%@
-page import="sk.iway.iwcm.tags.support_logic.ResponseUtils" %><%@
+page import="sk.iway.iwcm.tags.support.ResponseUtils" %><%@
 page import="org.json.JSONArray" %><%@
 page import="org.json.JSONObject" %><%@
 page import="org.jsoup.Jsoup" %><%@

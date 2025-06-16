@@ -14,8 +14,8 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.admin.layout.LayoutService;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * Tag that retrieves the specified property of the specified bean, converts

@@ -9,7 +9,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.MapUtils;
 
 /**

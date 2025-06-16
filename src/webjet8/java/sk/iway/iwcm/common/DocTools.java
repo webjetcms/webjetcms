@@ -21,7 +21,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 

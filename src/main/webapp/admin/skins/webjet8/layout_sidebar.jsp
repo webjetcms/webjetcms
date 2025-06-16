@@ -428,7 +428,7 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 			var currentWithQs = "<%
 				String qs = (String)request.getAttribute("path_filter_query_string");
 				if (qs == null) qs = "";
-				else qs = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(qs);
+				else qs = sk.iway.iwcm.tags.support.ResponseUtils.filter(qs);
 				out.print(currentUrl+"?"+qs);
 			%>";
 			if (current.endsWith("/") === false && current.indexOf(".") === -1) {

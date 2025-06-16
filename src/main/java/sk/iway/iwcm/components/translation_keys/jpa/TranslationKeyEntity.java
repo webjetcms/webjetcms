@@ -21,7 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 @Entity
 @Table(name = "_properties_")

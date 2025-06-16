@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.doc.DocDB"%><%@
 page import="sk.iway.iwcm.doc.TemplateDetails"%><%@
-page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%@
+page import="sk.iway.iwcm.tags.support.ResponseUtils"%><%@
 page import="sk.iway.iwcm.doc.GroupDetails"%><%@
 page import="sk.iway.iwcm.doc.GroupsDB"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%><%@

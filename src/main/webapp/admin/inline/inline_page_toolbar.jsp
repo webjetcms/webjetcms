@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.common.DocTools"%>
 <%@page import="sk.iway.iwcm.doc.*"%>

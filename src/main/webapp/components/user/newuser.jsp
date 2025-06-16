@@ -48,7 +48,7 @@ if (Tools.isNotEmpty(hash))
 	return;
 }
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 
 
 

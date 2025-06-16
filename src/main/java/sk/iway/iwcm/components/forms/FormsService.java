@@ -24,7 +24,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;

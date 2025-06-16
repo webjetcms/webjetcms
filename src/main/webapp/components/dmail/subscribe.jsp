@@ -3,7 +3,7 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 	String lng = PageLng.getUserLng(request);

@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import sk.iway.iwcm.CacheBean;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.stat.BrowserDetector;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import java.util.ArrayList;
 import java.util.Date;

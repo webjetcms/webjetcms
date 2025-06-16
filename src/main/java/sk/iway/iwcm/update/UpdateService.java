@@ -42,7 +42,7 @@ import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 public class UpdateService {

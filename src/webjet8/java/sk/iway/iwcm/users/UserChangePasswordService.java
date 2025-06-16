@@ -33,7 +33,7 @@ import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.logon.UserForm;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public class UserChangePasswordService {
 

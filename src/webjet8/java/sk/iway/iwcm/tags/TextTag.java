@@ -8,7 +8,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  Tag pre vypis stringu z requestu v JSP stranke

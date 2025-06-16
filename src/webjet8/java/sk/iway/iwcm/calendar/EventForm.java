@@ -18,7 +18,6 @@ public class EventForm
 	/**
 	 * Comment for <code>serialVersionUID</code>
 	 */
-	private static final long serialVersionUID = 1L;
 	private boolean recode = true;
 	private int calendarId;
 	private String title;

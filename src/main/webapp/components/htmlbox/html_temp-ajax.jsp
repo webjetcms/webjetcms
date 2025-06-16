@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.filebrowser.BrowseAction"%>
-<%@page import="sk.iway.iwcm.io.IwcmFile"%><%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.io.IwcmFile"%><%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");

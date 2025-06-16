@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.WriteTag;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.DiskMultiPartRequestHandler;

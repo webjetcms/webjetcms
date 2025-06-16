@@ -1,5 +1,5 @@
 <%@page import="sk.iway.iwcm.io.IwcmInputStream"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.io.IwcmFile"%>
 <%@page import="sk.iway.iwcm.io.IwcmFsDB"%>
 <%

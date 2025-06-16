@@ -3,15 +3,15 @@
 	sk.iway.iwcm.Encoding
 			.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%@ 
+	import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.tags.support.ResponseUtils"%><%@
 taglib
-	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@ 
+	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"
-	uri="/WEB-INF/iway.tld"%><%@ 
+	uri="/WEB-INF/iway.tld"%><%@
 taglib prefix="display"
-	uri="/WEB-INF/displaytag.tld"%><%@ 
+	uri="/WEB-INF/displaytag.tld"%><%@
 taglib prefix="stripes"
-	uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+	uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib
 	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@page import="java.net.URLDecoder"%>
@@ -30,10 +30,10 @@ taglib
 
 	int pageSize = 5;
 	int maxCols = pageParams.getIntValue("cols", 1);
-	
+
 	String json = pageParams.getValue("editorData", "W10=");
 	JSONArray itemsList = new JSONArray(URLDecoder.decode(StringUtils.newStringUtf8(Base64.decodeBase64(json)), "UTF-8"));
-	
+
 	int height = pageParams.getIntValue("nivoSliderHeight", 500);
 	int counter = 0;
 %>
@@ -46,7 +46,7 @@ taglib
 	href="/components/app-slit_slider/css/style2.css" />
 
 <style type="text/css">
-	
+
 .sl-slider h2 {
 padding: 0px;
 margin-bottom:0px;
@@ -70,13 +70,13 @@ margin-left:20px;
 	  				<%
 				String sliceOrientation;
 	  				int randOrientation;
-			%>	
-		
+			%>
+
 <% for(int i = 0; i < itemsList.length(); i++) { %>
-	<% JSONObject item = itemsList.getJSONObject(i); 
-	
+	<% JSONObject item = itemsList.getJSONObject(i);
+
 				counter++;
-				randOrientation = (int) ( Math.random() * 2 + 1); 
+				randOrientation = (int) ( Math.random() * 2 + 1);
 				if(randOrientation==1){sliceOrientation="horizontal";}else{sliceOrientation ="vertical";}
 				String displayStyle = "";
 
@@ -84,15 +84,15 @@ margin-left:20px;
 					displayStyle = " display: none;";
 					}
 	%>
-			
+
 			<div class="sl-slide" data-orientation="<%=sliceOrientation %>" data-slice1-rotation="-25" data-slice2-rotation="-25" data-slice1-scale="1" data-slice2-scale="2">
 						<div class="sl-slide-inner">
 						<%
-						
+
 				%>
 							<div class="bg-img" style="background-image: url(/thumb<%=item.get("image")%>?w=1200&ip=1); background-color: <%=item.get("backgroundColor")%>!important;"></div>
 							<h2 style="padding-bottom:0px !important; padding-top: <%= pageParams.getValue("headingMargin", "0") %>px; text-align:<%= pageParams.getValue("headingAlign", "left") %> ;size:<%=pageParams.getValue("headingSize", "70") %>px; color:<%=item.get("headingColor")%>!important;"><%=item.get("title")%></h2>
-							
+
 							<blockquote style="width:100%; <%=displayStyle%>"><p  style="padding-top: <%= pageParams.getValue("subHeadingMargin", "0") %>px; color:<%=item.get("subheadingColor")%>!important; text-align:<%= pageParams.getValue("subHeadingAlign", "left") %> ;size:<%=pageParams.getValue("subHeadingSize", "30") %>px;">
 									<%=item.get("subtitle")%>
 						</p>
@@ -101,18 +101,18 @@ margin-left:20px;
 					<% } %></blockquote>
 						</div>
 					</div>
-	
+
 	<% } %>
-	
+
 			<%
 				String currentSpan;
 				boolean currentSpanAdd = true;
 					%>
-					
-					
+
+
 		          <nav id="nav-dots" class="nav-dots">
 		          <% for(int i = 0; i < itemsList.length(); i++) { %>
-			
+
 			<% if(currentSpanAdd){currentSpan = "class=\"nav-dot-current\""; currentSpanAdd= false;} else{currentSpan="";} %>
 					<span <%=currentSpan%>></span>
 					<%} %>

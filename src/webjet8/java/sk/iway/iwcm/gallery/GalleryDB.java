@@ -84,7 +84,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.spirit.MediaDB;
 
 /**

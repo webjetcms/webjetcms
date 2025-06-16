@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.io.IwcmOutputStream"%>
 <%@page import="sk.iway.iwcm.io.IwcmInputStream"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="java.util.regex.Pattern"%>
 <%@page import="java.util.regex.Matcher"%>
 <%

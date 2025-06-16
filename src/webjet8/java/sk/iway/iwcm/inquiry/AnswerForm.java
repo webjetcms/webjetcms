@@ -16,8 +16,6 @@ import sk.iway.iwcm.Tools;
  */
 public class AnswerForm
 {
-   private static final long serialVersionUID = 1L;
-
    private String answerString;
    private String questionString;
    private int answerID;

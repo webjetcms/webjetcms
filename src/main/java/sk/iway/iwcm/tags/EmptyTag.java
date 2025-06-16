@@ -6,8 +6,8 @@ import java.util.Map;
 
 import javax.servlet.jsp.JspException;
 
-import sk.iway.iwcm.tags.support_logic.CustomConditionalTagBase;
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
+import sk.iway.iwcm.tags.support.CustomConditionalTagBase;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
 
 /**
  * Evalute the nested body content of this tag if the specified value is empty

@@ -11,7 +11,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;

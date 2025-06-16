@@ -27,7 +27,7 @@ import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.context.ContextFilter;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.UploadedFile;
 

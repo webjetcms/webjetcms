@@ -1,4 +1,4 @@
-package sk.iway.iwcm.tags.support_logic;
+package sk.iway.iwcm.tags.support;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -17,6 +17,7 @@ import lombok.Setter;
 @Setter
 public class CustomIterateTag extends BodyTagSupport {
 
+   @SuppressWarnings("rawtypes")
    protected Iterator iterator = null;
    protected int lengthCount = 0;
    protected int lengthValue = 0;
@@ -44,6 +45,7 @@ public class CustomIterateTag extends BodyTagSupport {
       return this.started ? this.offsetValue + this.lengthCount - 1 : 0;
    }
 
+   @SuppressWarnings({ "unchecked", "rawtypes" })
    @Override
    public int doStartTag() throws JspException {
       Object localCollection = this.collection;
@@ -81,6 +83,7 @@ public class CustomIterateTag extends BodyTagSupport {
                CustomTagUtils.getInstance().saveException(this.pageContext, e);
                throw e;
             }
+
 
             this.iterator = new IteratorAdapter((Enumeration)localCollection);
          }

@@ -12,9 +12,9 @@ import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
-import sk.iway.iwcm.tags.support_logic.IteratorAdapter;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
+import sk.iway.iwcm.tags.support.IteratorAdapter;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * Tag for creating multiple &lt;select&gt; options from a collection.  The
@@ -359,6 +359,7 @@ public class OptionsTag extends TagSupport {
      * @param property Name of the bean property (if any)
      * @throws JspException if an error occurs
      */
+    @SuppressWarnings("rawtypes")
     protected Iterator getIterator(String name, String property) throws JspException {
         CustomTagUtils customTagUtils = CustomTagUtils.getInstance();
 

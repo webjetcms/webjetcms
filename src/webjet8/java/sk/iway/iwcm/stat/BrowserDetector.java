@@ -4,7 +4,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.seo.SeoManager;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import javax.servlet.http.HttpServletRequest;
 

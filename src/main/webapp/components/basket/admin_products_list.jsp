@@ -6,7 +6,7 @@
 <%@page import="sk.iway.tags.CurrencyTag"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@page import="java.util.List"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");

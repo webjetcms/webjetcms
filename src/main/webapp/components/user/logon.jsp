@@ -26,7 +26,7 @@ pageContext.setAttribute("lng", lng);
 if(request.getParameter("loginName") != null)
 {
 	//posli heslo emailom
-	String loginName = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("loginName"));
+	String loginName = sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("loginName"));
 	//nastavime URL na zaslanie hesla na aktualnu login stranku, kde potom includneme podla parametrov form na zmenu hesla
 	if (pageParams.getBooleanValue("sendPasswordUrlSameAsLogin", true))
 	{
@@ -96,10 +96,10 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 			<form name="passwdSendForm" method="get" action="<%=PathFilter.getOrigPathDocId(request) %>">
 				<iwcm:text key="components.user.forgot_password"/>.
 				<a href="javascript:document.passwdSendForm.submit();"><iwcm:text key="components.user.send_login_info"/></a>.
-				<input class="input" type="hidden" name="loginName" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("username"))%>" />
+				<input class="input" type="hidden" name="loginName" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("username"))%>" />
 				<input type="hidden" name="docid" value="<%
-				if (request.getParameter("origDocId")!=null) out.print(sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("origDocId")));
-				else out.print(sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docId")));
+				if (request.getParameter("origDocId")!=null) out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("origDocId")));
+				else out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("docId")));
 				%>" />
 			</form>
 			<br /><br />
@@ -175,8 +175,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 						   String values[] = request.getParameterValues(name);
 						   for (int i=0; i<values.length; i++)
 						   {
-							   String value = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(values[i]);
-							   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
+							   String value = sk.iway.iwcm.tags.support.ResponseUtils.filter(values[i]);
+							   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
 						   }
 						}
 						%>
@@ -208,7 +208,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				  <div class="form-group">
 					<label id="loginLabelName" for="name" class="col-md-2 control-label"><iwcm:text key="logon.name"/>:</label>
 					<div class="col-md-10">
-					  <input type="text" name="username" size="16" maxlength="64" class="form-control" id="name" value="<% if (request.getParameter("username")!=null) out.print(sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("username"))); %>" />
+					  <input type="text" name="username" size="16" maxlength="64" class="form-control" id="name" value="<% if (request.getParameter("username")!=null) out.print(sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("username"))); %>" />
 					</div>
 				  </div>
 				  <div class="form-group">
@@ -254,8 +254,8 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 							   String values[] = request.getParameterValues(name);
 							   for (int i=0; i<values.length; i++)
 							   {
-								   String value = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(values[i]);
-								   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
+								   String value = sk.iway.iwcm.tags.support.ResponseUtils.filter(values[i]);
+								   out.println("<input type='hidden' name='"+sk.iway.iwcm.tags.support.ResponseUtils.filter(name)+"' value=\""+value+"\" />");
 							   }
 							}
 							%>

@@ -6,7 +6,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 <%@page import="sk.iway.iwcm.users.UserGroupsDB"%>
 <%@page import="sk.iway.iwcm.users.UserGroupDetails"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <jsp:include page="/components/top.jsp"/>
 
 <%

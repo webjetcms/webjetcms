@@ -1,6 +1,6 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.tags.support_logic.ResponseUtils,sk.iway.iwcm.Identity"%>
+	import="sk.iway.iwcm.tags.support.ResponseUtils,sk.iway.iwcm.Identity"%>
 <%@ page import="sk.iway.iwcm.PageParams" %>
 <%@ page import="sk.iway.iwcm.Tools" %>
 <%@ page import="sk.iway.iwcm.common.DocTools" %>

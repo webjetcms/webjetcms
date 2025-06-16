@@ -8,7 +8,7 @@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/admin/layout_top.jsp" %>
 <%@page import="sk.iway.iwcm.system.InstallCert"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <script language="JavaScript">
 var helpLink = "";
 </script>

@@ -83,7 +83,7 @@ if (searchType != null)
 %>
 
 
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
 <%@ page import="sk.iway.iwcm.common.SearchTools" %>
 <form class="smallSearchForm" action="<%=url%>" method="get">

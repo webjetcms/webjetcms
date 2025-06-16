@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.WJResponseWrapper;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.stripes.CSRF;
-import sk.iway.iwcm.tags.support_logic.TokenProcessor;
+import sk.iway.iwcm.tags.support.TokenProcessor;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.*;

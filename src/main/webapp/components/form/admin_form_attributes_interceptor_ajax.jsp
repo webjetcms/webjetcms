@@ -1,5 +1,5 @@
 <%@page import="sk.iway.iwcm.users.UsersDB"%><%@
-		page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%
+		page import="sk.iway.iwcm.tags.support.ResponseUtils"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "application/json");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
 		page import="org.json.JSONArray" %><%@

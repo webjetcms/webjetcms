@@ -1,5 +1,5 @@
 <%@page import="sk.iway.iwcm.system.cache.PersistentCacheDB"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 
 //[#18339 - app livechat] vloženie aplikacie do stránky. Ak nieje zadaný kód, aplikacia sa nevloží

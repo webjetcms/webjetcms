@@ -1,4 +1,4 @@
-package sk.iway.iwcm.tags.support_logic;
+package sk.iway.iwcm.tags.support;
 
 import java.io.IOException;
 import java.io.InputStream;

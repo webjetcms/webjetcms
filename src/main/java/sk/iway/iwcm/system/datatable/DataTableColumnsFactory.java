@@ -14,7 +14,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import javax.servlet.http.HttpServletRequest;
 

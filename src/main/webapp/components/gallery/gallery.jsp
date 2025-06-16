@@ -2,7 +2,7 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.gallery.*,java.util.*,java.io.*" %>
 <%@ page import="org.json.JSONObject" %>
-<%@ page import="sk.iway.iwcm.tags.support_logic.ResponseUtils" %>
+<%@ page import="sk.iway.iwcm.tags.support.ResponseUtils" %>
 <%@ page import="sk.iway.iwcm.tags.WriteTag" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@

@@ -5,7 +5,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 request.setAttribute("cmpName", "news");
 String paramPageParams = Tools.getStringValue(Tools.getRequestParameterUnsafe(request, "pageParams"), "");

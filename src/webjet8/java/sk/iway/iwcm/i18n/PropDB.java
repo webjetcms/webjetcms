@@ -12,7 +12,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  PropDB.java

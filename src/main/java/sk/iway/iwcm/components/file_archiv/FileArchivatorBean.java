@@ -26,8 +26,6 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.database.ActiveRecordRepository;
-import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;

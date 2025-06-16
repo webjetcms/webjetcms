@@ -11,8 +11,8 @@
 <%@page import="sk.iway.iwcm.PathFilter"%>
 <%@page import="java.util.regex.Pattern"%>
 <%@page import="sk.iway.iwcm.Tools"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.RequestUtils"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><iwcm:checkLogon admin="true" perms="cmp_adminlog_logging"/>
+<%@page import="sk.iway.iwcm.tags.support.RequestUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%><iwcm:checkLogon admin="true" perms="cmp_adminlog_logging"/>
 <jsp:useBean id="iwcm_useriwcm" scope="session" type="sk.iway.iwcm.Identity"/>
 <%@ include file="layout_top.jsp" %>
 

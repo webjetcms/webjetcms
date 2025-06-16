@@ -1,7 +1,7 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-import="sk.iway.iwcm.inquiry.*,sk.iway.iwcm.*,sk.iway.iwcm.tags.support_logic.ResponseUtils,java.io.*" %><%@page import="sk.iway.iwcm.users.UsersDB"%><%@
+import="sk.iway.iwcm.inquiry.*,sk.iway.iwcm.*,sk.iway.iwcm.tags.support.ResponseUtils,java.io.*" %><%@page import="sk.iway.iwcm.users.UsersDB"%><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%
 

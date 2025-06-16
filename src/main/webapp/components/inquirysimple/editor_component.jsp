@@ -1,6 +1,6 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+	import="sk.iway.iwcm.*,sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@ page import="sk.iway.iwcm.i18n.Prop" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="sk.iway.iwcm.users.UsersDB" %>

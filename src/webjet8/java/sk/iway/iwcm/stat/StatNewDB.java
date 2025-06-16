@@ -35,7 +35,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  StatNewDB.java

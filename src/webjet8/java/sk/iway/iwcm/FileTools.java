@@ -31,8 +31,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
-import sk.iway.iwcm.tags.support_logic.FormFile;
-
 import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
@@ -48,6 +46,7 @@ import sk.iway.iwcm.io.JarPackaging;
 import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.tags.support.FormFile;
 import sk.iway.iwcm.users.UserDetails;
 
 /**

@@ -38,7 +38,7 @@ public String isShow(String show, String name)
 	return " style='display: none;'";
 }
 %>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><iwcm:present parameter="qasend">
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%><iwcm:present parameter="qasend">
 	<%
 	String qasend = Tools.getRequestParameter(request, "qasend");
 	if (Tools.isNotEmpty(qasend))

@@ -1,7 +1,7 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %>
-<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%
@@ -214,8 +214,8 @@ if (pageLink.startsWith("/components")) pageLink = ""; //kvoli AJAX nacitaniu, a
 									<option value="<%=j%>" <%if(actualPageNum==j)out.println("selected");%>><%=j%></option>
 									<% } %>
 								</select>
-								<input type="hidden" name="forumDocId" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("forumDocId"))%>" >
-								<input type="hidden" name="words" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("words"))%>" >
+								<input type="hidden" name="forumDocId" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("forumDocId"))%>" >
+								<input type="hidden" name="words" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("words"))%>" >
 							</form>
 					<%	}
 					} %>

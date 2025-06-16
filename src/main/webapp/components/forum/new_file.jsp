@@ -1,12 +1,12 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8"  import="java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,sk.iway.iwcm.tags.support_logic.ResponseUtils" %>
+%><%@ page pageEncoding="utf-8"  import="java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,sk.iway.iwcm.tags.support.ResponseUtils" %>
 <%@ page import="sk.iway.iwcm.i18n.Prop" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -44,14 +44,14 @@ if (uploadLimits == null)
 	<title><iwcm:text key="forum.new.title"/></title>
 		<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" />
 		<meta http-equiv="Content-language" content="<%=PageLng.getUserLng(request)%>" />
-		
+
 		<meta name="description" content="WebJET Content Management web site" />
 		<meta name="author" content="Interway, s.r.o." />
-	
+
 		<link type="text/css" rel="stylesheet" href="/css/page.css" />
 		<link type="text/css" rel="stylesheet" href="/components/forum/forum.css" />
 		<script type="text/javascript" src="/components/form/check_form.js"></script>
-		
+
 		<script type="text/javascript">
 			<!--
 				window.resizeTo(510, 500);
@@ -78,12 +78,12 @@ if (uploadLimits == null)
 				</label>
 				<input type="file" name="uploadedFile" size="30"/>
 			</p>
-			
+
 			<input type="hidden" name="forumId" value="<%=ResponseUtils.filter(request.getParameter("forumId"))%>" />
-			
-			
+
+
 			<input type="hidden" name="type" value="upload" />
-						
+
 			<p>
 				<input type="submit" name="submit" value="<iwcm:text key="forum.new.send"/>"/>
 				<input type="button" onclick="javascript:window.close();" name="cancel" value="<iwcm:text key="forum.new.cancel"/>" />

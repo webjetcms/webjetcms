@@ -198,7 +198,7 @@ if(!isAjaxCall)
 	<form method="get" action="<%=PathFilter.getOrigPath(request) %>" name="actionForm" style="display: none;">
 		<div>
 	    <input type="hidden" name="act" />
-	    <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docid"))%>" />
+	    <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("docid"))%>" />
 		 <input type="hidden" name="forumId" />
 		 <input type="hidden" name="pId" />
 		 <input type="hidden" name="pageNum" value="<%=pageNum%>" />

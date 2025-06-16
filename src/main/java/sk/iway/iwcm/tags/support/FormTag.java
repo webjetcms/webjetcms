@@ -1,4 +1,4 @@
-package sk.iway.iwcm.tags.support_logic;
+package sk.iway.iwcm.tags.support;
 
 import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.tagext.TagSupport;
@@ -68,8 +68,4 @@ public class FormTag extends TagSupport {
 
         return results.toString();
     }
-
-   private boolean isXhtml() {
-      return CustomTagUtils.getInstance().isXhtml(this.pageContext);
-   }
 }

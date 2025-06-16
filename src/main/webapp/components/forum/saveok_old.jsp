@@ -74,7 +74,7 @@ if (isAdmin)
 		   {
 		   	int parentId = Tools.getIntValue(request.getParameter("parent2"), Tools.getIntValue(request.getParameter("parentId"), -1));
 		   	int pageNum = Tools.getIntValue(request.getParameter("pageNum"), 1);
-		   	String pageParams = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"));
+		   	String pageParams = sk.iway.iwcm.tags.support.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"));
 
 		   	String component = "forum-open.jsp?docid="+docId+"&pageParams="+pageParams;
 		   	if("normal".equals(type))

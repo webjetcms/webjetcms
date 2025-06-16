@@ -27,7 +27,7 @@ if (session.getAttribute("forum-shown")==null) {
 }
 
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
 
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -206,16 +206,16 @@ if (fgb != null && fgb.canPostMessage(user)==false)
             <div class="form-group">
 
                 <form:hidden path="parentId"/>
-                <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docid"))%>" />
-                <input type="hidden" name="docId" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("docid"))%>" />
-                <input type="hidden" name="parent2" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("parent2"))%>" />
+                <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("docid"))%>" />
+                <input type="hidden" name="docId" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("docid"))%>" />
+                <input type="hidden" name="parent2" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("parent2"))%>" />
                 <input type="hidden" name="pageNum" value="<%=Tools.getIntValue(request.getParameter("pageNum"), 1)%>" />
-                <input type="hidden" name="pageParams" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"))%>" />
+                <input type="hidden" name="pageParams" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"))%>" />
             <%
             if(Tools.isNotEmpty(request.getParameter("type")))
             {
             %>
-                <input type="hidden" name="type" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("type")) %>" />
+                <input type="hidden" name="type" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("type")) %>" />
             <%
             }
             %>
@@ -224,7 +224,7 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 		if(Tools.isNotEmpty(request.getParameter("rootForumId")))
 		{
 		%>
-			<input type="hidden" name="rootForumId" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("rootForumId")) %>" />
+			<input type="hidden" name="rootForumId" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("rootForumId")) %>" />
 		<%
 		}
 		%>
@@ -273,15 +273,15 @@ if (fgb != null && fgb.canPostMessage(user)==false)
 		var authorName = document.getElementById('authorName');
 		var authorEmail = document.getElementById('authorEmail');
 
-		if (!authorName.value) { 
+		if (!authorName.value) {
 			authorName.removeAttribute('disabled');
 		} else {
 			authorName.setAttribute('disabled', '');
-		}	
+		}
 
-		if (!authorEmail.value) { 
+		if (!authorEmail.value) {
 			authorEmail.removeAttribute('disabled');
 		} else {
 			authorEmail.setAttribute('disabled', '');
-		}	
+		}
 	</script>

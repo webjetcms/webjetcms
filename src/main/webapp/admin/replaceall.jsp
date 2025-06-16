@@ -1,6 +1,6 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.tags.support_logic.ResponseUtils,sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools,sk.iway.iwcm.doc.DocDB"%>
+%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.tags.support.ResponseUtils,sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools,sk.iway.iwcm.doc.DocDB"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <iwcm:checkLogon admin="true" perms="replaceAll"/>

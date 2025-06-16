@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.gdpr.model.GdprDB;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
 import sk.iway.iwcm.components.gdpr.model.QuestionsAnswersDB;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public enum GdprModule {
     WEB_STRANKY,

@@ -16,8 +16,8 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * SelectTag.java - tag pre render selectu zo Struts s pridanim poslednej
@@ -31,7 +31,7 @@ import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
  * @created Date: 16.8.2005 11:34:08
  * @modified $Date: 2010/01/20 11:15:08 $
  */
-public class SelectTag extends sk.iway.iwcm.tags.support_logic.SelectTag
+public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 {
 	private static final long serialVersionUID = 2751499992225522333L;
 	public static final String SELECT_KEY = "org.apache.struts.taglib.html.SELECT";

@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.Constants,sk.iway.iwcm.DBPool,sk.iway.iwcm.Identity, sk.iway.iwcm.Tools, sk.iway.iwcm.doc.DocDB, sk.iway.iwcm.doc.DocDetails, sk.iway.iwcm.users.UserDetails, sk.iway.iwcm.users.UsersDB" %>
@@ -132,7 +132,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 									</td>
 								</tr>
 							</table>
-							<%=sk.iway.iwcm.tags.support_logic.FormTag.renderToken(session)%>
+							<%=sk.iway.iwcm.tags.support.FormTag.renderToken(session)%>
 						</form>
 					</iwcm:notPresent>
 				</c:otherwise>

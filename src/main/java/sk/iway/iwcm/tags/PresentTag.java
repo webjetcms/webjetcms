@@ -7,8 +7,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 
-import sk.iway.iwcm.tags.support_logic.CustomConditionalTagBase;
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
+import sk.iway.iwcm.tags.support.CustomConditionalTagBase;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
 
 public class PresentTag extends CustomConditionalTagBase {
     public static final String ROLE_DELIMITER = ",";

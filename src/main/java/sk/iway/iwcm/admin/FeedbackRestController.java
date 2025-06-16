@@ -15,7 +15,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**

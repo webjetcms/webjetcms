@@ -19,8 +19,6 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import sk.iway.iwcm.tags.support_logic.FormFile;
-
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -56,6 +54,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.tags.support.FormFile;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.spirit.MediaDB;

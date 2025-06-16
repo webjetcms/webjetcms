@@ -2,7 +2,7 @@ package sk.iway.iwcm.tags;
 
 import javax.servlet.jsp.JspException;
 
-import sk.iway.iwcm.tags.support_logic.CustomCompareTagBase;
+import sk.iway.iwcm.tags.support.CustomCompareTagBase;
 
 /**
  * Evaluate the nested body content of this tag if the specified variable and

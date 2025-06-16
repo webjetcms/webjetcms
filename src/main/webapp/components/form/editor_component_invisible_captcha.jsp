@@ -1,4 +1,4 @@
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.Constants"%>
 <%@page import="sk.iway.iwcm.PageParams"%>
 <%

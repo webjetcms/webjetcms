@@ -11,7 +11,7 @@ import net.sourceforge.stripes.controller.DefaultActionBeanPropertyBinder;
 import net.sourceforge.stripes.controller.ParameterName;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  XssSafeActionBeanPropertyBinder.java

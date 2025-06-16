@@ -1,4 +1,4 @@
-package sk.iway.iwcm.tags.support_logic.action;
+package sk.iway.iwcm.tags.support.action;
 
 import java.io.Serializable;
 

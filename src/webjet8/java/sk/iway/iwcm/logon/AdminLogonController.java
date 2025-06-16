@@ -40,11 +40,9 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
-
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
-import sk.iway.iwcm.tags.support_logic.action.ActionMessage;
-import sk.iway.iwcm.tags.support_logic.action.ActionMessages;
-
+import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.tags.support.action.ActionMessage;
+import sk.iway.iwcm.tags.support.action.ActionMessages;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;

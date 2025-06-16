@@ -101,7 +101,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 							</td>
 						</tr>
 					</table>
-					<%=sk.iway.iwcm.tags.support_logic.FormTag.renderToken(session)%>
+					<%=sk.iway.iwcm.tags.support.FormTag.renderToken(session)%>
 					</form>
 				</iwcm:notPresent>
 

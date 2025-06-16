@@ -1,4 +1,4 @@
-package sk.iway.iwcm.tags.support_logic;
+package sk.iway.iwcm.tags.support;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;

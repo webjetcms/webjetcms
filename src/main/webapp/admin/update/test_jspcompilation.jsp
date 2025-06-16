@@ -6,7 +6,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.system.WJResponseWrapper" %>
 <%@ page import="java.io.StringWriter" %>
 <%@ page import="java.io.PrintWriter" %>
-<%@ page import="sk.iway.iwcm.tags.support_logic.ResponseUtils" %>
+<%@ page import="sk.iway.iwcm.tags.support.ResponseUtils" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@

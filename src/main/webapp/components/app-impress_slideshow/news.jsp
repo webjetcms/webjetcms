@@ -3,7 +3,7 @@
 	sk.iway.iwcm.Encoding
 			.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"
-	import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%@
+	import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.tags.support.ResponseUtils"%><%@
 taglib
 	prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><%@
 taglib prefix="iway"

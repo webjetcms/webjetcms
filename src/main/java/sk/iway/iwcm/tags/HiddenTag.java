@@ -2,9 +2,9 @@ package sk.iway.iwcm.tags;
 
 import javax.servlet.jsp.JspException;
 
-import sk.iway.iwcm.tags.support_logic.CustomBaseInputTag;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
-import sk.iway.iwcm.tags.support_logic.CustomTagUtils;
+import sk.iway.iwcm.tags.support.CustomBaseInputTag;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * Custom tag for input fields of type "hidden".

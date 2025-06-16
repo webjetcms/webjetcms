@@ -17,7 +17,7 @@ import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 @Component

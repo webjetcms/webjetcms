@@ -15,8 +15,8 @@ import org.apache.commons.beanutils.PropertyUtils;
 import sk.iway.Password;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.LogonTools;
-import sk.iway.iwcm.tags.support_logic.action.ActionMessage;
-import sk.iway.iwcm.tags.support_logic.action.ActionMessages;
+import sk.iway.iwcm.tags.support.action.ActionMessage;
+import sk.iway.iwcm.tags.support.action.ActionMessages;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 

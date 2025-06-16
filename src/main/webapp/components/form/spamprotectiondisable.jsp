@@ -1,4 +1,4 @@
-<%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%@page import="sk.iway.iwcm.*"%><%@page import="sk.iway.iwcm.common.DocTools"%><%@page import="sk.iway.iwcm.doc.DocDB"%><%@page import="sk.iway.iwcm.system.stripes.CSRF"%><%
+<%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%><%@page import="sk.iway.iwcm.*"%><%@page import="sk.iway.iwcm.common.DocTools"%><%@page import="sk.iway.iwcm.doc.DocDB"%><%@page import="sk.iway.iwcm.system.stripes.CSRF"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.util.Random" %>
 <%@

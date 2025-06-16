@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.doc.AtrDB"%>
 <%@page import="java.util.List"%><%@page import="java.util.ArrayList"%><%@page import="sk.iway.iwcm.doc.AtrBean"%><%@page import="sk.iway.iwcm.doc.TemplateDetails"%><%@
-page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%><%@
+page import="sk.iway.iwcm.tags.support.ResponseUtils"%><%@
 page import="sk.iway.iwcm.doc.GroupDetails"%><%@
 page import="sk.iway.iwcm.doc.GroupsDB"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%><%@

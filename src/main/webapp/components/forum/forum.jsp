@@ -89,7 +89,7 @@
 	boolean active = ForumDB.isActive(docId);
 	pageContext.setAttribute("forum", forum);
 %>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 if(!isAjaxCall)

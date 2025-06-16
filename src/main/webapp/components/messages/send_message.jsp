@@ -4,7 +4,7 @@
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <iwcm:checkLogon admin="true" perms="menuMessages"/>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@ page import="sk.iway.iwcm.Tools" %>
 
 <%

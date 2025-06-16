@@ -1,6 +1,6 @@
 package sk.iway.iwcm.xls;
 
-import sk.iway.iwcm.tags.support_logic.FormFile;
+import sk.iway.iwcm.tags.support.FormFile;
 
 public class ImportXLSForm {
 

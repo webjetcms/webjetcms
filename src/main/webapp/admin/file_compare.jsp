@@ -67,7 +67,7 @@ public String diff(String file1,String file2)
 }
 %>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.io.IwcmInputStream"%>
 <script language="JavaScript">
 if (window.name && window.name=="componentIframe")

@@ -47,7 +47,7 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetComponentParser;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**

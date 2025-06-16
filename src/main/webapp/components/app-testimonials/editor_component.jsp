@@ -8,7 +8,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <iwcm:checkLogon admin="true" perms="cmp_testimonials"/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 request.setAttribute("cmpName", "app-testimonials");
 request.setAttribute("iconLink", "/components/app-testimonials/editoricon.png");

@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  Zobrazi dokumenty v stromovej strukture

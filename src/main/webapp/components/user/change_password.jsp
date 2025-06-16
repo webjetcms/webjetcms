@@ -8,9 +8,9 @@
 <%@page import="sk.iway.Password"%>
 <%@page import="sk.iway.iwcm.users.UserDetails"%>
 <%@page import="sk.iway.iwcm.users.PasswordSecurity"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.action.ActionMessages"%>
+<%@page import="sk.iway.iwcm.tags.support.action.ActionMessages"%>
 <%@page import="java.util.Iterator"%>
-<%@page import="sk.iway.iwcm.tags.support_logic.action.ActionMessage"%>
+<%@page import="sk.iway.iwcm.tags.support.action.ActionMessage"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
@@ -70,7 +70,7 @@ if (includedIntoPage==false)
 					auth = new Password().decrypt(auth);
 
 					//Login handle
-					login = sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(login);
+					login = sk.iway.iwcm.tags.support.ResponseUtils.filter(login);
 
 					//Login CAN BE combination of more logins separated by UserChangePasswordService.LOGINS_SEPARATOR
 					String[] logins = Tools.getTokens(login, UserChangePasswordService.LOGINS_SEPARATOR);
@@ -190,9 +190,9 @@ if (includedIntoPage==false)
 									<td colspan="2">
 										<div class="form-group text-center">
 											<input type="submit" class="button btn btn-info" value="<iwcm:text key="button.submit"/>"/>
-											<input type="hidden" name="login" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("login")) %>" />
-											<input type="hidden" name="auth" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("auth")) %>" />
-											<input type="hidden" name="language" value="<%=sk.iway.iwcm.tags.support_logic.ResponseUtils.filter(request.getParameter("language")) %>" />
+											<input type="hidden" name="login" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("login")) %>" />
+											<input type="hidden" name="auth" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("auth")) %>" />
+											<input type="hidden" name="language" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("language")) %>" />
 										</div>
 									</td>
 								</tr>

@@ -5,7 +5,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * Title        webjet8

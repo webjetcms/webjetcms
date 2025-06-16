@@ -26,7 +26,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  nadtrieda DB tried, ma zakladne uzitocne funkcie

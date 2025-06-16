@@ -59,7 +59,7 @@ import sk.iway.iwcm.system.stripes.BindPageParams;
 import sk.iway.iwcm.system.stripes.PageParamOnly;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
 import sk.iway.iwcm.tags.WriteTag;
-import sk.iway.iwcm.tags.support_logic.ResponseUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
