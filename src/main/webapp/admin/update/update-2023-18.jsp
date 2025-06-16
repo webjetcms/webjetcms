@@ -8,7 +8,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="java.io.StringWriter" %>
 <%@ page import="java.io.PrintWriter" %>
 <%@ page import="java.util.*" %>
-<%@ page import="sk.iway.iwcm.tags.support_logic.ResponseUtils" %>
+<%@ page import="sk.iway.iwcm.tags.support.ResponseUtils" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
@@ -404,6 +404,10 @@ static {
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountActionBean\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
+
+	//unused editorEnableXHTML
+	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
+	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
 
 	//Replace logic:present with iwcm:present
 	replaces.add(new OptionDto("<" + "logic:present", "<" + "iwcm:present", ".jsp"));

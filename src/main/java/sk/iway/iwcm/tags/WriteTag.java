@@ -377,11 +377,6 @@ public class WriteTag extends BodyTagSupport
 		DebugTimer dt = new DebugTimer("WriteTag");
 		StringBuilder buff = new StringBuilder(text);
 
-		if (Constants.getBoolean("editorEnableXHTML"))
-		{
-			pageContext.setAttribute(XHTML_KEY, "true", PageContext.PAGE_SCOPE);
-		}
-
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
 		HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();
 
@@ -702,7 +697,7 @@ public class WriteTag extends BodyTagSupport
 							{
 								preserveParametersSet(includeFileName, request);
 
-								if (request.getAttribute("writeTagDisableCodeFix")==null && Constants.getBoolean("disableWJResponseWrapper")==false && (request.getAttribute(BuffTag.IS_BUFF_TAG)!=null || Constants.getBoolean("editorEnableXHTML")))
+								if (request.getAttribute("writeTagDisableCodeFix")==null && Constants.getBoolean("disableWJResponseWrapper")==false && request.getAttribute(BuffTag.IS_BUFF_TAG)!=null)
 								{
 									//respWrapper.setBufferSize(response.getBufferSize());
 									//FakeHttpServletResponse respWrapper = new FakeHttpServletResponse(response);

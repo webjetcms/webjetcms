@@ -234,7 +234,7 @@ public class Constants {
 		setString("currencyFormat", "0.00", MOD_BASKET, "pattern na formatovanie meny");
 
 		// FCK: ak je true zapne sa XHTML mod formatovania HTML
-		setBoolean("editorEnableXHTML", true);
+		setBoolean("editorEnableXHTML", true, MOD_OBSOLETE, "xhtml mode for Struts framework");
 		setString("editorFontColors", "", MOD_EDITOR,
 				"umožňuje definovať kódy farieb, ktoré sa zobrazia v popup menu pre výber farby v editore. Kódy sú oddelené čiarkou, napríklad 000000,00ff00,ff0000,0000ff");
 
