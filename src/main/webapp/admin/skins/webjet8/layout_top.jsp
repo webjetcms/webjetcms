@@ -52,6 +52,7 @@ if (Tools.isEmpty(adminJqueryVersion)) adminJqueryVersion = "adminJqueryJs";
 	<iwcm:combine type="js" set="<%=adminJqueryVersion%>" />
 
 	<script type="text/javascript">
+		window.userLng = "<%=Prop.getLngForJavascript(request)%>";
 		$.ajaxSetup({
 			headers: {
 				'X-CSRF-Token': "<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfToken(request.getSession(), true)%>"

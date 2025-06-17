@@ -11,11 +11,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 <br><br>
 
-<%
-request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
-%>
-
-<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
+<form method="post" action="/admin/import/excel/" name="xlsImportForm" id="xlsImportForm" enctype="multipart/form-data">
  <table>
   <tr>
 	<td>Vyberte súbor:</td>
@@ -39,7 +35,7 @@ request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 	</td>
   </tr>
  </table>
-</form:form>
+</form>
 
 
 <%@ include file="/admin/layout_bottom.jsp" %>

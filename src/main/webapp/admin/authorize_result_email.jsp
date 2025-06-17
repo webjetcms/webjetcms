@@ -14,7 +14,7 @@ if (fForward.exists())
    pageContext.forward(forward);
    return;
 }
-%> 
+%>
 
 <html:html >
 <HEAD>
@@ -24,7 +24,7 @@ response.setHeader("Pragma","No-Cache");
 response.setDateHeader("Expires",0);
 response.setHeader("Cache-Control","no-Cache");
 %>
-<LINK rel="stylesheet" href="css/style.css"> 
+<LINK rel="stylesheet" href="css/style.css">
 <script language="JavaScript">
 <!--
 function m_over(x)
@@ -52,8 +52,10 @@ function m_click(dest)
 
 function m_click_help()
 {
-   var options = "menubar=no,toolbar=no,scrollbars=yes,resizable=yes,width=600,height=400;"
-   popWindow=window.open("help.jsp","_blank",options);
+   var lng = "sk";
+   if (typeof window.userLng != "undefined" && window.userLng != null && window.userLng != "") lng = window.userLng;
+   var url = "http://docs.webjetcms.sk/latest/"+lng;
+   popWindow=window.open(url,"_blank");
 }
 
 var t_server = 1040376789

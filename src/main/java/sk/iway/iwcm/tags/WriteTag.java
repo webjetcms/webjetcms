@@ -697,7 +697,7 @@ public class WriteTag extends BodyTagSupport
 							{
 								preserveParametersSet(includeFileName, request);
 
-								if (request.getAttribute("writeTagDisableCodeFix")==null && Constants.getBoolean("disableWJResponseWrapper")==false && request.getAttribute(BuffTag.IS_BUFF_TAG)!=null)
+								if (request.getAttribute("writeTagDisableCodeFix")==null && Constants.getBoolean("disableWJResponseWrapper")==false)
 								{
 									//respWrapper.setBufferSize(response.getBufferSize());
 									//FakeHttpServletResponse respWrapper = new FakeHttpServletResponse(response);

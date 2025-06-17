@@ -10,7 +10,6 @@ Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request
 request.setAttribute("iconLink", "");
 request.setAttribute("dialogTitle", prop.getText("components.import_web_pages.xls.dialogTitle"));
 request.setAttribute("dialogDesc", prop.getText("components.import_web_pages.xls.dialogDesc"));
-request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 
 int groupId = Constants.getInt("rootGroupId");
 try
@@ -37,6 +36,8 @@ catch (Exception ex)
 <jsp:include page="/admin/layout_top_dialog.jsp" />
 <script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/modalDialog.js"></script>
 <script type="text/javascript">
+
+	window.helpLink = "/redactor/webpages/import-export";
 
 	function openPopup()
 	{
@@ -85,7 +86,7 @@ catch (Exception ex)
 	</iwcm:present>
 
 
-	<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
+	<form method="post" action="/admin/import/excel/" name="xlsImportForm" id="xlsImportForm" enctype="multipart/form-data">
 	<table>
 		<tr>
 			<td>
@@ -124,7 +125,7 @@ catch (Exception ex)
 		</tr>
 	</table>
 	<input type="hidden" name="type" value="sk.iway.iwcm.components.importWebPages.ImportStructureExcel">
-	</form:form>
+	</form>
 </div>
 
 

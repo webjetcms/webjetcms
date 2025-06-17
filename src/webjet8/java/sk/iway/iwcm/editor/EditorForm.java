@@ -32,7 +32,6 @@ import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.tags.support.FormFile;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.Pair;
 
@@ -58,7 +57,6 @@ public class EditorForm implements Serializable
 	/**
 	 *  Description of the Field
 	 */
-	protected FormFile theFile;
 	private int docId = -1;
 	private int copyMediaFrom = -1;
 	private String externalLink = "";
@@ -393,26 +391,6 @@ public class EditorForm implements Serializable
 		{
 			title = recode(newTitle);
 		}
-	}
-
-	/**
-	 *  Gets the theFile attribute of the EditorForm object
-	 *
-	 *@return    The theFile value
-	 */
-	public FormFile getTheFile()
-	{
-		return theFile;
-	}
-
-	/**
-	 *  Sets the theFile attribute of the EditorForm object
-	 *
-	 *@param  theFile  The new theFile value
-	 */
-	public void setTheFile(FormFile theFile)
-	{
-		this.theFile = theFile;
 	}
 
 	/**

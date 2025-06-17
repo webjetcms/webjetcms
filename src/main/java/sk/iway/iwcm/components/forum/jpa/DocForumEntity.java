@@ -31,7 +31,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
-import sk.iway.iwcm.tags.support.FormFile;
 import sk.iway.iwcm.users.UserBasicDto;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -174,9 +173,6 @@ public class DocForumEntity implements Serializable {
 
     @Column(name = "domain_id")
     private Integer domainId;
-
-    @Transient
-    private transient FormFile uploadedFile = null;
 
     @Transient
     private transient String prefix;

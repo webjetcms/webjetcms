@@ -30,6 +30,9 @@ if (sk.iway.iwcm.FileTools.exists("/components/sync/archive_upload.jsp")==false)
 <div class="padding10">
 <script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/modalDialog.js"></script>
 <script type="text/javascript">
+
+	window.helpLink = "/redactor/webpages/import-export";
+
 	function Ok()
 	{
 	   var url = "";

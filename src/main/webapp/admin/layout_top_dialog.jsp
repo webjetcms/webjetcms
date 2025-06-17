@@ -278,6 +278,8 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		<script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/common.jsp"></script>
 
 		<script type="text/javascript">
+			window.userLng = "<%=Prop.getLngForJavascript(request)%>";
+
 			if (window.name && window.name=="componentIframe")
 			{
 				document.write("<link rel='stylesheet' href='<%=request.getContextPath()%>/components/iframe.css' media=\"all\">");

@@ -452,6 +452,9 @@ static {
 	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY", ".jsp"));
 	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessages\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessages\"", ".jsp"));
 	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessage\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessage\"", ".jsp"));
+
+	replaces.add(new OptionDto("<form:form method=\"post\" modelAttribute=\"xlsImportForm\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" enctype=\"multipart/form-data\">", "<form method=\"post\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" id=\"xlsImportForm\" enctype=\"multipart/form-data\">", ".jsp"));
+	replaces.add(new OptionDto("</form:form>", "</form>", "import_xls.jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
