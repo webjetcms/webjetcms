@@ -11,7 +11,6 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
-import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -210,14 +209,14 @@ public class Prop
 		if (request == null) return Constants.getString("defaultLanguage");
 		HttpSession session = request.getSession();
 		String lng = null;
-		if (noParameter == false) lng = ResponseUtils.filter(request.getParameter("language"));
+		if (noParameter == false) lng = Tools.getParameter(request, "language");
 		else if (request.getParameter("__lng")!=null)
 		{
-			lng = request.getParameter("__lng");
+			lng = Tools.getParameter(request, "__lng");
 		}
 		else if (request.getParameter("lng")!=null)
 		{
-			lng = request.getParameter("lng");
+			lng = Tools.getParameter(request, "lng");
 		}
 		if (lng == null)
 		{

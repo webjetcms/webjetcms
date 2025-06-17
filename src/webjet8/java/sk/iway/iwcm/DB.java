@@ -87,7 +87,7 @@ public class DB
 
 
 	/**
-	 * vrati prekodovany a trimnuty string z result setu (povodne sa pouzivalo kvoli Oracle), ak je filter true vykona aj CustomResponseUtils.filter
+	 * vrati prekodovany a trimnuty string z result setu (povodne sa pouzivalo kvoli Oracle), ak je filter true vykona aj ResponseUtils.filter
 	 * @param db_result
 	 * @param fieldName
 	 * @param filter

@@ -75,7 +75,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 		String[] values = super.getParameterValues(parameter);
 		if (values==null || values.length<1) return values;
 
-		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje CustomResponseUtils.filter
+		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje ResponseUtils.filter
 		String[] valuesFiltered = new String[values.length];
 		if (values!=null && values.length>0)
 		{

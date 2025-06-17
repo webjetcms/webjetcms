@@ -44,6 +44,7 @@ public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 	String enableNewTextKey = null;
 	public static final String NEW_OPTION_VALUE = "htmlSelectTagNewValue";
 
+	@Override
 	public int doStartTag() throws JspException
 	{
 		if (Tools.isNotEmpty(enableNewTextKey))
