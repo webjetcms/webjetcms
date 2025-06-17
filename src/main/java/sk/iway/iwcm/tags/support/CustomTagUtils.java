@@ -23,6 +23,12 @@ public class CustomTagUtils {
    private static final String CUSTOM_TAG_UTILS = "CustomTagUtils";
    public static final String XHTML_KEY = "org.apache.struts.globals.XHTML";
 
+   static {
+        scopes.put("page", Integer.valueOf(PageContext.PAGE_SCOPE));
+        scopes.put("request", Integer.valueOf(PageContext.REQUEST_SCOPE));
+        scopes.put("session", Integer.valueOf(PageContext.SESSION_SCOPE));
+        scopes.put("application", Integer.valueOf(PageContext.APPLICATION_SCOPE));
+   }
 
    /* Keys gonna be only in EN version.
    *  Original struts had keys only in EN and ESP version, so there is no meaning to create CS and SK version.

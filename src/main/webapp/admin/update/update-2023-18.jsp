@@ -446,15 +446,21 @@ static {
 
 	//REplace old Struts imports with new ones
 	replaces.add(new OptionDto("import=\"org.apache.struts.util.ResponseUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.ResponseUtils\"", ".jsp"));
-	replaces.add(new OptionDto("org.apache.struts.util.ResponseUtils", "sk.iway.iwcm.tags.support_logic.ResponseUtils", ".jsp"));
-	replaces.add(new OptionDto("org.apache.struts.taglib.html.FormTag.", "sk.iway.iwcm.tags.support_logic.FormTag.", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.util.ResponseUtils", "sk.iway.iwcm.tags.support_logic.ResponseUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.struts.taglib.html.FormTag.", "sk.iway.iwcm.tags.support_logic.FormTag.", ".jsp,.java"));
 	replaces.add(new OptionDto("import=\"org.apache.struts.util.RequestUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.RequestUtils\"", ".jsp"));
-	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY", ".jsp,.java"));
 	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessages\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessages\"", ".jsp"));
 	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessage\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessage\"", ".jsp"));
 
 	replaces.add(new OptionDto("<form:form method=\"post\" modelAttribute=\"xlsImportForm\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" enctype=\"multipart/form-data\">", "<form method=\"post\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" id=\"xlsImportForm\" enctype=\"multipart/form-data\">", ".jsp"));
 	replaces.add(new OptionDto("</form:form>", "</form>", "import_xls.jsp"));
+
+	replaces.add(new OptionDto(".add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(", ".add(", ".jsp,.java"));
+	replaces.add(new OptionDto(".addAttribute(\"errorsList\", errors.get(ActionMessages.GLOBAL_MESSAGE))", ".addAttribute(\"errorsList\", errors)", ".jsp,.java"));
+	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.action.ActionMessages", "java.util.List", ".jsp,.java"));
+	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.action.ActionMessage", "java.lang.String", ".jsp,.java"));
+	replaces.add(new OptionDto("ActionMessages errors = new ActionMessages();", "java.util.List<String> errors = new java.util.ArrayList<>();", ".jsp,.java"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -477,7 +483,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			if ("node_modules".equals(f.getName()) || "dist".equals(f.getName())) return;
 			checkDir(url+f.getName()+"/", saveFile, compileFile, out, request, response);
 		}
-		else if (f.getName().endsWith(".jsp") || f.getName().endsWith(".html"))
+		else if (f.getName().endsWith(".jsp") || f.getName().endsWith(".html") || f.getName().endsWith(".java"))
 		{
 			String fullUrl = url+f.getName();
 
@@ -510,7 +516,16 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 					if (Tools.isNotEmpty(ext)) {
 						if (ext.startsWith(".")) {
 							//it's file extension
-							if (fullUrl.endsWith(ext)==false) continue;
+							//it can be in format .jsp,.java,.html
+							String[] exts = ext.split(",");
+							boolean found = false;
+							for (String e : exts) {
+								if (fullUrl.endsWith(e)) {
+									found = true;
+									break;
+								}
+							}
+							if (found == false) continue;
 						} else if(ext.startsWith("/")) {
 							//it's folder
 							if (fullUrl.startsWith(ext)==false) continue;
@@ -747,25 +762,29 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 %>
 
 	<div style="white-space: pre"><%
-		if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
-			checkDir("/admin/", saveFile, compileFile, out, request, response);
-			checkDir("/apps/", saveFile, compileFile, out, request, response);
-			checkDir("/components/", saveFile, compileFile, out, request, response);
-			checkDir("/templates/", saveFile, compileFile, out, request, response);
+		if ("java".equals(subdir)) {
+			checkDir("/../java/", saveFile, false, out, request, response);
+		} else {
+			if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
+				checkDir("/admin/", saveFile, compileFile, out, request, response);
+				checkDir("/templates/", saveFile, compileFile, out, request, response);
+				checkDir("/components/", saveFile, compileFile, out, request, response);
+				checkDir("/apps/", saveFile, compileFile, out, request, response);
+			}
+			else if ("admin".equals(subdir)) {
+				checkDir("/admin/", saveFile, compileFile, out, request, response);
+			}
+			else if ("templates".equals(subdir)) {
+				checkDir("/templates/", saveFile, compileFile, out, request, response);
+			}
+			else {
+				checkDir("/components/" + subdir + "/", saveFile, compileFile, out, request, response);
+				checkDir("/apps/" + subdir + "/", saveFile, compileFile, out, request, response);
+			}
+			checkDir("/403.jsp", saveFile, compileFile, out, request, response);
+			checkDir("/404.jsp", saveFile, compileFile, out, request, response);
+			checkDir("/500.jsp", saveFile, compileFile, out, request, response);
 		}
-		else if ("admin".equals(subdir) || "*".equals(subdir)) {
-			checkDir("/admin/", saveFile, compileFile, out, request, response);
-		}
-		else if ("templates".equals(subdir) || "*".equals(subdir)) {
-			checkDir("/templates/", saveFile, compileFile, out, request, response);
-		}
-		else {
-			checkDir("/components/" + subdir + "/", saveFile, compileFile, out, request, response);
-			checkDir("/apps/" + subdir + "/", saveFile, compileFile, out, request, response);
-		}
-		checkDir("/403.jsp", saveFile, compileFile, out, request, response);
-		checkDir("/404.jsp", saveFile, compileFile, out, request, response);
-		checkDir("/500.jsp", saveFile, compileFile, out, request, response);
 		%>
 	</div>
 	<p>

@@ -8,9 +8,9 @@
 <%@page import="sk.iway.Password"%>
 <%@page import="sk.iway.iwcm.users.UserDetails"%>
 <%@page import="sk.iway.iwcm.users.PasswordSecurity"%>
-<%@page import="sk.iway.iwcm.tags.support.action.ActionMessages"%>
+<%@page import="java.util.List"%>
 <%@page import="java.util.Iterator"%>
-<%@page import="sk.iway.iwcm.tags.support.action.ActionMessage"%>
+<%@page import="java.lang.String"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
@@ -105,7 +105,7 @@ if (includedIntoPage==false)
 
 						String newPassword = request.getParameter("newPassword");
 						String retypePassword = request.getParameter("retypePassword");
-						ActionMessages errors = new ActionMessages();
+						java.util.List<String> errors = new java.util.ArrayList<>();
 
 						if (!newPassword.equals(retypePassword))
 						{

@@ -1,5 +1,6 @@
 package sk.iway.iwcm.logon;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +42,6 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.tags.support.ResponseUtils;
-import sk.iway.iwcm.tags.support.action.ActionMessage;
-import sk.iway.iwcm.tags.support.action.ActionMessages;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
@@ -103,7 +102,7 @@ public class AdminLogonController {
         Identity user = null;
         String selectedLoginFromSelect = userForm.getSelectedLogin();
         String changePasswordAuth = userForm.getAuth();
-        ActionMessages errors = new ActionMessages();
+        List<String> errors = new ArrayList<>();
 
         // This is special
         //  -> can contain only 1 login value when reseting password via login
@@ -128,16 +127,16 @@ public class AdminLogonController {
 
         // je tam daco a je to rovnake?
         if(Tools.isEmpty(userForm.getNewPassword()) || Tools.isEmpty(userForm.getRetypeNewPassword()) || !(userForm.getNewPassword().equals(userForm.getRetypeNewPassword()))) {
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors", prop.getText("logon.change_password.password_not_match")));
-            model.addAttribute("errorsList", errors.get(ActionMessages.GLOBAL_MESSAGE));
+            errors.add(prop.getText("logon.change_password.password_not_match"));
+            model.addAttribute("errorsList", errors);
             return CHANGE_PASSWORD_FORM;
         }
 
         String currentPassword = userDetailsRepository.getPasswordByUserId((long)user.getUserId());
         if (Constants.getBoolean("passwordUseHash") && currentPassword.equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), userDetailsRepository.getPasswordSaltByUserId((long)user.getUserId()))) || currentPassword.equals(userForm.getNewPassword())) {
             // povodne heslo je rovnake ako nove heslo
-            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors", prop.getText("logon.change_password.old_password_match_new")));
-            model.addAttribute("errorsList", errors.get(ActionMessages.GLOBAL_MESSAGE));
+            errors.add(prop.getText("logon.change_password.old_password_match_new"));
+            model.addAttribute("errorsList", errors);
             return CHANGE_PASSWORD_FORM;
         } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, errors)){
             user.setPassword(userForm.getNewPassword());
@@ -170,7 +169,7 @@ public class AdminLogonController {
                 return "redirect:" + forwardAfterToken;
             }
         } else {
-            if (errors.size()>0) model.addAttribute("errorsList", errors.get(ActionMessages.GLOBAL_MESSAGE));
+            if (errors.size()>0) model.addAttribute("errorsList", errors);
             return CHANGE_PASSWORD_FORM;
         }
     }

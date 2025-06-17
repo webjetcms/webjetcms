@@ -142,7 +142,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <iwcm:present name="errorsList">
                             <ul>
                                 <c:forEach var="error" items="${errorsList}">
-                                    <li>${error.values[0]}</li>
+                                    <li>${error}</li>
                                 </c:forEach>
                             </ul>
                         </iwcm:present>

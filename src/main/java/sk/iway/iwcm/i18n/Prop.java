@@ -184,14 +184,19 @@ public class Prop
 
 	public static Prop getInstance()
 	{
-		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-		String lng = Constants.getString("defaultLanguage");
-		if (rb != null) lng = rb.getLng();
+		String lng = getLng(null);
 		return getInstance(Constants.getServletContext(), lng, false);
 	}
 
 	public static String getLng(HttpSession session)
 	{
+		if (session == null) {
+			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+			String lng = Constants.getString("defaultLanguage");
+			if (rb != null) lng = rb.getLng();
+			return lng;
+		}
+
 		String lng = (String)session.getAttribute(SESSION_I18N_PROP_LNG);
 		if (lng==null)
 			lng = (String)session.getAttribute("lng");

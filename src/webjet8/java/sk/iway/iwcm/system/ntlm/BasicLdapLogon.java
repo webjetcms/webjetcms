@@ -4,8 +4,10 @@ package sk.iway.iwcm.system.ntlm;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,8 +17,6 @@ import org.apache.commons.beanutils.PropertyUtils;
 import sk.iway.Password;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.LogonTools;
-import sk.iway.iwcm.tags.support.action.ActionMessage;
-import sk.iway.iwcm.tags.support.action.ActionMessages;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -37,9 +37,9 @@ public class BasicLdapLogon
 		//konstruktor aby sa dala trieda vytvorit v LogonTools
 	}
 
-	public static ActionMessages logon(String username, String password, HttpServletRequest request)
+	public static List<String> logon(String username, String password, HttpServletRequest request)
 	{
-		ActionMessages errors = new ActionMessages();
+		List<String> errors = new ArrayList<>();
 
 		//aby sa mohol prihlasit aj s velkymi pismenami, ak nahodou to tak je v AD
 		username = username.toLowerCase();
@@ -57,7 +57,7 @@ public class BasicLdapLogon
 		if (user.getLogin()==null)
 		{
 			//ma zle heslo, napis chybu
-			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.logon.wrong.pass"));
+			errors.add("error.logon.wrong.pass");
 			//nepiseme o aku chybu ide
 			request.setAttribute("error.logon.wrong.pass", "true");
 		}
@@ -93,7 +93,7 @@ public class BasicLdapLogon
 			else
 			{
 				//ma zle heslo, napis chybu
-				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("error.logon.wrong.pass"));
+				errors.add("error.logon.wrong.pass");
 				//nepiseme o aku chybu ide
 				request.setAttribute("error.logon.wrong.pass", "true");
 			}
