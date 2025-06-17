@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
@@ -232,8 +233,9 @@ public class EshopService {
 
 		try {
 			invoice = new BasketInvoiceEntity();
-			//TODO replace with something
-			//RequestUtils.populate(invoice, request);
+
+			BeanWrapperImpl wrapper = new BeanWrapperImpl(invoice);
+			wrapper.setPropertyValues(request.getParameterMap());
 
 			long browserId = EshopService.getBrowserId(request);
 			int userId = Tools.getUserId(request);
