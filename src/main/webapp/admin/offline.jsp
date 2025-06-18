@@ -75,7 +75,7 @@
 		}
 	</script>
 
-	<form name="pathForm" action="/admin/offline.do" method="get" onsubmit="javascript:setDirs();" ><%=sk.iway.iwcm.tags.support.FormTag.renderToken(session)%>
+	<form name="pathForm" action="/admin/offline.do" method="post" onsubmit="javascript:setDirs();" ><%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 		<table>
 			<tr>
 				<td><label for="groupId1"><iwcm:text key="stat_settings.group_id"/>:</label></td>

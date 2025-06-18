@@ -187,25 +187,6 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
     protected void prepareFocusEvents(StringBuffer handlers) {
         this.prepareAttribute(handlers, "onblur", this.getOnblur());
         this.prepareAttribute(handlers, "onfocus", this.getOnfocus());
-        FormTag formTag = null;
-        if (this.doDisabled && !this.isDisabled() || this.doReadonly && !this.isReadonly()) {
-            formTag = (FormTag)this.pageContext.getAttribute("org.apache.struts.taglib.html.FORM", 2);
-        }
-
-        boolean formReadOnly;
-        if (this.doDisabled) {
-            formReadOnly = formTag == null ? false : formTag.isDisabled();
-            if (formReadOnly || this.isDisabled()) {
-                handlers.append(" disabled=\"disabled\"");
-            }
-        }
-
-        if (this.doReadonly) {
-            formReadOnly = formTag == null ? false : formTag.isReadonly();
-            if (formReadOnly || this.isReadonly()) {
-                handlers.append(" readonly=\"readonly\"");
-            }
-        }
     }
 
     protected String prepareStyles() throws JspException {

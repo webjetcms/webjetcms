@@ -13,11 +13,6 @@
 request.setAttribute("perexGroupsNot", request.getAttribute("perexGroups"));
 %>
 
-
-
-<%--<html:select property="perexGroupNot" styleId="real" multiple="true" size="6">--%>
-   <%--<iwcm:options collection="perexGroupsNot" property="perexGroupId" labelProperty="perexGroupNameId"/>--%>
-<%--</html:select>--%>
 <select name="perexGroupNot" multiple="true" size="6">
 	<c:forEach items="${perexGroupsNot}" var="option"><%sk.iway.iwcm.doc.PerexGroupBean option = (sk.iway.iwcm.doc.PerexGroupBean)pageContext.getAttribute("option");%>
 		<option value="${option.perexGroupId}" <%=((String)request.getAttribute("perexGroupNot")).contains(","+option.getPerexGroupId()+",")?"selected=\"selected\"":"" %>>${option.perexGroupNameId}</option>

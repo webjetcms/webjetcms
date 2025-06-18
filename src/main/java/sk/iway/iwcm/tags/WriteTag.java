@@ -85,7 +85,7 @@ public class WriteTag extends BodyTagSupport
 	public static final String INLINE_EDITING_PLACEHOLDER = "<div class='inlineEditingToolbarPlaceholder'></div>";
 
 	private static final String INLINE_EDITING_DISABLE_DELETE_BUTTON = "inlineEditingDisableDeleteButton";
-	private static final String NO_WJTOOLBAR = "NO_WJTOOLBAR";
+	public static final String NO_WJTOOLBAR = "NO_WJTOOLBAR";
 	private static final String IS_INLINE_EDITING = "isInlineEditing";
 	private static final String INLINE_EDITING_BUTTONS_MACRO = "{inlineEditingButtons}";
 

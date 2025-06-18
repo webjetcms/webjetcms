@@ -136,7 +136,7 @@ request.setAttribute("user",user);
 				</tr>
 				</iwcm:notEmpty>
 			</table>
-			<iwcm:empty name="user" property="photo"><iwcm:hidden name="user" property="photo"/></iwcm:empty>
+			<iwcm:empty name="user" property="photo"><input type="hidden" name="photo" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(user.getPhoto())%>"/></iwcm:empty>
 		</td>
 		<td valign="top">
 			<table border="0" cellspacing="0" cellpadding="1">

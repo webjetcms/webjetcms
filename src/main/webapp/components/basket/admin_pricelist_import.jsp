@@ -57,7 +57,7 @@
 			}
 		%>
 	</div>
-	<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
+	<form method="post" action="/admin/import/excel/" name="xlsImportForm" id="xlsImportForm" enctype="multipart/form-data">
 		<div class="col-sm-12 col-xs-12 form-group">
 			<div class="col-sm-10 col-xs-10 form-group">
 				<div class="col-sm-6 col-xs-6">
@@ -147,6 +147,6 @@
 				</div>
 			</div>
 		</div>
-	</form:form>
+	</form>
 </div>
 <%@ include file="/admin/layout_bottom_dialog.jsp" %>

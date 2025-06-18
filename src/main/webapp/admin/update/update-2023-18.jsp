@@ -27,6 +27,7 @@ static {
 	replaces.add(new OptionDto("ArrayList\t", "List\t", null));
 	replaces.add(new OptionDto("ArrayList<", "List<", null));
 	replaces.add(new OptionDto("new List", "new ArrayList", null));
+	replaces.add(new OptionDto("new java.util.List", "new java.util.ArrayList", null));
 	//API changes
 	replaces.add(new OptionDto("Constants.INSTALL_NAME", "Constants.getInstallName()", null));
 	replaces.add(new OptionDto("InitServlet.SERVER_START_DATETIME", "InitServlet.getServerStartDatetime()", null));
@@ -66,8 +67,8 @@ static {
 	replaces.add(new OptionDto("uri=\"/WEB-INF/struts-html.tld\" prefix=\"html\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"", "import_xls_struct.jsp"));
 	replaces.add(new OptionDto("<html:form action=\"/admin/importxls.do\" name=\"xlsImportForm\" type=\"sk.iway.iwcm.xls.ImportXLSForm\" enctype=\"multipart/form-data\">", "<form:form method=\"post\" modelAttribute=\"xlsImportForm\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" enctype=\"multipart/form-data\">", null));
 	replaces.add(new OptionDto("<input type=\"File\"", "<input type=\"file\"", "import_xls_struct.jsp"));
-	replaces.add(new OptionDto("request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));", "request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));\nrequest.setAttribute(\"xlsImportForm\", new sk.iway.iwcm.xls.ImportXLSForm());", "import_xls_struct.jsp"));
-	replaces.add(new OptionDto("</form>", "</form:form>", "import_xls_struct.jsp"));
+	replaces.add(new OptionDto("request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));", "request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));", "import_xls_struct.jsp"));
+	//not needed anymore replaces.add(new OptionDto("</form>", "</form:form>", "import_xls_struct.jsp"));
 	replaces.add(new OptionDto("/admin/importxls.do", "/admin/import/excel/", null));
 
 	//forum/new.jsp
@@ -461,6 +462,9 @@ static {
 	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.action.ActionMessages", "java.util.List", ".jsp,.java"));
 	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.action.ActionMessage", "java.lang.String", ".jsp,.java"));
 	replaces.add(new OptionDto("ActionMessages errors = new ActionMessages();", "java.util.List<String> errors = new java.util.ArrayList<>();", ".jsp,.java"));
+
+	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.FormTag.renderToken(session)", "sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)", ".jsp"));
+	replaces.add(new OptionDto("FormTag.renderToken(session)", "sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -725,7 +729,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			<div class="col-8">
 				Zadajte prázdnu hodnotu alebo znak * pre kontrolu všetkých priečinkov
 				<br/>
-				Zadajte hodnotu templates pre kontrolu priečinka /templates/ a hodnotu admin pre kontrolu priečinka /admin/.
+				Zadajte hodnotu templates pre kontrolu priečinka /templates/, hodnotu admin pre kontrolu priečinka /admin/, hodnotu java pre kontrolu priečinka ../java/ alebo názov priečinka pre kontrolu konkrétneho priečinka v /components/.
 			</div>
 		</div>
 		<div class="row">

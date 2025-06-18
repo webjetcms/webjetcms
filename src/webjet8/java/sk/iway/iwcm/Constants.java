@@ -1160,7 +1160,7 @@ public class Constants {
 				"Ak je nastavene na false bude pri vytvarani novej stranky v editore odskrtnuta moznost zobrazovat");
 
 		setString("xssProtectionStrictPostUrlExceptionSystem",
-				"/components/blog/blog,/components/lms/ucitel,/components/gallery/send_card,/components/send_link/send_link,/components/magzilla/,/components/tips/tips_editor,/components/user/change_password,/components/wiki/save,%_autocomplete.jsp,/admin/offline.do",
+				"/components/blog/blog,/components/lms/ucitel,/components/gallery/send_card,/components/send_link/send_link,/components/magzilla/,/components/tips/tips_editor,/components/user/change_password,/components/wiki/save,%_autocomplete.jsp",
 				MOD_SECURITY,
 				"casti URL adries (ich zaciatky) pre ktore sa nepouzije xssProtectionStrict POST, jednotlive URL su oddelene ciarkou");
 		setString("xssProtectionStrictPostUrlException", "", MOD_SECURITY,

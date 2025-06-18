@@ -794,7 +794,7 @@ public class DocTools {
         if ("get".equalsIgnoreCase(request.getMethod())==false)
         {
             //pre /components/ adresar a JSP/Stripes subory budem testovat aj pre POST requesty
-            if (path.indexOf("/components/")!=-1 && (path.endsWith(".jsp") || path.endsWith(".action") || path.endsWith(".do")))
+            if (path.indexOf("/components/")!=-1 && (path.endsWith(".jsp") || path.endsWith(".action") || path.endsWith(".do") || path.endsWith(".struts")))
             {
                 //vynimky, pre ktore netreba testovat
 

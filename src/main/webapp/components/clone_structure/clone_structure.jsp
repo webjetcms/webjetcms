@@ -56,7 +56,7 @@
 
 <div class="padding10">
 
-	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post" ><%=sk.iway.iwcm.tags.support.FormTag.renderToken(session)%>
+	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post"><%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 		<table>
 			<tr>
 				<td><label for="srcGroupId1"><iwcm:text key="admin.clone.source_dir_id"/></label></td>
