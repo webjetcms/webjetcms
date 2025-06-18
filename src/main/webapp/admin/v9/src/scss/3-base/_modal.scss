@@ -165,6 +165,19 @@ body.modal-open {
                 white-space: nowrap;
                 @include show-scrollbar;
             }
+
+            &.height-md textarea {
+                height: 11rem;
+            }
+
+            &.height-lg textarea {
+                height: 20rem;
+            }
+
+            &.height-xl textarea {
+                height: 30rem;
+            }
+
             &.wrap textarea {
                 white-space: pre-wrap;
             }

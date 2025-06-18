@@ -1,11 +1,11 @@
 package sk.iway.iwcm.components.forum;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
@@ -29,12 +29,13 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 @WebjetAppStore(nameKey = "components.forum.title", descKey = "components.forum.desc", itemKey = "cmp_forum", imagePath = "/components/forum/editoricon.png", galleryImages = "/components/forum/", componentPath = "/components/forum/forum.jsp,/components/forum/forum_mb.jsp", customHtml = "/apps/forum/admin/editor-component.html")
 @DataTableTabs(tabs = {
         @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "groups", title = "user.admin.userGroups"),
         @DataTableTab(id = "componentIframeWindowTabList", title = "components.forum.zoznam_diskusii")
 })
 @Getter
 @Setter
 public class ForumApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.forum.select_component", tab = "basic", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.forum.select_component", tab = "basic", className = "dt-app-skip", editor = {
             @DataTableColumnEditor(options = {
                     @DataTableColumnEditorAttr(key = "components.forum.admin.forumType.simple", value = "forum"),
                     @DataTableColumnEditorAttr(key = "components.forum.admin.forumType.mb", value = "forum_mb")
@@ -90,8 +91,8 @@ public class ForumApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.forum.notify_page_author", tab = "basic")
     private Boolean notifyPageAuthor = false;
 
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title="components.forum_editor.writeGroups", tab = "basic", filter = true)
-    private String[] structure;
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title="components.forum_editor.writeGroups", className = "dt-app-skip height-xl", tab = "groups")
+    private String structure;
 
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic")
     Boolean rootGroup=true;
@@ -102,33 +103,33 @@ public class ForumApp extends WebjetComponentAbstract {
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-        List<OptionDto> sampleOptions = new ArrayList<>();
-        sampleOptions.add(new OptionDto("Skupina1", "Skupina1", null));
-        sampleOptions.add(new OptionDto("↳ podskupina1", "↳ podskupina1", null));
-        sampleOptions.add(new OptionDto("↳ podskupina2", "↳ podskupina2", null));
-        sampleOptions.add(new OptionDto("Skupina2", "Skupina2", null));
-        sampleOptions.add(new OptionDto("↳ podskupina1", "↳ podskupina1", null));
-        sampleOptions.add(new OptionDto("↳ podskupina2", "↳ podskupina2", null));
-        sampleOptions.add(new OptionDto("↳ podskupina3", "↳ podskupina3", null));
+
+        //Default options
+        StringBuilder optionsSB = new StringBuilder("");
+        optionsSB.append("Skupina1").append("\n");
+        optionsSB.append(" podskupina1").append("\n");
+        optionsSB.append("Skupina2").append("\n");
+        optionsSB.append(" podskupina1").append("\n");
+        optionsSB.append(" podskupina2").append("\n");
+        optionsSB.append(" podskupina3").append("\n");
 
         GroupsDB groupsDB = GroupsDB.getInstance();
         DocDB docDB = DocDB.getInstance();
-        List<GroupDetails> groups = groupsDB.getGroups(Tools.getIntValue(request.getSession().getAttribute("iwcm_group_id").toString(), -1));
+        String attribute = (request.getSession().getAttribute("iwcm_group_id") == null) ? null : request.getSession().getAttribute("iwcm_group_id").toString();
+        List<GroupDetails> groups = groupsDB.getGroups(Tools.getIntValue(attribute, -1));
 
-        if (!groups.isEmpty()) sampleOptions.clear();
+        if (groups.isEmpty() == false) optionsSB = new StringBuilder();
         for (GroupDetails gd : groups) {
-            sampleOptions.add(new OptionDto(gd.getGroupName(), gd.getGroupName(), null));
+            optionsSB.append(gd.getGroupName()).append("\n");
 
             List<DocDetails> docs = docDB.getDocByGroup(gd.getGroupId());
             for (DocDetails dd : docs) {
-                sampleOptions.add(new OptionDto("↳ " + dd.getTitle(), "↳ " + dd.getTitle(), null));
+                optionsSB.append(" ").append(dd.getTitle()).append("\n");
             }
         }
 
-        options.put("structure", sampleOptions);
+        structure = optionsSB.toString();
 
         return options;
     }
-
-
 }

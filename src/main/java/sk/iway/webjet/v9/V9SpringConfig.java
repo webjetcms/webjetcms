@@ -130,7 +130,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.appuser",
     "sk.iway.iwcm.components.video",
     "sk.iway.iwcm.components.appslitslider",
-    "sk.iway.iwcm.components.slider",
+    "sk.iway.iwcm.components.appslider",
     "sk.iway.iwcm.components.sitemap",
     "sk.iway.iwcm.components.rating",
     "sk.iway.iwcm.components.relatedpages",
