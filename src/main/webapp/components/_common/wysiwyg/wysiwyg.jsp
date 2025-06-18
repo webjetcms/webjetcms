@@ -3,6 +3,23 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 %><%@ page import="sk.iway.iwcm.Constants" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+/*
+ * Javascript WYSIWYG HTML control
+ * Version 0.2
+ *
+ * Copyright (c) 2004 Paul James
+ * All rights reserved.
+ *
+ * This software is covered by the BSD License, please find a copy of this
+ * license at http://peej.co.uk/sandbox/wysiwyg/
+ */
+
+// these are constants but IE doesn't like the const keyword
+var WYSIWYG_VALUE_NONE = 0;
+var WYSIWYG_VALUE_PROMPT = 1;
+var WYSIWYG_VALUE_FUNCTION = 2;
+var WYSIWYG_BUTTONS_AS_FORM_ELEMENTS = false;
+
 <%
 String forumWysiwygIcons = Constants.getString("forumWysiwygIcons");
 %>
@@ -78,7 +95,7 @@ if (document.getElementById && document.designMode && !<%=Constants.getBoolean("
 }
 
 // init wysiwyg
-function wysiwyg() {    
+function wysiwyg() {
 
     setTimeout(createWysiwygControls, 100);
 
@@ -120,7 +137,7 @@ function wysiwyg() {
         });
         setTimeout(initWysiwygControls, 300); // do this last and after a slight delay cos otherwise it can get turned off in Gecko
     }
-    
+
     // get controls from DOM
     function getWysiwygControls() {
         var divs = document.getElementsByTagName("div");
@@ -133,7 +150,7 @@ function wysiwyg() {
         }
         return wysiwygs;
     }
-    
+
     // initiate wysiwyg controls
     function initWysiwygControls() {
         //window.alert("initializing");
@@ -143,7 +160,7 @@ function wysiwyg() {
             setTimeout(initWysiwygControls, 100);
             return;
         }
-        for (var foo = 0; foo < wysiwygs.length; foo++) 
+        for (var foo = 0; foo < wysiwygs.length; foo++)
         {
         		//window.alert("attaching");
             // turn on design mode for wysiwyg controls
@@ -151,7 +168,7 @@ function wysiwyg() {
             // attach submit method
             var element = wysiwygs[foo].control;
             //window.alert("elem1a="+element.tagName);
-            while (element.tagName && element.tagName.toLowerCase() != "form") 
+            while (element.tagName && element.tagName.toLowerCase() != "form")
             {
             	//window.alert("elem2="+element.tagName);
                 if (!element.parentNode) break;
@@ -180,7 +197,7 @@ function wysiwyg() {
         setTimeout(initContent, 800);
     }
 
-    // set initial content    
+    // set initial content
     function initContent() {
         var wysiwygs = getWysiwygControls();
         for (var foo = 0; foo < wysiwygs.length; foo++) {
@@ -217,7 +234,7 @@ function wysiwyg() {
         }
         wysiwyg.insertBefore(toolbar, wysiwyg.control);
     }
-    
+
     // create a button for the toolbar
     function createButton(wysiwyg, number) {
         if (WYSIWYG_BUTTONS_AS_FORM_ELEMENTS) {
@@ -245,11 +262,11 @@ function wysiwyg() {
         {
            button.title = wysiwyg_toolbarButtons[number][1];
         }
-        
+
         button.wysiwyg = wysiwyg;
         return button;
     }
-   
+
     // execute a toolbar command
     function execCommand() {
         var value = null;
@@ -264,7 +281,7 @@ function wysiwyg() {
             if (!value) return false;
             break;
         case WYSIWYG_VALUE_FUNCTION:
-        
+
         default:
             value = this.commandValue;
         }
@@ -287,7 +304,7 @@ function wysiwyg() {
         this.wysiwyg.control.contentWindow.focus();
         return false;
     }
-    
+
     // insert HTML content into control
     function insertContent(wysiwyg, content) {
         var textarea = wysiwyg.textarea;
@@ -323,7 +340,7 @@ function wysiwyg() {
         }
         textareaUpdate(wysiwyg);
     }
-    
+
     // show textarea view
     function toggleView() {
         var control = this.wysiwyg.control;
@@ -363,12 +380,12 @@ function wysiwyg() {
         }
         return false;
     }
-   
-    
+
+
     // update the wysiwyg to contain the source for the textarea control
-    function wysiwygUpdate(wysiwyg) 
+    function wysiwygUpdate(wysiwyg)
     {
-        //window.alert("1");        
+        //window.alert("1");
         var value = wysiwyg.textarea.value;
         if (""==value)
         {
@@ -380,9 +397,9 @@ function wysiwyg() {
             wysiwyg.control.contentWindow.document.body.innerHTML = value;
         }
     }
-    
+
     // update for upon submit
-    function wysiwygSubmit() 
+    function wysiwygSubmit()
     {
         var divs = null;
         try
@@ -391,9 +408,9 @@ function wysiwyg() {
             divs = this.getElementsByTagName("div");
         }
         catch (e) {}
-        for (var foo = 0; foo < divs.length; foo++) 
+        for (var foo = 0; foo < divs.length; foo++)
         {
-            if (divs[foo].className == "wysiwyg") 
+            if (divs[foo].className == "wysiwyg")
             {
                 textareaUpdate(divs[foo]);
             }
@@ -412,7 +429,7 @@ function wysiwygUpdateFromTextarea()
            bar++;
        }
    }
-   for (var foo = 0; foo < wysiwygs.length; foo++) 
+   for (var foo = 0; foo < wysiwygs.length; foo++)
    {
        var wysiwyg = wysiwygs[foo];
        var value = wysiwyg.textarea.value;
@@ -426,14 +443,14 @@ function wysiwygUpdateFromTextarea()
 }
 
 function addEventWysiwyg(obj, evType, fn)
-{    
+{
     if (navigator.userAgent.indexOf("Opera")!=-1)
     {
     	//opera je tupa, cez addEventListener to nefunguje
     	eval("obj.on"+evType+"=fn");
     	return;
     }
-    
+
 	if (obj.addEventListener)
 	{
 		obj.addEventListener(evType, fn, true);
