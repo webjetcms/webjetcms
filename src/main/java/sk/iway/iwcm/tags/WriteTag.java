@@ -85,18 +85,9 @@ public class WriteTag extends BodyTagSupport
 	public static final String INLINE_EDITING_PLACEHOLDER = "<div class='inlineEditingToolbarPlaceholder'></div>";
 
 	private static final String INLINE_EDITING_DISABLE_DELETE_BUTTON = "inlineEditingDisableDeleteButton";
-
-	private static final String DOC_DATA = "doc_data";
-	private static final String DIV_END_TAG = "</div>";
 	private static final String NO_WJTOOLBAR = "NO_WJTOOLBAR";
-	private static final String DOC_ID = "docid";
 	private static final String IS_INLINE_EDITING = "isInlineEditing";
-	private static final String INLINE_EDITING_BUTTONS = "{inlineEditingButtons}";
-	private static final String COMPONENTS_PATH = java.io.File.separator + "components/";
-	private static final String SPAN_A_END_TAGS = "</span></a>";
-	private static final String PRESERVE_PREFIX = "preserve_";
-
-	public static final String XHTML_KEY = "org.apache.struts.globals.XHTML";
+	private static final String INLINE_EDITING_BUTTONS_MACRO = "{inlineEditingButtons}";
 
 
 	@Override
@@ -137,7 +128,7 @@ public class WriteTag extends BodyTagSupport
 
 			int docId = Tools.getDocId(request);
 			boolean inlineEditingToolbarAppended = false;
-			if (DOC_DATA.equals(name))
+			if ("doc_data".equals(name))
 			{
 				//WebJET7 vyzaduje jQuery
 				String tempName = (String)request.getAttribute("doc_temp_name");
@@ -188,21 +179,21 @@ public class WriteTag extends BodyTagSupport
 						if (isInlinePageEditable(user, docId, request) && isInlinePageEditable(user, doc.getDocId(), request))
 						{
 							String html = (String)request.getAttribute(name);
-							value = "<div id='"+name+"Editor'"+InlineEditor.getEditAttrs(request, doc)+">"+html+DIV_END_TAG;
+							value = "<div id='"+name+"Editor'"+InlineEditor.getEditAttrs(request, doc)+">"+html+"</div>";
 						}
 					}
 				}
 			}
 
 			String afterWriteEndTag = null;
-			if (inlineEditingToolbarAppended && DOC_DATA.equals(name))
+			if (inlineEditingToolbarAppended && "doc_data".equals(name))
 			{
 				DocDetails doc = (DocDetails)request.getAttribute("docDetails");
 				if (doc != null)
 				{
-					pageContext.getOut().write("<div id='wjInline-docdata' "+InlineEditor.getEditAttrs(request, doc, DOC_DATA, false)+">");
+					pageContext.getOut().write("<div id='wjInline-docdata' "+InlineEditor.getEditAttrs(request, doc, "doc_data", false)+">");
 
-					afterWriteEndTag = DIV_END_TAG;
+					afterWriteEndTag = "</div>";
 				}
 			}
 
@@ -216,7 +207,7 @@ public class WriteTag extends BodyTagSupport
 				pageContext.getOut().print(afterWriteEndTag);
 			}
 
-			if (DOC_DATA.equals(name) || "doc_header".equals(name))
+			if ("doc_data".equals(name) || "doc_header".equals(name))
 			{
 				try
 				{
@@ -225,7 +216,7 @@ public class WriteTag extends BodyTagSupport
 					//skus ziskat zo sablony priznak, ze sa nema zobrazit
 					String afterBody = (String)request.getAttribute("after_body");
 
-					if (afterBody!=null && afterBody.indexOf("NO WJTOOLBAR")!=-1)
+					if (afterBody!=null && afterBody.indexOf(NO_WJTOOLBAR)!=-1)
 					{
 						showToolbar = false;
 					}
@@ -235,7 +226,7 @@ public class WriteTag extends BodyTagSupport
 						request.getSession().setAttribute(NO_WJTOOLBAR, "1");
 					}
 
-					if (request.getHeader("dmail")!=null || request.getAttribute("NO WJTOOLBAR")!=null || (request.getSession()!=null && request.getSession().getAttribute(NO_WJTOOLBAR)!=null) || request.getParameter(NO_WJTOOLBAR)!=null || request.getAttribute("isPreview")!=null)
+					if (request.getHeader("dmail")!=null || request.getAttribute(NO_WJTOOLBAR)!=null || (request.getSession()!=null && request.getSession().getAttribute(NO_WJTOOLBAR)!=null) || request.getParameter(NO_WJTOOLBAR)!=null || request.getAttribute("isPreview")!=null)
 					{
 						showToolbar = false;
 					}
@@ -264,7 +255,7 @@ public class WriteTag extends BodyTagSupport
 
 					if (showToolbar)
 					{
-						if (DOC_DATA.equals(name))
+						if ("doc_data".equals(name))
 						{
 							pageContext.include("/admin/page_toolbar.jsp");
 						}
@@ -444,15 +435,15 @@ public class WriteTag extends BodyTagSupport
 			int docId = -1;
 			try
 			{
-				if (Tools.isNotEmpty(request.getParameter(DOC_ID)))
+				if (Tools.isNotEmpty(request.getParameter("docid")))
 				{
-					docId = Integer.parseInt(Tools.getParameter(request, DOC_ID));
+					docId = Integer.parseInt(Tools.getParameter(request, "docid"));
 				}
 				else
 				{
-					if (request.getAttribute(DOC_ID)!=null)
+					if (request.getAttribute("docid")!=null)
 					{
-						docId = Integer.parseInt((String)request.getAttribute(DOC_ID));
+						docId = Integer.parseInt((String)request.getAttribute("docid"));
 					}
 				}
 			}
@@ -507,7 +498,7 @@ public class WriteTag extends BodyTagSupport
 						cacheKey = "writeTag_"+includeText;
 						//aby sa dala spravit page dependent cache
 						//lng - aby sa neprekryvali verzie v roznych jazykoch
-						cacheKey = Tools.replace(cacheKey, "!DOC_ID!", request.getParameter(DOC_ID)) + " ;"+lng;
+						cacheKey = Tools.replace(cacheKey, "!DOC_ID!", request.getParameter("docid")) + " ;"+lng;
 
 
 						StopWatch executionTimeStopWatch = new StopWatch();
@@ -717,7 +708,7 @@ public class WriteTag extends BodyTagSupport
 									{
 										if (request.getHeader("dmail") == null && request.getParameter(NO_WJTOOLBAR) == null && request.getParameter("isDmail") == null && request.getAttribute("isPreview") == null)
 										{
-											if (DOC_DATA.equals(name) || request.getAttribute(name + "-docId=") != null)
+											if ("doc_data".equals(name) || request.getAttribute(name + "-docId=") != null)
 											{
 												if (user != null && user.isAdmin())
 												{
@@ -770,11 +761,11 @@ public class WriteTag extends BodyTagSupport
 											StringBuilder inlineEditingButtons = (StringBuilder)request.getAttribute(INLINE_EDITING_BUTTONS_KEY);
 											if (inlineEditingButtons != null)
 											{
-												inlineEditingStart = Tools.replace(inlineEditingStart, INLINE_EDITING_BUTTONS, inlineEditingButtons.toString());
+												inlineEditingStart = Tools.replace(inlineEditingStart, INLINE_EDITING_BUTTONS_MACRO, inlineEditingButtons.toString());
 											}
 											else
 											{
-												inlineEditingStart = Tools.replace(inlineEditingStart, INLINE_EDITING_BUTTONS, "");
+												inlineEditingStart = Tools.replace(inlineEditingStart, INLINE_EDITING_BUTTONS_MACRO, "");
 											}
 
 											if (htmlCode.indexOf(INLINE_EDITING_PLACEHOLDER)==-1)
@@ -784,7 +775,7 @@ public class WriteTag extends BodyTagSupport
 											}
 											else
 											{
-												htmlCode = Tools.replace(htmlCode, INLINE_EDITING_PLACEHOLDER, inlineEditingStart.append(DIV_END_TAG).toString());
+												htmlCode = Tools.replace(htmlCode, INLINE_EDITING_PLACEHOLDER, inlineEditingStart.append("</div>").toString());
 											}
 
 										}
@@ -811,14 +802,14 @@ public class WriteTag extends BodyTagSupport
 											buttonsTopString = Tools.replace(buttonsTopString, "{inlineComponentEdit}", href.toString());
 										}
 
-										content.append("<div class=\"inlineComponentEditButtonsTop\">").append(buttonsTopString).append(DIV_END_TAG);
+										content.append("<div class=\"inlineComponentEditButtonsTop\">").append(buttonsTopString).append("</div>");
 
 										request.removeAttribute(INLINE_EDITING_BUTTONS_TOP_KEY);
 									}
 
 									content.append(htmlCode);
 
-									if (inlineEditingAppendEndDiv) content.append(DIV_END_TAG);
+									if (inlineEditingAppendEndDiv) content.append("</div>");
 
 									if (cacheTime > 0)
 									{
@@ -863,7 +854,7 @@ public class WriteTag extends BodyTagSupport
 							{
 								content.append("<div style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'>" + ResponseUtils.filter(ex1.getMessage()) + "<br>");
 								String stackTrace = ResponseUtils.filter(stack);
-								content.append(stackTrace + DIV_END_TAG);
+								content.append(stackTrace + "</div>");
 							}
 
 							Adminlog.add(Adminlog.TYPE_JSPERROR, "ERROR: " + includeFileName + "\n\n" + ex1.getMessage() + "\n\n" + sw.toString(), -1, -1);
@@ -1091,7 +1082,7 @@ public class WriteTag extends BodyTagSupport
 		//skus pridat installName
 		if (path.indexOf("/"+Constants.getInstallName()+"/")==-1)
 		{
-			path = Tools.replace(path, COMPONENTS_PATH, COMPONENTS_PATH+Constants.getInstallName()+"/");
+			path = Tools.replace(path, "/components/", "/components/"+Constants.getInstallName()+"/");
 			if (FileTools.isFile(path))
 			{
 				if (ContextFilter.isRunning(request)) path = ContextFilter.addContextPath(request.getContextPath(), path);
@@ -1146,7 +1137,7 @@ public class WriteTag extends BodyTagSupport
 		String includeFileNameNoInstallName = includeFileName;
 
 		String returnIncludeFileName = includeFileName;
-		if (includeFileNameNoInstallName.startsWith(COMPONENTS_PATH+Constants.getInstallName())) returnIncludeFileName = "/components"+returnIncludeFileName.substring((COMPONENTS_PATH+Constants.getInstallName()).length());
+		if (includeFileNameNoInstallName.startsWith("/components/"+Constants.getInstallName())) returnIncludeFileName = "/components"+returnIncludeFileName.substring(("/components/"+Constants.getInstallName()).length());
 
 		if (DocTools.isXssStrictUrlException(returnIncludeFileName, "inlineEditingComponents")  && isInlinePageEditable(user, docId, request) && Tools.isNotEmpty(getInlineComponentEditTextKey(request)))
 		{
@@ -1172,10 +1163,10 @@ public class WriteTag extends BodyTagSupport
 				html.append(getInlineComponentEditIcon(request));
 				html.append("');\"><span>");
 				html.append(prop.getText(getInlineComponentEditTextKey(request)));
-				html.append(SPAN_A_END_TAGS);
+				html.append("</span></a>");
 			}
 
-			html.append(INLINE_EDITING_BUTTONS);
+			html.append(INLINE_EDITING_BUTTONS_MACRO);
 
 			if (editorComponent != null && Constants.getBoolean("inlineEditingAllowDelete") && request.getAttribute(INLINE_EDITING_DISABLE_DELETE_BUTTON)==null)
 			{
@@ -1187,7 +1178,7 @@ public class WriteTag extends BodyTagSupport
 				html.append("/components/_common/admin/inline/icon-delete.png");
 				html.append("');\"><span>");
 				html.append(prop.getText("button.delete"));
-				html.append(SPAN_A_END_TAGS);
+				html.append("</span></a>");
 			}
 			request.removeAttribute(INLINE_EDITING_DISABLE_DELETE_BUTTON);
 
@@ -1227,7 +1218,7 @@ public class WriteTag extends BodyTagSupport
 		buttons.append(iconLink);
 		buttons.append("');\"><span>");
 		buttons.append(prop.getText(textKey, textParam1, textParam2));
-		buttons.append(SPAN_A_END_TAGS);
+		buttons.append("</span></a>");
 	}
 
 	public static void addInlineButtonTop(String textKey, String iconLink, String href, String textParam1, String textParam2, HttpServletRequest request)
@@ -1306,7 +1297,7 @@ public class WriteTag extends BodyTagSupport
 				String value = (String)request.getAttribute(pname);
 				if (Tools.isNotEmpty(value))
 				{
-					request.setAttribute(PRESERVE_PREFIX+pname, value);
+					request.setAttribute("preserve_"+pname, value);
 					request.removeAttribute(pname);
 				}
 			}
@@ -1320,11 +1311,11 @@ public class WriteTag extends BodyTagSupport
 		{
 			for (String pname : SearchTools.getCheckInputParams())
 			{
-				String value = (String)request.getAttribute(PRESERVE_PREFIX+pname);
+				String value = (String)request.getAttribute("preserve_"+pname);
 				if (Tools.isNotEmpty(value))
 				{
 					request.setAttribute(pname, value);
-					request.removeAttribute(PRESERVE_PREFIX+pname);
+					request.removeAttribute("preserve_"+pname);
 				}
 			}
 		}
