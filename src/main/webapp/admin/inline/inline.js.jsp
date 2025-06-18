@@ -315,7 +315,7 @@ function wjInlineOverlayClass() {
 			$('.wjInlineHighlighterHint').html('<iwcm:text key='editor.dubleclickToEdit'/>');
 		}
 		if($('#'+el.id).hasClass('cke_editable')){
-			$('.wjInlineHighlighterHint').html('<i class="ti ti-alert-triangle" aria-hidden="true" style="background-position: center center;background-repeat: no-repeat;background-size:20px;display:inline-block;width:20px;height:20px;vertical-align:middle;background-image: url(\'/admin/webpages/page-builder/images/alert-triangle-black.png\')"></i> <iwcm:text key='editor.dubleclickToEdit.change'/>');
+			$('.wjInlineHighlighterHint').html('<i class="fa fa-triangle" aria-hidden="true" style="background-position: center center;background-repeat: no-repeat;background-size:20px;display:inline-block;width:20px;height:20px;vertical-align:middle;background-image: url(\'/admin/webpages/page-builder/images/alert-triangle-black.png\')"></i> <iwcm:text key='editor.dubleclickToEdit.change'/>');
 		}
 		// end - uprava textov a pozicie labela
 

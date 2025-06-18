@@ -56,6 +56,8 @@ BasicLdapLogon.logon return List<String> instead of ActionMessages
 org.apache.struts.util.ResponseUtils.filter –> sk.iway.iwcm.tags.support.ResponseUtils.filter
 ```
 
+Na konverziu JSP aj Java súborov môžete použiť skript `/admin/update/update-2023-18.jsp`.
+
 ## 2025.18
 
 > Verzia **2025.18** prináša kompletne prerobený modul **Elektronického obchodu** s podporou **platobnej brány GoPay** a vylepšeným zoznamom objednávok. Aplikácia **Kalendár noviniek** bola oddelená ako **samostatná aplikácia** a zároveň sme prerobili nastavenia viacerých aplikácii v editore stránok do nového dizajnu. **Manažér dokumentov** (pôvodne Archív súborov) prešiel **vizuálnym aj funkčným reštartom** vrátane nových nástrojov na správu, export a import dokumentov.
