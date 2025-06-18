@@ -29,7 +29,16 @@ import javax.servlet.jsp.tagext.BodyTagSupport;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.tags.IterateTag;
 
+/**
+ * Base class for tags that render form elements capable of including
+ * JavaScript event handlers and/or CSS Style attributes. This class does not
+ * implement the doStartTag() or doEndTag() methods. Subclasses should provide
+ * appropriate implementations of these.
+ *
+ * @version $Rev$ $Date$
+ */
 @Getter
 @Setter
 public class CustomBaseHandlerTag extends BodyTagSupport {
@@ -101,7 +110,7 @@ public class CustomBaseHandlerTag extends BodyTagSupport {
     }
 
     protected int getIndexValue() throws JspException {
-        CustomIterateTag iterateTag = (CustomIterateTag)findAncestorWithClass(this, CustomIterateTag.class);
+        IterateTag iterateTag = (IterateTag)findAncestorWithClass(this, IterateTag.class);
         if (iterateTag != null) {
             return iterateTag.getIndex();
         } else {

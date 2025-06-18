@@ -33,9 +33,14 @@ import javax.servlet.jsp.tagext.BodyContent;
 import org.apache.commons.beanutils.PropertyUtils;
 
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.i18n.Prop;
 
+/**
+ * Provides helper methods for JSP tags.
+ *
+ * @version $Rev$
+ * @since Struts 1.2
+ */
 public class CustomTagUtils {
 
 
@@ -198,13 +203,7 @@ public class CustomTagUtils {
     * Returns true if the custom tags are in XHTML mode.
     */
    public boolean isXhtml(PageContext pageContext) {
-      String xhtml;
-      try {
-            xhtml = (String) lookup(pageContext, XHTML_KEY, null);
-            return "true".equalsIgnoreCase(xhtml);
-      } catch (JspException e) {
-            Logger.error(CustomTagUtils.class,"Failed xhtml lookup", e);
-            throw new RuntimeException(e);
-      }
+      //WebJET CMS is always in XHTML mode
+      return true;
    }
 }

@@ -30,6 +30,13 @@ import javax.servlet.jsp.JspException;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
+/**
+ * Abstract base class for comparison tags.  Concrete subclasses need only
+ * define values for desired1 and desired2.
+ *
+ * @version $Rev$ $Date: 2004-10-16 12:38:42 -0400 (Sat, 16 Oct 2004)
+ *          $
+ */
 public abstract class CustomCompareTagBase extends CustomConditionalTagBase{
 
     protected static final int DOUBLE_COMPARE = 0;
