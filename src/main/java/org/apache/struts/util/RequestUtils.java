@@ -3,6 +3,7 @@ package org.apache.struts.util;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.MutablePropertyValues;
 
 /**
  * Wrapper for backward compatibility with Struts 1.x.
@@ -20,7 +21,7 @@ public class RequestUtils {
     @Deprecated
     public static void populate(Object bean, HttpServletRequest request) {
         BeanWrapperImpl wrapper = new BeanWrapperImpl(bean);
-		wrapper.setPropertyValues(request.getParameterMap());
+		wrapper.setPropertyValues(new MutablePropertyValues(request.getParameterMap()), true, true);
     }
 
 }

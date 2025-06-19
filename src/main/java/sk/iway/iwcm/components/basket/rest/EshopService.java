@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
@@ -235,7 +236,7 @@ public class EshopService {
 			invoice = new BasketInvoiceEntity();
 
 			BeanWrapperImpl wrapper = new BeanWrapperImpl(invoice);
-			wrapper.setPropertyValues(request.getParameterMap());
+			wrapper.setPropertyValues(new MutablePropertyValues(request.getParameterMap()), true, true);
 
 			long browserId = EshopService.getBrowserId(request);
 			int userId = Tools.getUserId(request);
