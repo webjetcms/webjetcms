@@ -54,8 +54,8 @@ request.setAttribute("menu", menu);
         <c:forEach var="innerList" items="${menu}">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="menu"> 
-                        <button class="btn btn-block text-left collapsed" type="button" data-bs-toggle="collapse" data-target="#collapse_${innerList[0].dayNumber}" aria-expanded="true">
+                    <h2 class="menu">
+                        <button class="btn btn-block text-left collapsed" type="button" data-toggle="collapse" data-bs-toggle="collapse" data-target="#collapse_${innerList[0].dayNumber}" aria-expanded="true">
                             <iwcm:text key="dayfull.${innerList[0].dayNumber}"/> (${innerList[0].dayFormated})
                         </button>
                     </h2>

@@ -9,7 +9,9 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><iwcm:script type="text/javascript" src="/components/basket/jscript.jsp"></iwcm:script>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+
+<iwcm:script type="text/javascript" src="/components/basket/jscript.jsp"></iwcm:script>
 
 <%
   //Vypis obsahu nakupneho kosika

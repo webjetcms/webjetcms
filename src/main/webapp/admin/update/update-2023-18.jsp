@@ -215,7 +215,7 @@ static {
 	replaces.add(new OptionDto("RatingBean", "RatingEntity", null));
 
 	//Menu
-	replaces.add(new OptionDto("<form ", "<form:form ", "/components/restaurant_menu/"));
+	//replaces.add(new OptionDto("<form ", "<form:form ", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.components.restaurant_menu.MealDB\"%" + ">", "", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("sk.iway.iwcm.components.restaurant_menu.MenuDB", "sk.iway.iwcm.components.restaurant_menu.rest.RestaurantMenuService", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.components.restaurant_menu.MealBean\"%" + ">", "", "/components/restaurant_menu/"));
@@ -406,10 +406,6 @@ static {
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
 
-	//unused editorEnableXHTML
-	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
-	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
-
 	//Replace logic:present with iwcm:present
 	replaces.add(new OptionDto("<" + "logic:present", "<" + "iwcm:present", ".jsp"));
 	replaces.add(new OptionDto("</" + "logic:present", "</" + "iwcm:present", ".jsp"));
@@ -444,6 +440,10 @@ static {
 	//Replace html:options with iwcm:options
 	replaces.add(new OptionDto("<" + "html:options", "<" + "iwcm:options", ".jsp"));
 	replaces.add(new OptionDto("</" + "html:options", "</" + "iwcm:options", ".jsp"));
+
+	//unused editorEnableXHTML
+	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
+	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
 
 	//REplace old Struts imports with new ones
 	replaces.add(new OptionDto("import=\"org.apache.struts.util.ResponseUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.ResponseUtils\"", ".jsp"));

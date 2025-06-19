@@ -3,7 +3,67 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-< 0 )
+function getElement(elementId)
+{
+   if(document.getElementById)
+   {
+      return(document.getElementById(elementId));
+   }
+   else if(document.all)
+   {
+      return(document.all[elementId]);
+   }
+   return(null);
+}
+
+function getHtml(elementId)
+{
+	var element = getElement(elementId);
+	if (element != null)
+	{
+		return(element.innerHTML);
+	}
+	return("");
+}
+
+function writeHtml(elementId, text)
+{
+	var element = getElement(elementId);
+	if (element != null)
+	{
+		element.innerHTML = text;
+	}
+}
+
+function writeHtmlParent(elementId, text)
+{
+	if (text == null || text == "") return;
+
+	var element = null;
+	if(window.opener.document.getElementById)
+   {
+      element = window.opener.document.getElementById(elementId);
+   }
+   else if(window.opener.document.all)
+   {
+      element = window.opener.document.all[elementId];
+   }
+
+	if (element != null)
+	{
+		element.innerHTML = text;
+	}
+}
+
+	function formatNumber(num)
+	{
+	  var isNegative = false;
+	  num = num.toString().replace(/\\$|\\,/g,'');
+	  if( isNaN( num ) )
+	  {
+	    num = "0";
+	  }
+	  if ( num < 0 )
 	  {
 	    num = Math.abs( num );
 	    isNegative = true;
@@ -26,7 +86,7 @@
 	  }
 	  return result;
 	}
-	
+
 
 function formatCurrency( num )
 {

@@ -319,11 +319,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 							</iwcm:present>
 							<a href='javascript:anketa("/inquiry.answer.do?qID=<jsp:getProperty name="answer" property="questionID"/>&amp;aID=<jsp:getProperty name="answer" property="answerID"/>", 300, 200,<jsp:getProperty name="answer" property="questionID"/><%
 			  				if (Tools.isNotEmpty(answer.getUrl())) { out.print(", \"" + ResponseUtils.filter(answer.getUrl()) + "\""); }
-			  				%>);' name="poll_bar" style="
-			  				<iwcm:present name="displayResults">
-			  				 width: <iwcm:beanWrite name="answer" property="percentageString"/>%;
-			  				 </iwcm:present>
-			  				 " class="poll_bar btn btn-default btn-sm btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>">
+			  				%>);' name="poll_bar" style="<iwcm:present name="displayResults">width: <iwcm:beanWrite name="answer" property="percentageString"/>%;</iwcm:present>" class="poll_bar btn btn-default btn-sm btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>">
 			  				 	<jsp:getProperty name="answer" property="answerString"/>
 			  				 </a>
 							<iwcm:present name="displayResults">
@@ -363,11 +359,7 @@ if (iBean!=null && iBean.getCanAnswer()!=null && iBean.getAnswers().size()>= 0)
 								%>
 								</iwcm:present>
 								<input type="checkbox" name="selectedAnswers" value="${answer.answerID}"/>
-								<a  name="poll_bar" style="
-									<iwcm:present name="displayResults">
-									width: <iwcm:beanWrite name="answer" property="percentageString"/>%;
-									</iwcm:present>
-									" class="poll_bar btn btn-default btn-sm btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>">
+								<a  name="poll_bar" style="<iwcm:present name="displayResults">width: <iwcm:beanWrite name="answer" property="percentageString"/>%;</iwcm:present>" class="poll_bar btn btn-default btn-sm btn-<% if("01".equals(color)){ %>info<%} else if("02".equals(color)){ %>danger<%} else if("03".equals(color)){ %>success<%} else if("04".equals(color)){ %>warning<%}%>">
 									<jsp:getProperty name="answer" property="answerString"/>
 								</a>
 								<iwcm:present name="displayResults">

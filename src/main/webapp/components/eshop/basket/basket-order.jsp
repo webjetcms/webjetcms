@@ -8,7 +8,9 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><script type="text/javascript" src="/components/basket/jscript.jsp"></script>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
+
+<script type="text/javascript" src="/components/basket/jscript.jsp"></script>
 
 <%!
 void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletRequest request)

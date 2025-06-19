@@ -227,7 +227,7 @@ if(displayType==2){ %>
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h4 class="panel-title">
-							<a class="accordion-toggle" data-bs-toggle="collapse" data-parent="#accordion" href="#collapse-<%=count_numer%>">
+							<a class="accordion-toggle" data-toggle="collapse" data-bs-toggle="collapse"  data-parent="#accordion" href="#collapse-<%=count_numer%>">
 								<jsp:getProperty name="q" property="question"/>
 							</a>
 						</h4>
