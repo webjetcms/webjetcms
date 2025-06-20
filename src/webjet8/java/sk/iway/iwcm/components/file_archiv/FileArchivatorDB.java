@@ -841,7 +841,7 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 	 * @param fabId long
 	 * @return FileArchivatorBean
 	 */
-	public static FileArchivatorBean getPrevious(long fabId)
+	public static FileArchivatorBean getPrevious(Long fabId)
 	{
 		List<FileArchivatorBean> list = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of("referenceId", fabId));
 		if(list!=null && list.size()>0)

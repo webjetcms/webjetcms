@@ -364,19 +364,6 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 		return id;
 	}
 
-	/**
-	 * Vrati id ako int, ak je null, vrati 0
-	 * @return
-	 * @deprecated use getId() instead and convert your API to use Long object
-	 */
-	@Deprecated
-	@JsonIgnore
-	public int getIdInt()
-	{
-		if (id == null) return 0;
-		return id.intValue();
-	}
-
 	public Long saveAndReturnId() {
 		save();
 		return getId();
@@ -537,4 +524,17 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	public Integer getPriority() { return priority == null ? 0 : priority; }
 	public Boolean getShowFile() { return Tools.isTrue(showFile); }
 	public Boolean getIndexFile() { return Tools.isTrue(indexFile); }
+
+	/**
+	 * Vrati id ako int, ak je null, vrati 0
+	 * @return
+	 * @deprecated use getId() instead and convert your API to use Long object
+	 */
+	@Deprecated
+	@JsonIgnore
+	public int getIdInt()
+	{
+		if (id == null) return 0;
+		return id.intValue();
+	}
 }
