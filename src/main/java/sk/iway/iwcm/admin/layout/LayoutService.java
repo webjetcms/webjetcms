@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.AdminPropRestController;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -58,6 +59,15 @@ public class LayoutService
         layout.setCsrfToken(CSRF.getCsrfToken(request.getSession(), true));
         layout.setPropertiesLastModified(AdminPropRestController.getLastModified(layout.getLngWebjet()));
         setNopermsCss();
+
+        //check for custom CSS file
+        String customAdminCss = WriteTagToolsForCore.getCustomPageAdmin("/admin/style.css", request);
+        layout.setCustomAdminCss(customAdminCss);
+
+        //check for custom JS file
+        String customAdminJavascript = WriteTagToolsForCore.getCustomPageAdmin("/admin/script.js", request);
+        layout.setCustomAdminJavascript(customAdminJavascript);
+
         return this;
     }
 
