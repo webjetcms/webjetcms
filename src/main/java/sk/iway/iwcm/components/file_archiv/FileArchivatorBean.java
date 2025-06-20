@@ -18,6 +18,8 @@ import javax.validation.constraints.NotBlank;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Adminlog;
@@ -360,6 +362,19 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	public Long getId()
 	{
 		return id;
+	}
+
+	/**
+	 * Vrati id ako int, ak je null, vrati 0
+	 * @return
+	 * @deprecated use getId() instead and convert to Long object
+	 */
+	@Deprecated
+	@JsonIgnore
+	public int getIdInt()
+	{
+		if (id == null) return 0;
+		return id.intValue();
 	}
 
 	public Long saveAndReturnId() {
