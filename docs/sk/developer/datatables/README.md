@@ -679,7 +679,7 @@ div#dateDependentEntriesTable_extfilter
 
 !>**Upozornenie:** v elemente pre vyhľadávacie pole je CSS trieda ```.dt-extfilter``` aj ```.dt-extfilter-FIELD```, je potrebné použiť obe. Podľa CSS triedy ```.dt-extfilter``` sa vyhľadá element po kliknutí na lupu, v data atribúte ```data-column-index``` je uložené poradové číslo stĺpca.
 
-Ak chcete presunúť filter do hlavičky stránky, môžete ho jednoducho presunúť pomocou jQuery ako je v [database-delete.pug](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
+Ak chcete presunúť filter do hlavičky stránky, môžete ho jednoducho presunúť pomocou jQuery ako je v [database-delete.pug](../../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
 
 **Poznámky k implementácii:**
 
