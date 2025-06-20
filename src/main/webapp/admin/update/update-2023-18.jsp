@@ -359,10 +359,13 @@ static {
 	replaces.add(new OptionDto("dataTables_wrapper", "dt-container", ".html"));
 	replaces.add(new OptionDto("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu", "div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]", ".js"));
 	replaces.add(new OptionDto("dataTables_empty", "dt-empty", ".js"));
-
-	replaces.add(new OptionDto("data-dismiss=", "data-bs-dismiss=", ".jsp"));
-	replaces.add(new OptionDto("data-toggle=", "data-bs-toggle=", ".jsp"));
 	replaces.add(new OptionDto(".DATA.json[", ".DATA.json.data[", ".html"));
+
+	//Bootstrap 5 upgrade
+	replaces.add(new OptionDto("data-dismiss=\"modal\"", "data-dismiss=\"modal\" data-bs-dismiss=\"modal\"", ".jsp"));
+	replaces.add(new OptionDto("data-dismiss=\"modal\" data-bs-dismiss=\"modal\" data-bs-dismiss=\"modal\"", "data-dismiss=\"modal\" data-bs-dismiss=\"modal\"", ".jsp"));
+	replaces.add(new OptionDto("data-toggle=\"tab\"", "data-toggle=\"tab\" data-bs-toggle=\"tab\"", ".jsp"));
+	replaces.add(new OptionDto("data-toggle=\"tab\" data-bs-toggle=\"tab\" data-bs-toggle=\"tab\"", "data-toggle=\"tab\" data-bs-toggle=\"tab\"", ".jsp"));
 
 	//basket - Transition from double to BigDecimal
 	replaces.add(new OptionDto("Math.abs( doc.getPrice() ) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
@@ -370,6 +373,10 @@ static {
 
 	//prop search
 	replaces.add(new OptionDto("/admin/prop_search.jsp?search=yes&text=", "/admin/v9/settings/translation-keys/#dt-filter-key=", ".jsp"));
+
+   //quiz
+   replaces.add(new OptionDto("sk.iway.iwcm.components.quiz.QuizResultBean", "sk.iway.iwcm.components.quiz.jpa.QuizResultEntity", null));
+   replaces.add(new OptionDto("QuizResultBean", "QuizResultEntity", null));
 
 	//remove html:form elements
 	replaces.add(new OptionDto("<html:form", "<form", ".jsp"));
@@ -446,13 +453,13 @@ static {
 	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
 
 	//REplace old Struts imports with new ones
-	replaces.add(new OptionDto("import=\"org.apache.struts.util.ResponseUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.ResponseUtils\"", ".jsp"));
-	replaces.add(new OptionDto("org.apache.struts.util.ResponseUtils", "sk.iway.iwcm.tags.support_logic.ResponseUtils", ".jsp,.java"));
-	replaces.add(new OptionDto("org.apache.struts.taglib.html.FormTag.", "sk.iway.iwcm.tags.support_logic.FormTag.", ".jsp,.java"));
-	replaces.add(new OptionDto("import=\"org.apache.struts.util.RequestUtils\"", "import=\"sk.iway.iwcm.tags.support_logic.RequestUtils\"", ".jsp"));
-	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support_logic.CustomTagUtils.XHTML_KEY", ".jsp,.java"));
-	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessages\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessages\"", ".jsp"));
-	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessage\"", "import=\"sk.iway.iwcm.tags.support_logic.action.ActionMessage\"", ".jsp"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.util.ResponseUtils\"", "import=\"sk.iway.iwcm.tags.support.ResponseUtils\"", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.util.ResponseUtils", "sk.iway.iwcm.tags.support.ResponseUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.struts.taglib.html.FormTag.", "sk.iway.iwcm.tags.support.FormTag.", ".jsp,.java"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.util.RequestUtils\"", "import=\"sk.iway.iwcm.tags.support.RequestUtils\"", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY", ".jsp,.java"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessages\"", "import=\"sk.iway.iwcm.tags.support.action.ActionMessages\"", ".jsp"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessage\"", "import=\"sk.iway.iwcm.tags.support.action.ActionMessage\"", ".jsp"));
 
 	replaces.add(new OptionDto("<form:form method=\"post\" modelAttribute=\"xlsImportForm\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" enctype=\"multipart/form-data\">", "<form method=\"post\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" id=\"xlsImportForm\" enctype=\"multipart/form-data\">", ".jsp"));
 	replaces.add(new OptionDto("</form:form>", "</form>", "import_xls.jsp"));
@@ -570,6 +577,10 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 						content = Tools.replace(content, "<html:file property=\"file\" styleClass=\"input\"", "<input type=\"file\" name=\"file\" class=\"input\"");
 						content = Tools.replace(content, "<html:file property=\"file\"", "<input type=\"file\" name=\"file\"");
 					}
+					if (content.contains("</form:form") && content.contains("<form:form")==false) {
+						//<form:form> is not present, but </form:form> is, fix it
+						content = Tools.replace(content, "</form:form>", "</form>");
+					}
 				}
 			}
 
@@ -646,13 +657,17 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				}
 
 				out.print(foundContent.toString());
+			}
 
+			//save before compile
+			if (hasChange && content.equals(contentOriginal)==false) {
 				if (saveFile) {
-					FileTools.saveFileContent(fullUrl, content, encoding);
-					out.println("   <strong>Ukladám súbor</strong>: "+fullUrl);
-				} else {
-					out.println("   <strong>Súbor obsahuje zmenu, uloženie ale nie je aktivované</strong>");
-				}
+						FileTools.saveFileContent(fullUrl, content, encoding);
+						out.println("   <strong>Ukladám súbor</strong>: "+fullUrl);
+				hasChange = false;
+					} else {
+						out.println("   <strong>Súbor obsahuje zmenu, uloženie ale nie je aktivované</strong>");
+					}
 			}
 
 			if (compileFile && f.getName().endsWith(".jsp")) {
@@ -692,8 +707,29 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 						out.println("CHYBA:<br/>");
 						out.println(ResponseUtils.filter(stack));
+
+						if (stack.contains("is not applicable for the arguments (List<FileArchivatorBean>, Long, String, boolean)")) {
+							out.println("<strong>FIXING:</strong> fab.getId() is not Long, updating to fab.getId().intValue()<br/>");
+							content = Tools.replace(content, "getArchiveFabListAndSorted(fabList, fabMain.getId(),", "getArchiveFabListAndSorted(fabList, fabMain.getId().intValue(),");
+							hasChange = true;
+						}
+						if (stack.contains("in the type FileArchivatorInsertLater is not applicable for the arguments (Long, boolean)")) {
+							out.println("<strong>FIXING:</strong> fab.getId() is not Long, updating to fab.getId().intValue()<br/>");
+							content = Tools.replace(content, "FileArchivatorInsertLater.getFilesToUploadByReferenceId(fabMain.getId(),", "FileArchivatorInsertLater.getFilesToUploadByReferenceId(fabMain.getId().intValue(),");
+							hasChange = true;
+						}
 					}
 				}
+			}
+
+			//save after compile to fix possible compilation errors
+			if (hasChange && content.equals(contentOriginal)==false) {
+				if (saveFile) {
+						FileTools.saveFileContent(fullUrl, content, encoding);
+						out.println("   <strong>Ukladám súbor</strong>: "+fullUrl);
+					} else {
+						out.println("   <strong>Súbor obsahuje zmenu, uloženie ale nie je aktivované</strong>");
+					}
 			}
 		}
 	}
@@ -703,7 +739,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 %>
 
 <div class="row title">
-	<h1 class="page-title">Upraviť kód v JSP súboroch pre WebJET 2023.18</h1>
+	<h1 class="page-title">Upraviť kód v JSP súboroch pre aktuálny WebJET</h1>
 </div>
 
 <%

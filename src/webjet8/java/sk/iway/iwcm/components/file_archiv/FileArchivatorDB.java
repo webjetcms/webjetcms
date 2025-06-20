@@ -835,6 +835,24 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 		  }
 	 }
 
+	 /**
+	 * vrati posledny nahrany subor vo vlakne
+	 *
+	 * @param fabId long
+	 * @return FileArchivatorBean
+	 */
+	public static FileArchivatorBean getPrevious(long fabId)
+	{
+		List<FileArchivatorBean> list = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of("referenceId", fabId));
+		if(list!=null && list.size()>0)
+		{
+			list.sort(Comparator.comparingLong(FileArchivatorBean::getId).reversed());
+			return list.get(0);
+		}
+		else
+			return null;
+	}
+
 	/***************************** BACKWARD COMPATIBILITY ******************************/
 	public static List<FileArchivatorBean> getByReferenceId(int referenceId) {
 		return getByReferenceId((long) referenceId);
@@ -855,5 +873,14 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
         em.getTransaction().commit();
         return count;
     }
+
+	public static FileArchivatorBean getPrevious(int fabId) {
+		return getPrevious((long) fabId);
+	}
+
+	public static List<FileArchivatorBean> getWaitingFileList()
+	{
+		return FileArchiveService.getWaitingFileList(null, Tools.getSpringBean("fileArchiveRepository", FileArchiveRepository.class));
+	}
 
 }
