@@ -718,6 +718,16 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 							content = Tools.replace(content, "FileArchivatorInsertLater.getFilesToUploadByReferenceId(fabMain.getId(),", "FileArchivatorInsertLater.getFilesToUploadByReferenceId(fabMain.getId().intValue(),");
 							hasChange = true;
 						}
+						if (stack.contains("The method getFrom() is undefined for the type QuizResultEntity")) {
+							out.println("<strong>FIXING:</strong> QuizResultEntity.getFrom() -> QuizResultEntity.getScoreFrom()<br/>");
+							content = Tools.replace(content, ".getFrom(", ".getScoreFrom(");
+							hasChange = true;
+						}
+						if (stack.contains("The method getTo() is undefined for the type QuizResultEntity")) {
+							out.println("<strong>FIXING:</strong> QuizResultEntity.getTo() -> QuizResultEntity.getScoreTo()<br/>");
+							content = Tools.replace(content, ".getTo(", ".getScoreTo(");
+							hasChange = true;
+						}
 					}
 				}
 			}
