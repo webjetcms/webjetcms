@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 import="sk.iway.iwcm.i18n.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);
 request.setAttribute("iconLink", "");
@@ -33,6 +30,9 @@ if (sk.iway.iwcm.FileTools.exists("/components/sync/archive_upload.jsp")==false)
 <div class="padding10">
 <script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/modalDialog.js"></script>
 <script type="text/javascript">
+
+	window.helpLink = "/redactor/webpages/import-export";
+
 	function Ok()
 	{
 	   var url = "";

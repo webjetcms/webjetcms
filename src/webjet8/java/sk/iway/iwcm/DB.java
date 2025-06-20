@@ -19,7 +19,6 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.RowSetDynaClass;
-import org.apache.struts.util.ResponseUtils;
 
 import oracle.jdbc.driver.OracleConnection;
 import oracle.sql.CLOB;
@@ -27,6 +26,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  nadtrieda DB tried, ma zakladne uzitocne funkcie

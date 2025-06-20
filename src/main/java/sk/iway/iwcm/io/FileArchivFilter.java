@@ -11,8 +11,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
@@ -22,6 +20,7 @@ import sk.iway.iwcm.components.file_archiv.FileArchivatorDB;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 

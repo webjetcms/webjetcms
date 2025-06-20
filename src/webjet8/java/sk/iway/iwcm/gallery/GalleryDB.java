@@ -52,7 +52,6 @@ import com.drew.metadata.Tag;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.struts.util.ResponseUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
@@ -85,6 +84,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.spirit.MediaDB;
 
 /**

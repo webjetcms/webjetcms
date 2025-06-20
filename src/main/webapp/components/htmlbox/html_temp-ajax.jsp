@@ -1,13 +1,11 @@
 <%@page import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.filebrowser.BrowseAction"%>
-<%@page import="sk.iway.iwcm.io.IwcmFile"%><%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.io.IwcmFile"%><%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%=Tools.insertJQuery(request)%>
 <div>
 <% String dirName = Tools.getStringValue(Tools.getRequestParameter(request, "dirName"), ""); %>
@@ -32,48 +30,51 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 		   {
 		      //IwcmFile dir = new IwcmFile(rootDirPath);
 		      IwcmFile files[] = FileTools.sortFilesByName(dir.listFiles());
-		      int size = files.length;
-		      IwcmFile f;
-		      for (int i=0; i<size; i++)
-		      {
-		         f = files[i];
-		         if (f.isFile())
-		         {
-		         	name = f.getName();
-		            prettyName = name;
+
+			  if(files != null) {
+				int size = files.length;
+				IwcmFile f;
+				for (int i=0; i<size; i++)
+				{
+					f = files[i];
+					if (f.isFile())
+					{
+						name = f.getName();
+						prettyName = name;
 
 
-		            if (BrowseAction.hasForbiddenSymbol(prettyName))
-		            	continue;
+						if (BrowseAction.hasForbiddenSymbol(prettyName))
+							continue;
 
-		            if(prettyName.substring(prettyName.lastIndexOf('.')).equals(".html")) {
-		            	try
-						{
-							prettyName = prettyName.substring(0, prettyName.lastIndexOf("."));
-							name = name.substring(0, name.lastIndexOf("."));
-							prettyName = Tools.escapeHtml(prettyName.replace('_', ' '));
-						}
-						catch (Exception ex){}
+						if(prettyName.substring(prettyName.lastIndexOf('.')).equals(".html")) {
+							try
+							{
+								prettyName = prettyName.substring(0, prettyName.lastIndexOf("."));
+								name = name.substring(0, name.lastIndexOf("."));
+								prettyName = Tools.escapeHtml(prettyName.replace('_', ' '));
+							}
+							catch (Exception ex){}
 
-						//String htmlName = f.getName().substring(0, f.getName().lastIndexOf('.')) + ".html";
+							//String htmlName = f.getName().substring(0, f.getName().lastIndexOf('.')) + ".html";
 
-		            %>
-		            <a class="thumbImage" data-name="<%=name+".html"%> ">
-		            	<%=prettyName %><br/>
-						<%
-						String pathPlusName = Tools.escapeHtml(dir.getVirtualPath())+"/"+ name;
-						IwcmFile imageJPG = new IwcmFile(PathFilter.getRealPath(pathPlusName+".jpg"));
-						IwcmFile imagePNG = new IwcmFile(PathFilter.getRealPath(pathPlusName+".png"));
-						if(imageJPG.exists()){
 						%>
-		            		<img src="<%=pathPlusName%>.jpg?w=500&h=300&ip=6"/>
-		            	<% }else if(imagePNG.exists()){ %>
-		            		<img src="<%=pathPlusName%>.png?w=500&h=300&ip=6"/>
-		            	<% } %>
-		            </a>
-		            <%
-		         	}
-		         }
+						<a class="thumbImage" data-name="<%=name+".html"%> ">
+							<%=prettyName %><br/>
+							<%
+							String pathPlusName = Tools.escapeHtml(dir.getVirtualPath())+"/"+ name;
+							IwcmFile imageJPG = new IwcmFile(PathFilter.getRealPath(pathPlusName+".jpg"));
+							IwcmFile imagePNG = new IwcmFile(PathFilter.getRealPath(pathPlusName+".png"));
+							if(imageJPG.exists()){
+							%>
+								<img src="<%=pathPlusName%>.jpg?w=500&h=300&ip=6"/>
+							<% }else if(imagePNG.exists()){ %>
+								<img src="<%=pathPlusName%>.png?w=500&h=300&ip=6"/>
+							<% } %>
+						</a>
+						<%
+						}
+					}
+				 }
 		      }
 		   }
         %>

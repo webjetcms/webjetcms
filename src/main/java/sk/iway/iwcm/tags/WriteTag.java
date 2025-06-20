@@ -1,11 +1,34 @@
 package sk.iway.iwcm.tags;
 
-import net.sourceforge.stripes.exception.SourcePageNotFoundException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.PageContext;
+import javax.servlet.jsp.tagext.BodyTagSupport;
+
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.struts.Globals;
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.context.ApplicationContext;
-import sk.iway.iwcm.*;
+
+import net.sourceforge.stripes.exception.SourcePageNotFoundException;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.SearchTools;
@@ -24,21 +47,8 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.components.SpringContext;
 import sk.iway.iwcm.system.spring.webjet_component.WebjetComponentParser;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.PageContext;
-import javax.servlet.jsp.tagext.BodyTagSupport;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  *  vypise string ulozeny v request objekte (vyhodne ked sa to setne v nejakej
@@ -75,6 +85,9 @@ public class WriteTag extends BodyTagSupport
 	public static final String INLINE_EDITING_PLACEHOLDER = "<div class='inlineEditingToolbarPlaceholder'></div>";
 
 	private static final String INLINE_EDITING_DISABLE_DELETE_BUTTON = "inlineEditingDisableDeleteButton";
+	public static final String NO_WJTOOLBAR = "NO_WJTOOLBAR";
+	private static final String IS_INLINE_EDITING = "isInlineEditing";
+	private static final String INLINE_EDITING_BUTTONS_MACRO = "{inlineEditingButtons}";
 
 
 	@Override
@@ -203,17 +216,17 @@ public class WriteTag extends BodyTagSupport
 					//skus ziskat zo sablony priznak, ze sa nema zobrazit
 					String afterBody = (String)request.getAttribute("after_body");
 
-					if (afterBody!=null && afterBody.indexOf("NO WJTOOLBAR")!=-1)
+					if (afterBody!=null && afterBody.indexOf(NO_WJTOOLBAR)!=-1)
 					{
 						showToolbar = false;
 					}
 
-					if (request.getParameter("NO_WJTOOLBAR")!=null)
+					if (request.getParameter(NO_WJTOOLBAR)!=null)
 					{
-						request.getSession().setAttribute("NO_WJTOOLBAR", "1");
+						request.getSession().setAttribute(NO_WJTOOLBAR, "1");
 					}
 
-					if (request.getHeader("dmail")!=null || request.getAttribute("NO WJTOOLBAR")!=null || (request.getSession()!=null && request.getSession().getAttribute("NO_WJTOOLBAR")!=null) || request.getParameter("NO_WJTOOLBAR")!=null || request.getAttribute("isPreview")!=null)
+					if (request.getHeader("dmail")!=null || request.getAttribute(NO_WJTOOLBAR)!=null || (request.getSession()!=null && request.getSession().getAttribute(NO_WJTOOLBAR)!=null) || request.getParameter(NO_WJTOOLBAR)!=null || request.getAttribute("isPreview")!=null)
 					{
 						showToolbar = false;
 					}
@@ -229,10 +242,10 @@ public class WriteTag extends BodyTagSupport
 						showToolbar = false;
 					}
 
-					if ("false".equals(request.getParameter("NO_WJTOOLBAR")))
+					if ("false".equals(request.getParameter(NO_WJTOOLBAR)))
 					{
 						showToolbar = true;
-						request.getSession().removeAttribute("NO_WJTOOLBAR");
+						request.getSession().removeAttribute(NO_WJTOOLBAR);
 					}
 
 					if (inlineEditingToolbarAppended)
@@ -354,11 +367,6 @@ public class WriteTag extends BodyTagSupport
 	{
 		DebugTimer dt = new DebugTimer("WriteTag");
 		StringBuilder buff = new StringBuilder(text);
-
-		if (Constants.getBoolean("editorEnableXHTML"))
-		{
-			pageContext.setAttribute(Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
-		}
 
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
 		HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();
@@ -680,7 +688,7 @@ public class WriteTag extends BodyTagSupport
 							{
 								preserveParametersSet(includeFileName, request);
 
-								if (request.getAttribute("writeTagDisableCodeFix")==null && Constants.getBoolean("disableWJResponseWrapper")==false && (request.getAttribute(BuffTag.IS_BUFF_TAG)!=null || Constants.getBoolean("editorEnableXHTML")))
+								if (request.getAttribute("writeTagDisableCodeFix")==null && Constants.getBoolean("disableWJResponseWrapper")==false)
 								{
 									//respWrapper.setBufferSize(response.getBufferSize());
 									//FakeHttpServletResponse respWrapper = new FakeHttpServletResponse(response);
@@ -693,19 +701,19 @@ public class WriteTag extends BodyTagSupport
 									request.removeAttribute(INLINE_EDITING_MODULE_PROPS_DISABLE_KEY);
 									request.removeAttribute(INLINE_EDITING_MODULE_PROPS_TEXT_KEY);
 									request.removeAttribute(INLINE_EDITING_MODULE_PROPS_ICON);
-									request.removeAttribute("isInlineEditing");
+									request.removeAttribute(IS_INLINE_EDITING);
 									int inlineDocId = -1;
 									boolean isInlineEditing = false;
 									if (Constants.getBoolean("inlineEditingEnabled"))
 									{
-										if (request.getHeader("dmail") == null && request.getParameter("NO_WJTOOLBAR") == null && request.getParameter("isDmail") == null && request.getAttribute("isPreview") == null)
+										if (request.getHeader("dmail") == null && request.getParameter(NO_WJTOOLBAR) == null && request.getParameter("isDmail") == null && request.getAttribute("isPreview") == null)
 										{
 											if ("doc_data".equals(name) || request.getAttribute(name + "-docId=") != null)
 											{
 												if (user != null && user.isAdmin())
 												{
 													inlineDocId = DocTools.getRequestNameDocId(name, request);
-													request.setAttribute("isInlineEditing", "true");
+													request.setAttribute(IS_INLINE_EDITING, "true");
 													isInlineEditing = true;
 												}
 											}
@@ -753,11 +761,11 @@ public class WriteTag extends BodyTagSupport
 											StringBuilder inlineEditingButtons = (StringBuilder)request.getAttribute(INLINE_EDITING_BUTTONS_KEY);
 											if (inlineEditingButtons != null)
 											{
-												inlineEditingStart = Tools.replace(inlineEditingStart, "{inlineEditingButtons}", inlineEditingButtons.toString());
+												inlineEditingStart = Tools.replace(inlineEditingStart, INLINE_EDITING_BUTTONS_MACRO, inlineEditingButtons.toString());
 											}
 											else
 											{
-												inlineEditingStart = Tools.replace(inlineEditingStart, "{inlineEditingButtons}", "");
+												inlineEditingStart = Tools.replace(inlineEditingStart, INLINE_EDITING_BUTTONS_MACRO, "");
 											}
 
 											if (htmlCode.indexOf(INLINE_EDITING_PLACEHOLDER)==-1)
@@ -1158,7 +1166,7 @@ public class WriteTag extends BodyTagSupport
 				html.append("</span></a>");
 			}
 
-			html.append("{inlineEditingButtons}");
+			html.append(INLINE_EDITING_BUTTONS_MACRO);
 
 			if (editorComponent != null && Constants.getBoolean("inlineEditingAllowDelete") && request.getAttribute(INLINE_EDITING_DISABLE_DELETE_BUTTON)==null)
 			{
@@ -1189,7 +1197,7 @@ public class WriteTag extends BodyTagSupport
 	 */
 	public static boolean isInlineEditing(HttpServletRequest request)
 	{
-		return "true".equals(request.getAttribute("isInlineEditing"));
+		return "true".equals(request.getAttribute(IS_INLINE_EDITING));
 	}
 
 	public static void addInlineButton(String textKey, String iconLink, String href, String textParam1, String textParam2, HttpServletRequest request)

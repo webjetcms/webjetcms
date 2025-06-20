@@ -5,7 +5,7 @@ response.setHeader("Pragma","No-Cache");
 response.setDateHeader("Expires",0);
 response.setHeader("Cache-Control","no-Cache");
 
-%><%@ page pageEncoding="utf-8" import="org.json.JSONException,org.json.JSONObject,sk.iway.iwcm.Constants, sk.iway.iwcm.Identity, sk.iway.iwcm.Tools" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@page import="sk.iway.iwcm.doc.DocDB"%><%@ page import="sk.iway.iwcm.doc.GroupsDB" %><%@
+%><%@ page pageEncoding="utf-8" import="org.json.JSONException,org.json.JSONObject,sk.iway.iwcm.Constants, sk.iway.iwcm.Identity, sk.iway.iwcm.Tools" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@page import="sk.iway.iwcm.doc.DocDB"%><%@ page import="sk.iway.iwcm.doc.GroupsDB" %><%@
         page import="sk.iway.iwcm.tags.JSEscapeTag" %><%@
         page import="sk.iway.iwcm.users.SettingsAdminBean" %><%@
         page import="sk.iway.iwcm.users.UserDetails" %><%@
@@ -107,7 +107,7 @@ if (user == null)
 <tree>
 
 	<%int parentGroupId; String folderIcon; boolean showChilds = false; int systemGroupId=-2; String src; List childs;%>
-	<logic:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
+	<iwcm:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index">
 		<%
 		canAccess = true;
 		if (Constants.getBoolean("adminCheckUserGroups"))
@@ -165,12 +165,12 @@ if (user == null)
 			String prefix = viewInfoJSON != null && viewInfoJSON.getBoolean("sortPriority") ? group.getSortPriority() + ". " : "";
 			prefix += viewInfoJSON != null && viewInfoJSON.getBoolean("docId") ? "[#" + group.getGroupId() + "] " : "";
 		%>
-		<tree text="&lt;em&gt;<%= prefix %>&lt;/em&gt;<bean:write name="group" property="groupNameShortNoJS"/>" action="javascript:xtreeItemClick(<bean:write name="group" property="groupId"/>, '<%=groupIdName %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
+		<tree text="&lt;em&gt;<%= prefix %>&lt;/em&gt;<iwcm:beanWrite name="group" property="groupNameShortNoJS"/>" action="javascript:xtreeItemClick(<iwcm:beanWrite name="group" property="groupId"/>, '<%=groupIdName %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		}%>
-	</logic:iterate>
+	</iwcm:iterate>
 
-	<logic:present name="pages">
-	<logic:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
+	<iwcm:present name="pages">
+	<iwcm:iterate id="doc" name="pages" type="sk.iway.iwcm.doc.DocDetails" indexId="index">
 		<%
 	   folderIcon = "-page";
 		src = "";
@@ -217,9 +217,9 @@ if (user == null)
 				out.print("[#" + doc.getDocId() + "] ");%>&lt;/em&gt;<%=title%><%
 			if (viewInfoJSON != null && viewInfoJSON.getBoolean("dateCreated"))
 				out.print(" &lt;em&gt;(" + doc.getDateCreatedString() + ")&lt;/em&gt;");%>"
-			action="javascript:xtreeItemPageClick(<bean:write name="doc" property="docId"/>, '<bean:write name="doc" property="sortPriority"/>. <%=titleEscaped %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
+			action="javascript:xtreeItemPageClick(<iwcm:beanWrite name="doc" property="docId"/>, '<iwcm:beanWrite name="doc" property="sortPriority"/>. <%=titleEscaped %>')" icon="/admin/images/dtree/folder<%=folderIcon%>.gif" openIcon="/admin/images/dtree/folderopen<%=folderIcon%>.gif" <%=src%> /><%
 		} %>
-	</logic:iterate>
-	</logic:present>
+	</iwcm:iterate>
+	</iwcm:present>
 
 </tree>

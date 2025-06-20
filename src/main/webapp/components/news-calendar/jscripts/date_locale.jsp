@@ -2,7 +2,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,javax.servlet.http.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 String lng = PageLng.getUserLng(request);
 Cookie cookies[] = request.getCookies();

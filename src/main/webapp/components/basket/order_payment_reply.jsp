@@ -6,8 +6,6 @@
 <%@page import="sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%@page import="java.math.BigDecimal"%>
 <%@page import="java.util.Date"%>
 

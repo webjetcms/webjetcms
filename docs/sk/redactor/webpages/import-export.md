@@ -65,7 +65,7 @@ K web stránke sa exportujú aj použité obrázky a súbory. Ak je v stránke p
 
 ## Import štruktúry z Excel súboru
 
-Pred importom sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Stlačte tlačidlo ![](import-export-button.png ":no-zoom") a počkajte na zobrazenie okna. V okne zvoľte možnosť **Importovať štruktúru z Excel súboru** a stlačte tlačidlo s textom **OK**. Zobrazí sa Vám nastavenie importu, ktoré Vás vyzve k zadaniu `XLS` súboru so štruktúrou. Nezabudnite, že **súboru musí byť typu XLS**. Nemôže byť typu `XLSX` ani `XLSM` iba práve XLS. Dostupné sú aj ďalšie možnosti importu:
+Pred importom sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Stlačte tlačidlo ![](import-export-button.png ":no-zoom") a počkajte na zobrazenie okna. V okne zvoľte možnosť **Importovať štruktúru z Excel súboru** a stlačte tlačidlo s textom **OK**. Zobrazí sa Vám nastavenie importu, ktoré Vás vyzve k zadaniu `XLS` súboru so štruktúrou. Nezabudnite, že **súboru musí byť typu XLS**. Nemôže byť typu `XLSX` ani `XLSM` iba práve XLS. Môžete si stiahnuť [vzorový súbor](import_struct.xls). Dostupné sú aj ďalšie možnosti importu:
 
 - ID priečinka, kde sa na-importujú súbory, táto možnosť bude prednastavená podľa skôr zvoleného priečinka, ale stále sa dá zmeniť (zmeniť cieľový priečinok)
 - Nastaviť prioritu podľa úrovne - priorita usporiadania sa nastaví podľa vnorenia v stromovej štruktúre, čím je stránka hlbšie, tým bude mať väčšie číslo priority. Význam to má pri vyhľadávaní a usporiadaní výsledkov podľa priority, aby stránky na nižšej úrovni boli skôr vo výsledkoch vyhľadávania - predpokladá sa, že stránka sekcie je významnejšia ako jej pod-stránka.

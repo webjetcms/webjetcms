@@ -1,13 +1,10 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8"  import="org.apache.struts.util.ResponseUtils,sk.iway.iwcm.doc.*,java.util.*,java.sql.*"%>
+%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.tags.support.ResponseUtils,sk.iway.iwcm.doc.*,java.util.*,java.sql.*"%>
 <%@ page import="sk.iway.iwcm.DBPool" %>
 <%@ page import="sk.iway.iwcm.Tools" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="users.edit_admins"/>
 <%@ include file="layout_top.jsp" %>
 <%!

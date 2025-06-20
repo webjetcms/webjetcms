@@ -2,9 +2,7 @@
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@ page import="sk.iway.iwcm.doc.DocDB"%>
+<%@ page import="sk.iway.iwcm.doc.DocDB"%>
 <%
 	session.setAttribute("forum-shown", Boolean.TRUE);
 
@@ -91,7 +89,7 @@
 	boolean active = ForumDB.isActive(docId);
 	pageContext.setAttribute("forum", forum);
 %>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 if(!isAjaxCall)
@@ -147,22 +145,22 @@ if(!isAjaxCall)
 					<td><iwcm:text key="forum.subject"/></td>
 					<td><iwcm:text key="forum.date"/></td>
 				</tr>
-			<logic:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
+			<iwcm:iterate name="forum" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td>
-						<logic:notEmpty name="field" property="authorEmail">
-							<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-						</logic:notEmpty>
-						<logic:empty name="field" property="authorEmail">
-							<bean:write name="field" property="authorName"/>
-						</logic:empty>
+						<iwcm:notEmpty name="field" property="authorEmail">
+							<a href="mailto:<iwcm:beanWrite name="field" property="authorEmail"/>"><iwcm:beanWrite name="field" property="authorName"/></a>
+						</iwcm:notEmpty>
+						<iwcm:empty name="field" property="authorEmail">
+							<iwcm:beanWrite name="field" property="authorName"/>
+						</iwcm:empty>
 					</td>
 					<td>
-						<bean:write name="field" property="prefix" filter="false"/><strong><bean:write name="field" property="subject"/></strong></div>
+						<iwcm:beanWrite name="field" property="prefix" filter="false"/><strong><iwcm:beanWrite name="field" property="subject"/></strong></div>
 					</td>
-					<td><bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/></td>
+					<td><iwcm:beanWrite name="field" property="questionDateDisplayDate"/> <iwcm:beanWrite name="field" property="questionDateDisplayTime"/></td>
 				</tr>
-			</logic:iterate>
+			</iwcm:iterate>
 			</table>
 	<% } %>
   </td>

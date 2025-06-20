@@ -3,11 +3,7 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 	String lng = PageLng.getUserLng(request);
@@ -177,11 +173,11 @@
 <div class="subscribe-form-simple">
 	<form id="subscribeForm" action="<%=PathFilter.getOrigPathDocId(request) %>#subscribeForm" method="post">
 		<% boolean hasAnyGroup = false; %>
-		<logic:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
+		<iwcm:iterate id="ugd" name="userGroupsList" type="sk.iway.iwcm.users.UserGroupDetails">
 		<% if (ugd.isAllowUserEdit() && ugd.isRequireEmailVerification()) { %>
-			<input type="hidden" name="user_group_id" value='<bean:write name="ugd" property="userGroupId"/>' value='checked'/>
+			<input type="hidden" name="user_group_id" value='<iwcm:beanWrite name="ugd" property="userGroupId"/>' value='checked'/>
 		<% hasAnyGroup = true;  } %>
-		</logic:iterate>
+		</iwcm:iterate>
 		<% if (hasAnyGroup) { %>
 			<input type="hidden" name="save" value="true" />
 			<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(request.getSession())%>

@@ -1,7 +1,6 @@
 package sk.iway.iwcm;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.struts.util.TokenProcessor;
 import org.springframework.web.util.NestedServletException;
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
@@ -621,21 +620,15 @@ public class PathFilter implements Filter
 					}
 				}
 
-				//#37426 CSRF ochrana Struts formularov
-				if (req.getSession().getAttribute("org.apache.struts.action.TOKEN")==null)
+				if ((path.endsWith(".do") || path.endsWith(".struts")) && "post".equalsIgnoreCase(req.getMethod()) && (req.getContentType()==null || req.getContentType().contains("multipart")==false))
 				{
-					//vygeneruj token, kedze struts u nas konci vygenerujem len jeden token do session
-					TokenProcessor.getInstance().saveToken(req);
-				}
-				else if (path.endsWith(".do") && "post".equalsIgnoreCase(req.getMethod()) && (req.getContentType()==null || req.getContentType().contains("multipart")==false))
-				{
-				   if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictPostUrlException")==false)
+				    if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictPostUrlException")==false)
 					{
 						//validuj token
-						boolean isTokenValid = TokenProcessor.getInstance().isTokenValid(req, false);
+						boolean isTokenValid = CSRF.verifyTokenAndDeleteIt(req);
 						if (isTokenValid == false)
 						{
-						   Logger.info(PathFilter.class, "Struts token not valid, path="+path);
+						    Logger.info(PathFilter.class, "Struts token not valid, path="+path);
 							req.setAttribute("errorText", Prop.getInstance(req).getText("components.csrfError"));
 							forwardSafely("/components/maybeError.jsp", req, res);
 							return;

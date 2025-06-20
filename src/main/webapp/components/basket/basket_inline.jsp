@@ -1,4 +1,4 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 %>
 <%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*" %>
@@ -6,7 +6,7 @@
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 
 <script type="text/javascript" src="/components/basket/jscript.jsp"></script>
 <%
@@ -334,16 +334,16 @@
        </tr>
 
 
-      <logic:present name="basketItems">
-          <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
+      <iwcm:present name="basketItems">
+          <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
 
-            <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
+            <tr class="itemTr itemId_<iwcm:beanWrite name="good" property="itemId"/> basketId_<iwcm:beanWrite name="good" property="basketItemId"/>">
                <td>
-                  <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
+                  <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><iwcm:beanWrite name="good" property="title"/></a>
                </td>
                <td class="fL">
                  <a href="javascript:void(0)" class="removeItem">Remove item</a>
-                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<bean:write name="good" property="itemQty"/>">
+                 <input type="text" class="basketQty" name="basketQty" maxlength="3" value="<iwcm:beanWrite name="good" property="itemQty"/>">
                  <a href="javascript:void(0)" class="addItem">Add item</a>
                </td>
                <td style="text-align: right;" class="basketPrice fL" nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
@@ -353,8 +353,8 @@
                   <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>">Delete</a>
                  </td>
             </tr>
-          </logic:iterate>
-       </logic:present>
+          </iwcm:iterate>
+       </iwcm:present>
 
 
         <tr class='basketListTableTotalVat'>

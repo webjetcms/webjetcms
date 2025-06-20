@@ -3,20 +3,15 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true" perms="menuWebpages|menuGallery"/>
+<iwcm:checkLogon admin="true" perms="menuWebpages|menuGallery"/>
 <%@ include file="/admin/layout_top.jsp" %>
 
 <H3>Import z Excelu</H3>
 
 <br><br>
 
-<%
-request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
-%>
-
-<form:form method="post" modelAttribute="xlsImportForm" action="/admin/import/excel/" name="xlsImportForm" enctype="multipart/form-data">
+<form method="post" action="/admin/import/excel/" name="xlsImportForm" id="xlsImportForm" enctype="multipart/form-data">
  <table>
   <tr>
 	<td>Vyberte súbor:</td>
@@ -40,7 +35,7 @@ request.setAttribute("xlsImportForm", new sk.iway.iwcm.xls.ImportXLSForm());
 	</td>
   </tr>
  </table>
-</form:form>
+</form>
 
 
 <%@ include file="/admin/layout_bottom.jsp" %>

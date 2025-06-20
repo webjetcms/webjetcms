@@ -5,11 +5,9 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
-<logic:present parameter="docId">
+<iwcm:checkLogon admin="true"/>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
+<iwcm:present parameter="docId">
 <%
 int docId = -1;
 try
@@ -45,8 +43,8 @@ body { overflow: auto }
 </body></html>
 
 
-</logic:present>
-<logic:notPresent parameter="docId">
+</iwcm:present>
+<iwcm:notPresent parameter="docId">
 <html>
 <head>
    <title><iwcm:text key="editor.link.insert_link"/></title>
@@ -311,7 +309,7 @@ request.setAttribute("ajaxSupportInserted", true);
 							                        var selected = event.data.selected;
 
 							                        var files = elfinderInstance.selectedFiles();
-							                        if (files.length == 1) {
+							                        if (files != null && files.length == 1) {
 							                        	if(files[0].mime != 'directory') {
 							                        		console.log(files[0]);
 							                            	selectLink(files[0].url.split(":").pop());
@@ -370,4 +368,4 @@ request.setAttribute("ajaxSupportInserted", true);
 </form>
 </body>
 </html>
-</logic:notPresent>
+</iwcm:notPresent>

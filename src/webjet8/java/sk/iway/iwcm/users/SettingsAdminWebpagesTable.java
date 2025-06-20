@@ -58,6 +58,8 @@ public class SettingsAdminWebpagesTable
 	{
 		setUserData(session);
 
+		if(property == null || propertyValue == null) return;
+
 		propertyValue = Boolean.toString(Integer.parseInt(propertyValue) != 0);
 
 		if(getAllowedProperties().contains(property))

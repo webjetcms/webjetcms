@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@page import="org.apache.commons.codec.binary.Base64"%><%@ page import="sk.iway.iwcm.i18n.Prop" %><%@ page import="sk.iway.iwcm.components.forum.jpa.DocForumEntity" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -66,7 +63,7 @@ if(request.getAttribute("profileDocId") != null) profileDocId = sk.iway.iwcm.Too
 boolean active = ForumDB.isActive(docId);
 int parentId = Tools.getIntValue(request.getParameter("pId"), 0);
 Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
-Map<String, String> emoticons = new Hashtable<>();
+Hashtable<String, String> emoticons = new Hashtable<>();
 String outStr = "";
 String fTitle = "";
 UserDetails uDet = null;
@@ -201,7 +198,7 @@ if(!isAjaxCall)
 	<form method="get" action="<%=PathFilter.getOrigPath(request) %>" name="actionForm" style="display: none;">
 		<div>
 	    <input type="hidden" name="act" />
-	    <input type="hidden" name="docid" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("docid"))%>" />
+	    <input type="hidden" name="docid" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("docid"))%>" />
 		 <input type="hidden" name="forumId" />
 		 <input type="hidden" name="pId" />
 		 <input type="hidden" name="pageNum" value="<%=pageNum%>" />
@@ -213,16 +210,16 @@ if(!isAjaxCall)
 }
 %>
 
-<logic:present name="forumClosed">
+<iwcm:present name="forumClosed">
 	<p><span class="forumClosed"><iwcm:text key="components.forum.forum_closed"/>!</span></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="delTimeLimitExpired">
+<iwcm:present name="delTimeLimitExpired">
   <div align="center" >
 		<p><iwcm:text key="components.forum.del_time_limit_expired"/></p>
  </div>
  <%request.removeAttribute("delTimeLimitExpired");%>
-</logic:present>
+</iwcm:present>
 
 <h1 class="maintitle"><%=fTitle%></h1>
 	<div class="row mobile-fix">
@@ -238,7 +235,7 @@ if(!isAjaxCall)
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><bean:write name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:beanWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>
@@ -252,7 +249,7 @@ if(!isAjaxCall)
 
 	</div>
 
-<logic:present name="emptyForum">
+<iwcm:present name="emptyForum">
 <table cellspacing="0" cellpadding="0" style="width:100%;" class="forumTableOpen" >
 	<tr>
 	  <td colspan=2>
@@ -260,7 +257,7 @@ if(!isAjaxCall)
 	  </td>
 	</tr>
 </table>
-</logic:present>
+</iwcm:present>
 
 <!--  ******** KOMPONENTA STRANKOVANIA ********  -->
 <%
@@ -271,7 +268,7 @@ if(!isAjaxCall)
  %>
 <!--  ***** KONIEC KOMPONENTY STRANKOVANIA ***** -->
 
-<logic:present name="forum">
+<iwcm:present name="forum">
 
 	<!--table class="forumline table table-striped table-bordered">
 		<thead class="topiclist">
@@ -281,7 +278,7 @@ if(!isAjaxCall)
 			</tr>
 		</thead>
 	</table-->
-	<logic:iterate offset="<%= offset%>" length="<%= end%>" name="forum" id="field" type="DocForumEntity" indexId="index">
+	<iwcm:iterate offset="<%= offset%>" length="<%= end%>" name="forum" id="field" type="DocForumEntity" indexId="index">
 
 	<%
 		String trClass = "";
@@ -307,12 +304,12 @@ if(!isAjaxCall)
 						<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
 					<%}%>
 
-					<logic:notEmpty name="field" property="authorEmail">
-						<span class="name"><a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a></span>
-					</logic:notEmpty>
-					<logic:empty name="field" property="authorEmail">
-						<span class="name"><bean:write name="field" property="authorName"/></span>
-					</logic:empty>
+					<iwcm:notEmpty name="field" property="authorEmail">
+						<span class="name"><a href="mailto:<iwcm:beanWrite name="field" property="authorEmail"/>"><iwcm:beanWrite name="field" property="authorName"/></a></span>
+					</iwcm:notEmpty>
+					<iwcm:empty name="field" property="authorEmail">
+						<span class="name"><iwcm:beanWrite name="field" property="authorName"/></span>
+					</iwcm:empty>
 					<br/>
 					<span class="postdetails">
 					<%
@@ -358,14 +355,14 @@ if(!isAjaxCall)
 
 						<div class="row post-head hidden-xs no-margin-bottom">
 							<div class="col-md-8 col-xs-8 author">
-								<span class="postdetails"><iwcm:text key="components.forum.bb.posted"/>: <bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/>
-								<span class="panel-title"><iwcm:text key="components.forum.bb.subject"/>: <bean:write name="field" property="subject"/></span>
+								<span class="postdetails"><iwcm:text key="components.forum.bb.posted"/>: <iwcm:beanWrite name="field" property="questionDateDisplayDate"/> <iwcm:beanWrite name="field" property="questionDateDisplayTime"/>
+								<span class="panel-title"><iwcm:text key="components.forum.bb.subject"/>: <iwcm:beanWrite name="field" property="subject"/></span>
 							</div>
 							<div class="col-md-4 col-xs-4 no-padding">
 									<div class="btn-toolbar topic-buttons" role="toolbar">
 										<%	if (field.canUpload(user, uploadLimits, forumGroupBean)){%>
 										<div class="btn-group">
-											<a class="btn btn-default" href="javascript:popupNewUpload(<bean:write name="field" property="forumId"/>, <%=docId%>, <%=parentId%>);">
+											<a class="btn btn-default" href="javascript:popupNewUpload(<iwcm:beanWrite name="field" property="forumId"/>, <%=docId%>, <%=parentId%>);">
 												<iwcm:text key="components.forum.upload"/>
 											</a>
 										</div>
@@ -374,7 +371,7 @@ if(!isAjaxCall)
 										<%if (field.canPost(forumGroupBean, user)) {%>
 										<div class="btn-group">
 											<span>
-												<a class="btn btn-info" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&parent2=<%=parentId%>&type=mb_open&rootForumId=<%=rootForumId%>&docid=<%=docId%>&isCite=true&pageNum=<%=pageNum%>');">
+												<a class="btn btn-info" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:beanWrite name="field" property="forumId"/>&parent2=<%=parentId%>&type=mb_open&rootForumId=<%=rootForumId%>&docid=<%=docId%>&isCite=true&pageNum=<%=pageNum%>');">
 													<iwcm:text key="components.forum.quote"/>
 												</a>
 											</span>
@@ -443,14 +440,14 @@ if(!isAjaxCall)
 	<!-- post -->
 
 
-	</logic:iterate>
+	</iwcm:iterate>
 	<!--/table-->
 
 	<div class="panel-footer post-footer">
 		<div class="to-top pull-right"> </div>
 	</div>
 
-</logic:present>
+</iwcm:present>
 
 	<div class="row mobile-fix">
 		<div class="col-md-2 col-xs-12">
@@ -465,7 +462,7 @@ if(!isAjaxCall)
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><bean:write name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:beanWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>

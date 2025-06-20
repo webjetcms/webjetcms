@@ -5,10 +5,8 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <iwcm:checkLogon admin="true" perms="menuQa"/>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 request.setAttribute("cmpName", "qa");
 
@@ -163,7 +161,7 @@ function loadListIframe()
 						<!-- 			sqlQuery="SELECT DISTINCT group_name FROM questions_answers ORDER BY group_name" -->
 						<%pageContext.setAttribute("selectSqlQueryOptions", SettingsAdminDB.filterBeansByUserAllowedCategories(QADB.getQARoots(request),"label",user,"menuQa"));%>
 						<iwcm:select property="groupName" name="groupName" enableNewTextKey="qa.admin_answer.new_group" style="max-width: 500px;">
-			       			<html:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
+			       			<iwcm:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
 			    		</iwcm:select>
 			    	</div>
 				</div>
@@ -216,7 +214,7 @@ function loadListIframe()
 					</div>
 					<div class="col-sm-8">
 						<iwcm:select property="groupName" name="groupName" sqlQuery="SELECT DISTINCT group_name FROM questions_answers ORDER BY group_name" enableNewTextKey="qa.admin_answer.new_group">
-			       			<html:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
+			       			<iwcm:options collection="selectSqlQueryOptions" property="label" labelProperty="label"/>
 			    		</iwcm:select>
 				    </div>
 				</div>

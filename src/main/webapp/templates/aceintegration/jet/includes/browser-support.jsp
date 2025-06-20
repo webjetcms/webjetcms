@@ -1,14 +1,14 @@
 <%@ page pageEncoding="utf-8" %>
 <c:if test="${ninja.userAgent.browserOutdated}">
 <div class="alert alert-warning md-browser-support md-browser-support--outdated" role="alert">
-   Verzia v�ho prehliada�a nie je aktu�lna, str�nka sa nebude zobrazova� spr�vne.
+   Verzia vášho prehliadača nie je aktuálna, stránka sa nebude zobrazovať správne.
 </div>
 </c:if>
 
 <div class="alert alert-warning md-browser-support md-browser-support--cookie" role="alert" style="display: none">
-    Nem�te povolen� pou�itie Cookie, webov� str�nka nebude fungova� spr�vne.<br> Niektor� �asti webu a aplik�cie nebud� dostupn�.
+    Nemáte povolené použitie Cookie, webová stránka nebude fungovať správne.<br> Niektoré časti webu a aplikácie nebudú dostupné.
 </div>
 
 <div class="alert alert-warning md-browser-support md-browser-support--js" role="alert" style="display: none">
-    Nem�te zapnut� Javascript, webov� str�nka nebude fungova� spr�vne.<br> Niektor� �asti webu a aplik�cie nebud� dostupn�.
+    Nemáte zapnutý Javascript, webová stránka nebude fungovať správne.<br> Niektoré časti webu a aplikácie nebudú dostupné.
 </div>

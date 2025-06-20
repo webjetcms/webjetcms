@@ -1,11 +1,8 @@
 <%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8"  import="org.apache.struts.util.ResponseUtils,sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools,sk.iway.iwcm.doc.DocDB"%>
+%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.tags.support.ResponseUtils,sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools,sk.iway.iwcm.doc.DocDB"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="replaceAll"/>
 <%@ include file="layout_top.jsp" %>
 <%!
@@ -336,7 +333,7 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 			<br/>
 
 
-			<logic:present name="replacedPages">
+			<iwcm:present name="replacedPages">
 				<strong>Uravené stránky:</strong>
 				<br>
 				<table cellspacing=2 cellpadding=0>
@@ -347,18 +344,18 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					<th><iwcm:text key="editor.title"/></th>
 					<th>URL</th>
 					</tr>
-				<logic:iterate name="replacedPages" id="doc" type="sk.iway.iwcm.doc.DocDetails">
+				<iwcm:iterate name="replacedPages" id="doc" type="sk.iway.iwcm.doc.DocDetails">
 					<tr>
-					<td><bean:write name="doc" property="docId"/></td>
-					<td><a href="/showdoc.do?docid=<bean:write name="doc" property="docId"/>" target="_blank"><bean:write name="doc" property="title"/></a></td>
-					<td><bean:write name="doc" property="virtualPath"/></td>
+					<td><iwcm:beanWrite name="doc" property="docId"/></td>
+					<td><a href="/showdoc.do?docid=<iwcm:beanWrite name="doc" property="docId"/>" target="_blank"><iwcm:beanWrite name="doc" property="title"/></a></td>
+					<td><iwcm:beanWrite name="doc" property="virtualPath"/></td>
 					</tr>
-				</logic:iterate>
+				</iwcm:iterate>
 				</table>
 				<br/>
-			</logic:present>
+			</iwcm:present>
 
-			<logic:present name="replacedPages">
+			<iwcm:present name="replacedPages">
 				<strong>Upravené adresáre:</strong>
 				<br>
 				<table cellspacing=2 cellpadding=0>
@@ -368,14 +365,14 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 					<th>GroupID</th>
 					<th><iwcm:text key="editor.title"/></th>
 					</tr>
-				<logic:iterate name="replacedGroups" id="group" type="sk.iway.iwcm.doc.GroupDetails">
+				<iwcm:iterate name="replacedGroups" id="group" type="sk.iway.iwcm.doc.GroupDetails">
 					<tr>
-					<td><bean:write name="group" property="groupId"/></td>
-					<td><bean:write name="group" property="groupName"/></td>
+					<td><iwcm:beanWrite name="group" property="groupId"/></td>
+					<td><iwcm:beanWrite name="group" property="groupName"/></td>
 					</tr>
-				</logic:iterate>
+				</iwcm:iterate>
 				</table>
-			</logic:present>
+			</iwcm:present>
 		</iwcm:buff>
 	<%
 

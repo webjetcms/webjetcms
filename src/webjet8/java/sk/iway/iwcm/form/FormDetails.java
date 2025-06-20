@@ -1,9 +1,9 @@
 package sk.iway.iwcm.form;
 
-import org.apache.struts.util.ResponseUtils;
 import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 
 import java.util.ArrayList;

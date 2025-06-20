@@ -8,7 +8,7 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 <%@page import="sk.iway.iwcm.components.basket.rest.EshopService"%>
 <%@page import="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity"%>
 
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 
 <script type="text/javascript" src="/components/basket/jscript.jsp"></script>
 
@@ -115,22 +115,22 @@ void addTransportFee(List<BasketInvoiceItemEntity> basketItems, HttpServletReque
                   </td>
               </tr>
 
-              <logic:present name="basketItems">
-                  <logic:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
-                      <tr class="itemTr itemId_<bean:write name="good" property="itemId"/> basketId_<bean:write name="good" property="basketItemId"/>">
+              <iwcm:present name="basketItems">
+                  <iwcm:iterate id="good" name="basketItems" type="sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity">
+                      <tr class="itemTr itemId_<iwcm:beanWrite name="good" property="itemId"/> basketId_<iwcm:beanWrite name="good" property="basketItemId"/>">
                           <td class="w-5">
-                              <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><bean:write name="good" property="title"/></a>
+                              <a target="_blank" href="<%=docDB.getDocLink(good.getItemIdInt()) %>"><iwcm:beanWrite name="good" property="title"/></a>
                           </td>
                           <td class="fL w-2">
-                              <bean:write name="good" property="itemQty"/>
+                              <iwcm:beanWrite name="good" property="itemQty"/>
                           </td>
                           <td nowrap="nowrap"><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
                           <td><iway:curr currency="<%=EshopService.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
 
                       </tr>
-                  </logic:iterate>
-              </logic:present>
+                  </iwcm:iterate>
+              </iwcm:present>
               <tr class="sucet">
                   <td></td>
                   <td></td>

@@ -232,7 +232,6 @@
                 <include name="500.jsp"/>
                 <include name="WEB-INF/mime.types"/>
                 <include name="WEB-INF/build.properties"/>
-                <include name="WEB-INF/struts-config.xml"/>
             </zipfileset>
         </jar>
 

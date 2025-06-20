@@ -1,5 +1,5 @@
 <%@page import="org.apache.commons.beanutils.BeanUtils"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.Constants"%>
 <%@page import="sk.iway.iwcm.Identity"%>
 <%@page import="sk.iway.iwcm.LabelValueDetails"%>
@@ -18,9 +18,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%@
@@ -61,7 +58,7 @@ Prop prop = Prop.getInstance(Constants.getServletContext(), request);
 
 String[] files = request.getParameterValues("files");
 
-if (files.length == 0) {
+if (files == null ||files.length == 0) {
 	out.print("No files");
 	return;
 }

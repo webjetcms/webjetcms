@@ -1,10 +1,5 @@
 package sk.iway.iwcm.calendar;
 
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.struts.action.ActionForm;
-import org.apache.struts.action.ActionMapping;
-
 import sk.iway.iwcm.Constants;
 
 /**
@@ -18,12 +13,11 @@ import sk.iway.iwcm.Constants;
  *@created      Streda, 2002, február 20
  *@modified     $Date: 2004/02/17 22:34:03 $
  */
-public class EventForm extends ActionForm
+public class EventForm
 {
 	/**
 	 * Comment for <code>serialVersionUID</code>
 	 */
-	private static final long serialVersionUID = 1L;
 	private boolean recode = true;
 	private int calendarId;
 	private String title;
@@ -86,12 +80,6 @@ public class EventForm extends ActionForm
 	public boolean isRecode()
 	{
 		return recode;
-	}
-
-	@Override
-	public void reset(ActionMapping mapping, HttpServletRequest request)
-	{
-		this.notifySendSMS = false;
 	}
 
 	/**

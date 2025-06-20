@@ -18,8 +18,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -39,6 +37,7 @@ import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.captcha.Captcha;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**

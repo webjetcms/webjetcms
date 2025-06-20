@@ -5,9 +5,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -46,25 +43,25 @@ if (isAdmin)
 %>
 <%@page import="sk.iway.iwcm.tags.WriteTag"%>
 
-<logic:present name="permissionDenied">
+<iwcm:present name="permissionDenied">
 
 	<strong>
 	   <span class="forumVulgar">
-			<logic:equal name="permissionDenied" value="true"><iwcm:text key="components.forum.new.upload_not_allowed"/></logic:equal>
-			<logic:equal name="permissionDenied" value="fileSize"><iwcm:text key="components.forum.new.upload_not_allowed_filesize"/></logic:equal>
-			<logic:equal name="permissionDenied" value="fileType"><iwcm:text key="components.forum.new.upload_not_allowed_filetype"/></logic:equal>
-			<logic:equal name="permissionDenied" value="sameText"><iwcm:text key="components.forum.new.sameText"/></logic:equal>
-			<logic:equal name="permissionDenied" value="postLimit"><iwcm:text key="spam_protection.post_forbidden"
+			<iwcm:equal name="permissionDenied" value="true"><iwcm:text key="components.forum.new.upload_not_allowed"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="fileSize"><iwcm:text key="components.forum.new.upload_not_allowed_filesize"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="fileType"><iwcm:text key="components.forum.new.upload_not_allowed_filetype"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="sameText"><iwcm:text key="components.forum.new.sameText"/></iwcm:equal>
+			<iwcm:equal name="permissionDenied" value="postLimit"><iwcm:text key="spam_protection.post_forbidden"
 				param1='<%=Constants.getInt(SpamProtection.HOURLY_LIMIT_KEY)+""%>'
 				param2='<%=Constants.getInt(SpamProtection.TIMEOUT_KEY)+""%>' />
-			</logic:equal>
+			</iwcm:equal>
 	   </span>
    </strong>
-</logic:present>
+</iwcm:present>
 
-<logic:notPresent name="permissionDenied">
-	<logic:notPresent name="isVulgar">
-		<logic:notPresent name="errorKey">
+<iwcm:notPresent name="permissionDenied">
+	<iwcm:notPresent name="isVulgar">
+		<iwcm:notPresent name="errorKey">
 
 		   <iwcm:text key="forum.new.saveok"/>
 		   <script type="text/javascript">
@@ -81,11 +78,11 @@ if (isAdmin)
 					window.opener.location.reload();
 					window.close();
 				<%
-				
+
 			} else if(Tools.isNotEmpty(type)) {
 				int parentId = Tools.getIntValue(request.getParameter("parent2"), Tools.getIntValue(request.getParameter("parentId"), -1));
 				int pageNum = Tools.getIntValue(request.getParameter("pageNum"), 1);
-				String pageParams = org.apache.struts.util.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"));
+				String pageParams = sk.iway.iwcm.tags.support.ResponseUtils.filter(Tools.getRequestParameterUnsafe(request, "pageParams"));
 
 				String component = "forum-open.jsp?docid=" + docId + "&pageParams=" + URLEncoder.encode(pageParams,"UTF-8");
 				if("normal".equals(type))
@@ -106,21 +103,21 @@ if (isAdmin)
 		   }
 		   %>
 		   </script>
-		</logic:notPresent>
-	   <logic:present name="errorKey">
+		</iwcm:notPresent>
+	   <iwcm:present name="errorKey">
 
 		   <iwcm:text key='<%=(String)request.getAttribute("errorKey")%>'/>
-	   </logic:present>
-	</logic:notPresent>
+	   </iwcm:present>
+	</iwcm:notPresent>
 
-	<logic:present name="isVulgar">
+	<iwcm:present name="isVulgar">
 	   <br><br>
 	   <span class="forumVulgar">
 	   <iwcm:text key="forum.new.invalid_question"/>
 	   </span>
 
-	</logic:present>
-</logic:notPresent>
+	</iwcm:present>
+</iwcm:notPresent>
 
 <%
 if (isAdmin)

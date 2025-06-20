@@ -2,7 +2,7 @@
 <%@ page pageEncoding="utf-8" import="java.io.*, sk.iway.iwcm.*, org.apache.commons.lang.*"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.system.Modules"%>
 
 <%

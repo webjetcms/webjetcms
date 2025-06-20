@@ -1,4 +1,4 @@
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.common.DocTools"%>
 <%@page import="sk.iway.iwcm.doc.*"%>
@@ -18,9 +18,7 @@
 <%@
         taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
         taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-        taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
         taglib prefix="form" uri="http://www.springframework.org/tags/form"%><%@
-        taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
         taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
         taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
         taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%!
@@ -623,7 +621,7 @@
                                 <%}else{ %>
                                 <li><a class="editPage" href="javascript:setPageAvailable(true)"><iwcm:text key="inlineToolbar.option.page.show"/></a></li>
                                 <%} %>
-                                <li><a class="lastChange" href="javascript:openPagePopup('pageHistory',500,220)"><strong><iwcm:text key="inlineToolbar.option.page.lastModification"/>: </strong><bean:write name="doc" property="authorName"/><br><bean:write name="doc" property="dateCreatedString"/> <bean:write name="doc" property="timeCreatedString"/></a></li>
+                                <li><a class="lastChange" href="javascript:openPagePopup('pageHistory',500,220)"><strong><iwcm:text key="inlineToolbar.option.page.lastModification"/>: </strong><iwcm:beanWrite name="doc" property="authorName"/><br><iwcm:beanWrite name="doc" property="dateCreatedString"/> <iwcm:beanWrite name="doc" property="timeCreatedString"/></a></li>
                                 <li class="noperms-cmp_stat"><a class="pageStats" href="javascript:openPagePopup('/apps/stat/admin/top-details/?docId=<%=doc.getDocId()%>&dateRange=',900,700)"><iwcm:text key="inlineToolbar.option.page.stats"/></a></li>
                                 <%
                                     TemplatesDB tempDB = TemplatesDB.getInstance();
@@ -641,7 +639,7 @@
                         <li class="wj-has-ul">
                             <a href="javascript:;" class="wj-right-menu-link">
                                 <img class="userImage" src="<%=getUserPhotoPath(request)%>"/>
-                                <bean:write name="<%=Constants.USER_KEY %>" property="fullName"/>
+                                <iwcm:beanWrite name="<%=Constants.USER_KEY %>" property="fullName"/>
                             </a>
                             <ul class="wj-sub-menu">
                                 <% if (isCloud == false) { %><li><a href="/admin/" target="_blank"><iwcm:text key="inlineToolbar.option.settings.admin"/></a></li><% } %>

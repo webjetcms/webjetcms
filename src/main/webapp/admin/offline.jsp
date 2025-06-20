@@ -3,9 +3,6 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="export_offline"/>
 
 <%
@@ -66,7 +63,7 @@
 
 <iwcm:text key="admin.offline.desc"/>. <br /><br />
 
-<logic:notPresent parameter="zipArchivePath">
+<iwcm:notPresent parameter="zipArchivePath">
 	<script type="text/javascript">
 		var archiveDirs = new Array();
 		function makeZipArchiveClick(cb)
@@ -78,7 +75,7 @@
 		}
 	</script>
 
-	<form name="pathForm" action="/admin/offline.do" method="get" onsubmit="javascript:setDirs();" ><%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
+	<form name="pathForm" action="/admin/offline.do" method="post" onsubmit="javascript:setDirs();" ><%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 		<table>
 			<tr>
 				<td><label for="groupId1"><iwcm:text key="stat_settings.group_id"/>:</label></td>
@@ -157,7 +154,7 @@
 			return (true);
 		}
 	</script>
-</logic:notPresent>
+</iwcm:notPresent>
 
 <script type="text/javascript">
 	window.scrollBy(0,10000);

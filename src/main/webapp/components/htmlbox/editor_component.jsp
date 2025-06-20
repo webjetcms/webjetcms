@@ -13,8 +13,6 @@
 <%sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.doc.*, java.util.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
    request.setAttribute("cmpName", "htmlbox");
@@ -249,27 +247,30 @@
 				   if (dir.exists() && dir.canRead())
 				   {
 				      IwcmFile files[] = FileTools.sortFilesByName(dir.listFiles());
-				      int size = files.length;
-				      IwcmFile f;
-				      for (int i=0; i<size; i++)
-				      {
-				         f = files[i];
-				         if (f.isDirectory())
-				         {
-				        	 dirName = f.getName();
 
-				        	 String dirNameDecoded = "";
-				             if (BrowseAction.hasForbiddenSymbol(dirName))
-				            	continue;
+					  if(files != null) {
+						int size = files.length;
+						IwcmFile f;
+						for (int i=0; i<size; i++)
+						{
+							f = files[i];
+							if (f.isDirectory())
+							{
+								dirName = f.getName();
 
-								try
-								{
-									dirNameDecoded = dirName.replace('_', ' ');
-								}
-								catch (Exception ex){}
-								out.print("<option value='"+Tools.escapeHtml(dirName)+"'>"+Tools.escapeHtml(dirNameDecoded)+"</option>");
-				         }
-				      }
+								String dirNameDecoded = "";
+								if (BrowseAction.hasForbiddenSymbol(dirName))
+									continue;
+
+									try
+									{
+										dirNameDecoded = dirName.replace('_', ' ');
+									}
+									catch (Exception ex){}
+									out.print("<option value='"+Tools.escapeHtml(dirName)+"'>"+Tools.escapeHtml(dirNameDecoded)+"</option>");
+							}
+						}
+					  }
 				   }
 	            %>
 			</select>

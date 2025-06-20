@@ -6,9 +6,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.doc.GroupsDB" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
@@ -20,7 +17,8 @@ if (request.getParameter("rootForumId")==null)
 {
    //vydedukuj
    GroupDetails actualGroup = (GroupDetails)request.getAttribute("pageGroupDetails");
-   GroupDetails parentGroup = GroupsDB.getInstance().getGroup(actualGroup.getParentGroupId());
+   GroupDetails parentGroup = null;
+   if(actualGroup != null) parentGroup = GroupsDB.getInstance().getGroup(actualGroup.getParentGroupId());
    if (parentGroup != null) rootForumId = parentGroup.getDefaultDocId();
 }
 
@@ -81,15 +79,15 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 -->
 </script>
 
-<logic:present name="noUserId">
+<iwcm:present name="noUserId">
   <p align="center"><b><iwcm:text key="components.forum.wrong_user_id"/>. </b></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="noResults">
+<iwcm:present name="noResults">
   <p align="center"><b><iwcm:text key="components.forum.no_posts_for_user"/>.</b></p>
-</logic:present>
+</iwcm:present>
 
-<logic:present name="searchResults">
+<iwcm:present name="searchResults">
 
 	<h1><iwcm:text key="components.search.search_results"/></h1>
 
@@ -111,7 +109,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 				<th class="lastpost"><iwcm:text key="components.forum.forum_post_date"/></th>
 			</tr>
 		</thead>
-	   	<logic:iterate offset="<%= offset%>" length="<%= end%>" name="searchResults" id="sr" type="sk.iway.iwcm.forum.ForumSearchBean" indexId="index">
+	   	<iwcm:iterate offset="<%= offset%>" length="<%= end%>" name="searchResults" id="sr" type="sk.iway.iwcm.forum.ForumSearchBean" indexId="index">
 			<% if ((iMod % 2) == 0) {
 				  out.println("<tr class='even'>");
 			   	}
@@ -138,7 +136,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 					int forumId = sr.getForumId();
 					if(sr.getParentId()>0) forumId = sr.getParentId();
 				%>
-				<strong><a href="<%=docDB.getDocLink(sr.getDocId(), request)%>"><bean:write name="sr" property="forumName"/></a></strong></td>
+				<strong><a href="<%=docDB.getDocLink(sr.getDocId(), request)%>"><iwcm:beanWrite name="sr" property="forumName"/></a></strong></td>
 			<td class=""><span class="topictitle"><%
 			        if("O".equals(flag)) {%><b><iwcm:text key="components.forum.announcement"/>: </b><%}
 					  else if("D".equals(flag)) {	%><b><iwcm:text key="components.forum.sticky"/>: </b><%}
@@ -183,14 +181,14 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 			</td>
 			<td class="">
 				<% if (sr.getUserId()>0) { %>
-				<a href="<%=Tools.addParameterToUrl(docDB.getDocLink(sr.getDocId()),"uId",String.valueOf(sr.getUserId()))%>&amp;type=view_profile"><bean:write name="sr" property="autorFullName"/></a>
+				<a href="<%=Tools.addParameterToUrl(docDB.getDocLink(sr.getDocId()),"uId",String.valueOf(sr.getUserId()))%>&amp;type=view_profile"><iwcm:beanWrite name="sr" property="autorFullName"/></a>
 				<% } else { %>
-				<bean:write name="sr" property="autorFullName"/>
+				<iwcm:beanWrite name="sr" property="autorFullName"/>
 				<% } %>
 			</td>
-			<td class=""><bean:write name="sr" property="questionDate"/></td>
+			<td class=""><iwcm:beanWrite name="sr" property="questionDate"/></td>
 		</tr>
-		</logic:iterate>
+		</iwcm:iterate>
 	</table>
 </div>
 					<!--  ******** KOMPONENTA STRANKOVANIA ********  -->
@@ -199,7 +197,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 			<nav aria-label="breadcrumb">
 				<ol class="breadcrumb">
 					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(rootForumId)%>"><iwcm:text key="components.forum.show_topics"/></a></li>
-					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><bean:write name="doc_title"/></a></li>
+					<li class="breadcrumb-item"><a href="<%=docDB.getDocLink(docId)%>"><iwcm:beanWrite name="doc_title"/></a></li>
 				</ol>
 			</nav>
 		</div>
@@ -212,7 +210,7 @@ document.write('<style type="text/css" media="screen">	@import "/components/foru
 		%>
 	</div>
 	<!--  ***** KONIEC KOMPONENTY STRANKOVANIA ***** -->
-</logic:present>
+</iwcm:present>
 
 <%if(showSearchBox==true){%>
 <div class="forumSearchBox row mobile-fix">

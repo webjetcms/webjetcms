@@ -1,15 +1,12 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@ 
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@ 
-taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@ 
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@ 
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@ 
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@ 
-taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@ 
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
+taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
+taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 page import="sk.iway.iwcm.components.rating.jpa.RatingEntity"%><%@
-page import="sk.iway.iwcm.components.rating.RatingService"%><%@ 
+page import="sk.iway.iwcm.components.rating.RatingService"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
 
 String lng = PageLng.getUserLng(request);
@@ -26,7 +23,7 @@ pageContext.setAttribute("lng", lng);
 	</iwcm:script>
 <%
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+
 PageParams pageParams = new PageParams(request);
 boolean checkLogon = pageParams.getBooleanValue("checkLogon", true);
 int range = pageParams.getIntValue("range", 10);
@@ -44,7 +41,7 @@ else if (checkLogon==false){
 	rBeanUserVoted = RatingService.getRatingByUserByDoc(- (int)StatDB.getBrowserId(request, response) , ratingDocId);
 }
 
-if (rBeanUserVoted != null) 
+if (rBeanUserVoted != null)
 {
 	request.setAttribute("rBeanUserVoted", rBeanUserVoted);
 	%>
@@ -56,7 +53,7 @@ if (rBeanUserVoted != null)
 	-->
     </iwcm:script>
     <%
-	request.setAttribute("isRated", "");							
+	request.setAttribute("isRated", "");
 }
 
 //kedze hlasujeme cez Ajax potrebujeme vediet, ci ma byt prihlasenie, alebo nie
@@ -65,7 +62,7 @@ session.setAttribute("rating."+ratingDocId+".checklogon", ""+checkLogon);
 if (checkLogon)
 {
 	if (user == null)
-	{				   
+	{
 		%>
 		<iwcm:script type="text/javascript">
 		<!--
@@ -75,14 +72,14 @@ if (checkLogon)
 		-->
 	    </iwcm:script>
 	    <%
-		request.setAttribute("notLogged", "");			
+		request.setAttribute("notLogged", "");
 	}
 }
 else
-{		
+{
 	session.setAttribute("checkLogon", "false");
 }
-%>	
+%>
 <form id="ratingForm<%=ratingDocId%>" style="margin: 0px;">
 	<iwcm:script type="text/javascript">
 	$(function(){
@@ -90,7 +87,7 @@ else
 	  callback: function(value, link){
 	  	$('#ratingForm<%=ratingDocId%>rate').load('/components/rating/ajax-star-rating.jsp', {ratingDocId: $('#ratingForm<%=ratingDocId%>docId').val(), ratingValue: this.value});
 	  }
-	  
+
 	 });
 	});
 	</iwcm:script>
@@ -138,8 +135,8 @@ else
 	  </td>
 	 </tr>
 	</table>
-</form>		
-	
+</form>
+
 	<%
 		request.removeAttribute("isRated");
 		request.removeAttribute("notLogged");

@@ -9,9 +9,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib uri="/WEB-INF/displaytag.tld" prefix="display" %><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
@@ -51,7 +48,7 @@ if (Tools.isNotEmpty(hash))
 	return;
 }
 
-if (Constants.getBoolean("editorEnableXHTML")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, "true", PageContext.PAGE_SCOPE);
+
 
 
 
@@ -207,12 +204,12 @@ float: left;
 		 <stripes:label for="userImageId" name="userImage"><iwcm:text key="components.user.newuser.userImage"/>:</stripes:label>
 		 <stripes:file id="userImageId" name="userImage" size="40" />
 		</p>
-		<logic:notEmpty name="actionBean" property="usr.photo">
+		<iwcm:notEmpty name="actionBean" property="usr.photo">
 			<p>
 				<stripes:label for="usrPhoto" name="usr.photo"><iwcm:text key="components.user.newuser.photo"/>:</stripes:label>
-				<img src="<bean:write name="actionBean" property="usr.photoSmall"/>">
+				<img src="<iwcm:beanWrite name="actionBean" property="usr.photoSmall"/>">
 			</p>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 		<p<%=isShow(show, "signature")%>>
 			<stripes:label for="usrSignature" name="usr.signature"><iwcm:text key="components.user.newuser.signature"/>:</stripes:label>
 			<stripes:text class='<%=isReq(required, "signature", "")%>' id="usrSignature" name="usr.signature" size="40" maxlength="255" />

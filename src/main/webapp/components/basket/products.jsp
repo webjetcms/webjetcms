@@ -7,9 +7,6 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%!
 public class CustomComparatorAsc implements Comparator<DocDetails> {
@@ -247,7 +244,7 @@ $(document).ready(function(){
 	%>
 	<div class="productsOrder">
 		<%--Zoradit podla: --%>
-		<logic:notEmpty name="novinky">
+		<iwcm:notEmpty name="novinky">
 			<iwcm:text key="components.cloud.basket.orderBy"/>:
 			<select name="orderType" class="filterKategorii">
 				<option <%=("asc_price".equals(param_order_type))? "selected":""%> value="asc_price"><iwcm:text key="components.cloud.basket.orderBy.priceAsc"/></option>
@@ -262,7 +259,7 @@ $(document).ready(function(){
 				<option <%=("asc_priority".equals(param_order_type))? "selected":""%> value="asc_priority"><iwcm:text key="components.cloud.basket.orderBy.priorityAsc"/></option>
 				<option <%=("desc_priority".equals(param_order_type))? "selected":""%> value="desc_priority"><iwcm:text key="components.cloud.basket.orderBy.priorityDesc"/></option>
 			</select>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 	</div>
 	<%
 	}
@@ -290,27 +287,27 @@ $(document).ready(function(){
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
 				<jsp:getProperty name="page2" property="value"/>
 				<!-- vlozenie cisla stranky a ukoncenie odkazu a -->
 				[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
-	</logic:present>
+	</iwcm:present>
 	<!-- koniec strankovania -->
 <%
 	}
 %>
 
 <div class="products">
-	<logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
-		<logic:notEmpty name="doc" property="perexImage">
+	<iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+		<iwcm:notEmpty name="doc" property="perexImage">
 			<div class="itemDiv" style="height:<%=pageParams.getIntValue("thumbHeight", 190)%>px;">
-			<h2><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h2>
+			<h2><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></h2>
 				<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>" class="info">
 					<div class="itemImageDiv" style="height:<%=pageParams.getIntValue("thumbHeight", 190)%>px;"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=<%=pageParams.getIntValue("thumbWidth", 190)%>&amp;h=<%=pageParams.getIntValue("thumbHeight", 190)%>&amp;ip=5" alt="" /></div>
 					<%--<p>
@@ -327,10 +324,10 @@ $(document).ready(function(){
 					</div><%
 				}%>
 			</div>
-		</logic:notEmpty>
-	</logic:iterate>
+		</iwcm:notEmpty>
+	</iwcm:iterate>
 	<span class="cleaner"></span>
 </div>
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.cloud.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>

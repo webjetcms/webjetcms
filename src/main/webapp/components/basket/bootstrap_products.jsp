@@ -9,9 +9,6 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <%!
@@ -46,6 +43,13 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 
 	String groupIds = pageParams.getValue("groupIds", (String)request.getAttribute("group_id"));
 	String style = pageParams.getValue("style", "01");
+
+
+	if(Tools.isEmpty(groupIds))
+	{
+		//Dont know, just return ??
+		return;
+	}
 
 	//mame to v takomto formate, takze to convertneme
 	groupIds = groupIds.replace('+', ',');
@@ -262,7 +266,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 <div class="row">
 	<div class="productsOrder bootstrap col-sm-12">
 		<%--Zoradit podla: --%>
-		<logic:notEmpty name="novinky">
+		<iwcm:notEmpty name="novinky">
 			<iwcm:text key="components.basket.orderBy"/>:
 			<select name="orderType" class="filterKategorii">
 				<option <%=("asc_price".equals(param_order_type))? "selected":""%> value="asc_price"><iwcm:text key="components.basket.orderBy.priceAsc"/></option>
@@ -277,7 +281,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 				<option <%=("asc_priority".equals(param_order_type))? "selected":""%> value="asc_priority"><iwcm:text key="components.basket.orderBy.priorityAsc"/></option>
 				<option <%=("desc_priority".equals(param_order_type))? "selected":""%> value="desc_priority"><iwcm:text key="components.basket.orderBy.priorityDesc"/></option>
 			</select>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 	</div>
 	<%
 	}
@@ -312,17 +316,17 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
 				<jsp:getProperty name="page2" property="value"/>
 				<!-- vlozenie cisla stranky a ukoncenie odkazu a -->
 				[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
-	</logic:present>
+	</iwcm:present>
 	<!-- koniec strankovania -->
 <%
 	}
@@ -337,7 +341,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 <div>
     	<!-- BEGIN PRODUCTS -->
     	<div class="row basket style01">
-    <logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+    <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
   		<div class="col-md-3 col-sm-6">
     		<span class="thumbnail clearfix">
@@ -355,7 +359,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
       			<div class="basket-label" style="<%=styleAttr%>"><%=doc.getFieldQ() %></div>
       			<%} %>
       			<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=500&h=400&ip=5" alt="" /></a>
-      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h4>
+      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></h4>
       			<div class="ratings">
 			<%
 				request.setAttribute("ratingForm", "!INCLUDE(/components/rating/rating_form.jsp, ratingDocId="+doc.getDocId()+", range=5)!");
@@ -387,19 +391,19 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
   		 <%   productCounter++;%>
 
-	</logic:iterate>
+	</iwcm:iterate>
 
 	</div>
 
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>
   		<!-- END PRODUCTS -->
 </div>
 <%} else if("02".equals(style)){ %>
 
   <div class="row basket style02">
-  <logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+  <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
         <div class="col-md-4">
             <div class="product-item">
@@ -423,7 +427,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
                   <a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>" class="btn">Zobraziť</a>
                 </div>
               </div>
-              <h3><a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></a></h3>
+              <h3><a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></a></h3>
              <%  if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
               <div class="pi-price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span> <iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr></div>
@@ -437,7 +441,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
   		 <%   productCounter++;%>
 
-	</logic:iterate>
+	</iwcm:iterate>
 
 
 
@@ -451,7 +455,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 	<div class="col-sm-7">
     	<!-- BEGIN PRODUCTS -->
     	<div class="row">
-    <logic:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
+    <iwcm:iterate id="doc" name="novinky" type="sk.iway.iwcm.doc.DocDetails">
 
   		<div class=" col-md-6 col-sm-6  col-xs-6 col-lg-4 ">
     		<span class="thumbnail">
@@ -469,7 +473,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
       			<div class="basket-label" style="<%=styleAttr%>"><%=doc.getFieldQ() %></div>
       			<%} %>
       			<a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><img src="/thumb<jsp:getProperty name="doc" property="perexImageSmall"/>?w=500&h=400&ip=5" alt="" /></a>
-      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></h4>
+      			<h4><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><iwcm:beanWrite name="doc" property="title"/></a></h4>
       			<div class="ratings">
 			<%
 				request.setAttribute("ratingForm", "!INCLUDE(/components/rating/rating_form.jsp, ratingDocId="+doc.getDocId()+", range=5)!");
@@ -502,13 +506,13 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 
   		 <%   productCounter++;%>
 
-	</logic:iterate>
+	</iwcm:iterate>
 
 	</div>
 
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>
   		<!-- END PRODUCTS -->
 </div>
 <div class="col-sm-5 sideBasket">
@@ -520,9 +524,9 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
 </div>
 <%} %>
 
-	<logic:empty name="novinky">
+	<iwcm:empty name="novinky">
 		<iwcm:text key="components.basket.category.empty"/>
-	</logic:empty>
+	</iwcm:empty>
 
 <%
 	if ((pageParams.getBooleanValue("showSort", true) && pageParams.getValue("pagingPosition", "both").equals("both") || pageParams.getValue("pagingPosition", "both").equals("bottom")) && GroupsDB.getInstance().getGroup(groupId)!=null)
@@ -534,7 +538,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 
 	<div class="productsOrder">
 		<%--Zoradit podla: --%>
-		<logic:notEmpty name="novinky">
+		<iwcm:notEmpty name="novinky">
 			<iwcm:text key="components.basket.orderBy"/>:
 			<select name="orderType" class="filterKategorii">
 				<option <%=("asc_price".equals(param_order_type))? "selected":""%> value="asc_price"><iwcm:text key="components.basket.orderBy.priceAsc"/></option>
@@ -549,7 +553,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 				<option <%=("asc_priority".equals(param_order_type))? "selected":""%> value="asc_priority"><iwcm:text key="components.basket.orderBy.priorityAsc"/></option>
 				<option <%=("desc_priority".equals(param_order_type))? "selected":""%> value="desc_priority"><iwcm:text key="components.basket.orderBy.priorityDesc"/></option>
 			</select>
-		</logic:notEmpty>
+		</iwcm:notEmpty>
 	</div>
 	<%
 	}
@@ -558,17 +562,17 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
 	{
 %>
 	<!-- strankovanie (naraz sa zobrazi iba urceny pocet web stranok) -->
-	<logic:present name="pages">
+	<iwcm:present name="pages">
 		<div class="paging" align="right"><iwcm:text key="calendar.page"/>:
-			<logic:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
+			<iwcm:iterate id="page2" name="pages" type="sk.iway.iwcm.LabelValueDetails">
 				<!-- vytvorenie odkazu <a href=... -->
 				<jsp:getProperty name="page2" property="value"/>
 				<!-- vlozenie cisla stranky a ukoncenie odkazu a -->
 				[<jsp:getProperty name="page2" property="label"/>]<%if(page2.getValue().indexOf("<a")!=-1) out.print("</a>");%>&nbsp;
-			</logic:iterate>
+			</iwcm:iterate>
 		</div>
 		<hr style="color: #f0f0f0; border: 1px solid #f0f0f0;" />
-	</logic:present>
+	</iwcm:present>
 	<!-- koniec strankovania -->
 <%
 	}

@@ -3,10 +3,6 @@
 
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <iwcm:checkLogon admin="true"/>
 
 <%
@@ -25,7 +21,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 %>
 
 
-<logic:empty name="inIframe">
+<iwcm:empty name="inIframe">
 	<%
 		if (request.getAttribute("dialogTitleKey")!=null)
 		   request.setAttribute("dialogTitle", prop2.getText((String)request.getAttribute("dialogTitleKey")));
@@ -104,10 +100,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 	<head>
 		<title><%=title%></title>
 
-		<logic:present name="mobile">
+		<iwcm:present name="mobile">
 			<meta name="viewport" content="width=100%, minimum-scale=1.0, maximum-scale=1.0" />
 			<meta name="viewport" content="width=device-width, user-scalable=no">
-		</logic:present>
+		</iwcm:present>
 		<%
 		String uaCompatible = (String)request.getAttribute("X-UA-Compatible");
 		if (Tools.isEmpty(uaCompatible)) uaCompatible = Constants.getString("xUaCompatibleAdminValue");
@@ -142,12 +138,12 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 			<jsp:include page="/admin/css/perms-css.jsp"/>
 
 			<% if (BrowserDetector.isSmartphoneOrTablet(request) == false) {%>
-			<logic:notPresent name="closeTable">
+			<iwcm:notPresent name="closeTable">
 				body
 				{
 					overflow: hidden;
 				}
-			</logic:notPresent>
+			</iwcm:notPresent>
 			<% } %>
 
 
@@ -166,10 +162,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
             div.padding10:before, div.padding10:after { display: table; content: " "; box-sizing: border-box; }
             div.padding10:after { clear: both; }
-			<logic:present name="hideHeaderFooter">
+			<iwcm:present name="hideHeaderFooter">
 				#headerTopRow, #buttonsBottomRow { display: none !important; }
 				div.padding10 {background-color: white;}
-			</logic:present>
+			</iwcm:present>
 
 
 			.padding10 {
@@ -282,6 +278,8 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		<script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/common.jsp"></script>
 
 		<script type="text/javascript">
+			window.userLng = "<%=Prop.getLngForJavascript(request)%>";
+
 			if (window.name && window.name=="componentIframe")
 			{
 				document.write("<link rel='stylesheet' href='<%=request.getContextPath()%>/components/iframe.css' media=\"all\">");
@@ -310,7 +308,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		</script>
 	</head>
 
-	<logic:present name="closeTable">
+	<iwcm:present name="closeTable">
 		<body class="closeTableBody" onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 
@@ -334,9 +332,9 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 					</td>
 				</tr>
 			</table>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:notPresent name="closeTable">
+	<iwcm:notPresent name="closeTable">
 		<body onload="onLoadHandler();" bgcolor="#FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 		<div class="popupSizeFinder"></div>
@@ -358,19 +356,19 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 				<td class="main mainTab" valign="top" colspan="2">
 		   		<% if (BrowserDetector.isSmartphoneOrTablet(request)==false) {%><div id="dialogCentralRow" class="calendarPopupStop" style="height: 100vh; width: auto; overflow: auto; padding: 0px; margin:0px; position: relative;"><% } %>
 
-	</logic:notPresent>
-</logic:empty>
+	</iwcm:notPresent>
+</iwcm:empty>
 
-<logic:notEmpty name="inIframe">
+<iwcm:notEmpty name="inIframe">
 
 	<html class="wjDialogWindow">
 	<head>
 		<title></title>
 
-		<logic:present name="mobile">
+		<iwcm:present name="mobile">
 		<meta name="viewport" content="width=100%, minimum-scale=1.0, maximum-scale=1.0" />
 		<meta name="viewport" content="width=device-width, user-scalable=no">
-	</logic:present>
+	</iwcm:present>
 	<%
 	String uaCompatible = (String)request.getAttribute("X-UA-Compatible");
 	if (Tools.isEmpty(uaCompatible)) uaCompatible = Constants.getString("xUaCompatibleAdminValue");
@@ -391,9 +389,9 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 	<link rel="stylesheet" type="text/css" href="/admin/css/datepicker.css" media="all"/>
 	<link type="text/css" rel="stylesheet" href="/components/cmp.css" media="all"/>
 
-	<logic:notEmpty name="widgetData">
+	<iwcm:notEmpty name="widgetData">
 		<link rel="stylesheet" href="/css/page.css" />
-	</logic:notEmpty>
+	</iwcm:notEmpty>
 
 	<style type="text/css" media="print">
 		.noprint { display: none; }
@@ -433,10 +431,10 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
 <body>
 
-	<logic:notEmpty name="widgetData">
+	<iwcm:notEmpty name="widgetData">
 		<div class="gridster gridInModal">
 		<ul>
 		<li data-sizex="3" data-sizey="3" class="gs-w">
-	</logic:notEmpty>
+	</iwcm:notEmpty>
 
-</logic:notEmpty>
+</iwcm:notEmpty>

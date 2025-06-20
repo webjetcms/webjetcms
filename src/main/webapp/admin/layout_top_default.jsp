@@ -1,7 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@page import="sk.iway.iwcm.tags.WriteTag"%><%@ 
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
+%><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@page import="sk.iway.iwcm.tags.WriteTag"%><iwcm:checkLogon admin="true"/>
 <html>
 <head>
 <title>:: Web JET admin ::</title>

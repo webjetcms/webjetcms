@@ -1,13 +1,10 @@
-<%@page import="org.apache.struts.util.ResponseUtils"%><%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%><%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*"%>
 <%@ page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%=Tools.insertJQuery(request) %>
 <%
 String lng = PageLng.getUserLng(request);
@@ -143,16 +140,16 @@ if (searchType != null)
  <h1 class="searchResultsH1"><iwcm:text key="components.search.search_results"/></h1>
 
  <div class="search">
-	<logic:present name="totalResults">
+	<iwcm:present name="totalResults">
 		<p class="totalResults">
 			<iwcm:text key="components.search.number_of_found_results"/>: <iway:request name="totalResults"/>
 		</p>
-	</logic:present>
+	</iwcm:present>
 
   	<!-- VYSLEDKY VYHLADAVANIA -->
 
-	<logic:present name="aList">
-		<logic:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
+	<iwcm:present name="aList">
+		<iwcm:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
 				<p>
 					<a href="<%=docDB.getDocLink(search.getDocId(), search.getExternalLink(), request)%>">
 						<strong><jsp:getProperty name="search" property="title"/></strong>
@@ -166,64 +163,64 @@ if (searchType != null)
 					<jsp:getProperty name="search" property="link"/>
 				</dd>
 			</dl>
-		</logic:iterate>
-	</logic:present>
+		</iwcm:iterate>
+	</iwcm:present>
 
-	<logic:present name="suggestion">
+	<iwcm:present name="suggestion">
 			<p>
 			<b>
 				<iwcm:text key="components.search.suggestion"/> <a href="<%=PathFilter.getOrigPath(request)%>?words=${suggestion}">${suggestion}</a> ?
 			</b>
 		</p>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="prevHref">
+	<iwcm:present name="prevHref">
 		<div class="navigation">
 			<a href="<%=newPrevHref%>">
 			&lt;&lt;&lt; <iwcm:text key="components.search.back"/>
 			</a>
 		</div>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="nextHref">
+	<iwcm:present name="nextHref">
 		<div class="navigation">
 			<a href="<%=newNextHref%>">
 				<iwcm:text key="components.search.next"/> &gt;&gt;&gt;
 			</a>
 		</div>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="notfound">
+	<iwcm:present name="notfound">
 		<p>
 			<b>
 				<iwcm:text key="components.search.no_matches_found"/>.
 			</b>
 		</p>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="emptyrequest">
+	<iwcm:present name="emptyrequest">
 		<p>
 			<b>
 				<iwcm:text key="components.search.enter_search_string"/> (<iwcm:text key="components.search.min_3"/>)
 			</b>
 		</p>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="crossHourlyLimit">
+	<iwcm:present name="crossHourlyLimit">
 		<p>
 			<strong>
 				<iwcm:text key="components.search.cross_hourly_limit" param1='<%=String.valueOf(request.getAttribute("wait")) %>'/>
 			</strong>
 		</p>
-	</logic:present>
+	</iwcm:present>
 
-	<logic:present name="crossTimeout">
+	<iwcm:present name="crossTimeout">
 		<p>
 			<strong>
 				<iwcm:text key="components.search.cross_timeout" param1='<%=String.valueOf(Constants.getInt("spamProtectionTimeout-search")) %>'/>
 			</strong>
 		</p>
-	</logic:present>
+	</iwcm:present>
 
 	</div>
  <!-- KONIEC VYSLEDKOV VYHLADAVANIA -->

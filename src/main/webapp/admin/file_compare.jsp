@@ -4,15 +4,13 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ include file="/admin/layout_top.jsp" %>
 <%!
 public boolean isTextFile(String file1) {
+	if(file1==null) return false;
 	String[] textFiles = {"txt","html","htm","xml","jsp","java","css","js","properties","sql","log"};
 	for (String textFile : textFiles) {
 		if (file1.contains("."+textFile)) return true;
@@ -21,6 +19,7 @@ public boolean isTextFile(String file1) {
 }
 
 public boolean isImageFile(String file1) {
+	if(file1==null) return false;
 	String[] imageFiles = {"jpg","jpeg","gif","png","bmp"};
 	for (String imageFile : imageFiles) {
 		if (file1.contains("."+imageFile)) return true;
@@ -68,7 +67,7 @@ public String diff(String file1,String file2)
 }
 %>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.io.IwcmInputStream"%>
 <script language="JavaScript">
 if (window.name && window.name=="componentIframe")

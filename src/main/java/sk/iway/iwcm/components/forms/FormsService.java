@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.forms;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +24,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
