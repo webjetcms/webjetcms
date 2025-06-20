@@ -472,6 +472,40 @@ static {
 
 	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.FormTag.renderToken(session)", "sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)", ".jsp"));
 	replaces.add(new OptionDto("FormTag.renderToken(session)", "sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)", ".jsp"));
+
+	//fix JAVA files, to run WebJET with compile errors in your project just rename /src/main/java to /src/main/java-update
+	replaces.add(new OptionDto("import sk.iway.iwcm.database.ActiveRecord;", "import sk.iway.iwcm.database.ActiveRecordRepository;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public class FileArchivatorBean extends ActiveRecord implements Serializable", "public class FileArchivatorBean extends ActiveRecordRepository implements Serializable", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("private int nnFileArchiveId;", "private Long id;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public void setId(int id)", "public void setId(Long id)", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public int getId()", "public Long getId()", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("return nnFileArchiveId;", "return id==null ? 0 : id.intValue();", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("this.nnFileArchiveId = nnFileArchiveId;", "this.id = Long.valueOf(nnFileArchiveId);", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("setNnFileArchiveId(id);", "this.id = id;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("return getNnFileArchiveId();", "return id;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("int referenceId", "Long referenceId", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public int getReferenceId()", "public Long getReferenceId()", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public void setReferenceId(int referenceId)", "public void setReferenceId(Long referenceId)", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("referenceId = -1;", "referenceId = Long.valueOf(-1);", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("init(userId, filePath, fileName, virtualFileName, showFile, null, null, null, null, null, null, -1, -1, null, -1, null, null);", "init(userId, filePath, fileName, virtualFileName, showFile, null, null, null, null, null, null, null, -1, null, -1, null, null);", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("init(userId, filePath, fileName, virtualFileName, showFile, validFrom, validTo, domain, productCode, product, category, -1, -1, md5, priority, patern_ref, note);", "init(userId, filePath, fileName, virtualFileName, showFile, validFrom, validTo, domain, productCode, product, category, null, -1, md5, priority, patern_ref, note);", "FileArchivatorBean.java"));
+
+	replaces.add(new OptionDto("int oldId=fab.getId();", "int oldId=fab.getId().intValue();", ".java"));
+	replaces.add(new OptionDto("newFab.setId(0);", "newFab.setId(Long.valueOf(0));", ".java"));
+	replaces.add(new OptionDto("newFab.setReferenceId(-1);", "newFab.setReferenceId(Long.valueOf(-1));", ".java"));
+
+	replaces.add(new OptionDto("public static boolean reSetReference(int oldReferenceId, int newReferenceId)", "public static boolean reSetReference(Long oldReferenceId, Long newReferenceId)", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("public static void incrementOrderId(int referenceId)", "public static void incrementOrderId(Long referenceId)", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("if(!reSetReference(oldId, newFab.getId()))", "if(!reSetReference((long)oldId, newFab.getId()))", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("newFab.setId(oldId);", "newFab.setId((long)oldId);", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("int reference = actualFab.getId();", "Long reference = actualFab.getId();", "FileArchivatorKit.java"));
+
+	replaces.add(new OptionDto("if(!FileArchivatorKit.reSetReference(oldId, newFab.getId()))", "if(!FileArchivatorKit.reSetReference((long)oldId, newFab.getId()))", "FileArchivatorInsertLater.java"));
+	replaces.add(new OptionDto("if(!FileArchivatorKit.reSetReference(oldId, newFab.getId()))", "if(!FileArchivatorKit.reSetReference((long)oldId, newFab.getId()))", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("int oldId = fabByOldId != null ? fabByOldId.getId() : 0;", "int oldId = fabByOldId != null ? fabByOldId.getId().intValue() : 0;", "FileArchivatorInsertLater.java"));
+	replaces.add(new OptionDto("int oldId = fab.getReferenceId();", "int oldId = fab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
+	replaces.add(new OptionDto("oldId = referenceFab.getReferenceId();", "oldId = referenceFab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
+
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -624,7 +658,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			}
 
 
-			if(url.contains("basket") && url.contains(".jsp")) {
+			if(url.contains("basket") && fullUrl.contains(".jsp")) {
 				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
 					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
 
@@ -641,18 +675,37 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				hasChange = true;
 			}
 
-			if (hasChange && content.equals(contentOriginal)==false) {
-				//FIX import
-				if (content.contains("List ") || content.contains("List\t") || content.contains("List<")) {
-					if (content.contains("java.util.List")==false) {
-						//pridaj import
-						content = "<"+"%@page import=\"java.util.List\"%"+">"+content;
+			if (fullUrl.endsWith("FileArchivatorBean.java")) {
+				if (content.contains("public void setReferenceId(int referenceId)")==false) {
+					int lastBracket = content.lastIndexOf("}");
+					if (lastBracket > 0) {
+						content = content.substring(0, lastBracket) + "\n\n" +
+								"    public void setReferenceId(int referenceId) {\n" +
+								"        this.referenceId = Long.valueOf(referenceId);\n" +
+								"    }\n\n" +
+								"    public int getReferenceIdInt() {\n" +
+								"        return referenceId == null ? 0 : referenceId.intValue();\n" +
+								"    }\n\n" +
+								content.substring(lastBracket);
+						hasChange = true;
 					}
 				}
-				if (content.contains("Map ") || content.contains("Map\t") || content.contains("Map<")) {
-					if (content.contains("java.util.Map")==false) {
-						//pridaj import
-						content = "<"+"%@page import=\"java.util.Map\"%"+">"+content;
+			}
+
+			if (hasChange && content.equals(contentOriginal)==false) {
+				if (url.endsWith(".jsp")) {
+					//FIX import
+					if (content.contains("List ") || content.contains("List\t") || content.contains("List<")) {
+						if (content.contains("java.util.List")==false) {
+							//pridaj import
+							content = "<"+"%@page import=\"java.util.List\"%"+">"+content;
+						}
+					}
+					if (content.contains("Map ") || content.contains("Map\t") || content.contains("Map<")) {
+						if (content.contains("java.util.Map")==false) {
+							//pridaj import
+							content = "<"+"%@page import=\"java.util.Map\"%"+">"+content;
+						}
 					}
 				}
 
@@ -775,7 +828,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			<div class="col-8">
 				Zadajte prázdnu hodnotu alebo znak * pre kontrolu všetkých priečinkov
 				<br/>
-				Zadajte hodnotu templates pre kontrolu priečinka /templates/, hodnotu admin pre kontrolu priečinka /admin/, hodnotu java pre kontrolu priečinka ../java/ alebo názov priečinka pre kontrolu konkrétneho priečinka v /components/.
+				Zadajte hodnotu templates pre kontrolu priečinka /templates/, hodnotu admin pre kontrolu priečinka /admin/, hodnotu java pre kontrolu priečinka ../java/, /../java-update/ (aby ste mohli vôbec spustiť WebJET s kompilačnými chybami premenujte priečinok /src/main/java vo vašom projekte na /src/main/java-update), alebo názov priečinka pre kontrolu konkrétneho priečinka v /components/.
 			</div>
 		</div>
 		<div class="row">
@@ -814,6 +867,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 	<div style="white-space: pre"><%
 		if ("java".equals(subdir)) {
 			checkDir("/../java/", saveFile, false, out, request, response);
+			checkDir("/../java-update/", saveFile, false, out, request, response);
 		} else {
 			if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
 				checkDir("/admin/", saveFile, compileFile, out, request, response);
