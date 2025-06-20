@@ -367,7 +367,7 @@ public class FileArchivatorBean extends ActiveRecordRepository implements Serial
 	/**
 	 * Vrati id ako int, ak je null, vrati 0
 	 * @return
-	 * @deprecated use getId() instead and convert to Long object
+	 * @deprecated use getId() instead and convert your API to use Long object
 	 */
 	@Deprecated
 	@JsonIgnore
