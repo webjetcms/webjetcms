@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -16,6 +14,7 @@ import sk.iway.iwcm.components.gdpr.model.GdprDB;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
 import sk.iway.iwcm.components.gdpr.model.QuestionsAnswersDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 public enum GdprModule {
     WEB_STRANKY,

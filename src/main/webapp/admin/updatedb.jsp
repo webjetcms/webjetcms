@@ -1,13 +1,10 @@
-<%@page import="java.util.List"%><%@page import="sk.iway.iwcm.*"%>
+<%@page import="java.util.Map"%><%@page import="java.util.List"%><%@page import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.sql.*,java.util.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <iwcm:checkLogon admin="true" perms="users.edit_admins"/>
 <%@ include file="layout_top_popup.jsp" %>

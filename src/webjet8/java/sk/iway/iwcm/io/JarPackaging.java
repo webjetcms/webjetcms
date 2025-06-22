@@ -119,7 +119,7 @@ public class JarPackaging
       if (virtualPath.startsWith("/admin") || virtualPath.startsWith("/components") || virtualPath.startsWith("/apps") ||
           virtualPath.equals("/WEB-INF/build.properties") || virtualPath.equals("/WEB-INF/sql/autoupdate.xml") || virtualPath.equals("/WEB-INF/sql/autoupdate-webjet9.xml") ||
           virtualPath.startsWith("/WEB-INF/sql/blank_web") || virtualPath.startsWith("/WEB-INF/classes/text") || virtualPath.startsWith("/WEB-INF/fonts/") ||
-          virtualPath.equals("/WEB-INF/mime.types") || virtualPath.equals("/WEB-INF/struts-config.xml"))
+          virtualPath.equals("/WEB-INF/mime.types"))
       {
          //tu nekontrolujeme ci existuje, automaticky je to JarPackaging, az nasledne sa k tomu pridaju fyzicke subory v listFiles
          if ("/components".equals(virtualPath) || "/apps".equals(virtualPath))

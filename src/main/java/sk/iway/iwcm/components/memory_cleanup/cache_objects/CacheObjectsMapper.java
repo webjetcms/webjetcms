@@ -1,10 +1,10 @@
 package sk.iway.iwcm.components.memory_cleanup.cache_objects;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.stereotype.Component;
 import sk.iway.iwcm.CacheBean;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.stat.BrowserDetector;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import java.util.ArrayList;
 import java.util.Date;

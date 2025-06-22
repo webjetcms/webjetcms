@@ -464,7 +464,7 @@ function verifyInvoice(I, testerName, deliveryMethodName, paymentMethodName, pri
   I.see("Nová (nezaplatená)", 'td[colspan="2"]');
   I.see(testerName, "table.invoiceInnerTable");
   I.see("Playwright", "table.invoiceInnerTable");
-  I.see("Mlýnske Nivy 71", "table.invoiceInnerTable");
+  I.see("Mlynské Nivy 71", "table.invoiceInnerTable");
   I.see("Bratislava", "table.invoiceInnerTable");
   I.see("82105", "table.invoiceInnerTable");
   I.see("Slovensko", "table.invoiceInnerTable");

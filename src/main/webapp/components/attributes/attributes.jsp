@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway"%><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html"%><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%><%@
 taglib uri="/WEB-INF/displaytag.tld" prefix="display" %><%
 PageParams pageParams = new PageParams(request);
 String group = pageParams.getValue("group", "default");
@@ -19,10 +16,10 @@ List atrs = AtrDB.getAtributes(docId, group, request);
 request.setAttribute("atrs", atrs);
 %>
 <table class="table table-sm tabulkaStandard atrTable">
-<logic:iterate name="atrs" id="atr" type="sk.iway.iwcm.doc.AtrBean">
+<iwcm:iterate name="atrs" id="atr" type="sk.iway.iwcm.doc.AtrBean">
    <tr>
-      <td><bean:write name="atr" property="atrName" filter="false"/></td>
-      <td><bean:write name="atr" property="valueHtml" filter="false"/></td>
+      <td><iwcm:beanWrite name="atr" property="atrName" filter="false"/></td>
+      <td><iwcm:beanWrite name="atr" property="valueHtml" filter="false"/></td>
    </tr>
-</logic:iterate>
+</iwcm:iterate>
 </table>
