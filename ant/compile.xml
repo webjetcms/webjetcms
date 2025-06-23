@@ -141,6 +141,11 @@
           <include name="**/*"/>
       </fileset>
     </copy>
+    <copy todir="${root}/../../../webjetcms_jakarta/src/test/" overwrite="true">
+      <fileset dir="${root}/../../src/test/">
+          <include name="**/*"/>
+      </fileset>
+    </copy>
     <copy todir="${root}/../../../webjetcms_jakarta/" overwrite="true">
       <fileset dir="${root}/../../">
           <include name="build.gradle"/>
