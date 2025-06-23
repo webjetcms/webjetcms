@@ -9,8 +9,7 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.struts.util.ResponseUtils;
-
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.utils.MapUtils;
 
 /**

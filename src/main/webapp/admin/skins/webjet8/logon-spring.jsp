@@ -106,7 +106,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 </div>
                 <div id="logon-form-wrapper">
 
-                    <logic:present name="errors">
+                    <iwcm:present name="errors">
                         <div class="alert-wrapper">
                             <div class="alert alert-danger">
                                 <span>
@@ -121,21 +121,21 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                                 </ul>
                             </div>
                         </div>
-                    </logic:present>
-                    <logic:present name="cancelChangePasswordAction">
+                    </iwcm:present>
+                    <iwcm:present name="cancelChangePasswordAction">
                         <div class="alert alert-success">
                             <span>
                                 <iwcm:text key="logon.change_password.action_canceled"/>
                             </span>
                         </div>
-                    </logic:present>
-                    <logic:present name="changePasswordActionFailed">
+                    </iwcm:present>
+                    <iwcm:present name="changePasswordActionFailed">
                         <div class="alert alert-danger">
                             <span>
                                 <iwcm:text key="logon.password.invalid_parameters"/>
                             </span>
                         </div>
-                    </logic:present>
+                    </iwcm:present>
                     <c:if test="${param.act eq 'changePasswordActionSuccess'}">
                         <div class="alert alert-success">
                             <span>
@@ -144,11 +144,11 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         </div>
                     </c:if>
 
-                    <logic:present name="passResultEmail">
+                    <iwcm:present name="passResultEmail">
                         <div class="alert alert-success">
                             <span><iwcm:text key="logon.lost_password_send_success"/></span>
                         </div>
-                    </logic:present>
+                    </iwcm:present>
 
                     <div class="form-group">
                         <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>

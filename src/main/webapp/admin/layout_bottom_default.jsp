@@ -1,4 +1,4 @@
-<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@page import="sk.iway.iwcm.tags.WriteTag"%>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@page import="sk.iway.iwcm.tags.WriteTag"%>
 <% if (request.getAttribute("layout_closeMainTable")==null) { %>
 	</TD>
   </TR>

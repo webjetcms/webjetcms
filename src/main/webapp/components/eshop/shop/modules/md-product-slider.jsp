@@ -41,7 +41,7 @@
                         </div>
                         <div class="col-6">
                             <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-success" data-toggle="tooltip" title="Pridať do košíka"><i class="fas fa-shopping-basket"></i></button>
+                                <button type="button" class="btn btn-success" data-bs-toggle="tooltip" title="Pridať do košíka"><i class="fas fa-shopping-basket"></i></button>
                                 <button type="button" class="btn btn-success">Kúpiť</button>
                             </div>
                         </div>

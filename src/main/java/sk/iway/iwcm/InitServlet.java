@@ -1131,13 +1131,6 @@ public class InitServlet extends HttpServlet
 				Constants.setBoolean("exportDocsHtml", param);
 			}
 
-			param = getInitParameter("editorEnableXHTML", databaseValues, servletContext);
-			skipValues.put("editorEnableXHTML", "true");
-			if (param != null && param.length() > 0)
-			{
-				Constants.setBoolean("editorEnableXHTML", param);
-			}
-
 			//Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe)
 			if("true".equals(getInitParameter("constantsAliasSearch", databaseValues, servletContext)))
 				Constants.setConstantsAliasSearch(true);

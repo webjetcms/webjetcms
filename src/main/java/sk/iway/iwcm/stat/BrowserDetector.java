@@ -4,10 +4,9 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.seo.SeoManager;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-import org.apache.struts.util.ResponseUtils;
 
 import java.io.Serializable;
 import java.util.StringTokenizer;

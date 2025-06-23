@@ -4,6 +4,8 @@
 <%
 DocDetails doc = (DocDetails)request.getAttribute("docDetails");
 
+if(doc == null) return;
+
 out.print("<p>" + doc.getTempId() + "</p>");
 %>
 <p class="noprefix-a"><iwcm:text key="editor.field_a"/></p>

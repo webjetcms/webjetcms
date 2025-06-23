@@ -7,6 +7,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDetails;
 
 /**
@@ -28,6 +30,13 @@ public class PreviewController {
         request.setAttribute("isPreview", Boolean.TRUE);
         request.setAttribute("xssTestDisabled", "true");
         request.setAttribute("ShowdocAction.showDocData", doc);
+        request.setAttribute("path_filter_orig_path", doc.getVirtualPath());
+
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        if (rb != null) {
+            rb.setDocId(doc.getDocId());
+            rb.setUrl(doc.getVirtualPath());
+        }
 
         return "forward:/showdoc.do";
     }

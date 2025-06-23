@@ -900,7 +900,10 @@ private static String combineCss(String cssStyle)
         //akoze posledna zachrana
         if (group == null) group = new GroupDetails();
 
-        if (!Constants.getBoolean("webpagesAvailableInInternalFolders") && !user.isAdmin() && group.isInternal())
+        String virtualPath = "";
+        if (doc != null && doc.getVirtualPath() != null) virtualPath = doc.getVirtualPath();
+
+        if (!Constants.getBoolean("webpagesAvailableInInternalFolders") && !user.isAdmin() && group.isInternal() && virtualPath.contains("404.html")==false)
         {
             //ak je stranka v internom adresari nezobraz ju
             Logger.println(ShowDoc.class, "404 (doc is not available) - is in internal folder");

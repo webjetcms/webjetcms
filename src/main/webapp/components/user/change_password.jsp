@@ -8,9 +8,9 @@
 <%@page import="sk.iway.Password"%>
 <%@page import="sk.iway.iwcm.users.UserDetails"%>
 <%@page import="sk.iway.iwcm.users.PasswordSecurity"%>
-<%@page import="org.apache.struts.action.ActionMessages"%>
+<%@page import="java.util.List"%>
 <%@page import="java.util.Iterator"%>
-<%@page import="org.apache.struts.action.ActionMessage"%>
+<%@page import="java.lang.String"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
@@ -19,9 +19,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%!
@@ -73,7 +70,7 @@ if (includedIntoPage==false)
 					auth = new Password().decrypt(auth);
 
 					//Login handle
-					login = org.apache.struts.util.ResponseUtils.filter(login);
+					login = sk.iway.iwcm.tags.support.ResponseUtils.filter(login);
 
 					//Login CAN BE combination of more logins separated by UserChangePasswordService.LOGINS_SEPARATOR
 					String[] logins = Tools.getTokens(login, UserChangePasswordService.LOGINS_SEPARATOR);
@@ -108,7 +105,7 @@ if (includedIntoPage==false)
 
 						String newPassword = request.getParameter("newPassword");
 						String retypePassword = request.getParameter("retypePassword");
-						ActionMessages errors = new ActionMessages();
+						java.util.List<String> errors = new java.util.ArrayList<>();
 
 						if (!newPassword.equals(retypePassword))
 						{
@@ -140,7 +137,7 @@ if (includedIntoPage==false)
 					<c:if test="${success}">
 						<p><strong><iwcm:text key="logon.password.change_successful" /></strong></p>
 					</c:if>
-					<logic:present name="errors">
+					<iwcm:present name="errors">
 					<%-- --------DUPLICATED IN logon.jsp--------%>
 						<%
 							String constStr = "";
@@ -161,7 +158,7 @@ if (includedIntoPage==false)
 							<%}%>
 								<li><iwcm:text key="logon.change_password.used_in_history2"/></li>
 						</ul>
-					</logic:present>
+					</iwcm:present>
 					<c:if test="${!success}">
 						<form action="<%=PathFilter.getOrigPath(request)%>" method="post">
 							<table border="0" cellpadding="2" style="width: 100%">
@@ -193,9 +190,9 @@ if (includedIntoPage==false)
 									<td colspan="2">
 										<div class="form-group text-center">
 											<input type="submit" class="button btn btn-info" value="<iwcm:text key="button.submit"/>"/>
-											<input type="hidden" name="login" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("login")) %>" />
-											<input type="hidden" name="auth" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("auth")) %>" />
-											<input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("language")) %>" />
+											<input type="hidden" name="login" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("login")) %>" />
+											<input type="hidden" name="auth" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("auth")) %>" />
+											<input type="hidden" name="language" value="<%=sk.iway.iwcm.tags.support.ResponseUtils.filter(request.getParameter("language")) %>" />
 										</div>
 									</td>
 								</tr>

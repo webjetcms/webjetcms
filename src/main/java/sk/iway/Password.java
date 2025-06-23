@@ -1,7 +1,5 @@
 package sk.iway;
 
-import org.apache.struts.action.ActionMessage;
-import org.apache.struts.action.ActionMessages;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.crypto.Rijndael;
@@ -12,6 +10,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Random;
 
 
@@ -192,7 +191,7 @@ public class Password
 	 * @param errors
 	 * @return - vrati true ak je heslo v poriadku
 	 */
-	public static boolean checkPassword(boolean isLogonForm, String password, boolean isAdmin, int userId, HttpSession session, ActionMessages errors)
+	public static boolean checkPassword(boolean isLogonForm, String password, boolean isAdmin, int userId, HttpSession session, List<String> errors)
 	{
 		String constStr = "";
 		if(isAdmin)
@@ -211,7 +210,7 @@ public class Password
 		int countPocetCisel = 0;
 		boolean jeChybneHeslo = false;
 
-		Prop prop = Prop.getInstance();
+		Prop prop = Prop.getInstance(Prop.getLng(session));
 
 		//testujem, len pri zmene hesla
 		if(isLogonForm || (!isLogonForm && password.trim().compareToIgnoreCase(UserTools.PASS_UNCHANGED) != 0))
@@ -248,7 +247,7 @@ public class Password
 				Logger.error(Password.class,"heslo je kratke");
 				if(errors != null)
 				{
-					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("passwordLengthFailed", prop.getText("logon.change_password.min_length", ""+dlzkaHesla)));
+					errors.add(prop.getText("logon.change_password.min_length", ""+dlzkaHesla));
 				}
 				jeChybneHeslo = true;
 			}
@@ -257,7 +256,7 @@ public class Password
                 Logger.error(Password.class,"heslo uz uzivatel v minulosti pouzil");
                 if (errors != null)
                 {
-                    errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("passwordUsedInHistory", prop.getText("logon.change_password.used_in_history")));
+                    errors.add(prop.getText("logon.change_password.used_in_history"));
                 }
                 jeChybneHeslo = true;
             }
@@ -267,7 +266,7 @@ public class Password
 				Logger.error(Password.class,"heslo ma maly pocet cisel");
 				if(errors != null)
 				{
-					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("passwordCountOfDigitsFailed", prop.getText("logon.change_password.count_of_digits", ""+pocetCisel)));
+					errors.add(prop.getText("logon.change_password.count_of_digits", ""+pocetCisel));
 				}
 				jeChybneHeslo = true;
 			}
@@ -277,7 +276,7 @@ public class Password
 				Logger.error(Password.class,"heslo ma maly pocet velkych pismen");
 				if(errors != null)
 				{
-					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("passwordUpperCaseLettersFailed", prop.getText("logon.change_password.count_of_upper_case", ""+pocetVelkychPismen)));
+					errors.add(prop.getText("logon.change_password.count_of_upper_case", ""+pocetVelkychPismen));
 				}
 				jeChybneHeslo = true;
 			}
@@ -287,7 +286,7 @@ public class Password
 				Logger.error(Password.class,"heslo ma maly pocet malych pismen");
 				if(errors != null)
 				{
-					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("passwordLowerCaseLettersFailed", prop.getText("logon.change_password.count_of_lower_case", ""+pocetMalychPismen)));
+					errors.add(prop.getText("logon.change_password.count_of_lower_case", ""+pocetMalychPismen));
 				}
 				jeChybneHeslo = true;
 			}
@@ -297,7 +296,7 @@ public class Password
 				Logger.error(Password.class,"heslo ma maly pocet znakov");
 				if(errors != null)
 				{
-					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("passwordCountOfSpecialSignsFailed", prop.getText("logon.change_password.count_of_special_sign", ""+pocetZnakov)));
+					errors.add(prop.getText("logon.change_password.count_of_special_sign", ""+pocetZnakov));
 				}
 				jeChybneHeslo = true;
 			}

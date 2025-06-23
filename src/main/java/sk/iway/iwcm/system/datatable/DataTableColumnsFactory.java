@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.datatable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -15,6 +14,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 

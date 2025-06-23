@@ -3,7 +3,6 @@ package sk.iway.iwcm.doc;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
 
-import org.apache.struts.util.ResponseUtils;
 import org.json.JSONObject;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.AdminTools;
@@ -24,6 +23,7 @@ import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;

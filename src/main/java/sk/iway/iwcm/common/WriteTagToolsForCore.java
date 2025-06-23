@@ -34,7 +34,6 @@ public class WriteTagToolsForCore {
 
     public static StringBuilder fixXhtml(StringBuilder text, HttpServletRequest request)
     {
-        if (Constants.getBoolean("editorEnableXHTML")==false) return(text);
         StringBuilder replacedText = text;
         //nahrad target="_blank"
         replacedText = Tools.replace(replacedText, "target='_blank'", "onclick=\"return openTargetBlank(this, event)\"");

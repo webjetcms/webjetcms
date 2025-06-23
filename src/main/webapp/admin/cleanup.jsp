@@ -8,10 +8,6 @@ java.util.*,
 java.sql.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 	response.setHeader("Pragma","No-Cache");
 	response.setDateHeader("Expires",0);
@@ -36,27 +32,29 @@ public void delCVS(String rootPath, JspWriter out, HttpServletRequest request) t
 	File rootFile = new File(rootPath);
 	File parentFile = rootFile.getParentFile();
 	File files[] = rootFile.listFiles();
-	int len = files.length;
-	int i;
-	for (i=0; i<len; i++)
-	{
-		if (files[i].isDirectory())
+	if(files!=null) {
+		int len = files.length;
+		int i;
+		for (i=0; i<len; i++)
 		{
-			//zavolaj rekurziu
-			delCVS(files[i].getAbsolutePath(), out, request);
-			//ak je to adresar CVS, vymaz
-			if ("CVS".equals(files[i].getName()))
+			if (files[i].isDirectory())
 			{
-				out.println("&nbsp;&nbsp;&nbsp;Deleting DIR: " + Tools.escapeHtml(files[i].getAbsolutePath())+"<br>");
-				deleteImpl(files[i], request);
+				//zavolaj rekurziu
+				delCVS(files[i].getAbsolutePath(), out, request);
+				//ak je to adresar CVS, vymaz
+				if ("CVS".equals(files[i].getName()))
+				{
+					out.println("&nbsp;&nbsp;&nbsp;Deleting DIR: " + Tools.escapeHtml(files[i].getAbsolutePath())+"<br>");
+					deleteImpl(files[i], request);
+				}
 			}
-		}
-		else
-		{
-			if ("CVS".equals(rootFile.getName()))
+			else
 			{
-				out.println("&nbsp;&nbsp;&nbsp;Deleting FILE: " + Tools.escapeHtml(files[i].getAbsolutePath())+"<br>");
-				deleteImpl(files[i], request);
+				if ("CVS".equals(rootFile.getName()))
+				{
+					out.println("&nbsp;&nbsp;&nbsp;Deleting FILE: " + Tools.escapeHtml(files[i].getAbsolutePath())+"<br>");
+					deleteImpl(files[i], request);
+				}
 			}
 		}
 	}
@@ -93,24 +91,25 @@ private void delDir(String realPath, JspWriter out, HttpServletRequest request) 
 	{
 		//zmaz vsetko v adresari rekurzivne
 		File files[] = rootDir.listFiles();
-		int len = files.length;
-		int i;
-		for (i=0; i<len; i++)
-		{
-			if (files[i].isDirectory())
+		if(files!=null) {
+			int len = files.length;
+			int i;
+			for (i=0; i<len; i++)
 			{
-				//zavolaj rekurziu
-				delDir(files[i].getAbsolutePath(), out, request);
-				//vymaz adresar (jeho podadresare by uz mali byt vymazane)
-				deleteImpl(files[i], request);
-			}
-			else
-			{
-				out.println("&nbsp;&nbsp;&nbsp;Deleting FILE: " + Tools.escapeHtml(files[i].getAbsolutePath())+"<br>");
-				deleteImpl(files[i], request);
+				if (files[i].isDirectory())
+				{
+					//zavolaj rekurziu
+					delDir(files[i].getAbsolutePath(), out, request);
+					//vymaz adresar (jeho podadresare by uz mali byt vymazane)
+					deleteImpl(files[i], request);
+				}
+				else
+				{
+					out.println("&nbsp;&nbsp;&nbsp;Deleting FILE: " + Tools.escapeHtml(files[i].getAbsolutePath())+"<br>");
+					deleteImpl(files[i], request);
+				}
 			}
 		}
-
 		//zmaz tento adresar
 		deleteImpl(rootDir, request);
 	}
@@ -280,9 +279,9 @@ request.setAttribute("modules", allModules);
 	<input type="checkbox" name="cvs" value="true"> CVS<br>
 
 	<h2>Vymazanie modulov:</h2>
-	<logic:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
-		<input type="checkbox" name="m_<bean:write name="m" property="itemKey"/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<bean:write name="m" property="itemKey"/>]<br>
-	</logic:iterate>
+	<iwcm:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
+		<input type="checkbox" name="m_<iwcm:beanWrite name="m" property="itemKey"/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<iwcm:beanWrite name="m" property="itemKey"/>]<br>
+	</iwcm:iterate>
 
 	<h2>Vymazanie komponent:</h2>
 <%
@@ -293,20 +292,22 @@ if (dirPath!=null)
    String toolbarPath;
    File dir = new File(dirPath);
    File files[] = dir.listFiles();
-   int size = files.length;
-   int i;
-   for (i=0; i<size; i++)
-   {
-      dir = files[i];
-      if (dir.isDirectory())
-      {
-         if ("CVS".equals(dir.getName()))
-         {
-            continue;
-         }
-         out.println("<input type='checkbox' name='componentsDelete' value='"+Tools.escapeHtml(dir.getName())+"'> "+Tools.escapeHtml(dir.getName())+"<br>");
-      }//isDir
-   }//for
+   if(files!=null) {
+	int size = files.length;
+	int i;
+	for (i=0; i<size; i++)
+	{
+		dir = files[i];
+		if (dir.isDirectory())
+		{
+			if ("CVS".equals(dir.getName()))
+			{
+				continue;
+			}
+			out.println("<input type='checkbox' name='componentsDelete' value='"+Tools.escapeHtml(dir.getName())+"'> "+Tools.escapeHtml(dir.getName())+"<br>");
+		}//isDir
+	}//for
+   }
 }//dirPath!=null
 
 %>

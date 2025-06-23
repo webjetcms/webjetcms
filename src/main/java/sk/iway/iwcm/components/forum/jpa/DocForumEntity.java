@@ -15,8 +15,6 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 
-import org.apache.struts.upload.FormFile;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
@@ -175,9 +173,6 @@ public class DocForumEntity implements Serializable {
 
     @Column(name = "domain_id")
     private Integer domainId;
-
-    @Transient
-    private transient FormFile uploadedFile = null;
 
     @Transient
     private transient String prefix;

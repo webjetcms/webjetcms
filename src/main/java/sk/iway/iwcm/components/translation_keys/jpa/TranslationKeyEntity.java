@@ -14,8 +14,6 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import org.apache.struts.util.ResponseUtils;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -23,6 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 @Entity
 @Table(name = "_properties_")

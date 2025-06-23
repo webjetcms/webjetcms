@@ -242,7 +242,6 @@ public class LogonTools {
                                         else
                                         {
                                             Logger.error(LogonTools.class,"user nie je administrator");
-                                            //errors.add(ActionMessages.GLOBAL_ERROR, new ActionMessage("error.logon.noadmin"));
                                             err.append("<li>").append(prop.getText("logon.err.noadmin"));
                                             request.setAttribute("logon.err.noadmin", "true");
                                             //return (mapping.findForward(forward));
@@ -264,7 +263,6 @@ public class LogonTools {
                                 {
                                     Logger.error(LogonTools.class,"zle heslo");
                                     //ma zle heslo, napis chybu
-                                    //errors.add(ActionMessages.GLOBAL_ERROR, new ActionMessage("error.logon.wrong.pass"));
                                     err.append("<li>").append(prop.getText("logon.err.wrongPass"));
                                     request.setAttribute("logon.err.wrongPass", "true");
 
@@ -277,7 +275,6 @@ public class LogonTools {
                         {
                             Logger.error(LogonTools.class,"user neexistuje");
                             //zadany user neexistuje
-                            //errors.add(ActionMessages.GLOBAL_ERROR, new ActionMessage("error.logon.user.unknown"));
                             err.append("<li>").append(prop.getText("logon.err.userUnknown"));
                             request.setAttribute("logon.err.userUnknown", "true");
 

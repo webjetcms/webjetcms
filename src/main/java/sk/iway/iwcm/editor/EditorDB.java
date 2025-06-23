@@ -1,6 +1,5 @@
 package sk.iway.iwcm.editor;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,8 +17,6 @@ import java.util.StringTokenizer;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-
-import org.apache.struts.upload.FormFile;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -618,43 +615,7 @@ public class EditorDB
 
 		String data = my_form.getData().trim();
 
-		FormFile file = my_form.getTheFile();
 		int history_id = -1;
-		if (file != null)
-		{
-			//retrieve the file name
-			String fileName = file.getFileName().trim();
-			//Logger.println(this,"we have a file name="+fileName+" content type="+file.getContentType());
-
-			try
-			{
-				if (fileName != null && fileName.length() > 1 && (file.getContentType().equalsIgnoreCase("text/html") || file.getContentType().equalsIgnoreCase("text/plain")))
-				{
-					BufferedInputStream buffReader = new BufferedInputStream(file.getInputStream());
-					int bytesRead = 0;
-					byte[] buffer = new byte[8192];
-					//Logger.println(this,"read begin");
-					data = "";
-					StringBuilder dataBuffer = new StringBuilder();
-					String append;
-					while ((bytesRead = buffReader.read(buffer, 0, 8192)) != -1)
-					{
-						append = new String(buffer, 0, bytesRead);
-						dataBuffer.append(append);
-						//Logger.println(this,"read: " + bytesRead);
-					}
-					//Logger.println(this,"read end");
-					data = dataBuffer.toString();
-					buffReader.close();
-					file.destroy();
-				}
-			}
-			catch (Exception ex)
-			{
-				sk.iway.iwcm.Logger.error(ex);
-			}
-		}
-
 		data = getCleanBody(data);
 
 		dt.diff("after getCleanBody");

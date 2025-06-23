@@ -22,8 +22,6 @@ import java.util.TreeMap;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
@@ -37,6 +35,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  StatNewDB.java

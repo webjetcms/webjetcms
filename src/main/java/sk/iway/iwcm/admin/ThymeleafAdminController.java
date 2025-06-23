@@ -212,6 +212,7 @@ public class ThymeleafAdminController {
 
    private void removePermissionFromCurrentUser(String permissionString, HttpServletRequest request) {
       Identity user = UsersDB.getCurrentUser(request);
+      //allow remove perms for e2e tests
       if (user != null && user.getLogin().startsWith("tester")) {
 
          String[] permsArr = Tools.getTokens(permissionString, ",");

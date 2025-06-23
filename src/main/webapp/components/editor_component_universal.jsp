@@ -1,10 +1,9 @@
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.Constants"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.Identity,sk.iway.iwcm.PageParams,sk.iway.iwcm.PathFilter,sk.iway.iwcm.FileTools" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@page import="sk.iway.iwcm.Tools"%>
 <%@ page import="sk.iway.iwcm.i18n.Prop" %>
 <%@ page import="sk.iway.iwcm.stat.Column" %>

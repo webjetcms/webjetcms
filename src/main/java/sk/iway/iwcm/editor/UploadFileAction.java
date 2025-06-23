@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Adminlog;
@@ -27,6 +26,7 @@ import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.upload.UploadedFile;
 

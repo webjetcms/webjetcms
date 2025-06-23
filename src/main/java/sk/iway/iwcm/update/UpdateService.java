@@ -22,7 +22,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import sk.iway.iwcm.Constants;
@@ -43,6 +42,7 @@ import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipInputStream;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 public class UpdateService {

@@ -41,6 +41,22 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
     )
     public String device;
 
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title="apps.showForLoggedUser.title",
+        tab = "commonSettings",
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "apps.showForLoggedUser.all", value = ""),
+                    @DataTableColumnEditorAttr(key = "apps.showForLoggedUser.onlyLogged", value = "onlyLogged"),
+                    @DataTableColumnEditorAttr(key = "apps.showForLoggedUser.onlyNotLogged", value = "onlyNotLogged")
+                }
+            )
+        }
+    )
+    public String showForLoggedUser = "";
+
 	@DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.news.cacheMinutes", tab = "commonSettings")
 	public Integer cacheMinutes;
 
@@ -177,5 +193,13 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
 
     public void setCacheMinutes(Integer cacheMinutes) {
         this.cacheMinutes = cacheMinutes;
+    }
+
+    public String getShowForLoggedUser() {
+        return showForLoggedUser;
+    }
+
+    public void setShowForLoggedUser(String showForLoggedUser) {
+        this.showForLoggedUser = showForLoggedUser;
     }
 }

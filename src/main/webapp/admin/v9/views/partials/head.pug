@@ -31,7 +31,7 @@ script.
     window.perexGroupsRenderAsSelect = [(${layout.isPerexGroupsRenderAsSelect()})];
     window.datatablesExportMaxRows = [(${layout.getConstantInt('datatablesExportMaxRows', 50000)})];
     window.am5license = "[(${layout.getConstant('amchartLicense')})]";
-    
+
     window.Constants = [];
     window.Constants["urlRemoveSpojky"] = [(${layout.getConstant('urlRemoveSpojky')})];
     window.Constants["urlRemoveSpojkyList"] = getTokens( "[(${layout.getConstant('urlRemoveSpojkyList')})]", ",");
@@ -70,6 +70,9 @@ style(type="text/css").
     .ql-snow .ql-tooltip.ql-editing a.ql-action::after {
         content: "[[\#{button.save}]]";
     }
+
+link(data-th-if="${layout.customAdminCss!=null}" data-th-href="${layout.customAdminCss}" rel="stylesheet")
+script(data-th-if="${layout.customAdminJavascript!=null}" data-th-src="${layout.customAdminJavascript}" type="text/javascript")
 
 style(data-th-utext="${layout.nopermsCss}" type="text/css")
 script(data-th-utext="${layout.nopermsJavascript}")

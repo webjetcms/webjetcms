@@ -1,4 +1,5 @@
-<%@ page pageEncoding="windows-1250" %>
+<%@page import="java.util.List"%>
+<%@ page pageEncoding="utf-8" %>
 
 <link rel="stylesheet" href="/templates/webjet8/ninja-starter-kit/assets/css/highlight.css">
 <script src="/templates/webjet8/ninja-starter-kit/assets/js/plugins/highlight.js"></script>
@@ -80,16 +81,16 @@
   $(function () {
     $("pre").not(".no-highlight").each(function (index) {
       $(this).find("code").attr("id", "collapse-" + index);
-      $(this).before("<a class='btn btn-link btn-toggle float-right' data-toggle='custom-collapse' href='#collapse-" + index + "'>Show Code <i class='fa fa-angle-down'></i></a>");
+      $(this).before("<a class='btn btn-link btn-toggle float-right' data-bs-toggle='custom-collapse' href='#collapse-" + index + "'>Show Code <i class='fa fa-angle-down'></i></a>");
     });
 
-    $("[data-toggle='custom-collapse']").click(function (e) {
+    $("[data-bs-toggle='custom-collapse']").click(function (e) {
       e.preventDefault();
       toggleCollapse($(this).attr("href"), $(this));
     });
 
-    $('[data-toggle="tooltip"]').tooltip();
-    $('[data-toggle="popover"]').popover();
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    $('[data-bs-toggle="popover"]').popover();
 
     generateStructure();
 
@@ -112,9 +113,9 @@
       this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
       e.preventDefault();
     });
-    
+
     var sectionToScroll = window.location.href.split("#")[1];
-    
+
     setTimeout(function(){
       if(sectionToScroll != null){
         $("html, body").animate({
@@ -129,10 +130,10 @@
 
     if (target == "#show-all") {
       $("code.collapse").collapse('show');
-      $("[data-toggle='custom-collapse']").not("[href='#show-all'], [href='#hide-all']").html("Hide Code <i class='fa fa-angle-up'></i>");
+      $("[data-bs-toggle='custom-collapse']").not("[href='#show-all'], [href='#hide-all']").html("Hide Code <i class='fa fa-angle-up'></i>");
     } else if (target == "#hide-all") {
       $("code.collapse").collapse('hide');
-      $("[data-toggle='custom-collapse']").not("[href='#show-all'], [href='#hide-all']").html("Show Code <i class='fa fa-angle-down'></i>");
+      $("[data-bs-toggle='custom-collapse']").not("[href='#show-all'], [href='#hide-all']").html("Show Code <i class='fa fa-angle-down'></i>");
     } else {
       if ($(target).hasClass("show")) {
         $(target).collapse('hide');
@@ -148,7 +149,7 @@
   var lastHId;
 
   function generateStructure() {
-    
+
     $(".bootstrap-example-wrapper :header").not("section .row .col-12 :header").each(function (index) {
       $(this).attr("id", "section-" + index);
       $(this).addClass("override-style");
@@ -165,11 +166,11 @@
 
         if ($(this).attr("id") == firstHId) {
 
-          htmlList += "<li class='pt-2'><a data-toggle='collapse' aria-expanded='false' class='dropdown-toggle' href='#dropdown-" + index + "'>" + $(this).text() + "</a><ul class='collapse list-unstyled' id='dropdown-" + index + "'>";
+          htmlList += "<li class='pt-2'><a data-bs-toggle='collapse' aria-expanded='false' class='dropdown-toggle' href='#dropdown-" + index + "'>" + $(this).text() + "</a><ul class='collapse list-unstyled' id='dropdown-" + index + "'>";
 
         } else {
 
-          htmlList += "</ul></li><li class='pt-2'><a data-toggle='collapse' aria-expanded='false' class='dropdown-toggle' href='#dropdown-" + index + "'>" + $(this).text() + "</a><ul class='collapse list-unstyled' id='dropdown-" + index + "'>";
+          htmlList += "</ul></li><li class='pt-2'><a data-bs-toggle='collapse' aria-expanded='false' class='dropdown-toggle' href='#dropdown-" + index + "'>" + $(this).text() + "</a><ul class='collapse list-unstyled' id='dropdown-" + index + "'>";
 
         }
 
@@ -217,8 +218,8 @@
   </div>
   <div class="content col-12 col-md-10">
     <div class="container">
-    <a class="btn btn-primary mr-2" href="#show-all" data-toggle="custom-collapse">Show all</a>
-    <a class="btn btn-primary" href="#hide-all" data-toggle="custom-collapse">Hide all</a>
+    <a class="btn btn-primary mr-2" href="#show-all" data-bs-toggle="custom-collapse">Show all</a>
+    <a class="btn btn-primary" href="#hide-all" data-bs-toggle="custom-collapse">Hide all</a>
 
 
     <h1>Typography</h1>
@@ -2321,7 +2322,7 @@
         <div class="col-12">
           <div class="alert alert-warning alert-dismissible fade show" role="alert">
             <strong>Holy guacamole!</strong> You should check in on some of those fields below.
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
@@ -2331,7 +2332,7 @@
     <code class="collapse html">
     &lt;div class=&quot;alert alert-warning alert-dismissible fade show&quot; role=&quot;alert&quot;&gt;
       &lt;strong&gt;Holy guacamole!&lt;/strong&gt; You should check in on some of those fields below.
-      &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;alert&quot; aria-label=&quot;Close&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;close&quot; data-bs-dismiss=&quot;alert&quot; aria-label=&quot;Close&quot;&gt;
         &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
       &lt;/button&gt;
     &lt;/div&gt;
@@ -3740,14 +3741,14 @@
       <hr>
       <div class="row">
         <div class="col-12">
-          <button type="button" class="btn btn-primary" data-toggle="button" aria-pressed="false" autocomplete="off">
+          <button type="button" class="btn btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off">
             Single toggle
           </button>
         </div>
       </div>
       <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-toggle=&quot;button&quot; aria-pressed=&quot;false&quot; autocomplete=&quot;off&quot;&gt;
+    &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;button&quot; aria-pressed=&quot;false&quot; autocomplete=&quot;off&quot;&gt;
       Single toggle
     &lt;/button&gt;
     </code>
@@ -3757,7 +3758,7 @@
       <hr>
       <div class="row">
         <div class="col-12">
-          <div class="btn-group-toggle" data-toggle="buttons">
+          <div class="btn-group-toggle" data-bs-toggle="buttons">
             <label class="btn btn-secondary active">
               <input type="checkbox" checked autocomplete="off"> Checked
             </label>
@@ -3766,7 +3767,7 @@
       </div>
       <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;div class=&quot;btn-group-toggle&quot; data-toggle=&quot;buttons&quot;&gt;
+    &lt;div class=&quot;btn-group-toggle&quot; data-bs-toggle=&quot;buttons&quot;&gt;
       &lt;label class=&quot;btn btn-secondary active&quot;&gt;
         &lt;input type=&quot;checkbox&quot; checked autocomplete=&quot;off&quot;&gt; Checked
       &lt;/label&gt;
@@ -3776,7 +3777,7 @@
 
       <div class="row">
         <div class="col-12">
-          <div class="btn-group btn-group-toggle" data-toggle="buttons">
+          <div class="btn-group btn-group-toggle" data-bs-toggle="buttons">
             <label class="btn btn-secondary active">
               <input type="radio" name="options" id="option1" autocomplete="off" checked> Active
             </label>
@@ -3791,7 +3792,7 @@
       </div>
       <pre class="m-0 col-12">
     <code class="collapse html">
-    &lt;div class=&quot;btn-group btn-group-toggle&quot; data-toggle=&quot;buttons&quot;&gt;
+    &lt;div class=&quot;btn-group btn-group-toggle&quot; data-bs-toggle=&quot;buttons&quot;&gt;
       &lt;label class=&quot;btn btn-secondary active&quot;&gt;
         &lt;input type=&quot;radio&quot; name=&quot;options&quot; id=&quot;option1&quot; autocomplete=&quot;off&quot; checked&gt; Active
       &lt;/label&gt;
@@ -4016,7 +4017,7 @@
       <div class="row">
         <div class="col-12">
           <div class="dropdown mb-2">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               Dropdown button
             </button>
@@ -4027,7 +4028,7 @@
             </div>
           </div>
           <div class="btn-group">
-            <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+            <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
               aria-expanded="false">
               Action
             </button>
@@ -4044,7 +4045,7 @@
       <pre class="m-0 col-12">
         <code class="collapse html">
         &lt;div class=&quot;dropdown&quot;&gt;
-          &lt;button class=&quot;btn btn-secondary dropdown-toggle&quot; type=&quot;button&quot; id=&quot;dropdownMenuButton&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+          &lt;button class=&quot;btn btn-secondary dropdown-toggle&quot; type=&quot;button&quot; id=&quot;dropdownMenuButton&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             Dropdown button
           &lt;/button&gt;
           &lt;div class=&quot;dropdown-menu&quot; aria-labelledby=&quot;dropdownMenuButton&quot;&gt;
@@ -4056,7 +4057,7 @@
 
         &lt;!-- Example single danger button --&gt;
         &lt;div class=&quot;btn-group&quot;&gt;
-          &lt;button type=&quot;button&quot; class=&quot;btn btn-danger dropdown-toggle&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn btn-danger dropdown-toggle&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             Action
           &lt;/button&gt;
           &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4077,7 +4078,7 @@
           <!-- Example split danger button -->
           <div class="btn-group">
             <button type="button" class="btn btn-primary">Primary</button>
-            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4091,7 +4092,7 @@
           </div>
           <div class="btn-group">
             <button type="button" class="btn btn-secondary">Secondary</button>
-            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4105,7 +4106,7 @@
           </div>
           <div class="btn-group">
             <button type="button" class="btn btn-success">Success</button>
-            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4119,7 +4120,7 @@
           </div>
           <div class="btn-group">
             <button type="button" class="btn btn-info">Info</button>
-            <button type="button" class="btn btn-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-info dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4133,7 +4134,7 @@
           </div>
           <div class="btn-group">
             <button type="button" class="btn btn-warning">Warning</button>
-            <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-warning dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4147,7 +4148,7 @@
           </div>
           <div class="btn-group">
             <button type="button" class="btn btn-danger">Danger</button>
-            <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4166,7 +4167,7 @@
         &lt;!-- Example split danger button --&gt;
         &lt;div class=&quot;btn-group&quot;&gt;
           &lt;button type=&quot;button&quot; class=&quot;btn btn-danger&quot;&gt;Action&lt;/button&gt;
-          &lt;button type=&quot;button&quot; class=&quot;btn btn-danger dropdown-toggle dropdown-toggle-split&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn btn-danger dropdown-toggle dropdown-toggle-split&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             &lt;span class=&quot;sr-only&quot;&gt;Toggle Dropdown&lt;/span&gt;
           &lt;/button&gt;
           &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4188,7 +4189,7 @@
         <div class="col-12">
           <div class="btn-toolbar mb-2" role="toolbar">
             <div class="btn-group">
-              <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" data-toggle="dropdown"
+              <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
                 Large button
               </button>
@@ -4202,7 +4203,7 @@
             </div>
             <div class="btn-group ml-2">
               <button type="button" class="btn btn-lg btn-secondary">Large split button</button>
-              <button type="button" class="btn btn-lg btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+              <button type="button" class="btn btn-lg btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
                 <span class="sr-only">Toggle Dropdown</span>
               </button>
@@ -4217,7 +4218,7 @@
           </div>
           <div class="btn-toolbar" role="toolbar">
             <div class="btn-group">
-              <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown"
+              <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
                 Small button
               </button>
@@ -4231,7 +4232,7 @@
             </div>
             <div class="btn-group ml-2">
               <button type="button" class="btn btn-sm btn-secondary">Small split button</button>
-              <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+              <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
                 <span class="sr-only">Toggle Dropdown</span>
               </button>
@@ -4250,7 +4251,7 @@
       <code class="collapse html">
       &lt;div class=&quot;btn-toolbar mb-2&quot; role=&quot;toolbar&quot;&gt;
         &lt;div class=&quot;btn-group&quot;&gt;
-          &lt;button class=&quot;btn btn-secondary btn-lg dropdown-toggle&quot; type=&quot;button&quot; data-toggle=&quot;dropdown&quot;
+          &lt;button class=&quot;btn btn-secondary btn-lg dropdown-toggle&quot; type=&quot;button&quot; data-bs-toggle=&quot;dropdown&quot;
             aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             Large button
           &lt;/button&gt;
@@ -4264,7 +4265,7 @@
         &lt;/div&gt;
         &lt;div class=&quot;btn-group ml-2&quot;&gt;
           &lt;button type=&quot;button&quot; class=&quot;btn btn-lg btn-secondary&quot;&gt;Large split button&lt;/button&gt;
-          &lt;button type=&quot;button&quot; class=&quot;btn btn-lg btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-toggle=&quot;dropdown&quot;
+          &lt;button type=&quot;button&quot; class=&quot;btn btn-lg btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-bs-toggle=&quot;dropdown&quot;
             aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             &lt;span class=&quot;sr-only&quot;&gt;Toggle Dropdown&lt;/span&gt;
           &lt;/button&gt;
@@ -4279,7 +4280,7 @@
       &lt;/div&gt;
       &lt;div class=&quot;btn-toolbar&quot; role=&quot;toolbar&quot;&gt;
         &lt;div class=&quot;btn-group&quot;&gt;
-          &lt;button class=&quot;btn btn-secondary btn-sm dropdown-toggle&quot; type=&quot;button&quot; data-toggle=&quot;dropdown&quot;
+          &lt;button class=&quot;btn btn-secondary btn-sm dropdown-toggle&quot; type=&quot;button&quot; data-bs-toggle=&quot;dropdown&quot;
             aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             Small button
           &lt;/button&gt;
@@ -4293,7 +4294,7 @@
         &lt;/div&gt;
         &lt;div class=&quot;btn-group ml-2&quot;&gt;
           &lt;button type=&quot;button&quot; class=&quot;btn btn-sm btn-secondary&quot;&gt;Small split button&lt;/button&gt;
-          &lt;button type=&quot;button&quot; class=&quot;btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-toggle=&quot;dropdown&quot;
+          &lt;button type=&quot;button&quot; class=&quot;btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-bs-toggle=&quot;dropdown&quot;
             aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             &lt;span class=&quot;sr-only&quot;&gt;Toggle Dropdown&lt;/span&gt;
           &lt;/button&gt;
@@ -4317,7 +4318,7 @@
       <div class="row">
         <div class="col-12">
           <div class="btn-group dropup">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
               aria-expanded="false">
               Dropup
             </button>
@@ -4334,7 +4335,7 @@
             <button type="button" class="btn btn-secondary">
               Split dropup
             </button>
-            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4352,7 +4353,7 @@
       <code class="collapse html">
       &lt;!-- Default dropup button --&gt;
       &lt;div class=&quot;btn-group dropup&quot;&gt;
-        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
           Dropup
         &lt;/button&gt;
         &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4365,7 +4366,7 @@
         &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot;&gt;
           Split dropup
         &lt;/button&gt;
-        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
           &lt;span class=&quot;sr-only&quot;&gt;Toggle Dropdown&lt;/span&gt;
         &lt;/button&gt;
         &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4380,7 +4381,7 @@
       <div class="row">
         <div class="col-12">
           <div class="btn-group dropright">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
               aria-expanded="false">
               Dropright
             </button>
@@ -4397,7 +4398,7 @@
             <button type="button" class="btn btn-secondary">
               Split dropright
             </button>
-            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+            <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <span class="sr-only">Toggle Dropdown</span>
             </button>
@@ -4415,7 +4416,7 @@
       <code class="collapse html">
       &lt;!-- Default dropup button --&gt;
       &lt;div class=&quot;btn-group dropright&quot;&gt;
-        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
           Dropright
         &lt;/button&gt;
         &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4428,7 +4429,7 @@
         &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary&quot;&gt;
           Split dropright
         &lt;/button&gt;
-        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
           &lt;span class=&quot;sr-only&quot;&gt;Toggle Dropdown&lt;/span&gt;
         &lt;/button&gt;
         &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4443,7 +4444,7 @@
       <div class="row">
         <div class="col-12">
           <div class="btn-group dropleft">
-            <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
               aria-expanded="false">
               Dropleft
             </button>
@@ -4458,7 +4459,7 @@
 
           <div class="btn-group">
             <div class="btn-group dropleft" role="group">
-              <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown"
+              <button type="button" class="btn btn-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false">
                 <span class="sr-only">Toggle Dropleft</span>
               </button>
@@ -4480,7 +4481,7 @@
       <code class="collapse html">
         &lt;!-- Default dropleft button --&gt;
         &lt;div class=&quot;btn-group dropleft&quot;&gt;
-          &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+          &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
             Dropleft
           &lt;/button&gt;
           &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4491,7 +4492,7 @@
         &lt;!-- Split dropleft button --&gt;
         &lt;div class=&quot;btn-group&quot;&gt;
           &lt;div class=&quot;btn-group dropleft&quot; role=&quot;group&quot;&gt;
-            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary dropdown-toggle dropdown-toggle-split&quot; data-bs-toggle=&quot;dropdown&quot; aria-haspopup=&quot;true&quot; aria-expanded=&quot;false&quot;&gt;
               &lt;span class=&quot;sr-only&quot;&gt;Toggle Dropleft&lt;/span&gt;
             &lt;/button&gt;
             &lt;div class=&quot;dropdown-menu&quot;&gt;
@@ -4514,11 +4515,11 @@
       <div class="row">
         <div class="col-12">
           <p>
-            <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false"
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false"
               aria-controls="collapseExample">
               Link with href
             </a>
-            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample"
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-target="#collapseExample"
               aria-expanded="false" aria-controls="collapseExample">
               Button with data-target
             </button>
@@ -4535,10 +4536,10 @@
       <pre class="m-0 col-12">
       <code class="collapse html">
       &lt;p&gt;
-        &lt;a class=&quot;btn btn-primary&quot; data-toggle=&quot;collapse&quot; href=&quot;#collapseExample&quot; role=&quot;button&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseExample&quot;&gt;
+        &lt;a class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;collapse&quot; href=&quot;#collapseExample&quot; role=&quot;button&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseExample&quot;&gt;
           Link with href
         &lt;/a&gt;
-        &lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#collapseExample&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseExample&quot;&gt;
+        &lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#collapseExample&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseExample&quot;&gt;
           Button with data-target
         &lt;/button&gt;
       &lt;/p&gt;
@@ -4557,11 +4558,11 @@
       <div class="row">
         <div class="col-12">
           <p>
-            <a class="btn btn-primary" data-toggle="collapse" href="#multiCollapseExample1" role="button" aria-expanded="false"
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#multiCollapseExample1" role="button" aria-expanded="false"
               aria-controls="multiCollapseExample1">Toggle first element</a>
-            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#multiCollapseExample2"
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-target="#multiCollapseExample2"
               aria-expanded="false" aria-controls="multiCollapseExample2">Toggle second element</button>
-            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".multi-collapse"
+            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-target=".multi-collapse"
               aria-expanded="false" aria-controls="multiCollapseExample1 multiCollapseExample2">Toggle both elements</button>
           </p>
           <div class="row">
@@ -4587,9 +4588,9 @@
       <pre class="m-0 col-12">
       <code class="collapse html">
       &lt;p&gt;
-        &lt;a class=&quot;btn btn-primary&quot; data-toggle=&quot;collapse&quot; href=&quot;#multiCollapseExample1&quot; role=&quot;button&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;multiCollapseExample1&quot;&gt;Toggle first element&lt;/a&gt;
-        &lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#multiCollapseExample2&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;multiCollapseExample2&quot;&gt;Toggle second element&lt;/button&gt;
-        &lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;.multi-collapse&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;multiCollapseExample1 multiCollapseExample2&quot;&gt;Toggle both elements&lt;/button&gt;
+        &lt;a class=&quot;btn btn-primary&quot; data-bs-toggle=&quot;collapse&quot; href=&quot;#multiCollapseExample1&quot; role=&quot;button&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;multiCollapseExample1&quot;&gt;Toggle first element&lt;/a&gt;
+        &lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#multiCollapseExample2&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;multiCollapseExample2&quot;&gt;Toggle second element&lt;/button&gt;
+        &lt;button class=&quot;btn btn-primary&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;.multi-collapse&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;multiCollapseExample1 multiCollapseExample2&quot;&gt;Toggle both elements&lt;/button&gt;
       &lt;/p&gt;
       &lt;div class=&quot;row&quot;&gt;
         &lt;div class=&quot;col&quot;&gt;
@@ -4620,7 +4621,7 @@
             <div class="card">
               <div class="card-header" id="headingOne">
                 <h5 class="mb-0">
-                  <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne"
+                  <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-target="#collapseOne"
                     aria-expanded="true" aria-controls="collapseOne">
                     Collapsible Group Item #1
                   </button>
@@ -4643,7 +4644,7 @@
             <div class="card">
               <div class="card-header" id="headingTwo">
                 <h5 class="mb-0">
-                  <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo"
+                  <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-target="#collapseTwo"
                     aria-expanded="false" aria-controls="collapseTwo">
                     Collapsible Group Item #2
                   </button>
@@ -4665,7 +4666,7 @@
             <div class="card">
               <div class="card-header" id="headingThree">
                 <h5 class="mb-0">
-                  <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseThree"
+                  <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-target="#collapseThree"
                     aria-expanded="false" aria-controls="collapseThree">
                     Collapsible Group Item #3
                   </button>
@@ -4693,7 +4694,7 @@
         &lt;div class=&quot;card&quot;&gt;
           &lt;div class=&quot;card-header&quot; id=&quot;headingOne&quot;&gt;
             &lt;h5 class=&quot;mb-0&quot;&gt;
-              &lt;button class=&quot;btn btn-link&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#collapseOne&quot; aria-expanded=&quot;true&quot; aria-controls=&quot;collapseOne&quot;&gt;
+              &lt;button class=&quot;btn btn-link&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#collapseOne&quot; aria-expanded=&quot;true&quot; aria-controls=&quot;collapseOne&quot;&gt;
                 Collapsible Group Item #1
               &lt;/button&gt;
             &lt;/h5&gt;
@@ -4708,7 +4709,7 @@
         &lt;div class=&quot;card&quot;&gt;
           &lt;div class=&quot;card-header&quot; id=&quot;headingTwo&quot;&gt;
             &lt;h5 class=&quot;mb-0&quot;&gt;
-              &lt;button class=&quot;btn btn-link collapsed&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#collapseTwo&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseTwo&quot;&gt;
+              &lt;button class=&quot;btn btn-link collapsed&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#collapseTwo&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseTwo&quot;&gt;
                 Collapsible Group Item #2
               &lt;/button&gt;
             &lt;/h5&gt;
@@ -4722,7 +4723,7 @@
         &lt;div class=&quot;card&quot;&gt;
           &lt;div class=&quot;card-header&quot; id=&quot;headingThree&quot;&gt;
             &lt;h5 class=&quot;mb-0&quot;&gt;
-              &lt;button class=&quot;btn btn-link collapsed&quot; type=&quot;button&quot; data-toggle=&quot;collapse&quot; data-target=&quot;#collapseThree&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseThree&quot;&gt;
+              &lt;button class=&quot;btn btn-link collapsed&quot; type=&quot;button&quot; data-bs-toggle=&quot;collapse&quot; data-target=&quot;#collapseThree&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;collapseThree&quot;&gt;
                 Collapsible Group Item #3
               &lt;/button&gt;
             &lt;/h5&gt;

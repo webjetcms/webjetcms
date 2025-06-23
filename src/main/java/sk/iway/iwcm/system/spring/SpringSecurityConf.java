@@ -28,7 +28,7 @@ public class SpringSecurityConf {
 		Logger.debug(SpringSecurityConf.class, "SpringSecurityConf - configure auth provider");
 		http.authenticationProvider(new WebjetAuthentificationProvider());
 
-		// Enable Basic Auth if configured
+		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
 		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
 		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");

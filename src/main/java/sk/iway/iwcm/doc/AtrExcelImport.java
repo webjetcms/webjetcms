@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jxl.Cell;
 import jxl.Sheet;
 import sk.iway.iwcm.DB;
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.i18n.Prop;
@@ -52,55 +51,53 @@ public class AtrExcelImport extends ExcelImportJXL
 		sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 		int index = 1;
-	   if (row.length>2 && row[0].getContents().length()>0 && row[2].getContents().length()>1)
-	   {
-	   	sheetName = DB.internationalToEnglish(DocTools.removeChars(sheet.getName()).trim());
-	   	if (lastSheetName == null || lastSheetName.equals(sheetName)==false)
-	   	{
-	   		Logger.println(this, "Deleting sheet: "+sheetName);
+		if (row.length>2 && row[0].getContents().length()>0 && row[2].getContents().length()>1)
+		{
+			sheetName = DB.internationalToEnglish(DocTools.removeChars(sheet.getName()).trim());
+			if (lastSheetName == null || lastSheetName.equals(sheetName)==false)
+			{
+				println("Deleting sheet: "+sheetName);
 
-	   		ps = db_conn.prepareStatement("DELETE FROM doc_atr_def WHERE atr_group = ?");
-	   		ps.setString(1, sheetName);
-	   		ps.execute();
-	   		ps.close();
+				ps = db_conn.prepareStatement("DELETE FROM doc_atr_def WHERE atr_group = ?");
+				ps.setString(1, sheetName);
+				ps.execute();
+				ps.close();
 
-	   		lastSheetName = sheetName;
+				lastSheetName = sheetName;
+			}
+
+	   		ps = db_conn.prepareStatement(sql);
+			ps.setString(index++, getValue(row[0])); //atr_name
+			ps.setInt(index++, (rowCounter-1) * 10); //order_priority
+			if (Tools.isNotEmpty(getValue(row[1])))
+			{
+				ps.setString(index++, getValue(row[1]));	//atr_description
+			}
+			else
+			{
+				ps.setNull(index++, Types.VARCHAR);
+			}
+			sTmp = getValue(row[2]);						//atr_default_value
+			if (sTmp.indexOf("více řádků")!=-1 || sTmp.indexOf("viac riadkov")!=-1)
+			{
+				ps.setString(index++, "multiline-40-4");
+			}
+			else
+			{
+				ps.setNull(index++, Types.VARCHAR);
+			}
+			atrType = AtrDB.TYPE_STRING;
+			if (sTmp.indexOf("Číslo")!=-1) atrType = AtrDB.TYPE_INT;
+			if (sTmp.indexOf("Boolean")!=-1) atrType = AtrDB.TYPE_INT;
+			if (sTmp.indexOf("Double")!=-1) atrType = AtrDB.TYPE_DOUBLE;
+			ps.setInt(index++, atrType);					//atr_type
+			ps.setString(index++, sheetName);			//atr_group
+			ps.setNull(index++, Types.BOOLEAN);			//true_value
+			ps.setNull(index++, Types.BOOLEAN);			//false_value
+
+			ps.execute();
+			ps.close();
+
 	   	}
-
-	   	ps = db_conn.prepareStatement(sql);
-		   ps.setString(index++, getValue(row[0])); //atr_name
-		   ps.setInt(index++, (rowCounter-1) * 10); //order_priority
-		   if (Tools.isNotEmpty(getValue(row[1])))
-		   {
-		   	ps.setString(index++, getValue(row[1]));	//atr_description
-		   }
-		   else
-		   {
-		   	ps.setNull(index++, Types.VARCHAR);
-		   }
-		   sTmp = getValue(row[2]);						//atr_default_value
-		   if (sTmp.indexOf("více řádků")!=-1 || sTmp.indexOf("viac riadkov")!=-1)
-		   {
-		   	ps.setString(index++, "multiline-40-4");
-		   }
-		   else
-		   {
-		   	ps.setNull(index++, Types.VARCHAR);
-		   }
-		   atrType = AtrDB.TYPE_STRING;
-		   if (sTmp.indexOf("Číslo")!=-1) atrType = AtrDB.TYPE_INT;
-		   if (sTmp.indexOf("Boolean")!=-1) atrType = AtrDB.TYPE_INT;
-		   if (sTmp.indexOf("Double")!=-1) atrType = AtrDB.TYPE_DOUBLE;
-		   ps.setInt(index++, atrType);					//atr_type
-		   ps.setString(index++, sheetName);			//atr_group
-		   ps.setNull(index++, Types.BOOLEAN);			//true_value
-		   ps.setNull(index++, Types.BOOLEAN);			//false_value
-
-		   ps.execute();
-		   ps.close();
-
-	   }
-
-
 	}
 }

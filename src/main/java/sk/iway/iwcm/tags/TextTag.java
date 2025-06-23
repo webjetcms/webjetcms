@@ -4,13 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.tagext.TagSupport;
 
-import org.apache.struts.util.ResponseUtils;
-
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
-
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  Tag pre vypis stringu z requestu v JSP stranke
@@ -132,8 +130,8 @@ public class TextTag extends TagSupport
 				if (iwayProperties.containsKey(key+"."+param1))
 				{
 					key = key+"."+param1;
-				} 
-				else 
+				}
+				else
 				{
 					boolean keyFound = false;
 					for (String lKey : iwayProperties.keySet())

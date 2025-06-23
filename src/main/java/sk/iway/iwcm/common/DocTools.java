@@ -1,7 +1,6 @@
 package sk.iway.iwcm.common;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.struts.util.ResponseUtils;
 import org.outerj.daisy.diff.HtmlCleaner;
 import org.outerj.daisy.diff.XslFilter;
 import org.outerj.daisy.diff.html.HTMLDiffer;
@@ -22,6 +21,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -794,7 +794,7 @@ public class DocTools {
         if ("get".equalsIgnoreCase(request.getMethod())==false)
         {
             //pre /components/ adresar a JSP/Stripes subory budem testovat aj pre POST requesty
-            if (path.indexOf("/components/")!=-1 && (path.endsWith(".jsp") || path.endsWith(".action") || path.endsWith(".do")))
+            if (path.indexOf("/components/")!=-1 && (path.endsWith(".jsp") || path.endsWith(".action") || path.endsWith(".do") || path.endsWith(".struts")))
             {
                 //vynimky, pre ktore netreba testovat
 

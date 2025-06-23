@@ -2,8 +2,7 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.users.*, java.util.*, sk.iway.iwcm.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
 request.setAttribute("cmpName", "user");
@@ -332,20 +331,20 @@ function showCustomFields(){
 		  	<form name="div1Form">
 		  		<div class="form-group" >
 			  		<div class="col-sm-4">
-			  			<logic:present name="groups">
+			  			<iwcm:present name="groups">
 			  	 			<iwcm:text key="components.user.group_id"/>:
 							<div class="scroll_checkboxes">
-								<logic:iterate id="g" name="groups" type="sk.iway.iwcm.users.UserGroupDetails">
+								<iwcm:iterate id="g" name="groups" type="sk.iway.iwcm.users.UserGroupDetails">
 								 <label><input type="checkbox" name="userGroups" style="margin-right:5px;" value='<%=g.getUserGroupId()%>' <%if (ResponseUtils.filter(pageParams.getValue("groupIds", "")).indexOf(((Integer)g.getUserGroupId()).toString()) != -1)
 									out.print("checked='checked'");%>/><%=g.getUserGroupName()%></label><br>
-							  </logic:iterate>
+							  </iwcm:iterate>
 							</div>
-				  	 	</logic:present>
+				  	 	</iwcm:present>
 			  		</div>
 			  		<div class="col-sm-4">
 			  			<iwcm:text key="components.user.show_fields"/>:
 							<div class="scroll_checkboxes">
-								<logic:iterate id="f" name="showFields" type="java.lang.String">
+								<iwcm:iterate id="f" name="showFields" type="java.lang.String">
 								 <label><input type="checkbox" name="showFields" style="margin-right:5px;" value='<%=f%>'<%
 								 if(Tools.isNotEmpty(ResponseUtils.filter(pageParams.getValue("show", ""))))
 								 {
@@ -356,13 +355,13 @@ function showCustomFields(){
 									 if (defaultShow.indexOf(","+f+",")!=-1) out.print(" checked='checked'");
 								 }
 								 %>/><iwcm:text key='<%="components.user.newuser."+f%>'/></label><br>
-							   </logic:iterate>
+							   </iwcm:iterate>
 							</div>
 			  		</div>
 			  		<div class="col-sm-4">
 			  			<iwcm:text key="components.user.required_fields"/>:
 							<div class="scroll_checkboxes">
-								<logic:iterate id="f" name="requiredFields" type="java.lang.String">
+								<iwcm:iterate id="f" name="requiredFields" type="java.lang.String">
 								 <label><input type="checkbox" name="requiredFields" style="margin-right:5px;" value='<%=f%>'<%
 								 if(Tools.isNotEmpty(ResponseUtils.filter(pageParams.getValue("show", ""))))
 								 {
@@ -373,7 +372,7 @@ function showCustomFields(){
 									 if (defaultRequired.indexOf(","+f+",")!=-1 || ResponseUtils.filter(pageParams.getValue("required", "")).indexOf(f) != -1) out.print(" checked='checked'");
 								 }
 								 %>/><iwcm:text key='<%="components.user.newuser."+f%>'/></label><br>
-							   </logic:iterate>
+							   </iwcm:iterate>
 							</div>
 					</div>
 				</div>
@@ -520,17 +519,17 @@ function showCustomFields(){
 		  	 		</div>
 		  		</div>
 		  		<div class="col-sm-6 col-sm-offset-3 form-group" style="margin-top:20px;">
-		  			<logic:present name="groups">
+		  			<iwcm:present name="groups">
 		  	 			<iwcm:text key="components.user.group_id"/>
 		  	 			<img src="question.gif" onclick="showHelpGroup(event);"/>
 						<br><br>
 						<div class="scroll_checkboxes" style="height=250px">
-							<logic:iterate id="g" name="groups" type="sk.iway.iwcm.users.UserGroupDetails">
+							<iwcm:iterate id="g" name="groups" type="sk.iway.iwcm.users.UserGroupDetails">
 							 <label><input type="checkbox" name="userGroups" value='<%=g.getUserGroupId()%>' <%if (ResponseUtils.filter(pageParams.getValue("regToUserGroups", "")).indexOf(((Integer)g.getUserGroupId()).toString()) != -1)
 								out.print("checked='checked'");%>/><%=g.getUserGroupName()%></label><br>
-						  </logic:iterate>
+						  </iwcm:iterate>
 						</div>
-		  	 		</logic:present>
+		  	 		</iwcm:present>
 		  		</div>
 		  	</div>
 		  </form>

@@ -1,6 +1,18 @@
 package sk.iway.iwcm.components.gallery;
 
-import jakarta.persistence.*;
+import java.util.Date;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -14,9 +26,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
-
-import java.util.Date;
 
 @Entity
 @Table(name = "gallery")
@@ -61,8 +72,8 @@ public class GalleryEntity {
                     @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
             })
     })
-    private String imagePath;    
-    
+    private String imagePath;
+
     @Column(name = "image_source")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata",
         editor = {
@@ -337,4 +348,8 @@ public class GalleryEntity {
 
     @Column(name = "domain_id")
     private Integer domainId;
+
+    @Transient
+    @DataTableColumnNested
+    private GalleryEditorFields editorFields = null;
 }

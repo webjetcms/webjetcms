@@ -1,7 +1,6 @@
 package sk.iway.iwcm.doc;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.struts.util.ResponseUtils;
 
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -18,6 +17,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 
 import jakarta.servlet.http.HttpServletRequest;
