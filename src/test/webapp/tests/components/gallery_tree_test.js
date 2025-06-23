@@ -11,7 +11,7 @@ Before(( { login } ) => {
 
 /*
 Scenario('zoznam fotografii', (I) => {
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     I.click("test");
     I.see("koala.jpg");
 });
@@ -19,7 +19,7 @@ Scenario('zoznam fotografii', (I) => {
 
 Scenario('Vytvorenie, presun a zmazanie adresaru', ({ I, DTE }) => {
     // vytvorenie adresaru
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     I.wait(3);
     I.click(".tree-col .buttons-create");
     I.waitForVisible('#galleryDimensionDatatable_modal');

@@ -6,7 +6,7 @@ Before(({ login }) => {
 });
 
 Scenario('cronjob screenshots', ({ I, DT, Document }) => {
-    I.amOnPage("/admin/v9/settings/cronjob");
+    I.amOnPage("/admin/v9/settings/cronjob/");
 
     Document.screenshot("/admin/settings/cronjob/dataTable.png");
     DT.filterContains('taskName', 'Zmazanie starých udalostí v kalendári');
