@@ -2,7 +2,7 @@ Feature('webpages.redirects');
 
 Before(({ I, login }) => {
     login('admin');
-    I.amOnPage("/admin/v9/settings/redirect");
+    I.amOnPage("/admin/v9/settings/redirect/");
 });
 
 Scenario('redirects-zakladne testy @baseTest', async ({ I, DataTables }) => {

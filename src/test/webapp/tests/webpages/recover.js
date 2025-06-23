@@ -6,7 +6,7 @@ Before(({ I }) => {
 
 
 Scenario('Recovery doc button visibility logic', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
 
     I.say("We are not in trash tab, dont see recovery button");
@@ -33,7 +33,7 @@ Scenario('Recovery doc button visibility logic', ({ I, DT }) => {
 });
 
 Scenario('Recovery tree buttons visibility logic', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
 
     I.say("We are not in trash tab, dont see recovery buttons");
