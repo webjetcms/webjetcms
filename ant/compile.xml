@@ -120,6 +120,8 @@
     <replace dir="${root}/src-utf8-jakarta/" token="@ApiModel(" value="@Schema(" />
 
     <replace dir="${root}/src-utf8-jakarta/" token="new PageImpl&lt;&gt;(" value="new sk.iway.iwcm.system.datatable.DatatablePageImpl&lt;&gt;(" />
+    <replace dir="${root}/src-utf8-jakarta/" token="import org.springframework.data.domain.PageImpl;" value=""/>
+    <replace dir="${root}/src-utf8-jakarta/" token="public class DatatablePageImpl&lt;T&gt; extends PageImpl&lt;T&gt; {" value="public class DatatablePageImpl&lt;T&gt; extends org.springframework.data.domain.PageImpl&lt;T&gt; {"/>
 
     <!-- zachovaj .properties subory z classes adresara -->
     <copy todir="${root}/resources-saved/" overwrite="true">
