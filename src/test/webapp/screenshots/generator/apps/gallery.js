@@ -6,7 +6,7 @@ Before(({ login }) => {
 
 Scenario('zoznam fotografii', ({ I, DT, DTE, Document }) => {
 
-    I.amOnPage('/admin/v9/apps/gallery');
+    I.amOnPage('/admin/v9/apps/gallery/');
     DT.waitForLoader();
     I.clickCss('td.dt-row-edit');
 

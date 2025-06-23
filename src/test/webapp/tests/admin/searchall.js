@@ -278,7 +278,7 @@ function switchDomainTo(I, DT, domain) {
 }
 
 function openUserPermissions(I, DT, DTE, user) {
-    I.amOnPage('/admin/v9/users/user-list');
+    I.amOnPage('/admin/v9/users/user-list/');
     DT.waitForLoader();
     DT.filterContains('login', user);
     I.click('.buttons-select-all');
