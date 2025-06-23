@@ -377,7 +377,7 @@ Before(({login}) => {
 });
 
 Scenario('zoznam fotografii', ({I}) => {
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     I.click("test");
     I.see("koala.jpg");
 });
