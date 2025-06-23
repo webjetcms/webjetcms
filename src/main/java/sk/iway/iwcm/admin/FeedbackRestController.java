@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
@@ -47,6 +48,8 @@ public class FeedbackRestController {
         feedbackText.append("<p>")
             .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), "\n", "<br/>\n"))
             .append("</p>\n<p>");
+
+        feedbackText.append("Version: " + ResponseUtils.filter(InitServlet.getActualVersionLong()) + "<br/>");
 
         //Handle isAnonymous
         if(!params.get(isAnonymousKey)[0].equals("true")) {
