@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,7 +58,7 @@ public class ErrorRestController extends DatatableRestControllerV2<ErrorDTO, Lon
         holder.setPageSize(pageable.getPageSize());
         holder.setPage(pageable.getPageNumber());
 
-        return new PageImpl<>(holder.getPageList(), pageable, items.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, items.size());
     }
 
     @Override

@@ -7,13 +7,14 @@ import java.util.Map;
 
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import sk.iway.iwcm.Tools;
 
-public class DatatablePageImpl<T> extends PageImpl<T> {
+public class DatatablePageImpl<T> extends org.springframework.data.domain.PageImpl<T> {
 
     private static final long serialVersionUID = 1L;
 
@@ -33,6 +34,10 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
             DatatablePageImpl<T> pageImpl = (DatatablePageImpl<T>)page;
             this.options = pageImpl.options;
         }
+    }
+
+    public DatatablePageImpl(List<T> content, Pageable pageable, long total) {
+        super(content, pageable, total);
     }
 
     private List<OptionDto> getFieldOptions(String field) {

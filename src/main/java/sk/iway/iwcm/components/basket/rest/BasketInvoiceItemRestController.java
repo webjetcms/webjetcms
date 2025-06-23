@@ -6,7 +6,7 @@ import java.util.List;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,7 +43,7 @@ public class BasketInvoiceItemRestController extends DatatableRestControllerV2<B
     @Override
     public Page<BasketInvoiceItemEntity> getAllItems(Pageable pageable) {
         long invoiceId = getInvoiceId();
-        if(invoiceId < 1)  return new PageImpl<>(new ArrayList<>());
+        if(invoiceId < 1)  return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(new ArrayList<>());
 
         Page<BasketInvoiceItemEntity> page = basketInvoiceItemsRepository.findAllByInvoiceIdAndDomainId(invoiceId, CloudToolsForCore.getDomainId(), pageable);
 

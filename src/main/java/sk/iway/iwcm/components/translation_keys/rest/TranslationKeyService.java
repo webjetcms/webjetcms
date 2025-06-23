@@ -18,7 +18,7 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.support.PagedListHolder;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -204,7 +204,7 @@ public class TranslationKeyService {
         holder.setPageSize(pageable.getPageSize());
         holder.setPage(pageable.getPageNumber());
 
-        return new PageImpl<>(holder.getPageList(), pageable, translationKeys.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, translationKeys.size());
     }
 
     /**
@@ -428,7 +428,7 @@ public class TranslationKeyService {
         holder.setPage(pageable.getPageNumber());
         holder.setPageSize(pageable.getPageSize());
 
-        return new PageImpl<>(holder.getPageList(), pageable, filteredTranslationKeys.size());
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(holder.getPageList(), pageable, filteredTranslationKeys.size());
     }
 
     /**

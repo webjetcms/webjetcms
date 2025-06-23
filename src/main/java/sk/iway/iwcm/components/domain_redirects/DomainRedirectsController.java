@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -40,7 +40,7 @@ public class DomainRedirectsController extends DatatableRestControllerV2<DomainR
         List<DomainRedirectBean> listedBeans;
         if (InitServlet.isTypeCloud()) listedBeans = DomainRedirectDB.getRedirectByDestDomain(CloudToolsForCore.getDomainName());
         else listedBeans = DomainRedirectDB.getAllRedirects();
-        return new PageImpl<>(listedBeans);
+        return new sk.iway.iwcm.system.datatable.DatatablePageImpl<>(listedBeans);
     }
 
     @Override
