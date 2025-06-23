@@ -1,5 +1,6 @@
 package sk.iway.iwcm.tags;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,7 +8,6 @@ import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.BodyTagSupport;
 
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -120,7 +120,6 @@ public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 			}
 		}
 
-		/*TODO:
 		if (Tools.isNotEmpty(enableNewText))
 		{
 			HttpServletRequest request= (HttpServletRequest) pageContext.getRequest();
@@ -143,13 +142,11 @@ public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 		// Store this tag itself as a page attribute
 		pageContext.setAttribute(SELECT_KEY, this);
 		this.calculateMatchValues();
-		*/
 		return (EVAL_BODY_BUFFERED);
 	}
 
 	public int doEndTag() throws JspException
 	{
-		/* TODO
 		// Remove the page scope attributes we created
 		pageContext.removeAttribute(SELECT_KEY);
 		// Render a tag representing the end of our current form
@@ -174,7 +171,6 @@ public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 	 */
 	private void calculateMatchValues() throws JspException
 	{
-		/* TODO
 		if (this.value != null)
 		{
 			this.match = new String[1];
@@ -195,6 +191,11 @@ public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 
 				this.match = new String[0];
 				return;
+				/*
+				JspException e = new JspException(messages.getMessage("getter.bean", name));
+				RequestUtils.saveException(pageContext, e);
+				throw e;
+				*/
 			}
 			try
 			{
@@ -227,7 +228,6 @@ public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 				}
 			}
 		}
-		*/
 	}
 
 	/**
