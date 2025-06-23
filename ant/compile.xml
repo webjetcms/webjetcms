@@ -141,6 +141,8 @@
           <include name="**/*"/>
       </fileset>
     </copy>
+    <!-- text*.properties -->
+    <replace dir="${root}/../../../webjetcms_jakarta/src/main/webapp/WEB-INF/classes/" token="javax.validation.constraints." value="jakarta.validation.constraints." />
     <copy todir="${root}/../../../webjetcms_jakarta/src/test/" overwrite="true">
       <fileset dir="${root}/../../src/test/">
           <include name="**/*"/>
