@@ -87,7 +87,7 @@ module.exports = {
      * Opens the application editor.
      * @param {string|null} docId - Optional document ID for the page to edit.
      */
-    openAppEditor(docId = null, modalId = "component-datatable_modal"){
+    openAppEditor(docId = null, modalId = "component-datatable_modal", editIcon = false){
         I.say('Opening app editor');
         I.switchTo();
         if(docId){
@@ -104,7 +104,10 @@ module.exports = {
         I.switchTo(locate("iframe.wj_component").first());
         I.wait(5);
         I.waitForElement(".inlineComponentEdit", 30);
-        I.click(locate(".inlineComponentEdit").first());
+        if (editIcon)
+            I.click(locate('.inlineComponentEdit .inlineComponentButton.cke_button').first());
+        else
+            I.click(locate('.inlineComponentEdit').first());
         I.switchTo();
         I.waitForInvisible('Čakajte prosím', 20);
         I.switchTo('.cke_dialog_ui_iframe');

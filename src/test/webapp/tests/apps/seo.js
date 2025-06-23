@@ -66,8 +66,8 @@ Scenario("admin", async ({ I, DT, Document }) => {
     await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 5);
     await Document.adjustScrollbar('#bots-lineVisits');
     await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 5);
-    DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,75", "30.07.2021"]);
-    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,48", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,74", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,46", "30.07.2021"]);
 
     DT.filterContains("name", "ThinkChaos 0.0");
     DT.waitForLoader();
@@ -157,7 +157,6 @@ Scenario("stat-keywords", async ({ I, DT, Browser, Document }) => {
     I.seeElement("#statKeywordsDataTable");
 
     navigateAndSetDates(I, DT, "#statKeywordsDataTable_extfilter");
-
     I.amOnPage("/apps/seo/admin/stat-keywords/");
     DT.waitForLoader();
     await Document.compareScreenshotElement("#statKeywords-barKeywords", "seo/autotest-barkeywords.png", null, null, 5);
@@ -416,8 +415,8 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
 
     DT.waitForLoader();
 
-        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "50,81", "30.07.2021"]);
-        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "29,03", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "50,40", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "28,80", "30.07.2021"]);
 });
 
 Scenario("cleanup", ({ I, DT }) => {

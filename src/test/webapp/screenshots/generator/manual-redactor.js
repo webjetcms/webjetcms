@@ -398,6 +398,7 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
 Scenario('logon', ({ I, Document, i18n }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
     I.amOnPage('/admin/logon/?language='+I.getConfLng()+'&id=2');
+    I.selectOption("#language", i18n.get("English"));
 
     I.fillField("#password", "12345");
     Document.screenshot("/redactor/admin/logon.png", 1080, 685);
@@ -418,7 +419,7 @@ Scenario('logon', ({ I, Document, i18n }) => {
     Document.screenshot("/redactor/admin/logon-weak-password.png", 1080, 685);
 });
 
-Scenario('customer zone', ({ I, Document }) => {
+Scenario('customer zone', ({ I, Document, i18n }) => {
     I.logout();
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
     I.wait(30); //password expiry time
@@ -502,12 +503,32 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
 
     //add PB classes to simulate mouse over
     await I.executeScript(()=>{
-        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first()
-        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active")
-        pbElement.find("aside.pb-toolbar").trigger("click")
+        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
+        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active");
+        pbElement.find("aside.pb-toolbar").trigger("click");
     });
 
     Document.screenshot("/redactor/webpages/pagebuilder.png");
+
+    await I.executeScript(()=>{
+        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first();
+        pbElement.find(".pb-toolbar-button__style.pb-toolbar-button").trigger("click");
+    });
+
+    Document.screenshot("/redactor/webpages/pagebuilder-style.png");
+
+    await I.executeScript(()=>{
+        var mainWindow = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow;
+        mainWindow.$(".pb-modal .pb-modal__footer__button-close").trigger("click");
+        var pbElement = mainWindow.$("section.pb-section.pb-grid-element").first();
+        pbElement.addClass("pb-has-toolbar-active");
+        pbElement.children("aside.pb-toolbar").first().trigger("click");
+        pbElement.children(".pb-prepend.pb-plus-button").first().trigger("click");
+        mainWindow.$(".library-tab-link[data-library-type='library']").trigger("click");
+        mainWindow.$(".library-tab-item-button__toggler[data-library-item-id='c2VjdGlvbi9Db250YWN0']").trigger("click");
+    });
+
+    Document.screenshot("/redactor/webpages/pagebuilder-library.png");
 
     I.switchTo();
     Document.screenshotElement("#trEditor > #DTE_Field_data-editorTypeSelector", "/redactor/webpages/pagebuilder-switcher.png");

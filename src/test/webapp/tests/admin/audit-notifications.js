@@ -16,7 +16,7 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
     savePage(I, DTE);
     await verifyEmailNotification(I, TempMail, false);
 
-    I.amOnPage('/admin/v9/apps/audit-notifications');
+    I.amOnPage('/admin/v9/apps/audit-notifications/');
     DT.waitForLoader();
     I.see('Zoznam notifikácií');
     I.click(DT.btn.add_button);
@@ -31,7 +31,7 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
 });
 
 Scenario('Revert changes', ({ I, DT, DTE }) => {
-    I.amOnPage('/admin/v9/apps/audit-notifications');
+    I.amOnPage('/admin/v9/apps/audit-notifications/');
     DT.filterSelect('adminlogType', "SAVEDOC");
     DT.filterContains('email', email);
     I.clickCss('.buttons-select-all');
