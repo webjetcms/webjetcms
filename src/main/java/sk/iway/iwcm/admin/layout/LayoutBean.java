@@ -35,6 +35,9 @@ public class LayoutBean {
     //datum poslednej zmeny properties suborov pre efektivnejsie (ne)volanie REST sluzby pre ich aktualizaciu na FE
     private long propertiesLastModified;
 
+    private String customAdminCss = null;
+    private String customAdminJavascript = null;
+
     public String getConstant(String name)
     {
         return Constants.getString(name);
