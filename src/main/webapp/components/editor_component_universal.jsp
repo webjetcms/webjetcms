@@ -114,7 +114,7 @@ if (url.startsWith("/components/")) {
 			//je to spring komponenta, prepni sa na zobrazenie cez datatabulku
 			%>
 				<script type="text/javascript">
-					var src = '/admin/v9/webpages/component?id=1&showOnlyEditor=true&name='+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>")+"&className="+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>")+"&docId=<%=ResponseUtils.filter(request.getParameter("docId")) %>&groupId=<%=ResponseUtils.filter(request.getParameter("groupId")) %>&title="+encodeURIComponent("<%=ResponseUtils.filter(request.getParameter("title")) %>");
+					var src = '/admin/v9/webpages/component/?id=1&showOnlyEditor=true&name='+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>")+"&className="+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>")+"&docId=<%=ResponseUtils.filter(request.getParameter("docId")) %>&groupId=<%=ResponseUtils.filter(request.getParameter("groupId")) %>&title="+encodeURIComponent("<%=ResponseUtils.filter(request.getParameter("title")) %>");
 
 					var iframe = window.parent.$('#editorComponent');
 
