@@ -15,8 +15,6 @@ import sk.iway.iwcm.Tools;
  */
 public class QABean
 {
-	private static final long serialVersionUID = -1805144846544468397L;
-
 	private int qaId;
 	private String categoryName;
 	private String questionDate;

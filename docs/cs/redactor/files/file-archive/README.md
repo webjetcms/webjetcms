@@ -49,6 +49,7 @@ Karta obsahuje základní informace pro vložení dokumentu.
 - **Kategorie** - zadejte libovolný název kategorie. Pole Vám bude automaticky nabízet jiné již zadefinované kategorie v manažeru. Ke zprávě můžete využít sekci [Kategorie](./category-manager.md).
 - **Kód produktu** - zadejte libovolný název kódu produktu
 - **Zobrazit** - nastavení pro zobrazení dokumentu na stránce (pokud nechcete dokumentu na stránce zobrazit, odškrtněte toto nastavení)
+- **Procházet** - umožňuje povolit indexování souborů. Nové soubory mají tuto možnost ve výchozím nastavení zapnutou. Více
 - **Priorita** - pomocí priority umíte libovolně nastavit pořadí zobrazení dokumentů na stránce
 - **Hlavní dokument** - reference na hlavní dokument. Pole nabízí cesty k jednotlivým hlavním dokumentům, na které se aktuální dokument může odkazovat, čímž se stává **vzorem**. Nabízené jsou pouze cesty dokumentů, které splňují:
   - nejde o stejný dokument, který se upravuje
@@ -228,3 +229,11 @@ Vymazáním hlavního dokumentu (který není vzor) se vymažou i všechny histo
 !>**Upozornění:** hlavní dokument nelze vymazat, pokud má čekající verzi na nahrání.
 
 Stejně jako při mazání vzorů lze tyto naplánované verze vymazat. **POUZE** pomocí tabulky v kartě **Čekající**.
+
+## Vyhledávání a indexování
+
+Zvolením možnosti **Procházet** povolíte vyhledávání dokumentu přes aplikaci **Vyhledávání** a indexování v externích vyhledávačích. Ve výchozím nastavení je tato možnost povolena pro nové dokumenty. Pokud se dokument stane **historickou verzí**, toto povolení se automaticky deaktivuje, avšak je možné jej opětovně povolit podle potřeby.
+
+### Vyhledávače typu Google
+
+Pokud možnost **Procházet** není povolena, pro takový dokument se přidá `HTTP` hlavička `X-Robots-Tag` s hodnotou `noindex, nofollow`, aby se zabránilo indexování takového dokumentu ve vyhledávačích typu Google.

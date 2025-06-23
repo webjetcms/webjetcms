@@ -1,5 +1,6 @@
-<%@ page import="sk.iway.iwcm.editor.InlineEditor" %>
-<%@ page pageEncoding="windows-1250" %>
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
+<%@ page import="sk.iway.iwcm.editor.InlineEditor,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
+<%@ page pageEncoding="utf-8" %>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="${ninja.temp.charset}">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -33,7 +34,8 @@ String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
 PageParams pageParams = new PageParams(request);
 DocDetails doc = (DocDetails)request.getAttribute("docDetails");
-GroupsDB groupsDB = GroupsDB.getInstance(); String fieldA = groupsDB.getPropertyRecursive(doc.getGroupId(), "fieldA");
+GroupsDB groupsDB = GroupsDB.getInstance();
+String fieldA = groupsDB.getPropertyRecursive(doc != null ? doc.getGroupId() : -1, "fieldA");
 
     InlineEditor.setEditingMode(InlineEditor.EditingMode.pageBuilder, request);
 %>
@@ -73,9 +75,9 @@ ${ninja.webjet.insertJqueryFake}
 <iwcm:write name="html_head"/>
 <script>
     <!-- DATA LAYER -->
-    <logic:notEmpty name="docDetails" property="fieldQ">
+    <iwcm:notEmpty name="docDetails" property="fieldQ">
     dataLayer.push({'pageCategory': '<c:out value="${docDetails.fieldQ}" />'});
-    </logic:notEmpty>
+    </iwcm:notEmpty>
 </script>
 
 <iwcm:insertScript position="head"/>

@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page language="java" pageEncoding="utf-8" import="sk.iway.iwcm.Tools,sk.iway.iwcm.system.msg.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 int messageId = Tools.getIntValue(Tools.getRequestParameter(request, "messageId"), -1);
 String recipient = Tools.getRequestParameter(request, "recipient");
@@ -27,16 +24,16 @@ if(Tools.getRequestParameter(request, "text")!=null) {
 
 AdminMessageBean mes = MessageDB.getInstance(false).getMessage(messageId);
 %>
-<logic:present parameter="text">
+<iwcm:present parameter="text">
 	<script type="text/javascript">
 		top.window.frames['topFrame'].window.frames['feederIframe'].window.location.reload();
 	</script>
-</logic:present>
-<logic:present parameter="removeAttribute" >
+</iwcm:present>
+<iwcm:present parameter="removeAttribute" >
 	<script type="text/javascript">
 		top.window.close();
 	</script>
-</logic:present>
+</iwcm:present>
 <LINK rel="stylesheet" href="/admin/css/style.css">
 <link rel="stylesheet" href="/components/cmp.css">
 <body>

@@ -604,7 +604,9 @@ Karta Zobrazenie pre spoločné nastavenia, sa predvolene zobrazí každej aplik
 ![](common-settings-tab.png)
 
 Karta obsahuje parametre:
+
 - Zobrazenie na zariadeniach, slúžiaci na nastavenie [podmieneného zobrazenia aplikácia](#podmienené-zobrazenie-aplikácie).
+- Prihlásený používateľ - umožňuje nastaviť zobrazenie aplikácie podľa stavu prihlásenia návštevníka web sídla - zobrazenie vždy, len ak je používateľ prihlásený, alebo ak nie je prihlásený.
 - Čas vyrovnávacej pamäte (minúty), slúži na nastavenie doby v minútach, po akú má byť inicializovaná aplikácia uložená vo vyrovnávacej pamäti.
 
 Ak v Spring aplikácii kartu nechcete zobraziť nastavte atribút `commonSettings=false` v anotácii `@WebjetAppStore`.
@@ -620,6 +622,16 @@ Pri náhľade aplikácie v editore, ktorá má podmienené zobrazenie sa v náh�
 Pre otestovanie pri zobrazení web stránky môžete využiť URL parameter ```?forceBrowserDetector=```, ktorým vieme WebJET presvedčiť, že pristupujeme so zariadením špecifického typu. Podporované typy tohto parametra sú ```phone```, ```tablet``` a ```pc```.
 
 Pri použití starých `editor_component.jsp` môžete pridať kartu s nastavením zobrazenia pre zariadenie volaním `$(document).ready(function() { addAdvancedSettingsTab(); });` a získať nastavenú hodnotu ako `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. Implementácia funkcie je v `/components/bottom.jsp` a je takto pripravená na vaše jednoduché použitie.
+
+### Prihlásený používateľ
+
+Aplikácia sa zobrazí podľa stavu prihláseného používateľa. V `PageParams` nastavené parametrom `showForLoggedUser`:
+
+- Prázdna hodnota/parameter nie je zadaný - aplikácia sa zobrazí vždy.
+- `onlyLogged` - aplikácia sa zobrazí len prihlásenému používateľovi.
+- `onlyNotLogged` - aplikácia sa zobrazí len ak používateľ nie je prihlásený.
+
+V editore stránok sa aplikácia zobrazí vždy, ale v náhľade, alebo zobrazení stránky sa zobrazí podľa nastavenej hodnoty.
 
 ### Čas vyrovnávacej pamäte (minúty)
 

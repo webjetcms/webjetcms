@@ -5,9 +5,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@page import="sk.iway.iwcm.PageLng"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<%
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%><%
 PageParams pageParams = new PageParams(request);
 String htmlName = pageParams.getValue("htmlName", null);
 String htmlId = pageParams.getValue("htmlId", null);

@@ -13,38 +13,40 @@ ext {
 ```
 
 Currently there are the following versions of WebJET:
-- `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
-- `2025.0` - Stabilized version 2025.0, no daily changes added
-- `2024.52` - stabilized version 2024.52, no daily changes added
+- `2025.0-SNAPSHOT` - a regularly updated version from the main repository version 2025, available as [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.18` - Stabilized version 2025.18, no daily changes are added.
+- `2025.0.23` - Stabilized version 2025.0.23 with bug fixes against version 2025.0 (without adding enhancements from SNAPSHOT version).
+- `2025.0` - Stabilized version 2025.0, no daily changes are added.
+- `2024.52` - Stabilized version 2024.52, no daily changes are added.
 - `2024.0.52` - Stabilized version 2024.0.52 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
 - `2024.0.47` - Stabilized version 2024.0.47 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
-- `2024.40` - stabilized version 2024.40, no daily changes added
+- `2024.40` - Stabilized version 2024.40, no daily changes are added.
 - `2024.0-SNAPSHOT` - regularly updated version from the master repository version 2024.0 compiled with Java version 17.
-- `2024.18` - Stabilized version 2024.18, no daily changes added
+- `2024.18` - Stabilized version 2024.18, no daily changes are added.
 - `2024.0.34` - Stabilized version 2024.0.34 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
 - `2024.0.21` - Stabilized version 2024.0.21 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
 - `2024.0.17` - Stabilized version 2024.0.17 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
 - `2024.0.9` - Stabilized version 2024.0.9 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
 - `2024.0` - Stabilized version 2024.0 (technically identical to 2023.52-java17), no daily changes added, compiled with Java version 17.
 - `2023.52-java17` - Stabilized version 2023.52, no daily changes added, compiled with Java version 17.
-- `2023.52` - Stabilized version 2023.52, no daily changes added
+- `2023.52` - Stabilized version 2023.52, no daily changes are added.
 - `2023.40-SNAPSHOT-java17` - regularly updated version from the master repository version 2023.40 compiled with Java version 17.
-- `2023.40-SNAPSHOT` - regularly updated version from the master repository version 2023.40
-- `2023.40` - stabilized version 2023.40, no daily changes added
+- `2023.40-SNAPSHOT` - regularly updated version from the master repository version 2023.40.
+- `2023.40` - Stabilized version 2023.40, no daily changes are added.
 - `2023.18-SNAPSHOT-java17` - regularly updated version from the master repository version 2023.18 compiled with Java version 17.
-- `2023.18-SNAPSHOT` - regularly updated version from the master repository version 2023.18
-- `2023.18` - Stabilized version 2023.18, no daily changes added
+- `2023.18-SNAPSHOT` - regularly updated version from the master repository version 2023.18.
+- `2023.18` - Stabilized version 2023.18, no daily changes are added.
 - `2023.0-SNAPSHOT` - regularly updated version from the master repository version 2023.0, due to API changes this version ends before the release of version 2023.18 to avoid unexpected API changes in projects.
-- `2023.0` - Stabilized version 2023.0, no daily changes added
-- `2022.0-SNAPSHOT` - regularly updated version from the master repository
-- `2022.52` - stabilized version 2022.52, no daily changes added
-- `2022.40` - stabilized version 2022.40, no daily changes added
-- `2022.18` - stabilized version 2022.18, no daily changes added
-- `2022.0` - stabilized version 2022.0, no daily changes added
-- `2021.0-SNAPSHOT` - regularly updated version from the master repository
-- `2021.52` - stabilized version 2021.52, no daily changes added
-- `2021.40` - stabilized version 2021.40, no daily changes added
-- `2021.13` - Stabilized version 2021.13, no daily changes added
+- `2023.0` - Stabilized version 2023.0, no daily changes are added.
+- `2022.0-SNAPSHOT` - regularly updated version from the master repository.
+- `2022.52` - stabilized version 2022.52, no daily changes are added.
+- `2022.40` - stabilized version 2022.40, no daily changes are added.
+- `2022.18` - stabilized version 2022.18, no daily changes are added.
+- `2022.0` - Stabilized version 2022.0, no daily changes are added.
+- `2021.0-SNAPSHOT` - regularly updated version from the master repository.
+- `2021.52` - Stabilized version 2021.52, no daily changes are added.
+- `2021.40` - Stabilized version 2021.40, no daily changes are added.
+- `2021.13` - Stabilized version 2021.13, no daily changes are added.
 
 For version numbers:
 - `YEAR.0.x` - Corrected version, **no new properties are added to it**, during the year it corrects the bugs found in WebJET CMS. The libraries used are updated only within `minor` Versions. If a library patch requires a change in `major` version cannot be incorporated into this version as it may carry the risk of changes in `API`.
@@ -59,7 +61,7 @@ It is therefore true that `YEAR.0.x` Is **most stable** in terms of changes and 
 
 ## Changes in the transition to 2025.0-SNAPSHOT
 
-View Full Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), you therefore need to add the configuration to your `build.gradle` file:
+View Full Version `2025.0-SNAPSHOT` is available via [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), you therefore need to add the configuration to your `build.gradle` file:
 
 ```gradle
 repositories {

@@ -1,2 +1,2 @@
-<%@ page pageEncoding="windows-1250" %>
+<%@ page pageEncoding="utf-8" %>
 <iwcm:write name="doc_right_menu"/>

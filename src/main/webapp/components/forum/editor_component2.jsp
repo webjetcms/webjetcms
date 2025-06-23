@@ -3,7 +3,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.io.*,sk.iway.iwcm.editor.*,java.util.*,sk.iway.iwcm.users.UsersDB"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 request.setAttribute("cmpName", "forum");
 %>
@@ -131,11 +130,11 @@ function Ok()
 
 
 <form name="textForm" action="editor_component2.jsp">
-<logic:present parameter="useDelTimeLimit" >
+<iwcm:present parameter="useDelTimeLimit" >
 <input type="hidden" name="useDelTimeLimit" value="true">
 <input type="hidden" name="notifyPageAuthor" value="<%=notifyPageAuthor%>">
 <input type="hidden" name="delMinutes" value="<%=Tools.getIntValue(request.getParameter("delMinutes"),10)%>">
-</logic:present>
+</iwcm:present>
 
 <input type="hidden" name="pageSize" value="<%=Tools.getIntValue(request.getParameter("pageSize"),10)%>">
 <input type="hidden" name="pageLinksNum" value="<%=Tools.getIntValue(request.getParameter("pageLinksNum"),10)%>">

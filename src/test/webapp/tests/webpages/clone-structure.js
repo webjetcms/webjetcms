@@ -90,13 +90,12 @@ async function checkBodyEN(I, DT, DTE, Apps, title, values, perex) {
     Apps.switchEditor('html');
 
     I.say("Check EN translated body");
-    within('.CodeMirror-code', () => {
-        for(var i = 0; i < values.length; i++)
-            I.see( values[i] );
-        
-        //This include must be unchanged !!!
-        I.see( fake_include );
-    });
+    for(var i = 0; i < values.length; i++) {
+        I.waitForText( values[i] , 10, '.CodeMirror-code');
+    }
+
+    //This include must be unchanged !!!
+    I.see( fake_include, '.CodeMirror-code' );
 
     I.say("Check EN translated perex");
     I.clickCss("#pills-dt-datatableInit-perex-tab");

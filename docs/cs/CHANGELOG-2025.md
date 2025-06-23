@@ -4,15 +4,25 @@
 
 > Vývojová verze
 
+## 2025.18
+
+> Verze **2025.18** přináší kompletně předělaný modul **Elektronického obchodu** s podporou **platební brány GoPay** a vylepšeným seznamem objednávek. Aplikace **Kalendář novinek** byla oddělena jako **samostatná aplikace** a zároveň jsme předělali nastavení více aplikací v editoru stránek do nového designu. **Manažer dokumentů** (původně Archiv souborů) prošel **vizuálním i funkčním restartem** včetně nových nástrojů pro správu, export a import dokumentů.
+>
+> Vylepšen byl i systém **Hromadného e-mailu** s novými možnostmi pro odesílatele a pohodlnějším výběrem příjemců. **Rezervace** získali nové možnosti jako**nadměrné rezervace**, vytváření rezervací zpětně do minulosti a zasílání notifikací na specifické emaily pro každý rezervační objekt.
+>
+> Optimalizovali jsme počet souborů v **Průzkumníku**, což vede k **rychlejšímu načítání** a přidali nové informace do **Monitorování serveru**.
+
 ### Průlomové změny
 
 - Aplikace Kalendář novinek oddělena do samostatné aplikace, pokud kalendář novinek používáte je třeba upravit cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
 - Upravená inicializace Spring a JPA, více informací v sekci pro programátora (#43144).
+- Předělaná backend část aplikace elektronický obchod, více v sekci pro programátora (#57685).
 
 ### Datové tabulky
 
 - Při nastavení filtru číselné hodnoty od-do se pole zvětší pro lepší zobrazení zadané hodnoty podobně jako to dělá datové pole (#57685).
 - Aplikace Archiv souborů byla předělána na Spring aplikaci. Bližší informace naleznete v sekci pro programátora (#57317).
+- Aplikace Elektronický obchod byla na `BE` části předělaná. Bližší informace naleznete v sekci pro programátora (#56609).
 
 ### Manažer dokumentů (Archiv souborů)
 
@@ -27,6 +37,7 @@
 ![](redactor/files/file-archive/export_all.png)
 
 - **Import hlavních souborů** byl opraven a upraven, aby dokázal pracovat s rozšířenými možnostmi exportu. Více se dočtete v části [Import hlavních souborů](redactor/files/file-archive/import-files.md) (#57317).
+- **Indexování** dokumentů ve vyhledávačích typu `Google` upraveno tak, aby se neindexovaly staré/historické verze dokumentů a dokumenty mimo datum platnosti (nastavená HTTP hlavička `X-Robots-Tag=noindex, nofollow`). Indexování těchto dokumentů lze povolit v editoru v manažerovi dokumentů (#57805).
 
 ### Aplikace
 
@@ -51,6 +62,8 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 ![](redactor/apps/menu/editor-dialog.png)
 
+- Doplněny fotky obrazovky aplikací v české jazykové mutaci pro většinu aplikací (#57785).
+
 ### Hromadný e-mail
 - **Přesunuté pole Web stránka** – nyní se nachází před polem **Předmět**, aby se po výběru stránky předmět automaticky vyplnil podle názvu zvolené web stránky (#57541).
 - **Úprava pořadí v kartě Skupiny** – e-mailové skupiny jsou nyní zobrazeny před skupinami uživatelů (#57541).
@@ -63,6 +76,8 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 ![](redactor/apps/dmail/campaings/users.png)
 
+- Odhlášení - při přímém zadání emailu na odhlášení (ne kliknutí na odkaz v emailu) je zaslán na zadanou email adresu potvrzující email. V něm je třeba kliknout na odkaz pro odhlášení. Původní verze nekontrolovala žádným způsobem platnost/vlastnictví email adresy a bylo možné odhlásit i cizí email (#57665).
+
 ### Kalendář novinek
 
 - Kalendář novinek oddělen jako samostatná aplikace, původně to byla možnost v aplikaci Kalendář (#57409).
@@ -73,6 +88,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 ### Monitorování serveru
 
 - Doplněna tabulka s informací o databázových spojeních a obsazené paměti (#54273-61).
+- Doplněna informace o verzi knihoven`Spring (Core, Data, Security)` do sekce Monitorování serveru-Aktuální hodnoty (#57793).
 
 ### Rezervace
 
@@ -98,6 +114,17 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - V seznamu objednávek předělán výběr země přes výběrové pole, který nabízí pouze země definované konstantou `basketInvoiceSupportedCountries` (#57685).
 
 ![](redactor/apps/eshop/invoice/editor_personal-info.png)
+
+- Nová verze[konfigurace způsobů platby](redactor/apps/eshop/payment-methods/README.md) a integrace na platební brány. Údaje jsou odděleny podle domén. Přidali jsme podporu [platební brány GoPay](https://www.gopay.com), což znamená i akceptaci platebních karet, podporu `Apple/Google Pay`, platby přes internet banking, `PayPal`, `Premium SMS` atd. Kromě toho jsou podporovány platby převodem a dobírka Pro každý typ platby je možné nastavit i cenu, která při zvolení možnosti bude automaticky připočtena k objednávce.
+
+![](redactor/apps/eshop/payment-methods/datatable.png)
+
+- Nová aplikace Seznam objednávek se seznamem objednávek aktuálně přihlášeného uživatele. Klepnutím na objednávku lze zobrazit detail objednávky a stáhnout ji v PDF formátu (#56609).
+
+### Jiné menší změny
+
+- Vyhledávání v administraci - upravené rozhraní na vlastní `RestController` a `Service` (#57561).
+- Průzkumník - rychlejší načítání a nižší zatížení serveru snížením počtu souborů/požadavek na server (#56953).
 
 ### Oprava chyb
 
@@ -129,6 +156,10 @@ Jiné změny:
 - Přidána možnost v anotaci `@DataTableColumn` nastavit atribut `orderProperty` který určí[sloupce pro uspořádání](developer/datatables/restcontroller.md#uspořádání) Např. `orderProperty = "contactLastName,deliverySurName"`. Výhodné pro `EditorFields` třídy, které mohou agregovat data z více sloupců (#57685).
 - Pro pole typu `dt-tree-dir-simple` s nastaveným `data-dt-field-root` doplněna stromová struktura rodičovských složek pro lepší[zobrazení stromové struktury](developer/datatables-editor/field-json.md) (předtím se složky zobrazovaly až od zadané kořenové složky). Přidána možnost definovat seznam složek, které se ve stromové struktuře nezobrazí pomocí konfigurační proměnné nastavené do `data-dt-field-skipFolders`.
 - Výběrové [pole s možností editace](developer/datatables-editor/field-select-editable.md) upraveno tak, aby po přidání nového záznamu byl tento záznam automaticky v poli zvolen (#57757).
+- Předělaná aplikace Elektronický obchod na `BE` části. Jelikož se využívají již nové třídy, pro správné fungování musíte:
+  - využít aktualizační skript `/admin/update/update-2023-18.jsp` pro základní aktualizaci vašich JSP souborů
+  - nakolik se nyní využívá typ `BigDecimnal` místo `float`, musíte navíc upravit všechna srovnání těchto hodnot. Typ `BigDecimal` se nesrovnává klasicky pomocí `<, =, >` ale pomocí `BigDecimal.compareTo( BigDecimal )`
+  - musíte odstranit volání souborů, nebo zpětně přidat všechny soubory, které byly odstraněny, protože nebyly využívány
 
 ### Testování
 
@@ -136,6 +167,9 @@ Jiné změny:
 - Web stránky - doplněný test vytvoření nové stránky s publikováním v budoucnosti (#57625).
 - Galerie - doplněn test vodoznaku s porovnáním obrázku, doplněn test kontroly práv (#57625).
 - Web stránky - doplněný test volitelných polí při vytváření web stránky (#57625).
+- Allure - doplněné výsledky jUnit testů do společného Allure reportu (#57801).
+
+![meme](_media/meme/2025-18.jpg ":no-zoom")
 
 ## 2025.0.x
 
@@ -155,6 +189,7 @@ Jiné změny:
 - Web stránky - schvalování - opraveno načtení seznamu v kartě Neschváleno při použití databázového serveru `Oracle` (#54273-62).
 - Web stránky - opravená aktualizace nodů clusteru při změně značek (#57717).
 - Web stránky - opraveno zobrazení seznamu stránek pokud má uživatel právo pouze na vybrané webové stránky (#57725-4).
+- Web stránky - doplněný přepínač domén i když není nastavena konfigurační proměnná `enableStaticFilesExternalDir` ale jen `multiDomainEnabled` (#57833).
 - Aplikace - opraveno zobrazení karty překladové klíče při použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Aplikace - přidána podpora vkládání nového řádku přes klávesovou zkratku `SHIFT+ENTER` do jednoduchého textového editoru používaného např. v Otázky a odpovědi (#57725-1).
 - Číselníky - přesunutý výběr číselníku přímo do nástrojové lišty datové tabulky (#49144).
@@ -169,6 +204,16 @@ Jiné změny:
 - Uživatelé - přidána možnost vybrat také Kořenovou složku v právech uživatele v sekci Nahrávání souborů do adresářů (54273-60).
 - Uživatelé - upravené nastavení práv - zjednodušené nastavení práv administrátorů a registrovaných uživatelů (již není třeba zvolit i právo Uživatelé), opravené duplicitní položky, upravené seskupení v sekci Šablony (#57725-4).
 - Průzkumník - doplněna lepší hlášení při chybě vytvoření ZIP archivu (#56058).
+- Statistika - opraveno vytvoření tabulky pro statistiku kliknutí v teplotní mapě.
+- Překladač - implementace inteligentního zpoždění pro překladač `DeepL` jako ochrana proti chybě `HTTP 429: too many requests`, která způsobovala výpadek překladů (#57833).
+- Klonování struktury - opraveno nechtěné překládání implementace aplikací `!INCLUDE(...)!`, při automatickém překladu těla stránky (#57833).
+- Klonování struktury - přidán překlad perex anotace automatickém překladu stránek (#57833).
+- Průzkumník - opravena práva nastavení vlastností složky a souboru (#57833).
+- Monitorování serveru - opraveno hlášení o nastavení konfigurační proměnné pro Aplikace, WEB stránky a SQL dotazy (#57833).
+- Úvod - opraveno zobrazení požadavku na dvoustupňové ověřování při integraci přes `IIS` (#57833).
+- Klonování/zrcadlení struktury - opraveno nastavení URL adresy složky (odstranění diakritiky a mezer) (#57657-7).
+- Galerie - doplněno chybějící značky (#57837).
+- Značky - opraveno nastavení složek existující značky v sekci Zobrazit pro (#57837).
 
 ### Bezpečnost
 

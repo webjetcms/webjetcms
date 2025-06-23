@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.jsp.PageContext;
 import jakarta.servlet.jsp.tagext.Tag;
 
-import org.apache.struts.util.ResponseUtils;
 import org.displaytag.localization.I18nResourceProvider;
 import org.displaytag.localization.LocaleResolver;
 
@@ -14,6 +13,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  *  DislpayTagLocaleResolver.java - resolver pre ResourceBundle

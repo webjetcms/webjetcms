@@ -1,7 +1,5 @@
 package sk.iway.iwcm.users;
 
-import javax.servlet.http.HttpServletRequest;
-
 import sk.iway.iwcm.Tools;
 
 /**

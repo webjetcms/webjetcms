@@ -13,38 +13,40 @@ ext {
 ```
 
 Přičemž aktuálně existují následující verze WebJET:
-- `2025.0-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
-- `2025.0` - stabilizovaná verze 2025.0, nepřibývají do ní denní změny
-- `2024.52` - stabilizovaná verze 2024.52, nepřibývají do ní denní změny
+- `2025.0-SNAPSHOT` - pravidelně aktualizovaná verze z main repozitáře verze 2025, dostupná jako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT)
+- `2025.18` - stabilizovaná verze 2025.18, nepřibývají do ní denní změny.
+- `2025.0.23` - stabilizovaná verze 2025.0.23 s opravami chyb vůči verzi 2025.0 (bez přidání vylepšení ze SNAPSHOT verze).
+- `2025.0` - stabilizovaná verze 2025.0, nepřibývají do ní denní změny.
+- `2024.52` - stabilizovaná verze 2024.52, nepřibývají do ní denní změny.
 - `2024.0.52` - stabilizovaná verze 2024.0.52 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2024.0.47` - stabilizovaná verze 2024.0.47 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
-- `2024.40` - stabilizovaná verze 2024.40, nepřibývají do ní denní změny
+- `2024.40` - stabilizovaná verze 2024.40, nepřibývají do ní denní změny.
 - `2024.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2024.0 zkompilovaná s Java verze 17.
-- `2024.18` - stabilizovaná verze 2024.18, nepřibývají do ní denní změny
+- `2024.18` - stabilizovaná verze 2024.18, nepřibývají do ní denní změny.
 - `2024.0.34` - stabilizovaná verze 2024.0.34 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2024.0.21` - stabilizovaná verze 2024.0.21 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2024.0.17` - stabilizovaná verze 2024.0.17 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2024.0.9` - stabilizovaná verze 2024.0.9 s opravami chyb vůči verzi 2024.0 (bez přidání vylepšení ze SNAPSHOT verze).
 - `2024.0` - stabilizovaná verze 2024.0 (technicky shodná s 2023.52-java17), nepřibývají do ní denní změny, zkompilovaná s Java verze 17.
 - `2023.52-java17` - stabilizovaná verze 2023.52, nepřibývají do ní denní změny, zkompilovaná s Java verze 17.
-- `2023.52` - stabilizovaná verze 2023.52, nepřibývají do ní denní změny
+- `2023.52` - stabilizovaná verze 2023.52, nepřibývají do ní denní změny.
 - `2023.40-SNAPSHOT-java17` - pravidelně aktualizovaná verze z master repozitáře verze 2023.40 zkompilovaná s Java verze 17.
-- `2023.40-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.40
-- `2023.40` - stabilizovaná verze 2023.40, nepřibývají do ní denní změny
+- `2023.40-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.40.
+- `2023.40` - stabilizovaná verze 2023.40, nepřibývají do ní denní změny.
 - `2023.18-SNAPSHOT-java17` - pravidelně aktualizovaná verze z master repozitáře verze 2023.18 zkompilovaná s Java verze 17.
-- `2023.18-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.18
-- `2023.18` - stabilizovaná verze 2023.18, nepřibývají do ní denní změny
+- `2023.18-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.18.
+- `2023.18` - stabilizovaná verze 2023.18, nepřibývají do ní denní změny.
 - `2023.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře verze 2023.0, z důvodu API změn tato verze končí před vydáním verze 2023.18 aby nedošlo k neočekávané změně API v projektech.
-- `2023.0` - stabilizovaná verze 2023.0, nepřibývají do ní denní změny
-- `2022.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře
-- `2022.52` - stabilizovaná verze 2022.52, nepřibývají do ní denní změny
-- `2022.40` - stabilizovaná verze 2022.40, nepřibývají do ní denní změny
-- `2022.18` - stabilizovaná verze 2022.18, nepřibývají do ní denní změny
-- `2022.0` - stabilizovaná verze 2022.0, nepřibývají do ní denní změny
-- `2021.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře
-- `2021.52` - stabilizovaná verze 2021.52, nepřibývají do ní denní změny
-- `2021.40` - stabilizovaná verze 2021.40, nepřibývají do ní denní změny
-- `2021.13` - stabilizovaná verze 2021.13, nepřibývají do ní denní změny
+- `2023.0` - stabilizovaná verze 2023.0, nepřibývají do ní denní změny.
+- `2022.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře.
+- `2022.52` - stabilizovaná verze 2022.52, nepřibývají do ní denní změny.
+- `2022.40` - stabilizovaná verze 2022.40, nepřibývají do ní denní změny.
+- `2022.18` - stabilizovaná verze 2022.18, nepřibývají do ní denní změny.
+- `2022.0` - stabilizovaná verze 2022.0, nepřibývají do ní denní změny.
+- `2021.0-SNAPSHOT` - pravidelně aktualizovaná verze z master repozitáře.
+- `2021.52` - stabilizovaná verze 2021.52, nepřibývají do ní denní změny.
+- `2021.40` - stabilizovaná verze 2021.40, nepřibývají do ní denní změny.
+- `2021.13` - stabilizovaná verze 2021.13, nepřibývají do ní denní změny.
 
 Pro čísla verzí platí:
 - `YEAR.0.x` - opravná verze, **nepřibývají do ní nové vlastnosti**, během roku jsou v ní opravovány nalezené chyby ve WebJET CMS. Použité knihovny jsou v případě potřeby aktualizovány pouze v rámci `minor` verze. Pokud oprava knihovny vyžaduje změnu v `major` verzi nemůže být do této verze zapracována, protože to může nést riziko změn v `API`.
@@ -59,7 +61,7 @@ Platí tedy, že `YEAR.0.x` je **nejstabilnější** z pohledu změn a `YEAR.0-S
 
 ## Změny při přechodu na 2025.0-SNAPSHOT
 
-Verze `2025.0-SNAPSHOT` je dostupná přes [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/), je proto třeba doplnit konfiguraci do vašeho `build.gradle` souboru:
+Verze `2025.0-SNAPSHOT` je dostupná přes [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), je proto třeba doplnit konfiguraci do vašeho `build.gradle` souboru:
 
 ```gradle
 repositories {

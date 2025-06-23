@@ -9,13 +9,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 
-import org.apache.struts.util.ResponseUtils;
+import org.apache.commons.beanutils.BeanUtils;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.tags.support.CustomTagUtils;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 /**
  * SelectTag.java - tag pre render selectu zo Struts s pridanim poslednej
@@ -29,9 +31,10 @@ import sk.iway.iwcm.i18n.Prop;
  * @created Date: 16.8.2005 11:34:08
  * @modified $Date: 2010/01/20 11:15:08 $
  */
-public class SelectTag extends BodyTagSupport
+public class SelectTag extends sk.iway.iwcm.tags.support.SelectTag
 {
 	private static final long serialVersionUID = 2751499992225522333L;
+	public static final String SELECT_KEY = "org.apache.struts.taglib.html.SELECT";
 
 	//tu je mozne zadat SQL prikaz pre setnutie ako ArrayList do pageContextu
 	// (pouzite pre options tag)
@@ -124,7 +127,7 @@ public class SelectTag extends BodyTagSupport
 			//	zapis linku na javascript
 			if (request.getAttribute("sk.iway.iwcm.tags.SelectTag.isJsIncluded")==null)
 			{
-				TagUtils.getInstance().write(pageContext, "<script type='text/javascript' language='JavaScript' src='"+request.getContextPath()+"/components/_common/html_tags_support.jsp'></script>");
+				CustomTagUtils.getInstance().write(pageContext, "<script type='text/javascript' language='JavaScript' src='"+request.getContextPath()+"/components/_common/html_tags_support.jsp'></script>");
 				request.setAttribute("sk.iway.iwcm.tags.SelectTag.isJsIncluded", "true");
 			}
 			String origOnchange = getOnchange();
@@ -136,20 +139,19 @@ public class SelectTag extends BodyTagSupport
 			setOnclick("if(1==this.length){onchange();}");
 		}
 
-		TagUtils.getInstance().write(pageContext, renderSelectStartElement());
+		CustomTagUtils.getInstance().write(pageContext, renderSelectStartElement());
 		// Store this tag itself as a page attribute
-		pageContext.setAttribute(Constants.SELECT_KEY, this);
+		pageContext.setAttribute(SELECT_KEY, this);
 		this.calculateMatchValues();
 		*/
 		return (EVAL_BODY_BUFFERED);
 	}
 
-	@Override
 	public int doEndTag() throws JspException
 	{
 		/* TODO
 		// Remove the page scope attributes we created
-		pageContext.removeAttribute(Constants.SELECT_KEY);
+		pageContext.removeAttribute(SELECT_KEY);
 		// Render a tag representing the end of our current form
 		StringBuilder results = new StringBuilder();
 		if (saveBody != null)
@@ -161,8 +163,7 @@ public class SelectTag extends BodyTagSupport
 			results.append("<option value='"+NEW_OPTION_VALUE+"'>"+enableNewText+"</option>");
 		}
 		results.append("</select>");
-		TagUtils.getInstance().write(pageContext, results.toString());
-		*/
+		CustomTagUtils.getInstance().write(pageContext, results.toString());
 		return (EVAL_PAGE);
 	}
 
@@ -181,7 +182,7 @@ public class SelectTag extends BodyTagSupport
 		}
 		else
 		{
-			Object bean = TagUtils.getInstance().lookup(pageContext, name, null);
+			Object bean = CustomTagUtils.getInstance().lookup(pageContext, name, null);
 			if (bean == null)
 			{
 				//aby sa top dalo pouzit aj v cistom forme
@@ -205,14 +206,14 @@ public class SelectTag extends BodyTagSupport
 			}
 			catch (IllegalAccessException e)
 			{
-				TagUtils.getInstance().saveException(pageContext, e);
-				throw new JspException(messages.getMessage("getter.access", property, name));
+				CustomTagUtils.getInstance().saveException(pageContext, e);
+				throw new JspException( CustomTagUtils.getInstance().getMessage("getter.access", property, name) );
 			}
 			catch (InvocationTargetException e)
 			{
 				Throwable t = e.getTargetException();
-				TagUtils.getInstance().saveException(pageContext, t);
-				throw new JspException(messages.getMessage("getter.result", property, t.toString()));
+				CustomTagUtils.getInstance().saveException(pageContext, t);
+				throw new JspException( CustomTagUtils.getInstance().getMessage("getter.result", property, t.toString()) );
 			}
 			catch (NoSuchMethodException e)
 			{

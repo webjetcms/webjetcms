@@ -5,11 +5,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.forum.*,sk.iway.iwcm.components.forum.jpa.*,java.util.*,sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
-<%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.i18n.Prop"%><%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="org.apache.commons.codec.binary.Base64"%><%@page import="sk.iway.iwcm.i18n.Prop"%><%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 
 <%
 String lng = PageLng.getUserLng(request);
@@ -27,8 +23,11 @@ if (Tools.isNotEmpty(paramPageParams))
 PageParams pageParams = new PageParams(request);
 
 paramPageParams = (String)request.getAttribute("includePageParams");
-String base64encoded = new String(b64.encode(paramPageParams.getBytes()));
-base64encoded = Tools.URLEncode(Tools.replace(base64encoded, "=", "|"));
+String base64encoded = "";
+if(Tools.isNotEmpty(paramPageParams)) {
+	base64encoded = new String(b64.encode(paramPageParams.getBytes()));
+	base64encoded = Tools.URLEncode(Tools.replace(base64encoded, "=", "|"));
+}
 
 boolean isAjaxCall = request.getAttribute("docDetails")==null;
 if(isAjaxCall)
@@ -146,9 +145,9 @@ if(!isAjaxCall)
 %>
 <h3><iwcm:text key="forum.title"/></h3>
 
-<logic:present name="forumClosed">
+<iwcm:present name="forumClosed">
 	<p><span class="forumClosed"><iwcm:text key="components.forum.forum_closed"/>!</span></p>
-</logic:present>
+</iwcm:present>
 
 <div class="row">
 	<div class="col-xs-12 col-sm-12 col-md-12">
@@ -158,7 +157,7 @@ if(!isAjaxCall)
 	</div>
 </div>
 
-<logic:iterate name="data" id="field" type="DocForumEntity" indexId="index">
+<iwcm:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 <div class="media">
   <div class="media-left">
   	<%
@@ -185,12 +184,12 @@ if(!isAjaxCall)
                       </div>
                       <div class="media-body">
                               <iwcm:text key="forum.author"/>:
-                              <logic:notEmpty name="field" property="authorEmail">
-                                  <a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-                              </logic:notEmpty>
-                              <logic:empty name="field" property="authorEmail">
-                                  <bean:write name="field" property="authorName"/>
-                              </logic:empty>
+                              <iwcm:notEmpty name="field" property="authorEmail">
+                                  <a href="mailto:<iwcm:beanWrite name="field" property="authorEmail"/>"><iwcm:beanWrite name="field" property="authorName"/></a>
+                              </iwcm:notEmpty>
+                              <iwcm:empty name="field" property="authorEmail">
+                                  <iwcm:beanWrite name="field" property="authorName"/>
+                              </iwcm:empty>
                               <div class="row">
                                   <div class="col-xs-12 col-sm-12 col-md-12">
                                     <jsp:getProperty name="field" property="question"/>
@@ -200,23 +199,23 @@ if(!isAjaxCall)
                     </div>
 				<%}else{%>
 
-							<h4 class="media-heading"><bean:write name="field" property="subject"/>
+							<h4 class="media-heading"><iwcm:beanWrite name="field" property="subject"/>
 								<%if (!active || !field.getActive()) {%>
 									<img src="/components/forum/images/folder_locked_big.gif" style="border:0px;" align="absbottom"/>
 								<%}%>
 							</h4>
 
 							<iwcm:text key="forum.author"/>:
-							<logic:notEmpty name="field" property="authorEmail">
-								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-							</logic:notEmpty>
-							<logic:empty name="field" property="authorEmail">
-								<bean:write name="field" property="authorName"/>
-							</logic:empty>
+							<iwcm:notEmpty name="field" property="authorEmail">
+								<a href="mailto:<iwcm:beanWrite name="field" property="authorEmail"/>"><iwcm:beanWrite name="field" property="authorName"/></a>
+							</iwcm:notEmpty>
+							<iwcm:empty name="field" property="authorEmail">
+								<iwcm:beanWrite name="field" property="authorName"/>
+							</iwcm:empty>
 <%--
-							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/>--%>
+							<iwcm:beanWrite name="field" property="questionDateDisplayDate"/> <iwcm:beanWrite name="field" property="questionDateDisplayTime"/>--%>
 						 <%if (field.canPost(forumGroupBean, user)) {%>
-							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
+							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:beanWrite name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
 						 <%}%>
 
 					<div class="row">
@@ -228,7 +227,7 @@ if(!isAjaxCall)
 
   </div>
 </div>
-</logic:iterate>
+</iwcm:iterate>
 <%--
 <table border="0" cellspacing="0" cellpadding="0" class="forumTable">
 <%if (!active) {%>
@@ -258,22 +257,22 @@ if(!isAjaxCall)
 	<% } else { %>
 		<table border="0" cellspacing="0" cellpadding="0" class="forumOpenTable">
 
-			<logic:iterate name="data" id="field" type="DocForumEntity" indexId="index">
+			<iwcm:iterate name="data" id="field" type="DocForumEntity" indexId="index">
 				<tr<% if (field.isDeleted()) out.print(" class='trDeleted'"); %>>
 					<td style="padding-left:<%=(20 * field.getLevel())%>px;" class="forumOpenTableHeader">
-							<b><bean:write name="field" property="subject"/></b><br />
+							<b><iwcm:beanWrite name="field" property="subject"/></b><br />
 							<iwcm:text key="forum.author"/>:
-							<logic:notEmpty name="field" property="authorEmail">
-								<a href="mailto:<bean:write name="field" property="authorEmail"/>"><bean:write name="field" property="authorName"/></a>
-							</logic:notEmpty>
-							<logic:empty name="field" property="authorEmail">
-								<bean:write name="field" property="authorName"/>
-							</logic:empty>
+							<iwcm:notEmpty name="field" property="authorEmail">
+								<a href="mailto:<iwcm:beanWrite name="field" property="authorEmail"/>"><iwcm:beanWrite name="field" property="authorName"/></a>
+							</iwcm:notEmpty>
+							<iwcm:empty name="field" property="authorEmail">
+								<iwcm:beanWrite name="field" property="authorName"/>
+							</iwcm:empty>
 					</td>
 					<td align="right" class="forumOpenTableHeader">
-							<bean:write name="field" property="questionDateDisplayDate"/> <bean:write name="field" property="questionDateDisplayTime"/><br />
+							<iwcm:beanWrite name="field" property="questionDateDisplayDate"/> <iwcm:beanWrite name="field" property="questionDateDisplayTime"/><br />
 						 <%if (active) {%>
-							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<bean:write name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
+							<a href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<iwcm:beanWrite name="field" property="forumId"/>&type=open&docid=<%=docId%>&pageParams=<%=base64encoded %>&pageNum=<%=pageNumber %>');">[<iwcm:text key="forum.reply"/>]</a>
 						 <%}%>
 					</td>
 				</tr>
@@ -282,7 +281,7 @@ if(!isAjaxCall)
 						<jsp:getProperty name="field" property="question"/>
 					</td>
 				</tr>
-			</logic:iterate>
+			</iwcm:iterate>
 
 		</table>
 	<% } %>

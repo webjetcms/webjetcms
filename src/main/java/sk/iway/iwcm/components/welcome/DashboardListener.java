@@ -165,11 +165,13 @@ public class DashboardListener {
             }
 
             boolean show2FARecommendation = false;
-            String overview2fawarning = prop.getText("overview.2fa.warning");
-            if (Tools.isEmpty(Constants.getString("ldapProviderUrl")) && Tools.isEmpty(Constants.getString("adminLogonMethod")) && AuthenticationFilter.weTrustIIS()==false && Tools.isNotEmpty(overview2fawarning) && overview2fawarning.length() > 2) {
-                String mobileDevice = userDetailsRepository.getMobileDeviceByUserId((long)user.getUserId());
-                if (Tools.isEmpty(mobileDevice)) {
-                    show2FARecommendation = true;
+            if (Constants.getBoolean("2factorAuthEnabled")) {
+                String overview2fawarning = prop.getText("overview.2fa.warning");
+                if (Tools.isEmpty(Constants.getString("ldapProviderUrl")) && Tools.isEmpty(Constants.getString("adminLogonMethod")) && AuthenticationFilter.weTrustIIS()==false && Tools.isNotEmpty(overview2fawarning) && overview2fawarning.length() > 2) {
+                    String mobileDevice = userDetailsRepository.getMobileDeviceByUserId((long)user.getUserId());
+                    if (Tools.isEmpty(mobileDevice)) {
+                        show2FARecommendation = true;
+                    }
                 }
             }
             model.addAttribute("show2FARecommendation", show2FARecommendation);

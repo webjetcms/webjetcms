@@ -259,6 +259,18 @@ Pri kliknutí na tlačidlo "Vložiť do stránky" sa aplikácia vloží do strá
 
 Ak už je aplikácia vložená v stránke kliknutím do vnútra aplikácie sa vám zobrazí rovnaké okno nastavenia aplikácie. Môžete tak jednoducho upraviť jej existujúce nastavenia.
 
+### Karta zobrazenie
+
+Väčšina aplikácii obsahuje kartu Zobrazenie pre spoločné nastavenia (ak táto možnosť v aplikácii nie je z rôznych dôvodov vypnutá).
+
+![](../../../custom-apps/appstore/common-settings-tab.png)
+
+Karta obsahuje parametre:
+
+- Zobrazenie na zariadeniach, slúžiaci na nastavenie [podmieneného zobrazenia aplikácia](../../../custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) na zariadeniach typu tablet, telefón alebo štandardný počítač. Ak nie je zvolená žiadna možnosť, zobrazí sa aplikácia na všetkých zariadeniach (rovnako ako keď sú zvolené všetky možnosti).
+- Prihlásený používateľ - umožňuje nastaviť zobrazenie aplikácie podľa stavu prihlásenia návštevníka web sídla - zobrazenie vždy, len ak je používateľ prihlásený, alebo ak nie je prihlásený. V editore stránok sa aplikácia zobrazí vždy, ale v náhľade, alebo zobrazení stránky sa zobrazí podľa nastavenej hodnoty.
+- Čas vyrovnávacej pamäte (minúty) - slúži na nastavenie doby v minútach, po akú má byť inicializovaná aplikácia uložená vo vyrovnávacej pamäti pre jej rýchlejšie zobrazenie. Napríklad zoznam noviniek sa nemení často a ich načítanie je náročné na databázový server, je teda vhodné nastaviť napríklad hodnotu 30. Ak je prihlásený administrátor, vyrovnávacia pamäť sa nepoužije a vždy sa zobrazia aktuálne údaje.
+
 ## Pred pripravené bloky
 
 Editor stránky ponúka možnosť vkladania prednastavených blokov (```HTML``` objektov) na stránku. Napr. tabuľka, text, kontaktný formulár atď. Viete vložiť aj obsah inej stránky do aktuálnej stránky (napr. opakujúci sa formulár).
