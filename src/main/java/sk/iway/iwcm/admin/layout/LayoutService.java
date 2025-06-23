@@ -60,12 +60,18 @@ public class LayoutService
         layout.setPropertiesLastModified(AdminPropRestController.getLastModified(layout.getLngWebjet()));
         setNopermsCss();
 
+        String suffix = "";
+        if (user!=null && "tester".equals(user.getLogin()) && "adminScript".equals(request.getParameter("act"))) {
+            //to properly test script insert in e2e we need this hack
+            suffix = "-test";
+        }
+
         //check for custom CSS file
-        String customAdminCss = WriteTagToolsForCore.getCustomPageAdmin("/admin/style.css", request);
+        String customAdminCss = WriteTagToolsForCore.getCustomPageAdmin("/admin/style"+suffix+".css", request);
         layout.setCustomAdminCss(customAdminCss);
 
         //check for custom JS file
-        String customAdminJavascript = WriteTagToolsForCore.getCustomPageAdmin("/admin/script.js", request);
+        String customAdminJavascript = WriteTagToolsForCore.getCustomPageAdmin("/admin/script"+suffix+".js", request);
         layout.setCustomAdminJavascript(customAdminJavascript);
 
         return this;
