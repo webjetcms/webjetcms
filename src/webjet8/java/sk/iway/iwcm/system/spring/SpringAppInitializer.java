@@ -12,6 +12,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.DebugTimer;
 
 import javax.servlet.FilterRegistration;
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration.Dynamic;
