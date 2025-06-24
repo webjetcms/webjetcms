@@ -99,8 +99,6 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
         "badge": "1"
     };
 
-    pause ();
-
     I.clickCss(".image_radio_item > label[for=DTE_Field_field_2]");
     DTE.fillField("file", changedParams.file);
     I.checkOption("#DTE_Field_widthType_1");
