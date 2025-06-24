@@ -69,12 +69,17 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		dynamic.addMapping("/");
 		dynamic.setLoadOnStartup(1);
 
+		String stripesPostSize = Constants.getString("stripes.FileUpload.MaximumPostSize");
+		stripesPostSize = Tools.replace(stripesPostSize, "m", "000000");
+		stripesPostSize = Tools.replace(stripesPostSize, "g", "000000000");
+		long maxPostSize = Tools.getLongValue(stripesPostSize, 0L);
+
 		// Set multipart config (example values)
 		MultipartConfigElement multipartConfig = new MultipartConfigElement(
-			null,        // location (null = default temp dir)
-			20_971_520,  // maxFileSize (20MB)
-			41_943_040,  // maxRequestSize (40MB)
-			0            // fileSizeThreshold
+			null,// location (null = default temp dir)
+			maxPostSize,  // maxFileSize
+			maxPostSize,  // maxRequestSize
+			0    // fileSizeThreshold
 		);
 		dynamic.setMultipartConfig(multipartConfig);
 
