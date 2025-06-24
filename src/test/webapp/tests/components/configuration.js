@@ -6,7 +6,7 @@ var datatableName = "configurationDatatable";
 Before(({ I, login, DT }) => {
 
     login('admin');
-    I.amOnPage("/admin/v9/settings/configuration");
+    I.amOnPage("/admin/v9/settings/configuration/");
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();

@@ -31,7 +31,7 @@ Scenario('Verification of manifestation of changes in the cronjob', ({ I, DT, DT
     I.dontSee(`Cron task executed: sk.iway.iwcm.system.cron.Echo [${jobName}]`);
 
     I.say('Edit cronjob to enable auditing');
-    I.amOnPage("/admin/v9/settings/cronjob");
+    I.amOnPage("/admin/v9/settings/cronjob/");
     DT.filterContains('taskName', `autotest-${randomNumber}`);
     I.click('button.buttons-select-all');
     I.click(DT.btn.edit_button);

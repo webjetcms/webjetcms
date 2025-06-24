@@ -2,7 +2,6 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="cmp_form"/>
 <%
 String loggedUserEmail = "";
@@ -35,7 +34,7 @@ if (user!=null)
 
 <script type='text/javascript'>
 
-<logic:notPresent parameter="modify">
+<iwcm:notPresent parameter="modify">
 window.onload = this.focus
 
 function doForm()
@@ -106,9 +105,9 @@ function setValues()
    document.formForm.form_name.value = window.opener.editorForm.title.value;
 }
 
-</logic:notPresent>
+</iwcm:notPresent>
 
-<logic:present parameter="modify">
+<iwcm:present parameter="modify">
 var myPage = window.opener;
 
 var formName = myPage.selectedForm.name;
@@ -199,7 +198,7 @@ function doForm()
     window.close()
 }
 
-</logic:present>
+</iwcm:present>
 
 function sendByEmailClick()
 {

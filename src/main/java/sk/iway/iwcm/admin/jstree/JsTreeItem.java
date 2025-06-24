@@ -7,13 +7,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.struts.util.ResponseUtils;
 
 @Getter
 @Setter

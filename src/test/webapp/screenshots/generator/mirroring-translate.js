@@ -9,12 +9,12 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {  
+Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {
     let confLng = I.getConfLng();
     I.say("Set configuration value");
     Document.setConfigValue("structureMirroringConfig", "56845,56846:mirroring.tau27.iway.sk");
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
     I.click("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     I.click(locate('.dropdown-item').withText("mirroring.tau27.iway.sk"));
@@ -54,7 +54,7 @@ Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {
     DTE.cancel();
     I.wait(1);
 
-    // Delete 
+    // Delete
     removePage(I, DT, enVersionName, confLng);
 
     I.clickCss("#pills-trash-tab");
@@ -73,7 +73,7 @@ function removePage(I, DT, pageName, confLng, all = false) {
     } else {
         I.forceClick("#datatableInit tbody tr:nth-child(1) td.dt-select-td");
     }
-    
+
     I.click(DT.btn.delete_button);
 
     switch (confLng) {

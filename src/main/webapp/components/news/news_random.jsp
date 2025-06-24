@@ -3,10 +3,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*,java.util.*"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 //stranka pre nahodny vypis jednej novinky
 String lng = PageLng.getUserLng(request);
@@ -31,15 +27,15 @@ try
 	{
 		int rndValue = (int) ( Math.random() * (double)size);
    	rndDoc = (DocDetails)docs.get(rndValue);
-   	
+
    	//vyradime default stranku adresara (tam je pravdepodobne zoznam noviniek)
    	if (group != null && rndDoc.getDocId()==group.getDefaultDocId()) continue;
-   	
+
    	//vyradime tie ktore nemaju platne datumy
    	long now = Tools.getNow();
    	if (rndDoc.getPublishStart()>now) continue;
    	if (rndDoc.getPublishEnd()>0 && rndDoc.getPublishEnd()<now) continue;
-   	
+
    	break;
    }
 }
@@ -54,8 +50,8 @@ if (rndDoc != null)
 }
 %>
 
-<logic:present name="rndDoc">
-   <a href="/showdoc.do?docid=<bean:write name="rndDoc" property="docId"/>"><bean:write name="rndDoc" property="title"/></a>
+<iwcm:present name="rndDoc">
+   <a href="/showdoc.do?docid=<iwcm:beanWrite name="rndDoc" property="docId"/>"><iwcm:beanWrite name="rndDoc" property="title"/></a>
    <br />
-   <bean:write name="rndDoc" property="perex"/>
-</logic:present>
+   <iwcm:beanWrite name="rndDoc" property="perex"/>
+</iwcm:present>

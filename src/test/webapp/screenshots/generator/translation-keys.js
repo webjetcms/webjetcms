@@ -2,7 +2,7 @@ Feature('settings.translation_keys');
 
 Before(({ I, login }) =>{
     login('admin');
-    I.amOnPage("/admin/v9/settings/translation-keys");
+    I.amOnPage("/admin/v9/settings/translation-keys/");
 });
 
 Scenario('translation keys', async ({ I, DTE, Document }) => {
@@ -43,7 +43,7 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
 
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
-    
+
     switch (I.getConfLng()) {
         case "sk":
             I.click("Zmazať", "div.DTE_Action_Remove");
@@ -56,7 +56,7 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
             break;
         default:
             throw new Error("Unknown language: " + I.getConfLng());
-    }    
+    }
 
     I.wait(1);
 

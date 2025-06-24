@@ -468,55 +468,34 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 			function m_click_help()
 			{
-			   var helpLink = "";
-
-			   try
+				try
 				{
-				   var url = document.getElementById("frmMain").contentWindow.location.pathname;
-					var start = url.indexOf("/components/");
-					if (start != -1)
-					{
-						start += "/components".length;
-						var end = url.indexOf("/", start+1)
-						if (end != -1)
-						{
-							var cmpName = url.substring(start+1, end);
-							//window.alert(cmpName);
-							helpLink = "components/"+cmpName+".jsp&book=components";
-						}
-
-					}
-				}
-				catch(e)
-				{
-				}
-
-				if (""==helpLink)
-				{
+					var helpLink = "/";
 					try
 					{
 						helpLink = document.getElementById("frmMain").contentWindow.helpLink;
 					}
 					catch (e) {}
+					if (parent.mainFrame && parent.mainFrame.helpLink) helpLink = parent.mainFrame.helpLink;
+					else if (typeof window.helpLink != "undefined" && window.helpLink != null && window.helpLink != "") helpLink = window.helpLink;
+					showHelpWindow(helpLink);
 				}
-
-				if (""==helpLink)
-				{
-					helpLink = "editor/editor_intro.jsp&book=editor";
-				}
-
-				showHelpWindow(helpLink);
+				catch (e) { showHelpWindow(""); }
 			}
 
 			function showHelpWindow(helpLink)
 			{
-				var url = "/admin/help/index.jsp";
-				if (helpLink != "")
+				try
 				{
-					url = url + "?link="+helpLink;
+					var lng = "sk";
+					if (typeof window.userLng != "undefined" && window.userLng != null && window.userLng != "") lng = window.userLng;
+					var url = "http://docs.webjetcms.sk/latest/"+lng;
+					if (helpLink == null) helpLink = "/";
+					else if (helpLink.indexOf("/") != 0) helpLink = "/" + helpLink;
+					url += helpLink;
+					window.open(url, '_blank');
 				}
-			   var options = "menubar=no,toolbar=no,scrollbars=yes,resizable=yes,width=880,height=540;"
-			   popWindow=window.open(url,"_blank",options);
+				catch (e) {  }
 			}
 
 			function setTopTitle(text, iconUrl)

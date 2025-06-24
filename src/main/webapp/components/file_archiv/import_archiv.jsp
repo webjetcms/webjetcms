@@ -22,9 +22,6 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
 <iwcm:checkLogon admin="true" perms="menuFileArchivImportFiles"/>
@@ -376,14 +373,14 @@
         Logger.debug(null,"import_archiv.jsp Nasli sme "+uploadDuplicates.size()+" duplikátov z "+fileArchivBeans.size()+" súborov");
         request.setAttribute("uploadDuplicates",uploadDuplicates);
         %>
-        <logic:empty name="uploadDuplicates">
+        <iwcm:empty name="uploadDuplicates">
             <script type="text/javascript">
                 $(document).ready(function(){
                     $('#btnPokracovatImport').click();
                 });
 
             </script>
-        </logic:empty>
+        </iwcm:empty>
         <form name="archiv_import" method="post">
             <h2><iwcm:text key="components.file_archiv.import_archiv.niektore_z_importovanych_suborov_sa_uz_v_archive_nachadzaju_vyberte_ci_sa_maju_nahradit_"/></h2>
             <display:table name="uploadDuplicates" id="fab" class="sort_table table table-hover table-wj dataTable no-footer">

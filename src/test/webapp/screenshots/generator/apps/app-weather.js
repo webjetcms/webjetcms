@@ -9,8 +9,8 @@ Scenario('app weather', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/pocasie/");
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/app-weather/app-weather.png");
-    
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     I.jstreeClick("Aplikácie");
     I.wait(1);
@@ -28,7 +28,7 @@ Scenario('app weather', ({ I, DT, DTE, Document }) => {
     I.wait(2);
 
     I.switchTo();
-  
+
     I.waitForElement("iframe.cke_dialog_ui_iframe", 10);
     I.switchTo("iframe.cke_dialog_ui_iframe");
     I.switchTo("iframe#editorComponent");
@@ -36,5 +36,5 @@ Scenario('app weather', ({ I, DT, DTE, Document }) => {
     I.wait(1);
 
     Document.screenshot("/redactor/apps/app-weather/editor.png");
-    
+
 });

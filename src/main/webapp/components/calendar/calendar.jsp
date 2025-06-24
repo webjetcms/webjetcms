@@ -7,10 +7,6 @@ sk.iway.iwcm.i18n.*,
 java.util.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 //ak mame na stranke viac kalendarov, toto je nase ID:
 Integer calendarID = (Integer)request.getAttribute("calendar.jsp.calendarID");
@@ -211,9 +207,9 @@ request.setAttribute("calendar.jsp.calendarID", new Integer(myCalendarId+1));
 		document.write('<style type="text/css" media="all">@import url("/components/calendar/calendar.css");</style>');
 
 		var print=false;
-		<logic:present parameter="print">
+		<iwcm:present parameter="print">
 			print = true;
-		</logic:present>
+		</iwcm:present>
 	//-->
 </script>
 

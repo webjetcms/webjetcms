@@ -9,6 +9,7 @@
   - [Rozšírenie Spring DATA repozitárov WebJET CMS](/custom-apps/spring/repository-extend.md)
   - [Verejné služby](/custom-apps/spring/public-services.md)
 - Aplikácie
+  - [Prispôsobenie administrácie](/custom-apps/apps/customize-admin.md)
   - [Položka v menu admin časti](/custom-apps/admin-menu-item/)
   - [Zoznam web stránok/noviniek](/custom-apps/news/)
   - [Používatelia](/custom-apps/apps/user/README.md)

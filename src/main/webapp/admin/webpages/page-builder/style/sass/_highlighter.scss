@@ -1,5 +1,5 @@
 .#{$prefix}-highlighter {
-    display: none;
+    opacity: 0; transition: all 0.3s ease-in-out;
     position: absolute;
 
     &::after {
@@ -22,7 +22,7 @@
             right: 50%;
         }
     }
-    
+
     &__top {
         top: 0;
         &::after {
@@ -30,7 +30,7 @@
             top: 0;
         }
     }
-    
+
     &__bottom {
         bottom: 0;
         &::after {
@@ -38,7 +38,7 @@
             top: -3px;
         }
     }
-    
+
     &__left,
     &__right {
         width: $highlighter-size;
@@ -50,7 +50,7 @@
             top: 50%;
         }
     }
-    
+
     &__left {
         left: 0;
         &::after {
@@ -58,7 +58,7 @@
             right: -3px;
         }
     }
-    
+
     &__right {
         right: 0;
         &::after {
@@ -75,7 +75,7 @@
             //background-color: orange;
         }
     }
-    
+
     .#{$prefix}-container > & {
         z-index: $highlighter-index + 1;
         background-color: $color-container;
@@ -84,7 +84,7 @@
             //background-color: orange;
         }
     }
-    
+
     .#{$prefix}-section > & {
         z-index: $highlighter-index;
         background-color: $color-section;
@@ -102,8 +102,8 @@
     &::after {
         visibility: visible;
         opacity: 1;
-        top:10%;
-        bottom:10%;
+        top:1%;
+        bottom:1%;
         //left:0;
         //right:0;
         animation: eye_catcher_vertical 1s ease-in-out infinite;
@@ -136,6 +136,7 @@
         &.#{$prefix}-has-child-toolbar-active > .#{$prefix}-highlighter,
         &:hover > .#{$prefix}-highlighter {
             display: block;
+            opacity: 1;
         }
     }
 
@@ -144,6 +145,7 @@
         &.#{$prefix}-has-child-toolbar-active > .#{$prefix}-highlighter,
         &.#{$prefix}-container.#{$prefix}-is-resize-columns .#{$prefix}-column > .#{$prefix}-highlighter {
             display: block;
+            opacity: 1;
         }
     }
 
@@ -161,7 +163,7 @@
                 left: 0;
                 right: 0;
                 background-color: black;
-                opacity: 0.5;
+                opacity: 0.3;
             }
         }
         &.#{$prefix}-is-moving-column .#{$prefix}-container > .#{$prefix}-highlighter,
@@ -170,6 +172,7 @@
         &.#{$prefix}-is-moving-container .#{$prefix}-container > .#{$prefix}-highlighter,
         &.#{$prefix}-is-moving-section .#{$prefix}-section > .#{$prefix}-highlighter {
             display: block;
+            opacity: 1;
         }
 
         &.#{$prefix}-is-moving-column .#{$prefix}-column > .#{$prefix}-highlighter {

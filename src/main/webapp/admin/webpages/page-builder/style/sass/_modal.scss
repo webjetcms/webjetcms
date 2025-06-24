@@ -4,23 +4,24 @@
     visibility: hidden;
     transform: scale(0.4);
     position: fixed;
-    top: 50px;
-    left: 50px;
+    top: 105px;
+    left: 30px;
     height: auto;
     width: 380px;
     z-index: $modal-index;
-    background-color: $modal-color;
 
     border-radius: $modal-radius;
+    border: 1px solid $modal-boder-color;
     overflow: hidden;
-    box-shadow: 0 1px 14px 0px rgba(0, 0, 0, 0.1);
 
+    box-shadow: $modal-box-shadow;
     transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.3s ease-in-out;
 
     &__header {
         position: relative;
         overflow: hidden;
-        padding:  0 0 $modal-padding 0;
+        margin:  0;
+        background-color: $modal-color;
 
         &__button-show {
             display: block;
@@ -30,7 +31,8 @@
             opacity: 0.7;
             margin-left: 10px;
             background-color: transparent;
-            background-image: url("../images/icon-crosshairs.png");
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQ1IDc5LjE2MzQ5OSwgMjAxOC8wOC8xMy0xNjo0MDoyMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6RDhEMUFBRjkxMUQwMTFFOTlDMUJBRDU1MkExRjJDMUIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6RDhEMUFBRkExMUQwMTFFOTlDMUJBRDU1MkExRjJDMUIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpEOEQxQUFGNzExRDAxMUU5OUMxQkFENTUyQTFGMkMxQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpEOEQxQUFGODExRDAxMUU5OUMxQkFENTUyQTFGMkMxQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjrH1N8AAAJMSURBVHja7FrdccMgDHZyHYAR6AbuBHE2SDZwNqAbuBN0FGcDJxM4G+AN6g0o3OGHUhD/PJDoTnc5G5C+BIlPIjvGWJNBMNeZK1Ker1w/uC6pDe6bPII1IBr5DOcwmAtIcakGyC5hjLRcT1wP8jMyjBNx8uB653qVn+NFAIlQxJVwpSxcqFwDxfgSA0IY/2HpRKw1lATScp1ZPpmljaxAelZO+lxABlZehtRAhoDtEfIuGEzK7UTlWJF9OmBcJ8f0HtmujwXSOmYbosyzAQnJfm0MkNlhC2HNPB8gjVzDxZbRV4iiDPKENok4kY+JmOwi13pYmAPxpSiCXlCAZmwgVsDwaKDxZ2COGD8BX6CY/661C5zaUEzgSGoDKbbEDPGJEeq7UGIlluzoBKT1XSSTUp8Mpgv2E7CHvwqWGJCtk0thdQAWuBYEAtn65+ObrKGxkuZMmUp9d3NwqAsYC9ncfOz+pO/ImmK0sAKqxBd0Oo8xtcweOCtcBFnOEax0VsbAtax+5Go+dIa2D9Zsn1cXpQSQm4GDLY5BHwRkjZgPzT0rYBYLz4ryQ5BGNf2OhsATqfCzcPr9NqRflXwuujQ4AWkOFaQoCPBjcqEodx9qkFEgW3cXGl8NaXwAVR+GqrSEQoDrh0VbSdZSWFVf6tp+la2rYcpivl2ULUvZOinDU7eDhFwcLnfmyARA5BptlC/P0jKtqold1bVCVRc9VV29qVst9WVocBezmuvpav4wkBKIWulNhnfHHHX7q4vyLEAWA8Vfmwx/OhPyK8AAkDM0bOVaM8AAAAAASUVORK5CYII="); /*/admin/webpages/page-builder/images/icon-crosshairs.png*/
+            filter: invert(1);
             background-repeat: no-repeat;
             background-position: center;
             background-size: 20px auto;
@@ -48,8 +50,7 @@
             background-color: transparent;
             line-height: 44px;
             font-size: 14px;
-            font-weight: 700;
-            color: #4e5e70;
+            color: $nice-black;
             margin-left: $modal-padding;
 
             &:hover {
@@ -63,6 +64,11 @@
         overflow-y: auto;
         width: 100%;
         max-height: 60vh;
+
+        background-color: $modal-body-background;
+        backdrop-filter: $modal-body-filter;
+
+        padding-bottom: 8px;
     }
 
     &__footer {
@@ -71,6 +77,8 @@
         overflow: hidden;
         clear: both;
         text-align: center;
+        background-color: white;
+        border-top: 1px solid $nice-gray-100;
 
         &__button-reset,
         &__button-close,
@@ -97,21 +105,21 @@
 
         &__button-close {
             float: left;
-            border: 2px solid #ea4c7f;
+            border: 1px solid $nice-gray-300;
             background-color: transparent;
-            color: #ea4c7f;
+            color: $nice-black;
         }
 
         &__button-save {
             float: right;
-            background-color: #41ff9a;
-            color: #42485c;
+            background-color: $primary;
+            color: white;
         }
 
         &__button-reset {
             text-align: center;
             background-color: transparent;
-            color: #7e9bc0;
+            color: $dark-60;
             font-weight: 400;
         }
     }
@@ -129,7 +137,7 @@
         .#{$prefix}-style-input-group-headline {
             font-size: 14px;
             line-height: 16px;
-            color: white;
+            color: $secondary;
             font-weight: 500;
             padding: 0;
             margin: 12px 0 6px 0;
@@ -145,6 +153,19 @@
 
                 .#{$prefix}-style-input {
                     width: 100%;
+                    background-color: white;
+                    color: $nice-black;
+                    border: 1px solid $nice-gray-300;
+                    border-radius: $modal-radius;
+                }
+
+                .#{$prefix}-input-group-addon {
+                    min-width: 34px;
+                    background-color: $nice-gray-300;
+                    background-size:26px;
+                    background-repeat:no-repeat;
+                    background-position:center;
+                    border-radius: $modal-radius;
                 }
 
                 .#{$prefix}-style-label {
@@ -154,7 +175,7 @@
                     line-height: 14px;
                     margin-bottom: 5px;
                     padding: 0;
-                    color: #fff;
+                    color: $secondary;
                 }
 
 
@@ -183,10 +204,13 @@
                         margin: 0;
                         width: 100%;
                         border-radius: 4px;
-                        background-color: #304866;
-
-                        color: #fff;
+                        color: $secondary;
                         outline: none;
+
+                        &[disabled] {
+                            background-color: $nice-gray-100;
+                            color: $dark-60;
+                        }
                     }
 
                     a.ui-spinner-button {
@@ -246,7 +270,7 @@
                     position: absolute;
                     bottom: 0;
                     width: 100%;
-                    border-bottom: 1px solid #fff;
+                    border-bottom: 1px solid $nice-gray-300;
                     margin-bottom: 5px;
 
                     .#{$prefix}-style-input-group-four-in-row-checkbox {
@@ -296,39 +320,39 @@
 
     }
 
-    $bg: #304866;
-    $fg: #304866;
-    $borderWidth: 2px;
-
+    $bg: $primary;
+    $fg: $nice-gray-300;
+    $borderWidth: 1px;
 
     input[type=radio] {
         position: absolute;
         visibility: hidden;
         display: none;
       }
-      
+
       label {
-        color: white;
+        color: $secondary;
         display: table-cell;
         cursor: pointer;
-        padding: 5px 20px;
+        padding: 5px 5px;
         margin: 0;
         font-size: 14px;
         font-weight: 400;
         text-align: center;
         border: 0 !important;
       }
-      
+
       input[type=radio]:checked + label {
         color: white;
-        background: $fg;
+        background: $primary;
       }
-      
+
       label + input[type=radio] + label {
         border-left: solid $borderWidth $fg;
       }
       .radio-group {
         border: solid $borderWidth $fg;
+        background-color: white;
         display: table;
         width: 100%;
         margin: 0;
@@ -343,17 +367,17 @@
         .pb-connection-reference {
             float: left;
             display: block;
-            color: white;
+            color: $secondary;
             font-size: 13px;
             line-height: 24px;
             padding: 0 8px;
             border-radius: 4px;
-            background-color: #1e3654;
+            background-color: $dark-60;
             margin:6px 6px 0 0;
-            
+
             &:hover {
                 cursor: pointer;
-                background-color: #304866;
+                background-color: $primary
             }
         }
     }
@@ -397,7 +421,7 @@
         width: 22px;
         margin-left: -3px;
         border-radius: 8px;
-        border: 2px solid white;
+        border: 2px solid $nice-gray-300;
         background-color: black;
     }
 
@@ -414,7 +438,9 @@
     }
 
     .tab-menu {
-        margin: 0 $modal-padding 0 0;
+        margin: 0;
+        display: block;
+        padding-left: 16px;
         float: right;
 
         .tab-link {
@@ -422,10 +448,11 @@
             display: inline-block;
             padding: 0 10px;
             background-color: transparent;
-            color: #7e9bc0;
+            color: $dark-60;
             line-height: 44px;
             font-size: 13px;
             font-weight: 400;
+            border-bottom: 2px solid transparent;
 
             &:first-child {
                 border-top-left-radius: 8px;
@@ -435,8 +462,9 @@
             }
 
             &.active {
-                color: #fbfcfc;
+                color: $primary;
                 font-weight: 500;
+                border-bottom-color: $primary;
             }
             &:hover {
                 cursor: pointer;
@@ -446,11 +474,17 @@
     }
 
     .tab-content {
-        border-radius: $modal-radius;
+        border-radius: 0px;
         overflow: hidden;
         overflow: hidden;
         clear: both;
         width: 100%;
+        background-color: $modal-body-background;
+        backdrop-filter: $modal-body-filter;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        border-top: 1px solid $nice-gray-100;
+        border-bottom: 1px solid $nice-gray-100;
 
         .tab-item {
             display: none;
@@ -458,34 +492,28 @@
             margin: 0 $modal-padding;
 
             span {
-                display: block; 
+                display: block;
                 float: left;
                 width: 32.3333%;
                 margin: 0.5%;
                 padding: 0 10px;
-                color: #ffffff;
+                color: $dark-60;
                 font-size: 13px;
                 line-height: 30px;
                 font-weight: 400;
                 text-align: center;
-                background-color: #304866;
+                background-color: $nice-gray-100;
                 border-radius: $modal-radius;
-                transition: background 0.3s ease-in-out;
 
                 &.active {
-                    color: #152942;
-                    font-weight: 700;
-                    &:nth-child(1) { background-image: linear-gradient(to right, #3bb6b5, #21c2b5, #0eceaf, #22daa5, #42e496); }
-                    &:nth-child(2) { background-image: linear-gradient(to right, #7e72fe, #a375fd, #c279fc, #dd7dfa, #f583f7); }
-                    &:nth-child(3) { background-image: linear-gradient(to right, #bea6a0, #b49a99, #a98f92, #9d848d, #907a87); }
-                    &:nth-child(4) { background-image: linear-gradient(to right, #f48e82, #fb9f7e, #feb27e, #fec581, #fbd889); }
-                    &:nth-child(5) { background-image: linear-gradient(to right, #5190e7, #00a8f3, #00bef3, #00d1ea, #1de2db); }
-                    &:nth-child(6) { background-image: linear-gradient(to right, #f6529d, #fa5893, #fd608a, #fe6882, #fe717b); }
+                    background-color: $primary;
+                    color: white;
                 }
 
                 &:hover {
                     cursor: pointer;
-                    background-color: darken(#304866, 5%);
+                    color: white;
+                    background-color: $primary;
                 }
             }
             &.active {

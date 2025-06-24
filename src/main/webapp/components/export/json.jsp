@@ -5,13 +5,7 @@
 	import="org.json.JSONArray, org.json.JSONObject,sk.iway.iwcm.JsonTools, sk.iway.iwcm.Tools, sk.iway.iwcm.components.export.ExportDatBean, sk.iway.iwcm.doc.DocDB, sk.iway.iwcm.doc.DocDetails, java.util.List"%><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%><%@
 taglib
-	uri="/WEB-INF/iway.tld" prefix="iway"%><%@
-taglib
-	uri="/WEB-INF/struts-bean.tld" prefix="bean"%><%@
-taglib
-	uri="/WEB-INF/struts-html.tld" prefix="html"%><%@
-taglib
-	uri="/WEB-INF/struts-logic.tld" prefix="logic"%><%
+	uri="/WEB-INF/iway.tld" prefix="iway"%><%
 	//ak komponentu nemate v stranke ale volate ju priamo
 	//tak sem zadajte ID adresarov z ktorych sa maju brat clanky
 	ExportDatBean bean = (ExportDatBean) request.getAttribute("exportDatBean");

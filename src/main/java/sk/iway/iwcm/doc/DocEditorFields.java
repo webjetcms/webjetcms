@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.struts.util.ResponseUtils;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -23,6 +21,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.spirit.model.Media;
 /**
  * Doplnkove data fieldy potrebne pre editor
