@@ -24,7 +24,7 @@ public class DatatablePageImpl<T> extends org.springframework.data.domain.PageIm
 
     public DatatablePageImpl(List<T> content) {
         //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
-        super(content, PageRequest.of(0, content.size(), Sort.unsorted()), content.size());
+        super(content, PageRequest.of(0, content.size() < 1 ? 1 : content.size(), Sort.unsorted()), content.size());
     }
 
     public DatatablePageImpl(Page<T> page) {
