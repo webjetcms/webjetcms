@@ -1,5 +1,5 @@
 <script>
-    function appAfterInit(response, datatable, path) {
+    function appAfterInit(response, datatable, path, isInsert) {
         const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
             fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
             fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
@@ -8,10 +8,15 @@
         window.addEventListener("WJ.DTE.opened", function(e) {
             const fieldElement = $("#DTE_Field_forumType");
 
-            //Set forumType, based on path
             if("/components/forum/forum_mb.jsp" === path) {
+                //Set forumType, based on path
                 fieldElement.val("forum_mb").change();
                 fieldElement.selectpicker('refresh');
+            } else {
+                //Only during update
+                //We ask paging but need to save noPaging sooo revert
+                if(isInsert == false)
+                    $("#DTE_Field_noPaging_0").prop( "checked", !response.data.noPaging);
             }
 
             fieldElement.on("change", function() {
@@ -74,6 +79,14 @@
 
     function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
         let include = "!INCLUDE(" + componentPath;
+
+        //We ask paging but need to save noPaging sooo revert
+        if(params.forumType != "forum_mb") {
+            params.noPaging[0] = !params.noPaging[0];
+        } else {
+            //This old version did this
+            params.type = "topics";
+        }
 
         if (Object.keys(params).length > 0) {
             include += ", " + convertObjectToInludeParams(params);

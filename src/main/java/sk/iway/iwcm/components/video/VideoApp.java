@@ -32,6 +32,9 @@ public class VideoApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.video_player.file", tab = "basic")
     private String file;
 
+    @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = "components.video_player.file_video", tab = "basic", className = "dt-app-skip")
+    private String videoFile;
+
     @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "&nbsp", tab = "basic", editor = @DataTableColumnEditor(options = {
             @DataTableColumnEditorAttr(key = "components.video_player.fixedWidth", value = "fixed"),
             @DataTableColumnEditorAttr(key = "components.video_player.responsiveWidth", value = "responsive")
@@ -43,21 +46,7 @@ public class VideoApp extends WebjetComponentAbstract {
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-center", value = "center"),
             @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-right", value = "right")
     }))
-    private String videoAlignYT = "left";
-
-    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.video_player.videoAlign", tab = "basic", editor = @DataTableColumnEditor(options = {
-        @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-left", value = "left"),
-        @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-center", value = "center"),
-        @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-right", value = "right")
-    }))
-    private String videoAlignVimeo = "left";
-
-    @DataTableColumn(inputType = DataTableColumnType.RADIO, title = "components.video_player.videoAlign", tab = "basic", editor = @DataTableColumnEditor(options = {
-        @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-left", value = "left"),
-        @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-center", value = "center"),
-        @DataTableColumnEditorAttr(key = "components.video_player.videoAlign-right", value = "right")
-    }))
-    private String videoAlignFacebook = "left";
+    private String align = "left";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.width", tab = "basic")
     private Integer width = 425;
@@ -68,32 +57,95 @@ public class VideoApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.video_player.widthPercentage", tab = "basic")
     private Integer percentageWidth = 100;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.autoplay", tab = "basic")
-    private Boolean autoplay = false;
-    
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.showinfo", tab = "basic")
-    private Boolean showinfo = false;
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.autoplay", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer autoplay = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.byline", tab = "basic")
-    private boolean byline = false;
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.showinfo", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer showinfo = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.branding", tab = "basic")
-    private Boolean branding = false;
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.byline", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer byline = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.fullscreen", tab = "basic")
-    private Boolean fullscreen = true;
-    
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.controls", tab = "basic")
-    private Boolean controls = true;
-    
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.rel", tab = "basic")
-    private Boolean rel = true;
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.branding", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer branding = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.portrait", tab = "basic")
-    private boolean portrait = true;
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.fullscreen", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer fullscreen = 1;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.video_player.badge", tab = "basic")
-    private boolean badge = true;
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.controls", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer controls = 1;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.rel", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer rel = 1;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.portrait", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer portrait = 1;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.video_player.badge", tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {@DataTableColumnEditorAttr(key = "unselectedValue", value = "0")},
+                options = {@DataTableColumnEditorAttr(key = "editor.form.sl.yes", value = "1")}
+            )
+        }
+    )
+    private Integer badge = 1;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {

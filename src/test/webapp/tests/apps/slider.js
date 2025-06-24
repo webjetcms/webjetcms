@@ -40,8 +40,6 @@ Scenario("Slider - test zobrazovania", ({ I }) => {
     I.seeElement( locate(".amazingslider-bullet-text-1 > .amazingslider-nav-thumbnail-tite-1").withText("Viac zadný pohľad") );
 });
 
-
-
 Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
     Apps.insertApp('Slider', '#components-slider-title', null, false);
 
@@ -50,53 +48,58 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
         fullWidthSlider: 'true',
         sliderWidth: '900',
         sliderHeight: '360',
-        arrowStyle: 'mouseover',
-        kenBurnsOnSlide: 'false',
-        navStyle: 'bullets',
-        showThumbnails: 'true',
-        touchSwipe: 'true',
-        randomPlay: 'false',
+        arrow_style: 'mouseover',
+        ken_burns_on_slide: 'false',
+        nav_style: 'bullets',
+        show_thumbnails: 'true',
+        touch_swipe: 'true',
+        random_play: 'false',
         autoplay: 'true',
-        displayMode: '1',
-        loopNumber: '0',
-        autoplayInterval: '5000',
-        showCountdown: 'true',
-        autoplayCountdownColor: '#ffffff',
-        countdownPosition: 'bottom',
-        transitionOnFirstSlide: 'false',
-        pauseOnMouseover: 'false',
-        showNumbering: 'false',
-        showShadowBottom: 'true',
-        transition_fade: 'false',
-        transition_cross_fade: 'false',
-        transition_slide: 'false',
-        transition_elastic: 'false',
-        transition_slice: 'false',
-        transition_blinds: 'false',
-        transition_blocks: 'false',
-        transition_shuffle: 'false',
-        transition_tiles: 'false',
-        transition_flip: 'false',
-        transition_flip_with_zoom: 'false',
-        transition_threed: 'false',
-        transition_threed_horizontal: 'false',
-        transition_threed_with_zoom: 'false',
-        transition_threed_horizontal_with_zoom: 'false',
-        transition_threed_flip: 'false',
+        display_mode: '1',
+        loop_number: '0',
+        autoplay_interval: '5000',
+        show_countdown: 'true',
+        autoplay_countdown_color: '#ffffff',
+        countdown_position: 'bottom',
+        transition_on_first_slide: 'false',
+        pause_on_mousover: 'false',
+        show_numbering: 'false',
+        show_shadow_bottom: 'true',
+        transitionStyle: 'fade',
         editorData: 'JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvY2hyeXNhbnRoZW11bS5qcGclMjIsJTIydGl0bGUlMjI6JTIyQ2hyeXphbnRlbWElMjIsJTIyZGVzY3JpcHRpb24lMjI6JTIyQWolMjB2JTIwY2hsYWRlJTIwa3ZpdG5lbSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjJodHRwczovL3d3dy5pbnRlcndheS5zay8lMjIlN0QlNUQ='
     };
 
     I.switchTo('#cke_121_iframe');
     I.switchTo('#editorComponent');
-    I.clickCss("#pills-dt-component-datatable-files-tab");
-    I.switchTo("#DTE_Field_iframe");
-    I.click(DT.btn.sliderItems_add_button);
-    DTE.fillField("image", "/images/gallery/chrysanthemum.jpg");
-    DTE.fillField("title", "Chryzantema");
-    DTE.fillField("description", "Aj v chlade kvitnem");
-    DTE.fillField("redirectUrl", "https://www.interway.sk/");
-    I.click("Pridať");
-    I.switchTo();
+
+    I.say('Check tabs');
+        I.seeElement("#pills-dt-component-datatable-basic-tab");
+        I.seeElement("#pills-dt-component-datatable-advanced-tab");
+        I.seeElement("#pills-dt-component-datatable-transitions-tab");
+        I.seeElement("#pills-dt-component-datatable-files-tab");
+        I.seeElement("#pills-dt-component-datatable-commonSettings-tab");
+
+    I.say("Set items in slider");
+        I.clickCss("#pills-dt-component-datatable-files-tab");
+        I.switchTo("#DTE_Field_iframe");
+
+        I.say("Add item");
+        I.click(DT.btn.sliderItems_add_button);
+        DTE.waitForEditor("sliderItemsDataTable");
+
+        // Set image
+        I.fillField(locate(".DTE_Field_Name_image").find("input"), "/images/gallery/chrysanthemum.jpg");
+
+        // Item title and description
+        DTE.fillField("title", "Chryzantema");
+        DTE.fillField("description", "Aj v chlade kvitnem");
+
+        //Set redirect
+        I.fillField(locate(".DTE_Field_Name_redirectUrl").find("input"), "https://www.interway.sk/");
+
+        // Save new item
+        DTE.save('sliderItemsDataTable');
+
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
 
@@ -120,71 +123,61 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
     Apps.openAppEditor();
 
     const changedParams = {
-    skin: 'Cube',
-    fullWidthSlider: 'true',
-    sliderWidth: '800',
-    sliderHeight: '320',
-    arrowStyle: 'always',
-    kenBurnsOnSlide: 'true',
-    navStyle: 'numbering',
-    showThumbnails: 'false',
-    touchSwipe: 'false',
-    randomPlay: 'true',
-    autoplay: 'false',
-    displayMode: '2',
-    loopNumber: '20',
-    autoplayInterval: '3000',
-    showCountdown: 'false',
-    autoplayCountdownColor: '#EEFFFF',
-    countdownPosition: 'top',
-    transitionOnFirstSlide: 'true',
-    pauseOnMouseover: 'true',
-    showNumbering: 'true',
-    showShadowBottom: 'false',
-    transition_fade: 'false',
-    transition_cross_fade: 'false',
-    transition_slide: 'false',
-    transition_elastic: 'false',
-    transition_slice: 'false',
-    transition_blinds: 'false',
-    transition_blocks: 'false',
-    transition_shuffle: 'false',
-    transition_tiles: 'false',
-    transition_flip: 'false',
-    transition_flip_with_zoom: 'false',
-    transition_threed: 'false',
-    transition_threed_horizontal: 'false',
-    transition_threed_with_zoom: 'false',
-    transition_threed_horizontal_with_zoom: 'false',
-    transition_threed_flip: 'false',
-    editorData: 'JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvY2hyeXNhbnRoZW11bS5qcGclMjIsJTIydGl0bGUlMjI6JTIyQ2hyeXphbnRlbWElMjIsJTIyZGVzY3JpcHRpb24lMjI6JTIyQWolMjB2JTIwY2hsYWRlJTIwa3ZpdG5lbSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjJodHRwczovL3d3dy5pbnRlcndheS5zay8lMjIlN0QlNUQ='
+        skin: 'Cube',
+        fullWidthSlider: 'true',
+        sliderWidth: '800',
+        sliderHeight: '320',
+        arrow_style: 'always',
+        ken_burns_on_slide: 'true',
+        nav_style: 'numbering',
+        show_thumbnails: 'false',
+        touch_swipe: 'false',
+        random_play: 'true',
+        autoplay: 'false',
+        display_mode: '2',
+        loop_number: '20',
+        autoplay_interval: '3000',
+        show_countdown: 'false',
+        autoplay_countdown_color: '#EEFFFF',
+        countdown_position: 'top',
+        transition_on_first_slide: 'true',
+        pause_on_mousover: 'true',
+        show_numbering: 'true',
+        show_shadow_bottom: 'false',
+        transitionStyle: 'tiles',
+        editorData: 'JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvY2hyeXNhbnRoZW11bS5qcGclMjIsJTIydGl0bGUlMjI6JTIyQ2hyeXphbnRlbWElMjIsJTIyZGVzY3JpcHRpb24lMjI6JTIyQWolMjB2JTIwY2hsYWRlJTIwa3ZpdG5lbSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjJodHRwczovL3d3dy5pbnRlcndheS5zay8lMjIlN0QlNUQ='
     };
 
-    DTE.selectOption("skin", "Cube");
-    I.clickCss("#pills-dt-component-datatable-advanced-tab");
-    DTE.fillField("sliderWidth", "800");
-    DTE.fillField("sliderHeight", "320");
-    DTE.selectOption("arrowStyle", "Vždy");
-    I.checkOption("#DTE_Field_kenBurnsOnSlide_0");
-    DTE.selectOption("navStyle", "Čísla");
-    I.uncheckOption("#DTE_Field_showThumbnails_0");
-    I.uncheckOption("#DTE_Field_touchSwipe_0");
-    I.checkOption("#DTE_Field_randomPlay_0");
-    I.uncheckOption("#DTE_Field_autoplay_0");
-    DTE.selectOption("displayMode", "Skončiť po");
-    DTE.fillField("loopNumber", "20");
-    DTE.fillField("autoplayInterval", 3000);
-    I.uncheckOption("#DTE_Field_showCountdown_0");
-    DTE.fillField("autoplayCountdownColor", "#EEFFFF");
-    DTE.selectOption("countdownPosition", "Hore");
-    I.checkOption("#DTE_Field_transitionOnFirstSlide_0");
-    I.checkOption("#DTE_Field_pauseOnMouseover_0");
-    I.checkOption("#DTE_Field_showNumbering_0");
-    I.uncheckOption("#DTE_Field_showShadowBottom_0");
+    I.say("Set changed parameters");
+        DTE.selectOption("skin", "Cube");
+
+        I.clickCss("#pills-dt-component-datatable-advanced-tab");
+        DTE.fillField("sliderWidth", "800");
+        DTE.fillField("sliderHeight", "320");
+        DTE.selectOption("arrow_style", "Vždy");
+        I.checkOption("#DTE_Field_ken_burns_on_slide_0");
+        DTE.selectOption("nav_style", "Čísla");
+        I.uncheckOption("#DTE_Field_show_thumbnails_0");
+        I.uncheckOption("#DTE_Field_touch_swipe_0");
+        I.checkOption("#DTE_Field_random_play_0");
+        I.uncheckOption("#DTE_Field_autoplay_0");
+        DTE.selectOption("display_mode", "Skončiť po");
+        DTE.fillField("loop_number", "20");
+        DTE.fillField("autoplay_interval", 3000);
+        I.uncheckOption("#DTE_Field_show_countdown_0");
+        DTE.fillField("autoplay_countdown_color", "#EEFFFF");
+        DTE.selectOption("countdown_position", "Hore");
+        I.checkOption("#DTE_Field_transition_on_first_slide_0");
+        I.checkOption("#DTE_Field_pause_on_mousover_0");
+        I.checkOption("#DTE_Field_show_numbering_0");
+        I.uncheckOption("#DTE_Field_show_shadow_bottom_0");
+
+        I.say("Change transition style");
+        I.clickCss("#pills-dt-component-datatable-transitions-tab");
+        DTE.selectOption("transitionStyle", "Tiles");
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok')
-
 
     await Apps.assertParams(changedParams);
 

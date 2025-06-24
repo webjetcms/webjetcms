@@ -210,8 +210,9 @@ block content
                 }
             });
 
+            let isInsert = (requestJson.originalComponentName == null && requestJson.originalJspFileName == null);
             if (typeof window.appAfterInit === "function") {
-                window.appAfterInit(response, componentDatatable, componentPath);
+                window.appAfterInit(response, componentDatatable, componentPath, isInsert);
             }
         }
 
@@ -284,14 +285,9 @@ block content
                     let include = window.appGetComponentCode(componentPath, params, componentDatatable, isInsert);
                     if (typeof include != "undefined" && include != null) {
                         $("#componentCode", window.parent.document).val(include);
-                    }
+                    } else setDedaultInclude(params);
                 } else {
-                    let include = "!INCLUDE(" + componentPath;
-                    if (Object.keys(params).length > 0) {
-                        include += ", " + convertObjectToInludeParams(params);
-                    }
-                    include += ")!";
-                    $("#componentCode", window.parent.document).val(include);
+                   setDedaultInclude(params);
                 }
 
                 if (typeof window.appCodeExecute === "function") {
@@ -303,6 +299,15 @@ block content
                 console.log(e);
             }
             return false;
+        }
+
+        function setDedaultInclude(params) {
+            let include = "!INCLUDE(" + componentPath;
+            if (Object.keys(params).length > 0) {
+                include += ", " + convertObjectToInludeParams(params);
+            }
+            include += ")!";
+            $("#componentCode", window.parent.document).val(include);
         }
 
         /**

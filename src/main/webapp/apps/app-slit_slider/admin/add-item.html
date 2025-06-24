@@ -1,5 +1,5 @@
 <script type="text/javascript" data-th-inline="javascript">
-	var sliderItemsDataTable;
+	var slitSliderItemsDataTable;
 
 	window.domReady.add(function () {
 
@@ -13,10 +13,10 @@
 
 		let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.appslitslider.jpa.SlitSliderDTO")})]*/ [];
 
-		sliderItemsDataTable = WJ.DataTable({
+		slitSliderItemsDataTable = WJ.DataTable({
 			columns: columns,
 			tabs: tabs,
-			id: "sliderItemsDataTable",
+			id: "slitSliderItemsDataTable",
             jsonEditor: true
 
 			//For now didsabled, because then I cant click on id checkbox
@@ -25,4 +25,4 @@
 	});
 </script>
 
-<table id="sliderItemsDataTable" class="datatableInit table"></table>
+<table id="slitSliderItemsDataTable" class="datatableInit table"></table>

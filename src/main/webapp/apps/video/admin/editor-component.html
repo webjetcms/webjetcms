@@ -14,11 +14,11 @@
             const responsive = $("#DTE_Field_widthType_1");
 
             if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
-                setFieldsVisibility([ "videoAlignFacebook", "videoAlignVimeo", "portrait", "byline", "badge", "file", "widthType", "videoAlignYT", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel"], []);
+                setFieldsVisibility(["align", "portrait", "byline", "badge", "file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel", "videoFile"], []);
             }
 
             const handleSizeFields = () => {
-                fixed.off("change").on("change", function () { 
+                fixed.off("change").on("change", function () {
                     if ($(this).is(":checked")) {
                         if ($(facebook).is(":checked")) {
                             setFieldsVisibility(["percentageWidth"], ["width"]);
@@ -28,13 +28,20 @@
                     }
                 });
 
+
+                let defaultValue = $("#DTE_Field_percentageWidth").val();
+                if(defaultValue == null || defaultValue == "") defaultValue = 0;
                 responsive.off("change").on("change", function () {
                     if ($(this).is(":checked")) {
                         if ($(facebook).is(":checked")) {
                             setFieldsVisibility(["height", "width", "percentageWidth"], []);
                         } else {
+                            $("#DTE_Field_percentageWidth").val(Number(defaultValue));
                             setFieldsVisibility(["height", "width"], ["percentageWidth"]);
                         }
+                    } else {
+                        //There is problem that parameter "percentageWidth" is set even when "responsive" is not selected so it fuck up video setting, for this reason set value of "percentageWidth" to 0
+                        $("#DTE_Field_percentageWidth").val("");
                     }
                 });
             };
@@ -47,36 +54,44 @@
 
             youtube.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["videoAlignVimeo", "videoAlignFacebook", "portrait", "byline", "badge"], ["file", "widthType", "videoAlignYT", "width", "height", "percentageWidth", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
-                                                                                                                                                                                                
+                    setFieldsVisibility(["portrait", "byline", "badge", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
                     $(".DTE_Field_Name_file label").text("[[#{components.video_player.file}]]");
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
                     updateFields();
-                }     
+                }
             });
 
             vimeo.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["videoAlignFacebook", "videoAlignYT", "controls", "branding", "rel"], ["file", "videoAlignVimeo", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
+                    setFieldsVisibility(["controls", "branding", "rel", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
                     $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_vimeo}]]");
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
                     updateFields();
-                }      
+                }
             });
 
             facebook.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth"], ['videoAlignFacebook', "file", "width", "widthType", "autoplay", "showinfo", "fullscreen", "byline"]);
+                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "videoFile"], ["file", "width", "widthType", "autoplay", "showinfo", "fullscreen", "byline"]);
                     $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_facebook}]]");
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidthFacebook}]]")
                     updateFields();
                 }
             });
 
+
             video.off("change").on("change", function () {
                 if ($(this).is(":checked")) {
-                    setFieldsVisibility(["videoAlignYT", "controls", "branding", "rel", "videoAlignVimeo", "portrait", "badge", "height", "percentageWidth", 'videoAlignFacebook', "autoplay", "fullscreen", "showinfo", "byline"], ["file", "width", "widthType"]);
-                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_video}]]");
+                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "byline", "file"], ["width", "widthType", "videoFile"]);
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
                     updateFields();
                 }
             });
+
+            //If type is video , set value from file to videoFile elfinder picker
+            if("logo_video_color" == response.data.field) {
+                $(".DTE_Field_Name_videoFile input").val(response.data.file);
+            }
 
             youtube.trigger('change');
             vimeo.trigger('change');
@@ -85,5 +100,15 @@
             fixed.trigger('change');
             responsive.trigger('change');
         });
+    }
+
+    function appGetComponentCode(componentPath, params, datatable) {
+
+        //If its video type, copy value from video elfinder picker to file input
+        if("logo_video_color" == params.field) {
+            params.file = params.videoFile;
+        }
+
+        return null;
     }
 </script>
