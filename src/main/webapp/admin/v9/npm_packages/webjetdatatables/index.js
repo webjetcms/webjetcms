@@ -1272,6 +1272,7 @@ export const dataTableInit = options => {
 
         const fields = DATA.fields;
         jsonEditorFields = fields.filter(field => {
+            //console.log("field=", field, "className=", field.className);
             return field.className && field.className.includes('dt-json-editor');
         });
         //console.log("DATA.fields", DATA.fields);
@@ -2991,7 +2992,7 @@ export const dataTableInit = options => {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
                 if (DATA.jsonEditor){
                     const data = {
-                        data: TableLinesStorage.load(),
+                        data: sanitizeJsonEditorData(TableLinesStorage.load()),
                         recordsTotal: 0,
                         recordsFiltered: 0,
                         options: {},
@@ -3420,6 +3421,21 @@ export const dataTableInit = options => {
             },
         });
     };
+
+    /**
+     * Add id's to json editor data objects so datatable works properly
+     * @param {*} editorData
+     * @returns
+     */
+    function sanitizeJsonEditorData(editorData) {
+        if(editorData == undefined || editorData == null || editorData == "" || Array.isArray(editorData) == false) return [];
+
+        editorData.forEach((item, index) => {
+            item.id = index + 1; // Add 1-based ID
+        });
+
+        return editorData;
+    }
 
     /**
      * Vyvolanie akcie na serveri

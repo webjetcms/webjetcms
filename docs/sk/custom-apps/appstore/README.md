@@ -670,9 +670,9 @@ Zadaný HTML kód je vložený do stránky s editorom aplikácie. Je možné vyu
 
 - `appBeforeXhr(data)` - volané pred získaním informácií o editore, `data` obsahuje objekt posielaný do REST služby.
 - `appAfterXhr(response)` - volané po získaní dát z REST služby, je možné modifikovať dáta (napr. doplniť vstupné pole) v `response` objekte.
-- `appAfterInit(response, datatable)` - volané po inicializácii datatabuľky, v `datatable` je inštancia datatabuľky/editora.
+- `appAfterInit(response, componentDatatable, componentPath, isInsert)` - volané po inicializácii datatabuľky, v `componentDatatable` je inštancia datatabuľky/editora a v `isInsert` informuje, či ide o novo vloženú aplikáciu alebo úpravu.
 - `appGetComponentPath(componentPath, componentDatatable)` - volané pri vložení aplikácie do stránky, môžete zmeniť cestu pre vložený `INCLUDE` napr. na základe vybraných možností.
-- `appGetComponentCode(componentPath, params, componentDatatable)` - volané pri vložení aplikácie do stránky, môže vrátiť kompletný kód pre vloženie do stránky (nemusí to byť priamo `!INCLUDE` kód).
+- `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - volané pri vložení aplikácie do stránky, môže vrátiť kompletný kód pre vloženie do stránky (nemusí to byť priamo `!INCLUDE` kód).
 
 Ukážkový kód, ktorý reaguje na zmenu výberového poľa:
 
