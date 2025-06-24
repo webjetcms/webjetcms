@@ -12,6 +12,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.doc.DebugTimer;
 
 import jakarta.servlet.FilterRegistration;
+import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration.Dynamic;
@@ -67,6 +68,15 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		Dynamic dynamic = servletContext.addServlet("springDispatcher", new DispatcherServlet(ctx));
 		dynamic.addMapping("/");
 		dynamic.setLoadOnStartup(1);
+
+		// Set multipart config (example values)
+		MultipartConfigElement multipartConfig = new MultipartConfigElement(
+			null,        // location (null = default temp dir)
+			20_971_520,  // maxFileSize (20MB)
+			41_943_040,  // maxRequestSize (40MB)
+			0            // fileSizeThreshold
+		);
+		dynamic.setMultipartConfig(multipartConfig);
 
 		CharacterEncodingFilter filter = new CharacterEncodingFilter();
 		filter.setEncoding(Constants.getString("defaultEncoding"));
