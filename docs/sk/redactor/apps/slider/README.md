@@ -4,10 +4,16 @@ Pridajte na svoju stránku pútavý animovaný slider s obrázkami. Vyberte si z
 
 ## Nastavenia aplikácie
 
+Dostupné karty:
 
-### Nastavenia
-V tejto časti je možné nastaviť štýl
-výberom z dostupných štýlov:
+- **Generované CSS štýly**
+- **Pokročilé**
+- **Prechody**
+- **Položky**
+
+### Generované CSS štýly
+
+V tejto časti je možné nastaviť štýl výberom z dostupných štýlov:
 
 - Classic
 - ContentBox
@@ -48,6 +54,7 @@ V tejto časti je možné nastaviť:
 ![](editor-advanced.png)
 
 ### Prechody
+
 V tejto časti je možné vybrať prechody:
 
 - Fade
@@ -74,12 +81,18 @@ V tejto časti je možné vybrať prechody:
 
 ### Položky
 
-V tejto časti je možné pridať alebo odobrať položku:
-- Pri pridaní možno vyplniť nadpis, podnadpis, presmerovanie.
-- Pri položkách sa dá zmeniť poradie presunutím.
-- Odobratie položky možno kliknutím na červený krížik.
+V tejto časti je možné vidieť a spravovať položky aplikácie, takže klasické akcie ako pridanie/úprava/mazanie…
 
 ![](editor-items.png)
+
+Pre jednotlivé položky môžete nastaviť tieto parametre:
+
+- **Obrázok**, podporovaný je výber obrázka pomocou prieskumníka, ako aj priame zadanie cesty obrázka
+- **Nadpis**, nadpis obrázka
+- **Podnadpis**, podnadpis obrázka
+- **Po kliknutí zobraziť inú stránku (presmerovať)**, výber stránky na ktorú budete presmerovaný (podporované je aj priame zadanie cesty)
+
+![](editor-items-edit.png)
 
 ## Zobrazenie aplikácie
 

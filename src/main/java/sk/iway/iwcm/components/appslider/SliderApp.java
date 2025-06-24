@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @WebjetComponent("sk.iway.iwcm.components.appslider.SliderApp")
 @WebjetAppStore(nameKey = "components.slider.title", descKey = "components.slider.desc", itemKey = "cmp_slider", imagePath = "/components/slider/editoricon.png", galleryImages = "/components/slider/", componentPath = "/components/slider/slider.jsp", customHtml = "/apps/slider/admin/editor-component.html")
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "basic", title = "components.menu.class_type", selected = true),
         @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
         @DataTableTab(id = "transitions", title = "components.slider.transitions"),
         @DataTableTab(id = "files", title = "components.slider.files"),
@@ -32,7 +32,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class SliderApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.menu.class_type", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="&nbsp;", editor = {
             @DataTableColumnEditor(options = {
                     @DataTableColumnEditorAttr(key = "Classic", value = "Classic"),
                     @DataTableColumnEditorAttr(key = "ContentBox", value = "ContentBox"),
