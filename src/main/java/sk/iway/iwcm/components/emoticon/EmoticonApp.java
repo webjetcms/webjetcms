@@ -24,7 +24,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 public class EmoticonApp extends WebjetComponentAbstract {
         @DataTableColumn(
         inputType = DataTableColumnType.IMAGE_RADIO,
-        title = "",
+        title = "&nbsp;",
         tab = "basic",
         className = "image-radio-horizontal image-radio-fullwidth"
     )
