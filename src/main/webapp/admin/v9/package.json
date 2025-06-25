@@ -50,6 +50,7 @@
         "@zxcvbn-ts/language-en": "^3.0.2",
         "bootstrap": "^5.3.3",
         "bootstrap-select": "1.14.0-beta3",
+        "datatables.net-rowreorder-bs5": "^1.5.0",
         "dropzone": "^5.9.3",
         "jquery": "^3.7.1",
         "jquery-ui": "^1.14.1",

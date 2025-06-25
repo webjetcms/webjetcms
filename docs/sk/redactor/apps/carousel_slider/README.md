@@ -4,18 +4,28 @@ Oživte svoju stránku s interaktívnym obrázkovým kolotočom. Kliknutím na m
 
 ## Nastavenia aplikácie
 
-### Štýl
+Dostupné karty:
 
-V tejto časti je možné si vybrať štýl aplikácie.
-Dostupné štýly sú: `Classic, Fashion, Gallery, Rotator, Simplicity, Stylish`
+- **Generované CSS štýly**
+- **Rozšírené**
+- **Položky**
+
+### Generované CSS štýly
+
+V tejto časti je možné si vybrať štýl aplikácie Carousel Slider.
 
 ![](editor-style.png)
 
-### Nastavenia
+### Rozšírené
 
-V tejto časti je možné nastaviť:
-- Rozmery
-- Kvalita malého obrázka
+V tejto časti je možné nastaviť rozšírené nastavenia:
+
+- **Rozmery**
+  - Šírka
+  - Výška
+- **Kvalita malého obrázka**
+  - Šírka
+  - Výška
 - Maximálny počet obrázkov na jeden slide
 - Smer (horizontálne, vertikálne)
 - Náhľad obrázka
@@ -35,11 +45,18 @@ V tejto časti je možné nastaviť:
 
 ### Položky
 
-V tejto časti možno pridať alebo odobrať položku z aplikácie.
-Pri pridaní položky možno špecifikovať nadpis, podnadpis, presmerovanie a vybrať obrázok.
-Položka sa odstraňuje kliknutím na červený krížik.
+V tejto časti je možné vidieť a spravovať položky aplikácie, takže klasické akcie ako pridanie/úprava/mazanie…
 
 ![](editor-items.png)
+
+Pre jednotlivé položky môžete nastaviť tieto parametre:
+
+- **Obrázok**, podporovaný je výber obrázka pomocou prieskumníka, ako aj priame zadanie cesty obrázka
+- **Nadpis**, nadpis obrázka
+- **Podnadpis**, podnadpis obrázka
+- **Po kliknutí zobraziť inú stránku (presmerovať)**, výber stránky na ktorú budete presmerovaný (podporované je aj priame zadanie cesty)
+
+![](editor-items-edit.png)
 
 ## Zobrazenie aplikácie
 

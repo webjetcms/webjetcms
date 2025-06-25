@@ -210,8 +210,9 @@ block content
                 }
             });
 
+            let isInsert = (requestJson.originalComponentName == null && requestJson.originalJspFileName == null);
             if (typeof window.appAfterInit === "function") {
-                window.appAfterInit(response, componentDatatable);
+                window.appAfterInit(response, componentDatatable, componentPath, isInsert);
             }
         }
 
@@ -261,15 +262,16 @@ block content
                 let params = componentDatatable.EDITOR.get();
                 delete params['id'];
 
-                if (typeof window.appGetComponentCode === "function") {
-                    let include = window.appGetComponentCode(componentPath, params, componentDatatable);
-                    //console.log("include=", include);
-                    if (typeof include != "undefined" && include != null) {
-                        $("#componentCode", window.parent.document).val(include);
-                        return true;
-                    }
-                }
+                /*
+                In some instances, we want to wrap INCLUDE in html code, like ForumApp in section,
+                BUT we NEED to know, if this is first time (inserting new app) or it's only update.
 
+                If we allways wrap include, we nest this bonus html with every edit of app. For this reason
+                we check is it's "INSERT" or "UPADTE" action.
+                */
+                let isInsert = (requestJson.originalComponentName == null && requestJson.originalJspFileName == null);
+
+               //appGetComponentPath before appGetComponentCode ... so component code can obtain allready modified path
                 if (typeof window.appGetComponentPath === "function") {
                     componentPath = window.appGetComponentPath(componentPath, componentDatatable);
                 } else {
@@ -279,17 +281,33 @@ block content
                     }
                 }
 
-                let include = "!INCLUDE(" + componentPath;
-                if (Object.keys(params).length > 0) {
-                    include += ", " + convertObjectToInludeParams(params);
+                if (typeof window.appGetComponentCode === "function") {
+                    let include = window.appGetComponentCode(componentPath, params, componentDatatable, isInsert);
+                    if (typeof include != "undefined" && include != null) {
+                        $("#componentCode", window.parent.document).val(include);
+                    } else setDedaultInclude(params);
+                } else {
+                   setDedaultInclude(params);
                 }
-                include += ")!";
-                $("#componentCode", window.parent.document).val(include);
+
+                if (typeof window.appCodeExecute === "function") {
+                    window.appCodeExecute(params);
+                }
+
                 return true;
             } catch (e) {
                 console.log(e);
             }
             return false;
+        }
+
+        function setDedaultInclude(params) {
+            let include = "!INCLUDE(" + componentPath;
+            if (Object.keys(params).length > 0) {
+                include += ", " + convertObjectToInludeParams(params);
+            }
+            include += ")!";
+            $("#componentCode", window.parent.document).val(include);
         }
 
         /**
