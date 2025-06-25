@@ -189,7 +189,6 @@ public class ExcelHssfView implements BinaryExportView
                 // Create an header row
                 HSSFRow xlsRow = sheet.createRow(rowNum++);
 
-                @SuppressWarnings("unchecked")
                 Iterator<HeaderCell> iterator = (Iterator<HeaderCell>)this.model.getHeaderCellList().iterator();
 
                 while (iterator.hasNext())
