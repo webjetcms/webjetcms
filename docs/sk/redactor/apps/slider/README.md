@@ -13,19 +13,7 @@ Dostupné karty:
 
 ### Generované CSS štýly
 
-V tejto časti je možné nastaviť štýl výberom z dostupných štýlov:
-
-- Classic
-- ContentBox
-- Cube
-- Elegant
-- Events
-- FeatureList
-- FrontPage
-- Gallery
-- Header
-- Lightbox
-- TextNavigation
+V tejto časti je možné nastaviť štýl pre Slider.
 
 ![](editor-settings.png)
 
@@ -33,19 +21,21 @@ V tejto časti je možné nastaviť štýl výberom z dostupných štýlov:
 
 V tejto časti je možné nastaviť:
 
-- Rozmery
-- Zobrazenie šípok vpravo a vľavo
+- Na celú šírku
+- Šírka
+- Výška
+- Zobrazenie šípok vpravo a vľavo (Nie je, Vždy, Len pri prejdeni myšou ponad slider)
 - Efekt pohyblivej fotky
-- Štýl navigácie
+- Štýl navigácie (Nie je, Guličky, Čísla, Náhľady)
 - Zobraziť náhľady pri prejdení myšou ponad navigáciu
 - Povoliť posúvanie chytením
 - Náhodné poradie
 - Automaticky spustiť
-- Počet slučiek
+- Počet slučiek (Navždy, Skončiť po)
 - Čas zobrazenia obrázku
 - Zobraziť odpočítavanie
-- Farba odpočítavania
-- Pozícia odpočítavania
+- Farba odpočítavania (hex/ENG)
+- Pozícia odpočítavania (Hore, Dolu)
 - Prechod na prvý obrázok
 - Pozastaviť pri prejdení myšou
 - Číslovanie
@@ -55,27 +45,7 @@ V tejto časti je možné nastaviť:
 
 ### Prechody
 
-V tejto časti je možné vybrať prechody:
-
-- Fade
-- Cross fade
-- Slide
-- Elastic
-- Slice
-- Blinds
-- Blocks
-- Shuffle
-- Tiles
-- Flip
-- Flip with zoom
-- 3D
-- 3D horizontal
-- 3D with zoom
-- 3D horizontal with zoom
-- 3D flip
-- 3D flip with zoom
-- 3D tiles
-- Ken bums
+V tejto časti je možné vybrať prechod (animáciu), ktorá sa bude používať pri zmene obrázkov.
 
 ![](editor-transitions.png)
 
