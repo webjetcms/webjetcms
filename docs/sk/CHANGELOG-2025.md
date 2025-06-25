@@ -112,6 +112,14 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Príbuzné stránky](redactor/apps/related-pages/README.md)
 - [Rating](redactor/apps/rating/README.md)
 - [Rezervácie](redactor/apps/reservation/reservation-app/README.md)
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Carousel Slider](redactor/apps/carousel_slider/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Emotikony](redactor/apps/emoticon/README.md)
+- [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Používatelia](redactor/apps/user/README.md)
+- [Video](redactor/apps/video/README.md)
 
 ![](redactor/apps/dmail/form/editor.png)
 
