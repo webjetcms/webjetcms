@@ -523,7 +523,7 @@ const WJ = (() => {
      */
     function openElFinder(options) {
         /** @type {string} */
-        let url = '/admin/v9/files/dialog';
+        let url = '/admin/v9/files/dialog/';
         //if (options.link !== undefined && options.link !== null && options.link !== '')
         if (!!options.link) {
             url = urlAddParam(url, 'link', options.link);
@@ -1474,7 +1474,7 @@ window.openImageDialogWindow = function(formName, fieldName, requestedImageDir) 
     openElFinderDialogWindow(formName, fieldName, requestedImageDir);
 }
 window.openElFinderDialogWindow = function(form, elementName, requestedImageDir) {
-	var url = '/admin/v9/files/dialog';
+	var url = '/admin/v9/files/dialog/';
     //console.log("openElFinderDialogWindow, form=", form, "elementName=", elementName);
 
 	if (form != null && elementName != null) {
