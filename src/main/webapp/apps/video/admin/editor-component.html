@@ -13,6 +13,9 @@
             const fixed = $("#DTE_Field_widthType_0");
             const responsive = $("#DTE_Field_widthType_1");
 
+            //align them to center
+            $(".DTE_Field_Name_field > div").css("text-align", "center");
+
             if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
                 setFieldsVisibility(["align", "portrait", "byline", "badge", "file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel", "videoFile"], []);
             }
