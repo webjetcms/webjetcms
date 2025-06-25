@@ -56,7 +56,7 @@ public class ThymeleafAdminController {
     * @param request HttpServletRequest
     * @return String
     */
-   @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[a-zA-Z0-9-]*}/" })
+   @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[a-zA-Z0-9_-]*}/" })
    public ModelAndView defaultHandler(@PathVariable(required = false) String page,
          @PathVariable(required = false) String subpage,
          @RequestParam(required = false) final MultiValueMap<String, String> allParams,
