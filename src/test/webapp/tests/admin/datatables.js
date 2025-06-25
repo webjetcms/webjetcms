@@ -11,7 +11,7 @@ Before(({ I, login }) => {
 
 Scenario('Nastavenie tabulky', async ({ I, Browser, Document }) => {
     if (Browser.isChromium()) {
-        I.amOnPage("/admin/v9/apps/insert-script#/");
+        I.amOnPage("/admin/v9/apps/insert-script/");
 
         //zobrazenie modalneho okna NASTAVENIA - je schovane pod dataTables
         I.clickCss(".buttons-settings");
