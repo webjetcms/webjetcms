@@ -5,7 +5,7 @@ Before(({ I, login }) => {
 });
 
 Scenario("overenie prvotneho zoznamu", async ({ I, DT, DTE }) => {
-  I.amOnPage("/admin/v9/settings/database-delete");
+  I.amOnPage("/admin/v9/settings/database-delete/");
   DTE.waitForLoader();
   I.seeElement("div.toast-message");
   let rows = await I.getTotalRows();

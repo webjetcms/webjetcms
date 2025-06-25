@@ -315,6 +315,19 @@
                 "showReuseMessage": false,
                 "close": true
             }
+        },
+        {
+            "label": "Sass Compile PB style.css",
+            "type": "shell",
+            "options": {
+                "cwd": "src/main/webapp/admin/webpages/page-builder/style/sass/"
+            },
+            "command": "sass --style=expanded --watch style.scss:../style.css",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+                "showReuseMessage": false
+            }
         }
     ]
 }

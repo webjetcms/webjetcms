@@ -28,6 +28,9 @@ Scenario('kontrola URL s bodkociarkou', ({ I }) => {
 
     I.amOnPage("/admin/;/mem.jsp");
     I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    I.amOnPage("/files/archiv/;/mem.jsp");
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
 });
 
 Scenario('mozne XSS v textarea replaceall', ({ I }) => {
@@ -57,4 +60,14 @@ Scenario('mozne XSS v textarea replaceall-db', ({ I }) => {
 
     I.see("Text "+xss+" nahradeny");
     I.see("za "+xss+" v data_asc");
+});
+
+Scenario("Ninja URL with double quotes", ({ I }) => {
+    var link = `/files/archiv/filter-xss/file.pdf”><audio>">`;
+    I.amOnPage(link);
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
+    I.see("archiv-xss-404".toUpperCase(), "h1");
+    I.dontSeeInSource(link);
+    //check properly escaped URL in source
+    I.seeInSource(`/files/archiv/filter-xss/file.pdf%E2%80%9D%3E%3Caudio%3E%22%3E`)
 });

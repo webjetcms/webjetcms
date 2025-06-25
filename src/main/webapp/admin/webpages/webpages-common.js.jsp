@@ -12,10 +12,7 @@ page import="sk.iway.iwcm.i18n.Prop"%><%@
 page import="sk.iway.iwcm.tags.CombineTag"%><%@
 page import="sk.iway.iwcm.users.SettingsAdminBean"%><%@ page import="sk.iway.iwcm.users.SettingsAdminDB"%><%@ page import="sk.iway.iwcm.users.UsersDB"%><%@ page import="java.util.ArrayList"%><%@ page import="java.util.Map"%><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
-taglib uri="/WEB-INF/struts-html.tld" prefix="html" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/>
 */
 <%
     Prop prop2 = Prop.getInstance(request);

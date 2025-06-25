@@ -5,10 +5,23 @@
      */
     var dataTable;
 
+    WJ.breadcrumb({
+        id: 'contacts',
+        noBorderBottom: true,
+        tabs: [
+            { url: '#typeSelect', title: '{filter}', active: false }
+        ]
+    });
+
     window.domReady.add(function () {
 
         //URL adresa REST rozhrania
         let url = "/admin/rest/apps/contact";
+
+        //presun filter do hlavicky
+        $("#pills-typeSelect-tab").html("");
+        $("div#dataTable_extfilter").appendTo("#pills-typeSelect-tab");
+
         //package a meno triedy s JPA entitou
         let columns = [(${layout.getDataTableColumns("sk.iway.basecms.contact.ContactEntity")})];
 
@@ -24,5 +37,12 @@
     });
 
 </script>
+
+<div id="dataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto dt-extfilter-title-country"></div>
+        <div class="col-auto dt-extfilter dt-extfilter-country"></div>
+    </div>
+</div>
 
 <table id="dataTable" class="datatableInit table"></table>

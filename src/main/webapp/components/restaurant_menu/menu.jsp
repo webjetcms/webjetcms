@@ -5,8 +5,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%
 //stranka pre includnutie noviniek
 

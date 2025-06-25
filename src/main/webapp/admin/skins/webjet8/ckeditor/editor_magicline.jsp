@@ -1,39 +1,36 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@ 
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@ 
-taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@ 
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@ 
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@ 
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@ 
-taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@ 
-taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@ 
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
+taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
+taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
+taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 
 <style type="text/css">
-	
-	#webjetMagicLine 
-	{ 	
-		position: absolute; top: 0px; left: 3px; height: 11px !important; overflow: hidden; width: 98%; margin:0xp; padding: 0px; z-index:9999; 
-		cursor: pointer; 
+
+	#webjetMagicLine
+	{
+		position: absolute; top: 0px; left: 3px; height: 11px !important; overflow: hidden; width: 98%; margin:0xp; padding: 0px; z-index:9999;
+		cursor: pointer;
 		background-position: center 4px;
 		background-repeat: no-repeat;
 		text-decoration: none;
 		background-image: url(/admin/skins/webjet8/assets/global/img/magicline.png);
-		background-position: right 0px;	
+		background-position: right 0px;
 		height: 20px !important;
 	}
 	a.magicLineHover
 	{
-		text-decoration: none;	
+		text-decoration: none;
 	}
-	
+
 	#webjetComponentsToolbar, #webjetMagicLineToolbar
 	{
 		position: absolute; top: 0px; left: 15px; height: 21px; _height: 23px; overflow: hidden; margin:0xp; z-index:9999;
 		background-image: url(/components/_common/admin/inline/toolbarbg.png);
 		background-position: left top;
-		background-repeat: repeat-x;		
+		background-repeat: repeat-x;
 		text-decoration: none;
 		border: 1px solid #e86678;
 		border-radius: 3px;
@@ -53,21 +50,21 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon adm
 		font-size: 11px;
 	   font-family: Tahoma, Arial, Verdana, Sans-Serif;
 	   color: black;
-		
-		background:url(/admin/FCKeditor/editor/skins/webjet/images/components_toolbar_sprite.png) no-repeat top left;		
-			
+
+		background:url(/admin/FCKeditor/editor/skins/webjet/images/components_toolbar_sprite.png) no-repeat top left;
+
 		cursor: pointer;
 		margin-left: 4px;
 		margin-right: 4px;
 		padding-top: 3px;
 		padding-left: 18px;
-		
+
 		display: block;
-		width: auto;	
-		height: 21px;	
-		float: left;	
+		width: auto;
+		height: 21px;
+		float: left;
 	}
-	
+
 	#webjetMagicLineToolbar span.mlBtn
 	{
 		display: block;
@@ -87,7 +84,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon adm
 	#webjetMagicLineToolbar span.mlBtn:hover
 	{
 		background-color: #dff1ff;
-		color: 316ac5;	
+		color: 316ac5;
 		cursor: pointer;
 	}
 	#webjetMagicLineToolbar span.mlBtn.disabled, #webjetMagicLineToolbar span.mlBtn.disabled:hover
@@ -97,13 +94,13 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon adm
 		cursor: default;
 		font-weight: normal;
 	}
-	
-	#webjetSectionToolbar 
-	{ 	
+
+	#webjetSectionToolbar
+	{
 		position: absolute; top: 0px; left: 15px; height: 21px; _height: 23px; overflow: hidden; margin:0xp; z-index:9999;
 		background-image: url(/components/_common/admin/inline/toolbarbg.png);
 		background-position: left top;
-		background-repeat: repeat-x;		
+		background-repeat: repeat-x;
 		text-decoration: none;
 		border: 1px solid #e86678;
 		border-radius: 3px;
@@ -114,20 +111,20 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon adm
 		font-size: 11px;
 	   font-family: Tahoma, Arial, Verdana, Sans-Serif;
 	   color: black;
-		
-		background:url(/admin/FCKeditor/editor/skins/webjet/images/components_toolbar_sprite.png) no-repeat top left;		
-			
+
+		background:url(/admin/FCKeditor/editor/skins/webjet/images/components_toolbar_sprite.png) no-repeat top left;
+
 		cursor: pointer;
 		margin-left: 4px;
 		margin-right: 4px;
 		padding-top: 3px;
 		padding-left: 18px;
-		
+
 		display: block;
-		width: auto;	
-		height: 21px;	
+		width: auto;
+		height: 21px;
 		float: left;
-		
+
 	}
 
 </style>

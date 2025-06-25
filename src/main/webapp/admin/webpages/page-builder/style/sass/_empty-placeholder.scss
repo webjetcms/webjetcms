@@ -12,7 +12,7 @@
         width: $empty-placeholder-button-size;
         height: $empty-placeholder-button-size;
         z-index: $empty-placeholder-button-index;
-        background-image: url("../images/plus.png");
+        background-image: url("/admin/webpages/page-builder/images/plus.png");
         background-repeat: no-repeat;
         background-position: center;
         background-size: auto $empty-placeholder-button-icon-size;
@@ -52,12 +52,12 @@
         &::after {
             border-color: $color-gray;
         }
-        background-image: url("../images/pencil.png");
+        background-image: url("/admin/webpages/page-builder/images/pencil.png");
         &:hover {
             background-color: darken($color-gray,15%);
         }
     }
-    
+
     .#{$prefix}-row > & &__button,
     .#{$prefix}-container > & &__button {
         background-color: $color-column;
@@ -65,18 +65,18 @@
             border-color: $color-column;
         }
     }
-    
+
     .#{$prefix}-row > & &__button:hover,
     .#{$prefix}-container > & &__button:hover {
         background-color: darken($color-column,15%);
     }
-    
+
     .#{$prefix}-section > & &__button {
         background-color: $color-container;
         &::after {
             border-color: $color-container;
         }
-    
+
         &:hover {
             background-color: darken($color-container,15%);
         }
@@ -92,7 +92,7 @@
             background-color: darken($color-wrapper,15%);
         }
     }
-    
+
 }
 
 .#{$prefix}-wrapper {

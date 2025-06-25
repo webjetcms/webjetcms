@@ -2,7 +2,7 @@ Feature('components.domain_redirects');
 
 Before(({ I, login }) => {
     login('admin');
-    I.amOnPage("/admin/v9/settings/domain-redirect");
+    I.amOnPage("/admin/v9/settings/domain-redirect/");
 });
 
 Scenario('domain_redirects-zakladne testy @baseTest', async ({ I, DataTables }) => {

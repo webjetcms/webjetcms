@@ -3,13 +3,9 @@
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <%@page import="sk.iway.iwcm.dmail.EmailDB"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%@page import="sk.iway.iwcm.dmail.Sender"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
 
 <%
 	String lng = PageLng.getUserLng(request);
@@ -120,39 +116,39 @@
 <div class="unsubscribeForm">
 	<form action="<%=Tools.replace(PathFilter.getOrigPathDocId(request), "email=", "em=") %>" method="post">
 		<fieldset>
-			<logic:present name="unsubscribeSuccess-showEmailSent">
+			<iwcm:present name="unsubscribeSuccess-showEmailSent">
 				<div class="alert alert-info" role="alert">
 					<iwcm:text key="dmail.unsubscribe.confirm_email_sent"/>
 				</div>
-			</logic:present>
+			</iwcm:present>
 
-			<logic:present name="confirmUnsubscribeText">
+			<iwcm:present name="confirmUnsubscribeText">
 				<div class="unsubscribe-confirm-text">
 					<iway:request name="confirmUnsubscribeText"/>
-					<logic:notPresent name="unsubscribeSuccess">
+					<iwcm:notPresent name="unsubscribeSuccess">
 						<p>
 							<a href="/" class="btn btn-primary"><iwcm:text key="components.dmail.unsubscribe.unsubscribeCancel"/></a>
 						</p>
-					</logic:notPresent>
+					</iwcm:notPresent>
 				</div>
-			</logic:present>
+			</iwcm:present>
 
-			<logic:present name="unsubscribeErrors">
+			<iwcm:present name="unsubscribeErrors">
 				<div class="alert alert-danger" role="alert">
 					<strong><iwcm:text key="dmail.subscribe.errors"/>:</strong>
 					<ul>
 						<li><iway:request name="unsubscribeErrors"/></li>
 					</ul>
 				</div>
-			</logic:present>
+			</iwcm:present>
 
-			<logic:present name="unsubscribeSuccess">
+			<iwcm:present name="unsubscribeSuccess">
 				<div class="alert alert-success" role="alert">
 					<iway:request name="unsubscribeSuccess"/>
 				</div>
-			</logic:present>
+			</iwcm:present>
 
-			<logic:notPresent name="unsubscribeSuccess">
+			<iwcm:notPresent name="unsubscribeSuccess">
 				<p class="email-address">
 					<label for="unsubscribeEmail" class="form-label"><iwcm:text key="dmail.subscribe.email"/>:</label>
 					<input id="unsubscribeEmail" class="emailField form-control" type="text" name="email" value="<%=ResponseUtils.filter(email)%>" <% if (dmspID>0 && Tools.isNotEmpty(email)) out.print("readonly='readonly'"); %> />
@@ -161,9 +157,9 @@
 					<input type="hidden" name="save" value="true" />
 					<input type="submit" class="bSubmit btn btn-secondary" name="bSubmit" value="<iwcm:text key="dmail.unsubscribe.unsubscribe"/>" />
 				</p>
-			</logic:notPresent>
+			</iwcm:notPresent>
 
-			<logic:present name="unsubscribeSuccess-showUndelete">
+			<iwcm:present name="unsubscribeSuccess-showUndelete">
 				<p>
 					<iwcm:text key="components.dmail.unsubscribe.unsubscribeUndelete.text"/>
 				</p>
@@ -172,7 +168,7 @@
 					<input type="hidden" name="email" value="<%=ResponseUtils.filter(email)%>"/>
 					<input type="submit" class="bSubmit btn btn-primary" name="bSubmit" value="<iwcm:text key="components.dmail.unsubscribe.unsubscribeUndelete"/>" />
 				</p>
-			</logic:present>
+			</iwcm:present>
 
 		</fieldset>
 		<input type="hidden" name="<%=Constants.getString("dmailStatParam") %>" value="<%=ResponseUtils.filter(request.getParameter(Constants.getString("dmailStatParam"))) %>" />

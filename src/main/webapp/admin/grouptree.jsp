@@ -11,9 +11,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="sk.iway.iwcm.Tools" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
+<iwcm:checkLogon admin="true"/>
 <%
 //otestuj ci existuje nahrada za tuto stranku
 String forward = "/admin/spec/"+Constants.getInstallName()+"/grouptree.jsp";
@@ -174,7 +172,7 @@ webFXTreeConfig.loadingText = "<iwcm:text key="groupslist.xtree.loading"/>";
 	<%
 	List<String> allreadyHasGroupParentTable = new ArrayList<>();
 	%>
-	<logic:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index"><%
+	<iwcm:iterate id="group" name="groups" type="sk.iway.iwcm.doc.GroupDetails" indexId="index"><%
 		boolean canAccess = true;
 		if (Constants.getBoolean("adminCheckUserGroups"))
 		{
@@ -246,8 +244,8 @@ webFXTreeConfig.loadingText = "<iwcm:text key="groupslist.xtree.loading"/>";
 			   folderIcon = "";
 			}
 
-	   %>tree.add(new WebFXLoadTreeItem("<jsp:getProperty name="group" property="sortPriority"/>. <jsp:getProperty name="group" property="groupNameShort"/>", "/admin/scripts/xtree/tree.jsp?<%if (alsoPages) out.print("alsoPages=true&"); %>parent=<bean:write name="group" property="groupId"/>", "javascript:xtreeItemClick(<bean:write name="group" property="groupId"/>, '<jsp:getProperty name="group" property="groupIdName"/>')", null, "images/dtree/folder<%=folderIcon%>.gif", "images/dtree/folderopen<%=folderIcon%>.gif"));<% }
-	%></logic:iterate>
+	   %>tree.add(new WebFXLoadTreeItem("<jsp:getProperty name="group" property="sortPriority"/>. <jsp:getProperty name="group" property="groupNameShort"/>", "/admin/scripts/xtree/tree.jsp?<%if (alsoPages) out.print("alsoPages=true&"); %>parent=<iwcm:beanWrite name="group" property="groupId"/>", "javascript:xtreeItemClick(<iwcm:beanWrite name="group" property="groupId"/>, '<jsp:getProperty name="group" property="groupIdName"/>')", null, "images/dtree/folder<%=folderIcon%>.gif", "images/dtree/folderopen<%=folderIcon%>.gif"));<% }
+	%></iwcm:iterate>
 
 	document.write(tree);
 

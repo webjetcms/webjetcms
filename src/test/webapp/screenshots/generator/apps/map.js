@@ -8,8 +8,8 @@ Scenario('app map', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/map/");
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/map/map.png");
-    
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     I.jstreeClick("Aplikácie");
     I.wait(1);
@@ -29,7 +29,7 @@ Scenario('app map', ({ I, DT, DTE, Document }) => {
     I.wait(2);
 
     I.switchTo();
-  
+
     I.waitForElement("iframe.cke_dialog_ui_iframe", 10);
     I.switchTo("iframe.cke_dialog_ui_iframe");
     I.switchTo("iframe#editorComponent");
@@ -40,5 +40,5 @@ Scenario('app map', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/map/editor-address.png");
     I.clickCss("#tabLink2");
     Document.screenshot("/redactor/apps/map/editor-settings.png");
-    
+
 });

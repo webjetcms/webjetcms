@@ -26,7 +26,7 @@
         .#{$prefix}-dimmer {
             visibility: visible;
             opacity: 1;
-            background-color: rgba(42, 51, 66, 0.6);
+            background-color: rgba(0, 0, 0, 0.3);
         }
     }
     .#{$prefix}-section.#{$prefix}-has-child-toolbar-active {
@@ -37,7 +37,7 @@
 }
 
 @keyframes fadeIn {
-    0% { 
+    0% {
         visibility: visible;
         opacity: 0;
     }

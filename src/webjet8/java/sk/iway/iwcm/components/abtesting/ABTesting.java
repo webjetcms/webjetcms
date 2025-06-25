@@ -52,10 +52,12 @@ public class ABTesting
 			//In case, user agent is crawler, we will always return variant A
 			variant = "a";
 		} else {
-
 			if ("true".equals(request.getAttribute("ABTestingPrefferVariantUrl"))) {
 				//if we are in AB testing variant URL, we will not use cookie
 				variant = getVariantFromUrl(path);
+			} else if (Constants.getBoolean("ABTestingForLoggedUser")) {
+				if (user == null) variant = "a";
+				else variant = "b";
 			} else {
 				variant = Tools.getCookieValue(request.getCookies(), Constants.getString("ABTestingCookieName"), null);
 			}

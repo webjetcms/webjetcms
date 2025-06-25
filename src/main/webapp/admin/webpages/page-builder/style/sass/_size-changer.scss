@@ -37,11 +37,11 @@
         }
     }
 
-    &__down {   background-image: url("../images/move-left.png"); }
-    &__up {     background-image: url("../images/move-right.png"); }
+    &__down {   background-image: url("/admin/webpages/page-builder/images/move-left.png"); }
+    &__up {     background-image: url("/admin/webpages/page-builder/images/move-right.png"); }
 
     .#{$prefix}-container.#{$prefix}-is-resize-columns & {
         display: block;
     }
-    
+
 }
