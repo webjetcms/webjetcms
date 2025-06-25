@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 @Getter
 @Setter
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+        @DataTableTab(id = "basic", title = "components.app-impress_slideshow.editor_components.styleAndSettings", selected = true),
         @DataTableTab(id = "files", title = "components.slider.files"),
 })
 public class SlitSliderApp extends WebjetComponentAbstract {
