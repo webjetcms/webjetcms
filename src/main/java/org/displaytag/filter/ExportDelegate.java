@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2022 Fabrizio Giustina, the Displaytag team
+ * Copyright (C) 2002-2024 Fabrizio Giustina, the Displaytag team
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -40,10 +40,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Actually writes out the content of the wrapped response. Used by the j2ee filter and the Spring interceptor
  * implementations.
- *
- * @author Fabrizio Giustina
- *
- * @version $Revision$ ($Author$)
  */
 public final class ExportDelegate {
 
