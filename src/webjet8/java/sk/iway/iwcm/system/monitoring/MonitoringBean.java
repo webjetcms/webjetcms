@@ -14,7 +14,8 @@ import springfox.documentation.annotations.ApiIgnore;
  *	@created      Date: 11.06.2009 10:52:51
  *	@modified     $Date: 2009/08/05 13:39:54 $
  */
-@ApiIgnore("pada to na .nodeName v JS kode swaggeru, preto musime ignorovat")
+//pada to na .nodeName v JS kode swaggeru, preto musime ignorovat
+@ApiIgnore()
 public class MonitoringBean
 {
 	private int 	monitoringId;		// identifikator

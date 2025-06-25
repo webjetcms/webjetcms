@@ -112,7 +112,7 @@ public class WebjetComponentResolver {
         @SuppressWarnings("rawtypes")
         Class c = bean.getClass();
 
-        if (c != null && c.getSimpleName().contains("EnhancerBySpring")) {
+        if (c != null && (c.getSimpleName().contains("EnhancerBySpring") || c.getSimpleName().contains("$SpringCGLIB$"))) {
             c = ClassUtils.getUserClass(c);
         }
         if (c==null) return null;
