@@ -4,14 +4,19 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('Forum types', async ({I, DTE, Document}) => {
+Scenario('Forum types', async ({I, DTE, Document, Apps}) => {
     Document.screenshotAppEditor(65077, "/redactor/apps/forum/clasic-forum.png");
-    Document.screenshotAppEditor(63761, "/redactor/apps/forum/message-board.png");
+    Document.screenshotAppEditor(63761, "/redactor/apps/forum/message-board.png", function(Document, I, DT, DTE) {
+        I.clickCss("#pills-dt-component-datatable-groups-tab");
+        Document.screenshot("/redactor/apps/forum/message-board-groups.png");
+
+        I.clickCss("#pills-dt-component-datatable-basic-tab");
+    });
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63768");
     DTE.waitForEditor();
-    I.clickCss('#trEditor', null, { position: { x: 177, y: 400 } });
-    I.pressKey(['Ctrl', 'Q']);
+    I.wait(5);
+    Apps.switchEditor('html');
     Document.screenshot("/redactor/apps/forum/message-board-upload.png");
 });
 
