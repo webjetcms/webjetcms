@@ -52,58 +52,24 @@ Scenario('menu screens', ({ I, DT, Document, i18n }) => {
     Document.screenshotElement("div.status-info", "/redactor/apps/restaurant-menu/menu-external-filter-status-b.png");
 });
 
-Scenario('menu app screens', async ({ I, DT, DTE, Document }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=74621");
-    DTE.waitForEditor();
-
-    I.switchTo("iframe.cke_wysiwyg_frame");
-    I.waitForElement("iframe.wj_component");
-    I.switchTo("iframe.wj_component");
-    I.seeElement("div.inlineComponentButtons > a:nth-child(1)");
-    I.wait(2);
-    I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
-
-    I.switchTo();
-    I.switchTo();
-
-    I.waitForVisible("div.cke_dialog_body");
-
-    Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/restaurant-menu/menu-app-dialog.png");
-
-    I.switchTo("iframe.cke_dialog_ui_iframe");
-    I.switchTo("iframe#editorComponent");
-        I.click("a#tabLink2");
-    I.switchTo("");
-    I.switchTo("");
-
-    DT.waitForLoader();
-
-    Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/restaurant-menu/menu-app-dialog-meals.png");
-
-    I.switchTo("iframe.cke_dialog_ui_iframe");
-    I.switchTo("iframe#editorComponent");
-        I.click("a#tabLink4");
-    I.switchTo("");
-    I.switchTo("");
-
-    Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/restaurant-menu/menu-app-dialog-menu.png");
-
-    switch (I.getConfLng()) {
-        case "sk":
-            I.amOnPage("/apps/restaurant-menu/?week=2023-W48");
-            I.waitForElement(locate("h2.menu").withText("Pondelok (27.11.2023)"));
-            break;
-        case "en":
-            I.amOnPage("/apps/restaurant-menu/?week=2023-W48&language=en");
-            I.waitForElement(locate("h2.menu").withText("Monday (27.11.2023)"));
-            break;
-        case "cs":
-            I.amOnPage("/apps/restaurant-menu/?week=2023-W48&language=cs");
-            I.waitForElement(locate("h2.menu").withText("Pondělí (27.11.2023)"));
-            break;
-        default:
-            throw new Error("Unknown language: " + I.getConfLng());
-    }
-
+Scenario('menu app screens', async ({ I, Document }) => {
+    I.amOnPage("/apps/restaurant-menu/?NO_WJTOOLBAR=true&week=2023-W48");
     Document.screenshot("/redactor/apps/restaurant-menu/menu-app-frontend.png", 1000, 1100);
+
+    Document.screenshotAppEditor(74621, "/redactor/apps/restaurant-menu/menu-app-dialog.png", function(Document, I) {
+        I.clickCss("#pills-dt-component-datatable-listMealsIframeWindowTab-tab");
+        Document.screenshot("/redactor/apps/restaurant-menu/menu-app-dialog-meals.png");
+
+        I.clickCss("#pills-dt-component-datatable-newMenuIframeWindowTab-tab");
+        I.switchTo("#DTE_Field_iframe2");
+        I.fillField("input.dt-filter-from-dayDate", "28.11.2023");
+        I.clickCss("button.dt-filtrujem-dayDate");
+
+        Document.screenshot("/redactor/apps/restaurant-menu/menu-app-dialog-menu.png");
+
+        I.switchTo();
+        I.switchTo('.cke_dialog_ui_iframe');
+        I.switchTo('#editorComponent');
+        I.clickCss("#pills-dt-component-datatable-basic-tab");
+    });
 });

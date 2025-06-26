@@ -64,7 +64,6 @@ function screenshotWebAndApp(I, Document, docId, path, webSelector, callback1=nu
 }
 
 Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document }) => {
-
     screenshotWebAndApp(I, Document, 77668, "/apps/file-archive/mvc/", ".ly-content .container", tabLinkNone, tabLink2Spring, 1000, 1000, function(Document, I) {
         I.executeScript(() => {
             $(".collapsible").click();
@@ -145,7 +144,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     screenshotWebAndApp(I, Document, 24008, "/components/media", ".ly-content .container", tabLinkNone, null, 800, 600);
 
     screenshotWebAndApp(I, Document, 10, "/components/news", "section.md-news-subpage", tabLink1, tabLink2);
-    screenshotWebAndApp(I, Document, 77772, "/components/app-social_icon", ".ly-content .container", tabLinkNone, null);
+    screenshotWebAndApp(I, Document, 77772, "/components/app-social_icon", ".ly-content .container", tabLink2Spring, null);
     screenshotWebAndApp(I, Document, 77773, "/components/app-testimonials", ".ly-content .container", tabLink1, tabLink2, 800, 600);
     screenshotWebAndApp(I, Document, 17322, "/components/qa", ".ly-content .container", tabLink1, tabLink3, 800, 600);
 
@@ -166,9 +165,23 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     screenshotWebAndApp(I, Document, 70839, "/components/rating", ".ly-content .container", tabLinkNone, null, 800, 600);
     screenshotWebAndApp(I, Document, 39096, "/components/reservation", ".ly-content .container", tabLink2Spring, tabLink3Spring);
 
-    screenshotWebAndApp(I, Document, 74621, "/components/restaurant_menu", ".restaurant-menu", tabLink1, tabLink2);
     I.amOnPage("/apps/restaurant-menu/?NO_WJTOOLBAR=true&week=2023-W48");
     Document.screenshotElement(".restaurant-menu", basePath+"/components/restaurant_menu/screenshot-1.jpg");
+    Document.screenshotAppEditor(74621, basePath+"/components/restaurant_menu/screenshot-2.jpg", function(Document, I, DT, DTE) {
+        tabLink2Spring(Document, I, DT, DTE);
+        Document.screenshot(basePath+"/components/restaurant_menu/screenshot-3.jpg");
+
+        tabLink3Spring(Document, I, DT, DTE);
+        I.switchTo("#DTE_Field_iframe2");
+        I.fillField("input.dt-filter-from-dayDate", "28.11.2023");
+        I.clickCss("button.dt-filtrujem-dayDate");
+        Document.screenshot(basePath+"/components/restaurant_menu/screenshot-4.jpg");
+
+        I.switchTo();
+        I.switchTo('.cke_dialog_ui_iframe');
+        I.switchTo('#editorComponent');
+        tabLink1Spring(Document, I, DT, DTE);
+    });
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
     DTE.waitForEditor();
