@@ -29,6 +29,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
     customHtml = "/apps/app-social_icon/admin/editor-component.html")
 @Getter
 @Setter
+@SuppressWarnings("java:S116")
 public class SocialIconApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "basic", title = "components.app-social_icon.editor_components.info")
     private String label;
@@ -63,7 +64,7 @@ public class SocialIconApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.news.visualStyle", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
     private String style = "01";
 
-    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.roots.new.style", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
+    @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-social_icon.editor_components.align", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
     private String socialIconAlign = "left";
 
     @Override

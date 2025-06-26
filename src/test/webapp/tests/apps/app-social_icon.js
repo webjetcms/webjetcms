@@ -42,7 +42,6 @@ Scenario("cleanup", ({ I }) => {
     I.closeOtherTabs();
 });
 
-
 Scenario('testovanie aplikácie - Odkazy na sociálne siete', async ({ I, Apps, Document, DTE }) => {
     Apps.insertApp('Odkazy na sociálne siete', '#components-app-social_icon-title', null, false);
     I.switchTo('.cke_dialog_ui_iframe');
