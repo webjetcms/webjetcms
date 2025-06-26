@@ -18,9 +18,9 @@
 
 			fieldElement.on("change", function () {
 				if ("qa" === $(this).val()) {
-					setFieldsVisibility(["show", "required"], ['sortBy', 'sortOrder']);
+					setFieldsVisibility(["toEmail", "show", "required"], ["pageSize", "sortBy", "sortOrder"]);
 				} else {
-					setFieldsVisibility(['sortBy', 'sortOrder'], ["show", "required"]);
+					setFieldsVisibility(["pageSize", "sortBy", "sortOrder"], ["toEmail", "show", "required"]);
 				}
 			});
 			fieldElement.trigger("change");

@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.qa;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,10 +8,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.LabelValueDetails;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.editor.rest.ComponentRequest;
-import sk.iway.iwcm.qa.QADB;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -23,6 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
+import sk.iway.iwcm.users.UsersDB;
 
 @WebjetComponent("sk.iway.iwcm.components.qa.QaApp")
 @WebjetAppStore(
@@ -40,7 +39,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 })
 @Getter
 @Setter
-public class QaApp  extends WebjetComponentAbstract{
+public class QaApp extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.qa.insert", editor = {
         @DataTableColumnEditor(options = {
@@ -50,8 +49,18 @@ public class QaApp  extends WebjetComponentAbstract{
     })
     private String field;
 
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.qa.group_name")
-    private String groupName;
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title="components.qa.group_name",
+		tab = "basic",
+		editor = {
+			@DataTableColumnEditor(attr = {
+				@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/qa/autocomplete"),
+				@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+			})
+		}
+    )
+	private String groupName;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.qa.page_size")
     private Integer pageSize = 10;
@@ -76,6 +85,8 @@ public class QaApp  extends WebjetComponentAbstract{
 
     // second options
 
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.qa.to_email")
+    private String toEmail;
 
     @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.qa.show_fields", editor = {
         @DataTableColumnEditor(options = {
@@ -109,14 +120,6 @@ public class QaApp  extends WebjetComponentAbstract{
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-
-        List<OptionDto> groupOptions = new ArrayList<>();
-        List<LabelValueDetails> groups = QADB.getQAGroups(request);
-        for (LabelValueDetails group : groups){
-            groupOptions.add(new OptionDto(group.getLabel(), group.getLabel(), null));
-        }
-        options.put("groupName", groupOptions);
-
         options.put("displayType", DatatableTools.getImageRadioOptions("/components/qa/admin-display-type/"));
         options.put("style", DatatableTools.getImageRadioOptions("/components/qa/admin-styles/"));
         return options;
@@ -125,5 +128,12 @@ public class QaApp  extends WebjetComponentAbstract{
     // third iframe
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabList", title="&nbsp;")
     private String iframe  = "/components/qa/admin_list.jsp";
-    
+
+    @Override
+    public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user != null) {
+            toEmail = user.getEmail();
+        }
+    }
 }
