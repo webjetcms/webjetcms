@@ -151,6 +151,11 @@ public class FsItemEx
 
 	public List<FsItemEx> listChildren()
 	{
+		if(_s instanceof sk.iway.iwcm.system.elfinder.FsService customService) {
+			// USe custom logic
+			return listChildren(customService.getSelectedType());
+		}
+
 		List<FsItemEx> list = new ArrayList<FsItemEx>();
 		for (FsItem child : _v.listChildren(_f))
 		{
@@ -197,4 +202,42 @@ public class FsItemEx
 		return "FsItemEx [_f=" + _f + "]";
 	}
 
+	public int getFsServiceSelectedType() {
+		if(_s instanceof sk.iway.iwcm.system.elfinder.FsService customService) {
+			return customService.getSelectedType();
+		}
+
+		// Return default
+		return sk.iway.iwcm.system.elfinder.FsService.TYPE_ALL;
+	}
+
+	public List<FsItemEx> listChildren(int selectedType) {
+		List<FsItemEx> list = new ArrayList<>();
+		FsItem[] childrens = _v.listChildren(_f);
+
+		if(selectedType == sk.iway.iwcm.system.elfinder.FsService.TYPE_IMAGES) {
+			//Accept ONLY image AND the directory
+			for (FsItem child : childrens) {
+				String mimeType = _v.getMimeType(child);
+				if("directory".equals(mimeType) || mimeType.startsWith("image/")) {
+					list.add(new FsItemEx(child, _s));
+				}
+			}
+		} else if(selectedType == sk.iway.iwcm.system.elfinder.FsService.TYPE_VIDEOS) {
+			//Accept ONLY video AND the directory
+			for (FsItem child : childrens) {
+				String mimeType = _v.getMimeType(child);
+				if("directory".equals(mimeType) || mimeType.startsWith("video/")) {
+					list.add(new FsItemEx(child, _s));
+				}
+			}
+		} else {
+			// Return them all
+			for (FsItem child : childrens) {
+				list.add(new FsItemEx(child, _s));
+			}
+		}
+
+		return list;
+	}
 }
