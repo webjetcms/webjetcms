@@ -51,7 +51,7 @@ request.setAttribute("is404", "true");
 
 String ua = request.getHeader("User-Agent");
 
-String path = (String)request.getAttribute("path_filter_orig_path");
+String path = PathFilter.getOrigPath(request);
 if (path == null)
 {
 	path = Tools.getRequestURI(request);

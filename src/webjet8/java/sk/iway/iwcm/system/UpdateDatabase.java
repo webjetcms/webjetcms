@@ -279,8 +279,11 @@ public class UpdateDatabase
 	 * Automaticka aktualizacia databazy na zaklade XML suboru
 	 */
 	@SuppressWarnings("resource")
-	private static void autoUpdateDatabase(IwcmFile f, String dbName) throws IOException
+	private static void autoUpdateDatabase(String url, String dbName) throws IOException
 	{
+		IwcmFile f = new IwcmFile(Tools.getRealPath(url));
+		if (f.exists()==false || f.canRead()==false) return;
+
 		Logger.println(UpdateDatabase.class,"--> updating from file: " + f.getName());
 		InputStream is = new IwcmInputStream(f);
 		is = SyncDirAction.checkXmlForAttack(is);
@@ -308,22 +311,13 @@ public class UpdateDatabase
 	{
 		try
 		{
-			IwcmFile f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate.xml"));
-			autoUpdateDatabase(f, "iwcm");
-
-			f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate-"+Constants.getInstallName()+".xml"));
-			if (f.exists())
-			{
-				autoUpdateDatabase(f, "iwcm");
-			}
-
+			autoUpdateDatabase("/WEB-INF/sql/autoupdate.xml", "iwcm");
 			//update pre webjet9 a dalsie podla skinu
-			f = new IwcmFile(Tools.getRealPath("/WEB-INF/sql/autoupdate-"+Constants.getString("defaultSkin")+".xml"));
-			if (f.exists())
-			{
-				autoUpdateDatabase(f, "iwcm");
-			}
+			autoUpdateDatabase("/WEB-INF/sql/autoupdate-"+Constants.getString("defaultSkin")+".xml", "iwcm");
 
+			autoUpdateDatabase("/WEB-INF/sql/autoupdate-"+Constants.getInstallName()+".xml", "iwcm");
+
+			//check for autoupdate-INSTALL_NAME-DBNAME.xml
 			IwcmFile dir = new IwcmFile(Tools.getRealPath("/WEB-INF/sql"));
 			if (dir.isDirectory())
 			{
@@ -332,7 +326,7 @@ public class UpdateDatabase
 				int i;
 				for (i=0; i<size; i++)
 				{
-					f = files[i];
+					IwcmFile f = files[i];
 					if (f.isFile() && f.getName().startsWith("autoupdate-"+Constants.getInstallName()))
 					{
 						int start = ("autoupdate-"+Constants.getInstallName()).length() + 1;
@@ -343,7 +337,7 @@ public class UpdateDatabase
 						String dbName = f.getName().substring(start, end).trim();
 
 						Logger.println(UpdateDatabase.class,"--> updating from file: " + f.getName() + " database: " + dbName);
-						autoUpdateDatabase(f, dbName);
+						autoUpdateDatabase("/WEB-INF/sql/"+f.getName(), dbName);
 					}
 				}
 			}

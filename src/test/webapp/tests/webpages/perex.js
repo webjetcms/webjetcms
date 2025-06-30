@@ -222,7 +222,7 @@ Scenario('Testing language mutation perex', ({ I, DT, DTE }) => {
     const perexGroupNameSk = 'Jazyková mutácia';
     const perexGroupNameEn = 'Language mutation';
 
-    I.amOnPage('/admin/v9/webpages/perex');
+    I.amOnPage('/admin/v9/webpages/perex/');
     I.click(DT.btn.perex_add_button);
     I.waitForVisible('.DTE.modal-content');
     I.clickCss('#perexDataTable_modal button.btn.btn-primary');
@@ -289,7 +289,7 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
     I.switchToNextTab()
 
     I.say("Verify that perex was created");
-    I.amOnPage('/admin/v9/webpages/perex');
+    I.amOnPage('/admin/v9/webpages/perex/');
     checkPerex(I, DT, perexName, true, 'Nenašli sa žiadne vyhovujúce záznamy');
 
     I.say("Verify that perex is in web page and is checked");
@@ -314,7 +314,7 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
  * @param {string} perexName - The name of the perex to be deleted.
  */
 async function deletePerex(I, DT, DTE, perexName) {
-    I.amOnPage('/admin/v9/webpages/perex');
+    I.amOnPage('/admin/v9/webpages/perex/');
 
     DT.filterEquals('perexGroupName', perexName);
     const isPerexDeleted = await I.grabNumberOfVisibleElements('td.dt-empty');

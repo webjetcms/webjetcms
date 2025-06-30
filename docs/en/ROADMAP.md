@@ -64,6 +64,9 @@ Explanation of the pictograms used:
 - [ ] +Tables - add option `hideOnDuplicate` for cards in the editor, not forgetting also the class `DataTableTab` so that it can also be set in the annotation.
 - [ ] +Add the option to move to the parent folder in the Media of this page.
 - [ ] +Configuration - if `cluster` add the option to set the variable only for the current node (do not save it to the database). Originally this was handled by the selection field `applyToAllClusterNodes`.
+- [ ] +Enumerators - add the ability to define a field type for the string as we have in the optional fields.
+- [ ] +Statistics - add the total number of Visits and Visits to the Traffic section for an easy overview of the total traffic for the selected period (the sum of the numbers in the table). It could be added `footerCallback` - https://datatables.net/examples/advanced\_init/footer\_callback.html
+- [ ] +Mirror Structure - add delete option `sync_id` values for the selected folder (recursive). In order to easily cancel/reset the synchronization. Also there is a problem that I clone `SK,DE,EN` then we'll shut down `DE` and I just want to have `EN` but the mirroring still applies changes even to the `DE` Folder.
 
 ## 2024
 

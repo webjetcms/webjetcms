@@ -53,7 +53,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   }
   DTE.save();
   I.wait(5);
-  I.amOnPage('/admin/v9/webpages/web-pages-list#/');
+  I.amOnPage('/admin/v9/webpages/web-pages-list/');
   DT.waitForLoader();
   I.waitForText(auto_name, 20);
 

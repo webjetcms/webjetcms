@@ -1,12 +1,9 @@
-<% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
+<%@page import="java.util.List"%><% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.io.*, sk.iway.iwcm.system.*, sk.iway.iwcm.i18n.*,sk.iway.iwcm.FileTools" %>
 <%@ page import="sk.iway.iwcm.Tools" %>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <iwcm:checkLogon admin="true" perms="make_zip_archive"/>
 <%
 	Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);
@@ -41,7 +38,7 @@
 	}
 %>
 
-<logic:present parameter="zipArchivePath" >
+<iwcm:present parameter="zipArchivePath" >
    <script type="text/javascript">
    		window.scrollBy(0,10000);
 		function Ok()
@@ -49,9 +46,9 @@
 			window.close();
 		}
 	</script>
-</logic:present>
+</iwcm:present>
 
-<logic:notPresent parameter="zipArchivePath" >
+<iwcm:notPresent parameter="zipArchivePath" >
 	<script type="text/javascript">
 		var archiveDirs = new Array();
 		function Ok()
@@ -122,7 +119,7 @@
 			return (true);
 		}
 	</script>
-</logic:notPresent>
+</iwcm:notPresent>
 
 </div>
 

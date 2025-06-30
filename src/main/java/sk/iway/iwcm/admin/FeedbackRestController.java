@@ -4,18 +4,19 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -47,6 +48,8 @@ public class FeedbackRestController {
         feedbackText.append("<p>")
             .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), "\n", "<br/>\n"))
             .append("</p>\n<p>");
+
+        feedbackText.append("Version: " + ResponseUtils.filter(InitServlet.getActualVersionLong()) + "<br/>");
 
         //Handle isAnonymous
         if(!params.get(isAnonymousKey)[0].equals("true")) {

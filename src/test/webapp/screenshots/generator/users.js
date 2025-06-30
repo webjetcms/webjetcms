@@ -9,11 +9,11 @@ Before(({ I, login }) => {
 });
 
 Scenario('users', ({ I, DT, DTE, Document }) => {
-    I.amOnPage("/admin/v9/users/user-list");
+    I.amOnPage("/admin/v9/users/user-list/");
 
     DT.waitForLoader();
 
-    //TODO - need to open, close and then reopen -> problem with loading icons of permission in first open 
+    //TODO - need to open, close and then reopen -> problem with loading icons of permission in first open
     I.clickCss("button.buttons-create");
     DTE.waitForEditor();
     DTE.cancel();
@@ -54,7 +54,7 @@ Scenario('password-strength-login', ({ I, Document }) => {
         default:
             throw new Error("Unknown language: " + language);
     }
-    
+
 
     I.fillField("#username", "admin");
     I.fillField("#password", "admin");
@@ -64,7 +64,7 @@ Scenario('password-strength-login', ({ I, Document }) => {
 });
 
 Scenario('users-docs-screens', ({ I, DT, Document }) => {
-    I.amOnPage("/admin/v9/users/user-list");
+    I.amOnPage("/admin/v9/users/user-list/");
 
     //Users data table
     DT.waitForLoader();
@@ -119,7 +119,7 @@ Scenario('users-docs-screens', ({ I, DT, Document }) => {
 });
 
 Scenario('users-docs-screens-adminuser', ({ I , DT, DTE, Document }) => {
-    I.amOnPage("/admin/v9/users/user-list");
+    I.amOnPage("/admin/v9/users/user-list/");
     DT.filterContains("login", "admin");
     I.click("admin");
     DTE.waitForEditor();
@@ -134,7 +134,7 @@ Scenario('users-docs-screens-adminuser', ({ I , DT, DTE, Document }) => {
 });
 
 Scenario('users-docs-existing-user', ({ I, DTE, Document }) => {
-    I.amOnPage("/admin/v9/users/user-list");
+    I.amOnPage("/admin/v9/users/user-list/");
     I.click("dwaynejohnson");
     DTE.waitForEditor();
 
@@ -147,7 +147,7 @@ Scenario('users-docs-existing-user', ({ I, DTE, Document }) => {
 });
 
 Scenario('users-docs-permsfilter', ({ I , DTE, Document}) => {
-    I.amOnPage("/admin/v9/users/user-list");
+    I.amOnPage("/admin/v9/users/user-list/");
     I.click({css: "button.buttons-create"});
     DTE.waitForEditor();
 
@@ -171,7 +171,7 @@ Scenario('users-docs-permsfilter', ({ I , DTE, Document}) => {
             break;
         default:
             throw new Error("Unknown language: " + I.getConfLng());
-    }    
+    }
 
     I.click("div.DTE_Field_Type_jsTree div.input-group button.btn-search")
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-right-search.png");

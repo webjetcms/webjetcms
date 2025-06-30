@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2025-05-02)
+ * Version 2.1.65 (2025-06-25)
  * http://elfinder.org
  * 
  * Copyright 2009-2025, Studio 42
@@ -36054,7 +36054,7 @@ elFinder.prototype.commands.wjdirprops = function() {
 		}
 
 		WJ.openIframeModalDatatable({
-			url: '/admin/v9/files/folder_prop?id=-1&dirPath=' + fileVirtualPath + "&fileIndexerPerm=" + haveFileIndexerPerm + "&showOnlyEditor=true",
+			url: '/admin/v9/files/folder_prop/?id=-1&dirPath=' + fileVirtualPath + "&fileIndexerPerm=" + haveFileIndexerPerm + "&showOnlyEditor=true",
 			width: 850,
 			height: 500,
 			buttonTitleKey: "button.save"
@@ -36616,7 +36616,7 @@ elFinder.prototype.commands.wjfileprops = function() {
 		var file = fileVirtualPath.substring(fileVirtualPath.lastIndexOf('/') + 1);
 
 		WJ.openIframeModalDatatable({
-			url: '/admin/v9/files/file_prop?id=-1&dirPath=' + dir + "&fileName=" + file + "&fileIndexerPerm=" + haveFileIndexerPerm + "&showOnlyEditor=true",
+			url: '/admin/v9/files/file_prop/?id=-1&dirPath=' + dir + "&fileName=" + file + "&fileIndexerPerm=" + haveFileIndexerPerm + "&showOnlyEditor=true",
 			width: 850,
 			height: 500,
 			buttonTitleKey: "button.save"
@@ -36932,7 +36932,7 @@ elFinder.prototype.commands.resize = function() {
 					height = screen.height - 150;
 				}
 
-				var openedWindow = WJ.openPopupDialog('/admin/v9/apps/image-editor?id=-1&dir=' + dir + '&name=' + name + '&showOnlyEditor=true', width, height);
+				var openedWindow = WJ.openPopupDialog('/admin/v9/apps/image-editor/?id=-1&dir=' + dir + '&name=' + name + '&showOnlyEditor=true', width, height);
 				var closeBtn;
 				var saveBtn;
 

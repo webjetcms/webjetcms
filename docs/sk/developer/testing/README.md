@@ -377,7 +377,7 @@ Before(({login}) => {
 });
 
 Scenario('zoznam fotografii', ({I}) => {
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     I.click("test");
     I.see("koala.jpg");
 });
@@ -471,7 +471,7 @@ Ak sa vám testy správajú rozdielne v prehliadači Firefox alebo Chromium je m
 
 ```javascript
 if (Browser.isChromium()) {
-  I.amOnPage("/admin/v9/apps/insert-script#/");
+  I.amOnPage("/admin/v9/apps/insert-script/");
   ...
 }
 
@@ -618,7 +618,7 @@ var auto_name, auto_folder_internal, auto_folder_public, sub_folder_public;
 
 Before(({ I, login }) => {
      login('admin');
-     I.amOnPage('/admin/v9/webpages/web-pages-list#/');
+     I.amOnPage('/admin/v9/webpages/web-pages-list/');
 
      if (typeof auto_name=="undefined") {
           var randomNumber = I.getRandomText();

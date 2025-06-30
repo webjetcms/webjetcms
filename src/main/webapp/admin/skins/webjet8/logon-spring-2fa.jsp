@@ -3,10 +3,7 @@
 <%@ page pageEncoding="utf-8"
          import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"
-%><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"
-%><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
-%><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
+<%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
 %><%
     Prop prop = Prop.getInstance(request);
@@ -89,7 +86,7 @@
                 <img src="/admin/skins/webjet8/assets/global/img/wj/logo-<%=brandSuffix%>.png" alt="WebJET CMS" />
             </div>
 
-            <logic:present name="errors">
+            <iwcm:present name="errors">
                 <div class="alert alert-danger">
                     <span>
                         <iwcm:text key="user.form.errors"/>
@@ -98,11 +95,11 @@
                         <li><iwcm:text key="admin.logon.2fa.wrongCode"/></li>
                     </ul>
                 </div>
-            </logic:present>
+            </iwcm:present>
             <div class="login_content">
                 <div class="form-group">
                     <form:form method="post" name="logonForm" modelAttribute="userForm">
-                        <logic:present name="QRURL" scope="session">
+                        <iwcm:present name="QRURL" scope="session">
                             <div class="form-group">
                                 <label class="control-label"><iwcm:text key="user.gauth.instructions"/></label>
                                 <div class="qrImageWrapper">
@@ -113,12 +110,12 @@
                                 </p>
                                 <label class="control-label"><iwcm:text key="user.gauth.enterCodeAfterSetup"/></label>
                             </div>
-                        </logic:present>
-                        <logic:notPresent name="QRURL" scope="session">
+                        </iwcm:present>
+                        <iwcm:notPresent name="QRURL" scope="session">
                             <div class="form-group">
                                 <label class="control-label"><iwcm:text key="user.gauth.label"/></label>
                             </div>
-                        </logic:notPresent>
+                        </iwcm:notPresent>
                         <div class="form-group">
                             <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
                             <div class="input-icon">
@@ -150,7 +147,7 @@
     jQuery(document).ready(function() {
         document.logonForm.token.focus();
 
-        <logic:present name="QRURL" scope="session">
+        <iwcm:present name="QRURL" scope="session">
             var qrcode = new QRCode(document.getElementById("qrImage"), {
                 text: "<%=session.getAttribute("QRURL")%>",
                 width: 250,
@@ -159,7 +156,7 @@
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
-        </logic:present>
+        </iwcm:present>
     });
 
 </script>

@@ -17,7 +17,7 @@ sk.iway.iwcm.SetCharacterEncodingFilter.setCommonHeaders(response, request);
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%
 
 
-	String path = (String)request.getAttribute("path_filter_orig_path");
+	String path = PathFilter.getOrigPath(request);
 	//presmerovanie admin komponent
 	if (path!=null && path.startsWith("/components"))
 	{

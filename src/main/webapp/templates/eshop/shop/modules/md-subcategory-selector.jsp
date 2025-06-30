@@ -1,4 +1,4 @@
-<%@ page pageEncoding="utf-8" import="java.util.List,sk.iway.iwcm.doc.*" %>
+<%@ page pageEncoding="utf-8" import="java.util.List,sk.iway.iwcm.doc.*,sk.iway.iwcm.Tools" %>
 
 <section class="md-subcategory-selector">
     <ul>

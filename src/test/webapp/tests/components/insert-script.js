@@ -2,7 +2,7 @@ Feature('components.insert-script');
 
 Before(({ I, login }) => {
      login('admin');
-     I.amOnPage("/admin/v9/apps/insert-script#/");
+     I.amOnPage("/admin/v9/apps/insert-script/");
 });
 
 Scenario('insert script-zakladne testy @baseTest', async ({ I, DataTables}) => {

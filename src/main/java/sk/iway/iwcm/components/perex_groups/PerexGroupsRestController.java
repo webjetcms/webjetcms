@@ -24,8 +24,11 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
 
     @Override
     public PerexGroupsEntity processFromEntity(PerexGroupsEntity entity, ProcessItemAction action, int rowCount) {
-        if(entity != null && entity.getEditorFields() == null) {
-            PerexGroupsEditorFields pgef = new PerexGroupsEditorFields();
+        if(entity != null) {
+            if (entity.getEditorFields() == null) {
+                entity.setEditorFields(new PerexGroupsEditorFields());
+            }
+            PerexGroupsEditorFields pgef = entity.getEditorFields();
 
             //Set "volitelne polia"
             if(rowCount == 1)
@@ -49,7 +52,10 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
 
     @Override
     public PerexGroupsEntity editItem(PerexGroupsEntity entity, long id) {
-        return processFromEntity(PerexGroupsService.save(entity, (PerexGroupsRepository)getRepo()), ProcessItemAction.EDIT, 1);
+        entity = processToEntity(entity, ProcessItemAction.EDIT);
+        PerexGroupsEntity saved = PerexGroupsService.save(entity, (PerexGroupsRepository)getRepo());
+        setForceReload(true);
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     @Override

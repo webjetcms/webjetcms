@@ -6,11 +6,9 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.io.*,sk.iway.iwcm.*, org.apache.commons.codec.binary.Base64, sk.iway.iwcm.i18n.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <iwcm:checkLogon admin="true" perms="cmp_testimonials"/>
 <%@page import="sk.iway.iwcm.gallery.*"%>
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
 <%
 request.setAttribute("cmpName", "app-testimonials");
 request.setAttribute("iconLink", "/components/app-testimonials/editoricon.png");
