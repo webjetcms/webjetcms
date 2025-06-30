@@ -2405,6 +2405,7 @@ public class UpdateDatabase
 					String domainName = groupsDB.getDomain(groupIds[0]);
 					exportDat.setDomainId(GroupsDB.getDomainId(domainName));
 					edr.save(exportDat);
+					Logger.warn(UpdateDatabase.class, "ExportDat updated: " + exportDat.getId() + ":" + exportDat.getUrlAddress() + ", domainId=" + exportDat.getDomainId() + ", groupIds=" + exportDat.getGroupIds());
 				}
 			}
 		} catch (Exception e) {
@@ -2479,8 +2480,12 @@ public class UpdateDatabase
 			List<GalleryEntity> items = page.getContent();
 
 			for(GalleryEntity galleryEntity : items) {
+				String oldPerexGroups = galleryEntity.getPerexGroup();
 				boolean needSave = getValidPerexGroupsForGallery(galleryEntity, domainsMap, domainPerexGroupsMap, docDB);
-				if(needSave == true) gr.save(galleryEntity);
+				if(needSave == true) {
+					gr.save(galleryEntity);
+					Logger.warn(UpdateDatabase.class, "Updated perex groups for gallery: " + galleryEntity.getId() + ":" + galleryEntity.getImagePath() + ", oldPerexGroups=" + oldPerexGroups + ", newPerexGroups=" + galleryEntity.getPerexGroup());
+				}
 			}
 
 			pageNumber++;
@@ -2502,8 +2507,12 @@ public class UpdateDatabase
 			List<DocDetails> items = page.getContent();
 
 			for(DocDetails doc : items) {
+				String oldPerexGroups = doc.getPerexGroupIdsString();
 				boolean needSave = getValidPerexGroupsForDoc(doc, domainsMap, domainPerexGroupsMap);
-				if(needSave == true) ddr.save(doc);
+				if(needSave == true) {
+					ddr.save(doc);
+					Logger.warn(UpdateDatabase.class, "Updated perex groups for doc: " + doc.getId() + ":" + doc.getVirtualPath() + ", oldPerexGroups=" + oldPerexGroups + ", newPerexGroups=" + doc.getPerexGroupIdsString());
+				}
 			}
 
 			pageNumber++;
@@ -2526,13 +2535,13 @@ public class UpdateDatabase
 			//find perexGroup by id in domainPerexGroupsMap
 			String perexGroupName = domainPerexGroupsMap.entrySet().stream()
 				.filter(entry -> entry.getValue().getId().intValue() == perexGroupId)
-				.map(Map.Entry::getKey)
+				.map(entry -> entry.getValue().getPerexGroupName())
 				.findFirst()
 				.orElse(null);
 			// Find perexGroup with same name but for domain of doc
 
 			if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
-				Logger.debug("Perex group with name: " + perexGroupName + " was not found in domain: " + domainId);
+				Logger.error(UpdateDatabase.class, "Perex group: " + perexGroupId + ":" + perexGroupName + " was not found in domain: " + domainId);
 			} else {
 				newPerexGroups.add( domainPerexGroupsMap.get(perexGroupName + "-" + domainId).getId().intValue() );
 			}
@@ -2567,12 +2576,12 @@ public class UpdateDatabase
 			// Find perexGroup with same name but for domain of doc
 			String perexGroupName = domainPerexGroupsMap.entrySet().stream()
 				.filter(entry -> entry.getValue().getId().intValue() == perexGroupId)
-				.map(Map.Entry::getKey)
+				.map(entry -> entry.getValue().getPerexGroupName())
 				.findFirst()
 				.orElse(null);
 
 			if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
-				Logger.debug("Perex group with name: " + perexGroupName + " was not found in domain: " + domainId);
+				Logger.error(UpdateDatabase.class, "Perex group: " + perexGroupId + ":" + perexGroupName + " was not found in domain: " + domainId);
 				return false;
 			} else {
 				newPerexGroups.add( domainPerexGroupsMap.get(perexGroupName + "-" + domainId).getId().intValue() );
@@ -2651,6 +2660,8 @@ public class UpdateDatabase
 			filterPerexGroupAvailableGroupsByDomain(newPerex, domainsMap, groupsDB);
 
 			newPerexGroups.add(newPerex);
+
+			Logger.warn(UpdateDatabase.class, "Duplicating perex group: " + origPerex.getId() + ":" + origPerex.getPerexGroupName() + ", domainId: " + domainId + ", availableGroups: " + newPerex.getAvailableGroups());
 		}
 		return newPerexGroups;
 	}

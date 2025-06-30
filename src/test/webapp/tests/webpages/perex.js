@@ -378,3 +378,22 @@ Scenario('Check language variants in news', ({ I, DTE }) => {
     I.see("PODNIKANIE", ".portfolio-item .tag");
     I.see("INVESTÍCIA", ".portfolio-item .tag");
 });
+
+Scenario('Verify domain_id groups', ({ I }) => {
+    /*
+    INSERT INTO `perex_groups` (`perex_group_name`, `available_groups`, `perex_group_name_sk`, `perex_group_name_cz`, `perex_group_name_en`, `perex_group_name_de`, `perex_group_name_pl`, `perex_group_name_ru`, `perex_group_name_hu`, `perex_group_name_cho`, `perex_group_name_esp`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `domain_id`)
+    VALUES
+        ('DOMAIN: test23', '', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '', 83),
+        ('DOMAIN: demo.webjetcms.sk', '', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '', 1);
+    */
+    I.amOnPage("/admin/v9/webpages/perex/");
+    I.see("DOMAIN: test23", "#perexDataTable td.dt-style-json");
+    I.see("DOMAIN: demo.webjetcms.sk", "#perexDataTable td.dt-style-json");
+
+    I.click("DOMAIN: test23");
+    I.waitForElement("#jsTree a.jstree-anchor");
+    I.see("test23.webjetcms.sk", "#jsTree a.jstree-anchor");
+    I.see("demo.webjetcms.sk", "#jsTree a.jstree-anchor");
+
+    I.click("a.close-custom-modal");
+});
