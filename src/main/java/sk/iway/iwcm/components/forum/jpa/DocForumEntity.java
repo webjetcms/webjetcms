@@ -9,6 +9,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -96,6 +97,7 @@ public class DocForumEntity implements Serializable {
     )
     private Boolean active;
 
+    @Lob
     @Column(name = "question")
     @DataTableColumn(
         inputType = DataTableColumnType.QUILL,

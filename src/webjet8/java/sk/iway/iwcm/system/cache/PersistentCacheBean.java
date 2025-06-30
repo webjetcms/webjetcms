@@ -66,6 +66,7 @@ public class PersistentCacheBean extends ActiveRecordRepository implements Seria
     )
     private int resultSize;
 
+    @Lob
     @Column(name = "data_result")
     @Convert(converter = AllowHtmlAttributeConverter.class)
     @DataTableColumn(
