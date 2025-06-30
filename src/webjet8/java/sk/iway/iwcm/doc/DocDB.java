@@ -131,8 +131,8 @@ public class DocDB extends DB
 	 */
 	private Map<Integer, DocDetails> cachedDocs;
 
-	//tabulka pre skupiny perexov (zrychleny pristup)
-	private List<PerexGroupBean> perexGroups = null;
+	//tabulka pre skupiny perexov (zrychleny pristup) - mapovana podla domainId
+	private Map<Integer, List<PerexGroupBean>> perexGroupsByDomainIdMap = null;
 
 	private final String serverName;
 
@@ -3545,6 +3545,10 @@ public class DocDB extends DB
 	 */
 	public List<PerexGroupBean> getPerexGroups(boolean forceRefresh)
 	{
+		//initialize perexGroupsMap if it is null
+		if (perexGroupsByDomainIdMap == null) perexGroupsByDomainIdMap = new HashMap<>();
+
+		List<PerexGroupBean> perexGroups = perexGroupsByDomainIdMap.get(CloudToolsForCore.getDomainId());
 		if (perexGroups != null && forceRefresh == false) {
 			return perexGroups;
 		}
@@ -3555,6 +3559,7 @@ public class DocDB extends DB
 			Logger.error(DocDB.class, "Error loading PerexGroups", e);
 			if (perexGroups == null) perexGroups = new ArrayList<>();
 		}
+		perexGroupsByDomainIdMap.put(CloudToolsForCore.getDomainId(), perexGroups);
 
 		return perexGroups;
 	}
@@ -4819,7 +4824,7 @@ public class DocDB extends DB
 			for (int groupId : groupIds) {
 				List<GroupDetails> parentGroups = groupsDB.getParentGroups(groupId);
 
-				//get all perex groups
+				//get all perex groups - TODO: cache items
 				List<PerexGroupBean> allPerexGroups = getPerexGroups(true);
 
 				if(allPerexGroups != null && allPerexGroups.size() > 0)

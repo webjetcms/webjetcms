@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -53,12 +52,8 @@ public abstract class DatatableRestControllerAvailableGroups<T, ID extends Seria
         if(getRepo() instanceof DomainIdRepository<T, ?> domainIdRepository) {
             try {
                 return domainIdRepository.findAllByDomainId(CloudToolsForCore.getDomainId());
-            } catch (IllegalArgumentException | DataAccessException e) {
-                Logger.error(DatatableRestControllerAvailableGroups.class, e);
-               return getRepo().findAll();
             } catch(Exception ex) {
                 Logger.error(DatatableRestControllerAvailableGroups.class, ex);
-                return getRepo().findAll();
             }
         }
         // Default
