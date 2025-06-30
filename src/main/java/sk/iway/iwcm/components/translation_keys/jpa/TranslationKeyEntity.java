@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -42,6 +43,7 @@ public class TranslationKeyEntity {
     private String key;
 
     //Field is not showed but used to get translation key value from DB
+    @Lob
     @Column(name = "prop_value")
     private String value;
 
