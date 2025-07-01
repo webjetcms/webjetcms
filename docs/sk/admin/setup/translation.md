@@ -31,4 +31,18 @@ Prekladač [DeepL](https://www.deepl.com/) umožňuje cez API prekladať texty m
 Po registrácii vo vašom konte v sekcii ```Plan``` nájdete ```Authentication Key for DeepL API``` ktorého hodnotu je potrebné zadať do konfiguračnej premennej ```deepl_auth_key```.
 
 V konf. premennej `deepl_api_url` môžete nastaviť URL adresu API služby. Predvolená je hodnota pre voľnú verziu, pri použití `Pro` verzie nastavte na `https://api.deepl.com/v2/translate`.
+
 V konf. premennej `deepl_api_usage_url` môžete nastaviť URL adresu API služby, pre získanie informácií o využití zadaného licenčného kľúča. Predvolená je hodnota pre voľnú verziu, pri použití `Pro` verzie nastavte na `https://api.deepl.com/v2/usage`.
+
+V konf. premennej `deepl_model_type` môžete zvoliť, ktorý model `DeepL` prekladača sa použije. Na výber máte možnosti:
+
+- `latency_optimized`
+  - používa „klasické“ prekladové modely s nižšou latenciou, ktoré podporujú **všetky** jazykové páry
+  - toto je **prednastavená hodnota**
+- `quality_optimized`
+  - používa modely „novej generácie“ pre preklady s vyššou kvalitou, ale latencia je väčšia
+  - podporovaná je iba **časť** jazykových párov (iba určitá podmnožina)
+  - ak model využijete na preklad **nepodporovanej** kombinácie jazykov, požiadavka na preklad nebude úspešná
+- `prefer_quality_optimized`
+  - používa rovnaké modely ako `quality_optimized`, ALE ak kombinácia jazykov nie je podporovaná, automaticky sa prepne na model `latency_optimized`
+  - je to viac bezpečná možnosť (**odporúča sa**)

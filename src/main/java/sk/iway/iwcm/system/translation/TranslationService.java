@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -22,19 +21,20 @@ import sk.iway.iwcm.components.structuremirroring.DocMirroringServiceV9;
  */
 @Getter
 @Setter
-@AllArgsConstructor
 public class TranslationService {
 
     private String fromLanguage;
     private String toLanguage;
+    private TranslationEngine translationEngine;
 
-    public String translate(String text) {
-        return translate(text, fromLanguage, toLanguage);
+    public TranslationService(String fromLanguage, String toLanguage) {
+        this.fromLanguage = fromLanguage;
+        this.toLanguage = toLanguage;
+        //Set lot of time when we have crated instance and just call instance without need of getting engine
+        this.translationEngine = getTranslationEngine();
     }
 
     private static TranslationEngine getTranslationEngine() {
-        //In future maybe some logic to choose translation engine
-
         String[] engineClasses = Constants.getArray("translationEngineClasses");
         if(engineClasses == null || engineClasses.length == 0) return null;
 
@@ -66,26 +66,29 @@ public class TranslationService {
         return null;
     }
 
-    /**
-     * Prelozi zadany text (slovo/veta/HTML kod) zo zdrojoveho do cieloveho jazyka (2 pismenovy kod)
-     * @param text
-     * @param fromLanguage
-     * @param toLanguage
-     * @return
-     */
+
+    public String translate(String text) {
+        //Use set translation engine by constructor
+        return translate(text, fromLanguage, toLanguage, this.translationEngine);
+    }
+
     public static String translate(String text, String fromLanguage, String toLanguage) {
+        //This is static method, get translation engine
+        return translate(text, fromLanguage, toLanguage, getTranslationEngine());
+    }
+
+    public static String translate(String text, String fromLanguage, String toLanguage, TranslationEngine translationEngine) {
         try {
 
             if (Tools.isEmpty(text) || text.contains("autotest")) return text;
             if (Tools.isEmpty(fromLanguage) || Tools.isEmpty(toLanguage) || fromLanguage.equalsIgnoreCase(toLanguage)) return text;
 
-            TranslationEngine translationEngine = getTranslationEngine();
             if(translationEngine == null) {
                 Logger.warn(TranslationService.class, "No translation engine was found or configured.");
                 return text;
             }
 
-            // FInd and replace all !INCLUDE()! with __INCLUDE_PLACEHOLDER_x value (x is number)
+            // Find and replace all !INCLUDE()! with __INCLUDE_PLACEHOLDER_x value (x is number)
             String textToTranslate = text;
             Map<Integer, String> replacedIncludes = new HashMap<>();
             try {

@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.translation;
 import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Random;
 
 import org.apache.http.Consts;
 import org.apache.http.client.HttpResponseException;
@@ -26,9 +25,6 @@ import sk.iway.iwcm.Tools;
 public class DeepL extends TranslationEngine {
 
     private static final String CACHE_KEY = "DeepL.translations";
-    private static final int MAX_RETRIES = 5;
-    private static final int BASE_DELAY_MS = 1000;
-    private static final Random random = new Random();
 
     public DeepL() {
         // Constructor for DeepL translation engine
@@ -68,6 +64,7 @@ public class DeepL extends TranslationEngine {
         }
 
         String translationApiUrl = Constants.getString("deepl_api_url");
+        String deeplModelType = Constants.getString("deepl_model_type");
 
         //DeepL has a problem with nbsp entity
         text = Tools.replace(text, "&nbsp;", " ");
@@ -81,11 +78,11 @@ public class DeepL extends TranslationEngine {
                         .add("source_lang", fromLanguage.toUpperCase())
                         .add("target_lang", toLanguage.toUpperCase())
                         .add("tag_handling", "html")
+                        .add("model_type", deeplModelType)
                         .build(), Consts.UTF_8)
                     .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
                     .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
                     .execute().returnContent().asString(StandardCharsets.UTF_8);
-
 
                 JSONObject json = new JSONObject(response);
                 JSONArray translations = json.getJSONArray("translations");
@@ -99,32 +96,12 @@ public class DeepL extends TranslationEngine {
 
                 //Succes, break the while
                 break;
-            } catch (Exception ex1) {
-
-                if(ex1 instanceof HttpResponseException responseException) {
+            } catch (Exception ex) {
+                if(ex instanceof HttpResponseException responseException) {
                     if(responseException.getStatusCode() == 429) {
-                        //too many requests
-                        try {
-                            //Too many requests, slow down
-                            int delay = getExponentialBackoffDelay(attempt);
-                            Logger.debug(DeepL.class, "To many requests error. Attempt number : " + (attempt + 1) + ", waiting for for : " + delay + " ms");
-                            Thread.sleep(delay);
-                        } catch (Exception ex2) {
-                            sk.iway.iwcm.Logger.error(ex2);
-                            break;
-                        }
-                        // Waiting done
-                        Logger.debug(DeepL.class, "Waiting done");
-                        // Increment attempt count
-                        attempt++;
-
-                        if(attempt >= MAX_RETRIES) {
-                            Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', reached maximum number of attempts");
-                            break;
-                        } else {
-                            // Try again
-                            continue;
-                        }
+                        //too many requests, apply sleep delay
+                        if(applyDelay(attempt)) continue;
+                        else break;
                     } else if(responseException.getStatusCode() == 456) {
                         //quota exceeded
                         Logger.error(DeepL.class, "Unable to translete '" + translationApiUrl + "', monthly quota of characters exceeded");
@@ -137,7 +114,7 @@ public class DeepL extends TranslationEngine {
                 }
 
                 Logger.error(DeepL.class,"Unable to connect to '" + translationApiUrl + "'");
-                Logger.error(DeepL.class, ex1);
+                Logger.error(DeepL.class, ex);
                 break;
             }
         }
@@ -145,36 +122,43 @@ public class DeepL extends TranslationEngine {
         return text;
     }
 
-    private int getExponentialBackoffDelay(int attempt) {
-        int exponentialDelay = BASE_DELAY_MS * (1 << attempt); // 2^attempt * base
-        // Add jitter: +/- 0-1000 ms
-        return exponentialDelay + random.nextInt(1000);
-    }
-
     @Override
     public Long numberOfFreeCharacters() {
         String usageApiUrl = Constants.getString("deepl_api_usage_url");
 
-        try {
-            String response = Request.Post(usageApiUrl)
-                    .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-                    .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
-                    .execute().returnContent().asString(StandardCharsets.UTF_8);
+        int attempt = 0;
+        while (attempt < MAX_RETRIES) {
+            try {
+                String response = Request.Post(usageApiUrl)
+                        .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                        .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
+                        .execute().returnContent().asString(StandardCharsets.UTF_8);
 
-            JSONObject json = new JSONObject(response);
-            Long characterLimit = json.getLong("character_limit");
-            Long characterCount = json.getLong("character_count");
-            if(characterLimit != null && characterCount != null) {
-                return characterLimit - characterCount; // returns number of free characters
-            } else {
-                Logger.error(DeepL.class, "Invalid response from DeepL API usage endpoint: " + response);
-               return Long.valueOf(-1);
+                JSONObject json = new JSONObject(response);
+                Long characterLimit = json.getLong("character_limit");
+                Long characterCount = json.getLong("character_count");
+                if(characterLimit != null && characterCount != null) {
+                    return characterLimit - characterCount; // returns number of free characters
+                } else {
+                    Logger.error(DeepL.class, "Invalid response from DeepL API usage endpoint: " + response);
+                return Long.valueOf(-1);
+                }
+
+            } catch (Exception ex) {
+                if(ex instanceof HttpResponseException responseException) {
+                    if(responseException.getStatusCode() == 429) {
+                        //too many requests, apply sleep delay
+                        if(applyDelay(attempt)) continue;
+                        else break;
+                    }
+                }
+
+                Logger.error(DeepL.class, "Unable to get number of litmit/used characters from DeepL", ex);
+                return Long.valueOf(-1); // return -1 to indicate an error
             }
-
-        } catch (Exception ex) {
-            Logger.error(DeepL.class, "Unable to get number of litmit/used characters from DeepL", ex);
-            return Long.valueOf(-1); // return -1 to indicate an error
         }
+
+        return Long.valueOf(-1);
     }
 
     @Override

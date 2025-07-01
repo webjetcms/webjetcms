@@ -143,7 +143,8 @@ public class ConstantsV9 {
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
 
-		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "translations", "");
+		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "translations", "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
+		Constants.setString("deepl_model_type", "latency_optimized", "translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
 	}
 
 	/**
