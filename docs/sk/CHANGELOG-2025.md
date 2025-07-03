@@ -131,6 +131,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Klonovanie štruktúry - pri klonovaní sa odteraz zobrazuje informácia, ktorý nakonfigurovaný prekladať sa využíva (ak je nakonfigurovaný) a koľko voľných znakov na preklad ostáva (#57881).
 - Prekladač - pri prekladači `DeepL` sa zlepšilo spracovanie vrátených chybových hlášok, pre presnejšie identifikovanie problému (#57881).
 - Prekladač - pridaná podpora pre implementáciu viacerých prekladačov a ich automatické spracovanie/využitie (#57881).
+- Zrkadlenie štruktúry - pridaná možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu (#57881).
 
 ### Oprava chýb
 
