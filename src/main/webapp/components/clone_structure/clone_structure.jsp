@@ -217,7 +217,7 @@
 			<input id="btnUndoSync" class="btn btn-sm btn-outline-secondary" style="margin-left: 16px;" type="button" value="<iwcm:text key="components.clone-structure.undo-sync-button"/>" onclick="cancelSync();"/>
 		</div>
 		<div>
-			<p id="undo_wait" style="width:100%; display: none;"><iwcm:text key="components.clone-structure.undo-sync-wait"/></p>
+			<p id="undo_wait" style="width:100%; display: none;"><iwcm:text key="components.syncDirAction.title"/></p>
 			<p id="undo_succ" style="width:100%; color: #00be9f; display: none;"><iwcm:text key="components.clone-structure.undo-sync-succesfull"/></p>
 			<p id="undo_fail" style="width:100%; color: #ff4b58; display: none;"><iwcm:text key="components.clone-structure.undo-sync-fail"/></p>
 		</div>

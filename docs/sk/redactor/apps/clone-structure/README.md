@@ -44,7 +44,7 @@ Nakoľko klonovanie využíva [Automatický preklad](../../../admin/setup/transl
 
 ## Zrušenie synchronizácie
 
-Okno ponúka možnosť zrušiť synchronizáciu zvoleného priečinka. Stačí a v dolnej časti okna zvolíte priečinok a stlačíte tlačidlo <button class="btn btn-sm btn-outline-secondary" type="button">Zrušiť synchronizáciu</button>. Následne sa pre zvolený priečinok, všetky podpriečinky ako ich stránky vymaže hodnota `sync_id`, ktorá zabezpečovala synchronizáciu. Samotná akcia môže trvať aj niekoľko minút a čakajte na úspešnú hlášku.
+Okno ponúka možnosť zrušiť synchronizáciu zvoleného priečinka. Stačí a v dolnej časti okna zvolíte priečinok a stlačíte tlačidlo <button class="btn btn-sm btn-outline-secondary" type="button">Zrušiť synchronizáciu</button>. Následne sa pre zvolený priečinok, všetky podpriečinky ako ich stránky vymaže hodnota `sync_id`, ktorá zabezpečovala synchronizáciu.
 
 ![](clone_structure_undo_sync.png)
 
