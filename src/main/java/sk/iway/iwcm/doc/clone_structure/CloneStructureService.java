@@ -23,7 +23,6 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -64,7 +63,7 @@ public class CloneStructureService {
                     //add mapping to this line
 					String newLine = line.substring(0, i) + "," + destGroupId + line.substring(i);
                     mirroringConfig = mirroringConfig.replace(line, newLine);
-                    ConfDB.setName("structureMirroringConfig", mirroringConfig);
+                    Constants.setString("structureMirroringConfig", mirroringConfig);
                     return;
 				}
 			}
@@ -74,7 +73,7 @@ public class CloneStructureService {
         if (mirroringConfig.isEmpty()==false) mirroringConfig += "\n";
 		mirroringConfig += srcGroupId + "," + destGroupId + ":" + domainName;
 
-		ConfDB.setName("structureMirroringConfig", mirroringConfig);
+        Constants.setString("structureMirroringConfig", mirroringConfig);
 	}
 
     /**
@@ -146,6 +145,9 @@ public class CloneStructureService {
 	public static String cloneStructure(int srcGroupId, int destGroupId, boolean keepMirroring, boolean keepVirtualPath, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		String domainName = CloudToolsForCore.getDomainName();
         Prop prop = Prop.getInstance(request);
+
+        //Constants that are needed in Mirror logic to chnage how we do thinks
+        setCloneConstants(true, srcGroupId, destGroupId);
 
         //Check that id's and domain are present
         if(srcGroupId == -1 || destGroupId == -1 || domainName.isEmpty()) return null;
@@ -223,17 +225,23 @@ public class CloneStructureService {
         } catch (Exception e) {
             Logger.error(e);
             println(out, "ERROR: "+e.getLocalizedMessage());
+
+            //Reset values
+            setCloneConstants(false, -1, -1);
         }
 
         Constants.setBoolean("structureMirroringDisabledOnCreate", structureMirroringDisabledOnCreate);
         if (keepMirroring==false) {
             //set original mirroring config
-            ConfDB.setName("structureMirroringConfig", mirroringConfig);
+            Constants.setString("structureMirroringConfig", mirroringConfig);
 
             //it there was no syncId on sourceFolder clear also source
             if (srcSyncId<1) MirroringService.clearSyncId(srcGroupId);
             MirroringService.clearSyncId(destGroupId);
         }
+
+        //Reset values
+       setCloneConstants(false, -1, -1);
 
         DocDB.getInstance(true);
         GroupsDB.getInstance(true);
@@ -245,4 +253,10 @@ public class CloneStructureService {
 
 		return null;
 	}
+
+    private static void setCloneConstants(boolean isCloneAction, int srcId, int destId) {
+        Constants.setBoolean("isCloneAction", isCloneAction);
+        Constants.setInt("cloneActionSrcId", srcId);
+        Constants.setInt("cloneActionDestId", destId);
+    }
 }
