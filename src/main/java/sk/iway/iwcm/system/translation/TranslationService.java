@@ -31,10 +31,10 @@ public class TranslationService {
         this.fromLanguage = fromLanguage;
         this.toLanguage = toLanguage;
         //Set lot of time when we have crated instance and just call instance without need of getting engine
-        this.translationEngine = getTranslationEngine();
+        this.translationEngine = getEngineInstance();
     }
 
-    private static TranslationEngine getTranslationEngine() {
+    private static TranslationEngine getEngineInstance() {
         String[] engineClasses = Constants.getArray("translationEngineClasses");
         if(engineClasses == null || engineClasses.length == 0) return null;
 
@@ -74,11 +74,14 @@ public class TranslationService {
 
     public static String translate(String text, String fromLanguage, String toLanguage) {
         //This is static method, get translation engine
-        return translate(text, fromLanguage, toLanguage, getTranslationEngine());
+        return translate(text, fromLanguage, toLanguage, getEngineInstance());
     }
 
     public static String translate(String text, String fromLanguage, String toLanguage, TranslationEngine translationEngine) {
         try {
+            //Handle cz / cs language shortcut
+            if ("cz".equalsIgnoreCase(toLanguage)) toLanguage = "cs";
+            if ("cz".equalsIgnoreCase(fromLanguage)) fromLanguage = "cs";
 
             if (Tools.isEmpty(text) || text.contains("autotest")) return text;
             if (Tools.isEmpty(fromLanguage) || Tools.isEmpty(toLanguage) || fromLanguage.equalsIgnoreCase(toLanguage)) return text;
@@ -137,7 +140,7 @@ public class TranslationService {
     }
 
     public static JSONObject getTranslationInfo() {
-        TranslationEngine translationEngine = getTranslationEngine();
+        TranslationEngine translationEngine = getEngineInstance();
 
         if(translationEngine == null) return null;
 

@@ -42,10 +42,6 @@ public class DeepL extends TranslationEngine {
 
     @Override
     public String translate(String text, String fromLanguage, String toLanguage) {
-
-        if ("cz".equalsIgnoreCase(toLanguage)) toLanguage = "cs";
-        if ("cz".equalsIgnoreCase(fromLanguage)) fromLanguage = "cs";
-
         Cache cache = Cache.getInstance();
         @SuppressWarnings("unchecked")
         Map<String, String> translationsCache = (Map<String, String>)cache.getObject(CACHE_KEY);
