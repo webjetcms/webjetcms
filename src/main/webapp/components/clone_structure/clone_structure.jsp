@@ -129,6 +129,13 @@
 		padding: 20px;
 		border-radius: 10px;
 	}
+
+	#btnUndoSync {
+		background-color: white;
+		color: #13151b;
+		border-color: #868ea5;
+		border-width: 1px;
+	}
 </style>
 
 <div class="padding10">
@@ -202,12 +209,12 @@
 
 		<div style="display: flex; padding-bottom: 5px;">
 			<div class="input-group" style="max-width: 160px;">
-				<input type="text" class="form-control" name="srcGroupId" id="undoSyncGroupId" size="10"  required>
+				<input type="text" class="form-control" name="undoSyncGroupId" id="undoSyncGroupId" size="10">
 				<div class="input-group-append">
 					<button name="groupSelect" onclick='popup("/admin/grouptree.jsp?fcnName=setGroup3", 300, 450);' class="btn btn-outline-secondary"><i class="ti ti-focus-2"></i></button>
 				</div>
 			</div>
-			<input id="btnCancel" style="margin-left: 16px;" type="button" value="<iwcm:text key="components.clone-structure.undo-sync-button"/>" onclick="cancelSync();"/>
+			<input id="btnUndoSync" class="btn btn-sm btn-outline-secondary" style="margin-left: 16px;" type="button" value="<iwcm:text key="components.clone-structure.undo-sync-button"/>" onclick="cancelSync();"/>
 		</div>
 		<div>
 			<p id="undo_wait" style="width:100%; display: none;"><iwcm:text key="components.clone-structure.undo-sync-wait"/></p>

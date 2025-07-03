@@ -41,3 +41,11 @@ Ak použijeme klonovanie štruktúry **s ponechaním URL**, z priečinka SK do p
 Nakoľko klonovanie využíva [Automatický preklad](../../../admin/setup/translation.md), zobrazuje sa informácia, aký prekladač je nakonfigurovaný a koľko voľných znakov na preklad ešte ostáva. Ak žiaden prekladač nakonfigurovaný nie je (napr ak nie je zadaný licenčný kľúč pre prekladač `DeepL`) alebo už neostávajú žiadne voľné znaky na preklad, budeme pri klonovaní upozornený. V takom prípade sa **nebude** automaticky prekladať klonovaná štruktúra.
 
 ![](clone_structure_no_set_translator.png)
+
+## Zrušenie synchronizácie
+
+Okno ponúka možnosť zrušiť synchronizáciu zvoleného priečinka. Stačí a v dolnej časti okna zvolíte priečinok a stlačíte tlačidlo <button class="btn btn-sm btn-outline-secondary" type="button">Zrušiť synchronizáciu</button>. Následne sa pre zvolený priečinok, všetky podpriečinky ako ich stránky vymaže hodnota `sync_id`, ktorá zabezpečovala synchronizáciu. Samotná akcia môže trvať aj niekoľko minút a čakajte na úspešnú hlášku.
+
+![](clone_structure_undo_sync.png)
+
+!>**Upozornenie:** počas akcie rušenia synchronizácie sa nebude dať spustiť klonovanie, nakoľko tieto akcie by spolu kolidovali.
