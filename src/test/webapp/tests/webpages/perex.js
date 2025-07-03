@@ -379,21 +379,33 @@ Scenario('Check language variants in news', ({ I, DTE }) => {
     I.see("INVESTÍCIA", ".portfolio-item .tag");
 });
 
-Scenario('Verify domain_id groups', ({ I }) => {
+Scenario('Verify domain_id groups', ({ I, DT, Document }) => {
     /*
     INSERT INTO `perex_groups` (`perex_group_name`, `available_groups`, `perex_group_name_sk`, `perex_group_name_cz`, `perex_group_name_en`, `perex_group_name_de`, `perex_group_name_pl`, `perex_group_name_ru`, `perex_group_name_hu`, `perex_group_name_cho`, `perex_group_name_esp`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`, `domain_id`)
     VALUES
         ('DOMAIN: test23', '', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '', 83),
         ('DOMAIN: demo.webjetcms.sk', '', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '', 1);
+
+    INSERT INTO `perex_groups` (`perex_group_name`, `available_groups`, `perex_group_name_sk`, `perex_group_name_cz`, `perex_group_name_en`, `perex_group_name_de`, `perex_group_name_pl`, `perex_group_name_ru`, `perex_group_name_hu`, `perex_group_name_cho`, `perex_group_name_esp`, `field_a`, `field_b`, `field_c`, `field_d`, `field_e`, `field_f`)
+    VALUES
+        ('DOMAIN: test23', '83', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', ''),
+        ('DOMAIN: demo.webjetcms.sk', '1', '', '', '', '', '', '', '', '', '', '', 'false', '', '', '', '');
     */
+    var demoName = "DOMAIN: demo.webjetcms.sk";
+    var test23Name = "DOMAIN: test23";
+    var selector = "#perexDataTable td.dt-row-edit";
+
     I.amOnPage("/admin/v9/webpages/perex/");
-    I.see("DOMAIN: test23", "#perexDataTable td.dt-style-json");
-    I.see("DOMAIN: demo.webjetcms.sk", "#perexDataTable td.dt-style-json");
+    DT.filterContains("perexGroupName", "DOMAIN:");
+    I.dontSee(test23Name, selector);
+    I.see(demoName, selector);
 
-    I.click("DOMAIN: test23");
-    I.waitForElement("#jsTree a.jstree-anchor");
-    I.see("test23.webjetcms.sk", "#jsTree a.jstree-anchor");
-    I.see("demo.webjetcms.sk", "#jsTree a.jstree-anchor");
+    Document.switchDomain('test23.tau27.iway.sk');
+    DT.filterContains("perexGroupName", "DOMAIN:");
+    I.see(test23Name, selector);
+    I.dontSee(demoName, selector);
+});
 
-    I.click("a.close-custom-modal");
+Scenario('Verify domain_id groups-logout', ({ I }) => {
+    I.logout();
 });

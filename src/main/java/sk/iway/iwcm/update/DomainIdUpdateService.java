@@ -58,6 +58,8 @@ public class DomainIdUpdateService {
 					Logger.warn(UpdateDatabase.class, "ExportDat updated: " + exportDat.getId() + ":" + exportDat.getUrlAddress() + ", domainId=" + exportDat.getDomainId() + ", groupIds=" + exportDat.getGroupIds());
 				}
 			}
+
+            UpdateDatabase.saveSuccessUpdate(note);
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
@@ -69,6 +71,8 @@ public class DomainIdUpdateService {
 	public static void updatePerexGroupDomainId() {
 		try {
 			String note = "03.06.2025 [sivan] pridanie podpory domainId pre perexGroups + uprava všetky zavislosti k tomu";
+            if(UpdateDatabase.isAllreadyUpdated(note)) return;
+
 			PerexGroupsRepository pgr = Tools.getSpringBean("perexGroupsRepository", PerexGroupsRepository.class);
 			DocDetailsRepository ddr = Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class);
 			GalleryRepository gr = Tools.getSpringBean("galleryRepository", GalleryRepository.class);
@@ -258,21 +262,50 @@ public class DomainIdUpdateService {
 
 		GroupsDB groupsDB = GroupsDB.getInstance();
 
+        List<PerexGroupsEntity> perexGroupsToCopy = new ArrayList<>();
+
 		// Set all existing perexes to default domain AND save them
-		originalPerexGroups.forEach(perex -> perex.setDomainId(defaultDomainId));
-		pgr.saveAll(originalPerexGroups);
+        for (PerexGroupsEntity perex : originalPerexGroups) {
+            if (Tools.isEmpty(perex.getAvailableGroups())) {
+                // If perex group has no available groups, set it to default domain
+                perex.setDomainId(defaultDomainId);
+                pgr.save(perex);
+                perexGroupsToCopy.add(perex);
+            } else {
+                // If perex group has available groups, find domain_id list for every group and decide which domain_id to use directly (do not duplicate it later)
+                String[] availableGroups = Tools.getTokens(perex.getAvailableGroups(), ",");
+                List<Integer> domainIds = new ArrayList<>();
+                for (String groupId : availableGroups) {
+                    Integer groupDomainId = GroupsDB.getDomainId(groupsDB.getDomain(Integer.parseInt(groupId)));
+                    if (groupDomainId != null && !domainIds.contains(groupDomainId)) {
+                        domainIds.add(groupDomainId);
+                    }
+                }
+                if (domainIds.isEmpty() || domainIds.size()==1) {
+                    //we do not need to duplicate this perex group, it is already in the correct domain
+                    perex.setDomainId(domainIds.get(0));
+                    pgr.save(perex);
+                } else {
+                    //set default and copy it later
+                    perex.setDomainId(defaultDomainId);
+                    pgr.save(perex);
+                    perexGroupsToCopy.add(perex);
+                }
+            }
+        }
 
 		// Create and save duplicated for every other domain (set correct available groups)
 		domainsMap.forEach((domainName, domainId) -> {
 			if(domainId.equals(defaultDomainId) == false) {
-				pgr.saveAll( clonePerexGroupDeepCopy(originalPerexGroups, domainId, domainsMap, groupsDB) );
+				pgr.saveAll( clonePerexGroupDeepCopy(perexGroupsToCopy, domainId, domainsMap, groupsDB) );
 			}
 		});
 
 		// At end, filter available groups for default domain
-		for(PerexGroupsEntity originalPerex : originalPerexGroups)
+		for(PerexGroupsEntity originalPerex : perexGroupsToCopy) {
 			filterPerexGroupAvailableGroupsByDomain(originalPerex, domainsMap, groupsDB);
-		pgr.saveAll(originalPerexGroups);
+            pgr.save(originalPerex);
+        }
 	}
 
 	/**
@@ -306,8 +339,14 @@ public class DomainIdUpdateService {
 			newPerex.setFieldF( origPerex.getFieldF() );
 
 			// Set available groups for this perex
+            String availableGroups = origPerex.getAvailableGroups();
 			newPerex.setAvailableGroups( origPerex.getAvailableGroups() );
 			filterPerexGroupAvailableGroupsByDomain(newPerex, domainsMap, groupsDB);
+            String newAvailableGroups = newPerex.getAvailableGroups();
+            if(Tools.isNotEmpty(availableGroups) && Tools.isEmpty(newAvailableGroups)) {
+                Logger.warn(UpdateDatabase.class, "Perex group: " + origPerex.getId() + ":" + origPerex.getPerexGroupName() + " has available groups: " + availableGroups + ", but after filtering for domain: " + domainId + " it has no available groups. Skipping duplicate.");
+                continue; // Skip this perex group, it has no available groups for this domain
+            }
 
 			newPerexGroups.add(newPerex);
 

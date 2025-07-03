@@ -236,10 +236,12 @@ public class PerexGroupsService {
             if (!found) {
                 // FIX - sivan, TMP fix aby bolo mozne pri edite perexGroups pridat availableGroups
                 if(InitServlet.isTypeCloud() == false) {
-                    List<GroupDetails> availableGroupsList = entity.getEditorFields().getAvailableGroups();
-                    if(availableGroupsList != null && availableGroupsList.size() > 0) {
-                        for(GroupDetails group : availableGroupsList) {
-                            entity.addAvailableGroup(group.getGroupId());
+                    if (entity.getEditorFields() != null) {
+                        List<GroupDetails> availableGroupsList = entity.getEditorFields().getAvailableGroups();
+                        if(availableGroupsList != null && availableGroupsList.size() > 0) {
+                            for(GroupDetails group : availableGroupsList) {
+                                entity.addAvailableGroup(group.getGroupId());
+                            }
                         }
                     }
                 } else {
