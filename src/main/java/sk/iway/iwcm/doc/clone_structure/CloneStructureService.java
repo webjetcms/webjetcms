@@ -255,7 +255,9 @@ public class CloneStructureService {
 	}
 
     private static void setCloneConstants(boolean isCloneAction, int srcId, int destId) {
-        Constants.setBoolean("isCloneAction", isCloneAction);
+        if(isCloneAction == true) Constants.setString("mirroringMode", MirroringService.MIRRORING_MODE_CLONE);
+        else Constants.setString("mirroringMode", MirroringService.MIRRORING_MODE_MIRROR);
+
         Constants.setInt("cloneActionSrcId", srcId);
         Constants.setInt("cloneActionDestId", destId);
     }

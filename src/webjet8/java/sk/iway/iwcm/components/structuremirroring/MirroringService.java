@@ -29,6 +29,9 @@ import sk.iway.iwcm.doc.GroupsDB;
  */
 public class MirroringService {
 
+   public static final String MIRRORING_MODE_MIRROR = "mirror";
+   public static final String MIRRORING_MODE_CLONE = "clone";
+
    private MirroringService() {
       //tools class
    }
@@ -110,7 +113,7 @@ public class MirroringService {
       String mirroringConfig = Constants.getString("structureMirroringConfig");
       String[] lines = Tools.getTokens(mirroringConfig, "\n");
 
-      if(Constants.getBoolean("isCloneAction")) {
+      if(MIRRORING_MODE_CLONE.equals( Constants.getString("mirroringMode") )) {
          int srcId = Constants.getInt("cloneActionSrcId");
          int destId = Constants.getInt("cloneActionDestId");
 
