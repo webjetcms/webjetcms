@@ -39,6 +39,8 @@
 
 <script type="text/javascript" src="<%=request.getContextPath()%>/admin/scripts/modalDialog.js"></script>
 <script type="text/javascript">
+	let undoSyncIsRunning = false;
+
 	function setGroup(returnValue)
 	{
 		if(returnValue.length > 15)
@@ -57,9 +59,59 @@
 		}
 	}
 
+	function setGroup3(returnValue)
+	{
+		if(returnValue.length > 15)
+		{
+			var groupId = returnValue.substr(0,15);
+			$("#undoSyncGroupId").val(groupId);
+		}
+	}
+
+	function cancelSync() {
+
+		$("#undo_wait").show();
+		$("#undo_succ").hide();
+		$("#undo_fail").hide();
+
+		undoSyncIsRunning = true;
+
+		$.ajax({
+			url: "/apps/clone_structure/admin/cancel_sync",
+			method : "POST",
+			data : {
+				"rootGroupId" : $("#undoSyncGroupId").val(),
+			},
+			success: function (response) {
+				console.log("OK");
+				$("#undo_wait").hide();
+				$("#undo_succ").show();
+				undoSyncIsRunning = false;
+			},
+			error: function (xhr, ajaxOptions, thrownError) {
+				$("#undo_wait").hide();
+				$("#undo_fail").show();
+				undoSyncIsRunning = false;
+				if(thrownError != undefined && thrownError != null && thrownError.length > 0) {
+					alert(thrownError)
+				}
+			}
+		});
+	}
+
 	function Ok()
 	{
-	   document.pathForm.submit();
+		if(undoSyncIsRunning == true) {
+			alert('<iwcm:text key="components.clone-structure.undo-sync-running-err"/>');
+			return;
+		}
+
+		if(pathForm.srcGroupId.value == "" || pathForm.destGroupId.value == "")
+		{
+			alert('<iwcm:text key="components.clone-structure.required-fields-err"/>');
+		} else {
+			document.pathForm.submit();
+		}
 	}
 </script>
 
@@ -69,6 +121,13 @@
 		width: 100%;
 		padding-right: 16px;
 		max-width: 380px;
+	}
+
+	.custom-section {
+		background: #edeff6;
+		margin: 15px 0;
+		padding: 20px;
+		border-radius: 10px;
 	}
 </style>
 
@@ -113,7 +172,7 @@
 		</table>
 	</form>
 
-	<div class="tranlator-info">
+	<div id="tranlator-info" class="custom-section">
 		<%if(translationInfo != null) {%>
 			<h2 style="color: #00be9f;"><iwcm:text key="components.translation_engine.found"/></h2>
 			<table>
@@ -136,15 +195,26 @@
 		<% } %>
 
 	</div>
-</div>
 
-<style>
-	.tranlator-info {
-		background: #edeff6;
-		margin: 15px 0;
-		padding: 20px;
-		border-radius: 10px;
-	}
-</style>
+	<div class="custom-section">
+
+		<h3 style="width:100%"><iwcm:text key="components.clone-structure.undo-sync-group"/></h3>
+
+		<div style="display: flex; padding-bottom: 5px;">
+			<div class="input-group" style="max-width: 160px;">
+				<input type="text" class="form-control" name="srcGroupId" id="undoSyncGroupId" size="10"  required>
+				<div class="input-group-append">
+					<button name="groupSelect" onclick='popup("/admin/grouptree.jsp?fcnName=setGroup3", 300, 450);' class="btn btn-outline-secondary"><i class="ti ti-focus-2"></i></button>
+				</div>
+			</div>
+			<input id="btnCancel" style="margin-left: 16px;" type="button" value="<iwcm:text key="components.clone-structure.undo-sync-button"/>" onclick="cancelSync();"/>
+		</div>
+		<div>
+			<p id="undo_wait" style="width:100%; display: none;"><iwcm:text key="components.clone-structure.undo-sync-wait"/></p>
+			<p id="undo_succ" style="width:100%; color: #00be9f; display: none;"><iwcm:text key="components.clone-structure.undo-sync-succesfull"/></p>
+			<p id="undo_fail" style="width:100%; color: #ff4b58; display: none;"><iwcm:text key="components.clone-structure.undo-sync-fail"/></p>
+		</div>
+	</div>
+</div>
 
 <jsp:include page="/admin/layout_bottom_dialog.jsp" />
