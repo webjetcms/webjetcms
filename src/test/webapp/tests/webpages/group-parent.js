@@ -4,7 +4,7 @@ var root1_name, subfolder_name, root2_name;
 
 Before(({ I, login }) => {
      login('admin');
-     I.amOnPage('/admin/v9/webpages/web-pages-list#/');
+     I.amOnPage('/admin/v9/webpages/web-pages-list/');
      if (typeof root1_name=="undefined") {
           var randomText = I.getRandomText();
           root1_name = 'root1-autotest-' + randomText;

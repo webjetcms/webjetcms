@@ -3,8 +3,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><iwcm:checkLogon admin="true"/>
+<iwcm:checkLogon admin="true"/>
 
 <html>
 <head>
@@ -58,29 +57,29 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 	<div class="toggle_content" style="padding-top: 5px;">
 		<div id="tabMenu1" style="height: 100px;">
 
-			<logic:present name="allreadyRejected">
+			<iwcm:present name="allreadyRejected">
 				<span class="error">
 					<iwcm:text key="approve.del.allready_rejected"/>:
 				</span>
-			</logic:present>
+			</iwcm:present>
 
 
-			<logic:notPresent name="allreadyRejected">
+			<iwcm:notPresent name="allreadyRejected">
 
-				<logic:present name="allreadyDeleted">
+				<iwcm:present name="allreadyDeleted">
 					<span class="error"><iwcm:text key="approve.del.allready_deleted"/>.</span>
 					<br><br><br><br><br><br>
-				</logic:present>
+				</iwcm:present>
 
-				<logic:notPresent name="wrongApproveId">
+				<iwcm:notPresent name="wrongApproveId">
 					<form action="approvedel.do" method="post">
 					<table border=0 align="left">
 						<tr>
 							<td rowspan=2 valign="top"><font color="red"><iway:request name="message"/></font></td>
-							<logic:notPresent name="user">
+							<iwcm:notPresent name="user">
 							<td><iwcm:text key="user.Name"/></td>
 							<td><iwcm:text key="user.password"/></td>
-							</logic:notPresent>
+							</iwcm:notPresent>
 							<td>&nbsp</td>
 							<td><img src="images/dot.gif" width=20 height=10></td>
 							<td rowspan=2 valign="top"><iwcm:text key="approve.reject.notes"/>:</td>
@@ -88,10 +87,10 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 							<td>&nbsp;</td>
 						</tr>
 						<tr>
-							<logic:notPresent name="user">
+							<iwcm:notPresent name="user">
 							<td><input type="text" name="username" size=10 class="input"></td>
 							<td><input type="password" name="password" size=10 class="input"></td>
-							</logic:notPresent>
+							</iwcm:notPresent>
 							<td><input type="hidden" name="historyid" value="<%=Tools.getRequestParameter(request, "historyid")%>">
 							    <input type="hidden" name="docid" value="<%=Tools.getRequestParameter(request, "docid")%>">
 							</td>
@@ -102,11 +101,11 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 							</td>
 						</tr>
 					</table>
-					<%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
+					<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 					</form>
-				</logic:notPresent>
+				</iwcm:notPresent>
 
-			</logic:notPresent>
+			</iwcm:notPresent>
 		</div>
 	</div>
 </div>

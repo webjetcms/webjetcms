@@ -31,8 +31,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.upload.FormFile;
-
 import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
@@ -41,13 +39,13 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.filebrowser.UnusedFile;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFileFilter;
-import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.io.JarPackaging;
 import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatNewDB;
+import sk.iway.iwcm.users.UserDetails;
 
 /**
  *  FileTools.java - podporne nastroje pre pracu so subormi
@@ -489,6 +487,16 @@ public class FileTools
 	 * @param url - url adresa suboru, napr. /images/wjlogo.gif
 	 * @return
 	 */
+	public static List<Column> getFileUsage(String url, UserDetails user) {
+		//Back compatibility
+		return getFileUsage(url, new Identity(user));
+	}
+
+	/**
+	 * Metoda vrati zoznam stranok (url+nazov) a suborov kde sa nachadza
+	 * @param url - url adresa suboru, napr. /images/wjlogo.gif
+	 * @return
+	 */
 	public static List<Column> getFileUsage(String url, Identity user)
 	{
 		Logger.debug(FileTools.class, "getFileUsage: url="+url);
@@ -557,39 +565,6 @@ public class FileTools
 		}
 
 		return(foundFiles);
-	}
-	/**
-	 * Skopiruje subor src do out
-	 * @param src
-	 * @param out
-	 * @return
-	 */
-	public static boolean copyFile(FormFile src, File out)
-	{
-		IwcmFile dest=new IwcmFile(out);
-		boolean ret = false;
-		try
-		{
-			//Logger.debug(FileTools.class,"copyFile: " + src.getAbsolutePath() + "->" + dest.getAbsolutePath());
-			if (dest.getParentFile().exists() == false)
-			{
-				Logger.debug(FileTools.class,"   creating dir");
-				if(dest.getParentFile().mkdirs() == false) return false;
-			}
-			if (dest.exists()==false)
-			{
-				Logger.debug(FileTools.class,"   creating new file");
-				if(dest.createNewFile() == false) return false;
-			}
-			InputStream is = src.getInputStream();
-			IwcmFsDB.writeFiletoDest(is,out,src.getFileSize());
-			ret = true;
-		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-		return(ret);
 	}
 
 	/**

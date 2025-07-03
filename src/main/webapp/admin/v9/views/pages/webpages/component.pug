@@ -384,8 +384,8 @@ block content
                     value = value.replace('>',"&gt;");
 
                     if (value === "" || value === "0") {
-                        if ("device" === key || "cacheMinutes" === key) {
-                            //skip empty device and cacheMinutes parameters
+                        if ("device" === key || "cacheMinutes" === key || "showForLoggedUser" === key) {
+                            //skip common settings parameters
                             continue;
                         }
                     }

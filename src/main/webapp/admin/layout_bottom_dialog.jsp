@@ -1,21 +1,17 @@
 <%@page import="sk.iway.iwcm.stat.BrowserDetector"%>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+<iwcm:empty name="inIframe">
 
-<logic:empty name="inIframe">
-
-	<logic:present name="closeTable">
+	<iwcm:present name="closeTable">
 	   <table border="0" cellspacing="0" cellpadding="0" width="100%" class="closeTable">
-	</logic:present>
+	</iwcm:present>
 
-	<logic:notPresent name="closeTable">
+	<iwcm:notPresent name="closeTable">
 	      <% if (BrowserDetector.isSmartphoneOrTablet(request)==false) {%></div><% } %>
 		</td>
 	</tr>
-	</logic:notPresent>
+	</iwcm:notPresent>
 
 			<tr id="buttonsBottomRow" height="50">
 				<td class="PopupButtons" colspan="2">
@@ -165,20 +161,20 @@
 	</script>
 
 	</html>
-</logic:empty>
+</iwcm:empty>
 
-<logic:notEmpty name="inIframe">
+<iwcm:notEmpty name="inIframe">
 
-	<logic:notEmpty name="widgetData">
+	<iwcm:notEmpty name="widgetData">
 		</li>
 		</ul>
 		</div>
 
 
-	</logic:notEmpty>
+	</iwcm:notEmpty>
 
 
 	</body>
 	<iwcm:combine type="js" set="adminStandardJs" />
 
-</logic:notEmpty>
+</iwcm:notEmpty>

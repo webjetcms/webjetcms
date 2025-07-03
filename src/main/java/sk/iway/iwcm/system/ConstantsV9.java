@@ -149,6 +149,8 @@ public class ConstantsV9 {
 		Constants.setString("mirroringMode", "mirror", "structuremirroring", "Used to signalize that mirroring is running in basic mode mirroring or clonning");
 		Constants.setInt("cloneActionSrcId", -1, Constants.MOD_CONFIG,"Used to set SRC group id when performing clonning.");
 		Constants.setInt("cloneActionDestId", -1, Constants.MOD_CONFIG, "Used to set DEST group id when performing clonning.");
+
+		Constants.setBoolean("ABTestingForLoggedUser", false, "abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 	}
 
 	/**

@@ -8,7 +8,7 @@ Scenario('Watermark - Visual Test', async ({ I, DT, DTE, Document }) => {
     const watermarkFile = "/images/watermark.svg";
     Document.setConfigValue('galleryWatermarkSvgSizePercent', 40);
 
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
 
     I.jstreeNavigate(['watermark', 'subfolder3']);

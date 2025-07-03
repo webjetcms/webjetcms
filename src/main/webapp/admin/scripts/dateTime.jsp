@@ -4,40 +4,35 @@ sk.iway.iwcm.PathFilter.setStaticContentHeaders("/assets/dateTime.js", null, req
 %><%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
-
 function openDialogDate(date, func)
 {
    openDialog("/admin/calendar_popup.jsp?date="+date, 140, 140, func)
 }
 
 function openDialogTimeStart(date, func)
-{      
+{
       openDialog("/admin/time_popup.jsp?time="+date, 100, 180, func);
 }
 
 
 function checkDate(vstup)
-{   
+{
    if (vstup.value.length == 0) return;
-   
-   test_date = vstup.value;      
-   test_date = test_date.replace(",", ".");
-   test_date = test_date.replace(" ", ".");
-   test_date = test_date.replace(":", ".");
-   test_date = test_date.replace("-", ".");
-   vstup.value = test_date;
-   
+
    test_date = vstup.value;
    test_date = test_date.replace(",", ".");
    test_date = test_date.replace(" ", ".");
    test_date = test_date.replace(":", ".");
    test_date = test_date.replace("-", ".");
    vstup.value = test_date;
-   
+
+   test_date = vstup.value;
+   test_date = test_date.replace(",", ".");
+   test_date = test_date.replace(" ", ".");
+   test_date = test_date.replace(":", ".");
+   test_date = test_date.replace("-", ".");
+   vstup.value = test_date;
+
    var text
    var index
    var tecka
@@ -46,16 +41,16 @@ function checkDate(vstup)
    var rok
    var ch
    text=""
-   
+
    den=""
    mesic=""
    rok=""
    tecka=0
-   
-   for (index = 0; index < vstup.value.length; index++) 
+
+   for (index = 0; index < vstup.value.length; index++)
    {
       ch = vstup.value.charAt(index);
-      if (ch != "0" && ch != "1" && ch != "2" && ch != "3" && ch != "4" && ch != "5" && ch != "6" && ch != "7" && ch != "8" && ch != "9" && ch != ".") 
+      if (ch != "0" && ch != "1" && ch != "2" && ch != "3" && ch != "4" && ch != "5" && ch != "6" && ch != "7" && ch != "8" && ch != "9" && ch != ".")
          {text="<iwcm:text key="dateTime.wrong_date_format"/>\r"}
       if ((ch == "0" || ch == "1" || ch == "2" || ch == "3" || ch == "4" || ch == "5" || ch == "6" || ch == "7" || ch == "8" || ch == "9") && (text ==""))
       {
@@ -69,9 +64,9 @@ function checkDate(vstup)
       if (ch == "." && text == "")
       {
          tecka++;
-      }  
+      }
    }
-      
+
    if ((den<1 || den >31) && (text == ""))
       {text=text + "<iwcm:text key="dateTime.wrong_day"/>\r"}
    if ((mesic<1 || mesic>12) && (text == ""))
@@ -104,7 +99,7 @@ function checkDate(vstup)
 
    if ((mesic == 4 || mesic == 6 || mesic == 9 || mesic == 11) && (den>30))
       {text=text + "<iwcm:text key="dateTime.days_in_month_1_to_30"/>\r"}
-   
+
    if (text!="")
    {
       alert(text);
@@ -211,19 +206,19 @@ function IsNumber(Value, AllowPoint, DigitsAfter, DigitsBefore)
 
 function checkTime(Field)
 // Checks the contents of a given TEXT/TEXTAREA is a valid time hh:mm
-{      
+{
    // Allow blank times
    if (Field.value.length == 0) { return null; }
-      
-   
+
+
    test_time = Field.value;
    test_time = test_time.replace(",", ":");
    test_time = test_time.replace(" ", ":");
    test_time = test_time.replace("\.", ":");
-   test_time = test_time.replace("-", ":");   
-   
+   test_time = test_time.replace("-", ":");
+
    dvojbodka = test_time.indexOf(":");
-   
+
    // Check it
    if ( (test_time.length > 5)                   // its too long
         ||
@@ -241,7 +236,7 @@ function checkTime(Field)
         ||
         (parseInt(test_time.substring(3,5)) > 59) // its got too many minutes
       )
-   {           
+   {
       window.alert("<iwcm:text key="dateTime.timeIsNotCorrect"/>");
       Field.select();
       Field.focus();
@@ -250,7 +245,7 @@ function checkTime(Field)
    else
    {
       Field.value = test_time;
-      return null;      
+      return null;
    }
 }
 

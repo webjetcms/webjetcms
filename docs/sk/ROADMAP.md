@@ -14,15 +14,15 @@ Vysvetlenie použitých piktogramov:
 
 ## 2025
 
-- [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript.
-- [ ] Prechod na aplikačný server Tomcat 11+.
-- [ ] Prechod na `Spring` verzia 7.
+- [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript (#57793).
+- [ ] Prechod na aplikačný server Tomcat 11+ (#57793).
+- [ ] Prechod na `Spring` verzia 7 (#57793).
 - [ ] Zaviesť do projektu povinnosť použitia `SonarLint` a formátovania kódu cez `.editorconfig` alebo `Spotless` - príklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
-- [ ] Primárne používanie GitHub repozitára na vývoj.
-- [ ] Zrušenie generovania artifaktov na starý `iwmsp.sk` repozitár, artefakty budú dostupné už len cez [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
-- [ ] Aktualizácia knižnice `pd4ml` na novú verziu, jednotlivé weby si budú musieť zaobstarať licenciu samostatne, nebude už poskytovaná WebJET CMS.
+- [x] Primárne používanie GitHub repozitára na vývoj.
+- [x] Zrušenie generovania artifaktov na starý `iwmsp.sk` repozitár, artefakty budú dostupné už len cez [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [x] Aktualizácia knižnice `pd4ml` na novú verziu, jednotlivé weby si budú musieť zaobstarať licenciu samostatne, nebude už poskytovaná WebJET CMS.
 - [ ] Prechod najpoužívanejších aplikácii do Spring verzie s využitím Thymeleaf šablón.
-- [ ] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [x] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Presun JSP súborov, Java tried a JavaScript knižníc starej verzie 8 do `obsolete` jar archívu, ktorý nebude štandardnou súčasťou WebJET CMS. Môže byť použitý na starých projektoch, kde zatiaľ nie je vykonaná aktualizácia všetkých zákazníckych aplikácií na `Spring` verzie, ale bez podpory a aktualizácií zo strany WebJET CMS.
 - [ ] Štatistika - mapa kliknutí - obnovenie funkcionality, vyriešenie problému responzívnosti (samostatná evidencia podľa šírky okna).
 - [ ] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok.
@@ -41,7 +41,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
-- [ ] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
+- [x] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
 - [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
 - [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).

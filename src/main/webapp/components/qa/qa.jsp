@@ -1,8 +1,6 @@
-<%
+<%@page import="java.util.List"%><%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="java.util.*,sk.iway.iwcm.qa.*,sk.iway.iwcm.*"%>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/displaytag.tld" prefix="display" %>
@@ -85,12 +83,12 @@ if(displayType==2)
 		</script>
 
 		<ol class="qa">
-		<logic:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
+		<iwcm:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
 			<li>
 				<span class="question"><jsp:getProperty name="q" property="question"/></span>
 				<span class="answer"><jsp:getProperty name="q" property="answerWeb"/></span>
 			</li>
-		</logic:iterate>
+		</iwcm:iterate>
 		</ol>
 	<% } else { %>
 	<iwcm:text key="displaytag.basic.msg.empty_list"/>
@@ -106,7 +104,7 @@ if(displayType==2)
 				<%
 					int count_numer = 0;
 				%>
-				<logic:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
+				<iwcm:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
 				<%
 					count_numer++;
 				%>
@@ -122,7 +120,7 @@ if(displayType==2)
 						</div>
 					</div>
 				</div>
-				</logic:iterate>
+				</iwcm:iterate>
 			</div>
 		</div>
 	</div>
@@ -222,14 +220,14 @@ if(displayType==2){ %>
 				<%
 					int count_numer = 0;
 				%>
-				<logic:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
+				<iwcm:iterate id="q" name="qaList" type="sk.iway.iwcm.qa.QABean">
 				<%
 					count_numer++;
 				%>
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h4 class="panel-title">
-							<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse-<%=count_numer%>">
+							<a class="accordion-toggle" data-toggle="collapse" data-bs-toggle="collapse"  data-parent="#accordion" href="#collapse-<%=count_numer%>">
 								<jsp:getProperty name="q" property="question"/>
 							</a>
 						</h4>
@@ -240,7 +238,7 @@ if(displayType==2){ %>
 						</div>
 					</div>
 				</div>
-				</logic:iterate>
+				</iwcm:iterate>
 			</div>
 		</div>
 	</div>

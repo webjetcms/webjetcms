@@ -1,7 +1,6 @@
 package sk.iway.iwcm;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.struts.util.TokenProcessor;
 import org.springframework.web.util.NestedServletException;
 import sk.iway.iwcm.analytics.AnalyticsHelper;
 import sk.iway.iwcm.common.*;
@@ -305,9 +304,7 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
-				path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok
-				req.getRequestURI().indexOf("//")!=-1 || path.indexOf('\\')!=-1 || path.indexOf("/../")!=-1)
+			if (req.getRequestURI().indexOf("//")!=-1 || isPathSafe(path)==false)
 			{
 				if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictGetUrlException")==false)
 				{
@@ -447,12 +444,12 @@ public class PathFilter implements Filter
                         else
                         {
                         	//ak nie je user prihlaseny a zacina to na /components a neobsahuje rest, tak posli na 403.jsp kde ho moze redirectnut do admin casti (na logon)
-									if (path.startsWith("/components") && path.contains("rest")==false)
-									{
-										res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-										forwardSafely("/403.jsp", req, res);
-										return;
-									}
+							if (path.startsWith("/components") && path.contains("rest")==false)
+							{
+								res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+								forwardSafely("/403.jsp", req, res);
+								return;
+							}
                            res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                            return;
                         }
@@ -623,21 +620,15 @@ public class PathFilter implements Filter
 					}
 				}
 
-				//#37426 CSRF ochrana Struts formularov
-				if (req.getSession().getAttribute("org.apache.struts.action.TOKEN")==null)
+				if ((path.endsWith(".do") || path.endsWith(".struts")) && "post".equalsIgnoreCase(req.getMethod()) && (req.getContentType()==null || req.getContentType().contains("multipart")==false))
 				{
-					//vygeneruj token, kedze struts u nas konci vygenerujem len jeden token do session
-					TokenProcessor.getInstance().saveToken(req);
-				}
-				else if (path.endsWith(".do") && "post".equalsIgnoreCase(req.getMethod()) && (req.getContentType()==null || req.getContentType().contains("multipart")==false))
-				{
-				   if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictPostUrlException")==false)
+				    if (DocTools.isXssStrictUrlException(path, "xssProtectionStrictPostUrlException")==false)
 					{
 						//validuj token
-						boolean isTokenValid = TokenProcessor.getInstance().isTokenValid(req, false);
+						boolean isTokenValid = CSRF.verifyTokenAndDeleteIt(req);
 						if (isTokenValid == false)
 						{
-						   Logger.info(PathFilter.class, "Struts token not valid, path="+path);
+						    Logger.info(PathFilter.class, "Struts token not valid, path="+path);
 							req.setAttribute("errorText", Prop.getInstance(req).getText("components.csrfError"));
 							forwardSafely("/components/maybeError.jsp", req, res);
 							return;
@@ -1983,7 +1974,10 @@ public class PathFilter implements Filter
 
 	public static String getOrigPath(HttpServletRequest request)
 	{
-		return((String)request.getAttribute("path_filter_orig_path"));
+		String origPath = (String)request.getAttribute("path_filter_orig_path");
+		//check for unsafe chars like "'`
+		if (isPathSafe(origPath)) return origPath;
+		return "";
 	}
 
 	/**
@@ -2657,5 +2651,16 @@ public class PathFilter implements Filter
 		} catch (Exception ex) {
 			Logger.error(PathFilter.class, ex);
 		}
+	}
+
+	private static boolean isPathSafe(String path) {
+		if (path == null || path.length() < 1) return true;
+
+		if (path.indexOf('\'')!=-1 || path.indexOf('"')!=-1 || path.indexOf('\r')!=-1 || path.indexOf('\n')!=-1 ||
+			path.contains("%0D") || path.contains("%0A") || path.contains("%0d") || path.contains("%0a") || //crlf utok
+			path.indexOf('\\')!=-1 || path.indexOf("/../")!=-1
+		) return false;
+
+		return true;
 	}
 }

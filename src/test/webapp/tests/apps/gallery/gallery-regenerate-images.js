@@ -107,7 +107,7 @@ async function regenerateWatermark(I, watermark) {
 }
 
 Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I, DT }) => {
-     I.amOnPage("/admin/v9/apps/gallery");
+     I.amOnPage("/admin/v9/apps/gallery/");
      DT.waitForLoader();
 
      // pregeneruj obrazky v priecinku watermark

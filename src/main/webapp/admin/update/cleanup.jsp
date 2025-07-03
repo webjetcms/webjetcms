@@ -9,10 +9,6 @@ java.util.*,
 java.sql.*" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-
 <iwcm:checkLogon admin="true" perms="modUpdate"/>
 <%
 	response.setHeader("Pragma","No-Cache");
@@ -274,9 +270,9 @@ request.setAttribute("modules", allModules);
 	<input type="checkbox" name="cluster" value="true"> Cluster node TYPE=<%=Constants.getString("clusterMyNodeType") %><br>
 
 	<h2>Vymazanie modulov:</h2>
-	<logic:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
-		<input type="checkbox" name="m_<bean:write name="m" property="itemKey" <% if (m.isAvailable()==false) out.print(" checked='checked'"); %>/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<bean:write name="m" property="itemKey"/>]<br>
-	</logic:iterate>
+	<iwcm:iterate name="modules" id="m" type="sk.iway.iwcm.system.ModuleInfo">
+		<input type="checkbox" name="m_<iwcm:beanWrite name="m" property="itemKey" <% if (m.isAvailable()==false) out.print(" checked='checked'"); %>/>" value="delete"> <iwcm:text key="<%=m.getNameKey()%>"/> [<iwcm:beanWrite name="m" property="itemKey"/>]<br>
+	</iwcm:iterate>
 
 	<h2>Vymazanie komponent:</h2>
 <%

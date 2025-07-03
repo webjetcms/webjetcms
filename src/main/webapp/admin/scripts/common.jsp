@@ -995,43 +995,11 @@ function setMainItem(select, value, selected)
 }
 function m_click_help()
 {
-   try
-	{
-		if (parent.mainFrame && parent.mainFrame.helpLink)
-		{
-		   helpLink = parent.mainFrame.helpLink;
-		}
-	}
-	catch(e)
-	{
-	}
-
 	try
 	{
-		if (""==helpLink)
-		{
-			try
-			{
-
-			   var url = window.location.pathname;
-				var start = url.indexOf("/components/");
-				if (start != -1)
-				{
-					start += "/components".length;
-					var end = url.indexOf("/", start+1)
-					if (end != -1)
-					{
-						var cmpName = url.substring(start+1, end);
-						//window.alert(cmpName);
-						helpLink = "components/"+cmpName+".jsp&book=components";
-					}
-				}
-			}
-			catch(e)
-			{
-			}
-		}
-
+		var helpLink = "/";
+        if (parent.mainFrame && parent.mainFrame.helpLink) helpLink = parent.mainFrame.helpLink;
+		else if (typeof window.helpLink != "undefined" && window.helpLink != null && window.helpLink != "") helpLink = window.helpLink;
 		showHelpWindow(helpLink);
 	}
 	catch (e) { showHelpWindow(""); }
@@ -1039,13 +1007,17 @@ function m_click_help()
 
 function showHelpWindow(helpLink)
 {
-	var url = "/admin/help/index.jsp";
-	if (helpLink != "")
+	try
 	{
-		url = url + "?link="+helpLink;
+		var lng = "sk";
+		if (typeof window.userLng != "undefined" && window.userLng != null && window.userLng != "") lng = window.userLng;
+		var url = "http://docs.webjetcms.sk/latest/"+lng;
+		if (helpLink == null) helpLink = "/";
+		else if (helpLink.indexOf("/") != 0) helpLink = "/" + helpLink;
+        url += helpLink;
+        window.open(url, '_blank');
 	}
-   var options = "menubar=no,toolbar=no,scrollbars=yes,resizable=yes,width=880,height=540;"
-   popWindow=window.open(url,"_blank",options);
+	catch (e) {  }
 }
 /* UPRAVA MULTi selectu koniec */
 

@@ -10,6 +10,12 @@ module.exports = {
     red: 'rgb(255, 75, 88)',
     black: 'rgb(19, 21, 27)',
 
+    clearBasket(I) {
+        I.amOnPage(this.PRODUCTS+"?act=deleteall");
+        I.amOnPage(this.PRODUCTS);
+        I.dontSeeElement(".basketSmallBox")
+    },
+
     addToBasket(I, productName){
         I.say(`Adding ${productName} to the basket`);
         const addToBasketButton = locate('.thumbnail').withText(productName).find('.addToBasket');
@@ -38,8 +44,8 @@ module.exports = {
         I.fillField('#contactLastNameId', 'Playwright');
         I.clearField('#contactEmailId');
         I.fillField('#contactEmailId', 'webjetbasket@fexpost.com');
-        I.fillField('#contactStreetId', "Mlýnske Nivy 71");
-        I.fillField("#contactCompanyId", "Interway a.s.");
+        I.fillField('#contactStreetId', "Mlynské Nivy 71");
+        I.fillField("#contactCompanyId", "InterWay, a. s.");
         I.fillField("#contactPhoneId", "0912345678")
         I.fillField('#contactCityId', 'Bratislava');
         I.fillField('#contactZipId', '82105');

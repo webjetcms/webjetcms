@@ -121,7 +121,8 @@ export function typeQuill() {
             var htmlCode = val;
             //console.log("QUILL SET, htmlCode=", htmlCode);
             if (htmlCode == null || htmlCode=="") htmlCode = "<p><br/></p>";
-            if (htmlCode.indexOf("<p>")==-1) htmlCode = "<p>"+htmlCode+"</p>";
+            if (htmlCode.indexOf("<p")==-1 && htmlCode.indexOf("<h")==-1 && htmlCode.indexOf("<div")==-1) htmlCode = "<p>"+htmlCode+"</p>";
+
             //aktualna verzia pracuje s P elementami namiesto DIV elementov, musime upravit povodny zapis
             htmlCode = htmlCode.replace(/<div>/gi, "<p>");
             htmlCode = htmlCode.replace(/<\/div>/gi, "</p>");

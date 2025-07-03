@@ -17,8 +17,13 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" per
 	String keyPrefix = Tools.getRequestParameter(request, "keyPrefix");
 	if (Tools.isEmpty(keyPrefix)) keyPrefix = "editor";
 
-	String field = keyPrefix + ".field_" + Tools.getRequestParameter(request, "field") + ".type";
-	final String search = DB.internationalToEnglish(Tools.getRequestParameter(request, "field"+Tools.getRequestParameter(request, "field")).toLowerCase());
+	String requestField = Tools.getRequestParameter(request, "field");
+	if(Tools.isEmpty(requestField)) {
+		requestField = "";
+	}
+
+	String field = keyPrefix + ".field_" + requestField + ".type";
+	final String search = DB.internationalToEnglish(Tools.getRequestParameter(request, "field" + requestField).toLowerCase());
 	String value = null;
 	String[] values = null;
 	Map<String, String> valueTable = new Hashtable();

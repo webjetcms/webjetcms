@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page language="java" pageEncoding="utf-8" import="sk.iway.iwcm.Tools" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 int messageId = Tools.getIntValue(Tools.getRequestParameter(request, "messageId"), -1);
 session.setAttribute("messageId",new Integer(messageId));

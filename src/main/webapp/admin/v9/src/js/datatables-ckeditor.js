@@ -261,7 +261,7 @@ export class DatatablesCkEditor {
 						{
 							type: 'html',
 							id: 'wjImageIframe',
-							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image?stop_resizing=true" border="0"/></div>'
+							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image/?stop_resizing=true" border="0"/></div>'
 						}
 						]
 					}, 'info');
@@ -505,7 +505,7 @@ export class DatatablesCkEditor {
 						{
 							//console.log("Creating iframe");
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
-							iframeElement.setAttribute("src", "/admin/v9/files/wj_link?stop_resizing=true");
+							iframeElement.setAttribute("src", "/admin/v9/files/wj_link/?stop_resizing=true");
 							iframeElement.setAttribute("id", "wjLinkIframe");
 							//iframeElement.setAttribute("width", 580);
 							iframeElement.setStyle("width", 800+"px");

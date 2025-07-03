@@ -1,11 +1,9 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250"
+%><%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.inquiry.*,sk.iway.iwcm.*,java.io.*" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
-taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
-taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %><%@
-taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%
+taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%
 String lng = PageLng.getUserLng(request);
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -15,8 +13,8 @@ String lng = PageLng.getUserLng(request);
 	<title><iwcm:write name="doc_title"/></title>
 	<meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" />
     <meta http-equiv="Content-language" content="<%=PageLng.getUserLng(request)%>" />
-    <logic:notEmpty name="perex_data"><meta name="Description" content="<iwcm:write name="perex_data"/>" /></logic:notEmpty>
-    <logic:notEmpty name="field_a"><meta name="Keywords" content="<iwcm:write name="field_a"/>" /></logic:notEmpty>
+    <iwcm:notEmpty name="perex_data"><meta name="Description" content="<iwcm:write name="perex_data"/>" /></iwcm:notEmpty>
+    <iwcm:notEmpty name="field_a"><meta name="Keywords" content="<iwcm:write name="field_a"/>" /></iwcm:notEmpty>
 	<meta name="author" content="InterWay, a. s. - www.interway.sk" />
 	<meta name="generator" content="WebJET - redakèný systém - www.webjet.sk" />
     <iwcm:write name="group_htmlhead_recursive"/>

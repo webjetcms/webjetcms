@@ -8,8 +8,8 @@ Scenario('video', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/video/");
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/video/video.png");
-    
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     I.jstreeClick("Aplikácie");
     I.wait(1);
@@ -32,7 +32,7 @@ Scenario('video', ({ I, DT, DTE, Document }) => {
     I.switchTo("#editorComponent");
     I.click(".choose.Button.button.green");
     Document.screenshot("/redactor/apps/video/editor-source.png");
-    
-    
-    
+
+
+
 });
