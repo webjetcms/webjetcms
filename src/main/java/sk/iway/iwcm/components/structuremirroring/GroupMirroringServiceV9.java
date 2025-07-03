@@ -47,27 +47,26 @@ public class GroupMirroringServiceV9 {
             group.setSyncId(PkeyGenerator.getNextValue("structuremirroring"));
          }
       } else if (type == WebjetEventType.AFTER_SAVE) {
+
          if (group.getSyncId()>1) {
             //najdi k tomu mirror verzie
             List<GroupDetails> syncedGroups = getGroupsBySyncId(group.getSyncId(), group.getGroupId());
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(group.getParentGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
-            if (mappedGroupsList.size()>syncedGroups.size()) {
-               //there is new mapping group created in allready synced groups, we must create missing one
-               for (GroupDetails mappedGroup : mappedGroupsList) {
-                  boolean containGroup = false;
-                  for (GroupDetails syncedGroup : syncedGroups) {
-                     if (mappedGroup.getGroupId()==syncedGroup.getParentGroupId()) {
-                        //ok, this group is allready synced
-                        containGroup = true;
-                        break;
-                     }
+            //there is new mapping group created in allready synced groups, we must create missing one
+            for (GroupDetails mappedGroup : mappedGroupsList) {
+               boolean containGroup = false;
+               for (GroupDetails syncedGroup : syncedGroups) {
+                  if (mappedGroup.getGroupId()==syncedGroup.getParentGroupId()) {
+                     //ok, this group is allready synced
+                     containGroup = true;
+                     break;
                   }
-                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
                }
-               mappedGroupsList = mappedGroupsListNotExisting;
+               if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
             }
+            mappedGroupsList = mappedGroupsListNotExisting;
 
             if (syncedGroups.isEmpty() || mappedGroupsListNotExisting.size()>0) {
                //este neexistuje, musime vytvorit novu grupu (kopiu)

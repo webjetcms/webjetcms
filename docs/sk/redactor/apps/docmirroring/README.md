@@ -96,6 +96,10 @@ Pri ukladaní stránky sa zmeny aplikujú na všetky kópie. Ak teda z SK verzie
 
 Ak je nastavená konf. premenná `syncGroupAndWebpageTitle` na hodnotu `true` (čo je štandardná hodnota) automaticky sa synchronizuje názov priečinka s názvom hlavnej stránky v priečinku. Pri zmene názvu hlavnej stránky sa premenuje aj priečinok a to aj v preložených verziách.
 
+## Zrušenie zrkadlenia
+
+Zrušenie zrkadlenia vyžaduje aby ste prepojenie odstránili z konfiguračnej premennej ```structureMirroringConfig```. Lenže v databáze ostane ešte nastavená hodnota `sync_id`, ktorá prepojovala priečinky/stránky v rôznych jazykových mutáciách. Tieto hodnoty musia byť dostránené, inak priečinky/stránky ostanú naďalej prepojené/synchronizované. K tomuto účelu potrebuje využiť [Zrušenie synchronizácie](../clone-structure/README.md#zrušenie-synchronizácie).
+
 ## Technické informácie
 
 Viac technických informácií sa nachádza v [dokumentácii pre vývojára](../../../developer/apps/docmirroring.md).

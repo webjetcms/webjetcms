@@ -63,21 +63,19 @@ public class DocMirroringServiceV9 {
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(doc.getGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
-            if (mappedGroupsList.size()>syncedDocs.size()) {
-               //there is new mapping group created in allready synced groups, we must create missing one
-               for (GroupDetails mappedGroup : mappedGroupsList) {
-                  boolean containGroup = false;
-                  for (DocDetails syncedDoc : syncedDocs) {
-                     if (mappedGroup.getGroupId()==syncedDoc.getGroupId()) {
-                        //ok, this group is allready synced
-                        containGroup = true;
-                        break;
-                     }
+            //there is new mapping group created in allready synced groups, we must create missing one
+            for (GroupDetails mappedGroup : mappedGroupsList) {
+               boolean containGroup = false;
+               for (DocDetails syncedDoc : syncedDocs) {
+                  if (mappedGroup.getGroupId()==syncedDoc.getGroupId()) {
+                     //ok, this group is allready synced
+                     containGroup = true;
+                     break;
                   }
-                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
                }
-               mappedGroupsList = mappedGroupsListNotExisting;
+               if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
             }
+            mappedGroupsList = mappedGroupsListNotExisting;
 
             if (syncedDocs.isEmpty() || mappedGroupsListNotExisting.isEmpty()==false) {
                //este neexistuje mirror doc, musime vytvorit novy (kopiu)
