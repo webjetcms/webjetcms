@@ -2,9 +2,12 @@ package sk.iway.iwcm.update;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +25,11 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
+import sk.iway.iwcm.doc.DocHistory;
+import sk.iway.iwcm.doc.DocHistoryRepository;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.system.UpdateDatabase;
 
 /**
@@ -106,6 +113,8 @@ public class DomainIdUpdateService {
 			// Handle documents perex groups (if doc have perex group from another domain, find and set equivalent perex group for its domain)
 			updatePerexGroupDomainIdInDocuments(domainsMap, domainPerexGroupsMap, ddr);
 
+            updatePerexGroupsInInclude(domainsMap, domainPerexGroupsMap, ddr);
+
 			// Handle gallery perex groups (if gallery have perex group from another domain, find and set equivalent perex group for its domain)
 			updatePerexGroupDomainIdInGallery(domainsMap, domainPerexGroupsMap, gr);
 
@@ -187,11 +196,7 @@ public class DomainIdUpdateService {
 		List<Integer> newPerexGroups = new ArrayList<>();
 		for(int perexGroupId : perexGroupIds) {
 			//find perexGroup by id in domainPerexGroupsMap
-			String perexGroupName = domainPerexGroupsMap.entrySet().stream()
-				.filter(entry -> entry.getValue().getId().intValue() == perexGroupId)
-				.map(entry -> entry.getValue().getPerexGroupName())
-				.findFirst()
-				.orElse(null);
+            String perexGroupName = getPerexGroupName(perexGroupId, domainPerexGroupsMap);
 			// Find perexGroup with same name but for domain of doc
 
 			if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
@@ -215,6 +220,16 @@ public class DomainIdUpdateService {
 		return false;
 	}
 
+    private static String getPerexGroupName(int perexGroupId, Map<String, PerexGroupsEntity> domainPerexGroupsMap) {
+        String perexGroupName = domainPerexGroupsMap.entrySet().stream()
+				.filter(entry -> entry.getValue().getId().intValue() == perexGroupId)
+				.map(entry -> entry.getValue().getPerexGroupName())
+				.findFirst()
+				.orElse(null);
+
+        return perexGroupName;
+    }
+
 	/**
 	 * Check if perex groups for doc are valid (are in same domain as doc).
 	 * If not, find equivalent perexGroups for doc domain and set them.
@@ -228,11 +243,7 @@ public class DomainIdUpdateService {
 		List<Integer> newPerexGroups = new ArrayList<>();
 		for(int perexGroupId : doc.getPerexGroups()) {
 			// Find perexGroup with same name but for domain of doc
-			String perexGroupName = domainPerexGroupsMap.entrySet().stream()
-				.filter(entry -> entry.getValue().getId().intValue() == perexGroupId)
-				.map(entry -> entry.getValue().getPerexGroupName())
-				.findFirst()
-				.orElse(null);
+			String perexGroupName = getPerexGroupName(perexGroupId, domainPerexGroupsMap);
 
 			if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
 				Logger.error(UpdateDatabase.class, "Perex group: " + perexGroupId + ":" + perexGroupName + " was not found in domain: " + domainId);
@@ -389,5 +400,141 @@ public class DomainIdUpdateService {
 
 		return arrayAsList.equals(list);
 	}
+
+    /**
+     * Update perexGroups and perexGroupsNot parameters in !INCLUDE(/components/news/news-velocity.jsp) includes
+     * @param domainsMap
+     * @param domainPerexGroupsMap
+     * @param ddr
+     */
+    public static void updatePerexGroupsInInclude(Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDetailsRepository ddr) {
+
+        String note = "03.06.2025 [sivan] pridanie podpory domainId pre perexGroups + uprava INCLUDE(/components/news/news-velocity.jsp";
+        if(UpdateDatabase.isAllreadyUpdated(note)) return;
+
+        //handle news include
+        List<DocDetails> docsToUpdate = getNewsDocToUpdate(ddr.findByDataLike("%!INCLUDE(/components/news/news-velocity.jsp%"), domainsMap, domainPerexGroupsMap, ddr);
+        if (docsToUpdate.isEmpty()==false) {
+            DocHistoryRepository historyRepo = Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class);
+            //save updated docs
+            for (DocDetails doc : docsToUpdate) {
+                //save with history to keep track of changes, can't use EditorFacade because it is request scoped
+                DocDetails toSaveDoc = ddr.findById(doc.getDocId());
+                if (toSaveDoc != null) {
+                    //create and save DocHistory from this Doc
+                    DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(toSaveDoc);
+                    editedHistory.setApprovedBy(-1);
+                    editedHistory.setAwaitingApprove(null);
+                    editedHistory.setPublicable(Boolean.FALSE);
+                    editedHistory.setSaveDate(new Date(Tools.getNow()));
+                    editedHistory.setActual(true);
+                    historyRepo.save(editedHistory);
+
+                    //set actual attribute to false for all previous versions of this doc
+                    List<Integer> historyIds = historyRepo.findOldHistoryIds(toSaveDoc.getDocId(), editedHistory.getHistoryId());
+                    if (historyIds.isEmpty()==false) historyRepo.updateActual(false, historyIds);
+
+                    //save the document with updated data
+                    String originalHtml = toSaveDoc.getData();
+                    toSaveDoc.setData(doc.getData());
+                    ddr.save(toSaveDoc);
+                    Logger.warn(UpdateDatabase.class, "Updated perex groups in include for doc: " + doc.getId() + ":" + doc.getVirtualPath()+" originalHtml:\n" + originalHtml + "\n, newHtml:\n" + toSaveDoc.getData());
+                } else {
+                    Logger.error(UpdateDatabase.class, "Failed to get doc for editor: " + doc.getId() + ":" + doc.getVirtualPath());
+                }
+            }
+        }
+
+        UpdateDatabase.saveSuccessUpdate(note);
+    }
+
+
+    /**
+     * Find all documents that contain !INCLUDE(/components/news/news-velocity.jsp) and update perexGroups and perexGroupsNot parameters
+     * in them to match the domain of the document.
+     * @param docs
+     * @param domainsMap
+     * @param domainPerexGroupsMap
+     * @param ddr
+     * @return
+     */
+    private static List<DocDetails> getNewsDocToUpdate(List<DocDetails> docs, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDetailsRepository ddr) {
+
+        List<DocDetails> docsToUpdate = new ArrayList<>();
+
+        try {
+
+            // Regex na !INCLUDE(...)!
+            Pattern includePattern = Pattern.compile("!INCLUDE\\((/components/news/news-velocity\\.jsp,[^)]*)\\)!");
+            // Regex na perexGroup a perexGroupNot parametre
+            Pattern perexGroupPattern = Pattern.compile("(perexGroup(?:Not)?=\\&quot;)([0-9\\+]+)(\\&quot;)");
+
+            for (DocDetails doc : docs) {
+                String html = doc.getData();
+                if (Tools.isEmpty(html)) continue;
+
+                GroupDetails group = doc.getGroup();
+                if (group == null) continue;
+
+                int domainId = domainsMap.get(group.getDomainName());
+                StringBuffer newHtml = new StringBuffer();
+
+                Matcher includeMatcher = includePattern.matcher(html);
+
+                while (includeMatcher.find()) {
+                    String includeContent = includeMatcher.group(1);
+                    Matcher paramMatcher = perexGroupPattern.matcher(includeContent);
+                    StringBuffer newIncludeContent = new StringBuffer();
+
+                    boolean includeChanged = false;
+
+                    while (paramMatcher.find()) {
+                        String paramName = paramMatcher.group(1); // perexGroup=" alebo perexGroupNot="
+                        String ids = paramMatcher.group(2);       // napr. 645+1+2
+                        String quote = paramMatcher.group(3);
+
+                        // Rozdel hodnoty podľa +
+                        int[] idsArray = Tools.getTokensInt(ids, "+");
+                        StringBuilder newIds = new StringBuilder();
+
+                        for (int i = 0; i < idsArray.length; i++) {
+                            int perexGroupId = idsArray[i];
+                            String perexGroupName = getPerexGroupName(perexGroupId, domainPerexGroupsMap);
+
+                            if(domainPerexGroupsMap.get(perexGroupName + "-" + domainId) == null) {
+                                Logger.error(UpdateDatabase.class, "Perex group: " + perexGroupId + ":" + perexGroupName + " was not found in domain: " + domainId);
+                            } else {
+                                if (newIds.length() > 0) newIds.append("+");
+                                // Pridaj nové ID perex group pre daný doménu
+                                newIds.append(domainPerexGroupsMap.get(perexGroupName + "-" + domainId).getId().intValue());
+                            }
+                        }
+
+                        // Nahrad hodnotu v parametri
+                        paramMatcher.appendReplacement(newIncludeContent, paramName + newIds + quote);
+                        includeChanged = true;
+                    }
+                    paramMatcher.appendTail(newIncludeContent);
+
+                    // Ak sa niečo zmenilo, nahraď v !INCLUDE(...)!
+                    if (includeChanged) {
+                        includeMatcher.appendReplacement(newHtml, "!INCLUDE(" + Matcher.quoteReplacement(newIncludeContent.toString()) + ")!");
+                    } else {
+                        includeMatcher.appendReplacement(newHtml, "!INCLUDE(" + Matcher.quoteReplacement(includeContent) + ")!");
+                    }
+                }
+                includeMatcher.appendTail(newHtml);
+
+                if (doc.getData().equals(newHtml.toString()) == false) {
+                    doc.setData(newHtml.toString());
+                    docsToUpdate.add(doc);
+                }
+            }
+        } catch (Exception e) {
+            sk.iway.iwcm.Logger.error(e);
+        }
+
+        return docsToUpdate;
+    }
 
 }
