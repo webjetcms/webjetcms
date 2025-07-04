@@ -42,6 +42,11 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
     @Query(value = "UPDATE DocHistory SET actual = :actual, awaitingApprove = :awaitingApprove, syncStatus = 1 WHERE id IN :historyIds")
     public void updateActualHistory(@Param("actual")boolean actual, @Param("awaitingApprove")String awaitingApprove, @Param("historyIds")List<Integer> historyIds);
 
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE DocHistory SET actual = :actual WHERE id IN :historyIds")
+    public void updateActual(@Param("actual")boolean actual, @Param("historyIds")List<Integer> historyIds);
+
     //
     @Transactional
     @Modifying

@@ -113,7 +113,7 @@ public class CloudToolsForCore {
 
                 domain = rb.getDomain();
             }
-            if (!Tools.isEmpty(domain))
+            if (Tools.isNotEmpty(domain))
             {
                 domainId = GroupsDB.getDomainId(domain);
             }

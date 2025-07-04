@@ -11,9 +11,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 
 /**
  * DatatableRestControllerAvailableGroups is a class that extends DatatableRestControllerV2 and adds the ability to filter
@@ -41,9 +43,21 @@ public abstract class DatatableRestControllerAvailableGroups<T, ID extends Seria
 
     @Override
     public Page<T> getAllItems(Pageable pageable) {
-        Page<T> page = new DatatablePageImpl<>(filterByPerms(getRepo().findAll()));
+        Page<T> page = new DatatablePageImpl<>(filterByPerms(getItems()));
         processFromEntity(page, ProcessItemAction.GETALL);
         return page;
+    }
+
+    private List<T> getItems() {
+        if(getRepo() instanceof DomainIdRepository<T, ?> domainIdRepository) {
+            try {
+                return domainIdRepository.findAllByDomainId(CloudToolsForCore.getDomainId());
+            } catch(Exception ex) {
+                Logger.error(DatatableRestControllerAvailableGroups.class, ex);
+            }
+        }
+        // Default
+        return getRepo().findAll();
     }
 
     @Override

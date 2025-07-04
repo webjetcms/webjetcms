@@ -113,7 +113,7 @@ public class AuditEntityListener {
     private boolean isDisabled(Object entity) {
 
         //do not audit during startup/UpdateDatabase call
-        if (InitServlet.isWebjetInitialized() == false) return true;
+        if (InitServlet.isSpringInitialized() == false) return true;
 
         String auditJpaDisabledEntities = Constants.getString("auditJpaDisabledEntities");
         if ("*".equals(auditJpaDisabledEntities)) return true;

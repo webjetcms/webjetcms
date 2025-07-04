@@ -5,6 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
@@ -60,6 +61,12 @@ public class PerexGroupsRestController extends DatatableRestControllerAvailableG
     @Override
     public void afterDelete(PerexGroupsEntity entity, long id) {
         DocDB.getInstance().getPerexGroups(true);
+    }
+
+    @Override
+    public void beforeSave(PerexGroupsEntity entity) {
+        if(entity.getDomainId() == null) entity.setDomainId(CloudToolsForCore.getDomainId());
+        super.beforeSave(entity);
     }
 
     @Override

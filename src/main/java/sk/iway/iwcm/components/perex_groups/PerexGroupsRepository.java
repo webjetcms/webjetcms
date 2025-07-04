@@ -1,11 +1,12 @@
 package sk.iway.iwcm.components.perex_groups;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
+import org.springframework.stereotype.Repository;
+
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
+
 @Repository
-public interface PerexGroupsRepository extends JpaRepository<PerexGroupsEntity, Long> {
-    List<PerexGroupsEntity> findAllByOrderByPerexGroupNameAsc();
+public interface PerexGroupsRepository extends DomainIdRepository<PerexGroupsEntity, Long> {
+    List<PerexGroupsEntity> findAllByDomainIdOrderByPerexGroupNameAsc(Integer domainId);
 }

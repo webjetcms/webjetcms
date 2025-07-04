@@ -130,6 +130,16 @@ input[type="checkbox"] {
   pointer-events: none;
 }
 
+.markdown-section .table-wrapper {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.markdown-section .table-wrapper table {
+  /* margin is set by .markdown-section .table-wrapper and merged with previous P margin-bottom */
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
 /*WebJET CMS design for buttons and TI*/
 .btn {
   border-width: 0;
