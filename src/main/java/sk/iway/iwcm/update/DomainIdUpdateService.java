@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.export.ExportDatBean;
@@ -415,34 +417,45 @@ public class DomainIdUpdateService {
         //handle news include
         List<DocDetails> docsToUpdate = getNewsDocToUpdate(ddr.findByDataLike("%!INCLUDE(/components/news/news-velocity.jsp%"), domainsMap, domainPerexGroupsMap, ddr);
         if (docsToUpdate.isEmpty()==false) {
+			//initialize RequestBean to transfer changes in INCLUDE to audit
+			SetCharacterEncodingFilter.registerDataContext(null);
+
             DocHistoryRepository historyRepo = Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class);
             //save updated docs
             for (DocDetails doc : docsToUpdate) {
                 //save with history to keep track of changes, can't use EditorFacade because it is request scoped
                 DocDetails toSaveDoc = ddr.findById(doc.getDocId());
                 if (toSaveDoc != null) {
-                    //create and save DocHistory from this Doc
-                    DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(toSaveDoc);
-                    editedHistory.setApprovedBy(-1);
-                    editedHistory.setAwaitingApprove(null);
-                    editedHistory.setPublicable(Boolean.FALSE);
-                    editedHistory.setSaveDate(new Date(Tools.getNow()));
-                    editedHistory.setActual(true);
-                    historyRepo.save(editedHistory);
+					if (historyRepo != null) {
+						//create and save DocHistory from this Doc
+						DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(toSaveDoc);
+						editedHistory.setApprovedBy(-1);
+						editedHistory.setAwaitingApprove(null);
+						editedHistory.setPublicable(Boolean.FALSE);
+						editedHistory.setSaveDate(new Date(Tools.getNow()));
+						editedHistory.setActual(true);
+						historyRepo.save(editedHistory);
 
-                    //set actual attribute to false for all previous versions of this doc
-                    List<Integer> historyIds = historyRepo.findOldHistoryIds(toSaveDoc.getDocId(), editedHistory.getHistoryId());
-                    if (historyIds.isEmpty()==false) historyRepo.updateActual(false, historyIds);
+						//set actual attribute to false for all previous versions of this doc
+						List<Integer> historyIds = historyRepo.findOldHistoryIds(toSaveDoc.getDocId(), editedHistory.getHistoryId());
+						if (historyIds.isEmpty()==false) historyRepo.updateActual(false, historyIds);
+					}
 
                     //save the document with updated data
                     String originalHtml = toSaveDoc.getData();
                     toSaveDoc.setData(doc.getData());
+
+					//we will use this to transfer changes in INCLUDE to audit
+					RequestBean.addAuditValue("news-velocity.jsp - update perexGroups+perexGroupsNot for domainId, old code:", doc.getDataAsc());
+
                     ddr.save(toSaveDoc);
                     Logger.warn(UpdateDatabase.class, "Updated perex groups in include for doc: " + doc.getId() + ":" + doc.getVirtualPath()+" originalHtml:\n" + originalHtml + "\n, newHtml:\n" + toSaveDoc.getData());
                 } else {
                     Logger.error(UpdateDatabase.class, "Failed to get doc for editor: " + doc.getId() + ":" + doc.getVirtualPath());
                 }
             }
+
+			SetCharacterEncodingFilter.unRegisterDataContext();
         }
 
         UpdateDatabase.saveSuccessUpdate(note);
@@ -481,6 +494,9 @@ public class DomainIdUpdateService {
 
                 Matcher includeMatcher = includePattern.matcher(html);
 
+				//we will use this to transfer changes in INCLUDE to audit
+				StringBuilder changes = new StringBuilder();
+
                 while (includeMatcher.find()) {
                     String includeContent = includeMatcher.group(1);
                     Matcher paramMatcher = perexGroupPattern.matcher(includeContent);
@@ -518,6 +534,11 @@ public class DomainIdUpdateService {
 
                     // Ak sa niečo zmenilo, nahraď v !INCLUDE(...)!
                     if (includeChanged) {
+						if (changes.length() > 0) {
+							changes.append("\n");
+						}
+						changes.append("\nINCLUDE(").append(includeContent).append(")\nnew code:\nINCLUDE(").append(newIncludeContent.toString()).append(")");
+
                         includeMatcher.appendReplacement(newHtml, "!INCLUDE(" + Matcher.quoteReplacement(newIncludeContent.toString()) + ")!");
                     } else {
                         includeMatcher.appendReplacement(newHtml, "!INCLUDE(" + Matcher.quoteReplacement(includeContent) + ")!");
@@ -527,6 +548,8 @@ public class DomainIdUpdateService {
 
                 if (doc.getData().equals(newHtml.toString()) == false) {
                     doc.setData(newHtml.toString());
+					//we will use this to transfer changes in INCLUDE to audit
+					doc.setDataAsc(changes.toString());
                     docsToUpdate.add(doc);
                 }
             }
