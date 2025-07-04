@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
@@ -32,9 +33,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_PEREX_GROUP_UPDATE)
 public class PerexGroupsEntity implements Serializable {
 
+    @PreUpdate
     @PrePersist
 	public void prePersist() {
-		if(domainId == null) domainId = CloudToolsForCore.getDomainId();
+		if(domainId == null || domainId.intValue()<1) domainId = CloudToolsForCore.getDomainId();
 	}
 
     @Id

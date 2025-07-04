@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -140,21 +141,25 @@ public class DomainIdUpdateService {
 		int pageNumber = 0;
 		int failsafe = 0;
 		Page<GalleryEntity> page;
-		do {
-			page = gr.findAllByPerexGroupIsNotNull(PageRequest.of(pageNumber, pageSize));
-			List<GalleryEntity> items = page.getContent();
+		try {
+			do {
+				page = gr.findAllByPerexGroupIsNotNull(PageRequest.of(pageNumber, pageSize));
+				List<GalleryEntity> items = page.getContent();
 
-			for(GalleryEntity galleryEntity : items) {
-				String oldPerexGroups = galleryEntity.getPerexGroup();
-				boolean needSave = getValidPerexGroupsForGallery(galleryEntity, domainsMap, domainPerexGroupsMap, docDB);
-				if(needSave == true) {
-					gr.save(galleryEntity);
-					Logger.warn(UpdateDatabase.class, "Updated perex groups for gallery: " + galleryEntity.getId() + ":" + galleryEntity.getImagePath() + ", oldPerexGroups=" + oldPerexGroups + ", newPerexGroups=" + galleryEntity.getPerexGroup());
+				for(GalleryEntity galleryEntity : items) {
+					String oldPerexGroups = galleryEntity.getPerexGroup();
+					boolean needSave = getValidPerexGroupsForGallery(galleryEntity, domainsMap, domainPerexGroupsMap, docDB);
+					if(needSave == true) {
+						gr.save(galleryEntity);
+						Logger.warn(UpdateDatabase.class, "Updated perex groups for gallery: " + galleryEntity.getId() + ":" + galleryEntity.getImagePath() + ", oldPerexGroups=" + oldPerexGroups + ", newPerexGroups=" + galleryEntity.getPerexGroup());
+					}
 				}
-			}
 
-			pageNumber++;
-		} while (!page.isLast() && failsafe++ < 5000);
+				pageNumber++;
+			} while (!page.isLast() && failsafe++ < 5000);
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, "Error while updating perex groups in galleries: " + e.getMessage(), e);
+		}
 	}
 
 	/**
@@ -167,21 +172,30 @@ public class DomainIdUpdateService {
 		int pageNumber = 0;
 		int failsafe = 0;
 		Page<DocDetails> page;
-		do {
-			page = ddr.findAllByPerexGroupsIsNotNull(PageRequest.of(pageNumber, pageSize));
-			List<DocDetails> items = page.getContent();
+		try {
+			do {
+				page = ddr.findAllByPerexGroupsIsNotNull(PageRequest.of(pageNumber, pageSize));
+				List<DocDetails> items = page.getContent();
 
-			for(DocDetails doc : items) {
-				String oldPerexGroups = doc.getPerexGroupIdsString();
-				boolean needSave = getValidPerexGroupsForDoc(doc, domainsMap, domainPerexGroupsMap);
-				if(needSave == true) {
-					ddr.save(doc);
-					Logger.warn(UpdateDatabase.class, "Updated perex groups for doc: " + doc.getId() + ":" + doc.getVirtualPath() + ", oldPerexGroups=" + oldPerexGroups + ", newPerexGroups=" + doc.getPerexGroupIdsString());
+				for(DocDetails doc : items) {
+					String oldPerexGroups = doc.getPerexGroupIdsString();
+					boolean needSave = getValidPerexGroupsForDoc(doc, domainsMap, domainPerexGroupsMap);
+					if(needSave == true) {
+						try {
+							ddr.save(doc);
+							Logger.warn(UpdateDatabase.class, "Updated perex groups for doc: " + doc.getId() + ":" + doc.getVirtualPath() + ", oldPerexGroups=" + oldPerexGroups + ", newPerexGroups=" + doc.getPerexGroupIdsString());
+						} catch (Exception e) {
+							Adminlog.add(Adminlog.TYPE_SAVEDOC, -1, "ERROR:\nid: " + doc.getId() + ":" + doc.getVirtualPath() + ", error: " + e.getMessage(), doc.getDocId(), -1);
+							Logger.error(UpdateDatabase.class, "Error while saving doc: " + doc.getId() + ":" + doc.getVirtualPath() + ", error: " + e.getMessage(), e);
+						}
+					}
 				}
-			}
 
-			pageNumber++;
-		} while (!page.isLast() && failsafe++ < 5000);
+				pageNumber++;
+			} while (!page.isLast() && failsafe++ < 5000);
+		} catch (Exception e) {
+			Logger.error(UpdateDatabase.class, "Error while updating perex groups in documents: " + e.getMessage(), e);
+		}
 	}
 
 	/**
@@ -286,10 +300,10 @@ public class DomainIdUpdateService {
                 perexGroupsToCopy.add(perex);
             } else {
                 // If perex group has available groups, find domain_id list for every group and decide which domain_id to use directly (do not duplicate it later)
-                String[] availableGroups = Tools.getTokens(perex.getAvailableGroups(), ",");
+                int[] availableGroups = Tools.getTokensInt(perex.getAvailableGroups(), ",+.");
                 List<Integer> domainIds = new ArrayList<>();
-                for (String groupId : availableGroups) {
-                    Integer groupDomainId = GroupsDB.getDomainId(groupsDB.getDomain(Integer.parseInt(groupId)));
+                for (int groupId : availableGroups) {
+                    Integer groupDomainId = GroupsDB.getDomainId(groupsDB.getDomain(groupId));
                     if (groupDomainId != null && !domainIds.contains(groupDomainId)) {
                         domainIds.add(groupDomainId);
                     }
@@ -489,7 +503,12 @@ public class DomainIdUpdateService {
                 GroupDetails group = doc.getGroup();
                 if (group == null) continue;
 
-                int domainId = domainsMap.get(group.getDomainName());
+                Integer domainId = domainsMap.get(group.getDomainName());
+				if (domainId == null) {
+					Logger.error(DomainIdUpdateService.class, "Domain ID for group: " + group.getGroupId() + ":" + group.getDomainName() + " not found in domainsMap. Skipping document: " + doc.getId() + ":" + doc.getVirtualPath());
+					continue;
+				}
+
                 StringBuffer newHtml = new StringBuffer();
 
                 Matcher includeMatcher = includePattern.matcher(html);
