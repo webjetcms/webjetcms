@@ -31,6 +31,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
@@ -55,6 +56,7 @@ import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
+import sk.iway.iwcm.update.DomainIdUpdateService;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -127,6 +129,12 @@ public class UpdateDatabase
 	public static void updateWithSpringInitialized() {
 		SpringAppInitializer.dtDiff("----- Updating database with Spring/JPA initialized [DBType="+Constants.DB_TYPE+"] -----");
 		updateInvoicePrices();
+
+		if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+			DomainIdUpdateService.updateExportDatDomainId();
+			DomainIdUpdateService.updatePerexGroupDomainId();
+		}
+
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
 
@@ -335,7 +343,7 @@ public class UpdateDatabase
 	}
 
 	private static Set<String> allreadyExecutedUpdates = null;
-	private static boolean isAllreadyUpdated(String note)
+	public static boolean isAllreadyUpdated(String note)
 	{
 		if (allreadyExecutedUpdates==null)
 		{
@@ -348,7 +356,7 @@ public class UpdateDatabase
 		return false;
 	}
 
-	private static void saveSuccessUpdate(String note)
+	public static void saveSuccessUpdate(String note)
 	{
 		String sqlUpdate = "INSERT INTO "+ConfDB.DB_TABLE_NAME+" (create_date, note) VALUES (?, ?)";
 		new SimpleQuery().execute(sqlUpdate, new Timestamp(Tools.getNow()), note);

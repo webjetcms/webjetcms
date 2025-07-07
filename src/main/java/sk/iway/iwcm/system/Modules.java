@@ -209,7 +209,7 @@ public class Modules
 
 		modVersions.put("fileIndexer", "EI;c21"); //WebJET Extended Search - 14900
 
-		modVersions.put("multiDomain", "EM;f17"); //WebJET Multi Domain - 30%ceny webjetu
+		modVersions.put("multiDomain", "EM;f17"); //WebJET Multi Domain - 25% ceny licencie
 
 		//standardne moduly
 		modVersions.put("menu.users", "PECDIOM;c01"); //standardny modul Pouzivatelia
