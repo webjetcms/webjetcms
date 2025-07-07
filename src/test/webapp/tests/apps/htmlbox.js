@@ -1,4 +1,4 @@
-Feature('apps.bloky');
+Feature('apps.htmlbox');
 
 Before(({ login }) => {
     login('admin');
@@ -38,6 +38,7 @@ Scenario('Blocks - Editing remote image should show a warning', ({ I, DT, DTE })
 
     I.say('Trying to edit the image');
     I.switchTo();
+    I.waitForElement(".cke_button.cke_button__floatimageedit.cke_button_off", 10);
     I.clickCss(".cke_button.cke_button__floatimageedit.cke_button_off");
 
     I.say('Verifying that a warning appears about the remote image');

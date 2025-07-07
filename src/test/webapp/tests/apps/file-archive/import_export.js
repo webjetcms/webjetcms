@@ -46,8 +46,9 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     I.see('Hlavný dokument : files/archiv/archive_export_import.pdf');
     I.see('Hlavný dokument : files/archiv/archive_replace.pdf');
     I.see('Naplanovaný hlavný dokument : files/archiv/files/archiv_insert_later/files/archiv/archive_file_test_fifth.pdf');
-    I.handleDownloads(`downloads/${exportedZipFileName}`);
-    I.clickCss("//div[@id='dialogCentralRow']//p//a[contains(@href, '.zip')]");
+    I.wait(3);
+    await I.handleDownloads(`downloads/${exportedZipFileName}`);
+    I.click(locate("div#dialogCentralRow a.download-archive-link").withText("/files/protected/archiv/file_archiv_export_aceintegration_"));
     I.wait(5);
 
     // 3. Vymazanie súboru a nahradenie

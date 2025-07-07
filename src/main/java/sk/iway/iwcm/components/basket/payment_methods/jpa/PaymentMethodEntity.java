@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.basket.payment_methods.jpa;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -10,6 +11,9 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -21,6 +25,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Table(name = "payment_methods")
 @Getter
 @Setter
+@EntityListeners(AuditEntityListener.class)
+@EntityListenersType(Adminlog.TYPE_BASKET_UPDATE)
 public class PaymentMethodEntity {
 
     @Id //We do not use this ID, it's here just because it must be here
