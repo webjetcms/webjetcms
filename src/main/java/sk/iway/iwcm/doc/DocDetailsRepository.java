@@ -98,4 +98,6 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
     public void updateAvailableAndDisabledAfterEnd(@Param("available")boolean available, @Param("disableAfterEnd")boolean disableAfterEnd, @Param("docId")Integer docId);
 
     List<DocDetails> findAllByDisableAfterEndTrue();
+
+    Page<DocDetails> findAllByPerexGroupsIsNotNull(Pageable pageable);
 }
