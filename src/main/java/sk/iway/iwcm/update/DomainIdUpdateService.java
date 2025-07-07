@@ -223,7 +223,7 @@ public class DomainIdUpdateService {
 		}
 
 		//Compare old and new ids, if there is change
-		if(comapreListAndArray(newPerexGroups, perexGroupIds) == false) {
+		if(compareListAndArray(newPerexGroups, perexGroupIds) == false) {
 			//Replace values and return TRUE, so change will be saved
 			ge.setPerexGroup(
 				String.join(",", newPerexGroups.stream()
@@ -270,7 +270,7 @@ public class DomainIdUpdateService {
 		}
 
 		//Compare old and new ids, if there is change
-		if(comapreListAndArray(newPerexGroups, doc.getPerexGroups()) == false) {
+		if(compareListAndArray(newPerexGroups, doc.getPerexGroups()) == false) {
 			//Replace values and return TRUE, so change will be saved
 			doc.setPerexGroups( newPerexGroups.toArray(new Integer[0]) );
 			return true;
@@ -403,7 +403,7 @@ public class DomainIdUpdateService {
 
 	 * @return true if both lists are equal, false otherwise.
 	 */
-	private static boolean comapreListAndArray(List<Integer> list, Integer[] array) {
+	private static boolean compareListAndArray(List<Integer> list, Integer[] array) {
 		if(list == null && array == null) return true;
 		else if(list == null || array == null) return false;
 
@@ -485,7 +485,7 @@ public class DomainIdUpdateService {
      * @param ddr
      * @return
      */
-    private static List<DocDetails> getNewsDocToUpdate(List<DocDetails> docs, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDetailsRepository ddr) {
+    protected static List<DocDetails> getNewsDocToUpdate(List<DocDetails> docs, Map<String, Integer> domainsMap, Map<String, PerexGroupsEntity> domainPerexGroupsMap, DocDetailsRepository ddr) {
 
         List<DocDetails> docsToUpdate = new ArrayList<>();
 
@@ -494,7 +494,7 @@ public class DomainIdUpdateService {
             // Regex na !INCLUDE(...)!
             Pattern includePattern = Pattern.compile("!INCLUDE\\((/components/news/news-velocity\\.jsp,[^)]*)\\)!");
             // Regex na perexGroup a perexGroupNot parametre
-            Pattern perexGroupPattern = Pattern.compile("(perexGroup(?:Not)?=\\&quot;)([0-9\\+]+)(\\&quot;)");
+            Pattern perexGroupPattern = Pattern.compile("(perexGroup(?:Not)?=)(?:\\&quot;)?([0-9\\+]+)(?:\\&quot;)?");
 
             for (DocDetails doc : docs) {
                 String html = doc.getData();
@@ -517,6 +517,8 @@ public class DomainIdUpdateService {
 				StringBuilder changes = new StringBuilder();
 
                 while (includeMatcher.find()) {
+					Logger.debug(DomainIdUpdateService.class, "Found include: " + includeMatcher.group(0));
+
                     String includeContent = includeMatcher.group(1);
                     Matcher paramMatcher = perexGroupPattern.matcher(includeContent);
                     StringBuffer newIncludeContent = new StringBuffer();
@@ -526,7 +528,10 @@ public class DomainIdUpdateService {
                     while (paramMatcher.find()) {
                         String paramName = paramMatcher.group(1); // perexGroup=" alebo perexGroupNot="
                         String ids = paramMatcher.group(2);       // napr. 645+1+2
-                        String quote = paramMatcher.group(3);
+
+						// Detect if &quot; was present (either before or after)
+						String quote = "";
+						if (paramMatcher.group(0).contains("&quot;")) quote = "&quot;";
 
                         // Rozdel hodnoty podľa +
                         int[] idsArray = Tools.getTokensInt(ids, "+");
@@ -546,7 +551,7 @@ public class DomainIdUpdateService {
                         }
 
                         // Nahrad hodnotu v parametri
-                        paramMatcher.appendReplacement(newIncludeContent, paramName + newIds + quote);
+                        paramMatcher.appendReplacement(newIncludeContent, paramName + quote + newIds + quote);
                         includeChanged = true;
                     }
                     paramMatcher.appendTail(newIncludeContent);
