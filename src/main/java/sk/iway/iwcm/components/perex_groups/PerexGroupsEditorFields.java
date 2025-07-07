@@ -26,10 +26,10 @@ public class PerexGroupsEditorFields extends BaseEditorFields {
         String availableGroupsString = perexGroupOriginal.getAvailableGroups();
         if(availableGroupsString != null && !availableGroupsString.isEmpty()) {
             GroupsDB groupsDB = GroupsDB.getInstance();
-            String availableGroupsIdArray[] = availableGroupsString.split(",");
+            int[] availableGroupsIdArray = Tools.getTokensInt(availableGroupsString, ",+.");
 
             for(int i = 0; i < availableGroupsIdArray.length; i++) {
-                GroupDetails tmp = groupsDB.getGroup(Integer.parseInt(availableGroupsIdArray[i]));
+                GroupDetails tmp = groupsDB.getGroup(availableGroupsIdArray[i]);
                 if (tmp != null) availableGroups.add(tmp);
             }
             perexGroupOriginal.setEditorFields(this);

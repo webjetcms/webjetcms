@@ -269,10 +269,10 @@ dependencies {
     testImplementation group: 'org.springframework', name: 'spring-test', version: "${springVersion}"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
+    testRuntimeOnly    'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testImplementation 'org.hamcrest:hamcrest:2.2'
     // https://mvnrepository.com/artifact/org.mockito/mockito-core
-    testImplementation 'org.mockito:mockito-core:5.15.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.mockito:mockito-core:5.18.0'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
     testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
     testImplementation "io.qameta.allure:allure-junit5"
@@ -305,6 +305,10 @@ test {
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', '/poolman-local.xml'
     jvmArgs = [ "-javaagent:${configurations.agent.singleFile}" ]
+    testLogging {
+        events "passed", "skipped", "failed", "standard_out", "standard_error"
+        showStandardStreams = true
+    }
 }
 
 java {
