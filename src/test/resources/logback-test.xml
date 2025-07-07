@@ -14,11 +14,11 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="ERROR">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
 
-    <logger level="DEBUG" name="sk.iway"/>
+    <logger level="INFO" name="sk.iway"/>
 
 </configuration>
