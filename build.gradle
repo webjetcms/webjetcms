@@ -166,7 +166,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
     implementation("com.github.hazendaz:displaytag:3.2.0")
 
-    implementation("org.eclipse.persistence:eclipselink:5.0.0-B07")
+    implementation("org.eclipse.persistence:eclipselink:5.0.0-B08")
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.10.1") //generate.jsp for pagebuilder, refactor to jackson
 
