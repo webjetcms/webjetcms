@@ -234,7 +234,7 @@ public class PerexGroupsService {
             //Logger.println(this,"UPDATE: " +groupName+ "  " +groupId);
 
             if (!found) {
-                // FIX - sivan, TMP fix aby bolo mozne pri edite perexGroups pridat availableGroups
+                // FIX - sivan, fix aby bolo mozne pri edite perexGroups pridat availableGroups
                 if(InitServlet.isTypeCloud() == false) {
                     if (entity.getEditorFields() != null) {
                         List<GroupDetails> availableGroupsList = entity.getEditorFields().getAvailableGroups();

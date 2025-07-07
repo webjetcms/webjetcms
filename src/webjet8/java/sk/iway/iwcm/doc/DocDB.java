@@ -4824,8 +4824,8 @@ public class DocDB extends DB
 			for (int groupId : groupIds) {
 				List<GroupDetails> parentGroups = groupsDB.getParentGroups(groupId);
 
-				//get all perex groups - TODO: cache items
-				List<PerexGroupBean> allPerexGroups = getPerexGroups(true);
+				//get all perex groups
+				List<PerexGroupBean> allPerexGroups = getPerexGroups();
 
 				if(allPerexGroups != null && allPerexGroups.size() > 0)
 				{
