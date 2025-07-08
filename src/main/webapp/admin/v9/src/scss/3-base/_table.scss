@@ -140,9 +140,10 @@ table.table {
             td {
                 font-size: 13px;
                 line-height: 18px;
-                padding: 8px 16px;
+                padding: 8px 6px;
                 white-space: nowrap;
                 overflow: hidden;
+                text-align: right;
             }
         }
     }
@@ -1542,6 +1543,10 @@ div.dt-scroll-body > table {
     //fix zobrazenia horizontalneho scrollbaru, pri niektorych rozliseniach a zaokruhleni vysla sirka vacsia ako parenta
     //ratanie total v _fnCalculateColumnWidths
     max-width: 100% !important;
+}
+div.dt-scroll-foot {
+    border-top: 2px solid #DDDFE6 !important;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .DTE_Field_Type_select div.filter-option-inner-inner {

@@ -1,9 +1,44 @@
 package sk.iway.iwcm.system.datatable;
 
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.persistence.Id;
+import javax.persistence.Query;
+import javax.persistence.Table;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.validation.Validator;
+
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
+import org.json.JSONObject;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -24,11 +59,24 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordBase;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -40,25 +88,6 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
-
-import javax.persistence.Id;
-import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.*;
-
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
 
 /**
  * Title        webjet8
@@ -163,7 +192,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		NullAwareBeanUtils.copyProperties(original, obj);
 		processToEntity(obj, ProcessItemAction.EDIT);
 
-		JpaEntityManager entityManager = JpaTools.getEclipseLinkEntityManager(original.getClass());
+		JpaEntityManager entityManager = JpaTools.getSpringEntityManager(original.getClass());
 		ReadAllQuery raq = new ReadAllQuery(original.getClass());
 		ExpressionBuilder builder = new ExpressionBuilder();
 
@@ -1984,5 +2013,58 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	public void setRequest(HttpServletRequest request) {
 		this.request = request;
+	}
+
+	/**
+	 * Return SUM values of columns belonging to entity declared in parameter columns[].
+	 * <p>
+	 * If column do not exist for this entity, OR column is not subclass of Number, then empty string for column is returned.
+	 * @param entity
+	 * @param columns string arraya of column names to sum (aka entity field names), they must be numerical types (subclass of Number)
+	 * @return
+	 */
+	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+	@GetMapping("/sumAll")
+	public String getSum(T entity, @RequestParam(value = "columns[]") String[] columns) {
+
+		clearThreadData();
+
+		JSONObject output = new JSONObject();
+
+		//Get class
+		try {
+			Class<?> clazz = entity.getClass();
+			String tableName;
+
+			if (clazz.isAnnotationPresent(Table.class)) {
+				tableName = clazz.getAnnotation(Table.class).name();
+			} else {
+				//Cant call SimpleQuery without table name
+				return output.toString();
+			}
+
+			String postfix = "";
+			if(clazz.getDeclaredField("domainId") != null) {
+				postfix = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
+			}
+
+			for(String column : columns) {
+				//Try get column/field
+				Field field = clazz.getDeclaredField(column);
+
+				if (Number.class.isAssignableFrom(field.getType())) {
+					//Ok, its numerical type
+					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + column + ") FROM " + tableName + "" + postfix));
+				} else {
+					//Field is not numerical type, set empty string
+					output.put(column, "");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return output.toString();
 	}
 }
