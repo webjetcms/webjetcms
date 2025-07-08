@@ -38,7 +38,6 @@ V konf. premennej `deepl_model_type` môžete zvoliť, ktorý model `DeepL` prek
 
 - `latency_optimized`
   - používa „klasické“ prekladové modely s nižšou latenciou, ktoré podporujú **všetky** jazykové páry
-  - toto je prednastavená hodnota prekladača `DeepL`
 - `quality_optimized`
   - používa modely „novej generácie“ pre preklady s vyššou kvalitou, ale latencia je väčšia
   - podporovaná je iba **časť** jazykových párov (iba určitá podmnožina)

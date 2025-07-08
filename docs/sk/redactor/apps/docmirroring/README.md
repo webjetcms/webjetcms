@@ -98,7 +98,7 @@ Ak je nastavená konf. premenná `syncGroupAndWebpageTitle` na hodnotu `true` (�
 
 ## Zrušenie zrkadlenia
 
-Zrušenie zrkadlenia vyžaduje aby ste prepojenie odstránili z konfiguračnej premennej ```structureMirroringConfig```. Lenže v databáze ostane ešte nastavená hodnota `sync_id`, ktorá prepojovala priečinky/stránky v rôznych jazykových mutáciách. Tieto hodnoty musia byť odstránené, inak priečinky/stránky ostanú naďalej prepojené/synchronizované. K tomuto účelu potrebuje využiť [Zrušenie synchronizácie](../clone-structure/README.md#zrušenie-synchronizácie).
+Zrušenie zrkadlenia vyžaduje aby ste prepojenie odstránili z konfiguračnej premennej `structureMirroringConfig`. Lenže v databáze ostane ešte nastavená hodnota `sync_id`, ktorá prepojovala priečinky/stránky v rôznych jazykových mutáciách. Tieto hodnoty musia byť odstránené, inak priečinky/stránky ostanú naďalej prepojené/synchronizované. K tomuto účelu potrebuje využiť [Zrušenie zrkadlenia](../clone-structure/README.md#zrušenie-zrkadlenia).
 
 ## Technické informácie
 

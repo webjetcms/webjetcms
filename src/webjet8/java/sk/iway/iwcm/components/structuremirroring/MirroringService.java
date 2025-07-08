@@ -94,7 +94,7 @@ public class MirroringService {
          }
       }
 
-      //Check if they are enabled for mirror
+      //Check if they are enabled for mirroring
       List<GroupDetails> filtered = new ArrayList<>();
       for(GroupDetails group : mapped) {
          if (MirroringService.isEnabled(group.getGroupId())) filtered.add(group);
@@ -128,6 +128,7 @@ public class MirroringService {
    }
 
    private static int[] getMirrorRootIds(int groupId, String[] lines) {
+      //accept only lines that contain wanted id and prevent duplicates
       Set<Integer> toReturn = new HashSet<>();
 
       for (String line : lines) {
@@ -139,7 +140,7 @@ public class MirroringService {
          int[] mapping = Tools.getTokensInt(ids, ",");
          for (int id : mapping) {
             if (id > 0 && id == groupId) {
-               //nasli sme riadok, v ktorom je zelane id -> push-ni ich do set-u
+               //nasli sme riadok, v ktorom je zelane id -> push-ni ich do set-u (groupId moze byt aj v inych riadkoch)
                for(int foundId : mapping) {
                   toReturn.add( foundId );
                }
@@ -283,20 +284,26 @@ public class MirroringService {
     * @param rootGroupId - ID of root group
     */
    public static void clearSyncId(int rootGroupId) {
-      GroupsDB groupsDB = GroupsDB.getInstance();
+      if(rootGroupId == 0) {
+         //Clear ALL sync_id's
+         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0");
+         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0");
+      } else {
+         GroupsDB groupsDB = GroupsDB.getInstance();
 
-      List<GroupDetails> groups = groupsDB.getGroupsTree(rootGroupId, true, true);
-      //convert group.getGroupId to comma separated String
-      StringBuilder groupIds = new StringBuilder();
-      for(GroupDetails group : groups) {
-          if(groupIds.isEmpty()==false) groupIds.append(",");
-          groupIds.append(String.valueOf(group.getGroupId()));
-      }
+         List<GroupDetails> groups = groupsDB.getGroupsTree(rootGroupId, true, true);
+         //convert group.getGroupId to comma separated String
+         StringBuilder groupIds = new StringBuilder();
+         for(GroupDetails group : groups) {
+            if(groupIds.isEmpty()==false) groupIds.append(",");
+            groupIds.append(String.valueOf(group.getGroupId()));
+         }
 
-      if (Tools.isNotEmpty(groupIds)) {
-         //update database
-         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
-         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+         if (Tools.isNotEmpty(groupIds)) {
+            //update database
+            (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+            (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+         }
       }
    }
 }

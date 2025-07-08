@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.json.JSONObject;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
@@ -150,15 +148,12 @@ public class TranslationService {
         return text;
     }
 
-    public static JSONObject getTranslationInfo() {
+    public static TranslationEngineInfo getTranslationInfo() {
         TranslationEngine translationEngine = getEngineInstance();
 
         if(translationEngine == null) return null;
 
-        JSONObject object = new JSONObject();
-        object.put("engineName", translationEngine.engineName());
-        object.put("numberOfFreeCharacters", translationEngine.numberOfFreeCharacters());
-
-        return object;
+        TranslationEngineInfo info = new TranslationEngineInfo(translationEngine.engineName(), translationEngine.numberOfFreeCharacters());
+        return info;
     }
 }

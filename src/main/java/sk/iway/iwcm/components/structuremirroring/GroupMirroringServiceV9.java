@@ -54,7 +54,7 @@ public class GroupMirroringServiceV9 {
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(group.getParentGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
-            //there is new mapping group created in allready synced groups, we must create missing one
+            //find groups which are not synced yet
             for (GroupDetails mappedGroup : mappedGroupsList) {
                boolean containGroup = false;
                for (GroupDetails syncedGroup : syncedGroups) {

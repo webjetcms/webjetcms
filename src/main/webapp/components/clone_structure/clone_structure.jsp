@@ -2,7 +2,7 @@
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.i18n.*" %>
 
 <%@page import="sk.iway.iwcm.system.translation.TranslationService"%>
-<%@page import="org.json.JSONObject"%>
+<%@page import="sk.iway.iwcm.system.translation.TranslationEngineInfo"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -19,15 +19,15 @@
 	request.setAttribute("dialogTitle", prop.getText("admin.clone.dialogTitle"));
 	request.setAttribute("dialogDesc", prop.getText("admin.clone.dialogDesc")+ ".");
 
-	JSONObject translationInfo = TranslationService.getTranslationInfo();
+	TranslationEngineInfo translationInfo = TranslationService.getTranslationInfo();
 	String engineName;
 	Long freeCharacters;
 	if(translationInfo == null) {
 		engineName = "---";
 		freeCharacters = -1L;
 	} else {
-		engineName = translationInfo.getString("engineName");
-		freeCharacters = translationInfo.getLong("numberOfFreeCharacters");
+		engineName = translationInfo.getEngineName();
+		freeCharacters = translationInfo.getRemainingCharacters();
 	}
 %>
 

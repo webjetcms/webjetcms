@@ -42,10 +42,10 @@ Nakoľko klonovanie využíva [Automatický preklad](../../../admin/setup/transl
 
 ![](clone_structure_no_set_translator.png)
 
-## Zrušenie synchronizácie
+## Zrušenie zrkadlenia
 
-Okno ponúka možnosť zrušiť synchronizáciu zvoleného priečinka. Stačí a v dolnej časti okna zvolíte priečinok a stlačíte tlačidlo <button class="btn btn-sm btn-outline-secondary" type="button">Zrušiť synchronizáciu</button>. Následne sa pre zvolený priečinok, všetky podpriečinky ako ich stránky vymaže hodnota `sync_id`, ktorá zabezpečovala synchronizáciu.
+Okno ponúka možnosť [zrušiť zrkadlenie](../docmirroring/README.md) zvoleného priečinka. Stačí a v dolnej časti okna zvolíte priečinok a stlačíte tlačidlo <button class="btn btn-sm btn-outline-secondary" type="button">Zrušiť zrkadlenie</button>. Následne sa pre zvolený priečinok, všetky podpriečinky ako ich stránky vymaže hodnota `sync_id`, ktorá zabezpečovala zrkadlenie.
 
 ![](clone_structure_undo_sync.png)
 
-!>**Upozornenie:** počas akcie rušenia synchronizácie sa nebude dať spustiť klonovanie, nakoľko tieto akcie by spolu kolidovali.
+!>**Upozornenie:** počas akcie rušenia zrkadlenia sa nebude dať spustiť klonovanie, nakoľko tieto akcie by spolu kolidovali.
