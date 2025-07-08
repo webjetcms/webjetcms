@@ -20,7 +20,7 @@ var srcGroupName_noUrlTranslate = "clone-src-noUrlTranslate-autotest-";
 var srcGroupChildName_noUrlTranslate = "Pod-priečinok";
 var srcGroupChildName_virtualPath = "ppriecinok";
 var destGroupName_noUrlTranslate = "clone-dest-noUrlTranslate-autotest-";
-var destGroupChildName_noUrlTranslate = "Sub-folder";
+var destGroupChildName_noUrlTranslate = "Subfolder";
 
 Before(({ I, login }) => {
     login('admin');
@@ -213,11 +213,11 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT, App
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
 
 
-        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "This is a perex.");
+        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "This is the lead.");
 
         I.click( locate("a.jstree-anchor").withText("Subfolder") );
 
-        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "This is also a perex.");
+        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "This is also a lead paragraph.");
 
         I.say("Check folder optional fields");
         I.jstreeNavigate([destGroupName, srcGroupChildName]);
@@ -273,7 +273,7 @@ Scenario("Structure cloning with translate - NO URL TRANSLATE", async ({ I, DTE,
         I.waitForText("POD-PRIEČINOK", 10);
 
         I.amOnPage("/" + destGroupName_noUrlTranslate.toLowerCase() + "/"+srcGroupChildName_virtualPath+"/");
-        I.waitForText("SUB-FOLDER", 10);
+        I.waitForText("SUBFOLDER", 10);
 });
 
 Scenario('delete data', async ({ I, DT, DTE }) => {

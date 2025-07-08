@@ -19,6 +19,8 @@
 
 - Povolené zobrazenie stránok obsahujúcich `404.html` v URL adrese zo systémových priečinkov, aby vám takáto technická stránka neprekážala medzi štandardnými web stránkami (#57657-8).
 - Značky - rozdelené zobrazenie značiek podľa aktuálne zvolenej domény, aby ste mohli mať značky zvlášť pre každú doménu vo WebJETe (#57837).
+- Klonovanie štruktúry - pri klonovaní sa odteraz zobrazuje informácia, ktorý nakonfigurovaný prekladať sa využíva (ak je nakonfigurovaný) a koľko voľných znakov na preklad ostáva (#57881).
+- Zrkadlenie štruktúry - pridaná možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať zrkadlenie stránok (#57881).
 
 ### Používateľské rozhranie
 
@@ -39,6 +41,11 @@
 ### Bezpečnosť
 
 - Opravená možná zraniteľnosť v Safari pri špeciálnej URL adrese smerujúcej na archív súborov v kombinácii s peknou 404 stránkou (#57657-8).
+
+### Iné menšie zmeny
+
+- Prekladač - pri prekladači `DeepL` sa zlepšilo spracovanie vrátených chybových hlášok, pre presnejšie identifikovanie problému (#57881).
+- Prekladač - pridaná podpora pre implementáciu viacerých prekladačov a ich automatické spracovanie/využitie (#57881).
 
 ### Oprava chýb
 
@@ -217,10 +224,6 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
 - Prieskumník - rýchlejšie načítanie a nižšie zaťaženie servera znížením počtu súborov/požiadaviek na server (#56953).
-- Klonovanie štruktúry - pri klonovaní sa odteraz zobrazuje informácia, ktorý nakonfigurovaný prekladať sa využíva (ak je nakonfigurovaný) a koľko voľných znakov na preklad ostáva (#57881).
-- Prekladač - pri prekladači `DeepL` sa zlepšilo spracovanie vrátených chybových hlášok, pre presnejšie identifikovanie problému (#57881).
-- Prekladač - pridaná podpora pre implementáciu viacerých prekladačov a ich automatické spracovanie/využitie (#57881).
-- Zrkadlenie štruktúry - pridaná možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu (#57881).
 
 ### Oprava chýb
 
