@@ -32,7 +32,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
 - [ ] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
 - [ ] Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru.
-- [ ] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach.
+- [x] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach (#57837).
 - [ ] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na `true`.
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
 - [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
@@ -68,6 +68,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach.
 - [ ] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html
 - [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
+- [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
 
 ## 2024
 
