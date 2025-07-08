@@ -18,11 +18,11 @@ public class TestTranslationService extends BaseWebjetTest {
         DBPool.getInstance();
         DBPool.jpaInitialize();
     }
-    
+
     @Test
     public void checkDeeplTranslation() {
-        String inputTextSk = "Toto je test : !INCLUDE(pes.jsp, ja, som, najlepší)! , tento test je povinný. Aj tento by mal fungovať : !INCLUDE(neviem.jsp, skúsim, to, znovu)! ale neviem to zaručiť.";
-        String requiredOutputEn = "This is a test : !INCLUDE(pes.jsp, ja, som, najlepší)! , this test is mandatory. Also this one should work : !INCLUDE(neviem.jsp, skúsim, to, znovu)! but I can't guarantee it.";
+        String inputTextSk = "Toto je test: !INCLUDE(pes.jsp, ja, som, najlepší)!, tento test je povinný. Aj tento by mal fungovať: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, ale neviem to zaručiť.";
+        String requiredOutputEn = "This is a test: !INCLUDE(pes.jsp, ja, som, najlepší)!, this test is mandatory. This one should also work: !INCLUDE(neviem.jsp, skúsim, to, znovu)!, but I cannot guarantee it.";
 
         // Init Translate from SK to EN
         TranslationService translator = new TranslationService("SK", "EN");
