@@ -75,8 +75,10 @@ public class GroupMirroringServiceV9 {
                //ak nie je pre tento adresar ziadne mapovanie, skonci, asi sa jedna o adresar mimo nastaveneho mapovania
                if (mappedGroupsList.size()<1) return;
 
+               TranslationService translationService = new TranslationService(null, null);
                for (GroupDetails mappedGroup : mappedGroupsList) {
-                  String translatedGroupName = TranslationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));
+
+                  String translatedGroupName = translationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));
                   GroupDetails existing = groupsDB.getGroup(translatedGroupName, mappedGroup.getGroupId());
 
                   if (existing!=null) {

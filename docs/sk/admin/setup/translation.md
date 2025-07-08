@@ -18,7 +18,7 @@ kde jazyk je dvoj písmenový kód jazyka.
 
 ## Výber prekladača
 
-WebJET podporuje možnosť pridania (konfiguráie) ďalších ľubovoľných prekladačov.
+WebJET podporuje možnosť pridania (konfigurácie) ďalších ľubovoľných prekladačov.
 
 Novo pridaný prekladač musí dediť z abstraktnej triedy `TranslationEngine` a musí byť zadefinovaný v konf. premennej `translationEngineClasses`, napríklad ako `sk.iway.iwcm.system.translation.DeepL`. V konf. premennej môžete zadefinovať viacero prekladačov, stačí ich oddeliť čiarkou.
 

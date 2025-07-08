@@ -39,7 +39,7 @@ Scenario("Structure clone screenshots", async ({ I, Document })  => {
     Document.screenshot("/redactor/apps/clone-structure/clone_structure_undo_sync.png", 750, 600);
 });
 
-//COPYED from test, only added screen shot
+//COPIED from test, only added screen shot
 
 function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
     I.waitForElement(DT.btn.tree_add_button, 10);

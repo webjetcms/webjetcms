@@ -34,6 +34,28 @@ public class TranslationService {
         this.translationEngine = getEngineInstance();
     }
 
+    /**
+     * Translate text from one language to another using the configured translation engine and languages set in constructor.
+     * @param text
+     * @return
+     */
+    public String translate(String text) {
+        //Use set translation engine by constructor
+        return translate(text, fromLanguage, toLanguage, this.translationEngine);
+    }
+
+    /**
+     * Translate text from one language to another using the configured translation engine.
+     * @param text
+     * @param fromLanguage
+     * @param toLanguage
+     * @return
+     */
+    public String translate(String text, String fromLanguage, String toLanguage) {
+        //Use set translation engine by constructor
+        return translate(text, fromLanguage, toLanguage, this.translationEngine);
+    }
+
     private static TranslationEngine getEngineInstance() {
         String[] engineClasses = Constants.getArray("translationEngineClasses");
         if(engineClasses == null || engineClasses.length == 0) return null;
@@ -66,18 +88,7 @@ public class TranslationService {
         return null;
     }
 
-
-    public String translate(String text) {
-        //Use set translation engine by constructor
-        return translate(text, fromLanguage, toLanguage, this.translationEngine);
-    }
-
-    public static String translate(String text, String fromLanguage, String toLanguage) {
-        //This is static method, get translation engine
-        return translate(text, fromLanguage, toLanguage, getEngineInstance());
-    }
-
-    public static String translate(String text, String fromLanguage, String toLanguage, TranslationEngine translationEngine) {
+    private static String translate(String text, String fromLanguage, String toLanguage, TranslationEngine translationEngine) {
         try {
             //Handle cz / cs language shortcut
             if ("cz".equalsIgnoreCase(toLanguage)) toLanguage = "cs";

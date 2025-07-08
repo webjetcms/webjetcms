@@ -175,7 +175,7 @@
 		</table>
 	</form>
 
-	<div id="tranlator-info" class="custom-section">
+	<div id="translator-info" class="custom-section">
 		<%if(translationInfo != null) {%>
 			<h2 style="color: #00be9f;"><iwcm:text key="components.translation_engine.found"/></h2>
 			<table>

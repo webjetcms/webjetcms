@@ -100,11 +100,11 @@ public class DeepL extends TranslationEngine {
                         else break;
                     } else if(responseException.getStatusCode() == 456) {
                         //quota exceeded
-                        Logger.error(DeepL.class, "Unable to translete '" + translationApiUrl + "', monthly quota of characters exceeded");
+                        Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', monthly quota of characters exceeded");
                         return text; //return original text, no translation available
                     } else if(responseException.getStatusCode() == 500) {
                         //internal server error
-                        Logger.error(DeepL.class, "Unable to translete '" + translationApiUrl + "', temporal error in DeepL services");
+                        Logger.error(DeepL.class, "Unable to translate '" + translationApiUrl + "', temporal error in DeepL services");
                         return text; //return original text, no translation available
                     }
                 }

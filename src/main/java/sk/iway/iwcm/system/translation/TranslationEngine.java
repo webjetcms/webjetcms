@@ -27,7 +27,7 @@ public abstract class TranslationEngine {
             // Add jitter: +/- 0-1000 ms
             exponentialDelay = exponentialDelay + random.nextInt(1000);
 
-            Logger.debug(DeepL.class, "To many requests error. Attempt number : " + (attempt + 1) + ", waiting for for : " + exponentialDelay + " ms");
+            Logger.debug(TranslationEngine.class, "Too many requests error. Attempt number : " + (attempt + 1) + ", waiting for for : " + exponentialDelay + " ms");
             Thread.sleep(exponentialDelay);
         } catch (Exception ex2) {
             sk.iway.iwcm.Logger.error(ex2);
@@ -35,12 +35,12 @@ public abstract class TranslationEngine {
         }
 
         // Waiting done
-        Logger.debug(DeepL.class, "Waiting done");
+        Logger.debug(TranslationEngine.class, "Waiting done");
         // Increment attempt count
         attempt++;
 
         if(attempt >= MAX_RETRIES) {
-            Logger.error(DeepL.class, "Unable to call API again, reached maximum number of attempts");
+            Logger.error(TranslationEngine.class, "Unable to call API again, reached maximum number of attempts");
             return false;
         }
 

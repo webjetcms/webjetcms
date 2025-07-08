@@ -10,7 +10,7 @@ V rámci WebJET CMS zrkadlenia štruktúry aktivuje nastavením konfiguračnej p
 
 Formát zápisu je nasledovný:
 
-```
+```txt
 groupId-sk,groupId-en,groupId-cz:poznamka (napr meno domeny)
 ineGroupId1,ineGroupId2:poznamka inej domeny
 ```
@@ -98,7 +98,7 @@ Ak je nastavená konf. premenná `syncGroupAndWebpageTitle` na hodnotu `true` (�
 
 ## Zrušenie zrkadlenia
 
-Zrušenie zrkadlenia vyžaduje aby ste prepojenie odstránili z konfiguračnej premennej ```structureMirroringConfig```. Lenže v databáze ostane ešte nastavená hodnota `sync_id`, ktorá prepojovala priečinky/stránky v rôznych jazykových mutáciách. Tieto hodnoty musia byť dostránené, inak priečinky/stránky ostanú naďalej prepojené/synchronizované. K tomuto účelu potrebuje využiť [Zrušenie synchronizácie](../clone-structure/README.md#zrušenie-synchronizácie).
+Zrušenie zrkadlenia vyžaduje aby ste prepojenie odstránili z konfiguračnej premennej ```structureMirroringConfig```. Lenže v databáze ostane ešte nastavená hodnota `sync_id`, ktorá prepojovala priečinky/stránky v rôznych jazykových mutáciách. Tieto hodnoty musia byť odstránené, inak priečinky/stránky ostanú naďalej prepojené/synchronizované. K tomuto účelu potrebuje využiť [Zrušenie synchronizácie](../clone-structure/README.md#zrušenie-synchronizácie).
 
 ## Technické informácie
 
