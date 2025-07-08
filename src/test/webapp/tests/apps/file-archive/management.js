@@ -37,6 +37,8 @@ Scenario('File Archive Product & Category Management Test', ({ I, DT, DTE }) => 
 
     // 4. Overiť, že sa kategória aj produkt zmenili
     I.say("Phase 4 - Verify that both the category and product have changed");
+    I.openNewTab();
+    I.closeOtherTabs();
     I.amOnPage(SL.fileArchive);
     DT.filterContains("virtualFileName", productCategoryTestVirtualFileName);
     I.clickCss("button.buttons-select-all");
