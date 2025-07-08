@@ -41,6 +41,10 @@
                     data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
                     data.fixed_searchRootDir = $('#rootDir').val();
                     data.fixed_statType = getStatType();
+                },
+                summary: {
+                    mode: "all",
+                    columns: ["visits", "sessions", "uniqueUsers"]
                 }
             });
 
