@@ -77,7 +77,6 @@ public class GroupMirroringServiceV9 {
 
                TranslationService translationService = new TranslationService(null, null);
                for (GroupDetails mappedGroup : mappedGroupsList) {
-
                   String translatedGroupName = translationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));
                   GroupDetails existing = groupsDB.getGroup(translatedGroupName, mappedGroup.getGroupId());
 
