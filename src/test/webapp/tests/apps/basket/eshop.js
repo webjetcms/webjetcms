@@ -31,7 +31,7 @@ Scenario("Nastav sposoby platby", ({ I, DTE }) => {
   I.click(locate("a").withText("Dobierka"));
   DTE.waitForEditor("paymentMethodsDataTable");
   DTE.seeInField("paymentMethodName", "Dobierka");
-  DTE.fillField("fieldA", "1,50");
+  DTE.fillField("fieldA", "1.50");
   DTE.fillField("fieldB", "20");
   I.waitForElement("#DTE_Field_fieldC");
   DTE.fillQuill("fieldC", "Dakujeme za platbu dobierkou");
@@ -46,7 +46,7 @@ Scenario("Nastav sposoby platby", ({ I, DTE }) => {
   DTE.fillField("fieldB", GOPAY_SECRET);
   DTE.fillField("fieldC", GOPAY_API_URL);
   DTE.fillField("fieldD", GOPAY_GO_ID);
-  DTE.fillField("fieldE", "0,4");
+  DTE.fillField("fieldE", "0.4");
   DTE.fillField("fieldF", "8");
   DTE.fillField("fieldG", "Platba GoPay-om");
   I.waitForElement("#DTE_Field_fieldH");

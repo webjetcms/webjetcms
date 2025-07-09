@@ -81,6 +81,8 @@ async function editDoc(I, DT, DTE, title) {
     I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
     I.click(DT.btn.edit_button);
     DTE.waitForEditor();
+    //wait for ckeditor to load
+    I.wait(2);
 }
 
 async function checkBodyEN(I, DT, DTE, Apps, title, values, perex) {
