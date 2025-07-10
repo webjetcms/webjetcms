@@ -5,6 +5,16 @@
 Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7 (#57793).
 
 - URL adresy - pre URL adresy Spring zaviedol presné zhody, ak REST služba definuje URL adresu s lomkou na konci, musí byť takto použitá. Je rozdiel v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
+- V Spring DATA repozitároch pre `IN/NOT IN query` je potrebné pridať `@Query`, inak nebude korektne SQL vytvorené, príklad:
+
+```java
+  //old
+  Page<DocDetails> findAllByGroupIdIn(int[] groupIds, Pageable pageable);
+
+  //new - add @Query and @Param to correctly create JPQL query for Eclipselink
+  @Query("SELECT d FROM DocDetails d WHERE d.groupId IN :groupIds")
+  Page<DocDetails> findAllByGroupIdIn(@Param("groupIds") int[] groupIds, Pageable pageable);
+```
 
 ## 2025-SNAPSHOT
 
