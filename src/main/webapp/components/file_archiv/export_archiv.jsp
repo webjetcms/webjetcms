@@ -196,7 +196,7 @@
         Logger.println(null, "export_archiv.jsp deleting " + tmpDir.getVirtualPath());
         FileTools.deleteDirTree(tmpDir);
         out.println("<p>&nbsp;</p><p><span style=\"color: green;\"><strong>"+prop2.getText("components.file_archiv.export_main_files_download")+
-                    "</strong></span>&nbsp;<a href=\""+zipArchiv.getVirtualPath()+"\">"+zipArchiv.getVirtualPath()+"</a>");
+                    "</strong></span>&nbsp;<a class=\"download-archive-link\" href=\""+zipArchiv.getVirtualPath()+"\">"+zipArchiv.getVirtualPath()+"</a>");
         out.println("<br/><br/><input class=\"button100\" type=\"button\" value=\""+prop2.getText("components.file_archiv.export_main_files_delete_btn")+"\" onclick=\"Delete();\" /> </p>");
         %>
         <form id="deleteZipArchive" action="<%=PathFilter.getOrigPath(request) %>" method="POST">
