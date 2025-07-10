@@ -259,8 +259,8 @@ public class DataTableColumn {
         }
 
         if(field.isAnnotationPresent(Lob.class) && (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL)) {
-            // By default, fields with anottation @Lob MUST NOT BE SORTED on Oracale and MsSql DB's 
-            // Why - @Lob represents text/ntext field's, and ordering of this field's is not supported on mentioned DB's
+            // By default, fields with annotation @Lob MUST NOT BE SORTED on Oracle and MsSql DBs
+            // Why? @Lob represents text/ntext fields, and ordering of these fields is not supported on mentioned DBs
             this.orderable = false;
         } else {
             boolean[] _orderable = annotation.orderable();

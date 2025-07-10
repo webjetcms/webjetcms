@@ -110,7 +110,6 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     @DataTableColumn(inputType=DataTableColumnType.TEXTAREA, tab="scriptBody", title="components.insert_script.body", className = "textarea-code show-html")
     String scriptBody;
 
-
     @Column(name="save_date")
     @Temporal(TemporalType.TIMESTAMP)
     Date saveDate;
