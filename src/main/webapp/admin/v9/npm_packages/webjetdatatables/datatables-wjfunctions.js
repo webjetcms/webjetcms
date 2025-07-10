@@ -607,7 +607,6 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
 
     var input = $(button).parents(".input-group").find("input.filter-input,select.filter-input");
     var index = parseInt($(button).parents("th,div.dt-extfilter").attr("data-dt-column"));
-    var regExval = $(button).parents(".input-group").find("option:selected").val();
 
     if (isNaN(index)) return;
 
@@ -675,7 +674,9 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
 
                 val = $(input).val();
 
-                //console.log("input=", input);
+                var regExval = $(input).parents(".input-group").find("option:selected").val();
+
+                //console.log("input=", input, " val=", val, " regExval=", regExval);
 
                 //pre lokalne vyhladavanie je potrebne do hladania vlozit TEXT optionu, nie hodnotu
                 if (DATA.serverSide === false && typeof input !== "undefined" && typeof input.prop("tagName") !== "undefined" && "SELECT" === input.prop("tagName").toUpperCase()) {

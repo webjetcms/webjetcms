@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.Lob;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -192,6 +193,7 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @Column(name = "editable_pages")
     private String editablePages;
 
+    @Lob
     @Column(name = "writable_folders")
     private String writableFolders;
 

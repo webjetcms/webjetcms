@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
@@ -131,9 +132,11 @@ public class BasketInvoiceBean implements Serializable
 	@Column(name="field_f")
 	private String fieldF;
 
+	@Lob
 	@Column(name="html_code")
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlCode;
+
 	@Column(name="currency")
 	private String currency;
 

@@ -12,6 +12,7 @@ import java.util.StringTokenizer;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -629,9 +630,10 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 
 	//Old DocumentAdvancedFields aka advancedFields
+	@Lob
 	@Column(name = "html_head")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title="editor.tab.html_header",
-	tab = "template", visible = false, sortAfter = "tempFieldDDocId"
+		tab = "template", visible = false, sortAfter = "tempFieldDDocId"
 	)
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlHead = "";
@@ -662,6 +664,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	)
 	private Date eventDateDate;
 
+	@Lob
 	@Column(name = "html_data")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = "wrap", title="editor.tab.perex",
 		tab = "perex", visible = false, sortAfter = "eventDateDate"
@@ -698,6 +701,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@Transient
 	private String docLink;
 
+	@Lob
 	@Column(name = "data")
 	@DataTableColumn(inputType = DataTableColumnType.WYSIWYG, title="components.news.template_html",
 		hidden = true, tab="content"
@@ -705,6 +709,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String data;
 
+	@Lob
 	@Column(name = "data_asc")
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String dataAsc;
