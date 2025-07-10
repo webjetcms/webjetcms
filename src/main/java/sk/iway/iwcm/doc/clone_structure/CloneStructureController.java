@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.structuremirroring.MirroringService;
 /*
  * Replace for "/admin/clone.do" old struts link
  */
@@ -36,6 +37,16 @@ public class CloneStructureController {
             Constants.setBoolean("syncGroupAndWebpageTitle", originalValue);
         }
 
+        return null;
+    }
+
+    @PostMapping("/apps/clone_structure/admin/cancel_sync")
+    public String cancelSync(@RequestParam int rootGroupId) {
+        try {
+            MirroringService.clearSyncId(rootGroupId);
+        } catch (Exception ex) {
+            return ex.getMessage();
+        }
         return null;
     }
 

@@ -47,27 +47,49 @@ public class GroupMirroringServiceV9 {
             group.setSyncId(PkeyGenerator.getNextValue("structuremirroring"));
          }
       } else if (type == WebjetEventType.AFTER_SAVE) {
+
          if (group.getSyncId()>1) {
             //najdi k tomu mirror verzie
             List<GroupDetails> syncedGroups = getGroupsBySyncId(group.getSyncId(), group.getGroupId());
+
+            if (syncedGroups.size()>0) {
+               //overenie zmeny parent adresara - toto musi byt skor ako test pomocou mappedGroupsList
+               GroupDetails parentGroup = groupsDB.getGroup(group.getParentGroupId());
+               if (parentGroup != null) {
+                  List<GroupDetails> syncedParentGroups = getGroupsBySyncId(parentGroup.getSyncId(), parentGroup.getGroupId());
+                  //ok mame zoznam parent adresarov, over ci su mapovane spravne
+                  for (GroupDetails syncedGroup : syncedGroups) {
+                     GroupDetails syncedCorrectParentGroup = MirroringService.selectMappedGroup(syncedGroup, syncedParentGroups);
+                     if (syncedCorrectParentGroup != null) {
+                        //porovnaj IDecko voci aktualnemu parentu
+                        if (syncedGroup.getParentGroupId()!=syncedCorrectParentGroup.getGroupId()) {
+                           Logger.debug(GroupMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectParentGroup="+syncedCorrectParentGroup.toString());
+                           GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());
+                           groupToSave.setParentGroupId(syncedCorrectParentGroup.getGroupId());
+                           groupsDB.setGroup(groupToSave, false);
+                           MirroringService.forceReloadTree();
+                        }
+                     }
+                  }
+               }
+            }
+
             List<GroupDetails> mappedGroupsList = MirroringService.getMappingForGroup(group.getParentGroupId());
             List<GroupDetails> mappedGroupsListNotExisting = new ArrayList<>();
 
-            if (mappedGroupsList.size()>syncedGroups.size()) {
-               //there is new mapping group created in allready synced groups, we must create missing one
-               for (GroupDetails mappedGroup : mappedGroupsList) {
-                  boolean containGroup = false;
-                  for (GroupDetails syncedGroup : syncedGroups) {
-                     if (mappedGroup.getGroupId()==syncedGroup.getParentGroupId()) {
-                        //ok, this group is allready synced
-                        containGroup = true;
-                        break;
-                     }
+            //find groups which are not synced yet
+            for (GroupDetails mappedGroup : mappedGroupsList) {
+               boolean containGroup = false;
+               for (GroupDetails syncedGroup : syncedGroups) {
+                  if (mappedGroup.getGroupId()==syncedGroup.getParentGroupId()) {
+                     //ok, this group is allready synced
+                     containGroup = true;
+                     break;
                   }
-                  if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
                }
-               mappedGroupsList = mappedGroupsListNotExisting;
+               if (containGroup==false) mappedGroupsListNotExisting.add(mappedGroup);
             }
+            mappedGroupsList = mappedGroupsListNotExisting;
 
             if (syncedGroups.isEmpty() || mappedGroupsListNotExisting.size()>0) {
                //este neexistuje, musime vytvorit novu grupu (kopiu)
@@ -76,8 +98,9 @@ public class GroupMirroringServiceV9 {
                //ak nie je pre tento adresar ziadne mapovanie, skonci, asi sa jedna o adresar mimo nastaveneho mapovania
                if (mappedGroupsList.size()<1) return;
 
+               TranslationService translationService = new TranslationService(null, null);
                for (GroupDetails mappedGroup : mappedGroupsList) {
-                  String translatedGroupName = TranslationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));
+                  String translatedGroupName = translationService.translate(group.getGroupName(), getLanguage(group) , getLanguage(mappedGroup));
                   GroupDetails existing = groupsDB.getGroup(translatedGroupName, mappedGroup.getGroupId());
 
                   if (existing!=null) {
@@ -146,29 +169,6 @@ public class GroupMirroringServiceV9 {
             }
 
             if (syncedGroups.size()>0) {
-               //adresare uz existuju, over, ze tam je vsetko dobre nastavene
-               //POZOR na zacyklenie
-
-               //overenie zmeny parent adresara
-               GroupDetails parentGroup = groupsDB.getGroup(group.getParentGroupId());
-               if (parentGroup != null) {
-                  List<GroupDetails> syncedParentGroups = getGroupsBySyncId(parentGroup.getSyncId(), parentGroup.getGroupId());
-                  //ok mame zoznam parent adresarov, over ci su mapovane spravne
-                  for (GroupDetails syncedGroup : syncedGroups) {
-                     GroupDetails syncedCorrectParentGroup = MirroringService.selectMappedGroup(syncedGroup, syncedParentGroups);
-                     if (syncedCorrectParentGroup != null) {
-                        //porovnaj IDecko voci aktualnemu parentu
-                        if (syncedGroup.getParentGroupId()!=syncedCorrectParentGroup.getGroupId()) {
-                           Logger.debug(GroupMirroringServiceV9.class, "NESEDI PARENT GROUP, syncedGroup="+syncedGroup.toString()+" syncedCorrectParentGroup="+syncedCorrectParentGroup.toString());
-                           GroupDetails groupToSave = groupsDB.getGroup(syncedGroup.getGroupId());
-                           groupToSave.setParentGroupId(syncedCorrectParentGroup.getGroupId());
-                           groupsDB.setGroup(groupToSave, false);
-                           MirroringService.forceReloadTree();
-                        }
-                     }
-                  }
-               }
-
                //overenie sort priority
                for (GroupDetails syncedGroup : syncedGroups) {
                   if (syncedGroup.getSortPriority()!=group.getSortPriority()) {
