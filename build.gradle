@@ -149,7 +149,7 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.26.1")
 
     // https://mvnrepository.com/artifact/com.zaxxer/HikariCP
-    implementation 'com.zaxxer:HikariCP:5.1.0'
+    implementation 'com.zaxxer:HikariCP:6.3.0'
 
     implementation("org.apache.commons:commons-fileupload2-jakarta:2.0.0-M1")
     // https://mvnrepository.com/artifact/org.apache.commons/commons-fileupload2-jakarta-servlet6
@@ -166,7 +166,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.hazendaz/displaytag
     implementation("com.github.hazendaz:displaytag:3.2.0")
 
-    implementation("org.eclipse.persistence:eclipselink:5.0.0-B07")
+    implementation("org.eclipse.persistence:eclipselink:5.0.0-B08")
     implementation("org.freemarker:freemarker:2.3.34")
     implementation("com.google.code.gson:gson:2.10.1") //generate.jsp for pagebuilder, refactor to jackson
 
@@ -189,7 +189,7 @@ dependencies {
     implementation("org.apache.lucene:lucene-highlighter:3.6.2")
     implementation("org.apache.lucene:lucene-memory:3.6.2")
     implementation("org.apache.lucene:lucene-analyzers:3.6.2")
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.4")
     implementation("com.drewnoakes:metadata-extractor:2.19.0")
     implementation("com.oracle.database.jdbc:ojdbc8:19.8.0.0")
     //implementation("org.mcavallo:opencloud:0.3")
