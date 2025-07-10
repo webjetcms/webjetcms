@@ -215,11 +215,11 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT, App
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
 
 
-        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "This is the lead.");
+        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "This is the lead");
 
         I.click( locate("a.jstree-anchor").withText("Subfolder") );
 
-        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "This is also a lead paragraph.");
+        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "This is also a lead");
 
         I.say("Check folder optional fields");
         I.jstreeNavigate([destGroupName, srcGroupChildName]);
