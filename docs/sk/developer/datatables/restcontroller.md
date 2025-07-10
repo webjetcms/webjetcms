@@ -234,7 +234,7 @@ v implementácii môžete využiť už existujúce API, napr.:
 @Override
 public Page<DomainRedirectBean> getAllItems(Pageable pageable) {
     List<DomainRedirectBean> listedBeans = DomainRedirectDB.getAllRedirects();
-    return new PageImpl<>(listedBeans);
+    return new DatatablePageImpl<>(listedBeans);
 }
 
 @Override

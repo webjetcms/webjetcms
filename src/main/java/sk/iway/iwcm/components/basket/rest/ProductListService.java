@@ -81,7 +81,8 @@ public class ProductListService {
 
         String priceField = Constants.getString("basketPriceField");
 
-        Specification<DocDetails> spec = Specification.where(hasGroupIdIn(groupIds))
+        //TODO: JAKARTA overit ze funguje
+        Specification<DocDetails> spec = hasGroupIdIn(groupIds)
                                                       .and(fieldStartsWithDigit(priceField));
         Page<DocDetails> page = options.getDocDetailsRepository().findAll(spec, options.getPageable());
 
