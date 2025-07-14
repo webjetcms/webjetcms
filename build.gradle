@@ -44,7 +44,7 @@ ext {
     mapstructVersion = "1.6.1";
     springVersion = "7.0.+";
     springDataVersion = "4.0.+";
-    springSecurityVersion = "6.4.+";
+    springSecurityVersion = "6.5.+";
     allureVersion = "2.24.0";
     aspectJVersion = '1.9.19';
 }
