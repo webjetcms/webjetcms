@@ -35,7 +35,7 @@ function verifyNavbarHtml(unescapedName, I) {
     I.see("subpage", "div.navbar-test sub");
 }
 
-Scenario('zobrazenie navbaru - HTML escaping @current', ({ I, DTE, Document }) => {
+Scenario('zobrazenie navbaru - HTML escaping', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
 
     var unescapedName = "Test<sub>HTML</sub> v názve";
@@ -87,6 +87,6 @@ Scenario('zobrazenie navbaru - HTML escaping @current', ({ I, DTE, Document }) =
     I.seeInSource("<li class=\"open\"><a href=\"/test-stavov/testhtml-nazve/\">"+unescapedName+"</a></li>");
 });
 
-Scenario('zobrazenie navbaru - HTML escaping - reset @current', ({ I, DTE, Document }) => {
+Scenario('zobrazenie navbaru - HTML escaping - reset', ({ I, DTE, Document }) => {
     Document.setConfigValue("navbarDefaultType", "normal");
 });
