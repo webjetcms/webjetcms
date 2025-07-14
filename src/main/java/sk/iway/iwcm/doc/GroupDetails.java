@@ -838,6 +838,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 		if (urlDirName == null || urlDirName.length()<1)
 		{
 			urlDirName = getNavbarNameNoAparam();
+			if (urlDirName != null && urlDirName.contains("<") && urlDirName.contains(">")) urlDirName = Tools.html2text(Tools.replace(urlDirName, "&#47;", "/"));
 			urlDirName = DB.internationalToEnglish(urlDirName).toLowerCase();
 			urlDirName = DocTools.removeCharsDir(urlDirName, true).toLowerCase();
 

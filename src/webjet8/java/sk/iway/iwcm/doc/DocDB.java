@@ -2859,6 +2859,7 @@ public class DocDB extends DB
 			if (Tools.isEmpty(htmlFileName))
 			{
 				htmlFileName = doc.getNavbar();
+				if (htmlFileName.contains("<") && htmlFileName.contains(">")) htmlFileName = Tools.html2text(htmlFileName);
 			}
 			StringBuilder fileName = new StringBuilder(groupDiskPath);
 			if (group == null)

@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.calendar.jpa;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 
@@ -127,6 +128,7 @@ public class CalendarEventsEntity extends CalendarEventsBasic {
     @Size(max = 255)
     private String fieldE;
 
+    @Lob
     @Column(name = "description")
     @DataTableColumn(
         inputType = DataTableColumnType.WYSIWYG,
@@ -148,6 +150,7 @@ public class CalendarEventsEntity extends CalendarEventsBasic {
     )
     private Integer notifyHoursBefore;
 
+    @Lob
     @Column(name = "notify_emails")
     private String notifyEmails;
 
@@ -161,6 +164,7 @@ public class CalendarEventsEntity extends CalendarEventsBasic {
     @Size(max = 255)
     private String notifySender;
 
+    @Lob
     @Column(name = "notify_introtext")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
