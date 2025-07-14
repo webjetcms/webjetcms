@@ -1130,7 +1130,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 	{
 		if (navbar == null || navbar.length() < 1)
 		{
-			return (title);
+			String navbarFromTitle = title;
+			if (navbarFromTitle.contains("<") && navbarFromTitle.contains(">")) navbarFromTitle = Tools.html2text(navbarFromTitle);
+			return navbarFromTitle;
 		}
 		else
 		{

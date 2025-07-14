@@ -51,10 +51,6 @@ public class PerexGroupsEntity implements Serializable {
     @NotBlank
     private String perexGroupName;
 
-    @Lob
-    @Column(name = "related_pages")
-    private String relatedPages;
-
     @Size(max = 255)
     @Column(name = "available_groups")
     private String availableGroups;

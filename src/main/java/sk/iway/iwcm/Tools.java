@@ -30,6 +30,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -2896,6 +2897,15 @@ public class Tools
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");
 		if (text.contains("|*")) text = Tools.replace(text, "|*", ">");
 		if (text.contains("&amp;#47;")) text = Tools.replace(text, "&amp;#47;", "&#47;");
+		if (text.contains("&lt;&#47;") || text.contains("<&#47;")) {
+			//enable HTML mode
+			text = Tools.replace(text, "&lt;&#47;", "</");
+			text = Tools.replace(text, "<&#47;", "</");
+			text = Tools.replace(text, "&lt;", "<");
+			text = Tools.replace(text, "&gt;", ">");
+
+			text = AllowSafeHtmlAttributeConverter.sanitize(text);
+		}
 
 		return  text;
 	}
