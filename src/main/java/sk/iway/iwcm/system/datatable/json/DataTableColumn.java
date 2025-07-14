@@ -13,6 +13,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
+import javax.persistence.Lob;
 import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
@@ -257,12 +258,18 @@ public class DataTableColumn {
             editor.setDef(defaultValue);
         }
 
-        boolean[] _orderable = annotation.orderable();
-        if (_orderable.length > 0) {
-            this.orderable = _orderable[0];
-        } else if (Boolean.FALSE.equals(this.filter)) {
-            //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
+        if((Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL) && field.isAnnotationPresent(Lob.class)) {
+            // By default, fields with annotation @Lob MUST NOT BE SORTED on Oracle and MsSql DBs
+            // Why? @Lob represents text/ntext fields, and ordering of these fields is not supported on mentioned DBs
             this.orderable = false;
+        } else {
+            boolean[] _orderable = annotation.orderable();
+            if (_orderable.length > 0) {
+                this.orderable = _orderable[0];
+            } else if (Boolean.FALSE.equals(this.filter)) {
+                //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
+                this.orderable = false;
+            }
         }
     }
 

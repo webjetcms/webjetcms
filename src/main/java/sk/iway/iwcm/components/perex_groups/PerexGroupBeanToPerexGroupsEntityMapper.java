@@ -16,7 +16,6 @@ public interface PerexGroupBeanToPerexGroupsEntityMapper {
     PerexGroupBeanToPerexGroupsEntityMapper INSTANCE = Mappers.getMapper(PerexGroupBeanToPerexGroupsEntityMapper.class);
 
     @Mapping(source = "perexGroupId", target = "id", qualifiedByName = "intToLong")
-    @Mapping(source = "relatedPages", target = "relatedPages", qualifiedByName = "tokensToString")
     PerexGroupsEntity perexGroupBeanToPerexGroupsEntity(PerexGroupBean perexGroupBean);
     List<PerexGroupsEntity> perexGroupBeanListToPerexGroupsEntityList(List<PerexGroupBean> perexGroupBeanList);
 

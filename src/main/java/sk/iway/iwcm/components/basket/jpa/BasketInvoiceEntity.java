@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
@@ -79,6 +80,7 @@ public class BasketInvoiceEntity implements Serializable {
     )
 	private Integer statusId;
 
+	@Lob
 	@Column(name="user_note")
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
