@@ -823,7 +823,7 @@ public class DocTools {
             //prenos include parametra z editor_component.jsp
             if ("include".equals(name) && path.startsWith("/apps/") && path.contains("/admin/")) continue;
 
-            //allow XSS on /admin/rest/ and param name start with search - to search including special chars
+            //allow HTML code on /admin/rest/ on param name start with search - to search including special chars, eg. in admin search for specific HTML code
             if (path.startsWith("/admin/rest/") && name.startsWith("search")) continue;
 
            if (testXssStrictGet(name))
