@@ -39,8 +39,8 @@ Scenario('type-quill-htmlview', async ({ I, DT, DTE }) => {
     htmlFromEditor = htmlFromEditor.replace(/\s+/g, ' ').trim();
     htmlFromEditor = htmlFromEditor.replace(/> </g, '><');
 
-    console.log("htmlEdit=", htmlFromEditor);
-    console.log("htmlCode=", htmlCode);
+    //console.log("htmlEdit=", htmlFromEditor);
+    //console.log("htmlCode=", htmlCode);
     //check that the HTML view is correct
     I.assertEqual(htmlFromEditor, htmlCode, "HTML view of quill editor is not correct");
 

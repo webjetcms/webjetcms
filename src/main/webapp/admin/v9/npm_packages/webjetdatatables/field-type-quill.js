@@ -46,8 +46,8 @@ export function typeQuill() {
         htmlCode = htmlCode.replace(/<\/div>/gi, "</p>");
 
         //nahrad inline styl za tagy em a strong
-        htmlCode = htmlCode.replace(/<span[^<>]+style="font-style:italic">([^<>]+)<\/span>/gi, '<em>$&</em>');
-        htmlCode = htmlCode.replace(/<span[^<>]+style="font-weight:bold">([^<>]+)<\/span>/gi, '<strong>$&</strong>');
+        htmlCode = htmlCode.replace(/<span[^<>]+style="font-style:italic">([^<>]+)<\/span>/gi, '<em>$1</em>');
+        htmlCode = htmlCode.replace(/<span[^<>]+style="font-weight:bold">([^<>]+)<\/span>/gi, '<strong>$1</strong>');
 
         //FIX: ak do style elementu pridame aj color, tak quill zachova cely span element (inak ho zmaze)
         //pridame to ako prve, ak by tam bolo dalsie color:nieco
