@@ -52,6 +52,7 @@ export function typeQuill() {
         //FIX: ak do style elementu pridame aj color, tak quill zachova cely span element (inak ho zmaze)
         //pridame to ako prve, ak by tam bolo dalsie color:nieco
         htmlCode = htmlCode.replace(/ style="/gi, ' style="color:inherit;');
+        htmlCode = htmlCode.replace(/color:inherit;color:inherit;/gi, 'color:inherit;');
 
         let $html = $("<section>"+htmlCode+"</section>");
         //append data-list to LI elements depending on OL or UL parent
@@ -93,6 +94,8 @@ export function typeQuill() {
     window.quillToHtmlFormat = function(htmlCode) {
         //remove <span class="ql-ui" contenteditable="false"> from the HTML code
         htmlCode = htmlCode.replace(/<span class="ql-ui" contenteditable="false"><\/span>/gi, '');
+        //remove color:inherit; from the HTML code
+        htmlCode = htmlCode.replace(/color:inherit;/gi, '');
 
         //replace <ol><li data-list="bullet"> with <ul>
         let $html = $("<section>"+htmlCode+"</section>");

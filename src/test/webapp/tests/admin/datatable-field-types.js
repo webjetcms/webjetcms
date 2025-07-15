@@ -12,7 +12,7 @@ Before(({ I, login }) => {
  */
 Scenario('type-quill-htmlview', async ({ I, DT, DTE }) => {
 
-    let htmlCode = `<p>Specs:</p><ol><li>0-100 km/h in ~2.1 s</li><li>Up to 652 km range</li><li>Tri-motor all-wheel drive</li></ol><p>Features:</p><ul class="features"><li>Autopilot &amp; FSD Capability</li><li>17-inch Cinematic Touchscreen</li><li>Premium Interior</li></ul>`;
+    let htmlCode = `<p><strong>Specs:</strong></p><ol><li>0-100 km/h in ~2.1 s</li><li>Up to <strong>652</strong> km range</li><li>Tri-motor all-wheel drive</li></ol><p><em>Features:</em></p><ul class="features"><li>Autopilot &amp; FSD Capability</li><li>17-inch <span style="color:rgb( 161 , 0 , 0 )">Cinematic</span> Touchscreen</li><li>Premium Interior</li></ul>`;
 
     I.amOnPage("/apps/banner/admin/?id=7053");
     DTE.waitForEditor("bannerDataTable");
@@ -39,8 +39,8 @@ Scenario('type-quill-htmlview', async ({ I, DT, DTE }) => {
     htmlFromEditor = htmlFromEditor.replace(/\s+/g, ' ').trim();
     htmlFromEditor = htmlFromEditor.replace(/> </g, '><');
 
-    //console.log("htmlEdit=", htmlFromEditor);
-    //console.log("htmlCode=", htmlCode);
+    console.log("htmlEdit=", htmlFromEditor);
+    console.log("htmlCode=", htmlCode);
     //check that the HTML view is correct
     I.assertEqual(htmlFromEditor, htmlCode, "HTML view of quill editor is not correct");
 
