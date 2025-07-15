@@ -33,6 +33,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     pageContext.setAttribute("subtitle", subtitle);
 
     pageContext.setAttribute("lng", lng);
+
+    request.setAttribute("googleOAuthEnabled", Constants.getBoolean("googleOAuthEnabled"));
 %><!DOCTYPE html>
 <html>
 <head>
@@ -169,6 +171,16 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
                         <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
                     </div>
+                    <c:if test="${googleOAuthEnabled}">
+                        <div class="form-group">
+                            <button type="button" name="google-login-submit" id="google-login-submit" class="btn btn-primary" onclick="window.location.href='<%=
+                                "https://accounts.google.com/o/oauth2/v2/auth"
+                                + "?client_id=" + Constants.getString("googleClientId")
+                                + "&redirect_uri=" + Constants.getString("googleRedirectUri")
+                                + "&response_type=code&scope=openid%20email%20profile&access_type=offline"
+                            %>'"><iwcm:text key="button.googleLogin"/><i class="ti ti-arrow-right"></i></button>
+                        </div>
+                    </c:if>
                 </div>
             </form:form>
 
