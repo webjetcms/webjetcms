@@ -61,6 +61,20 @@ Zároveň ale nemusí byť verzia `YEAR.0.x` najbezpečnejšia. Ak je potrebné 
 
 Platí teda, že `YEAR.0.x` je **najstabilnejšia** z pohľadu zmien a `YEAR.0-SNAPSHOT` je **najbezpečnejšia** z pohľadu zraniteľností.
 
+## Zmeny pri prechode na Tomcat 9.0.104+
+
+V [Tomcat od verzie 9.0.104](https://tomcat.apache.org/tomcat-9.0-doc/config/http.html) je zmenená kontrola počtu parametrov pri `multipart` HTTP požiadavke. Je preto potrebné nastaviť/zvýšiť parameter `maxPartCount` na `<Connector` elemente s súbore `tomcat/conf/server.xml` na hodnotu minimálne 100, príklad:
+
+```xml
+    <Connector port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               redirectPort="8443"
+               maxPartCount="1000"
+               URIEncoding="UTF-8"
+               useBodyEncodingForURI="true" relaxedQueryChars="^{}[]|&quot;"
+    />
+```
+
 ## Zmeny pri prechode na 2025.0-SNAPSHOT
 
 Verzia `2025.0-SNAPSHOT` je dostupná cez [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502?version=2025.0-SNAPSHOT), je preto potrebné doplniť konfiguráciu do vášho `build.gradle` súboru:

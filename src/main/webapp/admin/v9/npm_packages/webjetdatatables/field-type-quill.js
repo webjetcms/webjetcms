@@ -31,6 +31,109 @@ export function typeQuill() {
 
     ];
 
+    /**
+     * Update HTML to quill supported HTML tags, e.g.:
+     * ol-li.bullet -> ul.li
+     * @param {String} html
+     */
+    window.quillFromHtmlFormat = function(htmlCode) {
+        //console.log("QUILL SET, htmlCode=", htmlCode);
+        if (htmlCode == null || htmlCode=="") htmlCode = "<p><br/></p>";
+        if (htmlCode.indexOf("<p")==-1 && htmlCode.indexOf("<h")==-1 && htmlCode.indexOf("<div")==-1) htmlCode = "<p>"+htmlCode+"</p>";
+
+        //aktualna verzia pracuje s P elementami namiesto DIV elementov, musime upravit povodny zapis
+        htmlCode = htmlCode.replace(/<div>/gi, "<p>");
+        htmlCode = htmlCode.replace(/<\/div>/gi, "</p>");
+
+        //nahrad inline styl za tagy em a strong
+        htmlCode = htmlCode.replace(/<span[^<>]+style="font-style:italic">([^<>]+)<\/span>/gi, '<em>$1</em>');
+        htmlCode = htmlCode.replace(/<span[^<>]+style="font-weight:bold">([^<>]+)<\/span>/gi, '<strong>$1</strong>');
+
+        //FIX: ak do style elementu pridame aj color, tak quill zachova cely span element (inak ho zmaze)
+        //pridame to ako prve, ak by tam bolo dalsie color:nieco
+        htmlCode = htmlCode.replace(/ style="/gi, ' style="color:inherit;');
+        htmlCode = htmlCode.replace(/color:inherit;color:inherit;/gi, 'color:inherit;');
+
+        let $html = $("<section>"+htmlCode+"</section>");
+        //append data-list to LI elements depending on OL or UL parent
+        $html.find("li").each(function () {
+            let $li = $(this);
+            if ($li.parent("ol").length > 0) {
+                $li.attr("data-list", "ordered");
+            } else if ($li.parent("ul").length > 0) {
+                $li.attr("data-list", "bullet");
+            }
+        });
+
+        //replace UL with OL if it has data-list="ordered"
+        $html.find("ul").each(function () {
+            let $ul = $(this);
+
+            //save all attributes from ul to ol
+            let ulAttrs = $ul[0].attributes;
+            let $ol = $("<ol>");
+            for (let i = 0; i < ulAttrs.length; i++) {
+                let attr = ulAttrs[i];
+                $ol.attr(attr.name, attr.value);
+            }
+
+            $ul.replaceWith(function () {
+                return $ol.append($(this).contents());
+            });
+        });
+
+        htmlCode = $html.html();
+        return htmlCode;
+    }
+
+    /**
+     * Update HTML from quill to standard HTML tags, e.g.:
+     * ul.li -> ol-li.bullet
+     * @param {String} html
+     */
+    window.quillToHtmlFormat = function(htmlCode) {
+        //remove <span class="ql-ui" contenteditable="false"> from the HTML code
+        htmlCode = htmlCode.replace(/<span class="ql-ui" contenteditable="false"><\/span>/gi, '');
+        //remove color:inherit; from the HTML code
+        htmlCode = htmlCode.replace(/color:inherit;/gi, '');
+
+        //replace <ol><li data-list="bullet"> with <ul>
+        let $html = $("<section>"+htmlCode+"</section>");
+        //console.log("htmlCode before ul fix=", $html.html());
+        $html.find("li").each(function () {
+            let $li = $(this);
+            if ($li.data("list") === "bullet") {
+                let $ol = $li.parent("ol");
+                if ($ol.length > 0) {
+                    //replace ol with ul
+
+                    //save all attributes from ol to ul
+                    let olAttrs = $ol[0].attributes;
+                    let $ul = $("<ul>");
+                    for (let i = 0; i < olAttrs.length; i++) {
+                        let attr = olAttrs[i];
+                        $ul.attr(attr.name, attr.value);
+                    }
+
+                    $ol.replaceWith(function () {
+                        return $ul.append($(this).contents());
+                    });
+                }
+            }
+        });
+
+        //remove data-list attribute from li elements
+        $html.find("li").each(function () {
+            let $li = $(this);
+            if ($li.data("list")) {
+                $li.removeAttr("data-list");
+            }
+        });
+
+        htmlCode = $html.html();
+        return htmlCode;
+    }
+
     return {
         create: function (conf) {
             //console.log("Creating quill editor");
@@ -114,26 +217,12 @@ export function typeQuill() {
             var htmlCode = conf._quill.root.innerHTML;
             //prazdny text povazuj za prazdny, aby nam fungovalo required field
             if ("<p><br></p>"==htmlCode || ""==conf._quill.getText()) htmlCode = "";
-            return htmlCode;
+
+            return window.quillToHtmlFormat(htmlCode);
         },
 
         set: function (conf, val) {
-            var htmlCode = val;
-            //console.log("QUILL SET, htmlCode=", htmlCode);
-            if (htmlCode == null || htmlCode=="") htmlCode = "<p><br/></p>";
-            if (htmlCode.indexOf("<p")==-1 && htmlCode.indexOf("<h")==-1 && htmlCode.indexOf("<div")==-1) htmlCode = "<p>"+htmlCode+"</p>";
-
-            //aktualna verzia pracuje s P elementami namiesto DIV elementov, musime upravit povodny zapis
-            htmlCode = htmlCode.replace(/<div>/gi, "<p>");
-            htmlCode = htmlCode.replace(/<\/div>/gi, "</p>");
-
-            //nahrad inline styl za tagy em a strong
-            htmlCode = htmlCode.replace(/<span[^<>]+style="font-style:italic">([^<>]+)<\/span>/gi, '<em>$&</em>');
-            htmlCode = htmlCode.replace(/<span[^<>]+style="font-weight:bold">([^<>]+)<\/span>/gi, '<strong>$&</strong>');
-
-            //FIX: ak do style elementu pridame aj color, tak quill zachova cely span element (inak ho zmaze)
-            //pridame to ako prve, ak by tam bolo dalsie color:nieco
-            htmlCode = htmlCode.replace(/ style="/gi, ' style="color:inherit;');
+            var htmlCode = quillFromHtmlFormat(val);
 
             //console.log("QUILL SET, FIXED htmlCode=", htmlCode);
             conf._quill.root.innerHTML = htmlCode;
