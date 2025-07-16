@@ -4,7 +4,7 @@
 		$("[id^=DTE_Field_emoticon_]:checked").each(function () {
 			field = $(this).val();
 		});
-		return `<img src='/components/emoticon/admin-styles/${field}.png' border='0'>`;
+		return `<img src='/components/emoticon/${field}.gif' class='emoticon' alt='emoticon: ${field}' />`;
 	}
 
 	function appAfterInit(response, datatable) {

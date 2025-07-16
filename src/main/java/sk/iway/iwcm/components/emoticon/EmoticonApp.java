@@ -22,7 +22,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 public class EmoticonApp extends WebjetComponentAbstract {
-        @DataTableColumn(
+
+    @DataTableColumn(
         inputType = DataTableColumnType.IMAGE_RADIO,
         title = "&nbsp;",
         tab = "basic",
@@ -33,7 +34,8 @@ public class EmoticonApp extends WebjetComponentAbstract {
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-        options.put("emoticon", DatatableTools.getImageRadioOptions("/components/emoticon/admin-styles/"));
+        options.put("emoticon", DatatableTools.getImageRadioOptions("/components/emoticon/"));
         return options;
     }
+
 }
