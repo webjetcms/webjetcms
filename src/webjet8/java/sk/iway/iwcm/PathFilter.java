@@ -73,6 +73,12 @@ public class PathFilter implements Filter
 
 	private static Map<String, DynamicForward> dynamicForwards;
 
+	private static final ThreadLocal<HttpServletRequest> REQUEST_HOLDER = new ThreadLocal<>();
+
+	public static HttpServletRequest getRequest() {
+		return REQUEST_HOLDER.get();
+	}
+
 	/**
 	 * Inicializacia servletu
 	 */
@@ -201,6 +207,8 @@ public class PathFilter implements Filter
 
 		try
 		{
+			REQUEST_HOLDER.set(req);
+
 			if (passwordProtected==null) reloadProtectedDirs();
 
 			//System.out.println("PathFilter.doFilter: "+servletRequest.getClass());
@@ -1280,6 +1288,10 @@ public class PathFilter implements Filter
 			{
 				sk.iway.iwcm.Logger.error(ex);
 			}
+		}
+		finally
+		{
+			REQUEST_HOLDER.remove();
 		}
 
 		if (timer != null)

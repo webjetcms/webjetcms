@@ -15,7 +15,6 @@ import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,9 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @WebServlet("/XhrFileUpload")
 public class XhrFileUploadServlet extends HttpServlet
 {
+	@Serial
 	private static final long serialVersionUID = 1L;
-	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<>();
-
 	private static final String ALLOWED_EXTENSIONS = "doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4";
 
 	@Override
@@ -158,7 +156,7 @@ public class XhrFileUploadServlet extends HttpServlet
 					xhrFileUploadResponse.putName(name);
 					xhrFileUploadResponse.putKey(random);
 
-					temporary.put(random, new PathHolder(name, tempfile.getAbsolutePath(), Tools.getNow()));
+					UploadedFilesStore.put(random, new PathHolder(name, tempfile.getAbsolutePath(), Tools.getNow()));
 				} catch (IOException ioe) {
 					sk.iway.iwcm.Logger.error(ioe);
 				}
@@ -209,12 +207,12 @@ public class XhrFileUploadServlet extends HttpServlet
 	@SuppressWarnings("java:S1130")
 	public static String moveFile(String fileKey, String dir) throws IOException
 	{
-		if (temporary.containsKey(fileKey))
+		if (UploadedFilesStore.containsKey(fileKey))
 		{
 		    IwcmFile dirFile = new IwcmFile(dir);
 		    String dirVirtualPath = dirFile.getVirtualPath();
 
-			String originalFilename = temporary.get(fileKey).getFileName();
+			String originalFilename = UploadedFilesStore.get(fileKey).getFileName();
 
 			if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files"))
             {
@@ -223,7 +221,7 @@ public class XhrFileUploadServlet extends HttpServlet
             }
 
 			String filename = originalFilename;
-			IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());
+			IwcmFile file = new IwcmFile(UploadedFilesStore.get(fileKey).getTempPath());
 			if (!file.exists()) return null;
 			IwcmFile dest = new IwcmFile(dir, originalFilename);
 			int counter = 1;
@@ -247,7 +245,7 @@ public class XhrFileUploadServlet extends HttpServlet
     public static String moveAndReplaceFile(String fileKey, String dir, String fileNameParam) throws IOException
     {
         String fileName = fileNameParam;
-        if (temporary.containsKey(fileKey))
+        if (UploadedFilesStore.containsKey(fileKey))
         {
             IwcmFile dirFile = new IwcmFile(dir);
             String dirVirtualPath = dirFile.getVirtualPath();
@@ -258,7 +256,7 @@ public class XhrFileUploadServlet extends HttpServlet
                 fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();
             }
 
-            IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());
+            IwcmFile file = new IwcmFile(UploadedFilesStore.get(fileKey).getTempPath());
             if (!file.exists()) return null;
             IwcmFile dest = new IwcmFile(dir + fileName);
 
@@ -276,10 +274,10 @@ public class XhrFileUploadServlet extends HttpServlet
     }
 
 	public static boolean delete(String hash) {
-		if (temporary.containsKey(hash))
+		if (UploadedFilesStore.containsKey(hash))
 		{
 
-			IwcmFile file = new IwcmFile(temporary.get(hash).getTempPath());
+			IwcmFile file = new IwcmFile(UploadedFilesStore.get(hash).getTempPath());
 			return file.delete();
 		}
 
@@ -293,9 +291,9 @@ public class XhrFileUploadServlet extends HttpServlet
 	 */
 	public static String getTempFileName(String fileKey)
 	{
-		if (temporary.containsKey(fileKey))
+		if (UploadedFilesStore.containsKey(fileKey))
 		{
-			return temporary.get(fileKey).getFileName();
+			return UploadedFilesStore.get(fileKey).getFileName();
 		}
 		return null;
 	}
@@ -307,96 +305,12 @@ public class XhrFileUploadServlet extends HttpServlet
 	 */
 	public static String getTempFilePath(String fileKey)
 	{
-		if (temporary.containsKey(fileKey))
+		if (UploadedFilesStore.containsKey(fileKey))
 		{
-			return temporary.get(fileKey).getTempPath();
+			return UploadedFilesStore.get(fileKey).getTempPath();
 		}
 		return null;
 	}
 
 
-	public static class PartialUploadHolder implements Serializable
-	{
-		private static final long serialVersionUID = 1L;
-		private int chunks;
-		private String name;
-
-		private List<String> partPaths;
-
-		public PartialUploadHolder(int chunks, String name)
-		{
-			this.chunks = chunks;
-			this.name = name;
-			partPaths = new ArrayList<>(chunks);
-		}
-
-		public int getChunks()
-		{
-			return chunks;
-		}
-
-		public void setChunks(int chunks)
-		{
-			this.chunks = chunks;
-		}
-
-		public String getName()
-		{
-			return name;
-		}
-
-		public void setName(String name)
-		{
-			this.name = name;
-		}
-
-		public List<String> getPartPaths()
-		{
-			return partPaths;
-		}
-
-		public void setPartPaths(List<String> partPaths)
-		{
-			this.partPaths = partPaths;
-		}
-	}
-
-
-	public static class PathHolder
-	{
-		private String fileName;
-		private String tempPath;
-		private long timestamp;
-
-		public PathHolder(String fileName, String tempPath, long timestamp)
-		{
-			this.fileName = fileName;
-			this.timestamp = timestamp;
-			this.tempPath = tempPath;
-		}
-		public String getFileName()
-		{
-			return fileName;
-		}
-		public void setFileName(String fileName)
-		{
-			this.fileName = fileName;
-		}
-		public long getTimestamp()
-		{
-			return timestamp;
-		}
-		public void setTimestamp(long timestamp)
-		{
-			this.timestamp = timestamp;
-		}
-		public String getTempPath()
-		{
-			return tempPath;
-		}
-		public void setTempPath(String tempPath)
-		{
-			this.tempPath = tempPath;
-		}
-	}
 }
