@@ -426,7 +426,7 @@ export function renderImage(td, type, rowData, row) {
         return prepareForSearch(td);
     } else {
 
-        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".svg"))) {
+        if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg"))) {
             return  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> " + renderTd(row, td, rowData) + "</a>";
         }
 
@@ -488,5 +488,5 @@ export function renderJson(td, type, rowData, row) {
 
 export function renderAttrs(td, type, rowData, row) {
     //render attrs to datatable view, normally it's hidden
-    return renderTd(row, fullPath, rowData);
+    return renderTd(row, td, rowData);
 }

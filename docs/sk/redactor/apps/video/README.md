@@ -5,6 +5,7 @@ Pridajte na svoju stránku pútavé video obsahy z YouTube, Vimeo, Facebook aleb
 ## Nastavenia aplikácie
 
 ### Zdroj videa
+
 V tejto časti je možné vybrať z dostupných zdrojov videa:
 
 - YouTube
@@ -14,18 +15,71 @@ V tejto časti je možné vybrať z dostupných zdrojov videa:
 
 ![](editor-source.png)
 
-### Parametre
+### YouTube
 
-V tejto časti možno nastaviť:
+YouTube video parametre:
 
-- Adresa stránky - pri odkazoch na YouTube/Vimeo/Facebook stačí jednoducho vložiť odkaz na web stránku s videom, aplikácia podľa kódu v URL adrese vloží potrebný prehrávač.
-- Fixná/Responzívna veľkosť
-- Zarovnanie videa
-- Šírka
+- **Adresa stránky YouTube**, stačí jednoducho vložiť odkaz na web stránku s videom
+- Fixná veľkosť (v bodoch)
+  - Šírka
+  - Výška
+- Responzívna veľkosť (v percentách)
+  - Šírka (%)
+- Prehrať video po načítaní stránky
+- Zobraziť názov videa
+- Zobraziť YouTube logo
+- Zobraziť možnosť prechodu na plnú obrazovku
+- Zobraziť ovládacie ikony
+- Zobraziť podobné videá po skončení prehrávania
 
-A ostatné nastavenia v závislosti od vybratého zdroja
+![](editor-youtube.png)
 
-![](editor-parameters.png)
+### Vimeo
+
+Vimeo video parametre:
+
+- **Adresa stránky Vimeo**, stačí jednoducho vložiť odkaz na web stránku s videom
+- Fixná veľkosť (v bodoch)
+  - Šírka
+  - Výška
+- Responzívna veľkosť (v percentách)
+  - Šírka (%)
+- Prehrať video po načítaní stránky
+- Zobraziť názov videa
+- Zobraziť autorov text na videu
+- Zobraziť možnosť prechodu na plnú obrazovku
+- Zobraziť fotku autora na videu
+- Povoliť zobrazenie vodoznaku na videu
+
+![](editor-vimeo.png)
+
+### Facebook
+
+Facebook video parametre:
+
+- **Adresa stránky s videom na facebook.com**, stačí jednoducho vložiť odkaz na web stránku s videom
+- Fixná veľkosť (v bodoch)
+  - Šírka
+- Responzívna veľkosť (na celú šírku bloku)
+- Prehrať video po načítaní stránky
+- Zobraziť názov videa
+- Zobraziť autorov text na videu
+- Zobraziť možnosť prechodu na plnú obrazovku
+
+![](editor-facebook.png)
+
+### Video
+
+Serverové video parametre:
+
+- **Umiestnenie video súboru na serveri**, výber videa pomocou prieskumníka súborov (podporované je aj priame zadanie cesty k súboru)
+- Fixná veľkosť (v bodoch)
+  - Šírka
+  - Výška
+- Responzívna veľkosť (v percentách)
+  - Šírka (%)
+
+![](editor-video.png)
 
 ## Zobrazenie aplikácie
 

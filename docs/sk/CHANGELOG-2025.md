@@ -102,6 +102,9 @@ Pre prvý `INCLUDE` boli odstránené značky s ID 625 a 626, pretože tie sa ne
 
 Pred spustením aktualizácie existovali v databáze len záznamy `3, 645 a 794`, ktorým sa nastavilo `domain_id=1`. Záznamy `1438, 1439 a 1440` vznikli pri aktualizácii pre `domain_id=83`.
 
+- Dátové tabuľky - pridaná podpora pre úpravu [lokálneho JSON súboru](developer/datatables-editor/field-datatable.md#json-editor) vo forme JSON editora (#57409).
+- Dátové tabuľky - pridané rozšírenie [Row Reorder](https://datatables.net/extensions/rowreorder/) pre možnosť usporiadania zoznamu pomocou funkcie `Drag&Drop` (#57409).
+
 ## 2025.18
 
 > Verzia **2025.18** prináša kompletne prerobený modul **Elektronického obchodu** s podporou **platobnej brány GoPay** a vylepšeným zoznamom objednávok. Aplikácia **Kalendár noviniek** bola oddelená ako **samostatná aplikácia** a zároveň sme prerobili nastavenia viacerých aplikácii v editore stránok do nového dizajnu. **Manažér dokumentov** (pôvodne Archív súborov) prešiel **vizuálnym aj funkčným reštartom** vrátane nových nástrojov na správu, export a import dokumentov.
@@ -153,6 +156,14 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Príbuzné stránky](redactor/apps/related-pages/README.md)
 - [Rating](redactor/apps/rating/README.md)
 - [Rezervácie](redactor/apps/reservation/reservation-app/README.md)
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Carousel Slider](redactor/apps/carousel_slider/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Emotikony](redactor/apps/emoticon/README.md)
+- [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Používatelia](redactor/apps/user/README.md)
+- [Video](redactor/apps/video/README.md)
 
 ![](redactor/apps/dmail/form/editor.png)
 

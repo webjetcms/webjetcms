@@ -70,7 +70,7 @@ export function typeDatatable() {
         let url = conf.attr["data-dt-field-dt-url"];
         //url += "?docid={docId}&groupId={groupId}";
         //nahrad parametre z json objektu
-        if (url.indexOf("{")!==-1) {
+        if (typeof url != "undefined" && url!=null && url.indexOf("{")!==-1) {
             url = url.replace(/{(.*?)}/gi, function(a, b){
                 //Chceme real aktuálnu hodnotu
                 try {
@@ -123,6 +123,50 @@ export function typeDatatable() {
         return loaded;
     }
 
+    const decodeJSONData = function(inputData) {
+        try {
+            // Uistite sa, že je vstup platný Base64 reťazec
+            if (!inputData) throw new Error("Input data is empty");
+
+            // Dekódujeme Base64 a dekódujeme URI, pričom nahrádzame '%2B' späť na '+'
+            const parsed = JSON.parse(decodeURI(atob(inputData)).replace(/\%2B/gi, "+"));
+            return parsed;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const encodeJSONData = function(inputData) {
+        try {
+            // Uistite sa, že inputData nie je undefined alebo null
+            if (inputData === undefined || inputData === null) throw new Error("Input data is null or undefined");
+
+            // Kódujeme JSON do URI a následne Base64, pričom nahrádzame '+' na '%2B'
+            let encoded = encodeURI(JSON.stringify(inputData));
+            encoded = encoded.replace(/\+/gi, "%2B");
+            return btoa(encoded);
+        } catch (e) {
+            console.error("Failed to encode JSON data:", e);
+            return null;  // Vráťte null v prípade chyby
+        }
+    };
+
+    /**
+     * Add id's to json editor data objects so datatable works properly
+     * @param {*} editorData
+     * @returns
+     */
+    const sanitizeJsonEditorData = function(editorData) {
+        if(editorData == undefined || editorData == null || editorData == "" || Array.isArray(editorData) == false) return [];
+
+        editorData.forEach((item, index) => {
+            item.id = index + 1; // Add 1-based ID
+            item.rowOrder = (index + 1)*10; // Add rowOrder for row reordering
+        });
+
+        return editorData;
+    }
+
     return {
         create: function ( conf ) {
             //console.log("Creating DATATABLE field, conf=", conf, "this=", this);
@@ -152,12 +196,50 @@ export function typeDatatable() {
             //var json = conf.datatable.data;
             //vratime prazdnu hodnotu, kedze data sa posielaju v samostatnych REST volaniach vnorenej datatabulky
             const json = [];
+
+            let isJsonEditor = false;
+            if (!empty(conf.attr)) {
+                $.each(conf.attr, function (key, value) {
+                    if (key === "data-dt-field-dt-jsonEditor") {
+                        isJsonEditor = true;
+                    }
+                });
+            }
+
+            //console.log("isJsonEditor=", isJsonEditor, "conf=", conf);
+
+            if (isJsonEditor) {
+                let datatable = conf.datatable;
+                if (typeof datatable !== "undefined" && datatable != null) {
+                    let indexes = datatable.rows({ order: 'applied' }).indexes();
+                    for (let i = 0; i < indexes.length; i++) {
+                        let rowData = datatable.row(indexes[i]).data();
+                        json.push(rowData);
+                    }
+                    //console.log("Returning json for jsonEditor: ", json);
+
+                    //remove ID and rowOrder columns from json
+                    for (let i = 0; i < json.length; i++) {
+                        delete json[i].id;
+                        delete json[i].rowOrder;
+                    }
+
+                    //encode data to Base64
+                    return encodeJSONData(json);
+                } else {
+                    console.log("Returning original value, datatable is not initialized", conf.originalValue);
+                    //send original value, DT was not initialized
+                    return(conf.originalValue);
+                }
+            }
+
             //console.log("Returning json ("+conf.className+"): ", json);
             return json;
         },
 
         set: function (conf, val) {
             const EDITOR = this;
+            conf.originalValue = val;
 
             // Pri novom datatable draw() resetne loaded a zruší eventy
             tabDataLoaded = {};
@@ -167,7 +249,6 @@ export function typeDatatable() {
             window.removeEventListener('WJ.DTE.tabclick', function (evt) {
                 onTabClickResize(evt, conf)
             });
-
 
             function onTabClickInit(evt, conf) {
                 if (!isCurrentTab(evt, conf) || isLoaded(evt, conf)) {
@@ -234,6 +315,7 @@ export function typeDatatable() {
                     fetchOnCreate: true,
                     idAutoOpener: false,
                     autoHeight: false,
+                    jsonEditor: false
                 };
 
                 //dopln atributy nastavene z anotacie
@@ -275,6 +357,56 @@ export function typeDatatable() {
                 }
 
                 //console.log("dtConf=", dtConf);
+
+                if (true === dtConf.jsonEditor) {
+                    //console.log("its jsonEditor, setting data, val=", val);
+
+                    if (val == null || val == "" || typeof val === "undefined") val = [];
+                    else val = sanitizeJsonEditorData(decodeJSONData(val));
+
+                    //console.log("decoded val=", val);
+
+                    dtConf.url = null;
+                    dtConf.src = {
+                        data: val
+                    }
+                    dtConf.serverSide = false;
+                    dtConf.fetchOnEdit = false;
+                    dtConf.fetchOnCreate = false;
+                    dtConf.rowReorder = true;
+
+                    // and ROW_ORDER column as sedond item
+                    dtConf.columns.unshift({
+                        data: 'rowOrder',
+                        name: 'rowOrder',
+                        title: WJ.translate('datatables.rowReorder.js'),
+                        renderFormat: "dt-format-row-reorder",
+                        filter: false,
+                        editor: {
+                            type: "text",
+                            attr: {
+                                type: "number"
+                            }
+                        },
+                        array: false
+                    });
+
+                    //add ID column as first item in dtConf.columns
+                    dtConf.columns.unshift({
+                        data: 'id',
+                        name: 'id',
+                        title: WJ.translate('datatables.id.js'),
+                        renderFormat: "dt-format-selector",
+                        className: "dt-select-td cell-not-editable",
+                        editor: {
+                            type: "hidden",
+                            required: false
+                        },
+                        array: false
+                    });
+                }
+
+                //console.log("Creating datatable, conf=", conf, "dtConf=", dtConf);
 
                 conf.datatable = WJ.DataTable(dtConf);
 

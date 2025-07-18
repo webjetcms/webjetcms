@@ -4,15 +4,18 @@ block content
 
     style.
         .modal-header {
-            margin-top: 6px !important;
+            margin-top: 0px !important;
             border-top-width: 0px !important;
             padding-right: 0px !important;
         }
-        .modal.DTED .modal-header .DTE_Header_Content .row .col-sm-4 {
+        #component-datatable_modal .modal-header .DTE_Header_Content .row .col-sm-4 {
             width: 33.33333333% !important;
         }
-        div.DTE_Action_Edit div.DTE_Footer {
+        #component-datatable_modal div.DTE_Action_Edit div.DTE_Footer {
             display: none;
+        }
+        html.in-iframe .DTE_nested_modal.show .modal-dialog {
+            margin-top: 0px !important;
         }
 
     script.
@@ -210,8 +213,9 @@ block content
                 }
             });
 
+            let isInsert = (requestJson.originalComponentName == null && requestJson.originalJspFileName == null);
             if (typeof window.appAfterInit === "function") {
-                window.appAfterInit(response, componentDatatable);
+                window.appAfterInit(response, componentDatatable, componentPath, isInsert);
             }
         }
 
@@ -261,15 +265,16 @@ block content
                 let params = componentDatatable.EDITOR.get();
                 delete params['id'];
 
-                if (typeof window.appGetComponentCode === "function") {
-                    let include = window.appGetComponentCode(componentPath, params, componentDatatable);
-                    //console.log("include=", include);
-                    if (typeof include != "undefined" && include != null) {
-                        $("#componentCode", window.parent.document).val(include);
-                        return true;
-                    }
-                }
+                /*
+                In some instances, we want to wrap INCLUDE in html code, like ForumApp in section,
+                BUT we NEED to know, if this is first time (inserting new app) or it's only update.
 
+                If we allways wrap include, we nest this bonus html with every edit of app. For this reason
+                we check is it's "INSERT" or "UPADTE" action.
+                */
+                let isInsert = (requestJson.originalComponentName == null && requestJson.originalJspFileName == null);
+
+               //appGetComponentPath before appGetComponentCode ... so component code can obtain allready modified path
                 if (typeof window.appGetComponentPath === "function") {
                     componentPath = window.appGetComponentPath(componentPath, componentDatatable);
                 } else {
@@ -279,17 +284,33 @@ block content
                     }
                 }
 
-                let include = "!INCLUDE(" + componentPath;
-                if (Object.keys(params).length > 0) {
-                    include += ", " + convertObjectToInludeParams(params);
+                if (typeof window.appGetComponentCode === "function") {
+                    let include = window.appGetComponentCode(componentPath, params, componentDatatable, isInsert);
+                    if (typeof include != "undefined" && include != null) {
+                        $("#componentCode", window.parent.document).val(include);
+                    } else setDedaultInclude(params);
+                } else {
+                   setDedaultInclude(params);
                 }
-                include += ")!";
-                $("#componentCode", window.parent.document).val(include);
+
+                if (typeof window.appCodeExecute === "function") {
+                    window.appCodeExecute(params);
+                }
+
                 return true;
             } catch (e) {
                 console.log(e);
             }
             return false;
+        }
+
+        function setDedaultInclude(params) {
+            let include = "!INCLUDE(" + componentPath;
+            if (Object.keys(params).length > 0) {
+                include += ", " + convertObjectToInludeParams(params);
+            }
+            include += ")!";
+            $("#componentCode", window.parent.document).val(include);
         }
 
         /**
@@ -318,8 +339,19 @@ block content
                 //skip id or static text
                 if ("id"===key || "dt-format-static-text"===column.renderFormat) continue;
                 if ("dt-format-datatable" === column.renderFormat) {
-                    //skip datatable
-                    continue;
+                    let isJsonEditor = false;
+                    if (typeof column.editor != "undefined" && column.editor != null && typeof column.editor.attr != "undefined" && column.editor.attr != null) {
+                            $.each(column.editor.attr, function (key, value) {
+                                    if (key === "data-dt-field-dt-jsonEditor") {
+                                        isJsonEditor = true;
+                                    }
+                            });
+                    }
+                    //console.log("isJsonEditor=", isJsonEditor, "value=", value, "typeof=", typeof value);
+                    if (isJsonEditor===false) {
+                        //skip this column
+                        continue;
+                    }
                 }
 
                 if (typeof column.className != "undefined" && column.className != null) {
@@ -396,6 +428,18 @@ block content
             //console.log(includeParams);
             return includeParams;
         }
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            if (e.detail.dte.TABLE.DATA.nestedModal === true) {
+                //disable parent modal header/footer
+                window.parent.parent.$(".cke_dialog_container").addClass("DTE_nested_modal_open");
+            }
+        });
+        window.addEventListener("WJ.DTE.close", function(e) {
+            if (e.detail.dte.TABLE.DATA.nestedModal === true) {
+                window.parent.parent.$(".cke_dialog_container").removeClass("DTE_nested_modal_open");
+            }
+        });
 
     div(data-th-include="${appIncludePath}" data-th-remove="tag")
 

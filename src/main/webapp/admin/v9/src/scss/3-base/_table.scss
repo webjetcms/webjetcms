@@ -207,6 +207,11 @@ table.datatableInit {
                     background-color: $nice-primary;
                 }
             }
+            &.dt-rowReorder-moving {
+                td {
+                    background-color: $nice-primary;
+                }
+            }
             td {
                 transition: background-color 500ms linear;
 
@@ -214,6 +219,12 @@ table.datatableInit {
                     text-align: left;
                 }
                 a:hover { text-decoration: none; }
+                span.row-reorder-handler {
+                    float: left;
+                    margin-left: 4px;
+                    margin-right: 4px;
+                    cursor: move;
+                }
             }
         }
     }
@@ -1573,4 +1584,12 @@ div.DTE_Field_Type_datatable div.dt-container table.dataTable, div.DTE_Field_Typ
 
 table.dataTable thead > tr > th.dt-orderable-asc:hover, table.dataTable thead > tr > th.dt-orderable-desc:hover, table.dataTable thead > tr > td.dt-orderable-asc:hover, table.dataTable thead > tr > td.dt-orderable-desc:hover {
     outline: none;
+}
+
+//row reorder
+div.dt-rowReorder-float-parent {
+    position: absolute;
+    z-index: 9999999;
+    opacity: 0.8;
+    border: 2px solid $primary;
 }

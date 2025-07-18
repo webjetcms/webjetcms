@@ -31,7 +31,9 @@ public class DatatableTools {
             for (IwcmFile file : files)
             {
                 if (file.isFile()==false || file.canRead()==false) continue;
-                if (file.getName().endsWith(".png")==false) continue;
+                if (file.getName().endsWith(".png")==false && file.getName().endsWith(".jpg")==false && file.getName().endsWith(".gif")==false) continue;
+                //skip screenshots and system/hidden files
+                if (file.getName().startsWith("screenshot") || file.getName().startsWith("editoricon") || file.getName().startsWith("_")) continue;
 
                 String fileName = file.getName().substring(0, file.getName().lastIndexOf("."));
                 options.add(new OptionDto(fileName, fileName, rootPath+file.getName()));

@@ -254,3 +254,10 @@ table.urlFormTable {
         margin-left: 6px;
     }
 }
+
+.DTE_nested_modal_open {
+    .cke_dialog_footer, .cke_dialog_title, .cke_dialog_close_button {
+        pointer-events: none;
+        opacity: 0.2;
+    }
+}

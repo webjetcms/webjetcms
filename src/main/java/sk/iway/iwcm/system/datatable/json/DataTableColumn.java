@@ -80,6 +80,7 @@ public class DataTableColumn {
 
         setFinalProperties(field);
         setCellNotEditable(field);
+        addEditIcon(field);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -153,6 +154,8 @@ public class DataTableColumn {
                 if (titleKey.equals(title)) {
                     if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
                         title = prop.getText("datatables.id.js");
+                    } else if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ROW_REORDER) {
+                        title = prop.getText("datatables.rowReorder.js");
                     } else {
                         title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
                     }
@@ -627,6 +630,16 @@ public class DataTableColumn {
             }
             editor.setType("imageRadio");
         }
+
+        if (dataTableColumnType == DataTableColumnType.ROW_REORDER) {
+            renderFormat = "dt-format-row-reorder";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            HashMap<String, String> attrs = new HashMap<>();
+            attrs.put("type", "number");
+            editor.setAttr(attrs);
+        }
     }
 
     private void setFinalProperties(Field field) {
@@ -669,6 +682,22 @@ public class DataTableColumn {
 
         if (notEditable) {
             addClassName("cell-not-editable");
+        }
+    }
+
+    /**
+     * If className contains "dt-row-edit" set also renderFormatLinkTemplate and renderFormatPrefix
+     * @param field
+     */
+    private void addEditIcon(Field field) {
+        if (className != null && className.contains("dt-row-edit")) {
+            // ak je nastavene className pre editaciu, pridaj aj ikonu
+            if (Tools.isEmpty(renderFormatLinkTemplate)) {
+                renderFormatLinkTemplate = "javascript:;";
+            }
+            if (Tools.isEmpty(renderFormatPrefix)) {
+                renderFormatPrefix = "<i class=\"ti ti-pencil\"></i> ";
+            }
         }
     }
 

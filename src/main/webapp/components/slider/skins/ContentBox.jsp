@@ -644,7 +644,7 @@ jQuery(document).ready(function(){
 
         },
 
-        transition: "<%=pageParams.getValue("transitions_all","fade")%>",
+        transition: "<%=pageParams.getValue("transitionStyle","fade")%>",
 
         scalemode:"fill",
 
