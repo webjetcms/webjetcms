@@ -52,6 +52,7 @@ import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
+import * as RowReorder from './row-reorder';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
 
 const bootstrap = window.bootstrap = require('bootstrap');
@@ -102,133 +103,23 @@ export const dataTableInit = options => {
     */
     var TABLE;
 
-    const decodeJSONData = function(inputData) {
-        try {
-            // Uistite sa, že je vstup platný Base64 reťazec
-            if (!inputData) throw new Error("Input data is empty");
-
-            // Dekódujeme Base64 a dekódujeme URI, pričom nahrádzame '%2B' späť na '+'
-            const parsed = JSON.parse(decodeURI(atob(inputData)).replace(/\%2B/gi, "+"));
-            return parsed;
-        } catch (e) {
-            return null;
-        }
-    };
-
-    const encodeJSONData = function(inputData) {
-        try {
-            // Uistite sa, že inputData nie je undefined alebo null
-            if (inputData === undefined || inputData === null) throw new Error("Input data is null or undefined");
-
-            // Kódujeme JSON do URI a následne Base64, pričom nahrádzame '+' na '%2B'
-            let encoded = encodeURI(JSON.stringify(inputData));
-            encoded = encoded.replace(/\+/gi, "%2B");
-            return btoa(encoded);
-        } catch (e) {
-            console.error("Failed to encode JSON data:", e);
-            return null;  // Vráťte null v prípade chyby
-        }
-    };
-
-    const TableLinesStorage = {
-        key: 'tableLines',
-
-        getParam(){
-            return localStorage.getItem(this.key);
-        },
-
-        load() {
-            try {
-                const stored = decodeJSONData(localStorage.getItem(this.key));
-                return stored ? stored : [];
-            } catch (e) {
-                console.error('Failed to parse localStorage data:', e);
-                return [];
-            }
-        },
-
-        save(data) {
-            try {
-                localStorage.setItem(this.key, encodeJSONData(data));
-            } catch (e) {
-                console.error('Failed to save to localStorage:', e);
-            }
-        },
-
-        create(newItemOrItems) {
-            const data = this.load();
-            let lastId = data.length > 0 ? Math.max(...data.map(item => parseInt(item.id))) : 1;
-
-            if (Array.isArray(newItemOrItems)) {
-                newItemOrItems.forEach(item => {
-                    const existingIndex = data.findIndex(existingItem => existingItem.id === item.id);
-                    if (existingIndex !== -1) {
-                        data[existingIndex] = { ...data[existingIndex], ...item };
-                    } else {
-                        if (!item.id) {
-                            item.id = ++lastId;
-                        }
-                        data.push(item);
-                    }
-                });
-            } else {
-                const existingIndex = data.findIndex(existingItem => existingItem.id === newItemOrItems.id);
-                if (existingIndex !== -1) {
-                    data[existingIndex] = { ...data[existingIndex], ...newItemOrItems };
-                } else {
-                    if (!newItemOrItems.id) {
-                        newItemOrItems.id = ++lastId;
-                    }
-                    data.push(newItemOrItems);
-                }
-            }
-
-            this.save(data);
-        },
-
-        edit(id, updatedItem) {
-            const data = this.load();
-            const index = data.findIndex(item => item.id === id);
-            if (index !== -1) {
-                data[index] = { ...data[index], ...updatedItem };
-                this.save(data);
-            } else {
-                console.warn(`Item with id ${id} not found for edit.`);
-            }
-        },
-
-        remove(id) {
-            const data = this.load();
-            const filtered = data.filter(item => item.id !== id);
-            this.save(filtered);
-        },
-
-        clear() {
-            try {
-                localStorage.removeItem(this.key);
-            } catch (e) {
-                console.error('Failed to clear localStorage:', e);
-            }
-        }
-    };
-
     var DATA = [];
     DATA.id = options.id ? options.id : null;
     DATA.removeColumns = options.removeColumns ? options.removeColumns : null;
-    DATA.src = options.src;
+    //local JSON data (do not use REST service)
+    DATA.src = options.src ? options.src : null;
     DATA.fields = []; //polia pre DT editor
     DATA.serverSide = options.serverSide ? options.serverSide : false;
     DATA.tabsFolders = options.tabs ? options.tabs : [
         //always show basic tab
         { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true }
     ];
-    DATA.url = options.url || "";
+    DATA.url = options.url ? options.url : null;
     DATA.editorId = options.editorId ? options.editorId : "id";
     DATA.onXhr = options.onXhr ? options.onXhr : null;
     DATA.onPreXhr = options.onPreXhr ? options.onPreXhr : null;
     DATA.json = null;
     DATA.jsonOptions = null;
-    DATA.jsonEditor = options.jsonEditor ? options.jsonEditor : false;
     DATA.noAll = options.noAll;
     DATA.hideTable = options.hideTable || false;
     DATA.fetchOnCreate = options.fetchOnCreate ? options.fetchOnCreate : false;
@@ -270,11 +161,11 @@ export const dataTableInit = options => {
     //allow editor locking notifications
     DATA.editorLocking = (typeof options.editorLocking !== "undefined") ? options.editorLocking : true;
 
-    //Allows to move row in table (change position) - default false
-    DATA.rowReorder = (typeof options.rowReorder !== "undefined") ? options.rowReorder : false;
+    //local data do not use REST services
+    DATA.isLocalJson = false;
+    if (typeof DATA.src !== "undefined" && DATA.src != null) DATA.isLocalJson = true;
 
     //console.log("options=", options);
-    let jsonEditorFields;
 
     //pre podporu multi tabuliek a editora potrebujeme mat unikatne ID pre kazdu DT a editor
     if (DATA.id === null) {
@@ -380,30 +271,27 @@ export const dataTableInit = options => {
      */
     function prepareCustomFieldsDataBeforeSend(data, me) {
         //Array of fields (field names)
-        if (typeof(me) !== "undefined"){
-            var fields = me.fields();
-        }
+        var fields = me.fields();
+
         var letters = 'ABCDEFGHIJKLMNOPQRST';
         for(var i in data.data) {
             for(var letter in letters) {
                 if(Array.isArray(data.data[i]['field' + letters[letter]])) {
                     data.data[i]['field' + letters[letter]] = data.data[i]['field' + letters[letter]].join('|')
                 }
-                if (typeof(me) !== "undefined"){
 
-                    let fieldName = 'field' + letters[letter];
-                    if(fields.includes(fieldName)) {
-                        let field = me.field(fieldName);
-                        let renderFormat = field.s.opts.renderFormat;
+                let fieldName = 'field' + letters[letter];
+                if(fields.includes(fieldName)) {
+                    let field = me.field(fieldName);
+                    let renderFormat = field.s.opts.renderFormat;
 
-                        //Its quill editor - get html content and set into data as value
-                        if("dt-format-quill" == renderFormat) {
-                            let input = field.s.opts._input;
-                            let value = input.html();
-                            if ("<p><br></p>"==value) value = "";
-                            data.data[i][fieldName] = value;
-                        }
-                    }
+                    //Its quill editor - get html content and set into data as value
+                    if("dt-format-quill" == renderFormat) {
+                        let input = field.s.opts._input;
+                        let value = input.html();
+                        if ("<p><br></p>"==value) value = "";
+                        data.data[i][fieldName] = value;
+                }
                 }
             }
         }
@@ -437,50 +325,35 @@ export const dataTableInit = options => {
     };
 
     function refreshRow(id, callback) {
-        if (DATA.jsonEditor) {
-            const data = TableLinesStorage.load();
-            const row = data.find(item => String(item.id) === id);
-            TABLE.row("#" + id).data(row);
-            try {
-                if (row.editorFields && row.editorFields.notify) {
-                    showNotify(row.editorFields.notify);
+        var url = TABLE.getAjaxUrl();
+        var q = url.indexOf("?");
+        if (q === -1) url = url + "/" + id;
+        else url = url.substring(0, q) + "/" + id + url.substring(q);
+
+        //console.log("RefreshRow, url=", url, "id=", id);
+
+        $.ajax({
+            url: url,
+            success: function (json) {
+                //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
+                //console.log("refreshRow, id=", json[DATA.editorId], " json=", json);
+                if (typeof json.error != "undefined" && json.error != null && json.error!="") {
+                    WJ.notifyError(json.error);
+                    return;
                 }
-            } catch (e) {
-                console.log(e);
-            }
-            callback(row);
-        } else {
+                TABLE.row("#" + json[DATA.editorId]).data(json);
 
-            var url = TABLE.getAjaxUrl();
-            var q = url.indexOf("?");
-            if (q === -1) url = url + "/" + id;
-            else url = url.substring(0, q) + "/" + id + url.substring(q);
-
-            //console.log("RefreshRow, url=", url, "id=", id);
-
-            $.ajax({
-                url: url,
-                success: function (json) {
-                    //console.log("refreshSuccess, TABLE=", TABLE, "row=", TABLE.row, "id=", DATA.editorId);
-                    //console.log("refreshRow, id=", json[DATA.editorId], " json=", json);
-                    if (typeof json.error != "undefined" && json.error != null && json.error!="") {
-                        WJ.notifyError(json.error);
-                        return;
+                try {
+                    if (typeof json.editorFields != "undefined" && json.editorFields!=null && typeof json.editorFields.notify != "undefined" && json.editorFields.notify!=null) {
+                        var notifyList = json.editorFields.notify;
+                        showNotify(notifyList);
                     }
-                    TABLE.row("#" + json[DATA.editorId]).data(json);
+                } catch (e) {console.log(e);}
 
-                    try {
-                        if (typeof json.editorFields != "undefined" && json.editorFields!=null && typeof json.editorFields.notify != "undefined" && json.editorFields.notify!=null) {
-                            var notifyList = json.editorFields.notify;
-                            showNotify(notifyList);
-                        }
-                    } catch (e) {console.log(e);}
-
-                    //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
-                    callback(json);
-                }
-            });
-        }
+                //toto sa nemoze volat, pretoze to vyvola ajax request na server (pri serverSide: true) TABLE.draw(false);
+                callback(json);
+            }
+        });
     }
 
     function showNotify(notifyList) {
@@ -1032,7 +905,10 @@ export const dataTableInit = options => {
             //If showOnlyEditor, set it as full screen and hide close/minimalize button's
             if(window.location.href.indexOf("showOnlyEditor=true") != -1) {
                 $(dom.content).find("div.modal-dialog").addClass("modal-fullscreen");
-                $(append).find("button.btn-close-editor").hide();
+                if (false === DATA.nestedModal) {
+                    //hide close button for main dialog window
+                    $(append).find("button.btn-close-editor").hide();
+                }
                 $(append).find("div.dialog-buttons").hide();
             }
 
@@ -1269,17 +1145,11 @@ export const dataTableInit = options => {
             }
         }
 
-
-        const fields = DATA.fields;
-        jsonEditorFields = fields.filter(field => {
-            //console.log("field=", field, "className=", field.className);
-            return field.className && field.className.includes('dt-json-editor');
-        });
-        //console.log("DATA.fields", DATA.fields);
-        //console.log("DATA.columns", DATA.columns);
+        // console.log("DATA.fields", DATA.fields);
+        // console.log("DATA.columns", DATA.columns);
 
         let ajaxDeclaration;
-        if (DATA.jsonEditor === false){
+        if (DATA.isLocalJson === false) {
             ajaxDeclaration = {
                 url: WJ.urlAddPath(DATA.url, '/editor'),
                 contentType: 'application/json',
@@ -1386,16 +1256,8 @@ export const dataTableInit = options => {
             const me = this;
 
             // upravi multiple volne polia
-            if (DATA.jsonEditor){
-                prepareCustomFieldsDataBeforeSend(data)
+            prepareCustomFieldsDataBeforeSend(data, me);
 
-                if (action === 'remove') {
-                    const ids = Object.values(data.data).map(item => item.id);
-                    ids.forEach(id => {
-                        TableLinesStorage.remove(id);
-                    });
-                }
-        } else {
             /*if (action !== 'remove') {
 
                 $.each($(e.target.dom.wrapper).find("[data-dt-validation]"), function (k, v) {
@@ -1418,7 +1280,6 @@ export const dataTableInit = options => {
                     return false;
                 }
             }*/
-        }
         });
 
         EDITOR.on('opened', function (e, type, action) {
@@ -1460,46 +1321,35 @@ export const dataTableInit = options => {
             window.dispatchEvent(eventClose);
         });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
-            //console.log("Editor.on submitSuccess, json=", json);
-            if (DATA.jsonEditor){
-                TableLinesStorage.create(json.data);
-
-                if(DATA.updateEditorAfterSave == true) {
-                    EDITOR.setJson(data);
-                }
-
-                if(typeof json.notify != "undefined" && json.notify != null) {
-                    showNotify(json.notify);
-                }
-            }
-            else {
+            //console.log("Editor.on submitSuccess, json=", json, "DATA=", DATA);
+            if (DATA.isLocalJson === false) {
                 setTimeout(function() {
-                if (json.forceReload === true) {
-                    //serverSide is reloading by datatable directly
-                    if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
+                    if (json.forceReload === true) {
+                        //serverSide is reloading by datatable directly
+                        if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
 
-                    //publishni reload event, napr. pre jstree
-                    const eventReload = new CustomEvent('WJ.DTE.forceReload', {
-                        detail: {
-                            e: e,
-                            json: json,
-                            data: data,
-                            action: action,
-                            EDITOR: EDITOR,
-                            TABLE: TABLE
-                        }
-                    });
-                    window.dispatchEvent(eventReload);
-                }
+                        //publishni reload event, napr. pre jstree
+                        const eventReload = new CustomEvent('WJ.DTE.forceReload', {
+                            detail: {
+                                e: e,
+                                json: json,
+                                data: data,
+                                action: action,
+                                EDITOR: EDITOR,
+                                TABLE: TABLE
+                            }
+                        });
+                        window.dispatchEvent(eventReload);
+                    }
 
-                if(DATA.updateEditorAfterSave == true) {
-                    EDITOR.setJson(data);
-                }
+                    if(DATA.updateEditorAfterSave == true) {
+                        EDITOR.setJson(data);
+                    }
 
-                if(typeof json.notify != "undefined" && json.notify != null) {
-                    showNotify(json.notify);
-                }
-            }, 300);
+                    if(typeof json.notify != "undefined" && json.notify != null) {
+                        showNotify(json.notify);
+                    }
+                }, 300);
             }
         });
 
@@ -1519,11 +1369,7 @@ export const dataTableInit = options => {
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
-                    if (DATA.jsonEditor){
-                        EDITOR.setJson(json);
-                        resolve(); // Editor continues after this
-                    }
-                    else {
+
                     $.ajax({
                         url: url,
                         success: function (json) {
@@ -1533,7 +1379,6 @@ export const dataTableInit = options => {
                             resolve(); // Editor continues after this
                         }
                     });
-                    }
                 });
             });
         }
@@ -1907,6 +1752,8 @@ export const dataTableInit = options => {
 
         $.fn.dataTable.ext.search.push(
             function (settings, data, dataIndex) {
+
+                if (typeof TABLE === "undefined") return true;
 
                 var isOk = true;
 
@@ -2519,35 +2366,43 @@ export const dataTableInit = options => {
 
             initComplete: function (settings, json) {
 
-                //console.log("initComplete, TABLE=", TABLE.DATA.id);
-                dtWJ.fixDatatableHeaderInputs(TABLE);
+                const timeout = DATA.isLocalJson ? 100 : 0;
 
-                $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
-                    placement: 'top',
-                    trigger: 'hover'
-                });
+                //we need to have timeout because on localData TABLE is not yet initialized
+                //with REMOTE data it is initialized because of REST service call
+                setTimeout(()=> {
 
-                $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
-                    $(item).on("click", function () {
-                        $($(item).data("target")).modal({
-                            backdrop: 'static',
-                            keyboard: false
+                    //console.log("init, this=", this, "settings=", settings, "json=", json);
+                    //console.log("initComplete, TABLE=", TABLE.DATA.id);
+                    dtWJ.fixDatatableHeaderInputs(TABLE);
+
+                    $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
+                        placement: 'top',
+                        trigger: 'hover'
+                    });
+
+                    $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
+                        $(item).on("click", function () {
+                            $($(item).data("target")).modal({
+                                backdrop: 'static',
+                                keyboard: false
+                            });
                         });
                     });
-                });
 
-                /*
-                console.log("select picker 3");
-                $('.dt-container select').selectpicker(DT_SELECTPICKER_OPTS);*/
+                    /*
+                    console.log("select picker 3");
+                    $('.dt-container select').selectpicker(DT_SELECTPICKER_OPTS);*/
 
-                $('#' + DATA.id + '_wrapper').on('click', '.buttons-select-all', function (e) {
-                    if (TABLE.rows({selected:true}).count()>0) {
-                        TABLE.rows().deselect();
-                    } else {
-                        TABLE.rows({"filter": "applied", "page": "current"}).select();
-                    }
-                    return false;
-                });
+                    $('#' + DATA.id + '_wrapper').on('click', '.buttons-select-all', function (e) {
+                        if (TABLE.rows({selected:true}).count()>0) {
+                            TABLE.rows().deselect();
+                        } else {
+                            TABLE.rows({"filter": "applied", "page": "current"}).select();
+                        }
+                        return false;
+                    });
+                }, timeout);
             },
 
             columnDefs: [
@@ -2742,6 +2597,12 @@ export const dataTableInit = options => {
                     targets: "dt-format-attrs",
                     render: function (td, type, rowData, row) {
                         return dtConfig.renderAttrs(td, type, rowData, row);
+                    }
+                },
+                {
+                    targets: "dt-format-row-reorder",
+                    render: function (td, type, rowData, row) {
+                        return RowReorder.renderRowReorder(td, type, rowData, row, dtConfig);
                     }
                 }
             ]
@@ -2990,67 +2851,61 @@ export const dataTableInit = options => {
             }
             else {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
-                if (DATA.jsonEditor){
-                    const data = {
-                        data: sanitizeJsonEditorData(TableLinesStorage.load()),
-                        recordsTotal: 0,
-                        recordsFiltered: 0,
-                        options: {},
-                        notify: null
-                    };
-                    setTimeout(() => {
-                        fnCallback(data);
-                    }, 100);
-                } else {
-                    //finally, make the request
-                    $.ajax({
-                        "dataType": 'json',
-                        "type": "GET",
-                        "url": url,
-                        "data": restParams,
-                        "success": function (sourceData) {
-                            //console.log("sourceData=", sourceData);
-                            if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                                if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
-                                    WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
-                                    return;
-                                } else {
-                                    WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
-                                    return;
-                                }
+
+                //finally, make the request
+                $.ajax({
+                    "dataType": 'json',
+                    "type": "GET",
+                    "url": url,
+                    "data": restParams,
+                    "success": function (sourceData) {
+                        //console.log("sourceData=", sourceData);
+
+                        if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
+                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
+                                WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
+                                return;
+                            } else {
+                                WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
+                                return;
                             }
-
-                            var totalElements = sourceData.totalElements;
-                            var data = {};
-                            data.data = sourceData.content;
-
-                            data.recordsTotal = totalElements;
-                            data.recordsFiltered = totalElements;
-                            data.options = sourceData.options || {};
-                            data.notify = sourceData.notify || null;
-
-                            //WJ.log("fnCallback2, data=", data);
-                            fnCallback(data);
                         }
-                    });
-                }
+
+                        var totalElements = sourceData.totalElements;
+                        var data = {};
+                        data.data = sourceData.content;
+
+                        data.recordsTotal = totalElements;
+                        data.recordsFiltered = totalElements;
+                        data.options = sourceData.options || {};
+                        data.notify = sourceData.notify || null;
+
+                        //WJ.log("fnCallback2, data=", data);
+                        fnCallback(data);
+                    }
+                });
             }
         }
 
         function runDataTables() {
 
             //console.log("runDataTables, DATA 1: ", DATA);
+
+            let $datatableInit = $(dataTableInit);
+
+            //console.log("runDataTables, $datatableInit=", $datatableInit, "serverSide=", DATA.serverSide, "data=", DATA);
+            $datatableInit.attr("data-server-side", DATA.serverSide);
+
+            //get rowReorder config object
+            let rowReorder = RowReorder.getRowReorderConfig(DATA);
+
             //DT options: https://datatables.net/reference/option/
             if (typeof DATA.url === "string") {
                 //src je URL adresa rest endpointu
-                TABLE = $(dataTableInit)
+                TABLE = $datatableInit
                     .on('xhr.dt', function (e, settings, json, xhr) {
 
                         //ak neprisli options (napr. pri vyhladavani) zachovaj povodne
-                        if (jsonEditorFields.length > 0) {
-                            const jsonVariableName = jsonEditorFields[0].name;
-                            localStorage.setItem("tableLines", json.data[0][jsonVariableName]);
-                        }
                         //console.log("DATA.json=", DATA.json, "json=", json);
                         //if (DATA.json != null) console.log("DATA.json.options=", DATA.json.options);
                         if (DATA.json != null && typeof DATA.json.options != "undefined" && DATA.json.options != null) {
@@ -3089,7 +2944,7 @@ export const dataTableInit = options => {
                         rowId: DATA.editorId,
                         order: DATA.order,
                         paging: DATA.paging,
-                        rowReorder: DATA.rowReorder,
+                        rowReorder: rowReorder,
                         rowCallback: function (row, data, displayNum) {
                             //pozor, tato funkcia je tu 2x pre ajax aj normal load
                             //console.log("createdRow, displayNum=", displayNum, " data=", data, "row=", row);
@@ -3116,11 +2971,15 @@ export const dataTableInit = options => {
                     });
             } else {
                 //src su skutocne data v JS objekte
-                TABLE = $(dataTableInit).DataTable({
+                //console.log("Initializing DT from local data, src=", DATA.src, "serverSide: ", DATA.serverSide);
+                DATA.editorLocking = false;
+                TABLE = $datatableInit.DataTable({
                     data: DATA.src.data,
+                    serverSide: false,
+                    rowId: DATA.editorId,
                     columns: DATA.columns,
                     order: DATA.order,
-                    rowReorder: DATA.rowReorder,
+                    rowReorder: rowReorder,
                     rowCallback: function (row, data, displayNum) {
 
                         if (displayNum % 2 == 0) $(row).attr("class", "odd");
@@ -3423,21 +3282,6 @@ export const dataTableInit = options => {
     };
 
     /**
-     * Add id's to json editor data objects so datatable works properly
-     * @param {*} editorData
-     * @returns
-     */
-    function sanitizeJsonEditorData(editorData) {
-        if(editorData == undefined || editorData == null || editorData == "" || Array.isArray(editorData) == false) return [];
-
-        editorData.forEach((item, index) => {
-            item.id = index + 1; // Add 1-based ID
-        });
-
-        return editorData;
-    }
-
-    /**
      * Vyvolanie akcie na serveri
      * @param {String} action - meno akcie
      * @param {boolean} doNotCheckEmptySelection - ak je true nevykona sa kontrola oznacenia aspon jedneho riadku (na server sa posle ID riadku -1)
@@ -3598,6 +3442,12 @@ export const dataTableInit = options => {
         }
     }
 
+    if (DATA.isLocalJson) {
+        TABLE.hideButton("import");
+        TABLE.hideButton("export");
+        TABLE.hideButton("reload");
+    }
+
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
         new bootstrap.Tooltip($(".btn-export-dialog"));
@@ -3641,7 +3491,29 @@ export const dataTableInit = options => {
                     if (title != null && title != "") {
                         let dataAction = $("#"+TABLE.DATA.id+"_modal").attr("data-action");
                         let mainTitleKey = "button.edit";
-                        if ("duplicate"===dataAction) mainTitleKey = "button.duplicate";
+                        if ("duplicate"===dataAction) {
+                            mainTitleKey = "button.duplicate";
+
+                            //on local data increment ID to new value
+                            if (DATA.isLocalJson === true) {
+                                //iterate current rows, find maxId value and increment it
+                                let maxId = 0;
+                                TABLE.rows().every(function() {
+                                    let rowData = this.data();
+                                    if (typeof rowData[DATA.editorId] != "undefined" && rowData[TABLE.DATA.editorId] != null) {
+                                        let id = parseInt(rowData[TABLE.DATA.editorId]);
+                                        if (id > maxId) maxId = id;
+                                    }
+                                });
+                                maxId++;
+                                //console.log("Setting maxId=", maxId);
+                                EDITOR.field(TABLE.DATA.editorId).set(maxId);
+
+                                //unselect rows in datatable, because there is bug in render (it's not shown as selected but it is internally)
+                                TABLE.rows({ selected: true }).deselect();
+                            }
+                            RowReorder.setNewReorderValue(TABLE, true);
+                        }
 
                         $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(WJ.translate(mainTitleKey)+": "+title);
                     }

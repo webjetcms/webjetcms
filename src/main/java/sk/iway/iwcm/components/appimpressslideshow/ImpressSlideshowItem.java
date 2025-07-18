@@ -1,6 +1,4 @@
-package sk.iway.iwcm.components.appimpressslideshow.jpa;
-
-import javax.persistence.Id;
+package sk.iway.iwcm.components.appimpressslideshow;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,11 +8,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Getter
 @Setter
-public class ImpressSlideshowDTO {
-
-    @Id
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
-    private Long id;
+public class ImpressSlideshowItem {
 
     @DataTableColumn(
         inputType = DataTableColumnType.ELFINDER,
@@ -24,7 +18,7 @@ public class ImpressSlideshowDTO {
     )
     private String image;
 
-    @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "components.app-cookiebar.cookiebar_title")
+    @DataTableColumn(inputType = DataTableColumnType.QUILL, className="dt-row-edit", title = "components.app-cookiebar.cookiebar_title")
     private String title;
 
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title = "editor.subtitle")

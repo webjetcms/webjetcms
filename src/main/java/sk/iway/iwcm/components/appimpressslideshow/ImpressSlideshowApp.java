@@ -1,4 +1,5 @@
 package sk.iway.iwcm.components.appimpressslideshow;
+
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
@@ -6,6 +7,8 @@ import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
@@ -16,8 +19,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     itemKey = "cmp_app-impress_slideshow",
     imagePath = "/components/app-impress_slideshow/editoricon.png",
     galleryImages = "/components/app-impress_slideshow/",
-    componentPath = "/components/app-impress_slideshow/news.jsp",
-    customHtml = "/apps/app-impress_slideshow/admin/editor-component.html"
+    componentPath = "/components/app-impress_slideshow/news.jsp"
 )
 @DataTableTabs(tabs = {
     @DataTableTab(id = "style", title = "components.news.styleAndSettings", selected = true),
@@ -25,7 +27,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 })
 @Getter
 @Setter
-public class ImpressSlideshowApp  extends WebjetComponentAbstract{
+public class ImpressSlideshowApp extends WebjetComponentAbstract{
+
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "style", title = "editor.table.height")
     private Integer nivoSliderHeight = 400;
 
@@ -35,9 +38,12 @@ public class ImpressSlideshowApp  extends WebjetComponentAbstract{
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "style", title = "components.app-impress_slideshow.imageHeight")
     private Integer imageHeight = 300;
 
-    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "tabLink2", title="&nbsp;")
-    private String iframe = "/apps/app-impress_slideshow/admin/add-item/";
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "tabLink2", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appimpressslideshow.ImpressSlideshowItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-jsonEditor", value = "true")
+            }
+        )})
+    private String editorData = null;
 
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
-    private String editorData;
 }
