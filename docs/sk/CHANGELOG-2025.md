@@ -20,6 +20,12 @@
 - Povolené zobrazenie stránok obsahujúcich `404.html` v URL adrese zo systémových priečinkov, aby vám takáto technická stránka neprekážala medzi štandardnými web stránkami (#57657-8).
 - Značky - rozdelené zobrazenie značiek podľa aktuálne zvolenej domény, aby ste mohli mať značky zvlášť pre každú doménu vo WebJETe (#57837).
 
+### Voliteľné polia
+
+- Pridaná podpora pre 2 nové typy voliteľných polí, ktoré sa dajú nastaviť:
+  - [Výber adresára stránok](frontend/webpages/customfields/README.md#výber-adresára-stránok) (#57941).
+  - [Výber stránky](frontend/webpages/customfields/README.md#výber-stránky) (#57941).
+
 ### Používateľské rozhranie
 
 - Pri použití malého monitora (výška okna menej ako 760 bodov) sa zobrazí okno automaticky na celú plochu a zmenší sa hlavička a pätička (titulok okna je menším písmom). Zvýši sa tak zobrazené množstvo informácií, čo je potrebné hlavne v sekcii web stránky. Používa sa pri oknách používajúcich CSS triedu `modal-xl`, čo sú aktuálne web stránky, foto galéria, editor obrázkov a používatelia (#57893).

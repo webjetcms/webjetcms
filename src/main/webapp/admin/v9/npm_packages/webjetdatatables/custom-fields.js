@@ -255,7 +255,9 @@ export function update(EDITOR, action) {
         } else if (v.type == 'link') {
             template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_field'+identifier+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+        } else if (v.type == 'json_group' || v.type == 'json_doc') {
+            template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -294,7 +296,6 @@ export function update(EDITOR, action) {
         } else if (v.type == 'color') {
             template = colorTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         }
-        
 
         inputBox.html(template);
 
@@ -371,9 +372,10 @@ export function update(EDITOR, action) {
 
             new AutoCompleter("#"+datatable.DATA.id+"_modal .DTE_Field_Name_field" + identifier + " input.autocomplete").setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&template=' + json.tempId + '&field=' + identifier).transform();
 
-        } else if (v.type == "dir") {
+        }
+        else if (v.type == "dir") {
             let conf = {};
-            let id = 'DTE_Field_field'+identifier;
+            let id = 'DTE_Field_' + customPrefix + identifier;
 
             //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
             //And first-child because it's text input to hide and second child will be VUE component
@@ -435,7 +437,120 @@ export function update(EDITOR, action) {
 
             vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
             vm.mount(conf._el);
-        } else if ("uuid"==v.type) {
+        }
+         else if (v.type == "json_group" || v.type == "json_doc") {
+            let conf = {};
+            let id = 'DTE_Field_' + customPrefix + identifier;
+
+            //There must by allso prefix of datatable.DATA.id, because table can be nested in another table with same columns
+            //And first-child because it's text input to hide and second child will be VUE component
+            var textFieldInput  = $("#" + datatable.DATA.id + "_modal #" + id + ":first-child");
+            textFieldInput.hide();
+
+            conf._id = id;
+            conf._el = inputBox.find('div.vueComponent')[0];
+
+            //Prepare className
+            if(v.className == undefined || v.className == null || v.className.length < 1) {
+                if(v.type == "json_group") {
+                    conf.className = "dt-tree-groupid";
+                } else if(v.type == "json_doc") {
+                    conf.className = "dt-tree-pageid";
+                }
+            } else {
+                conf.className = v.className;
+            }
+
+            let preSetData = null;
+            if(valueUnescaped != undefined && valueUnescaped != null && value.length) {
+                preSetData = JSON.parse(valueUnescaped)
+            } else {
+                preSetData = json[customPrefix + identifier];
+            }
+
+            if(conf.className.indexOf("dt-tree-groupid") != -1 ) {
+                // GROUP jsonData init
+                if(preSetData == null) {
+                    conf.jsonData = [{
+                        "groupId": "",
+                        "fullPath": ""
+                    }];
+                } else {
+                    conf.jsonData = [{
+                        "groupId": preSetData["id"],
+                        "fullPath": preSetData["fullPath"]
+                    }];
+                }
+            } else if(conf.className.indexOf("dt-tree-pageid") != -1 ) {
+                // DOC jsonData init
+                if(preSetData == null) {
+                    conf.jsonData = [{
+                        "docId": "",
+                        "fullPath": ""
+                    }];
+                } else {
+                    conf.jsonData = [{
+                        "docId": preSetData["id"],
+                        "fullPath": preSetData["fullPath"]
+                    }];
+                }
+            } else {
+                // Base jsonData init
+                conf.jsonData = [{
+                    virtualPath: value,
+                    id: value
+                }];
+            }
+
+            let dataTableName = datatable.DATA.id;
+            const vm = window.VueTools.createApp({
+                components: {},
+                data() {
+                    return {
+                        data: null,
+                        idKey: null,
+                        dataTable: null,
+                        dataTableName: null,
+                        click: null,
+                        attr: null
+                    }
+                },
+                created() {
+                    this.data = fixNullData(conf.jsonData, conf.className);
+                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
+                    this.idKey = conf._id;
+                    this.dataTableName = dataTableName;
+                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
+                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
+                    const confClassNameArr = conf.className.split(" ");
+                    for (var i=0; i<confClassNameArr.length; i++) {
+                        let className = confClassNameArr[i];
+                        if (className.indexOf("dt-tree-")!=-1) this.click = className;
+                    }
+                    //console.log("click=", this.click);
+                    this.dataTable = EDITOR.TABLE;
+                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
+                },
+                methods: {
+                    remove(id) {
+                        //console.log("REMOVE impl, id=", id, "click=", this.click);
+                        let that = this;
+                        this.data = this.data.filter(function( obj ) {
+                            //console.log("Testing ", obj.groupId+" doc=", obj.docId);
+                            if (that.click.indexOf("dt-tree-page")!=-1) return obj.docId !== id;
+                            else if (that.click.indexOf("dt-tree-group")!=-1) return obj.groupId !== id;
+                            else return obj.id !== id;
+                        });
+                        window.$(textFieldInput).val(JSON.stringify(this.data, undefined, 4));
+                    }
+                }
+            });
+            VueTools.setDefaultObjects(vm);
+
+            vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
+            vm.mount(conf._el);
+        }
+        else if ("uuid"==v.type) {
             //console.log("inputBox=", inputBox);
             var inputField = inputBox.find("input.field-type-uuid");
             inputField = inputBox.find("input.field-type-uuid").on("blur", function() {
