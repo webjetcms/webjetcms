@@ -463,9 +463,19 @@ export function update(EDITOR, action) {
 
             let preSetData = null;
             if(valueUnescaped != undefined && valueUnescaped != null && value.length) {
-                preSetData = JSON.parse(valueUnescaped)
+                preSetData = JSON.parse(valueUnescaped);
+
+                //Can be returned only ID, we need check and use json data
+                if(preSetData == null || (typeof preSetData) != "object" || ("id" in preSetData) == false || ("fullPath" in preSetData) == false) {
+                    preSetData = json[customPrefix + identifier];
+                }
             } else {
                 preSetData = json[customPrefix + identifier];
+            }
+
+            //DO check again, if preSetData do not contain needed keys, set null
+            if(preSetData == null || (typeof preSetData) != "object" || ("id" in preSetData) == false || ("fullPath" in preSetData) == false) {
+                preSetData = null;
             }
 
             if(conf.className.indexOf("dt-tree-groupid") != -1 ) {
