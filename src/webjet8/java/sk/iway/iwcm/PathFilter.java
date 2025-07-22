@@ -79,6 +79,10 @@ public class PathFilter implements Filter
 		return REQUEST_HOLDER.get();
 	}
 
+	public static void setRequest(HttpServletRequest request) {
+		REQUEST_HOLDER.set(request);
+	}
+
 	/**
 	 * Inicializacia servletu
 	 */
@@ -207,7 +211,7 @@ public class PathFilter implements Filter
 
 		try
 		{
-			REQUEST_HOLDER.set(req);
+			setRequest(req);
 
 			if (passwordProtected==null) reloadProtectedDirs();
 

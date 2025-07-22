@@ -30,6 +30,8 @@ public class XhrFileUploadServlet extends HttpServlet
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		PathFilter.setRequest(request);
+
 		Prop prop = Prop.getInstance();
 		try {
 			String name = request.getParameter("name");
