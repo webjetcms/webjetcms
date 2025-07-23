@@ -27,7 +27,8 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @WebjetComponent("sk.iway.iwcm.components.appuser.UserApp")
 @WebjetAppStore(nameKey = "menu.users", descKey = "components.user.desc", itemKey = "cmp_user", imagePath = "/components/user/editoricon.png", galleryImages = "/components/user/", componentPath = "/components/user/newuser.jsp,/components/user/logon.jsp,/components/user/forget_password.jsp", customHtml = "/apps/user/admin/editor-component.html")
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "editor.tab.basic_info", selected = true),
+        @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+        @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
         @DataTableTab(id = "showed", title = "components.user_app.tab.showed"),
         @DataTableTab(id = "required", title = "components.user_app.tab.required")
 })
@@ -121,37 +122,29 @@ public class UserApp extends WebjetComponentAbstract {
             }) })
     private String[] required = {"login", "password", "password2", "firstName", "lastName", "email"};
 
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.editableGroupIds")
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "advanced", title = "components.user.editableGroupIds")
     private Integer[] groupIdsEditable;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.email_must_be_unique")
     private Boolean emailUnique;
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", title = "components.newuser.success_docid", className = "dt-tree-page")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.require_email_verification")
+    private Boolean requireEmailVerification;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "advanced", title = "components.newuser.success_docid", className = "dt-tree-page")
     private DocDetails successDocId;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, tab = "basic", title = "components.user.infoemail")
     private String infoemail;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.require_email_verification")
-    private Boolean requireEmailVerification;
-
-    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", title = "components.newuser.not_authorized_email_docid", className = "dt-tree-page")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "advanced", title = "components.newuser.not_authorized_email_docid", className = "dt-tree-page")
     private Integer notAuthorizedEmailDocId;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.login_new_user")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "advanced", title = "components.user.login_new_user")
     private Boolean loginNewUser;
 
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "basic", title = "components.user.send_using_ajax")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, tab = "advanced", title = "components.user.send_using_ajax")
     private Boolean useAjax = true;
-
-    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "basic", title = "components.user.group_id",
-    editor = {
-        @DataTableColumnEditor(
-            message = "components.user.loguser_groups_ids"
-        )
-    })
-    private Integer[] regToUserGroups;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
@@ -169,7 +162,6 @@ public class UserApp extends WebjetComponentAbstract {
 
         options.put("groupIds", userGroupOptions);
         options.put("groupIdsEditable", userGroupOptions);
-        options.put("regToUserGroups" , userGroupOptions);
 
         return options;
     }

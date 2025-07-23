@@ -22,8 +22,7 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => 
         requireEmailVerification: "false",
         notAuthorizedEmailDocId: "-1",
         loginNewUser: "false",
-        useAjax: "true",
-        regToUserGroups: ""
+        useAjax: "true"
     };
 
     await Apps.assertParams(defaultParams);
@@ -52,8 +51,7 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => 
         requireEmailVerification: "false",
         notAuthorizedEmailDocId: "141",
         loginNewUser: "true",
-        useAjax: "true",
-        regToUserGroups: ""
+        useAjax: "true"
     };
 
     I.say("Check change of structure based on FIELD");
@@ -62,14 +60,12 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => 
         I.dontSeeElement("#DTE_Field_infoemail");
         I.dontSeeElement("#DTE_Field_emailUnique_0");
         I.dontSeeElement("#DTE_Field_useAjax_0");
-        I.seeElement("#DTE_Field_regToUserGroups");
 
         DTE.selectOption('field', 'Meno');
         I.dontSeeElement("#DTE_Field_groupIds");
         I.dontSeeElement("#DTE_Field_infoemail");
         I.dontSeeElement("#DTE_Field_emailUnique_0");
         I.dontSeeElement("#DTE_Field_useAjax_0");
-        I.dontSeeElement("#DTE_Field_regToUserGroups");
 
     I.say("Go back to default form");
     DTE.selectOption('field', 'Registračný formulár');

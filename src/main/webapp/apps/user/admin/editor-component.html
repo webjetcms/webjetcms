@@ -7,8 +7,15 @@
 
 	function appGetComponentCode(componentPath, params, datatable) {
 		let field = $("#DTE_Field_field").val();
-		if (field.indexOf("!") == 0) return field;
-		return null;
+		if (field.indexOf("/") == 0) return null;
+
+		//revert HTML entities to normal HTML
+		field = field.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+		field = field.replace(/&amp;/g, "&");
+		field = field.replace(/&quot;/g, "\"");
+		field = field.replace(/&#39;/g, "'");
+
+		return field;
 	}
 
 	function appAfterInit(response, datatable) {
@@ -25,7 +32,7 @@
 				switch (value) {
 					case "/components/user/newuser.jsp":
 						setFieldsVisibility(
-							["regToUserGroups"],
+							[],
 							[
 								"groupIds",
 								"show",
@@ -42,6 +49,7 @@
 							]
 						);
 
+						$("#pills-dt-component-datatable-advanced-tab").show();
 						$("#pills-dt-component-datatable-showed-tab").show();
 						$("#pills-dt-component-datatable-required-tab").show();
 
@@ -62,9 +70,10 @@
 								"useAjax",
 								"useCustomFields",
 							],
-							["regToUserGroups"]
+							[]
 						);
 
+						$("#pills-dt-component-datatable-advanced-tab").hide();
 						$("#pills-dt-component-datatable-showed-tab").hide();
 						$("#pills-dt-component-datatable-required-tab").hide();
 
@@ -72,7 +81,7 @@
 					default:
 						setFieldsVisibility(
 							[
-								"userGroups",
+								"groupIds",
 								"show",
 								"required",
 								"groupIdsEditable",
@@ -83,12 +92,12 @@
 								"notAuthorizedEmailDocId",
 								"loginNewUser",
 								"useAjax",
-								"useCustomFields",
-								"regToUserGroups",
+								"useCustomFields"
 							],
 							[]
 						);
 
+						$("#pills-dt-component-datatable-advanced-tab").hide();
 						$("#pills-dt-component-datatable-showed-tab").hide();
 						$("#pills-dt-component-datatable-required-tab").hide();
 
