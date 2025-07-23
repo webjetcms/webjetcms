@@ -41,7 +41,7 @@ public class ImpressSlideshowApp extends WebjetComponentAbstract{
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "tabLink2", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
             attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appimpressslideshow.ImpressSlideshowItem"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-jsonEditor", value = "true")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
             }
         )})
     private String editorData = null;

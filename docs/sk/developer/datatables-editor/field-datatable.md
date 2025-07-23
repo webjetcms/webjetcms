@@ -14,7 +14,7 @@ Anotácia sa používa ako ```DataTableColumnType.DATATABLE```, pričom je potre
 - ```data-dt-field-dt-columns``` - meno triedy (vrátane packages) z ktorej sa použije [definícia stĺpcov datatabuľky](datatable-columns.md), napr. ```sk.iway.iwcm.system.audit.AuditNotifyEntity```
 - `data-dt-field-dt-columns-customize` - meno JavaScript funkcie, ktorá môže byť použitá na úpravu `columns` objektu, napr. `removeEditorFields`. Funkcia musí byť dostupná priamo vo `windows` objekte, ako parameter dostane `columns` objekt a očakáva sa, že ho vráti upravený. Príklad `function removeEditorFields(columns) { return columsn; }`.
 - `data-dt-field-dt-tabs` - zoznam kariet pre editor v JSON formáte. Všetky názvy aj hodnoty JSON objektu je potrebné obaliť do `'`, preklady sú nahradené automaticky. Príklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
-- `data-dt-field-dt-jsonEditor` - aktivuje režim JSON editor, ktorý pracuje s lokálnym JSON objektom kódovanom v `Base64`. Používa sa primárne pre aplikácie vo web stránke pre kódovanie položiek aplikácie.
+- `data-dt-field-dt-localJson` - aktivuje režim, ktorý pracuje s lokálnym JSON objektom. Používa sa primárne pre aplikácie vo web stránke pre evidenciu položiek aplikácie (napr. položky slide show), ktoré sa naviac automaticky kóduju do reťazca vhodného do `PageParams` objektu a sú kódovanom v `Base64`.
 
 Kompletný príklad anotácie:
 
@@ -69,7 +69,7 @@ public class ImpressSlideshowApp extends WebjetComponentAbstract{
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "tabLink2", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
             attr = {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appimpressslideshow.ImpressSlideshowItem"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-jsonEditor", value = "true")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
             }
         )})
     private String editorData = null;

@@ -110,7 +110,8 @@ block content
 
             response.data['id'] = 1;
             //console.log("response.data=", response.data);
-            multidata = convertMultichoiseData(response.data);
+            multidata = convertData(response.data);
+
             //console.log("multidata=", multidata, "original=", response.data);
 
             //create json data for editor, prevent call to REST service using "forceData": true
@@ -225,7 +226,7 @@ block content
          * @param data
          * @returns {*}
          */
-        function convertMultichoiseData(data) {
+        function convertData(data) {
             for (let column of componentColumns) {
                 let fieldValue = data[column.data];
                 //console.log("fieldValue=", fieldValue, "column=", column, "typeof=", typeof fieldValue);
@@ -253,6 +254,21 @@ block content
                     } else if (typeof fieldValue === "string") {
                         //It's multichoice (select multichoice), convert to array
                         data[column.data] = fieldValue.split("+");
+                    }
+                }
+
+                if(isLocalJson(column) && typeof fieldValue === "string") {
+                    //It's json, decode it
+                    //console.log("Decoding JSON data for column:", column.data, "value:", fieldValue);
+                    let decoded = decodeJSONData(fieldValue);
+                    //add ID and rowOrder to each item in the JSON array
+                    decoded = prepareJsonEditorData(decoded);
+
+                    //console.log("decoded=", decoded);
+                    if (decoded != null) {
+                        data[column.data] = decoded;
+                    } else {
+                        console.warn("Failed to decode JSON data for column:", column.data);
                     }
                 }
             }
@@ -329,6 +345,21 @@ block content
             return '"' + value + '"';
         }
 
+        /**
+         * For DataTableColumnType.DATATABLE verify data-dt-field-dt-localJson value
+        */
+        function isLocalJson(column) {
+            let isLocalJson = false;
+            if ("dt-format-datatable" === column.renderFormat && typeof column.editor != "undefined" && column.editor != null && typeof column.editor.attr != "undefined" && column.editor.attr != null) {
+                    $.each(column.editor.attr, function (key, value) {
+                            if (key === "data-dt-field-dt-localJson") {
+                                isLocalJson = (value === "true");
+                            }
+                    });
+            }
+            return isLocalJson;
+        }
+
         function convertObjectToInludeParams(params) {
             let result = [];
             for (let column of componentColumns) {
@@ -339,18 +370,13 @@ block content
                 //skip id or static text
                 if ("id"===key || "dt-format-static-text"===column.renderFormat) continue;
                 if ("dt-format-datatable" === column.renderFormat) {
-                    let isJsonEditor = false;
-                    if (typeof column.editor != "undefined" && column.editor != null && typeof column.editor.attr != "undefined" && column.editor.attr != null) {
-                            $.each(column.editor.attr, function (key, value) {
-                                    if (key === "data-dt-field-dt-jsonEditor") {
-                                        isJsonEditor = true;
-                                    }
-                            });
-                    }
-                    //console.log("isJsonEditor=", isJsonEditor, "value=", value, "typeof=", typeof value);
-                    if (isJsonEditor===false) {
-                        //skip this column
+                    //console.log("isLocalJson=", isLocalJson, "value=", value, "typeof=", typeof value);
+                    if (isLocalJson(column)===false) {
+                        //skip this column, it's datatable with separate REST service
                         continue;
+                    } else {
+                        //base64 encode JSON data
+                        value = encodeJSONData(value);
                     }
                 }
 
@@ -427,6 +453,57 @@ block content
             const includeParams = result.join(", ");
             //console.log(includeParams);
             return includeParams;
+        }
+
+        /**
+        * For backward compatibility with JSON editor we can't use WJ.base64decode
+        */
+        const decodeJSONData = function(inputData) {
+            try {
+                // Uistite sa, že je vstup platný Base64 reťazec
+                if (!inputData) throw new Error("Input data is empty");
+
+                // Dekódujeme Base64 a dekódujeme URI, pričom nahrádzame '%2B' späť na '+'
+                const parsed = JSON.parse(decodeURI(atob(inputData)).replace(/\%2B/gi, "+"));
+                return parsed;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        /**
+        * For backward compatibility with JSON editor we can't use WJ.base64encode
+        */
+        const encodeJSONData = function(inputData) {
+            try {
+                // Uistite sa, že inputData nie je undefined alebo null
+                if (inputData === undefined || inputData === null) throw new Error("Input data is null or undefined");
+
+                // Kódujeme JSON do URI a následne Base64, pričom nahrádzame '+' na '%2B'
+                let encoded = encodeURI(JSON.stringify(inputData));
+                encoded = encoded.replace(/\+/gi, "%2B");
+                //base64 encode it
+                return btoa(encoded);
+            } catch (e) {
+                console.error("Failed to encode JSON data:", e);
+                return null;  // Vráťte null v prípade chyby
+            }
+        };
+
+        /**
+        * Add id's and rowOrder to json editor data objects so datatable works properly
+        * @param {*} editorData
+        * @returns
+        */
+        const prepareJsonEditorData = function(editorData) {
+            if(editorData == undefined || editorData == null || editorData == "" || Array.isArray(editorData) == false) return [];
+
+            editorData.forEach((item, index) => {
+                item.id = index + 1; // Add 1-based ID
+                item.rowOrder = (index + 1)*10; // Add rowOrder for row reordering
+            });
+
+            return editorData;
         }
 
         window.addEventListener("WJ.DTE.opened", function(e) {
