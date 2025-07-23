@@ -9,6 +9,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
@@ -71,6 +72,7 @@ public class RestaurantMenuMealsEntity {
     @Size(max = 128)
     private String cathegory;
 
+    @Lob
     @Column(name = "description")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,

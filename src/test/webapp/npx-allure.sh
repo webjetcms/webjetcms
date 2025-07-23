@@ -102,6 +102,12 @@ rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-resu
 tar cvfz ../../../build/test-results-$CODECEPT_BROWSER.tgz ../../../build/test-results/
 tar cvfz ../../../build/test-screenshots-$CODECEPT_BROWSER.tgz ../../../build/test/screenshots/
 
+echo "Listing build directory:"
+ls -la ../../../build
+
+echo "Listing test directory:"
+ls -la ../../../build/test
+
 echo "Listing downloads directory:"
 ls -la ../../../build/test/downloads
 
