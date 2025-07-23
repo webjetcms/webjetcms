@@ -1,0 +1,214 @@
+extends ../../partials/layout
+
+block content
+
+    style.
+        tr.mirror-err td {
+            color: #ff4b58 !important;
+        }
+
+        tr.mirror-warn td {
+            color: #fabd00 !important;
+        }
+
+        tr.mirror-err.mirror-warn td {
+            color: #ff4b58 !important;
+        }
+
+    script.
+        var groupsMirroringTable;
+        var docsMirroringTable;
+        var mirrroringConfDataTable;
+
+        function showNewSelector(datatable) {
+            let hiddenFiles = getHiddenSelectorFiels(datatable.EDITOR);
+            if(hiddenFiles.length < 1) {
+                $("#add-sync-btn").hide();
+            } else {
+                datatable.EDITOR.field(hiddenFiles.shift()).show();
+            }
+
+            //
+            if(hiddenFiles.length < 1) {
+                $("#add-sync-btn").hide();
+            }
+        }
+
+        function prepareButton(tableName) {
+            //Check if exist allready
+            if($("#panel-body-dt-" + tableName + "-basic #add-sync-btn").length > 0) {
+                return;
+            }
+
+            let buttonHtml = `
+                <div class="DTE_Field form-group row dt-style-json">
+                    <label data-dte-e="label" class="col-sm-4 col-form-label">
+
+                    </label>
+                    <div data-dte-e="input" class="col-sm-7">
+                        <button id="add-sync-btn" class="btn btn-outline-secondary" onclick="showNewSelector(${tableName})">
+                            <i class="ti ti-plus"></i>
+                            <span> Pripojiť priečinok </span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            $("#panel-body-dt-" + tableName + "-basic").append(buttonHtml);
+        }
+
+        function getEmptySelectorFields(editor) {
+            let emptyFields = [];
+            let fields = editor.fields();
+            for(let i = 0; i < fields.length; i++) {
+                if(fields[i].startsWith("selector") == true) {
+                    let fieldValue = editor.field(fields[i]).val();
+                    if(fieldValue == undefined || fieldValue == null || fieldValue.length < 1) {
+                        emptyFields.push(fields[i]);
+                    }
+                }
+            }
+            return emptyFields;
+        }
+
+        function getHiddenSelectorFiels(editor) {
+            let hiddenFields = [];
+            let fields = editor.fields();
+            for(let i = 0; i < fields.length; i++) {
+                if(fields[i].startsWith("selector") == true && editor.field(fields[i]).displayed() == false) {
+                    hiddenFields.push(fields[i]);
+                }
+            }
+            return hiddenFields;
+        }
+
+        window.domReady.add(function () {
+            console.log("Mirroring page loaded");
+
+            WJ.headerTabs({
+                id: 'mirroringTabs',
+                tabs: [
+                    { url: '#groups', title: '[[\#{webpages.tab.folders}]]', active: true },
+                    { url: '#docs', title: '[[\#{sync.docs}]]' },
+                    { url: '#settings', title: '[[\#{webjet.left_conf.konfiguracia}]]' }
+                ]
+            });
+
+            let url = "/admin/rest/webpages/mirroring";
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.doc.mirroring.jpa.MirroringDTO")})];
+
+            groupsMirroringTable = WJ.DataTable({
+                url: WJ.urlUpdateParam(url, "type", "groups"),
+                serverSide: true,
+                columns: columns,
+                id: "groupsMirroringTable",
+                fetchOnEdit: true,
+                fetchOnCreate: true,
+                customFieldsUpdateColumns: true,
+                customFieldsUpdateColumnsPreserveVisibility: true
+            });
+            groupsMirroringTable.hideButton("create");
+            groupsMirroringTable.hideButton("duplicate");
+            groupsMirroringTable.hideButton("celledit");
+            groupsMirroringTable.hideButton("import");
+            groupsMirroringTable.hideButton("export");
+
+            groupsMirroringTable.EDITOR.on('open', function (e, mode, action) {
+                //
+                prepareButton("groupsMirroringTable");
+
+                let emptyFields = getEmptySelectorFields(groupsMirroringTable.EDITOR);
+                emptyFields.forEach(function (fieldName) {
+                    groupsMirroringTable.EDITOR.field(fieldName).hide();
+                });
+                if(emptyFields.length > 0) {
+                    $("#add-sync-btn").show();
+                } else {
+                    $("#add-sync-btn").hide();
+                }
+            });
+
+            docsMirroringTable = WJ.DataTable({
+                url: WJ.urlUpdateParam(url, "type", "docs"),
+                serverSide: true,
+                columns: columns,
+                id: "docsMirroringTable",
+                fetchOnEdit: true,
+                fetchOnCreate: true,
+                customFieldsUpdateColumns: true,
+                customFieldsUpdateColumnsPreserveVisibility: true
+            });
+            docsMirroringTable.hideButton("create");
+            docsMirroringTable.hideButton("duplicate");
+            docsMirroringTable.hideButton("celledit");
+            docsMirroringTable.hideButton("import");
+            docsMirroringTable.hideButton("export");
+
+            docsMirroringTable.EDITOR.on('open', function (e, mode, action) {
+                //
+                prepareButton("docsMirroringTable");
+
+                let emptyFields = getEmptySelectorFields(docsMirroringTable.EDITOR);
+                emptyFields.forEach(function (fieldName) {
+                    docsMirroringTable.EDITOR.field(fieldName).hide();
+                });
+                if(emptyFields.length > 0) {
+                    $("#add-sync-btn").show();
+                } else {
+                    $("#add-sync-btn").hide();
+                }
+            });
+
+            let confUrl = "/admin/rest/webpages/mirroring/config";
+            let confColumns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.configuration.model.ConfPrefixDto")})];
+
+            mirrroringConfDataTable = WJ.DataTable({
+                url: confUrl,
+                serverSide: false,
+                columns: confColumns,
+                id: "mirrroringConfDataTable"
+            });
+
+            mirrroringConfDataTable.hideButton("create");
+            mirrroringConfDataTable.hideButton("remove");
+            mirrroringConfDataTable.hideButton("celledit");
+            mirrroringConfDataTable.hideButton("import");
+            mirrroringConfDataTable.hideButton("duplicate");
+
+            mirrroringConfDataTable.EDITOR.on('open', function (e, mode, action) {
+                $("#DTE_Field_name").prop('disabled', true);
+            });
+
+            $('#pills-mirroringTabs a[data-wj-toggle="tab"]').on('click', function (e) {
+                let id = e.target.id;
+
+                if("pills-groups-tab" === id) {
+                    $("#groupsMirroringTable_wrapper").show();
+                    $("#docsMirroringTable_wrapper").hide();
+                    $("#mirrroringConfDataTable_wrapper").hide();
+
+                    groupsMirroringTable.ajax.reload();
+                } else if("pills-docs-tab" === id) {
+                    $("#groupsMirroringTable_wrapper").hide();
+                    $("#docsMirroringTable_wrapper").show();
+                    $("#mirrroringConfDataTable_wrapper").hide();
+
+                    docsMirroringTable.ajax.reload();
+                } else if("pills-settings-tab" === id) {
+                    $("#groupsMirroringTable_wrapper").hide();
+                    $("#docsMirroringTable_wrapper").hide();
+                    $("#mirrroringConfDataTable_wrapper").show();
+                }
+            });
+
+            //Start
+            $("#groupsMirroringTable_wrapper").show();
+            $("#groupsMirroringTable_wrapper label").text("Sync ID :");
+            $("#docsMirroringTable_wrapper").hide();
+            $("#docsMirroringTable_wrapper label").text("Sync ID :");
+            $("#mirrroringConfDataTable_wrapper").hide();
+        });
+
+    <table id="groupsMirroringTable" class="datatableInit table"></table>
+    <table id="docsMirroringTable" class="datatableInit table"></table>
+    <table id="mirrroringConfDataTable" class="datatableInit table"></table>
