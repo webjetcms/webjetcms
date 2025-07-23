@@ -19,6 +19,7 @@
 
 - Povolené zobrazenie stránok obsahujúcich `404.html` v URL adrese zo systémových priečinkov, aby vám takáto technická stránka neprekážala medzi štandardnými web stránkami (#57657-8).
 - Značky - rozdelené zobrazenie značiek podľa aktuálne zvolenej domény, aby ste mohli mať značky zvlášť pre každú doménu vo WebJETe (#57837).
+- Zrkadlenie - pridanie novej sekcie [zrkadlenie](redactor/webpages/mirroring/README.MD) na sledovanie a manažovanie previazaných priečinkov a stránok po akcií zrkadlenia (#57941).
 
 ### Voliteľné polia
 
