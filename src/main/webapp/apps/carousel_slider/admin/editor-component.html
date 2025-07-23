@@ -18,7 +18,7 @@
 			function updateImageFromSelect() {
 				var selectedValue = $("#DTE_Field_skin").val();
 				var newImage = '<img id="DTE_Field_styleImageIMG" src="/components/carousel_slider/admin-styles/' + selectedValue + '.jpg" style="width: 100%; margin-top: 7px; border: 4px solid #4286f4;">';
-                $("#DTE_Field_styleImageIMG").replaceWith(newImage);
+                $("#DTE_Field_styleImageIMG").html(newImage);
 			}
 
             updateImageFromSelect();

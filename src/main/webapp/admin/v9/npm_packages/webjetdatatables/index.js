@@ -1684,8 +1684,16 @@ export const dataTableInit = options => {
                         html: true
                     });
 
-                    //console.log("Setting selectpicker");
-                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').selectpicker(DT_SELECTPICKER_OPTS_EDITOR);
+                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
+                        const $select = $(this);
+                        const separator = $select.attr('separator');
+                        let opts = { ...DT_SELECTPICKER_OPTS_EDITOR };
+                        if (separator) {
+                            opts.multipleSeparator = separator;
+                        }
+                        //console.log("Setting selectpicker, opts=", opts, " el=", $select);
+                        $select.selectpicker(opts);
+                    });
                 }
 
                 //console.log("Setting tooltips header");
@@ -2577,6 +2585,14 @@ export const dataTableInit = options => {
                     className: "dt-style-image",
                     render: function (td, type, rowData, row) {
                         return dtConfig.renderImage(td, type, rowData, row);
+                    }
+
+                },
+                {
+                    targets: "dt-format-image-notext",
+                    className: "dt-style-image",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderImage(td, type, rowData, row, false);
                     }
 
                 },

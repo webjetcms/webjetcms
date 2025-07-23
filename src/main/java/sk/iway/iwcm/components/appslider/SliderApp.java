@@ -22,9 +22,17 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @WebjetComponent("sk.iway.iwcm.components.appslider.SliderApp")
-@WebjetAppStore(nameKey = "components.slider.title", descKey = "components.slider.desc", itemKey = "cmp_slider", imagePath = "/components/slider/editoricon.png", galleryImages = "/components/slider/", componentPath = "/components/slider/slider.jsp", customHtml = "/apps/slider/admin/editor-component.html")
+@WebjetAppStore(
+        nameKey = "components.slider.title",
+        descKey = "components.slider.desc",
+        itemKey = "cmp_slider",
+        imagePath = "/components/slider/editoricon.png",
+        galleryImages = "/components/slider/",
+        componentPath = "/components/slider/slider.jsp",
+        customHtml = "/apps/slider/admin/editor-component.html"
+)
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "components.menu.class_type", selected = true),
+        @DataTableTab(id = "basic", title = "components.slider.settings", selected = true),
         @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
         @DataTableTab(id = "transitions", title = "components.slider.transitions"),
         @DataTableTab(id = "files", title = "components.slider.files"),
@@ -32,7 +40,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class SliderApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="&nbsp;", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.slider.skin", editor = {
             @DataTableColumnEditor(options = {
                     @DataTableColumnEditorAttr(key = "Classic", value = "Classic"),
                     @DataTableColumnEditorAttr(key = "ContentBox", value = "ContentBox"),
@@ -146,39 +154,42 @@ public class SliderApp extends WebjetComponentAbstract {
     private boolean show_shadow_bottom = true;
 
     // prechody
-
-@DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "transitions", title = "components.slider.transition_style", editor = {
-    @DataTableColumnEditor(options = {
-                @DataTableColumnEditorAttr(key = "components.slider.transition_fade", value = "transition_fade"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_crossFade", value = "transition_cross_fade"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_slide", value = "transition_slide"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_elastic", value = "transition_elastic"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_slice", value = "transition_slice"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_blinds", value = "transition_blinds"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_blocks", value = "transition_blocks"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_shuffle", value = "transition_shuffle"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_tiles", value = "transition_tiles"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_flip", value = "transition_flip"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_flipWithZoom", value = "transition_flip_with_zoom"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3D", value = "transition_threed"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3DHorizontal", value = "transition_threed_horizontal"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3DWithZoom", value = "transition_threed_with_zoom"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3DHorizontalWithZoom", value = "transition_threed_horizontal_with_zoom"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3DFlip", value = "transition_threed_flip"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3DFlipWithZoom", value = "transition_threed_flip_with_zoom"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_3DTiles", value = "transition_threed_tiles"),
-                @DataTableColumnEditorAttr(key = "components.slider.transition_kenBurns", value = "transition_ken_burns")
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, tab = "transitions", title = "components.slider.transition_style", editor = {
+        @DataTableColumnEditor(options = {
+                @DataTableColumnEditorAttr(key = "components.slider.transition_fade", value = "fade"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_crossFade", value = "crossfade"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_slide", value = "slide"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_elastic", value = "elastic"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_slice", value = "slice"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_blinds", value = "blinds"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_blocks", value = "blocks"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_shuffle", value = "shuffle"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_tiles", value = "tiles"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_flip", value = "flip"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_flipWithZoom", value = "flipwithzoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3D", value = "threed"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DHorizontal", value = "threedhorizontal"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DWithZoom", value = "threedwithzoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DHorizontalWithZoom", value = "threedhorizontalwithzoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DFlip", value = "threedflip"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DFlipWithZoom", value = "threedflipwithzoom"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_3DTiles", value = "threedtiles"),
+                @DataTableColumnEditorAttr(key = "components.slider.transition_kenBurns", value = "kenburns")
+            }, attr = {
+                @DataTableColumnEditorAttr(key = "separator", value = ",")
+        })
     })
-    })
-    private String transitionStyle;
+    private String transitions_all;
 
     @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, tab = "transitions", title="&nbsp;")
     private String transitionStyleGif;
 
-    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
-    private String iframe  = "/apps/slider/admin/add-item/";
-
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
-    private String editorData;
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "files", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appslider.SliderItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+            }
+        )})
+    private String editorData = null;
 
 }

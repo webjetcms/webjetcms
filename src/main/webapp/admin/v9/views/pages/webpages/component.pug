@@ -252,8 +252,9 @@ block content
                     if(fieldValue === null || fieldValue === undefined) {
                         fieldValue = [];
                     } else if (typeof fieldValue === "string") {
+                        let multipleSeparator = getMultipleSeparator(column);
                         //It's multichoice (select multichoice), convert to array
-                        data[column.data] = fieldValue.split("+");
+                        data[column.data] = fieldValue.split(multipleSeparator);
                     }
                 }
 
@@ -360,6 +361,18 @@ block content
             return isLocalJson;
         }
 
+        function getMultipleSeparator(column) {
+            let multipleSeparator = "+";
+            if (typeof column.editor != "undefined" && typeof column.editor.attr != "undefined" && column.editor.attr != null) {
+                //check if there is separator attribute
+                if (typeof column.editor.attr.separator != "undefined") {
+                    multipleSeparator = column.editor.attr.separator;
+                }
+            }
+            //console.log("getMultipleSeparator column=", column, " multipleSeparator=", multipleSeparator);
+            return multipleSeparator;
+        }
+
         function convertObjectToInludeParams(params) {
             let result = [];
             for (let column of componentColumns) {
@@ -375,6 +388,14 @@ block content
                         //skip this column, it's datatable with separate REST service
                         continue;
                     } else {
+                        //remove ID and rowOrder columns from json
+                        if (typeof value === "object" && Array.isArray(value)) {
+                            //remove id and rowOrder from each item in array
+                            for (let i = 0; i < value.length; i++) {
+                                delete value[i].id;
+                                delete value[i].rowOrder;
+                            }
+                        }
                         //base64 encode JSON data
                         value = encodeJSONData(value);
                     }
@@ -403,6 +424,8 @@ block content
 
                         var valueArray = Array.isArray(value) ? value : [value];
 
+                        let multipleSeparator = getMultipleSeparator(column);
+
                         for (var item of valueArray) {
                             //console.log("item=", item);
                             if (item == null) continue;
@@ -415,7 +438,7 @@ block content
                             //console.log("idToAdd=", idToAdd);
 
                             if (id == null) id = idToAdd;
-                            else id += "+" + idToAdd;
+                            else id += multipleSeparator + idToAdd;
                         }
 
                         //console.log("key=", key, " id=", id);
@@ -431,7 +454,8 @@ block content
 
                 //For multichoise (checkbox multichoise, select multichoise) join values using "+"
                 if(Array.isArray(value)) {
-                    value = value.join("+");
+                    let multipleSeparator = getMultipleSeparator(column);
+                    value = value.join(multipleSeparator);
                 }
 
                 if (typeof value === "string") {

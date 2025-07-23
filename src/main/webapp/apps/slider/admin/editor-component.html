@@ -31,7 +31,7 @@
 				var selectedValue = $("#DTE_Field_skin").val();
 				var newImage = '<img id="DTE_Field_styleImageIMG" src="/components/slider/admin-styles/' + selectedValue + '.jpg" style="width: 100%; margin-top: 7px; border: 4px solid #4286f4;">';
 
-                $("#DTE_Field_styleImageIMG").replaceWith(newImage);
+                $("#DTE_Field_styleImageIMG").html(newImage);
 			}
 
             updateImageFromSelect();
@@ -66,36 +66,20 @@
 			}
 
 			function updateGifFromSelect() {
-				var selectedValue = ($("#DTE_Field_transitionStyle").val()).replace("transition_", "");
-				var newGif = "<img id='DTE_Field_transitionStyleGif' alt='" + selectedValue.toUpperCase() + "' src='/components/slider/transitions/" + selectedValue + ".gif' style='width:100%;' class='tooltipContent'>";
+				var selectedValue = $("#DTE_Field_transitions_all").val();
+				//console.log("Selected transition style: ", selectedValue);
+				var newGif = "";
+				if (Array.isArray(selectedValue)) {
+					selectedValue.forEach(function(value) {
+						newGif += "<img id='DTE_Field_transitionStyleGif_" + value + "' alt='" + value.toUpperCase() + "' src='/components/slider/transitions/" + value + ".gif' style='width:100%; margin-bottom: 8px;' class='tooltipContent'>";
+					});
+				}
 
-				$("#DTE_Field_transitionStyleGif").replaceWith(newGif);
+				$("#DTE_Field_transitionStyleGif").html(newGif);
 			}
 			// Set change event
-			$("#DTE_Field_transitionStyle").on("change", updateGifFromSelect);
-			// Set correct value
-			$("#DTE_Field_transitionStyle").val( amazingSliderToEditor(response.data.transitionStyle) ).change();
+			$("#DTE_Field_transitions_all").on("change", updateGifFromSelect);
+			updateGifFromSelect();
 		});
 	}
-
-    function appGetComponentCode(componentPath, params, componentDatatable){
-        let include = "!INCLUDE(" + componentPath;
-
-		// JTVCJTVE is base64 for []
-		let editorData = localStorage.getItem("tableLines");
-		if(editorData == undefined || editorData == null || editorData == "null") editorData = "JTVCJTVE";
-        params.editorData = editorData;
-
-		//Fix the prefix
-		let transitionValue = params.transitionStyle.replace("transition_", "");
-		//Plus bonus, amazing slider do not use undescore ... remove it
-		params.transitionStyle = transitionValue.replaceAll("_", "");
-
-        if (Object.keys(params).length > 0) {
-            include += ", " + convertObjectToInludeParams(params);
-        }
-
-        include += ")!";
-        return include;
-    }
 </script>

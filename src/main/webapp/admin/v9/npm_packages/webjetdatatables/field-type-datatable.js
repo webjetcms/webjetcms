@@ -173,13 +173,6 @@ export function typeDatatable() {
                         json.push(rowData);
                     }
                     //console.log("Returning json for localJson: ", json);
-
-                    //remove ID and rowOrder columns from json
-                    for (let i = 0; i < json.length; i++) {
-                        delete json[i].id;
-                        delete json[i].rowOrder;
-                    }
-
                     return json;
                 } else {
                     console.log("Returning original value, datatable is not initialized", conf.originalValue);

@@ -418,8 +418,7 @@ export function renderLink(td, type, rowData, row) {
     }
 }
 
-export function renderImage(td, type, rowData, row) {
-
+export function renderImage(td, type, rowData, row, text=true) {
     if (td === "") { return "" }
 
     if (type == "sort" || type == "filter" ) {
@@ -427,7 +426,10 @@ export function renderImage(td, type, rowData, row) {
     } else {
 
         if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".jpeg") || td.endsWith(".svg"))) {
-            return  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> " + renderTd(row, td, rowData) + "</a>";
+            let link =  "<a href=\"" + WJ.escapeHtml(td) + "\" target=\"_blank\"><img src=\""+td+"\"/> ";
+            if (true === text) link += renderTd(row, td, rowData);
+            link += "</a>";
+            return link;
         }
 
         return renderLink(td, type, rowData, row);

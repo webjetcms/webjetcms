@@ -53,9 +53,11 @@ Vytvorená datatabuľka sa sprístupní ako:
 
 Po vytvorení vnorenej datatabuľky je vyvolaná udalosť ```WJ.DTE.innerTableInitialized``` kde v objekte ```event.detail.conf``` je prenesená konfigurácia.
 
-## JSON editor
+## Lokálne JSON dáta
 
-Režim JSON editor pracuje s lokálnymi dátami kódovanými v `Base64` aby nedošlo k poškodeniu JSON objektu pri uložení dát vo web stránke v parametroch aplikácie. Zároveň sa aktivuje rozšírenie [Row Reorder](https://datatables.net/extensions/rowreorder/) pre možnosť usporiadania zoznamu pomocou funkcie `Drag&Drop`.
+Aktivuje režim práce s lokálnymi JSON dátami. Dáta sú získané priamo z hodnoty poľa, ktoré môže byť typu `String` pri ktorom sa vykoná volanie `JSON.parse`.
+
+Pre parametre aplikácie vo web stránke sa výsledok kóduje do `Base64` aby nedošlo k poškodeniu JSON objektu. Zároveň sa aktivuje rozšírenie [Row Reorder](https://datatables.net/extensions/rowreorder/) pre možnosť usporiadania zoznamu pomocou funkcie `Drag&Drop`.
 
 V aplikácii tak bude možné upravovať zoznam položiek, meniť ich poradie atď. bez použitia a definovania REST služby. Výsledok sa uloží nazad do JSON objektu a zakóduje cez `Base64`. Pri inicializácii sa doplní stĺpec `ID` a `rowOrder`. Využíva sa atribút `DATA.src` objektu `datatables` pre priame nastavenie dát pre tabuľku.
 
@@ -80,7 +82,7 @@ public class ImpressSlideshowItem {
         inputType = DataTableColumnType.ELFINDER,
         className = "image",
         title = "editor.perex.image",
-        renderFormat = "dt-format-image"
+        renderFormat = "dt-format-image-notext"
     )
     private String image;
 

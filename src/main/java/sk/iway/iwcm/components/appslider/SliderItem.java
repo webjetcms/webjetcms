@@ -1,6 +1,4 @@
-package sk.iway.iwcm.components.appslider.jpa;
-
-import javax.persistence.Id;
+package sk.iway.iwcm.components.appslider;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -10,11 +8,7 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Getter
 @Setter
-public class SliderDTO {
-
-    @Id
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
-    private Long id;
+public class SliderItem {
 
     @DataTableColumn(
         inputType = DataTableColumnType.ELFINDER,

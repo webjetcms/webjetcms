@@ -293,6 +293,7 @@ export function getSearchCriteria() {
 - ```dt-format-date, dt-format-date-time, dt-format-date--text, dt-format-date-time--text``` - dátum/čas, filter zobrazí od-do
 - ```dt-format-link``` - zobrazí text ako odkaz, možnosť použiť ```renderFormatLinkTemplate```
 - ```dt-format-image``` - zobrazí malý náhľad obrázku a odkaz na jeho plné zobrazenie, pod obrázkom je text linky na obrázok.
+- ```dt-format-image-notext``` - zobrazí malý náhľad obrázku a odkaz na jeho plné zobrazenie.
 - ```dt-format-mail``` - zobrazí text ako email odkaz
 - ```dt-row-edit``` - umožní editáciu riadku
 

@@ -330,13 +330,7 @@ public class MenuService {
 
             //Search
             {"/admin/searchall.jsp", "/admin/v9/search/index/"},
-            {"/admin/skins/webjet6/searchall.jsp", "/admin/v9/search/index/"},
-
-            //Slider
-            { "/components/slider/add-item.jsp", "/apps/slider/admin/add-item/"},
-
-            //Slit slider
-            { "/components/app-slit_slider/add-item.jsp", "/apps/app-slit_slider/admin/add-item/"},
+            {"/admin/skins/webjet6/searchall.jsp", "/admin/v9/search/index/"}
         };
         for (String[] pair : linkReplaces) {
             menuLinkReplaces.put(pair[0], pair[1]);
