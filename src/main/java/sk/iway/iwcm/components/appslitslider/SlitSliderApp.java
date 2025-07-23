@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.appslitslider;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +14,6 @@ import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
-import sk.iway.iwcm.system.datatable.DatatableTools;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -23,7 +22,15 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @WebjetComponent("sk.iway.iwcm.components.appslitslider.SlitSliderApp")
-@WebjetAppStore(nameKey = "components.app-slit_slider.title", descKey = "components.app-slit_slider.desc", itemKey = "app-slit_slider", imagePath = "/components/app-slit_slider/editoricon.png", galleryImages = "/components/app-slit_slider/", componentPath = "/components/app-slit_slider/news.jsp", customHtml = "/apps/app-slit_slider/admin/editor-component.html")
+@WebjetAppStore(
+    nameKey = "components.app-slit_slider.title",
+    descKey = "components.app-slit_slider.desc",
+    itemKey = "app-slit_slider",
+    imagePath = "/components/app-slit_slider/editoricon.png",
+    galleryImages = "/components/app-slit_slider/",
+    componentPath = "/components/app-slit_slider/news.jsp",
+    customHtml = "/apps/app-slit_slider/admin/editor-component.html"
+)
 @Getter
 @Setter
 @DataTableTabs(tabs = {
@@ -31,10 +38,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
         @DataTableTab(id = "files", title = "components.slider.files"),
 })
 public class SlitSliderApp extends WebjetComponentAbstract {
-
-    private static final String ICON_ALIGN_LEFT = "icon_align_left";
-    private static final String ICON_ALIGN_RIGHT = "icon_align_right";
-    private static final String ICON_ALIGN_CENTER = "icon_align_center";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "editor.table.height", tab = "basic")
     private Integer nivoSliderHeight = 500;
@@ -48,8 +51,7 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     private String explain;
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title =  "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal")
-    private String headAlign = ICON_ALIGN_LEFT;
-
+    private String headingAlign = "left";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontSize", tab = "basic")
     private Integer headingSize = 70;
@@ -66,7 +68,7 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     private String explain2;
 
     @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-slit_slider.admin.fontAlign", tab = "basic", className = "image-radio-horizontal")
-    private String subHeadingAlign = ICON_ALIGN_LEFT;
+    private String subHeadingAlign = "left";
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontSize", tab = "basic")
     private Integer subHeadingSize = 30;
@@ -74,26 +76,24 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.app-slit_slider.admin.fontMarginTop", tab = "basic")
     private Integer subHeadingMargin = 0;
 
-    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
-    private String iframe  = "/apps/app-slit_slider/admin/add-item/";
-
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
-    private String editorData;
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "files", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.appslitslider.SlitSliderItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+            }
+        )})
+    private String editorData = null;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
 
-        List<OptionDto> optionsMap = DatatableTools.getImageRadioOptions("/components/_common/custom_styles/images/align/");
-        optionsMap.sort(Comparator.comparingInt(option -> {
-            switch (option.getValue()) {
-                case ICON_ALIGN_LEFT: return 1;
-                case ICON_ALIGN_CENTER: return 2;
-                case ICON_ALIGN_RIGHT: return 3;
-                default: return 99;
-            }
-        }));
-        options.put("headAlign", optionsMap);
+        List<OptionDto> optionsMap = new ArrayList<>();
+        optionsMap.add(new OptionDto("left", "left", "/components/_common/custom_styles/images/icon_align_left.png"));
+        optionsMap.add(new OptionDto("center", "center", "/components/_common/custom_styles/images/icon_align_center.png"));
+        optionsMap.add(new OptionDto("right", "right", "/components/_common/custom_styles/images/icon_align_right.png"));
+
+        options.put("headingAlign", optionsMap);
         options.put("subHeadingAlign", optionsMap);
         return options;
     }

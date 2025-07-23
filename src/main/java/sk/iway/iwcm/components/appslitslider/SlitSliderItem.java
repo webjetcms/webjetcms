@@ -1,27 +1,19 @@
-package sk.iway.iwcm.components.appslitslider.jpa;
-
-import javax.persistence.Id;
+package sk.iway.iwcm.components.appslitslider;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Getter
 @Setter
-
-public class SlitSliderDTO {
-
-    @Id
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
-    private Long id;
+public class SlitSliderItem {
 
     @DataTableColumn(
         inputType = DataTableColumnType.ELFINDER,
         className = "image",
         title = "editor.perex.image",
-        renderFormat = "dt-format-image"
+        renderFormat = "dt-format-image-notext"
     )
     private String image;
 
@@ -32,7 +24,6 @@ public class SlitSliderDTO {
     private String subtitle;
 
     @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title = "components.news.redirectAfterClick")
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String redirectUrl;
 
     @DataTableColumn(inputType = DataTableColumnType.COLOR, title = "components.app-slit_slider.admin_news_list.headingColor")

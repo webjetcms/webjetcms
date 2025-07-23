@@ -14,7 +14,7 @@ public class SliderItem {
         inputType = DataTableColumnType.ELFINDER,
         className = "image",
         title = "editor.perex.image",
-        renderFormat = "dt-format-image"
+        renderFormat = "dt-format-image-notext"
     )
     private String image;
 
