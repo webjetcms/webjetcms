@@ -13,16 +13,24 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @WebjetComponent("sk.iway.iwcm.components.carouselslider.CarouselSliderApp")
-@WebjetAppStore(nameKey = "components.app-carousel_slider.title", descKey = "components.app-carousel_slider.desc", itemKey = "carousel_slider", imagePath = "/components/carousel_slider/editoricon.png", galleryImages = "/components/carousel_slider/", componentPath = "/components/carousel_slider/carousel_slider.jsp", customHtml = "/apps/carousel_slider/admin/editor-component.html")
+@WebjetAppStore(
+        nameKey = "components.app-carousel_slider.title",
+        descKey = "components.app-carousel_slider.desc",
+        itemKey = "carousel_slider",
+        imagePath = "/components/carousel_slider/editoricon.png",
+        galleryImages = "/components/carousel_slider/",
+        componentPath = "/components/carousel_slider/carousel_slider.jsp",
+        customHtml = "/apps/carousel_slider/admin/editor-component.html"
+)
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "components.menu.class_type", selected = true),
-        @DataTableTab(id = "advanced", title = "editor.tab.advanced"),
-        @DataTableTab(id = "files", title = "components.slider.files"),
+        @DataTableTab(id = "basic", title = "components.carousel_slider.skin", selected = true),
+        @DataTableTab(id = "advanced", title = "components.carousel_slider.settings"),
+        @DataTableTab(id = "files", title = "components.carousel_slider.files"),
 })
 @Getter
 @Setter
 public class CarouselSliderApp extends WebjetComponentAbstract {
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="&nbsp;", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.carousel_slider.skin", editor = {
             @DataTableColumnEditor(options = {
                     @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.autoScroller", value = "AutoScroller"),
                     @DataTableColumnEditorAttr(key = "components.carousel_slider.skin.classic", value = "Classic"),
@@ -133,9 +141,11 @@ public class CarouselSliderApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "advanced", title = "components.carousel_slider.interval")
     private Integer autoplay_interval = 5000;
 
-    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "files")
-    private String iframe  = "/apps/carousel_slider/admin/add-item/";
-
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic", className = "dt-json-editor")
-    private String editorData;
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, tab = "files", title="&nbsp;", className = "dt-json-editor",editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.carouselslider.CarouselSliderItem"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-localJson", value = "true")
+            }
+        )})
+    private String editorData = null;
 }

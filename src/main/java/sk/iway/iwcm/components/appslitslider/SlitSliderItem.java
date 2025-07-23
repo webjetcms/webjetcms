@@ -17,7 +17,7 @@ public class SlitSliderItem {
     )
     private String image;
 
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.app-cookiebar.cookiebar_title")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, className="dt-row-edit", title = "components.app-cookiebar.cookiebar_title")
     private String title;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "editor.subtitle")

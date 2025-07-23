@@ -25,19 +25,4 @@
 			$("#DTE_Field_skin").on("change", updateImageFromSelect);
 		});
 	}
-
-	function appGetComponentCode(componentPath, params, componentDatatable) {
-        let include = "!INCLUDE(" + componentPath;
-
-        // JTVCJTVE is base64 for []
-		let editorData = localStorage.getItem("tableLines");
-		if(editorData == undefined || editorData == null || editorData == "null") editorData = "JTVCJTVE";
-        params.editorData = editorData;
-
-        if (Object.keys(params).length > 0) {
-            include += ", " + convertObjectToInludeParams(params);
-        }
-        include += ")!";
-        return include;
-    }
 </script>
