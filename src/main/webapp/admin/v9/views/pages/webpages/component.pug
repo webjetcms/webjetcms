@@ -305,13 +305,17 @@ block content
                     let include = window.appGetComponentCode(componentPath, params, componentDatatable, isInsert);
                     if (typeof include != "undefined" && include != null) {
                         $("#componentCode", window.parent.document).val(include);
-                    } else setDedaultInclude(params);
+                    } else {
+                        setDefaultInclude(params);
+                    }
                 } else {
-                   setDedaultInclude(params);
+                   setDefaultInclude(params);
                 }
 
                 if (typeof window.appCodeExecute === "function") {
-                    window.appCodeExecute(params);
+                    //window.appCodeExecute must close window by itself and can be async
+                    setTimeout(()=>appCodeExecuteAsync(params), 10);
+                    return false;
                 }
 
                 return true;
@@ -321,7 +325,17 @@ block content
             return false;
         }
 
-        function setDedaultInclude(params) {
+        async function appCodeExecuteAsync(params) {
+            let executed = await window.appCodeExecute(params);
+            //undefined is when function doesn't return anything
+            if (typeof executed === "undefined" || executed === true) {
+                //close modal
+                window.parent.setComponentData();
+                window.parent.Cancel();
+            }
+        }
+
+        function setDefaultInclude(params) {
             let include = "!INCLUDE(" + componentPath;
             if (Object.keys(params).length > 0) {
                 include += ", " + convertObjectToInludeParams(params);

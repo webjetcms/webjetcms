@@ -673,8 +673,9 @@ Zadaný HTML kód je vložený do stránky s editorom aplikácie. Je možné vyu
 - `appAfterInit(response, componentDatatable, componentPath, isInsert)` - volané po inicializácii datatabuľky, v `componentDatatable` je inštancia datatabuľky/editora a v `isInsert` informuje, či ide o novo vloženú aplikáciu alebo úpravu.
 - `appGetComponentPath(componentPath, componentDatatable)` - volané pri vložení aplikácie do stránky, môžete zmeniť cestu pre vložený `INCLUDE` napr. na základe vybraných možností.
 - `appGetComponentCode(componentPath, params, componentDatatable, isInsert)` - volané pri vložení aplikácie do stránky, môže vrátiť kompletný kód pre vloženie do stránky (nemusí to byť priamo `!INCLUDE` kód).
+- `async appCodeExecute(params)` - volanie po kliknutí na tlačidlo OK, môže volať serverovú REST službu.
 
-Ukážkový kód, ktorý reaguje na zmenu výberového poľa:
+Ukážkový kód rôznych možností:
 
 ```html
 <script>
@@ -718,6 +719,37 @@ Ukážkový kód, ktorý reaguje na zmenu výberového poľa:
                 }
             });
         });
+    }
+
+    async function appCodeExecute(params) {
+        let result = false;
+        try {
+            await $.ajax({
+                url: "/admin/rest/forum/prepare-structure",
+                method: "POST",
+                data: paramsX.toString(),
+                success: async function(response) {
+                    if(response != undefined && response != null && response != "") {
+                        //It's error
+                        console.log("ERROR: ", response);
+                        window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                    }
+
+                    try { window.parent.parent.reloadWebpagesTree(); } catch (e) {}
+                    try { await window.parent.reloadParentWindow(); } catch (e) {}
+                    try { window.parent.parent.parent.$('#SomStromcek').jstree(true).refresh(); } catch (e) {}
+                    result = true;
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                }
+            });
+        } catch (e) {
+            console.log("ERROR: ", e);
+            window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+        }
+        return result;
     }
 
 </script>

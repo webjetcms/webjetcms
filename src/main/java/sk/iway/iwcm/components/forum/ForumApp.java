@@ -26,10 +26,18 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @WebjetComponent("sk.iway.iwcm.components.forum.ForumApp")
-@WebjetAppStore(nameKey = "components.forum.title", descKey = "components.forum.desc", itemKey = "cmp_forum", imagePath = "/components/forum/editoricon.png", galleryImages = "/components/forum/", componentPath = "/components/forum/forum.jsp,/components/forum/forum_mb.jsp", customHtml = "/apps/forum/admin/editor-component.html")
+@WebjetAppStore(
+        nameKey = "components.forum.title",
+        descKey = "components.forum.desc",
+        itemKey = "cmp_forum",
+        imagePath = "/components/forum/editoricon.png",
+        galleryImages = "/components/forum/",
+        componentPath = "/components/forum/forum.jsp,/components/forum/forum_mb.jsp",
+        customHtml = "/apps/forum/admin/editor-component.html"
+)
 @DataTableTabs(tabs = {
-        @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
-        @DataTableTab(id = "groups", title = "user.admin.userGroups"),
+        @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+        @DataTableTab(id = "groups", title = "components.forum.structure"),
         @DataTableTab(id = "componentIframeWindowTabList", title = "components.forum.zoznam_diskusii")
 })
 @Getter
@@ -41,7 +49,7 @@ public class ForumApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.forum.admin.forumType.mb", value = "forum_mb")
             })
     })
-    private String forumType;
+    private String forumType = "forum";
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.forum.sort_by_question_date", tab = "basic", editor = {
             @DataTableColumnEditor(options = {
@@ -49,7 +57,7 @@ public class ForumApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.forum.sort_by_question_date.desc", value = "false")
             })
     })
-    private Boolean sortAscending;
+    private Boolean sortAscending = true;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.forum.sort_topics_by", tab = "basic", editor = {
             @DataTableColumnEditor(options = {
@@ -57,7 +65,7 @@ public class ForumApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.forum.sortBy.QuestionDate", value = "QuestionDate")
             })
     })
-    private Boolean sortTopicsBy;
+    private String sortTopicsBy;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.forum.type", tab = "basic", editor = {
             @DataTableColumnEditor(options = {
@@ -95,7 +103,7 @@ public class ForumApp extends WebjetComponentAbstract {
     private String structure;
 
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN, tab = "basic")
-    Boolean rootGroup=true;
+    Boolean rootGroup = true;
 
     @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframeWindowTabList")
     private String iframe  = "/apps/forum/admin/";
@@ -115,8 +123,8 @@ public class ForumApp extends WebjetComponentAbstract {
 
         GroupsDB groupsDB = GroupsDB.getInstance();
         DocDB docDB = DocDB.getInstance();
-        String attribute = (request.getSession().getAttribute("iwcm_group_id") == null) ? null : request.getSession().getAttribute("iwcm_group_id").toString();
-        List<GroupDetails> groups = groupsDB.getGroups(Tools.getIntValue(attribute, -1));
+        String lastGroupIdString = (request.getSession().getAttribute("iwcm_group_id") == null) ? null : request.getSession().getAttribute("iwcm_group_id").toString();
+        List<GroupDetails> groups = groupsDB.getGroups(Tools.getIntValue(lastGroupIdString, -1));
 
         if (groups.isEmpty() == false) optionsSB = new StringBuilder();
         for (GroupDetails gd : groups) {

@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,16 +27,22 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.editor.EditorDB;
-import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.forum.ForumSortBy;
 import sk.iway.iwcm.users.UsersDB;
 
 @Controller
-@RequestMapping(value = "/apps/forum")
+@RequestMapping
 public class ForumController {
 
-    @PostMapping("/saveforum")
+    private final EditorFacade editorFacade;
+
+    @Autowired
+    public ForumController(EditorFacade editorFacade) {
+        this.editorFacade = editorFacade;
+    }
+
+    @PostMapping("/apps/forum/saveforum")
     public String saveForum(@ModelAttribute("forumForm") DocForumEntity forumForm, HttpServletRequest request, HttpServletResponse response) {
         try {
             return DocForumService.saveDocForum(request, response, forumForm);
@@ -45,7 +53,7 @@ public class ForumController {
         return null;
     }
 
-    @PostMapping("/saveForumFile")
+    @PostMapping("/apps/forum/saveForumFile")
     public String saveForumFile(@RequestParam("uploadedFile") CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
         try {
             return DocForumService.uploadForumFile(uploadFile, request);
@@ -56,7 +64,8 @@ public class ForumController {
         return null;
     }
 
-    @PostMapping("/prepareStructure")
+    @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_diskusia')")
+    @PostMapping("/admin/rest/forum/prepare-structure")
     @ResponseBody
     public String prepareStructure(@RequestParam("structure") String structure, @RequestParam("groupId") int groupId, @RequestParam("pageData") String pageData, HttpServletRequest request) {
         //Nothing to prepare
@@ -144,10 +153,9 @@ public class ForumController {
     private String saveSectionDoc(HttpServletRequest request, GroupDetails group, String title, String data, boolean available) {
         Identity user = UsersDB.getCurrentUser(request);
 
-        EditorForm editorForm = EditorDB.getEditorForm(request, -1, -1, group.getGroupId());
+        DocDetails editorForm = editorFacade.getDocForEditor(-1, -1, group.getGroupId());
         editorForm.setAuthorId(user.getUserId());
         editorForm.setTempId(group.getTempId());
-        editorForm.setPublish("1");
         editorForm.setAvailable(available);
         editorForm.setTitle(title);
         editorForm.setNavbar(title);
@@ -155,7 +163,8 @@ public class ForumController {
 
         Logger.debug(ForumController.class, "Ukladam stranku: " + title);
 
-        int historyId = EditorDB.saveEditorForm(editorForm, request);
+        DocDetails saved = editorFacade.save(editorForm);
+        int historyId = saved.getHistoryId();
         if (historyId > 0) {
             Logger.debug(ForumController.class, "Ulozenie stranky: " + title + " bolo uspesne, historyId:" + historyId);
             return null;

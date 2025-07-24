@@ -104,8 +104,9 @@
     async function appCodeExecute(params) {
         const structure = $("#DTE_Field_structure").val();
         const fieldElement = $("#DTE_Field_forumType").val();
+        let result = false;
 
-        if (fieldElement=== "forum_mb" && structure.length > 0) {
+        if (fieldElement === "forum_mb" && structure.length > 0) {
             try {
                 //Get jstree
                 let jstree = window.parent.parent.parent.$('#SomStromcek').jstree();
@@ -125,32 +126,31 @@
                 }));
 
                 await $.ajax({
-                    url: "/apps/forum/prepareStructure",
+                    url: "/admin/rest/forum/prepare-structure",
                     method: "POST",
                     data: paramsX.toString(),
                     success: async function(response) {
                         if(response != undefined && response != null && response != "") {
                             //It's error
                             console.log("ERROR: ", response);
-                            window.WJ.notifyError("[[#{components.forum_app.prepare_structure_err.title}]]", "[[#{components.forum_app.prepare_structure_err.text}]]");
+                            window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
                         }
 
                         try { window.parent.parent.reloadWebpagesTree(); } catch (e) {}
                         try { await window.parent.reloadParentWindow(); } catch (e) {}
-
                         try { window.parent.parent.parent.$('#SomStromcek').jstree(true).refresh(); } catch (e) {}
-                        try { window.parent.Cancel(); } catch (e) {}
+                        result = true;
                     },
-                     error: function(xhr, status, error) {
+                    error: function(xhr, status, error) {
                         console.error('Error:', error);
-                        window.WJ.notifyError("[[#{components.forum_app.prepare_structure_err.title}]]", "[[#{components.forum_app.prepare_structure_err.text}]]");
+                        window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
                     }
                 });
             } catch (e) {
                 console.log("ERROR: ", e);
-                window.WJ.notifyError("[[#{components.forum_app.prepare_structure_err.title}]]", "[[#{components.forum_app.prepare_structure_err.text}]]");
-                return;
+                window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
             }
         }
+        return result;
     }
 </script>
