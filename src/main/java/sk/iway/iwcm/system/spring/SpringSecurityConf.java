@@ -1,23 +1,27 @@
 package sk.iway.iwcm.system.spring;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -26,8 +30,7 @@ public class SpringSecurityConf {
 
 	private static boolean basicAuthEnabled = false;
 
-	@Autowired
-	private GoogleOAuth2UserService googleOAuth2UserService;
+	private static List<String> clients = Arrays.asList("google");
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -46,11 +49,13 @@ public class SpringSecurityConf {
 		}
 
 		// OAuth2 login podpora
-		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("oauth2")) {
+		//if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("oauth2")) {
+		if (Constants.getBoolean("isOAuth2Enabled")) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {
-				oauth2.loginPage("/admin/logon/");
-				oauth2.userInfoEndpoint(userInfo -> userInfo.userService(googleOAuth2UserService));
+				oauth2.clientRegistrationRepository(clientRegistrationRepository());
+				oauth2.authorizedClientService(authorizedClientService());
+				oauth2.successHandler(new OAuth2SuccessHandler());
 			});
 		}
 
@@ -128,30 +133,33 @@ public class SpringSecurityConf {
 
 	@Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
-		String clientId = Constants.getString("googleClientId");
-		String clientSecret = Constants.getString("googleClientSecret");
-		String redirectUri = Constants.getString("googleRedirectUri");
-		boolean enabled = Constants.getBoolean("googleOAuthEnabled");
+		List<ClientRegistration> registrations = clients.stream()
+				.map(c -> getRegistration(c))
+				.filter(registration -> registration != null)
+				.collect(Collectors.toList());
 
-		if (!enabled || clientId == null || clientSecret == null || redirectUri == null) {
-			Logger.error(SpringSecurityConf.class, "Google OAuth2 nie je správne nakonfigurovaný v Constants");
-			return new InMemoryClientRegistrationRepository();
+		return new InMemoryClientRegistrationRepository(registrations);
+	}
+
+	private ClientRegistration getRegistration(String client) {
+		if (client.equals("google")) {
+			String clientId = Constants.getString("googleClientId");
+
+			if (clientId == null) {
+				return null;
+			}
+
+			String clientSecret = Constants.getString("googleClientSecret");
+
+			return CommonOAuth2Provider.GOOGLE.getBuilder(client)
+					.clientId(clientId).clientSecret(clientSecret).build();
 		}
+		return null;
+	}
 
-		ClientRegistration googleRegistration = ClientRegistration.withRegistrationId("google")
-			.clientId(clientId)
-			.clientSecret(clientSecret)
-			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-			.redirectUri(redirectUri)
-			.scope("openid", "email", "profile")
-			.authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
-			.tokenUri("https://oauth2.googleapis.com/token")
-			.userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")
-			.userNameAttributeName("email")
-			.clientName("Google")
-			.build();
-
-		return new InMemoryClientRegistrationRepository(googleRegistration);
+	@Bean
+	public OAuth2AuthorizedClientService authorizedClientService() {
+		return new InMemoryOAuth2AuthorizedClientService(
+				clientRegistrationRepository());
 	}
 }
