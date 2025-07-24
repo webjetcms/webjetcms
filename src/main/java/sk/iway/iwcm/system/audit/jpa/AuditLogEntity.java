@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.Size;
@@ -70,7 +71,7 @@ public class AuditLogEntity {
 		this.userFullName = userFullName;
 	}
 
-	@Size(max = 1000)
+	@Lob
 	@Column(name = "description")
 	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
 			@DataTableColumnEditor(type = "textarea", attr = {

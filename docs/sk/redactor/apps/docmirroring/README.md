@@ -10,7 +10,7 @@ V rámci WebJET CMS zrkadlenia štruktúry aktivuje nastavením konfiguračnej p
 
 Formát zápisu je nasledovný:
 
-```
+```txt
 groupId-sk,groupId-en,groupId-cz:poznamka (napr meno domeny)
 ineGroupId1,ineGroupId2:poznamka inej domeny
 ```
@@ -95,6 +95,10 @@ Pri nastavenej hodnote `structureMirroringAutoTranslatorLogin` je teda detekcia 
 Pri ukladaní stránky sa zmeny aplikujú na všetky kópie. Ak teda z SK verzie vytvorím EN a DE verziu (ktoré ešte nie sú publikované, alebo neboli zmenené reálnym redaktorom), tak pri zmene EN verzie sa text preloží do DE verzie. SK verzia sa neovplyvní, pretože je už typicky publikovaná, respektíve je vytvorená reálnym (nie `structureMirroringAutoTranslatorLogin`) používateľom.
 
 Ak je nastavená konf. premenná `syncGroupAndWebpageTitle` na hodnotu `true` (čo je štandardná hodnota) automaticky sa synchronizuje názov priečinka s názvom hlavnej stránky v priečinku. Pri zmene názvu hlavnej stránky sa premenuje aj priečinok a to aj v preložených verziách.
+
+## Zrušenie zrkadlenia
+
+Zrušenie zrkadlenia vyžaduje aby ste prepojenie odstránili z konfiguračnej premennej `structureMirroringConfig`. Lenže v databáze ostane ešte nastavená hodnota `sync_id`, ktorá prepojovala priečinky/stránky v rôznych jazykových mutáciách. Tieto hodnoty musia byť odstránené, inak priečinky/stránky ostanú naďalej prepojené/synchronizované. K tomuto účelu potrebuje využiť [Zrušenie zrkadlenia](../clone-structure/README.md#zrušenie-zrkadlenia).
 
 ## Technické informácie
 

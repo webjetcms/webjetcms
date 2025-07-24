@@ -83,6 +83,8 @@ module.exports = {
     deleteCurrentEmail() {
         I.clickCss("#delete_mail");
         I.waitForElement("#modal-destroy-mail", 10);
+        I.waitForElement("#confirm_mail");
+        I.wait(1);
         I.clickCss("#confirm_mail");
         I.waitForInvisible("#modal-destroy-mail", 60);
     },

@@ -1129,6 +1129,12 @@ public class OfflineService {
 		{
 			name = e.nextElement();
 			value = req.getHeader(name);
+			if ("content-length".equalsIgnoreCase(name) || "content-type".equalsIgnoreCase(name) || "accept-encoding".equals(name))
+			{
+				//skip this headers they are from the original POST request
+				continue;
+			}
+
 			if ("host".equalsIgnoreCase(name))
 			{
 				//value = "www2.ing.cz";
@@ -1152,10 +1158,6 @@ public class OfflineService {
 		method.setHeader("userInServletContext", "true");
 		//nastav dmail header, aby sa negeneroval inline editor
 		method.setHeader("dmail", "1");
-
-		String contentType = req.getContentType()+"; charset="+req.getCharacterEncoding();
-		method.setHeader("Content-Type", contentType);
-		Logger.println(OfflineAction.class,"header: Content-Type: " + contentType);
 
 		try {
 			HttpResponse response = client.execute(method);
