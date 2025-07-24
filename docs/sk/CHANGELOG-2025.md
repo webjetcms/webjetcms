@@ -48,6 +48,7 @@
 
 - Prekladač - pri prekladači `DeepL` sa zlepšilo spracovanie vrátených chybových hlášok, pre presnejšie identifikovanie problému (#57881).
 - Prekladač - pridaná podpora pre implementáciu viacerých prekladačov a ich automatické spracovanie/využitie (#57881).
+- Prekladač - pridané automatické auditovanie počtu spotrebovaných znakov (tokenov) pri každom preklade (#57965).
 
 ### Oprava chýb
 

@@ -4,10 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.http.Consts;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -60,6 +59,9 @@ public class DeepL extends TranslationEngine {
         }
 
         String translationApiUrl = Constants.getString("deepl_api_url");
+        if(translationApiUrl.endsWith("/") == false) translationApiUrl += "/";
+        translationApiUrl += "translate";
+
         String deeplModelType = Constants.getString("deepl_model_type");
 
         //DeepL has a problem with nbsp entity
@@ -69,15 +71,9 @@ public class DeepL extends TranslationEngine {
         while (attempt < MAX_RETRIES) {
             try {
                 String response = Request.Post(translationApiUrl)
-                    .bodyForm(Form.form()
-                        .add("text", text)
-                        .add("source_lang", fromLanguage.toUpperCase())
-                        .add("target_lang", toLanguage.toUpperCase())
-                        .add("tag_handling", "html")
-                        .add("model_type", deeplModelType)
-                        .build(), Consts.UTF_8)
-                    .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                    .setHeader("Content-Type", "application/json; charset=utf-8")
                     .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
+                    .bodyString(getBodyString(text, fromLanguage, toLanguage, deeplModelType), ContentType.APPLICATION_JSON)
                     .execute().returnContent().asString(StandardCharsets.UTF_8);
 
                 JSONObject json = new JSONObject(response);
@@ -87,7 +83,11 @@ public class DeepL extends TranslationEngine {
 
                     if (translationKey != null) translationsCache.put(translationKey, translatedText);
 
-                    if (Tools.isNotEmpty(translatedText)) return translatedText;
+                    if (Tools.isNotEmpty(translatedText)) {
+                        int billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getInt("billed_characters") : 0;
+                        adminLogBilledCharactes(billedCharacters);
+                        return translatedText;
+                    }
                 }
 
                 //Succes, break the while
@@ -118,9 +118,22 @@ public class DeepL extends TranslationEngine {
         return text;
     }
 
+    private String getBodyString(String text, String fromLanguage, String toLanguage, String deeplModelType) {
+        JSONObject json = new JSONObject();
+        json.put("text", new JSONArray().put(text));
+        json.put("source_lang", fromLanguage.toUpperCase());
+        json.put("target_lang", toLanguage.toUpperCase());
+        json.put("tag_handling", "html");
+        json.put("model_type", deeplModelType);
+        json.put("show_billed_characters", Boolean.TRUE);
+        return json.toString();
+    }
+
     @Override
     public Long numberOfFreeCharacters() {
-        String usageApiUrl = Constants.getString("deepl_api_usage_url");
+        String usageApiUrl = Constants.getString("deepl_api_url");
+        if(usageApiUrl.endsWith("/") == false) usageApiUrl += "/";
+        usageApiUrl += "usage";
 
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
