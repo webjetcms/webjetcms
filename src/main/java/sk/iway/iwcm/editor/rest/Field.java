@@ -15,6 +15,7 @@ public class Field implements Serializable {
     private String warningMessage;
     private List<FieldValue> typeValues;
     private boolean multiple;
+    private String className;
 
     //If you dont want fieldA but originalValueA, them set customPrefix = "originalValue"
     private String customPrefix;
@@ -87,5 +88,11 @@ public class Field implements Serializable {
     }
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
+    }
+    public String getClassName() {
+        return className;
+    }
+    public void setClassName(String className) {
+        this.className = className;
     }
 }

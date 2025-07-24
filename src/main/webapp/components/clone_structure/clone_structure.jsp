@@ -3,6 +3,7 @@
 
 <%@page import="sk.iway.iwcm.system.translation.TranslationService"%>
 <%@page import="sk.iway.iwcm.system.translation.TranslationEngineInfo"%>
+<%@page import="sk.iway.iwcm.Tools"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -29,6 +30,10 @@
 		engineName = translationInfo.getEngineName();
 		freeCharacters = translationInfo.getRemainingCharacters();
 	}
+
+	//Get error messages
+	String errorMsg = (String) session.getAttribute("err_msg");
+	session.removeAttribute("err_msg");
 %>
 
 <jsp:include page="/admin/layout_top_dialog.jsp" />
@@ -135,6 +140,13 @@
 </style>
 
 <div class="padding10">
+
+
+	<% if (Tools.isNotEmpty(errorMsg)) { %>
+		<p style="width:100%; color: #ff4b58; display: block;">
+			<%=errorMsg%>
+		</p>
+	<%} %>
 
 	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post"><%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 		<table>

@@ -22,6 +22,16 @@
 - Klonovanie štruktúry - pridaná informácia o nakonfigurovanom prekladači a koľko voľných znakov na preklad ostáva (#57881).
 - Zrkadlenie štruktúry - pridaná možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať zrkadlenie stránok (#57881).
 
+- Zrkadlenie - pridanie novej sekcie [zrkadlenie](redactor/webpages/mirroring/README.MD) na sledovanie a manažovanie previazaných priečinkov a stránok po akcií zrkadlenia (#57941).
+
+![](redactor/webpages/mirroring/groups_datatable.png)
+
+### Voliteľné polia
+
+- Pridaná podpora pre 2 nové typy voliteľných polí, ktoré sa dajú nastaviť:
+  - [Výber adresára stránok](frontend/webpages/customfields/README.md#výber-adresára-stránok) (#57941).
+  - [Výber stránky](frontend/webpages/customfields/README.md#výber-stránky) (#57941).
+
 ![](redactor/apps/clone-structure/clone_structure_set_translator.png)
 
 ### Používateľské rozhranie
@@ -52,6 +62,7 @@
 ### Oprava chýb
 
 - Datatabuľky - opravené nastavenie možností do výberového menu externého filtra (#57657-8).
+- Klonovanie štruktúry - opravená validácia zadaných id adresárov + pridanie výpisu chybovej hlášky (#57941).
 
 ### Dokumentácia
 

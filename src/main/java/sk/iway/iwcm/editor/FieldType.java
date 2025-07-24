@@ -23,7 +23,9 @@ public enum FieldType {
     UUID,
     QUILL,
     BOOLEAN_TEXT,
-    COLOR
+    COLOR,
+    JSON_GROUP,
+    JSON_DOC
     ;
 
     public static FieldType asFieldType(String str) {
@@ -61,6 +63,9 @@ public enum FieldType {
         if ("uuid".equals(str)) return FieldType.UUID;
         if ("quill".equals(str)) return FieldType.QUILL;
         if ("color".equals(str)) return FieldType.COLOR;
+
+        if (str.startsWith("json_group")) return FieldType.JSON_GROUP;
+        if (str.startsWith("json_doc")) return FieldType.JSON_DOC;
 
         return FieldType.TEXT;
     }
