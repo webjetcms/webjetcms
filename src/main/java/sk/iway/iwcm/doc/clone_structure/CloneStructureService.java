@@ -24,6 +24,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.users.UsersDB;
@@ -255,6 +256,9 @@ public class CloneStructureService {
             //it there was no syncId on sourceFolder clear also source
             if (srcSyncId<1) MirroringService.clearSyncId(srcGroupId);
             MirroringService.clearSyncId(destGroupId);
+        } else {
+            //Set it to DB
+            ConfDB.setName(CONFIG_KEY, mirroringConfig);
         }
 
         //Reset values
