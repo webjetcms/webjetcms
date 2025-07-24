@@ -62,6 +62,7 @@
 ### Oprava chýb
 
 - Datatabuľky - opravené nastavenie možností do výberového menu externého filtra (#57657-8).
+- Klonovanie štruktúry - opravená validácia zadaných id adresárov + pridanie výpisu chybovej hlášky (#57941).
 
 ### Dokumentácia
 

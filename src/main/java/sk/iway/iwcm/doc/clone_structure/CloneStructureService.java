@@ -7,6 +7,7 @@ import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
@@ -23,12 +24,14 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.users.UsersDB;
 
 public class CloneStructureService {
+
+    private static final String CONFIG_KEY = "structureMirroringConfig";
+    private static final String DISABLE_ON_CREATE_KEY = "structureMirroringDisabledOnCreate";
 
     private CloneStructureService() {
         //Utility class
@@ -44,7 +47,7 @@ public class CloneStructureService {
      * @param domainName - name of current domain
      */
 	private static void setMirroringConfig(int srcGroupId, int destGroupId, String domainName) {
-		String mirroringConfig = Constants.getString("structureMirroringConfig");
+		String mirroringConfig = Constants.getString(CONFIG_KEY);
 
 		if(mirroringConfig.isEmpty()==false) {
 			String[] lines = Tools.getTokens(mirroringConfig, "\n");
@@ -63,7 +66,7 @@ public class CloneStructureService {
                     //add mapping to this line
 					String newLine = line.substring(0, i) + "," + destGroupId + line.substring(i);
                     mirroringConfig = mirroringConfig.replace(line, newLine);
-                    Constants.setString("structureMirroringConfig", mirroringConfig);
+                    Constants.setString(CONFIG_KEY, mirroringConfig);
                     return;
 				}
 			}
@@ -73,7 +76,7 @@ public class CloneStructureService {
         if (mirroringConfig.isEmpty()==false) mirroringConfig += "\n";
 		mirroringConfig += srcGroupId + "," + destGroupId + ":" + domainName;
 
-        Constants.setString("structureMirroringConfig", mirroringConfig);
+        Constants.setString(CONFIG_KEY, mirroringConfig);
 	}
 
     /**
@@ -145,12 +148,43 @@ public class CloneStructureService {
 	public static String cloneStructure(int srcGroupId, int destGroupId, boolean keepMirroring, boolean keepVirtualPath, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		String domainName = CloudToolsForCore.getDomainName();
         Prop prop = Prop.getInstance(request);
+        HttpSession session = request.getSession();
+
+        //Prepare DB instances
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        DocDB docDB = DocDB.getInstance();
+
+        //Check that id's and domain are present
+        if(srcGroupId < 1 || destGroupId < 1 || domainName.isEmpty()) {
+            handleError(response, session, prop, "datatable.error.unknown", "srcGroupId OR destGroupId invalid value");
+            return null;
+        }
+
+        //Obtain and check source group to clone
+        GroupDetails srcGroup = groupsDB.getGroup(srcGroupId);
+        GroupDetails destGroup = groupsDB.getGroup(destGroupId);
+        if(srcGroup == null || destGroup == null) {
+            handleError(response, session, prop, "datatable.error.unknown", "srcGroup OR destGroup not found");
+            return null;
+        }
+
+        if(Constants.getBoolean("multiDomainEnabled") == true) {
+            //Need to check if ids are domain safe
+            if(domainName.equals(srcGroup.getDomainName()) == false || domainName.equals(destGroup.getDomainName())) {
+                handleError(response, session, prop, "admin.editor_dir.dontHavePermsForThisDir", "srcGroup OR destGroup belongs to another domain");
+                return null;
+            }
+        }
+
+        //Perms check for groups
+        Identity user = UsersDB.getCurrentUser(request);
+        if(GroupsDB.isGroupEditable(user,srcGroupId) == false || GroupsDB.isGroupEditable(user,destGroupId) == false) {
+            handleError(response, session, prop, "admin.editor_dir.dontHavePermsForThisDir", "user have not right for group's");
+            return null;
+        }
 
         //Constants that are needed in Mirror logic to chnage how we do thinks
         setCloneConstants(true, srcGroupId, destGroupId);
-
-        //Check that id's and domain are present
-        if(srcGroupId == -1 || destGroupId == -1 || domainName.isEmpty()) return null;
 
         //save parameters to requestBean to use in services
         RequestBean.addParameter("keepVirtualPath", ""+keepVirtualPath);
@@ -160,25 +194,8 @@ public class CloneStructureService {
         int srcSyncId = GroupMirroringServiceV9.getSyncId(srcGroupId);
 
 		//Set id's to mirroring (if they are not set allready)
-        String mirroringConfig = Constants.getString("structureMirroringConfig");
+        String mirroringConfig = Constants.getString(CONFIG_KEY);
 		setMirroringConfig(srcGroupId, destGroupId, domainName);
-
-        //Prepare DB instances
-        GroupsDB groupsDB = GroupsDB.getInstance();
-        DocDB docDB = DocDB.getInstance();
-
-        //Obtain and check source group to clone
-        GroupDetails srcGroup = groupsDB.getGroup(srcGroupId);
-        if(srcGroup == null) return null;
-
-        Identity user = UsersDB.getCurrentUser(request);
-
-        //Perms check for groups
-        if(!GroupsDB.isGroupEditable(user,srcGroupId) || !GroupsDB.isGroupEditable(user,destGroupId)) {
-			request.setAttribute("err_msg", prop.getText("admin.editor_dir.dontHavePermsForThisDir"));
-			SpringUrlMapping.redirectToLogon(response);
-            return null;
-		}
 
         sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
         request.setAttribute("iconLink", "");
@@ -193,8 +210,8 @@ public class CloneStructureService {
         println(out, prop.getText("components.clone.copy_dir") + ": " + srcGroupId + " -> " + destGroupId);
 
         //disable structure mirroring available=false on create
-        boolean structureMirroringDisabledOnCreate = Constants.getBoolean("structureMirroringDisabledOnCreate");
-        Constants.setBoolean("structureMirroringDisabledOnCreate", false);
+        boolean structureMirroringDisabledOnCreate = Constants.getBoolean(DISABLE_ON_CREATE_KEY);
+        Constants.setBoolean(DISABLE_ON_CREATE_KEY, false);
 
         try {
             //Get all group's that belongs under source group (even with source group)
@@ -230,10 +247,10 @@ public class CloneStructureService {
             setCloneConstants(false, -1, -1);
         }
 
-        Constants.setBoolean("structureMirroringDisabledOnCreate", structureMirroringDisabledOnCreate);
+        Constants.setBoolean(DISABLE_ON_CREATE_KEY, structureMirroringDisabledOnCreate);
         if (keepMirroring==false) {
             //set original mirroring config
-            Constants.setString("structureMirroringConfig", mirroringConfig);
+            Constants.setString(CONFIG_KEY, mirroringConfig);
 
             //it there was no syncId on sourceFolder clear also source
             if (srcSyncId<1) MirroringService.clearSyncId(srcGroupId);
@@ -253,6 +270,12 @@ public class CloneStructureService {
 
 		return null;
 	}
+
+    private static void handleError(HttpServletResponse response, HttpSession session, Prop prop, String errMsgKey, String debugMsg) throws IOException{
+        session.setAttribute("err_msg", prop.getText(errMsgKey));
+        response.sendRedirect("/components/clone_structure/clone_structure.jsp");
+        Logger.debug(CloneStructureService.class, "cloneStructure() - " + debugMsg);
+    }
 
     private static void setCloneConstants(boolean isCloneAction, int srcId, int destId) {
         if(isCloneAction == true) Constants.setString("mirroringMode", MirroringService.MIRRORING_MODE_CLONE);
