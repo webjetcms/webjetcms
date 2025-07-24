@@ -170,7 +170,7 @@ public class CloneStructureService {
 
         if(Constants.getBoolean("multiDomainEnabled") == true) {
             //Need to check if ids are domain safe
-            if(domainName.equals(srcGroup.getDomainName()) == false || domainName.equals(destGroup.getDomainName())) {
+            if(domainName.equals(srcGroup.getDomainName()) == false || domainName.equals(destGroup.getDomainName()) == false) {
                 handleError(response, session, prop, "admin.editor_dir.dontHavePermsForThisDir", "srcGroup OR destGroup belongs to another domain");
                 return null;
             }
