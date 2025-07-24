@@ -2,6 +2,7 @@ package sk.iway.iwcm.system.translation;
 
 import java.util.Random;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 
 public abstract class TranslationEngine {
@@ -46,5 +47,9 @@ public abstract class TranslationEngine {
 
         // We can try again
         return true;
+    }
+
+    protected void adminLogBilledCharactes(int billedCharacters) {
+        Adminlog.add(Adminlog.TYPE_TRANSLATION, "AUTO _TRANSLATION " + engineName(), billedCharacters, -1);
     }
 }
