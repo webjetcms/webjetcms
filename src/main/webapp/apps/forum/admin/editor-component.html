@@ -150,6 +150,8 @@
                 console.log("ERROR: ", e);
                 window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
             }
+        } else {
+            result = true; //If not forum_mb, we don't need to prepare structure
         }
         return result;
     }

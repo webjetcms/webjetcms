@@ -1321,7 +1321,7 @@ export const dataTableInit = options => {
             window.dispatchEvent(eventClose);
         });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
-            //console.log("Editor.on submitSuccess, json=", json, "DATA=", DATA);
+            //console.log("Editor.on submitSuccess, json=", json, "DATA=", DATA, "data=", data, "action=", action);
             if (DATA.isLocalJson === false) {
                 setTimeout(function() {
                     if (json.forceReload === true) {

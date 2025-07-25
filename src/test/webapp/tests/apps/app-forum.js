@@ -9,7 +9,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('Forum app - test INCLUDE building', async ({ I, DTE, Apps }) => {
-    Apps.insertApp('Diskusia', '#components-forum-title', 128790, false);
+    Apps.insertApp('Diskusia', '#components-forum-title', null, false);
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
 
@@ -20,10 +20,10 @@ Scenario('Forum app - test INCLUDE building', async ({ I, DTE, Apps }) => {
     I.dontSeeElement("#pills-dt-component-datatable-groups-tab");
 
     I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok');
+    I.clickCss('.cke_dialog .cke_dialog_footer_buttons a.cke_dialog_ui_button.cke_dialog_ui_button_ok');
 
     const defaultParams = {
-        type: "iframe",
+        type: "normal",
         noPaging: "true",
         sortAscending : "true",
         notifyPageAuthor: "false"
@@ -84,8 +84,4 @@ Scenario('Forum app - test INCLUDE building', async ({ I, DTE, Apps }) => {
     };
 
     await Apps.assertParams(changedParams, "/components/forum/forum_mb.jsp");
-});
-
-Scenario('Forum app - test INCLUDE building', async ({ I, DT, DTE, Apps }) => {
-
 });

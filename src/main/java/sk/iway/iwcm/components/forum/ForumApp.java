@@ -76,7 +76,7 @@ public class ForumApp extends WebjetComponentAbstract {
                     @DataTableColumnEditorAttr(key = "components.forum.start_open", value = "open")
             })
     })
-    private String type;
+    private String type = "normal";
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title = "components.forum.paging", tab = "basic")
     private Boolean noPaging;

@@ -515,7 +515,7 @@ block content
         const encodeJSONData = function(inputData) {
             try {
                 // Uistite sa, že inputData nie je undefined alebo null
-                if (inputData === undefined || inputData === null) throw new Error("Input data is null or undefined");
+                if (inputData === undefined || inputData === null || inputData === "") return "";
 
                 // Kódujeme JSON do URI a následne Base64, pričom nahrádzame '+' na '%2B'
                 let encoded = encodeURI(JSON.stringify(inputData));

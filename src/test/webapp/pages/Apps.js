@@ -50,7 +50,7 @@ module.exports = {
         }
 
         if(expectedPath != null && expectedPath !== '') {
-            I.say("Test expected path");
+            I.say("Test expected path " + expectedPath);
             const match = inputString.match(/\!INCLUDE\(([^,]+),/);
             I.say(match);
 

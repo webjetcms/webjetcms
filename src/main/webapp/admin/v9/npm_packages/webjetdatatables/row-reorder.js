@@ -68,6 +68,8 @@ export function setNewReorderValue(TABLE, force=false) {
             //iterate datatable rows and get new rowOrder value
             let rowOrder = 0;
             let maxRowOrder = 0;
+            let id = 0;
+            let maxId = 0;
             TABLE.rows().every(function (rowIdx, tableLoop, rowLoop) {
                 //get row data
                 let rowData = this.data();
@@ -78,9 +80,21 @@ export function setNewReorderValue(TABLE, force=false) {
                         maxRowOrder = rowOrder; //get max rowOrder value
                     }
                 }
+                id = parseInt(rowData["id"]);
+                if (!isNaN(id) && id > maxId) {
+                    maxId = id; //get max rowOrder value
+                }
             });
             //set datatable editor field to new rowOrder
             TABLE.EDITOR.field(TABLE.DATA.rowReorderDataSrc).set(maxRowOrder + 10);
+            try {
+                if (TABLE.EDITOR.field("id").get()==="") {
+                    //console.log("setting new ID for item, maxId=", maxId);
+                    TABLE.EDITOR.field("id").set(maxId + 1); //set new ID for the item
+                }
+            } catch (e) {
+                //id field doesn't exist
+            }
         }
     }
 }

@@ -81,7 +81,7 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
         nivoSliderHeight: "400",
         imageWidth: "400",
         imageHeight: "300",
-        editorData: "JTVCJTVE"
+        editorData: ""
     };
     await Apps.assertParams(defaultParams);
 
@@ -102,7 +102,7 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
         nivoSliderHeight: "300",
         imageWidth: "300",
         imageHeight: "200",
-        editorData: "JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvdGVzdC12ZWxhLWZvdG8vZHNjMDQwODIuanBlZyUyMiwlMjJ0aXRsZSUyMjolMjIlM0NwJTNFVG90byUyMGplJTIwbmFkcGlzJTIwb2JyYXprYSUzQ2JyJTNFJTNDL3AlM0UlMjIsJTIyc3VidGl0bGUlMjI6JTIyJTNDcCUzRVRvdG8lMjBqZSUyMHBvZG5hZHBpcyUyMG9icmF6a2ElM0NiciUzRSUzQy9wJTNFJTIyLCUyMnJlZGlyZWN0VXJsJTIyOiUyMiUyMiwlMjJoZWFkaW5nQ29sb3IlMjI6JTIyI2VhMTAxMGZmJTIyLCUyMnN1YmhlYWRpbmdDb2xvciUyMjolMjIjMjdlYzJlZmYlMjIsJTIyYmFja2dyb3VuZENvbG9yJTIyOiUyMiUyMiwlMjJjdXN0b21TdHlsZUhlYWRpbmclMjI6JTIyJTIyLCUyMmN1c3RvbVN0eWxlU3ViSGVhZGluZyUyMjolMjIlMjIlN0QlNUQ="
+        editorData: "JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3RvL2RzYzA0MDgyLmpwZWclMjIsJTIydGl0bGUlMjI6JTIyJTNDcCUzRVRvdG8lMjBqZSUyMG5hZHBpcyUyMG9icmF6a2ElM0NiciUzRSUzQy9wJTNFJTIyLCUyMnN1YnRpdGxlJTIyOiUyMiUzQ3AlM0VUb3RvJTIwamUlMjBwb2RuYWRwaXMlMjBvYnJhemthJTNDYnIlM0UlM0MvcCUzRSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjIlMjIsJTIyaGVhZGluZ0NvbG9yJTIyOiUyMiNlYTEwMTBmZiUyMiwlMjJzdWJoZWFkaW5nQ29sb3IlMjI6JTIyIzI3ZWMyZWZmJTIyLCUyMmJhY2tncm91bmRDb2xvciUyMjolMjIlMjIsJTIyY3VzdG9tU3R5bGVIZWFkaW5nJTIyOiUyMiUyMiwlMjJjdXN0b21TdHlsZVN1YkhlYWRpbmclMjI6JTIyJTIyJTdEJTVE"
     };
 
     I.fillField("#DTE_Field_nivoSliderHeight", changedParams.nivoSliderHeight);
@@ -111,13 +111,11 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
 
     I.say("Test ITEMS inner table in tab");
         I.clickCss("#pills-dt-component-datatable-tabLink2-tab");
-        I.waitForVisible("#DTE_Field_iframe", 5);
-        I.switchTo("#DTE_Field_iframe");
-        I.seeElement("#impressSlideshowDataTable_wrapper");
+        I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
 
         I.say("Add item");
         I.clickCss("button.buttons-create");
-        DTE.waitForEditor("impressSlideshowDataTable");
+        DTE.waitForEditor("datatableFieldDTE_Field_editorData");
 
         // Item title and subtitle
         DTE.fillQuill("title", "Toto je nadpis obrazka");
@@ -139,16 +137,15 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
         I.wait(1);
         I.switchTo('#editorComponent');
         I.wait(1);
-        I.switchTo("#DTE_Field_iframe");
 
         // Confirm image selection
         I.click( locate("#modalIframe").find("button.btn-primary") );
 
         // Save new item
-        DTE.save('impressSlideshowDataTable');
+        DTE.save('datatableFieldDTE_Field_editorData');
 
         // Check item in DT
-        DT.checkTableRow("impressSlideshowDataTable", 1, ["", "/images/gallery/test-vela-foto/dsc04082.jpeg", "Toto je nadpis obrazka", "Toto je podnadpis obrazka", "", "#ea1010ff", "#27ec2eff"]);
+        DT.checkTableRow("datatableFieldDTE_Field_editorData", 1, ["1", "10", null, "Toto je nadpis obrazka", "Toto je podnadpis obrazka", "", "#ea1010ff", "#27ec2eff"]);
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');

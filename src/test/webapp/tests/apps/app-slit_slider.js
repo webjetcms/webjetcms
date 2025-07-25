@@ -2,7 +2,7 @@ Feature('apps.app-slit_slider');
 
 Before(({ I, login, DT }) => {
     login('admin');
-    DT.addContext("slitSliderItems","#slitSliderItemsDataTable_wrapper");
+    DT.addContext("slitSliderItems","#datatableFieldDTE_Field_editorData_wrapper");
 });
 
 Scenario("Slit slider - test zobrazovania", async ({ I }) => {
@@ -64,13 +64,13 @@ Scenario('Slit slider app - test INCLUDE building', async ({ I, DT, DTE, Apps, D
 
     const defaultParams = {
         nivoSliderHeight: "500",
-        headAlign: "icon_align_left",
+        headingAlign: "left",
         headingSize: "70",
         headingMargin: "0",
-        subHeadingAlign: "icon_align_left",
+        subHeadingAlign: "left",
         subHeadingSize: "30",
         subHeadingMargin: "0",
-        editorData: 'JTVCJTVE'
+        editorData: ''
     };
 
     await Apps.assertParams(defaultParams, "/components/app-slit_slider/news.jsp");
@@ -81,15 +81,14 @@ Scenario('Slit slider app - test INCLUDE building', async ({ I, DT, DTE, Apps, D
         I.fillField("#DTE_Field_nivoSliderHeight", 400);
         I.clickCss("#DTE_Field_nivoSliderHeight");
         I.fillField("#DTE_Field_headingMargin", 15);
-        I.click( locate("label[for='DTE_Field_headAlign_1']") );
+        I.click( locate("label[for='DTE_Field_headingAlign_1']") );
 
     I.say("Set items");
         I.clickCss("#pills-dt-component-datatable-files-tab");
-        I.waitForVisible("#DTE_Field_iframe", 5);
-        I.switchTo("#DTE_Field_iframe");
+        I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
 
         I.click(DT.btn.slitSliderItems_add_button);
-        DTE.waitForEditor("slitSliderItemsDataTable");
+        DTE.waitForEditor("datatableFieldDTE_Field_editorData");
 
         I.fillField(".DTE_Field_Name_image input", "/images/gallery/test-vela-foto/dsc04068.jpeg");
         I.fillField("#DTE_Field_title", "Test nadpis obrazka");
@@ -97,22 +96,22 @@ Scenario('Slit slider app - test INCLUDE building', async ({ I, DT, DTE, Apps, D
         I.fillField("#DTE_Field_headingColor", "#e70d0dff");
         I.fillField("#DTE_Field_subheadingColor", "#19e62eff");
 
-        DTE.save("slitSliderItemsDataTable");
+        DTE.save("datatableFieldDTE_Field_editorData");
 
-        DT.checkTableRow("slitSliderItemsDataTable", 1, ["", "/images/gallery/test-vela-foto/dsc04068.jpeg", "Test nadpis obrazka", "Test podnadpis obrazka", "", "#e70d0dff", "#19e62eff", ""]);
+        DT.checkTableRow("datatableFieldDTE_Field_editorData", 1, ["1", "10", null, "Test nadpis obrazka", "Test podnadpis obrazka", "", "#e70d0dff", "#19e62eff", ""]);
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
 
     const changedParams = {
         nivoSliderHeight: "400",
-        headAlign: "icon_align_center",
+        headingAlign: "center",
         headingSize: "70",
         headingMargin: "15",
-        subHeadingAlign: "icon_align_left",
+        subHeadingAlign: "left",
         subHeadingSize: "30",
         subHeadingMargin: "0",
-        editorData: "JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvdGVzdC12ZWxhLWZvdG8vZHNjMDQwNjguanBlZyUyMiwlMjJ0aXRsZSUyMjolMjJUZXN0JTIwbmFkcGlzJTIwb2JyYXprYSUyMiwlMjJzdWJ0aXRsZSUyMjolMjJUZXN0JTIwcG9kbmFkcGlzJTIwb2JyYXprYSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjIlMjIsJTIyaGVhZGluZ0NvbG9yJTIyOiUyMiNlNzBkMGRmZiUyMiwlMjJzdWJoZWFkaW5nQ29sb3IlMjI6JTIyIzE5ZTYyZWZmJTIyLCUyMmJhY2tncm91bmRDb2xvciUyMjolMjIlMjIlN0QlNUQ="
+        editorData: "JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3RvL2RzYzA0MDY4LmpwZWclMjIsJTIydGl0bGUlMjI6JTIyVGVzdCUyMG5hZHBpcyUyMG9icmF6a2ElMjIsJTIyc3VidGl0bGUlMjI6JTIyVGVzdCUyMHBvZG5hZHBpcyUyMG9icmF6a2ElMjIsJTIycmVkaXJlY3RVcmwlMjI6JTIyJTIyLCUyMmhlYWRpbmdDb2xvciUyMjolMjIjZTcwZDBkZmYlMjIsJTIyc3ViaGVhZGluZ0NvbG9yJTIyOiUyMiMxOWU2MmVmZiUyMiwlMjJiYWNrZ3JvdW5kQ29sb3IlMjI6JTIyJTIyJTdEJTVE"
     };
 
     await Apps.assertParams(changedParams, "/components/app-slit_slider/news.jsp");
@@ -128,8 +127,8 @@ Scenario('Slit slider app - test INCLUDE building', async ({ I, DT, DTE, Apps, D
             //Test image and bg color
             I.seeElement(".bg-img[style='background-image: url(/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=1200&ip=1); background-color: !important;']");
             //Test header
-            I.seeElement( locate("h2[style='padding-bottom:0px !important; padding-top: 15px; text-align:left ;size:70px; color:#e70d0dff!important;']").withText("Test nadpis obrazka") );
+            I.seeElement( locate("h2[style='padding-bottom:0px !important; padding-top: 15px; text-align:center ;font-size:70px; color:#e70d0dff!important;']").withText("Test nadpis obrazka") );
             //Test subheader
-            I.seeElement( locate("p[style='padding-top: 0px; color:#19e62eff!important; text-align:icon_align_left ;size:30px;']").withText("Test podnadpis obrazka") );
+            I.seeElement( locate("p[style='padding-top: 0px; color:#19e62eff!important; text-align:left ;font-size:30px;']").withText("Test podnadpis obrazka") );
         });
 });
