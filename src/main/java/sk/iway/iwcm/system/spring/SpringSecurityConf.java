@@ -56,6 +56,7 @@ public class SpringSecurityConf {
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
 				oauth2.authorizedClientService(authorizedClientService());
 				oauth2.successHandler(new OAuth2SuccessHandler());
+				oauth2.loginPage("/admin/logon");
 			});
 		}
 

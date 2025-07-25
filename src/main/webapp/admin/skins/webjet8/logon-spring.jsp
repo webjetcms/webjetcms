@@ -172,9 +172,11 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                         <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
                     </div>
                     <c:if test="${isOAuth2Enabled}">
-                        <div class="form-group">
-                            <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="window.location.href='<%="/login"%>'"><iwcm:text key="button.oauth2Login"/><i class="ti ti-arrow-right"></i></button>
-                        </div>
+                        <c:forEach var="url" items="${urls}">
+                            <div class="form-group">
+                                <button type="button" name="oauth2-login-submit" id="oauth2-login-submit" class="btn btn-primary" onclick="window.location.href='${url.value}'"><iwcm:text key="button.oauth2Login"/> ${url.key}<i class="ti ti-arrow-right"></i></button>
+                            </div>
+                        </c:forEach>
                     </c:if>
                 </div>
             </form:form>
