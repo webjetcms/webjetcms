@@ -6,7 +6,7 @@ Before(({ I, login, DT }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
     }
-    DT.addContext("sliderItems","#sliderItemsDataTable_wrapper");
+    DT.addContext("sliderItems","#datatableFieldDTE_Field_editorData_wrapper");
 });
 
 Scenario("Slider - test zobrazovania", ({ I }) => {
@@ -65,8 +65,8 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
         pause_on_mousover: 'false',
         show_numbering: 'false',
         show_shadow_bottom: 'true',
-        transitionStyle: 'fade',
-        editorData: 'JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvY2hyeXNhbnRoZW11bS5qcGclMjIsJTIydGl0bGUlMjI6JTIyQ2hyeXphbnRlbWElMjIsJTIyZGVzY3JpcHRpb24lMjI6JTIyQWolMjB2JTIwY2hsYWRlJTIwa3ZpdG5lbSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjJodHRwczovL3d3dy5pbnRlcndheS5zay8lMjIlN0QlNUQ='
+        transitions_all: '',
+        editorData: 'JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L2NocnlzYW50aGVtdW0uanBnJTIyLCUyMnRpdGxlJTIyOiUyMkNocnl6YW50ZW1hJTIyLCUyMmRlc2NyaXB0aW9uJTIyOiUyMkFqJTIwdiUyMGNobGFkZSUyMGt2aXRuZW0lMjIsJTIycmVkaXJlY3RVcmwlMjI6JTIyaHR0cHM6Ly93d3cuaW50ZXJ3YXkuc2svJTIyJTdEJTVE'
     };
 
     I.switchTo('#cke_121_iframe');
@@ -81,11 +81,11 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
 
     I.say("Set items in slider");
         I.clickCss("#pills-dt-component-datatable-files-tab");
-        I.switchTo("#DTE_Field_iframe");
+        I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
 
         I.say("Add item");
         I.click(DT.btn.sliderItems_add_button);
-        DTE.waitForEditor("sliderItemsDataTable");
+        DTE.waitForEditor("datatableFieldDTE_Field_editorData");
 
         // Set image
         I.fillField(locate(".DTE_Field_Name_image").find("input"), "/images/gallery/chrysanthemum.jpg");
@@ -98,7 +98,7 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
         I.fillField(locate(".DTE_Field_Name_redirectUrl").find("input"), "https://www.interway.sk/");
 
         // Save new item
-        DTE.save('sliderItemsDataTable');
+        DTE.save('datatableFieldDTE_Field_editorData');
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
@@ -144,8 +144,8 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
         pause_on_mousover: 'true',
         show_numbering: 'true',
         show_shadow_bottom: 'false',
-        transitionStyle: 'tiles',
-        editorData: 'JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvY2hyeXNhbnRoZW11bS5qcGclMjIsJTIydGl0bGUlMjI6JTIyQ2hyeXphbnRlbWElMjIsJTIyZGVzY3JpcHRpb24lMjI6JTIyQWolMjB2JTIwY2hsYWRlJTIwa3ZpdG5lbSUyMiwlMjJyZWRpcmVjdFVybCUyMjolMjJodHRwczovL3d3dy5pbnRlcndheS5zay8lMjIlN0QlNUQ='
+        transitions_all: 'tiles',
+        editorData: 'JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L2NocnlzYW50aGVtdW0uanBnJTIyLCUyMnRpdGxlJTIyOiUyMkNocnl6YW50ZW1hJTIyLCUyMmRlc2NyaXB0aW9uJTIyOiUyMkFqJTIwdiUyMGNobGFkZSUyMGt2aXRuZW0lMjIsJTIycmVkaXJlY3RVcmwlMjI6JTIyaHR0cHM6Ly93d3cuaW50ZXJ3YXkuc2svJTIyJTdEJTVE'
     };
 
     I.say("Set changed parameters");
@@ -174,7 +174,7 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
 
         I.say("Change transition style");
         I.clickCss("#pills-dt-component-datatable-transitions-tab");
-        DTE.selectOption("transitionStyle", "Tiles");
+        DTE.selectOption("transitions_all", "Tiles");
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok')

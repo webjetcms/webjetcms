@@ -59,37 +59,45 @@ Scenario('testovanie app - Pouzivatelia', async ({ I, Apps, Document, DTE }) => 
         I.dontSeeElement("#DTE_Field_groupIds");
         I.dontSeeElement("#DTE_Field_infoemail");
         I.dontSeeElement("#DTE_Field_emailUnique_0");
-        I.dontSeeElement("#DTE_Field_useAjax_0");
 
         DTE.selectOption('field', 'Meno');
         I.dontSeeElement("#DTE_Field_groupIds");
         I.dontSeeElement("#DTE_Field_infoemail");
         I.dontSeeElement("#DTE_Field_emailUnique_0");
-        I.dontSeeElement("#DTE_Field_useAjax_0");
 
     I.say("Go back to default form");
     DTE.selectOption('field', 'Registračný formulár');
     I.seeElement("#DTE_Field_groupIds");
     I.seeElement("#DTE_Field_infoemail");
     I.seeElement("#DTE_Field_emailUnique_0");
-    I.seeElement("#DTE_Field_useAjax_0");
 
     I.say("Set changed parameters");
-    multiselectOption(I, "groupIds", ["Blog"])
-    multiselectOption(I, "groupIdsEditable", ["Bankári"])
-    I.checkOption("#DTE_Field_emailUnique_0");
+    multiselectOption(I, "groupIds", ["Blog"]);
+
+    //advanced tab
+    I.clickCss("#pills-dt-component-datatable-advanced-tab");
+    multiselectOption(I, "groupIdsEditable", ["Bankári"]);
     I.clickCss("#editorAppDTE_Field_successDocId > section > div > div > div > div > button");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-141_anchor');
     I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);
-    DTE.fillField("infoemail", "webjeteditor@fexpost.com");
-    I.uncheckOption("#DTE_Field_requireEmailVerification_0", )
+
     I.clickCss("#editorAppDTE_Field_notAuthorizedEmailDocId > section > div > div > div > div > button");
     I.click(locate('.jstree-node.jstree-closed').withText('Jet portal 4').find('.jstree-icon.jstree-ocl'));
     I.clickCss('#docId-141_anchor');
     I.waitForElement('input[value="/Jet portal 4/Jet portal 4 - testovacia stranka"]', 10);
+
     I.checkOption("#DTE_Field_loginNewUser_0");
     I.checkOption("#DTE_Field_useAjax_0");
+
+    //basic tab
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+
+    I.checkOption("#DTE_Field_emailUnique_0");
+
+    DTE.fillField("infoemail", "webjeteditor@fexpost.com");
+    I.uncheckOption("#DTE_Field_requireEmailVerification_0", )
+
 
     I.say("Add showed and required fields");
         I.clickCss("#pills-dt-component-datatable-showed-tab");

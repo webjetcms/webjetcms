@@ -85,7 +85,7 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
         display_mode: "1",
         loop_number: "0",
         autoplay_interval: "5000",
-        editorData: "JTVCJTVE"
+        editorData: ""
     };
 
     await Apps.assertParams(defaultParams);
@@ -114,13 +114,11 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
 
         I.say("Test ITEMS inner table in tab");
             I.clickCss("#pills-dt-component-datatable-files-tab");
-            I.waitForVisible("#DTE_Field_iframe", 5);
-            I.switchTo("#DTE_Field_iframe");
-            I.seeElement("#carouselSliderItemsDataTable_wrapper");
+            I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
 
             I.say("Add item");
             I.clickCss("button.buttons-create");
-            DTE.waitForEditor("carouselSliderItemsDataTable");
+            DTE.waitForEditor("datatableFieldDTE_Field_editorData");
 
             // Set image
             I.fillField(locate(".DTE_Field_Name_image").find("input"), "/images/gallery/test-vela-foto/dsc04074.jpeg");
@@ -130,10 +128,10 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
             I.fillField("#DTE_Field_description", "Toto je podnadpis obrazka");
 
             // Save new item
-            DTE.save('carouselSliderItemsDataTable');
+            DTE.save('datatableFieldDTE_Field_editorData');
 
             // Check item in DT
-            DT.checkTableRow("carouselSliderItemsDataTable", 1, ["", "/images/gallery/test-vela-foto/dsc04074.jpeg", "Toto je nadpis obrazka", "Toto je podnadpis obrazka", ""]);
+            DT.checkTableRow("datatableFieldDTE_Field_editorData", 1, ["1", "10", null, "Toto je nadpis obrazka", "Toto je podnadpis obrazka", ""]);
 
 
         I.switchTo();
@@ -160,7 +158,7 @@ Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Ap
         display_mode: "2",
         loop_number: "2",
         autoplay_interval: "5000",
-        editorData: "JTVCJTdCJTIyaWQlMjI6MiwlMjJpbWFnZSUyMjolMjIvaW1hZ2VzL2dhbGxlcnkvdGVzdC12ZWxhLWZvdG8vZHNjMDQwNzQuanBlZyUyMiwlMjJ0aXRsZSUyMjolMjJUb3RvJTIwamUlMjBuYWRwaXMlMjBvYnJhemthJTIyLCUyMmRlc2NyaXB0aW9uJTIyOiUyMlRvdG8lMjBqZSUyMHBvZG5hZHBpcyUyMG9icmF6a2ElMjIsJTIycmVkaXJlY3RVcmwlMjI6JTIyJTIyJTdEJTVE"
+        editorData: "JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3RvL2RzYzA0MDc0LmpwZWclMjIsJTIydGl0bGUlMjI6JTIyVG90byUyMGplJTIwbmFkcGlzJTIwb2JyYXprYSUyMiwlMjJkZXNjcmlwdGlvbiUyMjolMjJUb3RvJTIwamUlMjBwb2RuYWRwaXMlMjBvYnJhemthJTIyLCUyMnJlZGlyZWN0VXJsJTIyOiUyMiUyMiU3RCU1RA=="
     };
 
     await Apps.assertParams(changedParams);

@@ -18,6 +18,6 @@ Scenario('testovanie app - Emoticons', async ({ I, Apps }) => {
 
     Apps.switchEditor("html");
     const inputString = await I.grabTextFrom('.CodeMirror-code');
-    I.assertTrue(inputString.includes("/components/emoticon/admin-styles/biggrin.png"));
+    I.assertContain(inputString, "/components/emoticon/biggrin.gif");
 });
 
