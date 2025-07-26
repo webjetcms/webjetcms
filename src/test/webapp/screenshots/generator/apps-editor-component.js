@@ -82,7 +82,6 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     screenshotWebAndApp(I, Document, 77874, "/components/app-docsembed", ".ly-content .container", tabLinkNone, null);
     screenshotWebAndApp(I, Document, 77873, "/components/app-htmlembed", ".ly-content .container", tabLinkNone, null);
     screenshotWebAndApp(I, Document, 77770, "/components/app-vyhladavanie", ".ly-content .container", tabLinkNone, null, 640, 480);
-    screenshotWebAndApp(I, Document, 64542, "/components/user", ".ly-content .container", tabLinkNone, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 77775, "/components/app-weather", ".app-weather", tabLinkNone, null, 800, 600);
     screenshotWebAndApp(I, Document, 77766, "/components/content-block", ".blueBox", tabLinkNone, null, 640, 480);
     screenshotWebAndApp(I, Document, 45926, "/components/gallery", "#thumbs1", tabLink1Spring, tabLink2Spring, 1000, 1000);
@@ -111,9 +110,6 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     screenshotWebAndApp(I, Document, 48204, "/components/inquiry", "#resultsDiv-1", tabLink1Spring);
     screenshotWebAndApp(I, Document, 77667, "/components/inquirysimple", ".inquiryBoxDefault", tabLink1, tabLink2);
     screenshotWebAndApp(I, Document, 21343, "/components/banner", ".banner-content", tabLinkNone, tabLink3, 640, 480);
-
-    screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1Spring, tabLink2Spring, 800, 600);
-    screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1Spring, tabLink3Spring, 800, 600);
     screenshotWebAndApp(I, Document, 60029, "/components/quiz", "#quiz", tabLink1Spring, null, 800, 600);
     screenshotWebAndApp(I, Document, 77767, "/components/app-date", ".ly-content .container", tabLinkNone, null, 800, 600);
 
@@ -169,7 +165,6 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     Document.screenshot(basePath+"/components/htmlbox/screenshot-2.jpg");
 
     screenshotWebAndApp(I, Document, 77776, "/components/related-pages", ".ly-content .container", tabLinkNone, null, 800, 600);
-    screenshotWebAndApp(I, Document, 77868, "/components/app-impress_slideshow", "#jms-slideshow", tabLink1Spring, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 70839, "/components/rating", ".ly-content .container", tabLinkNone, null, 800, 600);
     screenshotWebAndApp(I, Document, 39096, "/components/reservation", ".ly-content .container", tabLink2Spring, tabLink3Spring);
 
@@ -193,6 +188,16 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.wait(3);
     Document.screenshot(basePath+"/components/seo/screenshot-1.png");
 
+    screenshotWebAndApp(I, Document, 72299, "/components/site_browser", ".ly-content .container", tabLink1, tabLink2Wait, 800, 600);
+});
+
+Scenario('apps screenshot for editor-components.jsp apps to spring v4', ({ I, DT, DTE, Document }) => {
+    screenshotWebAndApp(I, Document, 64542, "/components/user", ".ly-content .container", tabLinkNone, tabLink2Spring, 800, 600);
+    screenshotWebAndApp(I, Document, 77868, "/components/app-impress_slideshow", "#jms-slideshow", tabLink1Spring, tabLink2Spring, 800, 600);
+
+    screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1Spring, tabLink2Spring, 800, 600);
+    screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1Spring, tabLink3Spring, 800, 600);
+
     screenshotWebAndApp(I, Document, 77869, "/components/slider", "#amazingslider-wrapper-1", tabLink1Spring, tabLink3Spring);
     screenshotWebAndApp(I, Document, 77870, "/components/app-slit_slider", "#slider", tabLink1Spring, tabLink2Spring);
 
@@ -202,7 +207,8 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.switchTo("#editorComponent");
     I.clickCss(".image_radio_item > label[for=DTE_Field_field_0]")
     Document.screenshot(basePath+"/components/video/screenshot-3.png");
+    I.switchTo();
+
 
     screenshotWebAndApp(I, Document, 77872, "/components/carousel_slider", "#amazingcarousel-container-1", tabLink1Spring, tabLink3Spring);
-    screenshotWebAndApp(I, Document, 72299, "/components/site_browser", ".ly-content .container", tabLink1, tabLink2Wait, 800, 600);
 });

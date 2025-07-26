@@ -20,20 +20,16 @@ Scenario('slider app screens', ({ I, DT, DTE, Document }) => {
         I.clickCss("#pills-dt-component-datatable-files-tab");
         Document.screenshot("/redactor/apps/slider/editor-items.png");
 
-        I.waitForVisible("#DTE_Field_iframe", 5);
-        I.switchTo("#DTE_Field_iframe");
+        I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
 
-        I.clickCss("td.sorting_1");
-        I.clickCss("button.buttons-edit");
-        DTE.waitForEditor("sliderItemsDataTable");
+        I.click("Pohľad z boku", "#datatableFieldDTE_Field_editorData");
+
+        DTE.waitForEditor("datatableFieldDTE_Field_editorData");
 
         Document.screenshot("/redactor/apps/slider/editor-items-edit.png");
 
-        DTE.cancel();
+        I.click("#datatableFieldDTE_Field_editorData_modal .DTE_Header button.btn-close-editor");
 
-        I.switchTo();
-        I.switchTo('.cke_dialog_ui_iframe');
-        I.switchTo('#editorComponent');
         I.clickCss("#pills-dt-component-datatable-basic-tab");
     });
 

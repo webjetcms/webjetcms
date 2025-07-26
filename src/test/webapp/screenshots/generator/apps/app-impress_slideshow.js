@@ -13,20 +13,15 @@ Scenario('impress slideshow app screens', ({ I, DT, DTE, Document }) => {
         I.clickCss("#pills-dt-component-datatable-tabLink2-tab");
         Document.screenshot("/redactor/apps/app-impress_slideshow/editor-items.png");
 
-        I.waitForVisible("#DTE_Field_iframe", 5);
-        I.switchTo("#DTE_Field_iframe");
+        I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
 
-        I.clickCss("td.sorting_1");
-        I.clickCss("button.buttons-edit");
-        DTE.waitForEditor("impressSlideshowDataTable");
+        I.click("Koleso", "#datatableFieldDTE_Field_editorData");
+        DTE.waitForEditor("datatableFieldDTE_Field_editorData");
 
         Document.screenshot("/redactor/apps/app-impress_slideshow/editor-items-edit.png");
 
-        DTE.cancel();
+        I.click("#datatableFieldDTE_Field_editorData_modal .DTE_Header button.btn-close-editor");
 
-        I.switchTo();
-        I.switchTo('.cke_dialog_ui_iframe');
-        I.switchTo('#editorComponent');
         I.clickCss("#pills-dt-component-datatable-style-tab");
     });
 });
