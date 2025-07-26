@@ -675,6 +675,13 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				hasChange = true;
 			}
 
+			if("news.jsp".equals(f.getName()) && url.contains("app-impress_slideshow")) {
+				// replace old <p> tag with <div> tag, because we insert html conde in new version
+				content = Tools.replaceRegex(content, "<p([\\S\\s]+subheadingColor)", "<div$1", false);
+				content = Tools.replaceRegex(content, "(subheadingColor[\\S\\s]+?)</p>", "$1</div>", false);
+				hasChange = true;
+			}
+
 			if (fullUrl.endsWith("FileArchivatorBean.java")) {
 				if (content.contains("public void setReferenceId(int referenceId)")==false) {
 					int lastBracket = content.lastIndexOf("}");

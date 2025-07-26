@@ -36,6 +36,19 @@
 
 ![](custom-apps/appstore/common-settings-tab.png)
 
+Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
+
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Carousel Slider](redactor/apps/carousel_slider/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Emotikony](redactor/apps/emoticon/README.md)
+- [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Používatelia](redactor/apps/user/README.md)
+- [Video](redactor/apps/video/README.md)
+
+![](redactor/apps/app-slit_slider/editor-items.png)
+
 ### Menu
 
 - Ak [menu web stránky](redactor/apps/menu/README.md) nemá zadaný koreňový priečinok (hodnota je nastavená na 0), automaticky sa použije koreňový priečinok pre aktuálne zobrazenú web stránku. Je to výhodné ak sa zobrazuje menu vo viacerých jazykových mutáciách kde každá je koreňový priečinok - nemusíte mať menu/hlavičky pre každý jazyk samostatne, stačí jedna spoločná (#57893).
@@ -101,6 +114,12 @@ Pre prvý `INCLUDE` boli odstránené značky s ID 625 a 626, pretože tie sa ne
 | 1440           | kalendár-udalostí     | 83        | NULL            |
 
 Pred spustením aktualizácie existovali v databáze len záznamy `3, 645 a 794`, ktorým sa nastavilo `domain_id=1`. Záznamy `1438, 1439 a 1440` vznikli pri aktualizácii pre `domain_id=83`.
+
+- Dátové tabuľky - pridaná podpora pre úpravu [lokálnych JSON dát](developer/datatables-editor/field-datatable.md#lokálne-json-dáta) (#57409).
+- Dátové tabuľky - pridané rozšírenie [Row Reorder](https://datatables.net/extensions/rowreorder/) pre možnosť usporiadania zoznamu pomocou funkcie `Drag&Drop` (#57409).
+- Aplikácie - doplnená možnosť použiť lokálne JSON dáta pre nastavenie položiek aplikácie, napríklad položiek pre [pôsobivú prezentáciu](redactor/apps/app-impress_slideshow/README.md) (#57409).
+
+![](redactor/apps/app-impress_slideshow/editor-items.png)
 
 ## 2025.18
 

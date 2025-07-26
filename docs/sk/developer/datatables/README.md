@@ -116,7 +116,7 @@ Minimálna konfigurácia:
 - ```editorId {string}``` jednoznačný identifikátor editora, ak nie je zadaný použije sa hodnota ```id```. Potrebné hlavne ak máte v jednej web stránke viaceré datatabuľky.
 - ```onXhr {function}``` JavaScript funkcia, ktorá sa zavolá po [načítaní dát](https://datatables.net/reference/event/xhr) vo forme ```function ( TABLE, e, settings, json, xhr ) {}```.
 - ```onPreXhr(TABLE, e, settings, data) {function}``` JavaScript funkcia, ktorá sa zavolá [pred načítaním dát](https://datatables.net/reference/event/preXhr), umožňuje pridať do odosielaných dát parametre. Tie sa zadávajú s prefixom ```fixed_``` aby išli odlíšiť od štandardných parametrov datatabuľky. Príklad: ```onPreXhr: function(TABLE, e, settings, data) { data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked'); }```.
-- ```onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}```: JavaScript funkcia, ktorá sa zavolá po kliknutí na odkaz editácie záznamu. Ako parametre dostane: ```TABLE``` - inštancia datatabuľky, ```row``` - jQuery objekt riadku na ktorý sa kliklo, ```dataAfterFetch``` - pri zapnutej funkcii ```fetchOnEdit``` json dáta získané po ich obnove, ```dataBeforeFetch``` pôvodné JSON dáta riadku pre volaním ich obnovenia. Štandardný editor otvoríte následne volaním ```TABLE.wjEdit(row);```. Príklad použitia je vo [web-pages-list.pug](../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
+- ```onEdit(TABLE, row, dataAfterFetch, dataBeforeFetch) {function}```: JavaScript funkcia, ktorá sa zavolá po kliknutí na odkaz editácie záznamu. Ako parametre dostane: ```TABLE``` - inštancia datatabuľky, ```row``` - jQuery objekt riadku na ktorý sa kliklo, ```dataAfterFetch``` - pri zapnutej funkcii ```fetchOnEdit``` json dáta získané po ich obnove, ```dataBeforeFetch``` pôvodné JSON dáta riadku pre volaním ich obnovenia. Štandardný editor otvoríte následne volaním ```TABLE.wjEdit(row);```. Príklad použitia je vo [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug).
 - ```fetchOnCreate {boolean}``` po nastavení na true bude pred vytvorením nového záznamu vykonané REST volanie s hodnotou -1 pre získanie dát nového objektu. Hodnoty sa nastavia volaním ```EDITOR.setJson(json)``` implementované v ```$.fn.dataTable.Editor.prototype.setJson``` v evente ```initCreate```.
 - ```fetchOnEdit {boolean}``` po nastavení na true bude pred editáciou záznamu vykonané REST volanie pre získanie aktuánych dát editovaného záznamu. Pri použití datatabuľky napr. pre web stránky sa pred otvorením editora aktualizuje daný záznam zo servera a do editora sa teda otvorí vždy najnovšia verzia. Implementované cez JS funkciu ```refreshRow``` a zákaznícke tlačítko ```$.fn.dataTable.ext.buttons.editRefresh``` ktorým sa nahradí štandardné tlačítko ```edit```.
 - ```idAutoOpener {boolean}``` umožňuje nastavením na ```false``` deaktivovať [automatické otváranie editora](../libraries/datatable-opener.md) podľa URL parametra a vloženie poľa pre zadanie ID do hlavičky tabuľky.
@@ -293,6 +293,7 @@ export function getSearchCriteria() {
 - ```dt-format-date, dt-format-date-time, dt-format-date--text, dt-format-date-time--text``` - dátum/čas, filter zobrazí od-do
 - ```dt-format-link``` - zobrazí text ako odkaz, možnosť použiť ```renderFormatLinkTemplate```
 - ```dt-format-image``` - zobrazí malý náhľad obrázku a odkaz na jeho plné zobrazenie, pod obrázkom je text linky na obrázok.
+- ```dt-format-image-notext``` - zobrazí malý náhľad obrázku a odkaz na jeho plné zobrazenie bez textu linky.
 - ```dt-format-mail``` - zobrazí text ako email odkaz
 - ```dt-row-edit``` - umožní editáciu riadku
 
@@ -394,7 +395,7 @@ JS funkcia ```nejakaTable.executeAction(action, doNotCheckEmptySelection, confir
 - `customData` - objekt pridaný do volania REST služby ako parameter `customData` (napr. dodatočné údaje potrebné pre korektné vykonanie akcie).
 - `forceIds` - číslo alebo pole čísel s hodnotou ID záznamu pre ktorý sa má akcia vykonať. Využívané ak potrebujete kliknutím na stavovú ikonu vyvolať akciu (bez potreby označenia riadku).
 
-Na serveri sa v REST službe vykoná volanie ```/action/rotate``` implementované v metóde [DatatableRestControllerV2.processAction](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). REST službe sa pošle zoznam vybratých riadkov (ich ID), čo sa spracuje v metóde DatatablesRestControllerV2.action.
+Na serveri sa v REST službe vykoná volanie ```/action/rotate``` implementované v metóde [DatatableRestControllerV2.processAction](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). REST službe sa pošle zoznam vybratých riadkov (ich ID), čo sa spracuje v metóde DatatablesRestControllerV2.action.
 
 **Príklad použitia** - pridané tlačidlo do ```toolbaru``` nad datatabuľkou s volaním akcie:
 
@@ -474,9 +475,9 @@ if (webpagesDatatable.hasPermission("create")) {
 
 ## Štýlovanie riadku
 
-Niekedy je potrebné nastaviť CSS štýl celého riadku (napr. tučné písmo pre hlavnú stránku, alebo červené pre nedostupnú). Na prenos týchto doplnkových údajov využívame prenos vnorených atribútov cez objekt [EditorFields](../datatables-editor/datatable-columns.md#vnorené-atribúty). Vytvorili sme triedu [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), ktorá má metódu ```addRowClass(String addClass)``` pre pridanie CSS triedy na riadku.
+Niekedy je potrebné nastaviť CSS štýl celého riadku (napr. tučné písmo pre hlavnú stránku, alebo červené pre nedostupnú). Na prenos týchto doplnkových údajov využívame prenos vnorených atribútov cez objekt [EditorFields](../datatables-editor/datatable-columns.md#vnorené-atribúty). Vytvorili sme triedu [BaseEditorFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), ktorá má metódu ```addRowClass(String addClass)``` pre pridanie CSS triedy na riadku.
 
-Príklad použitia je v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java):
+Príklad použitia je v [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java):
 
 ```java
 ...
@@ -501,7 +502,7 @@ Dostupné sú nasledovné CSS štýly riadku:
 - ```is-default-page``` - reprezentuje hlavnú web stránku adresára, zobrazené tučným písmom.
 - ```is-not-public``` - reprezentuje neverejnú položku, zobrazené červeným písmom.
 
-Nastavenie CSS štýlu riadku je implementované v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) pomocou možnosti ```rowCallback``` konštruktora datatabuľky. Overuje existenciu property ```data.editorFields.rowClass``` a ak existuje tak hodnotu aplikuje na riadok.
+Nastavenie CSS štýlu riadku je implementované v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) pomocou možnosti ```rowCallback``` konštruktora datatabuľky. Overuje existenciu property ```data.editorFields.rowClass``` a ak existuje tak hodnotu aplikuje na riadok.
 
 Nastavenie štýlu riadku môžete vykonať aj v JavaScript kóde (napr. na základe atribútov) pomocou voľby ```onRowCallback```. Môžete tak ľahko označiť riadky ako neaktívne CSS štýlom ```is-not-public```.
 
@@ -519,11 +520,11 @@ domainRedirectTable = WJ.DataTable({
 
 ## Stavové ikony
 
-Niekedy je potrebné zobraziť stavové ikony záznamu (napr. vo web stránkach ikony Nezobrazené v menu, Presmerovaná stránka a podobne). Na prenos týchto doplnkových údajov využívame prenos vnorených atribútov cez objekt [EditorFields](../datatables-editor/datatable-columns.md#vnorené-atribúty). Vytvorili sme triedu [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), ktorá má metódu ```addStatusIcon(String className)```. Ikony sú zo sady FontAwesome.
+Niekedy je potrebné zobraziť stavové ikony záznamu (napr. vo web stránkach ikony Nezobrazené v menu, Presmerovaná stránka a podobne). Na prenos týchto doplnkových údajov využívame prenos vnorených atribútov cez objekt [EditorFields](../datatables-editor/datatable-columns.md#vnorené-atribúty). Vytvorili sme triedu [BaseEditorFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java), ktorá má metódu ```addStatusIcon(String className)```. Ikony sú zo sady FontAwesome.
 
 ![](../../redactor/webpages/status-icons.png)
 
-Príklad použitia je v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java). Je potrebné definovať atribút ```statusIcons``` s ```@DataTableColumn``` anotáciou, aby sa stĺpec zobrazil. Je zobrazený ako výberové pole, do ```options``` atribútu odporúčame definovať ikonu a opisný text. Ako ```value``` sa prenášajú vyhľadávacie podmienky (viď nižšie):
+Príklad použitia je v [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java). Je potrebné definovať atribút ```statusIcons``` s ```@DataTableColumn``` anotáciou, aby sa stĺpec zobrazil. Je zobrazený ako výberové pole, do ```options``` atribútu odporúčame definovať ikonu a opisný text. Ako ```value``` sa prenášajú vyhľadávacie podmienky (viď nižšie):
 
 ```java
 ...
@@ -592,7 +593,7 @@ Vyhľadávanie po zvolení možnosti filtra je implementované v ```DatatableRes
 
 ## Zobrazenie dát na základe práv
 
-V columns definícii je možné nastaviť požadované právo pre zobrazenie daného stĺpca v datatabuľke alebo v editore pomocou atribútu ```perms```. Príklad v súbore [redirect.pug](../../../src/main/webapp/admin/v9/views/pages/settings/redirect.pug):
+V columns definícii je možné nastaviť požadované právo pre zobrazenie daného stĺpca v datatabuľke alebo v editore pomocou atribútu ```perms```. Príklad v súbore [redirect.pug](../../../../src/main/webapp/admin/v9/views/pages/settings/redirect.pug):
 
 ```javascript
 {
@@ -639,11 +640,11 @@ Do index.js je doplnený vyhľadávací typ html-input, ktorý nefiltruje HTML z
 
 ## Externý filter
 
-Okrem zobrazenia filtrov v záhlaví každého stĺpca tabuľky je možné pridať samostatné filtrovacie pole na ľubovoľné miesto v HTML kóde stránky. Príkladom je [Mazanie záznamov v databáze](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug) kde je filter presunutý priamo do hlavičky stránky k nadpisu.
+Okrem zobrazenia filtrov v záhlaví každého stĺpca tabuľky je možné pridať samostatné filtrovacie pole na ľubovoľné miesto v HTML kóde stránky. Príkladom je [Mazanie záznamov v databáze](../../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug) kde je filter presunutý priamo do hlavičky stránky k nadpisu.
 
 V pug súbore je potrebné pripraviť základnú HTML štruktúru vytvorením div kontajnera s ID ```TABLEID_extfilter```. V ňom sa vyhľadajú div elementy s CSS triedou ```dt-extfilter-title-FIELD``` do ktorého sa vloží názov stĺpca a ```dt-extfilter-FIELD``` do ktorého sa vloží vyhľadávacie pole.
 
-```
+```pug
 div#dateDependentEntriesTable_extfilter
     div.row.datatableInit
         div.col-auto.dt-extfilter-title-from

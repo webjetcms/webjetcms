@@ -1,0 +1,111 @@
+<script>
+	function appGetComponentPath(componentPath, datatable) {
+		let field = $("#DTE_Field_field").val();
+		if (field.indexOf("!") !== 0) return field;
+		return componentPath;
+	}
+
+	function appGetComponentCode(componentPath, params, datatable) {
+		let field = $("#DTE_Field_field").val();
+		if (field.indexOf("/") == 0) return null;
+
+		//revert HTML entities to normal HTML
+		field = field.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+		field = field.replace(/&amp;/g, "&");
+		field = field.replace(/&quot;/g, "\"");
+		field = field.replace(/&#39;/g, "'");
+
+		return field;
+	}
+
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const fieldElement = $("#DTE_Field_field");
+
+			fieldElement.on("change", function () {
+				let value = $(this).val();
+				switch (value) {
+					case "/components/user/newuser.jsp":
+						setFieldsVisibility(
+							[],
+							[
+								"groupIds",
+								"show",
+								"required",
+								"groupIdsEditable",
+								"emailUnique",
+								"successDocId",
+								"infoemail",
+								"requireEmailVerification",
+								"notAuthorizedEmailDocId",
+								"loginNewUser",
+								"useAjax",
+								"useCustomFields",
+							]
+						);
+
+						$("#pills-dt-component-datatable-advanced-tab").show();
+						$("#pills-dt-component-datatable-showed-tab").show();
+						$("#pills-dt-component-datatable-required-tab").show();
+
+						break;
+					case "/components/user/logon.jsp":
+						setFieldsVisibility(
+							[
+								"groupIds",
+								"show",
+								"required",
+								"groupIdsEditable",
+								"emailUnique",
+								"successDocId",
+								"infoemail",
+								"requireEmailVerification",
+								"notAuthorizedEmailDocId",
+								"loginNewUser",
+								"useAjax",
+								"useCustomFields",
+							],
+							[]
+						);
+
+						$("#pills-dt-component-datatable-advanced-tab").hide();
+						$("#pills-dt-component-datatable-showed-tab").hide();
+						$("#pills-dt-component-datatable-required-tab").hide();
+
+						break;
+					default:
+						setFieldsVisibility(
+							[
+								"groupIds",
+								"show",
+								"required",
+								"groupIdsEditable",
+								"emailUnique",
+								"successDocId",
+								"infoemail",
+								"requireEmailVerification",
+								"notAuthorizedEmailDocId",
+								"loginNewUser",
+								"useAjax",
+								"useCustomFields"
+							],
+							[]
+						);
+
+						$("#pills-dt-component-datatable-advanced-tab").hide();
+						$("#pills-dt-component-datatable-showed-tab").hide();
+						$("#pills-dt-component-datatable-required-tab").hide();
+
+						break;
+				}
+			});
+
+			fieldElement.change();
+		});
+	}
+</script>

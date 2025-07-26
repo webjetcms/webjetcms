@@ -26,8 +26,9 @@ module.exports = {
     /**
      * Asserts that the parameters in the page match the expected ones.
      * @param {Object} expectedParams - An object of key-value pairs representing expected parameters.
+     * @param {String} expectedPath - Optional expected path to by used in INCLUDE
      */
-    async assertParams(expectedParams) {
+    async assertParams(expectedParams, expectedPath = null) {
         I.say('Parameters testing');
         this.switchEditor('html');
         const inputString = await I.grabTextFrom('.CodeMirror-code');
@@ -47,6 +48,19 @@ module.exports = {
             const actualValue = params[key] !== undefined ? params[key] : '';
             I.assertEqual(actualValue, value, `Assertion failed for ${key}: expected '${value}', got '${actualValue}'`);
         }
+
+        if(expectedPath != null && expectedPath !== '') {
+            I.say("Test expected path " + expectedPath);
+            const match = inputString.match(/\!INCLUDE\(([^,]+),/);
+            I.say(match);
+
+            if (match) {
+                I.assertEqual(match[1], expectedPath, `Assertion failed for expectedPath: expected '${expectedPath}', got '${match[1]}'`);
+            } else {
+                I.assertEqual(null, expectedPath, `Assertion failed for expectedPath: expected '${expectedPath}', got 'null'`);
+            }
+        }
+
         return true;
     },
 

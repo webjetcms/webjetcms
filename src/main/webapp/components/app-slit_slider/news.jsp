@@ -91,9 +91,9 @@ margin-left:20px;
 
 				%>
 							<div class="bg-img" style="background-image: url(/thumb<%=item.get("image")%>?w=1200&ip=1); background-color: <%=item.get("backgroundColor")%>!important;"></div>
-							<h2 style="padding-bottom:0px !important; padding-top: <%= pageParams.getValue("headingMargin", "0") %>px; text-align:<%= pageParams.getValue("headingAlign", "left") %> ;size:<%=pageParams.getValue("headingSize", "70") %>px; color:<%=item.get("headingColor")%>!important;"><%=item.get("title")%></h2>
+							<h2 style="padding-bottom:0px !important; padding-top: <%= pageParams.getValue("headingMargin", "0") %>px; text-align:<%= pageParams.getValue("headingAlign", "left") %> ;font-size:<%=pageParams.getValue("headingSize", "70") %>px; color:<%=item.get("headingColor")%>!important;"><%=item.get("title")%></h2>
 
-							<blockquote style="width:100%; <%=displayStyle%>"><p  style="padding-top: <%= pageParams.getValue("subHeadingMargin", "0") %>px; color:<%=item.get("subheadingColor")%>!important; text-align:<%= pageParams.getValue("subHeadingAlign", "left") %> ;size:<%=pageParams.getValue("subHeadingSize", "30") %>px;">
+							<blockquote style="width:100%; <%=displayStyle%>"><p  style="padding-top: <%= pageParams.getValue("subHeadingMargin", "0") %>px; color:<%=item.get("subheadingColor")%>!important; text-align:<%= pageParams.getValue("subHeadingAlign", "left") %> ;font-size:<%=pageParams.getValue("subHeadingSize", "30") %>px;">
 									<%=item.get("subtitle")%>
 						</p>
 						<% if(Tools.isNotEmpty((String)item.get("redirectUrl"))) { %>

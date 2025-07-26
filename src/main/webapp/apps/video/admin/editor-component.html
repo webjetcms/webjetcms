@@ -1,0 +1,117 @@
+<script>
+    function appAfterInit(response, datatable) {
+        const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+            fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+            fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+        };
+
+        window.addEventListener("WJ.DTE.opened", function (e) {
+            const youtube = $("#DTE_Field_field_0");
+            const vimeo = $("#DTE_Field_field_1");
+            const facebook = $("#DTE_Field_field_2");
+            const video = $("#DTE_Field_field_3");
+            const fixed = $("#DTE_Field_widthType_0");
+            const responsive = $("#DTE_Field_widthType_1");
+
+            //align them to center
+            $(".DTE_Field_Name_field > div").css("text-align", "center");
+
+            if (!(youtube.is(":checked") || vimeo.is(":checked") || facebook.is(":checked") || video.is(":checked"))) {
+                setFieldsVisibility(["align", "portrait", "byline", "badge", "file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "controls", "branding", "rel", "videoFile"], []);
+            }
+
+            const handleSizeFields = () => {
+                fixed.off("change").on("change", function () {
+                    if ($(this).is(":checked")) {
+                        if ($(facebook).is(":checked")) {
+                            setFieldsVisibility(["percentageWidth"], ["width"]);
+                        } else {
+                            setFieldsVisibility(["percentageWidth"], ["height", "width"]);
+                        }
+                    }
+                });
+
+
+                let defaultValue = $("#DTE_Field_percentageWidth").val();
+                if(defaultValue == null || defaultValue == "") defaultValue = 0;
+                responsive.off("change").on("change", function () {
+                    if ($(this).is(":checked")) {
+                        if ($(facebook).is(":checked")) {
+                            setFieldsVisibility(["height", "width", "percentageWidth"], []);
+                        } else {
+                            $("#DTE_Field_percentageWidth").val(Number(defaultValue));
+                            setFieldsVisibility(["height", "width"], ["percentageWidth"]);
+                        }
+                    } else {
+                        //There is problem that parameter "percentageWidth" is set even when "responsive" is not selected so it fuck up video setting, for this reason set value of "percentageWidth" to 0
+                        $("#DTE_Field_percentageWidth").val("");
+                    }
+                });
+            };
+
+            const updateFields = () => {
+                handleSizeFields();
+                fixed.trigger('change');
+                responsive.trigger('change');
+            };
+
+            youtube.off("change").on("change", function () {
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["portrait", "byline", "badge", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "autoplay", "showinfo", "branding", "fullscreen", "controls", "rel"]);
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file}]]");
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
+                    updateFields();
+                }
+            });
+
+            vimeo.off("change").on("change", function () {
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["controls", "branding", "rel", "videoFile"], ["file", "widthType", "width", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "portrait", "byline", "badge"]);
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_vimeo}]]");
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
+                    updateFields();
+                }
+            });
+
+            facebook.off("change").on("change", function () {
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "videoFile"], ["file", "width", "widthType", "autoplay", "showinfo", "fullscreen", "byline"]);
+                    $(".DTE_Field_Name_file label").text("[[#{components.video_player.file_facebook}]]");
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidthFacebook}]]")
+                    updateFields();
+                }
+            });
+
+
+            video.off("change").on("change", function () {
+                if ($(this).is(":checked")) {
+                    setFieldsVisibility(["controls", "branding", "rel", "portrait", "badge", "height", "percentageWidth", "autoplay", "fullscreen", "showinfo", "byline", "file"], ["width", "widthType", "videoFile"]);
+                    $("#DTE_Field_widthType_1").parent().find("label").text("[[#{components.video_player.responsiveWidth}]]")
+                    updateFields();
+                }
+            });
+
+            //If type is video , set value from file to videoFile elfinder picker
+            if("logo_video_color" == response.data.field) {
+                $(".DTE_Field_Name_videoFile input").val(response.data.file);
+            }
+
+            youtube.trigger('change');
+            vimeo.trigger('change');
+            facebook.trigger('change');
+            video.trigger('change');
+            fixed.trigger('change');
+            responsive.trigger('change');
+        });
+    }
+
+    function appGetComponentCode(componentPath, params, datatable) {
+
+        //If its video type, copy value from video elfinder picker to file input
+        if("logo_video_color" == params.field) {
+            params.file = params.videoFile;
+        }
+
+        return null;
+    }
+</script>
