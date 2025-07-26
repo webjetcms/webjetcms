@@ -26,9 +26,9 @@ Možnosti nastavenia:
 
 Pre **Registračný formulár** sa dodatočne ešte zobrazia karty **Zobrazené** a **Povinné**.
 
-#### Karta - Zobrazené
+#### Karta - Polia
 
-V karte Zobrazené si môžete zvoliť polia, ktoré sa zobrazia v registračnom formulári.
+V karte Polia si môžete zvoliť polia, ktoré sa zobrazia v registračnom formulári.
 
 ![](editor-showed.png)
 

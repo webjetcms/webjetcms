@@ -446,6 +446,23 @@ export function renderMail(td, type, rowData, row) {
     }
 }
 
+export function renderColor(td, type, rowData, row) {
+    if (td === "" || td === null || typeof td == "undefined") {
+        return "";
+    }
+    if (type == "sort" || type == "filter" ) {
+        return prepareForSearch(td);
+    } else {
+        //console.log("renderColor, td=", td, " rowData=", rowData, " row=", row);
+        var color = WJ.escapeHtml(td);
+        if (color.startsWith("#")) {
+            return '<span class="dt-color-box" style="background-color: ' + color + '">&nbsp;</span>' + renderTd(row, color, rowData);
+        } else {
+            return renderTd(row, color, rowData);
+        }
+    }
+}
+
 export function renderJson(td, type, rowData, row) {
 
     //console.log("Using DT render json, rowData=", rowData, "row=", row, "td=", td, "type=", type);

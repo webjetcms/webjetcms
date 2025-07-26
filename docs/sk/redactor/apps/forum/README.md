@@ -77,7 +77,7 @@ Karta **Skupiny** sa zobrazuje iba v prípade zvolenia komponenty **viactémová
 
 Prednastavená štruktúra (ak v priečinku nie je iná diskusia) je:
 
-```
+```txt
 Skupina1
  podskupina1
 Skupina2

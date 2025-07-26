@@ -192,6 +192,18 @@ table.datatableInit {
             line-height: 16px;
         }
     }
+    td.dt-style-color {
+        span.dt-color-box {
+            display: block;
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            margin-top: 2px;
+            border: 1px solid $nice-black;
+            border-radius: 4px;
+        }
+    }
 
     tbody {
         tr {

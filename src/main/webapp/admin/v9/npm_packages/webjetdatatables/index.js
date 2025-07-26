@@ -1148,9 +1148,9 @@ export const dataTableInit = options => {
         // console.log("DATA.fields", DATA.fields);
         // console.log("DATA.columns", DATA.columns);
 
-        let ajaxDeclaration;
+        let ajaxConf;
         if (DATA.isLocalJson === false) {
-            ajaxDeclaration = {
+            ajaxConf = {
                 url: WJ.urlAddPath(DATA.url, '/editor'),
                 contentType: 'application/json',
                 data: function (d) {
@@ -1176,7 +1176,7 @@ export const dataTableInit = options => {
         }
 
         var EDITOR = new $.fn.dataTable.Editor({
-            ajax: ajaxDeclaration,
+            ajax: ajaxConf,
             table: dataTableSelector,
             idSrc: DATA.editorId,
             display: "bootstrap",
@@ -2620,6 +2620,14 @@ export const dataTableInit = options => {
                     render: function (td, type, rowData, row) {
                         return RowReorder.renderRowReorder(td, type, rowData, row, dtConfig);
                     }
+                },
+                {
+                    targets: "dt-format-color",
+                    className: "dt-style-color",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderColor(td, type, rowData, row);
+                    }
+
                 }
             ]
 
@@ -3510,25 +3518,11 @@ export const dataTableInit = options => {
                         if ("duplicate"===dataAction) {
                             mainTitleKey = "button.duplicate";
 
-                            //on local data increment ID to new value
+                            RowReorder.setNewReorderValue(TABLE, true);
                             if (DATA.isLocalJson === true) {
-                                //iterate current rows, find maxId value and increment it
-                                let maxId = 0;
-                                TABLE.rows().every(function() {
-                                    let rowData = this.data();
-                                    if (typeof rowData[DATA.editorId] != "undefined" && rowData[TABLE.DATA.editorId] != null) {
-                                        let id = parseInt(rowData[TABLE.DATA.editorId]);
-                                        if (id > maxId) maxId = id;
-                                    }
-                                });
-                                maxId++;
-                                //console.log("Setting maxId=", maxId);
-                                EDITOR.field(TABLE.DATA.editorId).set(maxId);
-
                                 //unselect rows in datatable, because there is bug in render (it's not shown as selected but it is internally)
                                 TABLE.rows({ selected: true }).deselect();
                             }
-                            RowReorder.setNewReorderValue(TABLE, true);
                         }
 
                         $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(WJ.translate(mainTitleKey)+": "+title);

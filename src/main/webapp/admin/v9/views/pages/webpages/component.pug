@@ -111,7 +111,6 @@ block content
             response.data['id'] = 1;
             //console.log("response.data=", response.data);
             multidata = convertData(response.data);
-
             //console.log("multidata=", multidata, "original=", response.data);
 
             //create json data for editor, prevent call to REST service using "forceData": true
@@ -398,10 +397,7 @@ block content
                 if ("id"===key || "dt-format-static-text"===column.renderFormat) continue;
                 if ("dt-format-datatable" === column.renderFormat) {
                     //console.log("isLocalJson=", isLocalJson, "value=", value, "typeof=", typeof value);
-                    if (isLocalJson(column)===false) {
-                        //skip this column, it's datatable with separate REST service
-                        continue;
-                    } else {
+                    if (isLocalJson(column)===true) {
                         //remove ID and rowOrder columns from json
                         if (typeof value === "object" && Array.isArray(value)) {
                             //remove id and rowOrder from each item in array
@@ -412,6 +408,9 @@ block content
                         }
                         //base64 encode JSON data
                         value = encodeJSONData(value);
+                    } else {
+                        //skip this column, it's datatable with separate REST service
+                        continue;
                     }
                 }
 

@@ -36,6 +36,19 @@
 
 ![](custom-apps/appstore/common-settings-tab.png)
 
+Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
+
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Carousel Slider](redactor/apps/carousel_slider/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Emotikony](redactor/apps/emoticon/README.md)
+- [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Používatelia](redactor/apps/user/README.md)
+- [Video](redactor/apps/video/README.md)
+
+![](redactor/apps/app-slit_slider/editor-items.png)
+
 ### Menu
 
 - Ak [menu web stránky](redactor/apps/menu/README.md) nemá zadaný koreňový priečinok (hodnota je nastavená na 0), automaticky sa použije koreňový priečinok pre aktuálne zobrazenú web stránku. Je to výhodné ak sa zobrazuje menu vo viacerých jazykových mutáciách kde každá je koreňový priečinok - nemusíte mať menu/hlavičky pre každý jazyk samostatne, stačí jedna spoločná (#57893).
@@ -159,14 +172,6 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - [Príbuzné stránky](redactor/apps/related-pages/README.md)
 - [Rating](redactor/apps/rating/README.md)
 - [Rezervácie](redactor/apps/reservation/reservation-app/README.md)
-- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
-- [Slit slider](redactor/apps/app-slit_slider/README.md)
-- [Carousel Slider](redactor/apps/carousel_slider/README.md)
-- [Slider](redactor/apps/slider/README.md)
-- [Emotikony](redactor/apps/emoticon/README.md)
-- [Fórum/Diskusia](redactor/apps/forum/README.md)
-- [Používatelia](redactor/apps/user/README.md)
-- [Video](redactor/apps/video/README.md)
 
 ![](redactor/apps/dmail/form/editor.png)
 
