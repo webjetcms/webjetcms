@@ -1566,18 +1566,24 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				return output.toString();
 			}
 
-			String postfix = "";
+			String whereClause = "";
 			if(clazz.getDeclaredField("domainId") != null) {
-				postfix = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
+				whereClause = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
 			}
 
-			for(String column : columns) {
-				//Try get column/field
-				Field field = clazz.getDeclaredField(column);
-
+			// Get all valid column names from the entity class, because columns[] is unsafe input/parameter
+			Set<String> validColumns = new HashSet<>();
+			for (Field field : clazz.getDeclaredFields()) {
 				if (Number.class.isAssignableFrom(field.getType())) {
+					validColumns.add(field.getName());
+				}
+			}
+
+			//iterate over parameters and get sum for each column
+			for(String column : columns) {
+				if (validColumns.contains(column)) {
 					//Ok, its numerical type
-					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + column + ") FROM " + tableName + "" + postfix));
+					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + DB.removeSlashes(column) + ") FROM " + DB.removeSlashes(tableName) + whereClause));
 				} else {
 					//Field is not numerical type, set empty string
 					output.put(column, "");
