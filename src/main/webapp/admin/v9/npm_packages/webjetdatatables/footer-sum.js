@@ -107,7 +107,7 @@ function getTableFooterRow(api, title, columnsToSum, mode) {
                 //Check, that this column is selected to SUM
                 if(columnsToSum != null && columnsToSum.length > 0 && columnsToSum.includes(columnId) == true) {
                     //OKK column is number, and belongs to DATA.summary.columns - return SUM of column
-                    let b = $("<b><b/>");
+                    let b = $("<b></b>");
                     b.text(getSum(api, column.index(), mode));
                     td.append(b);
                     tr.append(td);
@@ -156,7 +156,7 @@ function getTableFooterRowServerSide(api, title, columnsToSum) {
     });
 
     //Get columns SUM value from BE
-    console.log("getTableFooterRow2, realColumnsToSum=", realColumnsToSum, "api.DATA=", api.DATA);
+    //console.log("getTableFooterRow2, realColumnsToSum=", realColumnsToSum, "api.DATA=", api.DATA);
     let URL = api.DATA.url;
     URL = WJ.urlAddPath(URL, "/sumAll");
 
@@ -187,7 +187,7 @@ function getTableFooterRowServerSide(api, title, columnsToSum) {
                 }
 
                 if(columnId in json) {
-                    let b = $("<b><b/>");
+                    let b = $("<b></b>");
                     b.text(json[columnId]);
                     td.append(b);
                     tr.append(td);

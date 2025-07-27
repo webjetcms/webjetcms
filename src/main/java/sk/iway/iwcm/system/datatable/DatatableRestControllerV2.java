@@ -1567,7 +1567,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 
 			String whereClause = "";
-			if(clazz.getDeclaredField("domainId") != null) {
+			boolean hasDomainIdField = Arrays.stream(clazz.getDeclaredFields())
+				.anyMatch(field -> field.getName().equals("domainId"));
+			if (hasDomainIdField) {
 				whereClause = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
 			}
 

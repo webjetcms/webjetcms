@@ -26,7 +26,7 @@ Scenario("Datatable SUM footer logic", ({ I, DT }) => {
     I.clickCss("button.colvis-postfix.btn-primary.dt-close-modal");
     DT.checkFooterSumValues(I, "statsDataTable", ["", 37957, "", "", 382]);
 
-    I.say("Chenge page, test values are same because mode 'all'");
+    I.say("Change page, test values are same because mode 'all'");
     I.click( locate("button.page-link").withText("2") );
     DT.waitForLoader();
     DT.checkFooterSumValues(I, "statsDataTable", ["", 37957, "", "", 382]);
