@@ -53,6 +53,7 @@ import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
+import * as FooterSum from './footer-sum';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
 
 const bootstrap = window.bootstrap = require('bootstrap');
@@ -160,6 +161,9 @@ export const dataTableInit = options => {
 
     //allow editor locking notifications
     DATA.editorLocking = (typeof options.editorLocking !== "undefined") ? options.editorLocking : true;
+
+    // setting to generate sum of selected columns
+    DATA.summary = (typeof options.summary !== "undefined" && typeof options.summary == "object") ? options.summary : null;
 
     //local data do not use REST services
     DATA.isLocalJson = false;
@@ -2911,6 +2915,8 @@ export const dataTableInit = options => {
             }
         }
 
+        FooterSum.bindEvents(TABLE);
+
         function runDataTables() {
 
             //console.log("runDataTables, DATA 1: ", DATA);
@@ -2991,7 +2997,12 @@ export const dataTableInit = options => {
                         stateSave: DATA.stateSave,
                         stateDuration: 0,
                         stateSaveCallback: dtWJ.stateSaveCallback,
-                        stateLoadCallback: dtWJ.stateLoadCallback
+                        stateLoadCallback: dtWJ.stateLoadCallback,
+                        footerCallback: function (row, data, start, end, display) {
+                            setTimeout(() => {
+                                FooterSum.footerCallback(TABLE);
+                            }, 100);
+                        }
                     });
             } else {
                 //src su skutocne data v JS objekte

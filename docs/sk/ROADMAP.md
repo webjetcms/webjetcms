@@ -66,7 +66,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Prieskumník - do Média tejto stránky pridať možnosť presunúť sa do rodičovského priečinka.
 - [ ] +Konfigurácia - v prípade `cluster` inštalácie doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy). Pôvodne to riešilo výberové pole `applyToAllClusterNodes`.
 - [ ] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach.
-- [ ] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html
+- [x] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
 - [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
 
@@ -244,7 +244,7 @@ Vysvetlenie použitých piktogramov:
 - [x] pridať ```code coverage``` report, napr. cez JaCoCo - https://docs.gradle.org/current/userguide/jacoco_plugin.html (#54909).
 - [ ] ~~(presun do 2023.40) upraviť posielanie správ medzi administrátormi z vyskakovacieho okna na lepšie používateľské rozhranie~~
 - [ ] ~~(presun do 2023.40) Aplikácie - zlepšiť opis každej aplikácie, aktualizovať obrázky aplikácie.~~
-- [x] Galéria - pridať fyzickú zmenu mena súboru (vrátane vygenerovaných s_ a o_ obrázkov) po zmene atribútu Meno súboru v editore (#39751-52).
+- [x] Galéria - pridať fyzickú zmenu mena súboru (vrátane vygenerovaných `s_` a `o_` obrázkov) po zmene atribútu Meno súboru v editore (#39751-52).
 - [x] +Datatabuľky - zapamätať si počet záznamov na stranu pre každú datatabuľku (#39751-50).
 - [ ] +```Command Palette``` - pridať príkazovú paletu s integrovaným vyhľadávaním podobne ako má VS Code - https://trevorsullivan.net/2019/09/18/frictionless-user-experiences-add-a-command-palette-to-your-react-application/
 - [ ] ~~(presun do 2023.40) +foto galéria - optimalizovať množstvo načítaných dát~~

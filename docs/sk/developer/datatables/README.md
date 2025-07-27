@@ -764,3 +764,45 @@ window.addEventListener("WJ.DTE.opened", function(e) {
     }
 });
 ```
+
+## Pätička pre súčet hodnôt
+
+Tabuľka ponúka možnosť nastaviť automatické sčítanie hodnôt vybraných číselných stĺpcov a ich zobrazenie ako pätička `footer` tabuľky.
+
+Nastaviť `footer` môžete pridaním `summary` objektu ako možnosť pri definovaní tabuľky.
+
+```javacript
+    let datatable = WJ.DataTable({
+        url: "/admin/rest/...",
+        summary: {
+            mode: "all",
+            columns: ["visits", "sessions", "uniqueUsers"],
+            title: "[[#{components.summary.total_title}]]"
+        }
+    });
+```
+
+Jednotlivé parametre:
+
+- `mode`, povinný parameter, určuje akým spôsobom sa budú dáta stĺpca spočítavať. Možné hodnoty:
+  - `all`, spočítajú sa všetky hodnoty stĺpca (zo všetkých strán), čiže zmena strany v tabuľke hodnotu nezmení
+  - `visible`, spočítajú sa IBA hodnoty aktuálnej (zobrazenej) strany
+- `columns`, povinný parameter, pole obsahujúce identifikátory stĺpcov, ktorých hodnoty chceme spočítať
+- `title`, nepovinný parameter, hodnota sa nastaví pod stĺpec `ID` ak je zobrazený a slúži na účely informačného textu.
+
+### Získanie dát
+
+Ak tabuľka je nastavená ako `serverSide: false`, čiže dáta sa nestránkujú, pri počítaní hodnôt sa nevykoná žiaden `request` na databázu, nakoľko tabuľka má už všetky potrebné dáta v sebe.
+
+Ak tabuľka je nastavená ako `serverSide: true`, čiže dáta sa stránkujú, akcia sa mení podľa zvoleného módu:
+
+- `visible`, počítajú sa iba dáta aktuálnej strany. Keďže tieto dáta tabuľka už má, nie je potrebné robiť `request` na databázu
+- `all`, nakoľko potrebujeme spočítať všetky dáta, ale tabuľka má iba dáta aktuálnej strany, vykoná sa `request` koncový bod `/sumAll`
+
+Logika pre obsluhu koncového bodu `/sumAll` je v triede [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java).
+
+### Pätička a filtrovanie
+
+Nakoľko `footer` využíva dáta tabuľky (až na jeden prípad), výsledná hodnota stĺpca závisí na vy-filtrovaných dátach. Takto viete ľahko zistiť celkovú hodnotu stĺpcov pre špecifické parametre.
+
+!>**Upozornenie:** Ak tabuľka je nastavená ako `serverSide: true` a mód pätičky je `all`, spočítané hodnoty sa **nemenia** v závislosti od filtrovania v tabuľke.
