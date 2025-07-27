@@ -1538,6 +1538,59 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
 
+	/**
+	 * Return SUM values of columns belonging to entity declared in parameter columns[].
+	 * <p>
+	 * If column do not exist for this entity, OR column is not subclass of Number, then empty string for column is returned.
+	 * @param entity
+	 * @param columns string arraya of column names to sum (aka entity field names), they must be numerical types (subclass of Number)
+	 * @return
+	 */
+	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+	@GetMapping("/sumAll")
+	public String getSum(T entity, @RequestParam(value = "columns[]") String[] columns) {
+
+		clearThreadData();
+
+		JSONObject output = new JSONObject();
+
+		//Get class
+		try {
+			Class<?> clazz = entity.getClass();
+			String tableName;
+
+			if (clazz.isAnnotationPresent(Table.class)) {
+				tableName = clazz.getAnnotation(Table.class).name();
+			} else {
+				//Cant call SimpleQuery without table name
+				return output.toString();
+			}
+
+			String postfix = "";
+			if(clazz.getDeclaredField("domainId") != null) {
+				postfix = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
+			}
+
+			for(String column : columns) {
+				//Try get column/field
+				Field field = clazz.getDeclaredField(column);
+
+				if (Number.class.isAssignableFrom(field.getType())) {
+					//Ok, its numerical type
+					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + column + ") FROM " + tableName + "" + postfix));
+				} else {
+					//Field is not numerical type, set empty string
+					output.put(column, "");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return output.toString();
+	}
+
 	public JpaRepository<T, Long> getRepo() {
 		return repo;
 	}
@@ -2013,58 +2066,5 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 	public void setRequest(HttpServletRequest request) {
 		this.request = request;
-	}
-
-	/**
-	 * Return SUM values of columns belonging to entity declared in parameter columns[].
-	 * <p>
-	 * If column do not exist for this entity, OR column is not subclass of Number, then empty string for column is returned.
-	 * @param entity
-	 * @param columns string arraya of column names to sum (aka entity field names), they must be numerical types (subclass of Number)
-	 * @return
-	 */
-	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
-	@GetMapping("/sumAll")
-	public String getSum(T entity, @RequestParam(value = "columns[]") String[] columns) {
-
-		clearThreadData();
-
-		JSONObject output = new JSONObject();
-
-		//Get class
-		try {
-			Class<?> clazz = entity.getClass();
-			String tableName;
-
-			if (clazz.isAnnotationPresent(Table.class)) {
-				tableName = clazz.getAnnotation(Table.class).name();
-			} else {
-				//Cant call SimpleQuery without table name
-				return output.toString();
-			}
-
-			String postfix = "";
-			if(clazz.getDeclaredField("domainId") != null) {
-				postfix = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
-			}
-
-			for(String column : columns) {
-				//Try get column/field
-				Field field = clazz.getDeclaredField(column);
-
-				if (Number.class.isAssignableFrom(field.getType())) {
-					//Ok, its numerical type
-					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + column + ") FROM " + tableName + "" + postfix));
-				} else {
-					//Field is not numerical type, set empty string
-					output.put(column, "");
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return output.toString();
 	}
 }

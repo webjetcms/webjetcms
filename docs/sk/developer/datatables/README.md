@@ -772,16 +772,19 @@ Tabuľka ponúka možnosť nastaviť automatické sčítanie hodnôt vybraných 
 Nastaviť `footer` môžete pridaním `summary` objektu ako možnosť pri definovaní tabuľky.
 
 ```javacript
-    summary: {
-        mode: "all",
-        columns: ["visits", "sessions", "uniqueUsers"],
-        title: "[[#{components.summary.total_title}]]"
-    }
+    let datatable = WJ.DataTable({
+        url: "/admin/rest/...",
+        summary: {
+            mode: "all",
+            columns: ["visits", "sessions", "uniqueUsers"],
+            title: "[[#{components.summary.total_title}]]"
+        }
+    });
 ```
 
 Jednotlivé parametre:
 
-- `mode`, povinný parameter, určuje akým spôsobom sa budú dáta stĺpca spočítavať. Možné hodnoty `all` alebo `visible`.
+- `mode`, povinný parameter, určuje akým spôsobom sa budú dáta stĺpca spočítavať. Možné hodnoty:
   - `all`, spočítajú sa všetky hodnoty stĺpca (zo všetkých strán), čiže zmena strany v tabuľke hodnotu nezmení
   - `visible`, spočítajú sa IBA hodnoty aktuálnej (zobrazenej) strany
 - `columns`, povinný parameter, pole obsahujúce identifikátory stĺpcov, ktorých hodnoty chceme spočítať
@@ -796,7 +799,7 @@ Ak tabuľka je nastavená ako `serverSide: true`, čiže dáta sa stránkujú, a
 - `visible`, počítajú sa iba dáta aktuálnej strany. Keďže tieto dáta tabuľka už má, nie je potrebné robiť `request` na databázu
 - `all`, nakoľko potrebujeme spočítať všetky dáta, ale tabuľka má iba dáta aktuálnej strany, vykoná sa `request` koncový bod `/sumAll`
 
-Logika pre obsluhu koncového bodu `/sumAll` je v triede `DatatableRestControllerV2`.
+Logika pre obsluhu koncového bodu `/sumAll` je v triede [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java).
 
 ### Pätička a filtrovanie
 

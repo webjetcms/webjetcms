@@ -4,20 +4,9 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-function refreshColumnsOrder(I) {
-    I.clickCss("button.buttons-settings");
-    I.clickCss("button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
-    I.click("Obnoviť");
-}
-
-Scenario("Refresh columns order", ({ I }) => {
-    I.amOnPage("/apps/stat/admin/");
-    refreshColumnsOrder(I);
-});
-
 Scenario("Datatable SUM footer logic", ({ I, DT }) => {
     I.amOnPage("/apps/stat/admin/");
+    DT.resetTable("statsDataTable");
 
     I.say("Test default showed footer");
     DT.setDates("01.01.2025", "01.05.2025", "#statsDataTable_extfilter");
@@ -43,5 +32,9 @@ Scenario("Datatable SUM footer logic", ({ I, DT }) => {
     DT.checkFooterSumValues(I, "statsDataTable", ["", 37957, "", "", 382]);
 
     I.say("Resfresh columns order");
-    refreshColumnsOrder(I);
+});
+
+Scenario("Reset columns order", ({ I, DT }) => {
+    I.amOnPage("/apps/stat/admin/");
+    DT.resetTable("statsDataTable");
 });
