@@ -1,0 +1,158 @@
+<script>
+    function appAfterInit(response, datatable, path, isInsert) {
+        const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+            fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+            fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+        };
+
+        window.addEventListener("WJ.DTE.opened", function(e) {
+            const fieldElement = $("#DTE_Field_forumType");
+
+            if("/components/forum/forum_mb.jsp" === path) {
+                //Set forumType, based on path
+                fieldElement.val("forum_mb").change();
+                fieldElement.selectpicker('refresh');
+            } else {
+                //Only during update
+                //We ask paging but need to save noPaging sooo revert
+                if(isInsert == false)
+                    $("#DTE_Field_noPaging_0").prop( "checked", !response.data.noPaging);
+            }
+
+            fieldElement.on("change", function() {
+                let value = $(this).val();
+                if (value === 'forum') {
+                    setFieldsVisibility(
+                        ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum'],
+                        ['type', 'noPaging']
+                    );
+                    updateUsePagingVisibility();
+
+                    $("#pills-dt-component-datatable-groups-tab").hide();
+                } else {
+                    setFieldsVisibility(
+                        ['type', 'noPaging', 'pageSizeForum'],
+                        ['useDelTimeLimit', 'delMinutes', 'allowedUserGroup', 'searchPostsDocId', 'sortTopicsBy', 'pageSize', 'pageLinksNum']
+                    );
+                    updateUseDelTimeLimitVisibility();
+
+                    $("#pills-dt-component-datatable-groups-tab").show();
+                }
+            });
+
+            const updateUsePagingVisibility = () => {
+                if ($("#DTE_Field_noPaging_0").is(":checked")) {
+                    setFieldsVisibility([], ['pageSizeForum']);
+                } else {
+                    setFieldsVisibility(['pageSizeForum'], []);
+                }
+            };
+
+            const updateUseDelTimeLimitVisibility = () => {
+                if ($("#DTE_Field_useDelTimeLimit_0").is(":checked")) {
+                    setFieldsVisibility([], ['delMinutes']);
+                } else {
+                    setFieldsVisibility(['delMinutes'], []);
+                }
+            };
+
+            updateUsePagingVisibility();
+            updateUseDelTimeLimitVisibility();
+
+            $("#DTE_Field_noPaging_0").on("change", updateUsePagingVisibility);
+            $("#DTE_Field_useDelTimeLimit_0").on("change", updateUseDelTimeLimitVisibility);
+
+
+            fieldElement.trigger("change");
+        });
+
+    }
+
+    function appGetComponentPath(componentPath, componentDatatable, isInsert) {
+        let field = $("#DTE_Field_forumType").val();
+        if ("forum" === field) {
+            return "/components/forum/forum.jsp";
+        } else {
+            return "/components/forum/forum_mb.jsp";
+        }
+    }
+
+    function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+        let include = "!INCLUDE(" + componentPath;
+
+        //We ask paging but need to save noPaging sooo revert
+        if(params.forumType != "forum_mb") {
+            params.noPaging[0] = !params.noPaging[0];
+        } else {
+            //This old version did this
+            params.type = "topics";
+        }
+
+        if (Object.keys(params).length > 0) {
+            include += ", " + convertObjectToInludeParams(params);
+        }
+        include += ")!";
+
+        if(params.forumType != "forum_mb" || isInsert == false) return include;
+
+        // like in old version, include must be inside prepared SECTION structure, IF forumType is forum_mb
+        let prefix = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\"><div class=\"column-content\">";
+        let postfix = "</div></div></div></div></section>";
+        return prefix + include + postfix;
+    }
+
+    async function appCodeExecute(params) {
+        const structure = $("#DTE_Field_structure").val();
+        const fieldElement = $("#DTE_Field_forumType").val();
+        let result = false;
+
+        if (fieldElement === "forum_mb" && structure.length > 0) {
+            try {
+                //Get jstree
+                let jstree = window.parent.parent.parent.$('#SomStromcek').jstree();
+
+                //Prepare data
+                const paramsX = new URLSearchParams();
+                paramsX.append("structure", structure);
+                paramsX.append("groupId", jstree.get_selected()[0]);
+                paramsX.append("pageData", JSON.stringify({
+                    pageSize: params.pageSize,
+                    pageLinksNum: params.pageLinksNum,
+                    useDelTimeLimit: params.useDelTimeLimit[0],
+                    delMinutes: params.delMinutes,
+                    sortTopicsBy: params.sortTopicsBy,
+                    sortAscending: params.sortAscending,
+                    notifyPageAuthor: params.notifyPageAuthor[0]
+                }));
+
+                await $.ajax({
+                    url: "/admin/rest/forum/prepare-structure",
+                    method: "POST",
+                    data: paramsX.toString(),
+                    success: async function(response) {
+                        if(response != undefined && response != null && response != "") {
+                            //It's error
+                            console.log("ERROR: ", response);
+                            window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                        }
+
+                        try { window.parent.parent.reloadWebpagesTree(); } catch (e) {}
+                        try { await window.parent.reloadParentWindow(); } catch (e) {}
+                        try { window.parent.parent.parent.$('#SomStromcek').jstree(true).refresh(); } catch (e) {}
+                        result = true;
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+                    }
+                });
+            } catch (e) {
+                console.log("ERROR: ", e);
+                window.WJ.notifyError("[[#{components.forum.prepare_structure_err.title}]]", "[[#{components.forum.prepare_structure_err.text}]]");
+            }
+        } else {
+            result = true; //If not forum_mb, we don't need to prepare structure
+        }
+        return result;
+    }
+</script>

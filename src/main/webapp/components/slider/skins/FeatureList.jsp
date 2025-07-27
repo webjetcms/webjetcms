@@ -53,7 +53,7 @@ jQuery(document).ready(function(){
         videohidecontrols:false,
 
         fullwidth:<%=pageParams.getBooleanValue("fullWidthSlider",false)%>,
-        
+
         donotresize:false,
 
         enabletouchswipe: <%=pageParams.getBooleanValue("touch_swipe",true)%>,

@@ -48,7 +48,6 @@ if(request.getParameter("login") != null && request.getParameter("auth")!=null)
 
 DocDetails docDetailsOriginal = (DocDetails)request.getAttribute("docDetailsOriginal");
 String submitURL = null;
-String userGroupsIds = null;
 int docId = -1;
 if (docDetailsOriginal != null)
 {
@@ -57,9 +56,6 @@ if (docDetailsOriginal != null)
 	{
 		submitURL = docDetailsOriginal.getVirtualPath();
 	}
-	userGroupsIds = pageParams.getValue("regToUserGroups", docDetailsOriginal.getPasswordProtected());	//nastavim skupiny z premennej, ak regToUserGroups neexistuje
-																																		//nastavim skupiny podla stranky
-	session.setAttribute("groupsIds", userGroupsIds);
 	docId = docDetailsOriginal.getDocId();
 }
 else if (request.getAttribute("logonFormSubmitURL")!=null)

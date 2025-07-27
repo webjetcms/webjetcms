@@ -52,6 +52,7 @@ import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
+import * as RowReorder from './row-reorder';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
 
 const bootstrap = window.bootstrap = require('bootstrap');
@@ -78,7 +79,7 @@ require('datatables.net-colreorder-bs5');
 //require('datatables.net-keytable-bs5');
 //require('datatables.net-responsive-bs5');
 //require('datatables.net-rowgroup-bs5');
-//require('datatables.net-rowreorder-bs5');
+require('datatables.net-rowreorder-bs5');
 //require('datatables.net-scroller-bs5');
 require('datatables.net-select-bs5');
 require('datatables.net-datetime');
@@ -105,14 +106,15 @@ export const dataTableInit = options => {
     var DATA = [];
     DATA.id = options.id ? options.id : null;
     DATA.removeColumns = options.removeColumns ? options.removeColumns : null;
-    DATA.src = options.src;
+    //local JSON data (do not use REST service)
+    DATA.src = options.src ? options.src : null;
     DATA.fields = []; //polia pre DT editor
     DATA.serverSide = options.serverSide ? options.serverSide : false;
     DATA.tabsFolders = options.tabs ? options.tabs : [
         //always show basic tab
         { id: 'basic', title: WJ.translate('datatable.tab.basic'), selected: true }
     ];
-    DATA.url = options.url;
+    DATA.url = options.url ? options.url : null;
     DATA.editorId = options.editorId ? options.editorId : "id";
     DATA.onXhr = options.onXhr ? options.onXhr : null;
     DATA.onPreXhr = options.onPreXhr ? options.onPreXhr : null;
@@ -161,6 +163,10 @@ export const dataTableInit = options => {
 
     // setting to generate sum of selected columns
     DATA.summary = (typeof options.summary !== "undefined" && typeof options.summary == "object") ? options.summary : null;
+
+    //local data do not use REST services
+    DATA.isLocalJson = false;
+    if (typeof DATA.src !== "undefined" && DATA.src != null) DATA.isLocalJson = true;
 
     //console.log("options=", options);
 
@@ -288,7 +294,7 @@ export const dataTableInit = options => {
                         let value = input.html();
                         if ("<p><br></p>"==value) value = "";
                         data.data[i][fieldName] = value;
-                    }
+                }
                 }
             }
         }
@@ -902,7 +908,10 @@ export const dataTableInit = options => {
             //If showOnlyEditor, set it as full screen and hide close/minimalize button's
             if(window.location.href.indexOf("showOnlyEditor=true") != -1) {
                 $(dom.content).find("div.modal-dialog").addClass("modal-fullscreen");
-                $(append).find("button.btn-close-editor").hide();
+                if (false === DATA.nestedModal) {
+                    //hide close button for main dialog window
+                    $(append).find("button.btn-close-editor").hide();
+                }
                 $(append).find("div.dialog-buttons").hide();
             }
 
@@ -1142,8 +1151,9 @@ export const dataTableInit = options => {
         // console.log("DATA.fields", DATA.fields);
         // console.log("DATA.columns", DATA.columns);
 
-        var EDITOR = new $.fn.dataTable.Editor({
-            ajax: {
+        let ajaxConf;
+        if (DATA.isLocalJson === false) {
+            ajaxConf = {
                 url: WJ.urlAddPath(DATA.url, '/editor'),
                 contentType: 'application/json',
                 data: function (d) {
@@ -1165,7 +1175,11 @@ export const dataTableInit = options => {
                         WJ.notifyError(WJ.translate("session.logoff.info.js"), WJ.translate("datatables.error.network.js"));
                     }
                 },
-            },
+            }
+        }
+
+        var EDITOR = new $.fn.dataTable.Editor({
+            ajax: ajaxConf,
             table: dataTableSelector,
             idSrc: DATA.editorId,
             display: "bootstrap",
@@ -1310,34 +1324,36 @@ export const dataTableInit = options => {
             window.dispatchEvent(eventClose);
         });
         EDITOR.on('submitSuccess', function (e, json, data, action) {
-            //console.log("Editor.on submitSuccess, json=", json);
-            setTimeout(function() {
-                if (json.forceReload === true) {
-                    //serverSide is reloading by datatable directly
-                    if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
+            //console.log("Editor.on submitSuccess, json=", json, "DATA=", DATA, "data=", data, "action=", action);
+            if (DATA.isLocalJson === false) {
+                setTimeout(function() {
+                    if (json.forceReload === true) {
+                        //serverSide is reloading by datatable directly
+                        if (EDITOR.TABLE.DATA.serverSide===false) TABLE.ajax.reload();
 
-                    //publishni reload event, napr. pre jstree
-                    const eventReload = new CustomEvent('WJ.DTE.forceReload', {
-                        detail: {
-                            e: e,
-                            json: json,
-                            data: data,
-                            action: action,
-                            EDITOR: EDITOR,
-                            TABLE: TABLE
-                        }
-                    });
-                    window.dispatchEvent(eventReload);
-                }
+                        //publishni reload event, napr. pre jstree
+                        const eventReload = new CustomEvent('WJ.DTE.forceReload', {
+                            detail: {
+                                e: e,
+                                json: json,
+                                data: data,
+                                action: action,
+                                EDITOR: EDITOR,
+                                TABLE: TABLE
+                            }
+                        });
+                        window.dispatchEvent(eventReload);
+                    }
 
-                if(DATA.updateEditorAfterSave == true) {
-                    EDITOR.setJson(data);
-                }
+                    if(DATA.updateEditorAfterSave == true) {
+                        EDITOR.setJson(data);
+                    }
 
-                if(typeof json.notify != "undefined" && json.notify != null) {
-                    showNotify(json.notify);
-                }
-            }, 300);
+                    if(typeof json.notify != "undefined" && json.notify != null) {
+                        showNotify(json.notify);
+                    }
+                }, 300);
+            }
         });
 
         EDITOR.on('submitUnsuccessful', function (e, json) {
@@ -1671,8 +1687,16 @@ export const dataTableInit = options => {
                         html: true
                     });
 
-                    //console.log("Setting selectpicker");
-                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').selectpicker(DT_SELECTPICKER_OPTS_EDITOR);
+                    $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').each(function () {
+                        const $select = $(this);
+                        const separator = $select.attr('separator');
+                        let opts = { ...DT_SELECTPICKER_OPTS_EDITOR };
+                        if (separator) {
+                            opts.multipleSeparator = separator;
+                        }
+                        //console.log("Setting selectpicker, opts=", opts, " el=", $select);
+                        $select.selectpicker(opts);
+                    });
                 }
 
                 //console.log("Setting tooltips header");
@@ -1739,6 +1763,8 @@ export const dataTableInit = options => {
 
         $.fn.dataTable.ext.search.push(
             function (settings, data, dataIndex) {
+
+                if (typeof TABLE === "undefined") return true;
 
                 var isOk = true;
 
@@ -2351,35 +2377,43 @@ export const dataTableInit = options => {
 
             initComplete: function (settings, json) {
 
-                //console.log("initComplete, TABLE=", TABLE.DATA.id);
-                dtWJ.fixDatatableHeaderInputs(TABLE);
+                const timeout = DATA.isLocalJson ? 100 : 0;
 
-                $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
-                    placement: 'top',
-                    trigger: 'hover'
-                });
+                //we need to have timeout because on localData TABLE is not yet initialized
+                //with REMOTE data it is initialized because of REST service call
+                setTimeout(()=> {
 
-                $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
-                    $(item).on("click", function () {
-                        $($(item).data("target")).modal({
-                            backdrop: 'static',
-                            keyboard: false
+                    //console.log("init, this=", this, "settings=", settings, "json=", json);
+                    //console.log("initComplete, TABLE=", TABLE.DATA.id);
+                    dtWJ.fixDatatableHeaderInputs(TABLE);
+
+                    $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
+                        placement: 'top',
+                        trigger: 'hover'
+                    });
+
+                    $.each($('#' + DATA.id + '_wrapper [data-toggle*="modal"]'), function (key, item) {
+                        $(item).on("click", function () {
+                            $($(item).data("target")).modal({
+                                backdrop: 'static',
+                                keyboard: false
+                            });
                         });
                     });
-                });
 
-                /*
-                console.log("select picker 3");
-                $('.dt-container select').selectpicker(DT_SELECTPICKER_OPTS);*/
+                    /*
+                    console.log("select picker 3");
+                    $('.dt-container select').selectpicker(DT_SELECTPICKER_OPTS);*/
 
-                $('#' + DATA.id + '_wrapper').on('click', '.buttons-select-all', function (e) {
-                    if (TABLE.rows({selected:true}).count()>0) {
-                        TABLE.rows().deselect();
-                    } else {
-                        TABLE.rows({"filter": "applied", "page": "current"}).select();
-                    }
-                    return false;
-                });
+                    $('#' + DATA.id + '_wrapper').on('click', '.buttons-select-all', function (e) {
+                        if (TABLE.rows({selected:true}).count()>0) {
+                            TABLE.rows().deselect();
+                        } else {
+                            TABLE.rows({"filter": "applied", "page": "current"}).select();
+                        }
+                        return false;
+                    });
+                }, timeout);
             },
 
             columnDefs: [
@@ -2558,6 +2592,14 @@ export const dataTableInit = options => {
 
                 },
                 {
+                    targets: "dt-format-image-notext",
+                    className: "dt-style-image",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderImage(td, type, rowData, row, false);
+                    }
+
+                },
+                {
                     targets: "dt-format-mail",
                     className: "dt-style-link",
                     render: function (td, type, rowData, row) {
@@ -2575,6 +2617,20 @@ export const dataTableInit = options => {
                     render: function (td, type, rowData, row) {
                         return dtConfig.renderAttrs(td, type, rowData, row);
                     }
+                },
+                {
+                    targets: "dt-format-row-reorder",
+                    render: function (td, type, rowData, row) {
+                        return RowReorder.renderRowReorder(td, type, rowData, row, dtConfig);
+                    }
+                },
+                {
+                    targets: "dt-format-color",
+                    className: "dt-style-color",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderColor(td, type, rowData, row);
+                    }
+
                 }
             ]
 
@@ -3037,10 +3093,19 @@ export const dataTableInit = options => {
         function runDataTables() {
 
             //console.log("runDataTables, DATA 1: ", DATA);
+
+            let $datatableInit = $(dataTableInit);
+
+            //console.log("runDataTables, $datatableInit=", $datatableInit, "serverSide=", DATA.serverSide, "data=", DATA);
+            $datatableInit.attr("data-server-side", DATA.serverSide);
+
+            //get rowReorder config object
+            let rowReorder = RowReorder.getRowReorderConfig(DATA);
+
             //DT options: https://datatables.net/reference/option/
             if (typeof DATA.url === "string") {
                 //src je URL adresa rest endpointu
-                TABLE = $(dataTableInit)
+                TABLE = $datatableInit
                     .on('xhr.dt', function (e, settings, json, xhr) {
 
                         //ak neprisli options (napr. pri vyhladavani) zachovaj povodne
@@ -3082,6 +3147,7 @@ export const dataTableInit = options => {
                         rowId: DATA.editorId,
                         order: DATA.order,
                         paging: DATA.paging,
+                        rowReorder: rowReorder,
                         rowCallback: function (row, data, displayNum) {
                             //pozor, tato funkcia je tu 2x pre ajax aj normal load
                             //console.log("createdRow, displayNum=", displayNum, " data=", data, "row=", row);
@@ -3132,10 +3198,15 @@ export const dataTableInit = options => {
                     });
             } else {
                 //src su skutocne data v JS objekte
-                TABLE = $(dataTableInit).DataTable({
+                //console.log("Initializing DT from local data, src=", DATA.src, "serverSide: ", DATA.serverSide);
+                DATA.editorLocking = false;
+                TABLE = $datatableInit.DataTable({
                     data: DATA.src.data,
+                    serverSide: false,
+                    rowId: DATA.editorId,
                     columns: DATA.columns,
                     order: DATA.order,
+                    rowReorder: rowReorder,
                     rowCallback: function (row, data, displayNum) {
 
                         if (displayNum % 2 == 0) $(row).attr("class", "odd");
@@ -3601,6 +3672,12 @@ export const dataTableInit = options => {
         }
     }
 
+    if (DATA.isLocalJson) {
+        TABLE.hideButton("import");
+        TABLE.hideButton("export");
+        TABLE.hideButton("reload");
+    }
+
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
     setTimeout(function() {
         new bootstrap.Tooltip($(".btn-export-dialog"));
@@ -3644,7 +3721,15 @@ export const dataTableInit = options => {
                     if (title != null && title != "") {
                         let dataAction = $("#"+TABLE.DATA.id+"_modal").attr("data-action");
                         let mainTitleKey = "button.edit";
-                        if ("duplicate"===dataAction) mainTitleKey = "button.duplicate";
+                        if ("duplicate"===dataAction) {
+                            mainTitleKey = "button.duplicate";
+
+                            RowReorder.setNewReorderValue(TABLE, true);
+                            if (DATA.isLocalJson === true) {
+                                //unselect rows in datatable, because there is bug in render (it's not shown as selected but it is internally)
+                                TABLE.rows({ selected: true }).deselect();
+                            }
+                        }
 
                         $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(WJ.translate(mainTitleKey)+": "+title);
                     }

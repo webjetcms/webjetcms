@@ -62,7 +62,10 @@ class htmlEditButton {
 }
 
 function launchPopupEditor(quill, options) {
-  const htmlFromEditor = quill.container.querySelector(".ql-editor").innerHTML;
+  let htmlFromEditor = quill.container.querySelector(".ql-editor").innerHTML;
+
+  htmlFromEditor = window.quillToHtmlFormat(htmlFromEditor);
+
   const popupContainer = $create("div");
   const overlayContainer = $create("div");
   const msg = options.msg || 'Edit HTML here, when you click "OK" the quill editor\'s contents will be replaced';
@@ -108,7 +111,7 @@ function launchPopupEditor(quill, options) {
   buttonOk.onclick = function() {
     const output = textArea.value.split(/\r?\n/g).map(el => el.trim());
     const noNewlines = output.join("");
-    quill.container.querySelector(".ql-editor").innerHTML = noNewlines;
+    quill.container.querySelector(".ql-editor").innerHTML =  window.quillFromHtmlFormat(noNewlines);
     document.body.removeChild(overlayContainer);
   };
 }
@@ -117,7 +120,7 @@ function launchPopupEditor(quill, options) {
 function formatHTML(code) {
   "use strict";
 
-  //webjet fix
+  //====================== webjet fix =======================
     //add new line to end p and div tag
     let blockTags = ["p", "div", "ul", "li", "ol", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre", "table", "tr", "td", "th"];
     blockTags.forEach(tag => {
@@ -135,8 +138,13 @@ function formatHTML(code) {
     });
     //replace double new lines with single
     code = code.replace(/\n\n/g, "\n");
+
+    //remove OL helper classes
+    code = code.replace(/<span class="ql-ui" contenteditable="false"><\/span>/gi, '');
+
+    //DO NOT CONTINUE WITH THE OLD CODE BELOW
     if (1==1) return code;
-  //end webjet fix
+  //===================== end webjet fix =====================
 
   let stripWhiteSpaces = true;
   let stripEmptyLines = true;

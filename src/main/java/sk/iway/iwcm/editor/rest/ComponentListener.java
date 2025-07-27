@@ -8,6 +8,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
 
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -42,7 +43,7 @@ public class ComponentListener {
             Logger.error(ComponentListener.class, e);
         }
 
-        if (Tools.isEmpty(includePath)) {
+        if (Tools.isEmpty(includePath) || FileTools.isFile(includePath)==false) {
             includePath = "/apps/admin/editor-component.html";
         }
         model.addAttribute("appIncludePath", includePath);
