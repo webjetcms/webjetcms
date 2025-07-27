@@ -57,6 +57,8 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - V sekcií návštevnosť pridaný sumárny počet Videní, Návštev a Počet rôznych používateľov pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (#57929).
 
+![](redactor/apps/stat/stats-page.png)
+
 ### Bezpečnosť
 
 - Opravená možná zraniteľnosť v Safari pri špeciálnej URL adrese smerujúcej na archív súborov v kombinácii s peknou 404 stránkou (#57657-8).

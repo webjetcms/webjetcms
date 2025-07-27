@@ -100,7 +100,9 @@ function getTableFooterRow(api, title, columnsToSum, mode) {
         let td = $("<td></td>");
 
         if(counter === 0 && title !== undefined && title !== null && title !== "") {
-            td.text(title);
+            let b = $("<b></b>");
+            b.text(title);
+            td.append(b);
         } else {
             //Check - we can SUM only number columns
             if(column.header().className.indexOf("dt-style-number") != -1) {
@@ -177,7 +179,9 @@ function getTableFooterRowServerSide(api, title, columnsToSum) {
                 if("id" === columnId) {
                     //Special column, if TITLE is set, we add it
                     if(title !== undefined && title !== null) {
-                        td.text(title);
+                        let b = $("<b></b>");
+                        b.text(title);
+                        td.append(b);
                         tr.append(td);
                     } else {
                         //If TITLE is not set, we add an empty cell
