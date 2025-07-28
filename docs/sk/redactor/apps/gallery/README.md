@@ -62,7 +62,7 @@ Editor obsahuje nasledujúce karty:
 
 **Popis**
 
-Krátky a dlhý popis fotografie v rôznych jazykoch.
+Krátky a dlhý popis fotografie v rôznych jazykových mutáciách.
 
 Tieto popisy sú dôležité pre medzinárodných používateľov. Krátky popis poskytuje rýchly náhľad na obsah fotografie, zatiaľ čo dlhý popis poskytuje detailnejšie informácie. Popisy sa automaticky zobrazujú podľa zvoleného jazyka stránky.
 
@@ -72,12 +72,12 @@ Tieto popisy sú dôležité pre medzinárodných používateľov. Krátky popis
 
 Obsahuje doplnkové údaje:
 
-  - **Meno súboru**: Unikátny názov súboru fotografie, ktorý umožňuje jej identifikáciu v systéme.
-  - **Priečinok**: Cesta alebo umiestnenie v rámci úložiska, kde je fotografia uložená. Pomáha organizovať a vyhľadávať fotografie.
-  - **Autor**: Meno alebo pseudonym osoby, ktorá fotografiu vytvorila.
-  - **Dátum nahratia**: Dátum a čas, kedy bola fotografia nahraná do systému. Pomáha sledovať chronológiu a umožňuje vyhľadávať fotografie podľa času ich nahrania.
-  - **Priorita**: Úroveň dôležitosti alebo preferencie, ktorá sa môže použiť na usporiadanie fotografií v galérii. Nižšia priorita znamená, že fotografia bude zobrazená na poprednejších miestach.
-  - **URL adresa zdroja obrázku**: URL adresa odkiaľ sme získali daný obrázok.
+- **Meno súboru**: Unikátny názov súboru fotografie, ktorý umožňuje jej identifikáciu v systéme.
+- **Priečinok**: Cesta alebo umiestnenie v rámci úložiska, kde je fotografia uložená. Pomáha organizovať a vyhľadávať fotografie.
+- **Autor**: Meno alebo pseudonym osoby, ktorá fotografiu vytvorila.
+- **Dátum nahratia**: Dátum a čas, kedy bola fotografia nahraná do systému. Pomáha sledovať chronológiu a umožňuje vyhľadávať fotografie podľa času ich nahrania.
+- **Priorita**: Úroveň dôležitosti alebo preferencie, ktorá sa môže použiť na usporiadanie fotografií v galérii. Nižšia priorita znamená, že fotografia bude zobrazená na poprednejších miestach.
+- **URL adresa zdroja obrázku**: URL adresa odkiaľ sme získali daný obrázok.
 
 ![](metadata-preview.png)
 
@@ -113,6 +113,12 @@ Ku každej fotografii je v administrácii možné nastaviť názov a perex (dlh�
 Výsledná galéria na web stránke môže vyzerať nasledovne:
 
 ![](photoswipe.png)
+
+## Presunutie obrázka
+
+Zmenou hodnoty **Priečinok** v karte **Metadáta** nastane zmena uloženia v rámci úložiska. Priečinok môžete zmeniť pri editácii aj pri duplikovaní obrázka. Cieľový priečinok si môžete vybrať cez výberové okno, alebo môžete zadať priamo cestu. Cesta musí **vždy** začínať na `/images/gallery`. Táto funkcionalita je užitočná pri presúvaní, nakoľko galéria nepodporuje akciu `drag&drop`.
+
+Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbližšieho rodičovského priečinka sa nastavia vlastnosti vytvoreného priečinka. Funguje to aj pre niekoľko úrovni súčasne, takže sa môže automaticky vytvoriť celý strom vnorení.
 
 ## Možné konfiguračné premenné
 

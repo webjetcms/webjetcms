@@ -37,7 +37,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
 - [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
 - [ ] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.
-- [ ] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.
+- [x] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka (#57885).
 - [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
 - [x] Archív súborov - prerobiť do dátových tabuliek (#57317).
 - [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
@@ -69,6 +69,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Štatistika - do sekcie návštevnosť pridať sumárny počet Videní a Návštev pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (súčet čísel v tabuľke). Mohlo by ísť doplniť `footerCallback` - https://datatables.net/examples/advanced_init/footer_callback.html (#57929).
 - [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
+- [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
 
 ## 2024
 
