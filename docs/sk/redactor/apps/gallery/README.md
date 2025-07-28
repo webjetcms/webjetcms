@@ -116,7 +116,7 @@ Výsledná galéria na web stránke môže vyzerať nasledovne:
 
 ## Presunutie obrázka
 
-Zmenou hodnoty **Priečinok** v karte **Metadáta** nastane zmena uloženia v rámci úložiska. Funguje to pri úprave obrázka, ako aj pri duplikovaní. Cieľový priečinok si môžete vybrať cez výberové okno, alebo môžete zadať priamo cestu. Cesta musí **vždy** začínať na `/images/gallery`. Táto funkcionalita je užitočná pri presúvaní, nakoľko galéria nepodporuje akciu `drag and drop`.
+Zmenou hodnoty **Priečinok** v karte **Metadáta** nastane zmena uloženia v rámci úložiska. Priečinok môžete zmeniť pri editácii aj pri duplikovaní obrázka. Cieľový priečinok si môžete vybrať cez výberové okno, alebo môžete zadať priamo cestu. Cesta musí **vždy** začínať na `/images/gallery`. Táto funkcionalita je užitočná pri presúvaní, nakoľko galéria nepodporuje akciu `drag&drop`.
 
 Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbližšieho rodičovského priečinka sa nastavia vlastnosti vytvoreného priečinka. Funguje to aj pre niekoľko úrovni súčasne, takže sa môže automaticky vytvoriť celý strom vnorení.
 

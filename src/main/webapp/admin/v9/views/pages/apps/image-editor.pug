@@ -131,14 +131,18 @@ block content
                     $(".DTE_Footer .btn-primary").hide();
                 }
 
-                // Image editor has no permission to change dirSimpleGallery
-                galleryTable.EDITOR.field("editorFields.dirSimpleGallery").disable();
-                $("#editorAppDTE_Field_editorFields-dirSimpleGallery").find("button.btn-vue-jstree-item-edit").prop( "disabled", true );
-
                 $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                 //console.log("Reseting imageEditorInstance");
                 //zresetuj image editor instance
                 if (imageEditorInstance != null) imageEditorInstance.resetData();
+            });
+
+            window.addEventListener("WJ.DTE.opened", function() {
+                //this is not prepared in open event
+                // Image editor has no permission to change imagePath
+                galleryTable.EDITOR.field("editorFields.imagePath").disable();
+                $("#editorAppDTE_Field_editorFields-imagePath input.form-control").prop("disabled", true);
+                $("#editorAppDTE_Field_editorFields-imagePath").find("button.btn-vue-jstree-item-edit").prop("disabled", true);
             });
 
             adminUpload = window.AdminUpload({
@@ -165,6 +169,12 @@ block content
                     }, 1000);
                     window.opener.elFinderInstance.exec('reload');
                 } catch (e) {console.log("Error reloading elfinder", e);}
+
+                if (imageEditorInstance == null) {
+                    setTimeout(() => {
+                        window.close();
+                    }, 1200);
+                }
             });
 
             $("#upload-wrapper .upload-wrapper-header").text(WJ.translate("components.image_editor.saving.js"));
