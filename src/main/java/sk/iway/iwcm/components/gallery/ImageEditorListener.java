@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
 
 import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
@@ -24,7 +25,7 @@ public class ImageEditorListener {
         ModelMap model = event.getSource().getModel();
 
         Map<Long, String> perexGroupsMap = new HashMap<>();
-        for(PerexGroupsEntity perex : perexGroupsRepository.findAllByOrderByPerexGroupNameAsc()) {
+        for(PerexGroupsEntity perex : perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId())) {
             perexGroupsMap.put(perex.getId(), perex.getPerexGroupName());
         }
 

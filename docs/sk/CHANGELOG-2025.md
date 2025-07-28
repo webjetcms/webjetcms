@@ -229,8 +229,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ### Galéria
 
-- **Podpora pre zmenu hodnoty Priečinok** - pridaná podpora pre zmenu priečinka obrázka umožňuje [presunutie obrázka](redactor/apps/gallery/README.md#) pri úprave alebo duplikovaní (#57885).
-- **Automatické nastavenie neexistujúceho priečinka** - ak sa pri presúvaní obrázka zadala cesta neexistujúci priečinka, po vytvorení sa mu automatický nastavia nastavenia najbližšieho rodiča (#57885).
+- Pridaná podpora pre **zmenu priečinka** obrázku, ktorá umožňuje [presunúť obrázok](redactor/apps/gallery/README.md#) pri úprave alebo duplikovaní do iného priečinka. Užitočné to je práve pri duplikovaní, keď môžete rovno nastaviť nový priečinok, kam chcete obrázok duplikovať. Ak priečinok zadáte manuálne a neexistuje, automaticky sa vytvorí a nastavia sa mu vlastnosti podľa najbližšieho existujúceho rodičovského priečinka (#57885).
 
 ### Elektronický obchod
 
@@ -257,7 +256,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Vyhľadávanie v administrácii - upravené rozhranie na vlastný `RestController` a `Service` (#57561).
 - Prieskumník - rýchlejšie načítanie a nižšie zaťaženie servera znížením počtu súborov/požiadaviek na server (#56953).
-- `dt-tree-dir-simple` - pridaná podpora na skrytie rodičovských adresárov v zobrazenej stromovej štruktúre atribútom `data-dt-field-hideRootParents` (#57885).
+- `dt-tree-dir-simple` - pridaná podpora na [skrytie rodičovských priečinkov](developer/datatables-editor/field-json.md#možnosti-classname) v zobrazenej stromovej štruktúre atribútom `data-dt-field-hideRootParents` (#57885).
 
 ### Oprava chýb
 

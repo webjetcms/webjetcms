@@ -48,13 +48,13 @@ public class JsTreeMoveItem {
     private JsTreeItem node;
 
     /**
-     * Name of constant that holds paths of folders, that should be skipped (not showed in tree)
+     * Name of constant that holds paths of folders, that should be skipped/hidden (not showed in tree)
      */
     private String skipFoldersConst;
 
     /**
      * Hide parents of root folder in tree. in case we want see only from root down.
-     * By default false, so all parents are shown. This way we can see where in fulkl tree we are.
+     * By default false, so all parents are shown. This way we can see where in full tree we are.
      */
     private boolean hideRootParents = false;
 

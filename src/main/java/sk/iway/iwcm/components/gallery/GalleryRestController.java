@@ -15,6 +15,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -35,6 +36,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -49,8 +51,6 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     private final GalleryRepository repository;
     private final PerexGroupsRepository perexGroupsRepository;
     private final GalleryDimensionRepository gdr;
-
-    private static final String GALLERY_PATH = "/images/gallery";
 
     @Autowired
     public GalleryRestController(GalleryRepository repository, PerexGroupsRepository perexGroupsRepository, GalleryDimensionRepository gdr, HttpServletRequest request) {
@@ -89,7 +89,6 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
             if(entity.getId() == null) entity.setId(Long.valueOf(-1));
             return entity;
-
         }
 
         return super.getOneItem(id);
@@ -161,9 +160,9 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         // For gallery only
         if(isImageEditor() == false) {
             // DirSimpleGallery aka image path MUST be set
-            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getDirSimpleGallery()) || entity.getEditorFields().getDirSimpleGallery().startsWith(GALLERY_PATH) == false) {
+            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getImagePath()) || entity.getEditorFields().getImagePath().startsWith(getBaseGalleryPath()) == false) {
                 // Check if DirSimpleGallery starts with /images/gallery
-                errors.rejectValue("errorField.editorFields.dirSimpleGallery", "403", Prop.getInstance().getText("components.gallery.image_path.err"));
+                errors.rejectValue("errorField.editorFields.dirSimpleGallery", "403", Prop.getInstance().getText("components.gallery.image_path.err", getBaseGalleryPath()));
             }
         }
     }
@@ -212,7 +211,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
         // Image editor do not have permission to change imagePath via dirSimpleGallery
         if(isImageEditor) {
-            entity.getEditorFields().setDirSimpleGallery(entity.getImagePath());
+            entity.getEditorFields().setImagePath(entity.getImagePath());
 
             if(entity.getId() > 0) {
                 // ITS update
@@ -239,15 +238,15 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
                 name = DocTools.removeCharsDir(name, true).toLowerCase();
             }
 
-            String newPath = entity.getEditorFields().getDirSimpleGallery();
-            if (FileTools.isFile(newPath+"/"+name)) {
+            String newPath = entity.getEditorFields().getImagePath();
+            if (FileTools.isFile(newPath + "/" + name)) {
                 //subor uz existuje, musime zmenit nazov
                 int dot = name.lastIndexOf(".");
                 if (dot > 0) {
                     for (int i=1; i<100; i++) {
 
                         String newNameTest = name.substring(0, dot) + i + name.substring(dot);
-                        if (FileTools.isFile(newPath+"/"+newNameTest)==false) {
+                        if (FileTools.isFile(newPath + "/" + newNameTest) == false) {
                             name = newNameTest;
                             break;
                         }
@@ -257,7 +256,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             }
 
             entity.setImageName(name);
-            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(newPath+"/"+name)));
+            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(newPath + "/" + name)));
         }
 
         entity.setId(null);
@@ -334,12 +333,12 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
      * @param destPath
      */
     private void checkAndCreateGallery(String destPath) {
-        if(Tools.isEmpty(destPath) || destPath.startsWith(GALLERY_PATH) == false) return;
+        if(Tools.isEmpty(destPath) || destPath.startsWith(getBaseGalleryPath()) == false) return;
 
         // Sanitize path
         destPath = DocTools.removeCharsDir(destPath, true).toLowerCase();
 
-        StringBuilder rootPath = new StringBuilder(GALLERY_PATH);
+        StringBuilder rootPath = new StringBuilder(getBaseGalleryPath());
         int domainId = CloudToolsForCore.getDomainId();
         String author = getUser().getFullName();
 
@@ -349,7 +348,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             //Dimension do not exist, find first existing parent path
 
             //remove prefix and get subfolders of dest path
-            String restOfPath = destPath.replaceFirst("^" + GALLERY_PATH, "");
+            String restOfPath = destPath.replaceFirst("^" + getBaseGalleryPath(), "");
             if(restOfPath.startsWith("/")) restOfPath = restOfPath.substring(1);
             String[] subFolders = restOfPath.split("/");
 
@@ -386,16 +385,8 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     private GalleryDimension getDeepCopy(GalleryDimension source, String name, String rootPath, String author, int domainId) {
         GalleryDimension newDimension = new GalleryDimension();
 
-        // 1 - 1 with original
-        newDimension.setPath(source.getPerex());
-        newDimension.setResizeMode(source.getResizeMode());
-        newDimension.setImageWidth(source.getImageWidth());
-        newDimension.setImageHeight(source.getImageHeight());
-        newDimension.setNormalWidth(source.getNormalWidth());
-        newDimension.setNormalHeight(source.getNormalHeight());
-        newDimension.setWatermark(source.getWatermark());
-        newDimension.setWatermarkPlacement(source.getWatermarkPlacement());
-        newDimension.setWatermarkSaturation(source.getWatermarkSaturation());
+        NullAwareBeanUtils.copyProperties(source, newDimension);
+        newDimension.setId(null); // Set ID to null, so it will be saved as new dimension
 
         // Custom settings
         newDimension.setName(name);
@@ -405,5 +396,9 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         newDimension.setDate(new Date());
 
         return newDimension;
+    }
+
+    private String getBaseGalleryPath() {
+        return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
     }
 }

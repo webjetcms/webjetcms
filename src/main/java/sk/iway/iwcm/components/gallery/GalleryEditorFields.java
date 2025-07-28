@@ -26,7 +26,7 @@ public class GalleryEditorFields {
 		}
 	)
     @NotBlank
-    private String dirSimpleGallery;
+    private String imagePath;
 
     @DataTableColumn(
         inputType = DataTableColumnType.CHECKBOX,
@@ -47,7 +47,7 @@ public class GalleryEditorFields {
         perexGroupsIds = Tools.getTokens(entityOriginal.getPerexGroup(), ",");
 
         //
-        dirSimpleGallery = entityOriginal.getImagePath();
+        imagePath = entityOriginal.getImagePath();
     }
 
     public void toGalleryEntity(GalleryEntity entityOriginal) {
@@ -61,6 +61,6 @@ public class GalleryEditorFields {
             perexGroupStringBuilder.append(perexGroupId);
         }
         entityOriginal.setPerexGroup(perexGroupStringBuilder.toString());
-        entityOriginal.setImagePath(dirSimpleGallery);
+        entityOriginal.setImagePath(imagePath);
     }
 }

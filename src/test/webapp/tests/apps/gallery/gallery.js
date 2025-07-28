@@ -915,7 +915,6 @@ Scenario('Gallery - filtering', ({ I }) => {
     I.seeElement(locate('.jstree-anchor.jstree-search').withText('o-spolocnosti'));
     I.seeElement(locate('.jstree-anchor').withText('gallery'));
 
-
     I.jstreeFilter('spolocnosti', 'Začína na');
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('o-spolocnosti'));
     I.dontSeeElement(locate('.jstree-anchor').withText('gallery'));
@@ -1036,7 +1035,6 @@ function doRemove(I, DT) {
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
 }
-
 
 Scenario('Gallery - Feature - automatically create galleryDimension by saved imagePath', ({ I, DT, DTE }) => {
     const realPath = "/images/gallery/test";
