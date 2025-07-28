@@ -864,7 +864,7 @@ Scenario('logout', ({ I }) => {
 
 Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, DT, DTE }) => {
     var nameOfImage = 'koala.jpg';
-    I.amOnPage("/admin/v9/apps/gallery");
+    I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
 
     I.jstreeWaitForLoader();

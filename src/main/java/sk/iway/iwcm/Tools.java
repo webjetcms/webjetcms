@@ -8,7 +8,7 @@ import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.util.EntityUtils;
-import org.apache.struts.util.ResponseUtils;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.springframework.context.ApplicationContext;
@@ -29,6 +29,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -1035,7 +1037,7 @@ public class Tools
 		{
 			ret = ret.substring(0, ret.indexOf('#'));
 		}
-		return org.apache.struts.util.ResponseUtils.filter(ret);
+		return ResponseUtils.filter(ret);
 	}
 
 	/**
@@ -1591,7 +1593,7 @@ public class Tools
 		   String[] values = request.getParameterValues(name);
 		   for (int i=0; i<values.length; i++)
 		   {
-			   String value = org.apache.struts.util.ResponseUtils.filter(values[i]);
+			   String value = ResponseUtils.filter(values[i]);
 			   baseLink = addParameterToUrl(baseLink, name, value);
 		   }
 		}
@@ -2889,6 +2891,15 @@ public class Tools
 		if (text.contains("*|")) text = Tools.replace(text, "*|", "<");
 		if (text.contains("|*")) text = Tools.replace(text, "|*", ">");
 		if (text.contains("&amp;#47;")) text = Tools.replace(text, "&amp;#47;", "&#47;");
+		if (text.contains("&lt;&#47;") || text.contains("<&#47;")) {
+			//enable HTML mode
+			text = Tools.replace(text, "&lt;&#47;", "</");
+			text = Tools.replace(text, "<&#47;", "</");
+			text = Tools.replace(text, "&lt;", "<");
+			text = Tools.replace(text, "&gt;", ">");
+
+			text = AllowSafeHtmlAttributeConverter.sanitize(text);
+		}
 
 		return  text;
 	}

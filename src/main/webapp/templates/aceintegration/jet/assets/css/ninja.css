@@ -14821,6 +14821,29 @@ a.btn.more-info {
   top: 14px;
   z-index: 1;
 }
+.ly-header ul.nav {
+  display: flex;
+  flex-direction: row;
+}
+.ly-header #blindBlock-navigation ul.navbar-nav {
+  padding: 0 330px 0 200px;
+  margin: 0;
+  text-align: center;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  transform: translate(0, -50%);
+}
+.ly-header #blindBlock-navigation ul.navbar-nav a {
+  display: block;
+  padding: 0 15px;
+  color: #404e57;
+  font-weight: normal;
+  line-height: 40px;
+  font-size: 14px;
+  text-decoration: none;
+}
 .ly-header .btn.logout {
   padding: 6px 0 0 50px;
   position: relative;

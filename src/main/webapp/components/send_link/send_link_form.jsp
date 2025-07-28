@@ -4,9 +4,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*,java.net.*,sk.iway.iwcm.doc.*,java.util.*,java.sql.*,sk.iway.iwcm.system.*,sk.iway.Password"%><%@page import="org.apache.commons.codec.binary.Base64"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%
 //Formular na odoslanie stranky/linky
 
@@ -35,19 +32,19 @@ if (request.getParameter("docid") != null && request.getParameter("sendType") !=
 
 	sendType = request.getParameter("sendType");
 	if (Constants.getBoolean("disableWysiwyg")) sendType = "link";
-	
+
 	if ( pageDocId > 0 && ("link".equals(sendType) || "page".equals(sendType)) )
 	{
 		DocDB docDB = DocDB.getInstance();
 		docDet = docDB.getDoc(pageDocId);
-		
+
 		if (docDet == null)
 		{
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			pageContext.include("/404.jsp");
 			return;
 		}
-		
+
 		//ochrana pred zobrazenim cohokolvek (kontrola prav, inak by sa ktokolvek dostal ku ktoremukolvek clanku)
 		Identity user = UsersDB.getCurrentUser(request);
 		if (DocDB.canAccess(docDet, user, true)==false)
@@ -67,55 +64,55 @@ if (request.getParameter("docid") != null && request.getParameter("sendType") !=
 			pageContext.include("/404.jsp");
 			return;
 		}
-		
+
 		//aby aspon ako tak fungovali INCLUDE komponenty
 		request.setAttribute("docDetails", docDet);
 		pageLink = Tools.getServerName(request)+docDet.getDocLink();
 		if (pageLink.startsWith("/")){
-		
+
 			pageLink.replaceFirst("/", "");
 			}
-			
+
 		pageLink = "http://" + pageLink;
-		
+
 		String qs = request.getParameter("qs");
 		if (Tools.isNotEmpty(qs))
 		{
 			qs = Tools.replace(qs, "|", "=");
 			Base64 b64 = new Base64();
-			String decoded = new String(b64.decode(qs.getBytes()));	
+			String decoded = new String(b64.decode(qs.getBytes()));
 
 			pageLink = Tools.addParametersToUrlNoAmp(pageLink, decoded);
 		}
-		
+
 		if ("link".equals(sendType))
-		{		
+		{
 			message += "<p>"+prop.getText("components.send_link.visit_page") +  "<br/><br/>" +
-						  "<b>" + docDet.getTitle() +	"</b><br/>" + docDet.getPerex() + 
+						  "<b>" + docDet.getTitle() +	"</b><br/>" + docDet.getPerex() +
 						  "\n</p>\n<p><a href=\""+pageLink+"\">"+pageLink+"</a>\n</p>";
 		}
 		else if ("page".equals(sendType))
-		{			
+		{
 			String data = docDet.getData();
 			//asi je nadpis v sablone, pridame
 			if (data.toLowerCase().indexOf("<h1")==-1) data = "<h1>"+docDet.getTitle()+"</h1>"+data;
-			
+
 			//odstran JavaScript kod
-			
+
 			data = SearchAction.removeCommands(data);
-			data = Tools.replace(data, "onmouse", "atribute1");			
-			
+			data = Tools.replace(data, "onmouse", "atribute1");
+
 			message += "<p>" + prop.getText("components.send_link.page_text") + "</p>\n<p>" +
 						"<a href=\"" + pageLink + "\">" + pageLink + "</a>\n</p><br/><hr/>" + data;
 		}
-			
+
 		if (Constants.getBoolean("disableWysiwyg"))
 		{
 			message = SearchAction.htmlToPlain(message);
 		}
-		
+
 		request.setAttribute("docData", message);
-		
+
 		session.setAttribute("sendLinkToken-"+csrfToken, "1");
 	}
 }
@@ -166,7 +163,7 @@ if (Constants.getBoolean("disableWysiwyg"))
 {
 	message = Tools.replace(message, "<", "&lt;");
 	message = Tools.replace(message, ">", "&gt;");
-	message = Tools.replace(message, "\n", "<br />");		
+	message = Tools.replace(message, "\n", "<br />");
 }
 
 if (Constants.getBoolean("formMailSendPlainText"))
@@ -184,9 +181,9 @@ if (Tools.isEmpty(sendTime))
 }
 
 if ("sendPage".equals(request.getParameter("act")) && "post".equalsIgnoreCase(request.getMethod()))
-{   
+{
 	//System.out.println(message);
-	
+
 	//uloz meno a email do cookies
 	Cookie forumName = new Cookie("forumname", sk.iway.iwcm.Tools.URLEncode(fromName));
 	forumName.setPath("/");
@@ -196,10 +193,10 @@ if ("sendPage".equals(request.getParameter("act")) && "post".equalsIgnoreCase(re
 	forumEmail.setPath("/");
 	forumEmail.setMaxAge(60 * 24 * 3600);
 	forumEmail.setHttpOnly(true);
-	
+
 	Tools.addCookie(forumName, response, request);
 	Tools.addCookie(forumEmail, response, request);
-	
+
 	//odosli pohladnicu
 	String serverRoot = "http://"+Tools.getServerName(request);
 	if (sk.iway.iwcm.Constants.getInt("httpServerPort")!=80)
@@ -207,10 +204,10 @@ if ("sendPage".equals(request.getParameter("act")) && "post".equalsIgnoreCase(re
 		serverRoot += ":"+sk.iway.iwcm.Constants.getInt("httpServerPort");
 	}
 	//ochrana proti odosielaniu SPAMu
-	
+
 	//text musi obsahovat linku na nasu domenu
 	boolean antispamOK = true;
-	
+
 	String antispamServerName = Constants.getString("antispamServerName");
 	if (Tools.isNotEmpty(antispamServerName))
 	{
@@ -233,7 +230,7 @@ if ("sendPage".equals(request.getParameter("act")) && "post".equalsIgnoreCase(re
 	{
 		antispamOK = false;
 	}
-	
+
 	String disclaimer = Constants.getString("sendLinkDisclaimer-"+lng);
 	if (disclaimer != null)
 	{
@@ -247,19 +244,19 @@ if ("sendPage".equals(request.getParameter("act")) && "post".equalsIgnoreCase(re
 	   	message = message + "<br/><br/><hr/>" + adMessage;
 	   }
 	}
-	
+
 	if (!SpamProtection.canPost("sendLink",message,request)) antispamOK = false;
 	if (request.getCookies()==null) antispamOK = false;
-	
+
 	if (antispamOK)
 	{
 		String key = "sendLinkToken-"+request.getParameter("token");
 	   if (session.getAttribute(key) == null) antispamOK = false;
 	   else session.removeAttribute(key);
 	}
-	
+
 	boolean captchaOK = Captcha.validateResponse(request, request.getParameter("wjcaptcha"), "send_link");
-	
+
 	boolean ok = false;
 	if (antispamOK && captchaOK)
 	{
@@ -285,31 +282,31 @@ else
 <%@page import="sk.iway.iwcm.users.UsersDB"%>
 <%@page import="sk.iway.iwcm.system.captcha.Captcha"%>
 
-<%@page import="org.apache.struts.util.ResponseUtils"%>
-		
+<%@page import="sk.iway.iwcm.tags.support.ResponseUtils"%>
+
  		<%@include file="/components/_common/cleditor/jquery.cleditor.js.jsp" %>
  		<script type="text/javascript" src="/components/form/check_form.js"></script>
-		
+
 		<%--
-		// zakomentovany, kedze obsahuje document.write a to robi bordel pri nacitani cez AJAX 
+		// zakomentovany, kedze obsahuje document.write a to robi bordel pri nacitani cez AJAX
 		<script type="text/javascript" src="/components/calendar/popcalendar.jsp"></script>
 		--%>
 
 		<div class="send_linka">
-			<logic:equal name="pageSend" value="ok">
+			<iwcm:equal name="pageSend" value="ok">
    				<iwcm:text key="components.send_link.send_ok"/> <%=ResponseUtils.filter(toEmail)%>.
-			</logic:equal>
+			</iwcm:equal>
 
-			<logic:equal name="pageSend" value="fail">
+			<iwcm:equal name="pageSend" value="fail">
 			   <iwcm:text key="components.send_link.send_fail"/>.
-			</logic:equal>
-			
-			<logic:equal name="pageSend" value="captcha">
-			   <iwcm:text key="captcha.textNotCorrect"/>
-			</logic:equal>
+			</iwcm:equal>
 
-			<logic:present name="showForm">
-			
+			<iwcm:equal name="pageSend" value="captcha">
+			   <iwcm:text key="captcha.textNotCorrect"/>
+			</iwcm:equal>
+
+			<iwcm:present name="showForm">
+
 			   <form action="/components/send_link/send_link_form.jsp" method="post" id="sendLinkForm">
 					<div class="container-fluid">
 						<div class="row form-group">
@@ -347,7 +344,7 @@ else
 								<input type="text" id="subject1" name="subject" class="required form-control" size="60" maxlength="255" value="<%=ResponseUtils.filter(subject)%>" />
 							</div>
 						</div>
-						
+
 						<% if (sk.iway.iwcm.system.captcha.Captcha.isRequired("send_link")) { %>
 						<div class="row form-group">
 							<div class="col-md-3">
@@ -366,7 +363,7 @@ else
 
 					<div<%= "link".equals(sendType) ? " class=\"wysiwygLink\"" : " class=\"wysiwygPage\""%>>
 						<textarea name="message" id="wysiwygSendLink" class="wysiwyg" cols="50" rows="18"><iwcm:write name="docData"/></textarea>
-					</div>	
+					</div>
 					<div style="display: none;">
 						<input type="hidden" name="pageLink" value="<%=ResponseUtils.filter(pageLink)%>" />
 						<input type="hidden" name="token" value="<%=csrfToken%>" />
@@ -375,15 +372,15 @@ else
 						<input type="reset" class="reset" name="bReset" onclick="window.close();" value="<iwcm:text key="button.cancel"/>" />
 					</div>
 				</form>
-			</logic:present>
+			</iwcm:present>
 		</div>
-		
+
 		<script type="text/javascript">
-		
+
 			var textareaId = 'wysiwygSendLink';
-			
+
 			function loadClEditorIfReady()
-			{								
+			{
 				//window.alert(textareaId+" equals2="+("wysiwygSendLink"==textareaId));
 				$("#" + textareaId).cleditor({
 					width      : 560,
@@ -399,7 +396,7 @@ else
 			{
 				try
 				{
-					checkForm.allreadyInitialized = false;			
+					checkForm.allreadyInitialized = false;
 					checkForm.init();
 				}
 				catch (e) {}

@@ -20,7 +20,6 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.struts.util.ResponseUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.tools.generic.DateTool;
@@ -60,6 +59,7 @@ import sk.iway.iwcm.system.stripes.BindPageParams;
 import sk.iway.iwcm.system.stripes.PageParamOnly;
 import sk.iway.iwcm.system.stripes.WebJETActionBean;
 import sk.iway.iwcm.tags.WriteTag;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -477,7 +477,7 @@ public class NewsActionBean extends WebJETActionBean
 				if (alsoSubGroups)
 				{
 					//All subgroups
-					if(subGroupsDepth < 1) { 
+					if(subGroupsDepth < 1) {
 						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
 						for (GroupDetails g : groupList) {
 							groupIdsExpanded.add(g.getGroupId());

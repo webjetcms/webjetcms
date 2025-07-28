@@ -9,13 +9,12 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
-
-import org.apache.struts.upload.FormFile;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -96,6 +95,7 @@ public class DocForumEntity implements Serializable {
     )
     private Boolean active;
 
+    @Lob
     @Column(name = "question")
     @DataTableColumn(
         inputType = DataTableColumnType.QUILL,
@@ -175,9 +175,6 @@ public class DocForumEntity implements Serializable {
 
     @Column(name = "domain_id")
     private Integer domainId;
-
-    @Transient
-    private transient FormFile uploadedFile = null;
 
     @Transient
     private transient String prefix;

@@ -28,6 +28,9 @@ Scenario('kontrola URL s bodkociarkou', ({ I }) => {
 
     I.amOnPage("/admin/;/mem.jsp");
     I.see("Chyba 404 - požadovaná stránka neexistuje");
+
+    I.amOnPage("/files/archiv/;/mem.jsp");
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
 });
 
 Scenario('mozne XSS v textarea replaceall', ({ I }) => {
@@ -45,6 +48,7 @@ Scenario('mozne XSS v textarea replaceall', ({ I }) => {
 
 Scenario('mozne XSS v textarea replaceall-db', ({ I }) => {
     I.amOnPage("/admin/replaceall-db.jsp");
+    I.waitForElement("textarea[name=newText]", 5);
 
     var xss = "1</textarea><ScRiPt >kxyQ(9031)</ScRiPt>";
 
@@ -52,9 +56,19 @@ Scenario('mozne XSS v textarea replaceall-db', ({ I }) => {
     I.fillField("textarea[name=newText]", xss);
     I.click("input[name=replace]");
 
-    I.seeInField("textarea[name=oldText]", xss);
-    I.seeInField("textarea[name=newText]", xss);
+    I.waitForText("Text "+xss+" nahradeny", 10, "div.content-wrapper");
+    I.waitForText("za "+xss+" v data_asc", 10, "div.content-wrapper");
 
-    I.see("Text "+xss+" nahradeny");
-    I.see("za "+xss+" v data_asc");
+    I.waitForValue("textarea[name=oldText]", xss, 10);
+    I.waitForValue("textarea[name=newText]", xss, 10);
+});
+
+Scenario("Ninja URL with double quotes", ({ I }) => {
+    var link = `/files/archiv/filter-xss/file.pdf”><audio>">`;
+    I.amOnPage(link);
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
+    I.see("archiv-xss-404".toUpperCase(), "h1");
+    I.dontSeeInSource(link);
+    //check properly escaped URL in source
+    I.seeInSource(`/files/archiv/filter-xss/file.pdf%E2%80%9D%3E%3Caudio%3E%22%3E`)
 });

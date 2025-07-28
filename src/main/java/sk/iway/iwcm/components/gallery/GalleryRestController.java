@@ -100,7 +100,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         DatatablePageImpl<GalleryEntity> page =  new DatatablePageImpl<>( super.searchItem(params, pageable, search) );
 
         //this can't be in getOptions method becase getAll is never called
-        List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByOrderByPerexGroupNameAsc();
+        List<PerexGroupsEntity> perexList = perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId());
         page.addOptions("editorFields.perexGroupsIds", perexList, "perexGroupName", "id", false);
 
         return page;

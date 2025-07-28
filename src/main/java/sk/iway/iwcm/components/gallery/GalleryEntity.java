@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
@@ -69,6 +70,7 @@ public class GalleryEntity {
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private String imagePath;
 
+    @Lob
     @Column(name = "image_source")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata", sortAfter = "editorFields.dirSimpleGallery",
         editor = {
@@ -92,6 +94,7 @@ public class GalleryEntity {
             })
     private String descriptionShortSk;
 
+    @Lob
     @Column(name = "l_description_sk")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -116,6 +119,7 @@ public class GalleryEntity {
             })
     private String descriptionShortCz;
 
+    @Lob
     @Column(name = "l_description_cz")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -139,6 +143,7 @@ public class GalleryEntity {
             })
     private String descriptionShortEn;
 
+    @Lob
     @Column(name = "l_description_en")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -163,6 +168,7 @@ public class GalleryEntity {
             })
     private String descriptionShortDe;
 
+    @Lob
     @Column(name = "l_description_de")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -187,6 +193,7 @@ public class GalleryEntity {
             })
     private String descriptionShortPl;
 
+    @Lob
     @Column(name = "l_description_pl")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -211,6 +218,7 @@ public class GalleryEntity {
             })
     private String descriptionShortRu;
 
+    @Lob
     @Column(name = "l_description_ru")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -235,6 +243,7 @@ public class GalleryEntity {
             })
     private String descriptionShortHu;
 
+    @Lob
     @Column(name = "l_description_hu")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -259,6 +268,7 @@ public class GalleryEntity {
             })
     private String descriptionShortCho;
 
+    @Lob
     @Column(name = "l_description_cho")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -283,6 +293,7 @@ public class GalleryEntity {
             })
     private String descriptionShortEsp;
 
+    @Lob
     @Column(name = "l_description_esp")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,
@@ -293,6 +304,7 @@ public class GalleryEntity {
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongEsp;
 
+    @Lob
     @Column(name = "author")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,

@@ -243,11 +243,11 @@ Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
  });
 
  Scenario('overenie zobrazenia so zakladnymi pravami', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/settings/translation-keys");
+    I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.filterContains("key", "components.banner.add_new_banner");
     I.see("Pridať nový banner");
 
-    I.amOnPage("/admin/v9/settings/translation-keys?removePerm=prop.show_all_texts");
+    I.amOnPage("/admin/v9/settings/translation-keys/?removePerm=prop.show_all_texts");
     DT.filterContains("key", "components.banner.add_new_banner");
     I.dontSee("Pridať nový banner");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");

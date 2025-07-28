@@ -8,9 +8,6 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -33,9 +30,9 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     }
 %>
 
-<logic:present name="confValues">
+<iwcm:present name="confValues">
     <h3><iwcm:text key="admin.help.possibleConfigValues"/></h3>
-    <logic:iterate id="conf" name="confValues" type="sk.iway.iwcm.system.ConfDetails">
-        <span> - ```<bean:write name="conf" property="name"/>``` - <bean:write name="conf" property="description"/> ( <bean:write name="conf" property="value"/>) </span><br>
-    </logic:iterate>
-</logic:present>
+    <iwcm:iterate id="conf" name="confValues" type="sk.iway.iwcm.system.ConfDetails">
+        <span> - ```<iwcm:beanWrite name="conf" property="name"/>``` - <iwcm:beanWrite name="conf" property="description"/> ( <iwcm:beanWrite name="conf" property="value"/>) </span><br>
+    </iwcm:iterate>
+</iwcm:present>

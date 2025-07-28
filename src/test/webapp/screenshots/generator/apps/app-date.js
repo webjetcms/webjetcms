@@ -9,7 +9,7 @@ Scenario('datum', ({ I, DT, DTE, Document }) => {
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/app-date/app-date.png");
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list?docid=77767");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=77767");
     DTE.waitForEditor();
 
     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);

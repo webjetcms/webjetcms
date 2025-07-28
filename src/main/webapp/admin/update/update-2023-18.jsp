@@ -8,13 +8,10 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%@ page import="java.io.StringWriter" %>
 <%@ page import="java.io.PrintWriter" %>
 <%@ page import="java.util.*" %>
-<%@ page import="org.apache.struts.util.ResponseUtils" %>
+<%@ page import="sk.iway.iwcm.tags.support.ResponseUtils" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -30,6 +27,7 @@ static {
 	replaces.add(new OptionDto("ArrayList\t", "List\t", null));
 	replaces.add(new OptionDto("ArrayList<", "List<", null));
 	replaces.add(new OptionDto("new List", "new ArrayList", null));
+	replaces.add(new OptionDto("new java.util.List", "new java.util.ArrayList", null));
 	//API changes
 	replaces.add(new OptionDto("Constants.INSTALL_NAME", "Constants.getInstallName()", null));
 	replaces.add(new OptionDto("InitServlet.SERVER_START_DATETIME", "InitServlet.getServerStartDatetime()", null));
@@ -69,8 +67,8 @@ static {
 	replaces.add(new OptionDto("uri=\"/WEB-INF/struts-html.tld\" prefix=\"html\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"", "import_xls_struct.jsp"));
 	replaces.add(new OptionDto("<html:form action=\"/admin/importxls.do\" name=\"xlsImportForm\" type=\"sk.iway.iwcm.xls.ImportXLSForm\" enctype=\"multipart/form-data\">", "<form:form method=\"post\" modelAttribute=\"xlsImportForm\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" enctype=\"multipart/form-data\">", null));
 	replaces.add(new OptionDto("<input type=\"File\"", "<input type=\"file\"", "import_xls_struct.jsp"));
-	replaces.add(new OptionDto("request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));", "request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));\nrequest.setAttribute(\"xlsImportForm\", new sk.iway.iwcm.xls.ImportXLSForm());", "import_xls_struct.jsp"));
-	replaces.add(new OptionDto("</form>", "</form:form>", "import_xls_struct.jsp"));
+	replaces.add(new OptionDto("request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));", "request.setAttribute(\"dialogDesc\", prop.getText(\"components.import_web_pages.xls.dialogDesc\"));", "import_xls_struct.jsp"));
+	//not needed anymore replaces.add(new OptionDto("</form>", "</form:form>", "import_xls_struct.jsp"));
 	replaces.add(new OptionDto("/admin/importxls.do", "/admin/import/excel/", null));
 
 	//forum/new.jsp
@@ -217,7 +215,7 @@ static {
 	replaces.add(new OptionDto("RatingBean", "RatingEntity", null));
 
 	//Menu
-	replaces.add(new OptionDto("<form ", "<form:form ", "/components/restaurant_menu/"));
+	//replaces.add(new OptionDto("<form ", "<form:form ", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.components.restaurant_menu.MealDB\"%" + ">", "", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("sk.iway.iwcm.components.restaurant_menu.MenuDB", "sk.iway.iwcm.components.restaurant_menu.rest.RestaurantMenuService", "/components/restaurant_menu/"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.components.restaurant_menu.MealBean\"%" + ">", "", "/components/restaurant_menu/"));
@@ -361,10 +359,13 @@ static {
 	replaces.add(new OptionDto("dataTables_wrapper", "dt-container", ".html"));
 	replaces.add(new OptionDto("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu", "div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]", ".js"));
 	replaces.add(new OptionDto("dataTables_empty", "dt-empty", ".js"));
-
-	replaces.add(new OptionDto("data-dismiss=", "data-bs-dismiss=", ".jsp"));
-	replaces.add(new OptionDto("data-toggle=", "data-bs-toggle=", ".jsp"));
 	replaces.add(new OptionDto(".DATA.json[", ".DATA.json.data[", ".html"));
+
+	//Bootstrap 5 upgrade
+	replaces.add(new OptionDto("data-dismiss=\"modal\"", "data-dismiss=\"modal\" data-bs-dismiss=\"modal\"", ".jsp"));
+	replaces.add(new OptionDto("data-dismiss=\"modal\" data-bs-dismiss=\"modal\" data-bs-dismiss=\"modal\"", "data-dismiss=\"modal\" data-bs-dismiss=\"modal\"", ".jsp"));
+	replaces.add(new OptionDto("data-toggle=\"tab\"", "data-toggle=\"tab\" data-bs-toggle=\"tab\"", ".jsp"));
+	replaces.add(new OptionDto("data-toggle=\"tab\" data-bs-toggle=\"tab\" data-bs-toggle=\"tab\"", "data-toggle=\"tab\" data-bs-toggle=\"tab\"", ".jsp"));
 
 	//basket - Transition from double to BigDecimal
 	replaces.add(new OptionDto("Math.abs( doc.getPrice() ) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
@@ -372,6 +373,10 @@ static {
 
 	//prop search
 	replaces.add(new OptionDto("/admin/prop_search.jsp?search=yes&text=", "/admin/v9/settings/translation-keys/#dt-filter-key=", ".jsp"));
+
+   //quiz
+   replaces.add(new OptionDto("sk.iway.iwcm.components.quiz.QuizResultBean", "sk.iway.iwcm.components.quiz.jpa.QuizResultEntity", null));
+   replaces.add(new OptionDto("QuizResultBean", "QuizResultEntity", null));
 
 	//remove html:form elements
 	replaces.add(new OptionDto("<html:form", "<form", ".jsp"));
@@ -407,6 +412,100 @@ static {
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.cloud.payments.paypal.PayPalMerchantAccountActionBean\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.PaymentType\"%" + ">", "", ".jsp"));
 	replaces.add(new OptionDto("<" + "%@page import=\"sk.iway.iwcm.ebanking.epayments.ElectronicPayments\"%" + ">", "", ".jsp"));
+
+	//Replace logic:present with iwcm:present
+	replaces.add(new OptionDto("<" + "logic:present", "<" + "iwcm:present", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:present", "</" + "iwcm:present", ".jsp"));
+
+	//Replace logic:notPresent with iwcm:notPresent
+	replaces.add(new OptionDto("<" + "logic:notPresent", "<" + "iwcm:notPresent", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:notPresent", "</" + "iwcm:notPresent", ".jsp"));
+
+	//Replace logic:empty with iwcm:empty
+	replaces.add(new OptionDto("<" + "logic:empty", "<" + "iwcm:empty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:empty", "</" + "iwcm:empty", ".jsp"));
+
+	//Replace logic:notEmpty with iwcm:notEmpty
+	replaces.add(new OptionDto("<" + "logic:notEmpty", "<" + "iwcm:notEmpty", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:notEmpty", "</" + "iwcm:notEmpty", ".jsp"));
+
+	//Replace logic:equal with iwcm:equal
+	replaces.add(new OptionDto("<" + "logic:equal", "<" + "iwcm:equal", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:equal", "</" + "iwcm:equal", ".jsp"));
+
+	//Replace logic:iterate with iwcm:iterate
+	replaces.add(new OptionDto("<" + "logic:iterate", "<" + "iwcm:iterate", ".jsp"));
+	replaces.add(new OptionDto("</" + "logic:iterate", "</" + "iwcm:iterate", ".jsp"));
+
+	//Replace bean:write with iwcm:beanWrite
+	replaces.add(new OptionDto("<" + "bean:write", "<" + "iwcm:beanWrite", ".jsp"));
+
+	//Replace html:hidden with iwcm:hidden
+	replaces.add(new OptionDto("<" + "html:hidden", "<" + "iwcm:hidden", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:hidden", "</" + "iwcm:hidden", ".jsp"));
+
+	//Replace html:options with iwcm:options
+	replaces.add(new OptionDto("<" + "html:options", "<" + "iwcm:options", ".jsp"));
+	replaces.add(new OptionDto("</" + "html:options", "</" + "iwcm:options", ".jsp"));
+
+	//unused editorEnableXHTML
+	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(org.apache.struts.Globals.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
+	replaces.add(new OptionDto("if (Constants.getBoolean(\"editorEnableXHTML\")) pageContext.setAttribute(sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY, \"true\", PageContext.PAGE_SCOPE);", "", ".jsp"));
+
+	//REplace old Struts imports with new ones
+	replaces.add(new OptionDto("import=\"org.apache.struts.util.ResponseUtils\"", "import=\"sk.iway.iwcm.tags.support.ResponseUtils\"", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.util.ResponseUtils", "sk.iway.iwcm.tags.support.ResponseUtils", ".jsp,.java"));
+	replaces.add(new OptionDto("org.apache.struts.taglib.html.FormTag.", "sk.iway.iwcm.tags.support.FormTag.", ".jsp,.java"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.util.RequestUtils\"", "import=\"sk.iway.iwcm.tags.support.RequestUtils\"", ".jsp"));
+	replaces.add(new OptionDto("org.apache.struts.Globals.XHTML_KEY", "sk.iway.iwcm.tags.support.CustomTagUtils.XHTML_KEY", ".jsp,.java"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessages\"", "import=\"sk.iway.iwcm.tags.support.action.ActionMessages\"", ".jsp"));
+	replaces.add(new OptionDto("import=\"org.apache.struts.action.ActionMessage\"", "import=\"sk.iway.iwcm.tags.support.action.ActionMessage\"", ".jsp"));
+
+	replaces.add(new OptionDto("<form:form method=\"post\" modelAttribute=\"xlsImportForm\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" enctype=\"multipart/form-data\">", "<form method=\"post\" action=\"/admin/import/excel/\" name=\"xlsImportForm\" id=\"xlsImportForm\" enctype=\"multipart/form-data\">", ".jsp"));
+	replaces.add(new OptionDto("</form:form>", "</form>", "import_xls.jsp"));
+
+	replaces.add(new OptionDto(".add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage(", ".add(", ".jsp,.java"));
+	replaces.add(new OptionDto(".addAttribute(\"errorsList\", errors.get(ActionMessages.GLOBAL_MESSAGE))", ".addAttribute(\"errorsList\", errors)", ".jsp,.java"));
+	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.action.ActionMessages", "java.util.List", ".jsp,.java"));
+	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.action.ActionMessage", "java.lang.String", ".jsp,.java"));
+	replaces.add(new OptionDto("ActionMessages errors = new ActionMessages();", "java.util.List<String> errors = new java.util.ArrayList<>();", ".jsp,.java"));
+
+	replaces.add(new OptionDto("sk.iway.iwcm.tags.support.FormTag.renderToken(session)", "sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)", ".jsp"));
+	replaces.add(new OptionDto("FormTag.renderToken(session)", "sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)", ".jsp"));
+
+	//fix JAVA files, to run WebJET with compile errors in your project just rename /src/main/java to /src/main/java-update
+	replaces.add(new OptionDto("import sk.iway.iwcm.database.ActiveRecord;", "import sk.iway.iwcm.database.ActiveRecordRepository;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public class FileArchivatorBean extends ActiveRecord implements Serializable", "public class FileArchivatorBean extends ActiveRecordRepository implements Serializable", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("private int nnFileArchiveId;", "private Long id;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public void setId(int id)", "public void setId(Long id)", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public int getId()", "public Long getId()", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("return nnFileArchiveId;", "return id==null ? 0 : id.intValue();", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("this.nnFileArchiveId = nnFileArchiveId;", "this.id = Long.valueOf(nnFileArchiveId);", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("setNnFileArchiveId(id);", "this.id = id;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("return getNnFileArchiveId();", "return id;", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("int referenceId", "Long referenceId", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public int getReferenceId()", "public Long getReferenceId()", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("public void setReferenceId(int referenceId)", "public void setReferenceId(Long referenceId)", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("referenceId = -1;", "referenceId = Long.valueOf(-1);", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("init(userId, filePath, fileName, virtualFileName, showFile, null, null, null, null, null, null, -1, -1, null, -1, null, null);", "init(userId, filePath, fileName, virtualFileName, showFile, null, null, null, null, null, null, null, -1, null, -1, null, null);", "FileArchivatorBean.java"));
+	replaces.add(new OptionDto("init(userId, filePath, fileName, virtualFileName, showFile, validFrom, validTo, domain, productCode, product, category, -1, -1, md5, priority, patern_ref, note);", "init(userId, filePath, fileName, virtualFileName, showFile, validFrom, validTo, domain, productCode, product, category, null, -1, md5, priority, patern_ref, note);", "FileArchivatorBean.java"));
+
+	replaces.add(new OptionDto("int oldId=fab.getId();", "int oldId=fab.getId().intValue();", ".java"));
+	replaces.add(new OptionDto("newFab.setId(0);", "newFab.setId(Long.valueOf(0));", ".java"));
+	replaces.add(new OptionDto("newFab.setReferenceId(-1);", "newFab.setReferenceId(Long.valueOf(-1));", ".java"));
+
+	replaces.add(new OptionDto("public static boolean reSetReference(int oldReferenceId, int newReferenceId)", "public static boolean reSetReference(Long oldReferenceId, Long newReferenceId)", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("public static void incrementOrderId(int referenceId)", "public static void incrementOrderId(Long referenceId)", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("if(!reSetReference(oldId, newFab.getId()))", "if(!reSetReference((long)oldId, newFab.getId()))", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("newFab.setId(oldId);", "newFab.setId((long)oldId);", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("int reference = actualFab.getId();", "Long reference = actualFab.getId();", "FileArchivatorKit.java"));
+
+	replaces.add(new OptionDto("if(!FileArchivatorKit.reSetReference(oldId, newFab.getId()))", "if(!FileArchivatorKit.reSetReference((long)oldId, newFab.getId()))", "FileArchivatorInsertLater.java"));
+	replaces.add(new OptionDto("if(!FileArchivatorKit.reSetReference(oldId, newFab.getId()))", "if(!FileArchivatorKit.reSetReference((long)oldId, newFab.getId()))", "FileArchivatorKit.java"));
+	replaces.add(new OptionDto("int oldId = fabByOldId != null ? fabByOldId.getId() : 0;", "int oldId = fabByOldId != null ? fabByOldId.getId().intValue() : 0;", "FileArchivatorInsertLater.java"));
+	replaces.add(new OptionDto("int oldId = fab.getReferenceId();", "int oldId = fab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
+	replaces.add(new OptionDto("oldId = referenceFab.getReferenceId();", "oldId = referenceFab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
+
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -429,7 +528,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			if ("node_modules".equals(f.getName()) || "dist".equals(f.getName())) return;
 			checkDir(url+f.getName()+"/", saveFile, compileFile, out, request, response);
 		}
-		else if (f.getName().endsWith(".jsp") || f.getName().endsWith(".html"))
+		else if (f.getName().endsWith(".jsp") || f.getName().endsWith(".html") || f.getName().endsWith(".java"))
 		{
 			String fullUrl = url+f.getName();
 
@@ -462,7 +561,16 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 					if (Tools.isNotEmpty(ext)) {
 						if (ext.startsWith(".")) {
 							//it's file extension
-							if (fullUrl.endsWith(ext)==false) continue;
+							//it can be in format .jsp,.java,.html
+							String[] exts = ext.split(",");
+							boolean found = false;
+							for (String e : exts) {
+								if (fullUrl.endsWith(e)) {
+									found = true;
+									break;
+								}
+							}
+							if (found == false) continue;
 						} else if(ext.startsWith("/")) {
 							//it's folder
 							if (fullUrl.startsWith(ext)==false) continue;
@@ -503,7 +611,30 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 						content = Tools.replace(content, "<html:file property=\"file\" styleClass=\"input\"", "<input type=\"file\" name=\"file\" class=\"input\"");
 						content = Tools.replace(content, "<html:file property=\"file\"", "<input type=\"file\" name=\"file\"");
 					}
+					if (content.contains("</form:form") && content.contains("<form:form")==false) {
+						//<form:form> is not present, but </form:form> is, fix it
+						content = Tools.replace(content, "</form:form>", "</form>");
+					}
 				}
+			}
+
+			boolean containIwcmTaglib = content.contains("uri=\"/WEB-INF/iwcm.tld\"");
+			if(content.contains("<" + "iwcm:present") || content.contains("<" + "iwcm:notPresent") || content.contains("<" + "iwcm:empty") || content.contains("<" + "iwcm:notEmpty") || content.contains("<" + "iwcm:equal")
+				|| content.contains("<" + "iwcm:iterate") || content.contains("<" + "iwcm:beanWrite") || content.contains("<" + "iwcm:hidden") || content.contains("<" + "iwcm:options")) {
+				//Needed taglib is missing, add it
+				if(containIwcmTaglib == false) {
+					hasChange = true;
+					content = "<" + "%@ taglib uri=\"/WEB-INF/iwcm.tld\" prefix=\"iwcm\" %" + ">" + content;
+				}
+			}
+
+			if(content.contains("") || content.contains("") || content.contains("")) {
+				hasChange = true;
+
+				// Remove old Struts taglibs
+				content = Tools.replaceRegex(content, "<\\s*%\\s*@[^<>]*uri=\"/WEB-INF/struts-logic.tld\"[^<]*", "", false);
+				content = Tools.replaceRegex(content, "<\\s*%\\s*@[^<>]*uri=\"/WEB-INF/struts-bean.tld\"[^<]*", "", false);
+				content = Tools.replaceRegex(content, "<\\s*%\\s*@[^<>]*uri=\"/WEB-INF/struts-html.tld\"[^<]*", "", false);
 			}
 
 			{
@@ -527,7 +658,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			}
 
 
-			if(url.contains("basket") && url.contains(".jsp")) {
+			if(url.contains("basket") && fullUrl.contains(".jsp")) {
 				if(content.contains("<"+"%@page import=\"java.math.BigDecimal\"%"+">") == false)
 					content = "<"+"%@page import=\"java.math.BigDecimal\"%"+">"+content;
 
@@ -544,29 +675,59 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 				hasChange = true;
 			}
 
-			if (hasChange && content.equals(contentOriginal)==false) {
-				//FIX import
-				if (content.contains("List ") || content.contains("List\t") || content.contains("List<")) {
-					if (content.contains("java.util.List")==false) {
-						//pridaj import
-						content = "<"+"%@page import=\"java.util.List\"%"+">"+content;
+			if("news.jsp".equals(f.getName()) && url.contains("app-impress_slideshow")) {
+				// replace old <p> tag with <div> tag, because we insert html conde in new version
+				content = Tools.replaceRegex(content, "<p([\\S\\s]+subheadingColor)", "<div$1", false);
+				content = Tools.replaceRegex(content, "(subheadingColor[\\S\\s]+?)</p>", "$1</div>", false);
+				hasChange = true;
+			}
+
+			if (fullUrl.endsWith("FileArchivatorBean.java")) {
+				if (content.contains("public void setReferenceId(int referenceId)")==false) {
+					int lastBracket = content.lastIndexOf("}");
+					if (lastBracket > 0) {
+						content = content.substring(0, lastBracket) + "\n\n" +
+								"    public void setReferenceId(int referenceId) {\n" +
+								"        this.referenceId = Long.valueOf(referenceId);\n" +
+								"    }\n\n" +
+								"    public int getReferenceIdInt() {\n" +
+								"        return referenceId == null ? 0 : referenceId.intValue();\n" +
+								"    }\n\n" +
+								content.substring(lastBracket);
+						hasChange = true;
 					}
 				}
-				if (content.contains("Map ") || content.contains("Map\t") || content.contains("Map<")) {
-					if (content.contains("java.util.Map")==false) {
-						//pridaj import
-						content = "<"+"%@page import=\"java.util.Map\"%"+">"+content;
+			}
+
+			if (hasChange && content.equals(contentOriginal)==false) {
+				if (url.endsWith(".jsp")) {
+					//FIX import
+					if (content.contains("List ") || content.contains("List\t") || content.contains("List<")) {
+						if (content.contains("java.util.List")==false) {
+							//pridaj import
+							content = "<"+"%@page import=\"java.util.List\"%"+">"+content;
+						}
+					}
+					if (content.contains("Map ") || content.contains("Map\t") || content.contains("Map<")) {
+						if (content.contains("java.util.Map")==false) {
+							//pridaj import
+							content = "<"+"%@page import=\"java.util.Map\"%"+">"+content;
+						}
 					}
 				}
 
 				out.print(foundContent.toString());
+			}
 
+			//save before compile
+			if (hasChange && content.equals(contentOriginal)==false) {
 				if (saveFile) {
-					FileTools.saveFileContent(fullUrl, content, encoding);
-					out.println("   <strong>Ukladám súbor</strong>: "+fullUrl);
-				} else {
-					out.println("   <strong>Súbor obsahuje zmenu, uloženie ale nie je aktivované</strong>");
-				}
+						FileTools.saveFileContent(fullUrl, content, encoding);
+						out.println("   <strong>Ukladám súbor</strong>: "+fullUrl);
+				hasChange = false;
+					} else {
+						out.println("   <strong>Súbor obsahuje zmenu, uloženie ale nie je aktivované</strong>");
+					}
 			}
 
 			if (compileFile && f.getName().endsWith(".jsp")) {
@@ -606,8 +767,39 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 
 						out.println("CHYBA:<br/>");
 						out.println(ResponseUtils.filter(stack));
+
+						if (stack.contains("is not applicable for the arguments (List<FileArchivatorBean>, Long, String, boolean)")) {
+							out.println("<strong>FIXING:</strong> fab.getId() is not Long, updating to fab.getId().intValue()<br/>");
+							content = Tools.replace(content, "getArchiveFabListAndSorted(fabList, fabMain.getId(),", "getArchiveFabListAndSorted(fabList, fabMain.getId().intValue(),");
+							hasChange = true;
+						}
+						if (stack.contains("in the type FileArchivatorInsertLater is not applicable for the arguments (Long, boolean)")) {
+							out.println("<strong>FIXING:</strong> fab.getId() is not Long, updating to fab.getId().intValue()<br/>");
+							content = Tools.replace(content, "FileArchivatorInsertLater.getFilesToUploadByReferenceId(fabMain.getId(),", "FileArchivatorInsertLater.getFilesToUploadByReferenceId(fabMain.getId().intValue(),");
+							hasChange = true;
+						}
+						if (stack.contains("The method getFrom() is undefined for the type QuizResultEntity")) {
+							out.println("<strong>FIXING:</strong> QuizResultEntity.getFrom() -> QuizResultEntity.getScoreFrom()<br/>");
+							content = Tools.replace(content, ".getFrom(", ".getScoreFrom(");
+							hasChange = true;
+						}
+						if (stack.contains("The method getTo() is undefined for the type QuizResultEntity")) {
+							out.println("<strong>FIXING:</strong> QuizResultEntity.getTo() -> QuizResultEntity.getScoreTo()<br/>");
+							content = Tools.replace(content, ".getTo(", ".getScoreTo(");
+							hasChange = true;
+						}
 					}
 				}
+			}
+
+			//save after compile to fix possible compilation errors
+			if (hasChange && content.equals(contentOriginal)==false) {
+				if (saveFile) {
+						FileTools.saveFileContent(fullUrl, content, encoding);
+						out.println("   <strong>Ukladám súbor</strong>: "+fullUrl);
+					} else {
+						out.println("   <strong>Súbor obsahuje zmenu, uloženie ale nie je aktivované</strong>");
+					}
 			}
 		}
 	}
@@ -617,7 +809,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 %>
 
 <div class="row title">
-	<h1 class="page-title">Upraviť kód v JSP súboroch pre WebJET 2023.18</h1>
+	<h1 class="page-title">Upraviť kód v JSP súboroch pre aktuálny WebJET</h1>
 </div>
 
 <%
@@ -643,7 +835,7 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 			<div class="col-8">
 				Zadajte prázdnu hodnotu alebo znak * pre kontrolu všetkých priečinkov
 				<br/>
-				Zadajte hodnotu templates pre kontrolu priečinka /templates/ a hodnotu admin pre kontrolu priečinka /admin/.
+				Zadajte hodnotu templates pre kontrolu priečinka /templates/, hodnotu admin pre kontrolu priečinka /admin/, hodnotu java pre kontrolu priečinka ../java/, /../java-update/ (aby ste mohli vôbec spustiť WebJET s kompilačnými chybami premenujte priečinok /src/main/java vo vašom projekte na /src/main/java-update), alebo názov priečinka pre kontrolu konkrétneho priečinka v /components/.
 			</div>
 		</div>
 		<div class="row">
@@ -680,25 +872,30 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 %>
 
 	<div style="white-space: pre"><%
-		if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
-			checkDir("/admin/", saveFile, compileFile, out, request, response);
-			checkDir("/components/", saveFile, compileFile, out, request, response);
-			checkDir("/apps/", saveFile, compileFile, out, request, response);
-			checkDir("/templates/", saveFile, compileFile, out, request, response);
+		if ("java".equals(subdir)) {
+			checkDir("/../java/", saveFile, false, out, request, response);
+			checkDir("/../java-update/", saveFile, false, out, request, response);
+		} else {
+			if (Tools.isEmpty(subdir) || "*".equals(subdir)) {
+				checkDir("/admin/", saveFile, compileFile, out, request, response);
+				checkDir("/templates/", saveFile, compileFile, out, request, response);
+				checkDir("/components/", saveFile, compileFile, out, request, response);
+				checkDir("/apps/", saveFile, compileFile, out, request, response);
+			}
+			else if ("admin".equals(subdir)) {
+				checkDir("/admin/", saveFile, compileFile, out, request, response);
+			}
+			else if ("templates".equals(subdir)) {
+				checkDir("/templates/", saveFile, compileFile, out, request, response);
+			}
+			else {
+				checkDir("/components/" + subdir + "/", saveFile, compileFile, out, request, response);
+				checkDir("/apps/" + subdir + "/", saveFile, compileFile, out, request, response);
+			}
+			checkDir("/403.jsp", saveFile, compileFile, out, request, response);
+			checkDir("/404.jsp", saveFile, compileFile, out, request, response);
+			checkDir("/500.jsp", saveFile, compileFile, out, request, response);
 		}
-		else if ("admin".equals(subdir) || "*".equals(subdir)) {
-			checkDir("/admin/", saveFile, compileFile, out, request, response);
-		}
-		else if ("templates".equals(subdir) || "*".equals(subdir)) {
-			checkDir("/templates/", saveFile, compileFile, out, request, response);
-		}
-		else {
-			checkDir("/components/" + subdir + "/", saveFile, compileFile, out, request, response);
-			checkDir("/apps/" + subdir + "/", saveFile, compileFile, out, request, response);
-		}
-		checkDir("/403.jsp", saveFile, compileFile, out, request, response);
-		checkDir("/404.jsp", saveFile, compileFile, out, request, response);
-		checkDir("/500.jsp", saveFile, compileFile, out, request, response);
 		%>
 	</div>
 	<p>

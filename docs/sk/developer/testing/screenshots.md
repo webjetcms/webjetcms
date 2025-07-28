@@ -20,7 +20,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('web-pages-list', ({ I, DT, Document }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     //domenovy selektor
     I.click("div.js-domain-toggler div.bootstrap-select button");

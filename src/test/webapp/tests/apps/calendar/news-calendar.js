@@ -43,7 +43,7 @@ Scenario('testovanie app - Kalendar news', async ({ I, DT, DTE, Document, Apps }
     I.waitForElement("#custom-modal-id", 10);
     I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
     I.click(locate(".jstree-anchor").withText("Zo sveta financií"));
-    DTE.clickSwitch("perexGroup_2");
+    DTE.clickSwitch("perexGroup_3");
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok')

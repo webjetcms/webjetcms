@@ -1,5 +1,13 @@
 Feature('apps.carousel_slider');
 
+Before(({ I, login }) => {
+    login('admin');
+    if (typeof randomNumber == "undefined") {
+        randomNumber = I.getRandomText();
+    }
+});
+
+
 Scenario("Carousel slider - test zobrazovania", async ({ I }) => {
     I.amOnPage("/apps/carousel-slider/");
     I.waitForElement("#amazingcarousel-container-1");
@@ -41,6 +49,130 @@ Scenario("Carousel slider - test zobrazovania", async ({ I }) => {
     });
     I.clickCss("#html5-close");
     I.waitForInvisible("#carousel-html5-lightbox");
+});
+
+Scenario('testovanie aplikácie - Posobiva prezentacii', async ({ I, DT, DTE, Apps, Document }) => {
+    Apps.insertApp('Carousel Slider', '#components-app-carousel_slider-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+
+    I.say("Check tabs");
+        I.seeElement("#pills-dt-component-datatable-basic-tab");
+        I.seeElement("#pills-dt-component-datatable-advanced-tab");
+        I.seeElement("#pills-dt-component-datatable-files-tab");
+        I.seeElement("#pills-dt-component-datatable-commonSettings-tab");
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok');
+    const defaultParams = {
+        skin: "Classic",
+        carouselWidth: "900",
+        carouselHeight: "300",
+        imageWidth: "300",
+        imageHeight: "300",
+        imgPerSlide: "4",
+        direction: "horizontal",
+        showLightbox: "true",
+        rowNumber: "1",
+        nav_style: "bullets",
+        arrow_style: "always",
+        touch_swipe: "true",
+        random_play: "false",
+        autoplay: "true",
+        pause_on_mouse_over: "false",
+        circular: "true",
+        show_shadow_bottom: "false",
+        display_mode: "1",
+        loop_number: "0",
+        autoplay_interval: "5000",
+        editorData: ""
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    I.say("Set custom params");
+        I.clickCss("#pills-dt-component-datatable-basic-tab");
+        DTE.selectOption("skin", "Gallery");
+
+        I.clickCss("#pills-dt-component-datatable-advanced-tab");
+        I.fillField("#DTE_Field_carouselWidth", 500);
+        I.fillField("#DTE_Field_carouselHeight", 500);
+        DTE.selectOption("imgPerSlide", "1");
+        DTE.selectOption("display_mode", "Skončiť po");
+        I.waitForVisible("#DTE_Field_loop_number");
+        I.fillField("#DTE_Field_loop_number", 2);
+
+        I.say("Test ITEMS inner table in tab");
+            I.clickCss("#pills-dt-component-datatable-files-tab");
+            I.waitForVisible("#datatableFieldDTE_Field_editorData_wrapper", 5);
+
+            I.say("Add item");
+            I.clickCss("button.buttons-create");
+            DTE.waitForEditor("datatableFieldDTE_Field_editorData");
+
+            // Set image
+            I.fillField(locate(".DTE_Field_Name_image").find("input"), "/images/gallery/test-vela-foto/dsc04074.jpeg");
+
+            // Item title and subtitle
+            I.fillField("#DTE_Field_title", "Toto je nadpis obrazka");
+            I.fillField("#DTE_Field_description", "Toto je podnadpis obrazka");
+
+            // Save new item
+            DTE.save('datatableFieldDTE_Field_editorData');
+
+            // Check item in DT
+            DT.checkTableRow("datatableFieldDTE_Field_editorData", 1, ["1", "10", null, "Toto je nadpis obrazka", "Toto je podnadpis obrazka", ""]);
+
+
+        I.switchTo();
+        I.clickCss('.cke_dialog_ui_button_ok');
+
+    const changedParams = {
+        skin: "Gallery",
+        carouselWidth: "500",
+        carouselHeight: "500",
+        imageWidth: "300",
+        imageHeight: "300",
+        imgPerSlide: "1",
+        direction: "horizontal",
+        showLightbox: "true",
+        rowNumber: "1",
+        nav_style: "bullets",
+        arrow_style: "always",
+        touch_swipe: "true",
+        random_play: "false",
+        autoplay: "true",
+        pause_on_mouse_over: "false",
+        circular: "true",
+        show_shadow_bottom: "false",
+        display_mode: "2",
+        loop_number: "2",
+        autoplay_interval: "5000",
+        editorData: "JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L3Rlc3QtdmVsYS1mb3RvL2RzYzA0MDc0LmpwZWclMjIsJTIydGl0bGUlMjI6JTIyVG90byUyMGplJTIwbmFkcGlzJTIwb2JyYXprYSUyMiwlMjJkZXNjcmlwdGlvbiUyMjolMjJUb3RvJTIwamUlMjBwb2RuYWRwaXMlMjBvYnJhemthJTIyLCUyMnJlZGlyZWN0VXJsJTIyOiUyMiUyMiU3RCU1RA=="
+    };
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
+    I.switchToNextTab();
+
+    I.say("Check app");
+    I.waitForVisible(".amazingcarousel-item-container", 5);
+    I.seeElement(locate(".amazingcarousel-image").withChild("a[href='/images/gallery/test-vela-foto/dsc04074.jpeg']"));
+    I.seeElement(locate(".amazingcarousel-title").withText("Toto je nadpis obrazka"));
+    I.seeElement(locate(".amazingcarousel-description").withText("Toto je podnadpis obrazka"));
 });
 
 function seeLightboxImage(I, expectedImage) {

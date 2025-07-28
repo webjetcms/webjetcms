@@ -1262,7 +1262,7 @@ Scenario('Jstree filtering', async ({ I }) => {
 
     //
     I.say('2. Change search type functionality')
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
 
     I.jstreeFilter('zo', 'Začína na');
     I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
@@ -1349,17 +1349,17 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
 });
 Scenario('Set default ordering setting before', ({ I }) => {
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     setTreeSorting(I, 'Názov', true);
     setCheckBox(I, '#jstree-settings-showorder', false);
     I.relogin('tester4');
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     setCheckBox(I, '#jstree-settings-showid', false);
 });
 
 Scenario('jstree - sorting method', async ({ I }) => {
     I.say("1. The tree correctly sorts when changing the order type and direction.");
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
 
     setTreeSorting(I, 'Názov', true);
     var items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
@@ -1379,7 +1379,7 @@ Scenario('jstree - sorting method', async ({ I }) => {
     I.say("3. Create a new user, and verify on him that when he switches between him and the tester, order selection remains saved");
 
     I.relogin('tester4');
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     setTreeSorting(I, 'Dátum vytvorenia', true);
 
     I.relogin('admin');
@@ -1389,7 +1389,7 @@ Scenario('jstree - sorting method', async ({ I }) => {
     setCheckBox(I, '#jstree-settings-showorder', false);
 
     I.relogin('tester4');
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     checkTreeSorting(I, 'Dátum vytvorenia', true, '#jstree-settings-showid');
     items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
     assertIfSortedByCreationDate(items, true);
@@ -1397,10 +1397,10 @@ Scenario('jstree - sorting method', async ({ I }) => {
 });
 
 Scenario('Set default ordering setting after', ({ I }) => {
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     I.jstreeReset();
     I.relogin('tester4');
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     I.jstreeReset();
 });
 
@@ -1461,7 +1461,7 @@ function setTreeSorting(I, category, ascending = true) {
 }
 
 function checkTreeSorting(I, category, ascending, optionToCheck) {
-    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
     I.click(settings_button);
     I.waitForVisible('#jstreeSettingsModal');
     I.see(category);

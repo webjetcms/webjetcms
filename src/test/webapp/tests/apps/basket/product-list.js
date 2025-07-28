@@ -64,7 +64,7 @@ Scenario('Eshop CHECK subcategory-selector AND product-list', async ({I, Documen
 
 Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => {
 
-    await changeDomain(I, Document, "/apps/basket/admin/product-list");
+    await changeDomain(I, Document, "/apps/basket/admin/product-list/");
 
     I.seeElement(locate(".nav-link.active").withText("Zoznam produktov"));
 
@@ -91,7 +91,7 @@ Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => 
 
 Scenario('Creating new folder (cathegory)', async ({I, DT, DTE, Document}) => {
 
-    await changeDomain(I, Document, "/apps/basket/admin/product-list");
+    await changeDomain(I, Document, "/apps/basket/admin/product-list/");
 
     let random = I.getRandomText();
 

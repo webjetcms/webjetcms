@@ -7,14 +7,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-
-import org.apache.struts.util.ResponseUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 
 @Entity
 @Table(name = "_properties_")
@@ -42,6 +42,7 @@ public class TranslationKeyEntity {
     private String key;
 
     //Field is not showed but used to get translation key value from DB
+    @Lob
     @Column(name = "prop_value")
     private String value;
 
