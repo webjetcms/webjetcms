@@ -1007,7 +1007,7 @@ Scenario('Gallery - Feature - change image path during edit/duplicate to relocat
         DTE.waitForEditor("galleryTable");
 
         I.fillField("#DTE_Field_descriptionShortSk", duplicateName);
-       checkAndChangePath(I, DTE, dirB, dirA);
+        checkAndChangePath(I, DTE, dirB, dirA);
 
     I.say("Check duplicate image");
         I.amOnPage("/admin/v9/apps/gallery/?dir=" + dirA);

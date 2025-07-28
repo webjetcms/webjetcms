@@ -355,7 +355,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             // Get root parent
             GalleryDimension lastExistingParent = gdr.findFirstByPathAndDomainId(rootPath.toString(), domainId).orElse(null);
             if(lastExistingParent == null) {
-                Logger.error(GalleryRestController.class, "Cant crate new demension sub folder, because root folder was not found for domain : " + domainId);
+                Logger.error(GalleryRestController.class, "Cannot create new dimension sub folder, because root folder was not found for domain: " + domainId);
                 return;
             }
 
