@@ -72,7 +72,7 @@ public class GalleryEntity {
 
     @Lob
     @Column(name = "image_source")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata", sortAfter = "editorFields.dirSimpleGallery",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata", sortAfter = "editorFields.dirSimpleGallery", visible = false,
         editor = {
             @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
