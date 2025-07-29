@@ -181,7 +181,7 @@
                         $element.val(id);
                         $element.trigger("change");
                     }, 100);
-                }else {
+                } else {
                     window.$(textInputId).val(JSON.stringify(that.$root.data, undefined, 4)).change();
                 }
             },

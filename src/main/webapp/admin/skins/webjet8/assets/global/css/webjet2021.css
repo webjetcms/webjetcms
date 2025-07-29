@@ -1356,3 +1356,9 @@ a.cke_dialog_ui_button span.cke_dialog_ui_button {
     padding-bottom: 4px;
   }
 }
+
+/* redefine BS CSS variables */
+:root {
+  --bs-danger: #FF4B58;
+  --bs-warning: #FABD00;
+}

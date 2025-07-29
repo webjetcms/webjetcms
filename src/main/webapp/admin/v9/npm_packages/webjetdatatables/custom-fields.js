@@ -255,9 +255,9 @@ export function update(EDITOR, action) {
         } else if (v.type == 'link') {
             template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div class="input-group"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div class="input-groupxxx"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div class="input-group"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
@@ -437,8 +437,53 @@ export function update(EDITOR, action) {
 
             vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
             vm.mount(conf._el);
-        }
-         else if (v.type == "json_group" || v.type == "json_doc") {
+        } else if ("uuid"==v.type) {
+            //console.log("inputBox=", inputBox);
+            var inputField = inputBox.find("input.field-type-uuid");
+            inputField = inputBox.find("input.field-type-uuid").on("blur", function() {
+                if (this.value=="") this.value=generateUUID();
+            });
+            setTimeout(() => {
+                //there was problem that new page overwrite value, so we generate new uuid
+                if (inputField.val()=="") inputField.val(generateUUID());
+            }, 1000);
+        } else if ("color"==v.type) {
+            var conf = {};
+            var htmlCode = inputBox;
+            conf._preview = htmlCode.find(".color-preview");
+            conf._input = htmlCode.find("input");
+            conf._clear = htmlCode.find(".btn-clear");
+            conf._picker = htmlCode.find("color-picker")[0];
+
+            function setColor(conf, val) {
+                //console.log("Update color, val=", val);
+                conf._input.val(val);
+                conf._preview.css("background-color", val);
+            }
+
+            setTimeout(function() {
+                conf._input.on("click", function() {
+                    conf._picker.setAttribute('open', true);
+                    conf._picker.setAttribute('hex', conf._input.val());
+                });
+                conf._input.parent().find(".color-preview").on("click", function() {
+                    conf._picker.setAttribute('open', true);
+                    conf._picker.setAttribute('hex', conf._input.val());
+                });
+                conf._input.on("change", function() {
+                    const val = conf._input.val();
+                    conf._preview.css("background-color", val);
+                });
+
+                conf._clear.on("click", function() {
+                    setColor(conf, "");
+                });
+
+                conf._picker.addEventListener('update-color', function(e) {
+                    setColor(conf, e.detail.hex);
+                });
+            }, 500);
+        } else if (v.type == "json_group" || v.type == "json_doc") {
             let conf = {};
             let id = 'DTE_Field_' + customPrefix + identifier;
 
@@ -559,53 +604,6 @@ export function update(EDITOR, action) {
 
             vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
             vm.mount(conf._el);
-        }
-        else if ("uuid"==v.type) {
-            //console.log("inputBox=", inputBox);
-            var inputField = inputBox.find("input.field-type-uuid");
-            inputField = inputBox.find("input.field-type-uuid").on("blur", function() {
-                if (this.value=="") this.value=generateUUID();
-            });
-            setTimeout(() => {
-                //there was problem that new page overwrite value, so we generate new uuid
-                if (inputField.val()=="") inputField.val(generateUUID());
-            }, 1000);
-        } else if ("color"==v.type) {
-            var conf = {};
-            var htmlCode = inputBox;
-            conf._preview = htmlCode.find(".color-preview");
-            conf._input = htmlCode.find("input");
-            conf._clear = htmlCode.find(".btn-clear");
-            conf._picker = htmlCode.find("color-picker")[0];
-
-            function setColor(conf, val) {
-                //console.log("Update color, val=", val);
-                conf._input.val(val);
-                conf._preview.css("background-color", val);
-            }
-
-            setTimeout(function() {
-                conf._input.on("click", function() {
-                    conf._picker.setAttribute('open', true);
-                    conf._picker.setAttribute('hex', conf._input.val());
-                });
-                conf._input.parent().find(".color-preview").on("click", function() {
-                    conf._picker.setAttribute('open', true);
-                    conf._picker.setAttribute('hex', conf._input.val());
-                });
-                conf._input.on("change", function() {
-                    const val = conf._input.val();
-                    conf._preview.css("background-color", val);
-                });
-
-                conf._clear.on("click", function() {
-                    setColor(conf, "");
-                });
-
-                conf._picker.addEventListener('update-color', function(e) {
-                    setColor(conf, e.detail.hex);
-                });
-            }, 500);
         }
 
         //JICH - add

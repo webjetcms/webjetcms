@@ -18,11 +18,11 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.mirroring.jpa.DtTreeIdDTO;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.IdFullPath;
 
 /**
  * Zakladna trieda pre EditorFields Datatabulky, obsahuje spolocne vlastnosti, primarne nastavenie CSS riadku a ikony
@@ -234,7 +234,7 @@ public class BaseEditorFields {
                     if(groupId > 0) {
                         GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
                         if(group != null) {
-                            field.setValue( new DtTreeIdDTO(groupId, group.getFullPath()).toString() );
+                            field.setValue( new IdFullPath(groupId, group.getFullPath()).toString() );
                         }
                     }
                 } else if("json_doc".equals(type)) {
@@ -242,7 +242,7 @@ public class BaseEditorFields {
                     if(docId > 0) {
                         DocDetails doc = DocDB.getInstance().getDoc(docId);
                         if(doc != null) {
-                            field.setValue( new DtTreeIdDTO(docId, doc.getFullPath()).toString() );
+                            field.setValue( new IdFullPath(docId, doc.getFullPath()).toString() );
                         }
                     }
                 } else {

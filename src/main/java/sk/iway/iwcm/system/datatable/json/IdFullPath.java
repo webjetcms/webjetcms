@@ -1,16 +1,16 @@
-package sk.iway.iwcm.doc.mirroring.jpa;
+package sk.iway.iwcm.system.datatable.json;
 
 import org.json.JSONObject;
 
 import sk.iway.iwcm.Tools;
 
-public class DtTreeIdDTO {
+public class IdFullPath {
     Integer id;
     String fullPath;
 
-    public DtTreeIdDTO() {}
+    public IdFullPath() {}
 
-    public DtTreeIdDTO(String value) {
+    public IdFullPath(String value) {
         if (Tools.isEmpty(value) == true) {
             this.id = null;
             this.fullPath = null;
@@ -25,7 +25,7 @@ public class DtTreeIdDTO {
         }
     }
 
-    public DtTreeIdDTO(Integer id, String fullPath) {
+    public IdFullPath(Integer id, String fullPath) {
         this.id = id;
         this.fullPath = fullPath;
     }

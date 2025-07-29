@@ -4,15 +4,15 @@ block content
 
     style.
         tr.mirror-err td {
-            color: #ff4b58 !important;
+            color: var(--bs-danger) !important;
         }
 
         tr.mirror-warn td {
-            color: #fabd00 !important;
+            color: var(--bs-warning) !important;
         }
 
         tr.mirror-err.mirror-warn td {
-            color: #ff4b58 !important;
+            color: var(--bs-danger) !important;
         }
 
     script.
@@ -95,7 +95,7 @@ block content
             });
 
             let url = "/admin/rest/webpages/mirroring";
-            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.doc.mirroring.jpa.MirroringDTO")})];
+            let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.doc.mirroring.dto.MirroringDTO")})];
 
             groupsMirroringTable = WJ.DataTable({
                 url: WJ.urlUpdateParam(url, "type", "groups"),

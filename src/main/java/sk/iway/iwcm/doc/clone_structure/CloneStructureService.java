@@ -249,20 +249,20 @@ public class CloneStructureService {
         }
 
         Constants.setBoolean(DISABLE_ON_CREATE_KEY, structureMirroringDisabledOnCreate);
-        if (keepMirroring==false) {
+        if (keepMirroring) {
+            //Set it to DB
+            ConfDB.setName(CONFIG_KEY, mirroringConfig);
+        } else {
             //set original mirroring config
             Constants.setString(CONFIG_KEY, mirroringConfig);
 
             //it there was no syncId on sourceFolder clear also source
             if (srcSyncId<1) MirroringService.clearSyncId(srcGroupId);
             MirroringService.clearSyncId(destGroupId);
-        } else {
-            //Set it to DB
-            ConfDB.setName(CONFIG_KEY, mirroringConfig);
         }
 
         //Reset values
-       setCloneConstants(false, -1, -1);
+        setCloneConstants(false, -1, -1);
 
         DocDB.getInstance(true);
         GroupsDB.getInstance(true);

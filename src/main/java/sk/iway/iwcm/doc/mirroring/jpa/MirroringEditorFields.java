@@ -3,6 +3,7 @@ package sk.iway.iwcm.doc.mirroring.jpa;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -22,12 +23,12 @@ public class MirroringEditorFields extends BaseEditorFields {
         StringBuilder iconsHtml = new StringBuilder();
 
         if(Tools.isTrue(entity.getMultipleErr())) {
-            iconsHtml.append("<i class=\"ti ti-exclamation-circle\" style=\"color: #ff4b58;width: 1.25em;\"></i>");
+            iconsHtml.append("<i class=\"ti ti-exclamation-circle color-danger\"></i>");
             addRowClass("mirror-err");
         }
 
         if(Tools.isTrue(entity.getNestingWarn())) {
-            iconsHtml.append("<i class=\"ti ti-alert-triangle\" style=\"color: #fabd00;width: 1.25em;\"></i>");
+            iconsHtml.append("<i class=\"ti ti-alert-triangle color-warning\"></i>");
             addRowClass("mirror-warn");
         }
 

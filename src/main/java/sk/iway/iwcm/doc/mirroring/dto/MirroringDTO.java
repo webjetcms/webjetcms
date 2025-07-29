@@ -1,4 +1,4 @@
-package sk.iway.iwcm.doc.mirroring.jpa;
+package sk.iway.iwcm.doc.mirroring.dto;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,10 +9,12 @@ import javax.persistence.Transient;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.doc.mirroring.jpa.MirroringEditorFields;
 import sk.iway.iwcm.doc.mirroring.rest.MirroringService;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.json.IdFullPath;
 
 @Getter
 @Setter
@@ -91,28 +93,28 @@ public class MirroringDTO {
 	private transient MirroringEditorFields editorFields = null;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorA;
+    private IdFullPath selectorA;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorB;
+    private IdFullPath selectorB;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorC;
+    private IdFullPath selectorC;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorD;
+    private IdFullPath selectorD;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorE;
+    private IdFullPath selectorE;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorF;
+    private IdFullPath selectorF;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorG;
+    private IdFullPath selectorG;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXT, hidden = true)
-    private DtTreeIdDTO selectorH;
+    private IdFullPath selectorH;
 
     public void setField(char field, String value) {
         switch (field) {
@@ -148,7 +150,7 @@ public class MirroringDTO {
     }
 
     public void setSelectField(char field, int id, String fullPath) {
-        DtTreeIdDTO value = new DtTreeIdDTO();
+        IdFullPath value = new IdFullPath();
         value.setId(id);
         value.setFullPath(fullPath);
 
@@ -166,7 +168,7 @@ public class MirroringDTO {
         }
     }
 
-    public DtTreeIdDTO getSelectField(char field) {
+    public IdFullPath getSelectField(char field) {
         switch (field) {
             case 'A': return this.selectorA;
             case 'B': return this.selectorB;
@@ -189,7 +191,7 @@ public class MirroringDTO {
         List<Integer> selected = new ArrayList<>();
 
         for(Character alphabet = 'A'; alphabet <= MirroringService.LAST_ALPHABET; alphabet++) {
-            DtTreeIdDTO field = getSelectField(alphabet);
+            IdFullPath field = getSelectField(alphabet);
             if(field != null && field.getId() != null) {
                 if(removeDuplicate == false || selected.contains(field.getId()) != true) selected.add(field.getId());
             }

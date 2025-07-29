@@ -12,7 +12,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 @RestController
 @Datatable
 @RequestMapping("/admin/rest/webpages/mirroring/config")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_abtesting')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_mirroring')")
 public class MirroringConfigRestController extends AbstractConfigurationController {
 
     @Autowired

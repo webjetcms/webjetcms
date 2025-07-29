@@ -143,7 +143,7 @@
 
 
 	<% if (Tools.isNotEmpty(errorMsg)) { %>
-		<p style="width:100%; color: #ff4b58; display: block;">
+		<p style="width:100%; var(--bs-danger); display: block;">
 			<%=errorMsg%>
 		</p>
 	<%} %>

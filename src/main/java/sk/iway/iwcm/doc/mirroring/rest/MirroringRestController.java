@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.doc.mirroring.jpa.MirroringDTO;
+import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
 import sk.iway.iwcm.doc.mirroring.jpa.MirroringEditorFields;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -25,7 +25,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/webpages/mirroring")
-@PreAuthorize("@WebjetSecurityService.hasPermission('mirroring')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_mirroring')")
 @Datatable
 public class MirroringRestController extends DatatableRestControllerV2<MirroringDTO, Long> {
 

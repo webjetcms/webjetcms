@@ -37,7 +37,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplatesDB;
-import sk.iway.iwcm.doc.mirroring.jpa.MirroringDTO;
+import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
 import sk.iway.iwcm.doc.mirroring.jpa.MirroringEditorFields;
 import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
