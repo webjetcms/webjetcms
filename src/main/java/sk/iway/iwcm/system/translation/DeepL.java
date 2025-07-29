@@ -59,7 +59,6 @@ public class DeepL extends TranslationEngine {
         }
 
         String translationApiUrl = Constants.getString("deepl_api_url");
-        String deeplModelType = Constants.getString("deepl_model_type");
 
         //DeepL has a problem with nbsp entity
         text = Tools.replace(text, "&nbsp;", " ");
@@ -70,7 +69,7 @@ public class DeepL extends TranslationEngine {
                 String response = Request.Post(translationApiUrl)
                     .setHeader("Content-Type", "application/json; charset=utf-8")
                     .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
-                    .bodyString(getBodyString(text, fromLanguage, toLanguage, deeplModelType), ContentType.APPLICATION_JSON)
+                    .bodyString(getBodyString(text, fromLanguage, toLanguage), ContentType.APPLICATION_JSON)
                     .execute().returnContent().asString(StandardCharsets.UTF_8);
 
                 JSONObject json = new JSONObject(response);
@@ -81,8 +80,12 @@ public class DeepL extends TranslationEngine {
                     if (translationKey != null) translationsCache.put(translationKey, translatedText);
 
                     if (Tools.isNotEmpty(translatedText)) {
-                        long billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getLong("billed_characters") : 0;
-                        auditBilledCharacters(billedCharacters);
+                        try {
+                            long billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getLong("billed_characters") : 0;
+                            auditBilledCharacters(billedCharacters);
+                        } catch (Exception e) {
+                            Logger.error(DeepL.class, "Error while auditing billed characters", e);
+                        }
                         return translatedText;
                     }
                 }
@@ -115,7 +118,9 @@ public class DeepL extends TranslationEngine {
         return text;
     }
 
-    private String getBodyString(String text, String fromLanguage, String toLanguage, String deeplModelType) {
+    private String getBodyString(String text, String fromLanguage, String toLanguage) {
+        String deeplModelType = Constants.getString("deepl_model_type");
+
         JSONObject json = new JSONObject();
         json.put("text", new JSONArray().put(text));
         json.put("source_lang", fromLanguage.toUpperCase());

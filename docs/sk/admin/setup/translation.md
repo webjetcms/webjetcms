@@ -40,7 +40,7 @@ Po registrácii vo vašom konte v sekcii ```Plan``` nájdete ```Authentication K
 
 V konf. premennej `deepl_api_url` môžete nastaviť URL adresu API služby. Predvolená je hodnota pre voľnú verziu, pri použití `Pro` verzie nastavte na `https://api.deepl.com/v2/translate`.
 
-V konf. premennej `deepl_api_usage_url` môžete nastaviť URL adresu API služby, pre získanie informácií o využití zadaného licenčného kľúča. Predvolená je hodnota `/v2/usage`, doménové meno sa použije podľa nastavenia v `deepl_api_url`.
+V konf. premennej `deepl_api_usage_url` môžete nastaviť URL adresu API služby, pre získanie informácií o využití zadaného licenčného kľúča. Predvolená je hodnota `/v2/usage`, ak nie je zadané doménové meno, použije sa podľa nastavenia v `deepl_api_url`.
 
 V konf. premennej `deepl_model_type` môžete zvoliť, ktorý model `DeepL` prekladača sa použije. Na výber máte možnosti:
 
