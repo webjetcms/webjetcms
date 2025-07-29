@@ -643,7 +643,7 @@ jQuery(document).ready(function(){
             perspectiveorigin:"right"
 
         },
-        
+
         transition: "<%=pageParams.getValue("transitions_all","fade")%>",
 
         scalemode:"fill",

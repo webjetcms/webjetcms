@@ -37,7 +37,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 )
 @DataTableTabs(tabs = {
     @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
-    @DataTableTab(id = "advanced", title = "editor.tab.advanced", content = ""),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced", content = ""),
     @DataTableTab(id = "componentIframeWindowTabList", title = "components.banner.list_of_banners", content = ""),
     @DataTableTab(id = "componentIframeWindowTabStats", title = "components.banner.banners_stat", content = "")
 })
