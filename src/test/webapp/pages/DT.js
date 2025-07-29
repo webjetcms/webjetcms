@@ -295,5 +295,16 @@ module.exports = {
         I.waitForVisible("#" + name + "_modal", 200);
         I.click("Zmazať", "div.DTE_Action_Remove");
         I.waitForInvisible("div.DTE_Processing_Indicator", 200);
+    },
+
+    checkFooterSumValues(I, tableId, values) {
+        for(let i = 0; i < values.length; i++) {
+            let postfix = "";
+            if(values[i] != null && values[i].length > 0) {
+                //element "b" is present only if there is value to show
+                postfix = " > b";
+            }
+            I.see(values[i] + "", "#" + tableId + "_wrapper .dt-scroll-footInner > table > tfoot > tr > td:nth-child(" + (i + 1) + ")" + postfix );
+        }
     }
 }

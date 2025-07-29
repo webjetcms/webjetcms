@@ -1,0 +1,85 @@
+<script>
+	function appAfterInit(response, datatable) {
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			function toggleLoopNumber() {
+				const selected = $("#DTE_Field_display_mode").val();
+				if (selected === "2") {
+					$(".DTE_Field_Name_loop_number").show();
+				} else {
+					$(".DTE_Field_Name_loop_number").hide();
+				}
+			}
+
+			toggleLoopNumber();
+
+			$("#DTE_Field_display_mode").on("change", toggleLoopNumber);
+
+			$(".col-sm-1.form-group-tooltip > button[aria-label^='<img']").css({
+				"margin-left": "-360px",
+				"padding-right": "0px",
+			});
+
+            $('.btn-tooltip').on('shown.bs.tooltip', function () {
+                $('.tooltip-inner').css({
+                    "max-width": "none",
+                    "width": "auto",
+                    "display": "inline-block"
+                });
+            });
+
+			function updateImageFromSelect() {
+				var selectedValue = $("#DTE_Field_skin").val();
+				var newImage = '<img id="DTE_Field_styleImageIMG" src="/components/slider/admin-styles/' + selectedValue + '.jpg" style="width: 100%; margin-top: 7px; border: 4px solid #4286f4;">';
+
+                $("#DTE_Field_styleImageIMG").html(newImage);
+			}
+
+            updateImageFromSelect();
+			$("#DTE_Field_skin").on("change", updateImageFromSelect);
+
+			function amazingSliderToEditor(value) {
+				const basic = [
+					"fade", "slide", "elastic", "slice", "blinds",
+					"blocks", "snuffle", "tiles", "flip", "threed"
+				];
+
+				if (!value) { return "transition_fade"; }
+
+				if (basic.includes(value)) { return "transition_" + value; }
+
+				const mapping = {
+					"crossfade": "transition_cross_fade",
+					"flipwithzoom": "transition_flip_with_zoom",
+					"threedhorizontal": "transition_threed_horizontal",
+					"threedwithzoom": "transition_threed_with_zoom",
+					"threedhorizontalwithzoom": "transition_threed_horizontal_with_zoom",
+					"threedflip": "transition_threed_flip",
+					"threedflipwithzoom": "transition_threed_flip_with_zoom",
+					"threedtiles": "transition_threed_tiles",
+					"kenburns": "transition_ken_burns"
+				};
+
+				if (mapping[value]) { return mapping[value]; }
+
+				//Just in case
+				return "transition_fade";
+			}
+
+			function updateGifFromSelect() {
+				var selectedValue = $("#DTE_Field_transitions_all").val();
+				//console.log("Selected transition style: ", selectedValue);
+				var newGif = "";
+				if (Array.isArray(selectedValue)) {
+					selectedValue.forEach(function(value) {
+						newGif += "<img id='DTE_Field_transitionStyleGif_" + value + "' alt='" + value.toUpperCase() + "' src='/components/slider/transitions/" + value + ".gif' style='width:100%; margin-bottom: 8px;' class='tooltipContent'>";
+					});
+				}
+
+				$("#DTE_Field_transitionStyleGif").html(newGif);
+			}
+			// Set change event
+			$("#DTE_Field_transitions_all").on("change", updateGifFromSelect);
+			updateGifFromSelect();
+		});
+	}
+</script>

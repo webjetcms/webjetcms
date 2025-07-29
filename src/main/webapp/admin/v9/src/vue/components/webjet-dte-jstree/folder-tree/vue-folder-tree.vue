@@ -39,7 +39,11 @@
             if(this.$props.attr != null && typeof this.$props.attr["data-dt-field-skipFolders"] != "undefined") {
                 restEndpoint = restEndpoint + "&skipFolders=" + this.$props.attr["data-dt-field-skipFolders"];
             }
-            
+
+            if(this.$props.attr != null && typeof this.$props.attr["data-dt-field-hideRootParents"] != "undefined") {
+                restEndpoint = restEndpoint + "&hideRootParents=" + this.$props.attr["data-dt-field-hideRootParents"];
+            }
+
             //set root if defined
             if (this.$props.attr != null && typeof this.$props.attr["data-dt-field-root"] != "undefined") {
                 $("#jsTree").attr("data-rest-root", this.$props.attr["data-dt-field-root"]);
