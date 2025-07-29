@@ -1,9 +1,9 @@
 # Zrkadlenie
 
-Sekcia **Zrkadlenie** ponúka prehľad previazaných priečinok a stránok po akcií [Zrkadlenia štruktúry](../../apps/docmirroring/README.md). Okrem prehľadu existujúcich previazané ponúka aj upozornenia na potenciálne chybné previazania, ako aj možnosť ich úpravy.
+Sekcia **Zrkadlenie** ponúka prehľad previazaných priečinok a stránok po akcií [Zrkadlenia štruktúry](../../apps/docmirroring/README.md). Okrem prehľadu existujúcich previazaní ponúka aj upozornenia na potenciálne chybné previazania, ako aj možnosť ich úpravy.
 
-Sekcia sa skladá z 3 pod-sekcií:
+Sekcia sa skladá z 3 kariet:
 
-- **Priečinky**, prehľad previazaných priečinkov stránok
-- **Stránky**, prehľad previazaných stránok
-- **Ovládací panel**, prehľad konfiguračných premenných týkajúcich sa zrkadlenia
+- [Priečinky](groups.md) - prehľad previazaných priečinkov stránok
+- [Stránky](docs.md) - prehľad previazaných stránok
+- [Konfigurácia](settings.md) - prehľad konfiguračných premenných týkajúcich sa zrkadlenia

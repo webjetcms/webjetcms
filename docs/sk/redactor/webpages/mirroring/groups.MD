@@ -1,4 +1,4 @@
-# Zrkadlenie - Priečinky
+# Priečinky
 
 Sekcia obsahuje prehľad previazaných priečinkov pod spoločným synchronizačným identifikátorom `syncId`.
 
@@ -22,7 +22,7 @@ Stĺpec **Stav** ponúka pomocou ikon rýchly prehľad o stave previazania. Podp
 
 - <i class="ti ti-exclamation-circle" style="color: #ff4b58;"></i>, ikona zodpovedná stavu **Zlé mapovanie**. Previazanie priečinok nadobudne tento stav v prípade objavenia viacerých previazaných priečinkov v rovnakej jazykovej mutácií.
 - <i class="ti ti-alert-triangle" style="color: #fabd00;"></i>, ikona zodpovedná stavu **Nerovnomerné vnorenie**. Previazanie priečinok nadobudne tento stav v prípade rozdielnej hĺbky previazaných priečinok od koreňového priečinka.
-- **nič**, žiadna ikona sa nezobrazuje v prípade ak previazanie je korektné (nespadá do predchazdajúcich stavov)
+- **nič**, žiadna ikona sa nezobrazuje v prípade ak previazanie je korektné (nespadá do predcházdajúcich stavov)
 
 ### Zlé mapovanie
 
@@ -42,7 +42,7 @@ Akcia rozviazanie priečinka kaskádovito odstráni synchronizačný parameter `
 
 ## Editácia previazania
 
-Pri editácií previazania sa zobrazí každý previazaný priečinok ako výberové pole adresára stránok aj so skratkou jazyka ako štítkom.
+Pri editácii previazania sa zobrazí každý previazaný priečinok ako výberové pole adresára stránok aj so skratkou jazyka ako štítkom.
 
 Na nasledujúcom obrázku môžeme vidieť príklad **zlého mapovania**, kde sú previazané viaceré priečinky v rovnakej jazykovej mutácií, konkrétne v prípade `sk` jazyka.
 
@@ -50,12 +50,12 @@ Na nasledujúcom obrázku môžeme vidieť príklad **zlého mapovania**, kde s�
 
 ### Zmena priečinkov
 
-Pri editácií je možné previazané priečinky zmeniť. V takomto prípade bude nahradenému priečinku odstránený synchronizačný parameter `syncId`, na priečinku sa vyvolá akcia [rozviazania priečinka](./groups#rozviazanie-priečinka) a novo-zvolenému priečinku sa pridá parameter `syncId`.
+Pri editácii je možné previazané priečinky zmeniť. V takomto prípade bude nahradenému priečinku odstránený synchronizačný parameter `syncId`, na priečinku sa vyvolá akcia [rozviazania priečinka](./groups#rozviazanie-priečinka) a novo-zvolenému priečinku sa pridá parameter `syncId`.
 
 Pre zvolené priečinky nie je povolené:
 
 - duplicitné zvolenie toho istého priečinka
-- zvolenie priečinka s nastaveným `syncId` (samozrejme iným ako práve upravované). Ak stále budete trvať na previazaní daného priečinka, najprv musíte zrušiť jeho aktuálne previazanie (odstraníť `syncId`) a až následne ho môžete previazať s iným priečinkom (pridať nové `syncId`).
+- zvolenie priečinka s nastaveným `syncId` (samozrejme iným ako práve upravované). Ak stále budete trvať na previazaní daného priečinka, najprv musíte zrušiť jeho aktuálne previazanie (odstráníť `syncId`) a až následne ho môžete previazať s iným priečinkom (pridať nové `syncId`).
 - výber viacerých priečinkov v tej istej jazykovej mutácií (chyba [zlé mapovanie](./groups#zlé-mapovanie))
 - výber priečinkov v rôznej hĺbke (chyba [nerovnomerné vnorenie](./groups#nerovnomerné-vnorenie))
 
@@ -65,7 +65,7 @@ Každá z týchto chýb sa kontroluje. Ak sa takáto chyba objaví pri pokuse o 
 
 ### Pridanie priečinka
 
-Tabuľka neumožňuje vytvorenie úplne nového previazania (nového `syncId`) ale umožňuje pridanie (previazanie) nových priečinkov k už existujúcim. V editore pri editácií záznamu sa nachádza tlačidlo
+Tabuľka neumožňuje vytvorenie úplne nového previazania (nového `syncId`) ale umožňuje pridanie (previazanie) nových priečinkov k už existujúcim. V editore pri editácii záznamu sa nachádza tlačidlo
 
 <button id="add-sync-btn" class="btn btn-outline-secondary" onclick="showNewSelector(groupsMirroringTable)">
     <i class="ti ti-plus"></i>

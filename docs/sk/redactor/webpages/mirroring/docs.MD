@@ -1,4 +1,4 @@
-# Zrkadlenie - Stránky
+# Stránky
 
 Sekcia obsahuje prehľad previazaných stránok pod spoločným synchronizačným identifikátorom `syncId`.
 
@@ -22,7 +22,7 @@ Stĺpec **Stav** ponúka pomocou ikon rýchly prehľad o stave previazania. Podp
 
 - <i class="ti ti-exclamation-circle" style="color: #ff4b58;"></i>, ikona zodpovedná stavu **Zlé mapovanie**. Previazanie stránok nadobudne tento stav v prípade objavenia viacerých previazaných stránok v rovnakej jazykovej mutácií.
 - <i class="ti ti-alert-triangle" style="color: #fabd00;"></i>, ikona zodpovedná stavu **Nerovnomerné vnorenie**. Previazanie stránok nadobudne tento stav v prípade rozdielnej hĺbky previazaných stránok od koreňového priečinka.
-- **nič**, žiadna ikona sa nezobrazuje v prípade ak previazanie je korektné (nespadá do predchazdajúcich stavov)
+- **nič**, žiadna ikona sa nezobrazuje v prípade ak previazanie je korektné (nespadá do predcházdajúcich stavov)
 
 ### Zlé mapovanie
 
@@ -38,7 +38,7 @@ Pri vymazaní/zrušení celého previazania zaniká existujúci synchronizačný
 
 ## Editácia previazania
 
-Pri editácií previazania sa zobrazí každá previazaná stránka ako výberové pole stránok aj so skratkou jazyka ako štítkom.
+Pri editácii previazania sa zobrazí každá previazaná stránka ako výberové pole stránok aj so skratkou jazyka ako štítkom.
 
 Na nasledujúcom obrázku môžeme vidieť príklad **zlého mapovania**, kde sú previazané viaceré stránky v rovnakej jazykovej mutácií, konkrétne v prípade `sk` jazyka.
 
@@ -46,12 +46,12 @@ Na nasledujúcom obrázku môžeme vidieť príklad **zlého mapovania**, kde s�
 
 ### Zmena stránok
 
-Pri editácií je možné previazané stránky zmeniť. V takomto prípade bude nahradenej stránke odstránený synchronizačný parameter `syncId` a novo-zvolenej stránke sa pridá parameter `syncId`.
+Pri editácii je možné previazané stránky zmeniť. V takomto prípade bude nahradenej stránke odstránený synchronizačný parameter `syncId` a novo-zvolenej stránke sa pridá parameter `syncId`.
 
 Pre zvolené stránky nie je povolené:
 
 - duplicitné zvolenie tej istej stránky
-- zvolenie stránky s nastaveným `syncId` (samozrejme iným ako práve upravované). Ak stále budete trvať na previazaní danej stránky, najprv musíte zrušiť jej aktuálne previazanie (odstraníť `syncId`) a až následne ju môžete previazať s inými stránkami (pridať nové `syncId`).
+- zvolenie stránky s nastaveným `syncId` (samozrejme iným ako práve upravované). Ak stále budete trvať na previazaní danej stránky, najprv musíte zrušiť jej aktuálne previazanie (odstrániť `syncId`) a až následne ju môžete previazať s inými stránkami (pridať nové `syncId`).
 - výber viacerých stránok v tej istej jazykovej mutácií (chyba [zlé mapovanie](./docs#zlé-mapovanie))
 - výber stránok v rôznej hĺbke (chyba [nerovnomerné vnorenie](./docs#nerovnomerné-vnorenie))
 
@@ -61,7 +61,7 @@ Každá z týchto chýb sa kontroluje. Ak sa takáto chyba objaví pri pokuse o 
 
 ### Pridanie stránky
 
-Tabuľka neumožňuje vytvorenie úplne nového previazania (nového `syncId`) ale umožňuje pridanie (previazanie) nových stránok k už existujúcim. V editore pri editácií záznamu sa nachádza tlačidlo
+Tabuľka neumožňuje vytvorenie úplne nového previazania (nového `syncId`) ale umožňuje pridanie (previazanie) nových stránok k už existujúcim. V editore pri editácii záznamu sa nachádza tlačidlo
 
 <button id="add-sync-btn" class="btn btn-outline-secondary" onclick="showNewSelector(groupsMirroringTable)">
     <i class="ti ti-plus"></i>

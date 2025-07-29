@@ -929,7 +929,7 @@ public class MirroringService {
         }
 
         if(Tools.isEmpty(lng) == true) {
-            Logger.warn(MirroringService.class, "Language for group: " + group.getGroupId() + " waas not found.");
+            Logger.warn(MirroringService.class, "Language for group: " + group.getGroupId() + " was not found.");
             return null;
         }
 

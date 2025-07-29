@@ -2,7 +2,7 @@ Feature('webpages.mirroring');
 
 const groupTable = "groupsMirroringTable";
 const docTable = "docsMirroringTable";
-const confTable = "mirrroringConfDataTable";
+const confTable = "mirroringConfDataTable";
 
 const groupsWrapperSelector = "#groupsMirroringTable_wrapper";
 const docsWrapperSelector = "#docsMirroringTable_wrapper";

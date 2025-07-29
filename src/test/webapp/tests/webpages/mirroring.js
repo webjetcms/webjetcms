@@ -3,7 +3,7 @@ Feature('webpages.mirroring');
 let randomNumber;
 const groupTable = "groupsMirroringTable";
 const docTable = "docsMirroringTable";
-const confTable = "mirrroringConfDataTable";
+const confTable = "mirroringConfDataTable";
 
 const groupsWrapperSelector = "#groupsMirroringTable_wrapper";
 const docsWrapperSelector = "#docsMirroringTable_wrapper";
@@ -37,7 +37,7 @@ Scenario('Mirroring 1 - Structure prepare', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list");
     Document.switchDomain("mirroring.tau27.iway.sk");
 
-    I.say("Grete root groups");
+    I.say("Create root groups");
     addFolder(I, DT, DTE, sk_mirroring, true, "Slovenský");
     I.jstreeNavigate([sk_mirroring]);
     sk_mirroring_id = await I.grabValueFrom('#tree-folder-id');
@@ -370,13 +370,13 @@ function checkRowClass(I, table, classes, shouldSee) {
     }
 }
 
-function getAsPath(namesArr, doubleLAstOne = false) {
+function getAsPath(namesArr, doubleLastOne = false) {
     let path = "";
     for(let i = 0; i < namesArr.length; i++) {
         path += "/" + namesArr[i];
     }
 
-    if(doubleLAstOne == true) {
+    if(doubleLastOne == true) {
         path += "/" + namesArr[namesArr.length - 1];
     }
 
@@ -408,7 +408,7 @@ function checkTablesVisibility(I, groups, docs, conf) {
     I.say("Check visible tables");
     groups == true ? I.seeElement("#groupsMirroringTable_wrapper") : I.dontSeeElement("#groupsMirroringTable_wrapper");
     docs == true ? I.seeElement("#docsMirroringTable_wrapper") : I.dontSeeElement("#docsMirroringTable_wrapper");
-    conf == true ? I.seeElement("#mirrroringConfDataTable_wrapper") : I.dontSeeElement("#mirrroringConfDataTable_wrapper");
+    conf == true ? I.seeElement("#mirroringConfDataTable_wrapper") : I.dontSeeElement("#mirroringConfDataTable_wrapper");
 }
 
 function checkShowedSelectors(I, alphabet, label, value) {
