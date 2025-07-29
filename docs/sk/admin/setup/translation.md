@@ -5,6 +5,7 @@ WebJET integruje možnosť prekladu textov, aktuálne je podporovaný prekladač
 Automatický preklad je podporovaný v nasledovných aplikáciách:
 
 - [Zrkadlenie štruktúry](../../redactor/apps/docmirroring/README.md)
+- [Klonovanie štruktúry](../../redactor/apps/clone-structure/README.md)
 
 Po konfigurácii môžete vo vašom Java kóde použiť prekladač ako:
 
@@ -15,6 +16,13 @@ String translated = TranslationService.translate(text, fromLanguage, toLanguage)
 ```
 
 kde jazyk je dvoj písmenový kód jazyka.
+
+Do audit záznamu typu `TRANSLATION` sa do stĺpca `EntityID` zapíše spotrebované množstvo kreditov pri preklade. Audituje sa aj počet dostupných znakov, výsledok je uložený do `Cache` a aktualizuje sa znova najskôr o 5 minút (ani `API` neposkytuje údaje v reálnom čase).
+
+```txt
+AUTO_TRANSLATION DeepL used: 13
+AUTO_TRANSLATION DeepL remaining: 499453 usage: 0% (547/500000)
+```
 
 ## Výber prekladača
 
@@ -32,7 +40,7 @@ Po registrácii vo vašom konte v sekcii ```Plan``` nájdete ```Authentication K
 
 V konf. premennej `deepl_api_url` môžete nastaviť URL adresu API služby. Predvolená je hodnota pre voľnú verziu, pri použití `Pro` verzie nastavte na `https://api.deepl.com/v2/translate`.
 
-V konf. premennej `deepl_api_usage_url` môžete nastaviť URL adresu API služby, pre získanie informácií o využití zadaného licenčného kľúča. Predvolená je hodnota pre voľnú verziu, pri použití `Pro` verzie nastavte na `https://api.deepl.com/v2/usage`.
+V konf. premennej `deepl_api_usage_url` môžete nastaviť URL adresu API služby, pre získanie informácií o využití zadaného licenčného kľúča. Predvolená je hodnota `/v2/usage`, doménové meno sa použije podľa nastavenia v `deepl_api_url`.
 
 V konf. premennej `deepl_model_type` môžete zvoliť, ktorý model `DeepL` prekladača sa použije. Na výber máte možnosti:
 

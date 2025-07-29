@@ -59,9 +59,6 @@ public class DeepL extends TranslationEngine {
         }
 
         String translationApiUrl = Constants.getString("deepl_api_url");
-        if(translationApiUrl.endsWith("/") == false) translationApiUrl += "/";
-        translationApiUrl += "translate";
-
         String deeplModelType = Constants.getString("deepl_model_type");
 
         //DeepL has a problem with nbsp entity
@@ -84,8 +81,8 @@ public class DeepL extends TranslationEngine {
                     if (translationKey != null) translationsCache.put(translationKey, translatedText);
 
                     if (Tools.isNotEmpty(translatedText)) {
-                        int billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getInt("billed_characters") : 0;
-                        adminLogBilledCharactes(billedCharacters);
+                        long billedCharacters = translations.getJSONObject(0).has("billed_characters") ? translations.getJSONObject(0).getLong("billed_characters") : 0;
+                        auditBilledCharacters(billedCharacters);
                         return translatedText;
                     }
                 }
@@ -131,9 +128,26 @@ public class DeepL extends TranslationEngine {
 
     @Override
     public Long numberOfFreeCharacters() {
-        String usageApiUrl = Constants.getString("deepl_api_url");
-        if(usageApiUrl.endsWith("/") == false) usageApiUrl += "/";
-        usageApiUrl += "usage";
+        String CACHE_KEY = "DeepL.freeCharacters";
+        Cache cache = Cache.getInstance();
+        Long freeCharacters = (Long) cache.getObject(CACHE_KEY);
+        if (freeCharacters != null) {
+            return freeCharacters; // Return cached value if available
+        }
+
+        String usageApiUrl = Constants.getString("deepl_api_usage_url");
+
+        try {
+            //if it's a relative URL, prepend the base API URL from deepl_api_url
+            if (!usageApiUrl.startsWith("http")) {
+                String baseApiUrl = Constants.getString("deepl_api_url");
+                baseApiUrl = baseApiUrl.substring(0, baseApiUrl.indexOf('/', 10));
+                usageApiUrl = baseApiUrl + usageApiUrl;
+            }
+        } catch (Exception e) {
+            Logger.error(DeepL.class, "Error constructing usage API URL", e);
+            return Long.valueOf(-1); // return -1 to indicate an error
+        }
 
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
@@ -147,7 +161,12 @@ public class DeepL extends TranslationEngine {
                 Long characterLimit = json.getLong("character_limit");
                 Long characterCount = json.getLong("character_count");
                 if(characterLimit != null && characterCount != null) {
-                    return characterLimit - characterCount; // returns number of free characters
+                    freeCharacters = characterLimit - characterCount;
+
+                    cache.setObjectSeconds(CACHE_KEY, freeCharacters, 60 * 5);
+                    auditRemainingCharacters(characterLimit, characterCount);
+
+                    return freeCharacters; // returns number of free characters
                 } else {
                     Logger.error(DeepL.class, "Invalid response from DeepL API usage endpoint: " + response);
                 return Long.valueOf(-1);

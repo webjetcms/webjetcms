@@ -49,7 +49,21 @@ public abstract class TranslationEngine {
         return true;
     }
 
-    protected void adminLogBilledCharactes(int billedCharacters) {
-        Adminlog.add(Adminlog.TYPE_TRANSLATION, "AUTO _TRANSLATION " + engineName(), billedCharacters, -1);
+    protected void auditBilledCharacters(long billedCharacters) {
+        Adminlog.add(Adminlog.TYPE_TRANSLATION, "AUTO_TRANSLATION " + engineName() + " used: " + billedCharacters, (int)billedCharacters, -1);
+    }
+
+    protected void auditRemainingCharacters(long characterLimit, long characterCount) {
+        long remainingCharacters = characterLimit - characterCount;
+
+        //calculate percentage of used characters
+        long usedPercentage = 0;
+        if (characterLimit == 0) {
+            usedPercentage = 100;
+        } else if (characterCount != 0) {
+            usedPercentage = Math.round((double) characterCount / characterLimit * 100);
+        }
+
+        Adminlog.add(Adminlog.TYPE_TRANSLATION, "AUTO_TRANSLATION " + engineName() + " remaining: " + remainingCharacters + " usage: " + usedPercentage + "% (" + characterCount+"/"+characterLimit +")", (int)remainingCharacters, -1);
     }
 }
