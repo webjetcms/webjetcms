@@ -71,6 +71,11 @@ public class ABTesting
 			}
 		}
 
+		if (variant != null && variant.length() > 1) {
+			//if variant is longer than 1 character, it is not valid, possible XSS through cookie
+			variant = "a";
+		}
+
 		//Set variant into request - used in Ninja
 		request.setAttribute("ABTestingVariant", variant);
 
