@@ -372,8 +372,7 @@ export function update(EDITOR, action) {
 
             new AutoCompleter("#"+datatable.DATA.id+"_modal .DTE_Field_Name_field" + identifier + " input.autocomplete").setUrl('/admin/FCKeditor/_editor_autocomplete.jsp?keyPrefix=' + json.editorFields?.fieldsDefinitionKeyPrefix + '&template=' + json.tempId + '&field=' + identifier).transform();
 
-        }
-        else if (v.type == "dir") {
+        } else if (v.type == "dir") {
             let conf = {};
             let id = 'DTE_Field_' + customPrefix + identifier;
 

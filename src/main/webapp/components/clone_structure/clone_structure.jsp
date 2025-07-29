@@ -143,10 +143,10 @@
 
 
 	<% if (Tools.isNotEmpty(errorMsg)) { %>
-		<p style="width:100%; var(--bs-danger); display: block;">
+		<div class="alert alert-danger" role="alert">
 			<%=errorMsg%>
-		</p>
-	<%} %>
+		</div>
+	<% } %>
 
 	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post"><%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
 		<table>

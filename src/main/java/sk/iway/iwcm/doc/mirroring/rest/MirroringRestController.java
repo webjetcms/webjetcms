@@ -52,7 +52,6 @@ public class MirroringRestController extends DatatableRestControllerV2<Mirroring
         return page;
     }
 
-
     @Override
     public MirroringDTO insertItem(MirroringDTO entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));

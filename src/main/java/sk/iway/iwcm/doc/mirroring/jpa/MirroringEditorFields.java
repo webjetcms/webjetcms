@@ -18,7 +18,6 @@ public class MirroringEditorFields extends BaseEditorFields {
     )
     private String statusIcons;
 
-
     public void from(MirroringDTO entity) {
         StringBuilder iconsHtml = new StringBuilder();
 

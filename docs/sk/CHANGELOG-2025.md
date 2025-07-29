@@ -28,15 +28,6 @@
 
 ![](redactor/webpages/mirroring/groups_datatable.png)
 
-### Voliteľné polia
-
-- Pridaná podpora pre nové typy [voliteľných polí](frontend/webpages/customfields/README.md):
-  - [Výber priečinku webových stránok](frontend/webpages/customfields/README.md#výber-priečinku-webových-stránok) (#57941).
-  - [Výber webovej stránky](frontend/webpages/customfields/README.md#výber-webovej-stránky) (#57941).
-
-![](frontend/webpages/customfields/webpages-doc-null.png)
-![](frontend/webpages/customfields/webpages-group-null.png)
-
 ### Používateľské rozhranie
 
 - Pri použití malého monitora (výška okna menej ako 760 bodov) sa zobrazí okno automaticky na celú plochu a zmenší sa hlavička a pätička (titulok okna je menším písmom). Zvýši sa tak zobrazené množstvo informácií, čo je potrebné hlavne v sekcii web stránky. Používa sa pri oknách používajúcich CSS triedu `modal-xl`, čo sú aktuálne web stránky, foto galéria, editor obrázkov a používatelia (#57893).
@@ -71,6 +62,15 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - V sekcií [návštevnosť](redactor/apps/stat/README.md#návštevnosť) pridaný sumárny počet Videní, Návštev a Počet rôznych používateľov pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (#57929).
 
 ![](redactor/apps/stat/stats-page.png)
+
+### Voliteľné polia
+
+- Pridaná podpora pre nové typy [voliteľných polí](frontend/webpages/customfields/README.md):
+  - [Výber priečinku webových stránok](frontend/webpages/customfields/README.md#výber-priečinku-webových-stránok) (#57941).
+  - [Výber webovej stránky](frontend/webpages/customfields/README.md#výber-webovej-stránky) (#57941).
+
+![](frontend/webpages/customfields/webpages-doc-null.png)
+![](frontend/webpages/customfields/webpages-group-null.png)
 
 ### Bezpečnosť
 
