@@ -30,7 +30,7 @@ public class SpringSecurityConf {
 
 	private static boolean basicAuthEnabled = false;
 
-	private static List<String> clients = Arrays.asList("google");
+	private static List<String> clients = Arrays.asList("google", "keycloak");
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -154,6 +154,32 @@ public class SpringSecurityConf {
 
 			return CommonOAuth2Provider.GOOGLE.getBuilder(client)
 					.clientId(clientId).clientSecret(clientSecret).build();
+		}
+		if (client.equals("keycloak")) {
+			String clientId = Constants.getString("keycloakClientId");
+			String clientSecret = Constants.getString("keycloakClientSecret");
+			String issuerUri = Constants.getString("keycloakIssuerUri");
+			String authorizationUri = Constants.getString("keycloakAuthorizationUri");
+			String tokenUri = Constants.getString("keycloakTokenUri");
+			String userInfoUri = Constants.getString("keycloakUserInfoUri");
+			String jwkSetUri = Constants.getString("keycloakJwkSetUri");
+			if (Tools.isAnyEmpty(clientId, clientSecret, issuerUri, authorizationUri, tokenUri, userInfoUri, jwkSetUri)) {
+				return null;
+			}
+			return ClientRegistration.withRegistrationId("keycloak")
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.scope("openid", "profile", "email")
+					.authorizationUri(authorizationUri)
+					.tokenUri(tokenUri)
+					.userInfoUri(userInfoUri)
+					.userNameAttributeName("preferred_username")
+					.jwkSetUri(jwkSetUri)
+					.issuerUri(issuerUri)
+					.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+					.clientName("Keycloak")
+					.authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+					.build();
 		}
 		return null;
 	}
