@@ -19,7 +19,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,8 +28,6 @@ import java.util.stream.Collectors;
 public class SpringSecurityConf {
 
 	private static boolean basicAuthEnabled = false;
-
-	private static List<String> clients = Arrays.asList("google", "keycloak");
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -49,8 +46,7 @@ public class SpringSecurityConf {
 		}
 
 		// OAuth2 login podpora
-		//if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("oauth2")) {
-		if (Constants.getBoolean("isOAuth2Enabled")) {
+		if (Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients"))) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
@@ -134,54 +130,76 @@ public class SpringSecurityConf {
 
 	@Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
+		List<String> clients = List.of(Tools.getTokens(Constants.getString("springSecurityOAuth2Clients"), ","));
 		List<ClientRegistration> registrations = clients.stream()
-				.map(c -> getRegistration(c))
+				.map(this::buildClientRegistration)
 				.filter(registration -> registration != null)
 				.collect(Collectors.toList());
-
+		// Ak je zoznam prázdny, vráť anonymnú implementáciu ClientRegistrationRepository namiesto InMemoryClientRegistrationRepository
+		if (registrations.isEmpty()) {
+			return new ClientRegistrationRepository() {
+				@Override
+				public ClientRegistration findByRegistrationId(String registrationId) {
+					return null;
+				}
+			};
+		}
 		return new InMemoryClientRegistrationRepository(registrations);
 	}
 
-	private ClientRegistration getRegistration(String client) {
-		if (client.equals("google")) {
-			String clientId = Constants.getString("googleClientId");
-
-			if (clientId == null) {
-				return null;
-			}
-
-			String clientSecret = Constants.getString("googleClientSecret");
-
-			return CommonOAuth2Provider.GOOGLE.getBuilder(client)
-					.clientId(clientId).clientSecret(clientSecret).build();
-		}
-		if (client.equals("keycloak")) {
-			String clientId = Constants.getString("keycloakClientId");
-			String clientSecret = Constants.getString("keycloakClientSecret");
-			String issuerUri = Constants.getString("keycloakIssuerUri");
-			String authorizationUri = Constants.getString("keycloakAuthorizationUri");
-			String tokenUri = Constants.getString("keycloakTokenUri");
-			String userInfoUri = Constants.getString("keycloakUserInfoUri");
-			String jwkSetUri = Constants.getString("keycloakJwkSetUri");
-			if (Tools.isAnyEmpty(clientId, clientSecret, issuerUri, authorizationUri, tokenUri, userInfoUri, jwkSetUri)) {
-				return null;
-			}
-			return ClientRegistration.withRegistrationId("keycloak")
+	private ClientRegistration buildClientRegistration(String providerId) {
+		String clientId = Constants.getString(providerId + "ClientId");
+		String clientSecret = Constants.getString(providerId + "ClientSecret");
+		if (Tools.isAnyEmpty(clientId, clientSecret)) return null;
+		// Preddefinovaní poskytovatelia
+		if ("google".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.GOOGLE.getBuilder(providerId)
 					.clientId(clientId)
 					.clientSecret(clientSecret)
-					.scope("openid", "profile", "email")
-					.authorizationUri(authorizationUri)
-					.tokenUri(tokenUri)
-					.userInfoUri(userInfoUri)
-					.userNameAttributeName("preferred_username")
-					.jwkSetUri(jwkSetUri)
-					.issuerUri(issuerUri)
-					.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
-					.clientName("Keycloak")
-					.authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
 					.build();
 		}
-		return null;
+		if ("facebook".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.FACEBOOK.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("github".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.GITHUB.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("okta".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.OKTA.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		// Ostatní poskytovatelia - načítaj všetky potrebné parametre
+		String authorizationUri = Constants.getString(providerId + "AuthorizationUri");
+		String tokenUri = Constants.getString(providerId + "TokenUri");
+		String userInfoUri = Constants.getString(providerId + "UserInfoUri");
+		String jwkSetUri = Constants.getString(providerId + "JwkSetUri");
+		String issuerUri = Constants.getString(providerId + "IssuerUri");
+		String userNameAttributeName = Constants.getString(providerId + "UserNameAttributeName", "email");
+		String scopesStr = Constants.getString(providerId + "Scopes", "openid,profile,email");
+		String clientName = Constants.getString(providerId + "ClientName", providerId);
+		if (Tools.isAnyEmpty(authorizationUri, tokenUri, userInfoUri, jwkSetUri, issuerUri)) return null;
+		return ClientRegistration.withRegistrationId(providerId)
+				.clientId(clientId)
+				.clientSecret(clientSecret)
+				.scope(scopesStr.split(","))
+				.authorizationUri(authorizationUri)
+				.tokenUri(tokenUri)
+				.userInfoUri(userInfoUri)
+				.userNameAttributeName(userNameAttributeName)
+				.jwkSetUri(jwkSetUri)
+				.issuerUri(issuerUri)
+				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+				.clientName(clientName)
+				.authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+				.build();
 	}
 
 	@Bean

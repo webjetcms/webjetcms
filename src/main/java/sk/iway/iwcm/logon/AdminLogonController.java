@@ -73,14 +73,13 @@ public class AdminLogonController {
     private static final String authorizationRequestBaseUri = "/oauth2/authorization";
     Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
 
-    @Autowired
-    private ClientRegistrationRepository clientRegistrationRepository;
-
+    private final ClientRegistrationRepository clientRegistrationRepository;
     private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
-    public AdminLogonController(UserDetailsRepository userDetailsRepository) {
+    public AdminLogonController(UserDetailsRepository userDetailsRepository, ClientRegistrationRepository clientRegistrationRepository) {
         this.userDetailsRepository = userDetailsRepository;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     /**
@@ -242,17 +241,18 @@ public class AdminLogonController {
             UserChangePasswordService.sendPassword(request,loginName);
         }
 
-        if(Constants.getBoolean("isOAuth2Enabled")) {
+        if (Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients")) && clientRegistrationRepository != null) {
             Iterable<ClientRegistration> clientRegistrations = null;
             ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
             if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
                 clientRegistrations = (Iterable<ClientRegistration>) clientRegistrationRepository;
             }
-
-            clientRegistrations.forEach(registration ->
-                    oauth2AuthenticationUrls.put(registration.getClientName(),
-                            authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
-            model.addAttribute("urls", oauth2AuthenticationUrls);
+            if (clientRegistrations != null) {
+                clientRegistrations.forEach(registration ->
+                        oauth2AuthenticationUrls.put(registration.getClientName(),
+                                authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
+                model.addAttribute("urls", oauth2AuthenticationUrls);
+            }
         }
 
         return LOGON_FORM;
