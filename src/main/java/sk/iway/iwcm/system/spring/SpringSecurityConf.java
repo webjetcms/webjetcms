@@ -5,13 +5,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -34,6 +43,17 @@ public class SpringSecurityConf {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
 			basicAuthEnabled = true;
 			http.httpBasic(customizer -> {});
+		}
+
+		// OAuth2 login podpora
+		if (Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients"))) {
+			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
+			http.oauth2Login(oauth2 -> {
+				oauth2.clientRegistrationRepository(clientRegistrationRepository());
+				oauth2.authorizedClientService(authorizedClientService());
+				oauth2.successHandler(new OAuth2SuccessHandler());
+				oauth2.loginPage("/admin/logon");
+			});
 		}
 
 		// Disable headers and CSRF as per original config
@@ -106,5 +126,85 @@ public class SpringSecurityConf {
 	public static boolean isBasicAuthEnabled()
 	{
 		return basicAuthEnabled;
+	}
+
+	@Bean
+	public ClientRegistrationRepository clientRegistrationRepository() {
+		List<String> clients = List.of(Tools.getTokens(Constants.getString("springSecurityOAuth2Clients"), ","));
+		List<ClientRegistration> registrations = clients.stream()
+				.map(this::buildClientRegistration)
+				.filter(registration -> registration != null)
+				.collect(Collectors.toList());
+		// Ak je zoznam prázdny, vráť anonymnú implementáciu ClientRegistrationRepository namiesto InMemoryClientRegistrationRepository
+		if (registrations.isEmpty()) {
+			return new ClientRegistrationRepository() {
+				@Override
+				public ClientRegistration findByRegistrationId(String registrationId) {
+					return null;
+				}
+			};
+		}
+		return new InMemoryClientRegistrationRepository(registrations);
+	}
+
+	private ClientRegistration buildClientRegistration(String providerId) {
+		String clientId = Constants.getString(providerId + "ClientId");
+		String clientSecret = Constants.getString(providerId + "ClientSecret");
+		if (Tools.isAnyEmpty(clientId, clientSecret)) return null;
+		// Preddefinovaní poskytovatelia
+		if ("google".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.GOOGLE.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("facebook".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.FACEBOOK.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("github".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.GITHUB.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		if ("okta".equalsIgnoreCase(providerId)) {
+			return CommonOAuth2Provider.OKTA.getBuilder(providerId)
+					.clientId(clientId)
+					.clientSecret(clientSecret)
+					.build();
+		}
+		// Ostatní poskytovatelia - načítaj všetky potrebné parametre
+		String authorizationUri = Constants.getString(providerId + "AuthorizationUri");
+		String tokenUri = Constants.getString(providerId + "TokenUri");
+		String userInfoUri = Constants.getString(providerId + "UserInfoUri");
+		String jwkSetUri = Constants.getString(providerId + "JwkSetUri");
+		String issuerUri = Constants.getString(providerId + "IssuerUri");
+		String userNameAttributeName = Constants.getString(providerId + "UserNameAttributeName", "email");
+		String scopesStr = Constants.getString(providerId + "Scopes", "openid,profile,email");
+		String clientName = Constants.getString(providerId + "ClientName", providerId);
+		if (Tools.isAnyEmpty(authorizationUri, tokenUri, userInfoUri, jwkSetUri, issuerUri)) return null;
+		return ClientRegistration.withRegistrationId(providerId)
+				.clientId(clientId)
+				.clientSecret(clientSecret)
+				.scope(scopesStr.split(","))
+				.authorizationUri(authorizationUri)
+				.tokenUri(tokenUri)
+				.userInfoUri(userInfoUri)
+				.userNameAttributeName(userNameAttributeName)
+				.jwkSetUri(jwkSetUri)
+				.issuerUri(issuerUri)
+				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
+				.clientName(clientName)
+				.authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.AUTHORIZATION_CODE)
+				.build();
+	}
+
+	@Bean
+	public OAuth2AuthorizedClientService authorizedClientService() {
+		return new InMemoryOAuth2AuthorizedClientService(
+				clientRegistrationRepository());
 	}
 }
