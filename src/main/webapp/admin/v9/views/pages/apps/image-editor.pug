@@ -40,6 +40,40 @@ block content
             }
         ];
 
+
+        var customInitialData = dtWJ.getEmptyData(true);
+
+        let perexGroupsOptionsRaw = "[(${perexGroupsOptions})]";
+        var perexGroupsOptions = [];
+        if(perexGroupsOptionsRaw != null && perexGroupsOptionsRaw != undefined && perexGroupsOptionsRaw.length > 0) {
+            // Remove curly braces
+            const trimmed = perexGroupsOptionsRaw.slice(1, -1);
+
+            // Split into key-value pairs
+            const entries = trimmed.split(', ').map(pair => {
+                const [key, value] = pair.split('=');
+                return [key.trim(), value.trim()];
+            });
+
+            // Sort by value
+            const sortedEntries = entries.sort((a, b) => {
+                return a[1].localeCompare(b[1]);
+            });
+
+            // Prepare options
+            sortedEntries.forEach(([key, value]) => {
+                perexGroupsOptions.push({
+                    label: value,
+                    value: key,
+                    original: null
+                });
+            });
+        }
+
+        customInitialData.options = {
+            "editorFields.perexGroupsIds": perexGroupsOptions
+        }
+
         window.domReady.add(function () {
             galleryTable = WJ.DataTable( {
                 url: url,
@@ -50,7 +84,7 @@ block content
                 fetchOnCreate: true,
                 fetchOnEdit: true,
                 idAutoOpener: true,
-                initialData: dtWJ.getEmptyData(true),
+                initialData: customInitialData,
                 onPreXhr: function(TABLE, e, settings, data) {
                     data.fixed_searchImagePath = imagePath;
                     data.fixed_searchImageName = imageName;
@@ -103,6 +137,14 @@ block content
                 if (imageEditorInstance != null) imageEditorInstance.resetData();
             });
 
+            window.addEventListener("WJ.DTE.opened", function() {
+                //this is not prepared in open event
+                // Image editor has no permission to change imagePath
+                galleryTable.EDITOR.field("editorFields.imagePath").disable();
+                $("#editorAppDTE_Field_editorFields-imagePath input.form-control").prop("disabled", true);
+                $("#editorAppDTE_Field_editorFields-imagePath").find("button.btn-vue-jstree-item-edit").prop("disabled", true);
+            });
+
             adminUpload = window.AdminUpload({
                 element: "#dt-upload",
                 uploadType: "image",
@@ -127,6 +169,12 @@ block content
                     }, 1000);
                     window.opener.elFinderInstance.exec('reload');
                 } catch (e) {console.log("Error reloading elfinder", e);}
+
+                if (imageEditorInstance == null) {
+                    setTimeout(() => {
+                        window.close();
+                    }, 1200);
+                }
             });
 
             $("#upload-wrapper .upload-wrapper-header").text(WJ.translate("components.image_editor.saving.js"));

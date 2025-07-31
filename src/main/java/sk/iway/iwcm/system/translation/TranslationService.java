@@ -65,7 +65,8 @@ public class TranslationService {
                 if (TranslationEngine.class.isAssignableFrom(clazz)) {
                     TranslationEngine instance = (TranslationEngine) clazz.getDeclaredConstructor().newInstance();
                     if(instance.isConfigured() == true) {
-                        if(instance.numberOfFreeCharacters() == null || instance.numberOfFreeCharacters() <= 0) {
+                        Long freeCharacters = instance.numberOfFreeCharacters();
+                        if(freeCharacters == null || freeCharacters <= 0) {
                             // Engine is configured, but has no free characters, we will not use it
                             configuredWithoutFreeCharacters.add(instance);
                         } else {
