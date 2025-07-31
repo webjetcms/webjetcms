@@ -24,6 +24,10 @@
 
 ![](redactor/apps/clone-structure/clone_structure_set_translator.png)
 
+### Šablóny
+
+- pridaná nová sekcia [Novinky - šablóny](frontend/templates/news-templates.md) na správu a manažovanie šablón noviniek. Po spustení automatické prekonvertovanie z prekladových kľúčov na šablóny noviniek (#57937).
+
 ### Používateľské rozhranie
 
 - Pri použití malého monitora (výška okna menej ako 760 bodov) sa zobrazí okno automaticky na celú plochu a zmenší sa hlavička a pätička (titulok okna je menším písmom). Zvýši sa tak zobrazené množstvo informácií, čo je potrebné hlavne v sekcii web stránky. Používa sa pri oknách používajúcich CSS triedu `modal-xl`, čo sú aktuálne web stránky, foto galéria, editor obrázkov a používatelia (#57893).
