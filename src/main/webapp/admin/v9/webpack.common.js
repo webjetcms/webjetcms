@@ -180,6 +180,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-log-files")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-list")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/templates/news-temps")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-groups-list")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/configuration")),

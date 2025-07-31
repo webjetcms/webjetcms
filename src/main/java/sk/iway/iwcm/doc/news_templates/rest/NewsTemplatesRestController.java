@@ -1,0 +1,73 @@
+package sk.iway.iwcm.doc.news_templates.rest;
+
+import java.util.List;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesEntity;
+import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesRepository;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
+
+@RestController
+@RequestMapping("/admin/rest/templates/news-templates")
+@PreAuthorize("@WebjetSecurityService.hasPermission('menuNewsTemplates')")
+@Datatable
+public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsTemplatesEntity, Long> {
+
+    private final NewsTemplatesRepository repo;
+
+    public NewsTemplatesRestController(NewsTemplatesRepository repo) {
+        super(repo);
+        this.repo = repo;
+    }
+
+    @Override
+    public Page<NewsTemplatesEntity> getAllItems(Pageable pageable) {
+       DatatablePageImpl<NewsTemplatesEntity> page = new DatatablePageImpl<>( repo.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable) );
+        page.addOptions("engine", getOptions(), "label", "value", false);
+        return page;
+    }
+
+    @Override
+    public NewsTemplatesEntity getOneItem(long id) {
+        if(id < 1) {
+            return new NewsTemplatesEntity();
+        } else {
+            return repo.findByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(new NewsTemplatesEntity());
+        }
+    }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, NewsTemplatesEntity> target, Identity user, Errors errors, Long id, NewsTemplatesEntity entity) {
+        if("remove".equals(target.getAction()) == false &&  Tools.isNotEmpty(entity.getName())) {
+            Optional<NewsTemplatesEntity> duplicityCheck = repo.findFirstByNameAndDomainId(entity.getName(), CloudToolsForCore.getDomainId());
+            if(duplicityCheck.isPresent()) {
+                errors.rejectValue("name", "", getProp().getText("components.news.template_name.duplicity_err"));
+            }
+        }
+
+        super.validateEditor(request, target, user, errors, id, entity);
+    }
+
+    private List<LabelValue> getOptions() {
+        //Only one option for now - Thymeleaf in the future
+        return List.of(
+            new LabelValue(getProp().getText("components.news.engine.velocity"), "velocity")
+        );
+    }
+}

@@ -594,6 +594,18 @@ public class Modules
 		loadModule(templates);
 
 		sub = new ModuleInfo();
+        sub.setNameKey("components.news.title");
+        sub.setPath("/admin/v9/dist/views/templates/news-temps.html");
+        sub.setWjVersions(modVersions.get("menu.templates"));
+        sub.setItemKey("menuNewsTemplates");
+        sub.setUserItem(true);
+		sub.setShowInLeftMenu(true);
+        sub.setGroup("templates");
+		sub.setMenuOrder(21);
+		sub.setMenuIcon("ti ti-news");
+		loadModule(sub);
+
+		sub = new ModuleInfo();
         sub.setNameKey("menu.group_templates");
         sub.setPath("/admin/v9/dist/views/templates/temps-groups-list.html");
         sub.setWjVersions(modVersions.get("menu.templates"));
@@ -601,7 +613,7 @@ public class Modules
         sub.setUserItem(true);
 		sub.setShowInLeftMenu(true);
         sub.setGroup("templates");
-		sub.setMenuOrder(21);
+		sub.setMenuOrder(22);
 		loadModule(sub);
 
 		//pouzivatelia
