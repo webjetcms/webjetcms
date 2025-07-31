@@ -25,56 +25,56 @@ public class MirroringDTO {
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldA;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldB;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldC;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldD;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldE;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldF;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldG;
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = "wrap show-html",
+        className = "dt-style-text-nowrap show-html",
         hiddenEditor = true
     )
     private String fieldH;

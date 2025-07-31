@@ -184,6 +184,9 @@ table.datatableInit {
     td.dt-style-text-wrap {
         white-space: normal;
     }
+    td.dt-style-text-nowrap {
+        white-space: pre-wrap;
+    }
     td.dt-style-image {
         img{
             max-width: 230px;
