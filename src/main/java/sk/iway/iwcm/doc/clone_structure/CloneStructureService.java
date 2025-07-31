@@ -250,6 +250,8 @@ public class CloneStructureService {
 
         Constants.setBoolean(DISABLE_ON_CREATE_KEY, structureMirroringDisabledOnCreate);
         if (keepMirroring) {
+            //use current mirroring config updated before cloning
+            mirroringConfig = Constants.getString(CONFIG_KEY);
             //Set it to DB
             ConfDB.setName(CONFIG_KEY, mirroringConfig);
         } else {

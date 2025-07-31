@@ -255,9 +255,9 @@ export function update(EDITOR, action) {
         } else if (v.type == 'link') {
             template = '<div class="input-group"> ' + template + ' <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);"><i class="ti ti-focus-2"></i></button> </div>';
         } else if (v.type == 'dir') {
-            template = '<div class="input-group"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
         } else if (v.type == 'json_group' || v.type == 'json_doc') {
-            template = '<div class="input-group"> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
+            template = '<div> ' + template + ' <div class="vueComponent" id="DTE_Field_' + customPrefix + identifier + '"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr"></webjet-dte-jstree></div> </div>';
         } else if (v.type == 'none') {
             // LPA
             container.hide();
