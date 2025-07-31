@@ -1,6 +1,6 @@
 # Novinky - šablóny
 
-Sekcia **Novinky - šablóny** prinášajú nový spôsob ako spravovať šablóny pre aplikáciu [Novinky](../../redactor/apps/news/README.md). Podporované sú všetky akcie vrátane exportu a importu.
+Sekcia **Novinky - šablóny** prinášajú nový spôsob ako spravovať šablóny pre aplikáciu [Novinky](../../redactor/apps/news/README.md). Podporované sú všetky akcie vrátane exportu a importu. Na prístup k sekcii potrebujete právo `menuNewsTemplates`.
 
 ![](news-temps-datatable.png)
 
