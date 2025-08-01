@@ -7,7 +7,7 @@ const DT = require("./DT");
 
 module.exports = {
 
-          /**
+     /**
       * Selects a value in the dropdown in the DataTable editor
       * @param {String} name - The name of the dropdown field
       * @param {String} text - The text of the option to select
@@ -18,6 +18,31 @@ module.exports = {
           I.waitForVisible(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
           I.click(locate('div.dropdown-menu.show .dropdown-item').withText(text));
           I.wait(0.3);
+     },
+
+     /**
+      * Select multiple options in a dropdown in the DataTable editor
+      * warning: ASYNC function, use await
+      * This function first unselects all options and then selects the specified values.
+      * It is used for fields that allow multiple selections.
+      * @param {String} name
+      * @param {Array} values
+      */
+     async selectOptionMulti(name, values) {
+          //first unselect all options
+          I.click({ css: "div.modal-dialog div.DTE_Field_Name_" + name + " button.dropdown-toggle" });
+          var containerSelector = ".bs-container.dropdown.bootstrap-select.form-select";
+          I.waitForElement(containerSelector, 5);
+          let numOfElements = await I.grabNumberOfVisibleElements(containerSelector + " ul.dropdown-menu.inner.show li a.dropdown-item.selected");
+          for (let i = 0; i < numOfElements; i++) {
+               I.click(containerSelector + " ul.dropdown-menu.inner.show li a.dropdown-item.selected");
+          }
+
+          //then select wanted options
+          for (let i = 0; i < values.length; i++) {
+               I.click(locate(containerSelector + " ul.dropdown-menu.inner.show li a.dropdown-item").withText(values[i]));
+               I.wait(0.3);
+          }
      },
 
      /**
