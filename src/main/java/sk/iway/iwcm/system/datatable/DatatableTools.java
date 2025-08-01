@@ -42,6 +42,18 @@ public class DatatableTools {
         return options;
     }
 
+    /**
+     * Create list of options for DataTableColumnType.IMAGE_RADIO with align options
+     * Use as:
+     *
+     * @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-social_icon.editor_components.align", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
+     * private String socialIconAlign = "left";
+     *
+     * public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+     *    options.put("socialIconAlign", DatatableTools.getAlignOptions());
+     * }
+     * @return - list of align options
+     */
     public static List<OptionDto> getAlignOptions() {
         List<OptionDto> optionsMap = new ArrayList<>();
         optionsMap.add(new OptionDto("left", "left", "/components/_common/custom_styles/images/icon_align_left.png"));
