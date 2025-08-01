@@ -42,4 +42,12 @@ public class DatatableTools {
         return options;
     }
 
+    public static List<OptionDto> getAlignOptions() {
+        List<OptionDto> optionsMap = new ArrayList<>();
+        optionsMap.add(new OptionDto("left", "left", "/components/_common/custom_styles/images/icon_align_left.png"));
+        optionsMap.add(new OptionDto("center", "center", "/components/_common/custom_styles/images/icon_align_center.png"));
+        optionsMap.add(new OptionDto("right", "right", "/components/_common/custom_styles/images/icon_align_right.png"));
+        return optionsMap;
+    }
+
 }

@@ -110,10 +110,3 @@ Scenario('testovanie aplikácie - Odkazy na sociálne siete', async ({ I, Apps, 
 
     I.waitForElement(".iconFacebook", 10);
 });
-
-function multiselectOption(I, name, options){
-    I.clickCss(`//div[./*[@id="DTE_Field_${name}"]]`);
-    I.wait(1);
-    options.forEach(option => I.click(locate("a[role=option]").withText(option)));
-    I.pressKey('Enter');
-}

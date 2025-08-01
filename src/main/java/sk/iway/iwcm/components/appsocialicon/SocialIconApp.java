@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.appsocialicon;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,18 +71,7 @@ public class SocialIconApp extends WebjetComponentAbstract {
         Map<String, List<OptionDto>> options = new HashMap<>();
 
         options.put("style", DatatableTools.getImageRadioOptions("/components/app-social_icon/admin-styles/"));
-
-        List<OptionDto> optionsMap = DatatableTools.getImageRadioOptions("/components/app-social_icon/align-styles/");
-        optionsMap.sort(Comparator.comparingInt(option -> {
-            switch (option.getValue()) {
-                case "left": return 1;
-                case "center": return 2;
-                case "right": return 3;
-                default: return 99;
-            }
-        }));
-        options.put("socialIconAlign", optionsMap);
-
+        options.put("socialIconAlign", DatatableTools.getAlignOptions());
 
         return options;
     }

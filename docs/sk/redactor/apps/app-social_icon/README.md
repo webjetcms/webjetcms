@@ -19,8 +19,8 @@ V karte môžete zadať adresu vašej stránky pre jednotlivé sociálne siete. 
 
 V karte môžete nastaviť:
 
-- **Vizuálny štýl**, zobrazenia ikon
-- **Zarovnanie ikon**, (vľavo, stred, vpravo)
+- **Vizuálny štýl** - zobrazenia ikon
+- **Zarovnanie ikon** - vľavo, stred, vpravo
 
 ![](editor-style.png)
 
