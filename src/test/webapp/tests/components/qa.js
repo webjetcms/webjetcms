@@ -79,10 +79,12 @@ Scenario('from struts to Spring', async ({I, DT, DTE}) => {
     //Go check save question
     I.amOnPage("/apps/qa/admin/");
 
-    DTE.waitForLoader();
+    DT.waitForLoader();
 
     I.fillField("input.dt-filter-question", question);
     I.pressKey('Enter', "input.dt-filter-question");
+
+    DT.waitForLoader();
 
     I.see(question);
     I.see(name);
@@ -105,6 +107,7 @@ Scenario('from struts to Spring', async ({I, DT, DTE}) => {
 
     //Delete question
     I.clickCss("td.dt-select-td.sorting_1");
+    I.wait(1);
     I.click(DT.btn.qa_delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.see(question, "div.DTE_Action_Remove");

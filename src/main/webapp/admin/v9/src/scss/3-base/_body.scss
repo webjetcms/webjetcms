@@ -29,3 +29,10 @@ body {
 .hidden {
 	display: none;
 }
+
+.color-danger {
+	color: $danger;
+}
+.color-warning {
+	color: $warning;
+}

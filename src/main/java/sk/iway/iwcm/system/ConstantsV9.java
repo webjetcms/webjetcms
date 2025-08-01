@@ -24,7 +24,8 @@ public class ConstantsV9 {
 			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
-		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
+		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "URL adresa pre API volanie DeepL prekladu, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
+		Constants.setString("deepl_api_usage_url", "/v2/usage", "translations", "URL adresa pre API volanie DeepL statistiky pouzitia");
 
 		Constants.setInt("formsDatatableServerSizeLimit", 5000, Constants.mods(Constants.MOD_PERFORMANCE, "forms"),
 				"Minimalny pocet zaznamov formularu pre ktore sa uz pouzije serverove strankovanie.");
@@ -141,6 +142,13 @@ public class ConstantsV9 {
 		Constants.setString("basketInvoiceSupportedCountries", ".sk,.cz,.pl", Constants.MOD_BASKET, "Which countries are supported for delivery. Format is TLD: .sk,.cz,.pl");
 
 		Constants.setString("basketNewCategoryHtmlCode", "!INCLUDE(/components/basket/bootstrap_products.jsp, style=01 ,groupIds=, orderType=priority, asc=yes, publishType=all, paging=yes, pageSize=15,pagingPosition=both, thumbWidth=190, thumbHeight=190, showCategory=yes, showSort=yes, testRun=no, katalogProduktov=no, overeneZakaznikmi=)!", Constants.MOD_BASKET, "HTML kód pre novú kategóriu v košíku.");
+
+		Constants.setString("translationEngineClasses", "sk.iway.iwcm.system.translation.DeepL", "translations", "Čiarkou oddelený zoznam tried, ktoré implemetujú prekaldový modul (napr. DeepL alebo Google)");
+		Constants.setString("deepl_model_type", "prefer_quality_optimized", "translations", "Špecifikuje, ktorý DeepL model by sa mal použiť na preklad.");
+
+		Constants.setString("mirroringMode", "mirror", "structuremirroring", "Used to signalize that mirroring is running in basic mode mirroring or clonning");
+		Constants.setInt("cloneActionSrcId", -1, Constants.MOD_CONFIG,"Used to set SRC group id when performing clonning.");
+		Constants.setInt("cloneActionDestId", -1, Constants.MOD_CONFIG, "Used to set DEST group id when performing clonning.");
 
 		Constants.setBoolean("ABTestingForLoggedUser", false, "abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 	}

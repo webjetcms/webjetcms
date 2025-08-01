@@ -1,7 +1,9 @@
 package sk.iway.iwcm.components.structuremirroring;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PkeyGenerator;
@@ -26,6 +28,9 @@ import sk.iway.iwcm.doc.GroupsDB;
  * EUSTREAMNW-84
  */
 public class MirroringService {
+
+   public static final String MIRRORING_MODE_MIRROR = "mirror";
+   public static final String MIRRORING_MODE_CLONE = "clone";
 
    private MirroringService() {
       //tools class
@@ -83,13 +88,19 @@ public class MirroringService {
          }
       } else {
          GroupDetails group = groupsDB.getGroup(groupId);
-         if (group != null && group.getSyncId()>0) {
+         if (group != null && group.getSyncId() > 0) {
             List<GroupDetails> groupsBySync = GroupMirroringServiceV9.getGroupsBySyncId(group.getSyncId(), group.getGroupId());
             mapped.addAll(groupsBySync);
          }
       }
 
-      return mapped;
+      //Check if they are enabled for mirroring
+      List<GroupDetails> filtered = new ArrayList<>();
+      for(GroupDetails group : mapped) {
+         if (MirroringService.isEnabled(group.getGroupId())) filtered.add(group);
+      }
+
+      return filtered;
    }
 
    /**
@@ -101,21 +112,80 @@ public class MirroringService {
       //format zapisu: id,id,id:POZNAMKA\n
       String mirroringConfig = Constants.getString("structureMirroringConfig");
       String[] lines = Tools.getTokens(mirroringConfig, "\n");
+
+      if(MIRRORING_MODE_CLONE.equals( Constants.getString("mirroringMode") )) {
+         int srcId = Constants.getInt("cloneActionSrcId");
+         int destId = Constants.getInt("cloneActionDestId");
+
+         if(groupId == srcId) {
+            return new int[] {srcId, destId};
+         } else {
+            return getCloneRootIds(groupId, lines);
+         }
+      } else {
+         return getMirrorRootIds(groupId, lines);
+      }
+   }
+
+   private static int[] getMirrorRootIds(int groupId, String[] lines) {
+      //accept only lines that contain wanted id and prevent duplicates
+      Set<Integer> toReturn = new HashSet<>();
+
       for (String line : lines) {
          //odstan poznamku
          String ids = line;
          int i = line.indexOf(":");
-         if (i>0) ids = line.substring(0, i);
+         if (i > 0) ids = line.substring(0, i);
 
          int[] mapping = Tools.getTokensInt(ids, ",");
          for (int id : mapping) {
             if (id > 0 && id == groupId) {
-               //nasli sme riadok
-               return mapping;
+               //nasli sme riadok, v ktorom je zelane id -> push-ni ich do set-u (groupId moze byt aj v inych riadkoch)
+               for(int foundId : mapping) {
+                  toReturn.add( foundId );
+               }
+               break;
             }
          }
       }
-      return null;
+
+      return toReturn.size() < 1 ? null : toReturn.stream().mapToInt(Integer::intValue).toArray();
+   }
+
+   private static int[] getCloneRootIds(int groupId, String[] lines) {
+      int destId = Constants.getInt("cloneActionDestId");
+
+      //Accept only lines that contain wanted id AND DEST id
+      Set<Integer> toReturn = new HashSet<>();
+
+      for (String line : lines) {
+         //odstan poznamku
+         String ids = line;
+         int i = line.indexOf(":");
+         if (i > 0) ids = line.substring(0, i);
+
+         int[] mapping = Tools.getTokensInt(ids, ",");
+         boolean containWanted = false;
+         boolean containDest = false;
+         for (int id : mapping) {
+            if (id > 0 && id == groupId) {
+               containWanted = true;
+            }
+
+            if (id > 0 && id == destId) {
+               containDest = true;
+            }
+
+            if(containWanted && containDest) {
+               for(int foundId : mapping) {
+                  toReturn.add( foundId );
+               }
+               break;
+            }
+         }
+      }
+
+      return toReturn.size() < 1 ? null : toReturn.stream().mapToInt(Integer::intValue).toArray();
    }
 
    /**
@@ -214,20 +284,26 @@ public class MirroringService {
     * @param rootGroupId - ID of root group
     */
    public static void clearSyncId(int rootGroupId) {
-      GroupsDB groupsDB = GroupsDB.getInstance();
+      if(rootGroupId == 0) {
+         //Clear ALL sync_id's
+         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0");
+         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0");
+      } else {
+         GroupsDB groupsDB = GroupsDB.getInstance();
 
-      List<GroupDetails> groups = groupsDB.getGroupsTree(rootGroupId, true, true);
-      //convert group.getGroupId to comma separated String
-      StringBuilder groupIds = new StringBuilder();
-      for(GroupDetails group : groups) {
-          if(groupIds.isEmpty()==false) groupIds.append(",");
-          groupIds.append(String.valueOf(group.getGroupId()));
-      }
+         List<GroupDetails> groups = groupsDB.getGroupsTree(rootGroupId, true, true);
+         //convert group.getGroupId to comma separated String
+         StringBuilder groupIds = new StringBuilder();
+         for(GroupDetails group : groups) {
+            if(groupIds.isEmpty()==false) groupIds.append(",");
+            groupIds.append(String.valueOf(group.getGroupId()));
+         }
 
-      if (Tools.isNotEmpty(groupIds)) {
-         //update database
-         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
-         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+         if (Tools.isNotEmpty(groupIds)) {
+            //update database
+            (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+            (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+         }
       }
    }
 }

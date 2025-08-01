@@ -13,6 +13,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
+import javax.persistence.Lob;
 import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
@@ -79,6 +80,7 @@ public class DataTableColumn {
 
         setFinalProperties(field);
         setCellNotEditable(field);
+        addEditIcon(field);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -152,6 +154,8 @@ public class DataTableColumn {
                 if (titleKey.equals(title)) {
                     if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ID) {
                         title = prop.getText("datatables.id.js");
+                    } else if (inputType != null && inputType.length>0 && inputType[0] == DataTableColumnType.ROW_REORDER) {
+                        title = prop.getText("datatables.rowReorder.js");
                     } else {
                         title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
                     }
@@ -258,12 +262,18 @@ public class DataTableColumn {
             editor.setDef(defaultValue);
         }
 
-        boolean[] _orderable = annotation.orderable();
-        if (_orderable.length > 0) {
-            this.orderable = _orderable[0];
-        } else if (Boolean.FALSE.equals(this.filter)) {
-            //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
+        if((Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_MSSQL) && field.isAnnotationPresent(Lob.class)) {
+            // By default, fields with annotation @Lob MUST NOT BE SORTED on Oracle and MsSql DBs
+            // Why? @Lob represents text/ntext fields, and ordering of these fields is not supported on mentioned DBs
             this.orderable = false;
+        } else {
+            boolean[] _orderable = annotation.orderable();
+            if (_orderable.length > 0) {
+                this.orderable = _orderable[0];
+            } else if (Boolean.FALSE.equals(this.filter)) {
+                //ak je vypnuty filter a nenastavim orderable, tak predpokladam, ze nema byt ani orderable
+                this.orderable = false;
+            }
         }
 
         if (Tools.isNotEmpty(annotation.orderProperty())) {
@@ -620,6 +630,16 @@ public class DataTableColumn {
             }
             editor.setType("imageRadio");
         }
+
+        if (dataTableColumnType == DataTableColumnType.ROW_REORDER) {
+            renderFormat = "dt-format-row-reorder";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            HashMap<String, String> attrs = new HashMap<>();
+            attrs.put("type", "number");
+            editor.setAttr(attrs);
+        }
     }
 
     private void setFinalProperties(Field field) {
@@ -662,6 +682,22 @@ public class DataTableColumn {
 
         if (notEditable) {
             addClassName("cell-not-editable");
+        }
+    }
+
+    /**
+     * If className contains "dt-row-edit" set also renderFormatLinkTemplate and renderFormatPrefix
+     * @param field
+     */
+    private void addEditIcon(Field field) {
+        if (className != null && className.contains("dt-row-edit")) {
+            // ak je nastavene className pre editaciu, pridaj aj ikonu
+            if (Tools.isEmpty(renderFormatLinkTemplate)) {
+                renderFormatLinkTemplate = "javascript:;";
+            }
+            if (Tools.isEmpty(renderFormatPrefix)) {
+                renderFormatPrefix = "<i class=\"ti ti-pencil\"></i> ";
+            }
         }
     }
 

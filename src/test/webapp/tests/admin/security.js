@@ -48,6 +48,7 @@ Scenario('mozne XSS v textarea replaceall', ({ I }) => {
 
 Scenario('mozne XSS v textarea replaceall-db', ({ I }) => {
     I.amOnPage("/admin/replaceall-db.jsp");
+    I.waitForElement("textarea[name=newText]", 5);
 
     var xss = "1</textarea><ScRiPt >kxyQ(9031)</ScRiPt>";
 
@@ -55,11 +56,11 @@ Scenario('mozne XSS v textarea replaceall-db', ({ I }) => {
     I.fillField("textarea[name=newText]", xss);
     I.click("input[name=replace]");
 
-    I.seeInField("textarea[name=oldText]", xss);
-    I.seeInField("textarea[name=newText]", xss);
+    I.waitForText("Text "+xss+" nahradeny", 10, "div.content-wrapper");
+    I.waitForText("za "+xss+" v data_asc", 10, "div.content-wrapper");
 
-    I.see("Text "+xss+" nahradeny");
-    I.see("za "+xss+" v data_asc");
+    I.waitForValue("textarea[name=oldText]", xss, 10);
+    I.waitForValue("textarea[name=newText]", xss, 10);
 });
 
 Scenario("Ninja URL with double quotes", ({ I }) => {

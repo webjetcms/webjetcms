@@ -70,7 +70,7 @@ export function typeDatatable() {
         let url = conf.attr["data-dt-field-dt-url"];
         //url += "?docid={docId}&groupId={groupId}";
         //nahrad parametre z json objektu
-        if (url.indexOf("{")!==-1) {
+        if (typeof url != "undefined" && url!=null && url.indexOf("{")!==-1) {
             url = url.replace(/{(.*?)}/gi, function(a, b){
                 //Chceme real aktuálnu hodnotu
                 try {
@@ -152,12 +152,42 @@ export function typeDatatable() {
             //var json = conf.datatable.data;
             //vratime prazdnu hodnotu, kedze data sa posielaju v samostatnych REST volaniach vnorenej datatabulky
             const json = [];
+
+            let isLocalJson = false;
+            if (!empty(conf.attr)) {
+                $.each(conf.attr, function (key, value) {
+                    if (key === "data-dt-field-dt-localJson") {
+                        isLocalJson = true;
+                    }
+                });
+            }
+
+            //console.log("isLocalJson=", isLocalJson, "conf=", conf);
+
+            if (isLocalJson) {
+                let datatable = conf.datatable;
+                if (typeof datatable !== "undefined" && datatable != null) {
+                    let indexes = datatable.rows({ order: 'applied' }).indexes();
+                    for (let i = 0; i < indexes.length; i++) {
+                        let rowData = datatable.row(indexes[i]).data();
+                        json.push(rowData);
+                    }
+                    //console.log("Returning json for localJson: ", json);
+                    return json;
+                } else {
+                    console.log("Returning original value, datatable is not initialized", conf.originalValue);
+                    //send original value, DT was not initialized
+                    return(conf.originalValue);
+                }
+            }
+
             //console.log("Returning json ("+conf.className+"): ", json);
             return json;
         },
 
         set: function (conf, val) {
             const EDITOR = this;
+            conf.originalValue = val;
 
             // Pri novom datatable draw() resetne loaded a zruší eventy
             tabDataLoaded = {};
@@ -167,7 +197,6 @@ export function typeDatatable() {
             window.removeEventListener('WJ.DTE.tabclick', function (evt) {
                 onTabClickResize(evt, conf)
             });
-
 
             function onTabClickInit(evt, conf) {
                 if (!isCurrentTab(evt, conf) || isLoaded(evt, conf)) {
@@ -234,6 +263,7 @@ export function typeDatatable() {
                     fetchOnCreate: true,
                     idAutoOpener: false,
                     autoHeight: false,
+                    localJson: false
                 };
 
                 //dopln atributy nastavene z anotacie
@@ -275,6 +305,64 @@ export function typeDatatable() {
                 }
 
                 //console.log("dtConf=", dtConf);
+
+                if (true === dtConf.localJson) {
+                    //console.log("its localJson, setting data, val=", val);
+                    if (typeof val === "undefined" || val == null || val === "") val = [];
+                    if (typeof val === "string") {
+                        //if value is string, decode it
+                        try {
+                            //console.log("Parsing JSON string:", val);
+                            val = JSON.parse(val);
+                        } catch (e) {
+                            console.log("Error parsing JSON string:", e);
+                            val = [];
+                        }
+                    }
+
+                    //console.log("decoded val=", val);
+
+                    dtConf.url = null;
+                    dtConf.src = {
+                        data: val
+                    }
+                    dtConf.serverSide = false;
+                    dtConf.fetchOnEdit = false;
+                    dtConf.fetchOnCreate = false;
+                    dtConf.rowReorder = true;
+
+                    // and ROW_ORDER column as sedond item
+                    dtConf.columns.unshift({
+                        data: 'rowOrder',
+                        name: 'rowOrder',
+                        title: WJ.translate('datatables.rowReorder.js'),
+                        renderFormat: "dt-format-row-reorder",
+                        filter: false,
+                        editor: {
+                            type: "text",
+                            attr: {
+                                type: "number"
+                            }
+                        },
+                        array: false
+                    });
+
+                    //add ID column as first item in dtConf.columns
+                    dtConf.columns.unshift({
+                        data: 'id',
+                        name: 'id',
+                        title: WJ.translate('datatables.id.js'),
+                        renderFormat: "dt-format-selector",
+                        className: "dt-select-td cell-not-editable",
+                        editor: {
+                            type: "hidden",
+                            required: false
+                        },
+                        array: false
+                    });
+                }
+
+                //console.log("Creating datatable, conf=", conf, "dtConf=", dtConf);
 
                 conf.datatable = WJ.DataTable(dtConf);
 
