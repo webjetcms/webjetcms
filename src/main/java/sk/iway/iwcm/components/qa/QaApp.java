@@ -26,7 +26,7 @@ import sk.iway.iwcm.users.UsersDB;
 @WebjetComponent("sk.iway.iwcm.components.qa.QaApp")
 @WebjetAppStore(
     nameKey = "components.qa.title",
-    descKey = "components.app-social_icon.desc",
+    descKey = "components.qa.desc",
     itemKey = "cmp_qa",
     imagePath = "/components/qa/editoricon.png",
     galleryImages = "/components/qa/",
@@ -68,7 +68,7 @@ public class QaApp extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.qa.sortBy", editor = {
         @DataTableColumnEditor(options = {
             @DataTableColumnEditorAttr(key = "components.qa.sort.byDate", value = "1"),
-            @DataTableColumnEditorAttr(key = "components.qa.sort.byPriority", value = "1")
+            @DataTableColumnEditorAttr(key = "components.qa.sort.byPriority", value = "2")
         })
     })
     private Integer sortBy;

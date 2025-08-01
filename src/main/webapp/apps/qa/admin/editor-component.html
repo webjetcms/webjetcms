@@ -23,6 +23,11 @@
 					setFieldsVisibility(["pageSize", "sortBy", "sortOrder"], ["toEmail", "show", "required"]);
 				}
 			});
+			let originalJspFileName = requestJson.originalJspFileName;
+            if (originalJspFileName != null && originalJspFileName.indexOf("qa-ask.jsp") > -1) {
+                //grep the file name from the path
+                fieldElement.val("qa-ask");
+            }
 			fieldElement.trigger("change");
 		});
 	}

@@ -153,15 +153,15 @@ Scenario('BUG - test AnswerCheck + copy answer feature', async ({I, DT, DTE}) =>
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, Apps, Document }) => {
+Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, DTE, Apps, Document }) => {
     Apps.insertApp('Otázky a odpovede', '#components-qa-title', null, false);
     I.switchTo('.cke_dialog_ui_iframe');
     I.switchTo('#editorComponent');
 
-    I.selectOption("#DTE_Field_groupName", "skupina1");
-    I.fillField("#DTE_Field_pageSize", "2");
-    I.selectOption("#DTE_Field_sortBy","Podľa priority");
-    I.selectOption("#DTE_Field_sortOrder","Zostupne");
+    DTE.fillField("groupName", "skupina1");
+    DTE.fillField("pageSize", "2");
+    DTE.selectOption("sortBy","Podľa priority");
+    DTE.selectOption("sortOrder","Zostupne");
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok');
@@ -170,7 +170,7 @@ Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, Apps, Document
         "field": "qa",
         "groupName": "skupina1",
         "pageSize": "2",
-        "sortBy": "1",
+        "sortBy": "2",
         "sortOrder": "desc",
         "show": "name+company+phone+email",
         "required": "name+email",
@@ -193,26 +193,25 @@ Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, Apps, Document
 
     Apps.openAppEditor();
 
-    I.selectOption("#DTE_Field_field", "Formulár na zadanie otázky");
-    I.selectOption("#DTE_Field_groupName", "skupina2");
-    I.fillField("#DTE_Field_pageSize", "4");
-    multiselectOption(I, "show", ["Firma", "E-mail"]);
-    multiselectOption(I, "required", ["Firma"]);
+    DTE.selectOption("field", "Formulár na zadanie otázky");
+    DTE.fillField("groupName", "skupina2");
+    await DTE.selectOptionMulti("show", ["Meno", "Firma", "Telefón", "E-mail"]);
+    await DTE.selectOptionMulti("required", ["Firma"]);
 
     const changedParams = {
         field: "qa-ask",
         groupName: "skupina2",
-        pageSize: "4",
-        sortBy: "1",
+        pageSize: "2",
+        sortBy: "2",
         sortOrder: "desc",
-        show: "name+phone",
-        required: "name+company+email",
+        show: "name+company+phone+email",
+        required: "company",
         displayType: "01",
         style: "01"
     };
 
     I.switchTo();
-    I.clickCss('.cke_dialog_ui_button_ok')
+    I.clickCss('.cke_dialog_ui_button_ok');
 
     await Apps.assertParams(changedParams);
 
@@ -228,10 +227,3 @@ Scenario('testovanie aplikácie - Otazky a odpovede', async ({ I, Apps, Document
     I.see("Kontaktný telefón");
     I.seeElement("#qaForm input.btn.btn-primary");
 });
-
-function multiselectOption(I, name, options){
-    I.clickCss(`//div[./*[@id="DTE_Field_${name}"]]`);
-    I.wait(1);
-    options.forEach(option => I.click(locate("a[role=option]").withText(option)));
-    I.pressKey('Enter');
-}

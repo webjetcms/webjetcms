@@ -43,6 +43,8 @@ module.exports = {
                I.click(locate(containerSelector + " ul.dropdown-menu.inner.show li a.dropdown-item").withText(values[i]));
                I.wait(0.3);
           }
+
+          I.pressKey('Escape'); //close dropdown
      },
 
      /**
