@@ -182,7 +182,7 @@ Scenario('Mirroring 5 - Check mirroring result of wrong clonning + logic', ({I, 
     DT.filterContains("fieldA", getAsPath([sk_mirroring]), docsWrapperSelector);
     DT.filterContains("fieldB", getAsPath([cz_mirroring]), docsWrapperSelector);
 
-    DT.checkTableRow(docTable, 1, ["", "", getAsPath([sk_mirroring], true) + "\n" + getAsPath([sk_mirroring_copy], true), getAsPath([cz_mirroring], true), "", ""]);
+    DT.checkTableRow(docTable, 1, ["", "", getAsPath([sk_mirroring], true) + "\n" + getAsPath([sk_mirroring_copy, sk_mirroring]) + "\n" + getAsPath([sk_mirroring_copy], true), getAsPath([cz_mirroring], true) + "\n" + getAsPath([cz_mirroring, sk_mirroring]), "", ""]);
     DT.checkTableRow(docTable, 2, ["", "", getAsPath([sk_mirroring, sk_mirroring_child_A], true) + "\n" + getAsPath([sk_mirroring_copy, sk_mirroring_child_A], true), getAsPath([cz_mirroring, sk_mirroring_child_A], true), "", ""]);
     DT.checkTableRow(docTable, 3, ["", "", getAsPath([sk_mirroring, sk_mirroring_child_B], true) + "\n" + getAsPath([sk_mirroring_copy, sk_mirroring_child_B], true), getAsPath([cz_mirroring, sk_mirroring_child_B], true), "", ""]);
 
