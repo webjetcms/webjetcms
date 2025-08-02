@@ -20,6 +20,7 @@ import javax.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -141,6 +142,7 @@ public class DocAtrDefEntity extends ActiveRecordRepository {
     /**
      * We don't want to send docAtrEntities to frontend, because it's not needed to be there in attrDefinition page
      */
+    @ApiModelProperty(hidden = true) //Ambiguous models equality when conditions is empty
     @JsonManagedReference(value="atrDef")
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "atrDef")
@@ -150,6 +152,7 @@ public class DocAtrDefEntity extends ActiveRecordRepository {
      * For webPage we need to send DocAtrEntity value, as we have @JsonIgnore on docAtrEntities
      * we need to fill this field with first value from docAtrEntities on backend
      */
+    @ApiModelProperty(hidden = true) //Ambiguous models equality when conditions is empty
     @Transient
     private DocAtrEntity docAtrEntityFirst;
 }

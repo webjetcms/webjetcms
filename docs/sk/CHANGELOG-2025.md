@@ -24,9 +24,15 @@
 
 ![](redactor/apps/clone-structure/clone_structure_set_translator.png)
 
+- Zrkadlenie - pridanie novej sekcie [zrkadlenie](redactor/webpages/mirroring/README.md) na sledovanie a manažovanie previazaných priečinkov a stránok po akcií zrkadlenia (#57941).
+
+![](redactor/webpages/mirroring/groups_datatable.png)
+
 ### Šablóny
 
 - pridaná nová sekcia [Novinky - šablóny](frontend/templates/news-templates.md) na správu a manažovanie šablón noviniek. Po spustení automatické prekonvertovanie z prekladových kľúčov na šablóny noviniek (#57937).
+
+![](frontend/templates/news-temps-editor.png)
 
 ### Používateľské rozhranie
 
@@ -42,13 +48,16 @@
 
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
 
-- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
-- [Slit slider](redactor/apps/app-slit_slider/README.md)
 - [Carousel Slider](redactor/apps/carousel_slider/README.md)
-- [Slider](redactor/apps/slider/README.md)
 - [Emotikony](redactor/apps/emoticon/README.md)
 - [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Otázky a odpovede](redactor/apps/qa/README.md)
 - [Používatelia](redactor/apps/user/README.md)
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Reštauračné menu](redactor/apps/restaurant-menu/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Sociálne ikony](redactor/apps/app-social_icon/README.md)
 - [Video](redactor/apps/video/README.md)
 
 ![](redactor/apps/app-slit_slider/editor-items.png)
@@ -63,6 +72,15 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/stat/stats-page.png)
 
+### Voliteľné polia
+
+- Pridaná podpora pre nové typy [voliteľných polí](frontend/webpages/customfields/README.md):
+  - [Výber priečinku webových stránok](frontend/webpages/customfields/README.md#výber-priečinku-webových-stránok) (#57941).
+  - [Výber webovej stránky](frontend/webpages/customfields/README.md#výber-webovej-stránky) (#57941).
+
+![](frontend/webpages/customfields/webpages-doc-null.png)
+![](frontend/webpages/customfields/webpages-group-null.png)
+
 ### Bezpečnosť
 
 - Opravená možná zraniteľnosť v Safari pri špeciálnej URL adrese smerujúcej na archív súborov v kombinácii s peknou 404 stránkou (#57657-8).
@@ -76,6 +94,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Oprava chýb
 
 - Datatabuľky - opravené nastavenie možností do výberového menu externého filtra (#57657-8).
+- Klonovanie štruktúry - opravená validácia zadaných id priečinkov a pridaný výpis chybovej správy (#57941).
 
 ### Dokumentácia
 

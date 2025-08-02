@@ -1,10 +1,6 @@
 @charset "UTF-8";
 
-$wjTest : "martinko";
-
-
-
-$wj-install-name : "webjet8";
+$wj-install-name : "webjet";
 $wj-template-name : "ninja-starter-kit";
 $wj-assets : "/templates/#{$wj-install-name}/#{$wj-template-name}/assets/";
 $wj-images : "#{$wj-assets}images/";
@@ -24,17 +20,9 @@ $c-selection-bg: DodgerBlue;
 $base-font-family: 'Asap', sans-serif;
 $secondary-font-family: 'Asap', sans-serif;
 
-//WIDTH
-//$w-element-name:1px;
-
-//HEIGHT
-//$h-element-name:1px;
-
-//PADDING
-//$p-element-name:1px;
-
-//MARGIN
-//$m-element-name:1px;
-
-//Z-INDEX
-//$z-element-name: 1;
+//redefine BS CSS variables with our colors
+//WARNING: update also final CSS in webjet2021.css after you add some new variable
+:root {
+  --bs-danger: #{$danger};
+  --bs-warning: #{$warning};
+}

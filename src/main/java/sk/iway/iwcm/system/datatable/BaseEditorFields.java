@@ -22,6 +22,7 @@ import sk.iway.iwcm.editor.FieldType;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.editor.rest.FieldValue;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.IdFullPath;
 
 /**
  * Zakladna trieda pre EditorFields Datatabulky, obsahuje spolocne vlastnosti, primarne nastavenie CSS riadku a ikony
@@ -154,6 +155,22 @@ public class BaseEditorFields {
                         }
                     }
 
+                    // Support nullable of field by setting right className
+                    if(type.startsWith("json_group_")) {
+                        if (type.endsWith("_null")) {
+                            type = type.replace("_null", "");
+                            field.setClassName("dt-tree-groupid-null");
+                        }
+                    }
+
+                    // Support nullable of field by setting right className
+                    if(type.startsWith("json_doc_")) {
+                        if (type.endsWith("_null")) {
+                            type = type.replace("_null", "");
+                            field.setClassName("dt-tree-pageid-null");
+                        }
+                    }
+
                     //JICH - add
                     if (type.startsWith("custom-dialog")) {
                         //System.out.println(type);
@@ -211,7 +228,27 @@ public class BaseEditorFields {
 
                 field.setKey(Character.toLowerCase(alphabet) + "");
                 field.setLabel(label);
-                field.setValue(value);
+
+                if("json_group".equals(type)) {
+                    int groupId = Tools.getIntValue(value, -1);
+                    if(groupId > 0) {
+                        GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
+                        if(group != null) {
+                            field.setValue( new IdFullPath(groupId, group.getFullPath()).toString() );
+                        }
+                    }
+                } else if("json_doc".equals(type)) {
+                    int docId = Tools.getIntValue(value, -1);
+                    if(docId > 0) {
+                        DocDetails doc = DocDB.getInstance().getDoc(docId);
+                        if(doc != null) {
+                            field.setValue( new IdFullPath(docId, doc.getFullPath()).toString() );
+                        }
+                    }
+                } else {
+                    field.setValue(value);
+                }
+
                 if (Tools.isEmpty(field.getType())) field.setType(fieldType.name().toLowerCase());
                 field.setMaxlength(maxlength);
                 field.setWarninglength(warninglength);

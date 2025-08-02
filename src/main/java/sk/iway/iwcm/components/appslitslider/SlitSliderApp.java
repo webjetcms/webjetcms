@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.appslitslider;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,7 @@ import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.annotations.WebjetComponent;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DatatableTools;
 import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -88,13 +88,9 @@ public class SlitSliderApp extends WebjetComponentAbstract {
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
 
-        List<OptionDto> optionsMap = new ArrayList<>();
-        optionsMap.add(new OptionDto("left", "left", "/components/_common/custom_styles/images/icon_align_left.png"));
-        optionsMap.add(new OptionDto("center", "center", "/components/_common/custom_styles/images/icon_align_center.png"));
-        optionsMap.add(new OptionDto("right", "right", "/components/_common/custom_styles/images/icon_align_right.png"));
+        options.put("headingAlign", DatatableTools.getAlignOptions());
+        options.put("subHeadingAlign", DatatableTools.getAlignOptions());
 
-        options.put("headingAlign", optionsMap);
-        options.put("subHeadingAlign", optionsMap);
         return options;
     }
 

@@ -31,6 +31,10 @@
   - [Média](/redactor/webpages/media.md)
   - [Značky](/redactor/webpages/perexgroups.md)
   - [Export do HTML](/redactor/webpages/export-to-html/README.md)
+  - [Zrkadlenie](/redactor/webpages/mirroring/README.md)
+    - [Priečinky](/redactor/webpages/mirroring/groups.md)
+    - [Stránky](/redactor/webpages/mirroring/docs.md)
+    - [Konfigurácia](/redactor/webpages/mirroring/settings.md)
 - Aplikácie
   - AB testovanie
     - [Úvod](/redactor/apps/abtesting/README.md)

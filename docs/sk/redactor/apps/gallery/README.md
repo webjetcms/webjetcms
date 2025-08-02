@@ -148,3 +148,13 @@ Ak zadaný priečinok ešte neexistuje, automaticky sa vytvorí. Podľa najbliž
 - ```galleryWatermarkApplyOnUploadExceptions``` - Zoznam názvov ciest pre ktoré sa nebude aplikovať vodoznak pri nahratí súboru do WebJETu (predvolená hodnota: ```logo,nowatermark,system,funkcionari```).
 - ```galleryWatermarkSvgSizePercent``` - Výška v percentách ktorú bude zaberať SVG vodoznak z výšky obrázku (predvolená hodnota: 5).
 - ```galleryWatermarkSvgMinHeight``` - Minimálna výška SVG vodoznaku v bodoch (predvolená hodnota: 30).
+
+### Zmenšenie rozmerov originál obrázku
+
+Ak vám originál obrázok zaberá na disku veľa miesta, je možné nastaviť jeho zmenšenie pri nahratí pomocou konfiguračných premenných:
+
+- `metadataRemoverCommand` - ak je nastavené aktivuje sa odstraňovanie metadát z nahratých súborov, alebo sa použije `imageMagick` na zmenšenie veľkosti - nastavte na `/usr/bin/convert`.
+- `metadataRemoverParams` - parametre, pre zmenšenie obrázka cez `imageMagick` nastavte na `{filePath} -resize 1920x1080 {filePath}`. Rozmer nastavte podľa potreby.
+- `metadataRemoverExtensions` - prípony, pre ktoré sa použije, pre obrázky nastavte na `jpg,jpeg,png,gif`.
+
+Vyžadovaný je nástroj `ImageMagick` na serveri.

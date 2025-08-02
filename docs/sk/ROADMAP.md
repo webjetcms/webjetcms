@@ -70,6 +70,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Zrkadlenie štruktúry - pridať možnosť vymazať `sync_id` hodnoty pre zvolený priečinok (rekurzívne). Aby bolo ľahko možné zrušiť/resetovať synchronizáciu. Tiež existuje problém, že naklonujem `SK,DE,EN` potom vypnem `DE` a chcem mať len `EN` ale zrkadlenie stále aplikuje zmeny aj na `DE` priečinok (#57561).
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
 - [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
+- [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
 
 ## 2024
 
