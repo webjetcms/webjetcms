@@ -71,6 +71,7 @@ function screenshotWebAndApp(I, Document, docId, path, webSelector, callback1=nu
 }
 
 Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document }) => {
+
     screenshotWebAndApp(I, Document, 77668, "/apps/file-archive/mvc/", ".ly-content .container", tabLinkNone, tabLink2Spring, 1000, 1000, function(Document, I) {
         I.executeScript(() => {
             $(".collapsible").click();
