@@ -829,15 +829,15 @@ public class CloudToolsForCore {
     /**
      * Returns domain name by its alias
      * If domain name is not found, returns null.
-     * @param domainAllias
+     * @param domainAlias
      * @return
      */
-    public static String getDomainByAllias(String domainAllias) {
-        if(Tools.isEmpty(domainAllias)) return null;
+    public static String getDomainByAlias(String domainAlias) {
+        if(Tools.isEmpty(domainAlias)) return null;
 
         for(String domain : GroupsDB.getInstance().getAllDomainsList()) {
-            String foundAllias =  MultiDomainFilter.getDomainAlias(domain);
-            if(domainAllias.equals(foundAllias)) return domain;
+            String foundAlias =  MultiDomainFilter.getDomainAlias(domain);
+            if(domainAlias.equals(foundAlias)) return domain;
         }
 
         //We did not found match
@@ -847,11 +847,11 @@ public class CloudToolsForCore {
     /**
      * Returns domain ID by its alias.
      * If domain name is not found, returns default domain ID using getDomainId().
-     * @param domainAllias
+     * @param domainAlias
      * @return
      */
-    public static int getDomainIdByAllias(String domainAllias) {
-        int domainId = GroupsDB.getDomainId( getDomainByAllias(domainAllias) );
+    public static int getDomainIdByAlias(String domainAlias) {
+        int domainId = GroupsDB.getDomainId( getDomainByAlias(domainAlias) );
         return domainId == -1 ? getDomainId() : domainId;
     }
 }

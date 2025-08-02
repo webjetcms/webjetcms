@@ -41,6 +41,9 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
+import sk.iway.iwcm.components.news.templates.rest.TranslationKeysToNewsTemplatesService;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.rest.TranslationKeyService;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -49,9 +52,6 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesEntity;
-import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesRepository;
-import sk.iway.iwcm.doc.news_templates.rest.TranslationKeysToNewsTemplatesService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -140,7 +140,7 @@ public class UpdateDatabase
 			DomainIdUpdateService.updatePerexGroupDomainId();
 		}
 
-		setNewsTempalates();
+		setNewsTemplates();
 
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
@@ -2382,7 +2382,7 @@ public class UpdateDatabase
 	/**
 	 * Convert translation keys with prefix "news.template." to records in news_templates table
 	 */
-	private static void setNewsTempalates() {
+	private static void setNewsTemplates() {
 		try {
 			String note = "28.07.2025 [sivan] prekonvertovanie news šablón z prekladových kľučov do news_templates tabuľky";
 			if(isAllreadyUpdated(note)) return;
@@ -2397,7 +2397,7 @@ public class UpdateDatabase
 			DebugTimer dt = new DebugTimer("Converting news templates to db");
 
 			List<TranslationKeyEntity> translationKeys = tks.getNewsTemplateKeys();
-			Map<String, NewsTemplatesEntity> baseTemplatesMap = TranslationKeysToNewsTemplatesService.getBaseNewsTempolates(translationKeys);
+			Map<String, NewsTemplatesEntity> baseTemplatesMap = TranslationKeysToNewsTemplatesService.getBaseNewsTemplates(translationKeys);
 			ntr.saveAll( TranslationKeysToNewsTemplatesService.getFilledNewsTemplates(baseTemplatesMap, translationKeys) );
 
 			dt.diffInfo("DONE");

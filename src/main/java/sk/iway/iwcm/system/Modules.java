@@ -594,14 +594,14 @@ public class Modules
 		loadModule(templates);
 
 		sub = new ModuleInfo();
-        sub.setNameKey("components.news.title");
-        sub.setPath("/admin/v9/dist/views/templates/news-temps.html");
+        sub.setNameKey("components.news.templates.title");
+        sub.setPath("/admin/v9/dist/views/templates/news.html");
         sub.setWjVersions(modVersions.get("menu.templates"));
         sub.setItemKey("menuNewsTemplates");
         sub.setUserItem(true);
 		sub.setShowInLeftMenu(true);
         sub.setGroup("templates");
-		sub.setMenuOrder(21);
+		sub.setMenuOrder(23);
 		sub.setMenuIcon("ti ti-news");
 		loadModule(sub);
 

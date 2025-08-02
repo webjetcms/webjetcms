@@ -1,4 +1,4 @@
-package sk.iway.iwcm.doc.news_templates.rest;
+package sk.iway.iwcm.components.news.templates.rest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
-import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UpdateDatabase;
 
@@ -31,7 +31,7 @@ public class TranslationKeysToNewsTemplatesService {
 	 * @param translationKeys
 	 * @return
 	 */
-    public static Map<String, NewsTemplatesEntity> getBaseNewsTempolates(List<TranslationKeyEntity> translationKeys) {
+    public static Map<String, NewsTemplatesEntity> getBaseNewsTemplates(List<TranslationKeyEntity> translationKeys) {
         Map<String, NewsTemplatesEntity> baseTemplatesMap = new HashMap<>();
         if(translationKeys == null) return baseTemplatesMap;
 
@@ -69,7 +69,7 @@ public class TranslationKeysToNewsTemplatesService {
 
 				if (matcher.find()) {
 					//We found domain allias, use it to get real domain id
-					entity.setDomainId( CloudToolsForCore.getDomainIdByAllias( matcher.group(1) ) );
+					entity.setDomainId( CloudToolsForCore.getDomainIdByAlias( matcher.group(1) ) );
 				} else {
 					//Something wrong - set default domainId
 					entity.setDomainId(1);

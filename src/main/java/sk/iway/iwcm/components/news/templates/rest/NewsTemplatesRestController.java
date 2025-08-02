@@ -1,4 +1,4 @@
-package sk.iway.iwcm.doc.news_templates.rest;
+package sk.iway.iwcm.components.news.templates.rest;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesEntity;
-import sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesRepository;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -56,8 +56,8 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, NewsTemplatesEntity> target, Identity user, Errors errors, Long id, NewsTemplatesEntity entity) {
         if("remove".equals(target.getAction()) == false &&  Tools.isNotEmpty(entity.getName())) {
             Optional<NewsTemplatesEntity> duplicityCheck = repo.findFirstByNameAndDomainId(entity.getName(), CloudToolsForCore.getDomainId());
-            if(duplicityCheck.isPresent()) {
-                errors.rejectValue("name", "", getProp().getText("components.news.template_name.duplicity_err"));
+            if(duplicityCheck.isPresent() && !duplicityCheck.get().getId().equals(entity.getId())) {
+                errors.rejectValue("name", "", getProp().getText("components.news.templates.name.duplicity_err"));
             }
         }
 
@@ -67,7 +67,7 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
     private List<LabelValue> getOptions() {
         //Only one option for now - Thymeleaf in the future
         return List.of(
-            new LabelValue(getProp().getText("components.news.engine.velocity"), "velocity")
+            new LabelValue(getProp().getText("components.news.templates.engine.velocity"), "velocity")
         );
     }
 }

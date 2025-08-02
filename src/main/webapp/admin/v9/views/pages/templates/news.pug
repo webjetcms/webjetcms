@@ -8,7 +8,7 @@ block content
 
         var newsTempsDataTable;
         window.domReady.add(function () {
-            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.news_templates.jpa.NewsTemplatesEntity')})];
+            let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity')})];
 
             newsTempsDataTable = WJ.DataTable({
                 url: "/admin/rest/templates/news-templates",
@@ -19,20 +19,20 @@ block content
             });
 
             newsTempsDataTable.EDITOR.on('open', function (e, type, action) {
-                console.log("newsTempsDataTable opem");
+                //console.log("newsTempsDataTable open");
 
                 initContextMenu();
             });
 
             function initContextMenu() {
-                console.log("initContextMenu");
+                //console.log("initContextMenu");
 
                 var el = $('#DTE_Field_templateCode');
                 if (el.hasClass('context-menu-initialized')) {
                     return;
                 }
 
-                console.log(el);
+                //console.log(el);
 
                 $('#datatableInit_modal textarea').contextmenu({
                     target:'.context-menu',
@@ -40,8 +40,8 @@ block content
                         var contextMenu = $('.context-menu');
                         var id = context.prop("id");
 
-                        console.log("contextMenu = ", contextMenu);
-                        console.log("id = ", id);
+                        //console.log("contextMenu = ", contextMenu);
+                        //console.log("id = ", id);
 
                         contextMenu.find('.dropdown-submenu').hide();
                         contextMenu.find('.velocity').show();
@@ -58,7 +58,7 @@ block content
                     onItem: function(context,e) {
                         e.stopPropagation();
 
-                        console.log("ON ITEM");
+                        //console.log("ON ITEM");
 
                         var textarea = context;
                         var position = textarea.caret();

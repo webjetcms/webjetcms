@@ -11,7 +11,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('news-templates zakladne-testy @baseTest', async ({ I, DataTables }) => {
-    I.amOnPage("/admin/v9/templates/news-temps/");
+    I.amOnPage("/admin/v9/templates/news/");
     await DataTables.baseTest({
         dataTable: 'newsTempsDataTable',
         perms: 'menuNewsTemplates',
@@ -79,7 +79,7 @@ const pagingSubmenu = [
 ];
 
 Scenario('news-templates test context-menu compozition', ({ I, DTE }) => {
-    I.amOnPage("/admin/v9/templates/news-temps/");
+    I.amOnPage("/admin/v9/templates/news/");
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor();
@@ -110,7 +110,7 @@ Scenario('news-templates test context-menu compozition', ({ I, DTE }) => {
 
  let templateName = "autotestTemplate_" + randomNumber;
 Scenario('news-templates tesrt context-menu handling', async ({ I, DT, DTE }) => {
-    I.amOnPage("/admin/v9/templates/news-temps/");
+    I.amOnPage("/admin/v9/templates/news/");
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor();
@@ -145,7 +145,7 @@ Scenario('news-templates tesrt context-menu handling', async ({ I, DT, DTE }) =>
 });
 
 Scenario('news-templates delete entity', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/templates/news-temps/");
+    I.amOnPage("/admin/v9/templates/news/");
     DT.filterEquals("name", templateName);
     I.clickCss("td.sorting_1");
 

@@ -1,4 +1,4 @@
-package sk.iway.iwcm.doc.news_templates.jpa;
+package sk.iway.iwcm.components.news.templates.jpa;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -56,7 +56,7 @@ public class NewsTemplatesEntity {
     @DataTableColumn(
         inputType = DataTableColumnType.ELFINDER,
         className = "image",
-        title = "components.news.template_image",
+        title = "components.news.templates.image",
         renderFormat = "dt-format-image-notext"
     )
     @Size(max = 255)
@@ -90,7 +90,7 @@ public class NewsTemplatesEntity {
             @DataTableColumnEditor(
                 options = {
                     @DataTableColumnEditorAttr(
-                        key = "components.news.template_paging_position_none",
+                        key = "components.news.templates.paging_position_none",
                         value = "0"),
                     @DataTableColumnEditorAttr(
                         key = "components.news.template_paging_position_before",
@@ -99,7 +99,7 @@ public class NewsTemplatesEntity {
                         key = "components.news.template_paging_position_after",
                         value = "2"),
                     @DataTableColumnEditorAttr(
-                        key = "components.news.template_paging_position_before_and_after",
+                        key = "components.news.templates.paging_position_before_and_after",
                         value = "3")
                 }
             )
@@ -110,7 +110,7 @@ public class NewsTemplatesEntity {
 	@Column(name = "engine")
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title = "components.news.engine.title"
+        title = "components.news.templates.engine.title"
     )
     @Size(max = 255)
     private String engine;

@@ -1,4 +1,4 @@
-package sk.iway.iwcm.doc.news_templates.jpa;
+package sk.iway.iwcm.components.news.templates.jpa;
 
 import java.util.Optional;
 
