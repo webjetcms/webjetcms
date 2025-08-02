@@ -42,13 +42,16 @@
 
 Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek (#57409).
 
-- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
-- [Slit slider](redactor/apps/app-slit_slider/README.md)
 - [Carousel Slider](redactor/apps/carousel_slider/README.md)
-- [Slider](redactor/apps/slider/README.md)
 - [Emotikony](redactor/apps/emoticon/README.md)
 - [Fórum/Diskusia](redactor/apps/forum/README.md)
+- [Otázky a odpovede](redactor/apps/qa/README.md)
 - [Používatelia](redactor/apps/user/README.md)
+- [Pôsobivá prezentácia](redactor/apps/app-impress_slideshow/README.md)
+- [Reštauračné menu](redactor/apps/restaurant-menu/README.md)
+- [Slider](redactor/apps/slider/README.md)
+- [Slit slider](redactor/apps/app-slit_slider/README.md)
+- [Sociálne ikony](redactor/apps/app-social_icon/README.md)
 - [Video](redactor/apps/video/README.md)
 
 ![](redactor/apps/app-slit_slider/editor-items.png)

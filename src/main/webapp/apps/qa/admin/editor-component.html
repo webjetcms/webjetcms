@@ -1,0 +1,34 @@
+<script>
+	function appGetComponentPath(componentPath, datatable) {
+		let field = $("#DTE_Field_field").val();
+		if ("qa" === field) {
+			return "/components/qa/qa.jsp";
+		}
+		return "/components/qa/qa-ask.jsp";
+	}
+
+	function appAfterInit(response, datatable) {
+		const setFieldsVisibility = (fieldsToHide = [], fieldsToShow = []) => {
+			fieldsToHide.forEach((name) => $(`.DTE_Field_Name_${name}`).hide());
+			fieldsToShow.forEach((name) => $(`.DTE_Field_Name_${name}`).show());
+		};
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			const fieldElement = $("#DTE_Field_field");
+
+			fieldElement.on("change", function () {
+				if ("qa" === $(this).val()) {
+					setFieldsVisibility(["toEmail", "show", "required"], ["pageSize", "sortBy", "sortOrder"]);
+				} else {
+					setFieldsVisibility(["pageSize", "sortBy", "sortOrder"], ["toEmail", "show", "required"]);
+				}
+			});
+			let originalJspFileName = requestJson.originalJspFileName;
+            if (originalJspFileName != null && originalJspFileName.indexOf("qa-ask.jsp") > -1) {
+                //grep the file name from the path
+                fieldElement.val("qa-ask");
+            }
+			fieldElement.trigger("change");
+		});
+	}
+</script>
