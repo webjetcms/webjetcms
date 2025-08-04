@@ -62,7 +62,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             identity.setValid(true);
             HttpSession session = request.getSession();
             LogonTools.setUserToSession(session, identity);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
+            SecurityContextHolder.getContext().setAuthentication(springAuth);
             response.sendRedirect("/admin/");
         } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, ex);
