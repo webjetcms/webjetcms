@@ -30,7 +30,7 @@
 
 ### Šablóny
 
-- pridaná nová sekcia [Novinky - šablóny](frontend/templates/news/README.md) na správu a manažovanie šablón noviniek. Po spustení automatické prekonvertovanie z prekladových kľúčov na šablóny noviniek (#57937).
+- Pridaná nová sekcia [Šablóny noviniek](frontend/templates/news/README.md) na správu a manažovanie šablón noviniek (#57937).
 
 ![](frontend/templates/news/news-temps-editor.png)
 

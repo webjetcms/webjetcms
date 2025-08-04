@@ -1,12 +1,14 @@
 Feature('components.news-templates');
 
 var randomNumber;
+var templateName;
 
 Before(({ I, login }) => {
     login('admin');
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
+        templateName = "autotestTemplate_" + randomNumber;
     }
 });
 
@@ -85,6 +87,7 @@ Scenario('news-templates test context-menu compozition', ({ I, DTE }) => {
     DTE.waitForEditor();
 
     I.say("Check template html context menu");
+    I.click("#pills-dt-datatableInit-code-tab");
     I.rightClick("#DTE_Field_templateCode");
     testContextMenu(I, templateMenu);
 
@@ -98,6 +101,7 @@ Scenario('news-templates test context-menu compozition', ({ I, DTE }) => {
     testSubMenu(I, "group", "templateCode", groupSubmenu);
 
     I.say("Check paging html context menu");
+    I.click("#pills-dt-datatableInit-paging-tab");
     I.rightClick("#DTE_Field_pagingCode");
     testContextMenu(I, pagingMenu);
 
@@ -108,8 +112,7 @@ Scenario('news-templates test context-menu compozition', ({ I, DTE }) => {
     testSubMenu(I, "paging", "pagingCode", pagingSubmenu);
 });
 
- let templateName = "autotestTemplate_" + randomNumber;
-Scenario('news-templates tesrt context-menu handling', async ({ I, DT, DTE }) => {
+Scenario('news-templates test context-menu handling', async ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/templates/news/");
 
     I.clickCss("button.buttons-create");
@@ -118,11 +121,13 @@ Scenario('news-templates tesrt context-menu handling', async ({ I, DT, DTE }) =>
     I.fillField("#DTE_Field_name", templateName);
 
     I.say("Set template html value via context menu");
+    I.click("#pills-dt-datatableInit-code-tab");
     addContextCode(I, "templateCode", "velocity", velocitySubmenu[1]);
     addContextCode(I, "templateCode", "doc", docSubmenu[0]);
     addContextCode(I, "templateCode", "group", groupSubmenu[0]);
 
     I.say("Set paging html value via context menu");
+    I.click("#pills-dt-datatableInit-paging-tab");
     addContextCode(I, "pagingCode", "velocity", velocitySubmenu[0]);
     addContextCode(I, "pagingCode", "paging", pagingSubmenu[0]);
 
@@ -134,10 +139,12 @@ Scenario('news-templates tesrt context-menu handling', async ({ I, DT, DTE }) =>
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor();
 
+    I.click("#pills-dt-datatableInit-code-tab");
     const templateHtmlValue = await I.grabValueFrom("#DTE_Field_templateCode");
+    I.click("#pills-dt-datatableInit-paging-tab");
     const pagingHtmlValue = await I.grabValueFrom("#DTE_Field_pagingCode");
 
-    const templateHtmlReferenceValue = "<table> \n #foreach( $doc in $news ) \n <tr><td>$foreach.count</td><td>$doc.title</td></tr> \n #end $doc.tempId$doc.group.groupName\n </table>";
+    const templateHtmlReferenceValue = "<table> \n #foreach( $doc in $news ) \n <tr><td>$foreach.count</td><td>$doc.title</td></tr> \n #end \n </table>$doc.tempId$doc.group.groupName";
     const pagingHtmlReferenceValue = "#if($foo == $bar) it's true! #{else} it's not! #end$nextPage.link";
 
     I.assertEqual(templateHtmlReferenceValue, templateHtmlValue);

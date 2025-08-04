@@ -10,8 +10,8 @@
 - Šablóny
   - [Spôsob zobrazenia stránky](/frontend/templates/README.md)
   - [Šablóny](/frontend/templates/templates.md)
-  - [Novinky](/frontend/templates/news/README.md)
   - [Skupiny šablón](/frontend/templates/template-groups.md)
+  - [Šablóny noviniek](/frontend/templates/news/README.md)
 - Thymeleaf šablóny
   - [Úvod](/frontend/thymeleaf/README.md)
   - [Atribúty, podmienky a cykly](/frontend/thymeleaf/statements.md)

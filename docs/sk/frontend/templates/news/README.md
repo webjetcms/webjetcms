@@ -1,6 +1,6 @@
-# Novinky
+# Šablóny noviniek
 
-Sekcia **Novinky** umožňujú spravovať dizajnové šablóny pre aplikáciu [Novinky](../../../redactor/apps/news/README.md). Podporované sú všetky akcie vrátane exportu a importu. Na prístup k sekcii potrebujete právo Novinky - úprava šablón.
+Šablóny noviniek spravujú dizajnové šablóny (HTML kód) pre aplikáciu [Novinky](../../../redactor/apps/news/README.md). Podporované sú všetky akcie vrátane exportu a importu. Na prístup k sekcii potrebujete právo Novinky - úprava šablón.
 
 ![](news-temps-datatable.png)
 
@@ -12,25 +12,100 @@ Sekcia nahrádza pôvodný spôsob definovania šablón noviniek pomocou preklad
 
 ## Editor
 
-Pri akcii vytvárania ako aj editácie má editor rovnakú štruktúru polí:
+Dostupné sú nasledovné polia:
 
-- **Názov šablóny**, povinné pole s **jedinečným** názov šablóny noviniek
-- **Obrázok šablóny**, pole pre výber obrázka
-- **HTML kód**, kód šablóny
-- **HTML kód stránkovania**, kód stránkovania
-- **Umiestnenie stránkovania**
-- **Šablónovací nástroj**, výber šablónovacieho nástroja (zatiaľ podporovaný iba `Velocity`)
+- **Názov šablóny** - povinné pole s **jedinečným** názov šablóny noviniek
+- **Obrázok šablóny** - pole pre výber ilustračného obrázka zobrazených noviniek (pre lepšiu orientáciu pri výbere šablóny v aplikácii novinky)
+- **Šablónovací nástroj** - výber šablónovacieho nástroja (zatiaľ podporovaný iba `Velocity`)
+- **HTML kód** - kód šablóny
+- **Umiestnenie stránkovania** - miesto kam sa vloží stránkovanie
+- **HTML kód stránkovania** - kód stránkovania
 
 ![](news-temps-editor.png)
 
 ## Vkladanie kódu
 
-Pri vytváraní alebo editácii šablóny noviniek máte možnosť využiť ponuku pred-pripravených kódov. Tieto kódy slúžia k uľahčeniu práce a zobrazia sa po **pravom kliku** na pole **HTML kód** alebo **HTML kód stránkovania**, čím sa vyvolá okno s ponukou. Každá sekcia má ešte svoju pod-sekciu, kde sú už ponuky pripravených kódov.
+Pri vytváraní alebo editácii šablóny noviniek máte možnosť využiť ponuku pripravených kódov. Tieto kódy slúžia k uľahčeniu práce a zobrazia sa po **pravom kliku** na pole **HTML kód** alebo **HTML kód stránkovania**, čím sa vyvolá okno s ponukou. Každá sekcia má ešte svoju pod-sekciu, kde sú už ponuky pripravených kódov.
 
 ![](news-temps-editor-2.png)
 
-!> **Upozornenie:** ponuka pre polia **HTML kód** a **HTML kód stránkovania** sa líši.
-
-Po kliknutí na ponúkaný kód sa tento pred-pripravený kód vloží do poľa nad ktorým ste akciu pravým klikom vyvolali. Takto si viete jednoducho vytvoriť šablónu.
+Po kliknutí na ponúkaný kód sa zvolený kód vloží do poľa nad ktorým ste akciu pravým klikom vyvolali. Takto si viete jednoducho vytvoriť šablónu.
 
 ![](news-temps-editor-3.png)
+
+!> **Upozornenie:** ponuka pre polia **HTML kód** a **HTML kód stránkovania** sa líši.
+
+## Príklady kódu
+
+Šablóny noviniek používajú [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) pre zobrazenie, je teda možné definovať cykly, podmienky a iný programový kód. Pripravené sú šablóny s jedným, dvoma aj troma stĺpcami. Šablóny odporúčame editovať len používateľmi, ktorý vedia čo robia a poznajú syntax `Velocity Engine`. Odporúčame vychádzať z pripravených šablón a prípadne ich len upravovať. Štandardný redaktor by nemal mať právo na editáciu šablón noviniek, mal by ich len používať.
+
+Niekoľko ukážok práce s pokročilými objektami:
+
+```velocity
+//nastavenie premennej podla pageParams objektu:
+#set ($anonymousQuestions = $pageParams.getBooleanValue("anonymousQuestions", false))
+
+//nastavenie premennej:
+#set ($fileType = $media.mediaLink.split("[.]"))
+
+//prechod cez zoznam perex skupin a nastavenie CSS triedy podla mena perex skupiny
+<div class="grid-item grid-item-$doc.docId
+#foreach($perexGroup in $doc.perexGroupNames)
+    #if ($perexGroup == "news-red")
+    grid-item-red
+    #elseif ($perexGroup == "news-green")
+    grid-item-green
+    #elseif ($perexGroup == "news-blue")
+    grid-item-blue
+    #end
+#end
+" data-doc-id="$doc.docId">
+
+//nacitanie medii a vypis
+#foreach($media in $MediaDB.getMedia($doc, "files"))
+    #set ($fileType = $media.mediaLink.split("[.]"))
+    #if($fileType[1].equals('jpg') || $fileType[1].equals('png') || $fileType[1].equals('gif')) <a rel='wjimageviewer' href="$media.mediaLink"  > <img  src="$media.mediaLink " alt="" class="media-img myModalImg" style="height: 100%;" /></a> #end
+#end
+
+//nacitanie medii a vypis
+<div class="row"> #foreach($media in $MediaDB.getMedia($doc, "files"))
+    #set ($fileType = $media.mediaLink.split("[.]"))
+    #if(!$fileType[1].equals('jpg') && !$fileType[1].equals('png') && !$fileType[1].equals('gif')) <a href="$media.mediaLink" class="col-md-4 text-truncate icon-$fileType[1]" target="_blank"> $media.mediaTitleSk</a> #end
+#end </div>
+
+//vypis diskusnych prispevkov
+//vyzaduje pridanie sk.iway.iwcm.forum.ForumDB do parametra Vlozit triedu do Velocity sablony
+#set($forumDb = $ForumDB.getForumFieldsForDoc(null, $doc.docId))
+#set($commentCount = $forumDb.size())
+#set($showComment = 3)
+#set($e = $commentCount - $showComment)
+#foreach($forum in $forumDb)
+    <div class="comment" #if($foreach.count > $e)style="display:block;"#end>
+    <div class="comment-header"> <img src="/thumb$forum.getAuthorPhoto('/templates/intranet/assets/images/css/avatar.png')?w=35&h=35&ip=5" class="mr-3" alt="Fotka používateľa $forum.autorFullName"/>$forum.autorFullName <span>$forum.questionDateDisplayDate $forum.questionDateDisplayTime</span> </div>
+    <p>$forum.question</p>
+</div>
+#end
+
+//vypis texu podla prihlaseneho/neprihlaseneho pouzivatela
+#if ($actionBean.getCurrentUser()) LOGGED #end
+#if (!$actionBean.getCurrentUser()) NOT-LOGGED #end
+
+//zoznam vsetkych stranok ako odkazy - standardne $pages pouziva format 1 2 3 ... 7 8 9, pagesAll obsahuje 1 2 3 4 5 6 7 8 9
+//v pages je objekt PaginationInfo, obsahuje property label, pageNumber, url, active, actual, first, last, link a getLi() pre ziskanie celeho HTML kodu LI elementu
+$pagesAll
+//celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
+$totalPages
+
+//podmienene zobrazenie ak je zadany perex obrazok
+#if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
+```
+
+Ak potrebujete zobrazovať dátum prvého uloženia web stránky nastavte konf. premennú `editorAutoFillPublishStart` na hodnotu `true`. Po nastavení bude editor automaticky vypĺňať pole Dátum začiatku v karte Perex v editore aktuálnym dátumom. Tento dátum je možné v prípade potreby aj manuálne zmeniť. Následne v šablóne môžete použiť nasledovné objekty:
+
+```velocity
+//datum a cas posledneho ulozenia
+$doc.lastUpdateDate $doc.lastUpdateTime
+
+//datum a cas vytvorenia
+$doc.publishStartString
+```
