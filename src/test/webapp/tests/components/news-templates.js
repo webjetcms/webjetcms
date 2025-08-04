@@ -14,7 +14,7 @@ Scenario('news-templates zakladne-testy @baseTest', async ({ I, DataTables }) =>
     I.amOnPage("/admin/v9/templates/news/");
     await DataTables.baseTest({
         dataTable: 'newsTempsDataTable',
-        perms: 'menuNewsTemplates',
+        perms: 'components.news.edit_templates',
         createSteps: function(I, options) {
         },
         editSteps: function(I, options) {

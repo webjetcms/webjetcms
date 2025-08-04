@@ -594,18 +594,6 @@ public class Modules
 		loadModule(templates);
 
 		sub = new ModuleInfo();
-        sub.setNameKey("components.news.templates.title");
-        sub.setPath("/admin/v9/dist/views/templates/news.html");
-        sub.setWjVersions(modVersions.get("menu.templates"));
-        sub.setItemKey("menuNewsTemplates");
-        sub.setUserItem(true);
-		sub.setShowInLeftMenu(true);
-        sub.setGroup("templates");
-		sub.setMenuOrder(23);
-		sub.setMenuIcon("ti ti-news");
-		loadModule(sub);
-
-		sub = new ModuleInfo();
         sub.setNameKey("menu.group_templates");
         sub.setPath("/admin/v9/dist/views/templates/temps-groups-list.html");
         sub.setWjVersions(modVersions.get("menu.templates"));

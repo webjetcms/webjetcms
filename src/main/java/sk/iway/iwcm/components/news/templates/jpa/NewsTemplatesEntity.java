@@ -18,13 +18,19 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 
 @Entity
 @Table(name = "news_templates")
 @EntityListeners(AuditEntityListener.class)
-//@EntityListenersType()
+@DataTableTabs(tabs = {
+        @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+        @DataTableTab(id = "code", title = "components.news.template_html"),
+        @DataTableTab(id = "paging", title = "components.news.paging")
+})
 @Getter
 @Setter
 public class NewsTemplatesEntity {
@@ -46,7 +52,8 @@ public class NewsTemplatesEntity {
 	@Column(name = "name")
     @DataTableColumn(
 		inputType = DataTableColumnType.OPEN_EDITOR,
-		title = "components.news.template_title"
+		title = "components.news.template_title",
+        tab = "basic"
 	)
     @NotBlank
     @Size(max = 255)
@@ -57,7 +64,8 @@ public class NewsTemplatesEntity {
         inputType = DataTableColumnType.ELFINDER,
         className = "image",
         title = "components.news.templates.image",
-        renderFormat = "dt-format-image-notext"
+        renderFormat = "dt-format-image-notext",
+        tab = "basic"
     )
     @Size(max = 255)
     private String imagePath;
@@ -66,26 +74,22 @@ public class NewsTemplatesEntity {
 	@Column(name = "template_html")
 	@DataTableColumn(
 		inputType = DataTableColumnType.TEXTAREA,
-		title = "components.news.template_html"
-		//className = "wrap"
+		title = "",
+        tab = "code",
+        editor = {
+            @DataTableColumnEditor(type = "textarea", attr = {
+                @DataTableColumnEditorAttr(key = "class", value = "textarea-code")
+            })
+        }
 	)
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String templateCode;
-
-    @Lob
-	@Column(name = "paging_html")
-	@DataTableColumn(
-		inputType = DataTableColumnType.TEXTAREA,
-		title = "components.news.template_paging_html",
-		className = "wrap"
-	)
-	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
-	private String pagingCode;
 
     @Column(name = "paging_position")
 	@DataTableColumn(
 		inputType = DataTableColumnType.RADIO,
 		title = "components.news.template_paging_position",
+        tab = "paging",
 		editor = {
             @DataTableColumnEditor(
                 options = {
@@ -107,10 +111,27 @@ public class NewsTemplatesEntity {
 	)
     private Integer pagingPosition = 0;
 
+    @Lob
+	@Column(name = "paging_html")
+	@DataTableColumn(
+		inputType = DataTableColumnType.TEXTAREA,
+		title = "components.news.template_paging_html",
+		className = "wrap",
+        tab = "paging",
+        editor = {
+            @DataTableColumnEditor(type = "textarea", attr = {
+                @DataTableColumnEditorAttr(key = "class", value = "textarea-code")
+            })
+        }
+	)
+	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
+	private String pagingCode;
+
 	@Column(name = "engine")
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title = "components.news.templates.engine.title"
+        title = "components.news.templates.engine.title",
+        tab = "basic"
     )
     @Size(max = 255)
     private String engine;

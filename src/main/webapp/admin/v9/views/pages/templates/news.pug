@@ -9,18 +9,19 @@ block content
         var newsTempsDataTable;
         window.domReady.add(function () {
             let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity')})];
+            let tabs = [(${layout.getDataTableTabs('sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity')})];
 
             newsTempsDataTable = WJ.DataTable({
                 url: "/admin/rest/templates/news-templates",
                 serverSide: true,
                 columns: columns,
+                tabs: tabs,
                 fetchOnEdit: true,
                 fetchOnCreate: true
             });
 
             newsTempsDataTable.EDITOR.on('open', function (e, type, action) {
                 //console.log("newsTempsDataTable open");
-
                 initContextMenu();
             });
 
@@ -233,6 +234,8 @@ block content
         .context-menu.open > ul.dropdown-menu {
             display: block;
         }
+        div.DTE_Field_Name_templateCode label, div.DTE_Field_Name_pagingCode label { display: none; }
+        div.DTE_Field_Name_pagingCode .textarea-code { height: 377px; }
 
     <table class="datatableInit table"></table>
 

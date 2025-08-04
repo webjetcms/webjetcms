@@ -25,7 +25,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
 @RequestMapping("/admin/rest/templates/news-templates")
-@PreAuthorize("@WebjetSecurityService.hasPermission('menuNewsTemplates')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('components.news.edit_templates')")
 @Datatable
 public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsTemplatesEntity, Long> {
 

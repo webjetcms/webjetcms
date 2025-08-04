@@ -1,10 +1,10 @@
-# Novinky - šablóny
+# Novinky
 
-Sekcia **Novinky - šablóny** prinášajú nový spôsob ako spravovať šablóny pre aplikáciu [Novinky](../../redactor/apps/news/README.md). Podporované sú všetky akcie vrátane exportu a importu. Na prístup k sekcii potrebujete právo `menuNewsTemplates`.
+Sekcia **Novinky** umožňujú spravovať dizajnové šablóny pre aplikáciu [Novinky](../../../redactor/apps/news/README.md). Podporované sú všetky akcie vrátane exportu a importu. Na prístup k sekcii potrebujete právo Novinky - úprava šablón.
 
 ![](news-temps-datatable.png)
 
-Sekcia nahrádza pôvodný spôsob definovania šablón noviniek pomocou prekladových kľúčov, ktoré sa začínali prefixom `news.template.`, nakoľko to nebolo prehľadné a zle sa s týmto formátom pracovalo.
+Sekcia nahrádza pôvodný spôsob definovania šablón noviniek pomocou prekladových kľúčov, ktoré sa začínali prefixom `news.template.`.
 
 ![](news-temps-translation-keys.png)
 
@@ -23,9 +23,9 @@ Pri akcii vytvárania ako aj editácie má editor rovnakú štruktúru polí:
 
 ![](news-temps-editor.png)
 
-## Vkladanie kódov
+## Vkladanie kódu
 
-Pri vytváraní alebo editácií šablóny noviniek máte možnosť využiť ponuku pred-pripravených kódov. Tieto kódy slúžia k uľahčeniu práce a zobrazia sa po **pravom kliku** na pole **HTML kód** alebo **HTML kód stránkovania**, čím sa vyvolá okno s ponukou. Každá sekcia má ešte svoju pod-sekciu, kde sú už ponuky pripravených kódov.
+Pri vytváraní alebo editácii šablóny noviniek máte možnosť využiť ponuku pred-pripravených kódov. Tieto kódy slúžia k uľahčeniu práce a zobrazia sa po **pravom kliku** na pole **HTML kód** alebo **HTML kód stránkovania**, čím sa vyvolá okno s ponukou. Každá sekcia má ešte svoju pod-sekciu, kde sú už ponuky pripravených kódov.
 
 ![](news-temps-editor-2.png)
 
