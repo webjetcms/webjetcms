@@ -506,6 +506,8 @@ static {
 	replaces.add(new OptionDto("int oldId = fab.getReferenceId();", "int oldId = fab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
 	replaces.add(new OptionDto("oldId = referenceFab.getReferenceId();", "oldId = referenceFab.getReferenceIdInt();", "FileArchivatorInsertLater.java"));
 
+	//news templates
+	replaces.add(new OptionDto("sk.iway.iwcm.components.news.NewsTemplateBean", "sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity", null));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

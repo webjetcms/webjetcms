@@ -41,6 +41,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
+import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -134,6 +135,8 @@ public class UpdateDatabase
 			DomainIdUpdateService.updateExportDatDomainId();
 			DomainIdUpdateService.updatePerexGroupDomainId();
 		}
+
+		UpdateDatabaseService.setNewsTemplates();
 
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}

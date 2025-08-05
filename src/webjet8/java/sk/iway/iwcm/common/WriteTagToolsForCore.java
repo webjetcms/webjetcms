@@ -756,7 +756,7 @@ public class WriteTagToolsForCore {
         //riesime len /components/ alebo /templates/ adresare
         if (url.startsWith("/components/")==false && url.startsWith("/templates/")==false) return url;
 
-        if ("/components/form/check_form_impl.jsp".equals(url))
+        if ("/components/form/check_form_impl.jsp".equals(url) && request != null)
         {
             try
             {
