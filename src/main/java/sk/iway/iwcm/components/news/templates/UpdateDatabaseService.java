@@ -3,19 +3,24 @@ package sk.iway.iwcm.components.news.templates;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.rest.TranslationKeyService;
 import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UpdateDatabase;
 
@@ -30,7 +35,6 @@ public class UpdateDatabaseService {
     private static final String PAGING_KEY = "_paging";
 	private static final String PAGING_POSITION_KEY = "_paging_position";
 	private static final String IMAGE_PATH = "/components/news/images";
-
 
 	/**
 	 * Convert translation keys with prefix "news.template." to records in news_templates table
@@ -49,9 +53,32 @@ public class UpdateDatabaseService {
 
 			DebugTimer dt = new DebugTimer("Converting news templates to db");
 
+			//Prepare domain name - id combination map
+			Map<String, Integer> domainsMap = new Hashtable<>();
+			if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
+				for(String domainName : GroupsDB.getInstance().getAllDomainsList()) {
+					domainsMap.putIfAbsent(domainName, GroupsDB.getDomainId(domainName));
+				}
+			} else {
+				domainsMap.putIfAbsent("", CloudToolsForCore.getDomainId());
+			}
+
 			List<TranslationKeyEntity> translationKeys = tks.getNewsTemplateKeys();
 			Map<String, NewsTemplatesEntity> baseTemplatesMap = UpdateDatabaseService.getBaseNewsTemplates(translationKeys);
-			ntr.saveAll( UpdateDatabaseService.getFilledNewsTemplates(baseTemplatesMap, translationKeys) );
+			List<NewsTemplatesEntity> templates = UpdateDatabaseService.getFilledNewsTemplates(baseTemplatesMap, translationKeys);
+			for (NewsTemplatesEntity template : templates) {
+
+				if (template.getDomainId() == null || template.getDomainId() < 0) {
+					//we need to save template for every domain
+					for (Map.Entry<String, Integer> entry : domainsMap.entrySet()) {
+						template.setId(null); // reset ID to create a new record
+						template.setDomainId(entry.getValue());
+						ntr.save(template);
+					}
+				} else {
+					ntr.save(template);
+				}
+			}
 
 			dt.diffInfo("DONE");
 
@@ -61,7 +88,6 @@ public class UpdateDatabaseService {
 			sk.iway.iwcm.Logger.error(e);
 		}
 	}
-
 
 	/**
 	 * Loop translation keys from input and return map of NewsTemplatesEntity.
@@ -100,7 +126,7 @@ public class UpdateDatabaseService {
 			//Set domain ID's
 			if(translationKey.contains("(") == false) {
 				//No dmain alias, use default domain id
-				entity.setDomainId(1);
+				entity.setDomainId(-1);
 			} else {
 				//Domain allias is present, extract it
 				Pattern pattern = Pattern.compile("\\(([^)]+)\\)");
@@ -111,7 +137,7 @@ public class UpdateDatabaseService {
 					entity.setDomainId( CloudToolsForCore.getDomainIdByAlias( matcher.group(1) ) );
 				} else {
 					//Something wrong - set default domainId
-					entity.setDomainId(1);
+					entity.setDomainId(-1);
 				}
 			}
 
@@ -120,7 +146,6 @@ public class UpdateDatabaseService {
 
         return baseTemplatesMap;
     }
-
 
     public static List<NewsTemplatesEntity> getFilledNewsTemplates(Map<String, NewsTemplatesEntity> baseTemplatesMap, List<TranslationKeyEntity> translationKeys) {
         List<NewsTemplatesEntity> newsTemplatesList = new ArrayList<>();
@@ -184,8 +209,7 @@ public class UpdateDatabaseService {
 			//PRUSER nemame request a bez toho nebudu vetky obrazky
 
 			String path = IMAGE_PATH + "/" + tempName + "." + extension;
-			//IwcmFile imageFile = new IwcmFile(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path, getRequest())));
-			IwcmFile imageFile = new IwcmFile(Tools.getRealPath(path));
+			IwcmFile imageFile = new IwcmFile(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path, null)));
 
 			if (imageFile.isFile()) {
 				imagePath = imageFile.getVirtualPath();

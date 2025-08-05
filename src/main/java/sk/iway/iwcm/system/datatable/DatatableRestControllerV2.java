@@ -128,7 +128,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	/**
 	 * Constructor for DatatableRestControllerV2.
 	 * If entityClass is provided, it will be used to create new instances of the entity instead of using NULL value.
-	 * So it will have properties set to default values for new item.
+	 * So it will have properties set to default values for new item. Requires fetchOnCreate: true in WJ.DataTable config.
 	 * @param repo
 	 * @param entityClass
 	 */
