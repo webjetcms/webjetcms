@@ -102,6 +102,7 @@ import sk.iway.iwcm.users.UsersDB;
 public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 {
 	private final JpaRepository<T, Long> repo;
+	private final Class<T> entityClass;
 
 	//pozor: po zmene je potrebne opravit aj prefix v src/main/webapp/admin/v9/src/js/app.js
 	private static final String REGEX_PREFIX = "regex:";
@@ -117,16 +118,29 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	boolean checkDomainId = false;
 
 	protected DatatableRestControllerV2() {
-		this.repo = null;
+		this(null, null);
 	}
 
 	protected DatatableRestControllerV2(JpaRepository<T, Long> repo) {
+		this(repo, null);
+	}
+
+	/**
+	 * Constructor for DatatableRestControllerV2.
+	 * If entityClass is provided, it will be used to create new instances of the entity instead of using NULL value.
+	 * So it will have properties set to default values for new item.
+	 * @param repo
+	 * @param entityClass
+	 */
+	protected DatatableRestControllerV2(JpaRepository<T, Long> repo, Class<T> entityClass) {
 		this.repo = repo;
 
 		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
 		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
-			if (repo instanceof DomainIdRepository) checkDomainId = true;
+			if (repo !=null && repo instanceof DomainIdRepository) checkDomainId = true;
 		}
+
+		this.entityClass = entityClass;
 	}
 
 	/***************************** CITANIE / ZAPIS DAT *****************************/
@@ -344,7 +358,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	public T getOneItem(long id) {
 		T result = null;
-		if (repo.existsById(id)) {
+
+		//create new instance
+		if (id == -1 && entityClass != null) {
+			try {
+				result = entityClass.getDeclaredConstructor().newInstance();
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, e);
+			}
+		}
+
+		if (result == null && repo.existsById(id)) {
 			Optional<T> byId = Optional.empty();
 
 			if (checkDomainId) {
@@ -358,6 +382,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				result = byId.get();
 			}
 		}
+
 		return processFromEntity(result, ProcessItemAction.GETONE, 1);
 	}
 

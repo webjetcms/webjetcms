@@ -6,8 +6,6 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,29 +32,13 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
 
     @Autowired
     public NewsTemplatesRestController(NewsTemplatesRepository repo) {
-        super(repo);
+        super(repo, NewsTemplatesEntity.class);
         this.repo = repo;
     }
 
     @Override
-    public Page<NewsTemplatesEntity> getAllItems(Pageable pageable) {
-        DatatablePageImpl<NewsTemplatesEntity> page = new DatatablePageImpl<>( repo.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable) );
-        page.addOptions("engine", getOptions(), "label", "value", false);
-        return page;
-    }
-
-    @Override
-    public NewsTemplatesEntity getOneItem(long id) {
-        if(id < 1) {
-            return new NewsTemplatesEntity();
-        } else {
-            return repo.findByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(new NewsTemplatesEntity());
-        }
-    }
-
-    @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, NewsTemplatesEntity> target, Identity user, Errors errors, Long id, NewsTemplatesEntity entity) {
-        if("remove".equals(target.getAction()) == false &&  Tools.isNotEmpty(entity.getName())) {
+        if("remove".equals(target.getAction()) == false && Tools.isNotEmpty(entity.getName())) {
             Optional<NewsTemplatesEntity> duplicityCheck = repo.findFirstByNameAndDomainId(entity.getName(), CloudToolsForCore.getDomainId());
             if(duplicityCheck.isPresent() && !duplicityCheck.get().getId().equals(entity.getId())) {
                 errors.rejectValue("name", "", getProp().getText("components.news.templates.name.duplicity_err"));
@@ -66,10 +48,11 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
         super.validateEditor(request, target, user, errors, id, entity);
     }
 
-    private List<LabelValue> getOptions() {
-        //Only one option for now - Thymeleaf in the future
-        return List.of(
+    @Override
+    public void getOptions(DatatablePageImpl<NewsTemplatesEntity> page) {
+        List<LabelValue> engines = List.of(
             new LabelValue(getProp().getText("components.news.templates.engine.velocity"), "velocity")
         );
+        page.addOptions("engine", engines, "label", "value", false);
     }
 }

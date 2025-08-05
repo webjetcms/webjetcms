@@ -4,7 +4,7 @@ Ukážkový kód vytvorenia novej CRUD aplikácie v administrácii.
 
 ## Pug súbor
 
-Vytvorte si pug súbor s HTML kódom stránky. Odporúčame vám skopírovať kód napr. z [audit-notifications.pug](../../../src/main/webapp/admin/v9/views/pages/apps/audit-notifications.pug). Súbor umiestnite do adresára `settings` ak sa jedná o nastavenia, alebo do adresára `apps` ak sa jedná o štandardnú aplikáciu.
+Vytvorte si pug súbor s HTML kódom stránky. Odporúčame vám skopírovať kód napr. z [audit-notifications.pug](../../../../src/main/webapp/admin/v9/views/pages/apps/audit-notifications.pug). Súbor umiestnite do adresára `settings` ak sa jedná o nastavenia, alebo do adresára `apps` ak sa jedná o štandardnú aplikáciu.
 
 ```javascript
 extends ../../partials/layout
@@ -30,7 +30,7 @@ block content
     <table class="datatableInit table"></table>
 ```
 
-Po vytvorení nového pug súboru je potrebné ho pridať do webpacku v súbore [webpack.common.js](../../../src/main/webapp/admin/v9/webpack.common.js) do sekcie plugins:
+Po vytvorení nového pug súboru je potrebné ho pridať do `webpack` v súbore [webpack.common.js](../../../../src/main/webapp/admin/v9/webpack.common.js) do sekcie plugins:
 
 ```javascript
 plugins: [
@@ -42,11 +42,11 @@ plugins: [
 
 ## Spring DATA repozitár a JPA Entita/Bean
 
-JPA bean vytvorte v príslušnom package, typicky sk.iway.iwcm.components.MENOMODULU s rovnakým názvom ako meno tabuľky a suffixom Entity.
+JPA bean vytvorte v príslušnom package, typicky `sk.iway.iwcm.components.MENOMODULU` s rovnakým názvom ako meno tabuľky a príponou Entity.
 
-**Poznámka:** pre novo vytvárané entity platí, že meno triedy sa skladá z MenoTabulky a suffixu Entity. Čiže ```MenoTabulkyEntity.java```. Suffix ```Bean``` sa používa na triedy nesúce dáta, ktoré nie sú priamo JPA entitmi. V starom kóde ale aj JPA entity používajú suffix Bean, pre novo vytvárané triedy ale prosím dodržte toto pravidlo.
+**Poznámka:** pre novo vytvárané entity platí, že meno triedy sa skladá z MenoTabulky a príponou Entity. Čiže ```MenoTabulkyEntity.java```. Suffix ```Bean``` sa používa na triedy nesúce dáta, ktoré nie sú priamo JPA entitami. V starom kóde ale aj JPA entity používajú suffix Bean, pre novo vytvárané triedy ale prosím dodržte toto pravidlo.
 
-Pozrite si obsah triedy [AuditNotifyEntity](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyEntity.java) ako príklad:
+Pozrite si obsah triedy [AuditNotifyEntity](../../../../src/main/java/sk/iway/iwcm/system/audit/jpa/AuditNotifyEntity.java) ako príklad:
 
 ```java
 package sk.iway.iwcm.system.audit;
@@ -100,13 +100,13 @@ public class AuditNotifyEntity {
 }
 ```
 
-všimnite si, že trieda nemá žiadne gettere/settre, tie sa automaticky vygenerujú cez [lombook](https://projectlombok.org) anotácie @Getter a @Setter. Ak vám kompilácia hlási chyby, nainštalujte si z lombook stránky plugin do vášho vývojového prostredia.
+všimnite si, že trieda nemá žiadne `getter/setter`, tie sa automaticky vygenerujú cez [lombook](https://projectlombok.org) anotácie `@Getter,@Setter`. Ak vám kompilácia hlási chyby, nainštalujte si z lombook stránky plugin do vášho vývojového prostredia.
 
 Tiež si všimnite ```@DataTableColumn``` anotácie pre datatabuľku. Viac je v [dokumentácií k anotáciám](../datatables-editor/datatable-columns.md).
 
 Anotácia ```@GeneratedValue``` používa predvolene autoincrement stĺpec (```GenerationType.IDENTITY```). Staršia verzia Oracle ale nepodporuje autoincrement stĺpce ale používa sekvencie pre získanie ID hodnoty. Meno sekvencie je v atribúte ```generator```, typicky pomenováme sekvenciu ako ```S_meno_tabulky```.
 
-Spring DATA repozitár je typicky veľmi jednoduchý, príklad v [AuditNotifyRepository](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyRepository.java):
+Spring DATA repozitár je typicky veľmi jednoduchý, príklad v [AuditNotifyRepository](../../../../src/main/java/sk/iway/iwcm/system/audit/jpa/AuditNotifyRepository.java):
 
 ```java
 package sk.iway.iwcm.system.audit;
@@ -120,7 +120,7 @@ public interface AuditNotifyRepository extends JpaRepository<AuditNotifyEntity, 
 }
 ```
 
-Ak dáta obsahujú filtrovanie aj podľa dátumov je potrebné aby repozitár rozširoval aj ```JpaSpecificationExecutor<UrlRedirectBean>```, príkladom je [RedirectsRepository.java](../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
+Ak dáta obsahujú filtrovanie aj podľa dátumov je potrebné aby repozitár rozširoval aj ```JpaSpecificationExecutor<UrlRedirectBean>```, príkladom je [RedirectsRepository.java](../../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
 
 ```java
 package sk.iway.iwcm.system;
@@ -137,13 +137,13 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
 }
 ```
 
-Repozitár a JPA bean odporúčam mať v rovnakom package. Aby WebJET inicializoval JPA repozitár je následne potrebné ešte pridať package do [sk.iway.webjet.v9.JpaDBConfig.java](../../../src/main/java/sk/iway/webjet/v9/JpaDBConfig.java) do anotácie ```@EnableJpaRepositories```, **a zároveň do**, ```emf.setPackagesToScan```. Samotná JPA beana sa inicializuje pri štarte WebJETu, ak ju máte v inom package ako ak.iway.iwcm.components alebo sk.iway.iwcm.system a JPA vám nefunguje pridajte v administrácii WebJETu v Nastavenia->Konfigurácia novú premennú s názvom `jpaAddPackages` a hodnotou package vašej JPA beany.
+Repozitár a JPA bean odporúčam mať v rovnakom package. Aby WebJET inicializoval JPA repozitár je následne potrebné ešte pridať package do [sk.iway.webjet.v9.V9JpaDBConfig.java](../../../../src/main/java/sk/iway/webjet/v9/V9JpaDBConfig.java) do anotácie ```@EnableJpaRepositories```, **a zároveň do**, ```emf.setPackagesToScan```. Samotná JPA beana sa inicializuje pri štarte WebJETu, ak ju máte v inom package ako ak.iway.iwcm.components alebo sk.iway.iwcm.system a JPA vám nefunguje pridajte v administrácii WebJETu v Nastavenia->Konfigurácia novú premennú s názvom `jpaAddPackages` a hodnotou package vašej JPA entity.
 
 ## Rest služba
 
-Rest služba je pomerne jednoduchá, väčšina je implementovaná v super triede [DatatableRestControllerV2.java](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Príkladom je [RedirectRestController.java](../../../src/main/java/sk/iway/iwcm/components/redirects/RedirectRestController.java):
+Rest služba je pomerne jednoduchá, väčšina je implementovaná v super triede [DatatableRestControllerV2.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java). Príkladom je [RedirectRestController.java](../../../../src/main/java/sk/iway/iwcm/components/redirects/RedirectRestController.java):
 
-Ak sa vám REST služba po štarte neinicializuje je potrebné pridať jej package do zoznamu inicializovaných Spring packages v triede [sk.iway.webjet.v9.SpringConfig.java](../../../src/main/java/sk/iway/webjet/v9/SpringConfig.java)
+Ak sa vám REST služba po štarte neinicializuje je potrebné pridať jej package do zoznamu inicializovaných Spring packages v triede [sk.iway.webjet.v9.V9SpringConfig.java](../../../../src/main/java/sk/iway/webjet/v9/V9SpringConfig.java)
 
 ```java
 package sk.iway.iwcm.components.redirects;
@@ -187,15 +187,15 @@ public class RedirectRestController extends DatatableRestControllerV2<UrlRedirec
 }
 ```
 
-Dajte si pozor na anotáciu [@PreAuthorize](https://docs.webjetcms.sk/#/back-end/spring/rest-url) ktorá zabezpečuje kontrolu práv na modul. Rovnako je potrebné aby @RequestMapping bol v tvare /admin/rest/MENOMODULU ak sa jedná o aplikáciu, alebo /admin/rest/settings/MENOMODULU ak sa jedná o časť do Ovládacieho panelu.
+Dajte si pozor na anotáciu [@PreAuthorize](https://docs.webjetcms.sk/#/back-end/spring/rest-url) ktorá zabezpečuje kontrolu práv na modul. Rovnako je potrebné aby @RequestMapping bol v tvare `/admin/rest/MODULENAME` ak sa jedná o aplikáciu, alebo `/admin/rest/settings/MODULENAME` ak sa jedná o časť do Ovládacieho panelu.
 
 V ukážkovom kóde je prepísaná metóda beforeSave (existujú aj metódy editItem a insertItem pre rozdielne nastavenie pri editácii a vytvorení záznamu). Tá zabezpečuje nastavenie dátumu poslednej zmeny. Ak prepisujete metódy z DatatableRestControllerV2 snažte sa prepísať entitné metódy, nie restové.
 
-Ak potrebujete riešiť pokročilejšiu kontrolu práv (napr. na adresár pre upload) môžete sa inšpirovať v [GalleryRestController.java](../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) v metódach checkAccessAllowed (kontrola pri zobrazenie dát) a validateEditor (kontrola pri editácii dát), kde môžete implementovať špecifický kód.
+Ak potrebujete riešiť pokročilejšiu kontrolu práv (napr. na adresár pre upload) môžete sa inšpirovať v [GalleryRestController.java](../../../../src/main/java/sk/iway/iwcm/components/gallery/GalleryRestController.java) v metódach checkAccessAllowed (kontrola pri zobrazenie dát) a validateEditor (kontrola pri editácii dát), kde môžete implementovať špecifický kód.
 
 Metóda beforeDelete sa volá pred zmazaním entity, môžete v nej napr. zmazať príslušný súbor alebo vykonať inú akciu pred zmazaním dát z databázy (napr. presunúť dáta do archívu).
 
-Niekedy je potrebné prenášať číselníkové dáta (napr. možnosti do výberových/select polí). Podrobné informácie nájdete v [dokumentácii Číselníky pre select boxy](https://github.com/webjetcms/webjetcms/blob/main/docs/datatables/restcontroller.md#%C4%8D%C3%ADseln%C3%ADky-pre-select-boxy), príkladom je ale trieda [AuditNotifyRestController](../../../src/main/java/sk/iway/iwcm/system/audit/AuditNotifyRestController.java) kde v metóde getAllItems je do response pridaný objekt adminlogType so zoznamom možností pre výberové pole:
+Niekedy je potrebné prenášať číselníkové dáta (napr. možnosti do výberových/select polí). Podrobné informácie nájdete v [dokumentácii Číselníky pre select boxy](https://github.com/webjetcms/webjetcms/blob/main/docs/datatables/restcontroller.md#%C4%8D%C3%ADseln%C3%ADky-pre-select-boxy), príkladom je ale trieda [AuditNotifyRestController](../../../../src/main/java/sk/iway/iwcm/system/audit/rest/AuditNotifyRestController.java) kde v metóde getAllItems je do response pridaný objekt `adminlogType` so zoznamom možností pre výberové pole:
 
 ```java
 package sk.iway.iwcm.system.audit;

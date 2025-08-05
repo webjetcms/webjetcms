@@ -41,11 +41,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.rest.ProductListService;
-import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
-import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
-import sk.iway.iwcm.components.news.templates.rest.TranslationKeysToNewsTemplatesService;
-import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
-import sk.iway.iwcm.components.translation_keys.rest.TranslationKeyService;
+import sk.iway.iwcm.components.news.templates.UpdateDatabaseService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
@@ -140,7 +136,7 @@ public class UpdateDatabase
 			DomainIdUpdateService.updatePerexGroupDomainId();
 		}
 
-		setNewsTemplates();
+		UpdateDatabaseService.setNewsTemplates();
 
 		SpringAppInitializer.dtDiff("----- Database updated  -----");
 	}
@@ -2374,36 +2370,6 @@ public class UpdateDatabase
 			dt.diffInfo("DONE");
 
 			saveSuccessUpdate(note);
-		} catch (Exception e) {
-			sk.iway.iwcm.Logger.error(e);
-		}
-	}
-
-	/**
-	 * Convert translation keys with prefix "news.template." to records in news_templates table
-	 */
-	private static void setNewsTemplates() {
-		try {
-			String note = "28.07.2025 [sivan] prekonvertovanie news šablón z prekladových kľučov do news_templates tabuľky";
-			if(isAllreadyUpdated(note)) return;
-
-			NewsTemplatesRepository ntr = Tools.getSpringBean("newsTemplatesRepository", NewsTemplatesRepository.class);
-			TranslationKeyService tks = Tools.getSpringBean("translationKeyService", TranslationKeyService.class);
-			if(ntr == null || tks == null) {
-				Logger.error(UpdateDatabase.class, "NewsTemplatesRepository or TranslationKeyService bean not found");
-				return;
-			}
-
-			DebugTimer dt = new DebugTimer("Converting news templates to db");
-
-			List<TranslationKeyEntity> translationKeys = tks.getNewsTemplateKeys();
-			Map<String, NewsTemplatesEntity> baseTemplatesMap = TranslationKeysToNewsTemplatesService.getBaseNewsTemplates(translationKeys);
-			ntr.saveAll( TranslationKeysToNewsTemplatesService.getFilledNewsTemplates(baseTemplatesMap, translationKeys) );
-
-			dt.diffInfo("DONE");
-
-			saveSuccessUpdate(note);
-
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}

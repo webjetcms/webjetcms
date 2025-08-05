@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.news.templates.rest;
+package sk.iway.iwcm.components.news.templates;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,17 +12,56 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
+import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
+import sk.iway.iwcm.components.translation_keys.rest.TranslationKeyService;
+import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UpdateDatabase;
 
-public class TranslationKeysToNewsTemplatesService {
+/**
+ * Migrate news templates from translation keys to NewsTemplatesEntity.
+ * This service is used in UpdateDatabase to migrate old templates.
+ */
+public class UpdateDatabaseService {
 
     /* OLD VERSION */
     private static final String PREFIX = "news.template.";
     private static final String PAGING_KEY = "_paging";
 	private static final String PAGING_POSITION_KEY = "_paging_position";
 	private static final String IMAGE_PATH = "/components/news/images";
+
+
+	/**
+	 * Convert translation keys with prefix "news.template." to records in news_templates table
+	 */
+	public static void setNewsTemplates() {
+		try {
+			String note = "28.07.2025 [sivan] prekonvertovanie news šablón z prekladových kľučov do news_templates tabuľky";
+			if(UpdateDatabase.isAllreadyUpdated(note)) return;
+
+			NewsTemplatesRepository ntr = Tools.getSpringBean("newsTemplatesRepository", NewsTemplatesRepository.class);
+			TranslationKeyService tks = Tools.getSpringBean("translationKeyService", TranslationKeyService.class);
+			if(ntr == null || tks == null) {
+				Logger.error(UpdateDatabase.class, "NewsTemplatesRepository or TranslationKeyService bean not found");
+				return;
+			}
+
+			DebugTimer dt = new DebugTimer("Converting news templates to db");
+
+			List<TranslationKeyEntity> translationKeys = tks.getNewsTemplateKeys();
+			Map<String, NewsTemplatesEntity> baseTemplatesMap = UpdateDatabaseService.getBaseNewsTemplates(translationKeys);
+			ntr.saveAll( UpdateDatabaseService.getFilledNewsTemplates(baseTemplatesMap, translationKeys) );
+
+			dt.diffInfo("DONE");
+
+			UpdateDatabase.saveSuccessUpdate(note);
+
+		} catch (Exception e) {
+			sk.iway.iwcm.Logger.error(e);
+		}
+	}
+
 
 	/**
 	 * Loop translation keys from input and return map of NewsTemplatesEntity.
@@ -142,7 +181,7 @@ public class TranslationKeysToNewsTemplatesService {
 
 		for (String extension : extensions) {
 
-			//TODO - PRUSER nemame request a bez toho nebudu vetky obrazky
+			//PRUSER nemame request a bez toho nebudu vetky obrazky
 
 			String path = IMAGE_PATH + "/" + tempName + "." + extension;
 			//IwcmFile imageFile = new IwcmFile(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path, getRequest())));
