@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.news.templates.NewsTemplatesService;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -54,5 +55,15 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
             new LabelValue(getProp().getText("components.news.templates.engine.velocity"), "velocity")
         );
         page.addOptions("engine", engines, "label", "value", false);
+    }
+
+    @Override
+    public void afterDelete(NewsTemplatesEntity entity, long id) {
+        NewsTemplatesService.clearCache();
+    }
+
+    @Override
+    public void afterSave(NewsTemplatesEntity entity, NewsTemplatesEntity saved) {
+        afterDelete(null, 0);
     }
 }

@@ -35,13 +35,12 @@ import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 @Setter
 public class NewsTemplatesEntity {
 
-    // Propably needed later when working with old code
-	// private enum PagingPosition {
-	// 	NONE,
-	// 	BEFORE,
-	// 	AFTER,
-	// 	BEFORE_AND_AFTER
-	// }
+	public static enum PagingPosition {
+		NONE,
+		BEFORE,
+		AFTER,
+		BEFORE_AND_AFTER
+	}
 
 	@Id
     @Column(name = "id")
