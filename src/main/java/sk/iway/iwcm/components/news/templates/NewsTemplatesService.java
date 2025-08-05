@@ -25,8 +25,13 @@ public class NewsTemplatesService {
         this.newsTemplatesRepository = newsTemplatesRepository;
     }
 
+    /**
+     * Fetches the template by name from the cache or database.
+     * If the template is not found in the cache, it will be fetched from the database and cached.
+     * @param name
+     * @return
+     */
     public static NewsTemplatesEntity getTemplateByName(String name) {
-
         //old format from properties use news.template. prefix
         if (name != null && name.startsWith("news.template.")) name = name.substring("news.template.".length());
 
@@ -43,6 +48,10 @@ public class NewsTemplatesService {
         return service.getTemplateByNameFromDB(name);
     }
 
+    /**
+     * Fetches all templates from the database for current domain.
+     * @return
+     */
     public static List<NewsTemplatesEntity> getTemplates() {
         NewsTemplatesService service = Tools.getSpringBean("newsTemplatesService", NewsTemplatesService.class);
         if (service == null) {
@@ -69,6 +78,10 @@ public class NewsTemplatesService {
         return CloudToolsForCore.getDomainId() + "." + name;
     }
 
+    /**
+     * Returns a map of cached templates. Templates are cached by their name and domainId.
+     * @return
+     */
     private static Map<String, NewsTemplatesEntity> getCacheList() {
         Cache cache = Cache.getInstance();
         @SuppressWarnings("unchecked")
@@ -80,6 +93,9 @@ public class NewsTemplatesService {
         return list;
     }
 
+    /**
+     * Clears the cache for news templates.
+     */
     public static void clearCache() {
         Cache cache = Cache.getInstance();
         cache.removeObject(CACHE_KEY);

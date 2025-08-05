@@ -17,10 +17,10 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
-import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.rest.TranslationKeyService;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.UpdateDatabase;
 
@@ -63,9 +63,12 @@ public class UpdateDatabaseService {
 				domainsMap.putIfAbsent("", CloudToolsForCore.getDomainId());
 			}
 
-			List<TranslationKeyEntity> translationKeys = tks.getNewsTemplateKeys();
-			Map<String, NewsTemplatesEntity> baseTemplatesMap = UpdateDatabaseService.getBaseNewsTemplates(translationKeys);
-			List<NewsTemplatesEntity> templates = UpdateDatabaseService.getFilledNewsTemplates(baseTemplatesMap, translationKeys);
+
+			Prop prop = Prop.getInstance("sk");
+			Map<String, String> templatesMap = prop.getTextStartingWith("news.template.");
+
+			Map<String, NewsTemplatesEntity> baseTemplatesMap = UpdateDatabaseService.getBaseNewsTemplates(templatesMap);
+			List<NewsTemplatesEntity> templates = UpdateDatabaseService.getFilledNewsTemplates(baseTemplatesMap, templatesMap);
 			for (NewsTemplatesEntity template : templates) {
 
 				if (template.getDomainId() == null || template.getDomainId() < 0) {
@@ -96,12 +99,12 @@ public class UpdateDatabaseService {
 	 * @param translationKeys
 	 * @return
 	 */
-    public static Map<String, NewsTemplatesEntity> getBaseNewsTemplates(List<TranslationKeyEntity> translationKeys) {
+    public static Map<String, NewsTemplatesEntity> getBaseNewsTemplates(Map<String, String> templatesMap) {
         Map<String, NewsTemplatesEntity> baseTemplatesMap = new HashMap<>();
-        if(translationKeys == null) return baseTemplatesMap;
+        if(templatesMap == null) return baseTemplatesMap;
 
-        for(TranslationKeyEntity translationEntity : translationKeys) {
-			String translationKey = translationEntity.getKey();
+        for(Map.Entry<String, String> entry : templatesMap.entrySet()) {
+			String translationKey = entry.getKey();
 			if(Tools.isEmpty(translationKey) == true || translationKey.startsWith(PREFIX) == false) continue;
 
 			//Looking for main value
@@ -120,7 +123,7 @@ public class UpdateDatabaseService {
 			//Prepare entity
 			NewsTemplatesEntity entity = new NewsTemplatesEntity();
 			entity.setName(tempName);
-			entity.setTemplateCode( getFirstNotEmpty(translationEntity, 'J') );
+			entity.setTemplateCode(entry.getValue());
 			entity.setEngine("velocity");
 
 			//Set domain ID's
@@ -147,23 +150,23 @@ public class UpdateDatabaseService {
         return baseTemplatesMap;
     }
 
-    public static List<NewsTemplatesEntity> getFilledNewsTemplates(Map<String, NewsTemplatesEntity> baseTemplatesMap, List<TranslationKeyEntity> translationKeys) {
+    public static List<NewsTemplatesEntity> getFilledNewsTemplates(Map<String, NewsTemplatesEntity> baseTemplatesMap, Map<String, String> templatesMap) {
         List<NewsTemplatesEntity> newsTemplatesList = new ArrayList<>();
         if(baseTemplatesMap == null) return newsTemplatesList;
 
 		//Loop through base templates map and set additional values from translation keys
         baseTemplatesMap.forEach((tempName, tempEntity) -> {
 			//Loop through translation keys to find paging and image values for this template
-			for(TranslationKeyEntity translationEntity : translationKeys) {
-                String translationKey = translationEntity.getKey();
+			for(Map.Entry<String, String> entry : templatesMap.entrySet()) {
+                String translationKey = entry.getKey();
                 if(Tools.isEmpty(translationKey) == true || translationKey.startsWith(PREFIX) == false) continue;
 
                 if( translationKey.equals(PREFIX + tempName + PAGING_KEY) ) {
                     // Set paging code
-                    tempEntity.setPagingCode( getFirstNotEmpty(translationEntity, 'J') );
+                    tempEntity.setPagingCode( entry.getValue() );
                 } else if( translationKey.equals(PREFIX + tempName + PAGING_POSITION_KEY) ) {
                     // Set temp paging position
-                    String pagingPosition = getFirstNotEmpty(translationEntity, 'J');
+                    String pagingPosition = entry.getValue();
                     tempEntity.setPagingPosition( Tools.getIntValue(pagingPosition, 0) );
                 } else {
                     //NOTHING
@@ -177,21 +180,6 @@ public class UpdateDatabaseService {
 
 		return new ArrayList<>( baseTemplatesMap.values() );
     }
-
-	/**
-	 * Return first not empty value from TranslationKeyEntity fields from A to lastAlphabet.
-	 * @param keyEntity
-	 * @param lastAlphabet
-	 * @return
-	 */
-    private static String getFirstNotEmpty(TranslationKeyEntity keyEntity, Character lastAlphabet) {
-		String value = null;
-		for(Character alphabet = 'A'; alphabet <= lastAlphabet; alphabet++) {
-			value = keyEntity.getFieldValue(alphabet);
-			if(Tools.isNotEmpty(value)) return value;
-		}
-		return null;
-	}
 
 	/**
 	 * Return image path for news template based on its name.

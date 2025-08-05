@@ -371,16 +371,6 @@ public class TranslationKeyService {
     }
 
     /**
-     * Return list of TranslationKeyEntity, where key starts with "news.template.". This keys once represented news templates.
-     * @return
-     */
-    public List<TranslationKeyEntity> getNewsTemplateKeys() {
-        Identity fakeUser = new Identity();
-        List<TranslationKeyEntity> translationKeys = getAllData(fakeUser, "news.template.");
-        return translationKeys;
-    }
-
-    /**
      * Metoda sluzi na filtrovanie TranslationKeyEntit.
      *
      * @param searchMap Map<String, String> Parametre pouzite pri filtrovani TranslationKeyProperties.
