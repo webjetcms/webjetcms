@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,6 +32,7 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
 
     private final NewsTemplatesRepository repo;
 
+    @Autowired
     public NewsTemplatesRestController(NewsTemplatesRepository repo) {
         super(repo);
         this.repo = repo;
@@ -38,7 +40,7 @@ public class NewsTemplatesRestController extends DatatableRestControllerV2<NewsT
 
     @Override
     public Page<NewsTemplatesEntity> getAllItems(Pageable pageable) {
-       DatatablePageImpl<NewsTemplatesEntity> page = new DatatablePageImpl<>( repo.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable) );
+        DatatablePageImpl<NewsTemplatesEntity> page = new DatatablePageImpl<>( repo.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable) );
         page.addOptions("engine", getOptions(), "label", "value", false);
         return page;
     }

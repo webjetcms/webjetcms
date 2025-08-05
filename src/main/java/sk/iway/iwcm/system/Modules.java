@@ -601,7 +601,7 @@ public class Modules
         sub.setUserItem(true);
 		sub.setShowInLeftMenu(true);
         sub.setGroup("templates");
-		sub.setMenuOrder(22);
+		sub.setMenuOrder(21);
 		loadModule(sub);
 
 		//pouzivatelia
