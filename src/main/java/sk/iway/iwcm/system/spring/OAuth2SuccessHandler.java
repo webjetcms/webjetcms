@@ -57,6 +57,34 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 }
                 userDetails = UsersDB.getUserByEmail(email, 1);
                 Logger.info(OAuth2SuccessHandler.class, "Created new user for email: " + email);
+            } else {
+                // Aktualizuj existujúceho používateľa s novými údajmi z OAuth2
+                String givenName = null;
+                String familyName = null;
+                if (principal instanceof OAuth2User) {
+                    OAuth2User oauth2User = (OAuth2User) principal;
+                    givenName = oauth2User.getAttribute("given_name");
+                    familyName = oauth2User.getAttribute("family_name");
+                }
+
+                boolean needsUpdate = false;
+                if (givenName != null && !givenName.equals(userDetails.getFirstName())) {
+                    userDetails.setFirstName(givenName);
+                    needsUpdate = true;
+                }
+                if (familyName != null && !familyName.equals(userDetails.getLastName())) {
+                    userDetails.setLastName(familyName);
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate) {
+                    boolean isUserUpdated = UsersDB.saveUser(userDetails);
+                    if (isUserUpdated) {
+                        Logger.info(OAuth2SuccessHandler.class, "Updated user data for email: " + email);
+                    } else {
+                        Logger.error(OAuth2SuccessHandler.class, "Failed to update user for email: " + email);
+                    }
+                }
             }
             Identity identity = new Identity(userDetails);
             identity.setValid(true);
