@@ -1,15 +1,15 @@
 package sk.iway.iwcm.logon;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ResolvableType;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -70,11 +70,16 @@ public class AdminLogonController {
     private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
+    private static final String authorizationRequestBaseUri = "/oauth2/authorization";
+    Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
+
+    private final ClientRegistrationRepository clientRegistrationRepository;
     private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
-    public AdminLogonController(UserDetailsRepository userDetailsRepository) {
+    public AdminLogonController(UserDetailsRepository userDetailsRepository, ClientRegistrationRepository clientRegistrationRepository) {
         this.userDetailsRepository = userDetailsRepository;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     /**
@@ -182,7 +187,7 @@ public class AdminLogonController {
     }
 
     @GetMapping("logon/")
-    public String showForm(UserForm userForm, HttpServletRequest request, HttpSession session)
+    public String showForm(UserForm userForm, ModelMap model, HttpServletRequest request, HttpSession session)
     {
         Identity user = UsersDB.getCurrentUser(session);
         if (user != null && user.isAdmin())
@@ -234,6 +239,20 @@ public class AdminLogonController {
             String loginName = request.getParameter("loginName");
             request.setAttribute(UsersDB.IS_ADMIN_SECTION_KEY, true);
             UserChangePasswordService.sendPassword(request,loginName);
+        }
+
+        if (Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients")) && clientRegistrationRepository != null) {
+            Iterable<ClientRegistration> clientRegistrations = null;
+            ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
+            if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {
+                clientRegistrations = (Iterable<ClientRegistration>) clientRegistrationRepository;
+            }
+            if (clientRegistrations != null) {
+                clientRegistrations.forEach(registration ->
+                        oauth2AuthenticationUrls.put(registration.getClientName(),
+                                authorizationRequestBaseUri + "/" + registration.getRegistrationId()));
+                model.addAttribute("urls", oauth2AuthenticationUrls);
+            }
         }
 
         return LOGON_FORM;
