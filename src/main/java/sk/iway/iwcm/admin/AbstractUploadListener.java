@@ -8,15 +8,15 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.support.DefaultMultipartHttpServletRequest;
+import org.springframework.web.multipart.support.StandardMultipartHttpServletRequest;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -174,11 +174,11 @@ public abstract class AbstractUploadListener<T> {
      * @param form T
      */
     private void setMultipartFilePerametersToProperties(HttpServletRequest request, T form) {
-        if (!request.getClass().isAssignableFrom(DefaultMultipartHttpServletRequest.class)) {
+        if (!request.getClass().isAssignableFrom(StandardMultipartHttpServletRequest.class)) {
             return;
         }
 
-        DefaultMultipartHttpServletRequest req = (DefaultMultipartHttpServletRequest) request;
+        StandardMultipartHttpServletRequest req = (StandardMultipartHttpServletRequest) request;
         MultiValueMap<String, MultipartFile> multiFileMap = req.getMultiFileMap();
         for (Map.Entry<String, List<MultipartFile>> stringListEntry : multiFileMap.entrySet()) {
             String key = stringListEntry.getKey();
