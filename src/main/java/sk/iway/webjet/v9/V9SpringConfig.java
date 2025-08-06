@@ -2,6 +2,7 @@ package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;
@@ -32,6 +33,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @EnableSpringDataWebSupport
 @Configuration
 @EnableWebMvc
+@MultipartConfig
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
