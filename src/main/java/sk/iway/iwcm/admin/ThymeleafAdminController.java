@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.layout.MenuService;
@@ -114,7 +115,6 @@ public class ThymeleafAdminController {
     * @return String
     */
    @GetMapping({ "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[^.]+}" })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
    public ModelAndView appHandler(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
@@ -159,7 +159,6 @@ public class ThymeleafAdminController {
    }
 
    @PostMapping(path = { "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[^.]+}" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
    public ModelAndView appHandlerPost(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
