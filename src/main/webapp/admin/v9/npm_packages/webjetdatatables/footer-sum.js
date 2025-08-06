@@ -12,17 +12,15 @@ export function bindEvents(TABLE) {
 }
 
 export function runFooterCallback(TABLE) {
-    //Invoke data draw action on table, so footerCallback will be called
-    TABLE.draw(false);
+    if(isCallbackSet(TABLE) === true) {
+        //Invoke data draw action on table, so footerCallback will be called
+        TABLE.draw(false);
+    }
 }
 
 export function footerCallback(TABLE) {
-    //not initialized yet, skip
-    if (typeof TABLE === "undefined" || TABLE == null) return;
-
-    //Are summary setting set ?
-    var DATA = TABLE.DATA;
-    if(typeof DATA != "undefined" && DATA.summary !== null) {
+    if(isCallbackSet(TABLE) === true) {
+        var DATA = TABLE.DATA;
         const mode = DATA.summary.mode;
         const columnsToSum = DATA.summary.columns;
         const title = DATA.summary.title;
@@ -208,4 +206,15 @@ function getTableFooterRowServerSide(api, title, columnsToSum) {
     });
 
     return tr;
+}
+
+function isCallbackSet(TABLE) {
+    //not initialized yet, skip
+    if (typeof TABLE === "undefined" || TABLE == null) return false;
+
+    //Are summary setting set ?
+    var DATA = TABLE.DATA;
+    if(typeof DATA != "undefined" && DATA.summary !== null) return true;
+
+    return false;
 }
