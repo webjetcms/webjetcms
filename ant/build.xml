@@ -10,7 +10,7 @@
     </description>
 
     <!-- set global properties for this build -->
-    <property name="projectname" value="webjetcms"/>
+    <property name="projectname" value="webjetcms_jakarta"/>
 
     <property name="root" value="build/updatezip" />
     <property name="outdir" value="${root}/WebContent/"/>
@@ -69,16 +69,16 @@
         <exec executable="./gradlew">
             <arg value="clean"/>
         </exec>
-        <!--delete dir="src/main/webapp/admin/v9/dist"/>
+        <delete dir="src/main/webapp/admin/v9/dist"/>
         <exec executable="./gradlew">
             <arg value="npminstall"/>
         </exec>
         <exec executable="./gradlew">
             <arg value="npmbuild"/>
-        </exec-->
+        </exec>
         <exec executable="./gradlew">
             <arg value="compileJava"/>
-            <!--arg value="- -refresh-dependencies"/ -->
+            <arg value="--refresh-dependencies"/>
             <arg value="--info"/>
         </exec>
         <exec executable="./gradlew">
