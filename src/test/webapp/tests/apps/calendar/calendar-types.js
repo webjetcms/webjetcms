@@ -5,7 +5,7 @@ var entityName, randomNumber;
 Before(({ I, login }) => {
 
     login('admin');
-    I.amOnPage("/apps/calendar/admin/calendar-types");
+    I.amOnPage("/apps/calendar/admin/calendar-types/");
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
