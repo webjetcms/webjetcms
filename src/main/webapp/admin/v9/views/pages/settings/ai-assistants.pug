@@ -1,0 +1,43 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var aiAssistantsDataTable;
+        window.domReady.add(function () {
+            console.log("IDE KURWA");
+
+            var tabs = [
+                {id: 'basic', title: 'basic', selected: true, content:'<div></div>'},
+                {id: 'description', title: 'role description'}
+            ]
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.kokos.OpenAiAssistantsEntity')})];
+
+            aiAssistantsDataTable = WJ.DataTable({
+                url: "/admin/rest/openai-assistants/",
+                columns: columns,
+                serverSide: true,
+                tabs: tabs
+            });
+
+            var buttonCounter = 5;
+
+            aiAssistantsDataTable.button().add(buttonCounter++, {
+                text: '<i class="ti ti-cloud-down"></i>',
+                action: function (e, dt, node) {
+                    //
+                    aiAssistantsDataTable.executeAction("syncToTable", true, "[[\#{components.ai_assistants.sync_to_table.confirm}]]");
+                },
+                className: 'btn btn-outline-secondary',
+                attr: {
+                    'title': '[[\#{components.ai_assistants.sync_to_table.tooltip}]]',
+                    'data-toggle': 'tooltip'
+                }
+            });
+        });
+
+    style.
+        div.DTE_Field_Name_roleDescription label { display: none; }
+
+    <table class="datatableInit table"></table>

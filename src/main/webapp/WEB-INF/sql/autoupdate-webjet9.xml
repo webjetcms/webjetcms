@@ -1927,5 +1927,82 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>05.08.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky open_ai_assistants</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE open_ai_assistants (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            name VARCHAR(255) NOT NULL,
+                            assistant_key VARCHAR(255) NOT NULL,
+                            role_description TEXT,
+                            model VARCHAR(255) DEFAULT 'gpt-3.5-turbo',
+                            temperature FLOAT DEFAULT 0.7,
+                            created_at TIMESTAMP DEFAULT NULL,
+                            domain_id INT(11) DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE open_ai_assistants (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            name NVARCHAR(255) NOT NULL,
+                            assistant_key NVARCHAR(255) NOT NULL,
+                            role_description NTEXT,
+                            model NVARCHAR(255) DEFAULT 'gpt-3.5-turbo',
+                            temperature FLOAT DEFAULT 0.7,
+                            created_at DATETIME DEFAULT NULL,
+                            domain_id int DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE open_ai_assistants (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            name NVARCHAR2(255) NOT NULL,
+                            assistant_key NVARCHAR2(255) NOT NULL,
+                            role_description CLOB,
+                            model NVARCHAR2(255) DEFAULT 'gpt-3.5-turbo',
+                            temperature FLOAT DEFAULT 0.7,
+                            created_at TIMESTAMP DEFAULT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_open_ai_assistants START WITH 1;
+                        CREATE TRIGGER T_open_ai_assistants BEFORE INSERT ON open_ai_assistants
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_open_ai_assistants.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_open_ai_assistants START WITH 1;
+                        CREATE TABLE open_ai_assistants (
+                            id INT DEFAULT NEXTVAL('S_open_ai_assistants') PRIMARY KEY NOT NULL,
+                            name VARCHAR(255) NOT NULL,
+                            assistant_key VARCHAR(255) NOT NULL,
+                            role_description TEXT,
+                            model VARCHAR(255) DEFAULT 'gpt-3.5-turbo',
+                            temperature FLOAT DEFAULT 0.7,
+                            created_at TIMESTAMP DEFAULT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
     </object>
 </java>

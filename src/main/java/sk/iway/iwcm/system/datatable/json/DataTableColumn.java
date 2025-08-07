@@ -12,7 +12,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
-
+import sk.iway.iwcm.system.datatable.json.DataTableAi;
 import javax.persistence.Lob;
 import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
@@ -60,6 +60,8 @@ public class DataTableColumn {
     private Boolean orderable;
     private String orderProperty;
 
+    private DataTableAi ai;
+
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
         String fieldPrefixNotNull = fieldPrefix;
@@ -77,6 +79,8 @@ public class DataTableColumn {
         setPropertiesFromFieldType(field);
         setPropertiesFromAnnotation(controller, field, prop);
         setEditorPropertiesFromField(field);
+
+        setAiPropertiesFromField(field);
 
         setFinalProperties(field);
         setCellNotEditable(field);
@@ -304,6 +308,18 @@ public class DataTableColumn {
 
         if (editor.isEmpty()) {
             this.editor = null;
+        }
+    }
+
+    private void setAiPropertiesFromField(Field field) {
+        if(ai == null) {
+            ai = new DataTableAi();
+        }
+
+        ai.setPropertiesFromField(field);
+
+        if (ai.isEmpty()) {
+            this.ai = null;
         }
     }
 

@@ -140,7 +140,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.search",
     "sk.iway.iwcm.components.appweather",
     "sk.iway.iwcm.components.appimpressslideshow",
-    "sk.iway.iwcm.components.carouselslider"
+    "sk.iway.iwcm.components.carouselslider",
+    "sk.iway.iwcm.kokos"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 

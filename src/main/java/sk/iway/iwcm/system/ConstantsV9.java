@@ -151,6 +151,8 @@ public class ConstantsV9 {
 		Constants.setInt("cloneActionDestId", -1, Constants.MOD_CONFIG, "Used to set DEST group id when performing clonning.");
 
 		Constants.setBoolean("ABTestingForLoggedUser", false, "abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
+
+		Constants.setString("open_ai_auth_key", "", "", "Authentifikacny kluc k platform.openai.com");
 	}
 
 	/**

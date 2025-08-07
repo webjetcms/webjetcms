@@ -72,6 +72,77 @@ body.modal-open {
             margin-bottom: 0px;
         }
 
+        .form-group.row.ai-shit {
+
+            div.col-sm-1.form-group-tooltip {
+                button {
+                    left: -35px;
+                    position: relative;
+                }
+
+                button.ai-button {
+                    left: -50px;
+                    position: relative;
+                }
+            }
+
+            div.col-sm-1 {
+                button.ai-button {
+                    left: -65px;
+                    position: relative;
+                }
+            }
+
+            button.ai-button {
+                border: none;
+            }
+
+            button.ai-button:focus {
+                border: none;
+            }
+        }
+
+        .box__bg {
+            position: relative;
+            z-index: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 3px;
+        }
+
+        .box__bg::before {
+            content: "";
+            position: absolute;
+            z-index: -2;
+            left: -50%;
+            top: -50%;
+            width: 200%;
+            height: 200%;
+            background-color: #000;
+            background-repeat: no-repeat;
+            background-size: 100%100%, 50%50%;
+            background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+            background-image: linear-gradient(to right, red, purple);
+            animation: bgRotate 4s linear infinite;
+        }
+
+        .box__bg::after {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            left: 1px;
+            top: 1px;
+            width: calc(100% - 2px);
+            height: calc(100% - 2px);
+            border-radius: 12px;
+        }
+
+        @keyframes bgRotate {
+        100% {
+            transform: rotate(1turn);
+        }
+        }
+
         //Field definition BOOLEAN_TEXT
         .form-group.row.DTE_Field_Type_text {
             label.form-check-label {

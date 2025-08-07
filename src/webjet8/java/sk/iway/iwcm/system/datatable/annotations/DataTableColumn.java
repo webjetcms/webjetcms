@@ -48,4 +48,8 @@ public @interface DataTableColumn {
      * orderProperty = "contactFirstName,deliveryName"
      */
     String orderProperty() default "";
+
+
+    //
+    DataTableAi[] ai() default {};
 }

@@ -34,6 +34,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableAi;
 import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 import sk.iway.iwcm.system.jpa.CommaSeparatedIntegersConverter;
 import sk.iway.iwcm.users.UserDetails;
@@ -440,7 +441,15 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	@Column(name = "field_s")
 	@DataTableColumn(inputType = DataTableColumnType.TEXT, title="editor.field_s",
-		tab = "fields", visible = false, sortAfter = "fieldR")
+		tab = "fields", visible = false, sortAfter = "fieldR",
+		ai = {
+			@DataTableAi (
+				from = "data",
+				to = "fieldS",
+				assistant = "DOC SEO keywords"
+			)
+		}
+	)
 	private String fieldS = "";
 
 	@Column(name = "field_t")
@@ -667,7 +676,14 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@Lob
 	@Column(name = "html_data")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = "wrap", title="editor.tab.perex",
-		tab = "perex", visible = false, sortAfter = "eventDateDate"
+		tab = "perex", visible = false, sortAfter = "eventDateDate",
+		ai = {
+			@DataTableAi (
+				from = "data",
+				to = "htmlData",
+				assistant = "DOC Perex Generator"
+			)
+		}
 	)
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlData = "";
