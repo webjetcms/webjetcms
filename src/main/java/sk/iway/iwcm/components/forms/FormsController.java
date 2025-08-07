@@ -116,7 +116,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         return regexps;
     }
 
-    @GetMapping(path="/html")
+    @GetMapping(path="/html/")
     public String getHtml(@RequestParam long id) {
         FormsEntity entity = formsService.getById(id);
         if (entity == null || Tools.isEmpty(entity.getFormName())) return null;

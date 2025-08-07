@@ -40,13 +40,13 @@ public class EventsCalendarBean extends ActiveRecord implements Serializable {
     private String description;
 
     @NotNull(message = "validation.not_null.error")
-    @ApiModelProperty(dataType = "long", defaultValue="1521154800000")
+    @ApiModelProperty(dataType = "long")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_from")
     private Date from;
 
     @NotNull(message = "validation.not_null.error")
-    @ApiModelProperty(dataType = "long", defaultValue="1521154800000")
+    @ApiModelProperty(dataType = "long")
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name="date_to")
     private Date to;

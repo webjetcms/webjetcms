@@ -159,6 +159,23 @@ public class SimpleQuery
 	}
 
 	@SuppressWarnings("unchecked")
+	public Number forNumber(String sql, Object... parameters)
+	{
+		List<Object> result = forList(sql, parameters);
+		if (result.isEmpty()) return 0;
+
+		Object returned = result.get(0);
+
+		if (returned == null)
+			return 0;
+
+		if (returned instanceof Number number)
+			return number;
+
+		throw new IllegalStateException("Return value for SQL is not a number, nor NULL");
+	}
+
+	@SuppressWarnings("unchecked")
 	public String forString(String sql, Object... parameters)
 	{
 		List<Object> result = forList(sql, parameters);

@@ -9,6 +9,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
@@ -41,6 +42,7 @@ public class InquiryEntity extends ActiveRecordRepository implements Serializabl
     @Accessors(chain = false)
     private Long id;
 
+    @Lob
     @Column(name = "question_text")
     @DataTableColumn(
         inputType = DataTableColumnType.QUILL,
@@ -50,7 +52,6 @@ public class InquiryEntity extends ActiveRecordRepository implements Serializabl
         tab = "basic"
     )
     @NotEmpty
-    @Size(max = 255)
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String questionText;
 
@@ -89,6 +90,7 @@ public class InquiryEntity extends ActiveRecordRepository implements Serializabl
     @Size(max = 255)
     private String questionGroup;
 
+    @Lob
     @Column(name = "answer_text_ok")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
@@ -98,6 +100,7 @@ public class InquiryEntity extends ActiveRecordRepository implements Serializabl
     )
     private String answerTextOk;
 
+    @Lob
     @Column(name = "answer_text_fail")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,

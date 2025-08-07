@@ -151,10 +151,12 @@ Scenario('Recovery folder logic', ({ I, DT, DTE }) => {
     I.see("Priečinok recoverSubFolderOne bol úspešne obnovený do", "div.toast-message");
     I.see("/Test stavov/page_folder_recovery", "div.toast-message");
     I.toastrClose();
+    DT.waitForLoader();
 
     //
     I.say("Check folder position");
     I.clickCss("#pills-folders-tab");
+    DT.waitForLoader();
     I.jstreeNavigate(["Test stavov", "page_folder_recovery", "recoverSubFolderOne"]);
     I.click(DT.btn.tree_edit_button);
     DTE.waitForLoader();

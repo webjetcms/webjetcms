@@ -11,6 +11,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.PrePersist;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
@@ -101,6 +102,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
     )
 	private Integer statusId;
 
+	@Lob
 	@Column(name="user_note")
 	@DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,

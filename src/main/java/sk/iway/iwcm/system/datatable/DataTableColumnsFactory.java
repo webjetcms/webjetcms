@@ -231,7 +231,7 @@ public class DataTableColumnsFactory {
         }
 
         //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
-        boolean includeCommonSettings = true;
+        boolean includeCommonSettings = false;
         if(dto.isAnnotationPresent(sk.iway.iwcm.system.annotations.WebjetAppStore.class)) {
             includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();
         }

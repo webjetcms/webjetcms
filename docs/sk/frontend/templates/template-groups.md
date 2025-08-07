@@ -17,10 +17,10 @@ Zoznam skupín šablón zobrazuje prehľad vytvorených skupín, predvolene exis
 - Názov skupiny šablón - jednoznačný názov skupiny šablón.
 - Priečinok - hlavný priečinok, v ktorom sa nachádzajú súbory šablóny (JSP/HTML súbor s dizajnom, CSS štýly, JavaScript súbory).
 - Typ editora stránok:
-    - Štandardný - hlavný editor stránok s formátovaním textu, vkladaním obrázkov, odkazov atď.
-    - HTML editor - používa sa pre špeciálne stránky, ktoré potrebujú používať presný HTML editor.
-    - Page Builder - režim editácie stránky skladajúcej sa z [pripravených blokov](../page-builder/README.md).
-    - `Grid Editor` - predchodca režimu Page Builder, bude v roku 2024 odstránený.
+  - Štandardný - hlavný editor stránok s formátovaním textu, vkladaním obrázkov, odkazov atď.
+  - HTML editor - používa sa pre špeciálne stránky, ktoré potrebujú používať presný HTML editor.
+  - Page Builder - režim editácie stránky skladajúcej sa z [pripravených blokov](../page-builder/README.md).
+  - `Grid Editor` - predchodca režimu Page Builder, bude v roku 2024 odstránený.
 - Počet použití - počet šablón v tejto skupine.
 
 ## Karta Metadáta

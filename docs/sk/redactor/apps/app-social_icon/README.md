@@ -4,13 +4,25 @@ Vloží do stránky ikony s odkazmi na sociálne siete Facebook, Twitter, Instag
 
 ## Nastavenia aplikácie
 
-V tejto časti je možné nastaviť:
-- Vizuálny štýl
-- Zarovnanie ikon (vľavo, stred, vpravo)
-- Zadanie adries stránky pre jednotlivé sociálne siete.
-Ak sa nevyplní pole ikona sociálnej siete sa nezobrazí.
+Nastavenie obsahuje karty:
 
-![](editor.png)
+- **Základné**
+- **Štýl**
+
+### Karta - Základné
+
+V karte môžete zadať adresu vašej stránky pre jednotlivé sociálne siete. Pre prázdne polia sa ikona sociálnej siete nezobrazí.
+
+![](editor-base.png)
+
+### Karta - Štýl
+
+V karte môžete nastaviť:
+
+- **Vizuálny štýl** - zobrazenia ikon
+- **Zarovnanie ikon** - vľavo, stred, vpravo
+
+![](editor-style.png)
 
 ## Zobrazenie aplikácie
 
