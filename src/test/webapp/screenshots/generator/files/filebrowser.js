@@ -191,7 +191,7 @@ Scenario('filebrowser - folder properties screens', ({ I, DTE, Document, i18n })
     I.waitForElement("#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E");
     I.rightClick( locate("#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E") );
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list?docid=59071");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=59071");
     DTE.waitForEditor();
     I.wait(5);
     Document.screenshot("/redactor/files/fbrowser/folder-settings/folder_link_A.png");
@@ -242,7 +242,7 @@ Scenario('filebrowser - file properties screens', ({ I, DTE, Document, i18n }) =
     I.switchTo();
     Document.screenshotElement("#modalIframe > div.modal-dialog", "/redactor/files/fbrowser/file-settings/file_settings_usage.png");
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list?docid=60028");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=60028");
     DTE.waitForEditor();
     I.wait(2);
     Document.screenshot("/redactor/files/fbrowser/file-settings/file_link_A.png");

@@ -6,7 +6,7 @@ Before(({ I, login }) => {
 
 Scenario('basic-test stranky', async ({I, DT}) => {
 
-    I.amOnPage("/admin/v9/webpages/linkcheck?groupId=");
+    I.amOnPage("/admin/v9/webpages/linkcheck/?groupId=");
 
     //Check you see all 3 tabs
     I.see("Nefunkčné odkazy");
