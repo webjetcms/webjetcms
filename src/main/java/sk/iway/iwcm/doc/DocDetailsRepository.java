@@ -51,7 +51,9 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
 
     //
     List<DocDetails> findByDataLike(String data);
-    List<DocDetails> findByDataLikeAndGroupIdIn(String data, int[] subPagesids);
+
+    @Query(value = "SELECT dd FROM DocDetails dd WHERE dd.data LIKE :data AND dd.groupId IN :subPagesids")
+    List<DocDetails> findByDataLikeAndGroupIdIn(@Param("data") String data, @Param("subPagesids") int[] subPagesids);
 
     //
     @Transactional

@@ -5,16 +5,22 @@
 Verzia určená pre `jakarta namespace`, vyžaduje aplikačný server Tomcat 10/11, používa Spring verzie 7 (#57793).
 
 - URL adresy - pre URL adresy Spring zaviedol presné zhody, ak REST služba definuje URL adresu s lomkou na konci, musí byť takto použitá. Je rozdiel v URL adrese `/admin/rest/service` a `/admin/rest/service/`.
-- V Spring DATA repozitároch pre `IN/NOT IN query` je potrebné pridať `@Query`, inak nebude korektne SQL vytvorené, príklad:
+- V Spring DATA repozitároch pre `IN/NOTIN query` je potrebné pridať `@Query`, inak nebude korektne SQL vytvorené, príklad:
 
 ```java
   //old
   Page<DocDetails> findAllByGroupIdIn(int[] groupIds, Pageable pageable);
+  List<UserDetailsEntity> findAllByIdIn(List<Long> ids);
 
   //new - add @Query and @Param to correctly create JPQL query for Eclipselink
   @Query("SELECT d FROM DocDetails d WHERE d.groupId IN :groupIds")
   Page<DocDetails> findAllByGroupIdIn(@Param("groupIds") int[] groupIds, Pageable pageable);
+
+  @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
+  List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
 ```
+
+Pre vyhľadanie v kóde môžete použiť hľadanie v súboroch `*Repository.java` a hľadať regulárny výraz `\(.*List[^)]*\)`, `\(.*Long\[\][^)]*\)`, `\(.*Integer\[\][^)]*\)`. Odporúčame vykonať kód, v logu sa zobrazí chyba a použiť vygenerované SQL do `Query` hodnoty. Problémom je len kontrola typu, kde `EclipseLink` nevie identifikovať, že má kontrolovať pole/zoznam a nie priamo dátový typ.
 
 ## 2025-SNAPSHOT
 
