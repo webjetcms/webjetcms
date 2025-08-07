@@ -26,7 +26,7 @@
         let daydate = statKeywordsDataTable.DATA.columns[1].searchVal;
         if(daydate == null && daydate == undefined) daydate = "";
         let queryName = statKeywordsDataTable.DATA.json.data[order - 1]['queryName'];
-        window.location.href="/apps/seo/admin/stat-keywords-details?queryName=" +  encodeURIComponent(queryName) + "&dayDate=" + (statKeywordsDataTable.DATA.columns[1].searchVal);
+        window.location.href="/apps/seo/admin/stat-keywords-details/?queryName=" +  encodeURIComponent(queryName) + "&dayDate=" + (statKeywordsDataTable.DATA.columns[1].searchVal);
     }
 
     window.domReady.add(function () {
