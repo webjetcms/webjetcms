@@ -43,7 +43,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.0-SNAPSHOT" />
+        <property name="artifact.version" value="2025.0-SNAPSHOT-jakarta" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -232,7 +232,6 @@
                 <include name="500.jsp"/>
                 <include name="WEB-INF/mime.types"/>
                 <include name="WEB-INF/build.properties"/>
-                <include name="WEB-INF/struts-config.xml"/>
             </zipfileset>
         </jar>
 
