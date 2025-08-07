@@ -1,9 +1,44 @@
 package sk.iway.iwcm.system.datatable;
 
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
+
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.queries.ReadAllQuery;
+import org.json.JSONObject;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -25,11 +60,24 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordBase;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -41,25 +89,6 @@ import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.system.stripes.MultipartWrapper;
 import sk.iway.iwcm.users.UsersDB;
-
-import jakarta.persistence.Id;
-import jakarta.persistence.Query;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.*;
-
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
 
 /**
  * Title        webjet8
@@ -74,6 +103,7 @@ import java.util.*;
 public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 {
 	private final JpaRepository<T, Long> repo;
+	private final Class<T> entityClass;
 
 	//pozor: po zmene je potrebne opravit aj prefix v src/main/webapp/admin/v9/src/js/app.js
 	private static final String REGEX_PREFIX = "regex:";
@@ -89,16 +119,29 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	boolean checkDomainId = false;
 
 	protected DatatableRestControllerV2() {
-		this.repo = null;
+		this(null, null);
 	}
 
 	protected DatatableRestControllerV2(JpaRepository<T, Long> repo) {
+		this(repo, null);
+	}
+
+	/**
+	 * Constructor for DatatableRestControllerV2.
+	 * If entityClass is provided, it will be used to create new instances of the entity instead of using NULL value.
+	 * So it will have properties set to default values for new item. Requires fetchOnCreate: true in WJ.DataTable config.
+	 * @param repo
+	 * @param entityClass
+	 */
+	protected DatatableRestControllerV2(JpaRepository<T, Long> repo, Class<T> entityClass) {
 		this.repo = repo;
 
 		//over, ci maju byt pouzite automaticke podmienky so stlpcom domain_id
 		if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
-			if (repo instanceof DomainIdRepository) checkDomainId = true;
+			if (repo !=null && repo instanceof DomainIdRepository) checkDomainId = true;
 		}
+
+		this.entityClass = entityClass;
 	}
 
 	/***************************** CITANIE / ZAPIS DAT *****************************/
@@ -164,7 +207,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		NullAwareBeanUtils.copyProperties(original, obj);
 		processToEntity(obj, ProcessItemAction.EDIT);
 
-		JpaEntityManager entityManager = JpaTools.getEclipseLinkEntityManager(original.getClass());
+		JpaEntityManager entityManager = JpaTools.getSpringEntityManager(original.getClass());
 		ReadAllQuery raq = new ReadAllQuery(original.getClass());
 		ExpressionBuilder builder = new ExpressionBuilder();
 
@@ -316,7 +359,17 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	public T getOneItem(long id) {
 		T result = null;
-		if (repo.existsById(id)) {
+
+		//create new instance
+		if (id == -1 && entityClass != null) {
+			try {
+				result = entityClass.getDeclaredConstructor().newInstance();
+			} catch (Exception e) {
+				Logger.error(DatatableRestControllerV2.class, e);
+			}
+		}
+
+		if (result == null && repo.existsById(id)) {
 			Optional<T> byId = Optional.empty();
 
 			if (checkDomainId) {
@@ -330,6 +383,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				result = byId.get();
 			}
 		}
+
 		return processFromEntity(result, ProcessItemAction.GETONE, 1);
 	}
 
@@ -1508,6 +1562,67 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		}
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
+	}
+
+	/**
+	 * Return SUM values of columns belonging to entity declared in parameter columns[].
+	 * <p>
+	 * If column do not exist for this entity, OR column is not subclass of Number, then empty string for column is returned.
+	 * @param entity
+	 * @param columns string arraya of column names to sum (aka entity field names), they must be numerical types (subclass of Number)
+	 * @return
+	 */
+	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
+	@GetMapping("/sumAll")
+	public String getSum(T entity, @RequestParam(value = "columns[]") String[] columns) {
+
+		clearThreadData();
+
+		JSONObject output = new JSONObject();
+
+		//Get class
+		try {
+			Class<?> clazz = entity.getClass();
+			String tableName;
+
+			if (clazz.isAnnotationPresent(Table.class)) {
+				tableName = clazz.getAnnotation(Table.class).name();
+			} else {
+				//Cant call SimpleQuery without table name
+				return output.toString();
+			}
+
+			String whereClause = "";
+			boolean hasDomainIdField = Arrays.stream(clazz.getDeclaredFields())
+				.anyMatch(field -> field.getName().equals("domainId"));
+			if (hasDomainIdField) {
+				whereClause = " WHERE domain_id = " + CloudToolsForCore.getDomainId();
+			}
+
+			// Get all valid column names from the entity class, because columns[] is unsafe input/parameter
+			Set<String> validColumns = new HashSet<>();
+			for (Field field : clazz.getDeclaredFields()) {
+				if (Number.class.isAssignableFrom(field.getType())) {
+					validColumns.add(field.getName());
+				}
+			}
+
+			//iterate over parameters and get sum for each column
+			for(String column : columns) {
+				if (validColumns.contains(column)) {
+					//Ok, its numerical type
+					output.put(column, new SimpleQuery().forNumber("SELECT SUM(" + DB.removeSlashes(column) + ") FROM " + DB.removeSlashes(tableName) + whereClause));
+				} else {
+					//Field is not numerical type, set empty string
+					output.put(column, "");
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return output.toString();
 	}
 
 	public JpaRepository<T, Long> getRepo() {

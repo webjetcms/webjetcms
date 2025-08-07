@@ -31,13 +31,35 @@ public class DatatableTools {
             for (IwcmFile file : files)
             {
                 if (file.isFile()==false || file.canRead()==false) continue;
-                if (file.getName().endsWith(".png")==false) continue;
+                if (file.getName().endsWith(".png")==false && file.getName().endsWith(".jpg")==false && file.getName().endsWith(".gif")==false) continue;
+                //skip screenshots and system/hidden files
+                if (file.getName().startsWith("screenshot") || file.getName().startsWith("editoricon") || file.getName().startsWith("_")) continue;
 
                 String fileName = file.getName().substring(0, file.getName().lastIndexOf("."));
                 options.add(new OptionDto(fileName, fileName, rootPath+file.getName()));
             }
         }
         return options;
+    }
+
+    /**
+     * Create list of options for DataTableColumnType.IMAGE_RADIO with align options
+     * Use as:
+     *
+     * @DataTableColumn(inputType = DataTableColumnType.IMAGE_RADIO, title = "components.app-social_icon.editor_components.align", tab = "style", className = "image-radio-horizontal image-radio-fullwidth")
+     * private String socialIconAlign = "left";
+     *
+     * public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+     *    options.put("socialIconAlign", DatatableTools.getAlignOptions());
+     * }
+     * @return - list of align options
+     */
+    public static List<OptionDto> getAlignOptions() {
+        List<OptionDto> optionsMap = new ArrayList<>();
+        optionsMap.add(new OptionDto("left", "left", "/components/_common/custom_styles/images/icon_align_left.png"));
+        optionsMap.add(new OptionDto("center", "center", "/components/_common/custom_styles/images/icon_align_center.png"));
+        optionsMap.add(new OptionDto("right", "right", "/components/_common/custom_styles/images/icon_align_right.png"));
+        return optionsMap;
     }
 
 }

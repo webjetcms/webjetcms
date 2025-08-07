@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -41,6 +42,7 @@ public class TranslationKeyEntity {
     private String key;
 
     //Field is not showed but used to get translation key value from DB
+    @Lob
     @Column(name = "prop_value")
     private String value;
 
@@ -299,27 +301,34 @@ public class TranslationKeyEntity {
     }
 
     public String getOriginalValue(char a) {
-        switch (a) {
-            case 'A':
-                return originalValueA;
-            case 'B':
-                return originalValueB;
-            case 'C':
-                return originalValueC;
-            case 'D':
-                return originalValueD;
-            case 'E':
-                return originalValueE;
-            case 'F':
-                return originalValueF;
-            case 'G':
-                return originalValueG;
-            case 'H':
-                return originalValueH;
-            case 'I':
-                return originalValueI;
-            case 'J':
-                return originalValueJ;
+        // Return the original value for the given field letter (A-J), case-insensitive.
+        switch (Character.toUpperCase(a)) {
+            case 'A': return originalValueA;
+            case 'B': return originalValueB;
+            case 'C': return originalValueC;
+            case 'D': return originalValueD;
+            case 'E': return originalValueE;
+            case 'F': return originalValueF;
+            case 'G': return originalValueG;
+            case 'H': return originalValueH;
+            case 'I': return originalValueI;
+            case 'J': return originalValueJ;
+            default: return null;
+        }
+    }
+
+    public String getFieldValue(char a) {
+        switch (Character.toUpperCase(a)) {
+            case 'A': return fieldA;
+            case 'B': return fieldB;
+            case 'C': return fieldC;
+            case 'D': return fieldD;
+            case 'E': return fieldE;
+            case 'F': return fieldF;
+            case 'G': return fieldG;
+            case 'H': return fieldH;
+            case 'I': return fieldI;
+            case 'J': return fieldJ;
             default: return null;
         }
     }

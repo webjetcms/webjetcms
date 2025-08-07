@@ -10,7 +10,7 @@ block content
 
             var tabs = [
                 { id: 'description', title: '[[\#{components.audit_log.description}]]', selected: true, content: '<div></div>' },
-                { id: 'main', title: '[[\#{editor.tab.basic_info}]]' }
+                { id: 'main', title: '[[\#{datatable.tab.basic}]]' }
             ];
 
             var columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.AuditLogEntity")})];

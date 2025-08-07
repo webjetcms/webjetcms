@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Size;
@@ -70,7 +71,7 @@ public class AuditLogEntity {
 		this.userFullName = userFullName;
 	}
 
-	@Size(max = 1000)
+	@Lob
 	@Column(name = "description")
 	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
 			@DataTableColumnEditor(type = "textarea", attr = {

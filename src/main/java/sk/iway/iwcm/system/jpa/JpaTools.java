@@ -1,5 +1,15 @@
 package sk.iway.iwcm.system.jpa;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.Predicate;
+
 import org.eclipse.persistence.expressions.Expression;
 import org.eclipse.persistence.expressions.ExpressionBuilder;
 import org.eclipse.persistence.internal.jpa.querydef.CompoundExpressionImpl;
@@ -12,24 +22,17 @@ import org.eclipse.persistence.queries.ReportQueryResult;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.system.spring.SpringTools;
 import sk.iway.iwcm.utils.Pair;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import jakarta.persistence.criteria.Predicate;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *  JpaTools.java - podporne nastroje pre JPA
@@ -586,5 +589,10 @@ public class JpaTools
 		} catch (Exception e) {
 			Logger.error(e);
 		}
+	}
+
+	public static JpaEntityManager getSpringEntityManager(Class<?> clazz) {
+		SpringTools springTools = Tools.getSpringBean("springTools", SpringTools.class);
+		return springTools.getSpringEntityManager(clazz);
 	}
 }

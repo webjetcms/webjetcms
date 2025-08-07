@@ -574,6 +574,7 @@
                     byIdExportColumnName: "id"
                 });
 
+                this.formDetailTable.hideButton('create');
                 this.formDetailTable.hideButton('import');
                 this.formDetailTable.hideButton('duplicate');
 

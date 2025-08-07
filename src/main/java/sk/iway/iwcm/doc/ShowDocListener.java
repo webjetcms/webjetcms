@@ -2,7 +2,6 @@ package sk.iway.iwcm.doc;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -15,23 +14,11 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 @Component
 public class ShowDocListener {
 
-    //@Autowired
-    //private DocDetailsRepository docRepo;
-
-    @Autowired
-    private HttpServletRequest request;
-
     private NavbarService navbarService = new NavbarService();
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.doc.ShowDocBean'")
-    public void test(final WebjetEvent<ShowDocBean> event) {
+    public void setRequestData(final WebjetEvent<ShowDocBean> event) {
         WebjetEventType eventType = event.getEventType();
-
-        //Nastaví DocDetails objekt z DB pomocou setForceShowDoc (to zanmená že ďalej sa bude pracovať s týmto objektom)
-        if(eventType == WebjetEventType.ON_START) {
-            //DocDetails forceDoc = docRepo.getOne(Long.valueOf(event.getSource().getDocId()));
-            //event.getSource().setForceShowDoc(forceDoc);
-        }
 
         DocDetails sourceDoc = event.getSource().getDoc();
         if(eventType == WebjetEventType.ON_END && sourceDoc != null) {
@@ -79,7 +66,7 @@ public class ShowDocListener {
             }
 
             //Set navbar
-            sourceRequest.setAttribute("navbar", navbarService.getNavbar(sourceDoc, request));
+            sourceRequest.setAttribute("navbar", navbarService.getNavbar(sourceDoc, sourceRequest));
         }
     }
 }

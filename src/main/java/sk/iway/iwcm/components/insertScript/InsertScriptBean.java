@@ -104,11 +104,11 @@ public class InsertScriptBean extends ActiveRecordRepository implements Serializ
     )
     List<InsertScriptDocBean> docIds; //NOSONAR
 
+    @Lob
     @Column(name="script_body")
     @Convert(converter = AllowHtmlAttributeConverter.class)
     @DataTableColumn(inputType=DataTableColumnType.TEXTAREA, tab="scriptBody", title="components.insert_script.body", className = "textarea-code show-html")
     String scriptBody;
-
 
     @Column(name="save_date")
     @Temporal(TemporalType.TIMESTAMP)

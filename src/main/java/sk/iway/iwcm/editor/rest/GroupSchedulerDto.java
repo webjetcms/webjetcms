@@ -78,6 +78,7 @@ public class GroupSchedulerDto {
     @Column(name = "sync_status")
     private Integer syncStatus;
 
+    @Lob
     @Column(name = "html_head")
     private String htmlHead;
 

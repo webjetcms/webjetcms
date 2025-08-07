@@ -166,6 +166,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/component")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/linkcheck")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/attributes")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/webpages/mirroring")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/gallery")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/image-editor")),
@@ -180,6 +181,7 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-log-files")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-list")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/templates/news")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-groups-list")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/configuration")),

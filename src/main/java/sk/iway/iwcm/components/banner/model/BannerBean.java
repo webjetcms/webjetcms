@@ -12,6 +12,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -195,6 +196,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 
 
 		/*HTML BANNER columns*/
+		@Lob
 		@Column(name = "html_code")
 		@DataTableColumn(
 			inputType = DataTableColumnType.TEXTAREA,
@@ -250,6 +252,7 @@ public class BannerBean extends ActiveRecordRepository implements Serializable {
 		)
 		private String secondaryHeader;
 
+		@Lob
 		@Column(name = "description_text")
 		@DataTableColumn(
 			inputType = DataTableColumnType.QUILL,

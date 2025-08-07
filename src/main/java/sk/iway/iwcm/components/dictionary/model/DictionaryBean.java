@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.validation.constraints.NotBlank;
@@ -63,6 +64,7 @@ public class DictionaryBean extends ActiveRecord implements Serializable
 	private String domain;
 	/********************/
 
+	@Lob
     @Column(name="value")
     @DataTableColumn(inputType = DataTableColumnType.QUILL, title="[[#{components.htmlbox.basic}]]")
 	private String value;

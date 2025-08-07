@@ -20,8 +20,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import org.apache.commons.lang.StringUtils;
-
 import net.sourceforge.stripes.controller.StripesConstants;
 import net.sourceforge.stripes.util.CryptoUtil;
 import sk.iway.iwcm.Adminlog;
@@ -191,7 +189,7 @@ public class ShowDoc extends HttpServlet {
         }
 
         request.setAttribute("doc_id", doc.getDocId());
-        request.setAttribute("doc_title", doc.getTitle());
+        request.setAttribute("doc_title", Tools.convertToHtmlTags(doc.getTitle()));
         request.setAttribute("doc_title_original", doc.getTitle());
         if (Constants.getBoolean("docTitleIncludePath"))
         {
@@ -264,48 +262,7 @@ public class ShowDoc extends HttpServlet {
         request.setAttribute("field_t", doc.getFieldT());
 
         //set navbar
-        String navbar = doc.getNavbar();
-        String navbar2;
-        if ("rdf".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
-        {
-            navbar2 = groupsDB.getNavbarRDF(doc.getGroupId(), doc.getDocId(), request.getSession());
-        }
-        else if ("schema.org".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
-        {
-            navbar2 = groupsDB.getNavbarSchema(doc.getGroupId(), doc.getDocId(), request.getSession());
-        }
-        else
-        {
-            navbar2 = groupsDB.getNavbar(doc.getGroupId(), doc.getDocId(), request.getSession());
-        }
-        if (navbar2.length() > 2)
-        {
-            navbar = navbar2;
-            //ak to nie je default doc pre grupu tak sprav linku
-            if (doc.getDocId() != group.getDefaultDocId())
-            {
-                if (doc.getNavbar().length() > 2)
-                {
-                    if ("rdf".equalsIgnoreCase(Constants.getString("navbarDefaultType")) && navbar.contains("</div>"))
-                    {
-                        navbar = navbar.substring(0, navbar.length()-6) + " " + Constants.getString("navbarSeparator")+" <span>"+doc.getNavbar()+"</span></div>";
-                    }
-                    else if ("schema.org".equalsIgnoreCase(Constants.getString("navbarDefaultType")))
-                    {
-                        int counter = StringUtils.countMatches(navbar, "<li") + 1;
-                        String link = docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request);
-                        navbar = navbar.substring(0, navbar.length() - 5);
-                        navbar = navbar + " <li class=\"is-item\" itemprop=\"itemListElement\" itemscope=\"\" itemtype=\"http://schema.org/ListItem\"><a href=\"" + link + "\" class=\"navbar\" itemprop=\"item\"><span itemprop=\"name\">" + Tools.convertToHtmlTags(doc.getNavbar()) + "</span></a><meta itemprop=\"position\" content=\"" + counter + "\"></li>";
-                        navbar += "\n</ol>";
-                    }
-                    else
-                    {
-                        navbar = navbar + " " + Constants.getString("navbarSeparator") + " " + Tools.convertToHtmlTags(doc.getNavbar());
-                    }
-                }
-            }
-        }
-        request.setAttribute("navbar", navbar);
+        //it's done in NavbarService
     }
 
     public static void setRequestData(GroupDetails group, GroupsDB groupsDB, HttpServletRequest request)
