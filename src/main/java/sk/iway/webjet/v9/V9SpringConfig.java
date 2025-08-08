@@ -33,7 +33,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @EnableSpringDataWebSupport
 @Configuration
 @EnableWebMvc
-@MultipartConfig
 @ComponentScan({
     "sk.iway.iwcm.admin",
     "sk.iway.iwcm.calendar",
@@ -165,7 +164,7 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
     @Bean(name = "multipartResolver")
     public CommonsMultipartResolver multipartResolver() {
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-        //TODO: JAKARTA multipartResolver.setMaxUploadSize(-1);
+        multipartResolver.setMaxUploadSize(-1);
         return multipartResolver;
     }
 

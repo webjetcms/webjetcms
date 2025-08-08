@@ -200,7 +200,7 @@ public abstract class HtmlTagSupport extends StripesTagSupport implements Dynami
         }
 
       writeAttributes(writer);
-      writer.print(" />");
+      writer.print(isXmlTags() ? " />" : ">");
     } catch (IOException ioe) {
       JspException jspe =
           new JspException(

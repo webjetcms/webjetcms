@@ -50,7 +50,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -1524,7 +1523,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			checkItemPermsThrows(entity, -1L);
 			T newT = this.insertItem(entity);
 			afterSave(entity, newT);
-			return new ResponseEntity<>(newT, (HttpHeaders)null, HttpStatus.CREATED);
+			return new ResponseEntity<>(newT, null, HttpStatus.CREATED);
 		}
 	}
 

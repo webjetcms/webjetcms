@@ -8,10 +8,6 @@ import java.util.Map;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-
 import sk.iway.iwcm.Tools;
 
 public class DatatablePageImpl<T> extends PageImpl<T> {
@@ -23,8 +19,7 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
     private List<NotifyBean> notify;
 
     public DatatablePageImpl(List<T> content) {
-        //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
-        super(content, PageRequest.of(0, content.size() < 1 ? 1 : content.size(), Sort.unsorted()), content.size());
+        super(content);
     }
 
     public DatatablePageImpl(Page<T> page) {
@@ -34,10 +29,6 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
             DatatablePageImpl<T> pageImpl = (DatatablePageImpl<T>)page;
             this.options = pageImpl.options;
         }
-    }
-
-    public DatatablePageImpl(List<T> content, Pageable pageable, long total) {
-        super(content, pageable, total);
     }
 
     private List<OptionDto> getFieldOptions(String field) {

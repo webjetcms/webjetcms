@@ -10,8 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ReservationObjectRepository extends DomainIdRepository<ReservationObjectEntity, Long> {
-    @Query("SELECT roe FROM ReservationObjectEntity roe WHERE roe.id IN :ids")
-    List<ReservationObjectEntity> findAllByIdIn(@Param("ids") Integer[] ids);
+    List<ReservationObjectEntity> findAllByIdIn(Integer[] ids);
 
     @Query("SELECT roe.reservationForAllDay FROM ReservationObjectEntity roe WHERE roe.id = :id")
     Boolean isReservationForAllDay(@Param("id")Long id);

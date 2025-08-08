@@ -8,7 +8,6 @@ import org.displaytag.exception.RuntimeLookupException;
 import org.displaytag.model.Cell;
 import org.displaytag.model.DefaultComparator;
 import org.displaytag.model.Row;
-import org.displaytag.model.RowSorter;
 import org.displaytag.util.LookupUtil;
 
 import sk.iway.iwcm.Tools;
@@ -98,7 +97,7 @@ public class NumberComparator extends DefaultComparator implements Serializable
       }
       catch (ObjectLookupException e)
       {
-          throw new RuntimeLookupException(RowSorter.class, this.property, e);
+          throw new RuntimeLookupException(getClass(), this.property, e);
       }
 
 

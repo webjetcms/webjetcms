@@ -250,11 +250,13 @@
             <fileset dir="${outdir}WEB-INF/lib/">
                 <include name="wj*.jar"/>
                 <include name="stripes-*.jar"/>
+                <include name="displaytag-*.jar"/>
             </fileset>
         </unzip>
         <copy todir="${root}/libs" overwrite="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes">
                 <include name="net/**"/>
+                <include name="org/**"/>
             </fileset>
         </copy>
         <jar compress="${compress}" jarfile="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" defaultexcludes="true">
