@@ -647,7 +647,13 @@ task writePom() {
             }
 
             //remove sk.iway artifacts, they are packages to webjet-VERSION-libs.jar
-            if (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName)==false && "stripes".equals(artifactName)==false) {
+            if (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName)==false) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
+
+            //remove stripes, it is integrated with our changes in libs jar
+            if ("stripes".equals(artifactName)) {
                 println "----> removing: "+artifactName
                 i.remove();
             }
