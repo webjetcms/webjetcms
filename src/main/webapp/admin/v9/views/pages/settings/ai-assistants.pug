@@ -5,11 +5,11 @@ block content
     script.
         var aiAssistantsDataTable;
         window.domReady.add(function () {
-            console.log("IDE KURWA");
 
             var tabs = [
-                {id: 'basic', title: 'basic', selected: true, content:'<div></div>'},
-                {id: 'description', title: 'role description'}
+                {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true, content:'<div></div>'},
+                {id: 'instructions', title: '[[\#{components.ai_assistants.instruction_tab}]]'},
+                {id: 'advanced', title: '[[\#{datatable.tab.advanced}]]'}
             ]
 
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.kokos.OpenAiAssistantsEntity')})];
@@ -38,6 +38,6 @@ block content
         });
 
     style.
-        div.DTE_Field_Name_roleDescription label { display: none; }
+        div.DTE_Field_Name_instructions label { display: none; }
 
     <table class="datatableInit table"></table>

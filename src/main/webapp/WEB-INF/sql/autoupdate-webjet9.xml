@@ -1937,11 +1937,18 @@
                         CREATE TABLE open_ai_assistants (
                             id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
                             name VARCHAR(255) NOT NULL,
+                            class_name VARCHAR(255) NOT NULL,
+                            field_from VARCHAR(255) NOT NULL,
+                            field_to VARCHAR(255) NOT NULL,
                             assistant_key VARCHAR(255) NOT NULL,
-                            role_description TEXT,
+                            instructions TEXT NOT NULL,
                             model VARCHAR(255) DEFAULT 'gpt-3.5-turbo',
                             temperature FLOAT DEFAULT 0.7,
                             created_at TIMESTAMP DEFAULT NULL,
+                            reasoning_effort VARCHAR(255) DEFAULT 'medium',
+                            top_p FLOAT DEFAULT 1.0,
+                            description TEXT,
+                            keep_html BOOLEAN DEFAULT FALSE,
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -1951,11 +1958,18 @@
                         CREATE TABLE open_ai_assistants (
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             name NVARCHAR(255) NOT NULL,
+                            class_name NVARCHAR(255) NOT NULL,
+                            field_from NVARCHAR(255) NOT NULL,
+                            field_to NVARCHAR(255) NOT NULL,
                             assistant_key NVARCHAR(255) NOT NULL,
-                            role_description NTEXT,
+                            instructions NTEXT NOT NULL,
                             model NVARCHAR(255) DEFAULT 'gpt-3.5-turbo',
                             temperature FLOAT DEFAULT 0.7,
                             created_at DATETIME DEFAULT NULL,
+                            reasoning_effort NVARCHAR(255) DEFAULT 'medium',
+                            top_p FLOAT DEFAULT 1.0,
+                            description NTEXT,
+                            keep_html BIT DEFAULT 0,
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -1965,11 +1979,18 @@
                         CREATE TABLE open_ai_assistants (
                             id INTEGER NOT NULL PRIMARY KEY,
                             name NVARCHAR2(255) NOT NULL,
+                            class_name NVARCHAR2(255) NOT NULL,
+                            field_from NVARCHAR2(255) NOT NULL,
+                            field_to NVARCHAR2(255) NOT NULL,
                             assistant_key NVARCHAR2(255) NOT NULL,
-                            role_description CLOB,
+                            instructions CLOB NOT NULL,
                             model NVARCHAR2(255) DEFAULT 'gpt-3.5-turbo',
                             temperature FLOAT DEFAULT 0.7,
                             created_at TIMESTAMP DEFAULT NULL,
+                            reasoning_effort NVARCHAR2(255) DEFAULT 'medium',
+                            top_p FLOAT DEFAULT 1.0,
+                            description CLOB,
+                            keep_html NUMBER(1) DEFAULT 0,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_open_ai_assistants START WITH 1;
@@ -1992,11 +2013,18 @@
                         CREATE TABLE open_ai_assistants (
                             id INT DEFAULT NEXTVAL('S_open_ai_assistants') PRIMARY KEY NOT NULL,
                             name VARCHAR(255) NOT NULL,
+                            class_name VARCHAR(255) NOT NULL,
+                            field_from VARCHAR(255) NOT NULL,
+                            field_to VARCHAR(255) NOT NULL,
                             assistant_key VARCHAR(255) NOT NULL,
-                            role_description TEXT,
+                            instructions TEXT NOT NULL,
                             model VARCHAR(255) DEFAULT 'gpt-3.5-turbo',
                             temperature FLOAT DEFAULT 0.7,
                             created_at TIMESTAMP DEFAULT NULL,
+                            reasoning_effort VARCHAR(255) DEFAULT 'medium',
+                            top_p FLOAT DEFAULT 1.0,
+                            description TEXT,
+                            keep_html BOOLEAN DEFAULT FALSE,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>

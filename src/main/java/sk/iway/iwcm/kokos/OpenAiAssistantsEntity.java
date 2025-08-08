@@ -33,13 +33,68 @@ public class OpenAiAssistantsEntity {
     private Long id;
 
     @Column(name = "name")
-    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = "", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = "components.ai_assistants.name", tab = "basic")
     @NotBlank
     @Size(max = 255)
     private String name;
 
+    @Column(name = "class_name")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "basic",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/openai-assistants/autocomplete-class"),
+					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+				}
+			)
+		}
+    )
+    @NotBlank
+    @Size(max = 255)
+    private String className;
+
+    @Column(name = "field_from")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "basic",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/openai-assistants/autocomplete-field"),
+					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
+				}
+			)
+		}
+    )
+    @NotBlank
+    @Size(max = 255)
+    private String fieldFrom;
+
+    @Column(name = "field_to")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "basic",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/openai-assistants/autocomplete-field"),
+					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
+				}
+			)
+		}
+    )
+    @NotBlank
+    @Size(max = 255)
+    private String fieldTo;
+
+    @Column(name = "model")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.model", tab = "basic")
+    @Size(max = 255)
+    private String model = "gpt-3.5-turbo";
+
     @Column(name = "assistant_key")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "", tab = "basic", className = "hide-on-create",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.assistant_key", tab = "basic", className = "hide-on-create",
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
@@ -50,30 +105,31 @@ public class OpenAiAssistantsEntity {
     private String assistantKey;
 
     @Lob
-    @Column(name = "role_description")
+    @Column(name = "description")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = "components.ai_assistants.description",
+        tab = "basic"
+    )
+    private String description;
+
+    @Lob
+    @Column(name = "instructions")
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         title = "&nbsp;",
-        tab = "description",
+        tab = "instructions",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
                 @DataTableColumnEditorAttr(key = "class", value = "textarea-code")
             })
         }
     )
-    private String roleDescription;
-
-    @Column(name = "model")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
-    @Size(max = 255)
-    private String model;
-
-    @Column(name = "temperature")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "", tab = "basic", renderFormat = "dt-format-number--decimal")
-    private BigDecimal temperature;
+    @NotBlank
+    private String instructions;
 
     @Column(name = "created_at")
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "", tab = "basic", className = "hide-on-create",
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at", tab = "basic", className = "hide-on-create",
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
@@ -81,6 +137,20 @@ public class OpenAiAssistantsEntity {
         }
     )
     private Date created;
+
+    @Column(name = "temperature")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.temperature", tab = "advanced", renderFormat = "dt-format-number--decimal")
+    private BigDecimal temperature = BigDecimal.ONE;
+
+    @Column(name = "keep_html")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.keep_html", tab = "advanced")
+    private Boolean keepHtml;
+
+    @Column(name = "top_p")
+    private BigDecimal topP ;
+
+    @Column(name = "reasoning_effort")
+    private String reasoningEffort;
 
     @Column(name="domain_id")
 	private Integer domainId;
@@ -93,5 +163,12 @@ public class OpenAiAssistantsEntity {
 
     public String getFullName() {
         return name;
+    }
+
+    public void setNameAddPrefix(String name) {
+        String prefix = OpenAiAssistantsService.getAssitantPrefix();
+        //Just in case, so we dont set prefix 2x
+        if(name.startsWith(prefix)) return;
+        this.name = prefix + name;
     }
 }

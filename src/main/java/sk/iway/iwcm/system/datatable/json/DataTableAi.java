@@ -8,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.kokos.OpenAiAssistantsService;
+import sk.iway.iwcm.kokos.OpenAiSupportService;
+import sk.iway.iwcm.utils.Pair;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -19,46 +22,33 @@ public class DataTableAi {
 
     public DataTableAi() {}
 
-    public DataTableAi(Field field) {
-        setPropertiesFromField(field);
-    }
-
     public DataTableAi(String from, String to, String assistant) {
         this.from = from;
         this.to = to;
         this.assistant = assistant;
     }
 
-    public void setPropertiesFromField(Field field) {
-        String pes = "";
+    public void setProperties(Class controller, Field field) {
+        String toField = field.getName();
 
-        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
-        sk.iway.iwcm.system.datatable.annotations.DataTableAi[] ai = annotation.ai();
-
-        if (annotation == null || ai == null || ai.length == 0) {
-            return;
-        }
-
-        String from = ai[0].from();
-        if(Tools.isNotEmpty(from))  {
-            this.from = from;
-        }
-
-        String to = ai[0].to();
-        if(Tools.isNotEmpty(to)) {
-            this.to = to;
-        } else {
-            this.to = this.from;
-        }
-
-        String assistant = ai[0].assistant();
-        if(Tools.isNotEmpty(assistant)) {
-            this.assistant = assistant;
+        Pair<String, String> kk = OpenAiAssistantsService.getAssistantAndFieldFrom(toField, controller.getName());
+        if(kk != null) {
+            this.assistant = kk.getFirst();
+            this.from = kk.getSecond();
+            this.to = toField;
         }
     }
 
     @JsonIgnore
     public boolean isEmpty() {
-        return Tools.isEmpty(from) && Tools.isEmpty(to) && Tools.isEmpty(assistant);
+        //Check that all required fields are set
+        if (Tools.isEmpty(from) || Tools.isEmpty(to) || Tools.isEmpty(assistant)) return true;
+
+        //Check that required fields do NOT have "EMPTY_VALUE" what means it was not set
+        String emptyValue = OpenAiSupportService.EMPTY_VALUE;
+        if( emptyValue.equals(from) || emptyValue.equals(to) || emptyValue.equals(assistant) ) return true;
+
+        //Its good
+        return false;
     }
 }

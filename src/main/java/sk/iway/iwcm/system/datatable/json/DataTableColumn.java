@@ -1,27 +1,33 @@
 package sk.iway.iwcm.system.datatable.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import lombok.Getter;
-import lombok.Setter;
-import sk.iway.iwcm.*;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DataTableColumnType;
-import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
-import sk.iway.iwcm.system.datatable.json.DataTableAi;
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.persistence.Lob;
+import javax.persistence.Transient;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
 /**
  * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
@@ -80,7 +86,7 @@ public class DataTableColumn {
         setPropertiesFromAnnotation(controller, field, prop);
         setEditorPropertiesFromField(field);
 
-        setAiPropertiesFromField(field);
+        setAiPropertiesFromField(controller, field);
 
         setFinalProperties(field);
         setCellNotEditable(field);
@@ -311,12 +317,12 @@ public class DataTableColumn {
         }
     }
 
-    private void setAiPropertiesFromField(Field field) {
+    private void setAiPropertiesFromField(Class controller, Field field) {
         if(ai == null) {
             ai = new DataTableAi();
         }
 
-        ai.setPropertiesFromField(field);
+        ai.setProperties(controller, field);
 
         if (ai.isEmpty()) {
             this.ai = null;

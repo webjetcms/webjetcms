@@ -1,6 +1,6 @@
 package sk.iway.iwcm.kokos;
 
-import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -9,7 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Identity;
@@ -66,53 +68,100 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
         OpenAiAssistantsEntity existingEntity = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id " + id + " not found"));
 
         //Copy just allowed params
+        existingEntity.setNameAddPrefix( entity.getName() );
         existingEntity.setModel( entity.getModel() );
+        existingEntity.setInstructions( entity.getInstructions() );
+        existingEntity.setClassName( entity.getClassName() );
+        existingEntity.setFieldFrom( entity.getFieldFrom() );
+        existingEntity.setFieldTo( entity.getFieldTo() );
+        existingEntity.setDescription( entity.getDescription() );
         existingEntity.setTemperature( entity.getTemperature() );
-        existingEntity.setRoleDescription( entity.getRoleDescription() );
+
+        try {
+            openAiAssistantsService.updateAssistant(existingEntity, getProp());
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage());
+        }
 
         return repo.save(existingEntity);
     }
 
     @Override
+    public boolean deleteItem(OpenAiAssistantsEntity entity, long id) {
+        try {
+            openAiAssistantsService.deleteAssistant(entity, getProp());
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage());
+        }
+
+        repo.delete(entity);
+
+        return true;
+    }
+
+    @Override
     public OpenAiAssistantsEntity insertItem(OpenAiAssistantsEntity entity) {
         String assistantId;
-        String prefix = OpenAiAssistantsService.getAssitantPrefix();
 
-        entity.setName( prefix + entity.getFullName() );
+        entity.setNameAddPrefix( entity.getName() );
 
         try {
-            assistantId = openAiAssistantsService.insertAssistant(entity.getFullName(), entity.getRoleDescription(), entity.getTemperature(), entity.getModel());
+            assistantId = openAiAssistantsService.insertAssistant(entity, getProp());
 
             entity.setCreated(new Date());
             entity.setAssistantKey(assistantId);
             entity.setDomainId(CloudToolsForCore.getDomainId());
 
             return repo.save(entity);
-
-        } catch(IOException e) {
-            //BAdddd
-            return null;
+        } catch(Exception e) {
+            throw new IllegalStateException(e.getMessage());
         }
     }
 
     @Override
     public void getOptions(DatatablePageImpl<OpenAiAssistantsEntity> page) {
-        page.addOptions("model", openAiService.getSupportedModels(), "label", "value", false);
+        page.addOptions("model", openAiService.getSupportedModels(getProp()), "label", "value", false);
     }
 
     @Override
     public boolean processAction(OpenAiAssistantsEntity entity, String action) {
-
         if("syncToTable".equals(action)) {
-
-            openAiAssistantsService.syncToTable(repo);
-
-            return true;
-        } else if("syncFromTable".equals(action)) {
+            try {
+                openAiAssistantsService.syncToTable(repo, getProp());
+            } catch (Exception e) {
+                throw new IllegalStateException(e.getMessage());
+            }
 
             return true;
         }
 
         return false;
+    }
+
+
+
+    @Override
+    public void beforeSave(OpenAiAssistantsEntity entity) {
+        if(entity.getTemperature() == null ) entity.setTemperature(BigDecimal.ONE);
+    }
+
+    @Override
+    public void afterSave(OpenAiAssistantsEntity entity, OpenAiAssistantsEntity saved) {
+        OpenAiAssistantsService.removeAssistantsFromCache();
+    }
+
+    @Override
+    public void afterDelete(OpenAiAssistantsEntity entity, long id) {
+        OpenAiAssistantsService.removeAssistantsFromCache();
+    }
+
+    @GetMapping("/autocomplete-class")
+    public List<String> getAutocompleteClass(@RequestParam String term) {
+        return openAiAssistantsService.getClassOptions(term);
+    }
+
+    @GetMapping("/autocomplete-field")
+    public List<String> getAutocompleteField(@RequestParam String term, @RequestParam("DTE_Field_className") String className) {
+        return openAiAssistantsService.getFieldOptions(term, className);
     }
 }
