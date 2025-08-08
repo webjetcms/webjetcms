@@ -192,10 +192,11 @@ Scenario('media tabulka v NOVEJ stranke @singlethread', async ({I, DT, DTE}) => 
 
 Scenario('kontrola menu poloziek', ({I}) => {
     I.amOnPage("/admin/v9/webpages/media");
-    I.see("Média", "div.menu-wrapper");
+    //verify strict URL handling
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
 
     I.amOnPage("/admin/v9/webpages/media#");
-    I.see("Média", "div.menu-wrapper");
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
 
     I.amOnPage("/admin/v9/webpages/media/");
     I.see("Média", "div.menu-wrapper");

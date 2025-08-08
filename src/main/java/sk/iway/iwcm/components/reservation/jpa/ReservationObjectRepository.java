@@ -15,7 +15,7 @@ public interface ReservationObjectRepository extends DomainIdRepository<Reservat
     @Query("SELECT roe.reservationForAllDay FROM ReservationObjectEntity roe WHERE roe.id = :id")
     Boolean isReservationForAllDay(@Param("id")Long id);
 
-    List<ReservationObjectEntity> findAllByDomainIdAndReservationForAllDayFalse(Integer domainId);    
+    List<ReservationObjectEntity> findAllByDomainIdAndReservationForAllDayFalse(Integer domainId);
 
     List<ReservationObjectEntity> findAllByDomainIdAndReservationForAllDayTrue(Integer domainId);
 

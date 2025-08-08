@@ -2,6 +2,7 @@ package sk.iway.webjet.v9;
 
 import java.util.Locale;
 
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Bean;

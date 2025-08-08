@@ -906,7 +906,7 @@ public class DocForumService {
 
 		buffReader.close();
 		fos.close();
-		uploadedFile.getFileItem().delete();
+		//TODO: JAKARTA uploadedFile.getFileItem().delete();
 
 		//ak prepise existujuci subor, aby sa to neobjavilo v zozname viac krat
 		if (fileAllreadyExists == false) {

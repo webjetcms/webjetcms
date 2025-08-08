@@ -1,7 +1,6 @@
 package sk.iway.iwcm.system.spring.webjet_component;
 
 import java.lang.invoke.MethodHandles;
-import java.security.PrivilegedAction;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -10,10 +9,10 @@ import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.el.ELManager;
-import javax.el.ExpressionFactory;
-import javax.validation.MessageInterpolator;
-import javax.validation.ValidationException;
+import jakarta.el.ELManager;
+import jakarta.el.ExpressionFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.ValidationException;
 
 import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTerm;
 import org.hibernate.validator.internal.engine.messageinterpolation.InterpolationTermType;
@@ -24,8 +23,8 @@ import org.hibernate.validator.internal.engine.messageinterpolation.parser.Token
 import org.hibernate.validator.internal.util.ConcurrentReferenceHashMap;
 import org.hibernate.validator.internal.util.logging.Log;
 import org.hibernate.validator.internal.util.logging.LoggerFactory;
-import org.hibernate.validator.internal.util.privilegedactions.GetClassLoader;
-import org.hibernate.validator.internal.util.privilegedactions.SetContextClassLoader;
+import org.hibernate.validator.internal.util.actions.GetClassLoader;
+import org.hibernate.validator.internal.util.actions.SetContextClassLoader;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.hibernate.validator.resourceloading.PlatformResourceBundleLocator;
 import org.hibernate.validator.spi.resourceloading.ResourceBundleLocator;
@@ -217,10 +216,10 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
             Logger.debug(WebjetResourceBundleMessageInterpolator.class, "Loaded expression factory via original TCCL");
             return expressionFactory;
         } else {
-            ClassLoader originalContextClassLoader = run(GetClassLoader.fromContext());
+            ClassLoader originalContextClassLoader = GetClassLoader.fromContext();
 
             try {
-                run(SetContextClassLoader.action(ResourceBundleMessageInterpolator.class.getClassLoader()));
+                SetContextClassLoader.action(ResourceBundleMessageInterpolator.class.getClassLoader());
                 ExpressionFactory expressionFactory;
                 ExpressionFactory var2;
                 if (canLoadExpressionFactory()) {
@@ -230,7 +229,7 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
                     return var2;
                 }
 
-                run(SetContextClassLoader.action(ELManager.class.getClassLoader()));
+                SetContextClassLoader.action(ELManager.class.getClassLoader());
                 if (canLoadExpressionFactory()) {
                     expressionFactory = ELManager.getExpressionFactory();
                     Logger.debug(WebjetResourceBundleMessageInterpolator.class, "Loaded expression factory via EL classloader");
@@ -240,7 +239,7 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
             } catch (Exception var6) {
                 throw LOG.getUnableToInitializeELExpressionFactoryException(var6);
             } finally {
-                run(SetContextClassLoader.action(originalContextClassLoader));
+                SetContextClassLoader.action(originalContextClassLoader);
             }
 
             throw LOG.getUnableToInitializeELExpressionFactoryException((Throwable)null);
@@ -254,9 +253,5 @@ public class WebjetResourceBundleMessageInterpolator implements MessageInterpola
         } catch (Exception var1) {
             return false;
         }
-    }
-
-    private static <T> T run(PrivilegedAction<T> action) {
-        return action.run();
     }
 }
