@@ -195,6 +195,8 @@ module.exports = {
         //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/restart")),
         //new HtmlWebpackPlugin(generateHtmlPlugins("/settings/missing-keys")),
 
+        new HtmlWebpackPlugin(generateHtmlPlugins("/settings/ai-assistants")),
+
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/cache-objects")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/settings/persistent-cache-objects")),
