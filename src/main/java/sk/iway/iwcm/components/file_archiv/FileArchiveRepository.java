@@ -73,8 +73,6 @@ public interface FileArchiveRepository extends DomainIdRepository<FileArchivator
     @Query("SELECT COUNT(fab.id) FROM FileArchivatorBean fab WHERE fab.referenceToMain = :referenceToMain AND fab.domainId = :domainId")
     public Integer countReferencesToMain(@Param("referenceToMain")String referenceToMain, @Param("domainId")Integer domainId);
 
-    Page<FileArchivatorBean> findAllByIdInAndReferenceIdAndReferenceToMainAndDomainId(Integer[] ids, Integer referenceId, String referenceToMain, Integer domainId, Pageable pageable);
-
     @Query("SELECT fab FROM FileArchivatorBean fab WHERE fab.globalId IN :globalIds AND fab.referenceId = -1 AND fab.uploaded = -1 AND (fab.referenceToMain IS NULL OR fab.referenceToMain = '') AND fab.domainId = :domainId")
     List<FileArchivatorBean> findAllMainFilesUploadedNotPatternIdsIn(@Param("globalIds") List<Integer> globalIds, @Param("domainId") Integer domainId, Pageable pageable);
 

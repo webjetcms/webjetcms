@@ -57,5 +57,6 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     List<UserDetailsEntity> findByLoginAndAdminTrueOrderByIdDesc(String login);
 
     //get users by id list
-    List<UserDetailsEntity> findAllByIdIn(List<Long> ids);
+    @Query(value = "SELECT u FROM UserDetailsEntity u WHERE u.id IN :ids")
+    List<UserDetailsEntity> findAllByIdIn(@Param("ids") List<Long> ids);
 }
