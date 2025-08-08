@@ -131,8 +131,8 @@
                 <include name="*.config"/>
             </fileset>
         </copy>
-        <sync todir="${root}/../../../webjetcms_jakarta/lib" overwrite="true">
-            <fileset dir="${root}/../../lib/">
+        <sync todir="${root}/../../../webjetcms_jakarta/libs" overwrite="true">
+            <fileset dir="${root}/../../libs/">
                 <include name="**/*"/>
             </fileset>
         </sync>

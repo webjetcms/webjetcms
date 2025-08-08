@@ -651,6 +651,12 @@ task writePom() {
                 println "----> removing: "+artifactName
                 i.remove();
             }
+
+            //remove stripes, it is integrated with our changes in libs jar
+            if ("stripes".equals(artifactName)) {
+                println "----> removing: "+artifactName
+                i.remove();
+            }
         }
 
         // zapis pom subor
