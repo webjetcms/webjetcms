@@ -14,6 +14,8 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.PermissionGroupDB;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -139,27 +141,52 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             Logger.info(OAuth2SuccessHandler.class, "Found OAuth2 groups for user " + userDetails.getEmail() + ": " + oauth2Groups);
 
             // Nájdi existujúce skupiny používateľov v WebJET
-            List<UserGroupDetails> matchingGroups = new ArrayList<>();
+            List<UserGroupDetails> matchingUserGroups = new ArrayList<>();
+            List<PermissionGroupBean> matchingPermissionGroups = new ArrayList<>();
+
             for (String groupName : oauth2Groups) {
                 try {
+                    // Skús nájsť UserGroup
                     UserGroupDetails userGroup = UserGroupsDB.getInstance().getUserGroup(groupName);
                     if (userGroup != null) {
-                        matchingGroups.add(userGroup);
+                        matchingUserGroups.add(userGroup);
                         Logger.debug(OAuth2SuccessHandler.class, "Found matching user group: " + groupName);
                     } else {
                         Logger.debug(OAuth2SuccessHandler.class, "User group not found: " + groupName);
                     }
+
+                    // Skús nájsť PermissionGroup
+                    try {
+                        PermissionGroupBean permissionGroup = PermissionGroupDB.getPermissionGroup(groupName);
+                        if (permissionGroup != null) {
+                            matchingPermissionGroups.add(permissionGroup);
+                            Logger.debug(OAuth2SuccessHandler.class, "Found matching permission group: " + groupName);
+                        } else {
+                            Logger.debug(OAuth2SuccessHandler.class, "Permission group not found: " + groupName);
+                        }
+                    } catch (Exception ex) {
+                        Logger.debug(OAuth2SuccessHandler.class, "Error finding permission group '" + groupName + "': " + ex.getMessage());
+                    }
+
                 } catch (Exception ex) {
-                    Logger.debug(OAuth2SuccessHandler.class, "Error finding user group '" + groupName + "': " + ex.getMessage());
+                    Logger.debug(OAuth2SuccessHandler.class, "Error finding groups for '" + groupName + "': " + ex.getMessage());
                 }
             }
 
-            if (!matchingGroups.isEmpty()) {
-                // Priradí používateľa do nájdených skupín používateľov
-                assignUserToUserGroups(userDetails, matchingGroups);
-                Logger.info(OAuth2SuccessHandler.class, "Assigned user " + userDetails.getEmail() + " to " + matchingGroups.size() + " user groups");
-            } else {
-                Logger.info(OAuth2SuccessHandler.class, "No matching user groups found for user " + userDetails.getEmail());
+            // Priradí používateľa do nájdených skupín používateľov
+            if (!matchingUserGroups.isEmpty()) {
+                assignUserToUserGroups(userDetails, matchingUserGroups);
+                Logger.info(OAuth2SuccessHandler.class, "Assigned user " + userDetails.getEmail() + " to " + matchingUserGroups.size() + " user groups");
+            }
+
+            // Priradí používateľa do nájdených skupín práv
+            if (!matchingPermissionGroups.isEmpty()) {
+                assignUserToPermissionGroups(userDetails, matchingPermissionGroups);
+                Logger.info(OAuth2SuccessHandler.class, "Assigned user " + userDetails.getEmail() + " to " + matchingPermissionGroups.size() + " permission groups");
+            }
+
+            if (matchingUserGroups.isEmpty() && matchingPermissionGroups.isEmpty()) {
+                Logger.info(OAuth2SuccessHandler.class, "No matching user groups or permission groups found for user " + userDetails.getEmail());
             }
         } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, "Error applying OAuth2 permissions for user: " + userDetails.getEmail(), ex);
@@ -308,6 +335,22 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             }
         } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, "Error assigning user to user groups", ex);
+        }
+    }
+
+    /**
+     * Priradí používateľa do zadaných skupín práv
+     */
+    private void assignUserToPermissionGroups(UserDetails userDetails, List<PermissionGroupBean> permissionGroups) {
+        try {
+            // Priradí používateľa do skupín práv
+            for (PermissionGroupBean group : permissionGroups) {
+                UsersDB.addUserToPermissionGroup(userDetails.getUserId(), group.getUserPermGroupId());
+                Logger.debug(OAuth2SuccessHandler.class, "Added user to permission group: " + group.getTitle());
+            }
+            Logger.info(OAuth2SuccessHandler.class, "Successfully assigned user to permission groups");
+        } catch (Exception ex) {
+            Logger.error(OAuth2SuccessHandler.class, "Error assigning user to permission groups", ex);
         }
     }
 }
