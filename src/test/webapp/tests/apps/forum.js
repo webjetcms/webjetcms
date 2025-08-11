@@ -247,6 +247,7 @@ Scenario('Message board', async ({I, DT, DTE}) => {
     //Check delete
     I.wait(3);
     I.click( locate("div.btn-group > span.deleteMessage > a.btn-danger") );
+    I.wait(3);
 
     I.amOnPage("/apps/forum/admin/");
     DT.filterContains("subject", subject);

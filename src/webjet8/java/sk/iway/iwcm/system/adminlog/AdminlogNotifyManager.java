@@ -69,7 +69,7 @@ public class AdminlogNotifyManager
 				if(!descIntToLower.contains(fixCrLf(DB.internationalToEnglish(anb.getText().toLowerCase())))) continue;
 			}
 
-			SendMail.sendCapturingException(prop.getText("components.adminlog.senderEmail.name"), anb.getEmail(), anb.getEmail(), null, null, null, subject, text.toString(), null, null, true, writeToAuditLog);
+			SendMail.sendCapturingException(SendMail.getDefaultSenderName("audit", prop.getText("components.adminlog.senderEmail.name")), SendMail.getDefaultSenderEmail("audit", anb.getEmail()), anb.getEmail(), null, null, null, subject, text.toString(), null, null, true, writeToAuditLog);
 		}
 
 		return(true);

@@ -7,7 +7,7 @@ Before(({ I, login }) => {
 let groupId = 67;
 
 Scenario('generovanie screenov',({ I, DTE, Document }) => {
-    I.amOnPage("/admin/v9/webpages/linkcheck?groupId=" + groupId);
+    I.amOnPage("/admin/v9/webpages/linkcheck/?groupId=" + groupId);
 
     Document.screenshot("/redactor/webpages/linkcheck-datatable.png");
 

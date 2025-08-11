@@ -26,7 +26,8 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
     //tieto WJ admin nepotrebuje, ale ponechavame pre pripadne pouzitie v custom moduloch
     Page<DocDetails> findAllByGroupId(Integer groupId, Pageable pageable);
 
-    Page<DocDetails> findAllByGroupIdIn(int[] groupIds, Pageable pageable);
+    @Query("SELECT d FROM DocDetails d WHERE d.groupId IN :groupIds")
+    Page<DocDetails> findAllByGroupIdIn(@Param("groupIds") int[] groupIds, Pageable pageable);
 
     List<DocDetails> findAllByGroupId(Integer groupId);
 
@@ -50,7 +51,9 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
 
     //
     List<DocDetails> findByDataLike(String data);
-    List<DocDetails> findByDataLikeAndGroupIdIn(String data, int[] subPagesids);
+
+    @Query(value = "SELECT dd FROM DocDetails dd WHERE dd.data LIKE :data AND dd.groupId IN :subPagesids")
+    List<DocDetails> findByDataLikeAndGroupIdIn(@Param("data") String data, @Param("subPagesids") int[] subPagesids);
 
     //
     @Transactional

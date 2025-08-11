@@ -27,7 +27,7 @@ ant -Dcompress=true createUpdateZipJar
 ant rsyncToLicenseServer
 ant deployGithub
 
-#GITHUB: just run ant deployStaging
+#mvnrepository: just run ant deployStaging
 #then close repo and deploy it
 
 cd ..
