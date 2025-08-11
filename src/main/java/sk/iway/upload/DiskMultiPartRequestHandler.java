@@ -160,7 +160,11 @@ public class DiskMultiPartRequestHandler
 	{
 		for (FileItem item : files)
 		{
-			//TODO: JAKARTA item.delete();
+			try {
+				item.delete();
+			} catch (Exception e) {
+				Logger.error(DiskMultiPartRequestHandler.class, "Error deleting file item", e);
+			}
 		}
 	}
 }
