@@ -97,7 +97,6 @@ public class BootstrapPropertyResolver {
     // WebJET CMS - get value from Constants object
     if(Tools.isNotEmpty(Constants.getString("stripes." + key))) return Constants.getString("stripes." + key);
 
-
     try {
       value = this.filterConfig.getInitParameter(key);
     } catch (AccessControlException e) {

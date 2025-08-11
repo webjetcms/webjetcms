@@ -96,11 +96,7 @@ public class UploadedFile
 	{
 		if (localFile!=null && localFile.exists()) localFile.delete();
 
-		try {
-			diskFileItem.delete();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		diskFileItem.delete();
 
 	}
 
