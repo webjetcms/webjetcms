@@ -99,7 +99,7 @@ public class UploadedFile
 		try {
 			diskFileItem.delete();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//ignore
 		}
 
 	}

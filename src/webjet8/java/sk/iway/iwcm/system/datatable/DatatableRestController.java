@@ -94,7 +94,7 @@ public abstract class DatatableRestController<T, ID extends Serializable>
 				T modified = em.merge(entity);
 				em.getTransaction().commit();
 				em.close();
-				return new ResponseEntity<>(modified, (HttpHeaders)null, HttpStatus.OK);
+				return ResponseEntity.ok(modified);
 		  }
 	 }
 
@@ -124,6 +124,6 @@ public abstract class DatatableRestController<T, ID extends Serializable>
 				}
 		  }
 
-		  return new ResponseEntity<>(response, (HttpHeaders)null, HttpStatus.OK);
+		  return ResponseEntity.ok(response);
 	 }
 }

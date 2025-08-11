@@ -250,7 +250,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				try {
 					_parts.get(i)._content.delete();
 				} catch (Exception e) {
-					e.printStackTrace();
+					// ignore
 				}
 			}
 		}
