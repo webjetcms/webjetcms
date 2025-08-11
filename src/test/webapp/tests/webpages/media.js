@@ -191,11 +191,12 @@ Scenario('media tabulka v NOVEJ stranke @singlethread', async ({I, DT, DTE}) => 
 });
 
 Scenario('kontrola menu poloziek', ({I}) => {
-    //TODO: JAKARTAI.amOnPage("/admin/v9/webpages/media");
-    //I.see("Média", "div.menu-wrapper");
+    I.amOnPage("/admin/v9/webpages/media");
+    //verify strict URL handling
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
 
-    I.amOnPage("/admin/v9/webpages/media/#");
-    I.see("Média", "div.menu-wrapper");
+    I.amOnPage("/admin/v9/webpages/media#");
+    I.see("Chyba 404 - požadovaná stránka neexistuje");
 
     I.amOnPage("/admin/v9/webpages/media/");
     I.see("Média", "div.menu-wrapper");

@@ -1524,7 +1524,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			checkItemPermsThrows(entity, -1L);
 			T newT = this.insertItem(entity);
 			afterSave(entity, newT);
-			return new ResponseEntity<>(newT, (HttpHeaders)null, HttpStatus.CREATED);
+			return ResponseEntity.status(HttpStatus.CREATED).body(newT);
 		}
 	}
 

@@ -249,8 +249,8 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 			{
 				try {
 					_parts.get(i)._content.delete();
-				} catch (IOException e) {
-					e.printStackTrace();
+				} catch (Exception e) {
+					// ignore
 				}
 			}
 		}

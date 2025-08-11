@@ -21,21 +21,21 @@
 
         <!-- skopiruj nase src -->
         <copy todir="${root}/src-utf8/" overwrite="true">
-        <fileset dir="${root}/../../src/webjet8/java">
-            <include name="**/*"/>
-        </fileset>
-        <fileset dir="${root}/../../src/main/java">
-            <include name="**/*"/>
-        </fileset>
-        <fileset dir="${root}/../../src/main/aspectj">
-            <include name="**/*"/>
-        </fileset>
+            <fileset dir="${root}/../../src/webjet8/java">
+                <include name="**/*"/>
+            </fileset>
+            <fileset dir="${root}/../../src/main/java">
+                <include name="**/*"/>
+            </fileset>
+            <fileset dir="${root}/../../src/main/aspectj">
+                <include name="**/*"/>
+            </fileset>
         </copy>
 
         <javax2jakarta
-        src="${root}/src-utf8/"
-        dest="${root}/src-utf8-jakarta/"
-        profile="tomcat"
+            src="${root}/src-utf8/"
+            dest="${root}/src-utf8-jakarta/"
+            profile="tomcat"
         />
 
         <replace dir="${root}/src-utf8-jakarta/" token="javax.persistence." value="jakarta.persistence."/>
@@ -67,8 +67,8 @@
         <replace dir="${root}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getName()" value="uploadedFile.getOriginalFilename()"/>
         <replace dir="${root}/src-utf8-jakarta/" token="uploadedFile.getFileItem().getInputStream()" value="uploadedFile.getInputStream()"/>
         <replace dir="${root}/src-utf8-jakarta/">
-        <replacetoken><![CDATA[ResponseEntity<>(response, null, HttpStatus.OK)]]></replacetoken>
-        <replacevalue><![CDATA[ResponseEntity<>(response, HttpStatus.OK)]]></replacevalue>
+            <replacetoken><![CDATA[ResponseEntity<>(response, null, HttpStatus.OK)]]></replacetoken>
+            <replacevalue><![CDATA[ResponseEntity<>(response, HttpStatus.OK)]]></replacevalue>
         </replace>
 
         <replace dir="${root}/src-utf8-jakarta/" token="org.apache.commons.fileupload." value="org.apache.commons.fileupload2.core."/>
@@ -94,11 +94,14 @@
         <replace dir="${root}/src-utf8-jakarta/" token="import org.springframework.data.domain.PageImpl;" value=""/>
         <replace dir="${root}/src-utf8-jakarta/" token="public class DatatablePageImpl&lt;T&gt; extends PageImpl&lt;T&gt; {" value="public class DatatablePageImpl&lt;T&gt; extends org.springframework.data.domain.PageImpl&lt;T&gt; {"/>
 
+        <replace dir="${root}/src-utf8-jakarta/" token="DefaultMultipartHttpServletRequest" value="StandardMultipartHttpServletRequest"/>
+        <replace dir="${root}/src-utf8-jakarta/" token="multipartResolver.setMaxUploadSize(-1);" value=""/>
+
         <!-- zachovaj .properties subory z classes adresara -->
         <copy todir="${root}/resources-saved/" overwrite="true">
-        <fileset dir="${root}/../../src/main/webapp/WEB-INF/classes/">
-            <include name="text*.properties"/>
-        </fileset>
+            <fileset dir="${root}/../../src/main/webapp/WEB-INF/classes/">
+                <include name="text*.properties"/>
+            </fileset>
         </copy>
 
         <!-- skopiruj SRC do JAKARTA verzie -->
