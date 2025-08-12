@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.kokos.OpenAiAssistantsService;
 import sk.iway.iwcm.kokos.OpenAiSupportService;
@@ -29,13 +30,17 @@ public class DataTableAi {
     }
 
     public void setProperties(Class controller, Field field) {
-        String toField = field.getName();
+        try {
+            String toField = field.getName();
 
-        Pair<String, String> kk = OpenAiAssistantsService.getAssistantAndFieldFrom(toField, controller.getName());
-        if(kk != null) {
-            this.assistant = kk.getFirst();
-            this.from = kk.getSecond();
-            this.to = toField;
+            Pair<String, String> kk = OpenAiAssistantsService.getAssistantAndFieldFrom(toField, controller.getName());
+            if(kk != null) {
+                this.assistant = kk.getFirst();
+                this.from = kk.getSecond();
+                this.to = toField;
+            }
+        } catch (Exception e) {
+            Logger.error(DataTableAi.class, "Error setting properties", e);
         }
     }
 

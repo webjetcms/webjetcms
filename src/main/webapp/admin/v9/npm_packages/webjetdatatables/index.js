@@ -1703,7 +1703,7 @@ export const dataTableInit = options => {
                                     destEl.prop( "disabled", true );
 
                                     $.ajax({
-                                        type: "GET",
+                                        type: "POST",
                                         url: "/admin/rest/openai/doc-perex",
                                         dataType: 'text',
                                         data: {
