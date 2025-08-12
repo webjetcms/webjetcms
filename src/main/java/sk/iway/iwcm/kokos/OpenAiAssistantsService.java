@@ -16,11 +16,13 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Service;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -35,7 +37,7 @@ import sk.iway.iwcm.utils.Pair;
 @Service
 public class OpenAiAssistantsService extends OpenAiSupportService {
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final CloseableHttpClient client = HttpClients.createDefault();
     private static final String CLASS_FIELD_MAP_KEY = "OpenAiAssistantsService_classFieldsMap";
     private static final String ALL_ASSISTANTS_KEY = "OpenAiAssistantsService_allAssistants";
     private static final String SERVICE_NAME = "OpenAiAssistantsService";
@@ -179,31 +181,22 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
     }
 
     public String insertAssistant(OpenAiAssistantsEntity entity, Prop prop) throws IOException {
-        // Create JSON body
         JSONObject json = new JSONObject();
         json.put(ASSISTANT_FIELDS.NAME.value(), entity.getFullName());
         json.put(ASSISTANT_FIELDS.INSTRUCTIONS.value(), entity.getInstructions());
         json.put(ASSISTANT_FIELDS.MODEL.value(), entity.getModel());
         json.put(ASSISTANT_FIELDS.TEMPERATURE.value(), entity.getTemperature());
 
-        RequestBody body = RequestBody.create(
-            json.toString(),
-            MediaType.parse("application/json")
-        );
+        HttpPost post = new HttpPost(ASSISTANTS_URL);
+        post.setEntity(getRequestBody(json.toString()));
+        addHeaders(post, true, true);
 
-        Request.Builder builder = new Request.Builder().url(ASSISTANTS_URL).post(body);
-        addHeaders(builder, true, true);
-
-        try (Response response = client.newCall(builder.build()).execute()) {
-            if(response.isSuccessful() == false)
+        try (CloseableHttpResponse response = client.execute(post)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "insertAssistant");
-
-            String responseBody = response.body().string();
-
-            // Extract assistant_id
+            String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             JSONObject responseJson = new JSONObject(responseBody);
             String assistantId = responseJson.getString("id");
-
             return assistantId;
         }
     }
@@ -216,27 +209,21 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         json.put(ASSISTANT_FIELDS.TEMPERATURE.value(), assistantEnity.getTemperature());
         json.put(ASSISTANT_FIELDS.DESCRIPTION.value(), assistantEnity.getDescription());
 
-        Request.Builder builder = new Request.Builder()
-            .url(ASSISTANTS_URL + "/" + assistantEnity.getAssistantKey())
-            .post(getRequestBody(json.toString()));
+        HttpPost post = new HttpPost(ASSISTANTS_URL + "/" + assistantEnity.getAssistantKey());
+        post.setEntity(getRequestBody(json.toString()));
+        addHeaders(post, true, true);
 
-        addHeaders(builder, true, true);
-
-        try (Response response = client.newCall(builder.build()).execute()) {
-            if(response.isSuccessful() == false)
+        try (CloseableHttpResponse response = client.execute(post)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "updateAssistant");
         }
     }
 
     public void deleteAssistant(OpenAiAssistantsEntity assistantEnity, Prop prop) throws IOException {
-        Request.Builder builder = new Request.Builder()
-            .url(ASSISTANTS_URL + "/" + assistantEnity.getAssistantKey())
-            .delete();
-
-        addHeaders(builder, false, true);
-
-        try (Response response = client.newCall(builder.build()).execute()) {
-            if(response.isSuccessful() == false)
+        HttpDelete delete = new HttpDelete(ASSISTANTS_URL + "/" + assistantEnity.getAssistantKey());
+        addHeaders(delete, false, true);
+        try (CloseableHttpResponse response = client.execute(delete)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "deleteAssistant");
         }
     }
@@ -273,41 +260,33 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
 
     private List<OpenAiAssistantsEntity> getAssistantsFromOpenAI(Prop prop) throws IOException {
         List<OpenAiAssistantsEntity> items = new ArrayList<>();
-
         String jsonResponse = getAllAssistantsRequest(prop);
-
-        if(Tools.isEmpty(jsonResponse)) return items;
-
+        if (Tools.isEmpty(jsonResponse)) return items;
         JSONObject root = new JSONObject(jsonResponse);
         JSONArray assistants = root.getJSONArray("data");
-
         for (int i = 0; i < assistants.length(); i++) {
             JSONObject assistant = assistants.getJSONObject(i);
             OpenAiAssistantsEntity entity = new OpenAiAssistantsEntity();
             entity.setId(-1L);
-            entity.setName( getValue(assistant, ASSISTANT_FIELDS.NAME) );
-            entity.setAssistantKey( getValue(assistant, ASSISTANT_FIELDS.ID) );
-            entity.setInstructions( getValue(assistant, ASSISTANT_FIELDS.INSTRUCTIONS) );
-            entity.setModel( getValue(assistant, ASSISTANT_FIELDS.MODEL) );
-            entity.setTemperature( getValue(assistant, ASSISTANT_FIELDS.TEMPERATURE) );
-            entity.setCreated( getValue(assistant, ASSISTANT_FIELDS.CREATED_AT) );
-            entity.setDescription( getValue(assistant, ASSISTANT_FIELDS.DESCRIPTION) );
-
+            entity.setName(getValue(assistant, ASSISTANT_FIELDS.NAME));
+            entity.setAssistantKey(getValue(assistant, ASSISTANT_FIELDS.ID));
+            entity.setInstructions(getValue(assistant, ASSISTANT_FIELDS.INSTRUCTIONS));
+            entity.setModel(getValue(assistant, ASSISTANT_FIELDS.MODEL));
+            entity.setTemperature(getValue(assistant, ASSISTANT_FIELDS.TEMPERATURE));
+            entity.setCreated(getValue(assistant, ASSISTANT_FIELDS.CREATED_AT));
+            entity.setDescription(getValue(assistant, ASSISTANT_FIELDS.DESCRIPTION));
             items.add(entity);
         }
-
         return items;
     }
 
-    private String getAllAssistantsRequest(Prop prop) throws IOException{
-        Request.Builder builder = new Request.Builder().url(ASSISTANTS_URL).get();
-        addHeaders(builder, false, true);
-
-        try (Response response = client.newCall(builder.build()).execute()) {
-            if(response.isSuccessful() == false)
+    private String getAllAssistantsRequest(Prop prop) throws IOException {
+        HttpGet get = new HttpGet(ASSISTANTS_URL);
+        addHeaders(get, false, true);
+        try (CloseableHttpResponse response = client.execute(get)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAllAssistantsRequest");
-
-            return response.body().string();
+            return EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
         }
     }
 }

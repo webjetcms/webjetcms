@@ -6,10 +6,9 @@ import java.util.Date;
 
 import org.json.JSONObject;
 
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -59,36 +58,30 @@ public abstract class OpenAiSupportService {
         return null;
     }
 
-    protected final void addHeaders(Request.Builder builder, boolean addContentType, boolean isAssistantV2) {
+
+    protected final void addHeaders(org.apache.http.client.methods.HttpRequestBase request, boolean addContentType, boolean isAssistantV2) {
         String apiKey = Constants.getString("open_ai_auth_key");
-
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenAI API key is not set.");
-
-        builder.addHeader("Authorization", "Bearer " + apiKey);
-        if(addContentType) builder.addHeader("Content-Type", "application/json");
-        if(isAssistantV2) builder.addHeader("OpenAI-Beta", "assistants=v2");
+        request.setHeader("Authorization", "Bearer " + apiKey);
+        if(addContentType) request.setHeader("Content-Type", "application/json");
+        if(isAssistantV2) request.setHeader("OpenAI-Beta", "assistants=v2");
     }
 
-    protected final RequestBody getRequestBody(String stringBody) {
+    protected final StringEntity getRequestBody(String stringBody) {
         if(Tools.isEmpty(stringBody) == true) stringBody = "{}";
-        return RequestBody.create(stringBody, MediaType.parse("application/json"));
+        return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    protected String handleErrorMessage (Response response, Prop prop) {
-        int code = response.code();
+    protected String handleErrorMessage(CloseableHttpResponse response, Prop prop) {
+        int code = response.getStatusLine().getStatusCode();
         String defaultErrMsg = " (" + code + ") " + prop.getText("html_area.insert_image.error_occured");
-
         try {
-            String responseBody = response.body().string();
+            String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             JSONObject jsonObject = new JSONObject(responseBody);
-
             if (jsonObject.has("error")) {
                 JSONObject error = jsonObject.getJSONObject("error");
-
                 if (error.has("message")) {
                     String errorMessage = error.getString("message");
-
-                    //Get err msg return it
                     return " (" + code + ") " + errorMessage;
                 } else {
                     return defaultErrMsg;
@@ -101,9 +94,9 @@ public abstract class OpenAiSupportService {
         }
     }
 
-    protected String handleErrorMessage (Response response, Prop prop, String serviceName, String methodName) {
+    protected String handleErrorMessage(CloseableHttpResponse response, Prop prop, String serviceName, String methodName) {
         String errMsg = handleErrorMessage(response, prop);
         Adminlog.add(Adminlog.TYPE_AI, serviceName + "." + methodName + " FAILED : " + errMsg, -1, -1);
-        throw new IllegalStateException( errMsg );
+        throw new IllegalStateException(errMsg);
     }
 }

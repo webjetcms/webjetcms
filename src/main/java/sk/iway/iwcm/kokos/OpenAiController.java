@@ -25,7 +25,7 @@ public class OpenAiController {
         this.openAiService = openAiService;
     }
 
-    @PostMapping(value = "doc-perex", produces = "text/plain")
+    @PostMapping(value = "doc-perex", produces = "text/plain;charset=UTF-8")
     public String getGeneratedDocPerex(@RequestParam("assistantName") String assistantName, @RequestParam("inputData") String inputData, HttpServletRequest request) {
         try {
             String answer = openAiService.getAiResponse(assistantName, inputData, Prop.getInstance(request));
