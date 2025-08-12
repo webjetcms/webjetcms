@@ -53,7 +53,7 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
 });
 
 Scenario('Domain test', ({I, DT, Document}) => {
-    I.amOnPage("/apps/calendar/admin/calendar-types");
+    I.amOnPage("/apps/calendar/admin/calendar-types/");
     DT.filterContains("name", "Výstava");
     I.see("Výstava");
 
