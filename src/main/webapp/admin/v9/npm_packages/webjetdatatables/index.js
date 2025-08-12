@@ -55,6 +55,7 @@ import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
+import {EditorAi} from './editor-ai'
 
 const bootstrap = window.bootstrap = require('bootstrap');
 import $ from 'jquery';
@@ -632,24 +633,6 @@ export const dataTableInit = options => {
                 col.editor['label'] = col.editor.label || col.title;
                 col.editor.className = col.className;
                 col.editor.renderFormat = col.renderFormat;
-
-                if("object" == typeof col.ai && col.ai != null && col.ai.length > 0) {
-
-                    col.editor.className += " ai-shit";
-
-                    if (col.editor.hasOwnProperty("attr")) {
-                        col.editor.attr.ai_from = col.ai.from;
-                        col.editor.attr.ai_to = col.ai.to;
-                        col.editor.attr.ai_assistant = col.ai.assistant;
-                    } else {
-                        col.editor.attr = {
-                            "ai_from" : col.ai.from,
-                            "ai_to" : col.ai.to,
-                            "ai_assistant" : col.ai.assistant
-                        }
-                    }
-                }
-
                 col.editor.array = col.array;
 
 
@@ -859,7 +842,8 @@ export const dataTableInit = options => {
                 $("#" + dte._bootstrapDisplay.id).modal("show");
                 //firni event
                 WJ.dispatchEvent('WJ.DTE.open', {
-                    dte: dte
+                    dte: dte,
+                    id: dte.TABLE.DATA.id,
                 });
                 setTimeout(()=> {
                     WJ.dispatchEvent('WJ.DTE.opened', {
@@ -989,7 +973,8 @@ export const dataTableInit = options => {
 
             //firni event
             WJ.dispatchEvent('WJ.DTE.open', {
-                dte: dte
+                dte: dte,
+                id: dte.TABLE.DATA.id
             });
         }
 
@@ -1629,124 +1614,10 @@ export const dataTableInit = options => {
                             tooltipText = WJ.escapeHtml(tooltipText);
                             //console.log("Tooltiptext parsed=", tooltipText);
                             $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1 form-group-tooltip"><button type="button" tabindex="-1" class="btn btn-link btn-tooltip" data-toggle="tooltip" title="' + tooltipText + '" data-html="true"><i class="ti ti-info-circle"></i></button></div>');
-                        } else {
-                            //Add empty DIV so we can use it for AI button
-                            $(el).parents('[data-dte-e="input"]').after('<div class="col-sm-1"></div>');
                         }
 
                         $(el).hide();
                     });
-
-                    function areValid(arr) {
-                        if(arr == null || arr.length < 1) return false;
-
-                        for (let i = 0; i < arr.length; i++) {
-                            if(arr[i] == null || arr[i].length < 1) return false;
-                        }
-
-                        return true;
-                    }
-
-                    //setTimeout(function() {
-                        $.each($('#' + DATA.id + '_modal .DTE_Form_Content').find('.ai-shit'), function (key, parentEl) {
-                            let destEl = null;
-                            let elInput = $(parentEl).find("input.form-control");
-                            let elTextArea = $(parentEl).find("textarea");
-
-                            if(elInput != null && elInput && elInput.length > 0) {
-                                destEl = elInput;
-                            }
-                            else if(elTextArea != null && elTextArea && elTextArea.length > 0) {
-                                destEl = elTextArea;
-                            }
-                            else {
-                                console.log("KURWA");
-                                return;
-                            }
-
-                            let from = destEl.attr("ai_from");
-                            let to = destEl.attr("ai_to");
-                            let assistant = destEl.attr("ai_assistant");
-
-                            //console.log("from=", from, " to=", to, " assistant=", assistant);
-
-                            if(areValid([from, to, assistant]) === true) {
-                                let colSmEl = $(parentEl).find(".col-sm-1");
-
-                                const btn = $('<button>', {
-                                    type: 'button',
-                                    tabindex: '-1',
-                                    class: 'btn btn-sm ai-button'
-                                }).append('<span><i class="ti ti-sparkles"></i><i class="ti ti-loader" style="display:none;"></i></span>');
-
-                                btn.on('click', function() {
-                                    btn.prop("disabled", true);
-                                    btn.find("i.ti-loader").show();
-                                    btn.find("i.ti-sparkles").hide();
-
-                                    let containerEl = btn.parents(".form-group.ai-shit");
-                                    let destEl = null;
-                                    let elInput = $(containerEl).find("input.form-control");
-                                    let elTextArea = $(containerEl).find("textarea");
-
-                                     if(elInput != null && elInput && elInput.length > 0) {
-                                        destEl = elInput;
-                                    }
-                                    else if(elTextArea != null && elTextArea && elTextArea.length > 0) {
-                                        destEl = elTextArea;
-                                    }
-
-                                    //debugger;
-
-                                    let parent = destEl.parents(".DTE_Field_InputControl");
-                                    parent.addClass("box__bg");
-                                    destEl.prop( "disabled", true );
-
-                                    $.ajax({
-                                        type: "POST",
-                                        url: "/admin/rest/ai/assistant/response/",
-                                        data: {
-                                            "assistantName": assistant,
-                                            "inputData": EDITOR.get("data")
-                                        },
-                                        success: function(res)
-                                        {
-                                            console.log("AI response=", res);
-
-                                            //handle res.error
-                                            if (res.error) {
-                                                WJ.notifyError("AI", res.error);
-                                            }
-
-                                            EDITOR.set(to, res.response);
-                                            btn.prop("disabled", false);
-                                            btn.find("i.ti-loader").hide();
-                                            btn.find("i.ti-sparkles").show();
-
-                                            parent.removeClass("box__bg");
-                                            destEl.prop( "disabled", false );
-
-                                            WJ.notifyInfo("AI", "Total tokens: " + res.totalTokens, 3000);
-                                        },
-                                        error: function(xhr, ajaxOptions, thrownError) {
-
-                                            btn.prop("disabled", false);
-                                            btn.find("i.ti-loader").hide();
-                                            btn.find("i.ti-sparkles").show();
-
-                                            parent.removeClass("box__bg");
-                                            destEl.prop( "disabled", false );
-
-                                            WJ.notifyError("AI", WJ.translate("datatable.error.unknown"));
-                                        }
-                                    });
-                                });
-
-                                $(colSmEl).prepend(btn);
-                            }
-                        });
-                    //}, 5000);
-
                 }
 
                 if (action === 'edit') {
@@ -3755,6 +3626,8 @@ export const dataTableInit = options => {
     TABLE.getAjaxUrl = function() {
         return TABLE.DATA.url;
     }
+
+    var editorAi = new EditorAi(EDITOR);
 
     return TABLE;
 }

@@ -25,4 +25,7 @@ $secondary-font-family: 'Asap', sans-serif;
 :root {
   --bs-danger: #{$danger};
   --bs-warning: #{$warning};
+  --wj-ai-color: #{$ai-color};
+  --wj-ai-color-dark: #{$ai-color-dark};
+  --wj-ai-color-hover: #{$ai-color-hover};
 }

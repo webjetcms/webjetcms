@@ -330,7 +330,7 @@ public class DataTableColumn {
 
                 for (AssistantDefinitionEntity kk : assistants) {
                     DataTableAi ai = new DataTableAi();
-                    ai.setAssistant(kk.getAssistantKey());
+                    ai.setAssistant(kk.getName());
                     ai.setFrom(kk.getFieldFrom());
                     ai.setTo(toField);
                     if (ai.isEmpty()==false) {
