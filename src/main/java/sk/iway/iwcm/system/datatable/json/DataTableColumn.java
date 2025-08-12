@@ -25,6 +25,8 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiAssistantsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
@@ -66,7 +68,7 @@ public class DataTableColumn {
     private Boolean orderable;
     private String orderProperty;
 
-    private DataTableAi ai;
+    private List<DataTableAi> ai = null;
 
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
@@ -317,15 +319,27 @@ public class DataTableColumn {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private void setAiPropertiesFromField(Class controller, Field field) {
-        if(ai == null) {
-            ai = new DataTableAi();
-        }
+        try {
+            String toField = field.getName();
 
-        ai.setProperties(controller, field);
+            List<AssistantDefinitionEntity> assistants = OpenAiAssistantsService.getAssistantAndFieldFrom(toField, controller.getName());
+            if(assistants != null && assistants.size() > 0) {
+                ai = new ArrayList<>();
 
-        if (ai.isEmpty()) {
-            this.ai = null;
+                for (AssistantDefinitionEntity kk : assistants) {
+                    DataTableAi ai = new DataTableAi();
+                    ai.setAssistant(kk.getAssistantKey());
+                    ai.setFrom(kk.getFieldFrom());
+                    ai.setTo(toField);
+                    if (ai.isEmpty()==false) {
+                        this.ai.add(ai);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Logger.error(DataTableAi.class, "Error setting properties", e);
         }
     }
 

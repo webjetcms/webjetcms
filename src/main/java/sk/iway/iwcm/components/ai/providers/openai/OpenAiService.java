@@ -40,6 +40,13 @@ public class OpenAiService extends OpenAiSupportService {
     private static final int CACHE_MODELS_TIME = 24 * 60;
     private static final String SERVICE_NAME = "OpenAiService";
 
+    public List<LabelValue> getSupportedProviders(Prop prop) {
+        List<LabelValue> supportedValues = new ArrayList<>();
+        supportedValues.add(new LabelValue("OpenAI", "openai"));
+        supportedValues.add(new LabelValue(prop.getText("components.ai_assistants.provider.local"), "local"));
+        return supportedValues;
+    }
+
     public List<LabelValue> getSupportedModels(Prop prop) {
         List<LabelValue> supportedValues = new ArrayList<>();
 

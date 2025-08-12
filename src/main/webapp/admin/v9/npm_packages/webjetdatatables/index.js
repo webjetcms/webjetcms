@@ -633,7 +633,7 @@ export const dataTableInit = options => {
                 col.editor.className = col.className;
                 col.editor.renderFormat = col.renderFormat;
 
-                if("object" == typeof col.ai) {
+                if("object" == typeof col.ai && col.ai != null && col.ai.length > 0) {
 
                     col.editor.className += " ai-shit";
 

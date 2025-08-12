@@ -667,7 +667,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@Lob
 	@Column(name = "html_data")
 	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA, className = "wrap", title="editor.tab.perex",
-		tab = "perex", visible = false, sortAfter = "eventDateDate")
+		tab = "perex", visible = false, sortAfter = "eventDateDate"
+	)
 	@javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
 	private String htmlData = "";
 

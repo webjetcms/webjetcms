@@ -89,6 +89,10 @@ public class AssistantDefinitionEntity {
     @Size(max = 255)
     private String fieldTo;
 
+    @Column(name = "provider")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.provider", tab = "basic")
+    private String provider = "openai";
+
     @Column(name = "model")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.model", tab = "basic")
     @Size(max = 255)
@@ -120,6 +124,7 @@ public class AssistantDefinitionEntity {
         inputType = DataTableColumnType.TEXTAREA,
         title = "&nbsp;",
         tab = "instructions",
+        className = "wrap",
         editor = {
             @DataTableColumnEditor(type = "textarea", attr = {
                 @DataTableColumnEditorAttr(key = "class", value = "textarea-code")

@@ -34,7 +34,6 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.utils.Pair;
 
 @Service
 public class OpenAiAssistantsService extends OpenAiSupportService {
@@ -54,14 +53,41 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
      * @param srcClass
      * @return Pair<String, String> where -> <aiAssistantName, fromField>
      */
-    public static Pair<String, String> getAssistantAndFieldFrom(String fieldTo, String srcClass) {
+    public static List<AssistantDefinitionEntity> getAssistantAndFieldFrom(String fieldTo, String srcClass) {
+        List<AssistantDefinitionEntity> assistants = new ArrayList<>();
+        if(Tools.isEmpty(fieldTo) || Tools.isEmpty(srcClass)) return assistants;
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
-            if(aiAssistant.getClassName().equals(srcClass) && aiAssistant.getFieldTo().equals(fieldTo)) {
-                return new Pair<>(aiAssistant.getName(), aiAssistant.getFieldFrom());
+            boolean addAssistant = false;
+            String[] entityClasses = Tools.getTokens(aiAssistant.getClassName(), "\n,;", true);
+            for (String entityClass : entityClasses) {
+                boolean isMatchingClass = isMatching(entityClass, srcClass);
+
+                if (isMatchingClass) {
+                    String[] toFields = Tools.getTokens(aiAssistant.getFieldTo(), "\n,;", true);
+                    for (String field : toFields) {
+                        if (isMatching(field, fieldTo)) {
+                            addAssistant = true;
+                            break;
+                        }
+                    }
+                }
+                if (addAssistant) break;
+            }
+            if (addAssistant) {
+                assistants.add(aiAssistant);
             }
         }
+        return assistants;
+    }
 
-        return null;
+    private static boolean isMatching(String text, String search) {
+        if (search.equals(text)) return true;
+        else if ("*".equals(text)) return true;
+        else if (text.startsWith("%") && text.endsWith("!") && text.length()>4 && search.endsWith(text.substring(1, text.length()-1))) return true;
+        else if (text.startsWith("%") && text.length()>2 && search.indexOf(text.substring(1))!=-1) return true;
+        else if (text.endsWith("!") && text.length()>=2 && search.equals(text.substring(0, text.length()-1))) return true;
+
+        return false;
     }
 
     public List<String> getFieldOptions(String term, String className) {

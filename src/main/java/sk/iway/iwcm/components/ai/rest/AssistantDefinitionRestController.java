@@ -125,6 +125,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("model", openAiService.getSupportedModels(getProp()), "label", "value", false);
+        page.addOptions("provider", openAiService.getSupportedProviders(getProp()), "label", "value", false);
     }
 
     @Override
