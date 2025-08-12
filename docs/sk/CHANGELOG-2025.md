@@ -42,6 +42,10 @@
 
 ![](redactor/webpages/pagebuilder.png)
 
+- V editore pridaná možnosť kliknúť na ikonu obrázka na začiatku poľa, pre jeho zobrazenie v novej karte.
+
+![](developer/datatables-editor/field-type-elfinder.png)
+
 ### Aplikácie
 
 - Pridaná možnosť zobraziť aplikáciu len prihlásenému/neprihlásenému používateľovi. Režim sa nastavuje v karte [Zobrazenie nastavenia aplikácie](redactor/webpages/working-in-editor/README.md#karta-zobrazenie) v editore stránok (#57893).

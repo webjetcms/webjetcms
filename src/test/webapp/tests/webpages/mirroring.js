@@ -34,7 +34,7 @@ Scenario('Mirroring 1 - Structure prepare', async ({I, DT, DTE, Document}) => {
     cz_mirroring = "cz_mirroring_" + randomNumber;
     sk_mirroring_copy = "sk_mirroring_copy_" + randomNumber;
 
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
     Document.switchDomain("mirroring.tau27.iway.sk");
 
     I.say("Create root groups");
@@ -303,7 +303,7 @@ Scenario('odhlasenie', ({ I }) => {
 });
 
 function deleteGroup(I, DT, DTE, groupName, groupId) {
-    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
     I.say("Select group to delete");
     I.waitForElement(locate("a.jstree-anchor").withText(groupName), 10);
