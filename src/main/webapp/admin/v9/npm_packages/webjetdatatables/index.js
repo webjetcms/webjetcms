@@ -1704,21 +1704,29 @@ export const dataTableInit = options => {
 
                                     $.ajax({
                                         type: "POST",
-                                        url: "/admin/rest/openai/doc-perex",
-                                        dataType: 'text',
+                                        url: "/admin/rest/ai/assistant/response/",
                                         data: {
                                             "assistantName": assistant,
                                             "inputData": EDITOR.get("data")
                                         },
                                         success: function(res)
                                         {
-                                            EDITOR.set(to, res);
+                                            console.log("AI response=", res);
+
+                                            //handle res.error
+                                            if (res.error) {
+                                                WJ.notifyError("AI", res.error);
+                                            }
+
+                                            EDITOR.set(to, res.response);
                                             btn.prop("disabled", false);
                                             btn.find("i.ti-loader").hide();
                                             btn.find("i.ti-sparkles").show();
 
                                             parent.removeClass("box__bg");
                                             destEl.prop( "disabled", false );
+
+                                            WJ.notifyInfo("AI", "Total tokens: " + res.totalTokens, 3000);
                                         },
                                         error: function(xhr, ajaxOptions, thrownError) {
 
@@ -1729,7 +1737,7 @@ export const dataTableInit = options => {
                                             parent.removeClass("box__bg");
                                             destEl.prop( "disabled", false );
 
-                                            alert("PICE - nieco nejde");
+                                            WJ.notifyError("AI", WJ.translate("datatable.error.unknown"));
                                         }
                                     });
                                 });

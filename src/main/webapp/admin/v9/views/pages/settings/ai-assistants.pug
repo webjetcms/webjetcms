@@ -12,10 +12,10 @@ block content
                 {id: 'advanced', title: '[[\#{datatable.tab.advanced}]]'}
             ]
 
-            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.kokos.OpenAiAssistantsEntity')})];
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
             aiAssistantsDataTable = WJ.DataTable({
-                url: "/admin/rest/openai-assistants/",
+                url: "/admin/rest/ai/assistant-definition/",
                 columns: columns,
                 serverSide: true,
                 tabs: tabs

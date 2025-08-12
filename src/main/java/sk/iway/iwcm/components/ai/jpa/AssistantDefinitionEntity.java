@@ -1,4 +1,4 @@
-package sk.iway.iwcm.kokos;
+package sk.iway.iwcm.components.ai.jpa;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,6 +14,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiAssistantsService;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -25,7 +26,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 //@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CLIENT_SPECIFIC)
-public class OpenAiAssistantsEntity {
+public class AssistantDefinitionEntity {
 
     @Id
     @Column(name = "id")

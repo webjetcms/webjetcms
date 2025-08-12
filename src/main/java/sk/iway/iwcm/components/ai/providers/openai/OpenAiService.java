@@ -1,4 +1,4 @@
-package sk.iway.iwcm.kokos;
+package sk.iway.iwcm.components.ai.providers.openai;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -26,6 +26,9 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
@@ -80,17 +83,19 @@ public class OpenAiService extends OpenAiSupportService {
     }
 
 
-    public String getAiResponse(String assistantName, String content, Prop prop) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop) throws IOException, InterruptedException {
+
+        AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
         if(Tools.isEmpty(assistantName)) throw new IllegalStateException("No assistant found.");
 
         if(Tools.isEmpty(content)) throw new IllegalStateException("No content provided for assistant.");
 
-        OpenAiAssistantsRepository repo = Tools.getSpringBean("openAiAssistantsRepository", OpenAiAssistantsRepository.class);
+        AssistantDefinitionRepository repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
         if(repo == null) throw new IllegalStateException("Something went wrong.");
 
         String prefix = OpenAiAssistantsService.getAssitantPrefix();
-        Optional<OpenAiAssistantsEntity> assistant = repo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
+        Optional<AssistantDefinitionEntity> assistant = repo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
 
         if(assistant.isPresent() == false) throw new IllegalStateException("No assistant found.");
 
@@ -114,10 +119,10 @@ public class OpenAiService extends OpenAiSupportService {
             String runId = createRun(threadId, assistantId, temperature, prop);
 
             // 4. Wait for run to complete
-            waitForRunCompletion(threadId, runId, assistant.get(), prop);
+            waitForRunCompletion(threadId, runId, assistant.get(), prop, responseDto);
 
             // 5. Get assistant's reply
-            return getLatestMessage(threadId, prop);
+            return getLatestMessage(threadId, prop, responseDto);
 
         } finally {
             // 6. Delete thread (cleanup)
@@ -165,7 +170,7 @@ public class OpenAiService extends OpenAiSupportService {
         }
     }
 
-    private void waitForRunCompletion(String threadId, String runId, OpenAiAssistantsEntity dbAssitant, Prop prop) throws IOException, InterruptedException {
+    private void waitForRunCompletion(String threadId, String runId, AssistantDefinitionEntity dbAssitant, Prop prop, AssistantResponseDTO responseDto) throws IOException, InterruptedException {
         while (true) {
             HttpGet get = new HttpGet(THREADS_URL + threadId + "/runs/" + runId);
             addHeaders(get, false, true);
@@ -192,6 +197,10 @@ public class OpenAiService extends OpenAiSupportService {
                         sb.append("\tcompletion_tokens: ").append(completionTokens).append("\n");
                         sb.append("\t total_tokens: ").append(totalTokens).append("\n");
                         Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
+
+                        responseDto.setPromptTokens(promptTokens);
+                        responseDto.setCompletionTokens(completionTokens);
+                        responseDto.setTotalTokens(totalTokens);
                     }
                     break;
                 }
@@ -201,7 +210,7 @@ public class OpenAiService extends OpenAiSupportService {
         }
     }
 
-    private String getLatestMessage(String threadId, Prop prop) throws IOException {
+    private AssistantResponseDTO getLatestMessage(String threadId, Prop prop, AssistantResponseDTO responseDto) throws IOException {
         HttpGet get = new HttpGet(THREADS_URL + threadId + "/messages");
         addHeaders(get, false, true);
         try (CloseableHttpResponse response = client.execute(get)) {
@@ -211,7 +220,8 @@ public class OpenAiService extends OpenAiSupportService {
             JSONArray data = res.getJSONArray("data");
             JSONObject firstMessage = data.getJSONObject(0);
             JSONArray contentArray = firstMessage.getJSONArray("content");
-            return contentArray.getJSONObject(0).getJSONObject("text").getString("value");
+            responseDto.setResponse(contentArray.getJSONObject(0).getJSONObject("text").getString("value"));
+            return responseDto;
         }
     }
 

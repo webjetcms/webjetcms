@@ -1,4 +1,4 @@
-package sk.iway.iwcm.kokos;
+package sk.iway.iwcm.components.ai.rest;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -17,23 +17,27 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiAssistantsService;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
-@RequestMapping("/admin/rest/openai-assistants/")
+@RequestMapping("/admin/rest/ai/assistant-definition/")
 @PreAuthorize("@WebjetSecurityService.isAdmin()")
 @Datatable
-public class OpenAiAssistantsRestController extends DatatableRestControllerV2<OpenAiAssistantsEntity, Long> {
+public class AssistantDefinitionRestController extends DatatableRestControllerV2<AssistantDefinitionEntity, Long> {
 
-    private final OpenAiAssistantsRepository repo;
+    private final AssistantDefinitionRepository repo;
     private final OpenAiService openAiService;
     private final OpenAiAssistantsService openAiAssistantsService;
 
     @Autowired
-    public OpenAiAssistantsRestController(OpenAiAssistantsRepository repo, OpenAiService openAiService, OpenAiAssistantsService openAiAssistantsService) {
+    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, OpenAiService openAiService, OpenAiAssistantsService openAiAssistantsService) {
         super(repo);
         this.repo = repo;
         this.openAiService = openAiService;
@@ -41,7 +45,7 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
     }
 
     @Override
-    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, OpenAiAssistantsEntity> target, Identity user, Errors errors, Long id, OpenAiAssistantsEntity entity) {
+    public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
         if("create".equals(target.getAction()) && Tools.isNotEmpty(entity.getName())) {
             //New ame must be unique
             String prefix = OpenAiAssistantsService.getAssitantPrefix();
@@ -63,9 +67,9 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
     }
 
     @Override
-    public OpenAiAssistantsEntity editItem(OpenAiAssistantsEntity entity, long id) {
+    public AssistantDefinitionEntity editItem(AssistantDefinitionEntity entity, long id) {
         //Get entity from DB
-        OpenAiAssistantsEntity existingEntity = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id " + id + " not found"));
+        AssistantDefinitionEntity existingEntity = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id " + id + " not found"));
 
         //Copy just allowed params
         existingEntity.setNameAddPrefix( entity.getName() );
@@ -87,7 +91,7 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
     }
 
     @Override
-    public boolean deleteItem(OpenAiAssistantsEntity entity, long id) {
+    public boolean deleteItem(AssistantDefinitionEntity entity, long id) {
         try {
             openAiAssistantsService.deleteAssistant(entity, getProp());
         } catch (Exception e) {
@@ -100,7 +104,7 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
     }
 
     @Override
-    public OpenAiAssistantsEntity insertItem(OpenAiAssistantsEntity entity) {
+    public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
         String assistantId;
 
         entity.setNameAddPrefix( entity.getName() );
@@ -119,12 +123,12 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
     }
 
     @Override
-    public void getOptions(DatatablePageImpl<OpenAiAssistantsEntity> page) {
+    public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("model", openAiService.getSupportedModels(getProp()), "label", "value", false);
     }
 
     @Override
-    public boolean processAction(OpenAiAssistantsEntity entity, String action) {
+    public boolean processAction(AssistantDefinitionEntity entity, String action) {
         if("syncToTable".equals(action)) {
             try {
                 openAiAssistantsService.syncToTable(repo, getProp());
@@ -141,17 +145,17 @@ public class OpenAiAssistantsRestController extends DatatableRestControllerV2<Op
 
 
     @Override
-    public void beforeSave(OpenAiAssistantsEntity entity) {
+    public void beforeSave(AssistantDefinitionEntity entity) {
         if(entity.getTemperature() == null ) entity.setTemperature(BigDecimal.ONE);
     }
 
     @Override
-    public void afterSave(OpenAiAssistantsEntity entity, OpenAiAssistantsEntity saved) {
+    public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
         OpenAiAssistantsService.removeAssistantsFromCache();
     }
 
     @Override
-    public void afterDelete(OpenAiAssistantsEntity entity, long id) {
+    public void afterDelete(AssistantDefinitionEntity entity, long id) {
         OpenAiAssistantsService.removeAssistantsFromCache();
     }
 

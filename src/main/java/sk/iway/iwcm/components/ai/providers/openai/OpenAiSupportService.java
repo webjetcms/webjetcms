@@ -1,4 +1,4 @@
-package sk.iway.iwcm.kokos;
+package sk.iway.iwcm.components.ai.providers.openai;
 
 import java.io.IOException;
 import java.math.BigDecimal;

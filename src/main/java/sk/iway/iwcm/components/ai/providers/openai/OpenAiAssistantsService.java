@@ -1,4 +1,4 @@
-package sk.iway.iwcm.kokos;
+package sk.iway.iwcm.components.ai.providers.openai;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -27,6 +27,8 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -53,7 +55,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
      * @return Pair<String, String> where -> <aiAssistantName, fromField>
      */
     public static Pair<String, String> getAssistantAndFieldFrom(String fieldTo, String srcClass) {
-        for(OpenAiAssistantsEntity aiAssistant : getAssistantsFromDB(null)) {
+        for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
             if(aiAssistant.getClassName().equals(srcClass) && aiAssistant.getFieldTo().equals(fieldTo)) {
                 return new Pair<>(aiAssistant.getName(), aiAssistant.getFieldFrom());
             }
@@ -106,6 +108,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         }
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Map<String, List<String>> thisShit(Map<String, List<String>> classFieldsMap, Class foundClass) {
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
         provider.addIncludeFilter(new AnnotationTypeFilter(foundClass));
@@ -140,18 +143,18 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
      * LOAD assiatsnts from OpenAI. Filter only WebJET CMS assiatnts for cuyrrent domain.
      * Update or insert them in table (DB) when needed.
      */
-    public void syncToTable(OpenAiAssistantsRepository repo, Prop prop) throws IOException {
-        List<OpenAiAssistantsEntity> openAiAssitants = getAssistantsFromOpenAI(prop);
+    public void syncToTable(AssistantDefinitionRepository repo, Prop prop) throws IOException {
+        List<AssistantDefinitionEntity> openAiAssitants = getAssistantsFromOpenAI(prop);
         //Filter only our
         openAiAssitants = filterAssistants(openAiAssitants);
 
-        List<OpenAiAssistantsEntity> tableAiAssitants = getAssistantsFromDB(repo);
+        List<AssistantDefinitionEntity> tableAiAssitants = getAssistantsFromDB(repo);
 
         //Check if openAi assiatnt is table -> YES(update), NO(insert)
-        for(OpenAiAssistantsEntity openAiAssistant : openAiAssitants) {
+        for(AssistantDefinitionEntity openAiAssistant : openAiAssitants) {
             Long recordId = null;
 
-            for(OpenAiAssistantsEntity tableAiAssitant : tableAiAssitants) {
+            for(AssistantDefinitionEntity tableAiAssitant : tableAiAssitants) {
                 if(tableAiAssitant.getFullName().equalsIgnoreCase( openAiAssistant.getFullName() )) {
                     recordId = tableAiAssitant.getId();
                     break;
@@ -168,11 +171,11 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         }
     }
 
-    private List<OpenAiAssistantsEntity> filterAssistants(List<OpenAiAssistantsEntity> assistantsList) {
+    private List<AssistantDefinitionEntity> filterAssistants(List<AssistantDefinitionEntity> assistantsList) {
         String prefix = getAssitantPrefix();
-        List<OpenAiAssistantsEntity> filteredAssitants = new ArrayList<>();
+        List<AssistantDefinitionEntity> filteredAssitants = new ArrayList<>();
 
-        for(OpenAiAssistantsEntity assistant : assistantsList) {
+        for(AssistantDefinitionEntity assistant : assistantsList) {
             if(assistant.getFullName().startsWith(prefix))
                 filteredAssitants.add(assistant);
         }
@@ -180,7 +183,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         return filteredAssitants;
     }
 
-    public String insertAssistant(OpenAiAssistantsEntity entity, Prop prop) throws IOException {
+    public String insertAssistant(AssistantDefinitionEntity entity, Prop prop) throws IOException {
         JSONObject json = new JSONObject();
         json.put(ASSISTANT_FIELDS.NAME.value(), entity.getFullName());
         json.put(ASSISTANT_FIELDS.INSTRUCTIONS.value(), entity.getInstructions());
@@ -201,7 +204,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         }
     }
 
-    public void updateAssistant(OpenAiAssistantsEntity assistantEnity, Prop prop) throws IOException {
+    public void updateAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws IOException {
         JSONObject json = new JSONObject();
         json.put(ASSISTANT_FIELDS.NAME.value(), assistantEnity.getFullName());
         json.put(ASSISTANT_FIELDS.INSTRUCTIONS.value(), assistantEnity.getInstructions());
@@ -219,7 +222,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         }
     }
 
-    public void deleteAssistant(OpenAiAssistantsEntity assistantEnity, Prop prop) throws IOException {
+    public void deleteAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws IOException {
         HttpDelete delete = new HttpDelete(ASSISTANTS_URL + "/" + assistantEnity.getAssistantKey());
         addHeaders(delete, false, true);
         try (CloseableHttpResponse response = client.execute(delete)) {
@@ -228,7 +231,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         }
     }
 
-    private static List<OpenAiAssistantsEntity> getAssistantsFromDB(OpenAiAssistantsRepository repo) {
+    private static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
         int domainId = CloudToolsForCore.getDomainId();
 
         Cache c = Cache.getInstance();
@@ -236,16 +239,16 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         if(assistantsObj != null) {
             //We have cached list for this domain, return it
             @SuppressWarnings("unchecked")
-            List<OpenAiAssistantsEntity> items = (List<OpenAiAssistantsEntity>) assistantsObj;
+            List<AssistantDefinitionEntity> items = (List<AssistantDefinitionEntity>) assistantsObj;
             return items;
         } else {
             //Load them form DB
             String prefix = getAssitantPrefix();
 
             if(repo == null)
-                repo = Tools.getSpringBean("openAiAssistantsRepository", OpenAiAssistantsRepository.class);
+                repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
 
-            List<OpenAiAssistantsEntity> tableAiAssitants = repo.findAllByNameLikeAndDomainId(prefix + "%", CloudToolsForCore.getDomainId());
+            List<AssistantDefinitionEntity> tableAiAssitants = repo.findAllByNameLikeAndDomainId(prefix + "%", CloudToolsForCore.getDomainId());
 
             //Cache list of assistants
             c.setObject(ALL_ASSISTANTS_KEY + "_" + domainId, tableAiAssitants, 60);
@@ -258,15 +261,15 @@ public class OpenAiAssistantsService extends OpenAiSupportService {
         c.removeObject(ALL_ASSISTANTS_KEY + "_" + CloudToolsForCore.getDomainId());
     }
 
-    private List<OpenAiAssistantsEntity> getAssistantsFromOpenAI(Prop prop) throws IOException {
-        List<OpenAiAssistantsEntity> items = new ArrayList<>();
+    private List<AssistantDefinitionEntity> getAssistantsFromOpenAI(Prop prop) throws IOException {
+        List<AssistantDefinitionEntity> items = new ArrayList<>();
         String jsonResponse = getAllAssistantsRequest(prop);
         if (Tools.isEmpty(jsonResponse)) return items;
         JSONObject root = new JSONObject(jsonResponse);
         JSONArray assistants = root.getJSONArray("data");
         for (int i = 0; i < assistants.length(); i++) {
             JSONObject assistant = assistants.getJSONObject(i);
-            OpenAiAssistantsEntity entity = new OpenAiAssistantsEntity();
+            AssistantDefinitionEntity entity = new AssistantDefinitionEntity();
             entity.setId(-1L);
             entity.setName(getValue(assistant, ASSISTANT_FIELDS.NAME));
             entity.setAssistantKey(getValue(assistant, ASSISTANT_FIELDS.ID));
