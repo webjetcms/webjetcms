@@ -335,6 +335,10 @@ public class DataTableColumn {
                     ai.setTo(toField);
                     ai.setDescription(kk.getDescription());
                     ai.setProvider(kk.getProvider());
+                    if ("local".equals(ai.getProvider())) {
+                        //we need instructions to execute local AI in browser
+                        ai.setInstructions(kk.getInstructions());
+                    }
                     if (ai.isEmpty()==false) {
                         this.ai.add(ai);
                     }

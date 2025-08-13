@@ -1,3 +1,5 @@
+import { AiLocalExecutor } from "../ai-local-executor";
+
 export class EditorAi {
 
     EDITOR = null;
@@ -8,11 +10,13 @@ export class EditorAi {
         maxHideTime: null
     };
     $progressElement = null;
+    aiLocalExecutor = null;
 
     //constructor
     constructor(EDITOR) {
         this.EDITOR = EDITOR;
         //console.log("EditorAi instance created, editor=", this.EDITOR);
+        this.aiLocalExecutor = new AiLocalExecutor(EDITOR);
         EDITOR.editorAi = this;
 
         this.bindEvents();
@@ -126,7 +130,7 @@ export class EditorAi {
         }
     }
 
-    _executeAction(button, aiCol) {
+    async _executeAction(button, aiCol) {
         // Implement AI button click handling logic here
         //console.log("Executing action for AI column:", aiCol);
 
@@ -139,35 +143,42 @@ export class EditorAi {
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
-        $.ajax({
-            type: "POST",
-            url: "/admin/rest/ai/assistant/response/",
-            data: {
-                "assistantName": aiCol.assistant,
-                "inputData": self.EDITOR.get(aiCol.from)
-            },
-            success: function(res)
-            {
-                //console.log("AI response=", res);
+        if ("local" === aiCol.provider) {
+            await this.aiLocalExecutor.execute(aiCol);
+            self._hideLoader(button);
+            contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", 0));
+            self._closeToast(3000);
+        } else {
+            $.ajax({
+                type: "POST",
+                url: "/admin/rest/ai/assistant/response/",
+                data: {
+                    "assistantName": aiCol.assistant,
+                    "inputData": self.EDITOR.get(from)
+                },
+                success: function(res)
+                {
+                    //console.log("AI response=", res);
 
-                self._hideLoader(button);
+                    self._hideLoader(button);
 
-                //handle res.error
-                if (res.error) {
-                    contentContainer.html(res.error);
+                    //handle res.error
+                    if (res.error) {
+                        contentContainer.html(res.error);
+                    }
+
+                    self.EDITOR.set(aiCol.to, res.response);
+                    contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", res.totalTokens));
+                    self._closeToast(3000);
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+
+                    self._hideLoader(button);
+
+                    contentContainer.html(WJ.translate("datatable.error.unknown"));
                 }
-
-                self.EDITOR.set(aiCol.to, res.response);
-                contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", res.totalTokens));
-                self._closeToast(3000);
-            },
-            error: function(xhr, ajaxOptions, thrownError) {
-
-                self._hideLoader(button);
-
-                contentContainer.html(WJ.translate("datatable.error.unknown"));
-            }
-        });
+            });
+        }
     }
 
     _showLoader(button) {

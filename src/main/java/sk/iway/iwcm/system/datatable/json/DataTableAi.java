@@ -17,6 +17,7 @@ public class DataTableAi {
     private String assistant;
     private String provider;
     private String description;
+    private String instructions;
 
     public DataTableAi() {}
 
