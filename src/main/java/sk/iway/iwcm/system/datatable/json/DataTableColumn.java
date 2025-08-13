@@ -333,6 +333,8 @@ public class DataTableColumn {
                     ai.setAssistant(kk.getName());
                     ai.setFrom(kk.getFieldFrom());
                     ai.setTo(toField);
+                    ai.setDescription(kk.getDescription());
+                    ai.setProvider(kk.getProvider());
                     if (ai.isEmpty()==false) {
                         this.ai.add(ai);
                     }

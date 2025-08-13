@@ -68,7 +68,6 @@ public class AssistantDefinitionEntity {
 			)
 		}
     )
-    @NotBlank
     @Size(max = 255)
     private String fieldFrom;
 

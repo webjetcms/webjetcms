@@ -16,23 +16,18 @@ public class DataTableAi {
     private String to;
     private String assistant;
     private String provider;
+    private String description;
 
     public DataTableAi() {}
-
-    public DataTableAi(String from, String to, String assistant) {
-        this.from = from;
-        this.to = to;
-        this.assistant = assistant;
-    }
 
     @JsonIgnore
     public boolean isEmpty() {
         //Check that all required fields are set
-        if (Tools.isEmpty(from) || Tools.isEmpty(to) || Tools.isEmpty(assistant)) return true;
+        if (Tools.isEmpty(to) || Tools.isEmpty(assistant)) return true;
 
         //Check that required fields do NOT have "EMPTY_VALUE" what means it was not set
         String emptyValue = OpenAiSupportService.EMPTY_VALUE;
-        if( emptyValue.equals(from) || emptyValue.equals(to) || emptyValue.equals(assistant) ) return true;
+        if( emptyValue.equals(to) || emptyValue.equals(assistant) ) return true;
 
         //Its good
         return false;
