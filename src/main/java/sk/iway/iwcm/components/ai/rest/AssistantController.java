@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
+import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 
 @RestController
@@ -21,10 +22,12 @@ import sk.iway.iwcm.i18n.Prop;
 public class AssistantController {
 
     private final OpenAiService openAiService;
+    private final AiStatRepository statRepo;
 
     @Autowired
-    public AssistantController(OpenAiService openAiService) {
+    public AssistantController(OpenAiService openAiService, AiStatRepository statRepo) {
         this.openAiService = openAiService;
+        this.statRepo = statRepo;
     }
 
     @PostMapping(value = "/response/")
@@ -32,7 +35,7 @@ public class AssistantController {
         AssistantResponseDTO response = null;
         String exceptionMessage = null;
         try {
-            response = openAiService.getAiResponse(assistantName, inputData, Prop.getInstance(request));
+            response = openAiService.getAiResponse(assistantName, inputData, Prop.getInstance(request), statRepo);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
