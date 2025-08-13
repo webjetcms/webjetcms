@@ -93,9 +93,19 @@ public class AssistantDefinitionEntity {
     private String provider = "openai";
 
     @Column(name = "model")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.model", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", tab = "basic",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-model"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_provider")
+				}
+			)
+		}
+    )
     @Size(max = 255)
-    private String model = "gpt-3.5-turbo";
+    private String model;
 
     @Column(name = "assistant_key")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.assistant_key", tab = "basic", className = "hide-on-create",

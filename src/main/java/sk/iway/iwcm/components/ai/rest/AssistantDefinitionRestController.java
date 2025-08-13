@@ -132,7 +132,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
-        page.addOptions("model", openAiService.getSupportedModels(getProp()), "label", "value", false);
         page.addOptions("provider", openAiService.getSupportedProviders(getProp()), "label", "value", false);
     }
 
@@ -176,5 +175,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @GetMapping("/autocomplete-field")
     public List<String> getAutocompleteField(@RequestParam String term, @RequestParam("DTE_Field_className") String className) {
         return openAiAssistantsService.getFieldOptions(term, className);
+    }
+
+    @GetMapping("/autocomplete-model")
+    public List<String> getAutocompleteModel(@RequestParam String term, @RequestParam("DTE_Field_provider") String provider) {
+        return openAiService.getModelOptions(term, provider, getProp());
     }
 }

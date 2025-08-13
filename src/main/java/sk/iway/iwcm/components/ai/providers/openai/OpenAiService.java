@@ -49,7 +49,35 @@ public class OpenAiService extends OpenAiSupportService {
         return supportedValues;
     }
 
-    public List<LabelValue> getSupportedModels(Prop prop) {
+    public List<String> getModelOptions(String term, String provider, Prop prop) {
+        boolean found = false;
+        for(LabelValue supportedProvider : getSupportedProviders(prop)) {
+            if(supportedProvider.getValue().equals(provider)) {
+                found = true;
+                break;
+            }
+        }
+
+        if(found == false) return new ArrayList<>();
+
+        List<String> values;
+        switch (provider) {
+            case "openai": values = getSupportedOpenAiModels(prop); break;
+            case "local": values = new ArrayList<>(); break;
+            default: values = new ArrayList<>(); break;
+        }
+
+        if("%".equals(term)) return values;
+
+        List<String> ac = new ArrayList<>();
+        for(String value : values) {
+            if(value.toLowerCase().contains( term.toLowerCase() ))
+                ac.add(value);
+        }
+        return ac;
+    }
+
+    private List<String> getSupportedOpenAiModels(Prop prop) {
         List<LabelValue> supportedValues = new ArrayList<>();
 
         try {
@@ -57,7 +85,7 @@ public class OpenAiService extends OpenAiSupportService {
             Cache c = Cache.getInstance();
             @SuppressWarnings("unchecked")
             List<LabelValue> cachedModels = (List<LabelValue>)c.getObject(CHACHE_KEY_MODELS);
-            if(cachedModels != null) return cachedModels;
+            if(cachedModels != null) return labelsToStrings(cachedModels);
         } catch (Exception e) {
             //LOGG - and try get from openAI
         }
@@ -68,7 +96,7 @@ public class OpenAiService extends OpenAiSupportService {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getSupportedModels");
             String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            if (Tools.isEmpty(value)) return supportedValues;
+            if (Tools.isEmpty(value)) return labelsToStrings(supportedValues);
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(value);
             for (JsonNode model : root.get("data")) {
@@ -84,11 +112,19 @@ public class OpenAiService extends OpenAiSupportService {
             } catch (Exception e) {
                 //LOGG -
             }
-            return supportedValues;
+            return labelsToStrings(supportedValues);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return supportedValues;
+        return labelsToStrings(supportedValues);
+    }
+
+    private List<String> labelsToStrings(List<LabelValue> labels) {
+        List<String> values = new ArrayList<>();
+        for(LabelValue label : labels) {
+            values.add(label.getValue());
+        }
+        return values;
     }
 
 
