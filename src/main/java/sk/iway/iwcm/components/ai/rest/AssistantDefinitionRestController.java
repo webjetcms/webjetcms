@@ -82,7 +82,11 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         existingEntity.setTemperature( entity.getTemperature() );
 
         try {
-            openAiAssistantsService.updateAssistant(existingEntity, getProp());
+            if ("openai".equals(existingEntity.getProvider())) {
+                openAiAssistantsService.updateAssistant(existingEntity, getProp());
+            } else {
+                existingEntity.setAssistantKey(null);
+            }
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
@@ -93,7 +97,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public boolean deleteItem(AssistantDefinitionEntity entity, long id) {
         try {
-            openAiAssistantsService.deleteAssistant(entity, getProp());
+            if ("openai".equals(entity.getProvider())) {
+                openAiAssistantsService.deleteAssistant(entity, getProp());
+            }
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
@@ -105,12 +111,14 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
-        String assistantId;
+        String assistantId = null;
 
         entity.setNameAddPrefix( entity.getName() );
 
         try {
-            assistantId = openAiAssistantsService.insertAssistant(entity, getProp());
+            if ("openai".equals(entity.getProvider())) {
+                assistantId = openAiAssistantsService.insertAssistant(entity, getProp());
+            }
 
             entity.setCreated(new Date());
             entity.setAssistantKey(assistantId);
