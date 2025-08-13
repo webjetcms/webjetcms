@@ -12,7 +12,7 @@ export class EditorAi {
     }
 
     bindEvents() {
-        window.addEventListener("WJ.DTE.open", (event) => {
+        window.addEventListener("WJ.DTE.opened", (event) => {
             console.log("WJ.DTE.opened event received, detail=", event.detail, "this.id=", this.EDITOR.TABLE.DATA.id);
             if (this.EDITOR.TABLE.DATA.id===event.detail.id) {
                 console.log("WJ.DTE.open event triggered");

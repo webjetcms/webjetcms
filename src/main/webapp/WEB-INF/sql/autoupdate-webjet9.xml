@@ -2036,5 +2036,70 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>08.08.2025</string></void>
+                <void property="desc"><string>Vytvorenie tabulky open_ai_stats</string></void>
+                <void property="mysql">
+                    <string>
+                        CREATE TABLE ai_stats (
+                            id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                            assistant_name VARCHAR(255) NOT NULL,
+                            created DATETIME NOT NULL,
+                            used_tokens INT NOT NULL,
+                            domain_id INT(11) DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        CREATE TABLE ai_stats (
+                            id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
+                            assistant_name NVARCHAR(255) NOT NULL,
+                            created DATETIME NOT NULL,
+                            used_tokens INT NOT NULL,
+                            domain_id int DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE TABLE ai_stats (
+                            id INTEGER NOT NULL PRIMARY KEY,
+                            assistant_name NVARCHAR2(255) NOT NULL,
+                            created DATE NOT NULL,
+                            used_tokens INTEGER NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                        CREATE SEQUENCE S_ai_stats START WITH 1;
+                        CREATE TRIGGER T_ai_stats BEFORE INSERT ON ai_stats
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_open_ai_stats.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_ai_stats START WITH 1;
+                        CREATE TABLE ai_stats (
+                            id INT DEFAULT NEXTVAL('S_ai_stats') PRIMARY KEY NOT NULL,
+                            assistant_name VARCHAR(255) NOT NULL,
+                            created TIMESTAMP NOT NULL,
+                            used_tokens INT NOT NULL,
+                            domain_id INT DEFAULT 1 NOT NULL
+                        );
+                    </string>
+                </void>
+            </object>
+        </void>
+
     </object>
 </java>

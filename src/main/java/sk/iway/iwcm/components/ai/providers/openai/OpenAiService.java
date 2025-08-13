@@ -29,6 +29,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
@@ -90,7 +92,7 @@ public class OpenAiService extends OpenAiSupportService {
     }
 
 
-    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
@@ -126,7 +128,7 @@ public class OpenAiService extends OpenAiSupportService {
             String runId = createRun(threadId, assistantId, temperature, prop);
 
             // 4. Wait for run to complete
-            waitForRunCompletion(threadId, runId, assistant.get(), prop, responseDto);
+            waitForRunCompletion(threadId, runId, assistant.get(), prop, responseDto, statRepo);
 
             // 5. Get assistant's reply
             return getLatestMessage(threadId, prop, responseDto);
@@ -177,7 +179,7 @@ public class OpenAiService extends OpenAiSupportService {
         }
     }
 
-    private void waitForRunCompletion(String threadId, String runId, AssistantDefinitionEntity dbAssitant, Prop prop, AssistantResponseDTO responseDto) throws IOException, InterruptedException {
+    private void waitForRunCompletion(String threadId, String runId, AssistantDefinitionEntity dbAssitant, Prop prop, AssistantResponseDTO responseDto, AiStatRepository statRepo) throws IOException, InterruptedException {
         while (true) {
             HttpGet get = new HttpGet(THREADS_URL + threadId + "/runs/" + runId);
             addHeaders(get, false, true);
@@ -204,6 +206,8 @@ public class OpenAiService extends OpenAiSupportService {
                         sb.append("\tcompletion_tokens: ").append(completionTokens).append("\n");
                         sb.append("\t total_tokens: ").append(totalTokens).append("\n");
                         Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
+
+                        AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo);
 
                         responseDto.setPromptTokens(promptTokens);
                         responseDto.setCompletionTokens(completionTokens);

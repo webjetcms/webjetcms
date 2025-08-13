@@ -44,7 +44,7 @@ public class AssistantDefinitionEntity {
         editor = {
 			@DataTableColumnEditor(
 				attr = {
-					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/openai-assistants/autocomplete-class"),
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-class"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
 					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
 				}
@@ -60,7 +60,7 @@ public class AssistantDefinitionEntity {
         editor = {
 			@DataTableColumnEditor(
 				attr = {
-					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/openai-assistants/autocomplete-field"),
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-field"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
 					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
                     @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
@@ -77,7 +77,7 @@ public class AssistantDefinitionEntity {
         editor = {
 			@DataTableColumnEditor(
 				attr = {
-					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/openai-assistants/autocomplete-field"),
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-field"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
 					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
                     @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
