@@ -24,6 +24,17 @@ import java.util.List;
 import java.util.Map;
 
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
+
+    private static final String ROLES_ATTRIBUTE = "roles";
+    private static final String GROUPS_ATTRIBUTE = "groups";
+    private static final String GROUP_MEMBERSHIP_ATTRIBUTE = "group_membership";
+    private static final String RESOURCE_ACCESS_ATTRIBUTE = "resource_access";
+    private static final String REALM_ACCESS_ATTRIBUTE = "realm_access";
+    private static final String EMAIL_ATTRIBUTE = "email";
+    private static final String GIVEN_NAME_ATTRIBUTE = "given_name";
+    private static final String FAMILY_NAME_ATTRIBUTE = "family_name";
+    private static final String ROLE_PREFIX = "ROLE_";
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         try {
@@ -33,7 +44,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
             if (principal instanceof OAuth2User) {
                 oauth2User = (OAuth2User) principal;
-                email = oauth2User.getAttribute("email");
+                email = oauth2User.getAttribute(EMAIL_ATTRIBUTE);
             }
 
             if (email == null) {
@@ -57,8 +68,12 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 updateExistingUserFromOAuth2(oauth2User, userDetails);
             }
 
-            // Aplikuj práva z OAuth2
-            applyOAuth2Permissions(oauth2User, userDetails);
+            // Aplikuj práva z OAuth2 iba pre Keycloak
+            if (isKeycloakProvider(oauth2User)) {
+                applyOAuth2Permissions(oauth2User, userDetails);
+            } else {
+                Logger.info(OAuth2SuccessHandler.class, "Skipping group synchronization for non-Keycloak provider for user: " + userDetails.getEmail());
+            }
 
             Identity identity = new Identity(userDetails);
             identity.setValid(true);
@@ -80,8 +95,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         UserDetails userDetails = new UserDetails();
         userDetails.setEmail(email);
 
-        String givenName = oauth2User.getAttribute("given_name");
-        String familyName = oauth2User.getAttribute("family_name");
+        String givenName = oauth2User.getAttribute(GIVEN_NAME_ATTRIBUTE);
+        String familyName = oauth2User.getAttribute(FAMILY_NAME_ATTRIBUTE);
 
         if (givenName != null) userDetails.setFirstName(givenName);
         if (familyName != null) userDetails.setLastName(familyName);
@@ -97,15 +112,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             return null;
         }
 
-        return UsersDB.getUserByEmail(email, 1);
+        return userDetails;
     }
 
     /**
      * Aktualizuje existujúceho používateľa s novými údajmi z OAuth2
      */
     private void updateExistingUserFromOAuth2(OAuth2User oauth2User, UserDetails userDetails) {
-        String givenName = oauth2User.getAttribute("given_name");
-        String familyName = oauth2User.getAttribute("family_name");
+        String givenName = oauth2User.getAttribute(GIVEN_NAME_ATTRIBUTE);
+        String familyName = oauth2User.getAttribute(FAMILY_NAME_ATTRIBUTE);
 
         boolean needsUpdate = false;
         if (givenName != null && !givenName.equals(userDetails.getFirstName())) {
@@ -128,68 +143,131 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     }
 
     /**
-     * Aplikuje práva z OAuth2 atribútov na používateľa
+     * Zisťuje či je OAuth2 provider Keycloak
+     */
+    private boolean isKeycloakProvider(OAuth2User oauth2User) {
+        // Keycloak má špecifické atribúty ako realm_access alebo resource_access
+        boolean hasKeycloakAttributes = oauth2User.getAttribute(REALM_ACCESS_ATTRIBUTE) != null ||
+                                       oauth2User.getAttribute(RESOURCE_ACCESS_ATTRIBUTE) != null;
+
+        Logger.debug(OAuth2SuccessHandler.class, "Checking if provider is Keycloak - hasKeycloakAttributes: " + hasKeycloakAttributes);
+        return hasKeycloakAttributes;
+    }
+
+    /**
+     * Aplikuje práva z OAuth2 atribútov na používateľa (iba pre Keycloak)
      */
     private void applyOAuth2Permissions(OAuth2User oauth2User, UserDetails userDetails) {
         try {
             List<String> oauth2Groups = extractGroupsFromOAuth2(oauth2User);
+            Logger.info(OAuth2SuccessHandler.class, "Found OAuth2 groups for user " + userDetails.getEmail() + ": " + oauth2Groups);
+
             if (oauth2Groups.isEmpty()) {
-                Logger.debug(OAuth2SuccessHandler.class, "No groups found in OAuth2 for user: " + userDetails.getEmail());
+                Logger.info(OAuth2SuccessHandler.class, "No OAuth2 groups found for user " + userDetails.getEmail());
                 return;
             }
-
-            Logger.info(OAuth2SuccessHandler.class, "Found OAuth2 groups for user " + userDetails.getEmail() + ": " + oauth2Groups);
 
             // Nájdi existujúce skupiny používateľov v WebJET
             List<UserGroupDetails> matchingUserGroups = new ArrayList<>();
             List<PermissionGroupBean> matchingPermissionGroups = new ArrayList<>();
 
-            for (String groupName : oauth2Groups) {
-                try {
-                    // Skús nájsť UserGroup
-                    UserGroupDetails userGroup = UserGroupsDB.getInstance().getUserGroup(groupName);
-                    if (userGroup != null) {
+            try {
+                // Načítaj všetky user groups a filtruj podľa názvu
+                List<UserGroupDetails> allUserGroups = UserGroupsDB.getInstance().getUserGroups();
+                for (UserGroupDetails userGroup : allUserGroups) {
+                    if (oauth2Groups.contains(userGroup.getUserGroupName())) {
                         matchingUserGroups.add(userGroup);
-                        Logger.debug(OAuth2SuccessHandler.class, "Found matching user group: " + groupName);
-                    } else {
-                        Logger.debug(OAuth2SuccessHandler.class, "User group not found: " + groupName);
+                        Logger.debug(OAuth2SuccessHandler.class, "Found matching user group: " + userGroup.getUserGroupName());
                     }
-
-                    // Skús nájsť PermissionGroup
-                    try {
-                        PermissionGroupBean permissionGroup = PermissionGroupDB.getPermissionGroup(groupName);
-                        if (permissionGroup != null) {
-                            matchingPermissionGroups.add(permissionGroup);
-                            Logger.debug(OAuth2SuccessHandler.class, "Found matching permission group: " + groupName);
-                        } else {
-                            Logger.debug(OAuth2SuccessHandler.class, "Permission group not found: " + groupName);
-                        }
-                    } catch (Exception ex) {
-                        Logger.debug(OAuth2SuccessHandler.class, "Error finding permission group '" + groupName + "': " + ex.getMessage());
-                    }
-
-                } catch (Exception ex) {
-                    Logger.debug(OAuth2SuccessHandler.class, "Error finding groups for '" + groupName + "': " + ex.getMessage());
                 }
+
+                // Načítaj všetky permission groups a filtruj podľa názvu
+                List<PermissionGroupBean> allPermissionGroups = PermissionGroupDB.getPermissionGroups(null);
+                for (PermissionGroupBean permissionGroup : allPermissionGroups) {
+                    if (oauth2Groups.contains(permissionGroup.getTitle())) {
+                        matchingPermissionGroups.add(permissionGroup);
+                        Logger.debug(OAuth2SuccessHandler.class, "Found matching permission group: " + permissionGroup.getTitle());
+                    }
+                }
+
+            } catch (Exception ex) {
+                Logger.error(OAuth2SuccessHandler.class, "Error loading groups for user: " + userDetails.getEmail(), ex);
+                return;
             }
 
-            // Priradí používateľa do nájdených skupín používateľov
-            if (!matchingUserGroups.isEmpty()) {
-                assignUserToUserGroups(userDetails, matchingUserGroups);
-                Logger.info(OAuth2SuccessHandler.class, "Assigned user " + userDetails.getEmail() + " to " + matchingUserGroups.size() + " user groups");
-            }
-
-            // Priradí používateľa do nájdených skupín práv
-            if (!matchingPermissionGroups.isEmpty()) {
-                assignUserToPermissionGroups(userDetails, matchingPermissionGroups);
-                Logger.info(OAuth2SuccessHandler.class, "Assigned user " + userDetails.getEmail() + " to " + matchingPermissionGroups.size() + " permission groups");
-            }
+            // Synchronizuj skupiny - odstráň staré a pridaj nové
+            synchronizeUserGroups(userDetails, matchingUserGroups, matchingPermissionGroups);
 
             if (matchingUserGroups.isEmpty() && matchingPermissionGroups.isEmpty()) {
                 Logger.info(OAuth2SuccessHandler.class, "No matching user groups or permission groups found for user " + userDetails.getEmail());
             }
         } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, "Error applying OAuth2 permissions for user: " + userDetails.getEmail(), ex);
+        }
+    }
+
+    /**
+     * Odstráni všetky skupinové priradenia používateľa
+     */
+    private void removeAllGroupAssignments(UserDetails userDetails) {
+        try {
+            // Odstráň zo všetkých skupín používateľov
+            userDetails.setUserGroupsIds(null);
+
+            // Odstráň zo všetkých skupín práv
+            List<PermissionGroupBean> userPermGroups = UserGroupsDB.getPermissionGroupsFor(userDetails.getUserId());
+            for (PermissionGroupBean permGroup : userPermGroups) {
+                UsersDB.deleteUserFromPermissionGroup(userDetails.getUserId(), permGroup.getUserPermGroupId());
+            }
+            Logger.info(OAuth2SuccessHandler.class, "Removed user from all permission groups: " + userDetails.getEmail());
+        } catch (Exception ex) {
+            Logger.error(OAuth2SuccessHandler.class, "Error removing all group assignments for user: " + userDetails.getEmail(), ex);
+        }
+    }
+
+    /**
+     * Synchronizuje skupiny používateľa - odstráni staré a pridá nové
+     */
+    private void synchronizeUserGroups(UserDetails userDetails, List<UserGroupDetails> newUserGroups, List<PermissionGroupBean> newPermissionGroups) {
+        String userEmail = userDetails != null ? userDetails.getEmail() : "unknown";
+        try {
+            if (userDetails == null) {
+                Logger.error(OAuth2SuccessHandler.class, "UserDetails is null, cannot synchronize groups");
+                return;
+            }
+
+            // Najprv odstráň zo všetkých existujúcich skupín
+            removeAllGroupAssignments(userDetails);
+
+            // Pridaj nové user groups
+            if (!newUserGroups.isEmpty()) {
+                for (UserGroupDetails group : newUserGroups) {
+                    userDetails.addToGroup(group.getUserGroupId());
+                    Logger.debug(OAuth2SuccessHandler.class, "Added user to group: " + group.getUserGroupName());
+                }
+            }
+
+            // Ulož všetky zmeny
+            boolean saved = UsersDB.saveUser(userDetails);
+            if (saved) {
+                Logger.info(OAuth2SuccessHandler.class, "Successfully synchronized user groups: " + userDetails.getUserGroupsIds());
+                if (!newUserGroups.isEmpty()) {
+                    Logger.info(OAuth2SuccessHandler.class, "Synchronized user " + userDetails.getEmail() + " to " + newUserGroups.size() + " user groups");
+                }
+            } else {
+                Logger.error(OAuth2SuccessHandler.class, "Failed to save user groups synchronization for user: " + userDetails.getEmail());
+            }
+
+            // Pridaj permission groups
+            if (!newPermissionGroups.isEmpty()) {
+                for (PermissionGroupBean group : newPermissionGroups) {
+                    UsersDB.addUserToPermissionGroup(userDetails.getUserId(), group.getUserPermGroupId());
+                    Logger.debug(OAuth2SuccessHandler.class, "Added user to permission group: " + group.getTitle());
+                }
+                Logger.info(OAuth2SuccessHandler.class, "Synchronized user " + userDetails.getEmail() + " to " + newPermissionGroups.size() + " permission groups");
+            }
+        } catch (Exception ex) {
+            Logger.error(OAuth2SuccessHandler.class, "Error synchronizing user groups for user: " + userEmail, ex);
         }
     }
 
@@ -201,9 +279,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         List<String> groups = new ArrayList<>();
 
         // Skús získať zo všetkých možných atribútov (nielen ak sú groups prázdne)
-        groups.addAll(extractFromAttribute(oauth2User, "groups"));
-        groups.addAll(extractFromAttribute(oauth2User, "roles"));
-        groups.addAll(extractFromAttribute(oauth2User, "group_membership"));
+        groups.addAll(extractFromAttribute(oauth2User, GROUPS_ATTRIBUTE));
+        groups.addAll(extractFromAttribute(oauth2User, ROLES_ATTRIBUTE));
+        groups.addAll(extractFromAttribute(oauth2User, GROUP_MEMBERSHIP_ATTRIBUTE));
 
         // Skús získať z Keycloak formátu (resource_access)
         groups.addAll(extractFromResourceAccess(oauth2User));
@@ -215,8 +293,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         if (oauth2User.getAuthorities() != null) {
             for (var authority : oauth2User.getAuthorities()) {
                 String authName = authority.getAuthority();
-                if (authName.startsWith("ROLE_")) {
-                    authName = authName.substring(5); // Odstráň prefix ROLE_
+                if (authName.startsWith(ROLE_PREFIX)) {
+                    authName = authName.substring(ROLE_PREFIX.length()); // Odstráň prefix ROLE_
                 }
                 if (!groups.contains(authName)) {
                     groups.add(authName);
@@ -263,28 +341,33 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
      */
     private List<String> extractFromResourceAccess(OAuth2User oauth2User) {
         List<String> result = new ArrayList<>();
-        Object resourceAccess = oauth2User.getAttribute("resource_access");
+        Object resourceAccess = oauth2User.getAttribute(RESOURCE_ACCESS_ATTRIBUTE);
         Logger.debug(OAuth2SuccessHandler.class, "Resource access attribute: " + resourceAccess);
 
         if (resourceAccess instanceof Map) {
             Map<String, Object> resourceMap = (Map<String, Object>) resourceAccess;
             for (Map.Entry<String, Object> entry : resourceMap.entrySet()) {
-                Logger.debug(OAuth2SuccessHandler.class, "Resource access client '" + entry.getKey() + "': " + entry.getValue());
-                Object clientData = entry.getValue();
-                if (clientData instanceof Map) {
-                    Map<String, Object> clientMap = (Map<String, Object>) clientData;
-                    Object clientRoles = clientMap.get("roles");
-                    Logger.debug(OAuth2SuccessHandler.class, "Client roles for '" + entry.getKey() + "': " + clientRoles);
-                    if (clientRoles instanceof Collection) {
-                        for (Object role : (Collection<?>) clientRoles) {
-                            if (role instanceof String) {
-                                result.add((String) role);
-                                Logger.debug(OAuth2SuccessHandler.class, "Added role from resource_access: " + role);
-                            }
-                        }
-                    }
-                }
+                result.addAll(extractRolesFromClientResource(entry));
             }
+        }
+
+        return result;
+    }
+
+    /**
+     * Extrahuje role z jedného klientského resource
+     */
+    private List<String> extractRolesFromClientResource(Map.Entry<String, Object> clientEntry) {
+        List<String> result = new ArrayList<>();
+        String clientName = clientEntry.getKey();
+        Object clientData = clientEntry.getValue();
+
+        Logger.debug(OAuth2SuccessHandler.class, "Resource access client '" + clientName + "': " + clientData);
+
+        if (clientData instanceof Map) {
+            Map<String, Object> clientMap = (Map<String, Object>) clientData;
+            Object clientRoles = clientMap.get(ROLES_ATTRIBUTE);
+            result.addAll(extractRolesFromRolesObject(clientRoles, "resource_access." + clientName));
         }
 
         return result;
@@ -295,62 +378,33 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
      */
     private List<String> extractFromRealmAccess(OAuth2User oauth2User) {
         List<String> result = new ArrayList<>();
-        Object realmAccess = oauth2User.getAttribute("realm_access");
+        Object realmAccess = oauth2User.getAttribute(REALM_ACCESS_ATTRIBUTE);
         Logger.debug(OAuth2SuccessHandler.class, "Realm access attribute: " + realmAccess);
 
         if (realmAccess instanceof Map) {
             Map<String, Object> realmMap = (Map<String, Object>) realmAccess;
-            Object realmRoles = realmMap.get("roles");
-            Logger.debug(OAuth2SuccessHandler.class, "Realm roles: " + realmRoles);
-            if (realmRoles instanceof Collection) {
-                for (Object role : (Collection<?>) realmRoles) {
-                    if (role instanceof String) {
-                        result.add((String) role);
-                        Logger.debug(OAuth2SuccessHandler.class, "Added role from realm_access: " + role);
-                    }
-                }
-            }
+            result.addAll(extractRolesFromRolesObject(realmMap.get(ROLES_ATTRIBUTE), REALM_ACCESS_ATTRIBUTE));
         }
 
         return result;
     }
 
     /**
-     * Priradí používateľa do zadaných skupín používateľov
+     * Pomocná metóda na extrahovanie rolí z roles objektu
      */
-    private void assignUserToUserGroups(UserDetails userDetails, List<UserGroupDetails> userGroups) {
-        try {
-            // Priradí používateľa do skupín používateľov
-            for (UserGroupDetails group : userGroups) {
-                userDetails.addToGroup(group.getUserGroupId());
-                Logger.debug(OAuth2SuccessHandler.class, "Added user to group: " + group.getUserGroupName());
-            }
+    private List<String> extractRolesFromRolesObject(Object rolesObject, String source) {
+        List<String> result = new ArrayList<>();
+        Logger.debug(OAuth2SuccessHandler.class, source + " roles: " + rolesObject);
 
-            // Ulož používateľa do databázy s novými skupinami
-            boolean saved = UsersDB.saveUser(userDetails);
-            if (saved) {
-                Logger.info(OAuth2SuccessHandler.class, "Successfully saved user with new groups: " + userDetails.getUserGroupsIds());
-            } else {
-                Logger.error(OAuth2SuccessHandler.class, "Failed to save user with new groups for user: " + userDetails.getEmail());
+        if (rolesObject instanceof Collection) {
+            for (Object role : (Collection<?>) rolesObject) {
+                if (role instanceof String) {
+                    result.add((String) role);
+                    Logger.debug(OAuth2SuccessHandler.class, "Added role from " + source + ": " + role);
+                }
             }
-        } catch (Exception ex) {
-            Logger.error(OAuth2SuccessHandler.class, "Error assigning user to user groups", ex);
         }
-    }
 
-    /**
-     * Priradí používateľa do zadaných skupín práv
-     */
-    private void assignUserToPermissionGroups(UserDetails userDetails, List<PermissionGroupBean> permissionGroups) {
-        try {
-            // Priradí používateľa do skupín práv
-            for (PermissionGroupBean group : permissionGroups) {
-                UsersDB.addUserToPermissionGroup(userDetails.getUserId(), group.getUserPermGroupId());
-                Logger.debug(OAuth2SuccessHandler.class, "Added user to permission group: " + group.getTitle());
-            }
-            Logger.info(OAuth2SuccessHandler.class, "Successfully assigned user to permission groups");
-        } catch (Exception ex) {
-            Logger.error(OAuth2SuccessHandler.class, "Error assigning user to permission groups", ex);
-        }
+        return result;
     }
 }
