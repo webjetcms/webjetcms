@@ -19,8 +19,6 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiAssistantsService;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -33,33 +31,28 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class AssistantDefinitionRestController extends DatatableRestControllerV2<AssistantDefinitionEntity, Long> {
 
     private final AssistantDefinitionRepository repo;
-    private final OpenAiService openAiService;
-    private final OpenAiAssistantsService openAiAssistantsService;
+    private final AiService aiService;
+    private final AiAssistantsService aiAssistantsService;
 
     @Autowired
-    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, OpenAiService openAiService, OpenAiAssistantsService openAiAssistantsService) {
+    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService) {
         super(repo);
         this.repo = repo;
-        this.openAiService = openAiService;
-        this.openAiAssistantsService = openAiAssistantsService;
+        this.aiService = aiService;
+        this.aiAssistantsService = aiAssistantsService;
     }
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
         if("create".equals(target.getAction()) && Tools.isNotEmpty(entity.getName())) {
             //New ame must be unique
-            String prefix = OpenAiAssistantsService.getAssitantPrefix();
+            String prefix = AiAssistantsService.getAssitantPrefix();
             List<String> otherNames = repo.getAssistantNames(prefix + "%", CloudToolsForCore.getDomainId());
-            boolean valid = true;
             for(String otherName : otherNames) {
                 if( otherName.equalsIgnoreCase( prefix + entity.getName() ) ) {
-                    valid = false;
+                    errors.rejectValue("name", "", "Assistant name must be unique");
                     break;
                 }
-            }
-
-            if(valid == false) {
-                errors.rejectValue("name", "", "Assistant name must be unique");
             }
         }
 
@@ -82,11 +75,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         existingEntity.setTemperature( entity.getTemperature() );
 
         try {
-            if ("openai".equals(existingEntity.getProvider())) {
-                openAiAssistantsService.updateAssistant(existingEntity, getProp());
-            } else {
-                existingEntity.setAssistantKey(null);
-            }
+            aiAssistantsService.updateAssistant(existingEntity, getProp());
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
@@ -97,9 +86,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public boolean deleteItem(AssistantDefinitionEntity entity, long id) {
         try {
-            if ("openai".equals(entity.getProvider())) {
-                openAiAssistantsService.deleteAssistant(entity, getProp());
-            }
+            aiAssistantsService.deleteAssistant(entity, getProp());
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
@@ -116,9 +103,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         entity.setNameAddPrefix( entity.getName() );
 
         try {
-            if ("openai".equals(entity.getProvider())) {
-                assistantId = openAiAssistantsService.insertAssistant(entity, getProp());
-            }
+            assistantId = aiAssistantsService.insertAssistant(entity, getProp());
 
             entity.setCreated(new Date());
             entity.setAssistantKey(assistantId);
@@ -132,14 +117,14 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
-        page.addOptions("provider", openAiService.getSupportedProviders(getProp()), "label", "value", false);
+        page.addOptions("provider", aiService.getSupportedProviders(getProp()), "label", "value", false);
     }
 
     @Override
     public boolean processAction(AssistantDefinitionEntity entity, String action) {
         if("syncToTable".equals(action)) {
             try {
-                openAiAssistantsService.syncToTable(repo, getProp());
+                aiAssistantsService.syncToTable(repo, getProp());
             } catch (Exception e) {
                 throw new IllegalStateException(e.getMessage());
             }
@@ -150,8 +135,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         return false;
     }
 
-
-
     @Override
     public void beforeSave(AssistantDefinitionEntity entity) {
         if(entity.getTemperature() == null ) entity.setTemperature(BigDecimal.ONE);
@@ -159,26 +142,26 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
-        OpenAiAssistantsService.removeAssistantsFromCache();
+        AiAssistantsService.removeAssistantsFromCache();
     }
 
     @Override
     public void afterDelete(AssistantDefinitionEntity entity, long id) {
-        OpenAiAssistantsService.removeAssistantsFromCache();
+        AiAssistantsService.removeAssistantsFromCache();
     }
 
     @GetMapping("/autocomplete-class")
     public List<String> getAutocompleteClass(@RequestParam String term) {
-        return openAiAssistantsService.getClassOptions(term);
+        return aiAssistantsService.getClassOptions(term);
     }
 
     @GetMapping("/autocomplete-field")
     public List<String> getAutocompleteField(@RequestParam String term, @RequestParam("DTE_Field_className") String className) {
-        return openAiAssistantsService.getFieldOptions(term, className);
+        return aiAssistantsService.getFieldOptions(term, className);
     }
 
     @GetMapping("/autocomplete-model")
     public List<String> getAutocompleteModel(@RequestParam String term, @RequestParam("DTE_Field_provider") String provider) {
-        return openAiService.getModelOptions(term, provider, getProp());
+        return aiService.getModelOptions(term, provider, getProp());
     }
 }

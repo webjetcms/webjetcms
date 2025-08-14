@@ -1,7 +1,5 @@
 package sk.iway.iwcm.components.ai.rest;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,21 +10,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
-@PreAuthorize("@WebjetSecurityService.isAdmin()")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_tools')")
 public class AssistantController {
 
-    private final OpenAiService openAiService;
+    private final AiService aiService;
     private final AiStatRepository statRepo;
 
     @Autowired
-    public AssistantController(OpenAiService openAiService, AiStatRepository statRepo) {
-        this.openAiService = openAiService;
+    public AssistantController(AiService aiService, AiStatRepository statRepo) {
+        this.aiService = aiService;
         this.statRepo = statRepo;
     }
 
@@ -35,8 +32,8 @@ public class AssistantController {
         AssistantResponseDTO response = null;
         String exceptionMessage = null;
         try {
-            response = openAiService.getAiResponse(assistantName, inputData, Prop.getInstance(request), statRepo);
-        } catch (IOException | InterruptedException e) {
+            response = aiService.getAiResponse(assistantName, inputData, Prop.getInstance(request), statRepo);
+        } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
         }

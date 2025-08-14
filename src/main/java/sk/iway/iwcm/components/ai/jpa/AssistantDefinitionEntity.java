@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiAssistantsService;
+import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -172,7 +172,7 @@ public class AssistantDefinitionEntity {
 
     public String getName() {
         //Cut prefix from name
-        String prefix = OpenAiAssistantsService.getAssitantPrefix();
+        String prefix = AiAssistantsService.getAssitantPrefix();
         return name.startsWith(prefix) ? name.substring(prefix.length()) : name;
     }
 
@@ -181,7 +181,7 @@ public class AssistantDefinitionEntity {
     }
 
     public void setNameAddPrefix(String name) {
-        String prefix = OpenAiAssistantsService.getAssitantPrefix();
+        String prefix = AiAssistantsService.getAssitantPrefix();
         //Just in case, so we dont set prefix 2x
         if(name.startsWith(prefix)) return;
         this.name = prefix + name;

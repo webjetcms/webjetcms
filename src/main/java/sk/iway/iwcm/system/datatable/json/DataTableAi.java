@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService;
+import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -27,7 +27,7 @@ public class DataTableAi {
         if (Tools.isEmpty(to) || Tools.isEmpty(assistant)) return true;
 
         //Check that required fields do NOT have "EMPTY_VALUE" what means it was not set
-        String emptyValue = OpenAiSupportService.EMPTY_VALUE;
+        String emptyValue = AiAssistantsService.EMPTY_VALUE;
         if( emptyValue.equals(to) || emptyValue.equals(assistant) ) return true;
 
         //Its good
