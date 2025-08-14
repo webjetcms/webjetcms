@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -118,6 +119,35 @@ public class AiService {
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.get().getProvider())) {
                 return aiInterface.getAiResponse(assistant.get(), content, prop, statRepo);
+            }
+        }
+
+        throw new IllegalStateException("Something went wrong");
+    }
+
+    public AssistantResponseDTO getAiImageResponse(String assistantName, String imagePath, Prop prop, AiStatRepository statRepo) throws Exception {
+        //
+        if(Tools.isEmpty(assistantName)) throw new IllegalStateException("No assistant found.");
+        if(Tools.isEmpty(imagePath)) throw new IllegalStateException("No imagePath provided.");
+
+         //
+        AssistantDefinitionRepository repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+        if(repo == null) throw new IllegalStateException("Something went wrong.");
+
+        //
+        String prefix = AiAssistantsService.getAssitantPrefix();
+        Optional<AssistantDefinitionEntity> assistant = repo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
+
+        if(assistant.isPresent() == false) throw new IllegalStateException("No assistant found.");
+
+        String realPath = Tools.getRealPath(imagePath);
+        File fileImage = new File(realPath);
+
+        if (fileImage.isFile() == false) throw new IllegalStateException("Not a image");
+
+        for(AiInterface aiInterface : aiInterfaces) {
+            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.get().getProvider())) {
+                return aiInterface.getAiImageResponse(fileImage);
             }
         }
 

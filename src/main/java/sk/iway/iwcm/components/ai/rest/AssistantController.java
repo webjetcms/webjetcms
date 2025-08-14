@@ -37,6 +37,27 @@ public class AssistantController {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
         }
+
+        if (response == null) {
+            response = new AssistantResponseDTO();
+            response.setError("Something went wrong, please try again later: " + exceptionMessage);
+        }
+
+        return response;
+    }
+
+    @PostMapping(value = "/response-image/")
+    public AssistantResponseDTO getAiImageReponse(@RequestParam("assistantName") String assistantName, @RequestParam("imagePath") String imagePath, HttpServletRequest request) {
+        AssistantResponseDTO response = null;
+        String exceptionMessage = null;
+
+        try {
+            response = aiService.getAiImageResponse(assistantName, imagePath, null, statRepo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            exceptionMessage = e.getLocalizedMessage();
+        }
+
         if (response == null) {
             response = new AssistantResponseDTO();
             response.setError("Something went wrong, please try again later: " + exceptionMessage);

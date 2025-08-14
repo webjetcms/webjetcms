@@ -18,7 +18,7 @@ public abstract class OpenAiSupportService {
     protected static final String THREADS_URL = "https://api.openai.com/v1/threads/";
     protected static final String ASSISTANTS_URL = "https://api.openai.com/v1/assistants";
     protected static final String MODELS_URL = "https://api.openai.com/v1/models";
-
+    protected static final String IMAGES_URL = "https://api.openai.com/v1/images/edits";
 
     protected enum ASSISTANT_FIELDS {
         ID("id", String.class),

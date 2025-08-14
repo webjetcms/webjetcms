@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.ai.providers;
 
+import java.io.File;
 import java.util.List;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -12,6 +13,7 @@ import sk.iway.iwcm.utils.Pair;
 public interface AiInterface {
     public List<LabelValue> getSupportedModels(Prop prop);
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo) throws Exception;
+    public AssistantResponseDTO getAiImageResponse(File fileImage) throws Exception;
     public Pair<String, String> getProviderInfo(Prop prop);
     public String getProviderId();
     public boolean isInit();

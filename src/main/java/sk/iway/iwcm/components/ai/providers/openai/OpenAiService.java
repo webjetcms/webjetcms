@@ -1,15 +1,22 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -31,7 +38,6 @@ import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
-
 
 @Service
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
@@ -111,6 +117,47 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             // 6. Delete thread (cleanup)
             deleteThread(threadId);
         }
+    }
+
+    public AssistantResponseDTO getAiImageResponse(File fileImage) throws IOException {
+        HttpPost post = new HttpPost(IMAGES_URL);
+
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addTextBody("model", "gpt-image-1");
+        builder.addTextBody("prompt", "Make this image black and white. Return ONLY edited image. Nothing more.");
+
+        BufferedImage image = ImageIO.read( fileImage );
+        if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
+
+        // builder.addTextBody("size", "1024x1024");
+        // builder.addTextBody("size", "1024x1536");
+        // builder.addTextBody("size", "1536x1024");
+        builder.addTextBody("size", "auto");
+
+        ContentType contentType;
+        String fileName = fileImage.getName();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            contentType = ContentType.create("image/jpeg");
+        } else if (fileName.endsWith(".webp")) {
+            contentType = ContentType.create("image/webp");
+        } else {
+            contentType = ContentType.create("image/png"); // default
+        }
+
+        //Set image
+        builder.addBinaryBody("image", fileImage, contentType, fileName);
+
+        //Set entity and headers
+        post.setEntity(builder.build());
+        addHeaders(post, false, false);
+
+        try (CloseableHttpResponse response = client.execute(post)) {
+            int status = response.getStatusLine().getStatusCode();
+            String body = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "<no body>";
+        }
+
+        return null;
     }
 
     private String createThread(Prop prop) throws IOException {
