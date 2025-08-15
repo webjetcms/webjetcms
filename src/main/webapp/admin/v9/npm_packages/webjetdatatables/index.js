@@ -634,7 +634,7 @@ export const dataTableInit = options => {
                 col.editor.className = col.className;
                 col.editor.renderFormat = col.renderFormat;
                 col.editor.array = col.array;
-
+                if (typeof col.ai != "undefined") col.editor.ai = col.ai;
 
                 if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type) {
                     let defaultFormat = "L HH:mm:ss";

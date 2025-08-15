@@ -22,20 +22,20 @@ export class AiLocalExecutor {
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
         let text = this.EDITOR.get(from);
-        let toElementId = "DTE_Field_"+aiCol.to;
 
+        //console.log("execute, text=", text);
 
         if (typeof instructions == "undefined" || instructions == null || instructions == "") {
 
         } else if (instructions.indexOf("translate")==0) {
             await this._translatorInitialize();
             if (this.translator) {
-                await this.translate(text, toElementId);
+                await this.translate(text, aiCol.to);
             }
         } else if (instructions.indexOf("summarize")==0) {
             await this._summarizeInitialize();
             if (this.summarizer) {
-                await this.summarize(text, toElementId);
+                await this.summarize(text, aiCol.to);
             }
         }
     }
@@ -54,19 +54,15 @@ export class AiLocalExecutor {
         }
     }
 
-    async translate(text, elementId) {
+    async translate(text, fieldName) {
         await this._translatorInitialize();
         if (this.translator) {
-            console.log("Translating text:", text, "translator=", this.translator);
-            let element = $("#" + elementId);
-            element.val(WJ.translate("components.ai_assistants.editor.loading.js"));
+            //console.log("Translating text:", text, "translator=", this.translator);
+            this.EDITOR.set(fieldName, WJ.translate("components.ai_assistants.editor.loading.js"));
 
             const stream = this.translator.translateStreaming(text);
-            element.val(''); // Clear the element before appending new text
-            for await (const chunk of stream) {
-                console.log(chunk);
-                element.val(element.val() + chunk);
-            }
+
+            await this._setField(fieldName, stream);
         }
     }
 
@@ -85,27 +81,35 @@ export class AiLocalExecutor {
         }
     }
 
-    async summarize(text, elementId) {
+    async summarize(text, fieldName) {
         await this._summarizeInitialize();
         if (this.summarizer) {
-            console.log("Summarizing text:", text, "summarizer=", this.summarizer);
-            let element = $("#" + elementId);
+            //console.log("Summarizing text:", text, "summarizer=", this.summarizer);
 
-            element.val(WJ.translate("components.ai_assistants.editor.loading.js"));
+            this.EDITOR.set(fieldName, WJ.translate("components.ai_assistants.editor.loading.js"));
 
             const stream = this.summarizer.summarizeStreaming(text, {
                 context: "Použi slovenský jazyk"
             });
-            let firstItem = true;
-            for await (const chunk of stream) {
-                if (firstItem) {
-                    element.val(chunk);
-                } else {
-                    element.val(element.val() + chunk);
-                }
-                firstItem = false;
-                console.log(chunk);
+
+            await this._setField(fieldName, stream);
+        }
+    }
+
+    async _setField(fieldName, stream) {
+        let firstItem = true;
+        let content = "";
+        //console.log("Setting field:", fieldName);
+        for await (const chunk of stream) {
+            if (firstItem) {
+                content = chunk;
+            } else {
+                content += chunk;
             }
+            //console.log('\r'+content);
+
+            this.EDITOR.set(fieldName, content);
+            firstItem = false;
         }
     }
 }

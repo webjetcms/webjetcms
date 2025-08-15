@@ -1710,10 +1710,14 @@ export class DatatablesCkEditor {
 
 	setData(data) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
-		this.ckEditorInstance.setData(data);
+		if ("pageBuilder"===this.editingMode) {
+			//it's not possible to set new data into PB
+		} else {
+			this.ckEditorInstance.setData(data);
+		}
 	}
 
-	getData(data) {
+	getData() {
 		//console.log("getData, data=", data, "this=", this);
 		let htmlCode = this.ckEditorInstance.getData();
 		if ("pageBuilder"===this.editingMode) {
@@ -1733,6 +1737,19 @@ export class DatatablesCkEditor {
 		}
 		//console.log("getData, htmlCode=", htmlCode);
 		return htmlCode;
+	}
+
+	getDataArray() {
+		if ("pageBuilder"===this.editingMode) {
+			//get ARRAY of content for all editors
+			let fieldId = this.options.fieldid;
+			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
+
+			let editorsContent = pageBuilderIframe[0].contentWindow.getEditorsContent("doc_data");
+			console.log("getData, editorsContent=", editorsContent);
+			return editorsContent;
+		}
+		return [].push(this.getData());
 	}
 
 	setEditingMode(json) {
