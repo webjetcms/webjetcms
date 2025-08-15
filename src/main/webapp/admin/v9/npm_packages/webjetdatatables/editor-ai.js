@@ -181,6 +181,86 @@ export class EditorAi {
         }
     }
 
+    async _executeStreamAction(button, aiCol) {
+        // Implement AI button click handling logic here
+        //console.log("Executing action for AI column:", aiCol);
+
+        let self = this;
+        self._showLoader(button);
+
+        let contentContainer = $("#toast-container-ai-content");
+        contentContainer.html('<div class="group-title pulsate-text">' + WJ.translate("components.ai_assistants.editor.loading.js") + '</div>');
+
+        let from = aiCol.from;
+        if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
+
+        if ("local" === aiCol.provider) {
+            await this.aiLocalExecutor.execute(aiCol);
+            self._hideLoader(button);
+            contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", 0));
+            self._closeToast(3000);
+        } else {
+
+            fetch("/admin/rest/ai/assistant/stream/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRF-Token': window.csrfToken
+                },
+                body: JSON.stringify({
+                    assistantName: aiCol.assistant,
+                    inputData: self.EDITOR.get(from)
+                })
+            })
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                let wholeText = "";
+
+                function read() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            console.log("Stream complete");
+                            self._hideLoader(button);
+                            return;
+                        }
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        console.log("Received:", chunk);
+
+                        let isJson = false;
+                        try {
+                            const parsed = JSON.parse(chunk);
+                            isJson = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+                        } catch (e) {
+                            isJson = false;
+                        }
+
+                        if(isJson == false) {
+                            wholeText += chunk;
+                            self.EDITOR.set(aiCol.to, wholeText);
+                        } else {
+                            const parsed = JSON.parse(chunk);
+
+                            //handle parsed.error
+                            if (parsed.error) {
+                                contentContainer.html(parsed.error);
+                            }
+
+                            contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", parsed.totalTokens));
+                            self._closeToast(3000);
+                        }
+
+                        read();
+                    });
+                }
+
+                read();
+            });
+        }
+    }
+
     _showLoader(button) {
         button.parents(".DTE_Field").addClass("ai-loading");
         let input = button.parents(".DTE_Field").find(".form-control");

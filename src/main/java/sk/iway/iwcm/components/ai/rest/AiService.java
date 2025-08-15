@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -94,34 +96,71 @@ public class AiService {
         return ac;
     }
 
-    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo) throws Exception {
-        //
-        if(Tools.isEmpty(assistantName)) throw new IllegalStateException("No assistant found.");
-        if(Tools.isEmpty(content)) throw new IllegalStateException("No content provided for assistant.");
+    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+
+        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
 
         //
-        AssistantDefinitionRepository repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
-        if(repo == null) throw new IllegalStateException("Something went wrong.");
-
-        //
-        String prefix = AiAssistantsService.getAssitantPrefix();
-        Optional<AssistantDefinitionEntity> assistant = repo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
-
-        if(assistant.isPresent() == false) throw new IllegalStateException("No assistant found.");
-
-        //
-        if(Tools.isFalse( assistant.get().getKeepHtml() )) {
+        if(Tools.isFalse( assistant.getKeepHtml() )) {
             Html2Text html2Text = new Html2Text(content);
             content = html2Text.getText();
         }
 
         for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.get().getProvider())) {
-                return aiInterface.getAiResponse(assistant.get(), content, prop, statRepo);
+            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                return aiInterface.getAiResponse(assistant, content, prop, statRepo);
             }
         }
 
         throw new IllegalStateException("Something went wrong");
+    }
+
+    public AssistantResponseDTO getAiImageResponse(String assistantName, String imagePath, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+
+        if(Tools.isEmpty(imagePath)) throw new IllegalStateException("No imagePath provided.");
+
+        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+
+        String realPath = Tools.getRealPath(imagePath);
+        File fileImage = new File(realPath);
+
+        if (fileImage.isFile() == false) throw new IllegalStateException("Not a image");
+
+        for(AiInterface aiInterface : aiInterfaces) {
+            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                return aiInterface.getAiImageResponse(fileImage);
+            }
+        }
+
+        throw new IllegalStateException("Something went wrong");
+    }
+
+
+
+    public AssistantResponseDTO getAiStreamResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
+
+        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+
+        for(AiInterface aiInterface : aiInterfaces) {
+            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                return aiInterface.getAiStreamResponse(assistant, content, prop, statRepo, writer);
+            }
+        }
+
+        throw new IllegalStateException("Something went wrong");
+    }
+
+    private AssistantDefinitionEntity getAssistant(String assistantName, AssistantDefinitionRepository assistantRepo) {
+        //
+        if(Tools.isEmpty(assistantName)) throw new IllegalStateException("No assistant found.");
+
+        //
+        String prefix = AiAssistantsService.getAssitantPrefix();
+        Optional<AssistantDefinitionEntity> assistant = assistantRepo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
+
+        if(assistant.isPresent() == false) throw new IllegalStateException("No assistant found.");
+
+        return assistant.get();
     }
 
     /* PRIVATE SUPPORT METHODS */
