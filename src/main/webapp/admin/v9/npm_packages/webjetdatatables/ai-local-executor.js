@@ -14,28 +14,23 @@ export class AiLocalExecutor {
         return false;
     }
 
-    async execute(aiCol) {
+    async execute(aiCol, inputData, setFunction = null) {
 
         let instructions = aiCol.instructions;
 
-        let from = aiCol.from;
-        if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
-
-        let text = this.EDITOR.get(from);
-
-        //console.log("execute, text=", text);
+        //console.log("execute, inputData=", inputData);
 
         if (typeof instructions == "undefined" || instructions == null || instructions == "") {
 
         } else if (instructions.indexOf("translate")==0) {
             await this._translatorInitialize();
             if (this.translator) {
-                await this.translate(text, aiCol.to);
+                await this.translate(inputData, aiCol.to, setFunction);
             }
         } else if (instructions.indexOf("summarize")==0) {
             await this._summarizeInitialize();
             if (this.summarizer) {
-                await this.summarize(text, aiCol.to);
+                await this.summarize(inputData, aiCol.to, setFunction);
             }
         }
     }
@@ -54,7 +49,7 @@ export class AiLocalExecutor {
         }
     }
 
-    async translate(text, fieldName) {
+    async translate(text, fieldName, setFunction = null) {
         await this._translatorInitialize();
         if (this.translator) {
             //console.log("Translating text:", text, "translator=", this.translator);
@@ -62,7 +57,7 @@ export class AiLocalExecutor {
 
             const stream = this.translator.translateStreaming(text);
 
-            await this._setField(fieldName, stream);
+            await this._setField(fieldName, stream, setFunction);
         }
     }
 
@@ -81,7 +76,7 @@ export class AiLocalExecutor {
         }
     }
 
-    async summarize(text, fieldName) {
+    async summarize(text, fieldName, setFunction = null) {
         await this._summarizeInitialize();
         if (this.summarizer) {
             //console.log("Summarizing text:", text, "summarizer=", this.summarizer);
@@ -92,11 +87,11 @@ export class AiLocalExecutor {
                 context: "Použi slovenský jazyk"
             });
 
-            await this._setField(fieldName, stream);
+            await this._setField(fieldName, stream, setFunction);
         }
     }
 
-    async _setField(fieldName, stream) {
+    async _setField(fieldName, stream, setFunction = null) {
         let firstItem = true;
         let content = "";
         //console.log("Setting field:", fieldName);
@@ -108,7 +103,11 @@ export class AiLocalExecutor {
             }
             //console.log('\r'+content);
 
-            this.EDITOR.set(fieldName, content);
+            if (setFunction != null) {
+                setFunction(content);
+            } else {
+                this.EDITOR.set(fieldName, content);
+            }
             firstItem = false;
         }
     }

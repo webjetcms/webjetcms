@@ -151,37 +151,66 @@ export class EditorAi {
         let self = this;
         self._showLoader(button, column);
 
-        let contentContainer = $("#toast-container-ai-content");
-        contentContainer.html('<div class="group-title pulsate-text">' + WJ.translate("components.ai_assistants.editor.loading.js") + '</div>');
-
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
-
-        //for PageBuilder if to===pageBuilder element we need to execute function for every editor in PB page to prevent HTML structure issues
-
         var isPageBuilder = false;
         if ("wysiwyg" === column.type && aiCol.to === column.name) {
-            let wjeditor = this.EDITOR.field(aiCol.to).s.opts.wjeditor;
-            if (wjeditor != null && "pageBuilder" === wjeditor.editingMode) isPageBuilder = true;
+            try {
+                let wjeditor = this.EDITOR.field(aiCol.to).s.opts.wjeditor;
+                //for PageBuilder if to===pageBuilder element we need to execute function for every editor in PB page to prevent HTML structure issues
+                if (wjeditor != null && "pageBuilder" === wjeditor.editingMode) isPageBuilder = true;
+            } catch (e) {
+                console.error("Error checking PageBuilder editor:", e);
+            }
         }
+
+        let totalTokens = 0;
 
         if (isPageBuilder) {
             console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
+
+            //get all PB editor instances and execute action on them separately
+            let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
+            for (let editor of editors) {
+                //this._executeSingleAction(button, column, aiCol, from, editor);
+                //console.log("Executing on editor: ", editor);
+
+                from = editor.getData();
+                totalTokens += await this._executeSingleAction(button, column, aiCol, from, (response) => {
+                    //console.log("response="+response, "setting to editor: ", editor);
+                    editor.setData(response)
+                });
+            };
+
+        } else {
+            totalTokens = await this._executeSingleAction(button, column, aiCol, self.EDITOR.get(from));
         }
 
+        self._closeToast(3000);
+        self._hideLoader(button, column);
+
+        let contentContainer = $("#toast-container-ai-content");
+        contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", totalTokens));
+    }
+
+    async _executeSingleAction(button, column, aiCol, inputData, setFunction = null) {
+        let self = this;
+
+        let contentContainer = $("#toast-container-ai-content");
+        contentContainer.html('<div class="group-title pulsate-text">' + WJ.translate("components.ai_assistants.editor.loading.js") + '</div>');
+
         if ("local" === aiCol.provider) {
-            await this.aiLocalExecutor.execute(aiCol);
-            self._hideLoader(button, column);
-            contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", 0));
-            self._closeToast(3000);
+            await this.aiLocalExecutor.execute(aiCol, inputData, setFunction);
+            return 0; // Local executor does not return token count
+
         } else {
             $.ajax({
                 type: "POST",
                 url: "/admin/rest/ai/assistant/response/",
                 data: {
                     "assistantName": aiCol.assistant,
-                    "inputData": self.EDITOR.get(from)
+                    "inputData": inputData
                 },
                 success: function(res)
                 {
@@ -195,8 +224,7 @@ export class EditorAi {
                     }
 
                     self.EDITOR.set(aiCol.to, res.response);
-                    contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", res.totalTokens));
-                    self._closeToast(3000);
+                    return res.totalTokens;
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
 
@@ -225,7 +253,6 @@ export class EditorAi {
             await this.aiLocalExecutor.execute(aiCol);
             self._hideLoader(button);
             contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", 0));
-            self._closeToast(3000);
         } else {
 
             fetch("/admin/rest/ai/assistant/stream/", {
@@ -276,7 +303,6 @@ export class EditorAi {
                             }
 
                             contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", parsed.totalTokens));
-                            self._closeToast(3000);
                         }
 
                         read();

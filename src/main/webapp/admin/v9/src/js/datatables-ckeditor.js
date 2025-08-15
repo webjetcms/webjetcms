@@ -1752,6 +1752,15 @@ export class DatatablesCkEditor {
 		return [].push(this.getData());
 	}
 
+	getWysiwygEditors() {
+		if ("pageBuilder"===this.editingMode) {
+			let fieldId = this.options.fieldid;
+			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
+			return pageBuilderIframe[0].contentWindow.getWysiwygEditors("doc_data")
+		}
+		return [];
+	}
+
 	setEditingMode(json) {
 		var that = this;
 		//console.log("setEditingMode, json=", json);

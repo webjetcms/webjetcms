@@ -264,6 +264,34 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         return saveData;
     }
 
+    function getWysiwygEditors(wjAppField) {
+        //returns array of all editors HTML code
+        let wysiwygEditors = [];
+
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            var node = pageBuilderInstance.getClearNode();
+
+            var editableElements = node.find("*[class*='editableElement']");
+            editableElements.each(function()
+            {
+                var editorName =  $(this).attr("data-ckeditor-instance");
+                var editor = CKEDITOR.instances[editorName];
+                wysiwygEditors.push(editor);
+            });
+        });
+        return wysiwygEditors;
+    }
+
     /**
      * Returns ARRAY of content in all editors in wjAppField
      */
