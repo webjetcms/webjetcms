@@ -97,6 +97,11 @@ $sidebar-active-bg: #23262E;
 //new dark colors
 $dark-60: #686F83;
 
+//AI
+$ai-color: #8A3EFF;
+$ai-color-dark: #4D009F;
+$ai-color-hover: #E3DBFF;
+
 @import "~bootstrap/scss/bootstrap";
 
 @import "~@tabler/icons-webfont/dist/tabler-icons-filled";
@@ -188,6 +193,7 @@ $dark-60: #686F83;
 @import "5-modules/md-page-builder";
 
 @import "5-modules/md-elfinder";
+@import "5-modules/md-ai";
 
 //PAGES
 @import "6-pages/pg-homepage";

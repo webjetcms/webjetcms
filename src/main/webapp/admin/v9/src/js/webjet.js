@@ -244,6 +244,17 @@ const WJ = (() => {
         }
     }
 
+    /**
+     * Show a toast notification
+     * @param {*} type - type of notification (success, info, warning, error)
+     * @param {*} title - title of the notification
+     * @param {*} text - text of the notification
+     * @param {*} timeOut - timeout in ms
+     * @param {*} buttons - custom buttons for the notification
+     * @param {*} appendToExisting - whether to append to existing notifications
+     * @param {*} containerId - ID of the container to append the notification to
+     * @returns
+     */
     function toastNotify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null) {
 
         if (typeof containerId === "undefined" || containerId === null) containerId = 'toast-container-webjet';

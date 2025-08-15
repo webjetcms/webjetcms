@@ -137,6 +137,8 @@ CKEDITOR.editorConfig = function( config )
 		}
 		else if( Constants.getBoolean("gridEditorEnabled") || InlineEditor.EditingMode.gridEditor.toString().equals(Tools.getRequestParameter(request, "inlineMode")) ) toolbar += ",{ name: 'Layout', items: ['GridEditor','layout-desktop',';','layout-tablet','layout-mobile']}";
 
+		toolbar += ",{ name: 'AI', items: ['aibutton']}";
+
 		out.print(toolbar);
 		%>
 	];
