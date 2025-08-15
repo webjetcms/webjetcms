@@ -207,7 +207,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function getSaveData()
     {
-        console.log("Som getSaveData()");
+        //console.log("Som getSaveData()");
 
         var saveData = {
             editable : []
@@ -225,7 +225,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
             if ($(this).data('plugin_ninjaPageBuilder') === undefined)
             {
-                console.log("PageBuilder is not defined, skipping");
+                console.log("PageBuilder["+wjAppField+"] is not defined, skipping");
                 return;
             }
 

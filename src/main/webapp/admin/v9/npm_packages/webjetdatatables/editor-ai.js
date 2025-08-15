@@ -157,6 +157,19 @@ export class EditorAi {
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
+
+        //for PageBuilder if to===pageBuilder element we need to execute function for every editor in PB page to prevent HTML structure issues
+
+        var isPageBuilder = false;
+        if ("wysiwyg" === column.type && aiCol.to === column.name) {
+            let wjeditor = this.EDITOR.field(aiCol.to).s.opts.wjeditor;
+            if (wjeditor != null && "pageBuilder" === wjeditor.editingMode) isPageBuilder = true;
+        }
+
+        if (isPageBuilder) {
+            console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
+        }
+
         if ("local" === aiCol.provider) {
             await this.aiLocalExecutor.execute(aiCol);
             self._hideLoader(button, column);
