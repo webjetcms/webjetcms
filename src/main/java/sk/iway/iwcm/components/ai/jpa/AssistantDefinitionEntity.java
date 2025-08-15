@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.ai.providers.openai.OpenAiAssistantsService;
+import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -93,9 +93,19 @@ public class AssistantDefinitionEntity {
     private String provider = "openai";
 
     @Column(name = "model")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.model", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", tab = "basic",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-model"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_provider")
+				}
+			)
+		}
+    )
     @Size(max = 255)
-    private String model = "gpt-3.5-turbo";
+    private String model;
 
     @Column(name = "assistant_key")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.assistant_key", tab = "basic", className = "hide-on-create",
@@ -162,7 +172,7 @@ public class AssistantDefinitionEntity {
 
     public String getName() {
         //Cut prefix from name
-        String prefix = OpenAiAssistantsService.getAssitantPrefix();
+        String prefix = AiAssistantsService.getAssitantPrefix();
         return name.startsWith(prefix) ? name.substring(prefix.length()) : name;
     }
 
@@ -171,7 +181,7 @@ public class AssistantDefinitionEntity {
     }
 
     public void setNameAddPrefix(String name) {
-        String prefix = OpenAiAssistantsService.getAssitantPrefix();
+        String prefix = AiAssistantsService.getAssitantPrefix();
         //Just in case, so we dont set prefix 2x
         if(name.startsWith(prefix)) return;
         this.name = prefix + name;

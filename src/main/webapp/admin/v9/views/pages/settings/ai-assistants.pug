@@ -21,6 +21,12 @@ block content
                 tabs: tabs
             });
 
+            aiAssistantsDataTable.EDITOR.on('open', function (e, type) {
+                $("#DTE_Field_provider").on("change", function() {
+                    $("#DTE_Field_model").val("");
+                });
+            });
+
             var buttonCounter = 5;
 
             aiAssistantsDataTable.button().add(buttonCounter++, {

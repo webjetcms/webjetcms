@@ -20,7 +20,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 
 @RestController
 @RequestMapping("/admin/rest/ai/stat/")
-@PreAuthorize("@WebjetSecurityService.isAdmin()")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_stats')")
 @Datatable
 public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity, Long> {
 

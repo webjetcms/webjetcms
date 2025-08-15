@@ -1,12 +1,25 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
+import javax.imageio.ImageIO;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -14,61 +27,51 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import sk.iway.Html2Text;
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
-import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.utils.Pair;
 
 @Service
-public class OpenAiService extends OpenAiSupportService {
+public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     private static final CloseableHttpClient client = HttpClients.createDefault();
-    private static final String CHACHE_KEY_MODELS = "OPENAI_MODELS";
-    private static final int CACHE_MODELS_TIME = 24 * 60;
     private static final String SERVICE_NAME = "OpenAiService";
+    private static final String PROVIDER_ID = "openai";
+    private static final String TITLE_KEY = "components.ai_provider.openai.title";
+    private static final String AUTH_KEY = "open_ai_auth_key";
 
-    public List<LabelValue> getSupportedProviders(Prop prop) {
-        List<LabelValue> supportedValues = new ArrayList<>();
-        supportedValues.add(new LabelValue("OpenAI", "openai"));
-        supportedValues.add(new LabelValue(prop.getText("components.ai_assistants.provider.local"), "local"));
-        return supportedValues;
+    public String getProviderId() {
+        return PROVIDER_ID;
+    }
+
+    public boolean isInit() {
+        return Tools.isNotEmpty(Constants.getString(AUTH_KEY));
+    }
+
+    public Pair<String, String> getProviderInfo(Prop prop) {
+        return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
     }
 
     public List<LabelValue> getSupportedModels(Prop prop) {
         List<LabelValue> supportedValues = new ArrayList<>();
-
-        try {
-            //First check, if they are cached
-            Cache c = Cache.getInstance();
-            @SuppressWarnings("unchecked")
-            List<LabelValue> cachedModels = (List<LabelValue>)c.getObject(CHACHE_KEY_MODELS);
-            if(cachedModels != null) return cachedModels;
-        } catch (Exception e) {
-            //LOGG - and try get from openAI
-        }
 
         HttpGet get = new HttpGet(MODELS_URL);
         addHeaders(get, true, false);
         try (CloseableHttpResponse response = client.execute(get)) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getSupportedModels");
+
             String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             if (Tools.isEmpty(value)) return supportedValues;
+
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(value);
             for (JsonNode model : root.get("data")) {
@@ -77,45 +80,22 @@ public class OpenAiService extends OpenAiSupportService {
                 supportedValues.add(new LabelValue(modelId, created));
             }
             supportedValues.sort(Comparator.comparingLong((LabelValue o) -> Long.parseLong(o.getValue())).reversed());
+
             for (LabelValue modelValue : supportedValues) modelValue.setValue(modelValue.getLabel());
-            try {
-                Cache c = Cache.getInstance();
-                c.setObject(CHACHE_KEY_MODELS, supportedValues, CACHE_MODELS_TIME);
-            } catch (Exception e) {
-                //LOGG -
-            }
+
             return supportedValues;
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return supportedValues;
     }
 
-
-    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-
-        if(Tools.isEmpty(assistantName)) throw new IllegalStateException("No assistant found.");
-
-        if(Tools.isEmpty(content)) throw new IllegalStateException("No content provided for assistant.");
-
-        AssistantDefinitionRepository repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
-        if(repo == null) throw new IllegalStateException("Something went wrong.");
-
-        String prefix = OpenAiAssistantsService.getAssitantPrefix();
-        Optional<AssistantDefinitionEntity> assistant = repo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
-
-        if(assistant.isPresent() == false) throw new IllegalStateException("No assistant found.");
-
-        String assistantId = assistant.get().getAssistantKey();
-        BigDecimal temperature = assistant.get().getTemperature();
-        Boolean keepHtml = assistant.get().getKeepHtml();
-
-        if(Tools.isFalse(keepHtml)) {
-            Html2Text html2Text = new Html2Text(content);
-            content = html2Text.getText();
-        }
+        String assistantId = assistant.getAssistantKey();
+        BigDecimal temperature = assistant.getTemperature();
 
         // 1. Create thread
         String threadId = createThread(prop);
@@ -128,7 +108,7 @@ public class OpenAiService extends OpenAiSupportService {
             String runId = createRun(threadId, assistantId, temperature, prop);
 
             // 4. Wait for run to complete
-            waitForRunCompletion(threadId, runId, assistant.get(), prop, responseDto, statRepo);
+            waitForRunCompletion(threadId, runId, assistant, prop, responseDto, statRepo);
 
             // 5. Get assistant's reply
             return getLatestMessage(threadId, prop, responseDto);
@@ -137,6 +117,47 @@ public class OpenAiService extends OpenAiSupportService {
             // 6. Delete thread (cleanup)
             deleteThread(threadId);
         }
+    }
+
+    public AssistantResponseDTO getAiImageResponse(File fileImage) throws IOException {
+        HttpPost post = new HttpPost(IMAGES_URL);
+
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addTextBody("model", "gpt-image-1");
+        builder.addTextBody("prompt", "Make this image black and white. Return ONLY edited image. Nothing more.");
+
+        BufferedImage image = ImageIO.read( fileImage );
+        if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
+
+        // builder.addTextBody("size", "1024x1024");
+        // builder.addTextBody("size", "1024x1536");
+        // builder.addTextBody("size", "1536x1024");
+        builder.addTextBody("size", "auto");
+
+        ContentType contentType;
+        String fileName = fileImage.getName();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            contentType = ContentType.create("image/jpeg");
+        } else if (fileName.endsWith(".webp")) {
+            contentType = ContentType.create("image/webp");
+        } else {
+            contentType = ContentType.create("image/png"); // default
+        }
+
+        //Set image
+        builder.addBinaryBody("image", fileImage, contentType, fileName);
+
+        //Set entity and headers
+        post.setEntity(builder.build());
+        addHeaders(post, false, false);
+
+        try (CloseableHttpResponse response = client.execute(post)) {
+            int status = response.getStatusLine().getStatusCode();
+            String body = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "<no body>";
+        }
+
+        return null;
     }
 
     private String createThread(Prop prop) throws IOException {
