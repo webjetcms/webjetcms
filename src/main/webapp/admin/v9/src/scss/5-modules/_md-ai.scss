@@ -21,6 +21,10 @@
                 }
             }
 
+            .btn-ai-wysiwyg {
+                display: none;
+            }
+
             &.ai-loading {
                 .btn-ai {
                     background-color: var(--wj-ai-color-hover);
@@ -37,8 +41,19 @@
 
                 .form-control {
                     animation: ai-pulsate-color 1.5s infinite;
+                }
+
+                .form-control, div.wysiwyg {
                     background-color: var(--wj-ai-color-hover);
                     cursor: not-allowed;
+
+                    .wysiwyg_textarea, .wysiwyg-pageBuilder {
+                        opacity: 0.2;
+                    }
+                }
+                .exit-inline-editor {
+                    background-color: var(--wj-ai-color-hover);
+                    opacity: 0.2;
                 }
             }
         }

@@ -207,6 +207,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function getSaveData()
     {
+        console.log("Som getSaveData()");
+
         var saveData = {
             editable : []
         };
@@ -260,6 +262,69 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         });
 
         return saveData;
+    }
+
+    /**
+     * Returns ARRAY of content in all editors in wjAppField
+     */
+    function getEditorsContent(wjAppField) {
+        //returns array of all editors HTML code
+        let editorsContent = [];
+
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            var node = pageBuilderInstance.getClearNode();
+
+            var editableElements = node.find("*[class*='editableElement']");
+            editableElements.each(function()
+            {
+                var editorName =  $(this).attr("data-ckeditor-instance");
+                var editorData = CKEDITOR.instances[editorName].getData();
+                editorsContent.push(editorData);
+            });
+        });
+        return editorsContent;
+    }
+
+    /**
+     * Set content in all editors in wjAppField from editorsContent (ARRAY). If i is set it will set only i editor.
+     */
+    function setEditorsContent(wjAppField, editorsContent, i = null) {
+        //returns array of all editors HTML code
+        var counter = 0;
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            var node = pageBuilderInstance.getClearNode();
+
+            var editableElements = node.find("*[class*='editableElement']");
+            var counter = 0;
+            editableElements.each(function()
+            {
+                var editorName =  $(this).attr("data-ckeditor-instance");
+                var editor = CKEDITOR.instances[editorName];
+                if (i==null) editor.setData(editorsContent[counter]);
+                else if (i==counter) editor.setData(editorsContent);
+                counter++;
+            });
+        });
     }
 
     $(document).ready(()=> {
