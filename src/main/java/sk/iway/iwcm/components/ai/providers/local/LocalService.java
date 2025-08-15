@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.ai.providers.local;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,5 +43,10 @@ public class LocalService implements AiInterface {
 
     public List<LabelValue> getSupportedModels(Prop prop) {
         return new ArrayList<>();
+    }
+
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

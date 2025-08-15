@@ -1,8 +1,12 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,6 +14,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -90,6 +95,51 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         return supportedValues;
     }
+
+
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws IOException, InterruptedException {
+        AssistantResponseDTO responseDto = new AssistantResponseDTO();
+        String assistantId = assistant.getAssistantKey();
+        BigDecimal temperature = assistant.getTemperature();
+
+        // 1. Create thread
+        String threadId = createThread(prop);
+
+        try {
+            // 2. Add message
+            addMessage(threadId, content, prop);
+
+            // 3. Create run
+            JSONObject json = new JSONObject();
+            json.put("assistant_id", assistantId);
+            json.put("temperature", temperature);
+            json.put("stream", true);
+
+            HttpPost post = new HttpPost(THREADS_URL + threadId + "/runs");
+            post.setEntity(getRequestBody(json.toString()));
+            addHeaders(post, true, true);
+            post.setHeader("Accept", "text/event-stream");
+
+            try (CloseableHttpResponse response = client.execute(post)) {
+
+                HttpEntity entity = response.getEntity();
+                InputStream inputStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
+                streamHandler.handleBufferedReader(reader, writer);
+
+                //
+                handleUsage(responseDto, streamHandler.getUsageChunk(), assistant, streamHandler.getRunId(), threadId, statRepo);
+            }
+        } finally {
+            // 6. Delete thread (cleanup)
+            deleteThread(threadId);
+        }
+
+        return responseDto;
+    }
+
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
 
@@ -210,30 +260,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
                 String status = res.getString("status");
                 if ("completed".equals(status)) {
-                    if (res.has("usage")) {
-                        JSONObject usage = res.getJSONObject("usage");
-                        int promptTokens = usage.optInt("prompt_tokens", 0);
-                        int completionTokens = usage.optInt("completion_tokens", 0);
-                        int totalTokens = usage.optInt("total_tokens", 0);
-                        StringBuilder sb = new StringBuilder("");
-                        sb.append(SERVICE_NAME).append(" -> run with id: ").append(runId).append(" on thred: ").append(threadId).append(" was succesfull");
-                        sb.append("\n\n");
-                        sb.append("Assitant name : ").append(dbAssitant.getName()).append("\n");
-                        sb.append("From field : ").append(dbAssitant.getFieldFrom()).append("\n");
-                        sb.append("To field : ").append(dbAssitant.getFieldTo()).append("\n");
-                        sb.append("\n");
-                        sb.append("Action cost: \n");
-                        sb.append("\t prompt_tokens: ").append(promptTokens).append("\n");
-                        sb.append("\tcompletion_tokens: ").append(completionTokens).append("\n");
-                        sb.append("\t total_tokens: ").append(totalTokens).append("\n");
-                        Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
 
-                        AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo);
+                    handleUsage(responseDto, res, dbAssitant, runId, threadId, statRepo);
 
-                        responseDto.setPromptTokens(promptTokens);
-                        responseDto.setCompletionTokens(completionTokens);
-                        responseDto.setTotalTokens(totalTokens);
-                    }
                     break;
                 }
                 if ("failed".equals(status)) throw new RuntimeException("Run failed: " + res);
@@ -264,5 +293,34 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             // System.out.println("Thread deleted: " + threadId);
             //TODO
         }
+    }
+
+    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, String runId, String threadId, AiStatRepository statRepo) {
+
+        if (source.has("usage")) {
+            JSONObject usage = source.getJSONObject("usage");
+            int promptTokens = usage.optInt("prompt_tokens", 0);
+            int completionTokens = usage.optInt("completion_tokens", 0);
+            int totalTokens = usage.optInt("total_tokens", 0);
+            StringBuilder sb = new StringBuilder("");
+            sb.append(SERVICE_NAME).append(" -> run with id: ").append(runId).append(" on thred: ").append(threadId).append(" was succesfull");
+            sb.append("\n\n");
+            sb.append("Assitant name : ").append(dbAssitant.getName()).append("\n");
+            sb.append("From field : ").append(dbAssitant.getFieldFrom()).append("\n");
+            sb.append("To field : ").append(dbAssitant.getFieldTo()).append("\n");
+            sb.append("\n");
+            sb.append("Action cost: \n");
+            sb.append("\t prompt_tokens: ").append(promptTokens).append("\n");
+            sb.append("\tcompletion_tokens: ").append(completionTokens).append("\n");
+            sb.append("\t total_tokens: ").append(totalTokens).append("\n");
+            Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
+
+            AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo);
+
+            responseDto.setPromptTokens(promptTokens);
+            responseDto.setCompletionTokens(completionTokens);
+            responseDto.setTotalTokens(totalTokens);
+        }
+
     }
 }
