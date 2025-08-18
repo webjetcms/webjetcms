@@ -16,7 +16,7 @@ export class EditorAi {
     constructor(EDITOR) {
         this.EDITOR = EDITOR;
         //console.log("EditorAi instance created, editor=", this.EDITOR);
-        this.aiLocalExecutor = new AiLocalExecutor(EDITOR);
+        this.aiLocalExecutor = new AiLocalExecutor(EDITOR, this);
         EDITOR.editorAi = this;
 
         this.bindEvents();
@@ -79,6 +79,18 @@ export class EditorAi {
                 }
             }
         });
+    }
+
+    _setCurrentStatus(textKey, pulsate = false, ...params) {
+        let contentContainer = $("#toast-container-ai-content");
+        let html = '<div class="group-title"';
+
+        if (pulsate) {
+            html += " pulsate-text";
+        }
+
+        html = html + '">' + WJ.translate(textKey, params) + '</div>';
+        contentContainer.html(html);
     }
 
     _handleAiButtonClick(button, column) {
@@ -168,44 +180,49 @@ export class EditorAi {
         let totalTokens = 0;
 
         if (isPageBuilder) {
-            console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
+            //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
 
             //get all PB editor instances and execute action on them separately
             let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
-            for (let editor of editors) {
+            for (let i=0; i<editors.length; i++) {
+                let editor = editors[i];
                 //this._executeSingleAction(button, column, aiCol, from, editor);
                 //console.log("Executing on editor: ", editor);
+
+                self._setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
                 from = editor.getData();
                 totalTokens += await this._executeSingleAction(button, column, aiCol, from, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
-                    editor.setData(response)
+                    editor.setData(response);
                 });
             };
 
         } else {
+            self._setCurrentStatus("components.ai_assistants.editor.loading.js");
             totalTokens = await this._executeSingleAction(button, column, aiCol, self.EDITOR.get(from));
         }
 
-        self._closeToast(3000);
-        self._hideLoader(button, column);
+        if (totalTokens >= 0) {
+            self._closeToast(3000);
+            self._hideLoader(button, column);
 
-        let contentContainer = $("#toast-container-ai-content");
-        contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", totalTokens));
+            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
+        } else {
+            //there seems to be an error
+        }
     }
 
     async _executeSingleAction(button, column, aiCol, inputData, setFunction = null) {
         let self = this;
-
-        let contentContainer = $("#toast-container-ai-content");
-        contentContainer.html('<div class="group-title pulsate-text">' + WJ.translate("components.ai_assistants.editor.loading.js") + '</div>');
 
         if ("local" === aiCol.provider) {
             await this.aiLocalExecutor.execute(aiCol, inputData, setFunction);
             return 0; // Local executor does not return token count
 
         } else {
-            $.ajax({
+            let totalTokens = 0;
+            await $.ajax({
                 type: "POST",
                 url: "/admin/rest/ai/assistant/response/",
                 data: {
@@ -216,23 +233,25 @@ export class EditorAi {
                 {
                     //console.log("AI response=", res, "to=", aiCol.to);
 
-                    self._hideLoader(button, column);
-
                     //handle res.error
                     if (res.error) {
                         contentContainer.html(res.error);
+                    } else {
+                        if (setFunction != null) {
+                            setFunction(res.content);
+                        } else {
+                            self.EDITOR.set(aiCol.to, res.response);
+                        }
                     }
 
-                    self.EDITOR.set(aiCol.to, res.response);
-                    return res.totalTokens;
+                    totalTokens = res.totalTokens;
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
-
-                    self._hideLoader(button);
-
-                    contentContainer.html(WJ.translate("datatable.error.unknown"));
+                    self._setCurrentStatus("datatable.error.unknown");
+                    totalTokens = -1;
                 }
             });
+            return totalTokens;
         }
     }
 
@@ -243,8 +262,7 @@ export class EditorAi {
         let self = this;
         self._showLoader(button);
 
-        let contentContainer = $("#toast-container-ai-content");
-        contentContainer.html('<div class="group-title pulsate-text">' + WJ.translate("components.ai_assistants.editor.loading.js") + '</div>');
+        self._setCurrentStatus("components.ai_assistants.editor.loading.js");
 
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
@@ -252,7 +270,7 @@ export class EditorAi {
         if ("local" === aiCol.provider) {
             await this.aiLocalExecutor.execute(aiCol);
             self._hideLoader(button);
-            contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", 0));
+            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, 0);
         } else {
 
             fetch("/admin/rest/ai/assistant/stream/", {
@@ -302,7 +320,7 @@ export class EditorAi {
                                 contentContainer.html(parsed.error);
                             }
 
-                            contentContainer.html(WJ.translate("components.ai_assistants.stat.totalTokens.js", parsed.totalTokens));
+                            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, parsed.totalTokens);
                         }
 
                         read();
@@ -355,5 +373,10 @@ export class EditorAi {
 
         if (progressBar.intervalId != null) clearInterval(progressBar.intervalId);
         if (this.$progressElement != null) this.$progressElement.width('0%');
+    }
+
+    _setDownloadStatus(percent) {
+        console.log("Download progress:", percent);
+        this._setCurrentStatus("components.ai_assistants.local.downloadingModel.js", false, percent + "%");
     }
 }
