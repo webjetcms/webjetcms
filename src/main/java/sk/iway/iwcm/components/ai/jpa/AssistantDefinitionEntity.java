@@ -167,6 +167,10 @@ public class AssistantDefinitionEntity {
     @Column(name = "reasoning_effort")
     private String reasoningEffort;
 
+    @Column(name="use_streaming")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.use_streaming", tab = "advanced")
+	private Boolean useStreaming;
+
     @Column(name="domain_id")
 	private Integer domainId;
 

@@ -73,6 +73,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         existingEntity.setFieldTo( entity.getFieldTo() );
         existingEntity.setDescription( entity.getDescription() );
         existingEntity.setTemperature( entity.getTemperature() );
+        existingEntity.setUseStreaming( entity.getUseStreaming() );
 
         try {
             aiAssistantsService.updateAssistant(existingEntity, getProp());

@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.ai.providers.local;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -33,11 +33,11 @@ public class LocalService implements AiInterface {
         return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
     }
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo) {
+    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) {
         return null;
     }
 
-    public AssistantResponseDTO getAiImageResponse(File fileImage) throws Exception {
+    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws Exception {
         return null;
     }
 
@@ -45,7 +45,7 @@ public class LocalService implements AiInterface {
         return new ArrayList<>();
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception {
         // TODO Auto-generated method stub
         return null;
     }

@@ -328,16 +328,19 @@ public class DataTableColumn {
             if(assistants != null && assistants.size() > 0) {
                 ai = new ArrayList<>();
 
-                for (AssistantDefinitionEntity kk : assistants) {
+                for (AssistantDefinitionEntity ade : assistants) {
                     DataTableAi ai = new DataTableAi();
-                    ai.setAssistant(kk.getName());
-                    ai.setFrom(kk.getFieldFrom());
+                    ai.setAssistant(ade.getName());
+                    ai.setFrom(ade.getFieldFrom());
                     ai.setTo(toField);
-                    ai.setDescription(kk.getDescription());
-                    ai.setProvider(kk.getProvider());
+                    ai.setDescription(ade.getDescription());
+                    ai.setProvider(ade.getProvider());
+
+                    ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
+
                     if ("local".equals(ai.getProvider())) {
                         //we need instructions to execute local AI in browser
-                        ai.setInstructions(kk.getInstructions());
+                        ai.setInstructions(ade.getInstructions());
                     }
                     if (ai.isEmpty()==false) {
                         this.ai.add(ai);
