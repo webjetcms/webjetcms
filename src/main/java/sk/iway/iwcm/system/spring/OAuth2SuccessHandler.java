@@ -7,6 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.common.LogonTools;
@@ -203,7 +205,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
             // Nastav admin práva na základe skupín z Keycloak
             try {
-                String adminGroupName = sk.iway.iwcm.Constants.getString("NTLMAdminGroupName");
+                String adminGroupName = Constants.getString("NTLMAdminGroupName");
                 boolean isAdmin = false;
                 if (adminGroupName != null && !adminGroupName.isEmpty() && oauth2Groups.contains(adminGroupName)) {
                     isAdmin = true;
