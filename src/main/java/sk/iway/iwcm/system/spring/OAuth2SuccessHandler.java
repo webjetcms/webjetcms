@@ -72,7 +72,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             if (isKeycloakProvider(oauth2User)) {
                 applyOAuth2Permissions(oauth2User, userDetails);
             } else {
-                Logger.info(OAuth2SuccessHandler.class, "Skipping group synchronization for non-Keycloak provider for user: " + userDetails.getEmail());
+                Logger.info(OAuth2SuccessHandler.class, "Skipping group synchronization and admin privileges for non-Keycloak provider for user: " + userDetails.getEmail());
             }
 
             Identity identity = new Identity(userDetails);
@@ -105,7 +105,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String login = email.contains("@") ? email.substring(0, email.indexOf("@")) : email;
         userDetails.setLogin(login);
         userDetails.setAuthorized(true);
-        userDetails.setAdmin(true);
 
         boolean isUserSaved = UsersDB.saveUser(userDetails);
         if (!isUserSaved) {
@@ -200,6 +199,22 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
             if (matchingUserGroups.isEmpty() && matchingPermissionGroups.isEmpty()) {
                 Logger.info(OAuth2SuccessHandler.class, "No matching user groups or permission groups found for user " + userDetails.getEmail());
+            }
+
+            // Nastav admin práva na základe skupín z Keycloak
+            try {
+                String adminGroupName = sk.iway.iwcm.Constants.getString("NTLMAdminGroupName");
+                boolean isAdmin = false;
+                if (adminGroupName != null && !adminGroupName.isEmpty() && oauth2Groups.contains(adminGroupName)) {
+                    isAdmin = true;
+                }
+                if (userDetails.isAdmin() != isAdmin) {
+                    userDetails.setAdmin(isAdmin);
+                    UsersDB.saveUser(userDetails);
+                    Logger.info(OAuth2SuccessHandler.class, "Set admin=" + isAdmin + " for user: " + userDetails.getEmail() + " based on Keycloak groups");
+                }
+            } catch (Exception e) {
+                Logger.error(OAuth2SuccessHandler.class, "Error setting admin flag for user: " + userDetails.getEmail(), e);
             }
         } catch (Exception ex) {
             Logger.error(OAuth2SuccessHandler.class, "Error applying OAuth2 permissions for user: " + userDetails.getEmail(), ex);
