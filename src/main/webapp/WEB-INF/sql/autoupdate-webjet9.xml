@@ -1950,6 +1950,7 @@
                             top_p FLOAT DEFAULT 1.0,
                             description TEXT,
                             keep_html BOOLEAN DEFAULT FALSE,
+                            use_streaming BOOLEAN DEFAULT FALSE,
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -1972,6 +1973,7 @@
                             top_p FLOAT DEFAULT 1.0,
                             description NTEXT,
                             keep_html BIT DEFAULT 0,
+                            use_streaming BIT DEFAULT 0,
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -1994,6 +1996,7 @@
                             top_p FLOAT DEFAULT 1.0,
                             description CLOB,
                             keep_html NUMBER(1) DEFAULT 0,
+                            use_streaming NUMBER(1) DEFAULT 0,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_open_ai_assistants START WITH 1;
@@ -2029,6 +2032,7 @@
                             top_p FLOAT DEFAULT 1.0,
                             description TEXT,
                             keep_html BOOLEAN DEFAULT FALSE,
+                            use_streaming BOOLEAN DEFAULT FALSE,
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>

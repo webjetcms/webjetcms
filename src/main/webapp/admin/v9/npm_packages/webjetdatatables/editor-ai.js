@@ -81,6 +81,14 @@ export class EditorAi {
         });
     }
 
+    getColumnType(editor, fieldName) {
+        let className = editor?.field(fieldName)?.s?.opts?.className ?? "";
+        let renderFormat = editor?.field(fieldName)?.s?.opts?.renderFormat ?? "";
+
+        if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
+        return "text";
+    }
+
     _setCurrentStatus(textKey, pulsate = false, ...params) {
         let contentContainer = $("#toast-container-ai-content");
         let html = '<div class="group-title"';
@@ -155,7 +163,18 @@ export class EditorAi {
             // Bind click to _executeAction
             btn.on('click', () => {
                 //use original button clicked - which shows this popup
-                this._executeAction(button, column, aiCol);
+
+                if(this.getColumnType(this.EDITOR, column?.name) === "image") {
+                    // IS IMAGE
+                    this._executeImageAction(button, aiCol, column);
+                }
+                else if(aiCol.useStreaming === true) {
+                    this._executeStreamAction(button, aiCol);
+                }
+                else {
+                    this._executeAction(button, column, aiCol);
+                }
+
             });
 
             // Append button to the container
@@ -198,8 +217,11 @@ export class EditorAi {
 
                 self._setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
-                from = editor.getData();
-                totalTokens += await this._executeSingleAction(button, column, aiCol, from, (response) => {
+                let inputData = {
+                    type: "text",
+                    value: editor.getData()
+                }
+                totalTokens += await this._executeSingleAction(button, column, aiCol, JSON.stringify(inputData), (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
                 });
@@ -207,7 +229,12 @@ export class EditorAi {
 
         } else {
             self._setCurrentStatus("components.ai_assistants.editor.loading.js");
-            totalTokens = await this._executeSingleAction(button, column, aiCol, self.EDITOR.get(from));
+
+            let inputData = {
+                type: this.getColumnType(this.EDITOR, from),
+                value: self.EDITOR.get(from)
+            }
+            totalTokens = await this._executeSingleAction(button, column, aiCol, JSON.stringify(inputData));
         }
 
         if (totalTokens >= 0) {
@@ -264,6 +291,49 @@ export class EditorAi {
         }
     }
 
+    async _executeImageAction(button, aiCol, column) {
+        let self = this;
+        self._showLoader(button);
+
+        let from = aiCol.from;
+        if (from == null || from == "")  from = aiCol.to;
+
+        let inputData = {
+            type: this.getColumnType(this.EDITOR, from),
+            value: self.EDITOR.get(from)
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "/admin/rest/ai/assistant/response-image/",
+            data: {
+                "assistantName": aiCol.assistant,
+                "inputData": JSON.stringify(inputData)
+            },
+            success: function(res)
+            {
+                console.log("AI response=", res, "to=", aiCol.to);
+
+                self._closeToast(3000);
+                self._hideLoader(button, column);
+
+                //handle res.error
+                if (res.error) {
+                    contentContainer.html(res.error);
+                }
+
+                return res.totalTokens;
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+
+                self._closeToast(3000);
+                self._hideLoader(button);
+
+                contentContainer.html(WJ.translate("datatable.error.unknown"));
+            }
+        });
+    }
+
     async _executeStreamAction(button, aiCol) {
         // Implement AI button click handling logic here
         //console.log("Executing action for AI column:", aiCol);
@@ -282,7 +352,12 @@ export class EditorAi {
             self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, 0);
         } else {
 
-            fetch("/admin/rest/ai/assistant/stream/", {
+            let inputData = {
+                type: this.getColumnType(this.EDITOR, from),
+                value: self.EDITOR.get(from)
+            }
+
+            fetch("/admin/rest/ai/assistant/response-stream/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -290,7 +365,7 @@ export class EditorAi {
                 },
                 body: JSON.stringify({
                     assistantName: aiCol.assistant,
-                    inputData: self.EDITOR.get(from)
+                    inputData: JSON.stringify(inputData)
                 })
             })
             .then(response => {
@@ -303,6 +378,7 @@ export class EditorAi {
                     reader.read().then(({ done, value }) => {
                         if (done) {
                             console.log("Stream complete");
+                            self._closeToast(3000);
                             self._hideLoader(button);
                             return;
                         }

@@ -56,12 +56,12 @@ public class AssistantController {
     }
 
     @PostMapping(value = "/response-image/")
-    public AssistantResponseDTO getAiImageReponse(@RequestParam("assistantName") String assistantName, @RequestParam("imagePath") String imagePath, HttpServletRequest request) {
+    public AssistantResponseDTO getAiImageReponse(@RequestParam("assistantName") String assistantName,  @RequestParam("inputData") String inputData, HttpServletRequest request) {
         AssistantResponseDTO response = null;
         String exceptionMessage = null;
 
         try {
-            response = aiService.getAiImageResponse(assistantName, imagePath, null, statRepo, assistantRepo);
+            response = aiService.getAiImageResponse(assistantName, inputData, Prop.getInstance(request), statRepo, assistantRepo);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -75,7 +75,7 @@ public class AssistantController {
         return response;
     }
 
-    @PostMapping("/stream/")
+    @PostMapping("/response-stream/")
     public void streamData(@RequestBody Map<String, String> data, HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF-8");

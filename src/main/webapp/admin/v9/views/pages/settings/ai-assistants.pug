@@ -18,7 +18,9 @@ block content
                 url: "/admin/rest/ai/assistant-definition/",
                 columns: columns,
                 serverSide: true,
-                tabs: tabs
+                tabs: tabs,
+                fetchOnCreate: true,
+                fetchOnEdit: true
             });
 
             aiAssistantsDataTable.EDITOR.on('open', function (e, type) {

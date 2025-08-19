@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.ai.rest;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,11 +8,11 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import sk.iway.Html2Text;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
@@ -96,39 +95,34 @@ public class AiService {
         return ac;
     }
 
-    public AssistantResponseDTO getAiResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+    public AssistantResponseDTO getAiResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+
+        InputDataDTO inputDataDTO = new InputDataDTO(inputData);
 
         AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
 
-        //
         if(Tools.isFalse( assistant.getKeepHtml() )) {
-            Html2Text html2Text = new Html2Text(content);
-            content = html2Text.getText();
+            inputDataDTO.removeHtml();
         }
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiResponse(assistant, content, prop, statRepo);
+                return aiInterface.getAiResponse(assistant, inputDataDTO, prop, statRepo);
             }
         }
 
         throw new IllegalStateException("Something went wrong");
     }
 
-    public AssistantResponseDTO getAiImageResponse(String assistantName, String imagePath, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+    public AssistantResponseDTO getAiImageResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
 
-        if(Tools.isEmpty(imagePath)) throw new IllegalStateException("No imagePath provided.");
+        InputDataDTO inputDataDTO = new InputDataDTO(inputData);
 
         AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
 
-        String realPath = Tools.getRealPath(imagePath);
-        File fileImage = new File(realPath);
-
-        if (fileImage.isFile() == false) throw new IllegalStateException("Not a image");
-
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiImageResponse(fileImage);
+                return aiInterface.getAiImageResponse(assistant, inputDataDTO, prop, statRepo);
             }
         }
 
@@ -137,13 +131,15 @@ public class AiService {
 
 
 
-    public AssistantResponseDTO getAiStreamResponse(String assistantName, String content, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
+
+        InputDataDTO inputDataDTO = new InputDataDTO(inputData);
 
         AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiStreamResponse(assistant, content, prop, statRepo, writer);
+                return aiInterface.getAiStreamResponse(assistant, inputDataDTO, prop, statRepo, writer);
             }
         }
 

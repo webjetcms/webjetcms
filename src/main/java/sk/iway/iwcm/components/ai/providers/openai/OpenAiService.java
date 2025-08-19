@@ -3,13 +3,16 @@ package sk.iway.iwcm.components.ai.providers.openai;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -36,11 +39,13 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
@@ -96,8 +101,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return supportedValues;
     }
 
-
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws IOException, InterruptedException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         String assistantId = assistant.getAssistantKey();
         BigDecimal temperature = assistant.getTemperature();
@@ -107,7 +111,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try {
             // 2. Add message
-            addMessage(threadId, content, prop);
+            addMessage(threadId, inputData, prop);
 
             // 3. Create run
             JSONObject json = new JSONObject();
@@ -141,7 +145,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, String content, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         String assistantId = assistant.getAssistantKey();
@@ -152,7 +156,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try {
             // 2. Add message
-            addMessage(threadId, content, prop);
+            addMessage(threadId, inputData, prop);
 
             // 3. Create run
             String runId = createRun(threadId, assistantId, temperature, prop);
@@ -169,45 +173,91 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
     }
 
-    public AssistantResponseDTO getAiImageResponse(File fileImage) throws IOException {
-        HttpPost post = new HttpPost(IMAGES_URL);
+    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException {
 
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.addTextBody("model", "gpt-image-1");
-        builder.addTextBody("prompt", "Make this image black and white. Return ONLY edited image. Nothing more.");
+        AssistantResponseDTO responseDto = new AssistantResponseDTO();
+        HttpPost post;
 
-        BufferedImage image = ImageIO.read( fileImage );
-        if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
 
-        // builder.addTextBody("size", "1024x1024");
-        // builder.addTextBody("size", "1024x1536");
-        // builder.addTextBody("size", "1536x1024");
-        builder.addTextBody("size", "auto");
+        if(inputData.getInputDataType().equals(InputDataDTO.InputDataType.IMAGE)) {
+            //ITS IMAGE EDIT - I GOT IMAGE AND I WILL RETURN IMAGE
+            post = new HttpPost(IMAGES_EDITS_URL);
 
-        ContentType contentType;
-        String fileName = fileImage.getName();
-        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-            contentType = ContentType.create("image/jpeg");
-        } else if (fileName.endsWith(".webp")) {
-            contentType = ContentType.create("image/webp");
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+            builder.addTextBody("model", "gpt-image-1");
+            builder.addTextBody("prompt", assistant.getInstructions());
+
+            BufferedImage image = ImageIO.read( inputData.getInputFile() );
+            if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
+
+            // Supported sizes :  "auto" | "1024x1024" | "1024x1536" | "1536x1024"
+            builder.addTextBody("size", "auto");
+
+            ContentType contentType;
+            String fileName = inputData.getInputFile().getName();
+            if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+                contentType = ContentType.create("image/jpeg");
+            } else if (fileName.endsWith(".webp")) {
+                contentType = ContentType.create("image/webp");
+            } else {
+                contentType = ContentType.create("image/png"); // default
+            }
+
+            //Set image
+            builder.addBinaryBody("image", inputData.getInputFile(), contentType, fileName);
+
+            //Set entity and headers
+            post.setEntity(builder.build());
+
+            addHeaders(post, false, false);
+
         } else {
-            contentType = ContentType.create("image/png"); // default
+            //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
+            post = new HttpPost(IMAGES_GENERATION_URL);
+
+            JSONObject json = new JSONObject();
+            json.put("model", "gpt-image-1");
+            json.put("prompt", assistant.getInstructions());
+
+            post.setEntity(getRequestBody(json.toString()));
+
+            addHeaders(post, true, false);
         }
-
-        //Set image
-        builder.addBinaryBody("image", fileImage, contentType, fileName);
-
-        //Set entity and headers
-        post.setEntity(builder.build());
-        addHeaders(post, false, false);
 
         try (CloseableHttpResponse response = client.execute(post)) {
-            int status = response.getStatusLine().getStatusCode();
-            String body = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "<no body>";
+
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                handleErrorMessage(response, prop, SERVICE_NAME, "");
+
+
+            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            JSONArray imageArr = res.getJSONArray("data");
+
+            try {
+
+                for(int i = 0; i < imageArr.length(); i++) {
+                    JSONObject jsonImage = imageArr.getJSONObject(i);
+                    String base64Image = jsonImage.getString("b64_json");
+
+                    String tmpFileName = "tmp_ai_" + assistant.getAssistantKey() + "_" + (new Date()).getTime() + "_" + i;
+                    File tempUploadFile = File.createTempFile(tmpFileName, ".png");
+
+                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                    try (FileOutputStream out = new FileOutputStream(tempUploadFile)) {
+                        out.write(imageBytes);
+                    }
+
+                    responseDto.addTempFile(tempUploadFile.getAbsolutePath());
+                }
+
+            } catch (Exception e) {}
+
+            handleUsage(responseDto, res, assistant, "NO_RUN_ID", "NO_THREAD_ID", statRepo);
+
         }
 
-        return null;
+        return responseDto;
     }
 
     private String createThread(Prop prop) throws IOException {
@@ -222,10 +272,11 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
     }
 
-    private void addMessage(String threadId, String prompt, Prop prop) throws IOException {
+    private void addMessage(String threadId, InputDataDTO inputData, Prop prop) throws IOException {
         JSONObject json = new JSONObject();
         json.put("role", "user");
-        json.put("content", prompt);
+        json.put("content", inputData.getInputText());
+
         HttpPost post = new HttpPost(THREADS_URL + threadId + "/messages");
         post.setEntity(getRequestBody(json.toString()));
         addHeaders(post, true, true);

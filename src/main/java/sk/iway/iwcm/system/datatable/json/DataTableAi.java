@@ -18,6 +18,7 @@ public class DataTableAi {
     private String provider;
     private String description;
     private String instructions;
+    private boolean useStreaming;
 
     public DataTableAi() {}
 
