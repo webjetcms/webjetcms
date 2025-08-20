@@ -105,6 +105,7 @@ export class EditorAi {
         //console.log("AI button clicked for column:", column);
 
         this._clearProgress();
+        let self = this;
 
         let contentContainer = $("#toast-container-ai-content");
         if (contentContainer.length === 0) {
@@ -117,7 +118,13 @@ export class EditorAi {
                 containerId: 'toast-container-ai',
                 positionClass: 'toast-container toast-top-center',
                 preventDuplicates: true,
-                progressBar: true
+                progressBar: true,
+                onCloseClick: () => {
+                    console.log("Closing toast");
+                    self._clearProgress();
+                    self._hideLoader(button, column);
+                    if (self.aiLocalExecutor != null) self.aiLocalExecutor.destroy();
+                }
             });
             window.lastToast = this.lastToast;
             contentContainer = $("#toast-container-ai-content");
@@ -246,18 +253,20 @@ export class EditorAi {
             self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
         } else {
             //there seems to be an error
+            self._closeToast(3000);
+            self._hideLoader(button, column);
+
+            self._setCurrentStatus("components.ai_assistants.unknownError.js", false);
         }
     }
 
     async _executeSingleAction(button, column, aiCol, inputData, setFunction = null) {
         let self = this;
+        let totalTokens = 0;
 
         if ("local" === aiCol.provider) {
-            await this.aiLocalExecutor.execute(aiCol, inputData, setFunction);
-            return 0; // Local executor does not return token count
-
+            totalTokens = await this.aiLocalExecutor.execute(aiCol, inputData, setFunction);
         } else {
-            let totalTokens = 0;
             await $.ajax({
                 type: "POST",
                 url: "/admin/rest/ai/assistant/response/",
