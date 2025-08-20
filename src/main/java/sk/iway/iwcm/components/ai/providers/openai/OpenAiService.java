@@ -2,17 +2,14 @@ package sk.iway.iwcm.components.ai.providers.openai;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -42,10 +39,10 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
@@ -178,6 +175,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         HttpPost post;
 
+        Path tempFileFolder = AiTempFileStorage.getFileFolder();
 
         if(inputData.getInputDataType().equals(InputDataDTO.InputDataType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE AND I WILL RETURN IMAGE
@@ -232,6 +230,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
 
             JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            String format = "." + res.optString("output_format", "png");
             JSONArray imageArr = res.getJSONArray("data");
 
             try {
@@ -239,16 +238,16 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 for(int i = 0; i < imageArr.length(); i++) {
                     JSONObject jsonImage = imageArr.getJSONObject(i);
                     String base64Image = jsonImage.getString("b64_json");
+                    String tmpFileName = "tmp_ai_" + assistant.getAssistantKey() + "_";
 
-                    String tmpFileName = "tmp_ai_" + assistant.getAssistantKey() + "_" + (new Date()).getTime() + "_" + i;
-                    File tempUploadFile = File.createTempFile(tmpFileName, ".png");
+                    try {
+                        tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);
 
-                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-                    try (FileOutputStream out = new FileOutputStream(tempUploadFile)) {
-                        out.write(imageBytes);
+                        //If no error, add file
+                        responseDto.addTempFile(tmpFileName);
+                    } catch (IOException ioe) {
+                        //DONT know what to do
                     }
-
-                    responseDto.addTempFile(tempUploadFile.getAbsolutePath());
                 }
 
             } catch (Exception e) {}
@@ -374,4 +373,5 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
 
     }
+
 }

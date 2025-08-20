@@ -55,6 +55,13 @@
                     background-color: var(--wj-ai-color-hover);
                     opacity: 0.2;
                 }
+
+                .input-group {
+                    .btn.btn-outline-secondary {
+                        cursor: not-allowed;
+                        background-color: var(--wj-ai-color-hover);
+                    }
+                }
             }
         }
     }
@@ -129,5 +136,65 @@
                 animation: ai-pulsate-color 1.5s infinite;
             }
         }
+
+        div.ai-image-preview-div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 0;
+
+            .image-status {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+
+                img {
+                    width: 150px;
+                    height: 150px;
+                    margin: 0;
+                    border-radius: 8px;
+                    object-fit: cover;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+                    transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+
+                    &:hover {
+                        box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
+                        transform: scale(1.05);
+                        border: 2px solid var(--wj-ai-color);
+                        background-color: transparent;
+                        cursor: pointer;
+                    }
+                }
+
+                img.selected {
+                    box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
+                    transform: scale(1.05);
+                    border: 2px solid var(--wj-ai-color);
+                    background-color: transparent;
+                }
+            }
+        }
+
+        .button-div {
+            text-align: end;
+            margin-top: 7px;
+
+            button.select-image {
+                font-size: 16px;
+                color: white;
+                background-color: var(--wj-ai-color);
+
+                &:hover {
+                    background-color: var(--wj-ai-color-dark);
+                }
+            }
+        }
+
+    }
+
+    .toast.toast-info:has(.image-status) {
+        width: max-content;
+        max-width: 100%;
     }
 }

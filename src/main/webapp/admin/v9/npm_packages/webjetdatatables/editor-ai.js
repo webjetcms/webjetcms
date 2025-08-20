@@ -159,7 +159,16 @@ export class EditorAi {
 
                 if(this.getColumnType(this.EDITOR, column?.name) === "image") {
                     // IS IMAGE
-                    this._executeImageAction(button, aiCol, column);
+                    this._executeImageAction(button, aiCol, column)
+                        .then(result => {
+                            console.log("AJAX success:", result);
+
+                            this._setImageStatus(result.tempFiles, aiCol.to, "components.ai.editor.generated_images.js", result.totalTokens);
+
+                        })
+                        .catch(err => {
+                            console.error("AJAX failed:", err);
+                        });
                 }
                 else if(aiCol.useStreaming === true) {
                     this._executeStreamAction(button, aiCol);
@@ -282,47 +291,114 @@ export class EditorAi {
         }
     }
 
-    async _executeImageAction(button, aiCol, column) {
-        let self = this;
-        self._showLoader(button);
+    _executeImageAction(button, aiCol, column) {
+        return new Promise((resolve, reject) => {
+            let self = this;
+            self._showLoader(button);
+            self._setCurrentStatus("components.ai_assistants.editor.loading.js");
 
-        let from = aiCol.from;
-        if (from == null || from == "")  from = aiCol.to;
+            let from = aiCol.from;
+            if (from == null || from == "")  from = aiCol.to;
 
-        let inputData = {
-            type: this.getColumnType(this.EDITOR, from),
-            value: self.EDITOR.get(from)
+            let inputData = {
+                type: this.getColumnType(this.EDITOR, from),
+                value: self.EDITOR.get(from)
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/admin/rest/ai/assistant/response-image/",
+                data: {
+                    "assistantName": aiCol.assistant,
+                    "inputData": JSON.stringify(inputData)
+                },
+                success: function(res)
+                {
+                    //self._closeToast(3000);
+                    self._hideLoader(button, column);
+
+                    //handle res.error
+                    if (res.error) {
+                        contentContainer.html(res.error);
+                    }
+
+                    self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, res.totalTokens);
+
+                    resolve(res);
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+
+                    self._closeToast(3000);
+                    self._hideLoader(button);
+
+                    contentContainer.html(WJ.translate("datatable.error.unknown"));
+
+                    reject("kks");
+                }
+            });
+        });
+    }
+
+    _selectImage(imageName, toField) {
+        console.log("Selected image:", imageName);
+
+        $("div.button-div").show();
+        $("div.image-status").find("img.selected").removeClass("selected");
+        $("div.image-status").find('img[alt="' + imageName + '"]').addClass("selected");
+
+        //For now, only action gonna be SAVE of image and after save SET to field
+
+    }
+
+    _saveAndSetImage(imageName, toField) {
+        return new Promise((resolve, reject) => {
+            // Implement the save and set logic here
+            $.ajax({
+                type: "POST",
+                url: "/admin/rest/ai/assistant/response-image/",
+                data: {
+                    "assistantName": aiCol.assistant,
+                    "inputData": JSON.stringify(inputData)
+                },
+                success: function(res)
+                {
+                    resolve(res);
+                },
+                error: function(xhr, ajaxOptions, thrownError) {
+                    reject("kks");
+                }
+            });
+        });
+    }
+
+    _setImageStatus(images, toField, textKey, ...params) {
+        let contentContainer = $("#toast-container-ai-content");
+
+        let html = "<div>" + WJ.translate(textKey, params) + "</div>";
+        html += "<div class='ai-image-preview-div'></div>";
+        html += "<div class='button-div' style='display: none;'> </div>";
+
+        contentContainer.html(html);
+
+        let previewDiv = contentContainer.find('.ai-image-preview-div');
+
+        for (let i = 0; i < images.length; i++) {
+            const imageName = images[i];
+            const imgDiv = $(`
+                <div class="image-status">
+                    <img src="/admin/rest/ai/assistant/file/binary/?fileName=${imageName}" alt="${imageName}" />
+                </div>
+            `);
+            imgDiv.find('img').on('click', () => {
+                this._selectImage(imageName, toField);
+            });
+            previewDiv.append(imgDiv);
         }
 
-        $.ajax({
-            type: "POST",
-            url: "/admin/rest/ai/assistant/response-image/",
-            data: {
-                "assistantName": aiCol.assistant,
-                "inputData": JSON.stringify(inputData)
-            },
-            success: function(res)
-            {
-                console.log("AI response=", res, "to=", aiCol.to);
+        let buttonDiv = contentContainer.find('.button-div');
 
-                self._closeToast(3000);
-                self._hideLoader(button, column);
-
-                //handle res.error
-                if (res.error) {
-                    contentContainer.html(res.error);
-                }
-
-                return res.totalTokens;
-            },
-            error: function(xhr, ajaxOptions, thrownError) {
-
-                self._closeToast(3000);
-                self._hideLoader(button);
-
-                contentContainer.html(WJ.translate("datatable.error.unknown"));
-            }
-        });
+        const imageButton = $('<button class="btn btn-outline-secondary select-image">' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
+        buttonDiv.append(imageButton);
     }
 
     async _executeStreamAction(button, aiCol) {
@@ -371,6 +447,9 @@ export class EditorAi {
                             console.log("Stream complete");
                             self._closeToast(3000);
                             self._hideLoader(button);
+
+                            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, value.totalTokens);
+
                             return;
                         }
 
@@ -407,6 +486,26 @@ export class EditorAi {
             });
         }
     }
+
+    // getTempFile(fileName) {
+    //     return new Promise((resolve, reject) => {
+    //         $.ajax({
+    //             type: "GET",
+    //             url: "/admin/rest/ai/assistant/file/binary/",
+    //             data: {
+    //                 "fileName": fileName,
+    //             },
+    //             xhrFields: { responseType: "arraybuffer" },
+    //             success: function(res)
+    //             {
+    //                 resolve(res);
+    //             },
+    //             error: function(xhr, ajaxOptions, thrownError) {
+    //                 reject("KUWA");
+    //             }
+    //         });
+    //     });
+    // }
 
     _showLoader(button) {
         button.parents(".DTE_Field").addClass("ai-loading");

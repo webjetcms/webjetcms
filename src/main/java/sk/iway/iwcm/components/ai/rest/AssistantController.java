@@ -2,6 +2,8 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,20 +60,29 @@ public class AssistantController {
 
     @PostMapping(value = "/response-image/")
     public AssistantResponseDTO getAiImageReponse(@RequestParam("assistantName") String assistantName,  @RequestParam("inputData") String inputData, HttpServletRequest request) {
-        AssistantResponseDTO response = null;
-        String exceptionMessage = null;
+        // AssistantResponseDTO response = null;
+        // String exceptionMessage = null;
 
-        try {
-            response = aiService.getAiImageResponse(assistantName, inputData, Prop.getInstance(request), statRepo, assistantRepo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            exceptionMessage = e.getLocalizedMessage();
-        }
+        // try {
+        //     response = aiService.getAiImageResponse(assistantName, inputData, Prop.getInstance(request), statRepo, assistantRepo);
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        //     exceptionMessage = e.getLocalizedMessage();
+        // }
 
-        if (response == null) {
-            response = new AssistantResponseDTO();
-            response.setError("Something went wrong, please try again later: " + exceptionMessage);
-        }
+        // if (response == null) {
+        //     response = new AssistantResponseDTO();
+        //     response.setError("Something went wrong, please try again later: " + exceptionMessage);
+        // }
+
+        // return response;
+
+        AssistantResponseDTO response = new AssistantResponseDTO();
+        List<String> tempList = new ArrayList<>();
+        tempList.add("tmp_ai_asst_TkjlxoGaa7rMXM0Bir7ADWes10663767281476698815.png");
+        tempList.add("tmp_ai_asst_TkjlxoGaa7rMXM0Bir7ADWes_0_175559957749510731481645199711250.png");
+        tempList.add("tmp_ai_asst_TkjlxoGaa7rMXM0Bir7ADWes_0_17555997182909660624753342099606.png");
+        response.setTempFiles(tempList);
 
         return response;
     }
@@ -104,4 +116,19 @@ public class AssistantController {
             writer.close();
         }
     }
+
+
+    @GetMapping("/file/binary/")
+	public void execute(@RequestParam String fileName, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            AiTempFileStorage.downloadFile(fileName, request, response);
+        } catch(Exception e) {
+           sk.iway.iwcm.Logger.error(e);
+        }
+   }
+
+   @PostMapping("/save-temp-file/")
+   public void saveTempFile(@RequestParam("fileName") String fileName, HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+   }
 }

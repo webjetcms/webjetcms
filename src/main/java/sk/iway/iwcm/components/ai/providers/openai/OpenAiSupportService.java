@@ -4,17 +4,18 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import org.json.JSONObject;
-
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 
 public abstract class OpenAiSupportService {
+
     protected static final String THREADS_URL = "https://api.openai.com/v1/threads/";
     protected static final String ASSISTANTS_URL = "https://api.openai.com/v1/assistants";
     protected static final String MODELS_URL = "https://api.openai.com/v1/models";
