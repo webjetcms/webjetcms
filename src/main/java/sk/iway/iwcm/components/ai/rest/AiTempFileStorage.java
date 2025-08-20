@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.ai.rest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,10 +18,14 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
 
 @Service
 public class AiTempFileStorage {
+
+    public AiTempFileStorage() {}
 
     public static final String AI_FILE_DIR = "/WEB-INF/ai_files";
 
@@ -30,6 +36,8 @@ public class AiTempFileStorage {
         if (Files.notExists(tempDir)) {
             Files.createDirectories(tempDir);
         }
+
+        if(Files.isDirectory(tempDir) == false) throw new IOException("Tempfile folder is not a folder");
 
         return tempDir;
     }
@@ -83,14 +91,44 @@ public class AiTempFileStorage {
         out.close();
     }
 
-    public static void saveTempFile(String fileName) throws IOException {
-        Path tempFileFolder = getFileFolder();
-        Path tempFilePath = tempFileFolder.resolve(fileName);
+    public static String saveTempFile(String tempFileName, String fielName, String imageLocation) throws IOException, IllegalStateException {
+        if(Tools.isEmpty(tempFileName)) throw new IOException("File not found");
+        if(Tools.isEmpty(fielName)) throw new IllegalStateException("New file name cant be empty");
+        if(Tools.isEmpty(imageLocation)) throw new IllegalStateException("New file location cant be empty");
 
-        if (Files.notExists(tempFilePath)) {
-            throw new IOException("Field with name " + fileName + " do not exists.");
+        Path tempFileFolder = getFileFolder();
+        Path tempFilePath = tempFileFolder.resolve(tempFileName);
+
+        if (Files.notExists(tempFilePath))
+            throw new IOException("File with name " + tempFileName + " do not exists.");
+
+        if(Files.isDirectory(tempFilePath))
+            throw new IOException("File with name " + tempFileName + " is a FOLDER.");
+
+        IwcmFile tempFile = new IwcmFile( tempFilePath.toFile() );
+        InputStream tempFileIS = new IwcmInputStream(tempFile);
+
+        String path = imageLocation;
+        if(imageLocation.endsWith("/") == false) path += "/";
+
+        String newFileUrl = path + fielName + "." + tempFileName.substring(tempFileName.lastIndexOf('.') + 1);
+        IwcmFile newRealFile = new IwcmFile( Tools.getRealPath(newFileUrl) );
+
+        IwcmFsDB.writeFiletoDest(tempFileIS, new File(newRealFile.getAbsolutePath()), Tools.safeLongToInt(tempFile.getLength()));
+
+        String prefix = tempFileName.substring(0, tempFileName.lastIndexOf('_') + 1);
+
+        //After success remove all temp files with same prefix
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(tempFileFolder)) {
+            for (Path child : stream) {
+                if(child.getFileName().toString().startsWith(prefix)) {
+                    Files.delete(child);
+                }
+            }
+        } catch (IOException e) {
+            //e.printStackTrace();
         }
 
-
+        return newFileUrl;
     }
 }

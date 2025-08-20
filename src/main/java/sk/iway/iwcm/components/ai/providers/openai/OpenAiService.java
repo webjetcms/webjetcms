@@ -185,6 +185,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             builder.addTextBody("model", "gpt-image-1");
             builder.addTextBody("prompt", assistant.getInstructions());
+            // builder.addTextBody("n", "1");
+            // builder.addTextBody("quality", "low");
+
 
             BufferedImage image = ImageIO.read( inputData.getInputFile() );
             if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
@@ -217,6 +220,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONObject json = new JSONObject();
             json.put("model", "gpt-image-1");
             json.put("prompt", assistant.getInstructions());
+            // json.put("n", 1);
+            // json.put("quality", "low");
 
             post.setEntity(getRequestBody(json.toString()));
 
@@ -235,10 +240,12 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
             try {
 
+                long datePart = new java.util.Date().getTime();
                 for(int i = 0; i < imageArr.length(); i++) {
                     JSONObject jsonImage = imageArr.getJSONObject(i);
                     String base64Image = jsonImage.getString("b64_json");
-                    String tmpFileName = "tmp_ai_" + assistant.getAssistantKey() + "_";
+                    //Date pars is added so we can delet all images from same request (same request == same date time part)
+                    String tmpFileName = "tmp_ai_" + assistant.getAssistantKey() + "_" + datePart + "_";
 
                     try {
                         tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);

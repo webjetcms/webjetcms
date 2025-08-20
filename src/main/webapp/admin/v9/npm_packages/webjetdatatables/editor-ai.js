@@ -348,35 +348,39 @@ export class EditorAi {
         });
     }
 
-    _selectImage(imageName, toField) {
+    _selectImage(imageName) {
         console.log("Selected image:", imageName);
 
         $("div.button-div").show();
-        $("div.image-status").find("img.selected").removeClass("selected");
-        $("div.image-status").find('img[alt="' + imageName + '"]').addClass("selected");
+        $("div.image-info").show();
 
-        //For now, only action gonna be SAVE of image and after save SET to field
-
+        $("div.image-preview").find("img.selected").removeClass("selected");
+        $("div.image-preview").find('img[alt="' + imageName + '"]').addClass("selected");
     }
 
-    _saveAndSetImage(imageName, toField) {
-        return new Promise((resolve, reject) => {
-            // Implement the save and set logic here
-            $.ajax({
-                type: "POST",
-                url: "/admin/rest/ai/assistant/response-image/",
-                data: {
-                    "assistantName": aiCol.assistant,
-                    "inputData": JSON.stringify(inputData)
-                },
-                success: function(res)
-                {
-                    resolve(res);
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    reject("kks");
-                }
-            });
+    _saveAndSetImage(toField) {
+        let self = this;
+        let tempFileName = $(".image-preview").find("img.selected").attr("alt");
+        let imageName = $("#generated-image-name").val();
+        let imageLocation = $("#editorAppimageLocation").find("input").val();
+
+        $.ajax({
+            type: "POST",
+            url: "/admin/rest/ai/assistant/save-temp-file/",
+            data: {
+                "tempFileName": tempFileName,
+                "imageName": imageName,
+                "imageLocation": imageLocation
+            },
+            success: function(res)
+            {
+                self.EDITOR.set(toField, res);
+                self._setCurrentStatus("components.ai.editor.image_saved.js");
+                self._closeToast(3000);
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+
+            }
         });
     }
 
@@ -387,19 +391,117 @@ export class EditorAi {
         html += "<div class='ai-image-preview-div'></div>";
         html += "<div class='button-div' style='display: none;'> </div>";
 
+        html += `
+            <div class='image-info' style='display: none;'>
+                <div>
+                    <label for='generated-image-name' style='color: black;'>ImageName</label>
+                    <input id='generated-image-name' type='text' class='form-control'>
+                </div>
+
+                <div>
+                    <label for='editorAppimageLocation' style='color: black;'>ImageLocation</label>
+                    <div class="col-auto" data-toggle="tooltip">
+                        <input type="text" class="webjet-dte-jstree" id="imageLocation"/>
+                    </div>
+                </div>
+
+
+            </div>
+        `;
+
         contentContainer.html(html);
+
+        $("div.image-info").find("input.webjet-dte-jstree").each(async function(index) {
+                var $element = $(this);
+
+                console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
+
+                var id = $element.attr("id");
+                var htmlCode = $('<div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
+                htmlCode.insertAfter($element);
+
+                function fixNullData(data, click) {
+                    //console.log("fixNullData, data=", data, "click=", click);
+                    //ak to je pole neriesime, ponechame bezo zmeny
+                    if (click.indexOf("-array")!=-1) return data;
+                    //ak to nie je pole, musime nafejkovat jeden objekt aby sa pole aspon zobrazilo (a dala sa zmenit hodnota)
+                    if (data.length==0) {
+                        let emptyItem = {
+                            fullPath: ""
+                        }
+                        emptyItem.id = -1;
+
+                        return [emptyItem];
+                    }
+                    return data;
+                }
+
+                let conf = {
+                    jsonData: [{
+                        virtualPath: "",
+                        id: "",
+                        type: "DIR"
+                    }],
+                    className: "dt-tree-dir-simple",
+                    _id: id
+                };
+                //console.log("conf=", conf);
+                const app = window.VueTools.createApp({
+                    components: {},
+                    data() {
+                        return {
+                            data: null,
+                            idKey: null,
+                            dataTable: null,
+                            dataTableName: null,
+                            click: null,
+                            attr: null
+                        }
+                    },
+                    created() {
+                        this.data = fixNullData(conf.jsonData, conf.className);
+                        //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
+                        this.idKey = conf._id;
+                        //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
+                        //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
+                        const confClassNameArr = conf.className.split(" ");
+                        for (var i=0; i<confClassNameArr.length; i++) {
+                            let className = confClassNameArr[i];
+                            this.click = className;
+                        }
+                        //console.log("click=", this.click);
+                        if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
+
+                        this.dataTable = {
+                            DATA: {}
+                        }
+                    },
+                    methods: {
+                        onRemoveItem(id){
+                        }
+                    }
+                });
+                VueTools.setDefaultObjects(app);
+                app.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
+                const vm = app.mount($element.parent().find("div.vueComponent")[0]);
+                //console.log("Setting vm, input=", element, "vm=", vm);
+                $element.data("vm", vm);
+                //console.log("set vm=", $element.data("vm"));
+                $element.hide();
+            });
+
 
         let previewDiv = contentContainer.find('.ai-image-preview-div');
 
         for (let i = 0; i < images.length; i++) {
             const imageName = images[i];
             const imgDiv = $(`
-                <div class="image-status">
+                <div class="image-preview">
                     <img src="/admin/rest/ai/assistant/file/binary/?fileName=${imageName}" alt="${imageName}" />
                 </div>
             `);
             imgDiv.find('img').on('click', () => {
-                this._selectImage(imageName, toField);
+                this._selectImage(imageName);
             });
             previewDiv.append(imgDiv);
         }
@@ -407,6 +509,9 @@ export class EditorAi {
         let buttonDiv = contentContainer.find('.button-div');
 
         const imageButton = $('<button class="btn btn-outline-secondary select-image">' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
+        imageButton.on('click', () => {
+            this._saveAndSetImage(toField);
+        });
         buttonDiv.append(imageButton);
     }
 
