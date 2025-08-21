@@ -1,4 +1,4 @@
-import { AiLocalExecutor } from "./ai-local-executor";
+import { AiBrowserExecutor } from "./ai-browser-executor";
 
 export class EditorAi {
 
@@ -10,23 +10,32 @@ export class EditorAi {
         maxHideTime: null
     };
     $progressElement = null;
-    aiLocalExecutor = null;
+    aiBrowserExecutor = null;
 
     //constructor
     constructor(EDITOR) {
         this.EDITOR = EDITOR;
         //console.log("EditorAi instance created, editor=", this.EDITOR);
-        this.aiLocalExecutor = new AiLocalExecutor(EDITOR, this);
+        this.aiBrowserExecutor = new AiBrowserExecutor(EDITOR, this);
         EDITOR.editorAi = this;
 
         this.bindEvents();
     }
 
     bindEvents() {
+        //it must be WJ.DTE.open because of ckeditor button initialization
+        window.addEventListener("WJ.DTE.open", (event) => {
+            //console.log("WJ.DTE.open event received, detail=", event.detail, "this.id=", this.EDITOR.TABLE.DATA.id);
+            if (this.EDITOR.TABLE.DATA.id===event.detail.id) {
+                //console.log("WJ.DTE.open event triggered");
+                this.bindButtons();
+            }
+        });
+        //also opened for custom fields initialized async
         window.addEventListener("WJ.DTE.opened", (event) => {
             //console.log("WJ.DTE.opened event received, detail=", event.detail, "this.id=", this.EDITOR.TABLE.DATA.id);
             if (this.EDITOR.TABLE.DATA.id===event.detail.id) {
-                //console.log("WJ.DTE.open event triggered");
+                //console.log("WJ.DTE.opened event triggered");
                 this.bindButtons();
             }
         });
@@ -53,10 +62,7 @@ export class EditorAi {
                         //console.log("exitInlineEditorContainer=", exitInlineEditorContainer);
 
                         if (exitInlineEditorContainer.find(".ti-sparkles").length === 0) {
-                            const button = $('<button class="btn btn-outline-secondary btn-ai btn-ai-wysiwyg" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>');
-                            button.on('click', () => {
-                                this._handleAiButtonClick(button, column);
-                            });
+                            const button = this._getButton(column, "btn-ai-wysiwyg");
                             exitInlineEditorContainer.prepend(button);
                         }
                     } else {
@@ -69,10 +75,7 @@ export class EditorAi {
 
                         //if it doesnt have ti-sparkles button add it
                         if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
-                            const button = $('<button class="btn btn-outline-secondary btn-ai" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>');
-                            button.on('click', () => {
-                                this._handleAiButtonClick(button, column);
-                            });
+                            const button = this._getButton(column, null);
                             inputField.parents(".input-group").append(button);
                         }
                     }
@@ -81,7 +84,18 @@ export class EditorAi {
         });
     }
 
-    getColumnType(editor, fieldName) {
+    _getButton(column, appendClass) {
+        let buttonHTML = '<button class="btn btn-outline-secondary btn-ai'
+        if (appendClass != null && appendClass != "") buttonHTML += " " + appendClass;
+        buttonHTML += '" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>';
+        const button = $(buttonHTML);
+        button.on('click', () => {
+            this._handleAiButtonClick(button, column);
+        });
+        return button;
+    }
+
+    _getColumnType(editor, fieldName) {
         let className = editor?.field(fieldName)?.s?.opts?.className ?? "";
         let renderFormat = editor?.field(fieldName)?.s?.opts?.renderFormat ?? "";
 
@@ -120,10 +134,9 @@ export class EditorAi {
                 preventDuplicates: true,
                 progressBar: true,
                 onCloseClick: () => {
-                    console.log("Closing toast");
                     self._clearProgress();
                     self._hideLoader(button, column);
-                    if (self.aiLocalExecutor != null) self.aiLocalExecutor.destroy();
+                    if (self.aiBrowserExecutor != null) self.aiBrowserExecutor.destroy();
                 }
             });
             window.lastToast = this.lastToast;
@@ -157,6 +170,7 @@ export class EditorAi {
                 <button class="btn btn-light btn-ai-action" type="button">
                     <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
                     ${buttonText}
+                    <span class="provider">${aiCol.providerTitle}</span>
                 </button>
             `);
 
@@ -164,7 +178,7 @@ export class EditorAi {
             btn.on('click', () => {
                 //use original button clicked - which shows this popup
 
-                if(this.getColumnType(this.EDITOR, column?.name) === "image") {
+                if(this._getColumnType(this.EDITOR, column?.name) === "image") {
                     // IS IMAGE
                     this._executeImageAction(button, aiCol, column)
                         .then(result => {
@@ -176,11 +190,7 @@ export class EditorAi {
                         .catch(err => {
                             console.error("AJAX failed:", err);
                         });
-                }
-                else if(aiCol.useStreaming === true) {
-                    this._executeStreamAction(button, aiCol);
-                }
-                else {
+                } else {
                     this._executeAction(button, column, aiCol);
                 }
 
@@ -230,7 +240,7 @@ export class EditorAi {
                     type: "text",
                     value: editor.getData()
                 }
-                totalTokens += await this._executeSingleAction(button, column, aiCol, JSON.stringify(inputData), (response) => {
+                totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
                 });
@@ -240,10 +250,10 @@ export class EditorAi {
             self._setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             let inputData = {
-                type: this.getColumnType(this.EDITOR, from),
+                type: this._getColumnType(this.EDITOR, from),
                 value: self.EDITOR.get(from)
             }
-            totalTokens = await this._executeSingleAction(button, column, aiCol, JSON.stringify(inputData));
+            totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
         }
 
         if (totalTokens >= 0) {
@@ -256,7 +266,8 @@ export class EditorAi {
             self._closeToast(3000);
             self._hideLoader(button, column);
 
-            self._setCurrentStatus("components.ai_assistants.unknownError.js", false);
+            //for -1 show default status, otherwise we expect status is allready set by other code
+            if (totalTokens == -1) self._setCurrentStatus("components.ai_assistants.unknownError.js", false);
         }
     }
 
@@ -264,40 +275,107 @@ export class EditorAi {
         let self = this;
         let totalTokens = 0;
 
-        if ("local" === aiCol.provider) {
-            totalTokens = await this.aiLocalExecutor.execute(aiCol, inputData, setFunction);
+        if ("browser" === aiCol.provider) {
+            if (this.aiBrowserExecutor.isAvailable(aiCol)) {
+                totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, setFunction);
+            } else {
+                totalTokens = -2;
+            }
         } else {
-            await $.ajax({
-                type: "POST",
-                url: "/admin/rest/ai/assistant/response/",
-                data: {
-                    "assistantName": aiCol.assistant,
-                    "inputData": inputData
-                },
-                success: function(res)
-                {
-                    //console.log("AI response=", res, "to=", aiCol.to);
+            if (aiCol.useStreaming===true) {
+                //console.log("Using streaming for AI response:", aiCol.assistant);
 
-                    //handle res.error
-                    if (res.error) {
-                        contentContainer.html(res.error);
-                    } else {
-                        if (setFunction != null) {
-                            setFunction(res.content);
-                        } else {
-                            self.EDITOR.set(aiCol.to, res.response);
-                        }
+                const response = await fetch("/admin/rest/ai/assistant/response-stream/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRF-Token': window.csrfToken
+                    },
+                    body: JSON.stringify({
+                        assistantName: aiCol.assistant,
+                        inputData: JSON.stringify(inputData)
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let wholeText = "";
+                let done = false;
+
+                while (!done) {
+                    const { value, done: streamDone } = await reader.read();
+                    done = streamDone;
+                    if (done) {
+                        //console.log("Stream complete");
+                        break;
                     }
 
-                    totalTokens = res.totalTokens;
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    self._setCurrentStatus("datatable.error.unknown");
-                    totalTokens = -1;
+                    const chunk = decoder.decode(value, { stream: true });
+                    //console.log("Received:", chunk);
+
+                    let isJson = false;
+                    let parsed = null;
+                    try {
+                        parsed = JSON.parse(chunk);
+                        isJson = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+                    } catch (e) {
+                        isJson = false;
+                    }
+
+                    if (isJson == false) {
+                        wholeText += chunk;
+                        //self.EDITOR.set(aiCol.to, wholeText);
+
+                        if (setFunction != null) {
+                            setFunction(wholeText);
+                        } else {
+                            self.EDITOR.set(aiCol.to, wholeText);
+                        }
+                    } else {
+                        //handle parsed.error
+                        if (parsed.error) {
+                            totalTokens = -1;
+                            self._setCurrentStatus(parsed.error);
+                            break;
+                        }
+
+                        totalTokens += parsed.totalTokens;
+                    }
                 }
-            });
-            return totalTokens;
+            } else {
+                await $.ajax({
+                    type: "POST",
+                    url: "/admin/rest/ai/assistant/response/",
+                    data: {
+                        "assistantName": aiCol.assistant,
+                        "inputData": JSON.stringify(inputData)
+                    },
+                    success: function(res)
+                    {
+                        //console.log("AI response=", res, "to=", aiCol.to);
+
+                        //handle res.error
+                        if (res.error) {
+                            totalTokens = -1;
+                            self._setCurrentStatus("datatable.error.unknown");
+                        } else {
+                            if (setFunction != null) {
+                                setFunction(res.response);
+                            } else {
+                                self.EDITOR.set(aiCol.to, res.response);
+                            }
+                        }
+
+                        totalTokens = res.totalTokens;
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+                        totalTokens = -1;
+                        self._setCurrentStatus("datatable.error.unknown");
+                    }
+                });
+            }
         }
+        return totalTokens;
     }
 
     _executeImageAction(button, aiCol, column) {
@@ -310,7 +388,7 @@ export class EditorAi {
             if (from == null || from == "")  from = aiCol.to;
 
             let inputData = {
-                type: this.getColumnType(this.EDITOR, from),
+                type: this._getColumnType(this.EDITOR, from),
                 value: self.EDITOR.get(from)
             }
 
@@ -646,6 +724,6 @@ export class EditorAi {
 
     _setDownloadStatus(percent) {
         console.log("Download progress:", percent);
-        this._setCurrentStatus("components.ai_assistants.local.downloadingModel.js", false, percent + "%");
+        this._setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
     }
 }

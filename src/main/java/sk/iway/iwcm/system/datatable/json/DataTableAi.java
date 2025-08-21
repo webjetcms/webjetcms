@@ -16,6 +16,7 @@ public class DataTableAi {
     private String to;
     private String assistant;
     private String provider;
+    private String providerTitle;
     private String description;
     private String instructions;
     private boolean useStreaming;

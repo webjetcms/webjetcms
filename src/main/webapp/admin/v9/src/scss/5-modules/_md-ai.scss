@@ -132,6 +132,11 @@
                 padding-bottom: 3px;
             }
 
+            .provider {
+                color: var(--wj-nice-gray-200);
+                float: right;
+            }
+
             .pulsate-text {
                 animation: ai-pulsate-color 1.5s infinite;
             }

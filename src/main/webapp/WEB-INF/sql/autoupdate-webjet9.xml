@@ -1948,8 +1948,8 @@
                             created_at TIMESTAMP DEFAULT NULL,
                             description TEXT,
 
-                            keep_html BOOLEAN DEFAULT FALSE,
-                            use_streaming BOOLEAN DEFAULT FALSE,
+                            keep_html TINYINT DEFAULT 0,
+                            use_streaming TINYINT DEFAULT 0,
                             images_count INT DEFAULT 1,
                             images_size VARCHAR(255) DEFAULT NULL,
                             images_quality VARCHAR(255) DEFAULT NULL,

@@ -147,6 +147,10 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
 
+        if(Tools.isFalse( assistant.getKeepHtml() )) {
+            inputDataDTO.removeHtml();
+        }
+
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
                 return aiInterface.getAiStreamResponse(assistant, inputDataDTO, prop, statRepo, writer);
