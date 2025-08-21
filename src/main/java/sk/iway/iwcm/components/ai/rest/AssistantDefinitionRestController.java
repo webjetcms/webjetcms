@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.ai.rest;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -56,7 +55,30 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             }
         }
 
+        if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
+            if(Tools.isEmpty(entity.getAction())) {
+                errors.rejectValue("action", "", getProp().getText("javax.validation.constraints.NotNull.message"));
+            }
+        }
+
         super.validateEditor(request, target, user, errors, id, entity);
+    }
+
+    @Override
+    public AssistantDefinitionEntity getOneItem(long id) {
+        if(id < 1) return new AssistantDefinitionEntity();
+
+        AssistantDefinitionEntity assistant = repo.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
+
+        if(assistant != null) {
+            //Remove EMPTY_VALUES so you force the user to set it
+            if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getAction() )) assistant.setAction("");
+            if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getClassName() )) assistant.setClassName("");
+            if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getFieldFrom() )) assistant.setFieldFrom("");
+            if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getFieldTo() )) assistant.setFieldTo("");
+        }
+
+        return assistant;
     }
 
     @Override
@@ -64,24 +86,18 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         //Get entity from DB
         AssistantDefinitionEntity existingEntity = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id " + id + " not found"));
 
-        //Copy just allowed params
-        existingEntity.setNameAddPrefix( entity.getName() );
-        existingEntity.setModel( entity.getModel() );
-        existingEntity.setInstructions( entity.getInstructions() );
-        existingEntity.setClassName( entity.getClassName() );
-        existingEntity.setFieldFrom( entity.getFieldFrom() );
-        existingEntity.setFieldTo( entity.getFieldTo() );
-        existingEntity.setDescription( entity.getDescription() );
-        existingEntity.setTemperature( entity.getTemperature() );
-        existingEntity.setUseStreaming( entity.getUseStreaming() );
+        //Safety measure, for disabled fields
+        entity.setNameAddPrefix( entity.getName() );
+        entity.setAssistantKey(existingEntity.getAssistantKey());
+        entity.setCreated(existingEntity.getCreated());
 
         try {
-            aiAssistantsService.updateAssistant(existingEntity, getProp());
+            aiAssistantsService.updateAssistant(entity, getProp());
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
 
-        return repo.save(existingEntity);
+        return repo.save(entity);
     }
 
     @Override
@@ -119,6 +135,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("provider", aiService.getSupportedProviders(getProp()), "label", "value", false);
+        page.addOptions("action", aiService.getSupportedActions(getProp()), "label", "value", false);
+
+        //Every assistant should set their specific selects
+        aiAssistantsService.getProviderSpecificOptions(page, getProp());
     }
 
     @Override
@@ -138,7 +158,12 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void beforeSave(AssistantDefinitionEntity entity) {
-        if(entity.getTemperature() == null ) entity.setTemperature(BigDecimal.ONE);
+        //
+        aiAssistantsService.prepareBeforeSave(entity);
+
+        //Default logic
+        if(entity.getKeepHtml() == null) entity.setKeepHtml(false);
+        if(entity.getUseStreaming() == null) entity.setUseStreaming(false);
     }
 
     @Override
@@ -164,5 +189,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @GetMapping("/autocomplete-model")
     public List<String> getAutocompleteModel(@RequestParam String term, @RequestParam("DTE_Field_provider") String provider) {
         return aiService.getModelOptions(term, provider, getProp());
+    }
+
+    @GetMapping("/provider-fields")
+    public List<String> getProviderFields(@RequestParam(name = "provider") String provider, @RequestParam(name = "action") String action) {
+        return aiAssistantsService.getProviderFields(provider, action);
     }
 }

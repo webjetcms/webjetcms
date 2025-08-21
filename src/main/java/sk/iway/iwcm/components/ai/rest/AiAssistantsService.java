@@ -25,6 +25,7 @@ import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 @Service
@@ -148,6 +149,8 @@ public class AiAssistantsService {
                 // Prepare for save
                 aiAssitant.setId(recordId);
                 aiAssitant.setDomainId(CloudToolsForCore.getDomainId());
+                aiAssitant.setProvider(assistantInterface.getProviderId());
+                aiAssitant.setAction(EMPTY_VALUE);
                 aiAssitant.setClassName(EMPTY_VALUE);
                 aiAssitant.setFieldFrom(EMPTY_VALUE);
                 aiAssitant.setFieldTo(EMPTY_VALUE);
@@ -192,6 +195,34 @@ public class AiAssistantsService {
             if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
                 assistantInterface.deleteAssistant(assistantEnity, prop);
                 return;
+            }
+        }
+
+        throw new IllegalStateException("config.not_permitted_action_err");
+    }
+
+    public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
+        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
+            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
+                assistantInterface.prepareBeforeSave(assistantEnity);
+                return;
+            }
+        }
+
+        throw new IllegalStateException("config.not_permitted_action_err");
+    }
+
+    public void getProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
+        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
+            //For all
+            assistantInterface.setProviderSpecificOptions(page, prop);
+        }
+    }
+
+    public List<String> getProviderFields(String provider, String action) {
+        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
+            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(provider)) {
+                return assistantInterface.getFieldsToShow(action);
             }
         }
 

@@ -9,11 +9,13 @@ import javax.persistence.EntityListeners;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -38,6 +40,11 @@ public class AssistantDefinitionEntity {
     @NotBlank
     @Size(max = 255)
     private String name;
+
+    @Column(name = "action")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
+    @Size(max = 255)
+    private String action;
 
     @Column(name = "class_name")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "basic",
@@ -68,6 +75,7 @@ public class AssistantDefinitionEntity {
 			)
 		}
     )
+    @NotBlank
     @Size(max = 255)
     private String fieldFrom;
 
@@ -90,10 +98,19 @@ public class AssistantDefinitionEntity {
 
     @Column(name = "provider")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.provider", tab = "basic")
-    private String provider = "openai";
+    private String provider;
+
+    @Lob
+    @Column(name = "description")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title = "components.ai_assistants.description",
+        tab = "basic"
+    )
+    private String description;
 
     @Column(name = "model")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", tab = "basic",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", visible = false, className = "hideOnCreate hideOnEdit", tab = "basic",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -108,7 +125,7 @@ public class AssistantDefinitionEntity {
     private String model;
 
     @Column(name = "assistant_key")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.assistant_key", tab = "basic", className = "hide-on-create",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.assistant_key", tab = "basic", visible = false, className = "hideOnCreate hideOnEdit",
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
@@ -117,15 +134,6 @@ public class AssistantDefinitionEntity {
     )
     @Size(max = 255)
     private String assistantKey;
-
-    @Lob
-    @Column(name = "description")
-    @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
-        title = "components.ai_assistants.description",
-        tab = "basic"
-    )
-    private String description;
 
     @Lob
     @Column(name = "instructions")
@@ -153,13 +161,17 @@ public class AssistantDefinitionEntity {
     )
     private Date created;
 
-    @Column(name = "temperature")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.temperature", tab = "advanced", renderFormat = "dt-format-number--decimal")
-    private BigDecimal temperature = BigDecimal.ONE;
-
     @Column(name = "keep_html")
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.keep_html", tab = "advanced")
     private Boolean keepHtml;
+
+    @Column(name="use_streaming")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.use_streaming", visible = false, className = "hideOnCreate hideOnEdit", tab = "advanced")
+	private Boolean useStreaming;
+
+    //OpenAI - fields
+    @Column(name = "temperature")
+    private BigDecimal temperature = BigDecimal.ONE;
 
     @Column(name = "top_p")
     private BigDecimal topP ;
@@ -167,14 +179,24 @@ public class AssistantDefinitionEntity {
     @Column(name = "reasoning_effort")
     private String reasoningEffort;
 
-    @Column(name="use_streaming")
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.use_streaming", tab = "advanced")
-	private Boolean useStreaming;
+    @Column(name = "images_count")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "", tab = "advanced", visible = false, className = "hideOnCreate hideOnEdit")
+    @Min(value = 1)
+    private Integer imagesCount;
+
+    @Column(name = "images_size")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "advanced", visible = false, className = "hideOnCreate hideOnEdit")
+    private String imagesSize;
+
+    @Column(name = "images_quality")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "advanced", visible = false, className = "hideOnCreate hideOnEdit")
+    private String imagesQuality;
 
     @Column(name="domain_id")
 	private Integer domainId;
 
     public String getName() {
+        if(Tools.isEmpty(name)) return "";
         //Cut prefix from name
         String prefix = AiAssistantsService.getAssitantPrefix();
         return name.startsWith(prefix) ? name.substring(prefix.length()) : name;

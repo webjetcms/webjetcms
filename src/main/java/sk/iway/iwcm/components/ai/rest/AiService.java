@@ -27,6 +27,7 @@ public class AiService {
     private final List<AiInterface> aiInterfaces;
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
+    private static final String ACTION_PREFIX = "components.ai_assistants.supported_actions.";
 
     @Autowired
     public AiService(List<AiInterface> aiInterfaces) {
@@ -42,6 +43,17 @@ public class AiService {
             Pair<String, String> providerInfo = aiInterface.getProviderInfo(prop);
             supportedValues.add( new LabelValue(providerInfo.getSecond(), providerInfo.getFirst()) );
         }
+        return supportedValues;
+    }
+
+    public List<LabelValue> getSupportedActions(Prop prop) {
+        List<LabelValue> supportedValues = new ArrayList<>();
+
+        supportedValues.add(new LabelValue("", ""));
+        for(String action : List.of("generate_text", "generate_image", "edit_image", "live_chat")) {
+            supportedValues.add(new LabelValue(prop.getText(ACTION_PREFIX + action), action));
+        }
+
         return supportedValues;
     }
 
@@ -128,8 +140,6 @@ public class AiService {
 
         throw new IllegalStateException("Something went wrong");
     }
-
-
 
     public AssistantResponseDTO getAiStreamResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
 

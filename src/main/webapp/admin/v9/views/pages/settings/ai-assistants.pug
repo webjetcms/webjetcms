@@ -4,6 +4,13 @@ block content
 
     script.
         var aiAssistantsDataTable;
+
+        var fieldsWereSet = false;
+        var hideOnCreate = [];
+        var hideOnEdit = [];
+
+        let url = "/admin/rest/ai/assistant-definition/";
+
         window.domReady.add(function () {
 
             var tabs = [
@@ -14,6 +21,25 @@ block content
 
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
 
+            for(let i = 0; i < columns.length; i++) {
+                var columnClassName = columns[i]?.className;
+                if(columnClassName == undefined || columnClassName == null) {
+                    columnClassName = "";
+                }
+
+                if(columnClassName.indexOf("hideOnCreate") != -1) {
+                    hideOnCreate.push(columns[i].data);
+                    columnClassName = columnClassName.replace("hideOnCreate", "");
+                }
+
+                if(columnClassName.indexOf("hideOnEdit") != -1) {
+                    hideOnEdit.push(columns[i].data);
+                    columnClassName = columnClassName.replace("hideOnEdit", "");
+                }
+
+                columns[i].className = columnClassName;
+            }
+
             aiAssistantsDataTable = WJ.DataTable({
                 url: "/admin/rest/ai/assistant-definition/",
                 columns: columns,
@@ -23,11 +49,51 @@ block content
                 fetchOnEdit: true
             });
 
-            aiAssistantsDataTable.EDITOR.on('open', function (e, type) {
+            aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
                 $("#DTE_Field_provider").on("change", function() {
+                    changeFieldsVisibility($(this).val(), action);
                     $("#DTE_Field_model").val("");
                 });
             });
+
+            function changeFieldsVisibility(provider, action) {
+                console.log("provider: " + provider);
+                console.log("action: " + action);
+
+                $.ajax({
+                    type: "GET",
+                    url: url + "provider-fields",
+                    data: {
+                        "provider": provider,
+                        "action": action
+                    },
+                    success: function(res)
+                    {
+                        var toShow = Object.values(res);
+
+                        if("create" == action) {
+                            hideOnCreate.forEach(function(fieldName) {
+                                if(toShow.includes(fieldName)) {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
+                                } else {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
+                                }
+                            });
+                        } else if("edit" == action) {
+                            hideOnEdit.forEach(function(fieldName) {
+                                if(toShow.includes(fieldName)) {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
+                                } else {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
+                                }
+                            });
+                        }
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+
+                    }
+                });
+            }
 
             var buttonCounter = 5;
 

@@ -185,9 +185,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             builder.addTextBody("model", "gpt-image-1");
             builder.addTextBody("prompt", assistant.getInstructions());
-            // builder.addTextBody("n", "1");
-            // builder.addTextBody("quality", "low");
-
+            builder.addTextBody("n", assistant.getImagesCount().toString());
+            builder.addTextBody("quality", assistant.getImagesQuality());
+            builder.addTextBody("size", assistant.getImagesSize());
 
             BufferedImage image = ImageIO.read( inputData.getInputFile() );
             if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
@@ -220,8 +220,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONObject json = new JSONObject();
             json.put("model", "gpt-image-1");
             json.put("prompt", assistant.getInstructions());
-            // json.put("n", 1);
-            // json.put("quality", "low");
+            json.put("n", assistant.getImagesCount());
+            json.put("quality", assistant.getImagesQuality());
+            json.put("size", assistant.getImagesSize());
 
             post.setEntity(getRequestBody(json.toString()));
 

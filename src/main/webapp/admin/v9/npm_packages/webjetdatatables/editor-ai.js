@@ -224,7 +224,7 @@ export class EditorAi {
                 //this._executeSingleAction(button, column, aiCol, from, editor);
                 //console.log("Executing on editor: ", editor);
 
-                self._setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
+                self._setCurrentStatus("components.ai_assistants.editor.loading_parcial.js", false, (i+1)+"/"+editors.length);
 
                 let inputData = {
                     type: "text",
@@ -600,26 +600,6 @@ export class EditorAi {
             });
         }
     }
-
-    // getTempFile(fileName) {
-    //     return new Promise((resolve, reject) => {
-    //         $.ajax({
-    //             type: "GET",
-    //             url: "/admin/rest/ai/assistant/file/binary/",
-    //             data: {
-    //                 "fileName": fileName,
-    //             },
-    //             xhrFields: { responseType: "arraybuffer" },
-    //             success: function(res)
-    //             {
-    //                 resolve(res);
-    //             },
-    //             error: function(xhr, ajaxOptions, thrownError) {
-    //                 reject("KUWA");
-    //             }
-    //         });
-    //     });
-    // }
 
     _showLoader(button) {
         button.parents(".DTE_Field").addClass("ai-loading");

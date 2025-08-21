@@ -5,12 +5,19 @@ import java.util.List;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
 public interface AiAssitantsInterface {
     public List<AssistantDefinitionEntity> getAiAssistants(Prop prop) throws Exception;
     public String insertAssistant(AssistantDefinitionEntity entity, Prop prop) throws Exception;
     public void updateAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception;
     public void deleteAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception;
+
+    //Table related methods
+    public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity);
+    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop);
+    public List<String> getFieldsToShow(String action);
+
     public String getProviderId();
     public boolean isInit();
 
