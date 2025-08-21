@@ -190,11 +190,7 @@ export class EditorAi {
                         .catch(err => {
                             console.error("AJAX failed:", err);
                         });
-                }
-                else if(aiCol.useStreaming === true) {
-                    this._executeStreamAction(button, aiCol);
-                }
-                else {
+                } else {
                     this._executeAction(button, column, aiCol);
                 }
 
@@ -286,35 +282,98 @@ export class EditorAi {
                 totalTokens = -2;
             }
         } else {
-            await $.ajax({
-                type: "POST",
-                url: "/admin/rest/ai/assistant/response/",
-                data: {
-                    "assistantName": aiCol.assistant,
-                    "inputData": JSON.stringify(inputData)
-                },
-                success: function(res)
-                {
-                    //console.log("AI response=", res, "to=", aiCol.to);
+            if (aiCol.useStreaming===true) {
+                //console.log("Using streaming for AI response:", aiCol.assistant);
 
-                    //handle res.error
-                    if (res.error) {
-                        contentContainer.html(res.error);
-                    } else {
-                        if (setFunction != null) {
-                            setFunction(res.content);
-                        } else {
-                            self.EDITOR.set(aiCol.to, res.response);
-                        }
+                const response = await fetch("/admin/rest/ai/assistant/response-stream/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRF-Token': window.csrfToken
+                    },
+                    body: JSON.stringify({
+                        assistantName: aiCol.assistant,
+                        inputData: JSON.stringify(inputData)
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let wholeText = "";
+                let done = false;
+
+                while (!done) {
+                    const { value, done: streamDone } = await reader.read();
+                    done = streamDone;
+                    if (done) {
+                        //console.log("Stream complete");
+                        break;
                     }
 
-                    totalTokens = res.totalTokens;
-                },
-                error: function(xhr, ajaxOptions, thrownError) {
-                    self._setCurrentStatus("datatable.error.unknown");
-                    totalTokens = -1;
+                    const chunk = decoder.decode(value, { stream: true });
+                    //console.log("Received:", chunk);
+
+                    let isJson = false;
+                    let parsed = null;
+                    try {
+                        parsed = JSON.parse(chunk);
+                        isJson = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+                    } catch (e) {
+                        isJson = false;
+                    }
+
+                    if (isJson == false) {
+                        wholeText += chunk;
+                        //self.EDITOR.set(aiCol.to, wholeText);
+
+                        if (setFunction != null) {
+                            setFunction(wholeText);
+                        } else {
+                            self.EDITOR.set(aiCol.to, wholeText);
+                        }
+                    } else {
+                        //handle parsed.error
+                        if (parsed.error) {
+                            totalTokens = -1;
+                            self._setCurrentStatus(parsed.error);
+                            break;
+                        }
+
+                        totalTokens += parsed.totalTokens;
+                    }
                 }
-            });
+            } else {
+                await $.ajax({
+                    type: "POST",
+                    url: "/admin/rest/ai/assistant/response/",
+                    data: {
+                        "assistantName": aiCol.assistant,
+                        "inputData": JSON.stringify(inputData)
+                    },
+                    success: function(res)
+                    {
+                        //console.log("AI response=", res, "to=", aiCol.to);
+
+                        //handle res.error
+                        if (res.error) {
+                            totalTokens = -1;
+                            self._setCurrentStatus("datatable.error.unknown");
+                        } else {
+                            if (setFunction != null) {
+                                setFunction(res.response);
+                            } else {
+                                self.EDITOR.set(aiCol.to, res.response);
+                            }
+                        }
+
+                        totalTokens = res.totalTokens;
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+                        totalTokens = -1;
+                        self._setCurrentStatus("datatable.error.unknown");
+                    }
+                });
+            }
         }
         return totalTokens;
     }
@@ -532,92 +591,6 @@ export class EditorAi {
             this._saveAndSetImage(toField);
         });
         buttonDiv.append(imageButton);
-    }
-
-    async _executeStreamAction(button, aiCol) {
-        // Implement AI button click handling logic here
-        //console.log("Executing action for AI column:", aiCol);
-
-        let self = this;
-        self._showLoader(button);
-
-        self._setCurrentStatus("components.ai_assistants.editor.loading.js");
-
-        let from = aiCol.from;
-        if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
-
-        if ("browser" === aiCol.provider) {
-            await this.aiBrowserExecutor.execute(aiCol);
-            self._hideLoader(button);
-            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, 0);
-        } else {
-
-            let inputData = {
-                type: this._getColumnType(this.EDITOR, from),
-                value: self.EDITOR.get(from)
-            }
-
-            fetch("/admin/rest/ai/assistant/response-stream/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    'X-CSRF-Token': window.csrfToken
-                },
-                body: JSON.stringify({
-                    assistantName: aiCol.assistant,
-                    inputData: JSON.stringify(inputData)
-                })
-            })
-            .then(response => {
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-
-                let wholeText = "";
-
-                function read() {
-                    reader.read().then(({ done, value }) => {
-                        if (done) {
-                            console.log("Stream complete");
-                            self._closeToast(3000);
-                            self._hideLoader(button);
-
-                            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, value.totalTokens);
-
-                            return;
-                        }
-
-                        const chunk = decoder.decode(value, { stream: true });
-                        console.log("Received:", chunk);
-
-                        let isJson = false;
-                        try {
-                            const parsed = JSON.parse(chunk);
-                            isJson = typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
-                        } catch (e) {
-                            isJson = false;
-                        }
-
-                        if(isJson == false) {
-                            wholeText += chunk;
-                            self.EDITOR.set(aiCol.to, wholeText);
-                        } else {
-                            const parsed = JSON.parse(chunk);
-
-                            //handle parsed.error
-                            if (parsed.error) {
-                                contentContainer.html(parsed.error);
-                            }
-
-                            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, parsed.totalTokens);
-                        }
-
-                        read();
-                    });
-                }
-
-                read();
-            });
-        }
     }
 
     // getTempFile(fileName) {

@@ -40,9 +40,10 @@ export class AiBrowserExecutor {
             } else {
                 let config = this._getConfig(instructions);
                 let apiInstance = await this._apiInitialize(apiName, config);
+                let useStreaming = aiCol.useStreaming || false;
                 this.lastApiInstance = apiInstance; //store last instance for destroy
                 if (apiInstance) {
-                    totalTokens = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, setFunction);
+                    totalTokens = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
                 }
             }
         } catch (e) {
@@ -108,21 +109,40 @@ export class AiBrowserExecutor {
         return apiInstance;
     }
 
-    async _apiExecute(apiName, apiInstance, config, fieldName, inputData, setFunction = null) {
+    async _apiExecute(apiName, apiInstance, config, fieldName, inputData, useStreaming, setFunction = null) {
         if (apiInstance) {
             let text = inputData.value;
 
             //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, " text:", text, "config=", config, "setFunction=", setFunction);
 
-            let stream;
-            if ("Writer" === apiName) stream = apiInstance.writeStreaming(text, config);
-            else if ("Rewriter" === apiName) stream = apiInstance.rewriteStreaming(text, config);
-            else if ("Translator" === apiName) stream = apiInstance.translateStreaming(text, config);
-            else if ("LanguageDetector" === apiName) stream = apiInstance.detectLanguageStreaming(text, config);
-            else if ("Summarizer" === apiName) stream = apiInstance.summarizeStreaming(text, config);
-            else if ("LanguageModel" === apiName) stream = apiInstance.promptStreaming(text, config);
+            if (useStreaming) {
+                let stream = null;
+                if ("Writer" === apiName) stream = apiInstance.writeStreaming(text, config);
+                else if ("Rewriter" === apiName) stream = apiInstance.rewriteStreaming(text, config);
+                else if ("Translator" === apiName) stream = apiInstance.translateStreaming(text, config);
+                else if ("LanguageDetector" === apiName) stream = apiInstance.detectLanguageStreaming(text, config);
+                else if ("Summarizer" === apiName) stream = apiInstance.summarizeStreaming(text, config);
+                else if ("LanguageModel" === apiName) stream = apiInstance.promptStreaming(text, config);
 
-            await this._setField(fieldName, stream, setFunction);
+                if (stream!=null) await this._setField(fieldName, stream, setFunction);
+            } else {
+                let content = null;
+                if ("Writer" === apiName) content = await apiInstance.write(text, config);
+                else if ("Rewriter" === apiName) content = await apiInstance.rewrite(text, config);
+                else if ("Translator" === apiName) content = await apiInstance.translate(text, config);
+                else if ("LanguageDetector" === apiName) content = await apiInstance.detectLanguage(text, config);
+                else if ("Summarizer" === apiName) content = await apiInstance.summarize(text, config);
+                else if ("LanguageModel" === apiName) content = await apiInstance.prompt(text, config);
+
+                if (content != null) {
+                    if (setFunction != null) {
+                        setFunction(content);
+                    } else {
+                        this.EDITOR.set(fieldName, content);
+                    }
+                }
+            }
+
             return 0;
         }
         return -1;

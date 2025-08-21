@@ -54,7 +54,6 @@ public class BrowserService implements AiInterface {
     }
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception {
-        // TODO Auto-generated method stub
         return null;
     }
 }
