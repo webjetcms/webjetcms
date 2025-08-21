@@ -1,6 +1,6 @@
-export class AiLocalExecutor {
+export class AiBrowserExecutor {
 
-    //TODO: cache local API created with _apiInitialize
+    //TODO: cache API created with _apiInitialize
     localApiCache = {};
     lastApiInstance = null;
     EDITOR = null;
@@ -11,11 +11,19 @@ export class AiLocalExecutor {
         this.editorAiInstance = editorAiInstance;
     }
 
-    isAvailable() {
-        //check for local AI instances support
-        if ('Translator' in self || 'Writer' in self) {
+    isAvailable(aiCol = null) {
+        let apiName = "Translator";
+        if (aiCol != null) {
+            let instructions = aiCol.instructions;
+            apiName = this._getApiName(instructions);
+        }
+
+        //check for browser AI instances support
+        if (apiName in self) {
             return true;
         }
+
+        this.editorAiInstance._setCurrentStatus("components.ai_assistants.browser.api_not_available.js", false, apiName);
         return false;
     }
 
@@ -28,7 +36,7 @@ export class AiLocalExecutor {
         try {
             let apiName = this._getApiName(instructions);
             if (apiName == null) {
-                this.editorAiInstance._setCurrentStatus("components.ai_assistants.local.unknownApi.js", false, apiName);
+                this.editorAiInstance._setCurrentStatus("components.ai_assistants.browser.unknownApi.js", false, apiName);
             } else {
                 let config = this._getConfig(instructions);
                 let apiInstance = await this._apiInitialize(apiName, config);

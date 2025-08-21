@@ -1,4 +1,4 @@
-import { AiLocalExecutor } from "./ai-local-executor";
+import { AiBrowserExecutor } from "./ai-browser-executor";
 
 export class EditorAi {
 
@@ -10,23 +10,32 @@ export class EditorAi {
         maxHideTime: null
     };
     $progressElement = null;
-    aiLocalExecutor = null;
+    aiBrowserExecutor = null;
 
     //constructor
     constructor(EDITOR) {
         this.EDITOR = EDITOR;
         //console.log("EditorAi instance created, editor=", this.EDITOR);
-        this.aiLocalExecutor = new AiLocalExecutor(EDITOR, this);
+        this.aiBrowserExecutor = new AiBrowserExecutor(EDITOR, this);
         EDITOR.editorAi = this;
 
         this.bindEvents();
     }
 
     bindEvents() {
+        //it must be WJ.DTE.open because of ckeditor button initialization
+        window.addEventListener("WJ.DTE.open", (event) => {
+            //console.log("WJ.DTE.open event received, detail=", event.detail, "this.id=", this.EDITOR.TABLE.DATA.id);
+            if (this.EDITOR.TABLE.DATA.id===event.detail.id) {
+                //console.log("WJ.DTE.open event triggered");
+                this.bindButtons();
+            }
+        });
+        //also opened for custom fields initialized async
         window.addEventListener("WJ.DTE.opened", (event) => {
             //console.log("WJ.DTE.opened event received, detail=", event.detail, "this.id=", this.EDITOR.TABLE.DATA.id);
             if (this.EDITOR.TABLE.DATA.id===event.detail.id) {
-                //console.log("WJ.DTE.open event triggered");
+                //console.log("WJ.DTE.opened event triggered");
                 this.bindButtons();
             }
         });
@@ -53,10 +62,7 @@ export class EditorAi {
                         //console.log("exitInlineEditorContainer=", exitInlineEditorContainer);
 
                         if (exitInlineEditorContainer.find(".ti-sparkles").length === 0) {
-                            const button = $('<button class="btn btn-outline-secondary btn-ai btn-ai-wysiwyg" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>');
-                            button.on('click', () => {
-                                this._handleAiButtonClick(button, column);
-                            });
+                            const button = this._getButton(column, "btn-ai-wysiwyg");
                             exitInlineEditorContainer.prepend(button);
                         }
                     } else {
@@ -69,10 +75,7 @@ export class EditorAi {
 
                         //if it doesnt have ti-sparkles button add it
                         if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
-                            const button = $('<button class="btn btn-outline-secondary btn-ai" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>');
-                            button.on('click', () => {
-                                this._handleAiButtonClick(button, column);
-                            });
+                            const button = this._getButton(column, null);
                             inputField.parents(".input-group").append(button);
                         }
                     }
@@ -81,7 +84,18 @@ export class EditorAi {
         });
     }
 
-    getColumnType(editor, fieldName) {
+    _getButton(column, appendClass) {
+        let buttonHTML = '<button class="btn btn-outline-secondary btn-ai'
+        if (appendClass != null && appendClass != "") buttonHTML += " " + appendClass;
+        buttonHTML += '" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>';
+        const button = $(buttonHTML);
+        button.on('click', () => {
+            this._handleAiButtonClick(button, column);
+        });
+        return button;
+    }
+
+    _getColumnType(editor, fieldName) {
         let className = editor?.field(fieldName)?.s?.opts?.className ?? "";
         let renderFormat = editor?.field(fieldName)?.s?.opts?.renderFormat ?? "";
 
@@ -120,10 +134,9 @@ export class EditorAi {
                 preventDuplicates: true,
                 progressBar: true,
                 onCloseClick: () => {
-                    console.log("Closing toast");
                     self._clearProgress();
                     self._hideLoader(button, column);
-                    if (self.aiLocalExecutor != null) self.aiLocalExecutor.destroy();
+                    if (self.aiBrowserExecutor != null) self.aiBrowserExecutor.destroy();
                 }
             });
             window.lastToast = this.lastToast;
@@ -157,6 +170,7 @@ export class EditorAi {
                 <button class="btn btn-light btn-ai-action" type="button">
                     <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
                     ${buttonText}
+                    <span class="provider">${aiCol.providerTitle}</span>
                 </button>
             `);
 
@@ -164,7 +178,7 @@ export class EditorAi {
             btn.on('click', () => {
                 //use original button clicked - which shows this popup
 
-                if(this.getColumnType(this.EDITOR, column?.name) === "image") {
+                if(this._getColumnType(this.EDITOR, column?.name) === "image") {
                     // IS IMAGE
                     this._executeImageAction(button, aiCol, column)
                         .then(result => {
@@ -240,7 +254,7 @@ export class EditorAi {
             self._setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             let inputData = {
-                type: this.getColumnType(this.EDITOR, from),
+                type: this._getColumnType(this.EDITOR, from),
                 value: self.EDITOR.get(from)
             }
             totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
@@ -256,7 +270,8 @@ export class EditorAi {
             self._closeToast(3000);
             self._hideLoader(button, column);
 
-            self._setCurrentStatus("components.ai_assistants.unknownError.js", false);
+            //for -1 show default status, otherwise we expect status is allready set by other code
+            if (totalTokens == -1) self._setCurrentStatus("components.ai_assistants.unknownError.js", false);
         }
     }
 
@@ -264,8 +279,12 @@ export class EditorAi {
         let self = this;
         let totalTokens = 0;
 
-        if ("local" === aiCol.provider) {
-            totalTokens = await this.aiLocalExecutor.execute(aiCol, inputData, setFunction);
+        if ("browser" === aiCol.provider) {
+            if (this.aiBrowserExecutor.isAvailable(aiCol)) {
+                totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, setFunction);
+            } else {
+                totalTokens = -2;
+            }
         } else {
             await $.ajax({
                 type: "POST",
@@ -310,7 +329,7 @@ export class EditorAi {
             if (from == null || from == "")  from = aiCol.to;
 
             let inputData = {
-                type: this.getColumnType(this.EDITOR, from),
+                type: this._getColumnType(this.EDITOR, from),
                 value: self.EDITOR.get(from)
             }
 
@@ -527,14 +546,14 @@ export class EditorAi {
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
-        if ("local" === aiCol.provider) {
-            await this.aiLocalExecutor.execute(aiCol);
+        if ("browser" === aiCol.provider) {
+            await this.aiBrowserExecutor.execute(aiCol);
             self._hideLoader(button);
             self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, 0);
         } else {
 
             let inputData = {
-                type: this.getColumnType(this.EDITOR, from),
+                type: this._getColumnType(this.EDITOR, from),
                 value: self.EDITOR.get(from)
             }
 
@@ -666,6 +685,6 @@ export class EditorAi {
 
     _setDownloadStatus(percent) {
         console.log("Download progress:", percent);
-        this._setCurrentStatus("components.ai_assistants.local.downloadingModel.js", false, percent + "%");
+        this._setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
     }
 }

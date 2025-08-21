@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.ai.providers.local;
+package sk.iway.iwcm.components.ai.providers.browser;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -15,11 +15,15 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Service for Chrome Built-in AI:
+ * https://developer.chrome.com/docs/ai/built-in
+ */
 @Service
-public class LocalService implements AiInterface {
+public class BrowserService implements AiInterface {
 
-    private static final String PROVIDER_ID = "local";
-    private static final String TITLE_KEY = "components.ai_provider.local";
+    private static final String PROVIDER_ID = "browser";
+    private static final String TITLE_KEY = "components.ai_provider.browser.title";
 
     public String getProviderId() {
         return PROVIDER_ID;
@@ -42,7 +46,11 @@ public class LocalService implements AiInterface {
     }
 
     public List<LabelValue> getSupportedModels(Prop prop) {
-        return new ArrayList<>();
+        ArrayList<LabelValue> models = new ArrayList<>();
+
+        models.add(new LabelValue("Gemini Nano", "v3Nano"));
+
+        return models;
     }
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception {

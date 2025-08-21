@@ -88,7 +88,7 @@ public class DataTableColumn {
         setPropertiesFromAnnotation(controller, field, prop);
         setEditorPropertiesFromField(field);
 
-        setAiPropertiesFromField(controller, field);
+        setAiPropertiesFromField(controller, field, prop);
 
         setFinalProperties(field);
         setCellNotEditable(field);
@@ -320,7 +320,7 @@ public class DataTableColumn {
     }
 
     @SuppressWarnings("rawtypes")
-    private void setAiPropertiesFromField(Class controller, Field field) {
+    private void setAiPropertiesFromField(Class controller, Field field, Prop prop) {
         try {
             String toField = field.getName();
 
@@ -336,9 +336,14 @@ public class DataTableColumn {
                     ai.setDescription(ade.getDescription());
                     ai.setProvider(ade.getProvider());
 
+                    String providerTitleKey = "components.ai_provider."+ade.getProvider()+".title";
+                    String providerTitle = prop.getText(providerTitleKey);
+                    if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
+                    ai.setProviderTitle(providerTitle);
+
                     ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
 
-                    if ("local".equals(ai.getProvider())) {
+                    if ("browser".equals(ai.getProvider())) {
                         //we need instructions to execute local AI in browser
                         ai.setInstructions(ade.getInstructions());
                     }
