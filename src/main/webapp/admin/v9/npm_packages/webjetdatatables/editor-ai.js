@@ -221,7 +221,7 @@ export class EditorAi {
                     type: "text",
                     value: editor.getData()
                 }
-                totalTokens += await this._executeSingleAction(button, column, aiCol, JSON.stringify(inputData), (response) => {
+                totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
                 });
@@ -234,7 +234,7 @@ export class EditorAi {
                 type: this.getColumnType(this.EDITOR, from),
                 value: self.EDITOR.get(from)
             }
-            totalTokens = await this._executeSingleAction(button, column, aiCol, JSON.stringify(inputData));
+            totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
         }
 
         if (totalTokens >= 0) {
@@ -263,7 +263,7 @@ export class EditorAi {
                 url: "/admin/rest/ai/assistant/response/",
                 data: {
                     "assistantName": aiCol.assistant,
-                    "inputData": inputData
+                    "inputData": JSON.stringify(inputData)
                 },
                 success: function(res)
                 {
@@ -287,8 +287,8 @@ export class EditorAi {
                     totalTokens = -1;
                 }
             });
-            return totalTokens;
         }
+        return totalTokens;
     }
 
     async _executeImageAction(button, aiCol, column) {

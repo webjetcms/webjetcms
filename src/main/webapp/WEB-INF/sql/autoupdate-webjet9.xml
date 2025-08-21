@@ -1949,8 +1949,8 @@
                             reasoning_effort VARCHAR(255) DEFAULT 'medium',
                             top_p FLOAT DEFAULT 1.0,
                             description TEXT,
-                            keep_html BOOLEAN DEFAULT FALSE,
-                            use_streaming BOOLEAN DEFAULT FALSE,
+                            keep_html TINYINT DEFAULT 0,
+                            use_streaming TINYINT DEFAULT 0,
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>

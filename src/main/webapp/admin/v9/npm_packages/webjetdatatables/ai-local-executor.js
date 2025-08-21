@@ -24,7 +24,7 @@ export class AiLocalExecutor {
         let instructions = aiCol.instructions;
         let totalTokens = -1;
 
-        console.log("execute, inputData=", inputData);
+        //console.log("execute, inputData=", inputData);
         try {
             let apiName = this._getApiName(instructions);
             if (apiName == null) {
@@ -48,7 +48,7 @@ export class AiLocalExecutor {
      * Call this to destroy current instance and stop streaming
      */
     destroy() {
-        console.log("Destroying instance=", this.lastApiInstance);
+        //console.log("Destroying instance=", this.lastApiInstance);
         if (this.lastApiInstance) {
             this.lastApiInstance.destroy();
             this.lastApiInstance = null;
@@ -72,10 +72,9 @@ export class AiLocalExecutor {
         let i = instructions.indexOf(":");
         if (i !== -1) {
             let configString = instructions.substring(i + 1).trim();
-            console.log("configString:", configString);
+            //console.log("configString:", configString);
             try {
                 let config = JSON.parse(configString);
-                console.log("Parsed config:", config);
                 return config;
             } catch (e) {
                 console.error("Failed to parse config JSON:", e, "configString:", configString);
@@ -97,13 +96,15 @@ export class AiLocalExecutor {
         if (apiName in self) {
             apiInstance = await self[apiName].create(config);
         }
-        console.log("apiInstance:", apiInstance, "apiName=", apiName, "isInSelf=", apiName in self, "config=", config);
+        //console.log("apiInstance:", apiInstance, "apiName=", apiName, "isInSelf=", apiName in self, "config=", config);
         return apiInstance;
     }
 
-    async _apiExecute(apiName, apiInstance, config, fieldName, text, setFunction = null) {
+    async _apiExecute(apiName, apiInstance, config, fieldName, inputData, setFunction = null) {
         if (apiInstance) {
-            console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, " text:", text);
+            let text = inputData.value;
+
+            //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, " text:", text, "config=", config, "setFunction=", setFunction);
 
             let stream;
             if ("Writer" === apiName) stream = apiInstance.writeStreaming(text, config);
@@ -112,7 +113,6 @@ export class AiLocalExecutor {
             else if ("LanguageDetector" === apiName) stream = apiInstance.detectLanguageStreaming(text, config);
             else if ("Summarizer" === apiName) stream = apiInstance.summarizeStreaming(text, config);
             else if ("LanguageModel" === apiName) stream = apiInstance.promptStreaming(text, config);
-
 
             await this._setField(fieldName, stream, setFunction);
             return 0;
@@ -123,7 +123,7 @@ export class AiLocalExecutor {
     async _setField(fieldName, stream, setFunction = null) {
         let firstItem = true;
         let content = "";
-        console.log("Setting field:", fieldName, "stream=", stream);
+        //console.log("Setting field:", fieldName, "stream=", stream);
         for await (const chunk of stream) {
             if (firstItem) {
                 content = chunk;
@@ -142,7 +142,7 @@ export class AiLocalExecutor {
     }
 
     _setDownloadStatus(progress) {
-        console.log("Progress: ", progress);
+        //console.log("Progress: ", progress);
         let percent = progress.loaded * 100;
         //skip this values, they are not useful
         if (percent == 0 || percent == 100) return;
