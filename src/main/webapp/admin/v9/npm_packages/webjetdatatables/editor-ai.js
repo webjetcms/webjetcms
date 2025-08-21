@@ -234,7 +234,7 @@ export class EditorAi {
                 //this._executeSingleAction(button, column, aiCol, from, editor);
                 //console.log("Executing on editor: ", editor);
 
-                self._setCurrentStatus("components.ai_assistants.editor.loading_parcial.js", false, (i+1)+"/"+editors.length);
+                self._setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
                 let inputData = {
                     type: "text",

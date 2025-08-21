@@ -17,6 +17,14 @@ const WJ = (() => {
                 translated = replaceTranslateParameter(translated, params[i-1], i);
             }
         }
+
+        //remove unused params
+        if (translated.indexOf("{")!=-1 || translated.indexOf("}")!=-1) {
+            for (var i=1; i<= 30; i++) {
+                translated = translated.replaceAll("{"+i+"}", "");
+            }
+        }
+
         return translated;
     }
 
