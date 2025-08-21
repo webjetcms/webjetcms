@@ -342,6 +342,7 @@ public class DataTableColumn {
                     ai.setProviderTitle(providerTitle);
 
                     ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
+                    ai.setAction(ade.getAction());
 
                     if ("browser".equals(ai.getProvider())) {
                         //we need instructions to execute local AI in browser

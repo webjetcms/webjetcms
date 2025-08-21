@@ -22,12 +22,13 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
 
+//TODO: switch to IwcmFile for file operations
 @Service
 public class AiTempFileStorage {
 
     public AiTempFileStorage() {}
 
-    public static final String AI_FILE_DIR = "/WEB-INF/ai_files";
+    public static final String AI_FILE_DIR = "/WEB-INF/tmp/ai_files";
 
     public static Path getFileFolder() throws IOException {
         String filePath = Tools.getRealPath(AI_FILE_DIR);

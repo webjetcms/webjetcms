@@ -21,6 +21,9 @@ const WJ = (() => {
         //remove unused params
         if (translated.indexOf("{")!=-1 || translated.indexOf("}")!=-1) {
             for (var i=1; i<= 30; i++) {
+                //components.ai_assistants.unknownError.js=Nastala chyba pri volaní AI asistenta {1}.
+                translated = translated.replaceAll(" {"+i+"}.", ".");
+                //components.ai_assistants.editor.loading.js=AI už na tom pracuje... {1}
                 translated = translated.replaceAll("{"+i+"}", "");
             }
         }

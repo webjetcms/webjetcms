@@ -20,6 +20,7 @@ public class DataTableAi {
     private String description;
     private String instructions;
     private boolean useStreaming;
+    private String action;
 
     public DataTableAi() {}
 

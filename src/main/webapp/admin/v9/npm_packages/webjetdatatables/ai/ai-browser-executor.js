@@ -1,3 +1,6 @@
+/**
+ * Class to wrap Local Browser AI execution logic
+ */
 export class AiBrowserExecutor {
 
     //TODO: cache API created with _apiInitialize
