@@ -2,6 +2,8 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -103,5 +106,20 @@ public class AssistantController {
             writer.flush();
             writer.close();
         }
+    }
+
+
+    @GetMapping("/file/binary/")
+	public void execute(@RequestParam String fileName, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            AiTempFileStorage.downloadFile(fileName, request, response);
+        } catch(Exception e) {
+           sk.iway.iwcm.Logger.error(e);
+        }
+    }
+
+    @PostMapping("/save-temp-file/")
+    public String saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation);
     }
 }
