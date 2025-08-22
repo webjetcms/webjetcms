@@ -14,7 +14,7 @@ block content
         window.domReady.add(function () {
 
             var tabs = [
-                {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true, content:'<div></div>'},
+                {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true},
                 {id: 'instructions', title: '[[\#{components.ai_assistants.instruction_tab}]]'},
                 {id: 'advanced', title: '[[\#{datatable.tab.advanced}]]'}
             ]
@@ -49,11 +49,15 @@ block content
                 fetchOnEdit: true
             });
 
+            var eventsBinded = false;
             aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
-                $("#DTE_Field_provider").on("change", function() {
-                    changeFieldsVisibility($(this).val(), action);
-                    //do not do this, it will erase value on edit existing entity $("#DTE_Field_model").val("");
-                });
+                if (eventsBinded==false) {
+                    $("#DTE_Field_provider").on("change", function() {
+                        changeFieldsVisibility($(this).val(), action);
+                        //do not do this, it will erase value on edit existing entity $("#DTE_Field_model").val("");
+                    });
+                    eventsBinded = true;
+                }
             });
 
             function changeFieldsVisibility(provider, action) {

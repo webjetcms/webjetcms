@@ -176,7 +176,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException("config.not_permitted_action_err");
+        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
     }
 
     public void updateAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
@@ -187,7 +187,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException("config.not_permitted_action_err");
+        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
     }
 
     public void deleteAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
@@ -198,10 +198,10 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException("config.not_permitted_action_err");
+        //provider not found, just continue and delete row from database
     }
 
-    public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
+    public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity, Prop prop) {
         for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
             if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
                 assistantInterface.prepareBeforeSave(assistantEnity);
@@ -209,7 +209,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException("config.not_permitted_action_err");
+        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
     }
 
     public void getProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
@@ -219,14 +219,14 @@ public class AiAssistantsService {
         }
     }
 
-    public List<String> getProviderFields(String provider, String action) {
+    public List<String> getProviderFields(String provider, String action, Prop prop) {
         for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
             if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(provider)) {
                 return assistantInterface.getFieldsToShow(action);
             }
         }
 
-        throw new IllegalStateException("config.not_permitted_action_err");
+        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
     }
 
     /* PRIVATE SUPPORT METHODS */

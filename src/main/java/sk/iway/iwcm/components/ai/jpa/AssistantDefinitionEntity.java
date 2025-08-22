@@ -35,14 +35,41 @@ public class AssistantDefinitionEntity {
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
 
+    //Unique name
     @Column(name = "name")
     @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = "components.ai_assistants.name", tab = "basic")
     @NotBlank
     @Size(max = 255)
     private String name;
 
+    //User visible name
+    @Column(name = "description")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = "components.ai_assistants.description",
+        tab = "basic"
+    )
+    private String description;
+
+    @Column(name = "icon")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.icon", tab = "basic", visible = false)
+    private String icon;
+
+    @Column(name = "group_name")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.group", tab = "basic",
+        editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-group"),
+					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+				}
+			)
+	})
+    private String groupName;
+
     @Column(name = "action")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.action", tab = "basic")
     @Size(max = 255)
     private String action;
 
@@ -53,7 +80,8 @@ public class AssistantDefinitionEntity {
 				attr = {
 					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-class"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
-					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
 				}
 			)
 		}
@@ -75,7 +103,6 @@ public class AssistantDefinitionEntity {
 			)
 		}
     )
-    @NotBlank
     @Size(max = 255)
     private String fieldFrom;
 
@@ -96,18 +123,23 @@ public class AssistantDefinitionEntity {
     @Size(max = 255)
     private String fieldTo;
 
+    @Column(name = "user_prompt_enabled")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.user_prompt.enabled", tab = "basic", visible = false)
+    private Boolean userPromptEnabled;
+
+    @Column(name = "user_prompt_label")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.user_prompt.label", tab = "basic", visible = false,
+        editor = {
+            @DataTableColumnEditor(attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+            })
+        }
+    )
+    private String userPromptLabel;
+
     @Column(name = "provider")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.provider", tab = "basic")
     private String provider;
-
-    @Lob
-    @Column(name = "description")
-    @DataTableColumn(
-        inputType = DataTableColumnType.TEXTAREA,
-        title = "components.ai_assistants.description",
-        tab = "basic"
-    )
-    private String description;
 
     @Column(name = "model")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", visible = false, className = "hideOnCreate hideOnEdit", tab = "basic",
@@ -162,11 +194,11 @@ public class AssistantDefinitionEntity {
     private Date created;
 
     @Column(name = "keep_html")
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.keep_html", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.keep_html", tab = "advanced", visible = false)
     private Boolean keepHtml;
 
     @Column(name="use_streaming")
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.use_streaming", visible = false, className = "hideOnCreate hideOnEdit", tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.use_streaming", visible = false, tab = "advanced")
 	private Boolean useStreaming;
 
     //OpenAI - fields

@@ -3,6 +3,7 @@ package sk.iway.iwcm.system.datatable.json;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -325,6 +326,13 @@ public class DataTableColumn {
             String toField = field.getName();
 
             List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, controller.getName());
+
+            //sort assistants by group and name
+            assistants.sort(
+                Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
+                        .thenComparing(AssistantDefinitionEntity::getName)
+            );
+
             if(assistants != null && assistants.size() > 0) {
                 ai = new ArrayList<>();
 
@@ -343,6 +351,16 @@ public class DataTableColumn {
 
                     ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
                     ai.setAction(ade.getAction());
+
+                    String groupName = ade.getGroupName();
+                    //if groupName is in format number:name remove number prefix
+                    if (groupName != null && groupName.contains(":")) {
+                        groupName = groupName.substring(groupName.indexOf(":") + 1).trim();
+                    }
+                    ai.setGroupName(groupName);
+                    ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
+                    ai.setUserPromptLabel(ade.getUserPromptLabel());
+                    ai.setIcon(ade.getIcon());
 
                     if ("browser".equals(ai.getProvider())) {
                         //we need instructions to execute local AI in browser

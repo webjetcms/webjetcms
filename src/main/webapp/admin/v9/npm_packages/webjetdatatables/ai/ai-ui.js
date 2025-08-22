@@ -52,18 +52,15 @@ export class AiUserInterface {
 
         // Use jQuery to build content
         let currentGroup = null;
+        let lastGroup = null;
         for (let i = 0; i < column.ai.length; i++) {
             let aiCol = column.ai[i];
             //console.log("aiCol=", aiCol);
 
-            // Add group titles at specific indexes
-            if (i === 0) {
-                currentGroup = $('<div class="group-title">Generovanie</div>');
-                contentContainer.append(currentGroup);
-            }
-            if (i === 2) {
-                currentGroup = $('<div class="group-title">Gramatika</div>');
-                contentContainer.append(currentGroup);
+            currentGroup = aiCol.groupName;
+            if (currentGroup !== null && currentGroup !== "" && currentGroup !== lastGroup) {
+                contentContainer.append($('<div class="group-title"></div>').text(currentGroup));
+                lastGroup = currentGroup;
             }
 
             // Create button element

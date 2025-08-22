@@ -159,7 +159,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public void beforeSave(AssistantDefinitionEntity entity) {
         //
-        aiAssistantsService.prepareBeforeSave(entity);
+        aiAssistantsService.prepareBeforeSave(entity, getProp());
 
         //Default logic
         if(entity.getKeepHtml() == null) entity.setKeepHtml(false);
@@ -193,6 +193,11 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @GetMapping("/provider-fields")
     public List<String> getProviderFields(@RequestParam(name = "provider") String provider, @RequestParam(name = "action") String action) {
-        return aiAssistantsService.getProviderFields(provider, action);
+        return aiAssistantsService.getProviderFields(provider, action, getProp());
+    }
+
+    @GetMapping("/autocomplete-group")
+    public List<String> getAutocompleteGroup(@RequestParam String term) {
+        return repo.getGroupNames(term, CloudToolsForCore.getDomainId());
     }
 }

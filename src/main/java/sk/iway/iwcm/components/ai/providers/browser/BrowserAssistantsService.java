@@ -49,7 +49,7 @@ public class BrowserAssistantsService implements AiAssitantsInterface {
 
     public List<String> getFieldsToShow(String action) {
         //Local assistant do not need specific fields, base are enought
-        return new ArrayList<>();
+        return List.of( "useStreaming");
     }
 
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {

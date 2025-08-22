@@ -21,6 +21,10 @@ public class DataTableAi {
     private String instructions;
     private boolean useStreaming;
     private String action;
+    private String groupName;
+    private boolean userPromptEnabled;
+    private String userPromptLabel;
+    private String icon;
 
     public DataTableAi() {}
 
