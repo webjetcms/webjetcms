@@ -47,6 +47,11 @@ export class AiUserInterface {
             this.$progressElement = $("#toast-container-ai").find(".toast-progress");
         }
 
+        //set default header
+        $("#toast-container-ai").removeClass("has-back-button");
+        $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
+        contentContainer.addClass("has-back-button");
+
         // Clear previous content
         contentContainer.empty();
 
@@ -64,12 +69,13 @@ export class AiUserInterface {
             }
 
             // Create button element
-            let buttonText = aiCol.description;
-            if (typeof buttonText === 'undefined' || buttonText === null || buttonText === "") buttonText = aiCol.assistant;
+            let chatPromptIcon = "";
+            if (true === aiCol.userPromptEnabled) chatPromptIcon = "<i class='ti ti-messages'></i>";
             const btn = $(`
                 <button class="btn btn-light btn-ai-action" type="button">
                     <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
-                    ${buttonText}
+                    ${aiCol.description}
+                    ${chatPromptIcon}
                     <span class="provider">${aiCol.providerTitle}</span>
                 </button>
             `);
@@ -78,10 +84,11 @@ export class AiUserInterface {
             btn.on('click', () => {
                 //use original button clicked - which shows this popup
 
-                if ("PROMPT"===aiCol.from) {
-
+                if (true === aiCol.userPromptEnabled) {
+                    //we must first show dialog with textarea and after that call _executeAction
+                    this._renderUserPromptDialog(button, column, aiCol);
                 } else {
-                    this._processAiActionButtonClick(button, column, aiCol);
+                    this._executeAction(button, column, aiCol);
                 }
             });
 
@@ -106,8 +113,8 @@ export class AiUserInterface {
         setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
     }
 
-    async _processAiActionButtonClick(button, column, aiCol) {
-        this.editorAiInstance._executeAction(button, column, aiCol);
+    async _executeAction(button, column, aiCol, userPrompt = null) {
+        this.editorAiInstance._executeAction(button, column, aiCol, userPrompt);
     }
 
     _showLoader(button) {
@@ -158,6 +165,45 @@ export class AiUserInterface {
         this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
     }
 
+    _renderUserPromptDialog(button, column, aiCol) {
+        //console.log("_renderUserPromptDialog, button=", button, "column=", column, "aiCol=", aiCol);
+
+        let header = `
+            <div class="header-back-button">
+                <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
+                <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
+                ${aiCol.description}
+            </div>
+        `;
+
+        $("#toast-container-ai").addClass("has-back-button");
+        $("#toast-container-ai .toast-title").html(header);
+        $("#toast-container-ai .toast-title .btn-outline-secondary").on('click', () => {
+            this.generateAssistentOptions(button, column);
+        });
+
+        let html = `
+            <div class="mb-3">
+                <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
+            </div>
+        `;
+
+        let contentContainer = $("#toast-container-ai-content");
+        contentContainer.html(html);
+
+        const btn = $(`
+            <button class="btn btn-primary" type="button">
+                <i class="ti ti-sparkles"></i>
+                ${WJ.translate("components.ai_assistants.user_prompt.generate.js")}
+            </button>
+        `);
+        btn.on('click', () => {
+            this._executeAction(button, column, aiCol, $("#ai-user-prompt").val());
+        });
+
+        contentContainer.append(btn);
+    }
+
     renderImageSelection(button, images, toField, textKey, ...params) {
         let contentContainer = $("#toast-container-ai-content");
 
@@ -169,7 +215,7 @@ export class AiUserInterface {
             <div class='image-info' style='display: none;'>
                 <div>
                     <label for='generated-image-name' style='color: black;'>ImageName</label>
-                    <input id='generated-image-name' type='text' class='form-control' value='ai-image.jpg'>
+                    <input id='generated-image-name' type='text' class='form-control' value='ai-image.png'>
                 </div>
 
                 <div>

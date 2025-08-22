@@ -24,6 +24,7 @@ public class InputDataDTO {
 }
 
     String inputText = null;
+    String userPrompt = null;
     File inputFile = null;
     InputDataType inputDataType;
 
@@ -40,6 +41,7 @@ public class InputDataDTO {
         inputDataType = InputDataType.getInputDataType(json.optString("type", ""));
 
         if(inputDataType == InputDataType.TEXT) {
+            userPrompt = json.optString("userPrompt", "");
             inputText = json.optString("value", "");
         } else {
             String imagePath = json.optString("value", "");

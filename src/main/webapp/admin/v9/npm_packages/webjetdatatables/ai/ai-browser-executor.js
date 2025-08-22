@@ -116,6 +116,9 @@ export class AiBrowserExecutor {
     async _apiExecute(apiName, apiInstance, config, fieldName, inputData, useStreaming, setFunction = null) {
         if (apiInstance) {
             let text = inputData.value;
+            if (inputData.userPrompt != null) {
+                text = inputData.userPrompt;
+            }
 
             //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, " text:", text, "config=", config, "setFunction=", setFunction);
 

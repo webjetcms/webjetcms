@@ -130,7 +130,7 @@ export class EditorAi {
         this.aiUserInterface._closeToast(timeOut);
     }
 
-    async _executeAction(button, column, aiCol) {
+    async _executeAction(button, column, aiCol, userPrompt = null) {
         // Implement AI button click handling logic here
         //console.log("Executing action for AI column:", aiCol);
 
@@ -154,7 +154,8 @@ export class EditorAi {
         let totalTokens = 0;
 
         let inputData = {
-            type: this._getColumnType(this.EDITOR, aiCol.to)
+            type: this._getColumnType(this.EDITOR, aiCol.to),
+            userPrompt: userPrompt
         }
 
         if (isPageBuilder) {

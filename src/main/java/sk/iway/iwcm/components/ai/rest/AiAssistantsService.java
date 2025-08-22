@@ -18,6 +18,7 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
@@ -323,5 +324,23 @@ public class AiAssistantsService {
             c.setObject(ALL_ASSISTANTS_KEY + "_" + domainId, dbAiAssitants, 60);
             return dbAiAssitants;
         }
+    }
+
+    public static String executePromptMacro(String text, InputDataDTO inputData) {
+        if(inputData == null) return text;
+        if(Tools.isEmpty(text)) {
+            //to fill inputData if original input is empty
+            text = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
+        }
+
+        text = Tools.replace(text, "{inputText}", nvl(inputData.getInputText(), ""));
+        text = Tools.replace(text, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
+
+        return text;
+    }
+
+    private static String nvl(String value, String defaultValue) {
+        if(Tools.isEmpty(value)) return defaultValue;
+        return value;
     }
 }

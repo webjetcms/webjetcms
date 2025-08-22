@@ -106,6 +106,19 @@
         div.toast-title {
             background-color: var(--wj-nice-gray);
             color: var(--wj-ai-color);
+
+            .header-back-button {
+                color: var(--bs-body-color);
+                font-weight: bold;
+                .ti {
+                    vertical-align: middle;
+                }
+                .btn {
+                    padding: 0px 6px;
+                    margin-right: 8px;
+                    font-size: 14px;
+                }
+            }
         }
 
         div.toast-message {
@@ -206,5 +219,14 @@
     .toast.toast-info:has(.image-preview) {
         width: max-content;
         max-width: 100%;
+    }
+
+    &.has-back-button {
+        .toast.toast-info::before {
+            content: ""
+        }
+        .toast-title {
+            padding-left: 16px;
+        }
     }
 }

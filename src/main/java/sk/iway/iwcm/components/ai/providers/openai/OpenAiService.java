@@ -39,6 +39,7 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
@@ -108,7 +109,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try {
             // 2. Add message
-            addMessage(threadId, inputData, prop);
+            addMessage(assistant, threadId, inputData, prop);
 
             // 3. Create run
             JSONObject json = new JSONObject();
@@ -153,7 +154,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try {
             // 2. Add message
-            addMessage(threadId, inputData, prop);
+            addMessage(assistant, threadId, inputData, prop);
 
             // 3. Create run
             String runId = createRun(threadId, assistantId, temperature, prop);
@@ -184,7 +185,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
             builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             builder.addTextBody("model", "gpt-image-1");
-            builder.addTextBody("prompt", assistant.getInstructions());
+            builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
             builder.addTextBody("n", assistant.getImagesCount().toString());
             builder.addTextBody("quality", assistant.getImagesQuality());
             builder.addTextBody("size", assistant.getImagesSize());
@@ -219,7 +220,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
             JSONObject json = new JSONObject();
             json.put("model", "gpt-image-1");
-            json.put("prompt", assistant.getInstructions());
+            json.put("prompt", AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
             json.put("n", assistant.getImagesCount());
             json.put("quality", assistant.getImagesQuality());
             json.put("size", assistant.getImagesSize());
@@ -279,10 +280,16 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
     }
 
-    private void addMessage(String threadId, InputDataDTO inputData, Prop prop) throws IOException {
+    private void addMessage(AssistantDefinitionEntity assistant, String threadId, InputDataDTO inputData, Prop prop) throws IOException {
         JSONObject json = new JSONObject();
         json.put("role", "user");
-        json.put("content", inputData.getInputText());
+
+        String content = inputData.getInputText();
+        if (Tools.isTrue(assistant.getUserPromptEnabled())) {
+            content = AiAssistantsService.executePromptMacro("", inputData);
+        }
+
+        json.put("content", content);
 
         HttpPost post = new HttpPost(THREADS_URL + threadId + "/messages");
         post.setEntity(getRequestBody(json.toString()));
