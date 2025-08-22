@@ -13,7 +13,7 @@ export class AiRestExecutor {
 
     async execute(aiCol, inputData, setFunction = null) {
         let self = this;
-        let totalTokens = -1;
+        let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
         if (aiCol.useStreaming===true) {
             //console.log("Using streaming for AI response:", aiCol.assistant);
 
@@ -66,11 +66,10 @@ export class AiRestExecutor {
                 } else {
                     //handle parsed.error
                     if (parsed.error) {
-                        totalTokens = -1;
-                        self._setCurrentStatus(parsed.error);
+                        totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                        self._setError(parsed.error);
                         break;
                     }
-
                     totalTokens += parsed.totalTokens;
                 }
             }
@@ -88,8 +87,8 @@ export class AiRestExecutor {
 
                     //handle res.error
                     if (res.error) {
-                        totalTokens = -1;
-                        self._setCurrentStatus("datatable.error.unknown");
+                        totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                        self._setError(res.error);
                     } else {
                         if (setFunction != null) {
                             setFunction(res.response);
@@ -101,21 +100,21 @@ export class AiRestExecutor {
                     totalTokens = res.totalTokens;
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
-                    totalTokens = -1;
-                    self._setCurrentStatus("datatable.error.unknown");
+                    totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                    self._setError(thrownError);
                 }
             });
         }
         return totalTokens;
     }
 
-    _setCurrentStatus(textKey, pulsate = false, ...params) {
-        this.editorAiInstance._setCurrentStatus(textKey, pulsate, ...params);
+    _setError(...params) {
+        this.editorAiInstance.setError(...params);
     }
 
     async executeImageAction(aiCol, inputData, callback = null) {
         let self = this;
-        let totalTokens = -1;
+        let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
 
         await $.ajax({
             type: "POST",
@@ -128,8 +127,8 @@ export class AiRestExecutor {
             {
                 //handle res.error
                 if (res.error) {
-                    totalTokens = -1;
-                    self._setCurrentStatus("datatable.error.unknown", false, res.error);
+                    totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                    self._setError(res.error);
                 }
 
                 totalTokens = res.totalTokens;
@@ -138,8 +137,8 @@ export class AiRestExecutor {
                 }
             },
             error: function(xhr, ajaxOptions, thrownError) {
-
-                self._setCurrentStatus("datatable.error.unknown");
+                totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                self._setError(thrownError);
             }
         });
 

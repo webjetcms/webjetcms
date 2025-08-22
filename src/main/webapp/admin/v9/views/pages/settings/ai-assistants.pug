@@ -52,7 +52,7 @@ block content
             aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
                 $("#DTE_Field_provider").on("change", function() {
                     changeFieldsVisibility($(this).val(), action);
-                    $("#DTE_Field_model").val("");
+                    //do not do this, it will erase value on edit existing entity $("#DTE_Field_model").val("");
                 });
             });
 

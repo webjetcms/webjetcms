@@ -6,6 +6,7 @@ export class AiBrowserExecutor {
     //TODO: cache API created with _apiInitialize
     localApiCache = {};
     lastApiInstance = null;
+
     EDITOR = null;
     editorAiInstance = null;
 
@@ -26,20 +27,20 @@ export class AiBrowserExecutor {
             return true;
         }
 
-        this.editorAiInstance._setCurrentStatus("components.ai_assistants.browser.api_not_available.js", false, apiName);
+        this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.api_not_available.js", false, apiName);
         return false;
     }
 
     async execute(aiCol, inputData, setFunction = null) {
 
         let instructions = aiCol.instructions;
-        let totalTokens = -1;
+        let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
 
         //console.log("execute, inputData=", inputData);
         try {
             let apiName = this._getApiName(instructions);
             if (apiName == null) {
-                this.editorAiInstance._setCurrentStatus("components.ai_assistants.browser.unknownApi.js", false, apiName);
+                this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.unknownApi.js", false, apiName);
             } else {
                 let config = this._getConfig(instructions);
                 let apiInstance = await this._apiInitialize(apiName, config);
@@ -146,9 +147,10 @@ export class AiBrowserExecutor {
                 }
             }
 
+            //local browser uses zero tokens
             return 0;
         }
-        return -1;
+        return this.EDITOR.ERR_UNKNOWN;
     }
 
     async _setField(fieldName, stream, setFunction = null) {

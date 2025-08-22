@@ -38,7 +38,7 @@ export class AiUserInterface {
                 progressBar: true,
                 onCloseClick: () => {
                     self._clearProgress();
-                    self._hideLoader(button, column);
+                    self._hideLoader(button);
                     if (self.aiBrowserExecutor != null) self.aiBrowserExecutor.destroy();
                 }
             });
@@ -105,6 +105,10 @@ export class AiUserInterface {
         contentContainer.html(html);
     }
 
+    setError(...params) {
+        setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
+    }
+
     async _processAiActionButtonClick(button, column, aiCol) {
         this.editorAiInstance._executeAction(button, column, aiCol);
     }
@@ -157,7 +161,7 @@ export class AiUserInterface {
         this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
     }
 
-    _setImageStatus(images, toField, textKey, ...params) {
+    renderImageSelection(button, images, toField, textKey, ...params) {
         let contentContainer = $("#toast-container-ai-content");
 
         let html = "<div>" + WJ.translate(textKey, params) + "</div>";
@@ -168,7 +172,7 @@ export class AiUserInterface {
             <div class='image-info' style='display: none;'>
                 <div>
                     <label for='generated-image-name' style='color: black;'>ImageName</label>
-                    <input id='generated-image-name' type='text' class='form-control'>
+                    <input id='generated-image-name' type='text' class='form-control' value='ai-image.jpg'>
                 </div>
 
                 <div>
@@ -211,7 +215,7 @@ export class AiUserInterface {
 
                 let conf = {
                     jsonData: [{
-                        virtualPath: "",
+                        virtualPath: "/images/",
                         id: "",
                         type: "DIR"
                     }],
@@ -283,7 +287,7 @@ export class AiUserInterface {
 
         const imageButton = $('<button class="btn btn-outline-secondary select-image">' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {
-            this._saveAndSetImage(toField);
+            this._saveAndSetImage(button, toField);
         });
         buttonDiv.append(imageButton);
     }
@@ -298,7 +302,7 @@ export class AiUserInterface {
         $("div.image-preview").find('img[alt="' + imageName + '"]').addClass("selected");
     }
 
-    _saveAndSetImage(toField) {
+    _saveAndSetImage(button, toField) {
         let self = this;
         let tempFileName = $(".image-preview").find("img.selected").attr("alt");
         let imageName = $("#generated-image-name").val();
@@ -317,9 +321,10 @@ export class AiUserInterface {
                 self.EDITOR.set(toField, res);
                 self.setCurrentStatus("components.ai.editor.image_saved.js");
                 self._closeToast(3000);
+                self._hideLoader(button);
             },
             error: function(xhr, ajaxOptions, thrownError) {
-
+                self.setError(thrownError);
             }
         });
     }

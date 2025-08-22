@@ -10,6 +10,11 @@ export class EditorAi {
     aiRestExecutor = null;
     aiUserInterface = null;
 
+    //response error code from executeSingleAction
+    ERR_UNKNOWN = -1; //show unknown error message and close dialog
+    ERR_CLOSE_DIALOG = -2; //close dialog, message must be written by _setCurrentStatus
+    DO_NOT_CLOSE_DIALOG = -3; //do not close dialog, message must be written by _setCurrentStatus
+
     //constructor
     constructor(EDITOR) {
         this.EDITOR = EDITOR;
@@ -105,8 +110,12 @@ export class EditorAi {
         return "text";
     }
 
-    _setCurrentStatus(textKey, pulsate = false, ...params) {
+    setCurrentStatus(textKey, pulsate = false, ...params) {
         this.aiUserInterface.setCurrentStatus(textKey, pulsate, ...params);
+    }
+
+    setError(...params) {
+        this.aiUserInterface.setError(...params);
     }
 
     _showLoader(button) {
@@ -158,7 +167,7 @@ export class EditorAi {
                 //this._executeSingleAction(button, column, aiCol, from, editor);
                 //console.log("Executing on editor: ", editor);
 
-                self._setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
+                self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
                 inputData.value = editor.getData();
                 totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
@@ -168,7 +177,7 @@ export class EditorAi {
             };
 
         } else {
-            self._setCurrentStatus("components.ai_assistants.editor.loading.js");
+            self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             inputData.value = self.EDITOR.get(from);
             totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
@@ -178,16 +187,17 @@ export class EditorAi {
             self._closeToast(3000);
             self._hideLoader(button);
 
-            self._setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
-        } else if (totalTokens === -3) {
-            //do nothing, it is allready processed
+            self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
+        } else if (totalTokens === this.DO_NOT_CLOSE_DIALOG) {
+            //do nothing
+            //content was rendered in execute method e.g. image selection dialog
         } else {
             //there seems to be an error
             self._closeToast(3000);
             self._hideLoader(button);
 
             //for -1 show default status, otherwise we expect status is allready set by other code
-            if (totalTokens == -1) self._setCurrentStatus("components.ai_assistants.unknownError.js", false);
+            if (totalTokens == this.ERR_UNKNOWN) self.setError();
         }
     }
 
@@ -199,7 +209,7 @@ export class EditorAi {
             if (this.aiBrowserExecutor.isAvailable(aiCol)) {
                 totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, setFunction);
             } else {
-                totalTokens = -2;
+                totalTokens = this.ERR_CLOSE_DIALOG;
             }
         } else {
             // IS IMAGE
@@ -209,13 +219,13 @@ export class EditorAi {
                 await this.aiRestExecutor.executeImageAction(aiCol, inputData, (result) => {
                     console.log("Image action result:", result);
                     if (result.error != null) {
-                        totalTokens = -1;
-                        self._setCurrentStatus("components.ai_assistants.unknownError.js", false, result.error);
-                        return;
+                        totalTokens = this.ERR_CLOSE_DIALOG;
+                        self.setError(result.error);
+                        return totalTokens;
                     }
-                    totalTokens = result.totalTokens;
-                    self.aiUserInterface._setImageStatus(result.tempFiles, aiCol.to, "components.ai.editor.generated_images.js", result.totalTokens);
-                    totalTokens = -3;
+                    self.aiUserInterface.renderImageSelection(button, result.tempFiles, aiCol.to, "components.ai_assistants.stat.totalTokens.js", result.totalTokens);
+                    //dialog is rewriten, do not close it
+                    totalTokens = this.DO_NOT_CLOSE_DIALOG;
                 });
             } else {
                 totalTokens = await this.aiRestExecutor.execute(aiCol, inputData, setFunction);
