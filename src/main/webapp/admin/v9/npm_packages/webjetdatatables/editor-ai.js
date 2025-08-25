@@ -140,12 +140,44 @@ export class EditorAi {
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
 
-        var isPageBuilder = false;
+        let isPageBuilder = false;
+        let ckEditorRanges = null;
+        let ckEditorSelectionInstance = null;
         if ("wysiwyg" === column.type && aiCol.to === column.name) {
             try {
                 let wjeditor = this.EDITOR.field(aiCol.to).s.opts.wjeditor;
                 //for PageBuilder if to===pageBuilder element we need to execute function for every editor in PB page to prevent HTML structure issues
-                if (wjeditor != null && "pageBuilder" === wjeditor.editingMode) isPageBuilder = true;
+                if (wjeditor != null) {
+                    if ("pageBuilder" === wjeditor.editingMode) {
+                        isPageBuilder = true;
+
+                        //iterate over editors and find selection (if any)
+                        let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
+                        for (let i=0; i<editors.length; i++) {
+                            let editor = editors[i];
+                            let selection = editor.getSelection();
+                            if (selection != null && selection.getSelectedText().length > 0) {
+                                let ranges = selection.getRanges();
+                                if (ranges.length > 0) {
+                                    ckEditorSelectionInstance = editor;
+                                }
+                            }
+                        }
+                    } else {
+                        //check selection in ckeditor
+                        ckEditorSelectionInstance = ckEditorInstance;
+                    }
+
+                    if (ckEditorSelectionInstance != null) {
+                        let selection = ckEditorSelectionInstance.getSelection();
+                        if (selection != null && selection.getSelectedText().length > 0) {
+                            let ranges = selection.getRanges();
+                            if (ranges.length > 0) {
+                                ckEditorRanges = ranges;
+                            }
+                        }
+                    }
+                }
             } catch (e) {
                 console.error("Error checking PageBuilder editor:", e);
             }
@@ -163,7 +195,29 @@ export class EditorAi {
 
         console.log(inputData);
 
-        if (isPageBuilder) {
+        if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
+
+            self.setCurrentStatus("components.ai_assistants.editor.loading.js");
+
+            // Get selected HTML
+            var tempDiv = document.createElement('div');
+            for (var i = 0; i < ckEditorRanges.length; i++) {
+                var fragment = ckEditorRanges[i].cloneContents();
+                tempDiv.appendChild(fragment.$);
+            }
+            //console.log("tempDiv=", tempDiv, "html=", tempDiv.innerHTML);
+
+            inputData.value = tempDiv.innerHTML;
+
+            totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
+                //console.log("response="+response, "setting to editor: ", ckEditorInstance, "inputData=", inputData);
+
+                // Replace selection with AI response
+                ckEditorRanges[0].deleteContents();
+                ckEditorSelectionInstance.insertHtml(response);
+            });
+
+        } else if (isPageBuilder) {
             //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
 
             //get all PB editor instances and execute action on them separately
