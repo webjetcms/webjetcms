@@ -1,0 +1,238 @@
+.modal {
+    .DTE {
+        .DTE_Field {
+            .btn-ai {
+                .ti-sparkles {
+                    color: var(--wj-ai-color);
+                    display: inline-block;
+                }
+
+                .ti-loader {
+                    display: none;
+                    color: var(--wj-ai-color);
+                }
+
+                &:hover {
+                    background-color: var(--wj-ai-color-hover);
+                    .ti-sparkles {
+                        transform: rotate(20deg);
+                        transition: all 0.2s ease-in-out;
+                    }
+                }
+            }
+
+            .btn-ai-wysiwyg {
+                display: none;
+            }
+
+            &.ai-loading {
+                .btn-ai {
+                    background-color: var(--wj-ai-color-hover);
+
+                    .ti-sparkles {
+                        display: none;
+                    }
+
+                    .ti-loader {
+                        display: inline-block;
+                        animation: ti-loader-spin 2s linear infinite;
+                    }
+                }
+
+                .form-control {
+                    animation: ai-pulsate-color 1.5s infinite;
+                }
+
+                .form-control, div.wysiwyg {
+                    background-color: var(--wj-ai-color-hover);
+                    cursor: not-allowed;
+
+                    .wysiwyg_textarea, .wysiwyg-pageBuilder {
+                        opacity: 0.2;
+                    }
+                }
+                .exit-inline-editor {
+                    background-color: var(--wj-ai-color-hover);
+                    opacity: 0.2;
+                }
+
+                .input-group {
+                    .btn.btn-outline-secondary {
+                        cursor: not-allowed;
+                        background-color: var(--wj-ai-color-hover);
+                    }
+                }
+            }
+        }
+    }
+}
+
+@keyframes ti-loader-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes ai-pulsate-color {
+    0% {
+        color: var(--wj-ai-color);
+    }
+    50% {
+        color: var(--wj-ai-color-dark);
+    }
+    100% {
+        color: var(--wj-ai-color);
+    }
+}
+
+#toast-container-ai {
+    bottom: 16px;
+    top: auto;
+
+    .toast.toast-info {
+        opacity: 1;
+        transition: none;
+        width: 480px;
+        border: 1px solid var(--wj-ai-color);
+        cursor: auto;
+        &::before {
+            content: "\f6d7"; //sparkles
+            color: var(--wj-ai-color);
+        }
+
+        div.toast-title {
+            background-color: var(--wj-nice-gray);
+            color: var(--wj-ai-color);
+
+            .header-back-button {
+                color: var(--bs-body-color);
+                font-weight: bold;
+                .ti {
+                    vertical-align: middle;
+                }
+                .btn {
+                    padding: 0px 6px;
+                    margin-right: 8px;
+                    font-size: 14px;
+                }
+            }
+        }
+
+        div.toast-message {
+            background-color: white;
+
+            .btn-ai-action {
+                width: 100%;
+                background-color: white;
+                text-align: left;
+                border-width: 0px;
+                margin-bottom: 6px;
+
+                &:hover {
+                    color: white;
+                    background-color: var(--wj-ai-color);
+                }
+
+                i.ti {
+                    display: inline-block;
+                    vertical-align: middle;
+                }
+            }
+
+            .group-title {
+                color: var(--wj-dark-60);
+                //same as btn
+                margin-bottom: 6px;
+                padding-top: 3px;
+                padding-bottom: 3px;
+            }
+
+            .provider {
+                color: var(--wj-nice-gray-200);
+                float: right;
+            }
+
+            .pulsate-text {
+                animation: ai-pulsate-color 1.5s infinite;
+            }
+        }
+
+        div.ai-image-preview-div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 0;
+
+            .image-preview {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+
+                img {
+                    width: 150px;
+                    height: 150px;
+                    margin: 0;
+                    border-radius: 8px;
+                    object-fit: cover;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+                    transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+
+                    &:hover {
+                        box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
+                        transform: scale(1.05);
+                        border: 2px solid var(--wj-ai-color);
+                        background-color: transparent;
+                        cursor: pointer;
+                    }
+                }
+
+                img.selected {
+                    box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
+                    transform: scale(1.05);
+                    border: 2px solid var(--wj-ai-color);
+                    background-color: transparent;
+                }
+            }
+        }
+
+        .button-div {
+            text-align: end;
+            margin-top: 7px;
+
+            button.select-image {
+                font-size: 16px;
+                color: white;
+                background-color: var(--wj-ai-color);
+
+                &:hover {
+                    background-color: var(--wj-ai-color-dark);
+                }
+            }
+        }
+
+    }
+
+    .toast.toast-info {
+        .bonus-content {
+            label { color: black; }
+        }
+    }
+
+    .toast.toast-info:has(.image-preview) {
+        width: max-content;
+        max-width: 100%;
+    }
+
+    &.has-back-button {
+        .toast.toast-info::before {
+            content: ""
+        }
+        .toast-title {
+            padding-left: 16px;
+        }
+    }
+}

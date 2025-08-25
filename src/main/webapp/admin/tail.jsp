@@ -130,11 +130,9 @@
 		int linesAfter = Tools.getIntValue(Tools.getRequestParameter(request, "linesAfter"), 0);
 		int freeTokens = 0;
 
-
 		if (f.canRead())
 		{
 			Date d = new Date();
-			f.setLastModified(d.getTime());
 			FileReader fr = new FileReader(f);
 			BufferedReader br = new BufferedReader(fr);
 			long totalSize = f.length();

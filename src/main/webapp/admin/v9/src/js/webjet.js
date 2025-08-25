@@ -17,6 +17,17 @@ const WJ = (() => {
                 translated = replaceTranslateParameter(translated, params[i-1], i);
             }
         }
+
+        //remove unused params
+        if (translated.indexOf("{")!=-1 || translated.indexOf("}")!=-1) {
+            for (var i=1; i<= 30; i++) {
+                //components.ai_assistants.unknownError.js=Nastala chyba pri volaní AI asistenta {1}.
+                translated = translated.replaceAll(" {"+i+"}.", ".");
+                //components.ai_assistants.editor.loading.js=AI už na tom pracuje... {1}
+                translated = translated.replaceAll("{"+i+"}", "");
+            }
+        }
+
         return translated;
     }
 
@@ -244,6 +255,17 @@ const WJ = (() => {
         }
     }
 
+    /**
+     * Show a toast notification
+     * @param {*} type - type of notification (success, info, warning, error)
+     * @param {*} title - title of the notification
+     * @param {*} text - text of the notification
+     * @param {*} timeOut - timeout in ms
+     * @param {*} buttons - custom buttons for the notification
+     * @param {*} appendToExisting - whether to append to existing notifications
+     * @param {*} containerId - ID of the container to append the notification to
+     * @returns
+     */
     function toastNotify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null) {
 
         if (typeof containerId === "undefined" || containerId === null) containerId = 'toast-container-webjet';

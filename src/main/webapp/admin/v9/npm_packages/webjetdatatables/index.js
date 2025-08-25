@@ -55,6 +55,7 @@ import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
+import {EditorAi} from './editor-ai'
 
 const bootstrap = window.bootstrap = require('bootstrap');
 import $ from 'jquery';
@@ -633,7 +634,7 @@ export const dataTableInit = options => {
                 col.editor.className = col.className;
                 col.editor.renderFormat = col.renderFormat;
                 col.editor.array = col.array;
-
+                if (typeof col.ai != "undefined") col.editor.ai = col.ai;
 
                 if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type) {
                     let defaultFormat = "L HH:mm:ss";
@@ -841,7 +842,8 @@ export const dataTableInit = options => {
                 $("#" + dte._bootstrapDisplay.id).modal("show");
                 //firni event
                 WJ.dispatchEvent('WJ.DTE.open', {
-                    dte: dte
+                    dte: dte,
+                    id: dte.TABLE.DATA.id,
                 });
                 setTimeout(()=> {
                     WJ.dispatchEvent('WJ.DTE.opened', {
@@ -971,7 +973,8 @@ export const dataTableInit = options => {
 
             //firni event
             WJ.dispatchEvent('WJ.DTE.open', {
-                dte: dte
+                dte: dte,
+                id: dte.TABLE.DATA.id
             });
         }
 
@@ -3623,6 +3626,8 @@ export const dataTableInit = options => {
     TABLE.getAjaxUrl = function() {
         return TABLE.DATA.url;
     }
+
+    var editorAi = new EditorAi(EDITOR);
 
     return TABLE;
 }

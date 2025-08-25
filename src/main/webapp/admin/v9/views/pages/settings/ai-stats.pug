@@ -1,0 +1,139 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var aiStatDataTable;
+
+        let pieChartMostUsed;
+        let pieChartMostTokens;
+        let lineChartDaysUsage;
+        let lineChartDaysTokens;
+
+        WJ.breadcrumb({
+            id: 'ai-stats',
+            tabs: [
+                { url: '#searchTab', title: '[[\#{components.filter}]]', active: true },
+                { url: '#dateRange', title: '{filter}', active: false }
+            ]
+        });
+
+        window.domReady.add(function () {
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity')})];
+            var url = "/admin/rest/ai/stat/";
+
+            $("#pills-dateRange-tab").html("");
+            $("div#aiStatDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+            aiStatDataTable = WJ.DataTable({
+                url: url,
+                columns: columns,
+                serverSide: true,
+                id: "aiStatDataTable",
+                autoHeight: false,
+                summary: {
+                    mode: "visible",
+                    columns: ["usedTokens"],
+                    title: "[[\#{components.summary.total_title}]]",
+                }
+            });
+
+            aiStatDataTable.hideButton("create");
+            aiStatDataTable.hideButton("remove");
+            aiStatDataTable.hideButton("edit");
+            aiStatDataTable.hideButton("duplicate");
+            aiStatDataTable.hideButton("celledit");
+            aiStatDataTable.hideButton("import");
+
+            //Create and set amcharts
+            createAmcharts();
+
+            //Onchange events - update amcharts
+            $("#aiStatDataTable_extfilter").on("click", "button.filtrujem", function() {
+                getDataAndUpdateAmcharts();
+            });
+
+            async function createAmcharts() {
+                window.initAmcharts().then(module => {
+
+                    $.ajax({url: getGraphUrl("lineCharts"), success: function(result) {
+                        lineChartDaysUsage = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]), "dayDate", '[[\#{components.ai_stats.lineChartDaysUsage}]]', "ai-lineChartDaysUsage", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        ChartTools.createAmchart(lineChartDaysUsage);
+
+                        lineChartDaysTokens = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["tokens"], [undefined]), "dayDate", '[[\#{components.ai_stats.lineChartDaysTokens}]]', "ai-lineChartDaysTokens", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        ChartTools.createAmchart(lineChartDaysTokens);
+                    }});
+
+                    $.ajax({url: getGraphUrl("pieChartMostUsed"), success: function(result) {
+                        pieChartMostUsed = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_stats.pieChartMostUsed}]]', "ai-pieChartMostUsed", result);
+                        ChartTools.createAmchart(pieChartMostUsed);
+                    }});
+
+                    $.ajax({url: getGraphUrl("pieChartMostTokens"), success: function(result) {
+                        pieChartMostTokens = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_stats.pieChartMostTokens}]]', "ai-pieChartMostTokens", result);
+                        ChartTools.createAmchart(pieChartMostTokens);
+
+                        //After last load data
+                        WJ.hideLoader();
+                    }});
+                });
+            }
+
+            function getGraphUrl(chartDivId) {
+                //
+                let searchDateValue = ChartTools.getDateRangeWithName("created", 30);
+
+                if(chartDivId == "pieChartMostUsed") {
+                    return url + "pieChartMostUsed?created=" + searchDateValue;
+                } else if(chartDivId == "pieChartMostTokens") {
+                    return url + "pieChartMostTokens?created=" + searchDateValue;
+                } else if(chartDivId == "lineCharts") {
+                    return url + "lineCharts?created=" + searchDateValue;
+                }
+
+                return null;
+            }
+
+            async function getDataAndUpdateAmcharts() {
+                WJ.showLoader();
+
+                await $.ajax({url: getGraphUrl("pieChartMostUsed"), success: function(result) {
+                    pieChartMostUsed.chartData = result;
+                    ChartTools.updateChart(pieChartMostUsed);
+                }});
+
+                await $.ajax({url: getGraphUrl("pieChartMostTokens"), success: function(result) {
+                    pieChartMostTokens.chartData = result;
+                    ChartTools.updateChart(pieChartMostTokens);
+                }});
+
+                WJ.hideLoader();
+            }
+        });
+
+    div#aiStatDataTable_extfilter
+        div.row
+            div.col-auto.dt-extfilter-title-created
+            div.col-auto.dt-extfilter.dt-extfilter-created
+
+    <div id="graphsDiv" class="hide-while-loading">
+        <div class="row">
+            <div class="col-md">
+                <div id="ai-pieChartMostUsed" class="amcharts"></div>
+            </div>
+            <div class="col-md">
+                <div id="ai-pieChartMostTokens" class="amcharts"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div id="ai-lineChartDaysUsage" class="amcharts"></div>
+        </div>
+        <div class="row">
+            <div id="ai-lineChartDaysTokens" class="amcharts"></div>
+        </div>
+    </div>
+
+    <div id="tableDiv">
+        <table id="aiStatDataTable" class="datatableInit table"></table>
+    </div>
