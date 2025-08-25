@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
@@ -37,12 +40,12 @@ public class AssistantController {
         this.assistantRepo = assistantRepo;
     }
 
-    @PostMapping(value = "/response/")
-    public AssistantResponseDTO getAiReponse(@RequestParam("assistantName") String assistantName, @RequestParam("inputData") String inputData, HttpServletRequest request) {
+    @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO response = null;
         String exceptionMessage = null;
         try {
-            response = aiService.getAiResponse(assistantName, inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            response = aiService.getAiResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -56,13 +59,13 @@ public class AssistantController {
         return response;
     }
 
-    @PostMapping(value = "/response-image/")
-    public AssistantResponseDTO getAiImageReponse(@RequestParam("assistantName") String assistantName,  @RequestParam("inputData") String inputData, HttpServletRequest request) {
+    @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
         AssistantResponseDTO response = null;
         String exceptionMessage = null;
 
         try {
-            response = aiService.getAiImageResponse(assistantName, inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            response = aiService.getAiImageResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -82,14 +85,11 @@ public class AssistantController {
         response.setCharacterEncoding("UTF-8");
 
         PrintWriter writer = response.getWriter();
-        String assistantName = data.get("assistantName");
-        String inputData = data.get("inputData");
-
         AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
 
         try {
-            responseDto = aiService.getAiStreamResponse(assistantName, inputData, Prop.getInstance(request), statRepo, assistantRepo, writer);
+            responseDto = aiService.getAiStreamResponse(new InputDataDTO(data), Prop.getInstance(request), statRepo, assistantRepo, writer);
         } catch(Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -106,7 +106,6 @@ public class AssistantController {
         }
     }
 
-
     @GetMapping("/file/binary/")
 	public void execute(@RequestParam String fileName, HttpServletRequest request, HttpServletResponse response) {
         try {
@@ -119,5 +118,15 @@ public class AssistantController {
     @PostMapping("/save-temp-file/")
     public String saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request, HttpServletResponse response) throws IOException {
         return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation);
+    }
+
+    @GetMapping("/bonus-content/")
+    public String getBonusContent(@RequestParam("assistantName") String assistantName, HttpServletRequest request, HttpServletResponse response) {
+        return aiService.getBonusHtml(assistantName, assistantRepo);
+    }
+
+    @GetMapping("/new-image-location/")
+    public String getNewImageLocation(@RequestParam("docId") Integer docId, @RequestParam("groupId") Integer groupId, @RequestParam("title") String title) {
+        return UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images");
     }
 }

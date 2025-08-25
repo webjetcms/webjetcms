@@ -216,6 +216,12 @@
 
     }
 
+    .toast.toast-info {
+        .bonus-content {
+            label { color: black; }
+        }
+    }
+
     .toast.toast-info:has(.image-preview) {
         width: max-content;
         max-width: 100%;

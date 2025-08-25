@@ -113,8 +113,8 @@ export class AiUserInterface {
         setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
     }
 
-    async _executeAction(button, column, aiCol, userPrompt = null) {
-        this.editorAiInstance._executeAction(button, column, aiCol, userPrompt);
+    async _executeAction(button, column, aiCol, inputValues = null) {
+        this.editorAiInstance._executeAction(button, column, aiCol, inputValues);
     }
 
     _showLoader(button) {
@@ -165,7 +165,7 @@ export class AiUserInterface {
         this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
     }
 
-    _renderUserPromptDialog(button, column, aiCol) {
+    async _renderUserPromptDialog(button, column, aiCol) {
         //console.log("_renderUserPromptDialog, button=", button, "column=", column, "aiCol=", aiCol);
 
         let header = `
@@ -182,9 +182,11 @@ export class AiUserInterface {
             this.generateAssistentOptions(button, column);
         });
 
+        let bonusHtml = await this._getBonusHtml(aiCol.assistant);
         let html = `
             <div class="mb-3">
                 <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
+                ${bonusHtml}
             </div>
         `;
 
@@ -198,14 +200,54 @@ export class AiUserInterface {
             </button>
         `);
         btn.on('click', () => {
-            this._executeAction(button, column, aiCol, $("#ai-user-prompt").val());
+
+            let inputValues = {
+                "userPrompt" : $("#ai-user-prompt").val()
+            };
+
+            //Add bonus content
+            const prefix = "bonusContent-";
+            $(`input[id^='${prefix}'], select[id^='${prefix}']`).each(function () {
+                let key = this.id.substring(prefix.length);
+                inputValues[key] = $(this).val();
+            });
+
+            this._executeAction(button, column, aiCol, inputValues);
         });
 
         contentContainer.append(btn);
     }
 
-    renderImageSelection(button, images, toField, textKey, ...params) {
+    async getPathForNewImage(self) {
+        try {
+            const docId = self.EDITOR.get("id");
+            const groupId = self.EDITOR.get("editorFields.groupDetails");
+            const title = self.EDITOR.get("title");
+
+            //console.log("docId=", docId, "groupId=", groupId.groupId, "title=", title);
+
+            let url = "/admin/rest/ai/assistant/new-image-location/?";
+            url += "docId=" + docId + "&groupId=" + groupId.groupId + "&title=" + title;
+
+            const res = await $.ajax({
+                type: "GET",
+                url: url
+            });
+
+            if(res == undefined || res == null) return "";
+
+            return res;
+        } catch(err) {
+            console.log(err);
+            return "";
+        }
+    }
+
+    async renderImageSelection(button, images, toField, textKey, ...params) {
         let contentContainer = $("#toast-container-ai-content");
+
+        let self = this;
+        const imageUrl = await this.getPathForNewImage(self);
 
         let html = "<div>" + WJ.translate(textKey, params) + "</div>";
         html += "<div class='ai-image-preview-div'></div>";
@@ -231,85 +273,84 @@ export class AiUserInterface {
 
         contentContainer.html(html);
 
-        $("div.image-info").find("input.webjet-dte-jstree").each(async function(index) {
-                var $element = $(this);
+        $("div.image-info").find("input.webjet-dte-jstree").each(async function() {
+            var $element = $(this);
 
-                console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
+            //console.log("html=", $element[0].outerHTML, "val=", $element.val(), "text=", $element.data("text"));
 
-                var id = $element.attr("id");
-                var htmlCode = $('<div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
-                htmlCode.insertAfter($element);
+            var id = $element.attr("id");
+            var htmlCode = $('<div class="vueComponent" id="editorApp'+id+'"><webjet-dte-jstree :data-table-name="dataTableName" :data-table="dataTable" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"></webjet-dte-jstree></div>');
+            htmlCode.insertAfter($element);
 
-                function fixNullData(data, click) {
-                    //console.log("fixNullData, data=", data, "click=", click);
-                    //ak to je pole neriesime, ponechame bezo zmeny
-                    if (click.indexOf("-array")!=-1) return data;
-                    //ak to nie je pole, musime nafejkovat jeden objekt aby sa pole aspon zobrazilo (a dala sa zmenit hodnota)
-                    if (data.length==0) {
-                        let emptyItem = {
-                            fullPath: ""
-                        }
-                        emptyItem.id = -1;
-
-                        return [emptyItem];
+            function fixNullData(data, click) {
+                //console.log("fixNullData, data=", data, "click=", click);
+                //ak to je pole neriesime, ponechame bezo zmeny
+                if (click.indexOf("-array")!=-1) return data;
+                //ak to nie je pole, musime nafejkovat jeden objekt aby sa pole aspon zobrazilo (a dala sa zmenit hodnota)
+                if (data.length==0) {
+                    let emptyItem = {
+                        fullPath: ""
                     }
-                    return data;
+                    emptyItem.id = -1;
+
+                    return [emptyItem];
                 }
+                return data;
+            }
 
-                let conf = {
-                    jsonData: [{
-                        virtualPath: "/images/",
-                        id: "",
-                        type: "DIR"
-                    }],
-                    className: "dt-tree-dir-simple",
-                    _id: id
-                };
-                //console.log("conf=", conf);
-                const app = window.VueTools.createApp({
-                    components: {},
-                    data() {
-                        return {
-                            data: null,
-                            idKey: null,
-                            dataTable: null,
-                            dataTableName: null,
-                            click: null,
-                            attr: null
-                        }
-                    },
-                    created() {
-                        this.data = fixNullData(conf.jsonData, conf.className);
-                        //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
-                        this.idKey = conf._id;
-                        //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
-                        //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
-                        const confClassNameArr = conf.className.split(" ");
-                        for (var i=0; i<confClassNameArr.length; i++) {
-                            let className = confClassNameArr[i];
-                            this.click = className;
-                        }
-                        //console.log("click=", this.click);
-                        if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
-
-                        this.dataTable = {
-                            DATA: {}
-                        }
-                    },
-                    methods: {
-                        onRemoveItem(id){
-                        }
+            let conf = {
+                jsonData: [{
+                    virtualPath: imageUrl,
+                    id: "",
+                    type: "DIR"
+                }],
+                className: "dt-tree-dir-simple",
+                _id: id
+            };
+            //console.log("conf=", conf);
+            const app = window.VueTools.createApp({
+                components: {},
+                data() {
+                    return {
+                        data: null,
+                        idKey: null,
+                        dataTable: null,
+                        dataTableName: null,
+                        click: null,
+                        attr: null
                     }
-                });
-                VueTools.setDefaultObjects(app);
-                app.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
-                const vm = app.mount($element.parent().find("div.vueComponent")[0]);
-                //console.log("Setting vm, input=", element, "vm=", vm);
-                $element.data("vm", vm);
-                //console.log("set vm=", $element.data("vm"));
-                $element.hide();
-            });
+                },
+                created() {
+                    this.data = fixNullData(conf.jsonData, conf.className);
+                    //console.log("JS created, data=", this.data, " conf=", conf, " val=", conf._input.val());
+                    this.idKey = conf._id;
+                    //co sa ma stat po kliknuti prenasame z atributu className datatabulky (pre jednoduchost zapisu), je to hodnota obsahujuca dt-tree-
+                    //priklad: className: "dt-row-edit dt-style-json dt-tree-group", click=dt-tree-group
+                    const confClassNameArr = conf.className.split(" ");
+                    for (var i=0; i<confClassNameArr.length; i++) {
+                        let className = confClassNameArr[i];
+                        this.click = className;
+                    }
+                    //console.log("click=", this.click);
+                    if (typeof(conf.attr)!="undefined") this.attr = conf.attr;
 
+                    this.dataTable = {
+                        DATA: {}
+                    }
+                },
+                methods: {
+                    onRemoveItem(id){
+                    }
+                }
+            });
+            VueTools.setDefaultObjects(app);
+            app.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
+            const vm = app.mount($element.parent().find("div.vueComponent")[0]);
+            //console.log("Setting vm, input=", element, "vm=", vm);
+            $element.data("vm", vm);
+            //console.log("set vm=", $element.data("vm"));
+            $element.hide();
+        });
 
         let previewDiv = contentContainer.find('.ai-image-preview-div');
 
@@ -372,4 +413,18 @@ export class AiUserInterface {
         });
     }
 
+    async _getBonusHtml(assistantName) {
+        try {
+            const res = await $.ajax({
+                type: "GET",
+                url: "/admin/rest/ai/assistant/bonus-content/?assistantName=" + assistantName
+            });
+
+            if(res == undefined || res == null) return "";
+
+            return res;
+        } catch(err) {
+            return "";
+        }
+    }
 }

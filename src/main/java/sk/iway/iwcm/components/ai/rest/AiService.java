@@ -107,53 +107,62 @@ public class AiService {
         return ac;
     }
 
-    public AssistantResponseDTO getAiResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+    public AssistantResponseDTO getAiResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
 
-        InputDataDTO inputDataDTO = new InputDataDTO(inputData);
-
-        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
 
         if(Tools.isFalse( assistant.getKeepHtml() )) {
-            inputDataDTO.removeHtml();
+            inputData.removeHtml();
         }
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiResponse(assistant, inputDataDTO, prop, statRepo);
+                return aiInterface.getAiResponse(assistant, inputData, prop, statRepo);
             }
         }
 
         throw new IllegalStateException("Something went wrong");
     }
 
-    public AssistantResponseDTO getAiImageResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+    public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
 
-        InputDataDTO inputDataDTO = new InputDataDTO(inputData);
+        inputData.prepareData();
 
-        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiImageResponse(assistant, inputDataDTO, prop, statRepo);
+                return aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo);
             }
         }
 
         throw new IllegalStateException("Something went wrong");
     }
 
-    public AssistantResponseDTO getAiStreamResponse(String assistantName, String inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
 
-        InputDataDTO inputDataDTO = new InputDataDTO(inputData);
-
-        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
 
         if(Tools.isFalse( assistant.getKeepHtml() )) {
-            inputDataDTO.removeHtml();
+            inputData.removeHtml();
         }
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiStreamResponse(assistant, inputDataDTO, prop, statRepo, writer);
+                return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer);
+            }
+        }
+
+        throw new IllegalStateException("Something went wrong");
+    }
+
+    public String getBonusHtml(String assistantName, AssistantDefinitionRepository assistantRepo) {
+
+        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+
+        for(AiInterface aiInterface : aiInterfaces) {
+            if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
+                return aiInterface.getBonusHtml(assistant);
             }
         }
 

@@ -178,7 +178,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         Path tempFileFolder = AiTempFileStorage.getFileFolder();
 
-        if(inputData.getInputDataType().equals(InputDataDTO.InputDataType.IMAGE)) {
+        if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE AND I WILL RETURN IMAGE
             post = new HttpPost(IMAGES_EDITS_URL);
 
@@ -186,15 +186,12 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
             builder.addTextBody("model", "gpt-image-1");
             builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
-            builder.addTextBody("n", assistant.getImagesCount().toString());
-            builder.addTextBody("quality", assistant.getImagesQuality());
-            builder.addTextBody("size", assistant.getImagesSize());
+            builder.addTextBody("n", inputData.getImageCount().toString());
+            builder.addTextBody("quality", inputData.getImageQuality());
+            builder.addTextBody("size", inputData.getImageSize());
 
             BufferedImage image = ImageIO.read( inputData.getInputFile() );
             if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
-
-            // Supported sizes :  "auto" | "1024x1024" | "1024x1536" | "1536x1024"
-            builder.addTextBody("size", "auto");
 
             ContentType contentType;
             String fileName = inputData.getInputFile().getName();
@@ -221,9 +218,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONObject json = new JSONObject();
             json.put("model", "gpt-image-1");
             json.put("prompt", AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
-            json.put("n", assistant.getImagesCount());
-            json.put("quality", assistant.getImagesQuality());
-            json.put("size", assistant.getImagesSize());
+            json.put("n", inputData.getImageCount());
+            json.put("quality", inputData.getImageQuality());
+            json.put("size", inputData.getImageSize());
 
             post.setEntity(getRequestBody(json.toString()));
 
@@ -268,6 +265,38 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return responseDto;
     }
 
+    public String getBonusHtml(AssistantDefinitionEntity assistant) {
+        if("edit_image".equals(assistant.getAction()) || "generate_image".equals(assistant.getAction())) {
+            return """
+                <div class='bonus-content'>
+                    <div>
+                        <label for='bonusContent-imageCount'>Image count</label>
+                        <input id='bonusContent-imageCount' type='number' class='form-control' value=1>
+                    </div>
+                    <div>
+                        <label for='bonusContent-imageSize'>Image size</label>
+                        <select id='bonusContent-imageSize' class='form-control' value='auto'>
+                            <option value="auto">auto</option>
+                            <option value="1024x1024">1024x1024</option>
+                            <option value="1024x1536">1024x1536</option>
+                            <option value="1536x1024">1536x1024</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for='bonusContent-imageQuality'>Image quality</label>
+                        <select id='bonusContent-imageQuality' class='form-control' value='low'>
+                            <option value="low">low</option>
+                            <option value="medium">medium</option>
+                            <option value="high">high</option>
+                        </select>
+                    </div>
+                </div>
+            """;
+        }
+
+        return "";
+    }
+
     private String createThread(Prop prop) throws IOException {
         HttpPost post = new HttpPost("https://api.openai.com/v1/threads");
         post.setEntity(getRequestBody("{}"));
@@ -284,7 +313,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         JSONObject json = new JSONObject();
         json.put("role", "user");
 
-        String content = inputData.getInputText();
+        String content = inputData.getInputValue();
         if (Tools.isTrue(assistant.getUserPromptEnabled())) {
             content = AiAssistantsService.executePromptMacro("", inputData);
         }
@@ -388,5 +417,4 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
 
     }
-
 }

@@ -14,6 +14,9 @@ export class AiRestExecutor {
     async execute(aiCol, inputData, setFunction = null) {
         let self = this;
         let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
+
+        inputData.assistantName = aiCol.assistant;
+
         if (aiCol.useStreaming===true) {
             //console.log("Using streaming for AI response:", aiCol.assistant);
 
@@ -23,10 +26,7 @@ export class AiRestExecutor {
                     "Content-Type": "application/json",
                     'X-CSRF-Token': window.csrfToken
                 },
-                body: JSON.stringify({
-                    assistantName: aiCol.assistant,
-                    inputData: JSON.stringify(inputData)
-                })
+                body: JSON.stringify(inputData)
             });
 
             const reader = response.body.getReader();
@@ -77,10 +77,8 @@ export class AiRestExecutor {
             await $.ajax({
                 type: "POST",
                 url: "/admin/rest/ai/assistant/response/",
-                data: {
-                    "assistantName": aiCol.assistant,
-                    "inputData": JSON.stringify(inputData)
-                },
+                data: JSON.stringify(inputData),
+                contentType: "application/json; charset=utf-8",
                 success: function(res)
                 {
                     //console.log("AI response=", res, "to=", aiCol.to);
@@ -116,13 +114,13 @@ export class AiRestExecutor {
         let self = this;
         let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
 
+        inputData.assistantName = aiCol.assistant;
+
         await $.ajax({
             type: "POST",
             url: "/admin/rest/ai/assistant/response-image/",
-            data: {
-                "assistantName": aiCol.assistant,
-                "inputData": JSON.stringify(inputData)
-            },
+            data: JSON.stringify(inputData),
+            contentType: "application/json; charset=utf-8",
             success: function(res)
             {
                 //handle res.error

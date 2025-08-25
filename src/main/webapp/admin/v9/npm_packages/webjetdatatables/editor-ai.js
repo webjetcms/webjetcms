@@ -130,7 +130,7 @@ export class EditorAi {
         this.aiUserInterface._closeToast(timeOut);
     }
 
-    async _executeAction(button, column, aiCol, userPrompt = null) {
+    async _executeAction(button, column, aiCol, inputValues = null) {
         // Implement AI button click handling logic here
         //console.log("Executing action for AI column:", aiCol);
 
@@ -153,10 +153,15 @@ export class EditorAi {
 
         let totalTokens = 0;
 
-        let inputData = {
-            type: this._getColumnType(this.EDITOR, aiCol.to),
-            userPrompt: userPrompt
+        let inputData = {};
+        if(inputValues !== null && typeof inputValues === 'object' && !Array.isArray(inputValues)) {
+            inputData = inputValues;
         }
+        //Add other values
+        inputData.inputValueType = this._getColumnType(this.EDITOR, aiCol.to);
+
+
+        console.log(inputData);
 
         if (isPageBuilder) {
             //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
@@ -170,7 +175,7 @@ export class EditorAi {
 
                 self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
-                inputData.value = editor.getData();
+                inputData.inputValue = editor.getData();
                 totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
@@ -180,7 +185,7 @@ export class EditorAi {
         } else {
             self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
-            inputData.value = self.EDITOR.get(from);
+            inputData.inputValue = self.EDITOR.get(from);
             totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
         }
 
@@ -214,9 +219,16 @@ export class EditorAi {
             }
         } else {
             // IS IMAGE
-            if ("image"===inputData.type) {
+
+            if ("image"===inputData.inputValueType) {
                 //inputData.value = "/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg";
-                inputData.type = "text";
+
+                //We want IMAGE AI response, because SRC field is IMAGE
+                if(aiCol.action === "generate_image") {
+                    // We want image BUT we want generated new image from prompt (TEXT) so we set inputValueType as TEXT (we do NOT send image path od old image)
+                    inputData.inputValueType = "text"
+                }
+
                 await this.aiRestExecutor.executeImageAction(aiCol, inputData, (result) => {
                     console.log("Image action result:", result);
                     if (result.error != null) {

@@ -333,7 +333,7 @@ public class AiAssistantsService {
             text = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
         }
 
-        text = Tools.replace(text, "{inputText}", nvl(inputData.getInputText(), ""));
+        text = Tools.replace(text, "{inputText}", nvl(inputData.getInputValue(), ""));
         text = Tools.replace(text, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
 
         return text;

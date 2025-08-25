@@ -18,6 +18,8 @@ public interface AiInterface {
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception;
     public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws Exception;
 
+    public String getBonusHtml(AssistantDefinitionEntity assistant);
+
     public Pair<String, String> getProviderInfo(Prop prop);
     public String getProviderId();
     public boolean isInit();

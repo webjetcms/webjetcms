@@ -56,4 +56,8 @@ public class BrowserService implements AiInterface {
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws Exception {
         return null;
     }
+
+    public String getBonusHtml(AssistantDefinitionEntity assistant) {
+        return null;
+    }
 }
