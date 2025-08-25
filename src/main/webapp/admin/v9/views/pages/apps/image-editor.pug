@@ -40,6 +40,28 @@ block content
             }
         ];
 
+
+        var customInitialData = dtWJ.getEmptyData(true);
+
+        let perexGroupsOptions = [(${perexGroupsOptions})];
+        customInitialData.options = {
+            "editorFields.perexGroupsIds": perexGroupsOptions
+        }
+
+        if (window.perexGroupsRenderAsSelect===true) {
+            window.WJ.DataTable.mergeColumns(columns, {
+                name: "editorFields.perexGroupsIds",
+                renderFormat: "dt-format-text",
+                "editor" : {
+                    type : "select",
+                    multiple: true,
+                    attr: {
+                        "data-multiple-separator": "\x0a\x0d"
+                    }
+                }
+            });
+        }
+
         window.domReady.add(function () {
             galleryTable = WJ.DataTable( {
                 url: url,
@@ -50,7 +72,7 @@ block content
                 fetchOnCreate: true,
                 fetchOnEdit: true,
                 idAutoOpener: true,
-                initialData: dtWJ.getEmptyData(true),
+                initialData: customInitialData,
                 onPreXhr: function(TABLE, e, settings, data) {
                     data.fixed_searchImagePath = imagePath;
                     data.fixed_searchImageName = imageName;
@@ -127,6 +149,12 @@ block content
                     }, 1000);
                     window.opener.elFinderInstance.exec('reload');
                 } catch (e) {console.log("Error reloading elfinder", e);}
+
+                if (imageEditorInstance == null) {
+                    setTimeout(() => {
+                        window.close();
+                    }, 1200);
+                }
             });
 
             $("#upload-wrapper .upload-wrapper-header").text(WJ.translate("components.image_editor.saving.js"));

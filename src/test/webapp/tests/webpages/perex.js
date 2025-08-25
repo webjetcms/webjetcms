@@ -156,10 +156,21 @@ Scenario('Check Perex Groups Rendering Behavior in Editor', ({ I, DT, DTE , Docu
     Document.setConfigValue('perexGroupsRenderAsSelect', 3);
 
     checkElements(I, DTE, DT, false);
+});
+
+Scenario('Check Perex Groups Rendering Behavior in Gallery @current', ({ I, DT, DTE , Document }) => {
+
+    Document.setConfigValue('perexGroupsRenderAsSelect', 30);
+
+    checkGalleryElements(I, DTE, DT, true);
+
+    Document.setConfigValue('perexGroupsRenderAsSelect', 3);
+
+    checkGalleryElements(I, DTE, DT, false);
 
 });
 
-Scenario('Restore Default Perex Groups Rendering Configuration', ({ I, DT, Document }) => {
+Scenario('Restore Default Perex Groups Rendering Configuration @current', ({ I, DT, Document }) => {
     Document.setConfigValue('perexGroupsRenderAsSelect', 30);
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
     DT.resetTable();
@@ -208,6 +219,26 @@ async function checkElements(I, DTE, DT, shouldSeeCheckbox) {
         I.dontSeeElement('#DTE_Field_perexGroups_0');
         I.see("podnikanie", ".DTE_Field_Name_perexGroups div.bootstrap-select .filter-option .filter-option-inner-inner");
         I.dontSee("investícia", ".DTE_Field_Name_perexGroups div.bootstrap-select .filter-option .filter-option-inner-inner");
+    }
+
+    DTE.cancel();
+}
+
+function checkGalleryElements(I, DTE, DT, shouldSeeCheckbox) {
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto/&id=236');
+    DTE.waitForEditor("galleryTable");
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+
+    if (shouldSeeCheckbox) {
+        I.say('Check if I see checkbox in perex tab');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds[multiple]');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds_0');
+    } else {
+        I.say('Check if I see multiselect in perex tab');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds[multiple]');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds_0');
     }
 
     DTE.cancel();
