@@ -288,7 +288,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             }
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     @Override
@@ -307,7 +307,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             setForceReload(true);
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     private void setLastModified(String path, long lastModified) {

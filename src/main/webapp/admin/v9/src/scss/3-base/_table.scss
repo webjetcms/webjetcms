@@ -381,6 +381,7 @@ table.datatableInit {
     &.cardView
     {
         width: 100% !important;
+        position: initial !important;
 
         colgroup {
             col[data-dt-column="0"] {
