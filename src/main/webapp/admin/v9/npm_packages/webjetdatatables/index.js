@@ -449,6 +449,9 @@ export const dataTableInit = options => {
             $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
             $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').addClass("form-check-input");
             $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
+
+            //refresh selectpickers
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('select').selectpicker('refresh');
         }, 100);
     }
 
