@@ -3277,7 +3277,7 @@ export const dataTableInit = options => {
     }
 
     TABLE.wjEditFetch = function (row) {
-        console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
+        //console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
         let dataBeforeFetch = null;
         if (typeof row[0].id != "undefined" && row[0].id!="") dataBeforeFetch = TABLE.row("#"+row[0].id).data();
         if (DATA.fetchOnEdit) {
