@@ -124,6 +124,20 @@ block content
                         }
                     });
 
+                    if (window.perexGroupsRenderAsSelect===true) {
+                        window.WJ.DataTable.mergeColumns(columns, {
+                            name: "editorFields.perexGroupsIds",
+                            renderFormat: "dt-format-text",
+                            "editor" : {
+                                type : "select",
+                                multiple: true,
+                                attr: {
+                                    "data-multiple-separator": "\x0a\x0d"
+                                }
+                            }
+                        });
+                    }
+
                     //console.log(JSON.stringify(columns));
 
                     //console.log("tabsFolders", tabsFolders);
@@ -134,7 +148,7 @@ block content
                     if (typeof size == "undefined" || size == null) {
                         size = "S";
                     }
-                    
+
                     if (size != '') {
                         setDatatableInitSize(size);
                     };
@@ -172,7 +186,7 @@ block content
                         let arr = $("table.datatableInit");
                         for(let i = 0; i < arr.length; i++) {
                             //Skip searchTable (filter)
-                            if($(arr[i]).prop('id') != "jstreeSearchTable") 
+                            if($(arr[i]).prop('id') != "jstreeSearchTable")
                                 $(arr[i]).addClass('cardView cardView'+size);
                         }
                     }

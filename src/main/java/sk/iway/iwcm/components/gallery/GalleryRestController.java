@@ -79,6 +79,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
                     entity.setUploadDatetime(new Date());
                     entity.setDomainId(CloudToolsForCore.getDomainId());
                 }
+                processFromEntity(entity, ProcessItemAction.EDIT);
             }
 
             if(entity.getId() == null) entity.setId(Long.valueOf(-1));
@@ -263,7 +264,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             }
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     @Override
@@ -279,7 +280,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             if (FileTools.isFile(original.getImagePath()+"/s_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/s_"+original.getImageName(), saved.getImagePath()+"/s_"+saved.getImageName());
         }
 
-        return saved;
+        return processFromEntity(saved, ProcessItemAction.EDIT, 1);
     }
 
     private void setLastModified(String path, long lastModified) {

@@ -156,6 +156,35 @@ Scenario('Check Perex Groups Rendering Behavior in Editor', ({ I, DT, DTE , Docu
     Document.setConfigValue('perexGroupsRenderAsSelect', 3);
 
     checkElements(I, DTE, DT, false);
+});
+
+Scenario('Check Perex Groups Rendering Behavior in Gallery', async ({ I, DT, DTE , Document }) => {
+
+    Document.setConfigValue('perexGroupsRenderAsSelect', 30);
+
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto/&id=236');
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, true);
+    DTE.cancel();
+
+    await I.executeScript(function() {
+        window.location.href="/admin/v9/apps/image-editor?id=-1&dir=/images/apps&name=apps-monitor.jpg&showOnlyEditor=true";
+    });
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, true);
+
+    Document.setConfigValue('perexGroupsRenderAsSelect', 3);
+
+    I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto/&id=236');
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, false);
+    DTE.cancel();
+
+    await I.executeScript(function() {
+        window.location.href="/admin/v9/apps/image-editor?id=-1&dir=/images/apps&name=apps-monitor.jpg&showOnlyEditor=true";
+    });
+    DTE.waitForEditor("galleryTable");
+    checkGalleryElements(I, DTE, DT, false);
 
 });
 
@@ -211,6 +240,32 @@ async function checkElements(I, DTE, DT, shouldSeeCheckbox) {
     }
 
     DTE.cancel();
+}
+
+function checkGalleryElements(I, DTE, DT, shouldSeeCheckbox) {
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+
+    if (shouldSeeCheckbox) {
+        I.say('Check if I see checkbox in perex tab');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds[multiple]');
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds');
+
+        I.seeCheckboxIsChecked(locate(".DTE_Field_Name_editorFields\\.perexGroupsIds div.form-switch").withText("podnikanie").find("input"));
+        I.seeCheckboxIsChecked(locate(".DTE_Field_Name_editorFields\\.perexGroupsIds div.form-switch").withText("investícia").find("input"));
+        I.dontSeeCheckboxIsChecked(locate(".DTE_Field_Name_editorFields\\.perexGroupsIds div.form-switch").withText("Newsletter perex skupina").find("input"));
+
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds_0');
+    } else {
+        I.say('Check if I see multiselect in perex tab');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds[multiple]');
+        I.seeElement('#DTE_Field_editorFields-perexGroupsIds');
+
+        I.see("podnikanie", ".DTE_Field_Name_editorFields\\.perexGroupsIds div.bootstrap-select .filter-option .filter-option-inner-inner");
+        I.see("investícia", ".DTE_Field_Name_editorFields\\.perexGroupsIds div.bootstrap-select .filter-option .filter-option-inner-inner");
+        I.dontSee("Newsletter perex skupina", ".DTE_Field_Name_editorFields\\.perexGroupsIds div.bootstrap-select .filter-option .filter-option-inner-inner");
+
+        I.dontSeeElement('#DTE_Field_editorFields-perexGroupsIds_0');
+    }
 }
 
 Scenario('Delete language mutation perex', async ({ I, DT, DTE }) => {
