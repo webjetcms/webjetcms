@@ -387,7 +387,7 @@ block content
                         //console.log("WJ.treeInitialJson.selectedNode", e);
                         var node = e.detail;
                         //console.log("node=", node);
-                        setGalleryTablePath(dir);
+                        //we dont need to do this: it will call REST 2x: setGalleryTablePath(dir);
 
                         var isEditable = true;
                         if (typeof node.icon != "undefined" && node.icon.indexOf("ti-folder-x")!=-1) isEditable = false;

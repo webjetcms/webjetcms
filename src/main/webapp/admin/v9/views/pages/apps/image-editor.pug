@@ -62,6 +62,9 @@ block content
             });
         }
 
+        //do not update ID param in URL, because F5 will not work anymore
+        window.dtOpenerDoNotUpdateQuery = true;
+
         window.domReady.add(function () {
             galleryTable = WJ.DataTable( {
                 url: url,

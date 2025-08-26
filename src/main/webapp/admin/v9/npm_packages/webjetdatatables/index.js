@@ -442,6 +442,14 @@ export const dataTableInit = options => {
                 if (isChange) $("#"+DATA.id).trigger("column-reorder.dt");
             }
         }
+
+        //update checkboxes
+        setTimeout(()=> {
+            //console.log("Updating checkboxes:", $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]'));
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').addClass("form-check-input");
+            $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').siblings("label").addClass("form-check-label");
+        }, 100);
     }
 
     /**
@@ -3269,7 +3277,7 @@ export const dataTableInit = options => {
     }
 
     TABLE.wjEditFetch = function (row) {
-        //console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
+        console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
         let dataBeforeFetch = null;
         if (typeof row[0].id != "undefined" && row[0].id!="") dataBeforeFetch = TABLE.row("#"+row[0].id).data();
         if (DATA.fetchOnEdit) {

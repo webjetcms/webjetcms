@@ -196,7 +196,12 @@ export class DatatableOpener {
     setInputValue(value) {
         if (!Tools.empty(this.dataInput, value)) {
             this.dataInput.val(value);
-            Tools.updateUrlQuery(this._idKey, value, this.idKeyWhiteList);
+            if (typeof window.dtOpenerDoNotUpdateQuery !== "undefined") {
+                //image-editor fakes data from URL params dir,name, id=-1
+                //we dont want to update ID in URL address because reload of window will not work
+            } else {
+                Tools.updateUrlQuery(this._idKey, value, this.idKeyWhiteList);
+            }
         }
     }
 
