@@ -1955,9 +1955,6 @@
 
                             keep_html TINYINT DEFAULT 0,
                             use_streaming TINYINT DEFAULT 0,
-                            images_count INT DEFAULT 1,
-                            images_size VARCHAR(255),
-                            images_quality VARCHAR(255),
 
                             temperature FLOAT NULL,
                             reasoning_effort VARCHAR(255) NULL,
@@ -1990,9 +1987,6 @@
 
                             keep_html BIT DEFAULT 0,
                             use_streaming BIT DEFAULT 0,
-                            images_count INT DEFAULT 1 NOT NULL,
-                            images_size NVARCHAR(255),
-                            images_quality NVARCHAR(255),
 
                             temperature FLOAT,
                             reasoning_effort NVARCHAR(255),
@@ -2025,9 +2019,7 @@
 
                             keep_html NUMBER(1) DEFAULT 0,
                             use_streaming NUMBER(1) DEFAULT 0,
-                            images_count INT DEFAULT 1 NOT NULL,
-                            images_size NVARCHAR2(255),
-                            images_quality NVARCHAR2(255),
+
 
                             temperature FLOAT,
                             reasoning_effort NVARCHAR2(255),
@@ -2073,9 +2065,6 @@
 
                             keep_html BOOLEAN DEFAULT FALSE,
                             use_streaming BOOLEAN DEFAULT FALSE,
-                            images_count INT DEFAULT 1 NOT NULL,
-                            images_size VARCHAR(255),
-                            images_quality VARCHAR(255),
 
                             temperature FLOAT,
                             reasoning_effort VARCHAR(255),

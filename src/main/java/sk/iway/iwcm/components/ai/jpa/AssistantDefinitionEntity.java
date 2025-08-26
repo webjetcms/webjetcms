@@ -9,7 +9,6 @@ import javax.persistence.EntityListeners;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -210,19 +209,6 @@ public class AssistantDefinitionEntity {
 
     @Column(name = "reasoning_effort")
     private String reasoningEffort;
-
-    @Column(name = "images_count")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "", tab = "advanced", visible = false, className = "hideOnCreate hideOnEdit")
-    @Min(value = 1)
-    private Integer imagesCount;
-
-    @Column(name = "images_size")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "advanced", visible = false, className = "hideOnCreate hideOnEdit")
-    private String imagesSize;
-
-    @Column(name = "images_quality")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "", tab = "advanced", visible = false, className = "hideOnCreate hideOnEdit")
-    private String imagesQuality;
 
     @Column(name="domain_id")
 	private Integer domainId;

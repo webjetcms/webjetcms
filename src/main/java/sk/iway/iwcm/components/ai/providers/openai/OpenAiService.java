@@ -142,9 +142,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return responseDto;
     }
 
-
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
-
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         String assistantId = assistant.getAssistantKey();
         BigDecimal temperature = assistant.getTemperature();
@@ -172,59 +170,16 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException {
-
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        HttpPost post;
-
         Path tempFileFolder = AiTempFileStorage.getFileFolder();
 
+        HttpPost post;
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
-            //ITS IMAGE EDIT - I GOT IMAGE AND I WILL RETURN IMAGE
-            post = new HttpPost(IMAGES_EDITS_URL);
-
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-            builder.addTextBody("model", "gpt-image-1");
-            builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
-            builder.addTextBody("n", inputData.getImageCount().toString());
-            builder.addTextBody("quality", inputData.getImageQuality());
-            builder.addTextBody("size", inputData.getImageSize());
-
-            BufferedImage image = ImageIO.read( inputData.getInputFile() );
-            if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
-
-            ContentType contentType;
-            String fileName = inputData.getInputFile().getName();
-            if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-                contentType = ContentType.create("image/jpeg");
-            } else if (fileName.endsWith(".webp")) {
-                contentType = ContentType.create("image/webp");
-            } else {
-                contentType = ContentType.create("image/png"); // default
-            }
-
-            //Set image
-            builder.addBinaryBody("image", inputData.getInputFile(), contentType, fileName);
-
-            //Set entity and headers
-            post.setEntity(builder.build());
-
-            addHeaders(post, false, false);
-
+            //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
+            post = getEditImagePost(inputData, assistant.getInstructions());
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            post = new HttpPost(IMAGES_GENERATION_URL);
-
-            JSONObject json = new JSONObject();
-            json.put("model", "gpt-image-1");
-            json.put("prompt", AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
-            json.put("n", inputData.getImageCount());
-            json.put("quality", inputData.getImageQuality());
-            json.put("size", inputData.getImageSize());
-
-            post.setEntity(getRequestBody(json.toString()));
-
-            addHeaders(post, true, false);
+            post = getCreateImagePost(inputData, assistant.getInstructions());
         }
 
         try (CloseableHttpResponse response = client.execute(post)) {
@@ -232,13 +187,11 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "");
 
-
             JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
             String format = "." + res.optString("output_format", "png");
             JSONArray imageArr = res.getJSONArray("data");
 
             try {
-
                 long datePart = new java.util.Date().getTime();
                 for(int i = 0; i < imageArr.length(); i++) {
                     JSONObject jsonImage = imageArr.getJSONObject(i);
@@ -252,14 +205,14 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                         //If no error, add file
                         responseDto.addTempFile(tmpFileName);
                     } catch (IOException ioe) {
-                        //DONT know what to do
+                        ioe.printStackTrace();
                     }
                 }
-
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             handleUsage(responseDto, res, assistant, "NO_RUN_ID", "NO_THREAD_ID", statRepo);
-
         }
 
         return responseDto;
@@ -384,8 +337,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         HttpDelete delete = new HttpDelete(THREADS_URL + threadId);
         addHeaders(delete, false, true);
         try (CloseableHttpResponse response = client.execute(delete)) {
-            // System.out.println("Thread deleted: " + threadId);
-            //TODO
+        } catch(Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -415,6 +368,57 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             responseDto.setCompletionTokens(completionTokens);
             responseDto.setTotalTokens(totalTokens);
         }
+    }
 
+    private HttpPost getEditImagePost(InputDataDTO inputData, String instructions) throws IOException {
+        HttpPost post = new HttpPost(IMAGES_EDITS_URL);
+
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+        builder.addTextBody("model", "gpt-image-1");
+        builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
+        builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
+        builder.addTextBody("quality", inputData.getImageQuality() == null ? "low" : inputData.getImageQuality());
+        builder.addTextBody("size", inputData.getImageSize() == null ? "auto" : inputData.getImageSize());
+
+        BufferedImage image = ImageIO.read( inputData.getInputFile() );
+        if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
+
+        ContentType contentType;
+        String fileName = inputData.getInputFile().getName();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            contentType = ContentType.create("image/jpeg");
+        } else if (fileName.endsWith(".webp")) {
+            contentType = ContentType.create("image/webp");
+        } else {
+            contentType = ContentType.create("image/png"); // default
+        }
+
+        //Set image
+        builder.addBinaryBody("image", inputData.getInputFile(), contentType, fileName);
+
+        //Set entity and headers
+        post.setEntity(builder.build());
+
+        addHeaders(post, false, false);
+
+        return post;
+    }
+
+    private HttpPost getCreateImagePost(InputDataDTO inputData, String instructions) {
+        HttpPost post = new HttpPost(IMAGES_GENERATION_URL);
+
+        JSONObject json = new JSONObject();
+        json.put("model", "gpt-image-1");
+        json.put("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
+        json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
+        json.put("quality", inputData.getImageQuality() == null ? "low" : inputData.getImageQuality());
+        json.put("size", inputData.getImageSize() == null ? "auto" : inputData.getImageSize());
+
+        post.setEntity(getRequestBody(json.toString()));
+
+        addHeaders(post, true, false);
+
+        return post;
     }
 }

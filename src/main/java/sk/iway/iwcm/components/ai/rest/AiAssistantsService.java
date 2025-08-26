@@ -177,7 +177,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
+        throw new IllegalStateException(getNoPermittedString(prop));
     }
 
     public void updateAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
@@ -188,7 +188,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
+        throw new IllegalStateException(getNoPermittedString(prop));
     }
 
     public void deleteAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
@@ -210,7 +210,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
+        throw new IllegalStateException(getNoPermittedString(prop));
     }
 
     public void getProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
@@ -227,7 +227,7 @@ public class AiAssistantsService {
             }
         }
 
-        throw new IllegalStateException(prop.getText("config.not_permitted_action_err"));
+        throw new IllegalStateException(getNoPermittedString(prop));
     }
 
     /* PRIVATE SUPPORT METHODS */
@@ -342,5 +342,9 @@ public class AiAssistantsService {
     private static String nvl(String value, String defaultValue) {
         if(Tools.isEmpty(value)) return defaultValue;
         return value;
+    }
+
+    private String getNoPermittedString(Prop prop) {
+        return prop.getText("config.not_permitted_action_err");
     }
 }

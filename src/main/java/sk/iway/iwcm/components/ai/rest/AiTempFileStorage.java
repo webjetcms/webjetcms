@@ -1,7 +1,6 @@
 package sk.iway.iwcm.components.ai.rest;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
@@ -21,12 +20,14 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.io.IwcmOutputStream;
 
-//TODO: switch to IwcmFile for file operations
 @Service
 public class AiTempFileStorage {
 
-    public AiTempFileStorage() {}
+    private AiTempFileStorage() {
+        // Intentionally left empty to prevent instantiation
+    }
 
     public static final String AI_FILE_DIR = "/WEB-INF/tmp/ai_files";
 
@@ -48,10 +49,10 @@ public class AiTempFileStorage {
     }
 
     public static String addImage(String base64, String fileName, String fileFormat, Path fileFolder) throws IOException {
-        File tempUploadFile = File.createTempFile(fileName, fileFormat, fileFolder.toFile());
+        IwcmFile tempUploadFile = new IwcmFile( File.createTempFile(fileName, fileFormat, fileFolder.toFile()) );
 
         byte[] imageBytes = Base64.getDecoder().decode(base64);
-        try (FileOutputStream out = new FileOutputStream(tempUploadFile)) {
+        try (IwcmOutputStream out = new IwcmOutputStream(tempUploadFile)) {
             out.write(imageBytes);
         }
 
@@ -70,7 +71,7 @@ public class AiTempFileStorage {
 
         ServletOutputStream out = response.getOutputStream();
         //citaj subor a posielaj na vystup
-        byte buff[] = new byte[8000];
+        byte[] buff = new byte[8000];
         IwcmInputStream fis = new IwcmInputStream(filePath);
         int len;
 
@@ -127,7 +128,7 @@ public class AiTempFileStorage {
                 }
             }
         } catch (IOException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
         }
 
         return newFileUrl;

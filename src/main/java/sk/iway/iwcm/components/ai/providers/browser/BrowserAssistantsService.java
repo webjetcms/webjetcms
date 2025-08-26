@@ -29,12 +29,12 @@ public class BrowserAssistantsService implements AiAssitantsInterface {
 
     @Override
     public void updateAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
-
+        // no implementation needed
     }
 
     @Override
     public void deleteAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
-
+        // no implementation needed
     }
 
     @Override
@@ -59,5 +59,4 @@ public class BrowserAssistantsService implements AiAssitantsInterface {
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
         //Local provider do not have specific fields that need. set options
     }
-
 }
