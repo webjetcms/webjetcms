@@ -42,7 +42,7 @@ public enum SupportedActions {
         return labels;
     }
 
-    public static boolean doesSupportAction(AssistantDefinitionEntity assistant, SupportedActions action) {
+    public static boolean doesSupportAction(AssistantDefinitionEntity assistant, SupportedActions action) throws IllegalStateException {
         if(assistant == null || action == null) return false;
 
         SupportedActions assistantAction = getSupportedAction(assistant.getAction());

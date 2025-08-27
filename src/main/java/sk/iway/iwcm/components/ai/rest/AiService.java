@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -100,10 +102,10 @@ public class AiService {
 
     public AssistantResponseDTO getAiResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false) {
-            throw new IllegalStateException("This assistant is not configured for text generation.");
+            throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
         if(Tools.isFalse( assistant.getKeepHtml() )) {
@@ -116,17 +118,17 @@ public class AiService {
             }
         }
 
-        throw new IllegalStateException("Something went wrong");
+        throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
     public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
 
         inputData.prepareData();
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_IMAGE) == false && doesSupportAction(assistant, SupportedActions.EDIT_IMAGE) == false) {
-            throw new IllegalStateException("This assistant is not configured for image operations.");
+            throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
         for(AiInterface aiInterface : aiInterfaces) {
@@ -135,15 +137,15 @@ public class AiService {
             }
         }
 
-        throw new IllegalStateException("Something went wrong");
+        throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
     public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false || Tools.isFalse(assistant.getUseStreaming())) {
-            throw new IllegalStateException("This assistant is not configured for streamed text generation.");
+            throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
         if(Tools.isFalse( assistant.getKeepHtml() )) {
@@ -156,12 +158,12 @@ public class AiService {
             }
         }
 
-        throw new IllegalStateException("Something went wrong");
+        throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public String getBonusHtml(String assistantName, AssistantDefinitionRepository assistantRepo) {
+    public String getBonusHtml(String assistantName, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
 
-        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo);
+        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo, Prop.getInstance(request));
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
@@ -169,18 +171,18 @@ public class AiService {
             }
         }
 
-        throw new IllegalStateException("Something went wrong");
+        throw new IllegalStateException( getSomethingWrongErr(Prop.getInstance(request)) );
     }
 
-    private AssistantDefinitionEntity getAssistant(String assistantName, AssistantDefinitionRepository assistantRepo) {
+    private AssistantDefinitionEntity getAssistant(String assistantName, AssistantDefinitionRepository assistantRepo, Prop prop) {
         //
-        if(Tools.isEmpty(assistantName)) throw new IllegalStateException("No assistant found.");
+        if(Tools.isEmpty(assistantName)) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 
         //
         String prefix = AiAssistantsService.getAssitantPrefix();
         Optional<AssistantDefinitionEntity> assistant = assistantRepo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
 
-        if(assistant.isPresent() == false) throw new IllegalStateException("No assistant found.");
+        if(assistant.isPresent() == false) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 
         return assistant.get();
     }
@@ -193,5 +195,17 @@ public class AiService {
             values.add(label.getValue());
         }
         return values;
+    }
+
+    private String getNotSupportedAction(Prop prop) {
+        return prop.getText("components.ai_assistants.not_supproted_action_err");
+    }
+
+    private String getSomethingWrongErr(Prop prop) {
+        return prop.getText("html_area.insert_image.error_occured");
+    }
+
+    private String getNotFoundAssistantErr(Prop prop) {
+        return prop.getText("components.ai_assistants.not_found");
     }
 }

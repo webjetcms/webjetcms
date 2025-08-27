@@ -1943,7 +1943,6 @@
                             field_from VARCHAR(255),
                             field_to VARCHAR(255) NOT NULL,
                             provider VARCHAR(255) NOT NULL,
-                            assistant_key VARCHAR(255),
                             instructions TEXT NOT NULL,
                             model VARCHAR(255),
                             created_at TIMESTAMP,
@@ -1956,11 +1955,6 @@
                             keep_html TINYINT DEFAULT 0,
                             use_streaming TINYINT DEFAULT 0,
                             use_temporal TINYINT DEFAULT 0,
-                            save_with_provider TINYINT DEFAULT 0,
-
-                            temperature FLOAT NULL,
-                            reasoning_effort VARCHAR(255) NULL,
-                            top_p FLOAT,
 
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
@@ -1977,7 +1971,6 @@
                             field_from NVARCHAR(255),
                             field_to NVARCHAR(255) NOT NULL,
                             provider NVARCHAR(255) NOT NULL,
-                            assistant_key NVARCHAR(255),
                             instructions NTEXT NOT NULL,
                             model NVARCHAR(255),
                             created_at DATETIME,
@@ -1990,11 +1983,6 @@
                             keep_html BIT DEFAULT 0,
                             use_streaming BIT DEFAULT 0,
                             use_temporal BIT DEFAULT 0,
-                            save_with_provider BIT DEFAULT 0,
-
-                            temperature FLOAT,
-                            reasoning_effort NVARCHAR(255),
-                            top_p FLOAT,
 
                             domain_id int DEFAULT 1 NOT NULL
                         );
@@ -2011,7 +1999,6 @@
                             field_from NVARCHAR2(255),
                             field_to NVARCHAR2(255) NOT NULL,
                             provider NVARCHAR(255) NOT NULL,
-                            assistant_key NVARCHAR2(255),
                             instructions CLOB NOT NULL,
                             model NVARCHAR2(255),
                             created_at TIMESTAMP,
@@ -2024,11 +2011,6 @@
                             keep_html NUMBER(1) DEFAULT 0,
                             use_streaming NUMBER(1) DEFAULT 0,
                             use_temporal NUMBER(1) DEFAULT 0,
-                            save_with_provider NUMBER(1) DEFAULT 0,
-
-                            temperature FLOAT,
-                            reasoning_effort NVARCHAR2(255),
-                            top_p FLOAT,
 
                             domain_id INT DEFAULT 1 NOT NULL
                         );
@@ -2058,7 +2040,6 @@
                             field_from VARCHAR(255),
                             field_to VARCHAR(255) NOT NULL,
                             provider VARCHAR(255) NOT NULL,
-                            assistant_key VARCHAR(255),
                             instructions TEXT NOT NULL,
                             model VARCHAR(255),
                             created_at TIMESTAMP,
@@ -2071,11 +2052,6 @@
                             keep_html BOOLEAN DEFAULT FALSE,
                             use_streaming BOOLEAN DEFAULT FALSE,
                             use_temporal BOOLEAN DEFAULT FALSE,
-                            save_with_provider BOOLEAN DEFAULT FALSE,
-
-                            temperature FLOAT,
-                            reasoning_effort VARCHAR(255),
-                            top_p FLOAT,
 
                             domain_id INT DEFAULT 1 NOT NULL
                         );

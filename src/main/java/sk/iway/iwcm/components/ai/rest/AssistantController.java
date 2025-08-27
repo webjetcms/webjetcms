@@ -53,7 +53,7 @@ public class AssistantController {
 
         if (response == null) {
             response = new AssistantResponseDTO();
-            response.setError("Something went wrong, please try again later: " + exceptionMessage);
+            response.setError(getErrMsg(exceptionMessage, request));
         }
 
         return response;
@@ -73,7 +73,7 @@ public class AssistantController {
 
         if (response == null) {
             response = new AssistantResponseDTO();
-            response.setError("Something went wrong, please try again later: " + exceptionMessage);
+            response.setError(getErrMsg(exceptionMessage, request));
         }
 
         return response;
@@ -97,7 +97,7 @@ public class AssistantController {
 
             if (responseDto == null) {
                 responseDto = new AssistantResponseDTO();
-                responseDto.setError("Something went wrong, please try again later: " + exceptionMessage);
+                responseDto.setError(getErrMsg(exceptionMessage, request));
             }
 
             writer.write(responseDto.toJsonString());
@@ -117,16 +117,20 @@ public class AssistantController {
 
     @PostMapping("/save-temp-file/")
     public String saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation);
+        return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation, request);
     }
 
     @GetMapping("/bonus-content/")
     public String getBonusContent(@RequestParam("assistantName") String assistantName, HttpServletRequest request, HttpServletResponse response) {
-        return aiService.getBonusHtml(assistantName, assistantRepo);
+        return aiService.getBonusHtml(assistantName, assistantRepo, request);
     }
 
     @GetMapping("/new-image-location/")
     public String getNewImageLocation(@RequestParam("docId") Integer docId, @RequestParam("groupId") Integer groupId, @RequestParam("title") String title) {
         return UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images");
+    }
+
+    private String getErrMsg(String errMsg, HttpServletRequest request) {
+        return Prop.getInstance(request).getText("html_area.insert_image.error_occured") + " : " + errMsg;
     }
 }
