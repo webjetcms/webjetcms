@@ -28,6 +28,7 @@ export class AiUserInterface {
         if (contentContainer.length === 0) {
             this.lastToast = window.toastr.info("<div id='toast-container-ai-content'></div>", WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), {
                 closeButton: true,
+                closeHtml: '<i class="ti ti-x"></i>',
                 timeOut: 0,
                 tapToDismiss: false,
                 extendedTimeOut: 0,
@@ -50,7 +51,6 @@ export class AiUserInterface {
         //set default header
         $("#toast-container-ai").removeClass("has-back-button");
         $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
-        contentContainer.addClass("has-back-button");
 
         // Clear previous content
         contentContainer.empty();
