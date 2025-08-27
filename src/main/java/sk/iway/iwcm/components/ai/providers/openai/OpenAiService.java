@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,7 +15,6 @@ import javax.imageio.ImageIO;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -100,72 +98,66 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws IOException, InterruptedException {
+
+        if(Tools.isTrue(assistant.getSaveWithProvider())) return new OpenAiAssistantsService().getAiStreamResponse(assistant, inputData, prop, statRepo, writer);
+
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        String assistantId = assistant.getAssistantKey();
-        BigDecimal temperature = assistant.getTemperature();
 
-        // 1. Create thread
-        String threadId = createThread(prop);
+        JSONObject json = new JSONObject();
+        json.put("model", assistant.getModel());
+        json.put("instructions", assistant.getInstructions());
+        json.put("input", inputData.getInputValue());
+        json.put("store", !assistant.getUseTemporal());
+        json.put("stream", assistant.getUseStreaming());
 
-        try {
-            // 2. Add message
-            addMessage(assistant, threadId, inputData, prop);
+        HttpPost post = new HttpPost(RESPONSES_URL);
+        post.setEntity(getRequestBody(json.toString()));
+        addHeaders(post, true, true);
+        post.setHeader("Accept", "text/event-stream");
 
-            // 3. Create run
-            JSONObject json = new JSONObject();
-            json.put("assistant_id", assistantId);
-            json.put("temperature", temperature);
-            json.put("stream", true);
+        try (CloseableHttpResponse response = client.execute(post)) {
+            HttpEntity entity = response.getEntity();
+            InputStream inputStream = entity.getContent();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(false);
+            streamHandler.handleBufferedReader(reader, writer);
 
-            HttpPost post = new HttpPost(THREADS_URL + threadId + "/runs");
-            post.setEntity(getRequestBody(json.toString()));
-            addHeaders(post, true, true);
-            post.setHeader("Accept", "text/event-stream");
-
-            try (CloseableHttpResponse response = client.execute(post)) {
-
-                HttpEntity entity = response.getEntity();
-                InputStream inputStream = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
-                streamHandler.handleBufferedReader(reader, writer);
-
-                //
-                handleUsage(responseDto, streamHandler.getUsageChunk(), assistant, streamHandler.getRunId(), threadId, statRepo);
-            }
-        } finally {
-            // 6. Delete thread (cleanup)
-            deleteThread(threadId);
+            //
+            handleUsage(responseDto, streamHandler.getUsageChunk(), assistant, streamHandler.getRunId(), statRepo);
         }
 
         return responseDto;
     }
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
+
+        if(Tools.isTrue(assistant.getSaveWithProvider())) return new OpenAiAssistantsService().getAiResponse(assistant, inputData, prop, statRepo);
+
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        String assistantId = assistant.getAssistantKey();
-        BigDecimal temperature = assistant.getTemperature();
+        HttpPost post = new HttpPost(RESPONSES_URL);
 
-        // 1. Create thread
-        String threadId = createThread(prop);
+        JSONObject json = new JSONObject();
+        json.put("model", assistant.getModel());
+        json.put("store", !assistant.getUseTemporal());
+        json.put("instructions", assistant.getInstructions());
+        json.put("input", inputData.getInputValue());
 
-        try {
-            // 2. Add message
-            addMessage(assistant, threadId, inputData, prop);
+        post.setEntity(getRequestBody(json.toString()));
+        addHeaders(post, true, false);
 
-            // 3. Create run
-            String runId = createRun(threadId, assistantId, temperature, prop);
+        try (CloseableHttpResponse response = client.execute(post)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                handleErrorMessage(response, prop, SERVICE_NAME, "getLatestMessage");
 
-            // 4. Wait for run to complete
-            waitForRunCompletion(threadId, runId, assistant, prop, responseDto, statRepo);
+            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            JSONArray data = res.getJSONArray("output");
+            JSONObject firstMessage = data.getJSONObject(0);
+            JSONArray contentArray = firstMessage.getJSONArray("content");
+            responseDto.setResponse(contentArray.getJSONObject(0).getString("text"));
 
-            // 5. Get assistant's reply
-            return getLatestMessage(threadId, prop, responseDto);
+            handleUsage(responseDto, res, assistant, res.optString("id", "NO_RUN_ID"), statRepo);
 
-        } finally {
-            // 6. Delete thread (cleanup)
-            deleteThread(threadId);
+            return responseDto;
         }
     }
 
@@ -212,7 +204,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 e.printStackTrace();
             }
 
-            handleUsage(responseDto, res, assistant, "NO_RUN_ID", "NO_THREAD_ID", statRepo);
+            handleUsage(responseDto, res, assistant, "NO_RUN_ID", statRepo);
         }
 
         return responseDto;
@@ -250,122 +242,30 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return "";
     }
 
-    private String createThread(Prop prop) throws IOException {
-        HttpPost post = new HttpPost("https://api.openai.com/v1/threads");
-        post.setEntity(getRequestBody("{}"));
-        addHeaders(post, true, true);
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "createThread");
-            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            return res.getString("id");
-        }
-    }
-
-    private void addMessage(AssistantDefinitionEntity assistant, String threadId, InputDataDTO inputData, Prop prop) throws IOException {
-        JSONObject json = new JSONObject();
-        json.put("role", "user");
-
-        String content = inputData.getInputValue();
-        if (Tools.isTrue(assistant.getUserPromptEnabled())) {
-            content = AiAssistantsService.executePromptMacro("", inputData);
-        }
-
-        json.put("content", content);
-
-        HttpPost post = new HttpPost(THREADS_URL + threadId + "/messages");
-        post.setEntity(getRequestBody(json.toString()));
-        addHeaders(post, true, true);
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "addMessage");
-        }
-    }
-
-    private String createRun(String threadId, String assistantId, BigDecimal temperature, Prop prop) throws IOException {
-        JSONObject json = new JSONObject();
-        json.put("assistant_id", assistantId);
-        json.put("temperature", temperature);
-        HttpPost post = new HttpPost(THREADS_URL + threadId + "/runs");
-        post.setEntity(getRequestBody(json.toString()));
-        addHeaders(post, true, true);
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "createRun");
-            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            return res.getString("id");
-        }
-    }
-
-    private void waitForRunCompletion(String threadId, String runId, AssistantDefinitionEntity dbAssitant, Prop prop, AssistantResponseDTO responseDto, AiStatRepository statRepo) throws IOException, InterruptedException {
-        while (true) {
-            HttpGet get = new HttpGet(THREADS_URL + threadId + "/runs/" + runId);
-            addHeaders(get, false, true);
-            try (CloseableHttpResponse response = client.execute(get)) {
-                if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                    handleErrorMessage(response, prop, SERVICE_NAME, "waitForRunCompletion");
-                JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-                String status = res.getString("status");
-                if ("completed".equals(status)) {
-
-                    handleUsage(responseDto, res, dbAssitant, runId, threadId, statRepo);
-
-                    break;
-                }
-                if ("failed".equals(status)) throw new RuntimeException("Run failed: " + res);
-                Thread.sleep(1000);
-            }
-        }
-    }
-
-    private AssistantResponseDTO getLatestMessage(String threadId, Prop prop, AssistantResponseDTO responseDto) throws IOException {
-        HttpGet get = new HttpGet(THREADS_URL + threadId + "/messages");
-        addHeaders(get, false, true);
-        try (CloseableHttpResponse response = client.execute(get)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getLatestMessage");
-            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            JSONArray data = res.getJSONArray("data");
-            JSONObject firstMessage = data.getJSONObject(0);
-            JSONArray contentArray = firstMessage.getJSONArray("content");
-            responseDto.setResponse(contentArray.getJSONObject(0).getJSONObject("text").getString("value"));
-            return responseDto;
-        }
-    }
-
-    private void deleteThread(String threadId) throws IOException {
-        HttpDelete delete = new HttpDelete(THREADS_URL + threadId);
-        addHeaders(delete, false, true);
-        try (CloseableHttpResponse response = client.execute(delete)) {
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, String runId, String threadId, AiStatRepository statRepo) {
+    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, String runId, AiStatRepository statRepo) {
 
         if (source.has("usage")) {
+            //"total_tokens" "output_tokens" "input_tokens"
             JSONObject usage = source.getJSONObject("usage");
-            int promptTokens = usage.optInt("prompt_tokens", 0);
-            int completionTokens = usage.optInt("completion_tokens", 0);
+            int inputTokens = usage.optInt("input_tokens", 0);
+            int outputTokens = usage.optInt("output_tokens", 0);
             int totalTokens = usage.optInt("total_tokens", 0);
             StringBuilder sb = new StringBuilder("");
-            sb.append(SERVICE_NAME).append(" -> run with id: ").append(runId).append(" on thred: ").append(threadId).append(" was succesfull");
+
+            sb.append(SERVICE_NAME).append(" -> run with id: ").append(runId).append(" was succesfull");
             sb.append("\n\n");
             sb.append("Assitant name : ").append(dbAssitant.getName()).append("\n");
             sb.append("From field : ").append(dbAssitant.getFieldFrom()).append("\n");
             sb.append("To field : ").append(dbAssitant.getFieldTo()).append("\n");
             sb.append("\n");
             sb.append("Action cost: \n");
-            sb.append("\t prompt_tokens: ").append(promptTokens).append("\n");
-            sb.append("\tcompletion_tokens: ").append(completionTokens).append("\n");
+            sb.append("\t input_tokens: ").append(inputTokens).append("\n");
+            sb.append("\t output_tokens: ").append(outputTokens).append("\n");
             sb.append("\t total_tokens: ").append(totalTokens).append("\n");
             Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
 
             AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo);
 
-            responseDto.setPromptTokens(promptTokens);
-            responseDto.setCompletionTokens(completionTokens);
             responseDto.setTotalTokens(totalTokens);
         }
     }

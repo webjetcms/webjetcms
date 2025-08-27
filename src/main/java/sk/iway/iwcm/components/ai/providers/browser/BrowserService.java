@@ -37,6 +37,10 @@ public class BrowserService implements AiInterface {
         return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
     }
 
+    public AssistantResponseDTO getAiAssistantResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws Exception {
+        return null;
+    }
+
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) {
         return null;
     }

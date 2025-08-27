@@ -18,6 +18,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -44,7 +45,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
         if("create".equals(target.getAction()) && Tools.isNotEmpty(entity.getName())) {
-            //New ame must be unique
+            //New name must be unique
             String prefix = AiAssistantsService.getAssitantPrefix();
             List<String> otherNames = repo.getAssistantNames(prefix + "%", CloudToolsForCore.getDomainId());
             for(String otherName : otherNames) {
@@ -92,7 +93,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         entity.setCreated(existingEntity.getCreated());
 
         try {
-            aiAssistantsService.updateAssistant(entity, getProp());
+            if(Tools.isTrue(entity.getSaveWithProvider())) aiAssistantsService.updateAssistant(entity, getProp());
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
@@ -103,7 +104,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public boolean deleteItem(AssistantDefinitionEntity entity, long id) {
         try {
-            aiAssistantsService.deleteAssistant(entity, getProp());
+            if(Tools.isTrue(entity.getSaveWithProvider())) aiAssistantsService.deleteAssistant(entity, getProp());
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage());
         }
@@ -115,15 +116,13 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
-        String assistantId = null;
-
         entity.setNameAddPrefix( entity.getName() );
 
         try {
-            assistantId = aiAssistantsService.insertAssistant(entity, getProp());
+            if(Tools.isTrue(entity.getSaveWithProvider()))
+                entity.setAssistantKey( aiAssistantsService.insertAssistant(entity, getProp()) );
 
             entity.setCreated(new Date());
-            entity.setAssistantKey(assistantId);
             entity.setDomainId(CloudToolsForCore.getDomainId());
 
             return repo.save(entity);
@@ -135,7 +134,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("provider", aiService.getSupportedProviders(getProp()), "label", "value", false);
-        page.addOptions("action", aiService.getSupportedActions(getProp()), "label", "value", false);
+        page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());

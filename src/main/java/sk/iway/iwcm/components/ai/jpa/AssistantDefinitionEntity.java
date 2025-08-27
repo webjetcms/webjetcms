@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Entity
-@Table(name = "open_ai_assistants")
+@Table(name = "ai_assistants")
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
@@ -193,12 +193,20 @@ public class AssistantDefinitionEntity {
     private Date created;
 
     @Column(name = "keep_html")
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.keep_html", tab = "advanced", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.keep_html", tab = "advanced", visible = false)
     private Boolean keepHtml;
 
     @Column(name="use_streaming")
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "components.ai_assistants.use_streaming", visible = false, tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.use_streaming", visible = false, tab = "advanced")
 	private Boolean useStreaming;
+
+    @Column(name="use_temporal")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "", visible = false, tab = "advanced")
+	private Boolean useTemporal;
+
+    @Column(name="save_with_provider")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "", visible = false, tab = "advanced")
+	private Boolean saveWithProvider;
 
     //OpenAI - fields
     @Column(name = "temperature")

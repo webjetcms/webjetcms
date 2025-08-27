@@ -15,11 +15,14 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
+
+import static sk.iway.iwcm.components.ai.jpa.SupportedActions.doesSupportAction;
 
 @Service
 public class AiService {
@@ -27,7 +30,6 @@ public class AiService {
     private final List<AiInterface> aiInterfaces;
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
-    private static final String ACTION_PREFIX = "components.ai_assistants.supported_actions.";
 
     @Autowired
     public AiService(List<AiInterface> aiInterfaces) {
@@ -43,17 +45,6 @@ public class AiService {
             Pair<String, String> providerInfo = aiInterface.getProviderInfo(prop);
             supportedValues.add( new LabelValue(providerInfo.getSecond(), providerInfo.getFirst()) );
         }
-        return supportedValues;
-    }
-
-    public List<LabelValue> getSupportedActions(Prop prop) {
-        List<LabelValue> supportedValues = new ArrayList<>();
-
-        supportedValues.add(new LabelValue("", ""));
-        for(String action : List.of("generate_text", "generate_image", "edit_image", "live_chat")) {
-            supportedValues.add(new LabelValue(prop.getText(ACTION_PREFIX + action), action));
-        }
-
         return supportedValues;
     }
 
@@ -111,6 +102,10 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
 
+        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false) {
+            throw new IllegalStateException("This assistant is not configured for text generation.");
+        }
+
         if(Tools.isFalse( assistant.getKeepHtml() )) {
             inputData.removeHtml();
         }
@@ -130,6 +125,10 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
 
+        if(doesSupportAction(assistant, SupportedActions.GENERATE_IMAGE) == false && doesSupportAction(assistant, SupportedActions.EDIT_IMAGE) == false) {
+            throw new IllegalStateException("This assistant is not configured for image operations.");
+        }
+
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
                 return aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo);
@@ -142,6 +141,10 @@ public class AiService {
     public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo);
+
+        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false || Tools.isFalse(assistant.getUseStreaming())) {
+            throw new IllegalStateException("This assistant is not configured for streamed text generation.");
+        }
 
         if(Tools.isFalse( assistant.getKeepHtml() )) {
             inputData.removeHtml();

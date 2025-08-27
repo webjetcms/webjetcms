@@ -1931,10 +1931,10 @@
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>05.08.2025</string></void>
-                <void property="desc"><string>Vytvorenie tabulky open_ai_assistants</string></void>
+                <void property="desc"><string>Vytvorenie tabulky ai_assistants</string></void>
                 <void property="mysql">
                     <string>
-                        CREATE TABLE open_ai_assistants (
+                        CREATE TABLE ai_assistants (
                             id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
                             name VARCHAR(255) NOT NULL,
                             description VARCHAR(255),
@@ -1955,6 +1955,8 @@
 
                             keep_html TINYINT DEFAULT 0,
                             use_streaming TINYINT DEFAULT 0,
+                            use_temporal TINYINT DEFAULT 0,
+                            save_with_provider TINYINT DEFAULT 0,
 
                             temperature FLOAT NULL,
                             reasoning_effort VARCHAR(255) NULL,
@@ -1966,7 +1968,7 @@
                 </void>
                 <void property="mssql">
                     <string>
-                        CREATE TABLE open_ai_assistants (
+                        CREATE TABLE ai_assistants (
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             name NVARCHAR(255) NOT NULL,
                             description NVARCHAR(255),
@@ -1987,6 +1989,8 @@
 
                             keep_html BIT DEFAULT 0,
                             use_streaming BIT DEFAULT 0,
+                            use_temporal BIT DEFAULT 0,
+                            save_with_provider BIT DEFAULT 0,
 
                             temperature FLOAT,
                             reasoning_effort NVARCHAR(255),
@@ -1998,7 +2002,7 @@
                 </void>
                 <void property="oracle">
                     <string>
-                        CREATE TABLE open_ai_assistants (
+                        CREATE TABLE ai_assistants (
                             id INTEGER NOT NULL PRIMARY KEY,
                             name NVARCHAR2(255) NOT NULL,
                             description NVARCHAR2(255),
@@ -2019,7 +2023,8 @@
 
                             keep_html NUMBER(1) DEFAULT 0,
                             use_streaming NUMBER(1) DEFAULT 0,
-
+                            use_temporal NUMBER(1) DEFAULT 0,
+                            save_with_provider NUMBER(1) DEFAULT 0,
 
                             temperature FLOAT,
                             reasoning_effort NVARCHAR2(255),
@@ -2027,14 +2032,14 @@
 
                             domain_id INT DEFAULT 1 NOT NULL
                         );
-                        CREATE SEQUENCE S_open_ai_assistants START WITH 1;
-                        CREATE TRIGGER T_open_ai_assistants BEFORE INSERT ON open_ai_assistants
+                        CREATE SEQUENCE S_ai_assistants START WITH 1;
+                        CREATE TRIGGER T_ai_assistants BEFORE INSERT ON ai_assistants
                             FOR EACH ROW
                                 DECLARE
                                     val INTEGER|
                                 BEGIN
                                     IF :new.id IS NULL THEN
-                                        SELECT S_open_ai_assistants.nextval into val FROM dual|
+                                        SELECT S_ai_assistants.nextval into val FROM dual|
                                         :new.id:= val|
                                     END IF|
                                 END|
@@ -2043,9 +2048,9 @@
                 </void>
                 <void property="pgsql">
                     <string>
-                        CREATE SEQUENCE S_open_ai_assistants START WITH 1;
-                        CREATE TABLE open_ai_assistants (
-                            id INT DEFAULT NEXTVAL('S_open_ai_assistants') PRIMARY KEY NOT NULL,
+                        CREATE SEQUENCE S_ai_assistants START WITH 1;
+                        CREATE TABLE ai_assistants (
+                            id INT DEFAULT NEXTVAL('S_ai_assistants') PRIMARY KEY NOT NULL,
                             name VARCHAR(255) NOT NULL,
                             description VARCHAR(255),
                             class_name VARCHAR(255) NOT NULL,
@@ -2065,6 +2070,8 @@
 
                             keep_html BOOLEAN DEFAULT FALSE,
                             use_streaming BOOLEAN DEFAULT FALSE,
+                            use_temporal BOOLEAN DEFAULT FALSE,
+                            save_with_provider BOOLEAN DEFAULT FALSE,
 
                             temperature FLOAT,
                             reasoning_effort VARCHAR(255),

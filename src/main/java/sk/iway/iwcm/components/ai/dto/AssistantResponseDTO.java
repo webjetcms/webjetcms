@@ -14,8 +14,6 @@ import sk.iway.iwcm.Tools;
 public class AssistantResponseDTO {
     private String response;
     private String error;
-    private int promptTokens;
-    private int completionTokens;
     private int totalTokens;
     private List<String> tempFiles = new ArrayList<>();
 
