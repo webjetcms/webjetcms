@@ -99,18 +99,41 @@ export class AiUserInterface {
 
     setCurrentStatus(textKey, pulsate = false, ...params) {
         let contentContainer = $("#toast-container-ai-content");
-        let html = '<div class="group-title"';
+        let html = '<div class="current-status';
+
+        let spanClass = "";
+        let icon = "";
+        if ("components.ai_assistants.editor.loading.js" === textKey) {
+            spanClass = " ai-status-working";
+            icon = "exclamation-circle";
+        } else if ("components.ai_assistants.stat.totalTokens.js" === textKey || "components.ai.editor.image_saved.js" === textKey) {
+            spanClass = " ai-status-success";
+            icon = "circle-check";
+        } else if ("components.ai_assistants.unknownError.js" === textKey) {
+            spanClass = " ai-status-error";
+            icon = "help-circle";
+        }
 
         if (pulsate) {
             html += " pulsate-text";
         }
+        if (spanClass != "") html += " "+spanClass;
 
-        html = html + '">' + WJ.translate(textKey, params) + '</div>';
+        html = html + '">';
+
+        if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
+
+        html += WJ.translate(textKey, params) + '</div>';
         contentContainer.html(html);
     }
 
     setError(...params) {
-        setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
+        this.setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
+    }
+
+    //set error but do not close dialog
+    setErrorNoClose(...params) {
+        WJ.notifyError(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), WJ.translate("components.ai_assistants.unknownError.js", params));
     }
 
     async _executeAction(button, column, aiCol, inputValues = null) {
@@ -251,7 +274,9 @@ export class AiUserInterface {
         let self = this;
         const imageUrl = await this.getPathForNewImage(self);
 
-        let html = "<div>" + WJ.translate(textKey, params) + "</div>";
+        this.setCurrentStatus(textKey, false, ...params);
+
+        let html = contentContainer.html();
         html += "<div class='ai-image-preview-div'></div>";
         html += "<div class='button-div' style='display: none;'> </div>";
 
@@ -259,7 +284,7 @@ export class AiUserInterface {
             <div class='image-info' style='display: none;'>
                 <div>
                     <label for='generated-image-name' style='color: black;'>ImageName</label>
-                    <input id='generated-image-name' type='text' class='form-control' value='ai-image.png'>
+                    <input id='generated-image-name' type='text' class='form-control' value='ai-image'>
                 </div>
 
                 <div>
@@ -371,7 +396,7 @@ export class AiUserInterface {
 
         let buttonDiv = contentContainer.find('.button-div');
 
-        const imageButton = $('<button class="btn btn-outline-secondary select-image">' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
+        const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {
             this._saveAndSetImage(button, toField);
         });
@@ -379,7 +404,7 @@ export class AiUserInterface {
     }
 
     _selectImage(imageName) {
-        console.log("Selected image:", imageName);
+        //console.log("Selected image:", imageName);
 
         $("div.button-div").show();
         $("div.image-info").show();
@@ -404,13 +429,18 @@ export class AiUserInterface {
             },
             success: function(res)
             {
-                self.EDITOR.set(toField, res);
+                if (res && res.error) {
+                    self.setErrorNoClose(res.error);
+                    return;
+                }
+
+                self.EDITOR.set(toField, res.response);
                 self.setCurrentStatus("components.ai.editor.image_saved.js");
                 self._closeToast(3000);
                 self._hideLoader(button);
             },
             error: function(xhr, ajaxOptions, thrownError) {
-                self.setError(thrownError);
+                self.setErrorNoClose(thrownError);
             }
         });
     }

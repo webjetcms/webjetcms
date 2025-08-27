@@ -26,7 +26,7 @@ import sk.iway.iwcm.i18n.Prop;
 
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_tools')")
+@PreAuthorize("@WebjetSecurityService.isAdmin()") //AI assistants can be in any module, so check just for admin perms
 public class AssistantController {
 
     private final AiService aiService;
@@ -116,8 +116,15 @@ public class AssistantController {
     }
 
     @PostMapping("/save-temp-file/")
-    public String saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation, request);
+    public AssistantResponseDTO saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request) throws IOException {
+        AssistantResponseDTO response = new AssistantResponseDTO();
+        try {
+            String result = AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation, request);
+            response.setResponse(result);
+        } catch (Exception e) {
+            response.setError(e.getMessage());
+        }
+        return response;
     }
 
     @GetMapping("/bonus-content/")

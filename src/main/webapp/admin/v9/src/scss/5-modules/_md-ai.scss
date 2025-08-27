@@ -121,7 +121,7 @@
             background-color: var(--wj-ai-color-dark);
             border-color: var(--wj-ai-color-dark);
             transition: none;
-            .ti {
+            .ti-sparkles {
                 transform: rotate(200deg);
                 transition: all 0.2s ease-in-out;
             }
@@ -174,12 +174,14 @@
             content: "\f6d7"; //sparkles
             color: var(--wj-ai-color);
             transform: rotate(186deg);
+            left: 17px;
         }
 
         div.toast-title {
             background-color: var(--wj-nice-gray);
             color: var(--wj-ai-color);
             padding-top: 14px;
+            padding-left: 48px;
         }
 
         div.toast-message {
@@ -235,6 +237,24 @@
             .pulsate-text {
                 animation: ai-pulsate-color 1.5s infinite;
             }
+
+            .current-status {
+                .ti {
+                    vertical-align: bottom;
+                    font-size: 24px;
+                    margin-right: 3px;
+                    margin-left: -2px;
+                }
+                &.ai-status-working {
+                    color: var(--wj-yellow-60);
+                }
+                &.ai-status-success {
+                    color: var(--wj-green-60);
+                }
+                &.ai-status-error {
+                    color: var(--wj-red-60);
+                }
+            }
         }
 
         div.ai-image-preview-div {
@@ -250,18 +270,18 @@
                 gap: 8px;
 
                 img {
-                    width: 150px;
-                    height: 150px;
+                    width: 138px;
                     margin: 0;
                     border-radius: 8px;
                     object-fit: cover;
                     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
                     transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+                    border: 2px solid transparent;
 
                     &:hover {
                         box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
-                        transform: scale(1.05);
-                        border: 2px solid var(--wj-ai-color);
+                        //transform: scale(1.05);
+                        border-color: var(--wj-ai-color);
                         background-color: transparent;
                         cursor: pointer;
                     }
@@ -279,16 +299,6 @@
         .button-div {
             text-align: end;
             margin-top: 7px;
-
-            button.select-image {
-                font-size: 16px;
-                color: white;
-                background-color: var(--wj-ai-color);
-
-                &:hover {
-                    background-color: var(--wj-ai-color-dark);
-                }
-            }
         }
 
     }
@@ -297,11 +307,6 @@
         .bonus-content {
             label { color: black; }
         }
-    }
-
-    .toast.toast-info:has(.image-preview) {
-        width: max-content;
-        max-width: 100%;
     }
 
     &.has-back-button {

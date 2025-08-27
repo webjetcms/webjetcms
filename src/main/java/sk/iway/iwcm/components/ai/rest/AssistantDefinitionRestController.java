@@ -26,7 +26,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
 @RequestMapping("/admin/rest/ai/assistant-definition/")
-@PreAuthorize("@WebjetSecurityService.isAdmin()")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_tools')")
 @Datatable
 public class AssistantDefinitionRestController extends DatatableRestControllerV2<AssistantDefinitionEntity, Long> {
 

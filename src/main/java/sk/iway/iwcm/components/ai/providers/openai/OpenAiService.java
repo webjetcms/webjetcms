@@ -211,12 +211,12 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     public String getBonusHtml(AssistantDefinitionEntity assistant) {
         if("edit_image".equals(assistant.getAction()) || "generate_image".equals(assistant.getAction())) {
             return """
-                <div class='bonus-content'>
-                    <div>
+                <div class='bonus-content row'>
+                    <div class="col-sm-3">
                         <label for='bonusContent-imageCount'>Image count</label>
-                        <input id='bonusContent-imageCount' type='number' class='form-control' value=1>
+                        <input id='bonusContent-imageCount' type='number' class='form-control' value='3'>
                     </div>
-                    <div>
+                    <div class="col-sm-3">
                         <label for='bonusContent-imageSize'>Image size</label>
                         <select id='bonusContent-imageSize' class='form-control' value='auto'>
                             <option value="auto">auto</option>
@@ -225,7 +225,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                             <option value="1536x1024">1536x1024</option>
                         </select>
                     </div>
-                    <div>
+                    <div class="col-sm-3">
                         <label for='bonusContent-imageQuality'>Image quality</label>
                         <select id='bonusContent-imageQuality' class='form-control' value='low'>
                             <option value="low">low</option>

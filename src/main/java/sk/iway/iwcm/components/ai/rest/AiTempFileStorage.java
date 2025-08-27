@@ -16,12 +16,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
+import sk.iway.iwcm.users.UsersDB;
 
 @Service
 public class AiTempFileStorage {
@@ -98,12 +102,27 @@ public class AiTempFileStorage {
         out.close();
     }
 
-    public static String saveTempFile(String tempFileName, String fielName, String imageLocation, HttpServletRequest request) throws IOException, IllegalStateException {
+    public static String saveTempFile(String tempFileName, String fileName, String destinationFolder, HttpServletRequest request) throws IOException, IllegalStateException {
         Prop prop = Prop.getInstance(request);
 
         if(Tools.isEmpty(tempFileName)) throw new IOException(prop.getText(NOT_FOUND_ERR));
-        if(Tools.isEmpty(fielName)) throw new IllegalStateException(prop.getText("components.temp_file_storage.file_name_empty_err"));
-        if(Tools.isEmpty(imageLocation)) throw new IllegalStateException(prop.getText("components.temp_file_storage.file_location_empty_err"));
+        if(Tools.isEmpty(fileName)) throw new IllegalStateException(prop.getText("components.temp_file_storage.file_name_empty_err"));
+        if(Tools.isEmpty(destinationFolder)) throw new IllegalStateException(prop.getText("components.temp_file_storage.file_location_empty_err"));
+
+        fileName = DB.internationalToEnglish(fileName);
+        fileName = DocTools.removeChars(fileName, true).toLowerCase();
+
+        if (destinationFolder.startsWith("/images") || destinationFolder.startsWith("/files") || destinationFolder.startsWith("/shared")) {
+            //pre bezpecnost povolujeme len tieto priecinky na upload, kedze ten sa definuje cez parameter destinationFolder
+        } else {
+            throw new IllegalStateException(prop.getText("admin.upload_iframe.wrong_upload_dir"));
+        }
+
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user == null || user.isFolderWritable(destinationFolder)==false) {
+            // /files/protected/feedback-form/ je natvrdo povolene, aby bolo mozne nahrat subory k feedback-form
+            throw new IllegalStateException(prop.getText("admin.upload_iframe.wrong_upload_dir"));
+        }
 
         Path tempFileFolder = getFileFolder();
         Path tempFilePath = tempFileFolder.resolve(tempFileName);
@@ -117,10 +136,10 @@ public class AiTempFileStorage {
         IwcmFile tempFile = new IwcmFile( tempFilePath.toFile() );
         InputStream tempFileIS = new IwcmInputStream(tempFile);
 
-        String path = imageLocation;
-        if(imageLocation.endsWith("/") == false) path += "/";
+        String path = destinationFolder;
+        if(destinationFolder.endsWith("/") == false) path += "/";
 
-        String newFileUrl = path + fielName + "." + tempFileName.substring(tempFileName.lastIndexOf('.') + 1);
+        String newFileUrl = path + fileName + "." + tempFileName.substring(tempFileName.lastIndexOf('.') + 1);
         IwcmFile newRealFile = new IwcmFile( Tools.getRealPath(newFileUrl) );
 
         IwcmFsDB.writeFiletoDest(tempFileIS, new File(newRealFile.getAbsolutePath()), Tools.safeLongToInt(tempFile.getLength()));
