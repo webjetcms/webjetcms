@@ -1,10 +1,10 @@
 {
   "name": "docs",
   "version": "1.0.0",
-  "description": "dokumentacia WebJET 2021",
+  "description": "WebJET CMS docs - live on docs.webjetcms.sk",
   "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "docs": "docsify serve .",
     "sitemap": "node sitemapGenerator.js",
     "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'cs/' && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'en/'",
     "pdf": "node convert-to-pdf.js",
