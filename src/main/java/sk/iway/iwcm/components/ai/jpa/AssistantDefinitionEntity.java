@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.ai.jpa;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -155,17 +154,6 @@ public class AssistantDefinitionEntity {
     @Size(max = 255)
     private String model;
 
-    @Column(name = "assistant_key")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.assistant_key", tab = "basic", visible = false, className = "hideOnCreate hideOnEdit",
-        editor = {
-            @DataTableColumnEditor(
-                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
-            )
-        }
-    )
-    @Size(max = 255)
-    private String assistantKey;
-
     @Lob
     @Column(name = "instructions")
     @DataTableColumn(
@@ -201,22 +189,8 @@ public class AssistantDefinitionEntity {
 	private Boolean useStreaming;
 
     @Column(name="use_temporal")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "", visible = false, tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.useTemporal", visible = false, className = "hideOnCreate hideOnEdit", tab = "advanced")
 	private Boolean useTemporal;
-
-    @Column(name="save_with_provider")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "", visible = false, tab = "advanced")
-	private Boolean saveWithProvider;
-
-    //OpenAI - fields
-    @Column(name = "temperature")
-    private BigDecimal temperature = BigDecimal.ONE;
-
-    @Column(name = "top_p")
-    private BigDecimal topP ;
-
-    @Column(name = "reasoning_effort")
-    private String reasoningEffort;
 
     @Column(name="domain_id")
 	private Integer domainId;

@@ -50,7 +50,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             List<String> otherNames = repo.getAssistantNames(prefix + "%", CloudToolsForCore.getDomainId());
             for(String otherName : otherNames) {
                 if( otherName.equalsIgnoreCase( prefix + entity.getName() ) ) {
-                    errors.rejectValue("name", "", "Assistant name must be unique");
+                    errors.rejectValue("name", "", getProp().getText("components.ai_assistants.unique_name_err"));
                     break;
                 }
             }
@@ -89,46 +89,24 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
         //Safety measure, for disabled fields
         entity.setNameAddPrefix( entity.getName() );
-        entity.setAssistantKey(existingEntity.getAssistantKey());
         entity.setCreated(existingEntity.getCreated());
-
-        try {
-            if(Tools.isTrue(entity.getSaveWithProvider())) aiAssistantsService.updateAssistant(entity, getProp());
-        } catch (Exception e) {
-            throw new IllegalStateException(e.getMessage());
-        }
 
         return repo.save(entity);
     }
 
     @Override
     public boolean deleteItem(AssistantDefinitionEntity entity, long id) {
-        try {
-            if(Tools.isTrue(entity.getSaveWithProvider())) aiAssistantsService.deleteAssistant(entity, getProp());
-        } catch (Exception e) {
-            throw new IllegalStateException(e.getMessage());
-        }
-
         repo.delete(entity);
-
         return true;
     }
 
     @Override
     public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
         entity.setNameAddPrefix( entity.getName() );
+        entity.setCreated(new Date());
+        entity.setDomainId(CloudToolsForCore.getDomainId());
 
-        try {
-            if(Tools.isTrue(entity.getSaveWithProvider()))
-                entity.setAssistantKey( aiAssistantsService.insertAssistant(entity, getProp()) );
-
-            entity.setCreated(new Date());
-            entity.setDomainId(CloudToolsForCore.getDomainId());
-
-            return repo.save(entity);
-        } catch(Exception e) {
-            throw new IllegalStateException(e.getMessage());
-        }
+        return repo.save(entity);
     }
 
     @Override
@@ -138,21 +116,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());
-    }
-
-    @Override
-    public boolean processAction(AssistantDefinitionEntity entity, String action) {
-        if("syncToTable".equals(action)) {
-            try {
-                aiAssistantsService.syncToTable(repo, getProp());
-            } catch (Exception e) {
-                throw new IllegalStateException(e.getMessage());
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     @Override

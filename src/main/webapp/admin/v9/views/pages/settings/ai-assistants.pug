@@ -98,21 +98,6 @@ block content
                     }
                 });
             }
-
-            var buttonCounter = 5;
-
-            aiAssistantsDataTable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-cloud-down"></i>',
-                action: function (e, dt, node) {
-                    //
-                    aiAssistantsDataTable.executeAction("syncToTable", true, "[[\#{components.ai_assistants.sync_to_table.confirm}]]");
-                },
-                className: 'btn btn-outline-secondary',
-                attr: {
-                    'title': '[[\#{components.ai_assistants.sync_to_table.tooltip}]]',
-                    'data-toggle': 'tooltip'
-                }
-            });
         });
 
     style.

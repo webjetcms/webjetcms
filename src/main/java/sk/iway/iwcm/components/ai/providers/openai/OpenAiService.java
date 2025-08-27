@@ -45,6 +45,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.*;
+
 @Service
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
@@ -99,16 +101,14 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws IOException, InterruptedException {
 
-        if(Tools.isTrue(assistant.getSaveWithProvider())) return new OpenAiAssistantsService().getAiStreamResponse(assistant, inputData, prop, statRepo, writer);
-
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
         JSONObject json = new JSONObject();
-        json.put("model", assistant.getModel());
-        json.put("instructions", assistant.getInstructions());
-        json.put("input", inputData.getInputValue());
-        json.put("store", !assistant.getUseTemporal());
-        json.put("stream", assistant.getUseStreaming());
+        json.put(MODEL.value(), assistant.getModel());
+        json.put(INSTRUCTIONS.value(), assistant.getInstructions());
+        json.put(INPUT.value(), inputData.getInputValue());
+        json.put(STORE.value(), !assistant.getUseTemporal());
+        json.put(STREAM.value(), assistant.getUseStreaming());
 
         HttpPost post = new HttpPost(RESPONSES_URL);
         post.setEntity(getRequestBody(json.toString()));
@@ -119,7 +119,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             HttpEntity entity = response.getEntity();
             InputStream inputStream = entity.getContent();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(false);
+            OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
             streamHandler.handleBufferedReader(reader, writer);
 
             //
@@ -131,16 +131,14 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
 
-        if(Tools.isTrue(assistant.getSaveWithProvider())) return new OpenAiAssistantsService().getAiResponse(assistant, inputData, prop, statRepo);
-
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         HttpPost post = new HttpPost(RESPONSES_URL);
 
         JSONObject json = new JSONObject();
-        json.put("model", assistant.getModel());
-        json.put("store", !assistant.getUseTemporal());
-        json.put("instructions", assistant.getInstructions());
-        json.put("input", inputData.getInputValue());
+        json.put(MODEL.value(), assistant.getModel());
+        json.put(STORE.value(), !assistant.getUseTemporal());
+        json.put(INSTRUCTIONS.value(), assistant.getInstructions());
+        json.put(INPUT.value(), inputData.getInputValue());
 
         post.setEntity(getRequestBody(json.toString()));
         addHeaders(post, true, false);
@@ -189,7 +187,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                     JSONObject jsonImage = imageArr.getJSONObject(i);
                     String base64Image = jsonImage.getString("b64_json");
                     //Date pars is added so we can delet all images from same request (same request == same date time part)
-                    String tmpFileName = "tmp_ai_" + assistant.getAssistantKey() + "_" + datePart + "_";
+                    String tmpFileName = "tmp_ai_" + assistant.getName() + "_" + datePart + "_";
 
                     try {
                         tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);
@@ -275,7 +273,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.addTextBody("model", "gpt-image-1");
+        builder.addTextBody(MODEL.value(), "gpt-image-1");
         builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
         builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
         builder.addTextBody("quality", inputData.getImageQuality() == null ? "low" : inputData.getImageQuality());
@@ -309,7 +307,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         HttpPost post = new HttpPost(IMAGES_GENERATION_URL);
 
         JSONObject json = new JSONObject();
-        json.put("model", "gpt-image-1");
+        json.put(MODEL.value(), "gpt-image-1");
         json.put("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
         json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
         json.put("quality", inputData.getImageQuality() == null ? "low" : inputData.getImageQuality());

@@ -116,92 +116,6 @@ public class AiAssistantsService {
         return ac;
     }
 
-    public void syncToTable(AssistantDefinitionRepository assistantRepo, Prop prop) {
-        // Allready set assiatnts in DB
-        List<AssistantDefinitionEntity> dbAiAssitants = getAssistantsFromDB(assistantRepo);
-
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.isInit() == false) continue;
-
-            // Prepare AI assistants from provider
-           List<AssistantDefinitionEntity> aiAssitants = new ArrayList<>();
-            try {
-                aiAssitants = assistantInterface.getAiAssistants(prop);
-            } catch(Exception e) {
-                //??
-                continue;
-            }
-
-            // Filter correct one
-            aiAssitants = filterAssistantsByPrefix(aiAssitants);
-
-            // Loop obrained assistants
-            for(AssistantDefinitionEntity aiAssitant : aiAssitants) {
-                Long recordId = null;
-
-                // Find table version of obtained assistant
-                for(AssistantDefinitionEntity dbAiAssitant : dbAiAssitants) {
-                    if(dbAiAssitant.getFullName().equalsIgnoreCase( aiAssitant.getFullName() )) {
-                        recordId = dbAiAssitant.getId();
-                        break;
-                    }
-                }
-
-                // Prepare for save
-                aiAssitant.setId(recordId);
-                aiAssitant.setDomainId(CloudToolsForCore.getDomainId());
-                aiAssitant.setProvider(assistantInterface.getProviderId());
-                aiAssitant.setAction(EMPTY_VALUE);
-                aiAssitant.setClassName(EMPTY_VALUE);
-                aiAssitant.setFieldFrom(EMPTY_VALUE);
-                aiAssitant.setFieldTo(EMPTY_VALUE);
-
-                if(recordId == null || recordId < 1L) {
-                    // Its INSERT - add new DB assitant to list -  so no duplicity occur
-                    dbAiAssitants.add( assistantRepo.save(aiAssitant) );
-                } else {
-                    // Its UPDATE
-                    assistantRepo.save(aiAssitant);
-                }
-            }
-        }
-
-        //Assitants were changed - remove them from cache
-        removeAssistantsFromCache();
-    }
-
-    public String insertAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception{
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
-                return assistantInterface.insertAssistant(assistantEnity, prop);
-            }
-        }
-
-        throw new IllegalStateException(getNoPermittedString(prop));
-    }
-
-    public void updateAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
-                assistantInterface.updateAssistant(assistantEnity, prop);
-                return;
-            }
-        }
-
-        throw new IllegalStateException(getNoPermittedString(prop));
-    }
-
-    public void deleteAssistant(AssistantDefinitionEntity assistantEnity, Prop prop) throws Exception {
-        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
-            if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
-                assistantInterface.deleteAssistant(assistantEnity, prop);
-                return;
-            }
-        }
-
-        //provider not found, just continue and delete row from database
-    }
-
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity, Prop prop) {
         for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
             if(assistantInterface.isInit() == true && assistantInterface.getProviderId().equals(assistantEnity.getProvider())) {
@@ -231,19 +145,7 @@ public class AiAssistantsService {
     }
 
     /* PRIVATE SUPPORT METHODS */
-
-    private List<AssistantDefinitionEntity> filterAssistantsByPrefix(List<AssistantDefinitionEntity> assistantsList) {
-        String prefix = getAssitantPrefix();
-        List<AssistantDefinitionEntity> filteredAssitants = new ArrayList<>();
-
-        for(AssistantDefinitionEntity assistant : assistantsList) {
-            if(assistant.getFullName().startsWith(prefix))
-                filteredAssitants.add(assistant);
-        }
-
-        return filteredAssitants;
-    }
-
+    @SuppressWarnings("java:S1871")
     private static boolean isMatching(String text, String search) {
         if (search.equals(text)) return true;
         else if ("*".equals(text)) return true;
