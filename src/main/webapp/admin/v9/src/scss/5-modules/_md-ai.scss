@@ -1,3 +1,7 @@
+.ti-sparkles {
+    transform: rotate(186deg);
+}
+
 .modal {
     .DTE {
         .DTE_Field {
@@ -15,7 +19,7 @@
                 &:hover {
                     background-color: var(--wj-ai-color-hover);
                     .ti-sparkles {
-                        transform: rotate(20deg);
+                        transform: rotate(200deg);
                         transition: all 0.2s ease-in-out;
                     }
                 }
@@ -92,17 +96,41 @@
     bottom: 16px;
     top: auto;
 
+    .btn {
+        i.ti {
+            vertical-align: text-bottom;
+        }
+    }
+
     .btn-primary {
         background-color: var(--wj-ai-color);
         border-color: var(--wj-ai-color);
         background: linear-gradient(92.29deg, #8A3EFF 0%, #6E00DC 100%),
                     radial-gradient(65.28% 65.28% at 26.39% 20.83%, rgba(255, 255, 255, 0.236) 0%, rgba(255, 255, 255, 0) 69.79%, rgba(255, 255, 255, 0) 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */,
                     radial-gradient(92.09% 85.42% at 86.3% 87.5%, rgba(0, 0, 0, 0.23) 0%, rgba(0, 0, 0, 0) 86.18%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+        padding-left: 11px;
+        padding-right: 12px;
+
+        .ti {
+            display: inline-block;
+            margin-right: 3px;
+        }
+
         &:hover {
             background: none;
             background-color: var(--wj-ai-color-dark);
             border-color: var(--wj-ai-color-dark);
+            transition: none;
+            .ti {
+                transform: rotate(200deg);
+                transition: all 0.2s ease-in-out;
+            }
         }
+    }
+
+    .form-control {
+        font-size: 14px;
+        padding: 6px 2px 2px 11px;
     }
 
     .btn-outline-secondary {
@@ -121,11 +149,16 @@
         height: 30px;
         top: 9px;
         right: 19px;
+        opacity: 1;
         &::before {
             position: absolute;
             top: 8px;
             left: 8px;
             font-size: 14px;
+        }
+        &:hover {
+            background-color: var(--wj-dark-60);
+            color: var(--bs-body-color);
         }
     }
 
@@ -140,6 +173,7 @@
         &::before {
             content: "\f6d7"; //sparkles
             color: var(--wj-ai-color);
+            transform: rotate(186deg);
         }
 
         div.toast-title {
@@ -170,6 +204,11 @@
                     display: inline-block;
                     vertical-align: middle;
                     margin-right: 3px;
+                }
+                i.has-user-prompt {
+                    color: var(--wj-nice-gray-200);
+                    margin-left: 3px;
+                    vertical-align: text-top;
                 }
             }
 

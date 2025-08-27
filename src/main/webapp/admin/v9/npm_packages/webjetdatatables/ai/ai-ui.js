@@ -70,7 +70,7 @@ export class AiUserInterface {
 
             // Create button element
             let chatPromptIcon = "";
-            if (true === aiCol.userPromptEnabled) chatPromptIcon = "<i class='ti ti-messages'></i>";
+            if (true === aiCol.userPromptEnabled) chatPromptIcon = "<i class='ti ti-blockquote has-user-prompt'></i>";
             const btn = $(`
                 <button class="btn btn-light btn-ai-action" type="button">
                     <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
