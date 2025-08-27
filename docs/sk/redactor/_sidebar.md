@@ -35,6 +35,12 @@
     - [Priečinky](/redactor/webpages/mirroring/groups.md)
     - [Stránky](/redactor/webpages/mirroring/docs.md)
     - [Konfigurácia](/redactor/webpages/mirroring/settings.md)
+- AI asistent
+  - [AI asistent](/redactor/ai/README.md)
+  - [Používanie AI asistentov](/redactor/ai/datatables/README.md)
+  - [Nastavenie](/redactor/ai/settings/README.md)
+  - [Písanie inštrukcií](/redactor/ai/instructions/README.md)
+  - [Štatistika](/redactor/ai/stat/README.md)
 - Aplikácie
   - AB testovanie
     - [Úvod](/redactor/apps/abtesting/README.md)
