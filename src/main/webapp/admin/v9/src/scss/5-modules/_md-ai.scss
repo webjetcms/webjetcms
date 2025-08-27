@@ -284,9 +284,6 @@
             .header-back-button {
                 color: var(--bs-body-color);
                 font-weight: bold;
-                .ti {
-                    vertical-align: middle;
-                }
                 .btn {
                     padding-top: 4px;
                     padding-right: 11px;
@@ -300,6 +297,14 @@
                         vertical-align: text-bottom;
                         margin-right: 5px;
                     }
+                }
+                .ti {
+                    vertical-align: middle;
+                    margin-right: 5px;
+                }
+                span {
+                    position: relative;
+                    top: 1px;
                 }
             }
         }

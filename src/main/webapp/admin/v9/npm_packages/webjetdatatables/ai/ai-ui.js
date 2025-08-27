@@ -172,7 +172,9 @@ export class AiUserInterface {
             <div class="header-back-button">
                 <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
                 <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
-                ${aiCol.description}
+                <span>
+                    ${aiCol.description}
+                </span>
             </div>
         `;
 
