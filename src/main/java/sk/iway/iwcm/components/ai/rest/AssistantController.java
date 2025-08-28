@@ -45,7 +45,7 @@ public class AssistantController {
         AssistantResponseDTO response = null;
         String exceptionMessage = null;
         try {
-            response = aiService.getAiResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            response = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -65,7 +65,7 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
-            response = aiService.getAiImageResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            response = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -89,7 +89,7 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
-            responseDto = aiService.getAiStreamResponse(new InputDataDTO(data), Prop.getInstance(request), statRepo, assistantRepo, writer);
+            responseDto = aiService.getAiStreamResponse(new InputDataDTO(data), statRepo, assistantRepo, writer, request);
         } catch(Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -120,7 +120,7 @@ public class AssistantController {
         return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation, request);
     }
 
-    @GetMapping("/bonus-content/")
+    @GetMapping(value = "/bonus-content/", produces = "text/plain; charset=UTF-8")
     public String getBonusContent(@RequestParam("assistantName") String assistantName, HttpServletRequest request, HttpServletResponse response) {
         return aiService.getBonusHtml(assistantName, assistantRepo, request);
     }

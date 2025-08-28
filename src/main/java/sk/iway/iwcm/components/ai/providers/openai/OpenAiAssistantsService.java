@@ -28,7 +28,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService implements AiA
     }
 
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
-        if(assistantEnity.getModel() == null) assistantEnity.setModel("gpt-3.5-turbo");
+        if(Tools.isEmpty(assistantEnity.getModel())) assistantEnity.setModel("gpt-3.5-turbo");
     }
 
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
@@ -39,7 +39,7 @@ public class OpenAiAssistantsService extends OpenAiSupportService implements AiA
 
     public List<String> getFieldsToShow(String action) {
         if("create".equals(action)) return List.of("model", "useStreaming", "useTemporal");
-        else if("edit".equals(action)) return List.of("model", "assistantKey", "useStreaming", "useTemporal");
+        else if("edit".equals(action)) return List.of("model", "useStreaming", "useTemporal");
         else return new ArrayList<>();
     }
 

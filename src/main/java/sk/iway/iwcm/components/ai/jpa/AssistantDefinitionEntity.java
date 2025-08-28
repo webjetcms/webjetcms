@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.ai.jpa;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -15,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -25,8 +27,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-//@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CLIENT_SPECIFIC)
-public class AssistantDefinitionEntity {
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_AI)
+public class AssistantDefinitionEntity implements Serializable {
 
     @Id
     @Column(name = "id")
@@ -66,20 +68,21 @@ public class AssistantDefinitionEntity {
 	})
     private String groupName;
 
+
+
     @Column(name = "action")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.action", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.action", tab = "action")
     @Size(max = 255)
     private String action;
 
     @Column(name = "class_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "basic",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "action",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
 					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-class"),
 					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
-					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before")
+					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
 				}
 			)
 		}
@@ -89,7 +92,7 @@ public class AssistantDefinitionEntity {
     private String className;
 
     @Column(name = "field_from")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "basic",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "action",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -105,7 +108,7 @@ public class AssistantDefinitionEntity {
     private String fieldFrom;
 
     @Column(name = "field_to")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "basic",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "action",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -122,25 +125,24 @@ public class AssistantDefinitionEntity {
     private String fieldTo;
 
     @Column(name = "user_prompt_enabled")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.user_prompt.enabled", tab = "basic", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.user_prompt.enabled", tab = "action", visible = false)
     private Boolean userPromptEnabled;
 
     @Column(name = "user_prompt_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.user_prompt.label", tab = "basic", visible = false,
-        editor = {
-            @DataTableColumnEditor(attr = {
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
-            })
-        }
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.user_prompt.label", tab = "action", visible = false
+
     )
     private String userPromptLabel;
 
+
+
+
     @Column(name = "provider")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.provider", tab = "basic")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.provider", tab = "provider")
     private String provider;
 
     @Column(name = "model")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", visible = false, className = "hideOnCreate hideOnEdit", tab = "basic",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", visible = false, className = "hideOnCreate hideOnEdit", tab = "provider",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -153,6 +155,9 @@ public class AssistantDefinitionEntity {
     )
     @Size(max = 255)
     private String model;
+
+
+
 
     @Lob
     @Column(name = "instructions")
@@ -185,7 +190,7 @@ public class AssistantDefinitionEntity {
     private Boolean keepHtml;
 
     @Column(name="use_streaming")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.use_streaming", visible = false, tab = "advanced")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.use_streaming", visible = false, className = "hideOnCreate hideOnEdit", tab = "advanced")
 	private Boolean useStreaming;
 
     @Column(name="use_temporal")

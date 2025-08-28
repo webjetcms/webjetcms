@@ -100,8 +100,9 @@ public class AiService {
         return ac;
     }
 
-    public AssistantResponseDTO getAiResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+    public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws Exception {
 
+        Prop prop = Prop.getInstance(request);
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false) {
@@ -114,15 +115,16 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiResponse(assistant, inputData, prop, statRepo);
+                return aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
             }
         }
 
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) throws Exception {
+    public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws Exception {
 
+        Prop prop = Prop.getInstance(request);
         inputData.prepareData();
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
@@ -133,15 +135,16 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo);
+                return aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo, request);
             }
         }
 
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, Prop prop, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer, HttpServletRequest request) throws Exception {
 
+        Prop prop = Prop.getInstance(request);
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false || Tools.isFalse(assistant.getUseStreaming())) {
@@ -154,7 +157,7 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer);
+                return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
             }
         }
 
@@ -165,9 +168,10 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo, Prop.getInstance(request));
 
+        Prop prop = Prop.getInstance(request);
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getBonusHtml(assistant);
+                return aiInterface.getBonusHtml(assistant, prop);
             }
         }
 
