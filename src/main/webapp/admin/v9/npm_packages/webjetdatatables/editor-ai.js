@@ -192,8 +192,7 @@ export class EditorAi {
         //Add other values
         inputData.inputValueType = this._getColumnType(this.EDITOR, aiCol.to);
 
-
-        console.log(inputData);
+        //console.log(inputData);
 
         if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
 
@@ -284,7 +283,7 @@ export class EditorAi {
                 }
 
                 await this.aiRestExecutor.executeImageAction(aiCol, inputData, (result) => {
-                    console.log("Image action result:", result);
+                    //console.log("Image action result:", result);
                     if (result.error != null) {
                         totalTokens = this.ERR_CLOSE_DIALOG;
                         self.setError(result.error);

@@ -28,6 +28,7 @@ export class AiUserInterface {
         if (contentContainer.length === 0) {
             this.lastToast = window.toastr.info("<div id='toast-container-ai-content'></div>", WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), {
                 closeButton: true,
+                closeHtml: '<i class="ti ti-x"></i>',
                 timeOut: 0,
                 tapToDismiss: false,
                 extendedTimeOut: 0,
@@ -50,7 +51,6 @@ export class AiUserInterface {
         //set default header
         $("#toast-container-ai").removeClass("has-back-button");
         $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
-        contentContainer.addClass("has-back-button");
 
         // Clear previous content
         contentContainer.empty();
@@ -70,7 +70,7 @@ export class AiUserInterface {
 
             // Create button element
             let chatPromptIcon = "";
-            if (true === aiCol.userPromptEnabled) chatPromptIcon = "<i class='ti ti-messages'></i>";
+            if (true === aiCol.userPromptEnabled) chatPromptIcon = "<i class='ti ti-blockquote has-user-prompt'></i>";
             const btn = $(`
                 <button class="btn btn-light btn-ai-action" type="button">
                     <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
@@ -99,18 +99,48 @@ export class AiUserInterface {
 
     setCurrentStatus(textKey, pulsate = false, ...params) {
         let contentContainer = $("#toast-container-ai-content");
-        let html = '<div class="group-title"';
+
+        //reset contentContainer class
+        contentContainer.attr("class", "");
+
+        let chatErrorContainer = contentContainer.find(".chat-error-container");
+        let html = '<div class="current-status';
+
+        let statusClass = "";
+        let icon = "";
+        if ("components.ai_assistants.editor.loading.js" === textKey) {
+            statusClass = "ai-status-working";
+            icon = "exclamation-circle";
+        } else if ("components.ai_assistants.stat.totalTokens.js" === textKey || "components.ai.editor.image_saved.js" === textKey) {
+            statusClass = "ai-status-success";
+            icon = "circle-check";
+            //success replace whole content with success message
+            chatErrorContainer = null;
+        } else if ("components.ai_assistants.unknownError.js" === textKey) {
+            statusClass = "ai-status-error";
+            icon = "help-circle";
+        }
 
         if (pulsate) {
             html += " pulsate-text";
         }
+        if (statusClass != "") contentContainer.addClass(statusClass);
 
-        html = html + '">' + WJ.translate(textKey, params) + '</div>';
-        contentContainer.html(html);
+        html = html + '">';
+
+        if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
+
+        html += WJ.translate(textKey, params) + '</div>';
+
+        if (chatErrorContainer != null && chatErrorContainer.length > 0) {
+            chatErrorContainer.html(html);
+        } else {
+            contentContainer.html(html);
+        }
     }
 
     setError(...params) {
-        setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
+        this.setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
     }
 
     async _executeAction(button, column, aiCol, inputValues = null) {
@@ -172,7 +202,9 @@ export class AiUserInterface {
             <div class="header-back-button">
                 <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
                 <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
-                ${aiCol.description}
+                <span>
+                    ${aiCol.description}
+                </span>
             </div>
         `;
 
@@ -188,6 +220,7 @@ export class AiUserInterface {
                 <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
                 ${bonusHtml}
             </div>
+            <div class="chat-error-container"></div>
         `;
 
         let contentContainer = $("#toast-container-ai-content");
@@ -249,15 +282,19 @@ export class AiUserInterface {
         let self = this;
         const imageUrl = await this.getPathForNewImage(self);
 
-        let html = "<div>" + WJ.translate(textKey, params) + "</div>";
-        html += "<div class='ai-image-preview-div'></div>";
-        html += "<div class='button-div' style='display: none;'> </div>";
+        this.setCurrentStatus(textKey, false, ...params);
 
-        html += `
+        let currentStatus = contentContainer.html();
+
+        let html = `
+            <div class='ai-image-preview-div mb-3'></div>
+            <div class='chat-error-container'>${currentStatus}</div>
+            <div class='button-div' style='display: none;'> </div>
+
             <div class='image-info' style='display: none;'>
                 <div>
                     <label for='generated-image-name' style='color: black;'>ImageName</label>
-                    <input id='generated-image-name' type='text' class='form-control' value='ai-image.png'>
+                    <input id='generated-image-name' type='text' class='form-control' value='ai-image'>
                 </div>
 
                 <div>
@@ -267,11 +304,12 @@ export class AiUserInterface {
                     </div>
                 </div>
 
-
             </div>
         `;
 
         contentContainer.html(html);
+
+
 
         $("div.image-info").find("input.webjet-dte-jstree").each(async function() {
             var $element = $(this);
@@ -369,7 +407,7 @@ export class AiUserInterface {
 
         let buttonDiv = contentContainer.find('.button-div');
 
-        const imageButton = $('<button class="btn btn-outline-secondary select-image">' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
+        const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {
             this._saveAndSetImage(button, toField);
         });
@@ -377,7 +415,7 @@ export class AiUserInterface {
     }
 
     _selectImage(imageName) {
-        console.log("Selected image:", imageName);
+        //console.log("Selected image:", imageName);
 
         $("div.button-div").show();
         $("div.image-info").show();
@@ -402,7 +440,12 @@ export class AiUserInterface {
             },
             success: function(res)
             {
-                self.EDITOR.set(toField, res);
+                if (res && res.error) {
+                    self.setError(res.error);
+                    return;
+                }
+
+                self.EDITOR.set(toField, res.response);
                 self.setCurrentStatus("components.ai.editor.image_saved.js");
                 self._closeToast(3000);
                 self._hideLoader(button);

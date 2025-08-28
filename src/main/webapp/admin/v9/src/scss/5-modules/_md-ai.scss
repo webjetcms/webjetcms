@@ -1,3 +1,7 @@
+.ti-sparkles {
+    transform: rotate(186deg);
+}
+
 .modal {
     .DTE {
         .DTE_Field {
@@ -15,7 +19,7 @@
                 &:hover {
                     background-color: var(--wj-ai-color-hover);
                     .ti-sparkles {
-                        transform: rotate(20deg);
+                        transform: rotate(200deg);
                         transition: all 0.2s ease-in-out;
                     }
                 }
@@ -92,44 +96,106 @@
     bottom: 16px;
     top: auto;
 
+    .btn {
+        i.ti {
+            vertical-align: text-bottom;
+        }
+    }
+
+    .btn-primary {
+        background-color: var(--wj-ai-color);
+        border-color: var(--wj-ai-color);
+        background: linear-gradient(92.29deg, #8A3EFF 0%, #6E00DC 100%),
+                    radial-gradient(65.28% 65.28% at 26.39% 20.83%, rgba(255, 255, 255, 0.236) 0%, rgba(255, 255, 255, 0) 69.79%, rgba(255, 255, 255, 0) 100%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */,
+                    radial-gradient(92.09% 85.42% at 86.3% 87.5%, rgba(0, 0, 0, 0.23) 0%, rgba(0, 0, 0, 0) 86.18%) /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+        padding-left: 11px;
+        padding-right: 12px;
+
+        .ti {
+            display: inline-block;
+            margin-right: 3px;
+        }
+
+        &:hover {
+            background: none;
+            background-color: var(--wj-ai-color-dark);
+            border-color: var(--wj-ai-color-dark);
+            transition: none;
+            .ti-sparkles {
+                transform: rotate(200deg);
+                transition: all 0.2s ease-in-out;
+            }
+        }
+    }
+
+    .form-control {
+        font-size: 14px;
+        padding: 6px 2px 2px 11px;
+    }
+
+    .btn-outline-secondary {
+        background-color: white;
+        &:hover {
+            background-color: var(--wj-dark-20);
+            border-color: var(--wj-dark-50);
+            color: var(--bs-body-color);
+        }
+    }
+
+    .toast-close-button {
+        background-color: var(--wj-dark-20);
+        border-radius: 20px;
+        width: 30px;
+        height: 30px;
+        top: 9px;
+        right: 19px;
+        opacity: 1;
+        &::before {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 14px;
+        }
+        &:hover {
+            background-color: var(--wj-dark-60);
+            color: var(--bs-body-color);
+        }
+    }
+
     .toast.toast-info {
         opacity: 1;
         transition: none;
         width: 480px;
+        max-width: 480px;
         border: 1px solid var(--wj-ai-color);
+        border-radius: 10px;
         cursor: auto;
         &::before {
             content: "\f6d7"; //sparkles
             color: var(--wj-ai-color);
+            transform: rotate(186deg);
+            left: 17px;
         }
 
         div.toast-title {
             background-color: var(--wj-nice-gray);
             color: var(--wj-ai-color);
-
-            .header-back-button {
-                color: var(--bs-body-color);
-                font-weight: bold;
-                .ti {
-                    vertical-align: middle;
-                }
-                .btn {
-                    padding: 0px 6px;
-                    margin-right: 8px;
-                    font-size: 14px;
-                }
-            }
+            padding-top: 14px;
+            padding-left: 48px;
         }
 
         div.toast-message {
             background-color: white;
+            padding-left: 19px;
+            padding-right: 19px;
 
             .btn-ai-action {
                 width: 100%;
                 background-color: white;
                 text-align: left;
                 border-width: 0px;
-                margin-bottom: 6px;
+                margin-bottom: 3px;
+                padding: 3px 10px;
 
                 &:hover {
                     color: white;
@@ -139,15 +205,28 @@
                 i.ti {
                     display: inline-block;
                     vertical-align: middle;
+                    margin-right: 3px;
+                }
+                i.has-user-prompt {
+                    color: var(--wj-nice-gray-200);
+                    margin-left: 3px;
+                    vertical-align: text-top;
                 }
             }
 
             .group-title {
                 color: var(--wj-dark-60);
                 //same as btn
-                margin-bottom: 6px;
-                padding-top: 3px;
-                padding-bottom: 3px;
+                margin-top: 8px;
+                margin-bottom: 2px;
+                padding-top: 6px;
+                padding-bottom: 4px;
+                padding-left: 12px;
+            }
+
+            #toast-container-ai-content > .group-title:first-child {
+                margin-top: 0;
+                padding-top: 0;
             }
 
             .provider {
@@ -157,6 +236,45 @@
 
             .pulsate-text {
                 animation: ai-pulsate-color 1.5s infinite;
+            }
+
+            .current-status {
+                .ti {
+                    vertical-align: bottom;
+                    font-size: 24px;
+                    margin-right: 3px;
+                    margin-left: -2px;
+                }
+
+            }
+
+            #toast-container-ai-content {
+                &.ai-status-working {
+                    .current-status {
+                        color: var(--wj-yellow-60);
+                    }
+                    button.btn-primary {
+                        i {
+                            animation: ti-loader-spin 2s linear infinite;
+                        }
+                    }
+                }
+                &.ai-status-success {
+                    .current-status {
+                        color: var(--wj-green-60);
+                    }
+                }
+                &.ai-status-error {
+                    .current-status {
+                        color: var(--wj-red-60);
+                    }
+                }
+            }
+
+            .chat-error-container {
+                .current-status {
+                    margin-bottom: 1rem !important;
+                }
             }
         }
 
@@ -173,18 +291,18 @@
                 gap: 8px;
 
                 img {
-                    width: 150px;
-                    height: 150px;
+                    width: 138px;
                     margin: 0;
                     border-radius: 8px;
                     object-fit: cover;
                     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
                     transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
+                    border: 2px solid transparent;
 
                     &:hover {
                         box-shadow: 0 0 0 1px var(--wj-ai-color), 0 2px 8px rgba(0,0,0,0.12);
-                        transform: scale(1.05);
-                        border: 2px solid var(--wj-ai-color);
+                        //transform: scale(1.05);
+                        border-color: var(--wj-ai-color);
                         background-color: transparent;
                         cursor: pointer;
                     }
@@ -202,16 +320,6 @@
         .button-div {
             text-align: end;
             margin-top: 7px;
-
-            button.select-image {
-                font-size: 16px;
-                color: white;
-                background-color: var(--wj-ai-color);
-
-                &:hover {
-                    background-color: var(--wj-ai-color-dark);
-                }
-            }
         }
 
     }
@@ -222,17 +330,48 @@
         }
     }
 
-    .toast.toast-info:has(.image-preview) {
-        width: max-content;
-        max-width: 100%;
-    }
-
     &.has-back-button {
-        .toast.toast-info::before {
-            content: ""
-        }
-        .toast-title {
-            padding-left: 16px;
+        //padding-top: 11px;
+        //padding-bottom: 7px;
+        //padding-left: 18px;
+
+        .toast.toast-info {
+
+            &::before {
+                content: ""
+            }
+            .toast-title {
+                padding-left: 19px;
+                padding-top: 9px;
+                padding-bottom: 10px;
+            }
+
+            .header-back-button {
+                color: var(--bs-body-color);
+                font-weight: bold;
+                .btn {
+                    padding-top: 4px;
+                    padding-right: 11px;
+                    padding-bottom: 3px;
+                    padding-left: 10px;
+                    margin-right: 11px;
+                    font-size: 14px;
+
+                    .ti {
+                        font-size: 15px;
+                        vertical-align: text-bottom;
+                        margin-right: 5px;
+                    }
+                }
+                .ti {
+                    vertical-align: middle;
+                    margin-right: 5px;
+                }
+                span {
+                    position: relative;
+                    top: 1px;
+                }
+            }
         }
     }
 }

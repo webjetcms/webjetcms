@@ -22,11 +22,10 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.i18n.Prop;
 
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
-@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_tools')")
+@PreAuthorize("@WebjetSecurityService.isAdmin()") //AI assistants can be in any module, so check just for admin perms
 public class AssistantController {
 
     private final AiService aiService;
@@ -42,41 +41,41 @@ public class AssistantController {
 
     @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
-        AssistantResponseDTO response = null;
+        AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
         try {
-            response = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
+            responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
         }
 
-        if (response == null) {
-            response = new AssistantResponseDTO();
-            response.setError(getErrMsg(exceptionMessage, request));
+        if (responseDto == null) {
+            responseDto = new AssistantResponseDTO();
+            responseDto.setError(getErrMsg(exceptionMessage, request));
         }
 
-        return response;
+        return responseDto;
     }
 
     @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
-        AssistantResponseDTO response = null;
+        AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
 
         try {
-            response = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
+            responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
         }
 
-        if (response == null) {
-            response = new AssistantResponseDTO();
-            response.setError(getErrMsg(exceptionMessage, request));
+        if (responseDto == null) {
+            responseDto = new AssistantResponseDTO();
+            responseDto.setError(getErrMsg(exceptionMessage, request));
         }
 
-        return response;
+        return responseDto;
     }
 
     @PostMapping("/response-stream/")
@@ -116,8 +115,15 @@ public class AssistantController {
     }
 
     @PostMapping("/save-temp-file/")
-    public String saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        return AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation, request);
+    public AssistantResponseDTO saveTempFile(@RequestParam("tempFileName") String tempFileName, @RequestParam("imageName") String imageName, @RequestParam("imageLocation") String imageLocation, HttpServletRequest request) throws IOException {
+        AssistantResponseDTO response = new AssistantResponseDTO();
+        try {
+            String result = AiTempFileStorage.saveTempFile(tempFileName, imageName, imageLocation, request);
+            response.setResponse(result);
+        } catch (Exception e) {
+            response.setError(e.getMessage());
+        }
+        return response;
     }
 
     @GetMapping(value = "/bonus-content/", produces = "text/plain; charset=UTF-8")
@@ -131,6 +137,6 @@ public class AssistantController {
     }
 
     private String getErrMsg(String errMsg, HttpServletRequest request) {
-        return Prop.getInstance(request).getText("html_area.insert_image.error_occured") + " : " + errMsg;
+        return errMsg;
     }
 }

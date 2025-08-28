@@ -221,7 +221,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                         <label for='bonusContent-imageSize'>%s</label>
                         <select id='bonusContent-imageSize' class='form-control' value='auto'>
                             <option value="auto">auto</option>
-                            <option                            <option value="auto">auto</option>                             <option value="1024x1024">1024x1024</option>tion value="1024x1536">1024x1536</option>
+                            <option value="1024x1024">1024x1024</option>
+                            <option value="1024x1536">1024x1536</option>
                             <option value="1536x1024">1536x1024</option>
                         </select>
                     </div>
