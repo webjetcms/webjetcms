@@ -46,7 +46,7 @@ public class SpringSecurityConf {
 		}
 
 		// OAuth2 login podpora
-		if (Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients"))) {
+		if (Tools.isNotEmpty(Constants.getString("oauth2_clients"))) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - oauth2Login");
 			http.oauth2Login(oauth2 -> {
 				oauth2.clientRegistrationRepository(clientRegistrationRepository());
@@ -130,7 +130,7 @@ public class SpringSecurityConf {
 
 	@Bean
 	public ClientRegistrationRepository clientRegistrationRepository() {
-		List<String> clients = List.of(Tools.getTokens(Constants.getString("springSecurityOAuth2Clients"), ","));
+		List<String> clients = List.of(Tools.getTokens(Constants.getString("oauth2_clients"), ","));
 		List<ClientRegistration> registrations = clients.stream()
 				.map(this::buildClientRegistration)
 				.filter(registration -> registration != null)
@@ -148,8 +148,8 @@ public class SpringSecurityConf {
 	}
 
 	private ClientRegistration buildClientRegistration(String providerId) {
-		String clientId = Constants.getString(providerId + "ClientId");
-		String clientSecret = Constants.getString(providerId + "ClientSecret");
+		String clientId = Constants.getString("oauth2_" + providerId + "ClientId");
+		String clientSecret = Constants.getString("oauth2_" + providerId + "ClientSecret");
 		if (Tools.isAnyEmpty(clientId, clientSecret)) return null;
 		// Preddefinovaní poskytovatelia
 		if ("google".equalsIgnoreCase(providerId)) {
@@ -177,14 +177,14 @@ public class SpringSecurityConf {
 					.build();
 		}
 		// Ostatní poskytovatelia - načítaj všetky potrebné parametre
-		String authorizationUri = Constants.getString(providerId + "AuthorizationUri");
-		String tokenUri = Constants.getString(providerId + "TokenUri");
-		String userInfoUri = Constants.getString(providerId + "UserInfoUri");
-		String jwkSetUri = Constants.getString(providerId + "JwkSetUri");
-		String issuerUri = Constants.getString(providerId + "IssuerUri");
-		String userNameAttributeName = Constants.getString(providerId + "UserNameAttributeName", "email");
-		String scopesStr = Constants.getString(providerId + "Scopes", "openid,profile,email");
-		String clientName = Constants.getString(providerId + "ClientName", providerId);
+		String authorizationUri = Constants.getString("oauth2_" + providerId + "AuthorizationUri");
+		String tokenUri = Constants.getString("oauth2_" + providerId + "TokenUri");
+		String userInfoUri = Constants.getString("oauth2_" + providerId + "UserInfoUri");
+		String jwkSetUri = Constants.getString("oauth2_" + providerId + "JwkSetUri");
+		String issuerUri = Constants.getString("oauth2_" + providerId + "IssuerUri");
+		String userNameAttributeName = Constants.getString("oauth2_" + providerId + "UserNameAttributeName", "email");
+		String scopesStr = Constants.getString("oauth2_" + providerId + "Scopes", "openid,profile,email");
+		String clientName = Constants.getString("oauth2_" + providerId + "ClientName", providerId);
 		if (Tools.isAnyEmpty(authorizationUri, tokenUri, userInfoUri, jwkSetUri, issuerUri)) return null;
 		return ClientRegistration.withRegistrationId(providerId)
 				.clientId(clientId)

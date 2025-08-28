@@ -34,7 +34,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
     pageContext.setAttribute("lng", lng);
 
-    request.setAttribute("isOAuth2Enabled", Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients")));
+    request.setAttribute("isOAuth2Enabled", Tools.isNotEmpty(Constants.getString("oauth2_clients")));
 %><!DOCTYPE html>
 <html>
 <head>

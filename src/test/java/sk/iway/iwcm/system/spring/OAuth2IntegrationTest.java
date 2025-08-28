@@ -77,9 +77,9 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
     @Test
     void testCompleteOAuth2FlowWithGoogle() throws IOException {
         // Nastavenie Google OAuth2
-        Constants.setString("springSecurityOAuth2Clients", "google");
-        Constants.setString("googleClientId", "test-client-id");
-        Constants.setString("googleClientSecret", "test-client-secret");
+        Constants.setString("oauth2_clients", "google");
+        Constants.setString("oauth2_googleClientId", "test-client-id");
+        Constants.setString("oauth2_googleClientSecret", "test-client-secret");
 
         // Test konfigurácie ClientRegistrationRepository
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -143,17 +143,17 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
     @Test
     void testCompleteOAuth2FlowWithKeycloakAndGroups() throws IOException {
         // Nastavenie custom Keycloak provider
-        Constants.setString("springSecurityOAuth2Clients", "keycloak");
-        Constants.setString("keycloakClientId", "keycloak-client-id");
-        Constants.setString("keycloakClientSecret", "keycloak-client-secret");
-        Constants.setString("keycloakAuthorizationUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/auth");
-        Constants.setString("keycloakTokenUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/token");
-        Constants.setString("keycloakUserInfoUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/userinfo");
-        Constants.setString("keycloakJwkSetUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/certs");
-        Constants.setString("keycloakIssuerUri", "https://keycloak.example.com/auth/realms/test");
-        Constants.setString("keycloakUserNameAttributeName", "preferred_username");
-        Constants.setString("keycloakScopes", "openid,profile,email");
-        Constants.setString("keycloakClientName", "Keycloak");
+        Constants.setString("oauth2_clients", "keycloak");
+        Constants.setString("oauth2_keycloakClientId", "keycloak-client-id");
+        Constants.setString("oauth2_keycloakClientSecret", "keycloak-client-secret");
+        Constants.setString("oauth2_keycloakAuthorizationUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/auth");
+        Constants.setString("oauth2_keycloakTokenUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/token");
+        Constants.setString("oauth2_keycloakUserInfoUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/userinfo");
+        Constants.setString("oauth2_keycloakJwkSetUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/certs");
+        Constants.setString("oauth2_keycloakIssuerUri", "https://keycloak.example.com/auth/realms/test");
+        Constants.setString("oauth2_keycloakUserNameAttributeName", "preferred_username");
+        Constants.setString("oauth2_keycloakScopes", "openid,profile,email");
+        Constants.setString("oauth2_keycloakClientName", "Keycloak");
 
         // Test konfigurácie ClientRegistrationRepository
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -249,9 +249,9 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
     @Test
     void testCompleteOAuth2FlowWithNewUserCreation() throws IOException {
         // Nastavenie Facebook OAuth2
-        Constants.setString("springSecurityOAuth2Clients", "facebook");
-        Constants.setString("facebookClientId", "fb-client-id");
-        Constants.setString("facebookClientSecret", "fb-client-secret");
+        Constants.setString("oauth2_clients", "facebook");
+        Constants.setString("oauth2_facebookClientId", "fb-client-id");
+        Constants.setString("oauth2_facebookClientSecret", "fb-client-secret");
 
         // Test konfigurácie
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -306,13 +306,13 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
     @Test
     void testMultipleOAuth2ProvidersConfiguration() {
         // Nastavenie viacerých providerov
-        Constants.setString("springSecurityOAuth2Clients", "google,facebook,github");
-        Constants.setString("googleClientId", "google-id");
-        Constants.setString("googleClientSecret", "google-secret");
-        Constants.setString("facebookClientId", "facebook-id");
-        Constants.setString("facebookClientSecret", "facebook-secret");
-        Constants.setString("githubClientId", "github-id");
-        Constants.setString("githubClientSecret", "github-secret");
+        Constants.setString("oauth2_clients", "google,facebook,github");
+        Constants.setString("oauth2_googleClientId", "google-id");
+        Constants.setString("oauth2_googleClientSecret", "google-secret");
+        Constants.setString("oauth2_facebookClientId", "facebook-id");
+        Constants.setString("oauth2_facebookClientSecret", "facebook-secret");
+        Constants.setString("oauth2_githubClientId", "github-id");
+        Constants.setString("oauth2_githubClientSecret", "github-secret");
 
         // Test konfigurácie
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -341,9 +341,9 @@ class OAuth2IntegrationTest extends BaseWebjetTest {
     @Test
     void testIntegrationErrorScenarios() throws IOException {
         // Nastavenie OAuth2
-        Constants.setString("springSecurityOAuth2Clients", "google");
-        Constants.setString("googleClientId", "test-client-id");
-        Constants.setString("googleClientSecret", "test-client-secret");
+        Constants.setString("oauth2_clients", "google");
+        Constants.setString("oauth2_googleClientId", "test-client-id");
+        Constants.setString("oauth2_googleClientSecret", "test-client-secret");
 
         // Test s chýbajúcim emailom
         Map<String, Object> attributesNoEmail = new HashMap<>();

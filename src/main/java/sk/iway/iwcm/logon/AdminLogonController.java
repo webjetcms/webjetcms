@@ -241,7 +241,7 @@ public class AdminLogonController {
             UserChangePasswordService.sendPassword(request,loginName);
         }
 
-        if (Tools.isNotEmpty(Constants.getString("springSecurityOAuth2Clients")) && clientRegistrationRepository != null) {
+        if (Tools.isNotEmpty(Constants.getString("oauth2_clients")) && clientRegistrationRepository != null) {
             Iterable<ClientRegistration> clientRegistrations = null;
             ResolvableType type = ResolvableType.forInstance(clientRegistrationRepository).as(Iterable.class);
             if (type != ResolvableType.NONE && ClientRegistration.class.isAssignableFrom(type.resolveGenerics()[0])) {

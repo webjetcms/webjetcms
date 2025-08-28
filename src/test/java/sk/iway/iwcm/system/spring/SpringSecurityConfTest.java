@@ -44,7 +44,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testBasicConfiguration() throws Exception {
         // Žiadne OAuth2 clients
-        Constants.setString("springSecurityOAuth2Clients", "");
+        Constants.setString("oauth2_clients", "");
 
         // Mock HttpSecurity builder pattern
         when(httpSecurity.authenticationProvider(any())).thenReturn(httpSecurity);
@@ -93,11 +93,11 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testOAuth2Configuration() throws Exception {
         // Nastavenie OAuth2 clients
-        Constants.setString("springSecurityOAuth2Clients", "google,facebook");
-        Constants.setString("googleClientId", "google-client-id");
-        Constants.setString("googleClientSecret", "google-client-secret");
-        Constants.setString("facebookClientId", "facebook-client-id");
-        Constants.setString("facebookClientSecret", "facebook-client-secret");
+        Constants.setString("oauth2_clients", "google,facebook");
+        Constants.setString("oauth2_googleClientId", "google-client-id");
+        Constants.setString("oauth2_googleClientSecret", "google-client-secret");
+        Constants.setString("oauth2_facebookClientId", "facebook-client-id");
+        Constants.setString("oauth2_facebookClientSecret", "facebook-client-secret");
 
         // Mock HttpSecurity builder pattern
         when(httpSecurity.authenticationProvider(any())).thenReturn(httpSecurity);
@@ -120,11 +120,11 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testClientRegistrationRepositoryWithKnownProviders() {
         // Nastavenie OAuth2 clients
-        Constants.setString("springSecurityOAuth2Clients", "google,facebook");
-        Constants.setString("googleClientId", "google-client-id");
-        Constants.setString("googleClientSecret", "google-client-secret");
-        Constants.setString("facebookClientId", "facebook-client-id");
-        Constants.setString("facebookClientSecret", "facebook-client-secret");
+        Constants.setString("oauth2_clients", "google,facebook");
+        Constants.setString("oauth2_googleClientId", "google-client-id");
+        Constants.setString("oauth2_googleClientSecret", "google-client-secret");
+        Constants.setString("oauth2_facebookClientId", "facebook-client-id");
+        Constants.setString("oauth2_facebookClientSecret", "facebook-client-secret");
 
         // Spustenie testu
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -149,17 +149,17 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testClientRegistrationRepositoryWithCustomProvider() {
         // Nastavenie custom OAuth2 provider
-        Constants.setString("springSecurityOAuth2Clients", "keycloak");
-        Constants.setString("keycloakClientId", "keycloak-client-id");
-        Constants.setString("keycloakClientSecret", "keycloak-client-secret");
-        Constants.setString("keycloakAuthorizationUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/auth");
-        Constants.setString("keycloakTokenUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/token");
-        Constants.setString("keycloakUserInfoUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/userinfo");
-        Constants.setString("keycloakJwkSetUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/certs");
-        Constants.setString("keycloakIssuerUri", "https://keycloak.example.com/auth/realms/test");
-        Constants.setString("keycloakUserNameAttributeName", "preferred_username");
-        Constants.setString("keycloakScopes", "openid,profile,email");
-        Constants.setString("keycloakClientName", "Keycloak");
+        Constants.setString("oauth2_clients", "keycloak");
+        Constants.setString("oauth2_keycloakClientId", "keycloak-client-id");
+        Constants.setString("oauth2_keycloakClientSecret", "keycloak-client-secret");
+        Constants.setString("oauth2_keycloakAuthorizationUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/auth");
+        Constants.setString("oauth2_keycloakTokenUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/token");
+        Constants.setString("oauth2_keycloakUserInfoUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/userinfo");
+        Constants.setString("oauth2_keycloakJwkSetUri", "https://keycloak.example.com/auth/realms/test/protocol/openid-connect/certs");
+        Constants.setString("oauth2_keycloakIssuerUri", "https://keycloak.example.com/auth/realms/test");
+        Constants.setString("oauth2_keycloakUserNameAttributeName", "preferred_username");
+        Constants.setString("oauth2_keycloakScopes", "openid,profile,email");
+        Constants.setString("oauth2_keycloakClientName", "Keycloak");
 
         // Spustenie testu
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -188,10 +188,10 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testClientRegistrationRepositoryWithMissingParams() {
         // Nastavenie neúplných OAuth2 clients
-        Constants.setString("springSecurityOAuth2Clients", "google,invalid");
-        Constants.setString("googleClientId", "google-client-id");
-        Constants.setString("googleClientSecret", "google-client-secret");
-        // Chýba invalidClientId alebo invalidClientSecret
+        Constants.setString("oauth2_clients", "google,invalid");
+        Constants.setString("oauth2_googleClientId", "google-client-id");
+        Constants.setString("oauth2_googleClientSecret", "google-client-secret");
+        // Chýba oauth2_invalidClientId alebo oauth2_invalidClientSecret
 
         // Spustenie testu
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -214,7 +214,7 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testClientRegistrationRepositoryEmpty() {
         // Žiadne OAuth2 clients
-        Constants.setString("springSecurityOAuth2Clients", "");
+        Constants.setString("oauth2_clients", "");
 
         // Spustenie testu
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -233,9 +233,9 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testOAuth2AuthorizedClientService() {
         // Nastavenie OAuth2 clients
-        Constants.setString("springSecurityOAuth2Clients", "google");
-        Constants.setString("googleClientId", "google-client-id");
-        Constants.setString("googleClientSecret", "google-client-secret");
+        Constants.setString("oauth2_clients", "google");
+        Constants.setString("oauth2_googleClientId", "google-client-id");
+        Constants.setString("oauth2_googleClientSecret", "google-client-secret");
 
         // Spustenie testu
         OAuth2AuthorizedClientService service = springSecurityConf.authorizedClientService();
@@ -250,9 +250,9 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testGitHubProvider() {
         // Nastavenie GitHub OAuth2
-        Constants.setString("springSecurityOAuth2Clients", "github");
-        Constants.setString("githubClientId", "github-client-id");
-        Constants.setString("githubClientSecret", "github-client-secret");
+        Constants.setString("oauth2_clients", "github");
+        Constants.setString("oauth2_githubClientId", "github-client-id");
+        Constants.setString("oauth2_githubClientSecret", "github-client-secret");
 
         // Spustenie testu
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();
@@ -288,9 +288,9 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     void testMultipleAuthMethods() throws Exception {
         // Nastavenie Basic Auth a OAuth2
         Constants.setString("springSecurityAllowedAuths", "basic,oauth2");
-        Constants.setString("springSecurityOAuth2Clients", "google");
-        Constants.setString("googleClientId", "google-client-id");
-        Constants.setString("googleClientSecret", "google-client-secret");
+        Constants.setString("oauth2_clients", "google");
+        Constants.setString("oauth2_googleClientId", "google-client-id");
+        Constants.setString("oauth2_googleClientSecret", "google-client-secret");
 
         // Mock HttpSecurity builder pattern
         when(httpSecurity.authenticationProvider(any())).thenReturn(httpSecurity);
@@ -316,11 +316,11 @@ class SpringSecurityConfTest extends BaseWebjetTest {
     @Test
     void testCustomProviderIncompleteData() {
         // Nastavenie custom provider s chýbajúcimi údajmi
-        Constants.setString("springSecurityOAuth2Clients", "custom");
-        Constants.setString("customClientId", "custom-client-id");
-        Constants.setString("customClientSecret", "custom-client-secret");
-        Constants.setString("customAuthorizationUri", "https://custom.example.com/auth");
-        // Chýbajú tokenUri, userInfoUri, jwkSetUri, issuerUri
+        Constants.setString("oauth2_clients", "custom");
+        Constants.setString("oauth2_customClientId", "custom-client-id");
+        Constants.setString("oauth2_customClientSecret", "custom-client-secret");
+        Constants.setString("oauth2_customAuthorizationUri", "https://custom.example.com/auth");
+        // Chýbajú oauth2_customTokenUri, oauth2_customUserInfoUri, oauth2_customJwkSetUri, oauth2_customIssuerUri
 
         // Spustenie testu
         ClientRegistrationRepository repository = springSecurityConf.clientRegistrationRepository();

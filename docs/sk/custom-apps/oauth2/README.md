@@ -39,7 +39,7 @@ OAuth2 integrácia je implementovaná pomocou Spring Security OAuth2 modulu a ob
 Pre aktiváciu OAuth2 je potrebné nastaviť konfiguračnú premennú:
 
 ```properties
-springSecurityOAuth2Clients=google,keycloak
+oauth2_clients=google,keycloak
 ```
 
 ### Preddefinovaní poskytovatelia
@@ -49,29 +49,29 @@ Pre populárnych poskytovateľov stačí nastaviť `clientId` a `clientSecret`:
 #### Google
 
 ```properties
-googleClientId=your-google-client-id
-googleClientSecret=your-google-client-secret
+oauth2_googleClientId=your-google-client-id
+oauth2_googleClientSecret=your-google-client-secret
 ```
 
 #### Facebook
 
 ```properties
-facebookClientId=your-facebook-client-id
-facebookClientSecret=your-facebook-client-secret
+oauth2_facebookClientId=your-facebook-client-id
+oauth2_facebookClientSecret=your-facebook-client-secret
 ```
 
 #### GitHub
 
 ```properties
-githubClientId=your-github-client-id
-githubClientSecret=your-github-client-secret
+oauth2_githubClientId=your-github-client-id
+oauth2_githubClientSecret=your-github-client-secret
 ```
 
 #### Okta
 
 ```properties
-oktaClientId=your-okta-client-id
-oktaClientSecret=your-okta-client-secret
+oauth2_oktaClientId=your-okta-client-id
+oauth2_oktaClientSecret=your-okta-client-secret
 ```
 
 ### Vlastní poskytovatelia (napr. Keycloak)
@@ -79,16 +79,16 @@ oktaClientSecret=your-okta-client-secret
 Pre vlastných poskytovateľov je potrebné nastaviť všetky OAuth2 parametre:
 
 ```properties
-keycloakClientId=webjet-client
-keycloakClientSecret=your-client-secret
-keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/auth
-keycloakTokenUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/token
-keycloakUserInfoUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/userinfo
-keycloakJwkSetUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/certs
-keycloakIssuerUri=https://keycloak.example.com/auth/realms/your-realm
-keycloakUserNameAttributeName=email
-keycloakScopes=openid,profile,email
-keycloakClientName=Keycloak
+oauth2_keycloakClientId=webjet-client
+oauth2_keycloakClientSecret=your-client-secret
+oauth2_keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/auth
+oauth2_keycloakTokenUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/token
+oauth2_keycloakUserInfoUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/userinfo
+oauth2_keycloakJwkSetUri=https://keycloak.example.com/auth/realms/your-realm/protocol/openid-connect/certs
+oauth2_keycloakIssuerUri=https://keycloak.example.com/auth/realms/your-realm
+oauth2_keycloakUserNameAttributeName=email
+oauth2_keycloakScopes=openid,profile,email
+oauth2_keycloakClientName=Keycloak
 ```
 
 ### Redirect URI
@@ -229,7 +229,7 @@ response.sendRedirect("/admin/logon.jsp?error=oauth2_exception");
 
 ### Zobrazenie OAuth2 tlačidiel
 
-OAuth2 tlačidlá sa zobrazujú automaticky ak je nastavená konfiguračná premenná `springSecurityOAuth2Clients`:
+OAuth2 tlačidlá sa zobrazujú automaticky ak je nastavená konfiguračná premenná `oauth2_clients`:
 
 ```jsp
 <c:if test="${isOAuth2Enabled}">
@@ -290,17 +290,17 @@ Logger.info(OAuth2SuccessHandler.class, "Created new user for email: " + email);
 1. **Konfigurácia v WebJET**:
 
 ```properties
-springSecurityOAuth2Clients=keycloak
-keycloakClientId=webjet-client
-keycloakClientSecret=generated-secret-from-keycloak
-keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/auth
-keycloakTokenUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/token
-keycloakUserInfoUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/userinfo
-keycloakJwkSetUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/certs
-keycloakIssuerUri=https://keycloak.example.com/auth/realms/webjet
-keycloakUserNameAttributeName=email
-keycloakScopes=openid,profile,email
-keycloakClientName=Keycloak Login
+oauth2_clients=keycloak
+oauth2_keycloakClientId=webjet-client
+oauth2_keycloakClientSecret=generated-secret-from-keycloak
+oauth2_keycloakAuthorizationUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/auth
+oauth2_keycloakTokenUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/token
+oauth2_keycloakUserInfoUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/userinfo
+oauth2_keycloakJwkSetUri=https://keycloak.example.com/auth/realms/webjet/protocol/openid-connect/certs
+oauth2_keycloakIssuerUri=https://keycloak.example.com/auth/realms/webjet
+oauth2_keycloakUserNameAttributeName=email
+oauth2_keycloakScopes=openid,profile,email
+oauth2_keycloakClientName=Keycloak Login
 NTLMAdminGroupName=webjet-admin
 ```
 
@@ -313,9 +313,9 @@ NTLMAdminGroupName=webjet-admin
 ### Google OAuth2
 
 ```properties
-springSecurityOAuth2Clients=google
-googleClientId=your-google-client-id.apps.googleusercontent.com
-googleClientSecret=your-google-client-secret
+oauth2_clients=google
+oauth2_googleClientId=your-google-client-id.apps.googleusercontent.com
+oauth2_googleClientSecret=your-google-client-secret
 ```
 
 ## API referencia
