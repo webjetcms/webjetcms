@@ -42,9 +42,9 @@ ext {
     lombokVersion = "1.18.34";
     lombokMapstructBindingVersion = "0.2.0";
     mapstructVersion = "1.6.1";
-    springVersion = "7.0.0-M7";
+    springVersion = "7.0.+";
     springDataVersion = "4.0.+";
-    springSecurityVersion = "7.0.0-M1";
+    springSecurityVersion = "7.0.+";
     allureVersion = "2.24.0";
     aspectJVersion = '1.9.19';
 }
