@@ -185,26 +185,9 @@ public class WriteTag extends BodyTagSupport
 				}
 			}
 
-			String afterWriteEndTag = null;
-			if (inlineEditingToolbarAppended && "doc_data".equals(name))
-			{
-				DocDetails doc = (DocDetails)request.getAttribute("docDetails");
-				if (doc != null)
-				{
-					pageContext.getOut().write("<div id='wjInline-docdata' "+InlineEditor.getEditAttrs(request, doc, "doc_data", false)+">");
-
-					afterWriteEndTag = "</div>";
-				}
-			}
-
 			if (value != null)
 			{
 				writeText(value.toString(), pageContext, name);
-			}
-
-			if (afterWriteEndTag != null)
-			{
-				pageContext.getOut().print(afterWriteEndTag);
 			}
 
 			if ("doc_data".equals(name) || "doc_header".equals(name))

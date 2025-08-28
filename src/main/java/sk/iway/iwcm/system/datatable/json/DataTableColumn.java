@@ -1,27 +1,36 @@
 package sk.iway.iwcm.system.datatable.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import lombok.Getter;
-import lombok.Setter;
-import sk.iway.iwcm.*;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DataTableColumnType;
-import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.Lob;
 import javax.persistence.Transient;
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
 /**
  * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
@@ -60,6 +69,8 @@ public class DataTableColumn {
     private Boolean orderable;
     private String orderProperty;
 
+    private List<DataTableAi> ai = null;
+
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
         String fieldPrefixNotNull = fieldPrefix;
@@ -81,6 +92,9 @@ public class DataTableColumn {
         setFinalProperties(field);
         setCellNotEditable(field);
         addEditIcon(field);
+
+        //we need this to be last because it uses this.className, this.renderType etc
+        setAiPropertiesFromField(controller, field, prop);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -304,6 +318,63 @@ public class DataTableColumn {
 
         if (editor.isEmpty()) {
             this.editor = null;
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void setAiPropertiesFromField(Class controller, Field field, Prop prop) {
+        try {
+            String toField = field.getName();
+
+            List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, this, controller.getName());
+
+            //sort assistants by group and name
+            assistants.sort(
+                Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
+                        .thenComparing(AssistantDefinitionEntity::getName)
+            );
+
+            if(assistants != null && assistants.size() > 0) {
+                ai = new ArrayList<>();
+
+                for (AssistantDefinitionEntity ade : assistants) {
+                    DataTableAi ai = new DataTableAi();
+                    ai.setAssistant(ade.getName());
+                    ai.setFrom(ade.getFieldFrom());
+                    ai.setTo(toField);
+                    ai.setDescription(ade.getDescription());
+                    if (Tools.isEmpty(ai.getDescription())) ai.setDescription(ade.getName());
+                    ai.setProvider(ade.getProvider());
+
+                    String providerTitleKey = "components.ai_provider."+ade.getProvider()+".title";
+                    String providerTitle = prop.getText(providerTitleKey);
+                    if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
+                    ai.setProviderTitle(providerTitle);
+
+                    ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
+                    ai.setAction(ade.getAction());
+
+                    String groupName = ade.getGroupName();
+                    //if groupName is in format number:name remove number prefix
+                    if (groupName != null && groupName.contains(":")) {
+                        groupName = groupName.substring(groupName.indexOf(":") + 1).trim();
+                    }
+                    ai.setGroupName(groupName);
+                    ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
+                    ai.setUserPromptLabel(ade.getUserPromptLabel());
+                    ai.setIcon(ade.getIcon());
+
+                    if ("browser".equals(ai.getProvider())) {
+                        //we need instructions to execute local AI in browser
+                        ai.setInstructions(ade.getInstructions());
+                    }
+                    if (ai.isEmpty()==false) {
+                        this.ai.add(ai);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Logger.error(DataTableAi.class, "Error setting properties", e);
         }
     }
 

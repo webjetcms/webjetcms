@@ -1,0 +1,79 @@
+package sk.iway.iwcm.components.ai.providers.openai;
+
+import java.io.IOException;
+
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
+
+public abstract class OpenAiSupportService {
+
+    protected static final String MODELS_URL = "https://api.openai.com/v1/models";
+    protected static final String IMAGES_GENERATION_URL = "https://api.openai.com/v1/images/generations";
+    protected static final String IMAGES_EDITS_URL = "https://api.openai.com/v1/images/edits";
+    protected static final String RESPONSES_URL = "https://api.openai.com/v1/responses";
+
+    protected enum ASSISTANT_FIELDS {
+        INSTRUCTIONS("instructions"),
+        MODEL("model"),
+        INPUT("input"),
+        STORE("store"),
+        STREAM("stream");
+
+        private final String value;
+
+        ASSISTANT_FIELDS(String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return value;
+        }
+    }
+    protected final void addHeaders(org.apache.http.client.methods.HttpRequestBase request, boolean addContentType, boolean isAssistantV2) {
+        String apiKey = Constants.getString("open_ai_auth_key");
+        if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenAI API key is not set.");
+        request.setHeader("Authorization", "Bearer " + apiKey);
+        if(addContentType) request.setHeader("Content-Type", "application/json");
+        if(isAssistantV2) request.setHeader("OpenAI-Beta", "assistants=v2");
+    }
+
+    protected final StringEntity getRequestBody(String stringBody) {
+        if(Tools.isEmpty(stringBody) == true) stringBody = "{}";
+        return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    protected String handleErrorMessage(CloseableHttpResponse response, Prop prop) {
+        int code = response.getStatusLine().getStatusCode();
+        String defaultErrMsg = " (" + code + ") " + prop.getText("html_area.insert_image.error_occured");
+        try {
+            String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            JSONObject jsonObject = new JSONObject(responseBody);
+            if (jsonObject.has("error")) {
+                JSONObject error = jsonObject.getJSONObject("error");
+                if (error.has("message")) {
+                    String errorMessage = error.getString("message");
+                    return " (" + code + ") " + errorMessage;
+                } else {
+                    return defaultErrMsg;
+                }
+            } else {
+                return defaultErrMsg;
+            }
+        } catch (IOException ex) {
+            return defaultErrMsg;
+        }
+    }
+
+    protected String handleErrorMessage(CloseableHttpResponse response, Prop prop, String serviceName, String methodName) {
+        String errMsg = handleErrorMessage(response, prop);
+        Adminlog.add(Adminlog.TYPE_AI, serviceName + "." + methodName + " FAILED : " + errMsg, -1, -1);
+        throw new IllegalStateException(errMsg);
+    }
+}
