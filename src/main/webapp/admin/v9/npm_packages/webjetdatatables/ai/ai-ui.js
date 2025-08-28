@@ -253,6 +253,8 @@ export class AiUserInterface {
 
     async getPathForNewImage(self) {
         try {
+            //TODO: if current field has path /images/gallery/test-vela-foto/o_img04152.jpg preserve this path and file name (so replace existing image)
+
             const docId = self.EDITOR.get("id");
             const groupId = self.EDITOR.get("editorFields.groupDetails");
             const title = self.EDITOR.get("title");
