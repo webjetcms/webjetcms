@@ -99,41 +99,48 @@ export class AiUserInterface {
 
     setCurrentStatus(textKey, pulsate = false, ...params) {
         let contentContainer = $("#toast-container-ai-content");
+
+        //reset contentContainer class
+        contentContainer.attr("class", "");
+
+        let chatErrorContainer = contentContainer.find(".chat-error-container");
         let html = '<div class="current-status';
 
-        let spanClass = "";
+        let statusClass = "";
         let icon = "";
         if ("components.ai_assistants.editor.loading.js" === textKey) {
-            spanClass = " ai-status-working";
+            statusClass = "ai-status-working";
             icon = "exclamation-circle";
         } else if ("components.ai_assistants.stat.totalTokens.js" === textKey || "components.ai.editor.image_saved.js" === textKey) {
-            spanClass = " ai-status-success";
+            statusClass = "ai-status-success";
             icon = "circle-check";
+            //success replace whole content with success message
+            chatErrorContainer = null;
         } else if ("components.ai_assistants.unknownError.js" === textKey) {
-            spanClass = " ai-status-error";
+            statusClass = "ai-status-error";
             icon = "help-circle";
         }
 
         if (pulsate) {
             html += " pulsate-text";
         }
-        if (spanClass != "") html += " "+spanClass;
+        if (statusClass != "") contentContainer.addClass(statusClass);
 
         html = html + '">';
 
         if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
 
         html += WJ.translate(textKey, params) + '</div>';
-        contentContainer.html(html);
+
+        if (chatErrorContainer != null && chatErrorContainer.length > 0) {
+            chatErrorContainer.html(html);
+        } else {
+            contentContainer.html(html);
+        }
     }
 
     setError(...params) {
         this.setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
-    }
-
-    //set error but do not close dialog
-    setErrorNoClose(...params) {
-        WJ.notifyError(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), WJ.translate("components.ai_assistants.unknownError.js", params));
     }
 
     async _executeAction(button, column, aiCol, inputValues = null) {
@@ -213,6 +220,7 @@ export class AiUserInterface {
                 <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
                 ${bonusHtml}
             </div>
+            <div class="chat-error-container"></div>
         `;
 
         let contentContainer = $("#toast-container-ai-content");
@@ -276,11 +284,13 @@ export class AiUserInterface {
 
         this.setCurrentStatus(textKey, false, ...params);
 
-        let html = contentContainer.html();
-        html += "<div class='ai-image-preview-div'></div>";
-        html += "<div class='button-div' style='display: none;'> </div>";
+        let currentStatus = contentContainer.html();
 
-        html += `
+        let html = `
+            <div class='ai-image-preview-div mb-3'></div>
+            <div class='chat-error-container'>${currentStatus}</div>
+            <div class='button-div' style='display: none;'> </div>
+
             <div class='image-info' style='display: none;'>
                 <div>
                     <label for='generated-image-name' style='color: black;'>ImageName</label>
@@ -294,11 +304,12 @@ export class AiUserInterface {
                     </div>
                 </div>
 
-
             </div>
         `;
 
         contentContainer.html(html);
+
+
 
         $("div.image-info").find("input.webjet-dte-jstree").each(async function() {
             var $element = $(this);
@@ -430,7 +441,7 @@ export class AiUserInterface {
             success: function(res)
             {
                 if (res && res.error) {
-                    self.setErrorNoClose(res.error);
+                    self.setError(res.error);
                     return;
                 }
 
@@ -440,7 +451,7 @@ export class AiUserInterface {
                 self._hideLoader(button);
             },
             error: function(xhr, ajaxOptions, thrownError) {
-                self.setErrorNoClose(thrownError);
+                self.setError(thrownError);
             }
         });
     }

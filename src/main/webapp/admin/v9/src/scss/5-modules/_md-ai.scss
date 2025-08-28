@@ -245,14 +245,35 @@
                     margin-right: 3px;
                     margin-left: -2px;
                 }
+
+            }
+
+            #toast-container-ai-content {
                 &.ai-status-working {
-                    color: var(--wj-yellow-60);
+                    .current-status {
+                        color: var(--wj-yellow-60);
+                    }
+                    button.btn-primary {
+                        i {
+                            animation: ti-loader-spin 2s linear infinite;
+                        }
+                    }
                 }
                 &.ai-status-success {
-                    color: var(--wj-green-60);
+                    .current-status {
+                        color: var(--wj-green-60);
+                    }
                 }
                 &.ai-status-error {
-                    color: var(--wj-red-60);
+                    .current-status {
+                        color: var(--wj-red-60);
+                    }
+                }
+            }
+
+            .chat-error-container {
+                .current-status {
+                    margin-bottom: 1rem !important;
                 }
             }
         }

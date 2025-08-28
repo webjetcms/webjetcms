@@ -42,41 +42,41 @@ public class AssistantController {
 
     @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
-        AssistantResponseDTO response = null;
+        AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
         try {
-            response = aiService.getAiResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            responseDto = aiService.getAiResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
         }
 
-        if (response == null) {
-            response = new AssistantResponseDTO();
-            response.setError(getErrMsg(exceptionMessage, request));
+        if (responseDto == null) {
+            responseDto = new AssistantResponseDTO();
+            responseDto.setError(getErrMsg(exceptionMessage, request));
         }
 
-        return response;
+        return responseDto;
     }
 
     @PostMapping(value = "/response-image/", consumes = MediaType.APPLICATION_JSON_VALUE)
     public AssistantResponseDTO getAiImageReponse(@RequestBody InputDataDTO inputData, HttpServletRequest request) {
-        AssistantResponseDTO response = null;
+        AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
 
         try {
-            response = aiService.getAiImageResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            responseDto = aiService.getAiImageResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
         }
 
-        if (response == null) {
-            response = new AssistantResponseDTO();
-            response.setError(getErrMsg(exceptionMessage, request));
+        if (responseDto == null) {
+            responseDto = new AssistantResponseDTO();
+            responseDto.setError(getErrMsg(exceptionMessage, request));
         }
 
-        return response;
+        return responseDto;
     }
 
     @PostMapping("/response-stream/")
@@ -138,6 +138,6 @@ public class AssistantController {
     }
 
     private String getErrMsg(String errMsg, HttpServletRequest request) {
-        return Prop.getInstance(request).getText("html_area.insert_image.error_occured") + " : " + errMsg;
+        return errMsg;
     }
 }
