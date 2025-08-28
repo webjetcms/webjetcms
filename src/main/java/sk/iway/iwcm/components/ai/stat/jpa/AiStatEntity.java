@@ -12,6 +12,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
@@ -20,6 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_AI)
 public class AiStatEntity {
 
     @Id
@@ -40,6 +42,12 @@ public class AiStatEntity {
     @Column(name = "used_tokens")
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_stats.used_tokens")
     private Integer usedTokens;
+
+    @Column(name = "user")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "user.user")
+    @NotBlank
+    @Size(max = 255)
+    private String user;
 
     @Column(name="domain_id")
 	private Integer domainId;

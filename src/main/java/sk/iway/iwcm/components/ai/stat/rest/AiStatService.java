@@ -8,21 +8,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.DateTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
 @Service
 public class AiStatService {
 
-    public static final void addRecord(String assiatntName, Integer usedTokens, AiStatRepository statRepo) {
+    public static final void addRecord(String assiatntName, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request) {
         if(statRepo == null) throw new IllegalStateException("AiStatRepository is not provided");
         if(Tools.isEmpty(assiatntName) == true) throw new IllegalStateException("Assitant name is nor provided");
 
@@ -30,6 +34,9 @@ public class AiStatService {
         newStatRecord.setAssistantName(assiatntName);
         newStatRecord.setUsedTokens(usedTokens);
         newStatRecord.setCreated(new Date());
+
+        Identity currentUser = UsersDB.getCurrentUser(request);
+        newStatRecord.setUser(currentUser != null ? currentUser.getLogin() : "unknown");
         newStatRecord.setDomainId(CloudToolsForCore.getDomainId());
         statRepo.save(newStatRecord);
     }

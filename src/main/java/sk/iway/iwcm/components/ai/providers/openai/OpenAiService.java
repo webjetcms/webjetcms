@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -99,7 +100,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return supportedValues;
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop,  AiStatRepository statRepo, PrintWriter writer, HttpServletRequest request) throws IOException {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
@@ -123,13 +124,13 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             streamHandler.handleBufferedReader(reader, writer);
 
             //
-            handleUsage(responseDto, streamHandler.getUsageChunk(), assistant, streamHandler.getRunId(), statRepo);
+            handleUsage(responseDto, streamHandler.getUsageChunk(), assistant, streamHandler.getRunId(), statRepo, request);
         }
 
         return responseDto;
     }
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException, InterruptedException {
+    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         HttpPost post = new HttpPost(RESPONSES_URL);
@@ -153,13 +154,13 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONArray contentArray = firstMessage.getJSONArray("content");
             responseDto.setResponse(contentArray.getJSONObject(0).getString("text"));
 
-            handleUsage(responseDto, res, assistant, res.optString("id", "NO_RUN_ID"), statRepo);
+            handleUsage(responseDto, res, assistant, res.optString("id", "NO_RUN_ID"), statRepo, request);
 
             return responseDto;
         }
     }
 
-    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo) throws IOException {
+    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         Path tempFileFolder = AiTempFileStorage.getFileFolder();
 
@@ -202,22 +203,22 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 e.printStackTrace();
             }
 
-            handleUsage(responseDto, res, assistant, "NO_RUN_ID", statRepo);
+            handleUsage(responseDto, res, assistant, "NO_RUN_ID", statRepo, request);
         }
 
         return responseDto;
     }
 
-    public String getBonusHtml(AssistantDefinitionEntity assistant) {
+    public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
         if("edit_image".equals(assistant.getAction()) || "generate_image".equals(assistant.getAction())) {
             return """
-                <div class='bonus-content row'>
-                    <div class="col-sm-3">
-                        <label for='bonusContent-imageCount'>Image count</label>
-                        <input id='bonusContent-imageCount' type='number' class='form-control' value='3'>
+                <div class='bonus-content'>
+                    <div>
+                        <label for='bonusContent-imageCount'>%s</label>
+                        <input id='bonusContent-imageCount' type='number' class='form-control' value=1>
                     </div>
-                    <div class="col-sm-3">
-                        <label for='bonusContent-imageSize'>Image size</label>
+                    <div>
+                        <label for='bonusContent-imageSize'>%s</label>
                         <select id='bonusContent-imageSize' class='form-control' value='auto'>
                             <option value="auto">auto</option>
                             <option value="1024x1024">1024x1024</option>
@@ -225,8 +226,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                             <option value="1536x1024">1536x1024</option>
                         </select>
                     </div>
-                    <div class="col-sm-3">
-                        <label for='bonusContent-imageQuality'>Image quality</label>
+                    <div>
+                        <label for='bonusContent-imageQuality'>%s</label>
                         <select id='bonusContent-imageQuality' class='form-control' value='low'>
                             <option value="low">low</option>
                             <option value="medium">medium</option>
@@ -234,13 +235,17 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                         </select>
                     </div>
                 </div>
-            """;
+            """.formatted(
+                prop.getText("components.ai_assistants.imageCount"),
+                prop.getText("components.ai_assistants.imageSize"),
+                prop.getText("components.ai_assistants.imageQuality")
+            );
         }
 
         return "";
     }
 
-    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, String runId, AiStatRepository statRepo) {
+    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, String runId, AiStatRepository statRepo, HttpServletRequest request) {
 
         if (source.has("usage")) {
             //"total_tokens" "output_tokens" "input_tokens"
@@ -262,7 +267,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             sb.append("\t total_tokens: ").append(totalTokens).append("\n");
             Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
 
-            AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo);
+            AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo, request);
 
             responseDto.setTotalTokens(totalTokens);
         }

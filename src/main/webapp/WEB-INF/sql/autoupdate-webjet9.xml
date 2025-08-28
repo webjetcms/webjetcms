@@ -2072,6 +2072,7 @@
                             assistant_name VARCHAR(255) NOT NULL,
                             created DATETIME NOT NULL,
                             used_tokens INT NOT NULL,
+                            user VARCHAR(255) NOT NULL
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2083,6 +2084,7 @@
                             assistant_name NVARCHAR(255) NOT NULL,
                             created DATETIME NOT NULL,
                             used_tokens INT NOT NULL,
+                            user NVARCHAR(255) NOT NULL
                             domain_id int DEFAULT 1 NOT NULL
                         );
                     </string>
@@ -2094,6 +2096,7 @@
                             assistant_name NVARCHAR2(255) NOT NULL,
                             created DATE NOT NULL,
                             used_tokens INTEGER NOT NULL,
+                            user NVARCHAR2(255) NOT NULL
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                         CREATE SEQUENCE S_ai_stats START WITH 1;
@@ -2118,6 +2121,7 @@
                             assistant_name VARCHAR(255) NOT NULL,
                             created TIMESTAMP NOT NULL,
                             used_tokens INT NOT NULL,
+                            user VARCHAR(255) NOT NULL
                             domain_id INT DEFAULT 1 NOT NULL
                         );
                     </string>

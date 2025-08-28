@@ -33,7 +33,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 public class AiAssistantsService {
 
     private static final String CLASS_FIELD_MAP_KEY = "AiAssistantsService_classFieldsMap";
-    private static final String ALL_ASSISTANTS_KEY = "AiAssistantsService_allAssistants";
     public static final String EMPTY_VALUE = "EMPTY_VALUE";
 
     private final List<AiAssitantsInterface> aiAssitantsInterfaces;
@@ -80,11 +79,6 @@ public class AiAssistantsService {
             }
         }
         return assistants;
-    }
-
-    public static void removeAssistantsFromCache() {
-        Cache c = Cache.getInstance();
-        c.removeObject(ALL_ASSISTANTS_KEY + "_" + CloudToolsForCore.getDomainId());
     }
 
     public List<String> getFieldOptions(String term, String className) {
@@ -204,28 +198,15 @@ public class AiAssistantsService {
     }
 
     private static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
-        int domainId = CloudToolsForCore.getDomainId();
+        //Load them form DB
+        String prefix = getAssitantPrefix();
 
-        Cache c = Cache.getInstance();
-        Object assistantsObj = c.getObject(ALL_ASSISTANTS_KEY + "_" + domainId);
-        if(assistantsObj != null) {
-            //We have cached list for this domain, return it
-            @SuppressWarnings("unchecked")
-            List<AssistantDefinitionEntity> items = (List<AssistantDefinitionEntity>) assistantsObj;
-            return items;
-        } else {
-            //Load them form DB
-            String prefix = getAssitantPrefix();
+        if(repo == null)
+            repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
 
-            if(repo == null)
-                repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+        List<AssistantDefinitionEntity> dbAiAssitants = repo.findAllByNameLikeAndDomainId(prefix + "%", CloudToolsForCore.getDomainId());
 
-            List<AssistantDefinitionEntity> dbAiAssitants = repo.findAllByNameLikeAndDomainId(prefix + "%", CloudToolsForCore.getDomainId());
-
-            //Cache list of assistants
-            c.setObject(ALL_ASSISTANTS_KEY + "_" + domainId, dbAiAssitants, 60);
-            return dbAiAssitants;
-        }
+        return dbAiAssitants;
     }
 
     public static String executePromptMacro(String text, InputDataDTO inputData) {

@@ -460,7 +460,8 @@ export class AiUserInterface {
         try {
             const res = await $.ajax({
                 type: "GET",
-                url: "/admin/rest/ai/assistant/bonus-content/?assistantName=" + assistantName
+                url: "/admin/rest/ai/assistant/bonus-content/?assistantName=" + assistantName,
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8"
             });
 
             if(res == undefined || res == null) return "";

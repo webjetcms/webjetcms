@@ -2,10 +2,12 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +42,17 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         this.repo = repo;
         this.aiService = aiService;
         this.aiAssistantsService = aiAssistantsService;
+    }
+
+    @Override
+    protected Specification<AssistantDefinitionEntity> getSearchConditions(Map<String, String> properties, Map<String, String> params, AssistantDefinitionEntity entity) {
+        properties.forEach((key, value) -> {
+            if("name".equals(key) && value.startsWith("^")) {
+                properties.put(key, "^" + AiAssistantsService.getAssitantPrefix() + value.substring(1));
+            }
+        });
+
+        return super.getSearchConditions(properties, params, entity);
     }
 
     @Override
@@ -95,12 +108,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     }
 
     @Override
-    public boolean deleteItem(AssistantDefinitionEntity entity, long id) {
-        repo.delete(entity);
-        return true;
-    }
-
-    @Override
     public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
         entity.setNameAddPrefix( entity.getName() );
         entity.setCreated(new Date());
@@ -126,16 +133,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         //Default logic
         if(entity.getKeepHtml() == null) entity.setKeepHtml(false);
         if(entity.getUseStreaming() == null) entity.setUseStreaming(false);
-    }
-
-    @Override
-    public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
-        AiAssistantsService.removeAssistantsFromCache();
-    }
-
-    @Override
-    public void afterDelete(AssistantDefinitionEntity entity, long id) {
-        AiAssistantsService.removeAssistantsFromCache();
     }
 
     @GetMapping("/autocomplete-class")

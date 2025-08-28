@@ -22,7 +22,6 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.i18n.Prop;
 
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
@@ -45,7 +44,7 @@ public class AssistantController {
         AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
         try {
-            responseDto = aiService.getAiResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            responseDto = aiService.getAiResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -65,7 +64,7 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
-            responseDto = aiService.getAiImageResponse(inputData, Prop.getInstance(request), statRepo, assistantRepo);
+            responseDto = aiService.getAiImageResponse(inputData, statRepo, assistantRepo, request);
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -89,7 +88,7 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
-            responseDto = aiService.getAiStreamResponse(new InputDataDTO(data), Prop.getInstance(request), statRepo, assistantRepo, writer);
+            responseDto = aiService.getAiStreamResponse(new InputDataDTO(data), statRepo, assistantRepo, writer, request);
         } catch(Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
@@ -127,7 +126,7 @@ public class AssistantController {
         return response;
     }
 
-    @GetMapping("/bonus-content/")
+    @GetMapping(value = "/bonus-content/", produces = "text/plain; charset=UTF-8")
     public String getBonusContent(@RequestParam("assistantName") String assistantName, HttpServletRequest request, HttpServletResponse response) {
         return aiService.getBonusHtml(assistantName, assistantRepo, request);
     }
