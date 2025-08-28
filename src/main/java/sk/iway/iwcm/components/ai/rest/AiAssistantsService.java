@@ -55,7 +55,7 @@ public class AiAssistantsService {
      * @param srcClass
      * @return Pair<String, String> where -> <aiAssistantName, fromField>
      */
-    public static List<AssistantDefinitionEntity> getAssistantAndFieldFrom(String fieldTo, String srcClass) {
+    public static List<AssistantDefinitionEntity> getAssistantAndFieldFrom(String fieldTo, sk.iway.iwcm.system.datatable.json.DataTableColumn column, String srcClass) {
         List<AssistantDefinitionEntity> assistants = new ArrayList<>();
         if(Tools.isEmpty(fieldTo) || Tools.isEmpty(srcClass)) return assistants;
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
@@ -65,7 +65,7 @@ public class AiAssistantsService {
                 boolean isMatchingClass = isMatching(entityClass, srcClass);
 
                 if (isMatchingClass) {
-                    String[] toFields = Tools.getTokens(aiAssistant.getFieldTo(), "\n,;", true);
+                    String[] toFields = Tools.getTokens(aiAssistant.getFieldTo()+"\n"+column.getClassName()+"\n"+column.getRenderFormat(), "\n,; ", true);
                     for (String field : toFields) {
                         if (isMatching(field, fieldTo)) {
                             addAssistant = true;

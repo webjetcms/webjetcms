@@ -89,11 +89,12 @@ public class DataTableColumn {
         setPropertiesFromAnnotation(controller, field, prop);
         setEditorPropertiesFromField(field);
 
-        setAiPropertiesFromField(controller, field, prop);
-
         setFinalProperties(field);
         setCellNotEditable(field);
         addEditIcon(field);
+
+        //we need this to be last because it uses this.className, this.renderType etc
+        setAiPropertiesFromField(controller, field, prop);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -325,7 +326,7 @@ public class DataTableColumn {
         try {
             String toField = field.getName();
 
-            List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, controller.getName());
+            List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, this, controller.getName());
 
             //sort assistants by group and name
             assistants.sort(
