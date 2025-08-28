@@ -267,12 +267,13 @@ export class AiUserInterface {
                 url: url
             });
 
-            if(res == undefined || res == null) return "";
+            if(res == undefined || res == null) return "/images/";
 
             return res;
         } catch(err) {
-            console.log(err);
-            return "";
+            //,aybe it's not DocDetails, we don't know docId/groupId
+            //console.log(err);
+            return "/images/";
         }
     }
 

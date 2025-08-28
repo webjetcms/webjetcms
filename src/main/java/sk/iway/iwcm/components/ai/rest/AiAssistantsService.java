@@ -60,15 +60,29 @@ public class AiAssistantsService {
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
             boolean addAssistant = false;
             String[] entityClasses = Tools.getTokens(aiAssistant.getClassName(), "\n,;", true);
+            String[] classNames = Tools.getTokens(column.getClassName(), " ", true);
+            String[] renderFormats = Tools.getTokens(column.getRenderFormat(), " ", true);
             for (String entityClass : entityClasses) {
                 boolean isMatchingClass = isMatching(entityClass, srcClass);
 
                 if (isMatchingClass) {
-                    String[] toFields = Tools.getTokens(aiAssistant.getFieldTo()+"\n"+column.getClassName()+"\n"+column.getRenderFormat(), "\n,; ", true);
+                    String[] toFields = Tools.getTokens(aiAssistant.getFieldTo(), "\n,;", true);
                     for (String field : toFields) {
                         if (isMatching(field, fieldTo)) {
                             addAssistant = true;
                             break;
+                        }
+                        for (String className : classNames) {
+                            if (isMatching(field, className)) {
+                                addAssistant = true;
+                                break;
+                            }
+                        }
+                        for (String renderFormat : renderFormats) {
+                            if (isMatching(field, renderFormat)) {
+                                addAssistant = true;
+                                break;
+                            }
                         }
                     }
                 }
