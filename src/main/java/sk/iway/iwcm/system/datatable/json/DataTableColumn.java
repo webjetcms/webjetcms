@@ -342,8 +342,8 @@ public class DataTableColumn {
                     ai.setAssistant(ade.getName());
                     ai.setFrom(ade.getFieldFrom());
                     ai.setTo(toField);
-                    ai.setDescription(ade.getDescription());
-                    if (Tools.isEmpty(ai.getDescription())) ai.setDescription(ade.getName());
+                    if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
+                    else ai.setDescription(prop.getText(ade.getDescription()));
                     ai.setProvider(ade.getProvider());
 
                     String providerTitleKey = "components.ai_provider."+ade.getProvider()+".title";

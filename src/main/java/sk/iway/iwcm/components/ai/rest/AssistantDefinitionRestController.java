@@ -25,6 +25,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/ai/assistant-definition/")
@@ -90,6 +91,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getClassName() )) assistant.setClassName("");
             if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getFieldFrom() )) assistant.setFieldFrom("");
             if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getFieldTo() )) assistant.setFieldTo("");
+
+            if(Tools.isNotEmpty(assistant.getDescription())) {
+                assistant.setTranslatedDescription( getProp().getText(assistant.getDescription()) );
+            }
         }
 
         return assistant;
@@ -133,6 +138,14 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         //Default logic
         if(entity.getKeepHtml() == null) entity.setKeepHtml(false);
         if(entity.getUseStreaming() == null) entity.setUseStreaming(false);
+    }
+
+    @Override
+    public AssistantDefinitionEntity processFromEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
+        if(ProcessItemAction.GETALL.equals(action) && Tools.isNotEmpty(entity.getDescription())) {
+            entity.setTranslatedDescription( getProp().getText(entity.getDescription()) );
+        }
+        return entity;
     }
 
     @GetMapping("/autocomplete-class")
