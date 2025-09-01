@@ -92,4 +92,6 @@ Ak spĺňate požiadavky odporúčame najskôr vyskúšať asistenta na preklad 
 
 Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.chrome.com/docs/ai/built-in-apis#api_status), pre ich použitie je potrebné otvoriť v prehliadači stránku Experimenty zadaním adresy `chrome://flags/#prompt-api-for-gemini-nano` do prehliadača a nastaviť hodnotu `Enabled` pre položku `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Následne kliknite na Znova spustiť pre reštart prehliadača. Odporúčame na stránke v hornej časti zadať výraz `gemini` pre filtrovanie možností a ich jednoduchšie nájdenie. Bez povolenia týchto možností bude dostupné len API pre preklad a sumarizáciu.
 
+Overiť stav AI modelov môžete zadaním nasledovnej stránky do adresného riadku prehliadača `chrome://on-device-internals/`.
+
 Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto po použití môže dôjsť k automatickému prekladu. Prekladač je ale pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť po vykonaní iných AI asistentov na preklad výstupného textu.
