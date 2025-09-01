@@ -52,6 +52,9 @@ public class AiAssistantsService {
         List<AssistantDefinitionEntity> assistants = new ArrayList<>();
         if(Tools.isEmpty(fieldTo) || Tools.isEmpty(srcClass)) return assistants;
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
+
+            if(Tools.isFalse(aiAssistant.getActive())) continue;
+
             boolean addAssistant = false;
             String[] entityClasses = Tools.getTokens(aiAssistant.getClassName(), "\n,;", true);
             String[] classNames = Tools.getTokens(column.getClassName(), " ", true);

@@ -1955,6 +1955,7 @@
                             keep_html TINYINT DEFAULT 0,
                             use_streaming TINYINT DEFAULT 0,
                             use_temporal TINYINT DEFAULT 0,
+                            active TINYINT DEFAULT 1,
 
                             domain_id INT(11) DEFAULT 1 NOT NULL
                         );
@@ -1983,6 +1984,7 @@
                             keep_html BIT DEFAULT 0,
                             use_streaming BIT DEFAULT 0,
                             use_temporal BIT DEFAULT 0,
+                            active BIT DEFAULT 1,
 
                             domain_id int DEFAULT 1 NOT NULL
                         );
@@ -2011,6 +2013,7 @@
                             keep_html NUMBER(1) DEFAULT 0,
                             use_streaming NUMBER(1) DEFAULT 0,
                             use_temporal NUMBER(1) DEFAULT 0,
+                            active NUMBER(1) DEFAULT 1,
 
                             domain_id INT DEFAULT 1 NOT NULL
                         );
@@ -2052,6 +2055,7 @@
                             keep_html BOOLEAN DEFAULT FALSE,
                             use_streaming BOOLEAN DEFAULT FALSE,
                             use_temporal BOOLEAN DEFAULT FALSE,
+                            active NUMBER(1) DEFAULT 1,
 
                             domain_id INT DEFAULT 1 NOT NULL
                         );

@@ -89,6 +89,10 @@ public class AssistantDefinitionEntity implements Serializable {
     )
     private Date created;
 
+    @Column(name="active")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.active", visible = false, tab = "basic")
+	private Boolean active;
+
     /* ACTION tab */
 
     @Column(name = "action")
