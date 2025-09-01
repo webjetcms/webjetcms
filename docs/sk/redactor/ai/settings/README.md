@@ -1,6 +1,6 @@
 # Nastavenie
 
-Tento dokument popisuje správu a konfiguráciu AI asistentov v CMS systéme. V sekcii **AI asistenti** môžete vytvárať a upravovať jednotlivých asistentov, pričom každý záznam predstavuje konkrétny typ akcie s vybraným poskytovateľom AI služieb. Nastavenia umožňujú určiť, kde (v ktorej tabuľke) a pre ktoré pole alebo polia bude daný asistent dostupný, čiže bude vykonávať nastvenú akciu.
+Tento dokument popisuje správu a konfiguráciu AI asistentov v CMS systéme. V sekcii **AI asistenti** môžete vytvárať a upravovať jednotlivých asistentov, pričom každý záznam predstavuje konkrétny typ akcie s vybraným poskytovateľom AI služieb. Nastavenia umožňujú určiť, kde (v ktorej tabuľke) a pre ktoré pole alebo polia bude daný asistent dostupný, čiže bude vykonávať nastavenú akciu.
 
 ![](datatable.png)
 
@@ -20,11 +20,11 @@ V tejto časti si preberieme ako pridať/nastaviť nového **AI asistenta**. Pri
 
 Táto karta obsahuje základné informácie o asistentovi ako názov, ikona alebo dátum vytvorenia. Obsahuje polia:
 
-- **Unikátny názov**, unikátny názov aistenta, ktorý sa využíva ako identifikátor (používateľ ho nevidí)
-- **Názov pre používateľa**, názov asistenta, ktorý sa zobrazi používateľovy a nemusí byť unikátny. Ak ho nenastavíte, použije sa **Unikátny názov**.
+- **Unikátny názov**, unikátny názov asistenta, ktorý sa využíva ako identifikátor (používateľ ho nevidí)
+- **Názov pre používateľa**, názov asistenta, ktorý sa zobrazí používateľovi a nemusí byť unikátny. Ak ho nenastavíte, použije sa **Unikátny názov**.
 - **Ikona**, názov ikony, ktorá sa bude zobrazovať spolu s **Názov pre používateľa**. Zoznam ikon nájdete na `https://tabler.io/icons`
-- **Skupina**, podľa ktorej sa aistenti vizuálne členia (nemá vplyv na funkcionalitu)
-- **Vytvorené**, dátumové pole, ktoré sa nedá upraviť a zobrazí sa iba pri editácií asistenta (pri vytváraní sa automaticky nastaví)
+- **Skupina**, podľa ktorej sa asistenti vizuálne členia (nemá vplyv na funkcionalitu)
+- **Vytvorené**, dátumové pole, ktoré sa nedá upraviť a zobrazí sa iba pri editácii asistenta (pri vytváraní sa automaticky nastaví)
 
 ![](datatable-basic-tab.png)
 
@@ -81,4 +81,15 @@ API kľúč získate registráciou na stránke [OpenAI](https://platform.openai.
 
 ### Prehliadač
 
-// TODO toto je je na teba Jeeff
+AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome, po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch.
+
+Pre spustenie AI v prehliadači je potrebné splniť:
+
+- [HW požiadavky](https://developer.chrome.com/docs/ai/get-started#hardware) počítača.
+- Spojenie do WebJET CMS musí byť zabezpečené (použitý protokol https).
+
+Ak spĺňate požiadavky odporúčame najskôr vyskúšať asistenta na preklad a následne na sumarizáciu textu, to sú najjednoduchšie služby, ktoré AI v prehliadači podporuje. Overíte tak stiahnutie a inštaláciu modelu na váš počítač a ich funkčnosť v prehliadači.
+
+Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.chrome.com/docs/ai/built-in-apis#api_status), pre ich použitie je potrebné otvoriť v prehliadači stránku Experimenty zadaním adresy `chrome://flags/#prompt-api-for-gemini-nano` do prehliadača a nastaviť hodnotu `Enabled` pre položku `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Následne kliknite na Znova spustiť pre reštart prehliadača. Odporúčame na stránke v hornej časti zadať výraz `gemini` pre filtrovanie možností a ich jednoduchšie nájdenie. Bez povolenia týchto možností bude dostupné len API pre preklad a sumarizáciu.
+
+Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto po použití môže dôjsť k automatickému prekladu. Prekladač je ale pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť po vykonaní iných AI asistentov na preklad výstupného textu.

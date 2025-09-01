@@ -1068,7 +1068,10 @@ const WJ = (() => {
         if (typeof options != "undefined") {
             if (true === options.link) {
                 htmlText = htmlText.replace(/\[(\s*http[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
-                                   .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+                                   .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+                //external links fix
+                htmlText = htmlText.replace(/<a href="(http[^\"]+)"/g, '<a href="$1" target="_blank"');
             }
 
             //badge span

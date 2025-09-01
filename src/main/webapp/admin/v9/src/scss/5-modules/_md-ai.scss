@@ -189,6 +189,13 @@
             padding-left: 19px;
             padding-right: 19px;
 
+            a {
+                color: var(--wj-primary);
+                &:hover {
+                    color: var(--wj-primary-hover);
+                }
+            }
+
             .btn-ai-action {
                 width: 100%;
                 background-color: white;
