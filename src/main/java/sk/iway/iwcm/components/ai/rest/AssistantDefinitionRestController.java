@@ -2,12 +2,10 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,30 +44,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     }
 
     @Override
-    protected Specification<AssistantDefinitionEntity> getSearchConditions(Map<String, String> properties, Map<String, String> params, AssistantDefinitionEntity entity) {
-        properties.forEach((key, value) -> {
-            if("name".equals(key) && value.startsWith("^")) {
-                properties.put(key, "^" + AiAssistantsService.getAssitantPrefix() + value.substring(1));
-            }
-        });
-
-        return super.getSearchConditions(properties, params, entity);
-    }
-
-    @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
-        if("create".equals(target.getAction()) && Tools.isNotEmpty(entity.getName())) {
-            //New name must be unique
-            String prefix = AiAssistantsService.getAssitantPrefix();
-            List<String> otherNames = repo.getAssistantNames(prefix + "%", CloudToolsForCore.getDomainId());
-            for(String otherName : otherNames) {
-                if( otherName.equalsIgnoreCase( prefix + entity.getName() ) ) {
-                    errors.rejectValue("name", "", getProp().getText("components.ai_assistants.unique_name_err"));
-                    break;
-                }
-            }
-        }
-
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             if(Tools.isEmpty(entity.getAction())) {
                 errors.rejectValue("action", "", getProp().getText("javax.validation.constraints.NotNull.message"));
@@ -106,7 +81,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         AssistantDefinitionEntity existingEntity = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id " + id + " not found"));
 
         //Safety measure, for disabled fields
-        entity.setNameAddPrefix( entity.getName() );
         entity.setCreated(existingEntity.getCreated());
 
         return repo.save(entity);
@@ -114,7 +88,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
-        entity.setNameAddPrefix( entity.getName() );
         entity.setCreated(new Date());
         entity.setDomainId(CloudToolsForCore.getDomainId());
 

@@ -42,12 +42,6 @@ public class AiAssistantsService {
         this.aiAssitantsInterfaces = aiAssitantsInterfaces;
     }
 
-    /* PUBLIC STATIC METHODS */
-
-    public static final String getAssitantPrefix() {
-        return "WebJET.CMS-" + CloudToolsForCore.getDomainId() + "-";
-    }
-
     /**
      *
      * @param fieldTo
@@ -212,13 +206,10 @@ public class AiAssistantsService {
     }
 
     private static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
-        //Load them form DB
-        String prefix = getAssitantPrefix();
-
         if(repo == null)
             repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
 
-        List<AssistantDefinitionEntity> dbAiAssitants = repo.findAllByNameLikeAndDomainId(prefix + "%", CloudToolsForCore.getDomainId());
+        List<AssistantDefinitionEntity> dbAiAssitants = repo.findAllByDomainId(CloudToolsForCore.getDomainId());
 
         return dbAiAssitants;
     }

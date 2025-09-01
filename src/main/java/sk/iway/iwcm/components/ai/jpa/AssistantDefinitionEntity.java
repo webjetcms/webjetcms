@@ -15,8 +15,6 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -35,6 +33,8 @@ public class AssistantDefinitionEntity implements Serializable {
     @Column(name = "id")
     @DataTableColumn(inputType = DataTableColumnType.ID)
     private Long id;
+
+    /* BASIC tab */
 
     //Unique name
     @Column(name = "name")
@@ -79,7 +79,17 @@ public class AssistantDefinitionEntity implements Serializable {
 	})
     private String groupName;
 
+    @Column(name = "created_at")
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at", tab = "basic", className = "hide-on-create",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
+    private Date created;
 
+    /* ACTION tab */
 
     @Column(name = "action")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.action", tab = "action")
@@ -135,18 +145,7 @@ public class AssistantDefinitionEntity implements Serializable {
     @Size(max = 255)
     private String fieldTo;
 
-    @Column(name = "user_prompt_enabled")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.user_prompt.enabled", tab = "action", visible = false)
-    private Boolean userPromptEnabled;
-
-    @Column(name = "user_prompt_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.user_prompt.label", tab = "action", visible = false
-
-    )
-    private String userPromptLabel;
-
-
-
+    /* PROVIDER tab */
 
     @Column(name = "provider")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.provider", tab = "provider")
@@ -167,8 +166,7 @@ public class AssistantDefinitionEntity implements Serializable {
     @Size(max = 255)
     private String model;
 
-
-
+    /* INSTRUCTIONS tab */
 
     @Lob
     @Column(name = "instructions")
@@ -186,15 +184,8 @@ public class AssistantDefinitionEntity implements Serializable {
     @NotBlank
     private String instructions;
 
-    @Column(name = "created_at")
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at", tab = "basic", className = "hide-on-create",
-        editor = {
-            @DataTableColumnEditor(
-                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
-            )
-        }
-    )
-    private Date created;
+
+    /* ADVANCED tab */
 
     @Column(name = "keep_html")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.keep_html", tab = "advanced", visible = false)
@@ -208,24 +199,15 @@ public class AssistantDefinitionEntity implements Serializable {
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.useTemporal", visible = false, className = "hideOnCreate hideOnEdit", tab = "advanced")
 	private Boolean useTemporal;
 
+    @Column(name = "user_prompt_enabled")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.user_prompt.enabled", tab = "advanced", visible = false)
+    private Boolean userPromptEnabled;
+
+    @Lob
+    @Column(name = "user_prompt_label")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", visible = false)
+    private String userPromptLabel;
+
     @Column(name="domain_id")
 	private Integer domainId;
-
-    public String getName() {
-        if(Tools.isEmpty(name)) return "";
-        //Cut prefix from name
-        String prefix = AiAssistantsService.getAssitantPrefix();
-        return name.startsWith(prefix) ? name.substring(prefix.length()) : name;
-    }
-
-    public String getFullName() {
-        return name;
-    }
-
-    public void setNameAddPrefix(String name) {
-        String prefix = AiAssistantsService.getAssitantPrefix();
-        //Just in case, so we dont set prefix 2x
-        if(name.startsWith(prefix)) return;
-        this.name = prefix + name;
-    }
 }

@@ -1949,7 +1949,7 @@
 
                             group_name VARCHAR(255),
                             user_prompt_enabled TINYINT DEFAULT 0,
-                            user_prompt_label VARCHAR(255),
+                            user_prompt_label TEXT,
                             icon VARCHAR(255),
 
                             keep_html TINYINT DEFAULT 0,
@@ -1977,7 +1977,7 @@
 
                             group_name NVARCHAR(255),
                             user_prompt_enabled BIT DEFAULT 0,
-                            user_prompt_label NVARCHAR(255),
+                            user_prompt_label NTEXT,
                             icon VARCHAR(255),
 
                             keep_html BIT DEFAULT 0,
@@ -2005,7 +2005,7 @@
 
                             group_name NVARCHAR2(255),
                             user_prompt_enabled NUMBER(1) DEFAULT 0,
-                            user_prompt_label NVARCHAR2(255),
+                            user_prompt_label CLOB,
                             icon VARCHAR(255),
 
                             keep_html NUMBER(1) DEFAULT 0,
@@ -2046,7 +2046,7 @@
 
                             group_name VARCHAR(255),
                             user_prompt_enabled BOOLEAN DEFAULT 0,
-                            user_prompt_label VARCHAR(255),
+                            user_prompt_label TEXT,
                             icon VARCHAR(255),
 
                             keep_html BOOLEAN DEFAULT FALSE,

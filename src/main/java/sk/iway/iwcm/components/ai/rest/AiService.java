@@ -183,8 +183,7 @@ public class AiService {
         if(Tools.isEmpty(assistantName)) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 
         //
-        String prefix = AiAssistantsService.getAssitantPrefix();
-        Optional<AssistantDefinitionEntity> assistant = assistantRepo.findFirstByNameAndDomainId(prefix + assistantName, CloudToolsForCore.getDomainId());
+        Optional<AssistantDefinitionEntity> assistant = assistantRepo.findFirstByNameAndDomainId(assistantName, CloudToolsForCore.getDomainId());
 
         if(assistant.isPresent() == false) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 
