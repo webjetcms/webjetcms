@@ -110,6 +110,34 @@ export class AiBrowserExecutor {
         };
 
         if (apiName in self) {
+            if ("Translator" === apiName && navigator.userActivation.isActive===false) {
+                //verify translation pair availability
+                let status = await Translator.availability(config);
+                if ("available" !== status) {
+                    //we need to wait for user to click to some button, create dialog and await for user click
+                    await new Promise((resolve) => {
+                        // Create a dialog or some UI element to prompt the user
+                        let dialog = document.createElement('div');
+                        dialog.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.js", apiName);
+
+                        let button = document.createElement('button');
+                        button.innerText = WJ.translate("components.ai_assistants.userActivationPrompt.button.js");
+                        button.classList.add('btn');
+                        button.classList.add('btn-primary');
+                        dialog.appendChild(button);
+
+                        const container = document.getElementById('toast-container-ai-content');
+                        container.innerHTML = "";
+                        container.appendChild(dialog);
+
+                        button.addEventListener('click', () => {
+                            instance.editorAiInstance.setCurrentStatus("components.ai_assistants.editor.loading.js");
+                            resolve();
+                        });
+                    });
+                }
+            }
+
             if (navigator.userActivation.isActive || skipIsActive === true) {
                 apiInstance = await self[apiName].create(config);
             } else {
@@ -165,11 +193,13 @@ export class AiBrowserExecutor {
                     this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translating.js", false);
 
                     let translateFromLanguage = await this._detectLanguage(content);
-                    let translateToLanguage = window.userLng;
+                    let translateToLanguage = translateOutputLanguage;
 
-                    if ("preserve" === translateOutputLanguage || true === translateOutputLanguage) {
+                    if ("preserve" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
                         //detect source language
                         translateToLanguage = await this._detectLanguage(text);
+                    } else if ("userLng" === translateOutputLanguage) {
+                        translateToLanguage = window.userLng;
                     }
 
                     //console.log("Translating from:", translateFromLanguage, "to:", translateToLanguage);
