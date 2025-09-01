@@ -9,6 +9,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -47,9 +48,19 @@ public class AssistantDefinitionEntity implements Serializable {
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title = "components.ai_assistants.description",
-        tab = "basic"
+        tab = "basic",
+        hidden = true
     )
     private String description;
+
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.DISABLED,
+        title = "components.ai_assistants.description",
+        tab = "basic",
+        filter = false
+    )
+    private String translatedDescription;
 
     @Column(name = "icon")
     @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.icon", tab = "basic", visible = false)

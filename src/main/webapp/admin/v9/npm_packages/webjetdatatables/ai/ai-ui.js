@@ -283,7 +283,19 @@ export class AiUserInterface {
         let contentContainer = $("#toast-container-ai-content");
 
         let self = this;
-        const imageUrl = await this.getPathForNewImage(self);
+        let imageUrl = null;
+        let imageName = 'ai-image';
+
+        let actualValue = self.EDITOR.get(toField);
+        if(actualValue != undefined && actualValue != null && actualValue.length && /^\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i.test(actualValue)) {
+            //Use current location and name
+            const lastIndex = actualValue.lastIndexOf("/");
+            imageUrl = actualValue.substring(0, lastIndex + 1);
+            imageName = actualValue.substring(lastIndex + 1);
+            imageName = imageName.split(".")[0];
+        } else {
+            imageUrl = await this.getPathForNewImage(self);
+        }
 
         this.setCurrentStatus(textKey, false, ...params);
 
@@ -297,7 +309,7 @@ export class AiUserInterface {
             <div class='image-info' style='display: none;'>
                 <div>
                     <label for='generated-image-name' style='color: black;'>ImageName</label>
-                    <input id='generated-image-name' type='text' class='form-control' value='ai-image'>
+                    <input id='generated-image-name' type='text' class='form-control' value='${imageName}'>
                 </div>
 
                 <div>
@@ -309,10 +321,7 @@ export class AiUserInterface {
 
             </div>
         `;
-
         contentContainer.html(html);
-
-
 
         $("div.image-info").find("input.webjet-dte-jstree").each(async function() {
             var $element = $(this);

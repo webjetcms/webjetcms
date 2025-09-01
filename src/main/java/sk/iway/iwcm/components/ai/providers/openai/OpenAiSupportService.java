@@ -76,4 +76,91 @@ public abstract class OpenAiSupportService {
         Adminlog.add(Adminlog.TYPE_AI, serviceName + "." + methodName + " FAILED : " + errMsg, -1, -1);
         throw new IllegalStateException(errMsg);
     }
+
+    protected String getImageSizeSelect(String model, Prop prop) {
+        if(Tools.isEmpty(model)) return "";
+        String square = prop.getText("components.gallery.tui-image-editor.Square");
+
+        String options = "";
+        if("gpt-image-1".equals(model)) {
+            options =
+                """
+                    <option value="auto">auto</option>
+                    <option value="1024x1024">%s (1024x1024)</option>
+                    <option value="1024x1536">%s (1024x1536)</option>
+                    <option value="1536x1024">%s (1536x1024)</option>
+                """.formatted(
+                    square,
+                    prop.getText("components.datatables-data-export.Na_vysku"),
+                    prop.getText("components.datatables-data-export.Na_sirku")
+                );
+        } else if("dall-e-3".equals(model)) {
+            options =
+                """
+                    <option value="1024x1024">%s (1024x1024)</option>
+                    <option value="1024x1792">%s (1024x1792)</option>
+                    <option value="1792x1024">%s (1792x1024)</option>
+                """.formatted(
+                    square,
+                    prop.getText("components.datatables-data-export.Na_vysku"),
+                    prop.getText("components.datatables-data-export.Na_sirku")
+                );
+        } else if("dall-e-2".equals(model)) {
+            options =
+                """
+                    <option value="256x256">%s (256x256)</option>
+                    <option value="512x512">%s (512x512)</option>
+                    <option value="1024x1024">%s (1024x1024)</option>
+                """.formatted(
+                    square,
+                    square,
+                    square
+                );
+        } else {
+            return "";
+        }
+
+        return
+            """
+                <div>
+                    <label for='bonusContent-imageSize'>%s</label>
+                    <select id='bonusContent-imageSize' class='form-control'>
+                        %s
+                    </select>
+                </div>
+            """.formatted(prop.getText("components.ai_assistants.imageSize"), options);
+    }
+
+    protected String getImageQualitySelect(String model, Prop prop) {
+        if(Tools.isEmpty(model)) return "";
+
+        String options = "";
+        if("gpt-image-1".equals(model)) {
+            options =
+                """
+                    <option value="low">low</option>
+                    <option value="medium">medium</option>
+                    <option value="high">high</option>
+                """;
+        } else if("dall-e-3".equals(model)) {
+            options =
+                """
+                    <option value="standard">standard</option>
+                    <option value="hd">hd</option>
+                """;
+        } else {
+            //For exmaple, dall-e-2 do not support quality param
+            return "";
+        }
+
+        return
+            """
+                <div>
+                    <label for='bonusContent-imageQuality'>%s</label>
+                    <select id='bonusContent-imageQuality' class='form-control'>
+                        %s
+                    </select>
+                </div>
+            """.formatted(prop.getText("components.ai_assistants.imageQuality"), options);
+    }
 }

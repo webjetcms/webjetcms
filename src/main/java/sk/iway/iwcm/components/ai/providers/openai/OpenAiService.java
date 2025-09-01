@@ -167,10 +167,10 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         HttpPost post;
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            post = getEditImagePost(inputData, assistant.getInstructions());
+            post = getEditImagePost(inputData, assistant.getModel(), assistant.getInstructions(), prop);
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            post = getCreateImagePost(inputData, assistant.getInstructions());
+            post = getCreateImagePost(inputData, assistant.getModel(), assistant.getInstructions());
         }
 
         try (CloseableHttpResponse response = client.execute(post)) {
@@ -211,34 +211,21 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
         if("edit_image".equals(assistant.getAction()) || "generate_image".equals(assistant.getAction())) {
+            String model = assistant.getModel();
+
             return """
                 <div class='bonus-content'>
                     <div>
                         <label for='bonusContent-imageCount'>%s</label>
                         <input id='bonusContent-imageCount' type='number' class='form-control' value=1>
                     </div>
-                    <div>
-                        <label for='bonusContent-imageSize'>%s</label>
-                        <select id='bonusContent-imageSize' class='form-control' value='auto'>
-                            <option value="auto">auto</option>
-                            <option value="1024x1024">1024x1024</option>
-                            <option value="1024x1536">1024x1536</option>
-                            <option value="1536x1024">1536x1024</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for='bonusContent-imageQuality'>%s</label>
-                        <select id='bonusContent-imageQuality' class='form-control' value='low'>
-                            <option value="low">low</option>
-                            <option value="medium">medium</option>
-                            <option value="high">high</option>
-                        </select>
-                    </div>
+                    %s
+                    %s
                 </div>
             """.formatted(
                 prop.getText("components.ai_assistants.imageCount"),
-                prop.getText("components.ai_assistants.imageSize"),
-                prop.getText("components.ai_assistants.imageQuality")
+                getImageSizeSelect(model, prop),
+                getImageQualitySelect(model, prop)
             );
         }
 
@@ -273,16 +260,22 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
     }
 
-    private HttpPost getEditImagePost(InputDataDTO inputData, String instructions) throws IOException {
+    private HttpPost getEditImagePost(InputDataDTO inputData, String model, String instructions, Prop prop) throws IOException {
         HttpPost post = new HttpPost(IMAGES_EDITS_URL);
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        builder.addTextBody(MODEL.value(), "gpt-image-1");
+        //builder.addTextBody(MODEL.value(), "gpt-image-1");
+        builder.addTextBody(MODEL.value(), model);
         builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
         builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
-        builder.addTextBody("quality", inputData.getImageQuality() == null ? "low" : inputData.getImageQuality());
-        builder.addTextBody("size", inputData.getImageSize() == null ? "auto" : inputData.getImageSize());
+
+        if(inputData.getImageQuality() != null) {
+            builder.addTextBody("quality", inputData.getImageQuality());
+        }
+
+        //1024x1024 is valid for gpt-image dalle-3 and dalle-2 ... soo best default value
+        builder.addTextBody("size", inputData.getImageSize() == null ? "1024x1024" : inputData.getImageSize());
 
         BufferedImage image = ImageIO.read( inputData.getInputFile() );
         if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
@@ -298,7 +291,11 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
 
         //Set image
-        builder.addBinaryBody("image", inputData.getInputFile(), contentType, fileName);
+        if("dall-e-2".equals(model)) {
+           throw new IllegalStateException( prop.getText("components.ai_assistants.not_supproted_action_err") );
+        } else {
+            builder.addBinaryBody("image", inputData.getInputFile(), contentType, fileName);
+        }
 
         //Set entity and headers
         post.setEntity(builder.build());
@@ -308,15 +305,25 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return post;
     }
 
-    private HttpPost getCreateImagePost(InputDataDTO inputData, String instructions) {
+    private HttpPost getCreateImagePost(InputDataDTO inputData, String model, String instructions) {
         HttpPost post = new HttpPost(IMAGES_GENERATION_URL);
 
         JSONObject json = new JSONObject();
-        json.put(MODEL.value(), "gpt-image-1");
+        //json.put(MODEL.value(), "gpt-image-1");
+        json.put(MODEL.value(), model);
         json.put("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
         json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
-        json.put("quality", inputData.getImageQuality() == null ? "low" : inputData.getImageQuality());
-        json.put("size", inputData.getImageSize() == null ? "auto" : inputData.getImageSize());
+
+        if(inputData.getImageQuality() != null) {
+            json.put("quality", inputData.getImageQuality());
+        }
+
+        //1024x1024 is valid for gpt-image dalle-3 and dalle-2 ... soo best default value
+        json.put("size", inputData.getImageSize() == null ? "1024x1024" : inputData.getImageSize());
+
+        if("dall-e-2".equals(model) || "dall-e-3".equals(model)) {
+            json.put("response_format", "b64_json");
+        }
 
         post.setEntity(getRequestBody(json.toString()));
 
