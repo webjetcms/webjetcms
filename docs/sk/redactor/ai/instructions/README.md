@@ -30,7 +30,7 @@ Dodržiavaním týchto zásad zabezpečíte, že odpovede budú relevantné a po
 
 Písanie inštrukcií pre AI v prehliadači je špecifické podľa [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Inštrukcia je rozdelená na názov API a následnú konfiguráciu. V odkaze na `MDM` dokumentáciu nájdete podrobné informácie o možnostiach konfigurácie.
 
-Aj keď API podporuje nastavenie jazyka, aktuálne zvyčajne podporuje len anglický jazyk. Do konfigurácie môžete pridať možnosť `"translateOutputLanguage": "preserve"` pre následné vykonanie prekladu. Hodnota preserve deteguje jazyk pôvodného textu a tento následne použije. Môžete prípadne zadať aj fixnú hodnotu, napr. `sk`.
+Aj keď API podporuje nastavenie jazyka, aktuálne zvyčajne podporuje len anglický jazyk. Do konfigurácie môžete pridať možnosť `"translateOutputLanguage": "preserve"` pre následné vykonanie prekladu. Hodnota preserve deteguje jazyk pôvodného textu a tento následne použije. Môžete prípadne zadať aj fixnú hodnotu, napr. `sk`, alebo hodnotu `userLng` kde sa jazyk nastaví podľa jazyka aktuálne prihláseného používateľa.
 
 ### Sumarizácia textu
 
@@ -42,7 +42,8 @@ Summarizer:
    "type": "tldr",
    "format": "plain-text",
    "length": "short",
-   "translateOutputLanguage": "preserve"
+   "translateOutputLanguage": "preserve",
+   "sharedContext": "Dôležité: odpovedaj v rovnakom jazyku ako je zadaný text, nemeň jazyk!"
 }
 ```
 
