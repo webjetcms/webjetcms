@@ -141,7 +141,7 @@
             href = "https://github.com/webjetcms/webjetcms/tree/main"+href.substring(i);
           }
 
-          if (href.indexOf("http")==0) {
+          if (href.indexOf("http")==0 || href.indexOf("://")!=-1) {
             var rendered = originalRender(href, title, text);
             rendered = rendered.replace('href="', 'target="_blank" href="');
             return rendered;

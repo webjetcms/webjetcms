@@ -118,6 +118,10 @@ export class EditorAi {
         this.aiUserInterface.setError(...params);
     }
 
+    setDownloadStatus(percent) {
+        this.aiUserInterface.setDownloadStatus(percent);
+    }
+
     _showLoader(button) {
         this.aiUserInterface._showLoader(button);
     }
@@ -206,7 +210,7 @@ export class EditorAi {
             }
             //console.log("tempDiv=", tempDiv, "html=", tempDiv.innerHTML);
 
-            inputData.value = tempDiv.innerHTML;
+            inputData.inputValue = tempDiv.innerHTML;
 
             totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
                 //console.log("response="+response, "setting to editor: ", ckEditorInstance, "inputData=", inputData);
@@ -268,7 +272,7 @@ export class EditorAi {
             if (this.aiBrowserExecutor.isAvailable(aiCol)) {
                 totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, setFunction);
             } else {
-                totalTokens = this.ERR_CLOSE_DIALOG;
+                totalTokens = this.DO_NOT_CLOSE_DIALOG;
             }
         } else {
             // IS IMAGE

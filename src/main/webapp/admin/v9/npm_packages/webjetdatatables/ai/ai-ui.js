@@ -130,7 +130,9 @@ export class AiUserInterface {
 
         if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
 
-        html += WJ.translate(textKey, params) + '</div>';
+        let text = WJ.translate(textKey, params);
+        text = WJ.parseMarkdown(text, { link: true });
+        html += text + '</div>';
 
         if (chatErrorContainer != null && chatErrorContainer.length > 0) {
             chatErrorContainer.html(html);
@@ -190,9 +192,15 @@ export class AiUserInterface {
         if (this.$progressElement != null) this.$progressElement.width('0%');
     }
 
-    _setDownloadStatus(percent) {
-        console.log("Download progress:", percent);
-        this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
+    setDownloadStatus(percent) {
+        //console.log("Download progress:", percent);
+        if (percent >= 99) {
+            this.setCurrentStatus("components.ai_assistants.browser.optimizingModel.js", false);
+            if (this.$progressElement != null) this.$progressElement.width('0%');
+        } else {
+            this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
+            if (this.$progressElement != null) this.$progressElement.width(percent + '%');
+        }
     }
 
     async _renderUserPromptDialog(button, column, aiCol) {

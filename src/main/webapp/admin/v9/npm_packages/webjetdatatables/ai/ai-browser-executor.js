@@ -6,6 +6,7 @@ export class AiBrowserExecutor {
     //TODO: cache API created with _apiInitialize
     localApiCache = {};
     lastApiInstance = null;
+    languageDetector = null;
 
     EDITOR = null;
     editorAiInstance = null;
@@ -52,6 +53,8 @@ export class AiBrowserExecutor {
             }
         } catch (e) {
             console.log(e);
+            this.editorAiInstance.setError(e.message);
+            return this.editorAiInstance.DO_NOT_CLOSE_DIALOG;
         }
 
         return totalTokens;
@@ -96,7 +99,7 @@ export class AiBrowserExecutor {
         return {};
     }
 
-    async _apiInitialize(apiName, config) {
+    async _apiInitialize(apiName, config, skipIsActive = false) {
         let instance = this;
         let apiInstance = null;
 
@@ -107,7 +110,11 @@ export class AiBrowserExecutor {
         };
 
         if (apiName in self) {
-            apiInstance = await self[apiName].create(config);
+            if (navigator.userActivation.isActive || skipIsActive === true) {
+                apiInstance = await self[apiName].create(config);
+            } else {
+                throw new Error(WJ.translate("components.ai_assistants.browser.userInteractionError.js"));
+            }
         }
         //console.log("apiInstance:", apiInstance, "apiName=", apiName, "isInSelf=", apiName in self, "config=", config);
         return apiInstance;
@@ -115,13 +122,14 @@ export class AiBrowserExecutor {
 
     async _apiExecute(apiName, apiInstance, config, fieldName, inputData, useStreaming, setFunction = null) {
         if (apiInstance) {
-            let text = inputData.value;
+            let text = inputData.inputValue;
             if (inputData.userPrompt != null) {
                 text = inputData.userPrompt;
             }
 
-            //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, " text:", text, "config=", config, "setFunction=", setFunction);
+            //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, "inputData=", inputData, " text:", text, "config=", config, "setFunction=", setFunction);
 
+            let content = null;
             if (useStreaming) {
                 let stream = null;
                 if ("Writer" === apiName) stream = apiInstance.writeStreaming(text, config);
@@ -131,9 +139,8 @@ export class AiBrowserExecutor {
                 else if ("Summarizer" === apiName) stream = apiInstance.summarizeStreaming(text, config);
                 else if ("LanguageModel" === apiName) stream = apiInstance.promptStreaming(text, config);
 
-                if (stream!=null) await this._setField(fieldName, stream, setFunction);
+                if (stream!=null) content = await this._setField(fieldName, stream, setFunction);
             } else {
-                let content = null;
                 if ("Writer" === apiName) content = await apiInstance.write(text, config);
                 else if ("Rewriter" === apiName) content = await apiInstance.rewrite(text, config);
                 else if ("Translator" === apiName) content = await apiInstance.translate(text, config);
@@ -150,10 +157,59 @@ export class AiBrowserExecutor {
                 }
             }
 
+            //AI APIs can't return content in requested language (e.g. slovak), so we need to translate it afterwards
+            if (content != null && content.length > 0) {
+                let translateOutputLanguage = config.translateOutputLanguage || null;
+                if (typeof translateOutputLanguage != "undefined" && translateOutputLanguage != null) {
+
+                    this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translating.js", false);
+
+                    let translateFromLanguage = await this._detectLanguage(content);
+                    let translateToLanguage = window.userLng;
+
+                    if ("preserve" === translateOutputLanguage || true === translateOutputLanguage) {
+                        //detect source language
+                        translateToLanguage = await this._detectLanguage(text);
+                    }
+
+                    //console.log("Translating from:", translateFromLanguage, "to:", translateToLanguage);
+
+                    if (translateFromLanguage != translateToLanguage) {
+                        this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.translatingFromTo.js", false, translateFromLanguage, translateToLanguage);
+
+                        let config = {
+                            sourceLanguage: translateFromLanguage,
+                            targetLanguage: translateToLanguage
+                        }
+                        const translator = await this._apiInitialize("Translator", config, true);
+                        //console.log("Mam translator: ", translator);
+                        let translatedContent = await translator.translate(content);
+                        //console.log("Translated content:", translatedContent, "content=", content);
+                        if (setFunction != null) {
+                            setFunction(translatedContent);
+                        } else {
+                            this.EDITOR.set(fieldName, translatedContent);
+                        }
+                    }
+                }
+            }
+
             //local browser uses zero tokens
             return 0;
         }
         return this.EDITOR.ERR_UNKNOWN;
+    }
+
+    async _detectLanguage(text) {
+        if (this.languageDetector == null) {
+            this.languageDetector = await LanguageDetector.create({});
+        }
+        const results = await this.languageDetector.detect(text);
+        //console.log("Detected languages:", results);
+        if (results.length > 0) {
+            return results[0].detectedLanguage;
+        }
+        return null;
     }
 
     async _setField(fieldName, stream, setFunction = null) {
@@ -175,16 +231,18 @@ export class AiBrowserExecutor {
             }
             firstItem = false;
         }
+        return content;
     }
 
     _setDownloadStatus(progress) {
         //console.log("Progress: ", progress);
-        let percent = progress.loaded * 100;
+
+        let percent = Math.round(progress.loaded * 100);
         //skip this values, they are not useful
         if (percent == 0 || percent == 100) return;
 
         if (this.editorAiInstance) {
-            this.editorAiInstance._setDownloadStatus(percent);
+            this.editorAiInstance.setDownloadStatus(percent);
         } else {
             console.log("Download progress:", percent+"%");
         }
