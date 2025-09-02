@@ -17,5 +17,5 @@ public interface AssistantDefinitionRepository extends DomainIdRepository<Assist
     @Query("SELECT DISTINCT oaa.groupName FROM AssistantDefinitionEntity oaa WHERE oaa.groupName LIKE :groupName AND oaa.domainId = :domainId ORDER BY oaa.groupName ASC")
     List<String> getGroupNames(@Param("groupName") String groupName, @Param("domainId") Integer domainId);
 
-    Optional<AssistantDefinitionEntity> findByIdAndDomainId(Long id, Integer domainId);
+    Optional<AssistantDefinitionEntity> findByIdAndDomainId(Integer id, Integer domainId);
 }

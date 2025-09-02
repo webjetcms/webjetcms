@@ -222,7 +222,7 @@ export class AiUserInterface {
             this.generateAssistentOptions(button, column);
         });
 
-        let bonusHtml = await this._getBonusHtml(aiCol.assistant);
+        let bonusHtml = await this._getBonusHtml(aiCol.assistantId);
         let html = `
             <div class="mb-3">
                 <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>

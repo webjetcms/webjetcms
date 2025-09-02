@@ -15,7 +15,7 @@ export class AiRestExecutor {
         let self = this;
         let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
 
-        inputData.assistantId = aiCol.assistant;
+        inputData.assistantId = aiCol.assistantId;
 
         if (aiCol.useStreaming===true) {
             //console.log("Using streaming for AI response:", aiCol.assistant);
@@ -124,7 +124,7 @@ export class AiRestExecutor {
         let self = this;
         let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
 
-        inputData.assistantId = aiCol.assistant;
+        inputData.assistantId = aiCol.assistantId;
 
         await $.ajax({
             type: "POST",
