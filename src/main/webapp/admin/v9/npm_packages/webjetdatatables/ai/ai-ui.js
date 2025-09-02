@@ -476,11 +476,11 @@ export class AiUserInterface {
         });
     }
 
-    async _getBonusHtml(assistantName) {
+    async _getBonusHtml(assistantId) {
         try {
             const res = await $.ajax({
                 type: "GET",
-                url: "/admin/rest/ai/assistant/bonus-content/?assistantName=" + assistantName,
+                url: "/admin/rest/ai/assistant/bonus-content/?assistantId=" + assistantId,
                 contentType: "application/x-www-form-urlencoded; charset=UTF-8"
             });
 

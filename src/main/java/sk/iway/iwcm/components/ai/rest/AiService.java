@@ -103,7 +103,7 @@ public class AiService {
     public AssistantResponseDTO getAiResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws Exception {
 
         Prop prop = Prop.getInstance(request);
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
@@ -127,7 +127,7 @@ public class AiService {
         Prop prop = Prop.getInstance(request);
         inputData.prepareData();
 
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_IMAGE) == false && doesSupportAction(assistant, SupportedActions.EDIT_IMAGE) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
@@ -145,7 +145,7 @@ public class AiService {
     public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer, HttpServletRequest request) throws Exception {
 
         Prop prop = Prop.getInstance(request);
-        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantName(), assistantRepo, prop);
+        AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
         if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false || Tools.isFalse(assistant.getUseStreaming())) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
@@ -164,9 +164,9 @@ public class AiService {
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public String getBonusHtml(String assistantName, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
+    public String getBonusHtml(String assistantIdStr, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
 
-        AssistantDefinitionEntity assistant = getAssistant(assistantName, assistantRepo, Prop.getInstance(request));
+        AssistantDefinitionEntity assistant = getAssistant(assistantIdStr, assistantRepo, Prop.getInstance(request));
 
         Prop prop = Prop.getInstance(request);
         for(AiInterface aiInterface : aiInterfaces) {
@@ -178,12 +178,14 @@ public class AiService {
         throw new IllegalStateException( getSomethingWrongErr(Prop.getInstance(request)) );
     }
 
-    private AssistantDefinitionEntity getAssistant(String assistantName, AssistantDefinitionRepository assistantRepo, Prop prop) {
-        //
-        if(Tools.isEmpty(assistantName)) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
+    private AssistantDefinitionEntity getAssistant(String assistantIdStr, AssistantDefinitionRepository assistantRepo, Prop prop) {
+        Long assistantId = Tools.getLongValue(assistantIdStr, -1L);
 
         //
-        Optional<AssistantDefinitionEntity> assistant = assistantRepo.findFirstByNameAndDomainId(assistantName, CloudToolsForCore.getDomainId());
+        if(assistantId < 1) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
+
+        //
+        Optional<AssistantDefinitionEntity> assistant = assistantRepo.findByIdAndDomainId(assistantId, CloudToolsForCore.getDomainId());
 
         if(assistant.isPresent() == false) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 

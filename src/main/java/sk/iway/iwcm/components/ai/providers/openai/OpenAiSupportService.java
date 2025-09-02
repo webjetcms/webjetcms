@@ -1,13 +1,7 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
-import java.io.IOException;
-
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 
-import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
@@ -47,34 +41,6 @@ public abstract class OpenAiSupportService {
     protected final StringEntity getRequestBody(String stringBody) {
         if(Tools.isEmpty(stringBody) == true) stringBody = "{}";
         return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
-    }
-
-    protected String handleErrorMessage(CloseableHttpResponse response, Prop prop) {
-        int code = response.getStatusLine().getStatusCode();
-        String defaultErrMsg = " (" + code + ") " + prop.getText("html_area.insert_image.error_occured");
-        try {
-            String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            JSONObject jsonObject = new JSONObject(responseBody);
-            if (jsonObject.has("error")) {
-                JSONObject error = jsonObject.getJSONObject("error");
-                if (error.has("message")) {
-                    String errorMessage = error.getString("message");
-                    return " (" + code + ") " + errorMessage;
-                } else {
-                    return defaultErrMsg;
-                }
-            } else {
-                return defaultErrMsg;
-            }
-        } catch (IOException ex) {
-            return defaultErrMsg;
-        }
-    }
-
-    protected String handleErrorMessage(CloseableHttpResponse response, Prop prop, String serviceName, String methodName) {
-        String errMsg = handleErrorMessage(response, prop);
-        Adminlog.add(Adminlog.TYPE_AI, serviceName + "." + methodName + " FAILED : " + errMsg, -1, -1);
-        throw new IllegalStateException(errMsg);
     }
 
     protected String getImageSizeSelect(String model, Prop prop) {

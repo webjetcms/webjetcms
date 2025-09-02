@@ -34,7 +34,7 @@ public class InputDataDTO {
         }
     }
 
-    String assistantName;
+    String assistantId;
     String userPrompt = null;
 
     String inputValue = null;
@@ -57,7 +57,7 @@ public class InputDataDTO {
     }
 
     public InputDataDTO(Map<String, String> data) {
-        this.assistantName = data.get("assistantName");
+        this.assistantId = data.get("assistantId");
         this.inputValue = data.get("inputValue");
         this.inputValueType = InputValueType.from( data.get("inputValueType") );
     }
