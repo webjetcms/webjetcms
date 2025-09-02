@@ -51,8 +51,17 @@ public class AiAssistantsService {
     public static List<AssistantDefinitionEntity> getAssistantAndFieldFrom(String fieldTo, sk.iway.iwcm.system.datatable.json.DataTableColumn column, String srcClass) {
         List<AssistantDefinitionEntity> assistants = new ArrayList<>();
         if(Tools.isEmpty(fieldTo) || Tools.isEmpty(srcClass)) return assistants;
+
+        AiAssistantsService aiAssistantsService = Tools.getSpringBean("aiAssistantsService", AiAssistantsService.class);
+        if (aiAssistantsService == null) return assistants;
+
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
 
+            //get provider and test if is configured
+            AiAssitantsInterface provider = aiAssistantsService.getProvider(aiAssistant.getProvider());
+            if(provider == null || provider.isInit()==false) continue;
+
+            //assistant is disabled
             if(Tools.isFalse(aiAssistant.getActive())) continue;
 
             boolean addAssistant = false;
@@ -237,5 +246,14 @@ public class AiAssistantsService {
 
     private String getNoPermittedString(Prop prop) {
         return prop.getText("config.not_permitted_action_err");
+    }
+
+    private AiAssitantsInterface getProvider(String provider) {
+        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
+            if(assistantInterface.getProviderId().equals(provider)) {
+                return assistantInterface;
+            }
+        }
+        return null;
     }
 }

@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -54,15 +53,14 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     private static final CloseableHttpClient client = HttpClients.createDefault();
     private static final String SERVICE_NAME = "OpenAiService";
     private static final String PROVIDER_ID = "openai";
-    private static final String TITLE_KEY = "components.ai_provider.openai.title";
-    private static final String AUTH_KEY = "open_ai_auth_key";
+    private static final String TITLE_KEY = "components.ai_assistants.provider.openai.title";
 
     public String getProviderId() {
         return PROVIDER_ID;
     }
 
     public boolean isInit() {
-        return Tools.isNotEmpty(Constants.getString(AUTH_KEY));
+        return Tools.isNotEmpty(getApiKey());
     }
 
     public Pair<String, String> getProviderInfo(Prop prop) {
@@ -214,8 +212,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             String model = assistant.getModel();
 
             return """
-                <div class='bonus-content'>
-                    <div>
+                <div class='bonus-content row'>
+                    <div class='col-sm-4'>
                         <label for='bonusContent-imageCount'>%s</label>
                         <input id='bonusContent-imageCount' type='number' class='form-control' value=1>
                     </div>

@@ -53,6 +53,7 @@ public class Constants {
 	public static final String MOD_DMAIL = "dmail";
 	public static final String MOD_RESERVATION = "reservation";
 	public static final String MOD_FORMMAIL = "formmail";
+	public static final String MOD_AI_ASSISTANTS = "ai_assistants";
 
 	public static final String MOD_OBSOLETE = "obsolete";
 

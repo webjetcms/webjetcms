@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
@@ -17,14 +16,13 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 public class OpenAiAssistantsService extends OpenAiSupportService implements AiAssitantsInterface {
 
     private static final String PROVIDER_ID = "openai";
-    private static final String AUTH_KEY = "open_ai_auth_key";
 
     public String getProviderId() {
         return PROVIDER_ID;
     }
 
     public boolean isInit() {
-        return Tools.isNotEmpty(Constants.getString(AUTH_KEY));
+        return Tools.isNotEmpty(getApiKey());
     }
 
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {

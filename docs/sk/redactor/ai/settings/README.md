@@ -69,7 +69,7 @@ Poskytovateľ je externá služba alebo platforma, ktorá zabezpečuje AI nástr
 
 ### OpenAI
 
-OpenAI patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. V CMS systéme je jeho API už integrované – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `open_ai_auth_key`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
+OpenAI patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. V CMS systéme je jeho API už integrované – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `ai_openAiAuthKey`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
 
 Aktuálne je podporovaná integrácia pre tieto typy požiadaviek:
 
@@ -81,7 +81,7 @@ API kľúč získate registráciou na stránke [OpenAI](https://platform.openai.
 
 ### Prehliadač
 
-AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome, po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch.
+AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome, po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`.
 
 Pre spustenie AI v prehliadači je potrebné splniť:
 

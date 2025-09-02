@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.i18n.Prop;
@@ -21,7 +22,7 @@ public class BrowserAssistantsService implements AiAssitantsInterface {
     }
 
     public boolean isInit() {
-        return true;
+        return Constants.getBoolean("ai_browserAiEnabled");
     }
 
     public List<String> getFieldsToShow(String action) {

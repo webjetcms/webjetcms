@@ -157,6 +157,17 @@ export class AiBrowserExecutor {
 
             //console.log("_apiExecute, apiName=", apiName, "apiInstance=", apiInstance, "inputData=", inputData, " text:", text, "config=", config, "setFunction=", setFunction);
 
+            if ("Translator" === apiName) {
+                if ("autodetect"===config.sourceLanguage) {
+                    config.sourceLanguage = await this._detectLanguage(text);
+                } else if ("userLng" === config.sourceLanguage) {
+                    config.sourceLanguage = window.userLng;
+                }
+                if ("userLng" === config.targetLanguage) {
+                    config.targetLanguage = window.userLng;
+                }
+            }
+
             let content = null;
             if (useStreaming) {
                 let stream = null;
@@ -195,7 +206,7 @@ export class AiBrowserExecutor {
                     let translateFromLanguage = await this._detectLanguage(content);
                     let translateToLanguage = translateOutputLanguage;
 
-                    if ("preserve" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
+                    if ("autodetect" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
                         //detect source language
                         translateToLanguage = await this._detectLanguage(text);
                     } else if ("userLng" === translateOutputLanguage) {

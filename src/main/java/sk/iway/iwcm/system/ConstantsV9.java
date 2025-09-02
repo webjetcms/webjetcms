@@ -152,7 +152,8 @@ public class ConstantsV9 {
 
 		Constants.setBoolean("ABTestingForLoggedUser", false, "abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 
-		Constants.setString("open_ai_auth_key", "", "", "Authentifikacny kluc k platform.openai.com");
+		Constants.setString("ai_openAiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentication key to platform.openai.com");
+		Constants.setBoolean("ai_browserAiEnabled", true, Constants.MOD_AI_ASSISTANTS, "Enable AI assistants in browser - Chrome Built-in AI");
 	}
 
 	/**

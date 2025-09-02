@@ -28,6 +28,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
+import sk.iway.iwcm.components.ai.rest.AssistantDefinitionRestController;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
@@ -346,7 +347,7 @@ public class DataTableColumn {
                     else ai.setDescription(prop.getText(ade.getDescription()));
                     ai.setProvider(ade.getProvider());
 
-                    String providerTitleKey = "components.ai_provider."+ade.getProvider()+".title";
+                    String providerTitleKey = "components.ai_assistants.provider."+ade.getProvider()+".title";
                     String providerTitle = prop.getText(providerTitleKey);
                     if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
                     ai.setProviderTitle(providerTitle);
@@ -355,11 +356,7 @@ public class DataTableColumn {
                     ai.setAction(ade.getAction());
 
                     String groupName = ade.getGroupName();
-                    //if groupName is in format number:name remove number prefix
-                    if (groupName != null && groupName.contains(":")) {
-                        groupName = groupName.substring(groupName.indexOf(":") + 1).trim();
-                    }
-                    ai.setGroupName(groupName);
+                    ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + groupName));
                     ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
                     ai.setUserPromptLabel(ade.getUserPromptLabel());
                     ai.setIcon(ade.getIcon());
@@ -710,6 +707,14 @@ public class DataTableColumn {
             HashMap<String, String> attrs = new HashMap<>();
             attrs.put("type", "number");
             editor.setAttr(attrs);
+        }
+
+        if (dataTableColumnType == DataTableColumnType.ICON) {
+            renderFormat = "dt-format-icon";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("icon");
         }
     }
 

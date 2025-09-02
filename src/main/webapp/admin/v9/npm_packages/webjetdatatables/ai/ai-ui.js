@@ -131,7 +131,7 @@ export class AiUserInterface {
         if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
 
         let text = WJ.translate(textKey, params);
-        text = WJ.parseMarkdown(text, { link: true });
+        text = WJ.parseMarkdown(text, { link: true, removeLastBr: true });
         html += text + '</div>';
 
         if (chatErrorContainer != null && chatErrorContainer.length > 0) {
@@ -151,14 +151,10 @@ export class AiUserInterface {
 
     _showLoader(button) {
         button.parents(".DTE_Field").addClass("ai-loading");
-        let input = button.parents(".DTE_Field").find(".form-control");
-        if (input.val()=="") input.val(WJ.translate("components.ai_assistants.editor.loading.js"));
     }
 
     _hideLoader(button) {
         button.parents(".DTE_Field").removeClass("ai-loading");
-        let input = button.parents(".DTE_Field").find(".form-control");
-        if (input.val()==WJ.translate("components.ai_assistants.editor.loading.js")) input.val("");
     }
 
     _closeToast(timeOut) {
@@ -316,12 +312,12 @@ export class AiUserInterface {
 
             <div class='image-info' style='display: none;'>
                 <div>
-                    <label for='generated-image-name' style='color: black;'>ImageName</label>
+                    <label for='generated-image-name' style='color: black;'>${WJ.translate("components.ai_assistants.temp_file_storage.file_name.js")}</label>
                     <input id='generated-image-name' type='text' class='form-control' value='${imageName}'>
                 </div>
 
                 <div>
-                    <label for='editorAppimageLocation' style='color: black;'>ImageLocation</label>
+                    <label for='editorAppimageLocation' style='color: black;'>${WJ.translate("components.ai_assistants.temp_file_storage.file_dir.js")}</label>
                     <div class="col-auto" data-toggle="tooltip">
                         <input type="text" class="webjet-dte-jstree" id="imageLocation"/>
                     </div>
@@ -417,6 +413,7 @@ export class AiUserInterface {
             const imgDiv = $(`
                 <div class="image-preview">
                     <img src="/admin/rest/ai/assistant/file/binary/?fileName=${imageName}" alt="${imageName}" />
+                    <a href="/admin/rest/ai/assistant/file/binary/?fileName=${imageName}" target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a>
                 </div>
             `);
             imgDiv.find('img').on('click', () => {
@@ -432,6 +429,8 @@ export class AiUserInterface {
             this._saveAndSetImage(button, toField);
         });
         buttonDiv.append(imageButton);
+
+        if (images.length>0) this._selectImage(images[0]);
     }
 
     _selectImage(imageName) {
