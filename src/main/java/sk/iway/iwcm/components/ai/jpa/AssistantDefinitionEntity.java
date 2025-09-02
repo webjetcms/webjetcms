@@ -200,7 +200,7 @@ public class AssistantDefinitionEntity implements Serializable {
 
     @Lob
     @Column(name = "user_prompt_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", visible = false, className = "wrap")
     private String userPromptLabel;
 
     @Column(name="domain_id")

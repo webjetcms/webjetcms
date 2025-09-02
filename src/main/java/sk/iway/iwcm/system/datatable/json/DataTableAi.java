@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 public class DataTableAi {
     private String from;
     private String to;
-    private String assistant;
+    private Long assistantId;
     private String provider;
     private String providerTitle;
     private String description;
@@ -31,11 +31,11 @@ public class DataTableAi {
     @JsonIgnore
     public boolean isEmpty() {
         //Check that all required fields are set
-        if (Tools.isEmpty(to) || Tools.isEmpty(assistant)) return true;
+        if (Tools.isEmpty(to) || assistantId == null) return true;
 
         //Check that required fields do NOT have "EMPTY_VALUE" what means it was not set
         String emptyValue = AiAssistantsService.EMPTY_VALUE;
-        if( emptyValue.equals(to) || emptyValue.equals(assistant) ) return true;
+        if( emptyValue.equals(to)) return true;
 
         //Its good
         return false;
