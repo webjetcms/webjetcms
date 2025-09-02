@@ -127,7 +127,7 @@ public class AssistantController {
     }
 
     @GetMapping(value = "/bonus-content/", produces = "text/plain; charset=UTF-8")
-    public String getBonusContent(@RequestParam("assistantId") Integer assistantId, HttpServletRequest request, HttpServletResponse response) {
+    public String getBonusContent(@RequestParam("assistantId") Long assistantId, HttpServletRequest request, HttpServletResponse response) {
         return aiService.getBonusHtml(assistantId, assistantRepo, request);
     }
 

@@ -339,7 +339,7 @@ public class DataTableColumn {
 
                 for (AssistantDefinitionEntity ade : assistants) {
                     DataTableAi ai = new DataTableAi();
-                    ai.setAssistantId(ade.getId().intValue());
+                    ai.setAssistantId(ade.getId());
                     ai.setFrom(ade.getFieldFrom());
                     ai.setTo(toField);
                     if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());

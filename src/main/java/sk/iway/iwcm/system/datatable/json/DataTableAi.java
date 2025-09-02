@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 public class DataTableAi {
     private String from;
     private String to;
-    private Integer assistantId;
+    private Long assistantId;
     private String provider;
     private String providerTitle;
     private String description;

@@ -164,7 +164,7 @@ public class AiService {
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public String getBonusHtml(Integer assistantId, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
+    public String getBonusHtml(Long assistantId, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) {
 
         AssistantDefinitionEntity assistant = getAssistant(assistantId, assistantRepo, Prop.getInstance(request));
 
@@ -178,9 +178,9 @@ public class AiService {
         throw new IllegalStateException( getSomethingWrongErr(Prop.getInstance(request)) );
     }
 
-    private AssistantDefinitionEntity getAssistant(Integer assistantId, AssistantDefinitionRepository assistantRepo, Prop prop) {
+    private AssistantDefinitionEntity getAssistant(Long assistantId, AssistantDefinitionRepository assistantRepo, Prop prop) {
         //
-        if(assistantId == null || assistantId < 1) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
+        if(assistantId == null || assistantId < 1L) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 
         //
         Optional<AssistantDefinitionEntity> assistant = assistantRepo.findByIdAndDomainId(assistantId, CloudToolsForCore.getDomainId());
