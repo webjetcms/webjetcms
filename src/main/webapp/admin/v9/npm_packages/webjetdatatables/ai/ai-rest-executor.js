@@ -66,7 +66,7 @@ export class AiRestExecutor {
                         //self.EDITOR.set(aiCol.to, wholeText);
 
                         if (setFunction != null) {
-                            setFunction(wholeText);
+                            setFunction(wholeText, false);
                         } else {
                             self.EDITOR.set(aiCol.to, wholeText);
                         }
@@ -79,6 +79,10 @@ export class AiRestExecutor {
                         }
                         totalTokens += parsed.totalTokens;
                     }
+                }
+
+                if (setFunction != null) {
+                    setFunction(wholeText, true);
                 }
             } catch (err) {
                 console.log("ERRR : ", err);
@@ -99,7 +103,7 @@ export class AiRestExecutor {
                         self._setError(res.error);
                     } else {
                         if (setFunction != null) {
-                            setFunction(res.response);
+                            setFunction(res.response, true);
                         } else {
                             self.EDITOR.set(aiCol.to, res.response);
                         }

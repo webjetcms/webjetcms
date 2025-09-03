@@ -131,6 +131,23 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         return entity;
     }
 
+
+
+    @Override
+    public void afterDelete(AssistantDefinitionEntity entity, long id) {
+        afterSave(entity, null);
+    }
+
+    @Override
+    public void afterDuplicate(AssistantDefinitionEntity entity, Long originalId) {
+        afterSave(entity, null);
+    }
+
+    @Override
+    public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
+        AiAssistantsService.clearCache();
+    }
+
     @GetMapping("/autocomplete-class")
     public List<String> getAutocompleteClass(@RequestParam String term) {
         return aiAssistantsService.getClassOptions(term);

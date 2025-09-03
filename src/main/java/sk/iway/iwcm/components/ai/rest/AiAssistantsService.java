@@ -34,6 +34,7 @@ public class AiAssistantsService {
 
     private static final String CLASS_FIELD_MAP_KEY = "AiAssistantsService_classFieldsMap";
     public static final String EMPTY_VALUE = "EMPTY_VALUE";
+    private static final String CACHE_KEY_PREFIX = "AiAssistantsService.assistants-";
 
     private final List<AiAssitantsInterface> aiAssitantsInterfaces;
 
@@ -217,13 +218,34 @@ public class AiAssistantsService {
         return classFieldsMap;
     }
 
+    /**
+     * Get assistants from the database, it is heavily used for generating AI button in fields, so it is cached for 60 minutes
+     * @param repo
+     * @return
+     */
     private static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
+
+        Cache c = Cache.getInstance();
+        String cacheKey = CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId();
+
+        @SuppressWarnings("unchecked")
+        List<AssistantDefinitionEntity> cachedAssistants = (List<AssistantDefinitionEntity>) c.getObject(cacheKey, List.class);
+        if(cachedAssistants != null) {
+            return cachedAssistants;
+        }
+
         if(repo == null)
             repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
 
         List<AssistantDefinitionEntity> dbAiAssitants = repo.findAllByDomainId(CloudToolsForCore.getDomainId());
 
+        c.setObject(cacheKey, dbAiAssitants, 60);
         return dbAiAssitants;
+    }
+
+    public static void clearCache() {
+        Cache c = Cache.getInstance();
+        c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId());
     }
 
     public static String executePromptMacro(String text, InputDataDTO inputData) {

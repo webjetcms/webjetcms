@@ -212,7 +212,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             String model = assistant.getModel();
 
             return """
-                <div class='bonus-content row'>
+                <div class='bonus-content row mt-3'>
                     <div class='col-sm-4'>
                         <label for='bonusContent-imageCount'>%s</label>
                         <input id='bonusContent-imageCount' type='number' class='form-control' value=1>

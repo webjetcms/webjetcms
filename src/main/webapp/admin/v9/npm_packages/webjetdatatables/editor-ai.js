@@ -212,12 +212,14 @@ export class EditorAi {
 
             inputData.inputValue = tempDiv.innerHTML;
 
-            totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
+            totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, false, (response, finished) => {
                 //console.log("response="+response, "setting to editor: ", ckEditorInstance, "inputData=", inputData);
 
-                // Replace selection with AI response
-                ckEditorRanges[0].deleteContents();
-                ckEditorSelectionInstance.insertHtml(response);
+                // Replace selection with AI response, do not stream, wait for finished
+                if (finished === true) {
+                    ckEditorRanges[0].deleteContents();
+                    ckEditorSelectionInstance.insertHtml(response);
+                }
             });
 
         } else if (isPageBuilder) {
@@ -225,15 +227,17 @@ export class EditorAi {
 
             //get all PB editor instances and execute action on them separately
             let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
+            let reuseApiInstance = false;
             for (let i=0; i<editors.length; i++) {
                 let editor = editors[i];
-                //this._executeSingleAction(button, column, aiCol, from, editor);
+                if (i>0) reuseApiInstance = true;
                 //console.log("Executing on editor: ", editor);
 
                 self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
                 inputData.inputValue = editor.getData();
-                totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, (response) => {
+
+                totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
                 });
@@ -264,13 +268,13 @@ export class EditorAi {
         }
     }
 
-    async _executeSingleAction(button, column, aiCol, inputData, setFunction = null) {
+    async _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
         let self = this;
         let totalTokens = 0;
 
         if ("browser" === aiCol.provider) {
             if (this.aiBrowserExecutor.isAvailable(aiCol)) {
-                totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, setFunction);
+                totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
             } else {
                 totalTokens = this.DO_NOT_CLOSE_DIALOG;
             }

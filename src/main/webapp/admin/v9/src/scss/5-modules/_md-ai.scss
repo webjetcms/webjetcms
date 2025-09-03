@@ -148,7 +148,7 @@
         width: 30px;
         height: 30px;
         top: 9px;
-        right: 19px;
+        right: 16px;
         opacity: 1;
         &::before {
             position: absolute;
@@ -165,8 +165,8 @@
     .toast.toast-info {
         opacity: 1;
         transition: none;
-        width: 480px;
-        max-width: 480px;
+        width: 472px;
+        max-width: 472px;
         border: 1px solid var(--wj-ai-color);
         border-radius: 10px;
         cursor: auto;
@@ -186,13 +186,21 @@
 
         div.toast-message {
             background-color: white;
-            padding-left: 19px;
-            padding-right: 19px;
+            max-height: 90vh;
+            overflow: auto;
 
             a {
                 color: var(--wj-primary);
                 &:hover {
                     color: var(--wj-primary-hover);
+                }
+            }
+            a.jstree-anchor {
+                color: #1f2022;
+            }
+            .btn-vue-jstree-item-edit {
+                i.ti {
+                    vertical-align: middle;
                 }
             }
 
@@ -309,7 +317,7 @@
                     margin: 0;
                     border-radius: 8px;
                     object-fit: cover;
-                    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.00);
                     transition: box-shadow 0.2s, transform 0.2s, border 0.2s;
                     border: 2px solid transparent;
 
@@ -349,7 +357,6 @@
         }
 
         .button-div {
-            text-align: end;
             margin-top: 7px;
         }
 
@@ -372,9 +379,9 @@
                 content: ""
             }
             .toast-title {
-                padding-left: 19px;
-                padding-top: 9px;
-                padding-bottom: 10px;
+                padding-left: 16px;
+                padding-top: 8px;
+                padding-bottom: 8px;
             }
 
             .header-back-button {
