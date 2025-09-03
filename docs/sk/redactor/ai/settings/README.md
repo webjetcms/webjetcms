@@ -45,6 +45,27 @@ Na tejto karte nastavujete, akú akciu má AI asistent vykonávať, odkiaľ bude
 
 ![](datatable-action-tab.png)
 
+Pre entitu, zdrojové a cieľové pole je možné zadať aj hodnoty typu:
+
+- `value1,value2,value3` - aplikuje sa na viaceré hodnoty
+- `*` - aplikuje sa na všetky hodnoty
+- `%value!` - aplikuje sa ak kdekoľvek obsahuje hodnotu `value`
+- `%value` - aplikuje sa ak začína na hodnotu `value`
+- `value!` - aplikuje sa ak končí na hodnotu `value`
+
+Pre cieľové pole je možné zadať nielen meno atribútu v entite, ale aj CSS triedu a hodnotu `renderFormat`, je možné teda zadať hodnotu `dt-format-text,dt-format-text-wrap` pre aplikovanie na všetky typy textový polí.
+
+Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov stačí do anotácie pridať CSS triedu `ai-off`, v takom prípade sa pri poli zobrazí tlačidlo pre AI asistenta len ak je zadaný presne na danú entitu a pole.
+
+```java
+	@Lob
+	@Column(name = "description")
+	@DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, renderFormat = "dt-format-text", tab="description", editor = {
+			@DataTableColumnEditor(type = "textarea", attr = {
+					@DataTableColumnEditorAttr(key = "class", value = "textarea-code ai-off") }) })
+	private String description;
+```
+
 ### Karta - Provider
 
 Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý na spracovanie požiadavky asistenta. Vo výberovom poli sa zobrazia všetci dostupní a správne nakonfigurovaní poskytovatelia (napríklad tí, ktorí majú zadaný API kľúč). Po výbere konkrétneho poskytovateľa sa môžu zobraziť ďalšie špecifické nastavenia podľa možností daného poskytovateľa. Napríklad pri poskytovateľovi `OpenAI` je možné vybrať konkrétny model na spracovanie požiadavky, zatiaľ čo iní poskytovatelia môžu ponúkať iné alebo obmedzené možnosti konfigurácie.

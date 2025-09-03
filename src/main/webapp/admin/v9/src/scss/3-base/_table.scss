@@ -1464,6 +1464,16 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     padding: 5px;
     margin-left: 5px;
     margin-right: 5px;
+    margin-bottom: 5px;
+}
+.input-group:has(.textarea-code) {
+    width: 892px;
+    margin-bottom: 5px;
+    .textarea-code {
+        margin-right: 0px;
+        margin-bottom: 0px;
+        width: 842px;
+    }
 }
 
 div.textarea-code-small textarea {
