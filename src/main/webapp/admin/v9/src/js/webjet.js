@@ -1084,9 +1084,13 @@ const WJ = (() => {
                 htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='" + options.imgSrcPrefix + "$2' class='img-fluid' loading='lazy'/>")
                                    .replace(/(\[([^\]]+)])\(([^:)]+)\)/g, "<a href='" + options.imgSrcPrefix + "#/$3' target='_blank'>$2</a>")
             }
+
+            if (true === options.removeLastBr) {
+                htmlText = htmlText.replace(/<br \/>$/, '');
+            }
         }
 
-        //This is for cases where [](link) link isn't for our documentatio but for some web page (so do it without our prefix)
+        //This is for cases where [](link) link isn't for our documentation but for some web page (so do it without our prefix)
         //OR in case that options are not set at all
         htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' class='img-fluid' loading='lazy'/>")
                             .replace(/\[(\s*http[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')

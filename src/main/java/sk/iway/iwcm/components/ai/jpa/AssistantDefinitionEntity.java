@@ -63,20 +63,11 @@ public class AssistantDefinitionEntity implements Serializable {
     private String translatedDescription;
 
     @Column(name = "icon")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.icon", tab = "basic", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.ICON, title = "components.ai_assistants.icon", tab = "basic")
     private String icon;
 
     @Column(name = "group_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.group", tab = "basic",
-        editor = {
-			@DataTableColumnEditor(
-				attr = {
-					@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/ai/assistant-definition/autocomplete-group"),
-					@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
-					@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
-				}
-			)
-	})
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.group", tab = "basic")
     private String groupName;
 
     @Column(name = "created_at")

@@ -32,7 +32,7 @@ public abstract class OpenAiSupportService {
     }
 
     protected final void addHeaders(org.apache.http.client.methods.HttpRequestBase request, boolean addContentType, boolean isAssistantV2) {
-        String apiKey = Constants.getString("open_ai_auth_key");
+        String apiKey = getApiKey();
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenAI API key is not set.");
         request.setHeader("Authorization", "Bearer " + apiKey);
         if(addContentType) request.setHeader("Content-Type", "application/json");
@@ -89,7 +89,7 @@ public abstract class OpenAiSupportService {
 
         return
             """
-                <div>
+                <div class='col-sm-4'>
                     <label for='bonusContent-imageSize'>%s</label>
                     <select id='bonusContent-imageSize' class='form-control'>
                         %s
@@ -106,7 +106,7 @@ public abstract class OpenAiSupportService {
             options =
                 """
                     <option value="low">low</option>
-                    <option value="medium">medium</option>
+                    <option value="medium" selected="selected">medium</option>
                     <option value="high">high</option>
                 """;
         } else if("dall-e-3".equals(model)) {
@@ -122,12 +122,16 @@ public abstract class OpenAiSupportService {
 
         return
             """
-                <div>
+                <div class='col-sm-4'>
                     <label for='bonusContent-imageQuality'>%s</label>
                     <select id='bonusContent-imageQuality' class='form-control'>
                         %s
                     </select>
                 </div>
             """.formatted(prop.getText("components.ai_assistants.imageQuality"), options);
+    }
+
+    public static String getApiKey() {
+        return Constants.getString("ai_openAiAuthKey");
     }
 }

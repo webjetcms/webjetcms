@@ -208,6 +208,13 @@ table.datatableInit {
             border-radius: 4px;
         }
     }
+    td.dt-style-icon {
+        span.dt-icon-box {
+            float: left;
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+    }
 
     tbody {
         tr {

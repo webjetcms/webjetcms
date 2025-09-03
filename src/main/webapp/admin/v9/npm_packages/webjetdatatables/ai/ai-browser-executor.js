@@ -32,7 +32,15 @@ export class AiBrowserExecutor {
         return false;
     }
 
-    async execute(aiCol, inputData, setFunction = null) {
+    /**
+     *
+     * @param {*} aiCol
+     * @param {*} inputData
+     * @param {*} reuseApiInstance - set to true to reuse latest instance, EG for PageBuilder you need to reuse it for every editor
+     * @param {*} setFunction
+     * @returns
+     */
+    async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null) {
 
         let instructions = aiCol.instructions;
         let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
@@ -44,9 +52,16 @@ export class AiBrowserExecutor {
                 this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.unknownApi.js", false, apiName);
             } else {
                 let config = this._getConfig(instructions);
-                let apiInstance = await this._apiInitialize(apiName, config);
+                let apiInstance = null;
+
+                if (reuseApiInstance === true && this.lastApiInstance != null) {
+                    apiInstance = this.lastApiInstance;
+                } else {
+                    apiInstance = await this._apiInitialize(apiName, config, inputData);
+                    this.lastApiInstance = apiInstance; //store last instance for destroy
+                }
+
                 let useStreaming = aiCol.useStreaming || false;
-                this.lastApiInstance = apiInstance; //store last instance for destroy
                 if (apiInstance) {
                     totalTokens = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
                 }
@@ -99,9 +114,14 @@ export class AiBrowserExecutor {
         return {};
     }
 
-    async _apiInitialize(apiName, config, skipIsActive = false) {
+    async _apiInitialize(apiName, config, inputData, skipIsActive = false) {
         let instance = this;
         let apiInstance = null;
+
+        let text = inputData.inputValue;
+        if (inputData.userPrompt != null) {
+            text = inputData.userPrompt;
+        }
 
         config.monitor = (m) => {
             m.addEventListener('downloadprogress', (e) => {
@@ -110,6 +130,17 @@ export class AiBrowserExecutor {
         };
 
         if (apiName in self) {
+            if ("Translator" === apiName) {
+                if ("autodetect"===config.sourceLanguage) {
+                    config.sourceLanguage = await this._detectLanguage(text);
+                } else if ("userLng" === config.sourceLanguage) {
+                    config.sourceLanguage = window.userLng;
+                }
+                if ("userLng" === config.targetLanguage) {
+                    config.targetLanguage = window.userLng;
+                }
+            }
+
             if ("Translator" === apiName && navigator.userActivation.isActive===false) {
                 //verify translation pair availability
                 let status = await Translator.availability(config);
@@ -178,7 +209,7 @@ export class AiBrowserExecutor {
 
                 if (content != null) {
                     if (setFunction != null) {
-                        setFunction(content);
+                        setFunction(content, true);
                     } else {
                         this.EDITOR.set(fieldName, content);
                     }
@@ -195,7 +226,7 @@ export class AiBrowserExecutor {
                     let translateFromLanguage = await this._detectLanguage(content);
                     let translateToLanguage = translateOutputLanguage;
 
-                    if ("preserve" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
+                    if ("autodetect" === translateOutputLanguage || true === translateOutputLanguage || "true" === translateOutputLanguage) {
                         //detect source language
                         translateToLanguage = await this._detectLanguage(text);
                     } else if ("userLng" === translateOutputLanguage) {
@@ -211,12 +242,12 @@ export class AiBrowserExecutor {
                             sourceLanguage: translateFromLanguage,
                             targetLanguage: translateToLanguage
                         }
-                        const translator = await this._apiInitialize("Translator", config, true);
+                        const translator = await this._apiInitialize("Translator", config, inputData, true);
                         //console.log("Mam translator: ", translator);
                         let translatedContent = await translator.translate(content);
                         //console.log("Translated content:", translatedContent, "content=", content);
                         if (setFunction != null) {
-                            setFunction(translatedContent);
+                            setFunction(translatedContent, true);
                         } else {
                             this.EDITOR.set(fieldName, translatedContent);
                         }
@@ -255,11 +286,14 @@ export class AiBrowserExecutor {
             //console.log('\r'+content);
 
             if (setFunction != null) {
-                setFunction(content);
+                setFunction(content, false);
             } else {
                 this.EDITOR.set(fieldName, content);
             }
             firstItem = false;
+        }
+        if (setFunction != null) {
+            setFunction(content, true);
         }
         return content;
     }

@@ -34,6 +34,7 @@ public class AiAssistantsService {
 
     private static final String CLASS_FIELD_MAP_KEY = "AiAssistantsService_classFieldsMap";
     public static final String EMPTY_VALUE = "EMPTY_VALUE";
+    private static final String CACHE_KEY_PREFIX = "AiAssistantsService.assistants-";
 
     private final List<AiAssitantsInterface> aiAssitantsInterfaces;
 
@@ -51,8 +52,17 @@ public class AiAssistantsService {
     public static List<AssistantDefinitionEntity> getAssistantAndFieldFrom(String fieldTo, sk.iway.iwcm.system.datatable.json.DataTableColumn column, String srcClass) {
         List<AssistantDefinitionEntity> assistants = new ArrayList<>();
         if(Tools.isEmpty(fieldTo) || Tools.isEmpty(srcClass)) return assistants;
+
+        AiAssistantsService aiAssistantsService = Tools.getSpringBean("aiAssistantsService", AiAssistantsService.class);
+        if (aiAssistantsService == null) return assistants;
+
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
 
+            //get provider and test if is configured
+            AiAssitantsInterface provider = aiAssistantsService.getProvider(aiAssistant.getProvider());
+            if(provider == null || provider.isInit()==false) continue;
+
+            //assistant is disabled
             if(Tools.isFalse(aiAssistant.getActive())) continue;
 
             boolean addAssistant = false;
@@ -208,13 +218,34 @@ public class AiAssistantsService {
         return classFieldsMap;
     }
 
+    /**
+     * Get assistants from the database, it is heavily used for generating AI button in fields, so it is cached for 60 minutes
+     * @param repo
+     * @return
+     */
     private static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
+
+        Cache c = Cache.getInstance();
+        String cacheKey = CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId();
+
+        @SuppressWarnings("unchecked")
+        List<AssistantDefinitionEntity> cachedAssistants = (List<AssistantDefinitionEntity>) c.getObject(cacheKey, List.class);
+        if(cachedAssistants != null) {
+            return cachedAssistants;
+        }
+
         if(repo == null)
             repo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
 
         List<AssistantDefinitionEntity> dbAiAssitants = repo.findAllByDomainId(CloudToolsForCore.getDomainId());
 
+        c.setObject(cacheKey, dbAiAssitants, 60);
         return dbAiAssitants;
+    }
+
+    public static void clearCache() {
+        Cache c = Cache.getInstance();
+        c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId());
     }
 
     public static String executePromptMacro(String text, InputDataDTO inputData) {
@@ -237,5 +268,14 @@ public class AiAssistantsService {
 
     private String getNoPermittedString(Prop prop) {
         return prop.getText("config.not_permitted_action_err");
+    }
+
+    private AiAssitantsInterface getProvider(String provider) {
+        for(AiAssitantsInterface assistantInterface : aiAssitantsInterfaces) {
+            if(assistantInterface.getProviderId().equals(provider)) {
+                return assistantInterface;
+            }
+        }
+        return null;
     }
 }

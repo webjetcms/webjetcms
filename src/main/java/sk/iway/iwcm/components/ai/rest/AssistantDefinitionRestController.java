@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -34,6 +35,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     private final AssistantDefinitionRepository repo;
     private final AiService aiService;
     private final AiAssistantsService aiAssistantsService;
+    public static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
     public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService) {
@@ -96,8 +98,16 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
-        page.addOptions("provider", aiService.getSupportedProviders(getProp()), "label", "value", false);
+        page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
+
+        //group is defined as text key with prefix
+        Map<String,String> groups = getProp().getTextStartingWith(GROUPS_PREFIX);
+        for (Map.Entry<String, String> entry : groups.entrySet()) {
+            //skip empty/- values - so the user can aka delete default entries
+            if (Tools.isEmpty(entry.getValue()) || entry.getValue().length()<2) continue;
+            page.addOption("groupName", entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null);
+        }
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());
@@ -121,6 +131,23 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         return entity;
     }
 
+
+
+    @Override
+    public void afterDelete(AssistantDefinitionEntity entity, long id) {
+        afterSave(entity, null);
+    }
+
+    @Override
+    public void afterDuplicate(AssistantDefinitionEntity entity, Long originalId) {
+        afterSave(entity, null);
+    }
+
+    @Override
+    public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
+        AiAssistantsService.clearCache();
+    }
+
     @GetMapping("/autocomplete-class")
     public List<String> getAutocompleteClass(@RequestParam String term) {
         return aiAssistantsService.getClassOptions(term);
@@ -139,10 +166,5 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @GetMapping("/provider-fields")
     public List<String> getProviderFields(@RequestParam(name = "provider") String provider, @RequestParam(name = "action") String action) {
         return aiAssistantsService.getProviderFields(provider, action, getProp());
-    }
-
-    @GetMapping("/autocomplete-group")
-    public List<String> getAutocompleteGroup(@RequestParam String term) {
-        return repo.getGroupNames(term, CloudToolsForCore.getDomainId());
     }
 }

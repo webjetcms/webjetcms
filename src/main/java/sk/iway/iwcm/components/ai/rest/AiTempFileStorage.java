@@ -106,8 +106,8 @@ public class AiTempFileStorage {
         Prop prop = Prop.getInstance(request);
 
         if(Tools.isEmpty(tempFileName)) throw new IOException(prop.getText(NOT_FOUND_ERR));
-        if(Tools.isEmpty(fileName)) throw new IllegalStateException(prop.getText("components.temp_file_storage.file_name_empty_err"));
-        if(Tools.isEmpty(destinationFolder)) throw new IllegalStateException(prop.getText("components.temp_file_storage.file_location_empty_err"));
+        if(Tools.isEmpty(fileName)) throw new IllegalStateException(prop.getText("components.ai_assistants.temp_file_storage.file_name_empty_err"));
+        if(Tools.isEmpty(destinationFolder)) throw new IllegalStateException(prop.getText("components.ai_assistants.temp_file_storage.file_location_empty_err"));
 
         fileName = DB.internationalToEnglish(fileName);
         fileName = DocTools.removeChars(fileName, true).toLowerCase();

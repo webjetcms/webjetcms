@@ -40,12 +40,13 @@ public class AiService {
 
     /* PUBLIC METHODS */
 
-    public List<LabelValue> getSupportedProviders(Prop prop) {
+    public List<LabelValue> getProviders(Prop prop) {
         List<LabelValue> supportedValues = new ArrayList<>();
         for(AiInterface aiInterface : aiInterfaces) {
-            if(aiInterface.isInit() == false) continue;
             Pair<String, String> providerInfo = aiInterface.getProviderInfo(prop);
-            supportedValues.add( new LabelValue(providerInfo.getSecond(), providerInfo.getFirst()) );
+            String configuredAppend = "";
+            if (aiInterface.isInit() == false) configuredAppend = " (" + prop.getText("components.ai_assistants.provider.not_configured") + ")";
+            supportedValues.add( new LabelValue(providerInfo.getSecond() + configuredAppend, providerInfo.getFirst()) );
         }
         return supportedValues;
     }

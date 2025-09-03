@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -25,14 +26,14 @@ import sk.iway.iwcm.utils.Pair;
 public class BrowserService implements AiInterface {
 
     private static final String PROVIDER_ID = "browser";
-    private static final String TITLE_KEY = "components.ai_provider.browser.title";
+    private static final String TITLE_KEY = "components.ai_assistants.provider.browser.title";
 
     public String getProviderId() {
         return PROVIDER_ID;
     }
 
     public boolean isInit() {
-        return true;
+        return Constants.getBoolean("ai_browserAiEnabled");
     }
 
     public Pair<String, String> getProviderInfo(Prop prop) {
