@@ -30,6 +30,7 @@ public abstract class OpenAiSupportService {
             return value;
         }
     }
+
     protected final void addHeaders(org.apache.http.client.methods.HttpRequestBase request, boolean addContentType, boolean isAssistantV2) {
         String apiKey = Constants.getString("open_ai_auth_key");
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenAI API key is not set.");

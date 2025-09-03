@@ -153,6 +153,7 @@ public class ConstantsV9 {
 		Constants.setBoolean("ABTestingForLoggedUser", false, "abtest", "Ak je nastavené na true, tak sa pre neprihláseného používateľa vždy použije variant A, pre prihláseného vždy variant B.");
 
 		Constants.setString("open_ai_auth_key", "", "", "Authentifikacny kluc k platform.openai.com");
+		Constants.setString("gemini_auth_key", "", "", "Authentifikacny kluc k aistudio.google.com");
 	}
 
 	/**
