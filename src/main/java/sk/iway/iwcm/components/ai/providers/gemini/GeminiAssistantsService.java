@@ -15,7 +15,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 @Service
 public class GeminiAssistantsService implements AiAssitantsInterface {
 
-    private static final String AUTH_KEY = "gemini_auth_key";
+    private static final String AUTH_KEY = "ai_gemini_auth_key";
     private static final String PROVIDER_ID = "gemini";
 
     public String getProviderId() {
