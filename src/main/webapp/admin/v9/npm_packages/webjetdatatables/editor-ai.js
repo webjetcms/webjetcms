@@ -10,6 +10,9 @@ export class EditorAi {
     aiRestExecutor = null;
     aiUserInterface = null;
 
+    //field to remember value for undo process
+    undoField = null;
+
     //response error code from executeSingleAction
     ERR_UNKNOWN = -1; //show unknown error message and close dialog
     ERR_CLOSE_DIALOG = -2; //close dialog, message must be written by _setCurrentStatus
@@ -118,6 +121,17 @@ export class EditorAi {
         this.aiUserInterface.setError(...params);
     }
 
+    isUndo() {
+        return this.undoField !== null;
+    }
+
+    undo() {
+        if (this.isUndo()) {
+            this.EDITOR.set(this.undoField.to, this.undoField.value);
+            this._closeToast(1000);
+        }
+    }
+
     setDownloadStatus(percent) {
         this.aiUserInterface.setDownloadStatus(percent);
     }
@@ -140,6 +154,7 @@ export class EditorAi {
 
         let self = this;
         self._showLoader(button);
+        self.undoField = null;
 
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
@@ -247,11 +262,19 @@ export class EditorAi {
             self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             inputData.inputValue = self.EDITOR.get(from);
+            try {
+                self.undoField = {};
+                self.undoField.type = "field";
+                self.undoField.value = self.EDITOR.get(aiCol.to);
+                self.undoField.to = aiCol.to;
+            } catch (error) {
+                console.error("Error getting last field value:", error);
+            }
             totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
         }
 
         if (totalTokens >= 0) {
-            self._closeToast(3000);
+            if (self.isUndo()==false) self._closeToast(3000);
             self._hideLoader(button);
 
             self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
