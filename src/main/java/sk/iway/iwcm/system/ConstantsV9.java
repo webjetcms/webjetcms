@@ -154,6 +154,7 @@ public class ConstantsV9 {
 
 		Constants.setString("ai_openAiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentication key to platform.openai.com");
 		Constants.setBoolean("ai_browserAiEnabled", true, Constants.MOD_AI_ASSISTANTS, "Enable AI assistants in browser - Chrome Built-in AI");
+		Constants.setString("ai_gemini_auth_key", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k aistudio.google.com");
 	}
 
 	/**

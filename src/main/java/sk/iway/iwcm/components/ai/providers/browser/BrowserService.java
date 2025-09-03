@@ -52,7 +52,7 @@ public class BrowserService implements AiInterface {
         return null;
     }
 
-    public List<LabelValue> getSupportedModels(Prop prop) {
+    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         ArrayList<LabelValue> models = new ArrayList<>();
 
         models.add(new LabelValue("Gemini Nano", "v3Nano"));

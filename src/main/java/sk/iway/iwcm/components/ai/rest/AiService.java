@@ -51,7 +51,7 @@ public class AiService {
         return supportedValues;
     }
 
-    public List<LabelValue> getModelOptions(String provider, Prop prop) {
+    public List<LabelValue> getModelOptions(String provider, Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
 
         //First check, if they are cached
@@ -67,7 +67,7 @@ public class AiService {
         //No cached, get them from PROVIDER
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(provider)) {
-                supportedValues = aiInterface.getSupportedModels(prop);
+                supportedValues = aiInterface.getSupportedModels(prop, request);
                 break;
             }
         }
@@ -85,11 +85,11 @@ public class AiService {
         return supportedValues;
     }
 
-    public List<String> getModelOptions(String term, String provider, Prop prop) {
+    public List<String> getModelOptions(String term, String provider, Prop prop, HttpServletRequest request) {
         List<String> values = new ArrayList<>();
         if(Tools.isEmpty(provider) == true) return values;
 
-        values = labelsToStrings( getModelOptions(provider, prop) );
+        values = labelsToStrings( getModelOptions(provider, prop, request) );
 
         if("%".equals(term)) return values;
 

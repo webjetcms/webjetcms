@@ -160,7 +160,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @GetMapping("/autocomplete-model")
     public List<String> getAutocompleteModel(@RequestParam String term, @RequestParam("DTE_Field_provider") String provider) {
-        return aiService.getModelOptions(term, provider, getProp());
+        return aiService.getModelOptions(term, provider, getProp(), getRequest());
     }
 
     @GetMapping("/provider-fields")

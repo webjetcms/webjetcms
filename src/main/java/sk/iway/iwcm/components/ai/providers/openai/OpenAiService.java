@@ -67,7 +67,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
     }
 
-    public List<LabelValue> getSupportedModels(Prop prop) {
+    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
 
         HttpGet get = new HttpGet(MODELS_URL);
@@ -115,6 +115,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         post.setHeader("Accept", "text/event-stream");
 
         try (CloseableHttpResponse response = client.execute(post)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                handleErrorMessage(response, prop, SERVICE_NAME, "getAiStreamResponse");
+
             HttpEntity entity = response.getEntity();
             InputStream inputStream = entity.getContent();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -144,7 +147,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try (CloseableHttpResponse response = client.execute(post)) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getLatestMessage");
+                handleErrorMessage(response, prop, SERVICE_NAME, "getAiResponse");
 
             JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
             JSONArray data = res.getJSONArray("output");
@@ -172,9 +175,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
 
         try (CloseableHttpResponse response = client.execute(post)) {
-
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "");
+                handleErrorMessage(response, prop, SERVICE_NAME, "getAiImageResponse");
 
             JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
             String format = "." + res.optString("output_format", "png");

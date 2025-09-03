@@ -20,7 +20,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
 public interface AiInterface {
-    public List<LabelValue> getSupportedModels(Prop prop);
+    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request);
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception;
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer, HttpServletRequest request) throws Exception;
