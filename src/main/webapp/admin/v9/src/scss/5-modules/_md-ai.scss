@@ -92,9 +92,24 @@
     }
 }
 
+@keyframes ai-toast-zoom {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.ai-toast-zoom {
+    animation: ai-toast-zoom 0.5s ease;
+}
+
 #toast-container-ai {
-    bottom: 16px;
-    top: auto;
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000030;
+    pointer-events: auto;
+    display: flex;
+    justify-content: center;   // center horizontally
+    align-items: flex-end;     // align to bottom
 
     .btn {
         i.ti {
@@ -170,6 +185,7 @@
         border: 1px solid var(--wj-ai-color);
         border-radius: 10px;
         cursor: auto;
+        margin-bottom: 20px;
         &::before {
             content: "\f6d7"; //sparkles
             color: var(--wj-ai-color);
@@ -348,6 +364,7 @@
                     width: 32px;
                     opacity: 0.5;
                     color: white;
+                    cursor: zoom-in;
 
                     &:hover {
                         opacity: 1;

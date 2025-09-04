@@ -256,19 +256,21 @@ export class EditorAi {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
                 });
-            };
+            }
 
         } else {
             self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             inputData.inputValue = self.EDITOR.get(from);
             try {
-                self.undoField = {};
-                self.undoField.type = "field";
-                self.undoField.value = self.EDITOR.get(aiCol.to);
-                self.undoField.to = aiCol.to;
+                if (self._getColumnType(self.EDITOR, aiCol.to) === "text") {
+                    self.undoField = {};
+                    self.undoField.type = "field";
+                    self.undoField.value = self.EDITOR.get(aiCol.to);
+                    self.undoField.to = aiCol.to;
+                }
             } catch (error) {
-                console.error("Error getting last field value:", error);
+                console.error("Error setting undoField:", error);
             }
             totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
         }

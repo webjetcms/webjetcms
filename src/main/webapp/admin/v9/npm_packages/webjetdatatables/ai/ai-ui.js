@@ -52,6 +52,16 @@ export class AiUserInterface {
         $("#toast-container-ai").removeClass("has-back-button");
         $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
 
+        $("#toast-container-ai").on("click", (e) => {
+            if (e.target.id === "toast-container-ai") {
+                //animate zoom in on .toast.toast-info element
+                const $toast = $("#toast-container-ai .toast.toast-info");
+                $toast.removeClass("ai-toast-zoom"); // Remove if already present
+                void $toast[0].offsetWidth; // Force reflow to restart animation
+                $toast.addClass("ai-toast-zoom");
+            }
+        });
+
         // Clear previous content
         contentContainer.empty();
 
