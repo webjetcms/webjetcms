@@ -43,7 +43,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
     private static final CloseableHttpClient client = HttpClients.createDefault();
     private static final String PROVIDER_ID = "gemini";
-    private static final String TITLE_KEY = "components.ai_provider.gemini.title";
+    private static final String TITLE_KEY = "components.ai_assistants.provider.gemini.title";
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
 
     public String getProviderId() {
