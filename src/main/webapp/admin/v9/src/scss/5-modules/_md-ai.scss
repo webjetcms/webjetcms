@@ -295,6 +295,12 @@
                             }
                         }
                     }
+                    input, textarea, select {
+                        //disable form elements
+                        background-color: var(--wj-nice-gray);
+                        color: var(--wj-dark-60);
+                        pointer-events: none;
+                    }
                 }
                 &.ai-status-success {
                     .current-status {
