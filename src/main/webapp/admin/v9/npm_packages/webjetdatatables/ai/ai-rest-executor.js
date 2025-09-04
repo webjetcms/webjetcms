@@ -72,12 +72,11 @@ export class AiRestExecutor {
                         }
                     } else {
                         //handle parsed.error
-                        if (parsed.error) {
-                            totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
-                            self._setError(parsed.error);
-                            break;
-                        }
                         totalTokens += parsed.totalTokens;
+                        if (parsed.error) {
+                            self._setError(parsed.error);
+                            return self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
+                        }
                     }
                 }
 
@@ -99,7 +98,7 @@ export class AiRestExecutor {
 
                     //handle res.error
                     if (res.error) {
-                        totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                        totalTokens = self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
                         self._setError(res.error);
                     } else {
                         if (setFunction != null) {
@@ -112,7 +111,7 @@ export class AiRestExecutor {
                     totalTokens = res.totalTokens;
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
-                    totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
+                    totalTokens = self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
                     self._setError(thrownError);
                 }
             });
@@ -121,6 +120,7 @@ export class AiRestExecutor {
     }
 
     _setError(...params) {
+        console.log("Setting error:", ...params);
         this.editorAiInstance.setError(...params);
     }
 

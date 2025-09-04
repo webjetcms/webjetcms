@@ -360,6 +360,7 @@ public class DataTableColumn {
                     ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
                     ai.setUserPromptLabel(ade.getUserPromptLabel());
                     ai.setIcon(ade.getIcon());
+                    if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
 
                     if ("browser".equals(ai.getProvider())) {
                         //we need instructions to execute local AI in browser
