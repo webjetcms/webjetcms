@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -183,12 +184,12 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONArray imageArr = res.getJSONArray("data");
 
             try {
-                long datePart = new java.util.Date().getTime();
+                long datePart = Tools.getNow();
                 for(int i = 0; i < imageArr.length(); i++) {
                     JSONObject jsonImage = imageArr.getJSONObject(i);
                     String base64Image = jsonImage.getString("b64_json");
                     //Date pars is added so we can delet all images from same request (same request == same date time part)
-                    String tmpFileName = "tmp_ai_" + assistant.getName() + "_" + datePart + "_";
+                    String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
 
                     try {
                         tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);

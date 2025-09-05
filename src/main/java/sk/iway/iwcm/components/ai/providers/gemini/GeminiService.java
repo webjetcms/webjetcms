@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -196,7 +197,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             JSONArray parts = getParts(json);
 
             try {
-                long datePart = new java.util.Date().getTime();
+                long datePart = Tools.getNow();
                 for(int i = 0; i < parts.length(); i++) {
                     JSONObject part = parts.getJSONObject(i);
                     if(part.has("inlineData") == true) {
@@ -207,7 +208,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
                         if(format.startsWith(".") == false) format = "." + format;
 
                         //Date pars is added so we can delet all images from same request (same request == same date time part)
-                        String tmpFileName = "tmp_ai_" + assistant.getName() + "_" + datePart + "_";
+                        String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
 
                         try {
                             tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);
