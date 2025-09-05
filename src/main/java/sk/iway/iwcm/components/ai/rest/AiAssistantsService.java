@@ -44,6 +44,19 @@ public class AiAssistantsService {
     }
 
     /**
+     * Get value from column.editor.attr, NEVER returns NULL
+     * @param column
+     * @param name
+     * @return
+     */
+    private static String getColumnEditorAttr(sk.iway.iwcm.system.datatable.json.DataTableColumn column, String name) {
+        if (column.getEditor()!=null && column.getEditor().getAttr() != null && Tools.isNotEmpty(column.getEditor().getAttr().get(name))) {
+            return column.getEditor().getAttr().get(name);
+        }
+        return "";
+    }
+
+    /**
      *
      * @param fieldTo
      * @param srcClass
@@ -56,6 +69,18 @@ public class AiAssistantsService {
         AiAssistantsService aiAssistantsService = Tools.getSpringBean("aiAssistantsService", AiAssistantsService.class);
         if (aiAssistantsService == null) return assistants;
 
+        //if column.attr has disabled value skip
+        String disabled = getColumnEditorAttr(column, "disabled");
+        if (Tools.isNotEmpty(disabled)) return assistants;
+        boolean strictBinding = false;
+        if ((column.getClassName()!=null && column.getClassName().contains("ai-off")) ||
+            getColumnEditorAttr(column, "class").contains("ai-off")) {
+            strictBinding = true;
+        }
+
+        String[] classNames = Tools.getTokens(column.getClassName(), " ", true);
+        String[] renderFormats = Tools.getTokens(column.getRenderFormat(), " ", true);
+
         for(AssistantDefinitionEntity aiAssistant : getAssistantsFromDB(null)) {
 
             //get provider and test if is configured
@@ -67,28 +92,36 @@ public class AiAssistantsService {
 
             boolean addAssistant = false;
             String[] entityClasses = Tools.getTokens(aiAssistant.getClassName(), "\n,;", true);
-            String[] classNames = Tools.getTokens(column.getClassName(), " ", true);
-            String[] renderFormats = Tools.getTokens(column.getRenderFormat(), " ", true);
+
             for (String entityClass : entityClasses) {
-                boolean isMatchingClass = isMatching(entityClass, srcClass);
+                boolean isMatchingClass;
+                if (strictBinding) isMatchingClass = srcClass.equals(entityClass);
+                else isMatchingClass = isMatching(entityClass, srcClass);
 
                 if (isMatchingClass) {
                     String[] toFields = Tools.getTokens(aiAssistant.getFieldTo(), "\n,;", true);
                     for (String field : toFields) {
-                        if (isMatching(field, fieldTo)) {
-                            addAssistant = true;
-                            break;
-                        }
-                        for (String className : classNames) {
-                            if (isMatching(field, className)) {
+                        if (strictBinding) {
+                            if (field.equals(fieldTo)) {
                                 addAssistant = true;
                                 break;
                             }
-                        }
-                        for (String renderFormat : renderFormats) {
-                            if (isMatching(field, renderFormat)) {
+                        } else {
+                            if (isMatching(field, fieldTo)) {
                                 addAssistant = true;
                                 break;
+                            }
+                            for (String className : classNames) {
+                                if (isMatching(field, className)) {
+                                    addAssistant = true;
+                                    break;
+                                }
+                            }
+                            for (String renderFormat : renderFormats) {
+                                if (isMatching(field, renderFormat)) {
+                                    addAssistant = true;
+                                    break;
+                                }
                             }
                         }
                     }

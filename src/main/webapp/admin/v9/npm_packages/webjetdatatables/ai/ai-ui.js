@@ -52,6 +52,16 @@ export class AiUserInterface {
         $("#toast-container-ai").removeClass("has-back-button");
         $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
 
+        $("#toast-container-ai").on("click", (e) => {
+            if (e.target.id === "toast-container-ai") {
+                //animate zoom in on .toast.toast-info element
+                const $toast = $("#toast-container-ai .toast.toast-info");
+                $toast.removeClass("ai-toast-zoom"); // Remove if already present
+                void $toast[0].offsetWidth; // Force reflow to restart animation
+                $toast.addClass("ai-toast-zoom");
+            }
+        });
+
         // Clear previous content
         contentContainer.empty();
 
@@ -73,7 +83,7 @@ export class AiUserInterface {
             if (true === aiCol.userPromptEnabled) chatPromptIcon = "<i class='ti ti-blockquote has-user-prompt'></i>";
             const btn = $(`
                 <button class="btn btn-light btn-ai-action" type="button">
-                    <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
+                    <i class="ti ti-${aiCol.icon}"></i>
                     ${aiCol.description}
                     ${chatPromptIcon}
                     <span class="provider">${aiCol.providerTitle}</span>
@@ -126,18 +136,32 @@ export class AiUserInterface {
         }
         if (statusClass != "") contentContainer.addClass(statusClass);
 
-        html = html + '">';
+        html = html + '"><span>';
 
         if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
 
         let text = WJ.translate(textKey, params);
         text = WJ.parseMarkdown(text, { link: true, removeLastBr: true });
-        html += text + '</div>';
+        html += text + '</span></div>';
+
+        let undoButton = null;
+        if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
+            //generate undo button, on click call undo on editorAiInstance
+            undoButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i> ' + WJ.translate("components.ai_assistants.editor.undo.js")+'</button></div>');
+            undoButton.find("button").on('click', () => {
+                this.editorAiInstance.undo();
+            });
+        }
 
         if (chatErrorContainer != null && chatErrorContainer.length > 0) {
             chatErrorContainer.html(html);
         } else {
             contentContainer.html(html);
+            if (undoButton != null) {
+                let statusContainer = contentContainer.find(".current-status");
+                statusContainer.append(undoButton);
+                statusContainer.addClass("d-flex justify-content-between align-items-center");
+            }
         }
     }
 
@@ -177,7 +201,8 @@ export class AiUserInterface {
 
         if (percentage <= 1) {
             clearInterval(progressBar.intervalId);
-            toastr.clear(self.lastToast);
+            //toastr.clear(self.lastToast);
+            $("#toast-container-ai").find("i.toast-close-button").trigger("click");
         }
     }
 
@@ -205,7 +230,7 @@ export class AiUserInterface {
         let header = `
             <div class="header-back-button">
                 <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
-                <i class="ti ti-clipboard-text ti-${aiCol.icon}"></i>
+                <i class="ti ti-${aiCol.icon}"></i>
                 <span>
                     ${aiCol.description}
                 </span>

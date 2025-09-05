@@ -57,7 +57,12 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity getOneItem(long id) {
-        if(id < 1) return new AssistantDefinitionEntity();
+        if(id < 1) {
+
+            AssistantDefinitionEntity newOne = new AssistantDefinitionEntity();
+            newOne.setActive(true);
+            return newOne;
+        }
 
         AssistantDefinitionEntity assistant = repo.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
 
