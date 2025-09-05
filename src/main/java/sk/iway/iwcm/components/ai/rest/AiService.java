@@ -1,8 +1,12 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import static sk.iway.iwcm.components.ai.jpa.SupportedActions.doesSupportAction;
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,10 +25,9 @@ import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
-
-import static sk.iway.iwcm.components.ai.jpa.SupportedActions.doesSupportAction;
 
 @Service
 public class AiService {
@@ -32,6 +35,7 @@ public class AiService {
     private final List<AiInterface> aiInterfaces;
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
+    private static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
     public AiService(List<AiInterface> aiInterfaces) {
@@ -39,7 +43,6 @@ public class AiService {
     }
 
     /* PUBLIC METHODS */
-
     public List<LabelValue> getProviders(Prop prop) {
         List<LabelValue> supportedValues = new ArrayList<>();
         for(AiInterface aiInterface : aiInterfaces) {
@@ -189,6 +192,21 @@ public class AiService {
         if(assistant.isPresent() == false) throw new IllegalStateException( getNotFoundAssistantErr(prop) );
 
         return assistant.get();
+    }
+
+    public List<OptionDto> getGroupsOptions(Prop prop) {
+        //group is defined as text key with prefix
+        Map<String,String> groups = prop.getTextStartingWith(GROUPS_PREFIX);
+
+        //sort groups by key
+        List<OptionDto> groupsList = new ArrayList<>();
+        for (Map.Entry<String, String> entry : groups.entrySet()) {
+            //skip empty/- values - so the user can aka delete default entries
+            if (Tools.isEmpty(entry.getValue()) || entry.getValue().length()<2) continue;
+            groupsList.add(new OptionDto(entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null));
+        }
+        groupsList.sort(Comparator.comparing(OptionDto::getValue));
+        return groupsList;
     }
 
     /* PRIVATE SUPPORT METHODS */

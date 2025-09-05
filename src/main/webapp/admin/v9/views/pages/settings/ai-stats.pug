@@ -82,17 +82,29 @@ block content
 
             function getGraphUrl(chartDivId) {
                 //
-                let searchDateValue = ChartTools.getDateRangeWithName("created", 30);
+                let chartUrl = null;
+
+                let dateValue = ChartTools.getDateRangeWithName("created", 30);
+                let providerValue = $(".dt-extfilter-assistantProvider").find("select").val();
+                let actionValue = $(".dt-extfilter-assistantAction").find("select").val();
+                let groupNameValue = $(".dt-extfilter-assistantGroupName").find("select").val();
 
                 if(chartDivId == "pieChartMostUsed") {
-                    return url + "pieChartMostUsed?created=" + searchDateValue;
+                    chartUrl = url + "pieChartMostUsed";
                 } else if(chartDivId == "pieChartMostTokens") {
-                    return url + "pieChartMostTokens?created=" + searchDateValue;
+                    chartUrl = url + "pieChartMostTokens";
                 } else if(chartDivId == "lineCharts") {
-                    return url + "lineCharts?created=" + searchDateValue;
+                    chartUrl =  url + "lineCharts";
                 }
 
-                return null;
+                if(chartUrl == null) return null;
+
+                chartUrl += "?created=" + dateValue;
+                chartUrl += "&provider=" + providerValue;
+                chartUrl += "&action=" + actionValue;
+                chartUrl += "&groupName=" + groupNameValue;
+
+                return chartUrl;
             }
 
             async function getDataAndUpdateAmcharts() {
@@ -108,14 +120,36 @@ block content
                     ChartTools.updateChart(pieChartMostTokens);
                 }});
 
+                await $.ajax({url: getGraphUrl("lineCharts"), success: function(result) {
+                    lineChartDaysUsage.chartData = ChartTools.convertDataForLineChart(result);
+                    ChartTools.updateChart(lineChartDaysUsage);
+
+                    lineChartDaysTokens.chartData = ChartTools.convertDataForLineChart(result);
+                    ChartTools.updateChart(lineChartDaysTokens);
+                }});
+
                 WJ.hideLoader();
             }
         });
+
+    style.
+        .dt-extfilter [data-filter-type="select"] {
+            flex-wrap: nowrap;
+        }
 
     div#aiStatDataTable_extfilter
         div.row
             div.col-auto.dt-extfilter-title-created
             div.col-auto.dt-extfilter.dt-extfilter-created
+
+            div.col-auto.dt-extfilter-title-assistantAction
+            div.col-auto.dt-extfilter.dt-extfilter-assistantAction
+
+            div.col-auto.dt-extfilter-title-assistantProvider
+            div.col-auto.dt-extfilter.dt-extfilter-assistantProvider
+
+            div.col-auto.dt-extfilter-title-assistantGroupName
+            div.col-auto.dt-extfilter.dt-extfilter-assistantGroupName
 
     <div id="graphsDiv" class="hide-while-loading">
         <div class="row">

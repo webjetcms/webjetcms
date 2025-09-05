@@ -4,17 +4,22 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
+import sk.iway.iwcm.components.ai.jpa.SupportedActions;
+import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.components.ai.stat.dto.DaysUsageDTO;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.stat.rest.StatService;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 
@@ -24,12 +29,33 @@ import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 @Datatable
 public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity, Long> {
 
-    private final AiStatRepository repo;
+    private final AiService aiService;
+    private final AiStatRepository asr;
+    private final AssistantDefinitionRepository adr;
 
     @Autowired
-    public AiStatRestController(AiStatRepository repo) {
-        super(repo);
-        this.repo = repo;
+    public AiStatRestController(AiStatRepository asr, AssistantDefinitionRepository adr, AiService aiService) {
+        super(asr);
+        this.asr = asr;
+        this.adr = adr;
+        this.aiService = aiService;
+    }
+
+    @Override
+    public Page<AiStatEntity> getAllItems(Pageable pageable) {
+       DatatablePageImpl<AiStatEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new AiStatEntity(), pageable));
+
+        page.addOptions("assistantProvider", aiService.getProviders(getProp()), "label", "value", false);
+        page.addOptions("assistantAction", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
+        page.addOptions("assistantGroupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
+
+       return page;
+    }
+
+    @Override
+    public Page<AiStatEntity> searchItem(Map<String, String> params, Pageable pageable, AiStatEntity search) {
+        Page<AiStatEntity> page = asr.findAll( AiStatService.getSpecification(params, pageable), pageable);
+        return new DatatablePageImpl<>( AiStatService.fillStatEntities(page.getContent(), adr), pageable, page.getTotalElements() );
     }
 
     @Override
@@ -44,17 +70,32 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
     }
 
     @GetMapping("pieChartMostUsed")
-    public List<LabelValueInteger> getPieChartDataMostUsed(@RequestParam("created") String stringRange) {
-        return AiStatService.getPieChartDataMostUsed(StatService.processDateRangeString(stringRange), repo);
+    public List<LabelValueInteger> getPieChartDataMostUsed(
+        @RequestParam("created") String created,
+        @RequestParam("provider") String provider,
+        @RequestParam("action") String action,
+        @RequestParam("groupName") String groupName
+    ) {
+        return AiStatService.getPieChartDataMostUsed(created, provider, action, groupName, asr, adr, getProp());
     }
 
     @GetMapping("pieChartMostTokens")
-    public List<LabelValueInteger> getPieChartDataMostTokens(@RequestParam("created") String stringRange) {
-        return AiStatService.getPieChartDataMostTokens(StatService.processDateRangeString(stringRange), repo);
+    public List<LabelValueInteger> getPieChartDataMostTokens(
+        @RequestParam("created") String created,
+        @RequestParam("provider") String provider,
+        @RequestParam("action") String action,
+        @RequestParam("groupName") String groupName
+    ) {
+        return AiStatService.getPieChartDataMostTokens(created, provider, action, groupName, asr, adr, getProp());
     }
 
     @GetMapping("lineCharts")
-    public Map<String, List<DaysUsageDTO>> getLineChartData(@RequestParam("created") String stringRange) {
-        return AiStatService.getLineChartData(StatService.processDateRangeString(stringRange), repo);
+    public Map<String, List<DaysUsageDTO>> getLineChartData(
+        @RequestParam("created") String created,
+        @RequestParam("provider") String provider,
+        @RequestParam("action") String action,
+        @RequestParam("groupName") String groupName
+    ) {
+        return AiStatService.getLineChartData(created, provider, action, groupName, asr, adr);
     }
 }

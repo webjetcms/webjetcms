@@ -84,6 +84,8 @@ public class GeminiStreamHandler {
         //Start and end allways have ""
         answerPart = answerPart.substring(1, answerPart.length() - 1);
 
+        answerPart = escapeText(answerPart);
+
         for (char c : answerPart.toCharArray()) {
             writer.write(c);
             writer.flush();
@@ -94,6 +96,16 @@ public class GeminiStreamHandler {
 
         //Text was handled
         waitingForText = false;
+    }
+
+    private String escapeText(String input) {
+        return
+            input
+                .replace("\\u003c", "<")
+                .replace("\\u003e", ">")
+                .replace("\\u0026", "&")
+                .replace("\\n", "\n")
+                .replace("\\t", "\t");
     }
 
     private boolean skip(String line) {

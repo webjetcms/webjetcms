@@ -254,7 +254,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             sb.append("\t total_tokens: ").append(totalTokens).append("\n");
             Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
 
-            AiStatService.addRecord(dbAssitant.getName(), totalTokens, statRepo, request);
+            AiStatService.addRecord(dbAssitant.getId(), totalTokens, statRepo, request);
 
             responseDto.setTotalTokens(totalTokens);
         }
