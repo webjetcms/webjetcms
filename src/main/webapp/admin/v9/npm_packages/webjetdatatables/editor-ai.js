@@ -127,8 +127,16 @@ export class EditorAi {
 
     undo() {
         if (this.isUndo()) {
-            this.EDITOR.set(this.undoField.to, this.undoField.value);
-            this._closeToast(1000);
+            if (this.undoField.type === "range" && this.undoField.ckEditorSelectionInstance != null) {
+                this.undoField.ckEditorSelectionInstance.setData(this.undoField.value);
+            } else if (this.undoField.type === "pageBuilder" && this.undoField.editors.length > 0) {
+                this.undoField.editors.forEach(editor => {
+                    editor.instance.setData(editor.value);
+                });
+            } else if (this.undoField.type === "field" && this.undoField.to != null) {
+                this.EDITOR.set(this.undoField.to, this.undoField.value);
+            }
+            this._closeToast();
         }
     }
 
@@ -193,6 +201,11 @@ export class EditorAi {
                             let ranges = selection.getRanges();
                             if (ranges.length > 0) {
                                 ckEditorRanges = ranges;
+
+                                self.undoField = {};
+                                self.undoField.type = "range";
+                                self.undoField.value = ckEditorSelectionInstance.getData();
+                                self.undoField.ckEditorSelectionInstance = ckEditorSelectionInstance;
                             }
                         }
                     }
@@ -243,6 +256,11 @@ export class EditorAi {
             //get all PB editor instances and execute action on them separately
             let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
             let reuseApiInstance = false;
+
+            self.undoField = {};
+            self.undoField.type = "pageBuilder";
+            self.undoField.editors = [];
+
             for (let i=0; i<editors.length; i++) {
                 let editor = editors[i];
                 if (i>0) reuseApiInstance = true;
@@ -251,6 +269,7 @@ export class EditorAi {
                 self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
 
                 inputData.inputValue = editor.getData();
+                self.undoField.editors.push({instance: editor, value: inputData.inputValue});
 
                 totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);

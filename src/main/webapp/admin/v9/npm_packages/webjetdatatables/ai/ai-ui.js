@@ -182,6 +182,10 @@ export class AiUserInterface {
     }
 
     _closeToast(timeOut) {
+        if (typeof timeOut === "undefined" || timeOut == null || timeOut < 1) {
+            $("#toast-container-ai").find("i.toast-close-button").trigger("click");
+        }
+
         let progressBar = this.progressBar;
 
         //console.log("progressBar=", progressBar, "this.progressBar=", this.progressBar);
