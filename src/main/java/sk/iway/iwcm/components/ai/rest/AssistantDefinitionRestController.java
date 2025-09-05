@@ -2,7 +2,6 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -100,14 +99,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
-
-        //group is defined as text key with prefix
-        Map<String,String> groups = getProp().getTextStartingWith(GROUPS_PREFIX);
-        for (Map.Entry<String, String> entry : groups.entrySet()) {
-            //skip empty/- values - so the user can aka delete default entries
-            if (Tools.isEmpty(entry.getValue()) || entry.getValue().length()<2) continue;
-            page.addOption("groupName", entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null);
-        }
+        aiService.addGroupOptions(page, "groupName", getProp());
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());

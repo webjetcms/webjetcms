@@ -223,7 +223,7 @@ public class AiAssistantsService {
      * @param repo
      * @return
      */
-    private static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
+    public static List<AssistantDefinitionEntity> getAssistantsFromDB(AssistantDefinitionRepository repo) {
 
         Cache c = Cache.getInstance();
         String cacheKey = CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId();

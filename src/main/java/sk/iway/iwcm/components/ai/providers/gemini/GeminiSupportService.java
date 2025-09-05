@@ -55,7 +55,7 @@ public class GeminiSupportService {
         sb.append("\t totalTokenCount: ").append(totToken).append("\n");
         Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totToken, -1);
 
-        AiStatService.addRecord(dbAssitant.getName(), totToken, statRepo, request);
+        AiStatService.addRecord(dbAssitant.getId(), totToken, statRepo, request);
 
         responseDto.setTotalTokens(totToken);
     }
