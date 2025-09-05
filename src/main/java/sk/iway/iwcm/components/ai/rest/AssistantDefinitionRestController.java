@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
@@ -108,11 +111,16 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
         //group is defined as text key with prefix
         Map<String,String> groups = getProp().getTextStartingWith(GROUPS_PREFIX);
+
+        //sort groups by key
+        List<OptionDto> groupsList = new ArrayList<>();
         for (Map.Entry<String, String> entry : groups.entrySet()) {
             //skip empty/- values - so the user can aka delete default entries
             if (Tools.isEmpty(entry.getValue()) || entry.getValue().length()<2) continue;
-            page.addOption("groupName", entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null);
+            groupsList.add(new OptionDto(entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null));
         }
+        groupsList.sort(Comparator.comparing(OptionDto::getValue));
+        page.addOptions("groupName", groupsList, "label", "value", false);
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());
