@@ -315,17 +315,7 @@ export class EditorAi {
                     inputData.inputValueType = "text"
                 }
 
-                await this.aiRestExecutor.executeImageAction(aiCol, inputData, (result) => {
-                    //console.log("Image action result:", result);
-                    if (result.error != null) {
-                        totalTokens = this.ERR_CLOSE_DIALOG;
-                        self.setError(result.error);
-                        return totalTokens;
-                    }
-                    self.aiUserInterface.renderImageSelection(button, result.tempFiles, aiCol.to, "components.ai_assistants.stat.totalTokens.js", result.totalTokens);
-                    //dialog is rewriten, do not close it
-                    totalTokens = this.DO_NOT_CLOSE_DIALOG;
-                });
+                totalTokens = await this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
             } else {
                 totalTokens = await this.aiRestExecutor.execute(aiCol, inputData, setFunction);
             }

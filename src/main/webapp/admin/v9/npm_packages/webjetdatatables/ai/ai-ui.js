@@ -121,7 +121,7 @@ export class AiUserInterface {
         if ("components.ai_assistants.editor.loading.js" === textKey) {
             statusClass = "ai-status-working";
             icon = "exclamation-circle";
-        } else if ("components.ai_assistants.stat.totalTokens.js" === textKey || "components.ai.editor.image_saved.js" === textKey) {
+        } else if ("components.ai_assistants.stat.totalTokens.js" === textKey || "components.ai_assistants.editor.image_saved.js" === textKey) {
             statusClass = "ai-status-success";
             icon = "circle-check";
             //success replace whole content with success message
@@ -450,7 +450,7 @@ export class AiUserInterface {
 
         let buttonDiv = contentContainer.find('.button-div');
 
-        const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai.editor.select_image.js") + '</button>');
+        const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai_assistants.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {
             this._saveAndSetImage(button, toField);
         });
@@ -491,7 +491,7 @@ export class AiUserInterface {
                 }
 
                 self.EDITOR.set(toField, res.response);
-                self.setCurrentStatus("components.ai.editor.image_saved.js");
+                self.setCurrentStatus("components.ai_assistants.editor.image_saved.js");
                 self._closeToast(3000);
                 self._hideLoader(button);
             },

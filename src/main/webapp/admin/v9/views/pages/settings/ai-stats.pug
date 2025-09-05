@@ -13,8 +13,7 @@ block content
         WJ.breadcrumb({
             id: 'ai-stats',
             tabs: [
-                { url: '#searchTab', title: '[[\#{components.filter}]]', active: true },
-                { url: '#dateRange', title: '{filter}', active: false }
+                { url: '#dateRange', title: '{filter}', active: true }
             ]
         });
 
@@ -58,20 +57,20 @@ block content
                 window.initAmcharts().then(module => {
 
                     $.ajax({url: getGraphUrl("lineCharts"), success: function(result) {
-                        lineChartDaysUsage = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]), "dayDate", '[[\#{components.ai_stats.lineChartDaysUsage}]]', "ai-lineChartDaysUsage", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        lineChartDaysUsage = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["usage"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysUsage}]]', "ai-lineChartDaysUsage", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
                         ChartTools.createAmchart(lineChartDaysUsage);
 
-                        lineChartDaysTokens = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["tokens"], [undefined]), "dayDate", '[[\#{components.ai_stats.lineChartDaysTokens}]]', "ai-lineChartDaysTokens", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        lineChartDaysTokens = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["tokens"], [undefined]), "dayDate", '[[\#{components.ai_assistants.stats.lineChartDaysTokens}]]', "ai-lineChartDaysTokens", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
                         ChartTools.createAmchart(lineChartDaysTokens);
                     }});
 
                     $.ajax({url: getGraphUrl("pieChartMostUsed"), success: function(result) {
-                        pieChartMostUsed = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_stats.pieChartMostUsed}]]', "ai-pieChartMostUsed", result);
+                        pieChartMostUsed = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_assistants.stats.pieChartMostUsed}]]', "ai-pieChartMostUsed", result);
                         ChartTools.createAmchart(pieChartMostUsed);
                     }});
 
                     $.ajax({url: getGraphUrl("pieChartMostTokens"), success: function(result) {
-                        pieChartMostTokens = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_stats.pieChartMostTokens}]]', "ai-pieChartMostTokens", result);
+                        pieChartMostTokens = new ChartTools.PieChartForm("value", "label", '[[\#{components.ai_assistants.stats.pieChartMostTokens}]]', "ai-pieChartMostTokens", result);
                         ChartTools.createAmchart(pieChartMostTokens);
 
                         //After last load data
@@ -136,6 +135,12 @@ block content
         .dt-extfilter [data-filter-type="select"] {
             flex-wrap: nowrap;
         }
+        .dt-extfilter-created .datetimepicker {
+            width: 115px;
+        }
+        #aiStatDataTable_extfilter .col-auto {
+            padding-right: 0px;
+        }
 
     div#aiStatDataTable_extfilter
         div.row
@@ -161,10 +166,14 @@ block content
             </div>
         </div>
         <div class="row">
-            <div id="ai-lineChartDaysUsage" class="amcharts"></div>
+            <div class="col-md">
+                <div id="ai-lineChartDaysUsage" class="amcharts"></div>
+            </div>
         </div>
         <div class="row">
-            <div id="ai-lineChartDaysTokens" class="amcharts"></div>
+            <div class="col-md">
+                <div id="ai-lineChartDaysTokens" class="amcharts"></div>
+            </div>
         </div>
     </div>
 

@@ -26,6 +26,7 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -82,7 +83,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiResponse");
 
-            JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            String responseData = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(responseData);
             JSONArray parts = getParts(json);
             responseDto.setResponse(parts.getJSONObject(0).getString("text"));
 
@@ -169,7 +171,28 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiImageResponse");
 
-            JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            String responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(responseText);
+
+            String finishReason = null;
+            try {
+                JSONArray candidates = json.optJSONArray("candidates");
+                if (candidates != null && candidates.length() > 0) {
+                    for (int i = 0; i < candidates.length(); i++) {
+                        JSONObject candidate = candidates.getJSONObject(i);
+                        if (candidate.has("finishReason")) {
+                            finishReason = candidate.getString("finishReason");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Logger.error(GeminiService.class, e);
+            }
+            if (Tools.isNotEmpty(finishReason) && "STOP".equals(finishReason) == false) {
+                responseDto.setError(finishReason);
+                return responseDto;
+            }
+
             JSONArray parts = getParts(json);
 
             try {
