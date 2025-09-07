@@ -725,6 +725,15 @@ Ak chcete plošne zmeniť heslá v testovacej databáze použite:
 UPDATE users SET password='bcrypt:...', password_salt='bcrypt:...' WHERE user_id>1 AND login NOT IN ('user_sha512', 'user_bcrypt');
 ```
 
+V databáze pre penetračné testy je potrebné používateľom zakázať menu položku na editáciu administrátorov, použite nasledovné SQL:
+
+```sql
+INSERT INTO `user_disabled_items` (`user_id`, `item_name`)
+VALUES
+	(18, 'users.edit_admins'),
+    (1827, 'users.edit_admins');
+```
+
 ## Testovanie REST služieb
 
 CodeceptJS podporuje aj [testovanie REST služieb](https://codecept.io/helpers/REST/). Nastavenie je v ```codecept.conf.js```:
