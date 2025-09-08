@@ -54,6 +54,32 @@ Upraviť obrázok:
 }
 ```
 
+## Vylepšenia HTML kódu
+
+Pri pokročilých úpravách HTML kódu je potrebné získať upravený kód ale aj vysvetlenie čo bolo upravené. Ak odpoveď od AI obsahuje na začiatku blok
+
+```text
+  ```html
+```
+
+tak je obsah tohto bloku je považovaný za HTML kód a všetko čo je následne za týmto blokom sa zobrazí návštevníkovi v dialógu asistenta ako odpoveď.
+
+Príklad inštrukcie:
+
+```json
+"role": "Expert web copywriter",
+"task": "Critically review the provided website content in its original language. Evaluate clarity, conciseness, tone, and messaging alignment with the brand's voice and value proposition. Identify areas for improvement and recommend specific changes to enhance user engagement, conversion, and SEO performance.",
+"constraints": {
+    "language": "Detect and use the original language of the provided content, do not change language of the text elements",
+    "tone": "Professional, constructive, and actionable",
+    "output_format": "Response in markdown format, in TWO section - first with updated and valid HTML code, second with comments and explanatory of changes. Use same language as content for explanatory of changes.",
+    "focus": "Clarity, conciseness, brand alignment, user engagement, conversion, and SEO best practices",
+    "avoid": "Altering the core meaning of the content or adding unrelated suggestions"
+}
+```
+
+Všimnite si definovanie `output_format`, ktorý definuje vytvorenie 2 sekcií s HTML kódom a vysvetlivkami k úpravám.
+
 ## AI v prehliadači
 
 Písanie inštrukcií pre AI v prehliadači je špecifické podľa [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Inštrukcia je rozdelená na názov API a následnú konfiguráciu. V odkaze na `MDM` dokumentáciu nájdete podrobné informácie o možnostiach konfigurácie.

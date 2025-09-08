@@ -23,6 +23,7 @@ $secondary-font-family: 'Asap', sans-serif;
 //redefine BS CSS variables with our colors
 //WARNING: update also final CSS in webjet2021.css after you add some new variable
 :root {
+  //colors
   --bs-body-color: #{$secondary};
   --bs-danger: #{$danger};
   --bs-warning: #{$warning};
@@ -42,4 +43,6 @@ $secondary-font-family: 'Asap', sans-serif;
   --wj-ai-color: #{$ai-color};
   --wj-ai-color-dark: #{$ai-color-dark};
   --wj-ai-color-hover: #{$ai-color-hover};
+  //borders
+  --wj-border-radius: #{$border-radius};
 }

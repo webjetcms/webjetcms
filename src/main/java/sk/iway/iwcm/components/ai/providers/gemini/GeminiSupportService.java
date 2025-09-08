@@ -94,7 +94,7 @@ public class GeminiSupportService {
     protected <T extends HttpRequestBase> void setHeaders(T http, HttpServletRequest request) {
         String apiKey = Constants.getString(AUTH_KEY);
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("Gemini API key is not set.");
-        http.setHeader("Content-Type", "application/json");
+        http.setHeader("Content-Type", "application/json; charset=utf-8");
         http.setHeader("x-goog-api-key", apiKey);
         http.setHeader("referer", request.getHeader("referer"));
     }

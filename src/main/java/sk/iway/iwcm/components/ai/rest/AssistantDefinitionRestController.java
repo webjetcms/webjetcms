@@ -122,7 +122,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity processFromEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
-        if(ProcessItemAction.GETALL.equals(action) && Tools.isNotEmpty(entity.getDescription())) {
+        if(Tools.isNotEmpty(entity.getDescription())) {
             entity.setTranslatedDescription( getProp().getText(entity.getDescription()) );
         }
         return entity;

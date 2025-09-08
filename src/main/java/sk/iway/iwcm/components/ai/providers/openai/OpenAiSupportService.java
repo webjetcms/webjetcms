@@ -35,7 +35,7 @@ public abstract class OpenAiSupportService {
         String apiKey = getApiKey();
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenAI API key is not set.");
         request.setHeader("Authorization", "Bearer " + apiKey);
-        if(addContentType) request.setHeader("Content-Type", "application/json");
+        if(addContentType) request.setHeader("Content-Type", "application/json; charset=utf-8");
         if(isAssistantV2) request.setHeader("OpenAI-Beta", "assistants=v2");
     }
 

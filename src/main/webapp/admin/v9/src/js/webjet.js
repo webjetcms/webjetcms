@@ -1007,6 +1007,9 @@ const WJ = (() => {
      * @param {*} markdownText - nepovoluje HTML kod, striktne iba zakladne markdown znacky
      * @param {*} options
      *  - link {boolean} - ak je true, povolene su aj HTML linky
+     *  - badge {boolean} - ak je true, povolene su aj badge
+     *  - imgSrcPrefix {string} - URL prefix (domenove meno) pre obrazky
+     *  - removeLastBr {boolean} - ak je true, odstrani sa posledny <br />
      * @returns
      */
     function parseMarkdown(markdownText, options) {

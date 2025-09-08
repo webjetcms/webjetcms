@@ -121,6 +121,13 @@ export class EditorAi {
         this.aiUserInterface.setError(...params);
     }
 
+    setExplanatoryText(text) {
+        setTimeout(() => {
+            //because status will be changed to success after response
+            this.aiUserInterface.setExplanatoryText(text);
+        }, 800);
+    }
+
     isUndo() {
         return this.undoField !== null;
     }

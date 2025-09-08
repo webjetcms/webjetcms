@@ -93,6 +93,7 @@ export class AiUserInterface {
             // Bind click to _executeAction
             btn.on('click', () => {
                 //use original button clicked - which shows this popup
+                this._renderHeader(button, column, aiCol);
 
                 if (true === aiCol.userPromptEnabled) {
                     //we must first show dialog with textarea and after that call _executeAction
@@ -142,7 +143,7 @@ export class AiUserInterface {
 
         let text = WJ.translate(textKey, params);
         text = WJ.parseMarkdown(text, { link: true, removeLastBr: true });
-        html += text + '</span></div>';
+        html += text + '</span></div><div class="explanatory-text-container" style="display: none"></div>';
 
         let undoButton = null;
         if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
@@ -163,10 +164,29 @@ export class AiUserInterface {
                 statusContainer.addClass("d-flex justify-content-between align-items-center");
             }
         }
+
+        //for safety hide previous explanatory text
+        if (statusClass == "ai-status-working") this.hideExplanatoryText();
     }
 
     setError(...params) {
         this.setCurrentStatus("components.ai_assistants.unknownError.js", false, ...params);
+    }
+
+    setExplanatoryText(text) {
+        if (typeof text != "undefined" && text != null) {
+            let explanatoryTextContainer = $("#toast-container-ai").find(".explanatory-text-container");
+            explanatoryTextContainer.html(WJ.parseMarkdown(text));
+            explanatoryTextContainer.show();
+        } else {
+            this.hideExplanatoryText();
+        }
+    }
+
+    hideExplanatoryText() {
+        let explanatoryTextContainer = $("#toast-container-ai").find(".explanatory-text-container");
+        explanatoryTextContainer.html("");
+        explanatoryTextContainer.hide();
     }
 
     async _executeAction(button, column, aiCol, inputValues = null) {
@@ -228,9 +248,7 @@ export class AiUserInterface {
         }
     }
 
-    async _renderUserPromptDialog(button, column, aiCol) {
-        //console.log("_renderUserPromptDialog, button=", button, "column=", column, "aiCol=", aiCol);
-
+    _renderHeader(button, column, aiCol) {
         let header = `
             <div class="header-back-button">
                 <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
@@ -238,14 +256,22 @@ export class AiUserInterface {
                 <span>
                     ${aiCol.description}
                 </span>
+                <span class="provider">
+                   (${aiCol.providerTitle})
+                </span>
             </div>
         `;
 
         $("#toast-container-ai").addClass("has-back-button");
         $("#toast-container-ai .toast-title").html(header);
+
         $("#toast-container-ai .toast-title .btn-outline-secondary").on('click', () => {
             this.generateAssistentOptions(button, column);
         });
+    }
+
+    async _renderUserPromptDialog(button, column, aiCol) {
+        //console.log("_renderUserPromptDialog, button=", button, "column=", column, "aiCol=", aiCol);
 
         let bonusHtml = await this._getBonusHtml(aiCol.assistantId);
         let html = `

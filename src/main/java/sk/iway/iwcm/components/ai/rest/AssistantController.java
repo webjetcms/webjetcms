@@ -80,7 +80,7 @@ public class AssistantController {
 
     @PostMapping("/response-stream/")
     public void streamData(@RequestBody Map<String, String> data, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("text/plain");
+        response.setContentType("text/plain;charset=utf-8");
         response.setCharacterEncoding("UTF-8");
 
         PrintWriter writer = response.getWriter();
@@ -88,7 +88,8 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
-            responseDto = aiService.getAiStreamResponse(new InputDataDTO(data), statRepo, assistantRepo, writer, request);
+            InputDataDTO inputData = new InputDataDTO(data);
+            responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
         } catch(Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
