@@ -155,6 +155,8 @@ public class ConstantsV9 {
 		Constants.setString("ai_openAiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentication key to platform.openai.com");
 		Constants.setBoolean("ai_browserAiEnabled", true, Constants.MOD_AI_ASSISTANTS, "Enable AI assistants in browser - Chrome Built-in AI");
 		Constants.setString("ai_gemini_auth_key", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k aistudio.google.com");
+
+		Constants.setString("ai_generate_file_name_prompt", "Return VERY short, filesystem-safe file name (lowercase, hyphens). Try generate name as short as possible but meningfull to USER. Do not add explanations, return ONLY the name.", Constants.MOD_AI_ASSISTANTS, "");
 	}
 
 	/**

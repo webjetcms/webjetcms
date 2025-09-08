@@ -1,5 +1,11 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
+import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.INPUT;
+import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.INSTRUCTIONS;
+import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.MODEL;
+import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.STORE;
+import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.STREAM;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,8 +50,6 @@ import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
-
-import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.*;
 
 @Service
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
@@ -125,7 +129,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             streamHandler.handleBufferedReader(reader, writer);
 
             //
-            handleUsage(responseDto, streamHandler.getUsageChunk(), assistant, streamHandler.getRunId(), statRepo, request);
+            handleUsage(responseDto, streamHandler.getUsageChunk(), 0, assistant, streamHandler.getRunId(), statRepo, request);
         }
 
         return responseDto;
@@ -155,7 +159,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONArray contentArray = firstMessage.getJSONArray("content");
             responseDto.setResponse(contentArray.getJSONObject(0).getString("text"));
 
-            handleUsage(responseDto, res, assistant, res.optString("id", "NO_RUN_ID"), statRepo, request);
+            handleUsage(responseDto, res, 0, assistant, res.optString("id", "NO_RUN_ID"), statRepo, request);
 
             return responseDto;
         }
@@ -164,6 +168,10 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         Path tempFileFolder = AiTempFileStorage.getFileFolder();
+
+        //Prepare image name
+        Pair<String, Integer> generatedFileName = generateImageName(assistant, inputData);
+        responseDto.setGeneratedFileName(generatedFileName.getFirst());
 
         HttpPost post;
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
@@ -203,7 +211,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 e.printStackTrace();
             }
 
-            handleUsage(responseDto, res, assistant, "NO_RUN_ID", statRepo, request);
+            handleUsage(responseDto, res, generatedFileName.getSecond(),  assistant, "NO_RUN_ID", statRepo, request);
         }
 
         return responseDto;
@@ -232,14 +240,14 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return "";
     }
 
-    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, String runId, AiStatRepository statRepo, HttpServletRequest request) {
+    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, int addTokens, AssistantDefinitionEntity dbAssitant, String runId, AiStatRepository statRepo, HttpServletRequest request) {
 
         if (source.has("usage")) {
             //"total_tokens" "output_tokens" "input_tokens"
             JSONObject usage = source.getJSONObject("usage");
             int inputTokens = usage.optInt("input_tokens", 0);
             int outputTokens = usage.optInt("output_tokens", 0);
-            int totalTokens = usage.optInt("total_tokens", 0);
+            int totalTokens = usage.optInt("total_tokens", 0) + addTokens; // addTokens can be for example tokens used to generate image name using ai
             StringBuilder sb = new StringBuilder("");
 
             sb.append(SERVICE_NAME).append(" -> run with id: ").append(runId).append(" was succesfull");
@@ -330,5 +338,55 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         addHeaders(post, true, false);
 
         return post;
+    }
+
+    private Pair<String, Integer> generateImageName(AssistantDefinitionEntity assistant, InputDataDTO inputData) {
+        String defaultFileName = "ai_generated_image_" + new java.util.Date().getTime();
+        int totalTokens = 0;
+
+        //Now supportes only images
+        if("generate_image".equals(assistant.getAction()) == false) return new Pair<>(defaultFileName, totalTokens);
+
+        Pair<String, String> instructionValuePair = getInstructionsAndValue(assistant, inputData);
+        if(instructionValuePair == null) return new Pair<>(defaultFileName, totalTokens);
+
+        JSONObject json = new JSONObject();
+        json.put(MODEL.value(), "gpt-4.1-mini");
+        json.put(STORE.value(), false);
+        json.put(INSTRUCTIONS.value(), instructionValuePair.getFirst());
+        json.put(INPUT.value(), instructionValuePair.getSecond());
+
+        HttpPost post = new HttpPost(RESPONSES_URL);
+        post.setEntity(getRequestBody(json.toString()));
+        addHeaders(post, true, false);
+
+        try (CloseableHttpResponse response = client.execute(post)) {
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+                return new Pair<>(defaultFileName, totalTokens);
+
+            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            JSONArray data = res.getJSONArray("output");
+            JSONObject firstMessage = data.getJSONObject(0);
+            JSONArray contentArray = firstMessage.getJSONArray("content");
+            String imageName = contentArray.getJSONObject(0).getString("text");
+
+            if(res.has("usage") == true) {
+                JSONObject usage = res.getJSONObject("usage");
+                totalTokens = usage.optInt("total_tokens", 0);
+                StringBuilder sb = new StringBuilder("");
+
+                sb.append(SERVICE_NAME).append(" -> generating name for image succesfull");
+                sb.append("\n\n");
+                sb.append("Action cost: \n");
+                sb.append("\t input_tokens: ").append( usage.optInt("input_tokens", 0) ).append("\n");
+                sb.append("\t output_tokens: ").append( usage.optInt("output_tokens", 0) ).append("\n");
+                sb.append("\t total_tokens: ").append(totalTokens).append("\n");
+                Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
+            }
+
+            return new Pair<>(imageName, totalTokens);
+        } catch (Exception e) {
+            return new Pair<>(defaultFileName, totalTokens);
+        }
     }
 }

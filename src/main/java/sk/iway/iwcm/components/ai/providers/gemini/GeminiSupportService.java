@@ -19,28 +19,30 @@ public class GeminiSupportService {
     protected static final String AUTH_KEY = "ai_gemini_auth_key";
     protected static final String SERVICE_NAME = "GeminiService";
 
-    protected void handleUsage(AssistantResponseDTO responseDto, JSONObject source, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {
+    protected void handleUsage(AssistantResponseDTO responseDto, JSONObject source, int addTokens, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {
         if (source.has("usageMetadata")) {
             JSONObject usage = source.getJSONObject("usageMetadata");
-            handleUsage(responseDto, dbAssitant, statRepo, request,
+            handleUsage(responseDto,dbAssitant, statRepo, request,
                 usage.optInt("candidatesTokenCount", 0),
                 usage.optInt("thoughtsTokenCount", 0),
                 usage.optInt("promptTokenCount", 0),
-                usage.optInt("totalTokenCount", 0)
+                usage.optInt("totalTokenCount", 0),
+                addTokens
             );
         }
     }
 
-    protected void handleUsage(AssistantResponseDTO responseDto, GeminiStreamHandler streamHandler, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {
+    protected void handleUsage(AssistantResponseDTO responseDto, GeminiStreamHandler streamHandler, int addTokens, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {
         handleUsage(responseDto, dbAssitant, statRepo, request,
             streamHandler.getCandidatesTokenCount(),
             streamHandler.getThoughtsTokenCount(),
             streamHandler.getPromptTokenCount(),
-            streamHandler.getTotalTokenCount()
+            streamHandler.getTotalTokenCount(),
+            addTokens
         );
     }
 
-    protected void handleUsage(AssistantResponseDTO responseDto, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request, Integer candToken, Integer thouToken, Integer promToken, Integer totToken) {
+    protected void handleUsage(AssistantResponseDTO responseDto, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request, Integer candToken, Integer thouToken, Integer promToken, Integer totToken, int addTokens) {
         StringBuilder sb = new StringBuilder("");
         sb.append(SERVICE_NAME).append(" -> run was succesfull");
         sb.append("\n\n");
@@ -52,7 +54,11 @@ public class GeminiSupportService {
         sb.append("\t candidatesTokenCount: ").append(candToken).append("\n");
         sb.append("\t thoughtsTokenCount: ").append(thouToken).append("\n");
         sb.append("\t promptTokenCount: ").append(promToken).append("\n");
-        sb.append("\t totalTokenCount: ").append(totToken).append("\n");
+
+        sb.append("\t addTokens: ").append(addTokens).append("\n");
+
+        sb.append("\t totalTokenCount: ").append(totToken + addTokens).append("\n");
+
         Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totToken, -1);
 
         AiStatService.addRecord(dbAssitant.getId(), totToken, statRepo, request);

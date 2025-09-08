@@ -322,7 +322,7 @@ export class EditorAi {
                         self.setError(result.error);
                         return totalTokens;
                     }
-                    self.aiUserInterface.renderImageSelection(button, result.tempFiles, aiCol.to, "components.ai_assistants.stat.totalTokens.js", result.totalTokens);
+                    self.aiUserInterface.renderImageSelection(button, result.tempFiles, result.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", result.totalTokens);
                     //dialog is rewriten, do not close it
                     totalTokens = this.DO_NOT_CLOSE_DIALOG;
                 });
