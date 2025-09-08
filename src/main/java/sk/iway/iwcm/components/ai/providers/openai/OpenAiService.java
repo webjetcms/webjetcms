@@ -24,7 +24,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -289,21 +288,11 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         BufferedImage image = ImageIO.read( inputData.getInputFile() );
         if (image == null) throw new IllegalStateException("Image not founded or not a Image.");
 
-        ContentType contentType;
-        String fileName = inputData.getInputFile().getName();
-        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-            contentType = ContentType.create("image/jpeg");
-        } else if (fileName.endsWith(".webp")) {
-            contentType = ContentType.create("image/webp");
-        } else {
-            contentType = ContentType.create("image/png"); // default
-        }
-
         //Set image
         if("dall-e-2".equals(model)) {
            throw new IllegalStateException( prop.getText("components.ai_assistants.not_supproted_action_err") );
         } else {
-            builder.addBinaryBody("image", inputData.getInputFile(), contentType, fileName);
+            builder.addBinaryBody("image", inputData.getInputFile(), inputData.getContentType(), inputData.getInputFile().getName());
         }
 
         //Set entity and headers

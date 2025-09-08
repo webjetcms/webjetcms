@@ -77,6 +77,18 @@ public class GeminiSupportService {
         addPart(contentsArray, value, part);
     }
 
+    protected JSONObject getBaseMainObject(String... parts) {
+        //Main JSON object
+        JSONObject mainObject = new JSONObject();
+        //Contents Array
+        JSONArray contentsArray = new JSONArray();
+        //Add parts
+        for (String part : parts) addPart(contentsArray, part);
+
+        mainObject.put("contents", contentsArray);
+        return mainObject;
+    }
+
     protected void addPart(JSONArray contentsArray, String value) {
         addPart(contentsArray, value, null);
     }

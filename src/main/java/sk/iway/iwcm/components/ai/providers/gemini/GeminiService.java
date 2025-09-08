@@ -62,23 +62,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
-
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        String url = BASE_URL + assistant.getModel() + ":generateContent";
 
-        // Create HttpPost
-        HttpPost httpPost = new HttpPost(url);
+        //Prepare body object
+        JSONObject mainObject = getBaseMainObject(assistant.getInstructions(), inputData.getInputValue());
+
+        HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
-
-        //Main JSON object
-        JSONObject mainObject = new JSONObject();
-        //Contents Array
-        JSONArray contentsArray = new JSONArray();
-        addPart(contentsArray, assistant.getInstructions());
-        addPart(contentsArray, inputData.getInputValue());
-        mainObject.put("contents", contentsArray);
-
-        // Set JSON body
         httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
 
         try (CloseableHttpResponse response = client.execute(httpPost)) {
@@ -98,17 +88,11 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer, HttpServletRequest request) throws Exception {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        String url = BASE_URL + assistant.getModel() + ":streamGenerateContent";
 
-        //Main JSON object
-        JSONObject mainObject = new JSONObject();
-        //Contents Array
-        JSONArray contentsArray = new JSONArray();
-        addPart(contentsArray, assistant.getInstructions());
-        addPart(contentsArray, inputData.getInputValue());
-        mainObject.put("contents", contentsArray);
+        //Prepare body object
+        JSONObject mainObject = getBaseMainObject(assistant.getInstructions(), inputData.getInputValue());
 
-        HttpPost httpPost = new HttpPost(url);
+        HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
         httpPost.setHeader("Accept", "text/event-stream");
         httpPost.setHeader("Accept-Encoding", "identity");
@@ -147,19 +131,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-
-            String fileName = inputData.getInputFile().getName();
-            String fileMimeType = "";
-            if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-                fileMimeType = "image/jpeg";
-            } else if (fileName.endsWith(".webp")) {
-                fileMimeType = "image/webp";
-            } else {
-                fileMimeType = "image/png"; // default
-            }
-
             byte[] fileBytes = Files.readAllBytes(inputData.getInputFile().toPath());
-            addPartWithFile(contentsArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData), fileMimeType, Base64.getEncoder().encodeToString(fileBytes));
+            addPartWithFile(contentsArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData), inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
             addPart(contentsArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
@@ -167,8 +140,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
         mainObject.put("contents", contentsArray);
 
-        String url = BASE_URL + assistant.getModel() + ":generateContent";
-        HttpPost httpPost = new HttpPost(url);
+        HttpPost httpPost = new HttpPost( BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
         httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
 
@@ -285,21 +257,11 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         Pair<String, String> instructionValuePair = getInstructionsAndValue(assistant, inputData);
         if(instructionValuePair == null) return new Pair<>(defaultFileName, totalTokens);
 
-        String url = BASE_URL + assistant.getModel() + ":generateContent";
+        //Prepare body object
+        JSONObject mainObject = getBaseMainObject(instructionValuePair.getFirst(), instructionValuePair.getSecond());
 
-        // Create HttpPost
-        HttpPost httpPost = new HttpPost(url);
+        HttpPost httpPost = new HttpPost(BASE_URL + "gemini-2.5-flash" + ":generateContent");
         setHeaders(httpPost, request);
-
-        //Main JSON object
-        JSONObject mainObject = new JSONObject();
-        //Contents Array
-        JSONArray contentsArray = new JSONArray();
-        addPart(contentsArray, instructionValuePair.getFirst());
-        addPart(contentsArray, instructionValuePair.getSecond());
-        mainObject.put("contents", contentsArray);
-
-         // Set JSON body
         httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
 
         try (CloseableHttpResponse response = client.execute(httpPost)) {

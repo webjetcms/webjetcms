@@ -12,6 +12,8 @@ import lombok.Setter;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Tools;
 
+import org.apache.http.entity.ContentType;
+
 @Getter
 @Setter
 public class InputDataDTO {
@@ -73,5 +75,22 @@ public class InputDataDTO {
 
             inputFile = fileImage;
         }
+    }
+
+    public String getMimeType() {
+        if(inputFile == null) return "image/png";
+
+        String fileName = inputFile.getName();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (fileName.endsWith(".webp")) {
+            return "image/webp";
+        } else {
+            return "image/png"; // default
+        }
+    }
+
+    public ContentType getContentType() {
+        return ContentType.create( getMimeType() );
     }
 }
