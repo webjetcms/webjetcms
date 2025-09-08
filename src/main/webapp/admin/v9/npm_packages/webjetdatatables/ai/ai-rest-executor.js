@@ -1,3 +1,5 @@
+import {AiExecutionResult} from './ai-execution-result';
+
 /**
  * Class to wrap REST API for AI execution logic
  */
@@ -13,7 +15,7 @@ export class AiRestExecutor {
 
     async execute(aiCol, inputData, setFunction = null) {
         let self = this;
-        let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
+        let executionResult = new AiExecutionResult();
 
         inputData.assistantId = aiCol.assistantId;
 
@@ -40,6 +42,7 @@ export class AiRestExecutor {
                 const decoder = new TextDecoder("utf-8");
                 let wholeText = "";
                 let done = false;
+                let totalTokens = 0;
 
                 while (!done) {
                     const { value, done: streamDone } = await reader.read();
@@ -73,17 +76,18 @@ export class AiRestExecutor {
                         } else {
                             self.EDITOR.set(aiCol.to, explanatoryJson.html);
                         }
+                        executionResult.success = true;
                     } else {
                         //handle parsed.error
                         totalTokens += parsed.totalTokens;
                         if (parsed.error) {
-                            self._setError(parsed.error);
-                            return self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
+                            executionResult.errorText = parsed.error;
                         }
                     }
                 }
 
                 //console.log("Setting final text:", wholeText);
+                executionResult.totalTokens = totalTokens;
 
                 let explanatoryJson = self._handleExplanatoryResponse(wholeText);
                 if (setFunction != null) {
@@ -91,8 +95,8 @@ export class AiRestExecutor {
                 } else {
                     self.EDITOR.set(aiCol.to, explanatoryJson.html);
                 }
-                if (explanatoryJson.explanatory!=null) {
-                    self.editorAiInstance.setExplanatoryText(explanatoryJson.explanatory);
+                if (explanatoryJson.explanatoryText != null) {
+                    executionResult.explanatoryText = explanatoryJson.explanatoryText;
                 }
             } catch (err) {
                 console.log("ERRR : ", err);
@@ -109,9 +113,9 @@ export class AiRestExecutor {
 
                     //handle res.error
                     if (res.error) {
-                        totalTokens = self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
-                        self._setError(res.error);
+                        executionResult.errorText = res.error;
                     } else {
+                        executionResult.success = true;
 
                         //console.log("AI response received, response=", res);
                         let explanatoryJson = self._handleExplanatoryResponse(res.response);
@@ -120,25 +124,18 @@ export class AiRestExecutor {
                         } else {
                             self.EDITOR.set(aiCol.to, explanatoryJson.html);
                         }
-                        if (explanatoryJson.explanatory!=null) {
-                            self.editorAiInstance.setExplanatoryText(explanatoryJson.explanatory);
+                        if (explanatoryJson.explanatoryText != null) {
+                            executionResult.explanatoryText = explanatoryJson.explanatoryText;
                         }
+                        executionResult.totalTokens = res.totalTokens;
                     }
-
-                    totalTokens = res.totalTokens;
                 },
                 error: function(xhr, ajaxOptions, thrownError) {
-                    totalTokens = self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
-                    self._setError(thrownError);
+                    executionResult.errorText = thrownError;
                 }
             });
         }
-        return totalTokens;
-    }
-
-    _setError(...params) {
-        //console.log("Setting error:", ...params);
-        this.editorAiInstance.setError(...params);
+        return executionResult;
     }
 
     /**
@@ -156,7 +153,7 @@ export class AiRestExecutor {
         const parsedJson = {
             wholeText: wholeText,
             html: null,
-            explanatory: null
+            explanatoryText: null
         }
 
         let startBlock = wholeText.indexOf("```html");
@@ -170,24 +167,27 @@ export class AiRestExecutor {
                 //we have an end block, extract HTML and explanatory block
                 parsedJson.html = wholeText.substring(startBlock + 7, endBlock).trim();
                 //if there is explanatory text use it
-                if (wholeText.length > endBlock + 10) parsedJson.explanatory = wholeText.substring(endBlock + 3).trim();
+                if (wholeText.length > endBlock + 10) parsedJson.explanatoryText = wholeText.substring(endBlock + 3).trim();
             }
         } else {
             parsedJson.html = wholeText;
         }
 
         //if it has explanatory unwrap it from possible ```markdown container
-        if (parsedJson.explanatory != null) {
-            parsedJson.explanatory = parsedJson.explanatory.replace(/```markdown/g, "").replace(/```$/g, "").trim();
+        if (parsedJson.explanatoryText != null) {
+            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/```markdown/g, "").replace(/```$/g, "").trim();
             //replace \" to "
-            parsedJson.explanatory = parsedJson.explanatory.replace(/\\"/g, '"');
+            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/\\"/g, '"');
         }
+
+        //console.log("Parsed JSON:", parsedJson);
 
         return parsedJson;
     }
 
     async executeImageAction(aiCol, inputData, button) {
         let self = this;
+        let executionResult = new AiExecutionResult();
 
         inputData.assistantId = aiCol.assistantId;
 
@@ -200,17 +200,20 @@ export class AiRestExecutor {
             {
                 //handle res.error
                 if (res.error) {
-                    self._setError(res.error);
+                    executionResult.errorText = res.error;
                 } else {
                     self.editorAiInstance.aiUserInterface.renderImageSelection(button, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
+                    executionResult.totalTokens = res.totalTokens;
+                    //set to false, otherwise dialog will be rerendered with default success message
+                    executionResult.success = false;
                 }
             },
             error: function(xhr, ajaxOptions, thrownError) {
-                self._setError(thrownError);
+                executionResult.errorText = thrownError;
             }
         });
 
-        return self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
+        return executionResult;
     }
 
 }

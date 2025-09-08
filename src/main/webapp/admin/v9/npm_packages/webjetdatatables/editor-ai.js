@@ -1,6 +1,7 @@
 import { AiBrowserExecutor } from "./ai/ai-browser-executor";
 import { AiRestExecutor } from "./ai/ai-rest-executor";
 import { AiUserInterface } from "./ai/ai-ui";
+import { AiExecutionResult } from "./ai/ai-execution-result";
 
 export class EditorAi {
 
@@ -12,11 +13,6 @@ export class EditorAi {
 
     //field to remember value for undo process
     undoField = null;
-
-    //response error code from executeSingleAction
-    ERR_UNKNOWN = -1; //show unknown error message and close dialog
-    ERR_CLOSE_DIALOG = -2; //close dialog, message must be written by _setCurrentStatus
-    DO_NOT_CLOSE_DIALOG = -3; //do not close dialog, message must be written by _setCurrentStatus
 
     //constructor
     constructor(EDITOR) {
@@ -223,6 +219,7 @@ export class EditorAi {
         }
 
         let totalTokens = 0;
+        let executionResult = null;
 
         let inputData = {};
         if(inputValues !== null && typeof inputValues === 'object' && !Array.isArray(inputValues)) {
@@ -247,7 +244,7 @@ export class EditorAi {
 
             inputData.inputValue = tempDiv.innerHTML;
 
-            totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, false, (response, finished) => {
+            executionResult = await this._executeSingleAction(button, column, aiCol, inputData, false, (response, finished) => {
                 //console.log("response="+response, "setting to editor: ", ckEditorInstance, "inputData=", inputData);
 
                 // Replace selection with AI response, do not stream, wait for finished
@@ -256,6 +253,7 @@ export class EditorAi {
                     ckEditorSelectionInstance.insertHtml(response);
                 }
             });
+            if (executionResult!=null) totalTokens += executionResult.totalTokens;
 
         } else if (isPageBuilder) {
             //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
@@ -267,6 +265,9 @@ export class EditorAi {
             self.undoField = {};
             self.undoField.type = "pageBuilder";
             self.undoField.editors = [];
+            let successCount = 0;
+            let explanatoryText = null;
+            executionResult = new AiExecutionResult();
 
             for (let i=0; i<editors.length; i++) {
                 let editor = editors[i];
@@ -278,11 +279,29 @@ export class EditorAi {
                 inputData.inputValue = editor.getData();
                 self.undoField.editors.push({instance: editor, value: inputData.inputValue});
 
-                totalTokens += await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
+                let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
                     //console.log("response="+response, "setting to editor: ", editor);
                     editor.setData(response);
                 });
+                //console.log("editorExecutionResult=", editorExecutionResult);
+                if (editorExecutionResult!=null) {
+                    totalTokens += editorExecutionResult.totalTokens;
+                    //preserve status to executionResults
+                    if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
+                    if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
+                    if (editorExecutionResult.error != null) executionResult.error = editorExecutionResult.error;
+                    if (editorExecutionResult.success === true) successCount++;
+
+                    if (editorExecutionResult.explanatoryText != null) {
+                        if (explanatoryText == null || explanatoryText.trim() === "") explanatoryText = editorExecutionResult.explanatoryText;
+                        else explanatoryText += "\n---\n" + editorExecutionResult.explanatoryText;
+                    }
+                    totalTokens += editorExecutionResult.totalTokens;
+                }
             }
+
+            if (successCount === editors.length) executionResult.success = true;
+            executionResult.explanatoryText = explanatoryText;
 
         } else {
             self.setCurrentStatus("components.ai_assistants.editor.loading.js");
@@ -298,36 +317,44 @@ export class EditorAi {
             } catch (error) {
                 console.error("Error setting undoField:", error);
             }
-            totalTokens = await this._executeSingleAction(button, column, aiCol, inputData);
+            executionResult = await this._executeSingleAction(button, column, aiCol, inputData);
+            if (executionResult!=null) totalTokens += executionResult.totalTokens;
         }
 
-        if (totalTokens >= 0) {
-            if (self.isUndo()==false) self._closeToast(3000);
-            self._hideLoader(button);
+        //console.log("executionResult=", executionResult, "totalTokens=", totalTokens);
 
-            self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
-        } else if (totalTokens === this.DO_NOT_CLOSE_DIALOG) {
-            //do nothing
-            //content was rendered in execute method e.g. image selection dialog
+        if (executionResult == null) {
+            self.setError();
         } else {
-            //there seems to be an error
-            self._closeToast(3000);
-            self._hideLoader(button);
+            if (executionResult.error != null) {
+                self.setError(executionResult.error);
+            } else if (executionResult.statusKey != null) {
+                self.setCurrentStatus(executionResult.statusKey, false, ...(executionResult.statusKeyParams ?? []));
+            } else if (executionResult.success === true) {
+                if (self.isUndo()==false) self._closeToast(3000);
+                self._hideLoader(button);
 
-            //for -1 show default status, otherwise we expect status is allready set by other code
-            if (totalTokens == this.ERR_UNKNOWN) self.setError();
+                self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
+            }
+
+            if (executionResult.explanatoryText != null) {
+                self.aiUserInterface.setExplanatoryText(executionResult.explanatoryText);
+            }
         }
     }
 
     async _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
         let self = this;
-        let totalTokens = 0;
+        let executionResult = null;
 
         if ("browser" === aiCol.provider) {
             if (this.aiBrowserExecutor.isAvailable(aiCol)) {
-                totalTokens = await this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
+                executionResult = await this.aiBrowserExecutor.execute(aiCol, inputData, reuseApiInstance, setFunction);
             } else {
-                totalTokens = this.DO_NOT_CLOSE_DIALOG;
+                executionResult = new AiExecutionResult();
+                executionResult.statusKey = "components.ai_assistants.browser.api_not_available.js"
+                let apiName = this.aiBrowserExecutor.getApiName(aiCol);
+                executionResult.statusKeyParams = [apiName];
             }
         } else {
             // IS IMAGE
@@ -341,12 +368,12 @@ export class EditorAi {
                     inputData.inputValueType = "text"
                 }
 
-                totalTokens = await this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
+                executionResult = await this.aiRestExecutor.executeImageAction(aiCol, inputData, button);
             } else {
-                totalTokens = await this.aiRestExecutor.execute(aiCol, inputData, setFunction);
+                executionResult = await this.aiRestExecutor.execute(aiCol, inputData, setFunction);
             }
         }
-        return totalTokens;
+        return executionResult;
     }
 
 }

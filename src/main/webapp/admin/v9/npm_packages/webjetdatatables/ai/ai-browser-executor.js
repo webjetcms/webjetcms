@@ -1,3 +1,5 @@
+import {AiExecutionResult} from './ai-execution-result';
+
 /**
  * Class to wrap Local Browser AI execution logic
  */
@@ -17,19 +19,22 @@ export class AiBrowserExecutor {
     }
 
     isAvailable(aiCol = null) {
-        let apiName = "Translator";
-        if (aiCol != null) {
-            let instructions = aiCol.instructions;
-            apiName = this._getApiName(instructions);
-        }
+        let apiName = this.getApiName(aiCol);
 
         //check for browser AI instances support
         if (apiName in self) {
             return true;
         }
-
-        this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.api_not_available.js", false, apiName);
         return false;
+    }
+
+    getApiName(aiCol = null) {
+        let apiName = "Translator";
+        if (aiCol != null) {
+            let instructions = aiCol.instructions;
+            apiName = this._getApiName(instructions);
+        }
+        return apiName;
     }
 
     /**
@@ -38,18 +43,19 @@ export class AiBrowserExecutor {
      * @param {*} inputData
      * @param {*} reuseApiInstance - set to true to reuse latest instance, EG for PageBuilder you need to reuse it for every editor
      * @param {*} setFunction
-     * @returns
+     * @returns {AiExecutionResult}
      */
     async execute(aiCol, inputData, reuseApiInstance = false, setFunction = null) {
 
         let instructions = aiCol.instructions;
-        let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
+        let executionResult = new AiExecutionResult();
 
         //console.log("execute, inputData=", inputData);
         try {
             let apiName = this._getApiName(instructions);
             if (apiName == null) {
-                this.editorAiInstance.setCurrentStatus("components.ai_assistants.browser.unknownApi.js", false, apiName);
+                executionResult.statusKey = "components.ai_assistants.browser.unknownApi.js";
+                executionResult.statusKeyParams = ["NULL"];
             } else {
                 let config = this._getConfig(instructions);
                 let apiInstance = null;
@@ -63,16 +69,17 @@ export class AiBrowserExecutor {
 
                 let useStreaming = aiCol.useStreaming || false;
                 if (apiInstance) {
-                    totalTokens = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
+                    executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
                 }
             }
         } catch (e) {
             console.log(e);
-            this.editorAiInstance.setError(e.message);
-            return this.editorAiInstance.DO_NOT_CLOSE_DIALOG;
+            executionResult.error = e.message;
         }
 
-        return totalTokens;
+        //console.log("executionResult:", executionResult);
+
+        return executionResult;
     }
 
     /**
@@ -180,6 +187,9 @@ export class AiBrowserExecutor {
     }
 
     async _apiExecute(apiName, apiInstance, config, fieldName, inputData, useStreaming, setFunction = null) {
+
+        let executionResult = new AiExecutionResult();
+
         if (apiInstance) {
             let text = inputData.inputValue;
             if (inputData.userPrompt != null) {
@@ -256,9 +266,13 @@ export class AiBrowserExecutor {
             }
 
             //local browser uses zero tokens
-            return 0;
+            executionResult.totalTokens = 0;
+            executionResult.success = true;
+        } else {
+            executionResult.statusKey = "components.ai_assistants.browser.api_not_available.js";
         }
-        return this.EDITOR.ERR_UNKNOWN;
+
+        return executionResult;
     }
 
     async _detectLanguage(text) {
