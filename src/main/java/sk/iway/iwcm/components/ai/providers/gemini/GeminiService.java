@@ -27,7 +27,9 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -83,7 +85,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiResponse");
 
-            JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            String responseData = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(responseData);
             JSONArray parts = getParts(json);
             responseDto.setResponse(parts.getJSONObject(0).getString("text"));
 
@@ -173,11 +176,32 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiImageResponse");
 
-            JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            String responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(responseText);
+
+            String finishReason = null;
+            try {
+                JSONArray candidates = json.optJSONArray("candidates");
+                if (candidates != null && candidates.length() > 0) {
+                    for (int i = 0; i < candidates.length(); i++) {
+                        JSONObject candidate = candidates.getJSONObject(i);
+                        if (candidate.has("finishReason")) {
+                            finishReason = candidate.getString("finishReason");
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Logger.error(GeminiService.class, e);
+            }
+            if (Tools.isNotEmpty(finishReason) && "STOP".equals(finishReason) == false) {
+                responseDto.setError(finishReason);
+                return responseDto;
+            }
+
             JSONArray parts = getParts(json);
 
             try {
-                long datePart = new java.util.Date().getTime();
+                long datePart = Tools.getNow();
                 for(int i = 0; i < parts.length(); i++) {
                     JSONObject part = parts.getJSONObject(i);
                     if(part.has("inlineData") == true) {
@@ -188,7 +212,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
                         if(format.startsWith(".") == false) format = "." + format;
 
                         //Date pars is added so we can delet all images from same request (same request == same date time part)
-                        String tmpFileName = "tmp_ai_" + assistant.getName() + "_" + datePart + "_";
+                        String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
 
                         try {
                             tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);

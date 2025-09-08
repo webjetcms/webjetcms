@@ -53,11 +53,11 @@ public class AiStatEntity {
     private Date created;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "", filter = true)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.inquiry.inquiry_statistics.user_name", filter = true)
     private String userName;
 
     @Column(name = "used_tokens")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_stats.used_tokens")
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.stats.used_tokens")
     private Integer usedTokens;
 
     @Column(name = "user_id")

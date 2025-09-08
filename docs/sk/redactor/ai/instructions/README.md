@@ -26,6 +26,34 @@ Pri písaní inštrukcií pre OpenAI response API dodržujte tieto odporúčania
 
 Dodržiavaním týchto zásad zabezpečíte, že odpovede budú relevantné a použiteľné.
 
+## Obrázky
+
+Pri inštrukciách pre generovanie a úpravu obrázkov je potrebné do inštrukcií vložiť značku `{userPrompt}` pre vloženie zadanej požiadavky používateľa. Táto značka je nahradená zadaným textom. Príklady inštrukcií:
+
+Vygenerovať obrázok
+
+```json
+{
+   "task": "generate image",
+   "imageDescription": "{userPrompt}",
+   "returnFormat": "Return only generated image, without any other response. Image return as Base64."
+}
+```
+
+Upraviť obrázok:
+
+```json
+"role": "Image editing specialist",
+"task": "Analyze the provided image and apply the requested edits as specified in the user input. Return the edited image encoded in Base64 format without any additional response or explanation.",
+"constraints": {
+    "input": "User-provided image and specific edit instructions",
+    "edit instructions": "{userPrompt}",
+    "output": "Edited image in Base64 format",
+    "avoid": "Providing any text, comments, or explanations",
+    "format": "Ensure the output is a valid Base64-encoded image"
+}
+```
+
 ## AI v prehliadači
 
 Písanie inštrukcií pre AI v prehliadači je špecifické podľa [možností dostupného API](https://developer.chrome.com/docs/ai/built-in-apis). Inštrukcia je rozdelená na názov API a následnú konfiguráciu. V odkaze na `MDM` dokumentáciu nájdete podrobné informácie o možnostiach konfigurácie.

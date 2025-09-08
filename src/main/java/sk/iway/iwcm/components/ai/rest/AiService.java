@@ -4,6 +4,7 @@ import static sk.iway.iwcm.components.ai.jpa.SupportedActions.doesSupportAction;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,7 +25,7 @@ import sk.iway.iwcm.components.ai.jpa.SupportedActions;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
@@ -193,14 +194,19 @@ public class AiService {
         return assistant.get();
     }
 
-    public void addGroupOptions(DatatablePageImpl<?> page , String field, Prop prop) {
+    public List<OptionDto> getGroupsOptions(Prop prop) {
         //group is defined as text key with prefix
         Map<String,String> groups = prop.getTextStartingWith(GROUPS_PREFIX);
+
+        //sort groups by key
+        List<OptionDto> groupsList = new ArrayList<>();
         for (Map.Entry<String, String> entry : groups.entrySet()) {
             //skip empty/- values - so the user can aka delete default entries
             if (Tools.isEmpty(entry.getValue()) || entry.getValue().length()<2) continue;
-            page.addOption(field, entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null);
+            groupsList.add(new OptionDto(entry.getValue(), entry.getKey().substring(GROUPS_PREFIX.length()), null));
         }
+        groupsList.sort(Comparator.comparing(OptionDto::getValue));
+        return groupsList;
     }
 
     /* PRIVATE SUPPORT METHODS */

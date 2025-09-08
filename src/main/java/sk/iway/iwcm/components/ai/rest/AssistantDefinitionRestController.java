@@ -104,7 +104,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
-        aiService.addGroupOptions(page, "groupName", getProp());
+        page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());

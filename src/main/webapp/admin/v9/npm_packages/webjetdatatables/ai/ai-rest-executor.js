@@ -45,7 +45,7 @@ export class AiRestExecutor {
                     const { value, done: streamDone } = await reader.read();
                     done = streamDone;
                     if (done) {
-                        console.log("Stream complete : ", value);
+                        //console.log("Stream complete : ", value);
                         break;
                     }
 
@@ -120,13 +120,12 @@ export class AiRestExecutor {
     }
 
     _setError(...params) {
-        console.log("Setting error:", ...params);
+        //console.log("Setting error:", ...params);
         this.editorAiInstance.setError(...params);
     }
 
-    async executeImageAction(aiCol, inputData, callback = null) {
+    async executeImageAction(aiCol, inputData, button) {
         let self = this;
-        let totalTokens = this.editorAiInstance.ERR_UNKNOWN;
 
         inputData.assistantId = aiCol.assistantId;
 
@@ -139,22 +138,17 @@ export class AiRestExecutor {
             {
                 //handle res.error
                 if (res.error) {
-                    totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
                     self._setError(res.error);
-                }
-
-                totalTokens = res.totalTokens;
-                if (callback != null) {
-                    callback(res);
+                } else {
+                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, res.tempFiles, result.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
                 }
             },
             error: function(xhr, ajaxOptions, thrownError) {
-                totalTokens = self.editorAiInstance.ERR_CLOSE_DIALOG;
                 self._setError(thrownError);
             }
         });
 
-        return totalTokens;
+        return self.editorAiInstance.DO_NOT_CLOSE_DIALOG;
     }
 
 }

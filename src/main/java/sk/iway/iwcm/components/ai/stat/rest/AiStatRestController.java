@@ -47,7 +47,7 @@ public class AiStatRestController extends DatatableRestControllerV2<AiStatEntity
 
         page.addOptions("assistantProvider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("assistantAction", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
-        aiService.addGroupOptions(page, "assistantGroupName", getProp());
+        page.addOptions("assistantGroupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
 
        return page;
     }
