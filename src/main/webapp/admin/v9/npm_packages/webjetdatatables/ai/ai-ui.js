@@ -340,7 +340,7 @@ export class AiUserInterface {
         }
     }
 
-    async renderImageSelection(button, images, toField, textKey, ...params) {
+    async renderImageSelection(button, images, generatedImageName,  toField, textKey, ...params) {
         let contentContainer = $("#toast-container-ai-content");
 
         let self = this;
@@ -356,6 +356,9 @@ export class AiUserInterface {
             imageName = imageName.split(".")[0];
         } else {
             imageUrl = await this.getPathForNewImage(self);
+            if(generatedImageName != null && generatedImageName != undefined && generatedImageName.length) {
+                imageName = generatedImageName;
+            }
         }
 
         this.setCurrentStatus(textKey, false, ...params);

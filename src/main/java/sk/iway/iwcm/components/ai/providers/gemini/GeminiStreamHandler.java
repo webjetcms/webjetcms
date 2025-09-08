@@ -20,7 +20,6 @@ public class GeminiStreamHandler {
     Integer promptTokenCount = 0;
 
     public final void handleBufferedReader(BufferedReader reader, PrintWriter writer) throws IOException {
-
         String line;
         while ((line = reader.readLine()) != null) {
 
@@ -42,7 +41,6 @@ public class GeminiStreamHandler {
                 setUsage(line);
             }
         }
-
     }
 
     private void setUsage(String line) {

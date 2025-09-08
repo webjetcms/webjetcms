@@ -202,7 +202,7 @@ export class AiRestExecutor {
                 if (res.error) {
                     self._setError(res.error);
                 } else {
-                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, res.tempFiles, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
+                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
                 }
             },
             error: function(xhr, ajaxOptions, thrownError) {

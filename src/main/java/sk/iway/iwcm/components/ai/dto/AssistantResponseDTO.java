@@ -16,6 +16,7 @@ public class AssistantResponseDTO {
     private String error;
     private int totalTokens;
     private List<String> tempFiles = new ArrayList<>();
+    private String generatedFileName;
 
     public void addTempFile(String tempFile) {
         if(tempFiles == null) tempFiles = new ArrayList<>();
