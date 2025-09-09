@@ -474,6 +474,7 @@ module.exports = function () {
       // vytvorenie webstranky
       this.say('Pridanie novej web stranky ' + auto_webPage);
       this.waitForElement(buttons.btn.add_button, 10);
+      this.wait(1);
       this.click(buttons.btn.add_button);
       this.dtWaitForEditor();
       this.clickCss('#pills-dt-datatableInit-basic-tab');
@@ -490,7 +491,12 @@ module.exports = function () {
       // Pridanie textu do obsahu
       this.clickCss('#pills-dt-datatableInit-content-tab');
       this.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+      this.waitForElement("span.cke_toolbox");
+      this.wait(2);
+      this.waitForElement('#trEditor', 10);
       this.clickCss('#trEditor');
+      //this.pressKey('ArrowLeft');
+      //this.pressKey('ArrowRight');
       this.type('<!-- This is an autotest -->');
       // Nastav datumy v perex tabe
       this.clickCss('#pills-dt-datatableInit-perex-tab');
