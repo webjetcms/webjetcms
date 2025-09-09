@@ -11,11 +11,8 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 public interface AssistantDefinitionRepository extends DomainIdRepository<AssistantDefinitionEntity, Long> {
     List<AssistantDefinitionEntity> findAllByNameLikeAndDomainId(String name, Integer domainId);
 
-    @Query("SELECT oaa.name FROM AssistantDefinitionEntity oaa WHERE oaa.name LIKE :name AND oaa.domainId = :domainId")
-    List<String> getAssistantNames(@Param("name") String name, @Param("domainId") Integer domainId);
-
-    @Query("SELECT DISTINCT oaa.groupName FROM AssistantDefinitionEntity oaa WHERE oaa.groupName LIKE :groupName AND oaa.domainId = :domainId ORDER BY oaa.groupName ASC")
-    List<String> getGroupNames(@Param("groupName") String groupName, @Param("domainId") Integer domainId);
-
     Optional<AssistantDefinitionEntity> findByIdAndDomainId(Long id, Integer domainId);
+
+    @Query("SELECT ade FROM AssistantDefinitionEntity ade WHERE ade.name = :name AND ade.provider = :provider AND ade.domainId = :domainId")
+    List<AssistantDefinitionEntity> getEntitiesCount(@Param("name") String name, @Param("provider") String provider, @Param("domainId") Integer domainId);
 }
