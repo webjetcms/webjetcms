@@ -23,6 +23,9 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 
+/**
+ * REST controller for AI statistics - handles datatable requests
+ */
 @RestController
 @RequestMapping("/admin/rest/ai/stat/")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_stats')")

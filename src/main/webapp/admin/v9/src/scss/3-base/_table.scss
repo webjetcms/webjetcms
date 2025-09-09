@@ -1470,9 +1470,10 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     width: 892px;
     margin-bottom: 5px;
     .textarea-code {
+        //if there is ai/button in group we need to be smaller
+        width: 842px;
         margin-right: 0px;
         margin-bottom: 0px;
-        width: 842px;
     }
 }
 

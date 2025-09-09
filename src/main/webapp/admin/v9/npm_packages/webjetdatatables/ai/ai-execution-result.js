@@ -1,3 +1,6 @@
+/**
+ * DTO for AI execution result
+ */
 export class AiExecutionResult {
 
     success = false;

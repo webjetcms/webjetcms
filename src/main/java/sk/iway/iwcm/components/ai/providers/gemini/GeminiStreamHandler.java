@@ -8,6 +8,9 @@ import java.util.List;
 import lombok.Getter;
 import sk.iway.iwcm.Tools;
 
+/**
+ * Handler for streaming responses from Gemini API
+ */
 @Getter
 public class GeminiStreamHandler {
 

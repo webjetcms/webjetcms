@@ -26,7 +26,6 @@ public class BrowserAssistantsService implements AiAssitantsInterface {
     }
 
     public List<String> getFieldsToShow(String action) {
-        //Local assistant do not need specific fields, base are enought
         return List.of( "useStreaming");
     }
 

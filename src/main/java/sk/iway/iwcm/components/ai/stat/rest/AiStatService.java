@@ -35,6 +35,9 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Service for AI statistics - handles data processing for stats section/graphs
+ */
 @Service
 public class AiStatService {
 

@@ -6,6 +6,9 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
+/**
+ * Interface for AI assistants providers for datatable handling - shows provider specific options in the DT Editor
+ */
 public interface AiAssitantsInterface {
     //Table related methods
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity);

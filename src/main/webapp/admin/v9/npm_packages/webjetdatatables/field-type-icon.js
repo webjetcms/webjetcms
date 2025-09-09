@@ -1,3 +1,7 @@
+/**
+ * Icon field type for Datatables Editor - show icon preview using Tabler icons, user can set icon name
+ * @returns
+ */
 export function typeIcon() {
 
     function setIcon(conf, val) {

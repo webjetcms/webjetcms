@@ -8,6 +8,9 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Enum of supported actions for AI assistants
+ */
 @Getter
 public enum SupportedActions {
     GENERATE_TEXT("generate_text"),

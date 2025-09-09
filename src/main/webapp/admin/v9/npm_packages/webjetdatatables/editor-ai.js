@@ -3,6 +3,9 @@ import { AiRestExecutor } from "./ai/ai-rest-executor";
 import { AiUserInterface } from "./ai/ai-ui";
 import { AiExecutionResult } from "./ai/ai-execution-result";
 
+/**
+ * Main class for AI integration in Datatables Editor - binds buttons, handles events, shows UI, executes actions
+ */
 export class EditorAi {
 
     EDITOR = null;

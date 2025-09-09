@@ -29,6 +29,9 @@ import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
+/**
+ * Service for AI Assistants management / datatables, editor
+ */
 @Service
 public class AiAssistantsService {
 

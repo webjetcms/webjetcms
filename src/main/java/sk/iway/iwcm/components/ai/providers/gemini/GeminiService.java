@@ -27,7 +27,6 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
@@ -42,6 +41,11 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Service for Google Gemini AI model integration. We do not use any official SDK, but
+ * rather direct REST calls, so its easy to maintain and we can see what is going on.
+ * docs: https://ai.google.dev/gemini-api/docs
+ */
 @Service
 public class GeminiService extends GeminiSupportService implements AiInterface {
 
@@ -55,7 +59,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public boolean isInit() {
-        return Tools.isNotEmpty(Constants.getString(AUTH_KEY));
+        return Tools.isNotEmpty(getApiKey());
     }
 
     public Pair<String, String> getProviderInfo(Prop prop) {

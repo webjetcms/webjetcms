@@ -26,9 +26,12 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Interface for AI providers - main methods to implement in specific provider services
+ */
 public interface AiInterface {
 
-    static final String GENERATE_FILE_NAME_KEY = "ai_generate_file_name_prompt";
+    static final String GENERATE_FILE_NAME_KEY = "ai_generateFileNamePrompt";
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request);
 

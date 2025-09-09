@@ -1,7 +1,6 @@
 /**
- * User Interface for AI interactions
+ * User Interface for AI interactions. It uses toastr to show popup with options and status.
  */
-
 export class AiUserInterface {
 
     EDITOR = null;

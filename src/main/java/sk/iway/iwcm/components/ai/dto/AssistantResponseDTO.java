@@ -9,6 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Tools;
 
+/**
+ * DTO for AI assistant response
+ */
 @Getter
 @Setter
 public class AssistantResponseDTO {

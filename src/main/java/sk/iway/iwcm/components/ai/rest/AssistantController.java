@@ -23,6 +23,9 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 
+/**
+ * REST controller for AI assistants - handles XHR requests from UI
+ */
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
 @PreAuthorize("@WebjetSecurityService.isAdmin()") //AI assistants can be in any module, so check just for admin perms
