@@ -71,6 +71,15 @@ export class EditorAi {
                             const button = this._getEditorButton(column, "btn-ai-wysiwyg");
                             exitInlineEditorContainer.prepend(button);
                         }
+                    } else if ("quill"===column.type) {
+                        let inputField = $(field.dom.inputControl[0]).find(".quill-wrapper");
+                        //console.log("inputField:", inputField);
+
+                        if (inputField.parent().find(".ti-sparkles").length === 0) {
+                            const button = this._getEditorButton(column, null);
+                            inputField.find(".ql-toolbar").append($("<span class='ql-formats ql-formats-ai'></span>"));
+                            inputField.find(".ql-formats-ai").append(button);
+                        }
                     } else {
                         let inputField = $(field.dom.inputControl[0]).find(".form-control");
 
