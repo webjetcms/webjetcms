@@ -56,7 +56,13 @@ block content
                 if (eventsBinded==false) {
                     $("#DTE_Field_provider").on("change", function() {
                         changeFieldsVisibility($(this).val(), action);
-                        //do not do this, it will erase value on edit existing entity $("#DTE_Field_model").val("");
+
+                        let oldValue = aiAssistantsDataTable.EDITOR.currentJson["provider"];
+                        let newValue = $("#DTE_Field_provider").val();
+                        if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
+                            //Provider was changed and oldValue != newValue ... so remove value from model
+                            $("#DTE_Field_model").val("");
+                        }
                     });
                     eventsBinded = true;
                 }
