@@ -285,7 +285,7 @@ function insertLink(I, link) {
     I.switchTo("#DTE_Field_data-pageBuilderIframe");
     I.clickCss('.cke_dialog_ui_button_ok');
     I.executeScript(() => {
-    const element = document.querySelector('#cke_710_uiElement #wjLinkIframe');
+    const element = document.querySelector('#cke_730_uiElement #wjLinkIframe');
         if (element) {
           element.remove();
         }
@@ -325,7 +325,7 @@ async function validateThumb(I, elementText) {
     I.clickCss(".cke_dialog_ui_button_cancel");
 
     await I.executeScript(() => {
-        const element = document.querySelector('#cke_672_uiElement #wjImageIframeElement');
+        const element = document.querySelector('#cke_692_uiElement #wjImageIframeElement');
             if (element) {
               element.remove();
             }

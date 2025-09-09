@@ -69,7 +69,7 @@ Scenario('testovanie app - Slider', async ({ I, DT, DTE, Apps, Document }) => {
         editorData: 'JTVCJTdCJTIyaW1hZ2UlMjI6JTIyL2ltYWdlcy9nYWxsZXJ5L2NocnlzYW50aGVtdW0uanBnJTIyLCUyMnRpdGxlJTIyOiUyMkNocnl6YW50ZW1hJTIyLCUyMmRlc2NyaXB0aW9uJTIyOiUyMkFqJTIwdiUyMGNobGFkZSUyMGt2aXRuZW0lMjIsJTIycmVkaXJlY3RVcmwlMjI6JTIyaHR0cHM6Ly93d3cuaW50ZXJ3YXkuc2svJTIyJTdEJTVE'
     };
 
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
 
     I.say('Check tabs');

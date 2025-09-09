@@ -20,7 +20,7 @@ Scenario('Pixabay - test image source after adding', async ({ I, DTE }) => {
     DTE.waitForEditor();
     I.waitForElement(".cke_wysiwyg_frame.cke_reset");
     I.clickCss('.cke_button__image');
-    I.clickCss('#cke_wjImagePixabay_131');
+    I.clickCss('#cke_wjImagePixabay_133');
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
     I.wait(1);
