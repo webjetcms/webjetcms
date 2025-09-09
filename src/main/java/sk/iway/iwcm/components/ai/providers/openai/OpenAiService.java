@@ -123,13 +123,15 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiStreamResponse");
 
             HttpEntity entity = response.getEntity();
-            InputStream inputStream = entity.getContent();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
-            streamHandler.handleBufferedReader(reader, writer);
+            try (InputStream inputStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8))) {
 
-            //
-            handleUsage(responseDto, streamHandler.getUsageChunk(), 0, assistant, streamHandler.getRunId(), statRepo, request);
+                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
+                streamHandler.handleBufferedReader(reader, writer);
+
+                //
+                handleUsage(responseDto, streamHandler.getUsageChunk(), 0, assistant, streamHandler.getRunId(), statRepo, request);
+            }
         }
 
         return responseDto;

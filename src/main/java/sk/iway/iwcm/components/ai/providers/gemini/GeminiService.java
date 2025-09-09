@@ -13,6 +13,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -105,13 +106,30 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiStreamResponse");
 
             HttpEntity entity = response.getEntity();
-            InputStream inputStream = entity.getContent();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-            GeminiStreamHandler streamHandler = new GeminiStreamHandler();
-            streamHandler.handleBufferedReader(reader, writer);
+            String charset = java.nio.charset.StandardCharsets.UTF_8.name();
+            Header contentType = entity.getContentType();
+            if (contentType != null) {
+                String value = contentType.getValue();
+                String[] parts = value.split(";");
+                for (String part : parts) {
+                    part = part.trim();
+                    if (part.toLowerCase().startsWith("charset=")) {
+                        charset = part.substring(8);
+                        break;
+                    }
+                }
+            }
 
-            handleUsage(responseDto, streamHandler, 0, assistant, statRepo, request);
+            try (InputStream inputStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
+
+                GeminiStreamHandler streamHandler = new GeminiStreamHandler();
+                streamHandler.handleBufferedReader(reader, writer);
+
+                handleUsage(responseDto, streamHandler, 0, assistant, statRepo, request);
+            }
+
         }
 
         return responseDto;
