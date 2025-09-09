@@ -56,8 +56,23 @@ block content
                 if (eventsBinded==false) {
                     $("#DTE_Field_provider").on("change", function() {
                         changeFieldsVisibility($(this).val(), action);
-                        //do not do this, it will erase value on edit existing entity $("#DTE_Field_model").val("");
+
+                        let oldValue = aiAssistantsDataTable.EDITOR.currentJson["provider"];
+                        let newValue = $("#DTE_Field_provider").val();
+                        if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
+                            //Provider was changed and oldValue != newValue ... so remove value from model
+                            $("#DTE_Field_model").val("");
+                        }
                     });
+
+                    $("#DTE_Field_description").on("blur", function() {
+                        getTranslatedKey($("#DTE_Field_description").val(), "translatedDescription");
+                    });
+
+                    $("#DTE_Field_userPromptLabel").on("blur", function() {
+                        getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "translatedUserPromptLabel");
+                    });
+
                     eventsBinded = true;
                 }
             });
@@ -97,6 +112,20 @@ block content
                     }
                 });
             }
+
+            function getTranslatedKey(keyToTranslate, fieldId) {
+                if(keyToTranslate == undefined || keyToTranslate == null || keyToTranslate == "") return;
+
+                $.ajax({
+                    url: url + "translate-key",
+                    method: "get",
+                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                    data: { key: keyToTranslate },
+                    success: function(response) {
+                        $("#DTE_Field_" + fieldId).val(response);
+                    }
+                });
+            }
         });
 
     style.
@@ -104,5 +133,7 @@ block content
         textarea.textarea-code { white-space: pre-line !important; }
         label[for='DTE_Field_translatedDescription'] { visibility: hidden; }
         div.DTE_Field_Name_translatedDescription div.form-group-tooltip { display: none; }
+        label[for='DTE_Field_translatedUserPromptLabel'] { visibility: hidden; }
+        div.DTE_Field_Name_translatedUserPromptLabel div.form-group-tooltip { display: none; }
 
     <table class="datatableInit table"></table>
