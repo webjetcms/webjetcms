@@ -46,9 +46,27 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, AssistantDefinitionEntity> target, Identity user, Errors errors, Long id, AssistantDefinitionEntity entity) {
+        List<AssistantDefinitionEntity> sameEntities = repo.getEntitiesCount(entity.getName(), entity.getProvider(), CloudToolsForCore.getDomainId());
+
         if("create".equals(target.getAction()) || "edit".equals(target.getAction())) {
             if(Tools.isEmpty(entity.getAction())) {
                 errors.rejectValue("action", "", getProp().getText("javax.validation.constraints.NotNull.message"));
+            }
+
+            if(sameEntities != null && sameEntities.size() > 0) {
+                if("create".equals(target.getAction())) {
+                    //This combination already exist
+                    errors.rejectValue("name",  "", getProp().getText("components.ai_assistants.unique_name_err"));
+                } else {
+                    boolean isOneOfThem = false;
+                    for(AssistantDefinitionEntity sameEntity : sameEntities) {
+                        if(sameEntity.getId().equals(entity.getId()) == true) {
+                            isOneOfThem = true;
+                            break;
+                        }
+                    }
+                    if(isOneOfThem == false) errors.rejectValue("name",  "", getProp().getText("components.ai_assistants.unique_name_err"));
+                }
             }
         }
 
@@ -75,6 +93,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
             if(Tools.isNotEmpty(assistant.getDescription())) {
                 assistant.setTranslatedDescription( getProp().getText(assistant.getDescription()) );
+            }
+
+            if(Tools.isNotEmpty(assistant.getUserPromptLabel())) {
+                assistant.setTranslatedUserPromptLabel( getProp().getText(assistant.getUserPromptLabel()) );
             }
         }
 
@@ -125,10 +147,13 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         if(Tools.isNotEmpty(entity.getDescription())) {
             entity.setTranslatedDescription( getProp().getText(entity.getDescription()) );
         }
+
+        if(Tools.isNotEmpty(entity.getUserPromptLabel())) {
+            entity.setTranslatedUserPromptLabel( getProp().getText(entity.getUserPromptLabel()) );
+        }
+
         return entity;
     }
-
-
 
     @Override
     public void afterDelete(AssistantDefinitionEntity entity, long id) {
@@ -163,5 +188,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @GetMapping("/provider-fields")
     public List<String> getProviderFields(@RequestParam(name = "provider") String provider, @RequestParam(name = "action") String action) {
         return aiAssistantsService.getProviderFields(provider, action, getProp());
+    }
+
+    @GetMapping(value = "/translate-key", produces = "text/plain; charset=UTF-8")
+    public String getTranslatedKey(@RequestParam(name = "key") String key) {
+        return getProp().getText(key);
     }
 }
