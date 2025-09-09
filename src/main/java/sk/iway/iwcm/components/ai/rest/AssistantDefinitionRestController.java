@@ -94,6 +94,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             if(Tools.isNotEmpty(assistant.getDescription())) {
                 assistant.setTranslatedDescription( getProp().getText(assistant.getDescription()) );
             }
+
+            if(Tools.isNotEmpty(assistant.getUserPromptLabel())) {
+                assistant.setTranslatedUserPromptLabel( getProp().getText(assistant.getUserPromptLabel()) );
+            }
         }
 
         return assistant;
@@ -143,10 +147,13 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         if(Tools.isNotEmpty(entity.getDescription())) {
             entity.setTranslatedDescription( getProp().getText(entity.getDescription()) );
         }
+
+        if(Tools.isNotEmpty(entity.getUserPromptLabel())) {
+            entity.setTranslatedUserPromptLabel( getProp().getText(entity.getUserPromptLabel()) );
+        }
+
         return entity;
     }
-
-
 
     @Override
     public void afterDelete(AssistantDefinitionEntity entity, long id) {
@@ -181,5 +188,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @GetMapping("/provider-fields")
     public List<String> getProviderFields(@RequestParam(name = "provider") String provider, @RequestParam(name = "action") String action) {
         return aiAssistantsService.getProviderFields(provider, action, getProp());
+    }
+
+    @GetMapping(value = "/translate-key", produces = "text/plain; charset=UTF-8")
+    public String getTranslatedKey(@RequestParam(name = "key") String key) {
+        return getProp().getText(key);
     }
 }
