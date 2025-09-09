@@ -72,6 +72,9 @@ public class DataTableColumn {
 
     private List<DataTableAi> ai = null;
 
+    //https://editor.datatables.net/reference/option/fields.entityDecode
+    private Boolean entityDecode = null;
+
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
         String fieldPrefixNotNull = fieldPrefix;
@@ -602,6 +605,9 @@ public class DataTableColumn {
                 editor = new DataTableColumnEditor();
             }
             editor.setType("wysiwyg");
+            //disable decode of &lt; &gt; etc, because WYSIWYG editor works directly with HTML
+            //https://editor.datatables.net/reference/option/fields.entityDecode
+            entityDecode = Boolean.FALSE;
         }
 
         if (dataTableColumnType == DataTableColumnType.JSTREE) {
