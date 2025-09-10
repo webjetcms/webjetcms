@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.Date;
+import java.util.stream.Stream;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -163,5 +165,45 @@ public class AiTempFileStorage {
         }
 
         return newFileUrl;
+    }
+
+    public static void removeOldTempFiles(int hours) throws IOException {
+        Path tempFileFolder = getFileFolder();
+
+        Long timestamp = new Date().getTime() - (hours * 60 * 60 * 1000);
+
+        try (Stream<Path> paths = Files.walk(tempFileFolder)) {
+            paths
+                .filter(Files::isRegularFile)
+                .filter(p -> olderThat(p.getFileName().toString(), timestamp))
+                .forEach(p -> {
+                    try {
+                        //Separe try so it wont stop
+                        Files.delete(p);
+                    } catch (IOException e) {
+                        sk.iway.iwcm.Logger.error(e);
+                    }
+                });
+        }
+    }
+
+    private static boolean olderThat(String fileName, Long timestamp) {
+        try {
+            if(Tools.isEmpty(fileName) == true) return false;
+
+            //BAsic format of AI file name tmp-ai-img-01-ASSISTANT NAME-1757494092168-2153576467150330344.png
+            String[] arr = fileName.split("-");
+
+            //Last past is random generated number, but before that is timestamp of creation
+            Long fileTimestamp =  Tools.getLongValue(arr[arr.length - 2], -1L);
+
+            //Something wrong
+            if(fileTimestamp < 1) return false;
+
+            return fileTimestamp <= timestamp ? true : false;
+        } catch (Exception e) {
+            //Just in case
+            return false;
+        }
     }
 }
