@@ -380,7 +380,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             entity.setPassword("random");
         }
         entity.setRegDate(new Date(Tools.getNow()));
-        entity.setLastLogon(null);
+        entity.setLastLogonAsDate(null);
         super.beforeDuplicate(entity);
     }
 }
