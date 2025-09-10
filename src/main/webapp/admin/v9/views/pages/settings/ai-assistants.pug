@@ -2,6 +2,23 @@ extends ../../partials/layout
 
 block content
 
+    style.
+        tr.not-active td {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-active td div a {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-init td {
+            color: var(--bs-warning) !important;
+        }
+
+        tr.not-init td div a {
+            color: var(--bs-warning) !important;
+        }
+
     script.
         var aiAssistantsDataTable;
 
@@ -66,11 +83,11 @@ block content
                     });
 
                     $("#DTE_Field_description").on("blur", function() {
-                        getTranslatedKey($("#DTE_Field_description").val(), "translatedDescription");
+                        getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
                     });
 
                     $("#DTE_Field_userPromptLabel").on("blur", function() {
-                        getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "translatedUserPromptLabel");
+                        getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
                     });
 
                     eventsBinded = true;
@@ -131,9 +148,9 @@ block content
     style.
         div.DTE_Field_Name_instructions label { display: none; }
         textarea.textarea-code { white-space: pre-line !important; }
-        label[for='DTE_Field_translatedDescription'] { visibility: hidden; }
-        div.DTE_Field_Name_translatedDescription div.form-group-tooltip { display: none; }
-        label[for='DTE_Field_translatedUserPromptLabel'] { visibility: hidden; }
-        div.DTE_Field_Name_translatedUserPromptLabel div.form-group-tooltip { display: none; }
+        label[for='DTE_Field_editorFields-translatedDescription'] { visibility: hidden; }
+        div.DTE_Field_Name_editorFields-translatedDescription div.form-group-tooltip { display: none; }
+        label[for='DTE_Field_editorFields-translatedUserPromptLabel'] { visibility: hidden; }
+        div.DTE_Field_Name_editorFields-translatedUserPromptLabel div.form-group-tooltip { display: none; }
 
     <table class="datatableInit table"></table>

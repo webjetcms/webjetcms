@@ -20,6 +20,7 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 @Entity
 @Table(name = "ai_assistants")
@@ -52,15 +53,6 @@ public class AssistantDefinitionEntity implements Serializable {
         hidden = true
     )
     private String description;
-
-    @Transient
-    @DataTableColumn(
-        inputType = DataTableColumnType.DISABLED,
-        title = "components.ai_assistants.description",
-        tab = "basic",
-        filter = false
-    )
-    private String translatedDescription;
 
     @Column(name = "icon")
     @DataTableColumn(inputType = DataTableColumnType.ICON, title = "components.ai_assistants.icon", tab = "basic")
@@ -179,7 +171,6 @@ public class AssistantDefinitionEntity implements Serializable {
     @NotBlank
     private String instructions;
 
-
     /* ADVANCED tab */
 
     @Column(name = "keep_html")
@@ -204,14 +195,8 @@ public class AssistantDefinitionEntity implements Serializable {
     private String userPromptLabel;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", className = "wrap", filter = false,
-        editor = {
-            @DataTableColumnEditor(
-                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
-            )
-        }
-    )
-    private String translatedUserPromptLabel;
+	@DataTableColumnNested
+	private AssistantDefinitionEditorFields editorFields = null;
 
     @Column(name="domain_id")
 	private Integer domainId;

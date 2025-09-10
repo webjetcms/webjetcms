@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEditorFields;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
@@ -94,13 +95,7 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
             if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getFieldFrom() )) assistant.setFieldFrom("");
             if(AiAssistantsService.EMPTY_VALUE.equals( assistant.getFieldTo() )) assistant.setFieldTo("");
 
-            if(Tools.isNotEmpty(assistant.getDescription())) {
-                assistant.setTranslatedDescription( getProp().getText(assistant.getDescription()) );
-            }
-
-            if(Tools.isNotEmpty(assistant.getUserPromptLabel())) {
-                assistant.setTranslatedUserPromptLabel( getProp().getText(assistant.getUserPromptLabel()) );
-            }
+            processFromEntity(assistant, null);
         }
 
         return assistant;
@@ -147,12 +142,11 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public AssistantDefinitionEntity processFromEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
-        if(Tools.isNotEmpty(entity.getDescription())) {
-            entity.setTranslatedDescription( getProp().getText(entity.getDescription()) );
-        }
 
-        if(Tools.isNotEmpty(entity.getUserPromptLabel())) {
-            entity.setTranslatedUserPromptLabel( getProp().getText(entity.getUserPromptLabel()) );
+        if(entity != null ) {
+            AssistantDefinitionEditorFields adef = entity.getEditorFields();
+            if(adef == null) adef = new AssistantDefinitionEditorFields();
+            adef.fromAssistantDefinition(entity, aiAssistantsService.getAssistantStatus(entity.getProvider()),  getProp());
         }
 
         return entity;
