@@ -9,6 +9,14 @@ Scenario('base tests', async ({I, DTE, DataTables}) => {
 
     I.say("Check elements");
 
+    I.seeElement("#aiStatDataTable_extfilter");
+    within("#aiStatDataTable_extfilter", () => {
+        I.seeElement("div.dt-extfilter-created");
+        I.seeElement("div.dt-extfilter-assistantAction");
+        I.seeElement("div.dt-extfilter-assistantProvider");
+        I.seeElement("div.dt-extfilter-assistantGroupName");
+    });
+
     within("#graphsDiv > div:nth-child(1) > div:nth-child(1)", () => {
         I.seeElement( locate("h6.amchart-header").withText("Najčastejšie používaný AI asistenti") );
         I.seeElement( locate("#ai-pieChartMostUsed > div").withChild("div.am5-html-container") );
