@@ -2,7 +2,11 @@ package sk.iway.iwcm.components.ai.rest;
 
 import static sk.iway.iwcm.components.ai.jpa.SupportedActions.doesSupportAction;
 
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -11,6 +15,8 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -229,5 +235,47 @@ public class AiService {
 
     private String getNotFoundAssistantErr(Prop prop) {
         return prop.getText("components.ai_assistants.not_found");
+    }
+
+    public String checkExistance(String fileLocation, String currentName, String generatedName) throws IOException {
+        JSONArray response = new JSONArray();
+
+        if(Tools.isEmpty(fileLocation) == true) throw new IOException("XX");
+
+        Path location = Paths.get( Tools.getRealPath(fileLocation) );
+
+        if (Files.notExists(location)) {
+            //In this scenario ... location do not exist YET, so no re-write can happen
+            putAnswer(response, currentName, false);
+            putAnswer(response, generatedName, false);
+            return response.toString();
+        }
+
+        if (Files.isDirectory(location) == false) throw new IOException("Location is not a dicrectory");
+
+        putAnswer(response, currentName, containFileName(location, currentName));
+        putAnswer(response, generatedName, containFileName(location, generatedName));
+
+        return response.toString();
+    }
+
+    private void putAnswer(JSONArray response, String name, boolean doExist) {
+        JSONObject newObject = new JSONObject();
+        newObject.put("name", name);
+        newObject.put("doExist", doExist);
+        response.put(newObject);
+    }
+
+    private boolean containFileName(Path location, String targetName) throws IOException {
+        try (var stream = Files.list(location)) {
+            return stream
+                .filter(Files::isRegularFile)
+                .map(path -> path.getFileName().toString())
+                .map(name -> {
+                    int dotIndex = name.lastIndexOf('.');
+                    return (dotIndex == -1) ? name : name.substring(0, dotIndex);
+                })
+                .anyMatch(baseName -> baseName.equalsIgnoreCase(targetName));
+        }
     }
 }

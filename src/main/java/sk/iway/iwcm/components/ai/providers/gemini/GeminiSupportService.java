@@ -16,7 +16,7 @@ import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 
 public class GeminiSupportService {
 
-    protected static final String AUTH_KEY = "ai_gemini_auth_key";
+    protected static final String AUTH_KEY = "ai_geminiAuthKey";
     protected static final String SERVICE_NAME = "GeminiService";
 
     protected void handleUsage(AssistantResponseDTO responseDto, JSONObject source, int addTokens, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {

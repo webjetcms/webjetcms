@@ -140,4 +140,15 @@ public class AssistantController {
     private String getErrMsg(String errMsg, HttpServletRequest request) {
         return errMsg;
     }
+
+    @GetMapping("/check-name-location/")
+    public AssistantResponseDTO checkFileNamesLocationCombo(@RequestParam("fileLocation") String fileLocation, @RequestParam("currentName") String currentName, @RequestParam("generatedName") String generatedName) {
+        AssistantResponseDTO response = new AssistantResponseDTO();
+        try {
+            response.setResponse( aiService.checkExistance(fileLocation, currentName, generatedName) );
+        } catch (IOException ex) {
+            response.setError( ex.getMessage() );
+        }
+        return response;
+    }
 }

@@ -28,7 +28,7 @@ import sk.iway.iwcm.utils.Pair;
 
 public interface AiInterface {
 
-    static final String GENERATE_FILE_NAME_KEY = "ai_generate_file_name_prompt";
+    static final String GENERATE_FILE_NAME_KEY = "ai_generateFileNamePrompt";
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request);
 

@@ -46,6 +46,21 @@ export class AiUserInterface {
             window.lastToast = this.lastToast;
             contentContainer = $("#toast-container-ai-content");
             this.$progressElement = $("#toast-container-ai").find(".toast-progress");
+
+                // Container with action buttons for handling existing file name conflicts
+                const $nameSelection = $(`
+                    <div id="toast-ai-name-selection" class="ai-name-selection" style="display:none">
+                        <button class="btn btn-primary" id="rewrite">
+                            ${WJ.translate("components.ai_assistants.saveFile.rewrite.js")}
+                        </button>
+                        <button class="btn btn-primary" id="rename"></button>
+                        <button class="btn btn-primary" id="back">
+                            ${WJ.translate("components.ai_assistants.saveFile.back.js")}
+                        </button>
+                    </div>
+                `);
+
+                $(".toast-message").append($nameSelection);
         }
 
         //set default header
@@ -128,6 +143,9 @@ export class AiUserInterface {
             //success replace whole content with success message
             chatErrorContainer = null;
         } else if ("components.ai_assistants.unknownError.js" === textKey) {
+            statusClass = "ai-status-error";
+            icon = "help-circle";
+        } else if ("components.ai_assistants.saveFile.unknownError.js" === textKey) {
             statusClass = "ai-status-error";
             icon = "help-circle";
         }
@@ -485,16 +503,101 @@ export class AiUserInterface {
 
         const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai_assistants.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {
-            this._saveAndSetImage(button, toField);
+            this._chooseNameAndSaveImage(generatedImageName, button, toField);
         });
         buttonDiv.append(imageButton);
 
         if (images.length>0) this._selectImage(images[0]);
     }
 
-    _selectImage(imageName) {
-        //console.log("Selected image:", imageName);
+    _chooseNameAndSaveImage(generatedImageName, button, toField) {
+        let self = this;
+        let imageName = $("#generated-image-name").val();
+        let imageLocation = $("#editorAppimageLocation").find("input").val();
 
+        //Hide part to select image
+        $("#toast-container-ai-content").hide();
+
+        $.ajax({
+            type: "GET",
+            url: "/admin/rest/ai/assistant/check-name-location/",
+            data: {
+                "fileLocation": imageLocation,
+                "currentName": imageName,
+                "generatedName": generatedImageName
+            },
+            success: function(res)
+            {
+                if (res && res.error) {
+                    self.setCurrentStatus("components.ai_assistants.saveFile.unknownError.js", false, res.error);
+                    $("#toast-container-ai-content").show();
+                    return;
+                }
+
+                let currentNameExist = false;
+                let generatedNameExist = false;
+                let arr = JSON.parse(res.response);
+
+                for(let i = 0; i < arr.length; i++) {
+                    if(imageName === arr[i].name) {
+                        currentNameExist = arr[i].doExist;
+                    }
+
+                    if(generatedImageName === arr[i].name) {
+                        generatedNameExist = arr[i].doExist;
+                    }
+                }
+
+                if(currentNameExist === true) {
+                    //Current name exist, we must show options too user
+                    $("#toast-ai-name-selection").css({ display: "grid" });
+
+                    let buttonRewrite = $("#toast-ai-name-selection").find("#rewrite");
+                    let buttonBack = $("#toast-ai-name-selection").find("#back");
+
+                    buttonRewrite.on("click", () => {
+                        self._saveAndSetImage(button, toField, imageName, imageLocation);
+                        $("#toast-ai-name-selection").hide();
+                        $("#toast-container-ai-content").show();
+                        return;
+                    });
+
+                    buttonBack.on("click", () => {
+                        $("#toast-ai-name-selection").hide();
+                        $("#toast-container-ai-content").show();
+                        return;
+                    });
+
+                    let buttonRename = $("#toast-ai-name-selection").find("#rename");
+                    if(generatedNameExist === false) {
+                        buttonRename.show();
+                        buttonRename.text(WJ.translate("components.ai_assistants.saveFile.rename.js", generatedImageName));
+
+                        // Back button action: hide the name selection panel and show original content again
+                        buttonRename.on("click", () => {
+                            self._saveAndSetImage(button, toField, generatedImageName, imageLocation);
+                            $("#toast-ai-name-selection").hide();
+                            $("#toast-container-ai-content").show();
+                            return;
+                        });
+                    } else {
+                        buttonRename.hide();
+                    }
+                } else {
+                    self._saveAndSetImage(button, toField, imageName, imageLocation);
+                    $("#toast-ai-name-selection").hide();
+                    $("#toast-container-ai-content").show();
+                    return;
+                }
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+                self.setCurrentStatus("components.ai_assistants.saveFile.unknownError.js", false, res.error);
+                $("#toast-container-ai-content").show();
+            }
+        });
+    }
+
+    _selectImage(imageName) {
         $("div.button-div").show();
         $("div.image-info").show();
 
@@ -502,11 +605,9 @@ export class AiUserInterface {
         $("div.image-preview").find('img[alt="' + imageName + '"]').addClass("selected");
     }
 
-    _saveAndSetImage(button, toField) {
+    _saveAndSetImage(button, toField, imageName, imageLocation) {
         let self = this;
         let tempFileName = $(".image-preview").find("img.selected").attr("alt");
-        let imageName = $("#generated-image-name").val();
-        let imageLocation = $("#editorAppimageLocation").find("input").val();
 
         $.ajax({
             type: "POST",
