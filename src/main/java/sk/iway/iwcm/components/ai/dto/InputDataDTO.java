@@ -14,6 +14,9 @@ import sk.iway.iwcm.Tools;
 
 import org.apache.http.entity.ContentType;
 
+/**
+ * DTO for AI assistant input data
+ */
 @Getter
 @Setter
 public class InputDataDTO {

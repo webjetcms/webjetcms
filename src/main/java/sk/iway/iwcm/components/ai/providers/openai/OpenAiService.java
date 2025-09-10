@@ -51,6 +51,11 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Service for OpenAI assistants - handles calls to OpenAI API
+ * We do not use any official SDK, but rather direct REST calls, so its easy to maintain and we can see what is going on.
+ * docs: https://platform.openai.com/docs/api-reference
+ */
 @Service
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
@@ -123,13 +128,15 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 handleErrorMessage(response, prop, SERVICE_NAME, "getAiStreamResponse");
 
             HttpEntity entity = response.getEntity();
-            InputStream inputStream = entity.getContent();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
-            streamHandler.handleBufferedReader(reader, writer);
+            try (InputStream inputStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8))) {
 
-            //
-            handleUsage(responseDto, streamHandler.getUsageChunk(), 0, assistant, streamHandler.getRunId(), statRepo, request);
+                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
+                streamHandler.handleBufferedReader(reader, writer);
+
+                //
+                handleUsage(responseDto, streamHandler.getUsageChunk(), 0, assistant, streamHandler.getRunId(), statRepo, request);
+            }
         }
 
         return responseDto;

@@ -35,6 +35,9 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Service for AI statistics - handles data processing for stats section/graphs
+ */
 @Service
 public class AiStatService {
 
@@ -246,7 +249,7 @@ public class AiStatService {
     public static List<AiStatEntity> fillStatEntities(List<AiStatEntity> entities, AssistantDefinitionRepository repo) {
         if(repo == null) throw new IllegalStateException("AssistantDefinitionRepository is not provided");
 
-        //Get assistants fromcache/db and put into map
+        //Get assistants from cache/db and put into map
         Map<Long, AssistantDefinitionEntity> assistantsMap = new HashMap<>();
         for(AssistantDefinitionEntity assistant : AiAssistantsService.getAssistantsFromDB(repo)) {
             assistantsMap.put(assistant.getId(), assistant);
@@ -272,7 +275,7 @@ public class AiStatService {
                 String userName = cachedUsersNames.get(userId);
                 if(userName == null) {
                     UserDetails user = UsersDB.getUserCached(userId);
-                    userName = (user == null) ? "UKNOWN" : user.getFullName();
+                    userName = (user == null) ? "UNKNOWN" : user.getFullName();
                     cachedUsersNames.put(userId, userName);
                 }
 

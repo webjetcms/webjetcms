@@ -12,6 +12,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Service for OpenAI assistants - handles provider specific options
+ */
 @Service
 public class OpenAiAssistantsService extends OpenAiSupportService implements AiAssitantsInterface {
 

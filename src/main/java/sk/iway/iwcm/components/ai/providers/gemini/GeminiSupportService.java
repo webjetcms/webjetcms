@@ -14,6 +14,9 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 
+/**
+ * Support service for Gemini AI model integration - common methods
+ */
 public class GeminiSupportService {
 
     protected static final String AUTH_KEY = "ai_geminiAuthKey";
@@ -110,7 +113,7 @@ public class GeminiSupportService {
     }
 
     protected <T extends HttpRequestBase> void setHeaders(T http, HttpServletRequest request) {
-        String apiKey = Constants.getString(AUTH_KEY);
+        String apiKey = getApiKey();
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("Gemini API key is not set.");
         http.setHeader("Content-Type", "application/json; charset=utf-8");
         http.setHeader("x-goog-api-key", apiKey);
@@ -122,5 +125,9 @@ public class GeminiSupportService {
         JSONObject firstCandidate = candidates.getJSONObject(0);
         JSONObject content = firstCandidate.getJSONObject("content");
         return content.getJSONArray("parts");
+    }
+
+    public static String getApiKey() {
+        return Constants.getString(AUTH_KEY);
     }
 }

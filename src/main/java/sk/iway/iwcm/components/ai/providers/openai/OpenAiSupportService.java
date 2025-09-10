@@ -6,6 +6,9 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 
+/**
+ * Support service for OpenAI integration - common methods
+ */
 public abstract class OpenAiSupportService {
 
     protected static final String MODELS_URL = "https://api.openai.com/v1/models";
@@ -44,6 +47,12 @@ public abstract class OpenAiSupportService {
         return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    /**
+     * Generates HTML select element for image size options based on the model.
+     * @param model
+     * @param prop
+     * @return
+     */
     protected String getImageSizeSelect(String model, Prop prop) {
         if(Tools.isEmpty(model)) return "";
         String square = prop.getText("components.gallery.tui-image-editor.Square");

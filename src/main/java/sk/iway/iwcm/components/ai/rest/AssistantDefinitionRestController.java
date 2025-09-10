@@ -25,6 +25,9 @@ import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
+/**
+ * REST controller for AI assistant definitions - handles datatable requests
+ */
 @RestController
 @RequestMapping("/admin/rest/ai/assistant-definition/")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_tools')")

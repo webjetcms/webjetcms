@@ -4,14 +4,12 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
@@ -19,8 +17,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Table(name = "ai_stats")
 @Getter
 @Setter
-@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_AI)
+//DO NOT set EntityListeners for audit - we don't need to audit stat writing events
 public class AiStatEntity {
 
     @Id

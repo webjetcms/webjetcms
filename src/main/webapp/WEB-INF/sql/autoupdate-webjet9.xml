@@ -1967,7 +1967,7 @@
                             id INT IDENTITY(1,1) PRIMARY KEY NOT NULL,
                             name NVARCHAR(255) NOT NULL,
                             description NVARCHAR(255),
-                            action NVARCHAR(255) NOT NULLL,
+                            action NVARCHAR(255) NOT NULL,
                             class_name NVARCHAR(255) NOT NULL,
                             field_from NVARCHAR(255),
                             field_to NVARCHAR(255) NOT NULL,
@@ -2055,7 +2055,7 @@
                             keep_html BOOLEAN DEFAULT FALSE,
                             use_streaming BOOLEAN DEFAULT FALSE,
                             use_temporal BOOLEAN DEFAULT FALSE,
-                            active NUMBER(1) DEFAULT 1,
+                            active BOOLEAN DEFAULT TRUE,
 
                             domain_id INT DEFAULT 1 NOT NULL
                         );
@@ -2110,7 +2110,7 @@
                                     val INTEGER|
                                 BEGIN
                                     IF :new.id IS NULL THEN
-                                        SELECT S_open_ai_stats.nextval into val FROM dual|
+                                        SELECT S_ai_stats.nextval into val FROM dual|
                                         :new.id:= val|
                                     END IF|
                                 END|

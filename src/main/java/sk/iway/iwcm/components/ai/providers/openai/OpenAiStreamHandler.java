@@ -6,6 +6,9 @@ import java.io.PrintWriter;
 
 import org.json.JSONObject;
 
+/**
+ * Handler for streaming responses from OpenAI API
+ */
 public class OpenAiStreamHandler {
 
     private enum STREAM_STATUS {

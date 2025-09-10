@@ -8,6 +8,9 @@ import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 
+/**
+ * Handles datatable.column.ai JSON data for AI assistants
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter

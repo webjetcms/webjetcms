@@ -29,6 +29,18 @@
                 display: none;
             }
 
+            .quill-wrapper {
+                .ql-formats {
+                    .btn-ai {
+                        padding-top: 3px;
+                        padding-bottom: 3px;
+                    }
+                    .ti-loader {
+                        font-size: 18px !important;
+                    }
+                }
+            }
+
             &.ai-loading {
                 .btn-ai {
                     background-color: var(--wj-ai-color-hover);

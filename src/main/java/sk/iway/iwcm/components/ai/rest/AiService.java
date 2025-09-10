@@ -35,6 +35,9 @@ import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Main service for AI assistants - handles calls to specific providers
+ */
 @Service
 public class AiService {
 
