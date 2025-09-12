@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.datatable.json;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -26,9 +25,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
-import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
-import sk.iway.iwcm.components.ai.rest.AssistantDefinitionRestController;
+import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
@@ -74,6 +71,10 @@ public class DataTableColumn {
 
     //https://editor.datatables.net/reference/option/fields.entityDecode
     private Boolean entityDecode = null;
+
+    public DataTableColumn() {
+        //default constructor
+    }
 
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
@@ -327,56 +328,7 @@ public class DataTableColumn {
 
     @SuppressWarnings("rawtypes")
     private void setAiPropertiesFromField(Class controller, Field field, Prop prop) {
-        try {
-            String toField = field.getName();
-
-            List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, this, controller.getName());
-
-            //sort assistants by group and name
-            assistants.sort(
-                Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
-                        .thenComparing(AssistantDefinitionEntity::getName)
-            );
-
-            if(assistants != null && assistants.size() > 0) {
-                ai = new ArrayList<>();
-
-                for (AssistantDefinitionEntity ade : assistants) {
-                    DataTableAi ai = new DataTableAi();
-                    ai.setAssistantId(ade.getId());
-                    ai.setFrom(ade.getFieldFrom());
-                    ai.setTo(toField);
-                    if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
-                    else ai.setDescription(prop.getText(ade.getDescription()));
-                    ai.setProvider(ade.getProvider());
-
-                    String providerTitleKey = "components.ai_assistants.provider."+ade.getProvider()+".title";
-                    String providerTitle = prop.getText(providerTitleKey);
-                    if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
-                    ai.setProviderTitle(providerTitle);
-
-                    ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
-                    ai.setAction(ade.getAction());
-
-                    String groupName = ade.getGroupName();
-                    ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + groupName));
-                    ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
-                    ai.setUserPromptLabel(ade.getUserPromptLabel());
-                    ai.setIcon(ade.getIcon());
-                    if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
-
-                    if ("browser".equals(ai.getProvider())) {
-                        //we need instructions to execute local AI in browser
-                        ai.setInstructions(ade.getInstructions());
-                    }
-                    if (ai.isEmpty()==false) {
-                        this.ai.add(ai);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Logger.error(DataTableAi.class, "Error setting properties", e);
-        }
+        ai = AiService.getAiAssistantsForField(field.getName(), controller.getName(), this, prop);
     }
 
     /**

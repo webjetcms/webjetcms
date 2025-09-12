@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.Date;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -17,9 +18,12 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.ImageTools;
+import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
@@ -132,6 +136,19 @@ public class AiTempFileStorage {
         Path tempFileFolder = getFileFolder();
         Path tempFilePath = tempFileFolder.resolve(tempFileName);
 
+        String tempFileExt = FileTools.getFileExtension(tempFileName);
+        String fileNameExt = FileTools.getFileExtension(fileName);
+        fileName = FileTools.getFileNameWithoutExtension(fileName);
+        if (("jpg".equals(fileNameExt) || "jpeg".equals(fileNameExt)) && "png".equals(tempFileExt)) {
+            //convert tempFile from png to jpg
+            String convertedImageName = ImageTools.convertImageFormat(new IwcmFile(tempFilePath.toFile()), fileNameExt);
+            if (convertedImageName != null) {
+                tempFileName = convertedImageName;
+                tempFileExt = fileNameExt;
+                tempFilePath = tempFileFolder.resolve(tempFileName);
+            }
+        }
+
         if (Files.notExists(tempFilePath))
             throw new IOException(prop.getText(NOT_FOUND_ERR));
 
@@ -144,7 +161,7 @@ public class AiTempFileStorage {
         String path = destinationFolder;
         if(destinationFolder.endsWith("/") == false) path += "/";
 
-        String newFileUrl = path + fileName + "." + tempFileName.substring(tempFileName.lastIndexOf('.') + 1);
+        String newFileUrl = path + fileName + "." + tempFileExt;
         IwcmFile newRealFile = new IwcmFile( Tools.getRealPath(newFileUrl) );
 
         IwcmFsDB.writeFiletoDest(tempFileIS, new File(newRealFile.getAbsolutePath()), Tools.safeLongToInt(tempFile.getLength()));
@@ -161,6 +178,9 @@ public class AiTempFileStorage {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        //handle gallery
+        UploadFileTools.handleGallery(newRealFile, new Date());
 
         return newFileUrl;
     }

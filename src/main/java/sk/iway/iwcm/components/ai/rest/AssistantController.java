@@ -2,6 +2,7 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +23,8 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.system.datatable.json.DataTableAi;
+import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 
 /**
  * REST controller for AI assistants - handles XHR requests from UI
@@ -135,7 +138,7 @@ public class AssistantController {
         return aiService.getBonusHtml(assistantId, assistantRepo, request);
     }
 
-    @GetMapping("/new-image-location/")
+    @PostMapping("/new-image-location/")
     public String getNewImageLocation(@RequestParam("docId") Integer docId, @RequestParam("groupId") Integer groupId, @RequestParam("title") String title) {
         return UploadFileTools.getPageUploadSubDir(docId, groupId, title, "/images");
     }
@@ -153,5 +156,18 @@ public class AssistantController {
             response.setError( ex.getMessage() );
         }
         return response;
+    }
+
+    @PostMapping("/other-button-column/")
+    public DataTableColumn getOtherButtonData(@RequestParam String fieldName, @RequestParam String javaClassName, @RequestParam String renderFormat, HttpServletRequest request) {
+        //create fake DatatableColumn for passing to service
+        DataTableColumn column = new DataTableColumn();
+        column.setName(fieldName);
+        column.setRenderFormat(renderFormat);
+
+        List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
+        column.setAi(ai); //set also to column for future use
+
+        return column;
     }
 }

@@ -731,7 +731,10 @@ V databáze pre penetračné testy je potrebné používateľom zakázať menu p
 INSERT INTO `user_disabled_items` (`user_id`, `item_name`)
 VALUES
 	(18, 'users.edit_admins'),
-    (1827, 'users.edit_admins');
+    (18, 'conf.show_all_variables'),
+    (1827, 'users.edit_admins'),
+    (1827, 'conf.show_all_variables');
+UPDATE _conf_ SET value='' WHERE name='adminEnableIPs';
 ```
 
 ## Testovanie REST služieb

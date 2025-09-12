@@ -4213,6 +4213,20 @@ public class GalleryDB
 		}
 	}
 
+	public static boolean clearInterestPoint(String dir, String name)
+	{
+		try
+		{
+			new SimpleQuery().execute("UPDATE gallery SET selected_x=NULL, selected_y=NULL, selected_width=NULL, selected_height=NULL WHERE image_path = ? AND image_name = ?"+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);
+			return true;
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+			return false;
+		}
+	}
+
 	/**
 	 * Konvertuje obrazok na JPG
 	 * @param f

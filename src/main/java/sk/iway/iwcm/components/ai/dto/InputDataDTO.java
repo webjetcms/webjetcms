@@ -71,6 +71,12 @@ public class InputDataDTO {
         if(inputValueType.equals(InputValueType.IMAGE)) {
             if(Tools.isEmpty(inputValue)) throw new IllegalStateException("No imagePath provided.");
 
+            //remove /thumb prefix if exists
+            if (inputValue.startsWith("/thumb")) inputValue = inputValue.substring("/thumb".length());
+            //remove any parameters
+            int pos = inputValue.indexOf("?");
+            if (pos != -1) inputValue = inputValue.substring(0, pos);
+
             String realPath = Tools.getRealPath(inputValue);
             File fileImage = new File(realPath);
 

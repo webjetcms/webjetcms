@@ -18,7 +18,7 @@ export class EditorAi {
     undoField = null;
 
     //constructor
-    constructor(EDITOR) {
+    constructor(EDITOR, bindEvents = true) {
         this.EDITOR = EDITOR;
         //console.log("EditorAi instance created, editor=", this.EDITOR);
         this.aiBrowserExecutor = new AiBrowserExecutor(EDITOR, this);
@@ -28,7 +28,9 @@ export class EditorAi {
 
         this.aiUserInterface = new AiUserInterface(EDITOR, this);
 
-        this.bindEvents();
+        if (bindEvents) {
+            this.bindEvents();
+        }
     }
 
     bindEvents() {
@@ -102,6 +104,25 @@ export class EditorAi {
         });
     }
 
+    //bind buttons by class/data attributes outside of Datatables Editor
+    bindOtherButtons() {
+        let inputFields = $(".ai-field");
+        inputFields.each((index, element) => {
+            let inputField = $(element);
+
+            //if it doesnt have input-group, wrap it
+            if (inputField.parents(".input-group").length === 0) {
+                inputField.wrap('<div class="input-group"></div>');
+            }
+
+            //if it doesnt have ti-sparkles button add it
+            if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
+                const button = this._getOtherButton(inputField);
+                inputField.parents(".input-group").append(button);
+            }
+        });
+    }
+
     _getEditorButton(column, appendClass) {
         let buttonHTML = '<button class="btn btn-outline-secondary btn-ai'
         if (appendClass != null && appendClass != "") buttonHTML += " " + appendClass;
@@ -113,9 +134,21 @@ export class EditorAi {
         return button;
     }
 
-    _getColumnType(editor, fieldName) {
-        let className = editor?.field(fieldName)?.s?.opts?.className ?? "";
-        let renderFormat = editor?.field(fieldName)?.s?.opts?.renderFormat ?? "";
+    _getOtherButton(inputField, appendClass=null) {
+        let buttonHTML = '<button class="btn btn-outline-secondary btn-ai'
+        if (appendClass != null && appendClass != "") buttonHTML += " " + appendClass;
+        buttonHTML += '" type="button" data-toggle="tooltip" title="'+WJ.translate('components.ai_assistants.editor.btn.tooltip.js')+'"><i class="ti ti-sparkles"></i><i class="ti ti-loader"></i></button>';
+        const button = $(buttonHTML);
+        button.on('click', () => {
+            this.aiUserInterface.generateOtherAssistentOptions(inputField);
+            this.aiUserInterface.getPathForNewImage();
+        });
+        return button;
+    }
+
+    _getColumnType(column, fieldName) {
+        let className = column.className ?? "";
+        let renderFormat = column.renderFormat ?? "";
 
         if(className.indexOf("image") != -1 || renderFormat.indexOf("dt-format-image") != -1) return "image";
         return "text";
@@ -238,7 +271,7 @@ export class EditorAi {
             inputData = inputValues;
         }
         //Add other values
-        inputData.inputValueType = this._getColumnType(this.EDITOR, aiCol.to);
+        inputData.inputValueType = this._getColumnType(column, aiCol.to);
 
         //console.log(inputData);
 
@@ -320,7 +353,7 @@ export class EditorAi {
 
             inputData.inputValue = self.EDITOR.get(from);
             try {
-                if (self._getColumnType(self.EDITOR, aiCol.to) === "text") {
+                if (self._getColumnType(column, aiCol.to) === "text") {
                     self.undoField = {};
                     self.undoField.type = "field";
                     self.undoField.value = self.EDITOR.get(aiCol.to);

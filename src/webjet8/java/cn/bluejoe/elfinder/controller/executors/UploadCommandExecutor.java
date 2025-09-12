@@ -25,7 +25,6 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
-import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -500,25 +499,10 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					}
 				}
 
-				if (FileTools.isImage(newFileIwcm.getName())) {
-					if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {
-						//we must replace o_ file because it will be used in resize process instead of new file
-						IwcmFile orig = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/o_"+fileName));
-						if (orig.exists()) {
-							FileTools.copyFile(newFileIwcm, orig);
-						}
-
-						GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir.getPath()+directory);
-						added.add(new FsItemEx(dir, "s_"+fileName));
-						added.add(new FsItemEx(dir, "o_"+fileName));
-					} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
-						GalleryDB.setImage(dir.getPath()+directory, fileName);
-					}
-
-					//zapise datum vytvorenia fotografie (ak vieme ziskat)
-					if (dateCreated != null) {
-						GalleryDB.setUploadDateImage(dir.getPath()+directory, fileName, dateCreated.getTime());
-					}
+				List<String> galleryAdded = UploadFileTools.handleGallery(newFileIwcm, dateCreated);
+				for (String s : galleryAdded) {
+					FsItemEx fsItem = new FsItemEx(dir, s);
+					added.add(fsItem);
 				}
 
 				//ak existuje adresar files, treba indexovat

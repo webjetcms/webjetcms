@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -32,6 +34,8 @@ import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.OptionDto;
+import sk.iway.iwcm.system.datatable.json.DataTableAi;
+import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
@@ -270,6 +274,8 @@ public class AiService {
     }
 
     private boolean containFileName(Path location, String targetName) throws IOException {
+        //compare only names without extension
+        final String targetNameNoExt = FileTools.getFileNameWithoutExtension(targetName);
         try (var stream = Files.list(location)) {
             return stream
                 .filter(Files::isRegularFile)
@@ -278,7 +284,59 @@ public class AiService {
                     int dotIndex = name.lastIndexOf('.');
                     return (dotIndex == -1) ? name : name.substring(0, dotIndex);
                 })
-                .anyMatch(baseName -> baseName.equalsIgnoreCase(targetName));
+                .anyMatch(baseName -> baseName.equalsIgnoreCase(targetNameNoExt));
         }
+    }
+
+    public static List<DataTableAi> getAiAssistantsForField(String toField, String javaClassName, DataTableColumn column, Prop prop) {
+        List<DataTableAi> aiList = new ArrayList<>();
+        try {
+            List<AssistantDefinitionEntity> assistants = AiAssistantsService.getAssistantAndFieldFrom(toField, column, javaClassName);
+
+            //sort assistants by group and name
+            assistants.sort(
+                Comparator.comparing(AssistantDefinitionEntity::getGroupName, Comparator.nullsFirst(String::compareTo))
+                        .thenComparing(AssistantDefinitionEntity::getName)
+            );
+
+            if(assistants != null && assistants.size() > 0) {
+
+                for (AssistantDefinitionEntity ade : assistants) {
+                    DataTableAi ai = new DataTableAi();
+                    ai.setAssistantId(ade.getId());
+                    ai.setFrom(ade.getFieldFrom());
+                    ai.setTo(toField);
+                    if (Tools.isEmpty(ade.getDescription())) ai.setDescription(ade.getName());
+                    else ai.setDescription(prop.getText(ade.getDescription()));
+                    ai.setProvider(ade.getProvider());
+
+                    String providerTitleKey = "components.ai_assistants.provider."+ade.getProvider()+".title";
+                    String providerTitle = prop.getText(providerTitleKey);
+                    if (providerTitleKey.equals(providerTitle)) providerTitle = ade.getProvider();
+                    ai.setProviderTitle(providerTitle);
+
+                    ai.setUseStreaming(Tools.isTrue(ade.getUseStreaming()));
+                    ai.setAction(ade.getAction());
+
+                    String groupName = ade.getGroupName();
+                    ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + groupName));
+                    ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
+                    ai.setUserPromptLabel(ade.getUserPromptLabel());
+                    ai.setIcon(ade.getIcon());
+                    if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
+
+                    if ("browser".equals(ai.getProvider())) {
+                        //we need instructions to execute local AI in browser
+                        ai.setInstructions(ade.getInstructions());
+                    }
+                    if (ai.isEmpty()==false) {
+                        aiList.add(ai);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Logger.error(DataTableAi.class, "Error setting properties", e);
+        }
+        return aiList;
     }
 }

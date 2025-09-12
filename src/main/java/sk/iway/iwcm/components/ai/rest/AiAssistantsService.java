@@ -28,7 +28,6 @@ import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for AI Assistants management / datatables, editor

@@ -122,6 +122,38 @@ export class AiUserInterface {
         }
     }
 
+    async generateOtherAssistentOptions(button) {
+        let datatableColumn = null;
+        await $.ajax({
+            type: "POST",
+            url: "/admin/rest/ai/assistant/other-button-column/",
+            data: {
+                "fieldName": "txtUrl", //button.parent().find(".form-control").attr("name"),
+                "javaClassName": button.data("ai-java-class"),
+                "renderFormat": button.data("ai-render-format")
+            },
+            success: function(res)
+            {
+                //console.log("Other button AI assistants:", res);
+                if (res == null || res.ai == null || res.ai.length === 0) {
+                    console.warn("No AI assistants found for button:", button);
+                    return;
+                }
+                datatableColumn = res;
+
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+                console.error("Error loading AI assistants:", thrownError);
+            }
+        });
+
+        if (datatableColumn != null) {
+            this.generateAssistentOptions(button, datatableColumn);
+        } else {
+            this.setError(WJ.translate("components.ai_assistants.unknownError.js"));
+        }
+    }
+
     setCurrentStatus(textKey, pulsate = false, ...params) {
         let contentContainer = $("#toast-container-ai-content");
 
@@ -329,32 +361,48 @@ export class AiUserInterface {
         contentContainer.append(btn);
     }
 
-    async getPathForNewImage(self) {
+    async getPathForNewImage() {
         try {
-            //TODO: if current field has path /images/gallery/test-vela-foto/o_img04152.jpg preserve this path and file name (so replace existing image)
+            let docId = this.EDITOR.get("id");
+            let groupDetails = this.EDITOR.get("editorFields.groupDetails");
+            let title = this.EDITOR.get("title");
+            let groupId = null;
+            if (groupDetails != null) groupId = groupDetails.groupId;
 
-            const docId = self.EDITOR.get("id");
-            const groupId = self.EDITOR.get("editorFields.groupDetails");
-            const title = self.EDITOR.get("title");
+            if (typeof docId === "undefined" || docId == null) {
+                docId = window.parent.getCkEditorInstance().element.$.form.docId.value
+            }
+            if (typeof title === "undefined" || title == null) {
+                if (typeof getPageNavbar === "function") title = getPageNavbar();
+                else title = "";
+            }
+            if (typeof groupId === "undefined" || groupId == null) {
+                groupId = window.parent.getCkEditorInstance().element.$.form.groupId.value
+            }
 
-            //console.log("docId=", docId, "groupId=", groupId.groupId, "title=", title);
+            //console.log("docId=", docId, "groupDetails=", groupDetails, "title=", title);
 
-            let url = "/admin/rest/ai/assistant/new-image-location/?";
-            url += "docId=" + docId + "&groupId=" + groupId.groupId + "&title=" + title;
+            if (typeof docId !== "undefined" && typeof groupId !== "undefined" && typeof title !== "undefined" && docId != null && groupId != null && title != null) {
+                let url = "/admin/rest/ai/assistant/new-image-location/";
+                const res = await $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: {
+                        docId: docId,
+                        groupId: groupId,
+                        title: title
+                    }
+                });
 
-            const res = await $.ajax({
-                type: "GET",
-                url: url
-            });
+                if(res == undefined || res == null) return "/images/";
 
-            if(res == undefined || res == null) return "/images/";
-
-            return res;
+                return res;
+            }
         } catch(err) {
             //,aybe it's not DocDetails, we don't know docId/groupId
-            //console.log(err);
-            return "/images/";
+            console.log(err);
         }
+        return "/images/";
     }
 
     async renderImageSelection(button, images, generatedImageName,  toField, textKey, ...params) {
@@ -365,14 +413,21 @@ export class AiUserInterface {
         let imageName = 'ai-image';
 
         let actualValue = self.EDITOR.get(toField);
+
+        //remove /thumb prefix if exists
+        if (typeof actualValue != "undefined" && actualValue != null) {
+            if (actualValue.startsWith("/thumb")) actualValue = actualValue.substring("/thumb".length);
+            //remove any parameters
+            actualValue = actualValue.split("?")[0];
+        }
+
         if(actualValue != undefined && actualValue != null && actualValue.length && /^\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i.test(actualValue)) {
             //Use current location and name
             const lastIndex = actualValue.lastIndexOf("/");
             imageUrl = actualValue.substring(0, lastIndex + 1);
             imageName = actualValue.substring(lastIndex + 1);
-            imageName = imageName.split(".")[0];
         } else {
-            imageUrl = await this.getPathForNewImage(self);
+            imageUrl = await this.getPathForNewImage();
             if(generatedImageName != null && generatedImageName != undefined && generatedImageName.length) {
                 imageName = generatedImageName;
             }

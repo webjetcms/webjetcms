@@ -2,28 +2,39 @@
     transform: rotate(186deg);
 }
 
+.btn-ai {
+    .ti-sparkles {
+        color: var(--wj-ai-color);
+        display: inline-block;
+    }
+
+    .ti-loader {
+        display: none;
+        color: var(--wj-ai-color);
+    }
+
+    &:hover {
+        background-color: var(--wj-ai-color-hover);
+        .ti-sparkles {
+            transform: rotate(200deg);
+            transition: all 0.2s ease-in-out;
+        }
+    }
+}
+
+.cke_dialog_ui_input_text {
+    .btn-ai {
+        padding-top: 0px;
+        padding-bottom: 1px;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+}
+
 .modal {
     .DTE {
         .DTE_Field {
-            .btn-ai {
-                .ti-sparkles {
-                    color: var(--wj-ai-color);
-                    display: inline-block;
-                }
 
-                .ti-loader {
-                    display: none;
-                    color: var(--wj-ai-color);
-                }
-
-                &:hover {
-                    background-color: var(--wj-ai-color-hover);
-                    .ti-sparkles {
-                        transform: rotate(200deg);
-                        transition: all 0.2s ease-in-out;
-                    }
-                }
-            }
 
             .btn-ai-wysiwyg {
                 display: none;
@@ -108,6 +119,10 @@
     0% { transform: scale(1); }
     50% { transform: scale(1.02); }
     100% { transform: scale(1); }
+}
+
+.ai-field {
+    width: auto !important;
 }
 
 .ai-toast-zoom {
@@ -214,7 +229,7 @@
 
         div.toast-message {
             background-color: white;
-            max-height: 90vh;
+            max-height: 82vh; //because of bottom padding and small window in elfinder image dialog in editor
             overflow: auto;
 
             a {
