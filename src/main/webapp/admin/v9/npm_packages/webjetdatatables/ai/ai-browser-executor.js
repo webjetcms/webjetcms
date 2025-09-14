@@ -74,7 +74,7 @@ export class AiBrowserExecutor {
             }
         } catch (e) {
             console.log(e);
-            executionResult.error = e.message;
+            executionResult.errorText = e.message;
         }
 
         //console.log("executionResult:", executionResult);
