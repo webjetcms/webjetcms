@@ -1710,11 +1710,8 @@ export class DatatablesCkEditor {
 
 	setData(data) {
 		//console.log("Set data, instance=", this.ckEditorInstance, "data=", data);
-		if ("pageBuilder"===this.editingMode) {
-			//it's not possible to set new data into PB
-		} else {
-			this.ckEditorInstance.setData(data);
-		}
+		//WARNING: this property is not YET set, do not count on it: if ("pageBuilder"===this.editingMode) {
+		this.ckEditorInstance.setData(data);
 	}
 
 	getData() {

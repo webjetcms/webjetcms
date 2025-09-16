@@ -191,7 +191,7 @@ Scenario(' test Gemini AI text answers', async ({I, DT, DTE}) => {
         I.assertNotContain(valueC, defaultValue);
 });
 
-Scenario('@current test OpenAI AI image answers', async ({I, DT, DTE}) => {
+Scenario('test OpenAI AI image answers', async ({I, DT, DTE}) => {
     openPageAndPerexTab(I, DTE);
 
     kokosImage(I, "perexImage", "Odstrániť pozadie", "OpenAI", "ti.ti-photo-x");
