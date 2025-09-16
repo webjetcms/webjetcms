@@ -334,7 +334,7 @@ export class EditorAi {
                     //preserve status to executionResults
                     if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
                     if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
-                    if (editorExecutionResult.error != null) executionResult.error = editorExecutionResult.error;
+                    if (editorExecutionResult.errorText != null) executionResult.errorText = editorExecutionResult.errorText;
                     if (editorExecutionResult.success === true) successCount++;
 
                     if (editorExecutionResult.explanatoryText != null) {
@@ -371,8 +371,8 @@ export class EditorAi {
         if (executionResult == null) {
             self.setError();
         } else {
-            if (executionResult.error != null) {
-                self.setError(executionResult.error);
+            if (executionResult.errorText != null) {
+                self.setError(executionResult.errorText);
             } else if (executionResult.statusKey != null) {
                 self.setCurrentStatus(executionResult.statusKey, false, ...(executionResult.statusKeyParams ?? []));
             } else if (executionResult.success === true) {
