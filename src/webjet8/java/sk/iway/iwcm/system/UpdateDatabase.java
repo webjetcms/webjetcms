@@ -121,6 +121,8 @@ public class UpdateDatabase
 
 		updateInvoiceContacts();
 
+		updateStatErrorColumns();
+
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
 
@@ -2373,5 +2375,82 @@ public class UpdateDatabase
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}
+	}
+
+
+	public static void updateStatErrorColumns()
+	{
+		String note = "16.09.2025 [sivan] pridanie stlpca browser_ua_id do stat_error";
+		if (Constants.getBoolean("updateDisableFixBrowserId") || isAllreadyUpdated(note)) return;
+
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.YEAR, 1);
+		long to = cal.getTimeInMillis();
+		cal.set(Calendar.YEAR, 2000);
+		cal.set(Calendar.DATE, 1);
+		cal.set(Calendar.MONTH, Calendar.JANUARY);
+		long from = cal.getTimeInMillis();
+
+		String[] suffixes = StatNewDB.getTableSuffix(from, to);
+		for (int s=0; s<suffixes.length; s++)
+		{
+			try
+			{
+				Logger.println(UpdateDatabase.class, "Updating stat_error columns "+(s+1)+"/"+suffixes.length+" "+suffixes[s]);
+
+				db_conn = DBPool.getConnection();
+
+				StringBuilder sql = new StringBuilder("ALTER TABLE stat_error");
+				sql.append(suffixes[s]);
+				sql.append(' ');
+
+				if (Constants.DB_TYPE==Constants.DB_ORACLE) sql.append("ADD (browser_ua_id INT)");
+				else if (Constants.DB_TYPE==Constants.DB_MSSQL) sql.append("ADD browser_ua_id INT");
+				else sql.append("ADD browser_ua_id INT");
+
+				ps = db_conn.prepareStatement(sql.toString());
+				ps.execute();
+				ps.close();
+				ps = null;
+
+				//nastav prazdne hodnoty
+				sql = new StringBuilder("UPDATE stat_error");
+				sql.append(suffixes[s]);
+				sql.append(" SET browser_ua_id=0");
+
+				ps = db_conn.prepareStatement(sql.toString());
+				ps.execute();
+				ps.close();
+				db_conn.close();
+				ps = null;
+				db_conn = null;
+			}
+			catch (Exception ex)
+			{
+				if (ex.getMessage().indexOf("exist")==-1 && ex.getMessage().indexOf("duplicate")==-1)
+				{
+					sk.iway.iwcm.Logger.error(ex);
+				}
+			}
+			finally
+			{
+				try
+				{
+					if (ps != null)
+						ps.close();
+					if (db_conn != null)
+						db_conn.close();
+				}
+				catch (Exception ex2)
+				{
+				}
+			}
+		}
+
+		//zapis do DB, ze je to aktualizovane
+		saveSuccessUpdate(note);
 	}
 }
