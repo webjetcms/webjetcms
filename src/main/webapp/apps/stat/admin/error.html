@@ -36,6 +36,7 @@
             defaultSearch: ChartTools.getSearchCriteria(),
             onPreXhr: function(TABLE, e, settings, data) {
                 //console.log('onPreXhr, url=', $('#searchUrl').val());
+                data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
                 data.fixed_searchurl = $('#searchUrl').val();
             }
         });
@@ -54,6 +55,11 @@
             errorDataTable.ajax.reload();
         });
 
+        $("#botFilterOut").on("change", function() {
+            ChartTools.saveSearchCriteria(errorDataTable.DATA);
+            errorDataTable.ajax.reload();
+        });
+
         dtWJ.fixTableSize(errorDataTable);
     });
 </script>
@@ -64,6 +70,12 @@
     }
     th.dt-th-order form, th.dt-th-year form, th.dt-th-week form {
         display: none;
+    }
+    #errorDataTable > tbody > tr > td > div.datatable-column-width {
+        white-space: normal;
+        overflow: visible;
+        word-wrap: break-word;
+        word-break: break-word;
     }
 </style>
 <div id="errorDataTable_extfilter">
@@ -78,6 +90,13 @@
                 <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-url" type="submit">
                     <i class="ti ti-search"></i>
                 </button>
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="#{stat.withoutBots}">
+                <input id="botFilterOut" type="checkbox" class="form-check-input" value="true" />
+                <label for="botFilterOut" class="form-check-label is-icon-arrows-v"></label>
             </div>
         </div>
     </div>

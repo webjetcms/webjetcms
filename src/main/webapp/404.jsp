@@ -294,7 +294,7 @@ if (referer != null)
 }
 
 //zapis do logu
-StatDB.addError(statPath, referer);
+StatDB.addError(statPath, referer, request);
 
 if ("/components/gdpr/jscripts/jquery.cookie.js".equals(path)) {
 	//Bezpecnost - odstranena stara verzia jquery.cookie.js v aplikacii GDPR, nahradena verziou v _common adresari.

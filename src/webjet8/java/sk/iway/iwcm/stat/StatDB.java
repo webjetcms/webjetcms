@@ -647,7 +647,11 @@ public class StatDB extends DB
 	/**
 	 * Zapise chybu do databazy
 	 */
-	public static void addError(String url, String queryString)
+	public static void addError(String url, String queryString) {
+		addError(url, queryString, null);
+	}
+
+	public static void addError(String url, String queryString, HttpServletRequest request)
 	{
 		if ("none".equals(Constants.getString("statMode")))
 		{
@@ -664,10 +668,14 @@ public class StatDB extends DB
 		cal.setFirstDayOfWeek(Calendar.MONDAY);
 		int year = cal.get(Calendar.YEAR);
 		int week = cal.get(Calendar.WEEK_OF_YEAR);
-		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week, CloudToolsForCore.getDomainId()};
 
-		String update = "UPDATE stat_error"+StatNewDB.getTableSuffix("stat_error")+" SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week=? AND domain_id=?";
-		String insert = "INSERT INTO stat_error"+StatNewDB.getTableSuffix("stat_error")+" (url, query_string, year, week, domain_id, count) VALUES (?, ?, ?, ?, ?, 1)";
+		BrowserDetector browser = request == null ? null : BrowserDetector.getInstance(request);
+		Integer browserUaId = browser == null ? 0 : browser.getBrowserUaId();
+
+		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week, browserUaId, CloudToolsForCore.getDomainId()};
+
+		String update = "UPDATE stat_error"+StatNewDB.getTableSuffix("stat_error")+" SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week= ? AND browser_ua_id=? AND domain_id=?";
+		String insert = "INSERT INTO stat_error"+StatNewDB.getTableSuffix("stat_error")+" (url, query_string, year, week, browser_ua_id, domain_id, count) VALUES (?, ?, ?, ?, ?, ?, 1)";
 
 		StatWriteBuffer.addUpdateInsertPair(update, insert, "stat_error", params);
 	}
