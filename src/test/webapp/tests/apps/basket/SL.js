@@ -2,7 +2,7 @@ module.exports = {
 
     PRODUCTS : "/apps/elektronicky-obchod/produkty/",
     ORDERS: "/apps/elektronicky-obchod/objednavky/",
-    METHODS: "/apps/eshop/admin/payment-methods/",
+    METHODS: "/apps/basket/admin/payment-methods/",
     BASKET: "/apps/elektronicky-obchod/kosik/",
     BASKET_ADMIN: "/apps/basket/admin/",
     PRODUCTS_ADMIN: "/apps/basket/admin/product-list/",

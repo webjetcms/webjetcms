@@ -314,7 +314,7 @@ public class MenuService {
             { "/components/abtesting/admin_abtesting.jsp", "/apps/abtesting/admin/"},
 
             //ESHOP
-            { "/components/basket/admin_payment_methods.jsp", "/apps/eshop/admin/payment-methods/"},
+            { "/components/basket/admin_payment_methods.jsp", "/apps/basket/admin/payment-methods/"},
             { "/components/basket/admin_invoices_list.jsp", "/apps/basket/admin/"},
             { "/components/basket/admin_pricelist.jsp", "/apps/basket/admin/product-list/"},
 
