@@ -53,8 +53,8 @@ export class AiUserInterface {
                             ${WJ.translate("components.ai_assistants.saveFile.rewrite.js")}
                         </button>
                         <button class="btn btn-primary" id="rename"></button>
-                        <button class="btn btn-primary" id="back">
-                            ${WJ.translate("components.ai_assistants.saveFile.back.js")}
+                        <button class="btn btn-outline-secondary" id="back">
+                            ${WJ.translate("button.cancel")}
                         </button>
                     </div>
                 `);

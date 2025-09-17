@@ -84,7 +84,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String action;
 
     @Column(name = "class_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "action",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "action", className = "ai-off",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -100,7 +100,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String className;
 
     @Column(name = "field_from")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "action",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "action", className = "ai-off",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -116,7 +116,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String fieldFrom;
 
     @Column(name = "field_to")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "action",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "action", className = "ai-off",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -139,7 +139,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String provider;
 
     @Column(name = "model")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", visible = false, className = "hideOnCreate hideOnEdit", tab = "provider",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.model", visible = false, className = "hideOnCreate hideOnEdit ai-off", tab = "provider",
         editor = {
 			@DataTableColumnEditor(
 				attr = {
