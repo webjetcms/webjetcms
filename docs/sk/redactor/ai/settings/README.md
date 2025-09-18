@@ -1,6 +1,6 @@
 # Nastavenie
 
-Tento dokument popisuje správu a konfiguráciu AI asistentov v CMS systéme. V sekcii **AI asistenti** môžete vytvárať a upravovať jednotlivých asistentov, pričom každý záznam predstavuje konkrétny typ akcie s vybraným poskytovateľom AI služieb. Nastavenia umožňujú určiť, kde (v ktorej tabuľke) a pre ktoré pole alebo polia bude daný asistent dostupný, čiže bude vykonávať nastavenú akciu.
+Tento dokument popisuje správu a konfiguráciu AI asistentov v systéme CMS. V sekcii **AI asistenti** môžete vytvárať a upravovať jednotlivých asistentov, pričom každý záznam predstavuje konkrétny typ akcie s vybraným poskytovateľom AI služieb. Nastavenia umožňujú určiť, kde (v ktorej tabuľke) a pre ktoré pole alebo polia bude daný asistent dostupný, čiže bude vykonávať nastavenú akciu.
 
 ![](datatable.png)
 
@@ -8,7 +8,7 @@ Tento dokument popisuje správu a konfiguráciu AI asistentov v CMS systéme. V 
 
 ## Základné informácie
 
-V tejto časti si preberieme ako pridať/nastaviť nového **AI asistenta**. Pri tejto akcii sú dostupné nasledujúce karty:
+V tejto časti si preberieme, ako pridať/nastaviť nového **AI asistenta**. Pri tejto akcii sú dostupné nasledujúce karty:
 
 - Základné
 - Akcia
@@ -20,11 +20,11 @@ V tejto časti si preberieme ako pridať/nastaviť nového **AI asistenta**. Pri
 
 Táto karta obsahuje základné informácie o asistentovi ako názov, ikona alebo dátum vytvorenia. Obsahuje polia:
 
-- **Unikátny názov**, unikátny názov asistenta, ktorý sa využíva ako identifikátor (používateľ ho nevidí)
-- **Názov pre používateľa**, názov asistenta, ktorý sa zobrazí používateľovi a nemusí byť unikátny. Ak ho nenastavíte, použije sa **Unikátny názov**.
-- **Ikona**, názov ikony, ktorá sa bude zobrazovať spolu s **Názov pre používateľa**. Zoznam ikon nájdete na `https://tabler.io/icons`
-- **Skupina**, podľa ktorej sa asistenti vizuálne členia (nemá vplyv na funkcionalitu)
-- **Vytvorené**, dátumové pole, ktoré sa nedá upraviť a zobrazí sa iba pri editácii asistenta (pri vytváraní sa automaticky nastaví)
+- **Unikátny názov** – unikátny názov asistenta, ktorý sa využíva ako identifikátor (používateľ ho nevidí).
+- **Názov pre používateľa** – názov asistenta, ktorý sa zobrazí používateľovi a nemusí byť unikátny. Ak ho nenastavíte, použije sa **Unikátny názov**.
+- **Ikona** – názov ikony, ktorá sa bude zobrazovať spolu s poľom **Názov pre používateľa**. Zoznam ikon nájdete na `https://tabler.io/icons`.
+- **Skupina** – podľa nej sa asistenti vizuálne členia (nemá vplyv na funkcionalitu).
+- **Vytvorené** – dátumové pole, ktoré sa nedá upraviť a zobrazí sa iba pri editácii asistenta (pri vytváraní sa automaticky nastaví).
 
 ![](datatable-basic-tab.png)
 
@@ -47,15 +47,15 @@ Na tejto karte nastavujete, akú akciu má AI asistent vykonávať, odkiaľ bude
 
 Pre entitu, zdrojové a cieľové pole je možné zadať aj hodnoty typu:
 
-- `value1,value2,value3` - aplikuje sa na viaceré hodnoty
-- `*` - aplikuje sa na všetky hodnoty
-- `%value!` - aplikuje sa ak kdekoľvek obsahuje hodnotu `value`
-- `%value` - aplikuje sa ak začína na hodnotu `value`
-- `value!` - aplikuje sa ak končí na hodnotu `value`
+- `value1,value2,value3` – aplikuje sa na viaceré hodnoty
+- `*` – aplikuje sa na všetky hodnoty
+- `%value!` – aplikuje sa, ak kdekoľvek obsahuje hodnotu `value`
+- `%value` – aplikuje sa, ak začína hodnotou `value`
+- `value!` – aplikuje sa, ak končí hodnotou `value`
 
-Pre cieľové pole je možné zadať nielen meno atribútu v entite, ale aj CSS triedu a hodnotu `renderFormat`, je možné teda zadať hodnotu `dt-format-text,dt-format-text-wrap` pre aplikovanie na všetky typy textový polí.
+Pre cieľové pole je možné zadať nielen meno atribútu v entite, ale aj CSS triedu a hodnotu `renderFormat`. Je teda možné zadať hodnotu `dt-format-text,dt-format-text-wrap` pre aplikovanie na všetky typy textových polí.
 
-Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov stačí do anotácie pridať CSS triedu `ai-off`, v takom prípade sa pri poli zobrazí tlačidlo pre AI asistenta len ak je zadaný presne na danú entitu a pole.
+Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov, stačí do anotácie pridať CSS triedu `ai-off`. V takom prípade sa pri poli zobrazí tlačidlo pre AI asistenta len vtedy, ak je zadaný presne pre danú entitu a pole.
 
 ```java
 	@Lob
@@ -80,7 +80,7 @@ Táto karta je kľúčová pre správne fungovanie asistenta. Obsahuje jedno pol
 
 ### Karta - Pokročilé
 
-Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré umožňujú detailnejšie prispôsobiť jeho správanie podľa vašich potrieb. Dostupné nastavenia sa môžu líšiť v závislosti od vybraného poskytovateľa AI služieb. Odporúčame meniť tieto nastavenia len v prípade, že presne viete, aký bude ich vplyv na fungovanie asistenta, keďže môžu ovplyvniť jeho výsledky alebo spôsob interakcie s používateľom.
+Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré umožňujú detailnejšie prispôsobiť jeho správanie podľa vašich potrieb. Dostupné nastavenia sa môžu líšiť v závislosti od vybraného poskytovateľa AI služieb. Odporúčame meniť tieto nastavenia len vtedy, ak presne viete, aký bude ich vplyv na fungovanie asistenta, keďže môžu ovplyvniť jeho výsledky alebo spôsob interakcie s používateľom.
 
 ![](datatable-advanced-tab.png)
 
@@ -90,7 +90,7 @@ Poskytovateľ je externá služba alebo platforma, ktorá zabezpečuje AI nástr
 
 ### OpenAI
 
-OpenAI patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. V CMS systéme je jeho API už integrované – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `ai_openAiAuthKey`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
+OpenAI patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. V systéme CMS je jeho API už integrované – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `ai_openAiAuthKey`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
 
 Aktuálne je podporovaná integrácia pre tieto typy požiadaviek:
 
@@ -100,21 +100,43 @@ Aktuálne je podporovaná integrácia pre tieto typy požiadaviek:
 
 API kľúč získate registráciou na stránke [OpenAI](https://platform.openai.com/signup). Po prihlásení do svojho účtu prejdite do sekcie `API Keys`, kde si môžete vygenerovať nový kľúč. Tento kľúč následne vložte do nastavení CMS podľa vyššie uvedeného postupu.
 
+### Gemini
+
+Gemini, podobne ako OpenAI, patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. V systéme CMS je jeho API už integrované – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `ai_geminiAuthKey`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
+
+Aktuálne je podporovaná integrácia pre tieto typy požiadaviek:
+
+- Generovanie textu
+- Generovanie obrázkov
+- Úprava obrázkov
+
+API kľúč získate nasledovne:
+
+- Otvorte stránku [Google AI Studio](https://aistudio.google.com/apikey).
+- Prihláste sa do účtu `Google` (kľúč bude viazaný na tento účet).
+- Kliknite na `Create API key`.
+- Vyberte existujúci alebo vytvorte nový `Google Cloud` projekt, ku ktorému sa kľúč priradí.
+- Potvrdíte generovanie – zobrazí sa vygenerovaný kľúč, ktorý následne vložte do nastavení CMS podľa vyššie uvedeného postupu.
+
+Novovygenerovaný kľúč funguje najskôr v bezplatnom (obmedzenom) režime – platia limity na počet požiadaviek za minútu / hodinu / deň. Pre vyššie limity a stabilnú prevádzku nastavte fakturáciu cez odkaz `Set up billing` pri kľúči. Po pridaní spôsobu platby sa limity sprístupnia podľa aktuálnych podmienok spoločnosti `Google`.
+
+Pokročilé nastavenia (kvóty, fakturácia, rotácia kľúčov, štatistiky) nájdete v [Google Cloud Console](https://console.cloud.google.com/).
+
 ### Prehliadač
 
-AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome za použitia zabezpečeného (httpS) spojenia. Po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`, kedy sa možnosti prestanú zobrazovať.
+AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome za použitia zabezpečeného (HTTPS) spojenia. Po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`, kedy sa možnosti prestanú zobrazovať.
 
 Pre spustenie AI v prehliadači je potrebné splniť:
 
 - [HW požiadavky](https://developer.chrome.com/docs/ai/get-started#hardware) počítača.
-- Spojenie do WebJET CMS musí byť zabezpečené (použitý protokol https).
+- Spojenie do WebJET CMS musí byť zabezpečené (použitý protokol HTTPS).
 
-Ak spĺňate požiadavky odporúčame najskôr vyskúšať asistenta na preklad a následne na sumarizáciu textu, to sú najjednoduchšie služby, ktoré AI v prehliadači podporuje. Overíte tak stiahnutie a inštaláciu modelu na váš počítač a ich funkčnosť v prehliadači.
+Ak spĺňate požiadavky, odporúčame najskôr vyskúšať asistenta na preklad a následne na sumarizáciu textu – to sú najjednoduchšie služby, ktoré AI v prehliadači podporuje. Tým overíte stiahnutie a inštaláciu modelu na váš počítač a jeho funkčnosť v prehliadači.
 
-Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.chrome.com/docs/ai/built-in-apis#api_status), pre ich použitie je potrebné otvoriť v prehliadači stránku Experimenty zadaním adresy `chrome://flags/#prompt-api-for-gemini-nano` do prehliadača a nastaviť hodnotu `Enabled` pre položku `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Následne kliknite na Znova spustiť pre reštart prehliadača. Odporúčame na stránke v hornej časti zadať výraz `gemini` pre filtrovanie možností a ich jednoduchšie nájdenie. Bez povolenia týchto možností bude dostupné len API pre preklad a sumarizáciu.
+Niektoré rozhrania sú [zatiaľ v experimentálnom režime](https://developer.chrome.com/docs/ai/built-in-apis#api_status). Pre ich použitie je potrebné otvoriť v prehliadači stránku Experimenty zadaním adresy `chrome://flags/#prompt-api-for-gemini-nano` a nastaviť hodnotu `Enabled` pre položky `Prompt API for Gemini Nano`, `Summarization API for Gemini Nano`, `Writer API for Gemini Nano`, `Rewriter API for Gemini Nano`. Následne kliknite na Znova spustiť pre reštart prehliadača. Odporúčame na stránke v hornej časti zadať výraz `gemini` pre filtrovanie možností a ich jednoduchšie nájdenie. Bez povolenia týchto možností bude dostupné len API pre preklad a sumarizáciu.
 
 ![](chrome-ai-settings.png)
 
-Overiť stav AI modelov môžete zadaním nasledovnej stránky do adresného riadku prehliadača `chrome://on-device-internals/`.
+Overiť stav AI modelov môžete zadaním nasledujúcej adresy do riadku prehliadača: `chrome://on-device-internals/`.
 
-Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto po použití môže dôjsť k automatickému prekladu. Prekladač je ale pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť po vykonaní iných AI asistentov na preklad výstupného textu.
+Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto môže po použití dôjsť k automatickému prekladu. Prekladač je však pri prvom použití potrebné tiež stiahnuť, preto odporúčame ako prvé vyskúšať AI nástroj pre preklad, aby sa prekladač nainštaloval. Následne sa už bude dať použiť aj po vykonaní iných AI asistentov na preklad výstupného textu.
