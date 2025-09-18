@@ -321,7 +321,7 @@ public class AiService {
                     String groupName = ade.getGroupName();
                     ai.setGroupName(prop.getText(AssistantDefinitionRestController.GROUPS_PREFIX + groupName));
                     ai.setUserPromptEnabled(Tools.isTrue(ade.getUserPromptEnabled()));
-                    ai.setUserPromptLabel(ade.getUserPromptLabel());
+                    ai.setUserPromptLabel(prop.getText(ade.getUserPromptLabel()));
                     ai.setIcon(ade.getIcon());
                     if (Tools.isEmpty(ai.getIcon())) ai.setIcon("clipboard-text");
 
