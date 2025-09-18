@@ -174,6 +174,13 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     }
 
     @Override
+    public void afterDelete(BasketInvoiceEntity entity, long id) {
+        // After invoice is deleted, remove items and payments bind to this invoice
+        biir.deleteByInvoiceId(id, CloudToolsForCore.getDomainId());
+        bipr.deleteByInvoiceId(id);
+    }
+
+    @Override
     public BasketInvoiceEntity insertItem(BasketInvoiceEntity entity) {
         throwError(getProp().getText("config.not_permitted_action_err"));
         return null;
