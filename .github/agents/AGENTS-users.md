@@ -35,7 +35,7 @@ Handles user security metadata (password policy, permission groups) and DTO mapp
 
 ## Conventions
 
-- Suffix *Dto for transfer objects, *Mapper for mapping classes, *EditorFields for UI field wrappers.
+- Suffix `*Dto` for transfer objects, `*Mapper` for mapping classes, `*EditorFields` for UI field wrappers.
 - Separate algorithm selection from hashing execution to allow runtime strategy adjustments.
 
 ## Pitfalls

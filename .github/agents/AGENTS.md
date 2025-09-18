@@ -22,6 +22,7 @@ High-level expectations when a JS/TS monorepo (e.g., Turborepo or pnpm workspace
 `Drizzle schema (table definitions)` -> generate static types -> extend with Zod (refinements: JSONB parsing, branded IDs) -> validators exported -> consumed by tRPC routers -> UI imports tRPC inference types (no manual re-declare) -> forms/components rely on inferred input/output types.
 
 Rules:
+
 1. Never duplicate an entity/interface manually inside UI or API layer.
 2. If DB column changes -> Drizzle type diff -> cascades to Zod -> tRPC -> UI compile errors (desired early failure).
 3. Use Zod `.transform` or `.pipe` for JSONB/text columns instead of casting.

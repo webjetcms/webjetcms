@@ -27,22 +27,27 @@ WebJET CMS combines a Java/Spring backend with optional JS/TS workspaces (design
 ## 4. Commit Messages
 
 Format:
-```
+
+```text
 <type>(scope): short summary
 
 Body explains motivation, behavior change, migration risk, validation.
 Refs: #issue-id
 ```
+
 Types: feat, fix, refactor, docs, chore, perf, test, build.
 Scope: optional (e.g., datatable, editor, users, ui, infra).
 
 ## 5. Type & Schema Flow (JS/TS)
 
 Authoritative pipeline (never bypass):
-```
+
+```text
 Drizzle table defs -> generated static types -> Zod refinements (JSONB, branded IDs) -> export validators -> tRPC routers use inferred input/output -> UI consumes tRPC inference -> forms/components rely on inferred types only.
 ```
+
 Rules:
+
 1. Do not redefine interfaces manually downstream.
 2. Schema change must trigger type errors up the stack (desired early failure).
 3. No broad `any`; if uncertain, create a narrow union or parse with Zod.
@@ -82,6 +87,7 @@ Heuristic: If another app might need it inside 30 days, put it in a package now.
 ## 9. Validation Strategy
 
 Layered:
+
 1. Bean Validation (annotations) – first line.
 2. Programmatic checks – enrich BindingResult.
 3. JSON/Zod (JS boundary) – parse external input only once.
@@ -115,6 +121,7 @@ Layered:
 ## 13. Adding a Component (Feature Module)
 
 Follow `AGENTS-components.md` Extension Steps. Ensure:
+
 - Unique config key prefix.
 - i18n keys added.
 - Service + repository or migration off legacy SimpleQuery.
@@ -137,6 +144,7 @@ Follow `AGENTS-components.md` Extension Steps. Ensure:
 ## 16. PR Checklist
 
 Before marking Ready for Review:
+
 - [ ] Build & tests green locally.
 - [ ] Added / updated tests (happy path + at least one edge case).
 - [ ] Updated `AGENTS-*.md` docs (if new infra/domain/cache/permission).
