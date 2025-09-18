@@ -85,6 +85,7 @@ import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.metadata.MetadataCleaner;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.spirit.MediaDB;
 
 /**
@@ -2537,10 +2538,9 @@ public class GalleryDB
 
 	private static List<GalleryDimension> getDirectoriesToGalleryRoot(GalleryDimension dir)
 	{
-		String pathToGallery = "/images/gallery"; //NOSONAR
 		List<GalleryDimension> upDirs = new ArrayList<>();
 		GalleryDimension currentDir = dir;
-		while(currentDir != null && currentDir.getGalleryPath().startsWith(pathToGallery))
+		while(currentDir != null && isBasePathCorrect(currentDir.getGalleryPath()))
 		{
 			upDirs.add(currentDir);
 			String nextGalleryPath = IwcmFile.fromVirtualPath(currentDir.getGalleryPath()).getVirtualParent();
@@ -2548,7 +2548,6 @@ public class GalleryDB
 		}
 		return upDirs;
 	}
-
 
 	/**
 	 * Samotny kod, ktory sposobi pridanie vodotlace do obrazku. Spolieha
@@ -4759,4 +4758,25 @@ public class GalleryDB
 	{
 		return GalleryDBTools.cropAndResize(from,cwidth,cheight,cleft,ctop,finalWidth,finalHeight,fillColor,exactFinalSize,to,imageQuality,ip);
 	}
+
+	/**
+     * Checks if the given path starts with the base gallery path, which is either
+     * /images/gallery or /images/{domainAlias}/gallery depending on the domain.
+     *
+     * @param path The file path to check.
+     * @return true if the path starts with the base gallery path or the domain-specific gallery path;
+     *         false otherwise.
+     */
+    public static boolean isBasePathCorrect(String path) {
+        String basePath = Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+        String basePathDomainAlias = basePath;
+
+		String domain = null;
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (rb != null) domain = rb.getDomain();
+        String domainAlias = MultiDomainFilter.getDomainAlias(domain);
+        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) basePathDomainAlias = Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+
+        return path.startsWith(basePath) || path.startsWith(basePathDomainAlias);
+    }
 }

@@ -32,6 +32,25 @@ public class FsItemEx
 		_f = _v.fromPath(_v.getPath(parent._f) + "/" + name);
 	}
 
+	/**
+	 * Constructs a new FsItemEx representing a child item with the specified subdirectory and name.
+	 *
+	 * @param parent the parent FsItemEx instance
+	 * @param subdir the subdirectory under the parent; if "/" is provided, it is treated as the root and replaced with an empty string
+	 * @param name the name of the child item to create
+	 * @throws IOException if an I/O error occurs during item creation
+	 */
+	public FsItemEx(FsItemEx parent, String subdir, String name) throws IOException
+	{
+		_v = parent._v;
+		_s = parent._s;
+		if ("/".equals(subdir))
+		{
+			subdir = "";
+		}
+		_f = _v.fromPath(_v.getPath(parent._f) + subdir + "/" + name);
+	}
+
 	public FsItemEx createChild(String name) throws IOException
 	{
 		return new FsItemEx(this, name);
