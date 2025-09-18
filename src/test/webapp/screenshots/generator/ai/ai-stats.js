@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('ai-stats screenshots', ({ I, DT, DTE, Document }) => {
+Scenario('ai-stats screenshots', ({ I, Document }) => {
     I.amOnPage("/admin/v9/settings/ai-stats/");
 
     // TODO - az to bude merged, nastavit date range aby boli pekne grafy
