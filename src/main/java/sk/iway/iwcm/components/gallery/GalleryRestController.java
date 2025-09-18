@@ -28,6 +28,7 @@ import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
 import sk.iway.iwcm.components.perex_groups.PerexGroupsRepository;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -36,6 +37,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -160,9 +162,9 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         // For gallery only
         if(isImageEditor() == false) {
             // DirSimpleGallery aka image path MUST be set
-            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getImagePath()) || entity.getEditorFields().getImagePath().startsWith(getBaseGalleryPath()) == false) {
+            if (entity.getEditorFields() == null || Tools.isEmpty(entity.getEditorFields().getImagePath()) || isBasePathCorrect(entity.getEditorFields().getImagePath()) == false) {
                 // Check if DirSimpleGallery starts with /images/gallery
-                errors.rejectValue("errorField.editorFields.dirSimpleGallery", "403", Prop.getInstance().getText("components.gallery.image_path.err", getBaseGalleryPath()));
+                errors.rejectValue("errorField.editorFields.imagePath", "403", Prop.getInstance().getText("components.gallery.image_path.err", getBaseGalleryPath()));
             }
         }
     }
@@ -333,7 +335,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
      * @param destPath
      */
     private void checkAndCreateGallery(String destPath) {
-        if(Tools.isEmpty(destPath) || destPath.startsWith(getBaseGalleryPath()) == false) return;
+        if(Tools.isEmpty(destPath) || isBasePathCorrect(destPath) == false) return;
 
         // Sanitize path
         destPath = DocTools.removeCharsDir(destPath, true).toLowerCase();
@@ -399,6 +401,22 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     }
 
     private String getBaseGalleryPath() {
-        return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+        String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
+        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) return Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+        else return Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+    }
+
+    /**
+     * Check if path startsWith base path /images/gallery or /images/{domainAlias}/gallery
+     * @param path
+     * @return
+     */
+    private boolean isBasePathCorrect(String path) {
+        String basePath = Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
+        String basePathDomainAlias = basePath;
+        String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(getRequest()));
+        if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) basePathDomainAlias = Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+
+        return path.startsWith(basePath) || path.startsWith(basePathDomainAlias);
     }
 }
