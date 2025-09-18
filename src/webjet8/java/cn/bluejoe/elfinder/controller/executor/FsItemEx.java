@@ -32,6 +32,17 @@ public class FsItemEx
 		_f = _v.fromPath(_v.getPath(parent._f) + "/" + name);
 	}
 
+	public FsItemEx(FsItemEx parent, String subdir, String name) throws IOException
+	{
+		_v = parent._v;
+		_s = parent._s;
+		if ("/".equals(subdir))
+		{
+			subdir = "";
+		}
+		_f = _v.fromPath(_v.getPath(parent._f) + subdir + "/" + name);
+	}
+
 	public FsItemEx createChild(String name) throws IOException
 	{
 		return new FsItemEx(this, name);
