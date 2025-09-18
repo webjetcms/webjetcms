@@ -1,0 +1,2 @@
+#ignore .github/agents folder, which are AI generated and has a lot of programmers jargon
+.github/agents
