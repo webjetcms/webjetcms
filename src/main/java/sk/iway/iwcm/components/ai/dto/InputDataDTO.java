@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.ai.dto;
 import java.io.File;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -11,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
 
@@ -67,9 +70,11 @@ public class InputDataDTO {
         this.inputValueType = InputValueType.from( data.get("inputValueType") );
     }
 
-    public void prepareData() throws IllegalStateException {
+    public void prepareData(HttpServletRequest request) throws IllegalStateException {
+        Prop prop = Prop.getInstance(request);
+
         if(inputValueType.equals(InputValueType.IMAGE)) {
-            if(Tools.isEmpty(inputValue)) throw new IllegalStateException("No imagePath provided.");
+            if(Tools.isEmpty(inputValue)) throw new IllegalStateException(prop.getText("components.ai_assistants.image_path.err"));
 
             //remove /thumb prefix if exists
             if (inputValue.startsWith("/thumb")) inputValue = inputValue.substring("/thumb".length());
@@ -80,7 +85,7 @@ public class InputDataDTO {
             String realPath = Tools.getRealPath(inputValue);
             File fileImage = new File(realPath);
 
-            if (fileImage.isFile() == false) throw new IllegalStateException("Not a image");
+            if (fileImage.isFile() == false) throw new IllegalStateException(prop.getText("components.ai_assistants.not%image.err"));
 
             inputFile = fileImage;
         }

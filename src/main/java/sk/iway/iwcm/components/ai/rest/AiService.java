@@ -142,7 +142,7 @@ public class AiService {
     public AssistantResponseDTO getAiImageResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, HttpServletRequest request) throws Exception {
 
         Prop prop = Prop.getInstance(request);
-        inputData.prepareData();
+        inputData.prepareData(request);
 
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
