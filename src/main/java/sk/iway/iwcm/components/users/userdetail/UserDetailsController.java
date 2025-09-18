@@ -378,7 +378,9 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
         //Force random password generation -> null value can cause problems
         if(entity.getPassword() == null || entity.getPassword().equals(UserTools.PASS_UNCHANGED)) {
             entity.setPassword("random");
-            super.beforeDuplicate(entity);
         }
+        entity.setRegDate(new Date(Tools.getNow()));
+        entity.setLastLogonAsDate(null);
+        super.beforeDuplicate(entity);
     }
 }

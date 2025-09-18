@@ -182,8 +182,8 @@ padding: 0;
 position: relative;
 transition: opacity 0.2s ease 0s;
 background: rgba(0, 0, 0, 0) url("/components/gallery/prettyphoto/images/prettyPhoto/light_rounded/default-skin.png") no-repeat scroll 0 0 / 264px 88px;
-background-position: -50px -51px; 
-height: 30px; 
+background-position: -50px -51px;
+height: 30px;
 width: 30px;
 text-indent: -9999px;
 outline: none;
@@ -220,7 +220,7 @@ div.pp_pic_holder .pp_description {
 div.pp_pic_holder div.pp_social {
 	display: block;
     position: absolute;
-    right: 30;
+    right: 30px;
     top: 0;
     margin-top: 0;
 }
@@ -231,13 +231,13 @@ div.pp_pic_holder div.pp_social {
 
 .pp_social_box a.share-download:hover {
   background: #DDD; }
-  
+
 .pp_social_box a.share-facebook:hover {
   background: #3E5C9A;
   color: #FFF; }
 .pp_social_box a.share-facebook:hover:before {
     border-bottom-color: #3E5C9A; }
-    
+
 .pp_social_box a:first-child {
     border-radius: 2px 2px 0 0;
 }
