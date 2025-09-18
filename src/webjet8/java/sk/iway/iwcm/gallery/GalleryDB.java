@@ -4786,9 +4786,12 @@ public class GalleryDB
 	}
 
 	/**
-     * Check if path startsWith base path /images/gallery or /images/{domainAlias}/gallery
-     * @param path
-     * @return
+     * Checks if the given path starts with the base gallery path, which is either
+     * /images/gallery or /images/{domainAlias}/gallery depending on the domain.
+     *
+     * @param path The file path to check.
+     * @return true if the path starts with the base gallery path or the domain-specific gallery path;
+     *         false otherwise.
      */
     public static boolean isBasePathCorrect(String path) {
         String basePath = Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
