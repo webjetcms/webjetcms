@@ -4769,13 +4769,14 @@ public class GalleryDB
      */
     public static boolean isBasePathCorrect(String path) {
         String basePath = Constants.getString("imagesRootDir") + "/" + Constants.getString("galleryDirName");
-        String basePathDomainAlias = basePath;
+        String basePathDomainAlias;
 
 		String domain = null;
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb != null) domain = rb.getDomain();
         String domainAlias = MultiDomainFilter.getDomainAlias(domain);
         if (Tools.isNotEmpty(domainAlias) && Constants.getBoolean("multiDomainEnabled")) basePathDomainAlias = Constants.getString("imagesRootDir") + "/" + domainAlias + "/" + Constants.getString("galleryDirName");
+		else basePathDomainAlias = basePath;
 
         return path.startsWith(basePath) || path.startsWith(basePathDomainAlias);
     }

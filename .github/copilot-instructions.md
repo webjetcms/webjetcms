@@ -1,2 +1,4 @@
 - When performing a code review, focus on readability and avoid nested ternary operators.
 - Do not suggest change from if(statement == false) to if(!statement).
+- Do not suggest change from if(statement == true) to if(statement).
+- Do not suggest change Avoid explicit boolean comparison.
