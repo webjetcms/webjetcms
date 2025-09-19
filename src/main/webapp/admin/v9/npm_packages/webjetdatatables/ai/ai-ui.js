@@ -25,9 +25,9 @@ export class AiUserInterface {
 
         let contentContainer = $("#toast-container-ai-content");
         if (contentContainer.length === 0) {
-            this.lastToast = window.toastr.info("<div id='toast-container-ai-content'></div>", WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), {
+            this.lastToast = window.toastr.info("<div id='toast-container-ai-content'></div>", "<strong>"+WJ.translate("components.ai_assistants.editor.btn.tooltip.js")+"</strong>", {
                 closeButton: true,
-                closeHtml: '<i class="ti ti-x"></i>',
+                closeHtml: '<button class="toast-close-button" data-toggle="tooltip" title="'+WJ.translate('datatables.modal.close.js')+'"><i class="ti ti-x"></i></button>',
                 timeOut: 0,
                 tapToDismiss: false,
                 extendedTimeOut: 0,
@@ -46,25 +46,28 @@ export class AiUserInterface {
             contentContainer = $("#toast-container-ai-content");
             this.$progressElement = $("#toast-container-ai").find(".toast-progress");
 
-                // Container with action buttons for handling existing file name conflicts
-                const $nameSelection = $(`
-                    <div id="toast-ai-name-selection" class="ai-name-selection" style="display:none">
-                        <button class="btn btn-primary" id="rewrite">
-                            ${WJ.translate("components.ai_assistants.saveFile.rewrite.js")}
-                        </button>
-                        <button class="btn btn-primary" id="rename"></button>
-                        <button class="btn btn-outline-secondary" id="back">
-                            ${WJ.translate("button.cancel")}
-                        </button>
-                    </div>
-                `);
+            // Container with action buttons for handling existing file name conflicts
+            const $nameSelection = $(`
+                <div id="toast-ai-name-selection" class="ai-name-selection" style="display:none">
+                    <button class="btn btn-primary" id="rewrite">
+                        ${WJ.translate("components.ai_assistants.saveFile.rewrite.js")}
+                    </button>
+                    <button class="btn btn-primary" id="rename"></button>
+                    <button class="btn btn-outline-secondary" id="back">
+                        ${WJ.translate("button.cancel")}
+                    </button>
+                </div>
+            `);
 
-                $(".toast-message").append($nameSelection);
+            $(".toast-message").append($nameSelection);
+
+            //add tooltip to close button
+            $('#toast-container-ai').find('.toast-close-button').tooltip({ trigger: 'hover', customClass: 'tooltip-ai' });
         }
 
         //set default header
         $("#toast-container-ai").removeClass("has-back-button");
-        $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
+        $("#toast-container-ai .toast-title").html("<strong>"+WJ.translate("components.ai_assistants.editor.btn.tooltip.js")+"</strong>");
 
         $("#toast-container-ai").on("click", (e) => {
             if (e.target.id === "toast-container-ai") {
@@ -176,6 +179,10 @@ export class AiUserInterface {
         } else if ("components.ai_assistants.unknownError.js" === textKey) {
             statusClass = "ai-status-error";
             icon = "help-circle";
+            if (typeof params != "undefined" && params != null && params.length == 1 && params[0].indexOf("!")==0) {
+                //if params starts with ! use it as main text
+                textKey = params[0].substring(1);
+            }
         } else if ("components.ai_assistants.saveFile.unknownError.js" === textKey) {
             statusClass = "ai-status-error";
             icon = "help-circle";
@@ -252,7 +259,7 @@ export class AiUserInterface {
 
     _closeToast(timeOut) {
         if (typeof timeOut === "undefined" || timeOut == null || timeOut < 1) {
-            $("#toast-container-ai").find("i.toast-close-button").trigger("click");
+            $("#toast-container-ai").find(".toast-close-button").trigger("click");
         }
 
         let progressBar = this.progressBar;
@@ -275,7 +282,7 @@ export class AiUserInterface {
         if (percentage <= 1) {
             clearInterval(progressBar.intervalId);
             //toastr.clear(self.lastToast);
-            $("#toast-container-ai").find("i.toast-close-button").trigger("click");
+            $("#toast-container-ai").find(".toast-close-button").trigger("click");
         }
     }
 
@@ -292,7 +299,9 @@ export class AiUserInterface {
             this.setCurrentStatus("components.ai_assistants.browser.optimizingModel.js", false);
             if (this.$progressElement != null) this.$progressElement.width('0%');
         } else {
-            this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
+            var value = percent + "%";
+            if (percent == null || percent == "") value = "";
+            this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, value);
             if (this.$progressElement != null) this.$progressElement.width(percent + '%');
         }
     }
@@ -301,13 +310,15 @@ export class AiUserInterface {
         let header = `
             <div class="header-back-button">
                 <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
-                <i class="ti ti-${aiCol.icon}"></i>
-                <span>
-                    ${aiCol.description}
-                </span>
-                <span class="provider">
-                   (${aiCol.providerTitle})
-                </span>
+                <div class="ai-title">
+                    <i class="ti ti-${aiCol.icon}"></i>
+                    <span>
+                        ${aiCol.description}
+                    </span>
+                    <span class="provider">
+                    (${aiCol.providerTitle})
+                    </span>
+                </div>
             </div>
         `;
 

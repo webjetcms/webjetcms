@@ -73,7 +73,7 @@ export class AiBrowserExecutor {
                 }
             }
         } catch (e) {
-            console.log(e);
+            //console.log(e);
             executionResult.errorText = e.message;
         }
 
@@ -173,6 +173,55 @@ export class AiBrowserExecutor {
                             resolve();
                         });
                     });
+                }
+            }
+
+            //show download confirm dialog
+            let availability = await self[apiName].availability(config);
+            //console.log("API", apiName, "availability:", availability, "config=", config);
+            if ("downloadable" === availability) {
+                let downloadConfirmed = await new Promise((resolve) => {
+                    let dialog = document.createElement('div');
+                    dialog.innerHTML = WJ.parseMarkdown(WJ.translate("components.ai_assistants.browser.download_model.confirm.js", apiName), {
+                        link: true
+                    });
+
+                    let buttonContainer = document.createElement('div');
+                    buttonContainer.classList.add('mt-2');
+                    buttonContainer.classList.add('text-end');
+
+                    //cancel button
+                    let buttonCancel = document.createElement('button');
+                    buttonCancel.innerText = WJ.translate("button.cancel");
+                    buttonCancel.classList.add('btn');
+                    buttonCancel.classList.add('btn-outline-secondary');
+                    buttonCancel.classList.add('me-2');
+                    buttonContainer.appendChild(buttonCancel);
+
+                    buttonCancel.addEventListener('click', () => {
+                        resolve(false);
+                    });
+
+                    //confirm button
+                    let button = document.createElement('button');
+                    button.innerText = WJ.translate("components.ai_assistants.browser.download_model.download.js");
+                    button.classList.add('btn');
+                    button.classList.add('btn-primary');
+                    buttonContainer.appendChild(button);
+
+                    const container = document.getElementById('toast-container-ai-content');
+                    container.innerHTML = "";
+                    container.appendChild(dialog);
+                    container.appendChild(buttonContainer);
+
+                    button.addEventListener('click', () => {
+                        instance.editorAiInstance.setDownloadStatus("");
+                        resolve(true);
+                    });
+                });
+
+                if (downloadConfirmed !== true) {
+                    throw new Error("!" + WJ.translate("components.ai_assistants.browser.download_model.canceled.js"));
                 }
             }
 

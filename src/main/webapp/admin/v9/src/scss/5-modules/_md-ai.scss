@@ -13,7 +13,7 @@
         color: var(--wj-ai-color);
     }
 
-    &:hover {
+    &:hover, &:focus, &:active {
         background-color: var(--wj-ai-color-hover);
         .ti-sparkles {
             transform: rotate(200deg);
@@ -252,12 +252,14 @@
                 background-color: white;
                 text-align: left;
                 border-width: 0px;
-                margin-bottom: 3px;
-                padding: 3px 10px;
+                padding: 4px 10px 4px 10px;
 
                 &:hover {
                     color: white;
                     background-color: var(--wj-ai-color);
+                    .provider {
+                        color: white;
+                    }
                 }
 
                 i.ti {
@@ -489,6 +491,8 @@
             .header-back-button {
                 color: var(--bs-body-color);
                 font-weight: bold;
+                display: flex;
+                align-items: center;
                 .btn {
                     padding-top: 4px;
                     padding-right: 11px;
@@ -496,6 +500,7 @@
                     padding-left: 10px;
                     margin-right: 11px;
                     font-size: 14px;
+                    flex: 0 0 auto;
 
                     .ti {
                         font-size: 15px;
@@ -503,19 +508,26 @@
                         margin-right: 5px;
                     }
                 }
-                .ti {
-                    vertical-align: middle;
-                    margin-right: 5px;
-                }
-                span {
-                    position: relative;
-                    top: 1px;
-                }
-                span.provider {
-                    font-weight: normal;
-                    color: var(--wj-nice-gray-200);
+                .ai-title {
+                    flex: 1 1 auto;
+                    .ti {
+                        vertical-align: middle;
+                        margin-right: 5px;
+                    }
+                    span {
+                        position: relative;
+                        top: 1px;
+                    }
+                    span.provider {
+                        font-weight: normal;
+                        color: var(--wj-nice-gray-200);
+                    }
                 }
             }
         }
     }
+}
+
+.tooltip-ai {
+    z-index: 1000000;
 }
