@@ -85,7 +85,7 @@ public class InputDataDTO {
             String realPath = Tools.getRealPath(inputValue);
             File fileImage = new File(realPath);
 
-            if (fileImage.isFile() == false) throw new IllegalStateException(prop.getText("components.ai_assistants.not%image.err"));
+            if (fileImage.isFile() == false) throw new IllegalStateException(prop.getText("components.ai_assistants.not_image.err"));
 
             inputFile = fileImage;
         }

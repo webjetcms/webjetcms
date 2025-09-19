@@ -18,7 +18,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 public class BrowserAssistantsService implements AiAssitantsInterface {
 
     public String getProviderId() {
-        return "browser";
+        return BrowserService.PROVIDER_ID;
     }
 
     public boolean isInit() {
@@ -34,6 +34,6 @@ public class BrowserAssistantsService implements AiAssitantsInterface {
     }
 
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
-        //Local provider do not have specific fields that need. set options
+        //Local provider do not have specific fields that need to set options
     }
 }

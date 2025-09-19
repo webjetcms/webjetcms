@@ -40,6 +40,8 @@ public enum SupportedActions {
     public static List<LabelValue> getSupportedActions(Prop prop) {
         List<LabelValue> labels = new ArrayList<>();
         for (SupportedActions supportedAction : SupportedActions.values()) {
+            if (LIVE_CHAT.equals(supportedAction)) continue; // currently not supported in UI
+
             labels.add(new LabelValue(prop.getText(ACTION_PREFIX + supportedAction.getAction()), supportedAction.getAction()));
         }
         return labels;

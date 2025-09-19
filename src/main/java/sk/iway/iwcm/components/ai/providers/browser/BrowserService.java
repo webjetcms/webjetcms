@@ -25,7 +25,7 @@ import sk.iway.iwcm.utils.Pair;
 @Service
 public class BrowserService implements AiInterface {
 
-    private static final String PROVIDER_ID = "browser";
+    protected static final String PROVIDER_ID = "browser";
     private static final String TITLE_KEY = "components.ai_assistants.provider.browser.title";
 
     public String getProviderId() {
@@ -54,9 +54,7 @@ public class BrowserService implements AiInterface {
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         ArrayList<LabelValue> models = new ArrayList<>();
-
         models.add(new LabelValue("Gemini Nano", "v3Nano"));
-
         return models;
     }
 

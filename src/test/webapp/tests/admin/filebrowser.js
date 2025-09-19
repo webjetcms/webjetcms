@@ -89,7 +89,7 @@ function openDirEditorAndCheck(I, dirPath) {
     I.rightClick('#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZC9kaXItZWRpdC1mb3JtLXRlc3Q_E');
     I.click( locate('div.elfinder-contextmenu-item').withChild( locate("span").withText("Nastavenie priečinka") ) );
     I.switchTo("#modalIframeIframeElement");
-    I.seeElement( locate("h5.modal-title").withText(dirPath) );
+    I.waitForElement( locate("h5.modal-title").withText(dirPath), 10 );
 }
 
 function openFileEditorAndCheck(I, fileName) {
