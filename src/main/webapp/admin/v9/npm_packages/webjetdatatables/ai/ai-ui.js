@@ -39,7 +39,7 @@ export class AiUserInterface {
                 onCloseClick: () => {
                     self._clearProgress();
                     self._hideLoader(button);
-                    if (self.aiBrowserExecutor != null) self.aiBrowserExecutor.destroy();
+                    if (self.editorAiInstance != null) self.editorAiInstance.stopExecution();
                     //get tootltip element and hide tooltip
                     $('#toast-container-ai').find('.toast-close-button').tooltip('disable');
                     $('#toast-container-ai').find('.toast-close-button').tooltip('hide');
@@ -185,6 +185,7 @@ export class AiUserInterface {
     }
 
     setCurrentStatus(textKey, pulsate = false, ...params) {
+        let self = this;
         let contentContainer = $("#toast-container-ai-content");
 
         //reset contentContainer class
@@ -222,8 +223,6 @@ export class AiUserInterface {
         if (pulsate) {
             html += " pulsate-text";
         }
-        if (statusClass != "") contentContainer.addClass(statusClass);
-
         html = html + '"><span>';
 
         if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
@@ -232,14 +231,18 @@ export class AiUserInterface {
         text = WJ.parseMarkdown(text, { link: true, removeLastBr: true });
         html += text + '</span></div><div class="explanatory-text-container" style="display: none"></div>';
 
+
+        //clean and set new status class on toast container
+        let toastContainerAi = $("#toast-container-ai");
+        toastContainerAi.removeClass(function (index, className) {
+            return (className.match (/(^|\s)ai-status-\S+/g) || []).join(' ');
+        });
+        if (statusClass != "") toastContainerAi.addClass(statusClass);
+
+        //chat error container is shown only in image generation with user prompt
         if (statusClass === "ai-status-success" && chatErrorContainer == null) {
-            //preserve userPromptDialog if exists
-            let userPromptSaved = $("#toast-ai-user-prompt-saved");
-            userPromptSaved.empty();
-            let userPromptDialog = $("#toast-container-ai-content").find(".user-prompt-container");
-            if (userPromptDialog != null && userPromptDialog.length > 0) {
-                userPromptSaved.append(userPromptDialog);
-            }
+            //preserve userPromptDialog if exists - save it to hidden container
+            this.saveUserPrompt();
         }
 
         if (chatErrorContainer != null && chatErrorContainer.length > 0) {
@@ -266,6 +269,18 @@ export class AiUserInterface {
             }
         }
 
+        if (statusClass === "ai-status-working") {
+            //generate stop button
+            let stopButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-stop" type="button"><i class="ti ti-square" style="font-size: 16px; vertical-align: middle;"></i> ' + WJ.translate("button.stop")+'</button></div>');
+            stopButton.find("button").on('click', () => {
+                if (self.editorAiInstance != null) self.editorAiInstance.stopExecution();
+            });
+
+            let statusContainer = $("#toast-container-ai").find(".current-status");
+            statusContainer.append(stopButton);
+            statusContainer.addClass("d-flex justify-content-between align-items-center");
+        }
+
         //for safety hide previous explanatory text
         if (statusClass == "ai-status-working") this.hideExplanatoryText();
     }
@@ -288,6 +303,17 @@ export class AiUserInterface {
         let explanatoryTextContainer = $("#toast-container-ai").find(".explanatory-text-container");
         explanatoryTextContainer.html("");
         explanatoryTextContainer.hide();
+    }
+
+    saveUserPrompt() {
+        let userPromptSaved = $("#toast-ai-user-prompt-saved");
+        userPromptSaved.empty();
+        let userPromptDialog = $("#toast-container-ai-content").find(".user-prompt-container");
+        //console.log("saving userPromptDialog=", userPromptDialog);
+        if (userPromptDialog != null && userPromptDialog.length > 0) {
+            //move userPromptDialog to hidden container
+            userPromptSaved.append(userPromptDialog);
+        }
     }
 
     async _executeAction(button, column, aiCol, inputValues = null) {
@@ -381,11 +407,12 @@ export class AiUserInterface {
         let bonusHtml = await this._getBonusHtml(aiCol.assistantId);
         let html = `
             <div class="user-prompt-container">
-                <div class="chat-error-container"></div>
                 <div class="mb-3">
                     <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
+                    <div class="form-text text-danger small"></div>
                     ${bonusHtml}
                 </div>
+                <div class="chat-error-container"></div>
             </div>
         `;
 
@@ -402,8 +429,18 @@ export class AiUserInterface {
         `);
         btn.find("button").on('click', () => {
 
+            //check required fields
+            let value = $("#ai-user-prompt").val();
+            let valueEmptyContainer = $("#ai-user-prompt").next(".form-text");
+            valueEmptyContainer.hide();
+            if (aiCol.userPromptEnabled === true && (value == null || value.trim() === "")) {
+                valueEmptyContainer.html(WJ.translate("components.ai_assistants.user_prompt.required.js"));
+                valueEmptyContainer.show();
+                return;
+            }
+
             let inputValues = {
-                "userPrompt" : $("#ai-user-prompt").val()
+                "userPrompt" : value
             };
 
             //Add bonus content

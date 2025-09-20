@@ -67,6 +67,8 @@ export class AiBrowserExecutor {
                     this.lastApiInstance = apiInstance; //store last instance for destroy
                 }
 
+                //console.log("Initialized API instance:", apiInstance, "apiName=", apiName, "config=", config);
+
                 let useStreaming = aiCol.useStreaming || false;
                 if (apiInstance) {
                     executionResult = await this._apiExecute(apiName, apiInstance, config, aiCol.to, inputData, useStreaming, setFunction);
@@ -74,7 +76,11 @@ export class AiBrowserExecutor {
             }
         } catch (e) {
             //console.log(e);
-            executionResult.errorText = e.message;
+            if ("signal is aborted without reason" === e.message) {
+                executionResult.stopped = true;
+            } else {
+                executionResult.errorText = e.message;
+            }
         }
 
         //console.log("executionResult:", executionResult);
@@ -87,7 +93,7 @@ export class AiBrowserExecutor {
      */
     destroy() {
         //console.log("Destroying instance=", this.lastApiInstance);
-        if (this.lastApiInstance) {
+        if (this.lastApiInstance != null) {
             this.lastApiInstance.destroy();
             this.lastApiInstance = null;
         }

@@ -317,41 +317,6 @@
 
             }
 
-            #toast-container-ai-content {
-                &.ai-status-working {
-                    .current-status {
-                        color: var(--wj-yellow-60);
-                    }
-                    button.btn-primary {
-                        i {
-                            animation: ti-loader-spin 2s linear infinite;
-                            &.ti-sparkles {
-                                vertical-align: text-top;
-                                &::before {
-                                    content: "\eca3";
-                                }
-                            }
-                        }
-                    }
-                    input, textarea, select {
-                        //disable form elements
-                        background-color: var(--wj-nice-gray);
-                        color: var(--wj-dark-60);
-                        pointer-events: none;
-                    }
-                }
-                &.ai-status-success {
-                    .current-status {
-                        color: var(--wj-green-60);
-                    }
-                }
-                &.ai-status-error {
-                    .current-status {
-                        color: var(--wj-red-60);
-                    }
-                }
-            }
-
             #toast-ai-name-selection {
 
                 button {
@@ -533,6 +498,42 @@
                     }
                 }
             }
+        }
+    }
+    &.ai-status-working {
+        .current-status {
+            color: var(--wj-yellow-60);
+        }
+        button.btn-primary {
+            i {
+                animation: ti-loader-spin 2s linear infinite;
+                &.ti-sparkles {
+                    vertical-align: text-top;
+                    &::before {
+                        content: "\eca3";
+                    }
+                }
+            }
+        }
+        input, textarea, select, .header-back-button .btn {
+            //disable form elements
+            background-color: var(--wj-nice-gray);
+            color: var(--wj-dark-60);
+            pointer-events: none;
+        }
+        .user-prompt-container .btn-primary {
+            //status will be same as with normal fields - ai is working on it
+            display: none;
+        }
+    }
+    &.ai-status-success {
+        .current-status {
+            color: var(--wj-green-60);
+        }
+    }
+    &.ai-status-error {
+        .current-status {
+            color: var(--wj-red-60);
         }
     }
 }

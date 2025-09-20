@@ -123,6 +123,13 @@ export class EditorAi {
         });
     }
 
+    stopExecution() {
+        this.aiUserInterface.saveUserPrompt();
+        if (this.aiBrowserExecutor != null) this.aiBrowserExecutor.destroy();
+        //if (this.aiRestExecutor != null) this.aiRestExecutor.destroy();
+
+    }
+
     _getEditorButton(column, appendClass) {
         let buttonHTML = '<button class="btn btn-outline-secondary btn-ai'
         if (appendClass != null && appendClass != "") buttonHTML += " " + appendClass;
@@ -194,6 +201,7 @@ export class EditorAi {
     revertUserPrompt() {
         let userPromptSaved = $("#toast-ai-user-prompt-saved");
         let savedContent = userPromptSaved.find(".user-prompt-container");
+        //console.log("revertUserPrompt: savedContent=", savedContent);
         if (savedContent != null && savedContent.length > 0) {
             $("#toast-container-ai-content").empty();
             savedContent.find(".chat-error-container").empty();
@@ -347,6 +355,12 @@ export class EditorAi {
                 //console.log("editorExecutionResult=", editorExecutionResult);
                 if (editorExecutionResult!=null) {
                     totalTokens += editorExecutionResult.totalTokens;
+
+                    if (editorExecutionResult.stopped === true) {
+                        this._stoppedSignalReceived(button);
+                        return;
+                    }
+
                     //preserve status to executionResults
                     if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
                     if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
@@ -398,11 +412,26 @@ export class EditorAi {
                 self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
             }
 
+            if (executionResult.stopped === true) {
+                this._stoppedSignalReceived(button);
+                return;
+            }
+
             if (executionResult.explanatoryText != null) {
                 self.aiUserInterface.setExplanatoryText(executionResult.explanatoryText);
             }
         }
     }
+
+    _stoppedSignalReceived(button) {
+        this._hideLoader(button);
+        $("#toast-container-ai").removeClass("ai-status-working");
+
+        if (this.isUndo()) {
+            this.undo();
+        }
+    }
+
 
     async _executeSingleAction(button, column, aiCol, inputData, reuseApiInstance = false, setFunction = null) {
         let self = this;
