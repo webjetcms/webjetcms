@@ -1,0 +1,156 @@
+extends ../../partials/layout
+
+block content
+
+    style.
+        tr.not-active td {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-active td div a {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-init td {
+            color: var(--bs-warning) !important;
+        }
+
+        tr.not-init td div a {
+            color: var(--bs-warning) !important;
+        }
+
+    script.
+        var aiAssistantsDataTable;
+
+        var fieldsWereSet = false;
+        var hideOnCreate = [];
+        var hideOnEdit = [];
+
+        let url = "/admin/rest/ai/assistant-definition/";
+
+        window.domReady.add(function () {
+
+            var tabs = [
+                {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true},
+                {id: 'action', title: '[[\#{editor.form.action}]]'},
+                {id: 'provider', title: '[[\#{components.ai_assistants.provider}]]'},
+                {id: 'instructions', title: '[[\#{components.ai_assistants.instruction_tab}]]'},
+                {id: 'advanced', title: '[[\#{datatable.tab.advanced}]]'}
+            ]
+
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity')})];
+
+            for(let i = 0; i < columns.length; i++) {
+                var columnClassName = columns[i]?.className;
+                if(columnClassName == undefined || columnClassName == null) {
+                    columnClassName = "";
+                }
+
+                if(columnClassName.indexOf("hideOnCreate") != -1) {
+                    hideOnCreate.push(columns[i].data);
+                    columnClassName = columnClassName.replace("hideOnCreate", "");
+                }
+
+                if(columnClassName.indexOf("hideOnEdit") != -1) {
+                    hideOnEdit.push(columns[i].data);
+                    columnClassName = columnClassName.replace("hideOnEdit", "");
+                }
+
+                columns[i].className = columnClassName;
+            }
+
+            aiAssistantsDataTable = WJ.DataTable({
+                url: "/admin/rest/ai/assistant-definition/",
+                columns: columns,
+                serverSide: true,
+                tabs: tabs,
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+
+            var eventsBinded = false;
+            aiAssistantsDataTable.EDITOR.on( 'open', function ( e, data, action ) {
+                if (eventsBinded==false) {
+                    $("#DTE_Field_provider").on("change", function() {
+                        changeFieldsVisibility($(this).val(), action);
+
+                        let oldValue = aiAssistantsDataTable.EDITOR.currentJson["provider"];
+                        let newValue = $("#DTE_Field_provider").val();
+                        if((oldValue == null && newValue != null) || (oldValue != null && newValue == null) || (oldValue != newValue)) {
+                            //Provider was changed and oldValue != newValue ... so remove value from model
+                            $("#DTE_Field_model").val("");
+                        }
+                    });
+
+                    $("#DTE_Field_description").on("blur", function() {
+                        getTranslatedKey($("#DTE_Field_description").val(), "editorFields-translatedDescription");
+                    });
+
+                    $("#DTE_Field_userPromptLabel").on("blur", function() {
+                        getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
+                    });
+
+                    eventsBinded = true;
+                }
+            });
+
+            function changeFieldsVisibility(provider, action) {
+                $.ajax({
+                    type: "GET",
+                    url: url + "provider-fields",
+                    data: {
+                        "provider": provider,
+                        "action": action
+                    },
+                    success: function(res)
+                    {
+                        var toShow = Object.values(res);
+
+                        if("create" == action) {
+                            hideOnCreate.forEach(function(fieldName) {
+                                if(toShow.includes(fieldName)) {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
+                                } else {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
+                                }
+                            });
+                        } else if("edit" == action) {
+                            hideOnEdit.forEach(function(fieldName) {
+                                if(toShow.includes(fieldName)) {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).show();
+                                } else {
+                                    aiAssistantsDataTable.EDITOR.field(fieldName).hide();
+                                }
+                            });
+                        }
+                    },
+                    error: function(xhr, ajaxOptions, thrownError) {
+
+                    }
+                });
+            }
+
+            function getTranslatedKey(keyToTranslate, fieldId) {
+                if(keyToTranslate == undefined || keyToTranslate == null || keyToTranslate == "") return;
+
+                $.ajax({
+                    url: url + "translate-key",
+                    method: "get",
+                    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                    data: { key: keyToTranslate },
+                    success: function(response) {
+                        $("#DTE_Field_" + fieldId).val(response);
+                    }
+                });
+            }
+        });
+
+    style.
+        div.DTE_Field_Name_instructions label { display: none; }
+        textarea.textarea-code { white-space: pre-line !important; }
+        label[for='DTE_Field_editorFields-translatedDescription'] { visibility: hidden; }
+        div.DTE_Field_Name_editorFields-translatedDescription div.form-group-tooltip { display: none; }
+        label[for='DTE_Field_editorFields-translatedUserPromptLabel'] { visibility: hidden; }
+        div.DTE_Field_Name_editorFields-translatedUserPromptLabel div.form-group-tooltip { display: none; }
+
+    <table class="datatableInit table"></table>

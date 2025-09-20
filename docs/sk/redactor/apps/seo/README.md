@@ -1,6 +1,6 @@
-# SEO
+# Vyhľadávače (SEO)
 
-Aplikácia SEO je podporný nástroj pre optimalizáciu stránok pre vyhľadávače. Je dostupný v sekcii Aplikácie v ľavom menu ako položka SEO.
+Aplikácia Vyhľadávače (SEO) je podporný nástroj pre optimalizáciu stránok pre vyhľadávače. Je dostupný v sekcii Prehľady v ľavom menu ako položka Vyhľadávače.
 
 Sekcia SEO využíva externý filter, ktorý je podrobnejšie opísaný tu [Externý filter](../stat/external-filter.md)
 

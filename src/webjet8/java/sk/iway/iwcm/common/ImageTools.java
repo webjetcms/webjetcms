@@ -649,4 +649,51 @@ public class ImageTools
 		}
 		return result ;
 	}
+
+	/**
+	 * Convert image to target format (jpg, png, gif).
+	 * If image is already in target format, no conversion is done and null is returned.
+	 * @param imageFile
+	 * @param targetFormat
+	 * @return - new file name (without path) if conversion was done, null otherwise
+	 */
+	public static String convertImageFormat(IwcmFile imageFile, String targetFormat)
+	{
+		String imageFileExt = FileTools.getFileExtension(imageFile.getName());
+		if (imageFileExt.equalsIgnoreCase(targetFormat)) {
+			return null;
+		}
+		if ("jpeg".equalsIgnoreCase(targetFormat)) {
+			targetFormat = "jpg";
+		}
+
+		try {
+			// Implement the conversion logic using ImageIO or any other library
+			IwcmInputStream is = new IwcmInputStream(imageFile);
+			BufferedImage image = ImageIO.read(is);
+			BufferedImage convertedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+			convertedImage.createGraphics().drawImage(image, 0, 0, null);
+
+			String newFileName = FileTools.getFileNameWithoutExtension(imageFile.getName()) + "." + targetFormat;
+			IwcmFile newImageFile = new IwcmFile(imageFile.getParent(), newFileName);
+			if (newImageFile.exists()) {
+				newImageFile.delete();
+			}
+
+			IwcmOutputStream iwos = new IwcmOutputStream(newImageFile);
+			ImageOutputStream ios = ImageIO.createImageOutputStream(iwos);
+			ImageIO.write(convertedImage, targetFormat, ios);
+
+			ios.flush();
+			ios.close();
+			iwos.close();
+			is.close();
+
+			return newImageFile.getName();
+		}
+		catch (Exception ex) {
+			sk.iway.iwcm.Logger.error(ex);
+		}
+		return null;
+	}
 }

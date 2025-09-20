@@ -122,11 +122,18 @@ export function setVisibility(selectedOption) {
  * Return daterange:timestamp-timestamp from top search bar
  */
 export function getDateRange(defaultRangeDaysValue) {
+    return getDateRangeWithName("dayDate", defaultRangeDaysValue);
+}
+
+/**
+ * Return daterange:timestamp-timestamp from top search bar
+ */
+export function getDateRangeWithName(name, defaultRangeDaysValue) {
     var daterange = "";
 
-    var from = $("div.md-breadcrumb .dt-filter-from-dayDate").val();
+    var from = $("div.md-breadcrumb .dt-filter-from-" + name).val();
     if (typeof from == "undefined") from = '';
-    var to = $("div.md-breadcrumb .dt-filter-to-dayDate").val();
+    var to = $("div.md-breadcrumb .dt-filter-to-" + name).val();
     if (typeof to == "undefined") to = '';
 
     if(from == '' && to == '') {

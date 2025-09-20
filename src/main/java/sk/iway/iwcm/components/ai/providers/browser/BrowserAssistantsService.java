@@ -1,0 +1,39 @@
+package sk.iway.iwcm.components.ai.providers.browser;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+
+/**
+ * Service for Chrome Built-in AI:
+ * https://developer.chrome.com/docs/ai/built-in
+ */
+@Service
+public class BrowserAssistantsService implements AiAssitantsInterface {
+
+    public String getProviderId() {
+        return BrowserService.PROVIDER_ID;
+    }
+
+    public boolean isInit() {
+        return Constants.getBoolean("ai_browserAiEnabled");
+    }
+
+    public List<String> getFieldsToShow(String action) {
+        return List.of( "useStreaming");
+    }
+
+    public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
+        //no checks  needed for now
+    }
+
+    public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {
+        //Local provider do not have specific fields that need to set options
+    }
+}

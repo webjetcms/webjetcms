@@ -17,7 +17,7 @@ body.modal-open {
         text-overflow: ellipsis;
         font-size: 18px;
         font-weight: 500;
-        margin-right: 80px;
+        margin-right: 110px; //because there are buttons on the right side such as maximize, close, etc
         //space for possible input elements in title
         padding-top: 2px;
         padding-bottom: 2px;
@@ -129,6 +129,14 @@ body.modal-open {
                 .form-control {
                     //ti-clock-hour-3, stroke 1.25
                     background-image: url('data:image/svg+xml,%3Csvg%20%20xmlns=%22http://www.w3.org/2000/svg%22%20%20width=%2224%22%20%20height=%2224%22%20%20viewBox=%220%200%2024%2024%22%20%20fill=%22none%22%20%20stroke=%22currentColor%22%20%20stroke-width=%221.25%22%20%20stroke-linecap=%22round%22%20%20stroke-linejoin=%22round%22%20%20class=%22icon%20icon-tabler%20icons-tabler-outline%20icon-tabler-clock-hour-3%22%3E%3Cpath%20stroke=%22none%22%20d=%22M0%200h24v24H0z%22%20fill=%22none%22/%3E%3Cpath%20d=%22M12%2012m-9%200a9%209%200%201%200%2018%200a9%209%200%201%200%20-18%200%22%20/%3E%3Cpath%20d=%22M12%2012h3.5%22%20/%3E%3Cpath%20d=%22M12%207v5%22%20/%3E%3C/svg%3E');
+                }
+            }
+        }
+        .DTE_Field_Type_icon {
+            .input-group {
+                span.icon-preview {
+                    width: 2.5rem;
+                    display: inline-block;
                 }
             }
         }

@@ -208,6 +208,13 @@ table.datatableInit {
             border-radius: 4px;
         }
     }
+    td.dt-style-icon {
+        span.dt-icon-box {
+            float: left;
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+    }
 
     tbody {
         tr {
@@ -1457,6 +1464,17 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     padding: 5px;
     margin-left: 5px;
     margin-right: 5px;
+    margin-bottom: 5px;
+}
+.input-group:has(.textarea-code) {
+    width: 892px;
+    margin-bottom: 5px;
+    .textarea-code {
+        //if there is ai/button in group we need to be smaller
+        width: 842px;
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
 }
 
 div.textarea-code-small textarea {

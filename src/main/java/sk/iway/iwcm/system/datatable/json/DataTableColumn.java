@@ -1,27 +1,34 @@
 package sk.iway.iwcm.system.datatable.json;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import lombok.Getter;
-import lombok.Setter;
-import sk.iway.iwcm.*;
-import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.system.datatable.DataTableColumnType;
-import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
-
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
+import javax.persistence.Lob;
+import javax.persistence.Transient;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.rest.AiService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 
 /**
  * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
@@ -60,6 +67,15 @@ public class DataTableColumn {
     private Boolean orderable;
     private String orderProperty;
 
+    private List<DataTableAi> ai = null;
+
+    //https://editor.datatables.net/reference/option/fields.entityDecode
+    private Boolean entityDecode = null;
+
+    public DataTableColumn() {
+        //default constructor
+    }
+
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
         String fieldPrefixNotNull = fieldPrefix;
@@ -81,6 +97,9 @@ public class DataTableColumn {
         setFinalProperties(field);
         setCellNotEditable(field);
         addEditIcon(field);
+
+        //we need this to be last because it uses this.className, this.renderType etc
+        setAiPropertiesFromField(controller, field, prop);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -305,6 +324,11 @@ public class DataTableColumn {
         if (editor.isEmpty()) {
             this.editor = null;
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void setAiPropertiesFromField(Class controller, Field field, Prop prop) {
+        ai = AiService.getAiAssistantsForField(field.getName(), controller.getName(), this, prop);
     }
 
     /**
@@ -533,6 +557,9 @@ public class DataTableColumn {
                 editor = new DataTableColumnEditor();
             }
             editor.setType("wysiwyg");
+            //disable decode of &lt; &gt; etc, because WYSIWYG editor works directly with HTML
+            //https://editor.datatables.net/reference/option/fields.entityDecode
+            entityDecode = Boolean.FALSE;
         }
 
         if (dataTableColumnType == DataTableColumnType.JSTREE) {
@@ -639,6 +666,14 @@ public class DataTableColumn {
             HashMap<String, String> attrs = new HashMap<>();
             attrs.put("type", "number");
             editor.setAttr(attrs);
+        }
+
+        if (dataTableColumnType == DataTableColumnType.ICON) {
+            renderFormat = "dt-format-icon";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("icon");
         }
     }
 

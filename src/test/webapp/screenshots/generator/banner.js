@@ -33,7 +33,7 @@ Scenario('banner editor', ({ I, DTE, Document }) => {
         default:
             throw new Error(`Unsupported language code: ${confLng}`);
     }
-    
+
     DTE.waitForEditor();
     I.wait(5);
 
@@ -99,7 +99,7 @@ Scenario('Device type specific banner screens', ({ I, DTE, Document }) => {
 
         I.waitForElement("table.cke_dialog");
 
-        I.switchTo("#cke_121_iframe") //iframe
+        I.switchTo('iframe[src$="webjetcomponet.jsp"]'); //iframe
         I.switchTo("#editorComponent") //iframe
         I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
 

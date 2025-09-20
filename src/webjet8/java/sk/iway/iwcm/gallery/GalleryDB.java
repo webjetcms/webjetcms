@@ -319,6 +319,7 @@ public class GalleryDB
 				gBean.setPerexGroup(convertPerexGroupString(rs.getString("perex_group")));
 				gBean.setUploadDate(DB.getDate(rs, "upload_datetime"));
 				gBean.setSortPriority(rs.getInt("sort_priority"));
+				gBean.setImageSource(DB.getDbString(rs, "image_source"));
 				gBeanTable.put(gBean.getImageUrl(), gBean);
 			}
 
@@ -382,6 +383,7 @@ public class GalleryDB
 				gb.setImagePath(file.getVirtualParent());
 				gb.setLongDescription("");
 				gb.setShortDescription("");
+				gb.setImageSource("");
 				if (Constants.getBoolean("galleryUseFastLoading")==false) gb.setUploadDate(new Date(file.lastModified()));
 			}
 			else if (file.getName().startsWith("o_"))
@@ -995,6 +997,7 @@ public class GalleryDB
 				gBean.setLongDescription(DB.getDbString(rs, "l_description" + lngAdd));
 				gBean.setShortDescription(DB.getDbString(rs, "s_description" + lngAdd));
 				gBean.setPerexGroup(convertPerexGroupString(DB.getDbString(rs, "perex_group")));
+				gBean.setImageSource(DB.getDbString(rs, "image_source"));
 			}
 			rs.close();
 			ps.close();
@@ -1507,6 +1510,7 @@ public class GalleryDB
 					gBean.setSelectedHeight(rs.getInt("selected_height"));
 					gBean.setUploadDate(rs.getTimestamp("upload_datetime"));
 					gBean.setSortPriority(rs.getInt("sort_priority"));
+					gBean.setImageSource(DB.getDbString(rs, "image_source"));
 				}
 				rs.close();
 				ps.close();
@@ -4203,6 +4207,20 @@ public class GalleryDB
 		try
 		{
 			new SimpleQuery().execute("UPDATE gallery SET upload_datetime = ? WHERE image_path = ? AND image_name = ?"+CloudToolsForCore.getDomainIdSqlWhere(true), new Timestamp(uploadDate), dir, name);
+			return true;
+		}
+		catch (Exception e)
+		{
+			sk.iway.iwcm.Logger.error(e);
+			return false;
+		}
+	}
+
+	public static boolean clearInterestPoint(String dir, String name)
+	{
+		try
+		{
+			new SimpleQuery().execute("UPDATE gallery SET selected_x=NULL, selected_y=NULL, selected_width=NULL, selected_height=NULL WHERE image_path = ? AND image_name = ?"+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);
 			return true;
 		}
 		catch (Exception e)

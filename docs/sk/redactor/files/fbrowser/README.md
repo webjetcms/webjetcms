@@ -3,6 +3,7 @@
 Prieskumník je aplikácia na správu a prácu so súbormi.
 
 Pozostáva z niekoľkých častí:
+
 - panel nástrojov
 - navigačná lišta
 - hlavná plocha
@@ -17,6 +18,7 @@ Panel nástrojov ponúka široký výber nástrojov/funkcií na prácu so súbor
 !>**Upozornenie:** jednotlivé tlačidlá sa aktivujú iba za špecifický podmienok, takže nie sú vždy dostupné. Panel nástrojov obsahuje taktiež vyhľadávanie.
 
 Dané nástroje sú poľa logiky rozdelené do 3 kariet:
+
 - Súbor
 - Nástroje
 - Export - Import
@@ -98,6 +100,7 @@ Mód "Tu"                   |  Mód "V pod-priečinkoch"
 Obsahuje zoradené priečinky so súbormi vo forme stromovej štruktúry. Ak majú priečinky pod-priečinky (deti) je možné ich rozbaliť/zbaliť poď potreby. Pre potrebu navigácie v tejto stromovej štruktúre existujú aj nástroje **Späť**, **Prejsť do nadradeného priečinka** a **Ďalej** zo sekcie [panel nástrojov](#karta-súbor).
 
 Šírka navigačnej lišty nie je fixná, a dá sa meniť podľa potreby. Stromová štruktúra podporuje taktiež `Drag and Drop`, čiže umožňuje presúvanie priečinkov. Každý riadok s priečinkom môže obsahovať ikony:
+
 - <span><i class="ti ti-home"></i></span>, hlavný priečinok, ktorý už nemá nad sebou rodičovský priečinok
 - <span><i class="ti ti-lock"></i></span>, uzamknutý priečinok, povolené je len čítanie
 - <span><i class="ti ti-caret-right-filled"></i></span>, priečinok ktorý obsahuje pod-priečinky, ale zoznam je zbalený
@@ -116,6 +119,7 @@ Ako aj "Navigačná lišta", "Hlavná plocha" taktiež podporuje `Drag and Drop`
 **Ľavý klik**, slúži na označenie priečinkov a súborov.
 
 **Dvojitý ľavý klik**, na:
+
 - priečinok, vykoná jeho otvorenie
 - na textový súbor typov `text/plain`, `text/html`, `text/jsp`, `text/javascript`, `text/css`, `text/xml`, `text/x-js`, `text/markdown`, spusti akciu úpravy
 - na iné nepodporované súbory ako `.tld`, neurobí nič
@@ -128,6 +132,7 @@ Pravý klik na plochu       |  Pravý klik na priečinok  | Pravý klik na súbo
 
 Ako môžete vidieť z predchádzajúcej série obrázkov, zobrazené nástroje sa líšia v závislosti od zvoleného elementu. Napríklad pre súbor máme zobrazenú možnosť **Stiahnuť** ale pre priečinok nie, nakoľko povolené je IBA sťahovanie súborov.
 Taktiež ste si mohli všimnúť nástroje, ktoré sme si v sekcií [Panela nástrojov](#panel-nástrojov) nespomenuli, nakoľko nemajú vlastné tlačidlo v paneli. Ide o nástroje:
+
 - <span><i class="ti ti-reload"></i></span>, **Obnoviť**, je to akcia nad hlavnou plochou, ktorá vykoná opätovné načítanie dát aktuálneho priečinka.
 - <span><i class="ti ti-file-plus"></i></span>, **Nový textový súbor**, je to akcia nad hlavnou plochou, umožňuje okamžite v aktuálnom priečinku vytvoriť textový súbor týchto typov `TEXT, CSS, HTML`.
 - <span><i class="ti ti-folder-cog"></i></span>, **Nastavenie adresáru**, je to akcia nad priečinkom, bližšie informácie v časti [Nastavenie adresáru](../fbrowser/folder-settings/README.md).
@@ -140,3 +145,5 @@ Taktiež ste si mohli všimnúť nástroje, ktoré sme si v sekcií [Panela nás
 - `elfinderMoveConfirm` - štandardne sa zobrazí potvrdenie presunu súboru alebo priečinka, pri použití funkcie "drag & drop" alebo kopírovania/vloženia cez kontextové menu. Ak chcete potvrdzovanie presunu súboru alebo priečinka vypnúť zmeňte hodnotu konfiguračnej premennej `elfinderMoveConfirm` na `false`.
 
 ![](move-confirm.png)
+
+- Po nastavení konf. premennej `iwfs_useVersioning` na `true` sa začne zapisovať história zmien v súboroch (každý súbor sa po nahratí a pred prepísaním archivuje do priečinka `/WEB-INF/libfilehistory`). Zoznam je dostupný v prieskumníku v kontextovom menu Nastavenie súboru s možnosťou porovnania, zobrazenia historickej verzie a vrátenia zmeny. Cestu `/WEB-INF/libfilehistory` viete upraviť v konfiguračnej premennej `fileHistoryPath`, ak súbory potrebujete ukladať napr. na sieťový disk.
