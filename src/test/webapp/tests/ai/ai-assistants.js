@@ -107,7 +107,7 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
         I.dontSeeElement( locate(btnAiAction).withText("Vytvoriť nový obrázok") );
         I.dontSeeElement( locate(btnAiAction).withText("Odstrániť pozadie") );
     });
-    I.click( locate("#toast-container-ai").find("i.toast-close-button") );
+    I.click( locate("#toast-container-ai").find(".toast-close-button") );
     I.waitForInvisible("#toast-container-ai");
 
     I.click( locate(".DTE_Field_Name_perexImage").find( locate(btnAiAssistants) ) );

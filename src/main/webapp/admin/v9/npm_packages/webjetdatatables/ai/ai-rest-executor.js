@@ -178,6 +178,8 @@ export class AiRestExecutor {
             parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/```markdown/g, "").replace(/```$/g, "").trim();
             //replace \" to "
             parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/\\"/g, '"');
+            //replace escaped comments &amp;lt;!-- to <!-- and --&amp;gt; to -->
+            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/&amp;lt;!--/g, "&lt!--").replace(/--&amp;gt;/g, "--&gt;");
         }
 
         //console.log("Parsed JSON:", parsedJson);

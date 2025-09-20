@@ -40,6 +40,9 @@ export class AiUserInterface {
                     self._clearProgress();
                     self._hideLoader(button);
                     if (self.aiBrowserExecutor != null) self.aiBrowserExecutor.destroy();
+                    //get tootltip element and hide tooltip
+                    $('#toast-container-ai').find('.toast-close-button').tooltip('disable');
+                    $('#toast-container-ai').find('.toast-close-button').tooltip('hide');
                 }
             });
             window.lastToast = this.lastToast;
@@ -85,9 +88,24 @@ export class AiUserInterface {
         // Use jQuery to build content
         let currentGroup = null;
         let lastGroup = null;
+        let buttonCounter = 0;
         for (let i = 0; i < column.ai.length; i++) {
             let aiCol = column.ai[i];
             //console.log("aiCol=", aiCol);
+
+            //check value in input, if empty remove if there is no userPromptEnabled
+            let hasInput = false;
+            if (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action) hasInput = true;
+            else {
+                let inputFieldName = aiCol.from;
+                if (inputFieldName == null || inputFieldName === "") inputFieldName = aiCol.to;
+                let inputValue = this.EDITOR.get(inputFieldName);
+                if (inputValue != null && inputValue !== "") hasInput = true;
+                else {
+                    console.log("inputFieldName=", inputFieldName, "inputValue=", inputValue, "asistent=", aiCol.description, "aiCol=", aiCol);
+                }
+            }
+            if (hasInput === false) continue;
 
             currentGroup = aiCol.groupName;
             if (currentGroup !== null && currentGroup !== "" && currentGroup !== lastGroup) {
@@ -122,6 +140,10 @@ export class AiUserInterface {
 
             // Append button to the container
             contentContainer.append(btn);
+            buttonCounter++;
+        }
+        if (buttonCounter === 0) {
+            contentContainer.append($('<div class="no-ai-options"></div>').html(WJ.translate("components.ai_assistants.noOptionsAvailable.js")));
         }
     }
 
