@@ -184,8 +184,24 @@ export class EditorAi {
             } else if (this.undoField.type === "field" && this.undoField.to != null) {
                 this.EDITOR.set(this.undoField.to, this.undoField.value);
             }
-            this._closeToast();
+            //this._closeToast();
+            if (this.revertUserPrompt()==false) {
+                $("#toast-container-ai .header-back-button .btn-outline-secondary").trigger("click");
+            }
         }
+    }
+
+    revertUserPrompt() {
+        let userPromptSaved = $("#toast-ai-user-prompt-saved");
+        let savedContent = userPromptSaved.find(".user-prompt-container");
+        if (savedContent != null && savedContent.length > 0) {
+            $("#toast-container-ai-content").empty();
+            savedContent.find(".chat-error-container").empty();
+            $("#toast-container-ai-content").append(savedContent);
+            userPromptSaved.empty();
+            return true;
+        }
+        return false;
     }
 
     setDownloadStatus(percent) {

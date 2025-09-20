@@ -139,6 +139,7 @@
     align-items: flex-end;     // align to bottom
 
     .btn {
+        white-space: nowrap;
         i.ti {
             vertical-align: text-bottom;
         }
