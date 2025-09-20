@@ -180,7 +180,7 @@ Scenario('ai-assistants usage - IMAGE - WITH prompt', async ({ I, DTE, Document 
     I.fillField("#bonusContent-imageCount", 3);
     I.fillField("#ai-user-prompt", "Izometrický pohľad na bratislavský hrad");
     I.click( locate("#toast-container-ai-content").find(locate("button").withText("Generovať")) );
-    I.waitForInvisible( locate(".toast.toast-info > .toast-message > #toast-container-ai-content > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 100 );
+    I.waitForElement( ".ai-image-preview-div", 100 );
 
     Document.screenshot("/redactor/ai/datatables/image-select.png");
 });

@@ -271,7 +271,7 @@ export class AiUserInterface {
 
         if (statusClass === "ai-status-working") {
             //generate stop button
-            let stopButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-stop" type="button"><i class="ti ti-square" style="font-size: 16px; vertical-align: middle;"></i> ' + WJ.translate("button.stop")+'</button></div>');
+            let stopButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-stop" type="button"><i class="ti ti-square" style="font-size: 16px; vertical-align: text-bottom;"></i> ' + WJ.translate("button.stop")+'</button></div>');
             stopButton.find("button").on('click', () => {
                 if (self.editorAiInstance != null) self.editorAiInstance.stopExecution();
             });
