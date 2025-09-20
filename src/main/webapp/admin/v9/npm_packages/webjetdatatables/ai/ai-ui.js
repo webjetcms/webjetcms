@@ -232,15 +232,6 @@ export class AiUserInterface {
         text = WJ.parseMarkdown(text, { link: true, removeLastBr: true });
         html += text + '</span></div><div class="explanatory-text-container" style="display: none"></div>';
 
-        let undoButton = null;
-        if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
-            //generate undo button, on click call undo on editorAiInstance
-            undoButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i> ' + WJ.translate("components.ai_assistants.editor.undo.js")+'</button></div>');
-            undoButton.find("button").on('click', () => {
-                this.editorAiInstance.undo();
-            });
-        }
-
         if (statusClass === "ai-status-success" && chatErrorContainer == null) {
             //preserve userPromptDialog if exists
             let userPromptSaved = $("#toast-ai-user-prompt-saved");
@@ -255,10 +246,23 @@ export class AiUserInterface {
             chatErrorContainer.html(html);
         } else {
             contentContainer.html(html);
-            if (undoButton != null) {
-                let statusContainer = contentContainer.find(".current-status");
-                statusContainer.append(undoButton);
-                statusContainer.addClass("d-flex justify-content-between align-items-center");
+
+
+            if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
+                //generate undo button, on click call undo on editorAiInstance
+                let undoButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i> ' + WJ.translate("components.ai_assistants.editor.undo.js")+'</button></div>');
+                undoButton.find("button").on('click', () => {
+                    this.editorAiInstance.undo();
+                });
+                //generate OK button, on click close toast
+                let okButton = $('<div class="text-end"><button class="btn btn-primary btn-ai-ok" type="button"><i class="ti ti-check"></i> ' + WJ.translate("button.ok")+'</button></div>');
+                okButton.find("button").on('click', () => {
+                    this._closeToast();
+                });
+                let buttonContainer = $('<div class="ai-status-buttons-container d-flex justify-content-end gap-3 mt-1"></div>');
+                buttonContainer.append(undoButton);
+                buttonContainer.append(okButton);
+                contentContainer.append(buttonContainer);
             }
         }
 
@@ -459,7 +463,7 @@ export class AiUserInterface {
         return "/images/";
     }
 
-    async renderImageSelection(button, images, generatedImageName,  toField, textKey, ...params) {
+    async renderImageSelection(button, aiCol, images, generatedImageName, toField, textKey, ...params) {
         let contentContainer = $("#toast-container-ai-content");
 
         let self = this;
@@ -609,12 +613,14 @@ export class AiUserInterface {
 
         let buttonDiv = contentContainer.find('.button-div');
 
-        const editInstructionsButton = $('<button class="btn btn-outline-secondary me-2 edit-instructions"><i class="ti ti-pencil"></i> ' + WJ.translate("components.ai_assistants.editor.edit_prompt.js") + '</button>');
-        editInstructionsButton.on('click', () => {
-            //this.generateAssistentOptions(button, column);
-            self.editorAiInstance.revertUserPrompt();
-        });
-        buttonDiv.append(editInstructionsButton);
+        if (aiCol.userPromptEnabled===true) {
+            const editInstructionsButton = $('<button class="btn btn-outline-secondary me-2 edit-instructions"><i class="ti ti-pencil"></i> ' + WJ.translate("components.ai_assistants.editor.edit_prompt.js") + '</button>');
+            editInstructionsButton.on('click', () => {
+                //this.generateAssistentOptions(button, column);
+                self.editorAiInstance.revertUserPrompt();
+            });
+            buttonDiv.append(editInstructionsButton);
+        }
 
         const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai_assistants.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {

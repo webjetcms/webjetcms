@@ -204,7 +204,7 @@ export class AiRestExecutor {
                 if (res.error) {
                     executionResult.errorText = res.error;
                 } else {
-                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
+                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, aiCol, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
                     executionResult.totalTokens = res.totalTokens;
                     //set to false, otherwise dialog will be rerendered with default success message
                     executionResult.success = false;

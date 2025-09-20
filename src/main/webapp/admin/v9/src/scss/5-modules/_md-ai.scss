@@ -145,6 +145,14 @@
         }
     }
 
+    .ai-status-buttons-container {
+        .btn {
+            i.ti {
+                vertical-align: middle;
+            }
+        }
+    }
+
     .btn-primary {
         background-color: var(--wj-ai-color);
         border-color: var(--wj-ai-color);
