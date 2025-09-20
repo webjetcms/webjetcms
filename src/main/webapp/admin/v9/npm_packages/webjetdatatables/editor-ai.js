@@ -125,6 +125,7 @@ export class EditorAi {
 
     stopExecution() {
         this.aiUserInterface.saveUserPrompt();
+        this.aiUserInterface.setCurrentStatus("components.ai_assistants.stopping.js", false);
         if (this.aiBrowserExecutor != null) this.aiBrowserExecutor.destroy();
         //if (this.aiRestExecutor != null) this.aiRestExecutor.destroy();
 

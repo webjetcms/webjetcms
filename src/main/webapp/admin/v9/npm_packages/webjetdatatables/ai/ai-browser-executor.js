@@ -9,6 +9,7 @@ export class AiBrowserExecutor {
     localApiCache = {};
     lastApiInstance = null;
     languageDetector = null;
+    isDestroyed = false;
 
     EDITOR = null;
     editorAiInstance = null;
@@ -49,6 +50,7 @@ export class AiBrowserExecutor {
 
         let instructions = aiCol.instructions;
         let executionResult = new AiExecutionResult();
+        this.isDestroyed = false;
 
         //console.log("execute, inputData=", inputData);
         try {
@@ -68,6 +70,11 @@ export class AiBrowserExecutor {
                 }
 
                 //console.log("Initialized API instance:", apiInstance, "apiName=", apiName, "config=", config);
+                if (this.isDestroyed === true) {
+                    executionResult.stopped = true;
+                    this.isDestroyed = false;
+                    return executionResult;
+                }
 
                 let useStreaming = aiCol.useStreaming || false;
                 if (apiInstance) {
@@ -78,6 +85,7 @@ export class AiBrowserExecutor {
             //console.log(e);
             if ("signal is aborted without reason" === e.message) {
                 executionResult.stopped = true;
+                this.isDestroyed = false;
             } else {
                 executionResult.errorText = e.message;
             }
@@ -93,6 +101,8 @@ export class AiBrowserExecutor {
      */
     destroy() {
         //console.log("Destroying instance=", this.lastApiInstance);
+        //sometimes API instance is not YET available, so we need this semafor to handle this situation
+        this.isDestroyed = true;
         if (this.lastApiInstance != null) {
             this.lastApiInstance.destroy();
             this.lastApiInstance = null;
