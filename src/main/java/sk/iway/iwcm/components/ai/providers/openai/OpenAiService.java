@@ -60,12 +60,17 @@ import sk.iway.iwcm.utils.Pair;
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     private static final CloseableHttpClient client = HttpClients.createDefault();
-    private static final String SERVICE_NAME = "OpenAiService";
-    private static final String PROVIDER_ID = "openai";
-    private static final String TITLE_KEY = "components.ai_assistants.provider.openai.title";
 
     public String getProviderId() {
-        return PROVIDER_ID;
+        return "openai";
+    }
+
+    public String getServiceName() {
+        return "OpenAiService";
+    }
+
+    public String getTitleKey() {
+        return "components.ai_assistants.provider.openai.title";
     }
 
     public boolean isInit() {
@@ -73,7 +78,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public Pair<String, String> getProviderInfo(Prop prop) {
-        return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
+        return new Pair<>(getProviderId(), prop.getText(getTitleKey()));
     }
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
@@ -83,7 +88,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         addHeaders(get, true, false);
         try (CloseableHttpResponse response = client.execute(get)) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getSupportedModels");
+                handleErrorMessage(response, prop, getServiceName(), "getSupportedModels");
 
             String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             if (Tools.isEmpty(value)) return supportedValues;
@@ -125,7 +130,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try (CloseableHttpResponse response = client.execute(post)) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiStreamResponse");
+                handleErrorMessage(response, prop, getServiceName(), "getAiStreamResponse");
 
             HttpEntity entity = response.getEntity();
             try (InputStream inputStream = entity.getContent();
@@ -158,7 +163,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try (CloseableHttpResponse response = client.execute(post)) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiResponse");
+                handleErrorMessage(response, prop, getServiceName(), "getAiResponse");
 
             JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
             JSONArray data = res.getJSONArray("output");
@@ -191,7 +196,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         try (CloseableHttpResponse response = client.execute(post)) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiImageResponse");
+                handleErrorMessage(response, prop, getServiceName(), "getAiImageResponse");
 
             JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
             String format = "." + res.optString("output_format", "png");
@@ -257,7 +262,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             int totalTokens = usage.optInt("total_tokens", 0) + addTokens; // addTokens can be for example tokens used to generate image name using ai
             StringBuilder sb = new StringBuilder("");
 
-            sb.append(SERVICE_NAME).append(" -> run with id: ").append(runId).append(" was succesfull");
+            sb.append(getServiceName()).append(" -> run with id: ").append(runId).append(" was succesfull");
             sb.append("\n\n");
             sb.append("Assitant name : ").append(dbAssitant.getName()).append("\n");
             sb.append("From field : ").append(dbAssitant.getFieldFrom()).append("\n");
@@ -372,7 +377,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
                 totalTokens = usage.optInt("total_tokens", 0);
                 StringBuilder sb = new StringBuilder("");
 
-                sb.append(SERVICE_NAME).append(" -> generating name for image succesfull");
+                sb.append(getServiceName()).append(" -> generating name for image succesfull");
                 sb.append("\n\n");
                 sb.append("Action cost: \n");
                 sb.append("\t input_tokens: ").append( usage.optInt("input_tokens", 0) ).append("\n");
