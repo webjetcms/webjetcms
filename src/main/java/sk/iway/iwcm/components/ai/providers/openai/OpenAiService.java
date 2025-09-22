@@ -15,7 +15,9 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +45,7 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -116,10 +119,15 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
+        //Handle replace of INCLUDE tags
+        Map<Integer, String> replacedIncludes = new HashMap<>();
+        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
+        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+
         JSONObject json = new JSONObject();
         json.put(MODEL.value(), assistant.getModel());
-        json.put(INSTRUCTIONS.value(), assistant.getInstructions());
-        json.put(INPUT.value(), inputData.getInputValue());
+        json.put(INSTRUCTIONS.value(), instructions);
+        json.put(INPUT.value(), inputText);
         json.put(STORE.value(), !assistant.getUseTemporal());
         json.put(STREAM.value(), assistant.getUseStreaming());
 
@@ -136,7 +144,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             try (InputStream inputStream = entity.getContent();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8))) {
 
-                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler();
+                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(replacedIncludes);
                 streamHandler.handleBufferedReader(reader, writer);
 
                 //
@@ -149,14 +157,19 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
 
+        //Handle replace of INCLUDE tags
+        Map<Integer, String> replacedIncludes = new HashMap<>();
+        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
+        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
         HttpPost post = new HttpPost(RESPONSES_URL);
 
         JSONObject json = new JSONObject();
         json.put(MODEL.value(), assistant.getModel());
         json.put(STORE.value(), !assistant.getUseTemporal());
-        json.put(INSTRUCTIONS.value(), assistant.getInstructions());
-        json.put(INPUT.value(), inputData.getInputValue());
+        json.put(INSTRUCTIONS.value(), instructions);
+        json.put(INPUT.value(), inputText);
 
         post.setEntity(getRequestBody(json.toString()));
         addHeaders(post, true, false);
@@ -169,7 +182,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             JSONArray data = res.getJSONArray("output");
             JSONObject firstMessage = data.getJSONObject(0);
             JSONArray contentArray = firstMessage.getJSONArray("content");
-            responseDto.setResponse(contentArray.getJSONObject(0).getString("text"));
+
+            String responseText = contentArray.getJSONObject(0).getString("text");
+            responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
 
             handleUsage(responseDto, res, 0, assistant, res.optString("id", "NO_RUN_ID"), statRepo, request);
 

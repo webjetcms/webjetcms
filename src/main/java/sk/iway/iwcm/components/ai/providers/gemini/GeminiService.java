@@ -9,7 +9,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -34,6 +36,7 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -69,8 +72,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
+        //Handle replace of INCLUDE tags
+        Map<Integer, String> replacedIncludes = new HashMap<>();
+        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
+        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+
         //Prepare body object
-        JSONObject mainObject = getBaseMainObject(assistant.getInstructions(), inputData.getInputValue());
+        JSONObject mainObject = getBaseMainObject(instructions, inputText);
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -83,7 +91,10 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             String responseData = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
             JSONObject json = new JSONObject(responseData);
             JSONArray parts = getParts(json);
-            responseDto.setResponse(parts.getJSONObject(0).getString("text"));
+
+            //Set INCLUDES back to string
+            String responseText = parts.getJSONObject(0).getString("text");
+            responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
 
             handleUsage(responseDto, json, 0, assistant, statRepo, request);
         }
@@ -94,8 +105,13 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
+        //Handle replace of INCLUDE tags
+        Map<Integer, String> replacedIncludes = new HashMap<>();
+        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
+        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+
         //Prepare body object
-        JSONObject mainObject = getBaseMainObject(assistant.getInstructions(), inputData.getInputValue());
+        JSONObject mainObject = getBaseMainObject(instructions, inputText);
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
@@ -128,7 +144,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             try (InputStream inputStream = entity.getContent();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
 
-                GeminiStreamHandler streamHandler = new GeminiStreamHandler();
+                GeminiStreamHandler streamHandler = new GeminiStreamHandler(replacedIncludes);
                 streamHandler.handleBufferedReader(reader, writer);
 
                 handleUsage(responseDto, streamHandler, 0, assistant, statRepo, request);
