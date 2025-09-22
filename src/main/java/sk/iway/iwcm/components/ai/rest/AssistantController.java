@@ -1,7 +1,9 @@
 package sk.iway.iwcm.components.ai.rest;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -38,11 +40,14 @@ public class AssistantController {
     private final AiStatRepository statRepo;
     private final AssistantDefinitionRepository assistantRepo;
 
+    private final AiTaskRegistry aiTaskRegistry;
+
     @Autowired
-    public AssistantController(AiService aiService, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo) {
+    public AssistantController(AiService aiService, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, AiTaskRegistry aiTaskRegistry) {
         this.aiService = aiService;
         this.statRepo = statRepo;
         this.assistantRepo = assistantRepo;
+        this.aiTaskRegistry = aiTaskRegistry;
     }
 
     @PostMapping(value = "/response/", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -89,7 +94,10 @@ public class AssistantController {
         response.setContentType("text/plain;charset=utf-8");
         response.setCharacterEncoding("UTF-8");
 
-        PrintWriter writer = response.getWriter();
+        BufferedWriter writer = new BufferedWriter(
+            new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)
+        );
+
         AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
 
@@ -169,5 +177,10 @@ public class AssistantController {
         column.setAi(ai); //set also to column for future use
 
         return column;
+    }
+
+    @GetMapping(value = "/stop-assistant/")
+    public boolean stopAssistant(@RequestParam("assistantId") Long assistantId, @RequestParam("timestamp") Long timestamp, HttpServletRequest request) {
+        return aiTaskRegistry.cancel(assistantId, timestamp, request);
     }
 }

@@ -2,8 +2,8 @@ package sk.iway.iwcm.components.ai.rest;
 
 import static sk.iway.iwcm.components.ai.jpa.SupportedActions.doesSupportAction;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -46,13 +47,16 @@ import sk.iway.iwcm.utils.Pair;
 public class AiService {
 
     private final List<AiInterface> aiInterfaces;
+    private final AiTaskRegistry aiTaskRegistry;
+
     private static final String CACHE_OPTION_KEYS = "AiService.ProviderOptions.";
     private static final int CACHE_MODELS_TIME = 24 * 60;
     private static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
-    public AiService(List<AiInterface> aiInterfaces) {
+    public AiService(List<AiInterface> aiInterfaces, AiTaskRegistry aiTaskRegistry) {
         this.aiInterfaces = aiInterfaces;
+        this.aiTaskRegistry = aiTaskRegistry;
     }
 
     /* PUBLIC METHODS */
@@ -132,7 +136,10 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
+                // Prepare task
+                Callable<AssistantResponseDTO> task = () -> aiInterface.getAiResponse(assistant, inputData, prop, statRepo, request);
+                // Run task
+                return aiTaskRegistry.runAssistantTask(task, inputData, request);
             }
         }
 
@@ -152,14 +159,17 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo, request);
+                // Prepare task
+                Callable<AssistantResponseDTO> task = () -> aiInterface.getAiImageResponse(assistant, inputData, prop, statRepo, request);
+                // Run task
+                return aiTaskRegistry.runAssistantTask(task, inputData, request);
             }
         }
 
         throw new IllegalStateException( getSomethingWrongErr(prop) );
     }
 
-    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, PrintWriter writer, HttpServletRequest request) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(InputDataDTO inputData, AiStatRepository statRepo, AssistantDefinitionRepository assistantRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
 
         Prop prop = Prop.getInstance(request);
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
@@ -174,7 +184,10 @@ public class AiService {
 
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
+                // Prepare task
+                Callable<AssistantResponseDTO> task = () -> aiInterface.getAiStreamResponse(assistant, inputData, prop, statRepo, writer, request);
+                // Run task
+                return aiTaskRegistry.runAssistantTask(task, inputData, request);
             }
         }
 

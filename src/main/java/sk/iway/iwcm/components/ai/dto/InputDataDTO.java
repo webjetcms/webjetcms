@@ -54,6 +54,9 @@ public class InputDataDTO {
     String imageSize;
     String imageQuality;
 
+    // timestamp from FE when assistant was called, used as part of running assiatnt task id
+    Long timestamp;
+
     public void removeHtml() {
         if(Tools.isEmpty(inputValue)) return;
         Html2Text html2Text = new Html2Text(inputValue);
@@ -68,6 +71,7 @@ public class InputDataDTO {
         this.assistantId = Tools.getLongValue(data.get("assistantId"), -1L);
         this.inputValue = data.get("inputValue");
         this.inputValueType = InputValueType.from( data.get("inputValueType") );
+        this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
     }
 
     public void prepareData(HttpServletRequest request) throws IllegalStateException {

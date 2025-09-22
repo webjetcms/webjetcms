@@ -1,8 +1,8 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import org.json.JSONObject;
 
@@ -57,13 +57,13 @@ public class OpenAiStreamHandler {
         }
     }
 
-    private void pushAnswePart(String answerPart, PrintWriter writer) {
+    private void pushAnswePart(String answerPart, BufferedWriter writer) throws IOException{
         if(answerPart == null) return;
         writer.write(answerPart);
         writer.flush();
     }
 
-    public final void handleBufferedReader(BufferedReader reader, PrintWriter writer) throws IOException {
+    public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
 
         String line;
         while ((line = reader.readLine()) != null) {

@@ -1,6 +1,6 @@
 package sk.iway.iwcm.components.ai.providers.browser;
 
-import java.io.PrintWriter;
+import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,7 +60,7 @@ public class BrowserService implements AiInterface {
         return models;
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, PrintWriter writer, HttpServletRequest request) throws Exception {
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
         return null;
     }
 

@@ -1,8 +1,8 @@
 package sk.iway.iwcm.components.ai.providers.gemini;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 
 import lombok.Getter;
@@ -22,7 +22,7 @@ public class GeminiStreamHandler {
     Integer thoughtsTokenCount = 0;
     Integer promptTokenCount = 0;
 
-    public final void handleBufferedReader(BufferedReader reader, PrintWriter writer) throws IOException {
+    public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
         String line;
         while ((line = reader.readLine()) != null) {
 
@@ -72,7 +72,7 @@ public class GeminiStreamHandler {
         return Tools.getIntValue(line, 0);
     }
 
-    private void pushAnswePart(String answerPart, PrintWriter writer) {
+    private void pushAnswePart(String answerPart, BufferedWriter writer) throws IOException {
         if(answerPart == null) return;
 
         //Remove prefix

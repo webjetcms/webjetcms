@@ -8,6 +8,9 @@ export class AiRestExecutor {
     EDITOR = null;
     editorAiInstance = null;
 
+    curentAssistantId = null;
+    curentTimestamp = null;
+
     constructor(EDITOR, editorAiInstance) {
         this.EDITOR = EDITOR;
         this.editorAiInstance = editorAiInstance;
@@ -18,6 +21,12 @@ export class AiRestExecutor {
         let executionResult = new AiExecutionResult();
 
         inputData.assistantId = aiCol.assistantId;
+        inputData.timestamp = Date.now();
+
+        self.curentAssistantId = inputData.assistantId;
+        self.curentTimestamp = inputData.timestamp;
+
+        //debugger;
 
         if (aiCol.useStreaming===true) {
             //console.log("Using streaming for AI response:", aiCol.assistant);
@@ -135,6 +144,11 @@ export class AiRestExecutor {
                 }
             });
         }
+
+        //Remove old run info
+        self.curentAssistantId = null;
+        self.curentTimestamp = null;
+
         return executionResult;
     }
 
@@ -190,6 +204,10 @@ export class AiRestExecutor {
         let executionResult = new AiExecutionResult();
 
         inputData.assistantId = aiCol.assistantId;
+        inputData.timestamp = Date.now();
+
+        self.curentAssistantId = inputData.assistantId;
+        self.curentTimestamp = inputData.timestamp;
 
         await $.ajax({
             type: "POST",
@@ -213,7 +231,35 @@ export class AiRestExecutor {
             }
         });
 
+        //Remove old run info
+        self.curentAssistantId = null;
+        self.curentTimestamp = null;
+
         return executionResult;
+    }
+
+    destroy() {
+        let self = this;
+
+        console.log("ai-rest-execution self", self);
+
+        if(self.curentAssistantId != null && self.curentTimestamp != null) {
+            $.ajax({
+                type: "GET",
+                url: "/admin/rest/ai/assistant-definition/stop-assistant/",
+                data: {
+                    assistantId : self.curentAssistantId,
+                    timestamp : self.curentTimestamp
+                },
+                success: function(res)
+                {
+                    console.log("SUCCESCC : ", res);
+                }
+            });
+        }
+
+        self.curentAssistantId = null;
+        self.curentTimestamp = null;
     }
 
 }

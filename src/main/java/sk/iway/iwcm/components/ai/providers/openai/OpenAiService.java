@@ -8,10 +8,10 @@ import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.A
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -107,7 +107,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return supportedValues;
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop,  AiStatRepository statRepo, PrintWriter writer, HttpServletRequest request) throws IOException {
+    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop,  AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws IOException {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
