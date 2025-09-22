@@ -9,5 +9,6 @@ export class AiExecutionResult {
     errorText = null;
     totalTokens = 0;
     explanatoryText = null;
+    stopped = false;
 
 }

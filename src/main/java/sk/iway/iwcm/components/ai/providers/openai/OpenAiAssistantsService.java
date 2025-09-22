@@ -18,10 +18,8 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 @Service
 public class OpenAiAssistantsService extends OpenAiSupportService implements AiAssitantsInterface {
 
-    private static final String PROVIDER_ID = "openai";
-
     public String getProviderId() {
-        return PROVIDER_ID;
+        return "openai";
     }
 
     public boolean isInit() {

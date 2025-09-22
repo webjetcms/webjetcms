@@ -192,6 +192,8 @@ export class AiRestExecutor {
             parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/```markdown/g, "").replace(/```$/g, "").trim();
             //replace \" to "
             parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/\\"/g, '"');
+            //replace escaped comments &amp;lt;!-- to <!-- and --&amp;gt; to -->
+            parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/&amp;lt;!--/g, "&lt!--").replace(/--&amp;gt;/g, "--&gt;");
         }
 
         //console.log("Parsed JSON:", parsedJson);
@@ -220,7 +222,7 @@ export class AiRestExecutor {
                 if (res.error) {
                     executionResult.errorText = res.error;
                 } else {
-                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
+                    self.editorAiInstance.aiUserInterface.renderImageSelection(button, aiCol, res.tempFiles, res.generatedFileName, aiCol.to, "components.ai_assistants.stat.totalTokens.js", res.totalTokens);
                     executionResult.totalTokens = res.totalTokens;
                     //set to false, otherwise dialog will be rerendered with default success message
                     executionResult.success = false;

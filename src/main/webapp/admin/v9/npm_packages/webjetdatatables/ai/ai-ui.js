@@ -25,9 +25,9 @@ export class AiUserInterface {
 
         let contentContainer = $("#toast-container-ai-content");
         if (contentContainer.length === 0) {
-            this.lastToast = window.toastr.info("<div id='toast-container-ai-content'></div>", WJ.translate("components.ai_assistants.editor.btn.tooltip.js"), {
+            this.lastToast = window.toastr.info("<div id='toast-container-ai-content'></div>", "<strong>"+WJ.translate("components.ai_assistants.editor.btn.tooltip.js")+"</strong>", {
                 closeButton: true,
-                closeHtml: '<i class="ti ti-x"></i>',
+                closeHtml: '<button class="toast-close-button" data-toggle="tooltip" title="'+WJ.translate('datatables.modal.close.js')+'"><i class="ti ti-x"></i></button>',
                 timeOut: 0,
                 tapToDismiss: false,
                 extendedTimeOut: 0,
@@ -39,32 +39,43 @@ export class AiUserInterface {
                 onCloseClick: () => {
                     self._clearProgress();
                     self._hideLoader(button);
-                    if (self.aiBrowserExecutor != null) self.aiBrowserExecutor.destroy();
+                    if (self.editorAiInstance != null) self.editorAiInstance.stopExecution();
+                    //get tootltip element and hide tooltip
+                    $('#toast-container-ai').find('.toast-close-button').tooltip('disable');
+                    $('#toast-container-ai').find('.toast-close-button').tooltip('hide');
                 }
             });
             window.lastToast = this.lastToast;
             contentContainer = $("#toast-container-ai-content");
             this.$progressElement = $("#toast-container-ai").find(".toast-progress");
 
-                // Container with action buttons for handling existing file name conflicts
-                const $nameSelection = $(`
-                    <div id="toast-ai-name-selection" class="ai-name-selection" style="display:none">
-                        <button class="btn btn-primary" id="rewrite">
-                            ${WJ.translate("components.ai_assistants.saveFile.rewrite.js")}
-                        </button>
-                        <button class="btn btn-primary" id="rename"></button>
-                        <button class="btn btn-outline-secondary" id="back">
-                            ${WJ.translate("button.cancel")}
-                        </button>
-                    </div>
-                `);
+            //container with saved userPromptDialog (to preserve it for undo)
+            const $userPromptDialog = $(`<div id="toast-ai-user-prompt-saved" style="display:none"></div>`);
+            $("#toast-container-ai .toast-message").append($userPromptDialog);
 
-                $(".toast-message").append($nameSelection);
+            // Container with action buttons for handling existing file name conflicts
+            const $nameSelection = $(`
+                <div id="toast-ai-name-selection" class="ai-name-selection" style="display:none">
+                    <button class="btn btn-primary" id="rewrite">
+                        ${WJ.translate("components.ai_assistants.saveFile.rewrite.js")}
+                    </button>
+                    <button class="btn btn-primary" id="rename"></button>
+                    <button class="btn btn-outline-secondary" id="back">
+                        ${WJ.translate("button.cancel")}
+                    </button>
+                </div>
+            `);
+
+            $("#toast-container-ai .toast-message").append($nameSelection);
+
+            //add tooltip to close button
+            $('#toast-container-ai').find('.toast-close-button').tooltip({ trigger: 'hover', customClass: 'tooltip-ai' });
         }
 
         //set default header
         $("#toast-container-ai").removeClass("has-back-button");
-        $("#toast-container-ai .toast-title").html(WJ.translate("components.ai_assistants.editor.btn.tooltip.js"));
+        $("#toast-container-ai .toast-title").html("<strong>"+WJ.translate("components.ai_assistants.editor.btn.tooltip.js")+"</strong>");
+        $("#toast-ai-user-prompt-saved").empty();
 
         $("#toast-container-ai").on("click", (e) => {
             if (e.target.id === "toast-container-ai") {
@@ -82,9 +93,24 @@ export class AiUserInterface {
         // Use jQuery to build content
         let currentGroup = null;
         let lastGroup = null;
+        let buttonCounter = 0;
         for (let i = 0; i < column.ai.length; i++) {
             let aiCol = column.ai[i];
             //console.log("aiCol=", aiCol);
+
+            //check value in input, if empty remove if there is no userPromptEnabled
+            let hasInput = false;
+            if (true === aiCol.userPromptEnabled && "edit_image" !== aiCol.action) hasInput = true;
+            else {
+                let inputFieldName = aiCol.from;
+                if (inputFieldName == null || inputFieldName === "") inputFieldName = aiCol.to;
+                let inputValue = this.EDITOR.get(inputFieldName);
+                if (inputValue != null && inputValue !== "") hasInput = true;
+                else {
+                    console.log("inputFieldName=", inputFieldName, "inputValue=", inputValue, "asistent=", aiCol.description, "aiCol=", aiCol);
+                }
+            }
+            if (hasInput === false) continue;
 
             currentGroup = aiCol.groupName;
             if (currentGroup !== null && currentGroup !== "" && currentGroup !== lastGroup) {
@@ -119,6 +145,10 @@ export class AiUserInterface {
 
             // Append button to the container
             contentContainer.append(btn);
+            buttonCounter++;
+        }
+        if (buttonCounter === 0) {
+            contentContainer.append($('<div class="no-ai-options"></div>').html(WJ.translate("components.ai_assistants.noOptionsAvailable.js")));
         }
     }
 
@@ -155,6 +185,7 @@ export class AiUserInterface {
     }
 
     setCurrentStatus(textKey, pulsate = false, ...params) {
+        let self = this;
         let contentContainer = $("#toast-container-ai-content");
 
         //reset contentContainer class
@@ -176,16 +207,22 @@ export class AiUserInterface {
         } else if ("components.ai_assistants.unknownError.js" === textKey) {
             statusClass = "ai-status-error";
             icon = "help-circle";
+            if (typeof params != "undefined" && params != null && params.length == 1 && params[0].indexOf("!")==0) {
+                //if params starts with ! use it as main text
+                textKey = params[0].substring(1);
+            }
         } else if ("components.ai_assistants.saveFile.unknownError.js" === textKey) {
             statusClass = "ai-status-error";
             icon = "help-circle";
         }
 
+        if ("components.ai_assistants.stat.totalTokens.js" === textKey && typeof params != "undefined" && params != null && params.length == 1 && params[0] == 0) {
+            textKey = "components.ai_assistants.stat.totalTokens-0.js";
+        }
+
         if (pulsate) {
             html += " pulsate-text";
         }
-        if (statusClass != "") contentContainer.addClass(statusClass);
-
         html = html + '"><span>';
 
         if (icon != "") html += '<i class="ti ti-' + icon + '"></i> ';
@@ -194,24 +231,54 @@ export class AiUserInterface {
         text = WJ.parseMarkdown(text, { link: true, removeLastBr: true });
         html += text + '</span></div><div class="explanatory-text-container" style="display: none"></div>';
 
-        let undoButton = null;
-        if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
-            //generate undo button, on click call undo on editorAiInstance
-            undoButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i> ' + WJ.translate("components.ai_assistants.editor.undo.js")+'</button></div>');
-            undoButton.find("button").on('click', () => {
-                this.editorAiInstance.undo();
-            });
+
+        //clean and set new status class on toast container
+        let toastContainerAi = $("#toast-container-ai");
+        toastContainerAi.removeClass(function (index, className) {
+            return (className.match (/(^|\s)ai-status-\S+/g) || []).join(' ');
+        });
+        if (statusClass != "") toastContainerAi.addClass(statusClass);
+
+        //chat error container is shown only in image generation with user prompt
+        if (statusClass === "ai-status-success" && chatErrorContainer == null) {
+            //preserve userPromptDialog if exists - save it to hidden container
+            this.saveUserPrompt();
         }
 
         if (chatErrorContainer != null && chatErrorContainer.length > 0) {
             chatErrorContainer.html(html);
         } else {
             contentContainer.html(html);
-            if (undoButton != null) {
-                let statusContainer = contentContainer.find(".current-status");
-                statusContainer.append(undoButton);
-                statusContainer.addClass("d-flex justify-content-between align-items-center");
+
+
+            if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
+                //generate undo button, on click call undo on editorAiInstance
+                let undoButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i> ' + WJ.translate("components.ai_assistants.editor.undo.js")+'</button></div>');
+                undoButton.find("button").on('click', () => {
+                    this.editorAiInstance.undo();
+                });
+                //generate OK button, on click close toast
+                let okButton = $('<div class="text-end"><button class="btn btn-primary btn-ai-ok" type="button"><i class="ti ti-check"></i> ' + WJ.translate("button.ok")+'</button></div>');
+                okButton.find("button").on('click', () => {
+                    this._closeToast();
+                });
+                let buttonContainer = $('<div class="ai-status-buttons-container d-flex justify-content-end gap-3 mt-1"></div>');
+                buttonContainer.append(undoButton);
+                buttonContainer.append(okButton);
+                contentContainer.append(buttonContainer);
             }
+        }
+
+        if (statusClass === "ai-status-working") {
+            //generate stop button
+            let stopButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-stop" type="button"><i class="ti ti-square" style="font-size: 16px; vertical-align: text-bottom;"></i> ' + WJ.translate("button.stop")+'</button></div>');
+            stopButton.find("button").on('click', () => {
+                if (self.editorAiInstance != null) self.editorAiInstance.stopExecution();
+            });
+
+            let statusContainer = $("#toast-container-ai").find(".current-status");
+            statusContainer.append(stopButton);
+            statusContainer.addClass("d-flex justify-content-between align-items-center");
         }
 
         //for safety hide previous explanatory text
@@ -238,6 +305,17 @@ export class AiUserInterface {
         explanatoryTextContainer.hide();
     }
 
+    saveUserPrompt() {
+        let userPromptSaved = $("#toast-ai-user-prompt-saved");
+        userPromptSaved.empty();
+        let userPromptDialog = $("#toast-container-ai-content").find(".user-prompt-container");
+        //console.log("saving userPromptDialog=", userPromptDialog);
+        if (userPromptDialog != null && userPromptDialog.length > 0) {
+            //move userPromptDialog to hidden container
+            userPromptSaved.append(userPromptDialog);
+        }
+    }
+
     async _executeAction(button, column, aiCol, inputValues = null) {
         this.editorAiInstance._executeAction(button, column, aiCol, inputValues);
     }
@@ -252,7 +330,7 @@ export class AiUserInterface {
 
     _closeToast(timeOut) {
         if (typeof timeOut === "undefined" || timeOut == null || timeOut < 1) {
-            $("#toast-container-ai").find("i.toast-close-button").trigger("click");
+            $("#toast-container-ai").find(".toast-close-button").trigger("click");
         }
 
         let progressBar = this.progressBar;
@@ -275,7 +353,7 @@ export class AiUserInterface {
         if (percentage <= 1) {
             clearInterval(progressBar.intervalId);
             //toastr.clear(self.lastToast);
-            $("#toast-container-ai").find("i.toast-close-button").trigger("click");
+            $("#toast-container-ai").find(".toast-close-button").trigger("click");
         }
     }
 
@@ -292,7 +370,9 @@ export class AiUserInterface {
             this.setCurrentStatus("components.ai_assistants.browser.optimizingModel.js", false);
             if (this.$progressElement != null) this.$progressElement.width('0%');
         } else {
-            this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, percent + "%");
+            var value = percent + "%";
+            if (percent == null || percent == "") value = "";
+            this.setCurrentStatus("components.ai_assistants.browser.downloadingModel.js", false, value);
             if (this.$progressElement != null) this.$progressElement.width(percent + '%');
         }
     }
@@ -301,13 +381,15 @@ export class AiUserInterface {
         let header = `
             <div class="header-back-button">
                 <button class="btn btn-outline-secondary"><i class="ti ti-chevron-left"></i> ${WJ.translate("components.ai_assistants.user_prompt.back.js")}</button>
-                <i class="ti ti-${aiCol.icon}"></i>
-                <span>
-                    ${aiCol.description}
-                </span>
-                <span class="provider">
-                   (${aiCol.providerTitle})
-                </span>
+                <div class="ai-title">
+                    <i class="ti ti-${aiCol.icon}"></i>
+                    <span>
+                        ${aiCol.description}
+                    </span>
+                    <span class="provider">
+                    (${aiCol.providerTitle})
+                    </span>
+                </div>
             </div>
         `;
 
@@ -324,10 +406,13 @@ export class AiUserInterface {
 
         let bonusHtml = await this._getBonusHtml(aiCol.assistantId);
         let html = `
-            <div class="chat-error-container"></div>
-            <div class="mb-3">
-                <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
-                ${bonusHtml}
+            <div class="user-prompt-container">
+                <div class="mb-3">
+                    <textarea id="ai-user-prompt" class="form-control" rows="4" placeholder="${aiCol.userPromptLabel}"></textarea>
+                    <div class="form-text text-danger small"></div>
+                    ${bonusHtml}
+                </div>
+                <div class="chat-error-container"></div>
             </div>
         `;
 
@@ -344,8 +429,18 @@ export class AiUserInterface {
         `);
         btn.find("button").on('click', () => {
 
+            //check required fields
+            let value = $("#ai-user-prompt").val();
+            let valueEmptyContainer = $("#ai-user-prompt").next(".form-text");
+            valueEmptyContainer.hide();
+            if (aiCol.userPromptEnabled === true && (value == null || value.trim() === "")) {
+                valueEmptyContainer.html(WJ.translate("components.ai_assistants.user_prompt.required.js"));
+                valueEmptyContainer.show();
+                return;
+            }
+
             let inputValues = {
-                "userPrompt" : $("#ai-user-prompt").val()
+                "userPrompt" : value
             };
 
             //Add bonus content
@@ -358,7 +453,7 @@ export class AiUserInterface {
             this._executeAction(button, column, aiCol, inputValues);
         });
 
-        contentContainer.append(btn);
+        contentContainer.find(".user-prompt-container").append(btn);
     }
 
     async getPathForNewImage() {
@@ -405,7 +500,7 @@ export class AiUserInterface {
         return "/images/";
     }
 
-    async renderImageSelection(button, images, generatedImageName,  toField, textKey, ...params) {
+    async renderImageSelection(button, aiCol, images, generatedImageName, toField, textKey, ...params) {
         let contentContainer = $("#toast-container-ai-content");
 
         let self = this;
@@ -554,6 +649,15 @@ export class AiUserInterface {
         }
 
         let buttonDiv = contentContainer.find('.button-div');
+
+        if (aiCol.userPromptEnabled===true) {
+            const editInstructionsButton = $('<button class="btn btn-outline-secondary me-2 edit-instructions"><i class="ti ti-pencil"></i> ' + WJ.translate("components.ai_assistants.editor.edit_prompt.js") + '</button>');
+            editInstructionsButton.on('click', () => {
+                //this.generateAssistentOptions(button, column);
+                self.editorAiInstance.revertUserPrompt();
+            });
+            buttonDiv.append(editInstructionsButton);
+        }
 
         const imageButton = $('<button class="btn btn-primary select-image"><i class="ti ti-download"></i> ' + WJ.translate("components.ai_assistants.editor.select_image.js") + '</button>');
         imageButton.on('click', () => {

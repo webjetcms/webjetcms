@@ -1,10 +1,10 @@
 # Používanie AI asistentov
 
-Logika využívania AI asistentov je jednotná naprieč celým CMS, aby mal používateľ konzistentný zážitok bez ohľadu na kontext. V tejto kapitole nájdete prehľad správania asistenta v dátových tabuľkách, CKEditore, PageBuilderi, pri označení textu aj v editore obrázkov.
+Logika využívania AI asistentov je jednotná naprieč celým CMS, aby mal používateľ konzistentný zážitok bez ohľadu na kontext. V tejto kapitole nájdete prehľad správania asistenta v dátových tabuľkách, editore webových stránok, v nástroji PageBuilder, pri označení textu aj v editore obrázkov.
 
 ## Textové polia
 
-Asistent pri textovom poli (jednoriadkové pole aj textarea) slúži na vygenerovanie nového obsahu alebo úpravu existujúceho. Spúšťa sa cez tlačidlo <button class="btn btn-outline-secondary btn-ai" type="button"><i class="ti ti-sparkles"></i></button> na konci poľa.
+Asistent pri textovom poli (jednoriadkové pole aj `textarea`) slúži na vygenerovanie nového obsahu alebo úpravu existujúceho. Spúšťa sa cez tlačidlo <button class="btn btn-outline-secondary btn-ai" type="button"><i class="ti ti-sparkles"></i></button> na konci poľa.
 
 ![](textarea-focus.png)
 
@@ -58,7 +58,7 @@ Ak pole obsahuje obrázok, spustí sa spracovanie a zobrazí sa indikácia prieb
 
 Po dokončení sa zobrazí potvrdenie, informácia o spotrebe tokenov a náhľad výsledku. Pomocou tlačidla <a target="_blank" class="zoom-in"><i class="ti ti-zoom-in"></i></a> si môžete obrázok otvoriť v plnej veľkosti na novej karte.
 
-Obrázok sa neukladá automaticky. Najprv vyplňte alebo upravte polia **Názov obrázka** a **Umiestnenie**. Hodnoty sa predvyplnia podľa pôvodného obrázka, ale môžete ich zmeniť. Pole **Umiestnenie** umožňuje výber priečinka cez stromovú štruktúru.
+Obrázok sa neukladá automaticky. Najprv vyplňte alebo upravte polia **Názov obrázka** a **Umiestnenie**. Hodnoty sa vyplnia podľa pôvodného obrázka, ale môžete ich zmeniť. Pole **Umiestnenie** umožňuje výber priečinka cez stromovú štruktúru.
 
 Na uloženie stlačte **Uložiť obrázok**.
 
@@ -98,9 +98,9 @@ Poskytovateľ môže odmietnuť požiadavku, ak pokyny obsahujú chránenú aleb
 
 ![](image-error-2.png)
 
-## CKEditor
+## Editor webových stránok
 
-Asistenti fungujú aj v `CKEditor` a slúžia na vygenerovanie nového obsahu alebo úpravu existujúceho obsahu stránky, ktorý je vložený v `CKEditor`. Spúšťajú sa cez ikonu <button class="btn-ai" type="button"><i class="ti ti-sparkles"></i></button> umiestnenú v paneli nástrojov.
+Asistenti fungujú aj v editore webových stránok a slúžia na vygenerovanie nového obsahu alebo úpravu existujúceho obsahu stránky. Spúšťajú sa cez ikonu <button class="btn-ai" type="button"><i class="ti ti-sparkles"></i></button> umiestnenú v paneli nástrojov webového editora.
 
 ![](ckeditor.png)
 
@@ -159,3 +159,11 @@ AI asistenta môžete využiť aj pri vkladaní obrázkov do webovej stránky. T
 Po kliknutí sa otvorí okno so všetkými dostupnými asistentmi, s ktorými sa pracuje rovnako, ako je to opísané v časti [Obrázkové polia](./README.md#obrázkové-polia)
 
 ![](page-image-assistants.png)
+
+## Prázdne pole
+
+Asistenti používajú často ako vstupnú hodnotu obsah daného poľa, ak je pole prázdne, nezobrazia sa. Napríklad Preložiť do angličtiny nemá zmysel zobraziť, ak je pole prázdne. Môže nastať situácia, že pre prázdne pole nie je dostupný žiaden asistent, vtedy sa zobrazí chybová správa. Do poľa je potrebné najskôr zadať text, až potom zobraziť asistentov.
+
+Nie vždy sa ale používa rovnaké pole pre vstupnú hodnotu. Napríklad v editácii webovej stránky je asistent na generovanie Názvu webovej stránky z jej textu. Ak text web stránky je zatiaľ prázdny nemusí sa táto možnosť zobraziť.
+
+![](no-assistants-available.png)
