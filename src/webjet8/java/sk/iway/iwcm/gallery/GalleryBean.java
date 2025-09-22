@@ -46,7 +46,6 @@ public class GalleryBean
 	private Date uploadDate;
 	private int sortPriority;
 	private boolean cyclicViewing = false;
-   private String imageSource = "";
 
 	private boolean prevNextLinksInitalized = false;
 	private void initPrevNextLinks()
@@ -55,6 +54,7 @@ public class GalleryBean
 		GalleryDB.fillPrevNextLink(this, cyclicViewing);
 		prevNextLinksInitalized = true;
 	}
+
 
 	/**
 	 * Vrati URL k obrazku ako imagePath+/+imageName
@@ -113,7 +113,7 @@ public class GalleryBean
 
       if (ret==null) return("");
 
-      if (ret.indexOf('\n')!=-1)
+      if (ret.indexOf('\n')>0)
       {
          if (ret.indexOf("<br")!=-1 || ret.indexOf("<p")!=-1 || ret.indexOf("<td")!=-1)
          {
@@ -150,7 +150,7 @@ public class GalleryBean
 
       if (ret==null) return("");
 
-      if (ret.indexOf('\n')!=-1)
+      if (ret.indexOf('\n')>0)
       {
          if (ret.indexOf("<br")!=-1 || ret.indexOf("<p")!=-1 || ret.indexOf("<td")!=-1)
          {
@@ -341,13 +341,7 @@ public class GalleryBean
 					+ ", perexGroup=" + Arrays.toString(perexGroup) + ", selectedX=" + selectedX + ", selectedY=" + selectedY
 					+ ", selectedWidth=" + selectedWidth + ", selectedHeight=" + selectedHeight + ", uploadDate=" + uploadDate
 					+ ", sortPriority=" + sortPriority + ", cyclicViewing=" + cyclicViewing
-					+ ", prevNextLinksInitalized=" + prevNextLinksInitalized + ", imageSource=" + imageSource + "]";
+					+ ", prevNextLinksInitalized=" + prevNextLinksInitalized + "]";
 	}
 
-   public String getImageSource() {
-      return imageSource;
-   }
-   public void setImageSource(String imageSource) {
-      this.imageSource = imageSource;
-   }
 }
