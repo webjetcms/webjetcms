@@ -88,15 +88,22 @@ export class EditorAi {
                     } else {
                         let inputField = $(field.dom.inputControl[0]).find(".form-control");
 
-                        //if it doesnt have input-group, wrap it
-                        if (inputField.parents(".input-group").length === 0) {
-                            inputField.wrap('<div class="input-group"></div>');
-                        }
+                        //console.log("inputField:", inputField, "parents=", inputField.parents(".bootstrap-select").length);
 
-                        //if it doesnt have ti-sparkles button add it
-                        if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
-                            const button = this._getEditorButton(column, null);
-                            inputField.parents(".input-group").append(button);
+                        if (inputField.parents(".bootstrap-select").length > 0) {
+                            //it is probably custom field set as selectpicker, skip it
+                            //we should probably better handle custom fields in future
+                        } else {
+                            //if it doesnt have input-group, wrap it
+                            if (inputField.parents(".input-group").length === 0) {
+                                inputField.wrap('<div class="input-group"></div>');
+                            }
+
+                            //if it doesnt have ti-sparkles button add it
+                            if (inputField.parents(".input-group").find(".ti-sparkles").length === 0) {
+                                const button = this._getEditorButton(column, null);
+                                inputField.parents(".input-group").append(button);
+                            }
                         }
                     }
                 }
