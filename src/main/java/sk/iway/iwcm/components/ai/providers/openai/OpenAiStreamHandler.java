@@ -65,7 +65,7 @@ public class OpenAiStreamHandler {
         }
     }
 
-    private void pushAnswePart(String answerPart, BufferedWriter writer) throws IOException{
+    private void pushAnswerPart(String answerPart, BufferedWriter writer) throws IOException{
         if(answerPart == null) return;
         includeHandler.handleLine(answerPart, writer);
     }
@@ -95,7 +95,7 @@ public class OpenAiStreamHandler {
             }
             else if(actualStatus == STREAM_STATUS.DELTA) {
                 JSONObject mainChunk = new JSONObject(line);
-                pushAnswePart(mainChunk.getString("delta"), writer);
+                pushAnswerPart(mainChunk.getString("delta"), writer);
             }
             else if(actualStatus == STREAM_STATUS.COMPLETED) {
                 usageChunk = new JSONObject(line).getJSONObject("response");

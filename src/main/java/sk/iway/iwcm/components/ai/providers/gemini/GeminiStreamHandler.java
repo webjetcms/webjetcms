@@ -47,7 +47,7 @@ public class GeminiStreamHandler {
             }
 
             if(waitingForText == true) {
-                pushAnswePart(line, writer);
+                pushAnswerPart(line, writer);
             } else if(waitingForUsage == true) {
                 setUsage(line);
             }
@@ -80,7 +80,7 @@ public class GeminiStreamHandler {
         return Tools.getIntValue(line, 0);
     }
 
-    private void pushAnswePart(String answerPart, BufferedWriter writer) throws IOException {
+    private void pushAnswerPart(String answerPart, BufferedWriter writer) throws IOException {
         if(answerPart == null) return;
 
         //Remove prefix
