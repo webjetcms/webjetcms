@@ -98,6 +98,10 @@ public class AssistantController {
             new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)
         );
 
+        //5 hours of debugging, if this is not here, that writer.flush later will cause 401/403 error for REST calls
+        writer.write("");
+        writer.flush();
+
         AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;
 

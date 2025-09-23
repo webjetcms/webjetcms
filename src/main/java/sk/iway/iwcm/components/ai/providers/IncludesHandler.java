@@ -66,7 +66,6 @@ public class IncludesHandler {
                 // digits + suffix "__"
                 if (Character.isDigit(c)) {
                     // stay in digits section
-                    continue;
                 } else if (c == '_' && state < 2) {
                     state++;
                 } else if (state == 2) {
@@ -121,7 +120,7 @@ public class IncludesHandler {
 
             int findIncludes = 1;
             while (matcher.find()) {
-                String replaceText = "__LOCK_" + findIncludes + "__";
+                String replaceText = PREFIX + findIncludes + "__";
                 replacedIncludes.put(findIncludes, matcher.group());
                 textToHandle = textToHandle.replaceFirst(Pattern.quote(matcher.group()), Matcher.quoteReplacement(replaceText));
                 findIncludes++;
@@ -150,7 +149,7 @@ public class IncludesHandler {
         String textToHandle = responseText;
         try {
             for(Map.Entry<Integer, String> entry : replacedIncludes.entrySet()) {
-                String replaceText = "__LOCK_" + entry.getKey() + "__";
+                String replaceText = PREFIX + entry.getKey() + "__";
                 textToHandle = textToHandle.replace(replaceText, Matcher.quoteReplacement(entry.getValue()));
             }
             return textToHandle;
