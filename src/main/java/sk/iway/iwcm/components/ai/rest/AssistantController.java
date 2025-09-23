@@ -89,14 +89,20 @@ public class AssistantController {
         return responseDto;
     }
 
-    @PostMapping("/response-stream/")
+    @PostMapping(value="/response-stream/", produces = MediaType.TEXT_PLAIN_VALUE)
     public void streamData(@RequestBody Map<String, String> data, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setContentType("text/plain;charset=utf-8");
-        response.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType("text/plain;charset="+StandardCharsets.UTF_8.name());
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("X-Accel-Buffering", "no"); // for Nginx (disable buffering)
 
         BufferedWriter writer = new BufferedWriter(
             new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)
         );
+
+        //5 hours of debugging, if this is not here, that writer.flush later will cause 401/403 error for REST calls
+        writer.write("");
+        writer.flush();
 
         AssistantResponseDTO responseDto = null;
         String exceptionMessage = null;

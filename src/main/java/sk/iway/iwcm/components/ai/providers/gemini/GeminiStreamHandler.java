@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 
 /**
  * Handler for streaming responses from Gemini API
@@ -21,6 +23,12 @@ public class GeminiStreamHandler {
     Integer candidatesTokenCount = 0;
     Integer thoughtsTokenCount = 0;
     Integer promptTokenCount = 0;
+
+    IncludesHandler includeHandler;
+
+    public GeminiStreamHandler(Map<Integer, String> replacedIncludes) {
+        this.includeHandler = new IncludesHandler(replacedIncludes, 1);
+    }
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
         String line;
@@ -39,7 +47,7 @@ public class GeminiStreamHandler {
             }
 
             if(waitingForText == true) {
-                pushAnswePart(line, writer);
+                pushAnswerPart(line, writer);
             } else if(waitingForUsage == true) {
                 setUsage(line);
             }
@@ -72,7 +80,7 @@ public class GeminiStreamHandler {
         return Tools.getIntValue(line, 0);
     }
 
-    private void pushAnswePart(String answerPart, BufferedWriter writer) throws IOException {
+    private void pushAnswerPart(String answerPart, BufferedWriter writer) throws IOException {
         if(answerPart == null) return;
 
         //Remove prefix
@@ -87,13 +95,8 @@ public class GeminiStreamHandler {
 
         answerPart = escapeText(answerPart);
 
-        for (char c : answerPart.toCharArray()) {
-            writer.write(c);
-            writer.flush();
-            try {
-                Thread.sleep(3); // 50ms delay per character
-            } catch (InterruptedException ignored) {}
-        }
+        //
+        includeHandler.handleLine(answerPart, writer);
 
         //Text was handled
         waitingForText = false;

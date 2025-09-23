@@ -3,8 +3,11 @@ package sk.iway.iwcm.components.ai.providers.openai;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.Map;
 
 import org.json.JSONObject;
+
+import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 
 /**
  * Handler for streaming responses from OpenAI API
@@ -32,6 +35,11 @@ public class OpenAiStreamHandler {
     private STREAM_STATUS actualStatus;
     private String runId = null;
     private JSONObject usageChunk;
+    IncludesHandler includeHandler;
+
+    public OpenAiStreamHandler(Map<Integer, String> replacedIncludes) {
+        this.includeHandler = new IncludesHandler(replacedIncludes);
+    }
 
     public final String getRunId() {
         return this.runId;
@@ -57,10 +65,9 @@ public class OpenAiStreamHandler {
         }
     }
 
-    private void pushAnswePart(String answerPart, BufferedWriter writer) throws IOException{
+    private void pushAnswerPart(String answerPart, BufferedWriter writer) throws IOException{
         if(answerPart == null) return;
-        writer.write(answerPart);
-        writer.flush();
+        includeHandler.handleLine(answerPart, writer);
     }
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
@@ -88,7 +95,7 @@ public class OpenAiStreamHandler {
             }
             else if(actualStatus == STREAM_STATUS.DELTA) {
                 JSONObject mainChunk = new JSONObject(line);
-                    pushAnswePart(mainChunk.getString("delta"), writer);
+                pushAnswerPart(mainChunk.getString("delta"), writer);
             }
             else if(actualStatus == STREAM_STATUS.COMPLETED) {
                 usageChunk = new JSONObject(line).getJSONObject("response");
