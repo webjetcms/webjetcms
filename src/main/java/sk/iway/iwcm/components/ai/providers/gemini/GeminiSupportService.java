@@ -86,7 +86,9 @@ public class GeminiSupportService {
         //Contents Array
         JSONArray contentsArray = new JSONArray();
         //Add parts
-        for (String part : parts) addPart(contentsArray, part);
+        for (String part : parts) {
+            if (Tools.isNotEmpty(part)) addPart(contentsArray, part);
+        }
 
         mainObject.put("contents", contentsArray);
         return mainObject;

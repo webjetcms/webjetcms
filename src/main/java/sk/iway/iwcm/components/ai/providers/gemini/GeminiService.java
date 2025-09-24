@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,12 +72,11 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
         //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
         //Prepare body object
-        JSONObject mainObject = getBaseMainObject(instructions, inputText);
+        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -105,13 +103,12 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+
+        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
         //Prepare body object
-        JSONObject mainObject = getBaseMainObject(instructions, inputText);
+        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
@@ -167,13 +164,15 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         //Contents Array
         JSONArray contentsArray = new JSONArray();
 
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
+
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
             byte[] fileBytes = Files.readAllBytes(inputData.getInputFile().toPath());
-            addPartWithFile(contentsArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData), inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
+            addPartWithFile(contentsArray, instructions, inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            addPart(contentsArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
+            addPart(contentsArray, instructions);
         }
 
         mainObject.put("contents", contentsArray);

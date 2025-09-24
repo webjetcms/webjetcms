@@ -138,6 +138,11 @@
     justify-content: center;   // center horizontally
     align-items: flex-end;     // align to bottom
 
+    &.ai-status-success {
+        //allow to scroll webpage when action was successful
+        pointer-events: none;
+    }
+
     .btn {
         white-space: nowrap;
         i.ti {

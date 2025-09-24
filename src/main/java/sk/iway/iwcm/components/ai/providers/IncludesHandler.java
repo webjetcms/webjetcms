@@ -2,11 +2,14 @@ package sk.iway.iwcm.components.ai.providers;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 
 /**
  * Provides logic to hnalde INCLUDES in strings. To replace them with placeholders, then swap them back. Even when output is parse to line.
@@ -110,7 +113,11 @@ public class IncludesHandler {
         buffer.setLength(0);
     }
 
-    public static final String replaceIncludesWithPlaceholders(String inputText, Map<Integer, String> replacedIncludes) {
+    public static Map<Integer, String> replaceIncludesWithPlaceholders(InputDataDTO inputData) {
+        Map<Integer, String> replacedIncludes = new HashMap<>();
+        String inputText = inputData.getInputValue();
+        if (Tools.isEmpty(inputText)) return replacedIncludes;
+
         // Find and replace all !INCLUDE()! with __INCLUDE_PLACEHOLDER_x value (x is number)
         String textToHandle = inputText;
         try {
@@ -126,13 +133,13 @@ public class IncludesHandler {
                 findIncludes++;
             }
 
-            return textToHandle;
+            inputData.setInputValue(textToHandle);
         } catch (Exception ex) {
             //Something went wrong, return original text
             Logger.debug(IncludesHandler.class, "Error while extracting !INLCUDE()! for AI assiatnt.", ex);
             replacedIncludes.clear();
-            return inputText;
         }
+        return replacedIncludes;
     }
 
     public static final String addProtectedTokenInstructionRule(String instructions) {

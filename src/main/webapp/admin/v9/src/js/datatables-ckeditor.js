@@ -1736,6 +1736,55 @@ export class DatatablesCkEditor {
 		return htmlCode;
 	}
 
+	pbInsertContent(html, mode=null, markPbElements=false) {
+		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
+
+		if (html.indexOf("<section")==-1)
+        {
+            //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
+            if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
+            html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
+        }
+
+		//let options = self.EDITOR.field(aiCol.to).s.opts;
+		let fieldId = this.options.fieldid;
+		let pbIframe = $("#"+fieldId+"-pageBuilderIframe")[0].contentWindow;
+		pbIframe.$("[data-wjapp='pageBuilder']").each(function(index) {
+			if ("doc_data" != $(this).data("wjappfield")) return;
+
+			const $container = $(this);
+
+			if ("replace" === mode) {
+				//remove all section elements and prepend new code to preserve pb-modal/notify/library elements
+				$container.children('section').remove();
+				$container.prepend(html);
+			} else {
+				//$(this).prepend(response);
+				const $lastSection = $container.children('section').last();
+				if ($lastSection.length > 0) {
+					$lastSection.after(html);
+				} else {
+					// if there are no sections yet, just prepend to container
+					$container.prepend(html);
+				}
+			}
+		});
+		//reinitialize pb blocks
+		if (markPbElements===true) {
+			this.markPbElements();
+		}
+	}
+
+	markPbElements() {
+		if ("pageBuilder"===this.editingMode) {
+			//get ARRAY of content for all editors
+			let fieldId = this.options.fieldid;
+			let pageBuilderIframe = $("#"+fieldId+"-pageBuilderIframe");
+
+			pageBuilderIframe[0].contentWindow.markPbElements("doc_data");
+		}
+	}
+
 	getDataArray() {
 		if ("pageBuilder"===this.editingMode) {
 			//get ARRAY of content for all editors

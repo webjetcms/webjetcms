@@ -107,7 +107,7 @@ export class AiUserInterface {
                 let inputValue = this.EDITOR.get(inputFieldName);
                 if (inputValue != null && inputValue !== "") hasInput = true;
                 else {
-                    console.log("inputFieldName=", inputFieldName, "inputValue=", inputValue, "asistent=", aiCol.description, "aiCol=", aiCol);
+                    //console.log("inputFieldName=", inputFieldName, "inputValue=", inputValue, "asistent=", aiCol.description, "aiCol=", aiCol);
                 }
             }
             if (hasInput === false) continue;
@@ -418,6 +418,14 @@ export class AiUserInterface {
 
         let contentContainer = $("#toast-container-ai-content");
         contentContainer.html(html);
+
+        //when user double clicks on textarea and it is empty fill it with placeholder value
+        let userPromptTextarea = contentContainer.find("#ai-user-prompt");
+        userPromptTextarea.on('dblclick', function() {
+            if ($(this).val() == null || $(this).val().trim() === "") {
+                $(this).val($(this).attr("placeholder"));
+            }
+        });
 
         const btn = $(`
             <div class="text-end">

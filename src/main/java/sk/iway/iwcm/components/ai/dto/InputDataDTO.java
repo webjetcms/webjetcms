@@ -72,6 +72,7 @@ public class InputDataDTO {
         this.inputValue = data.get("inputValue");
         this.inputValueType = InputValueType.from( data.get("inputValueType") );
         this.timestamp = Tools.getLongValue(data.get("timestamp"), -1L);
+        this.userPrompt = data.get("userPrompt");
     }
 
     public void prepareData(HttpServletRequest request) throws IllegalStateException {

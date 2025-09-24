@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -90,7 +89,7 @@ public class AssistantController {
     }
 
     @PostMapping(value="/response-stream/", produces = MediaType.TEXT_PLAIN_VALUE)
-    public void streamData(@RequestBody Map<String, String> data, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void streamData(@RequestBody InputDataDTO inputData, HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType("text/plain;charset="+StandardCharsets.UTF_8.name());
         response.setHeader("Cache-Control", "no-cache");
@@ -108,7 +107,6 @@ public class AssistantController {
         String exceptionMessage = null;
 
         try {
-            InputDataDTO inputData = new InputDataDTO(data);
             responseDto = aiService.getAiStreamResponse(inputData, statRepo, assistantRepo, writer, request);
         } catch(Exception e) {
             e.printStackTrace();
