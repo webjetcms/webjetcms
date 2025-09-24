@@ -3,6 +3,8 @@ package sk.iway.iwcm.editor.rest;
 import java.io.Serializable;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 public class Field implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -16,6 +18,9 @@ public class Field implements Serializable {
     private List<FieldValue> typeValues;
     private boolean multiple;
     private String className;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL) // Serialize only when not null
+    private String originalValue = null;
 
     //If you dont want fieldA but originalValueA, them set customPrefix = "originalValue"
     private String customPrefix;
@@ -94,5 +99,11 @@ public class Field implements Serializable {
     }
     public void setClassName(String className) {
         this.className = className;
+    }
+    public String getOriginalValue() {
+        return originalValue;
+    }
+    public void setOriginalValue(String originalValue) {
+        this.originalValue = originalValue;
     }
 }
