@@ -122,7 +122,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         JSONObject json = new JSONObject();
         json.put(MODEL.value(), assistant.getModel());
         json.put(INSTRUCTIONS.value(), instructions);
-        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getInputValue());
+        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
         else json.put(INPUT.value(), inputData.getInputValue());
         json.put(STORE.value(), !assistant.getUseTemporal());
         json.put(STREAM.value(), assistant.getUseStreaming());
@@ -163,7 +163,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         json.put(MODEL.value(), assistant.getModel());
         json.put(STORE.value(), !assistant.getUseTemporal());
         json.put(INSTRUCTIONS.value(), instructions);
-        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getInputValue());
+        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
         else json.put(INPUT.value(), inputData.getInputValue());
 
         post.setEntity(getRequestBody(json.toString()));
