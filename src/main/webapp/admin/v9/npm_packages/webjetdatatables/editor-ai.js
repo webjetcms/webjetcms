@@ -197,10 +197,10 @@ export class EditorAi {
                     editor.instance.setData(editor.value);
                 });
             } else if (this.undoField.type === "pageBuilder-full") {
-                this.EDITOR.set(this.undoField.to, this.undoField.value);
-            } else if (this.undoField.type === "field" && this.undoField.to != null) {
                 let options = this.EDITOR.field(this.undoField.to).s.opts;
                 options.wjeditor.pbInsertContent(this.undoField.value, "replace", true);
+            } else if (this.undoField.type === "field" && this.undoField.to != null) {
+                this.EDITOR.set(this.undoField.to, this.undoField.value);
             }
             //this._closeToast();
             if (this.revertUserPrompt()==false) {
@@ -310,9 +310,9 @@ export class EditorAi {
 
         //console.log(inputData);
 
-        if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
+        self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
-            self.setCurrentStatus("components.ai_assistants.editor.loading.js");
+        if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
 
             // Get selected HTML
             var tempDiv = document.createElement('div');
@@ -364,6 +364,9 @@ export class EditorAi {
                     if (insertData) options.wjeditor.pbInsertContent(response, mode, final);
                 });
 
+                /*/wait for 10 seconds
+                await new Promise(resolve => setTimeout(resolve, 10000));
+
                 let response = `<section class="py-5 aaaa-apend text-center text-lg-start">
 <div class="container">
 <div class="row align-items-center g-5">
@@ -379,10 +382,12 @@ export class EditorAi {
 </div>
 </div>
 </section>`;
-                //options.wjeditor.pbInsertContent(response, mode, true);
-
-
+                options.wjeditor.pbInsertContent(response, mode, true);
+                executionResult = new AiExecutionResult();
+                executionResult.totalTokens = 100;
                 console.log("executionResult=", executionResult);
+
+                */
                 totalTokens = executionResult.totalTokens;
             } else {
 
@@ -439,7 +444,6 @@ export class EditorAi {
             }
 
         } else {
-            self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             inputData.inputValue = self.EDITOR.get(from);
             try {
