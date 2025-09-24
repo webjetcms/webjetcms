@@ -17,7 +17,7 @@ import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 /**
  * Support service for Gemini AI model integration - common methods
  */
-public class GeminiSupportService {
+public abstract class GeminiSupportService {
 
     protected static final String AUTH_KEY = "ai_geminiAuthKey";
     protected static final String SERVICE_NAME = "GeminiService";

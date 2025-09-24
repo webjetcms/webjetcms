@@ -14,6 +14,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -41,8 +44,8 @@ public interface AiInterface {
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop);
 
-    public Pair<String, String> getProviderInfo(Prop prop);
     public String getProviderId();
+    public String getTitleKey();
     public boolean isInit();
 
     default String handleErrorMessage(CloseableHttpResponse response, Prop prop) {
@@ -50,9 +53,29 @@ public interface AiInterface {
         String defaultErrMsg = " (" + code + ") " + prop.getText("html_area.insert_image.error_occured");
         try {
             String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            JSONObject jsonObject = new JSONObject(responseBody);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode array = mapper.readTree(responseBody);
+
+            //Gemini send it aj array with objects ... OpenAI just as object (we need to handle it)
+            JSONObject jsonObject;
+            if(array.isArray()) {
+                jsonObject = new JSONObject(array.get(0).toString());
+            } else {
+                jsonObject = new JSONObject(responseBody);
+            }
+
             if (jsonObject.has("error")) {
                 JSONObject error = jsonObject.getJSONObject("error");
+
+                //This handles OpenRouter error detail message
+                if(error.has("metadata")) {
+                    JSONObject errMetadata = error.getJSONObject("metadata");
+                    if(errMetadata.has("raw")) {
+                        return " (" + code + ") " + errMetadata.getString("raw");
+                    }
+                }
+
                 if (error.has("message")) {
                     String errorMessage = error.getString("message");
                     return " (" + code + ") " + errorMessage;

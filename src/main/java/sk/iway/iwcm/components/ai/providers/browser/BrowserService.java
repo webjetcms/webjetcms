@@ -16,7 +16,6 @@ import sk.iway.iwcm.components.ai.providers.AiInterface;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for Chrome Built-in AI:
@@ -32,12 +31,12 @@ public class BrowserService implements AiInterface {
         return PROVIDER_ID;
     }
 
-    public boolean isInit() {
-        return Constants.getBoolean("ai_browserAiEnabled");
+    public String getTitleKey() {
+        return TITLE_KEY;
     }
 
-    public Pair<String, String> getProviderInfo(Prop prop) {
-        return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
+    public boolean isInit() {
+        return Constants.getBoolean("ai_browserAiEnabled");
     }
 
     public AssistantResponseDTO getAiAssistantResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {

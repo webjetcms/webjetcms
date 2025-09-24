@@ -63,9 +63,11 @@ import sk.iway.iwcm.utils.Pair;
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     private static final CloseableHttpClient client = HttpClients.createDefault();
+    private static final String PROVIDER_ID = "openai";
+    private static final String TITLE_KEY = "components.ai_assistants.provider.openai.title";
 
     public String getProviderId() {
-        return "openai";
+        return PROVIDER_ID;
     }
 
     public String getServiceName() {
@@ -73,15 +75,11 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public String getTitleKey() {
-        return "components.ai_assistants.provider.openai.title";
+        return TITLE_KEY;
     }
 
     public boolean isInit() {
         return Tools.isNotEmpty(getApiKey());
-    }
-
-    public Pair<String, String> getProviderInfo(Prop prop) {
-        return new Pair<>(getProviderId(), prop.getText(getTitleKey()));
     }
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {

@@ -38,7 +38,6 @@ import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  * Main service for AI assistants - handles calls to specific providers
@@ -63,10 +62,9 @@ public class AiService {
     public List<LabelValue> getProviders(Prop prop) {
         List<LabelValue> supportedValues = new ArrayList<>();
         for(AiInterface aiInterface : aiInterfaces) {
-            Pair<String, String> providerInfo = aiInterface.getProviderInfo(prop);
             String configuredAppend = "";
             if (aiInterface.isInit() == false) configuredAppend = " (" + prop.getText("components.ai_assistants.provider.not_configured") + ")";
-            supportedValues.add( new LabelValue(providerInfo.getSecond() + configuredAppend, providerInfo.getFirst()) );
+            supportedValues.add( new LabelValue(prop.getText(aiInterface.getTitleKey()) + configuredAppend, aiInterface.getProviderId()) );
         }
         return supportedValues;
     }
