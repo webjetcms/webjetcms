@@ -1,3 +1,4 @@
+
 package sk.iway.iwcm.components.ai.providers.gemini;
 
 import java.io.BufferedReader;
@@ -60,12 +61,12 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return PROVIDER_ID;
     }
 
-    public boolean isInit() {
-        return Tools.isNotEmpty(getApiKey());
+    public String getTitleKey() {
+        return TITLE_KEY;
     }
 
-    public Pair<String, String> getProviderInfo(Prop prop) {
-        return new Pair<>(PROVIDER_ID, prop.getText(TITLE_KEY));
+    public boolean isInit() {
+        return Tools.isNotEmpty(getApiKey());
     }
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
@@ -208,7 +209,6 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             }
 
             JSONArray parts = getParts(json);
-
             try {
                 long datePart = Tools.getNow();
                 for(int i = 0; i < parts.length(); i++) {
