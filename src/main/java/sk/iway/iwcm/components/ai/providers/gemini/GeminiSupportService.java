@@ -6,6 +6,9 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -125,6 +128,13 @@ public abstract class GeminiSupportService {
         JSONObject firstCandidate = candidates.getJSONObject(0);
         JSONObject content = firstCandidate.getJSONObject("content");
         return content.getJSONArray("parts");
+    }
+
+    protected ArrayNode getParts(JsonNode root) {
+        ArrayNode candidates = (ArrayNode) root.path("candidates");
+        JsonNode firstCandidate = candidates.get(0);
+        JsonNode content = firstCandidate.path("content");
+        return (ArrayNode) content.path("parts");
     }
 
     public static String getApiKey() {

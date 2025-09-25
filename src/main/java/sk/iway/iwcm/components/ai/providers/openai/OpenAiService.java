@@ -36,7 +36,7 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
@@ -45,7 +45,9 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.FunctionTypes.*;
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
+import sk.iway.iwcm.components.ai.providers.SupportLogic;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -83,34 +85,53 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
-        List<LabelValue> supportedValues = new ArrayList<>();
 
-        HttpGet get = new HttpGet(MODELS_URL);
-        addHeaders(get, true, false);
-        try (CloseableHttpResponse response = client.execute(get)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getSupportedModels");
+        ModelsRequest mr  = () -> {
+            HttpGet get = new HttpGet(MODELS_URL);
+            addHeaders(get, true, false);
+            return get;
+        };
 
-            String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            if (Tools.isEmpty(value)) return supportedValues;
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(value);
+        ModelsExtractor me = (root) -> {
+            List<LabelValue> supportedValues = new ArrayList<>();
             for (JsonNode model : root.get("data")) {
                 String modelId = model.get("id").asText();
                 String created = model.get("created").asText();
                 supportedValues.add(new LabelValue(modelId, created));
             }
             supportedValues.sort(Comparator.comparingLong((LabelValue o) -> Long.parseLong(o.getValue())).reversed());
-
             for (LabelValue modelValue : supportedValues) modelValue.setValue(modelValue.getLabel());
-
             return supportedValues;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        };
 
-        return supportedValues;
+        return SupportLogic.getSupportedModels(prop, getServiceName(), mr, me);
+    }
+
+    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
+
+       ResponseRequest rr = (inputText, instructions) -> {
+            HttpPost post = new HttpPost(RESPONSES_URL);
+
+            JSONObject json = new JSONObject();
+            json.put(MODEL.value(), assistant.getModel());
+            json.put(STORE.value(), !assistant.getUseTemporal());
+            json.put(INSTRUCTIONS.value(), instructions);
+            json.put(INPUT.value(), inputText);
+
+            post.setEntity(getRequestBody(json.toString()));
+            addHeaders(post, true, false);
+
+            return post;
+        };
+
+        ResponseExtractor re = (jsonNodeRes) -> {
+            ArrayNode data = (ArrayNode) jsonNodeRes.path("output");
+            JsonNode firstMessage = data.get(0);
+            ArrayNode contentArray = (ArrayNode) firstMessage.path("content");
+            return  contentArray.get(0).path("text").asText();
+        };
+
+        return SupportLogic.getAiResponse(assistant, inputData, prop, statRepo, request, rr, re);
     }
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop,  AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws IOException {
@@ -151,43 +172,6 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
 
         return responseDto;
-    }
-
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
-
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
-
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        HttpPost post = new HttpPost(RESPONSES_URL);
-
-        JSONObject json = new JSONObject();
-        json.put(MODEL.value(), assistant.getModel());
-        json.put(STORE.value(), !assistant.getUseTemporal());
-        json.put(INSTRUCTIONS.value(), instructions);
-        json.put(INPUT.value(), inputText);
-
-        post.setEntity(getRequestBody(json.toString()));
-        addHeaders(post, true, false);
-
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getAiResponse");
-
-            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            JSONArray data = res.getJSONArray("output");
-            JSONObject firstMessage = data.getJSONObject(0);
-            JSONArray contentArray = firstMessage.getJSONArray("content");
-
-            String responseText = contentArray.getJSONObject(0).getString("text");
-            responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
-
-            handleUsage(responseDto, res, 0, assistant, res.optString("id", "NO_RUN_ID"), statRepo, request);
-
-            return responseDto;
-        }
     }
 
     public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {

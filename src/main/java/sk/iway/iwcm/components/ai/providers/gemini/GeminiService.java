@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -37,7 +41,9 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.FunctionTypes.*;
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
+import sk.iway.iwcm.components.ai.providers.SupportLogic;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -70,37 +76,52 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return Tools.isNotEmpty(getApiKey());
     }
 
+    public String getServiceName() {
+        return "GeminiService";
+    }
+
+    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
+        ModelsRequest mr  = () -> {
+            HttpGet httpGet = new HttpGet(BASE_URL);
+            setHeaders(httpGet, request);
+            return httpGet;
+        };
+
+        ModelsExtractor me = (root) -> {
+            String modelPrefix = "models/";
+            List<LabelValue> supportedValues = new ArrayList<>();
+            for (JsonNode model : (ArrayNode) root.get("models")) {
+                String id = model.path("name").asText("");
+                if(id.startsWith(modelPrefix)) id = id.substring(modelPrefix.length());
+                String displayName = model.path("displayName").asText(id);
+                supportedValues.add(new LabelValue(displayName, id));
+                supportedValues.sort(Comparator.comparing(LabelValue::getValue));
+            }
+            return supportedValues;
+        };
+
+
+        return SupportLogic.getSupportedModels(prop, getServiceName(), mr, me);
+    }
+
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+        ResponseRequest rr = (inputText, instructions) -> {
+            JSONObject mainObject = getBaseMainObject(instructions, inputText);
 
-        //Prepare body object
-        JSONObject mainObject = getBaseMainObject(instructions, inputText);
+            HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
+            setHeaders(httpPost, request);
+            httpPost.setEntity(getRequestBody(mainObject.toString()));
 
-        HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
-        setHeaders(httpPost, request);
-        httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
+            return httpPost;
+        };
 
-        try (CloseableHttpResponse response = client.execute(httpPost)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiResponse");
+        ResponseExtractor re = (jsonNodeRes) -> {
+            ArrayNode parts = getParts(jsonNodeRes);
+            return parts.get(0).path("text").asText();
+        };
 
-            String responseData = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            JSONObject json = new JSONObject(responseData);
-            JSONArray parts = getParts(json);
-
-            //Set INCLUDES back to string
-            String responseText = parts.getJSONObject(0).getString("text");
-            responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
-
-            handleUsage(responseDto, json, 0, assistant, statRepo, request);
-        }
-
-        return responseDto;
+        return SupportLogic.getAiResponse(assistant, inputData, prop, statRepo, request, rr, re);
     }
 
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
@@ -242,42 +263,6 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         }
 
         return responseDto;
-    }
-
-    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
-        List<LabelValue> supportedValues = new ArrayList<>();
-        String modelPrefix = "models/";
-
-        HttpGet httpGet = new HttpGet(BASE_URL);
-        setHeaders(httpGet, request);
-
-        try (CloseableHttpResponse response = client.execute(httpGet)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getSupportedModels");
-
-
-            String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            if (Tools.isEmpty(value)) return supportedValues;
-
-            JSONObject root = new JSONObject(value);
-            JSONArray models = root.getJSONArray("models");
-
-            for (int i = 0; i < models.length(); i++) {
-                JSONObject model = models.getJSONObject(i);
-
-                String id = model.getString("name");
-                if(id.startsWith(modelPrefix)) id = id.substring(modelPrefix.length());
-
-                String displayName = model.optString("displayName", id);
-
-                supportedValues.add(new LabelValue(displayName, id));
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return supportedValues;
     }
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {

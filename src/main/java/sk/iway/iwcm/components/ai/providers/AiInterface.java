@@ -8,6 +8,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -148,5 +149,10 @@ public interface AiInterface {
         else if (node instanceof Number n) out.add(n.toString());
         else if (node instanceof Boolean b) out.add(Boolean.toString(b));
         // (skip nulls)
+    }
+
+    default StringEntity getRequestBody(String stringBody) {
+        if(Tools.isEmpty(stringBody) == true) stringBody = "{}";
+        return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
     }
 }

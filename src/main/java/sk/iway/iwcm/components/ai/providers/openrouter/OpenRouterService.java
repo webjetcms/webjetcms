@@ -29,7 +29,6 @@ import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
@@ -37,7 +36,9 @@ import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
+import sk.iway.iwcm.components.ai.providers.FunctionTypes.*;
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
+import sk.iway.iwcm.components.ai.providers.SupportLogic;
 import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
@@ -68,74 +69,52 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
-        List<LabelValue> supportedValues = new ArrayList<>();
 
-        HttpGet get = new HttpGet(MODELS_URL);
-        setHeaders(get, true);
-        try (CloseableHttpResponse response = client.execute(get)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getSupportedModels");
+        ModelsRequest mr  = () -> {
+            HttpGet get = new HttpGet(MODELS_URL);
+            setHeaders(get, true);
+            return get;
+        };
 
-            String value = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            if (Tools.isEmpty(value)) return supportedValues;
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(value);
-            for (JsonNode model : root.get("data")) {
+        ModelsExtractor me = (root) -> {
+            List<LabelValue> supportedValues = new ArrayList<>();
+             for (JsonNode model : root.get("data")) {
                 String modelId = model.get("id").asText();
                 String created = model.get("created").asText();
                 supportedValues.add(new LabelValue(modelId, created));
             }
             supportedValues.sort(Comparator.comparingLong((LabelValue o) -> Long.parseLong(o.getValue())).reversed());
-
             for (LabelValue modelValue : supportedValues) modelValue.setValue(modelValue.getLabel());
-
             return supportedValues;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        };
 
-        return supportedValues;
+        return SupportLogic.getSupportedModels(prop, getServiceName(), mr, me);
     }
 
     @Override
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
 
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+        ResponseRequest rr = (inputText, instructions) -> {
+            JSONObject mainObject = getBaseMainObject(instructions, inputText);
+            mainObject.put("model", assistant.getModel());
 
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        HttpPost post = new HttpPost(RESPONSES_URL);
+            HttpPost post = new HttpPost(RESPONSES_URL);
+            post.setEntity(getRequestBody(mainObject.toString()));
+            setHeaders(post, true);
 
-        JSONObject mainObject = getBaseMainObject(instructions, inputText);
-        mainObject.put("model", assistant.getModel());
+            return post;
+        };
 
-        post.setEntity(getRequestBody(mainObject.toString()));
-        setHeaders(post, true);
-
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getAiResponse");
-
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree( EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8) );
-
+        ResponseExtractor re = (jsonNodeRes) -> {
             // Navigate: choices[0].message.content
-            String responseText = root.path("choices")
-                             .get(0)
-                             .path("message")
-                             .path("content")
-                             .asText();
+            return jsonNodeRes.path("choices")
+                .get(0)
+                .path("message")
+                .path("content")
+                .asText();
+        };
 
-            responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
-
-            handleUsage(responseDto, assistant, statRepo, request, root);
-
-            return responseDto;
-        }
+        return SupportLogic.getAiResponse(assistant, inputData, prop, statRepo, request, rr, re);
     }
 
     @Override

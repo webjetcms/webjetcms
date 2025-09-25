@@ -1,7 +1,5 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
-import org.apache.http.entity.StringEntity;
-
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
@@ -40,11 +38,6 @@ public abstract class OpenAiSupportService {
         request.setHeader("Authorization", "Bearer " + apiKey);
         if(addContentType) request.setHeader("Content-Type", "application/json; charset=utf-8");
         if(isAssistantV2) request.setHeader("OpenAI-Beta", "assistants=v2");
-    }
-
-    protected final StringEntity getRequestBody(String stringBody) {
-        if(Tools.isEmpty(stringBody) == true) stringBody = "{}";
-        return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /**
