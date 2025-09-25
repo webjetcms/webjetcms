@@ -10,9 +10,6 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -21,39 +18,24 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
-import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
-import sk.iway.iwcm.components.ai.providers.FunctionTypes.*;
-import sk.iway.iwcm.components.ai.providers.IncludesHandler;
-import sk.iway.iwcm.components.ai.providers.SupportLogic;
-import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
-import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
-import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for OpenAI assistants - handles calls to OpenAI API
@@ -63,9 +45,10 @@ import sk.iway.iwcm.utils.Pair;
 @Service
 public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
-    private static final CloseableHttpClient client = HttpClients.createDefault();
     private static final String PROVIDER_ID = "openai";
     private static final String TITLE_KEY = "components.ai_assistants.provider.openai.title";
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public String getProviderId() {
         return PROVIDER_ID;
@@ -83,146 +66,117 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return Tools.isNotEmpty(getApiKey());
     }
 
-    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
+    public int addUsageAndReturnTotal(StringBuilder sb, int addTokens, JsonNode root) {
+        int totalTokens = addTokens;
+        if(root.has("usage")) {
+            JsonNode usage = root.path("usage");
+            int inputTokens = usage.path("input_tokens").asInt(0);
+            int outputTokens = usage.path("output_tokens").asInt(0);
+            totalTokens = usage.path("total_tokens").asInt(0) + addTokens;
 
-        ModelsRequest mr  = () -> {
-            HttpGet get = new HttpGet(MODELS_URL);
-            addHeaders(get, true, false);
-            return get;
-        };
-
-        ModelsExtractor me = (root) -> {
-            List<LabelValue> supportedValues = new ArrayList<>();
-            for (JsonNode model : root.get("data")) {
-                String modelId = model.get("id").asText();
-                String created = model.get("created").asText();
-                supportedValues.add(new LabelValue(modelId, created));
-            }
-            supportedValues.sort(Comparator.comparingLong((LabelValue o) -> Long.parseLong(o.getValue())).reversed());
-            for (LabelValue modelValue : supportedValues) modelValue.setValue(modelValue.getLabel());
-            return supportedValues;
-        };
-
-        return SupportLogic.getSupportedModels(prop, getServiceName(), mr, me);
+            sb.append("\t input_tokens: ").append(inputTokens).append("\n");
+            sb.append("\t output_tokens: ").append(outputTokens).append("\n");
+            sb.append("\t total_tokens: ").append(totalTokens).append("\n");
+        }
+        return totalTokens;
     }
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
-
-       ResponseRequest rr = (instructions, inputText, inputPrompt) -> {
-            HttpPost post = new HttpPost(RESPONSES_URL);
-
-            JSONObject json = new JSONObject();
-            json.put(MODEL.value(), assistant.getModel());
-            json.put(STORE.value(), !assistant.getUseTemporal());
-            json.put(INSTRUCTIONS.value(), instructions);
-            if (Tools.isNotEmpty(inputPrompt)) json.put(INPUT.value(), inputPrompt);
-            else json.put(INPUT.value(), inputText);
-
-            post.setEntity(getRequestBody(json.toString()));
-            addHeaders(post, true, false);
-
-            return post;
-        };
-
-        ResponseExtractor re = (jsonNodeRes) -> {
-            ArrayNode data = (ArrayNode) jsonNodeRes.path("output");
-            JsonNode firstMessage = data.get(0);
-            ArrayNode contentArray = (ArrayNode) firstMessage.path("content");
-            return  contentArray.get(0).path("text").asText();
-        };
-
-        return SupportLogic.getAiResponse(assistant, inputData, prop, statRepo, request, rr, re);
+    public HttpRequestBase getModelsRequest (HttpServletRequest request) {
+        HttpGet get = new HttpGet(MODELS_URL);
+        addHeaders(get, true);
+        return get;
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop,  AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws IOException {
+    public List<LabelValue> extractModels(JsonNode root) {
+        List<LabelValue> supportedValues = new ArrayList<>();
+        for (JsonNode model : root.get("data")) {
+            String modelId = model.get("id").asText();
+            String created = model.get("created").asText();
+            supportedValues.add(new LabelValue(modelId, created));
+        }
+        supportedValues.sort(Comparator.comparingLong((LabelValue o) -> Long.parseLong(o.getValue())).reversed());
+        for (LabelValue modelValue : supportedValues) modelValue.setValue(modelValue.getLabel());
+        return supportedValues;
+    }
 
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
-
-        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
-        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+        HttpPost post = new HttpPost(RESPONSES_URL);
 
         JSONObject json = new JSONObject();
         json.put(MODEL.value(), assistant.getModel());
+        json.put(STORE.value(), !assistant.getUseTemporal());
         json.put(INSTRUCTIONS.value(), instructions);
         if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
         else json.put(INPUT.value(), inputData.getInputValue());
+
+        post.setEntity(getRequestBody(json.toString()));
+        addHeaders(post, true);
+
+        return post;
+    }
+
+    public String extractResponseText(JsonNode jsonNodeRes) {
+        ArrayNode data = (ArrayNode) jsonNodeRes.path("output");
+        JsonNode firstMessage = data.get(0);
+        ArrayNode contentArray = (ArrayNode) firstMessage.path("content");
+        return  contentArray.get(0).path("text").asText();
+    }
+
+    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+        JSONObject json = new JSONObject();
+        json.put(MODEL.value(), assistant.getModel());
         json.put(STORE.value(), !assistant.getUseTemporal());
+        json.put(INSTRUCTIONS.value(), instructions);
+        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
+        else json.put(INPUT.value(), inputData.getInputValue());
         json.put(STREAM.value(), assistant.getUseStreaming());
 
         HttpPost post = new HttpPost(RESPONSES_URL);
         post.setEntity(getRequestBody(json.toString()));
-        addHeaders(post, true, true);
+        addHeaders(post, true);
         post.setHeader("Accept", "text/event-stream");
 
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getAiStreamResponse");
-
-            HttpEntity entity = response.getEntity();
-            try (InputStream inputStream = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8))) {
-
-                OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(replacedIncludes);
-                streamHandler.handleBufferedReader(reader, writer);
-
-                //
-                handleUsage(responseDto, streamHandler.getUsageChunk(), 0, assistant, streamHandler.getRunId(), statRepo, request);
-            }
-        }
-
-        return responseDto;
+        return post;
     }
 
-    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        Path tempFileFolder = AiTempFileStorage.getFileFolder();
+    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+        OpenAiStreamHandler streamHandler = new OpenAiStreamHandler(replacedIncludes);
+        streamHandler.handleBufferedReader(reader, writer);
+        return streamHandler.getUsageChunk();
+    }
 
-        //Prepare image name
-        Pair<String, Integer> generatedFileName = generateImageName(assistant, inputData);
-        responseDto.setGeneratedFileName(generatedFileName.getFirst());
 
-        HttpPost post;
+    public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
-            post = getEditImagePost(inputData, assistant.getModel(), assistant.getInstructions(), prop);
+            return getEditImagePost(inputData, assistant.getModel(), instructions, prop);
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            post = getCreateImagePost(inputData, assistant.getModel(), assistant.getInstructions());
+            return getCreateImagePost(inputData, assistant.getModel(), instructions);
         }
+    }
 
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, getServiceName(), "getAiImageResponse");
+    public String getFinishReason(JsonNode jsonNodeRes) {
+        //TODO
+        return "";
+    }
 
-            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            String format = "." + res.optString("output_format", "png");
-            JSONArray imageArr = res.getJSONArray("data");
+    public ArrayNode getImages(JsonNode jsonNodeRes) {
+        JsonNode imagesArr = jsonNodeRes.path("data");
+        return imagesArr.isArray() ? (ArrayNode) imagesArr : mapper.createArrayNode();
+    }
 
-            try {
-                long datePart = Tools.getNow();
-                for(int i = 0; i < imageArr.length(); i++) {
-                    JSONObject jsonImage = imageArr.getJSONObject(i);
-                    String base64Image = jsonImage.getString("b64_json");
-                    //Date pars is added so we can delet all images from same request (same request == same date time part)
-                    String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
+    public String getImageFormat(JsonNode jsonNodeRes, JsonNode jsonImage) {
+        //OpeAI returns global fomat, not local
+        return "." + jsonNodeRes.path("output_format").asText( "png");
+    }
 
-                    try {
-                        tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);
+    public String getImageBase64(JsonNode jsonNodeRes, JsonNode jsonImage) {
+        return jsonImage.path("b64_json").asText(null);
+    }
 
-                        //If no error, add file
-                        responseDto.addTempFile(tmpFileName);
-                    } catch (IOException ioe) {
-                        ioe.printStackTrace();
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            handleUsage(responseDto, res, generatedFileName.getSecond(),  assistant, "NO_RUN_ID", statRepo, request);
-        }
-
-        return responseDto;
+    public String  getModelForImageNameGeneration() {
+        return "gpt-4.1-mini";
     }
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
@@ -248,34 +202,6 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return "";
     }
 
-    private void handleUsage(AssistantResponseDTO responseDto, JSONObject source, int addTokens, AssistantDefinitionEntity dbAssitant, String runId, AiStatRepository statRepo, HttpServletRequest request) {
-
-        if (source.has("usage")) {
-            //"total_tokens" "output_tokens" "input_tokens"
-            JSONObject usage = source.getJSONObject("usage");
-            int inputTokens = usage.optInt("input_tokens", 0);
-            int outputTokens = usage.optInt("output_tokens", 0);
-            int totalTokens = usage.optInt("total_tokens", 0) + addTokens; // addTokens can be for example tokens used to generate image name using ai
-            StringBuilder sb = new StringBuilder("");
-
-            sb.append(getServiceName()).append(" -> run with id: ").append(runId).append(" was succesfull");
-            sb.append("\n\n");
-            sb.append("Assitant name : ").append(dbAssitant.getName()).append("\n");
-            sb.append("From field : ").append(dbAssitant.getFieldFrom()).append("\n");
-            sb.append("To field : ").append(dbAssitant.getFieldTo()).append("\n");
-            sb.append("\n");
-            sb.append("Action cost: \n");
-            sb.append("\t input_tokens: ").append(inputTokens).append("\n");
-            sb.append("\t output_tokens: ").append(outputTokens).append("\n");
-            sb.append("\t total_tokens: ").append(totalTokens).append("\n");
-            Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
-
-            AiStatService.addRecord(dbAssitant.getId(), totalTokens, statRepo, request);
-
-            responseDto.setTotalTokens(totalTokens);
-        }
-    }
-
     private HttpPost getEditImagePost(InputDataDTO inputData, String model, String instructions, Prop prop) throws IOException {
         HttpPost post = new HttpPost(IMAGES_EDITS_URL);
 
@@ -283,7 +209,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         //builder.addTextBody(MODEL.value(), "gpt-image-1");
         builder.addTextBody(MODEL.value(), model);
-        builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(instructions, inputData, null));
+        builder.addTextBody("prompt", instructions);
         builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
 
         if(inputData.getImageQuality() != null) {
@@ -306,7 +232,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         //Set entity and headers
         post.setEntity(builder.build());
 
-        addHeaders(post, false, false);
+        addHeaders(post, false);
 
         return post;
     }
@@ -317,7 +243,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         JSONObject json = new JSONObject();
         //json.put(MODEL.value(), "gpt-image-1");
         json.put(MODEL.value(), model);
-        json.put("prompt", AiAssistantsService.executePromptMacro(instructions, inputData, null));
+        json.put("prompt", instructions);
         json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
 
         if(inputData.getImageQuality() != null) {
@@ -333,58 +259,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         post.setEntity(getRequestBody(json.toString()));
 
-        addHeaders(post, true, false);
+        addHeaders(post, true);
 
         return post;
-    }
-
-    private Pair<String, Integer> generateImageName(AssistantDefinitionEntity assistant, InputDataDTO inputData) {
-        String defaultFileName = "ai_generated_image_" + new java.util.Date().getTime();
-        int totalTokens = 0;
-
-        //Now supportes only images
-        if("generate_image".equals(assistant.getAction()) == false) return new Pair<>(defaultFileName, totalTokens);
-
-        Pair<String, String> instructionValuePair = getInstructionsAndValue(assistant, inputData);
-        if(instructionValuePair == null) return new Pair<>(defaultFileName, totalTokens);
-
-        JSONObject json = new JSONObject();
-        json.put(MODEL.value(), "gpt-4.1-mini");
-        json.put(STORE.value(), false);
-        json.put(INSTRUCTIONS.value(), instructionValuePair.getFirst());
-        json.put(INPUT.value(), instructionValuePair.getSecond());
-
-        HttpPost post = new HttpPost(RESPONSES_URL);
-        post.setEntity(getRequestBody(json.toString()));
-        addHeaders(post, true, false);
-
-        try (CloseableHttpResponse response = client.execute(post)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                return new Pair<>(defaultFileName, totalTokens);
-
-            JSONObject res = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            JSONArray data = res.getJSONArray("output");
-            JSONObject firstMessage = data.getJSONObject(0);
-            JSONArray contentArray = firstMessage.getJSONArray("content");
-            String imageName = contentArray.getJSONObject(0).getString("text");
-
-            if(res.has("usage") == true) {
-                JSONObject usage = res.getJSONObject("usage");
-                totalTokens = usage.optInt("total_tokens", 0);
-                StringBuilder sb = new StringBuilder("");
-
-                sb.append(getServiceName()).append(" -> generating name for image succesfull");
-                sb.append("\n\n");
-                sb.append("Action cost: \n");
-                sb.append("\t input_tokens: ").append( usage.optInt("input_tokens", 0) ).append("\n");
-                sb.append("\t output_tokens: ").append( usage.optInt("output_tokens", 0) ).append("\n");
-                sb.append("\t total_tokens: ").append(totalTokens).append("\n");
-                Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
-            }
-
-            return new Pair<>(imageName, totalTokens);
-        } catch (Exception e) {
-            return new Pair<>(defaultFileName, totalTokens);
-        }
     }
 }

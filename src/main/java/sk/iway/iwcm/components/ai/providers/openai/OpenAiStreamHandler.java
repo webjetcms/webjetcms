@@ -5,7 +5,8 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Map;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 
@@ -15,7 +16,6 @@ import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 public class OpenAiStreamHandler {
 
     private enum STREAM_STATUS {
-        CREATED("response.created"),
         DELTA("response.output_text.delta"),
         COMPLETED("response.completed"),
         DONE("done");
@@ -33,28 +33,23 @@ public class OpenAiStreamHandler {
     }
 
     private STREAM_STATUS actualStatus;
-    private String runId = null;
-    private JSONObject usageChunk;
+    private JsonNode usageChunk;
+    private ObjectMapper mapper = new ObjectMapper();
+
     IncludesHandler includeHandler;
 
     public OpenAiStreamHandler(Map<Integer, String> replacedIncludes) {
         this.includeHandler = new IncludesHandler(replacedIncludes);
     }
 
-    public final String getRunId() {
-        return this.runId;
-    }
-
-    public final JSONObject getUsageChunk() {
+    public final JsonNode getUsageChunk() {
         return this.usageChunk;
     }
 
     private void handleEvent(String line) {
         String event = line.substring(6).trim();
 
-        if (event.equals(STREAM_STATUS.CREATED.value())) {
-            actualStatus = STREAM_STATUS.CREATED;
-        } else if (event.equals(STREAM_STATUS.DELTA.value())) {
+        if (event.equals(STREAM_STATUS.DELTA.value())) {
             actualStatus = STREAM_STATUS.DELTA;
         } else if (event.equals(STREAM_STATUS.COMPLETED.value())) {
             actualStatus = STREAM_STATUS.COMPLETED;
@@ -89,16 +84,12 @@ public class OpenAiStreamHandler {
                 continue;
             }
 
-            if(actualStatus == STREAM_STATUS.CREATED) {
-                JSONObject json = new JSONObject(line);
-                runId = json.getJSONObject("response").getString("id");
-            }
-            else if(actualStatus == STREAM_STATUS.DELTA) {
-                JSONObject mainChunk = new JSONObject(line);
-                pushAnswerPart(mainChunk.getString("delta"), writer);
+            if(actualStatus == STREAM_STATUS.DELTA) {
+                JsonNode mainChunk = mapper.readTree(line);
+                pushAnswerPart(mainChunk.path("delta").asText(null), writer);
             }
             else if(actualStatus == STREAM_STATUS.COMPLETED) {
-                usageChunk = new JSONObject(line).getJSONObject("response");
+                usageChunk = mapper.readTree(line).path("response");
             }
             else if(actualStatus == STREAM_STATUS.DONE) {
                 return;

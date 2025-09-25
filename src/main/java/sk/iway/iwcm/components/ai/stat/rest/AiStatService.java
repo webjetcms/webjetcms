@@ -45,7 +45,7 @@ public class AiStatService {
 
     public static final void addRecord(Long assistantId, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request) {
         if(statRepo == null) throw new IllegalStateException("AiStatRepository is not provided");
-        if(assistantId == null || assistantId < 1) throw new IllegalStateException("Assitant is not specified");
+        if(assistantId == null) throw new IllegalStateException("Assitant is not specified");
 
         AiStatEntity newStatRecord = new AiStatEntity();
         newStatRecord.setAssistantId(assistantId);

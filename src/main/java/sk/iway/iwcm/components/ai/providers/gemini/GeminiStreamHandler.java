@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import lombok.Getter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
@@ -28,6 +32,20 @@ public class GeminiStreamHandler {
 
     public GeminiStreamHandler(Map<Integer, String> replacedIncludes) {
         this.includeHandler = new IncludesHandler(replacedIncludes, 1);
+    }
+
+    public final JsonNode getUsageChunk() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode root = mapper.createObjectNode();
+
+        ObjectNode usage = mapper.createObjectNode();
+        usage.put("totalTokenCount", totalTokenCount);
+        usage.put("candidatesTokenCount", candidatesTokenCount);
+        usage.put("thoughtsTokenCount", thoughtsTokenCount);
+        usage.put("promptTokenCount", promptTokenCount);
+
+        root.set("usage", usage);
+        return root;
     }
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {

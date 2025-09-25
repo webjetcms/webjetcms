@@ -4,14 +4,10 @@ package sk.iway.iwcm.components.ai.providers.gemini;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,13 +15,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -33,23 +26,13 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
-import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiInterface;
-import sk.iway.iwcm.components.ai.providers.FunctionTypes.*;
-import sk.iway.iwcm.components.ai.providers.IncludesHandler;
-import sk.iway.iwcm.components.ai.providers.SupportLogic;
-import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
-import sk.iway.iwcm.components.ai.rest.AiTempFileStorage;
-import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
-import sk.iway.iwcm.utils.Pair;
 
 /**
  * Service for Google Gemini AI model integration. We do not use any official SDK, but
@@ -59,7 +42,6 @@ import sk.iway.iwcm.utils.Pair;
 @Service
 public class GeminiService extends GeminiSupportService implements AiInterface {
 
-    private static final CloseableHttpClient client = HttpClients.createDefault();
     private static final String PROVIDER_ID = "gemini";
     private static final String TITLE_KEY = "components.ai_assistants.provider.gemini.title";
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/";
@@ -80,57 +62,63 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return "GeminiService";
     }
 
-    public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
-        ModelsRequest mr  = () -> {
-            HttpGet httpGet = new HttpGet(BASE_URL);
-            setHeaders(httpGet, request);
-            return httpGet;
-        };
+    public int addUsageAndReturnTotal(StringBuilder sb, int addTokens, JsonNode root) {
+        int totalTokens = addTokens;
+        JsonNode usage = null;
 
-        ModelsExtractor me = (root) -> {
-            String modelPrefix = "models/";
-            List<LabelValue> supportedValues = new ArrayList<>();
-            for (JsonNode model : (ArrayNode) root.get("models")) {
-                String id = model.path("name").asText("");
-                if(id.startsWith(modelPrefix)) id = id.substring(modelPrefix.length());
-                String displayName = model.path("displayName").asText(id);
-                supportedValues.add(new LabelValue(displayName, id));
-                supportedValues.sort(Comparator.comparing(LabelValue::getValue));
-            }
-            return supportedValues;
-        };
+        // Gemini return "usage" (when text answer) OR "usageMetadata" (when image answer) -> like and idiot
+        if(root.has("usage")) usage = root.path("usage");
+        else if(root.has("usageMetadata")) usage = root.path("usageMetadata");
 
+        if(usage != null) {
+            int candToken = usage.path("candidatesTokenCount").asInt(0);
+            int thouToken = usage.path("thoughtsTokenCount").asInt(0);
+            int promToken = usage.path("promptTokenCount").asInt(0);
+            totalTokens = usage.path("totalTokenCount").asInt(0) + addTokens;
 
-        return SupportLogic.getSupportedModels(prop, getServiceName(), mr, me);
+            sb.append("\t candidatesTokenCount: ").append(candToken).append("\n");
+            sb.append("\t thoughtsTokenCount: ").append(thouToken).append("\n");
+            sb.append("\t promptTokenCount: ").append(promToken).append("\n");
+            sb.append("\t totalTokenCount: ").append(totalTokens).append("\n");
+        }
+        return totalTokens;
     }
 
-    public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
-
-        ResponseRequest rr = (instructions, inputText, inputPrompt) -> {
-            JSONObject mainObject = getBaseMainObject(instructions, inputText, inputPrompt);
-
-            HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
-            setHeaders(httpPost, request);
-            httpPost.setEntity(getRequestBody(mainObject.toString()));
-
-            return httpPost;
-        };
-
-        ResponseExtractor re = (jsonNodeRes) -> {
-            ArrayNode parts = getParts(jsonNodeRes);
-            return parts.get(0).path("text").asText();
-        };
-
-        return SupportLogic.getAiResponse(assistant, inputData, prop, statRepo, request, rr, re);
+    public HttpRequestBase getModelsRequest (HttpServletRequest request) {
+        HttpGet httpGet = new HttpGet(BASE_URL);
+        setHeaders(httpGet, request);
+        return httpGet;
     }
 
-    public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
+    public List<LabelValue> extractModels(JsonNode root) {
+        String modelPrefix = "models/";
+        List<LabelValue> supportedValues = new ArrayList<>();
+        for (JsonNode model : (ArrayNode) root.get("models")) {
+            String id = model.path("name").asText("");
+            if(id.startsWith(modelPrefix)) id = id.substring(modelPrefix.length());
+            String displayName = model.path("displayName").asText(id);
+            supportedValues.add(new LabelValue(displayName, id));
+            supportedValues.sort(Comparator.comparing(LabelValue::getValue));
+        }
+        return supportedValues;
+    }
 
+    public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
-        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
-        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
+        HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
+        setHeaders(httpPost, request);
+        httpPost.setEntity(getRequestBody(mainObject.toString()));
 
+        return httpPost;
+    }
+
+    public String extractResponseText(JsonNode jsonNodeRes) {
+        ArrayNode parts = getParts(jsonNodeRes);
+        return parts.get(0).path("text").asText();
+    }
+
+    public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
         //Prepare body object
         JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
@@ -140,55 +128,36 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         httpPost.setHeader("Accept-Encoding", "identity");
         httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
 
-        CloseableHttpClient streamClient = HttpClients.custom().disableContentCompression().build();
-
-        try (CloseableHttpResponse response = streamClient.execute(httpPost)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiStreamResponse");
-
-            HttpEntity entity = response.getEntity();
-
-            String charset = java.nio.charset.StandardCharsets.UTF_8.name();
-            Header contentType = entity.getContentType();
-            if (contentType != null) {
-                String value = contentType.getValue();
-                String[] parts = value.split(";");
-                for (String part : parts) {
-                    part = part.trim();
-                    if (part.toLowerCase().startsWith("charset=")) {
-                        charset = part.substring(8);
-                        break;
-                    }
-                }
-            }
-
-            try (InputStream inputStream = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset))) {
-
-                GeminiStreamHandler streamHandler = new GeminiStreamHandler(replacedIncludes);
-                streamHandler.handleBufferedReader(reader, writer);
-
-                handleUsage(responseDto, streamHandler, 0, assistant, statRepo, request);
-            }
-
-        }
-
-        return responseDto;
+        return httpPost;
     }
 
-    public AssistantResponseDTO getAiImageResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
-        AssistantResponseDTO responseDto = new AssistantResponseDTO();
-        Path tempFileFolder = AiTempFileStorage.getFileFolder();
+    public JsonNode handleBufferedReader(BufferedReader reader,  BufferedWriter writer, Map<Integer, String> replacedIncludes) throws IOException {
+        GeminiStreamHandler streamHandler = new GeminiStreamHandler(replacedIncludes);
+        streamHandler.handleBufferedReader(reader, writer);
+        return streamHandler.getUsageChunk();
+    }
 
-        Pair<String, Integer> generatedFileName = generateImageName(assistant, inputData, prop, request);
-        responseDto.setGeneratedFileName( generatedFileName.getFirst() );
+    @Override
+    public String getStreamEncoding(HttpEntity entity) {
+        String charset = java.nio.charset.StandardCharsets.UTF_8.name();
+        Header contentType = entity.getContentType();
+        if (contentType != null) {
+            String value = contentType.getValue();
+            String[] parts = value.split(";");
+            for (String part : parts) {
+                part = part.trim();
+                if (part.toLowerCase().startsWith("charset=")) {
+                    charset = part.substring(8);
+                    break;
+                }
+            }
+        }
+        return charset;
+    }
 
-        //Main JSON object
+    public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
         JSONObject mainObject = new JSONObject();
-        //Contents Array
         JSONArray contentsArray = new JSONArray();
-
-        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
 
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
@@ -205,65 +174,42 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         setHeaders(httpPost, request);
         httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
 
-        try (CloseableHttpResponse response = client.execute(httpPost)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiImageResponse");
+        return httpPost;
+    }
 
-            String responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
-            JSONObject json = new JSONObject(responseText);
-
-            String finishReason = null;
-            try {
-                JSONArray candidates = json.optJSONArray("candidates");
-                if (candidates != null && candidates.length() > 0) {
-                    for (int i = 0; i < candidates.length(); i++) {
-                        JSONObject candidate = candidates.getJSONObject(i);
-                        if (candidate.has("finishReason")) {
-                            finishReason = candidate.getString("finishReason");
-                        }
+    public String getFinishReason(JsonNode jsonNodeRes) {
+        // Extract finishReason from Jackson JsonNode response
+        String finishReason = null;
+        try {
+            JsonNode candidates = jsonNodeRes.path("candidates");
+            if (candidates.isArray()) {
+                for (JsonNode candidate : candidates) {
+                    JsonNode frNode = candidate.get("finishReason");
+                    if (frNode != null && frNode.isTextual()) {
+                        // Last non-null value wins (in case of multiple candidates)
+                        finishReason = frNode.asText();
                     }
                 }
-            } catch (Exception e) {
-                Logger.error(GeminiService.class, e);
             }
-            if (Tools.isNotEmpty(finishReason) && "STOP".equals(finishReason) == false) {
-                responseDto.setError(finishReason);
-                return responseDto;
-            }
-
-            JSONArray parts = getParts(json);
-            try {
-                long datePart = Tools.getNow();
-                for(int i = 0; i < parts.length(); i++) {
-                    JSONObject part = parts.getJSONObject(i);
-                    if(part.has("inlineData") == true) {
-                        //Its image (rest its just some crap)
-                        String base64Image = part.getJSONObject("inlineData").getString("data");
-                        String format = part.getJSONObject("inlineData").optString("mimeType", "png");
-                        if(format.startsWith("image/")) format = format.substring(6);
-                        if(format.startsWith(".") == false) format = "." + format;
-
-                        //Date pars is added so we can delet all images from same request (same request == same date time part)
-                        String tmpFileName = "tmp-ai-" + DocTools.removeChars(assistant.getName()) + "-" + datePart + "-";
-
-                        try {
-                            tmpFileName = AiTempFileStorage.addImage(base64Image, tmpFileName, format, tempFileFolder);
-
-                            //If no error, add file
-                            responseDto.addTempFile(tmpFileName);
-                        } catch (IOException ioe) {
-                            ioe.printStackTrace();
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            handleUsage(responseDto, json, generatedFileName.getSecond(), assistant, statRepo, request);
+        } catch (Exception e) {
+            Logger.error(GeminiService.class, e);
         }
+        return finishReason;
+    }
 
-        return responseDto;
+    public ArrayNode getImages(JsonNode jsonNodeRes) {
+        return getParts(jsonNodeRes);
+    }
+
+    public String getImageFormat(JsonNode jsonNodeRes, JsonNode jsonImage) {
+        String format = jsonImage.path("inlineData").path("mimeType").asText("png");
+        if(format.startsWith("image/")) format = format.substring(6);
+        if(format.startsWith(".") == false) format = "." + format;
+        return format;
+    }
+
+    public String getImageBase64(JsonNode jsonNodeRes, JsonNode jsonImage) {
+        return jsonImage.path("inlineData").path("data").asText(null);
     }
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
@@ -271,51 +217,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return null;
     }
 
-    private Pair<String, Integer> generateImageName(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, HttpServletRequest request) {
-        String defaultFileName = "ai_generated_image_" + new java.util.Date().getTime();
-        int totalTokens = 0;
-
-        //Now supportes only images
-        if("generate_image".equals(assistant.getAction()) == false) return new Pair<>(defaultFileName, totalTokens);
-
-        Pair<String, String> instructionValuePair = getInstructionsAndValue(assistant, inputData);
-        if(instructionValuePair == null) return new Pair<>(defaultFileName, totalTokens);
-
-        //Prepare body object
-        JSONObject mainObject = getBaseMainObject(instructionValuePair.getFirst(), instructionValuePair.getSecond());
-
-        HttpPost httpPost = new HttpPost(BASE_URL + "gemini-2.5-flash" + ":generateContent");
-        setHeaders(httpPost, request);
-        httpPost.setEntity(new StringEntity(mainObject.toString(), java.nio.charset.StandardCharsets.UTF_8));
-
-        try (CloseableHttpResponse response = client.execute(httpPost)) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
-                handleErrorMessage(response, prop, SERVICE_NAME, "getAiResponse");
-
-            JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
-            JSONArray parts = getParts(json);
-            String imageName = parts.getJSONObject(0).getString("text");
-
-            if (json.has("usageMetadata")) {
-                JSONObject usage = json.getJSONObject("usageMetadata");
-                int candToken = usage.optInt("candidatesTokenCount", 0);
-                int thouToken = usage.optInt("thoughtsTokenCount", 0);
-                int promToken = usage.optInt("promptTokenCount", 0);
-                totalTokens = usage.optInt("totalTokenCount", 0);
-
-                StringBuilder sb = new StringBuilder("");
-                sb.append(SERVICE_NAME).append(" -> generating name for image succesfull.");
-                sb.append("\nAction cost: \n");
-                sb.append("\t candidatesTokenCount: ").append(candToken).append("\n");
-                sb.append("\t thoughtsTokenCount: ").append(thouToken).append("\n");
-                sb.append("\t promptTokenCount: ").append(promToken).append("\n");
-                sb.append("\t totalTokenCount: ").append(totalTokens).append("\n");
-                Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totalTokens, -1);
-            }
-
-            return new Pair<>(imageName, totalTokens);
-        } catch (Exception e) {
-            return new Pair<>(defaultFileName, totalTokens);
-        }
+    public String  getModelForImageNameGeneration() {
+        return "gemini-2.5-flash";
     }
 }

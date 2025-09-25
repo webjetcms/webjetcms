@@ -2,12 +2,13 @@ package sk.iway.iwcm.components.ai.providers.openai;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.ai.providers.SupportLogic;
 import sk.iway.iwcm.i18n.Prop;
 
 /**
  * Support service for OpenAI integration - common methods
  */
-public abstract class OpenAiSupportService {
+public abstract class OpenAiSupportService extends SupportLogic {
 
     protected static final String MODELS_URL = "https://api.openai.com/v1/models";
     protected static final String IMAGES_GENERATION_URL = "https://api.openai.com/v1/images/generations";
@@ -32,12 +33,11 @@ public abstract class OpenAiSupportService {
         }
     }
 
-    protected final void addHeaders(org.apache.http.client.methods.HttpRequestBase request, boolean addContentType, boolean isAssistantV2) {
+    protected final void addHeaders(org.apache.http.client.methods.HttpRequestBase request, boolean addContentType) {
         String apiKey = getApiKey();
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenAI API key is not set.");
         request.setHeader("Authorization", "Bearer " + apiKey);
         if(addContentType) request.setHeader("Content-Type", "application/json; charset=utf-8");
-        if(isAssistantV2) request.setHeader("OpenAI-Beta", "assistants=v2");
     }
 
     /**
