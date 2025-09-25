@@ -6,68 +6,20 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import sk.iway.iwcm.Adminlog;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
-import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
-import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
-import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
+import sk.iway.iwcm.components.ai.providers.SupportLogic;
 
 /**
  * Support service for Gemini AI model integration - common methods
  */
-public abstract class GeminiSupportService {
+public abstract class GeminiSupportService extends SupportLogic {
 
     protected static final String AUTH_KEY = "ai_geminiAuthKey";
     protected static final String SERVICE_NAME = "GeminiService";
-
-    protected void handleUsage(AssistantResponseDTO responseDto, JSONObject source, int addTokens, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {
-        if (source.has("usageMetadata")) {
-            JSONObject usage = source.getJSONObject("usageMetadata");
-            handleUsage(responseDto,dbAssitant, statRepo, request,
-                usage.optInt("candidatesTokenCount", 0),
-                usage.optInt("thoughtsTokenCount", 0),
-                usage.optInt("promptTokenCount", 0),
-                usage.optInt("totalTokenCount", 0),
-                addTokens
-            );
-        }
-    }
-
-    protected void handleUsage(AssistantResponseDTO responseDto, GeminiStreamHandler streamHandler, int addTokens, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request) {
-        handleUsage(responseDto, dbAssitant, statRepo, request,
-            streamHandler.getCandidatesTokenCount(),
-            streamHandler.getThoughtsTokenCount(),
-            streamHandler.getPromptTokenCount(),
-            streamHandler.getTotalTokenCount(),
-            addTokens
-        );
-    }
-
-    protected void handleUsage(AssistantResponseDTO responseDto, AssistantDefinitionEntity dbAssitant, AiStatRepository statRepo, HttpServletRequest request, Integer candToken, Integer thouToken, Integer promToken, Integer totToken, int addTokens) {
-        StringBuilder sb = new StringBuilder("");
-        sb.append(SERVICE_NAME).append(" -> run was succesfull");
-        sb.append("\n\n");
-        sb.append("Assitant name : ").append(dbAssitant.getName()).append("\n");
-        sb.append("From field : ").append(dbAssitant.getFieldFrom()).append("\n");
-        sb.append("To field : ").append(dbAssitant.getFieldTo()).append("\n");
-        sb.append("\n");
-        sb.append("Action cost: \n");
-        sb.append("\t candidatesTokenCount: ").append(candToken).append("\n");
-        sb.append("\t thoughtsTokenCount: ").append(thouToken).append("\n");
-        sb.append("\t promptTokenCount: ").append(promToken).append("\n");
-
-        sb.append("\t addTokens: ").append(addTokens).append("\n");
-
-        sb.append("\t totalTokenCount: ").append(totToken + addTokens).append("\n");
-
-        Adminlog.add(Adminlog.TYPE_AI, sb.toString(), totToken, -1);
-
-        AiStatService.addRecord(dbAssitant.getId(), totToken, statRepo, request);
-
-        responseDto.setTotalTokens(totToken);
-    }
 
     protected void addPartWithFile(JSONArray contentsArray, String value, String mimeType, String fileData) {
         JSONObject inlineData = new JSONObject()
@@ -127,6 +79,13 @@ public abstract class GeminiSupportService {
         JSONObject firstCandidate = candidates.getJSONObject(0);
         JSONObject content = firstCandidate.getJSONObject("content");
         return content.getJSONArray("parts");
+    }
+
+    protected ArrayNode getParts(JsonNode root) {
+        ArrayNode candidates = (ArrayNode) root.path("candidates");
+        JsonNode firstCandidate = candidates.get(0);
+        JsonNode content = firstCandidate.path("content");
+        return (ArrayNode) content.path("parts");
     }
 
     public static String getApiKey() {

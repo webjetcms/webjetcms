@@ -16,14 +16,14 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
  * Service for OpenAI assistants - handles provider specific options
  */
 @Service
-public class OpenAiAssistantsService extends OpenAiSupportService implements AiAssitantsInterface {
+public class OpenAiAssistantsService implements AiAssitantsInterface {
 
     public String getProviderId() {
         return "openai";
     }
 
     public boolean isInit() {
-        return Tools.isNotEmpty(getApiKey());
+        return Tools.isNotEmpty(OpenAiSupportService.getApiKey());
     }
 
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {

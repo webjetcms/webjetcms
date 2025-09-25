@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.IncludesHandler;
@@ -19,6 +20,17 @@ public class OpenRouterStreamHandler {
 
     public OpenRouterStreamHandler(Map<Integer, String> replacedIncludes) {
         this.includeHandler = new IncludesHandler(replacedIncludes, null);
+    }
+
+    public final JsonNode getUsageChunk() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode root = mapper.createObjectNode();
+
+        ObjectNode usage = mapper.createObjectNode();
+        usage.put("total_tokens", totalTokenCount);
+
+        root.set("usage", usage);
+        return root;
     }
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
