@@ -152,6 +152,30 @@ Nemusíte upravovať celý obsah stránky. Asistent pracujúci s `PageBuilder` p
 
 ![](page_builder-selection.png)
 
+## Režim chat
+
+Ak je asistent nastavený do režimu chat, aplikujú sa zmeny v PageBuilder na celú štruktúru, nielen textový/editovateľný obsah. Asistent tak dokáže generovať nové bloky, upravovať existujúce a podobne. Viete mu zadávať požiadavky na úpravu textov v stránke a generovanie nových blokov. Režim aktivujete nastavením poľa Typ požiadavky na hodnotu `Chat` vo vlastnostiach asistenta.
+
+Okno so zadaním požiadavky obsahuje nové polia na nastavenie režimu:
+
+- **Pridať** - výstupný HTML kód z požiadavky pridá na koniec stránky. Neposiela asistentovi aktuálny obsah stránky, vykonanie je teda lacnejšie (spotrebuje sa menej tokenov).
+- **Upraviť** - spolu s inštrukciou a vašou požiadavkou sa pošle aj aktuálny HTML kód stránky, v ktorom vie asistent upraviť texty, bloky, HTML kód. Spotrebuje sa viac tokenov na vykonanie požiadavky.
+- **Nahradiť** - podobne ako pridať, spolu s požiadavkou sa neposiela aktuálny kód stránky. Výsledkom je nahradená aktuálna stránka. Vhodné, ak chcete začať od znova a zmazať celý aktuálny obsah.
+
+![](pb-chat-prompt.png)
+
+Po vykonaní požiadavky sa zobrazí okno so stavom a počtom použitých tokenov. Naviac ale v tomto okne je možnosť **Pokračovať**, ktorá znova zobrazí okno pre zadanie požiadavky.
+
+![](pb-chat-success.png)
+
+Môžete teda pokračovať v úpravách na web stránke a zadať požiadavku na úpravu textu stránky. Zvolením možnosti **Upraviť** sa odošle spolu s vašou požiadavkou aj aktuálny HTML kód stránky, asistent v ňom teda vie vykonať zmeny.
+
+![](pb-chat-edit.png)
+
+Vykonané úpravy sa zobrazia vo web stránke a znova môžete kliknutím na Pokračovať zadať ďalšiu požiadavku, alebo kliknutím na **OK** asistenta ukončiť. Všimnite si na fotke, že podľa zadanej požiadavky je upravený nadpis oproti predchádzajúcej verzii.
+
+![](pb-chat-edit-success.png)
+
 ## Obrázky v stránke
 
 AI asistenta môžete využiť aj pri vkladaní obrázkov do webovej stránky. Tlačidlo asistenta sa nachádza v pravom dolnom rohu na konci poľa s adresou obrázka.

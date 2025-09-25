@@ -2285,7 +2285,7 @@ export const dataTableInit = options => {
 
         $.fn.dataTable.ext.errMode = function(settings, tn, msg) {
             console.error("DataTables error: ", msg, "tn=", tn, "settings=", settings);
-            WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
+            //WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
             dtWJ.stateResetLocalStorage(settings);
             dtWJ.stateReset(TABLE);
             if (msg.indexOf("ColReorder - column count mismatch") != -1) {

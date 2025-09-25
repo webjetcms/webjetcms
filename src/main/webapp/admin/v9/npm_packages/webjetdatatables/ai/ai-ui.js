@@ -135,6 +135,12 @@ export class AiUserInterface {
                 //use original button clicked - which shows this popup
                 this._renderHeader(button, column, aiCol);
 
+                let toastContainerAi = $("#toast-container-ai");
+                toastContainerAi.removeClass(function (index, className) {
+                    return (className.match (/(^|\s)ai-action-\S+/g) || []).join(' ');
+                });
+                toastContainerAi.addClass("ai-action-" + aiCol.action.replaceAll("_", "-"));
+
                 if (true === aiCol.userPromptEnabled) {
                     //we must first show dialog with textarea and after that call _executeAction
                     this._renderUserPromptDialog(button, column, aiCol);
@@ -152,6 +158,10 @@ export class AiUserInterface {
         }
     }
 
+    /**
+     * Options for buttons NOT IN datatable (aka other buttons). We must load column info from server.
+     * @param {} button
+     */
     async generateOtherAssistentOptions(button) {
         let datatableColumn = null;
         await $.ajax({
@@ -257,13 +267,21 @@ export class AiUserInterface {
                 undoButton.find("button").on('click', () => {
                     this.editorAiInstance.undo();
                 });
+
+                //generate continue chat button
+                let continueChatButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-continue-chat" type="button"><i class="ti ti-player-play-filled"></i> ' + WJ.translate("components.ai_assistants.editor.continueChat.js")+'</button></div>');
+                continueChatButton.find("button").on('click', () => {
+                    this.editorAiInstance.continueChat();
+                });
+
                 //generate OK button, on click close toast
                 let okButton = $('<div class="text-end"><button class="btn btn-primary btn-ai-ok" type="button"><i class="ti ti-check"></i> ' + WJ.translate("button.ok")+'</button></div>');
                 okButton.find("button").on('click', () => {
                     this._closeToast();
                 });
-                let buttonContainer = $('<div class="ai-status-buttons-container d-flex justify-content-end gap-3 mt-1"></div>');
+                let buttonContainer = $('<div class="ai-status-buttons-container d-flex justify-content-end gap-2 mt-1"></div>');
                 buttonContainer.append(undoButton);
+                buttonContainer.append(continueChatButton);
                 buttonContainer.append(okButton);
                 contentContainer.append(buttonContainer);
             }
@@ -429,7 +447,7 @@ export class AiUserInterface {
 
         const btn = $(`
             <div class="text-end">
-                <button class="btn btn-primary" type="button">
+                <button class="btn btn-primary btn-generate" type="button">
                     <i class="ti ti-sparkles"></i>
                     ${WJ.translate("components.ai_assistants.user_prompt.generate.js")}
                 </button>
@@ -454,7 +472,15 @@ export class AiUserInterface {
             //Add bonus content
             const prefix = "bonusContent-";
             $(`input[id^='${prefix}'], select[id^='${prefix}']`).each(function () {
+                let $this = $(this);
                 let key = this.id.substring(prefix.length);
+
+                //for input type=radio set only checked value
+                if ($this.is(":radio")) {
+                    if ($this.is(":checked")) key = $this.attr("name").substring(prefix.length);
+                    else return; //continue
+                }
+
                 inputValues[key] = $(this).val();
             });
 
@@ -462,6 +488,8 @@ export class AiUserInterface {
         });
 
         contentContainer.find(".user-prompt-container").append(btn);
+
+        WJ.initTooltip($('#toast-container-ai-content [data-bs-toggle*="tooltip"]'), 'tooltip-ai');
     }
 
     async getPathForNewImage() {
@@ -522,6 +550,9 @@ export class AiUserInterface {
             if (actualValue.startsWith("/thumb")) actualValue = actualValue.substring("/thumb".length);
             //remove any parameters
             actualValue = actualValue.split("?")[0];
+
+            //if doesnt start with /images do not use it, probably placeholder image
+            if (actualValue.indexOf("/images/") != 0 || actualValue.indexOf("stock") !== -1 || actualValue.indexOf("placeholder") !== -1) actualValue = null;
         }
 
         if(actualValue != undefined && actualValue != null && actualValue.length && /^\/.+\.(jpg|jpeg|png|gif|webp|svg)$/i.test(actualValue)) {

@@ -16,6 +16,7 @@ export class EditorAi {
 
     //field to remember value for undo process
     undoField = null;
+    stopped = false;
 
     //constructor
     constructor(EDITOR, bindEvents = true) {
@@ -131,11 +132,11 @@ export class EditorAi {
     }
 
     stopExecution() {
+        this.stopped = true;
         this.aiUserInterface.saveUserPrompt();
         this.aiUserInterface.setCurrentStatus("components.ai_assistants.stopping.js", false);
         if (this.aiBrowserExecutor != null) this.aiBrowserExecutor.destroy();
-        //if (this.aiRestExecutor != null) this.aiRestExecutor.destroy();
-
+        if (this.aiRestExecutor != null) this.aiRestExecutor.destroy();
     }
 
     _getEditorButton(column, appendClass) {
@@ -209,6 +210,15 @@ export class EditorAi {
         }
     }
 
+    continueChat() {
+        //show back previous user prompt
+        this.revertUserPrompt();
+        //clear value
+        $("#ai-user-prompt").val("");
+        //focus into input
+        $("#ai-user-prompt").focus();
+    }
+
     revertUserPrompt() {
         let userPromptSaved = $("#toast-ai-user-prompt-saved");
         let savedContent = userPromptSaved.find(".user-prompt-container");
@@ -246,6 +256,7 @@ export class EditorAi {
         let self = this;
         self._showLoader(button);
         self.undoField = null;
+        self.stopped = false;
 
         let from = aiCol.from;
         if (from == null || from == "")  from = aiCol.to; //if from is not set, use to as from
@@ -312,6 +323,12 @@ export class EditorAi {
 
         self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
+        let mode = "";
+        if ($("#bonusContent-replaceMode-append").is(":checked")) mode = "append";
+        else if ($("#bonusContent-replaceMode-replace").is(":checked")) mode = "replace";
+        else if ($("#bonusContent-replaceMode-edit").is(":checked")) mode = "edit";
+        //console.log("mode=", mode);
+
         if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
 
             // Get selected HTML
@@ -338,56 +355,65 @@ export class EditorAi {
         } else if (isPageBuilder) {
             //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
 
-            let mode = "";
-
-            if ("append"===mode || "replace"===mode) {
+            if ("append"===mode || "replace"===mode || "edit"===mode) {
                 //append new content into page
                 let reuseApiInstance = false;
                 let self = this;
                 let options = self.EDITOR.field(aiCol.to).s.opts;
                 let lastLength = 0;
 
+                //set HTML only for edit mode, because otherwise AI may duplicate whole page content
+                if ("edit" === mode) inputData.inputValue = self.EDITOR.get(from);
+                else inputData.inputValue = "";
+
                 self.undoField = {};
                 self.undoField.type = "pageBuilder-full";
                 self.undoField.value = options.wjeditor.getData();
                 self.undoField.to = aiCol.to;
 
-                executionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response, final) => {
-                    let insertData = final;
-                    if (final === false && lastLength+300 < response.length && response.lastIndexOf("</section>") > response.length-60) {
-                        insertData = true;
-                        //insert only valid HTML code with complete sections
-                        response = response.substring(0, response.lastIndexOf("</section>")+10);
-                        lastLength = response.length;
-                    }
+                //save credits during development
+                let fakeData = false;
+                if (fakeData === true) {
+                    //wait for 10 seconds
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    let response = `<section class="py-5 aaaa-apend text-center text-lg-start">
+                        <div class="container">
+                        <div class="row align-items-center g-5">
+                        <div class="col-12 col-lg-6">
+                        <h1 class="display-5 fw-bold">Spoľahlivý Opravár Vody, Plynu a&nbsp;Elektriny v&nbsp;Bratislave</h1>
 
-                    if (insertData) options.wjeditor.pbInsertContent(response, mode, final);
-                });
+                        <p class="lead my-4">Profesionálne služby v&nbsp;oblasti vodovodných a&nbsp;plynových prípojok, ako aj odborné revízie elektriny. Rýchlo, kvalitne a&nbsp;za férovú cenu.</p>
 
-                /*/wait for 10 seconds
-                await new Promise(resolve => setTimeout(resolve, 10000));
+                        <p><a class="btn btn-primary btn-lg" href="#kontakt">Kontaktujte ma</a></p>
+                        </div>
 
-                let response = `<section class="py-5 aaaa-apend text-center text-lg-start">
-<div class="container">
-<div class="row align-items-center g-5">
-<div class="col-12 col-lg-6">
-<h1 class="display-5 fw-bold">AAAA Spoľahlivý Opravár Vody, Plynu a&nbsp;Elektriny v&nbsp;Bratislave</h1>
+                        <div class="col-12 col-lg-6"><img alt="Ilustračný obrázok opravy vodovodného potrubia" class="img-fluid rounded-3 shadow-sm" src="/components/news/admin_imgplaceholder.png" /></div>
+                        </div>
+                        </div>
+                        </section>`;
+                        options.wjeditor.pbInsertContent(response, mode, true);
+                        executionResult = new AiExecutionResult();
+                        executionResult.totalTokens = 100;
+                        executionResult.success = true;
+                        console.log("executionResult=", executionResult);
+                } else {
+                    executionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response, final) => {
+                        let insertData = final;
+                        if (final === false && lastLength+300 < response.length && response.lastIndexOf("</section>") > response.length-60) {
+                            insertData = true;
+                            //insert only valid HTML code with complete sections
+                            response = response.substring(0, response.lastIndexOf("</section>")+10);
+                            lastLength = response.length;
+                        }
 
-<p class="lead my-4">Profesionálne služby v&nbsp;oblasti vodovodných a&nbsp;plynových prípojok, ako aj odborné revízie elektriny. Rýchlo, kvalitne a&nbsp;za férovú cenu.</p>
+                        if (insertData) {
+                            //if (final === true) console.log("Inserting into PageBuilder:", response, "final=", final);
+                            options.wjeditor.pbInsertContent(response, mode, final);
+                        }
+                    });
+                }
 
-<p><a class="btn btn-primary btn-lg" href="#kontakt">Kontaktujte ma</a></p>
-</div>
 
-<div class="col-12 col-lg-6"><img alt="Ilustračný obrázok opravy vodovodného potrubia" class="img-fluid rounded-3 shadow-sm" src="/components/news/admin_imgplaceholder.png" /></div>
-</div>
-</div>
-</section>`;
-                options.wjeditor.pbInsertContent(response, mode, true);
-                executionResult = new AiExecutionResult();
-                executionResult.totalTokens = 100;
-                console.log("executionResult=", executionResult);
-
-                */
                 totalTokens = executionResult.totalTokens;
             } else {
 
@@ -403,6 +429,11 @@ export class EditorAi {
                 executionResult = new AiExecutionResult();
 
                 for (let i=0; i<editors.length; i++) {
+                    if (self.stopped === true) {
+                        executionResult.stopped = true;
+                        break;
+                    }
+
                     let editor = editors[i];
                     if (i>0) reuseApiInstance = true;
                     //console.log("Executing on editor: ", editor);
@@ -414,7 +445,7 @@ export class EditorAi {
 
                     let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
                         //console.log("response="+response, "setting to editor: ", editor);
-                        editor.setData(response);
+                        if (self.stopped === false) editor.setData(response);
                     });
                     //console.log("editorExecutionResult=", editorExecutionResult);
                     if (editorExecutionResult!=null) {
@@ -456,7 +487,25 @@ export class EditorAi {
             } catch (error) {
                 console.error("Error setting undoField:", error);
             }
-            executionResult = await this._executeSingleAction(button, column, aiCol, inputData);
+            if ("append"===mode || "replace"===mode || "edit"===mode) {
+                executionResult = await this._executeSingleAction(button, column, aiCol, inputData, false, (response, finished) => {
+                    //console.log("response="+response, "setting to field: ", self.EDITOR, "inputData=", inputData)
+                    // Append or replace field with AI response, do not stream, wait for finished
+                    // In edit mode we replace whole content
+                    if (finished === true) {
+                        if ("append"===mode) {
+                            let currentValue = self.EDITOR.get(aiCol.to);
+                            if (currentValue == null) currentValue = "";
+                            self.EDITOR.set(aiCol.to, currentValue + response);
+                        } else if ("replace"===mode || "edit"===mode) {
+                            self.EDITOR.set(aiCol.to, response);
+                        }
+                    }
+                });
+            } else {
+                executionResult = await this._executeSingleAction(button, column, aiCol, inputData);
+            }
+
             if (executionResult!=null) totalTokens += executionResult.totalTokens;
         }
 

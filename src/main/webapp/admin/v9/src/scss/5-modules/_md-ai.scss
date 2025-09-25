@@ -449,6 +449,11 @@
     .toast.toast-info {
         .bonus-content {
             label { color: black; }
+            div.btn-group {
+                .btn-check:checked + .btn {
+                    color: white;
+                }
+            }
         }
     }
 
@@ -540,6 +545,15 @@
     &.ai-status-error {
         .current-status {
             color: var(--wj-red-60);
+        }
+    }
+
+    .btn-ai-continue-chat {
+        display: none;
+    }
+    &.ai-action-live-chat {
+        .btn-ai-continue-chat {
+            display: inline-block;
         }
     }
 }

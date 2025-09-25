@@ -64,7 +64,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String groupName;
 
     @Column(name = "created_at")
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at", tab = "basic", className = "hide-on-create",
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at", tab = "basic", className = "hide-on-create", visible = false,
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
@@ -80,12 +80,12 @@ public class AssistantDefinitionEntity implements Serializable {
     /* ACTION tab */
 
     @Column(name = "action")
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.action", tab = "action")
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.action", tab = "action", visible = false)
     @Size(max = 255)
     private String action;
 
     @Column(name = "class_name")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "action", className = "ai-off",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.class_name", tab = "action", className = "ai-off", visible = false,
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -101,7 +101,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String className;
 
     @Column(name = "field_from")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "action", className = "ai-off",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_from", tab = "action", className = "ai-off", visible = false,
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -117,7 +117,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private String fieldFrom;
 
     @Column(name = "field_to")
-    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "action", className = "ai-off",
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.field_to", tab = "action", className = "ai-off", visible = false,
         editor = {
 			@DataTableColumnEditor(
 				attr = {
@@ -193,7 +193,7 @@ public class AssistantDefinitionEntity implements Serializable {
 
     @Lob
     @Column(name = "user_prompt_label")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", className = "wrap", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced", className = "wrap", hidden = true)
     private String userPromptLabel;
 
     @Transient

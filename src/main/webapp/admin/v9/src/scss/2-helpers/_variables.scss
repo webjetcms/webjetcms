@@ -27,6 +27,10 @@ $secondary-font-family: 'Asap', sans-serif;
   --bs-body-color: #{$secondary};
   --bs-danger: #{$danger};
   --bs-warning: #{$warning};
+
+  --bs-btn-active-bg: #{$primary};
+  --bs-btn-active-border-color: #{$primary};
+
   --wj-primary: #{$primary};
   --wj-primary-hover: #{$primary-hover};
   --wj-secondary: #{$secondary};

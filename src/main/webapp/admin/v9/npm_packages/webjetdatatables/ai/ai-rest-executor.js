@@ -170,6 +170,8 @@ export class AiRestExecutor {
             explanatoryText: null
         }
 
+        if (wholeText == null || wholeText.trim().length == 0) return parsedJson;
+
         let startBlock = wholeText.indexOf("```html");
         if (startBlock==0) {
             //if it starts with ```html markdown
@@ -243,19 +245,19 @@ export class AiRestExecutor {
     destroy() {
         let self = this;
 
-        console.log("ai-rest-execution self", self);
+        //console.log("ai-rest-execution self", self);
 
         if(self.curentAssistantId != null && self.curentTimestamp != null) {
             $.ajax({
                 type: "GET",
-                url: "/admin/rest/ai/assistant-definition/stop-assistant/",
+                url: "/admin/rest/ai/assistant/stop-assistant/",
                 data: {
                     assistantId : self.curentAssistantId,
                     timestamp : self.curentTimestamp
                 },
                 success: function(res)
                 {
-                    console.log("SUCCESCC : ", res);
+                    //console.log("SUCCESSS : ", res);
                 }
             });
         }

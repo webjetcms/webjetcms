@@ -335,3 +335,48 @@ Scenario('ai-assistants empty', async ({ I, DT, DTE, Document }) => {
     I.click(locate("div.DTE_Field_Name_perexGroupName").find("button.btn-ai"));
     Document.screenshot("/redactor/ai/datatables/no-assistants-available.png", 1280, 420);
 });
+
+Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=34495");
+    DT.waitForLoader();
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+    I.clickCss("#pills-dt-datatableInit-content-tab");
+    DTE.waitForCkeditor();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+
+    I.clickCss("span.cke_button_icon.cke_button__aibutton_icon");
+    I.switchTo();
+    I.waitForVisible("#toast-container-ai > div.toast-info");
+
+    I.click( locate('button.btn-ai-action').withText("Webový dizajnér (PageBuilder)").withChild(locate('span.provider').withText(gemini)) );
+    I.wait(2);
+    I.waitForElement("#ai-user-prompt");
+    I.doubleClick("#ai-user-prompt");
+    I.clickCss("label[for=bonusContent-replaceMode-replace]");
+    I.click("#ai-user-prompt"); //move cursor from tooltip
+    Document.screenshot("/redactor/ai/datatables/pb-chat-prompt.png");
+
+    I.clickCss("#toast-container-ai .btn.btn-generate");
+    I.waitForElement(".btn-ai-continue-chat", 120);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.scrollPageToTop();
+    I.switchTo();
+    Document.screenshot("/redactor/ai/datatables/pb-chat-success.png");
+
+    I.click(".btn-ai-continue-chat");
+    I.fillField("#ai-user-prompt", "Zmeň nadpis na názov firmy Super Barber Bernolákovo, telefón na 02/3278 8888 a doplň do stránky nový blok s novinkami a trendami v účesoch a strihaní.");
+    I.clickCss("label[for=bonusContent-replaceMode-edit]");
+    I.click("#ai-user-prompt"); //move cursor from tooltip
+    Document.screenshot("/redactor/ai/datatables/pb-chat-edit.png");
+
+    I.clickCss("#toast-container-ai .btn.btn-generate");
+    I.waitForElement(".btn-ai-continue-chat", 120);
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.scrollPageToTop();
+    I.switchTo();
+    Document.screenshot("/redactor/ai/datatables/pb-chat-edit-success.png");
+
+    I.switchTo();
+});

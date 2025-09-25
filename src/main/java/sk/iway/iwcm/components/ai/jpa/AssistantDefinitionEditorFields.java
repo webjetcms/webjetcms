@@ -24,7 +24,7 @@ public class AssistantDefinitionEditorFields extends BaseEditorFields {
     private String translatedDescription;
 
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "components.ai_assistants.user_prompt.label", tab = "advanced",
-        className = "wrap", filter = false, sortAfter = "userPromptLabel",
+        className = "wrap", filter = false, sortAfter = "userPromptLabel", visible = false,
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }

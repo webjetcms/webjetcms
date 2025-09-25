@@ -2,23 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    style.
-        tr.not-active td {
-            color: var(--bs-danger) !important;
-        }
-
-        tr.not-active td div a {
-            color: var(--bs-danger) !important;
-        }
-
-        tr.not-init td {
-            color: var(--bs-warning) !important;
-        }
-
-        tr.not-init td div a {
-            color: var(--bs-warning) !important;
-        }
-
     script.
         var aiAssistantsDataTable;
 
@@ -59,11 +42,15 @@ block content
                 columns[i].className = columnClassName;
             }
 
+            let order = [];
+            order.push([1, 'asc']);
+
             aiAssistantsDataTable = WJ.DataTable({
                 url: "/admin/rest/ai/assistant-definition/",
                 columns: columns,
                 serverSide: true,
                 tabs: tabs,
+                order: order,
                 fetchOnCreate: true,
                 fetchOnEdit: true
             });
@@ -152,5 +139,20 @@ block content
         div.DTE_Field_Name_editorFields-translatedDescription div.form-group-tooltip { display: none; }
         label[for='DTE_Field_editorFields-translatedUserPromptLabel'] { visibility: hidden; }
         div.DTE_Field_Name_editorFields-translatedUserPromptLabel div.form-group-tooltip { display: none; }
+        tr.not-active td {
+            color: var(--bs-danger) !important;
+        }
 
-    <table class="datatableInit table"></table>
+        tr.not-active td div a {
+            color: var(--bs-danger) !important;
+        }
+
+        tr.not-init td {
+            color: var(--bs-warning) !important;
+        }
+
+        tr.not-init td div a {
+            color: var(--bs-warning) !important;
+        }
+
+    table.datatableInit.table

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.ai.jpa;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import lombok.Getter;
@@ -40,19 +41,17 @@ public enum SupportedActions {
     public static List<LabelValue> getSupportedActions(Prop prop) {
         List<LabelValue> labels = new ArrayList<>();
         for (SupportedActions supportedAction : SupportedActions.values()) {
-            if (LIVE_CHAT.equals(supportedAction)) continue; // currently not supported in UI
-
             labels.add(new LabelValue(prop.getText(ACTION_PREFIX + supportedAction.getAction()), supportedAction.getAction()));
         }
         return labels;
     }
 
-    public static boolean doesSupportAction(AssistantDefinitionEntity assistant, SupportedActions action) throws IllegalStateException {
+    public static boolean doesSupportAction(AssistantDefinitionEntity assistant, SupportedActions... action) throws IllegalStateException {
         if(assistant == null || action == null) return false;
 
         SupportedActions assistantAction = getSupportedAction(assistant.getAction());
 
-        if(assistantAction == null || assistantAction.equals(action) == false) return false;
+        if(assistantAction == null || !Arrays.asList(action).contains(assistantAction)) return false;
 
         return true;
     }

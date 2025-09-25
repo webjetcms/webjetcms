@@ -54,6 +54,9 @@ public class InputDataDTO {
     String imageSize;
     String imageQuality;
 
+    //append or replace - relevant only for PageBuilder editor
+    String replaceMode;
+
     // timestamp from FE when assistant was called, used as part of running assiatnt task id
     Long timestamp;
 

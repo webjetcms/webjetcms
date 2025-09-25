@@ -310,6 +310,10 @@ public class AiAssistantsService {
         }
 
         if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
+
+            //for append we must clear inputValue, because it will be duplicated into final result
+            if ("append".equals(inputData.getReplaceMode()) || "replace".equals(inputData.getReplaceMode())) inputData.setInputValue("");
+
             instructions = Tools.replace(instructions, "{inputText}", nvl(inputData.getInputValue(), ""));
             instructions = Tools.replace(instructions, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
 
@@ -327,6 +331,10 @@ public class AiAssistantsService {
 
     private static String nvl(String value, String defaultValue) {
         if(Tools.isEmpty(value)) return defaultValue;
+
+        //remove new lines and escape quotes, we are expecting JSON format for instructions for HTML code/replace in PB
+        value = value.replace("\n", " ").replace("\r", " ").replace("\"", "\\\"").replace("'", "\\'");
+
         return value;
     }
 

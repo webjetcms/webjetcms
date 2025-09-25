@@ -1108,25 +1108,26 @@ const WJ = (() => {
      * Inicializuje tooltip na zadanom element
      * @param {jQuery element} $element
      */
-    function initTooltip($element) {
+    function initTooltip($element, customClass = null) {
         $element.each(function (key, el) {
             var $el = $(el);
             var tooltipText = $el.attr("title");
+
+            var conf = {
+                placement: 'top',
+                trigger: 'hover'
+            };
+            if (customClass != null) conf.customClass = customClass;
+
             if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
                 //console.log("Tooltiptext=", tooltipText);
                 tooltipText = WJ.parseMarkdown(tooltipText);
                 //console.log("Tooltiptext parsed=", tooltipText);
                 $el.attr("title", tooltipText);
-                $el.tooltip({
-                    placement: 'top',
-                    trigger: 'hover',
-                    html: true
-                });
+                conf.html = true;
+                $el.tooltip(conf);
             } else {
-                $el.tooltip({
-                    placement: 'top',
-                    trigger: 'hover'
-                });
+                $el.tooltip(conf);
             }
         });
     }
@@ -1430,8 +1431,8 @@ const WJ = (() => {
         parseMarkdown: (markdownText, options) => {
             return parseMarkdown(markdownText, options);
         },
-        initTooltip: ($el) => {
-            return initTooltip($el);
+        initTooltip: ($el, customClass = null) => {
+            return initTooltip($el, customClass);
         },
         getAdminSetting: (key) => {
             return getAdminSetting(key);

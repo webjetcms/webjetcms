@@ -124,7 +124,7 @@ public class AiService {
         Prop prop = Prop.getInstance(request);
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false) {
+        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
@@ -172,7 +172,7 @@ public class AiService {
         Prop prop = Prop.getInstance(request);
         AssistantDefinitionEntity assistant = getAssistant(inputData.getAssistantId(), assistantRepo, prop);
 
-        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT) == false || Tools.isFalse(assistant.getUseStreaming())) {
+        if(doesSupportAction(assistant, SupportedActions.GENERATE_TEXT, SupportedActions.LIVE_CHAT) == false || Tools.isFalse(assistant.getUseStreaming())) {
             throw new IllegalStateException( getNotSupportedAction(prop) );
         }
 
@@ -196,11 +196,58 @@ public class AiService {
 
         AssistantDefinitionEntity assistant = getAssistant(assistantId, assistantRepo, Prop.getInstance(request));
 
+        String bonusHtml = null;
+
         Prop prop = Prop.getInstance(request);
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
-                return aiInterface.getBonusHtml(assistant, prop);
+                bonusHtml = aiInterface.getBonusHtml(assistant, prop);
             }
+        }
+
+        if (Tools.isNotEmpty(bonusHtml)) {
+            return bonusHtml;
+        }
+
+        //for chat fields enable option to add content after current OR replace it
+        if (Tools.isTrue(assistant.getUserPromptEnabled()) && assistant.getAction().equals(SupportedActions.LIVE_CHAT.getAction())) {
+            //for chat fields enable option to add content after current OR replace it
+            String editHTML = "";
+            String checked = " checked";
+            if (Tools.isNotEmpty(assistant.getFieldFrom())) {
+                editHTML = """
+                    <input type="radio" class="btn-check" name="bonusContent-replaceMode" id="bonusContent-replaceMode-edit" value="edit" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary btn-sm" for="bonusContent-replaceMode-edit" title="%s" data-bs-toggle="tooltip">%s</label>
+                """.formatted(
+                    prop.getText("components.ai_assistants.editor.replaceMode.edit.tooltip"),
+                    prop.getText("components.ai_assistants.editor.replaceMode.edit")
+                );
+                checked = "";
+            }
+
+            return """
+                <div class='bonus-content row mt-3'>
+                    <div class='col-12'>
+                        <div class="btn-group" role="group" aria-label="%s">
+                            <input type="radio" class="btn-check" name="bonusContent-replaceMode" id="bonusContent-replaceMode-append" value="append" autocomplete="off" %s>
+                            <label class="btn btn-outline-primary btn-sm" for="bonusContent-replaceMode-append" title="%s" data-bs-toggle="tooltip">%s</label>
+
+                            %s
+
+                            <input type="radio" class="btn-check" name="bonusContent-replaceMode" id="bonusContent-replaceMode-replace" value="replace" autocomplete="off">
+                            <label class="btn btn-outline-primary btn-sm" for="bonusContent-replaceMode-replace" title="%s" data-bs-toggle="tooltip">%s</label>
+                        </div>
+                    </div>
+                </div>
+            """.formatted(
+                prop.getText("components.ai_assistants.editor.replaceMode.label"),
+                checked,
+                prop.getText("components.ai_assistants.editor.replaceMode.append.tooltip"),
+                prop.getText("components.ai_assistants.editor.replaceMode.append"),
+                editHTML,
+                prop.getText("components.ai_assistants.editor.replaceMode.replace.tooltip"),
+                prop.getText("components.ai_assistants.editor.replaceMode.replace")
+            );
         }
 
         throw new IllegalStateException( getSomethingWrongErr(Prop.getInstance(request)) );

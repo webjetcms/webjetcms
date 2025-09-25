@@ -1736,8 +1736,11 @@ export class DatatablesCkEditor {
 		return htmlCode;
 	}
 
-	pbInsertContent(html, mode=null, markPbElements=false) {
+	pbInsertContent(html, mode=null, final=false) {
 		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
+
+		//if we are appending content we must wait for final version, otherwise we would append content multiple times
+		if ("append" === mode && final===false) return;
 
 		if (html.indexOf("<section")==-1)
         {
@@ -1754,23 +1757,22 @@ export class DatatablesCkEditor {
 
 			const $container = $(this);
 
-			if ("replace" === mode) {
-				//remove all section elements and prepend new code to preserve pb-modal/notify/library elements
+			if ("replace" === mode || "edit" === mode) {
+				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
 				$container.children('section').remove();
-				$container.prepend(html);
-			} else {
-				//$(this).prepend(response);
-				const $lastSection = $container.children('section').last();
-				if ($lastSection.length > 0) {
-					$lastSection.after(html);
-				} else {
-					// if there are no sections yet, just prepend to container
-					$container.prepend(html);
-				}
 			}
+			const $lastSection = $container.children('section').last();
+			if ($lastSection.length > 0) {
+				$lastSection.after(html);
+			} else {
+				// if there are no sections yet, just prepend to container
+				$container.prepend(html);
+			}
+			//scroll window to bottom
+			pbIframe.scrollTo(0, pbIframe.document.body.scrollHeight+200);
 		});
 		//reinitialize pb blocks
-		if (markPbElements===true) {
+		if (final===true) {
 			this.markPbElements();
 		}
 	}
