@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,8 +93,8 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     @Override
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws Exception {
 
-        ResponseRequest rr = (inputText, instructions) -> {
-            JSONObject mainObject = getBaseMainObject(instructions, inputText);
+        ResponseRequest rr = (instructions, inputText, inputPrompt) -> {
+            JSONObject mainObject = getBaseMainObject(instructions, inputText, inputPrompt);
             mainObject.put("model", assistant.getModel());
 
             HttpPost post = new HttpPost(RESPONSES_URL);
@@ -120,13 +119,12 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     @Override
     public AssistantResponseDTO getAiStreamResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, BufferedWriter writer, HttpServletRequest request) throws Exception {
        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
-        JSONObject mainObject = getBaseMainObject(instructions, inputText);
+        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
         mainObject.put("model", assistant.getModel());
         mainObject.put("stream", true);
 
@@ -165,13 +163,15 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
         //Contents Array
         JSONArray messagesArray = new JSONArray();
 
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
+
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
             byte[] fileBytes = Files.readAllBytes(inputData.getInputFile().toPath());
-            addMessageWithImage(messagesArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData), inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
+            addMessageWithImage(messagesArray, instructions, inputData.getMimeType(), Base64.getEncoder().encodeToString(fileBytes));
         } else {
             //ITS IMAGE GENERATION - INPUT IS TEXT RETUN IMAGE
-            addMessage(messagesArray, AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData));
+            addMessage(messagesArray, instructions);
         }
 
         mainObject.put("messages", messagesArray);

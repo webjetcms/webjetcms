@@ -22,6 +22,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
+import sk.iway.iwcm.components.ai.providers.IncludesHandler;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -294,17 +295,34 @@ public class AiAssistantsService {
         c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId());
     }
 
-    public static String executePromptMacro(String text, InputDataDTO inputData) {
-        if(inputData == null) return text;
-        if(Tools.isEmpty(text)) {
+    /**
+     * Execute prompt macro, replaces {inputText}, {userPrompt} and adds rule for INCLUDE protected tokens if includes are used
+     * @param instructions
+     * @param inputData
+     * @param replacedIncludes
+     * @return
+     */
+    public static String executePromptMacro(String instructions, InputDataDTO inputData, Map<Integer, String> replacedIncludes) {
+        if(inputData == null) return instructions;
+        if(Tools.isEmpty(instructions)) {
             //to fill inputData if original input is empty
-            text = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
+            instructions = "{\nuserPrompt:{userPrompt}\ninputText:{inputText}\n}";
         }
 
-        text = Tools.replace(text, "{inputText}", nvl(inputData.getInputValue(), ""));
-        text = Tools.replace(text, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
+        if (instructions.contains("{inputText}") || instructions.contains("{userPrompt}")) {
+            instructions = Tools.replace(instructions, "{inputText}", nvl(inputData.getInputValue(), ""));
+            instructions = Tools.replace(instructions, "{userPrompt}", nvl(inputData.getUserPrompt(), ""));
 
-        return text;
+            //clear values, so it will be not appended into final prompt, clear both,
+            //because it instructions contains {userPrompt} we expect that it will contain also
+            //inputValue if it is required for the action
+            inputData.setInputValue("");
+            inputData.setUserPrompt("");
+        }
+
+        if (replacedIncludes != null && replacedIncludes.isEmpty()==false) instructions = IncludesHandler.addProtectedTokenInstructionRule(instructions);
+
+        return instructions;
     }
 
     private static String nvl(String value, String defaultValue) {

@@ -109,7 +109,9 @@ public class GeminiStreamHandler {
                 .replace("\\u003e", ">")
                 .replace("\\u0026", "&")
                 .replace("\\n", "\n")
-                .replace("\\t", "\t");
+                .replace("\\t", "\t")
+                .replace("\\\"", "\"")
+                ;
     }
 
     private boolean skip(String line) {

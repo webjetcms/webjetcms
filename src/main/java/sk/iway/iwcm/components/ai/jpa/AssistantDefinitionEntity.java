@@ -21,6 +21,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.jpa.AllowHtmlAttributeConverter;
 
 @Entity
 @Table(name = "ai_assistants")
@@ -169,6 +170,7 @@ public class AssistantDefinitionEntity implements Serializable {
         }
     )
     @NotBlank
+    @javax.persistence.Convert(converter = AllowHtmlAttributeConverter.class)
     private String instructions;
 
     /* ADVANCED tab */

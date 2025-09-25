@@ -28,6 +28,8 @@ Asistenti, ktorí potrebujú vstup používateľa, majú pri názve ikonu <i cla
 
 ![](textarea-prompt.png)
 
+Pole môže mať zástupný text (`placeholder`) s návodom ako správne zadať požiadavku. Ak je pole prázdne a 2x do neho kliknete, tak sa tento zástupný text prenesie ako editovateľný text do poľa. Môžete tak ľahko upraviť potrebné časti a použiť ho ako základ vašej požiadavky.
+
 Po zadaní pokynov stlačte **Generovať**. Ďalší priebeh (načítanie, vloženie výsledku, možnosť vrátenia) je rovnaký ako pri asistentovi bez používateľského vstupu.
 
 ![](textarea-prompt-loading.png)

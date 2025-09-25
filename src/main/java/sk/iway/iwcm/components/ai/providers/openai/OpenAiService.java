@@ -15,7 +15,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -109,14 +108,15 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public AssistantResponseDTO getAiResponse(AssistantDefinitionEntity assistant, InputDataDTO inputData, Prop prop, AiStatRepository statRepo, HttpServletRequest request) throws IOException {
 
-       ResponseRequest rr = (inputText, instructions) -> {
+       ResponseRequest rr = (instructions, inputText, inputPrompt) -> {
             HttpPost post = new HttpPost(RESPONSES_URL);
 
             JSONObject json = new JSONObject();
             json.put(MODEL.value(), assistant.getModel());
             json.put(STORE.value(), !assistant.getUseTemporal());
             json.put(INSTRUCTIONS.value(), instructions);
-            json.put(INPUT.value(), inputText);
+            if (Tools.isNotEmpty(inputPrompt)) json.put(INPUT.value(), inputPrompt);
+            else json.put(INPUT.value(), inputText);
 
             post.setEntity(getRequestBody(json.toString()));
             addHeaders(post, true, false);
@@ -138,15 +138,14 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
-        //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
         JSONObject json = new JSONObject();
         json.put(MODEL.value(), assistant.getModel());
         json.put(INSTRUCTIONS.value(), instructions);
-        json.put(INPUT.value(), inputText);
+        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
+        else json.put(INPUT.value(), inputData.getInputValue());
         json.put(STORE.value(), !assistant.getUseTemporal());
         json.put(STREAM.value(), assistant.getUseStreaming());
 
@@ -284,7 +283,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         //builder.addTextBody(MODEL.value(), "gpt-image-1");
         builder.addTextBody(MODEL.value(), model);
-        builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
+        builder.addTextBody("prompt", AiAssistantsService.executePromptMacro(instructions, inputData, null));
         builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
 
         if(inputData.getImageQuality() != null) {
@@ -318,7 +317,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         JSONObject json = new JSONObject();
         //json.put(MODEL.value(), "gpt-image-1");
         json.put(MODEL.value(), model);
-        json.put("prompt", AiAssistantsService.executePromptMacro(instructions, inputData));
+        json.put("prompt", AiAssistantsService.executePromptMacro(instructions, inputData, null));
         json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
 
         if(inputData.getImageQuality() != null) {

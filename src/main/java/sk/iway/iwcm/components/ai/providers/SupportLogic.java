@@ -2,7 +2,6 @@ package sk.iway.iwcm.components.ai.providers;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +25,7 @@ import sk.iway.iwcm.components.ai.providers.FunctionTypes.ModelsExtractor;
 import sk.iway.iwcm.components.ai.providers.FunctionTypes.ModelsRequest;
 import sk.iway.iwcm.components.ai.providers.FunctionTypes.ResponseExtractor;
 import sk.iway.iwcm.components.ai.providers.FunctionTypes.ResponseRequest;
+import sk.iway.iwcm.components.ai.rest.AiAssistantsService;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -60,12 +60,11 @@ public class SupportLogic {
         AssistantResponseDTO responseDto = new AssistantResponseDTO();
 
         //Handle replace of INCLUDE tags
-        Map<Integer, String> replacedIncludes = new HashMap<>();
-        String inputText = IncludesHandler.replaceIncludesWithPlaceholders(inputData.getInputValue(), replacedIncludes);
-        String instructions = replacedIncludes.isEmpty() ? assistant.getInstructions() : IncludesHandler.addProtectedTokenInstructionRule(assistant.getInstructions());
+        Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
+        String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
         CloseableHttpClient client = HttpClients.createDefault();
-        try (CloseableHttpResponse response = client.execute(rr.apply(inputText, instructions))) {
+        try (CloseableHttpResponse response = client.execute(rr.apply(instructions, inputData.getInputValue(), inputData.getUserPrompt()))) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, "", "getAiResponse");
 

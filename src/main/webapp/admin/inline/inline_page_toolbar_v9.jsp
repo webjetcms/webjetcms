@@ -323,6 +323,24 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         return editorsContent;
     }
 
+    function markPbElements(wjAppField) {
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                //console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            pageBuilderInstance.mark_grid_elements();
+
+            initPageBuilderEditors($(this));
+        });
+    }
+
     /**
      * Set content in all editors in wjAppField from editorsContent (ARRAY). If i is set it will set only i editor.
      */
@@ -602,7 +620,7 @@ if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
     </div>
 </div>
 <div id="inlineEditorToolbarTopPlaceHolder"></div>
-<div id="wjInline-docdata" data-wjapp="pageBuilder" data-wjappkey="<%=doc.getDocId()%>" data-wjappfield="doc_data">
+<div id="wjInline-docdata" data-wjapp="pageBuilder" data-wjappkey="<%=doc.getDocId()%>" data-wjapptemp="<%=doc.getTempId()%>" data-wjappfield="doc_data">
     <% if ("true".equals(request.getParameter("inlineEditingNewPage"))) { %>
         <p><iwcm:text key='editor.newDocumentName'/></p>
     <%

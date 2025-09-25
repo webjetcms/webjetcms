@@ -110,7 +110,7 @@ public interface AiInterface {
                 try {
                     JSONObject setInstructions = new JSONObject( assistant.getInstructions() );
                     if(setInstructions.has("inputText") == true) value = inputData.getInputValue();
-                    if(Tools.isEmpty(value)) value = joinAllValues(AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData) , ".");
+                    if(Tools.isEmpty(value)) value = joinAllValues(AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null) , ".");
                 } catch (JSONException e) {
                     value = assistant.getInstructions();
                 }

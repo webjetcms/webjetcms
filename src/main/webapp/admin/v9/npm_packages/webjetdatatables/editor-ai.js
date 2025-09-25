@@ -196,6 +196,9 @@ export class EditorAi {
                 this.undoField.editors.forEach(editor => {
                     editor.instance.setData(editor.value);
                 });
+            } else if (this.undoField.type === "pageBuilder-full") {
+                let options = this.EDITOR.field(this.undoField.to).s.opts;
+                options.wjeditor.pbInsertContent(this.undoField.value, "replace", true);
             } else if (this.undoField.type === "field" && this.undoField.to != null) {
                 this.EDITOR.set(this.undoField.to, this.undoField.value);
             }
@@ -307,9 +310,9 @@ export class EditorAi {
 
         //console.log(inputData);
 
-        if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
+        self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
-            self.setCurrentStatus("components.ai_assistants.editor.loading.js");
+        if (ckEditorRanges != null && ckEditorSelectionInstance != null) {
 
             // Get selected HTML
             var tempDiv = document.createElement('div');
@@ -335,59 +338,112 @@ export class EditorAi {
         } else if (isPageBuilder) {
             //console.log("Executing action for PageBuilder editor:", aiCol, "column", column);
 
-            //get all PB editor instances and execute action on them separately
-            let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
-            let reuseApiInstance = false;
+            let mode = "";
 
-            self.undoField = {};
-            self.undoField.type = "pageBuilder";
-            self.undoField.editors = [];
-            let successCount = 0;
-            let explanatoryText = null;
-            executionResult = new AiExecutionResult();
+            if ("append"===mode || "replace"===mode) {
+                //append new content into page
+                let reuseApiInstance = false;
+                let self = this;
+                let options = self.EDITOR.field(aiCol.to).s.opts;
+                let lastLength = 0;
 
-            for (let i=0; i<editors.length; i++) {
-                let editor = editors[i];
-                if (i>0) reuseApiInstance = true;
-                //console.log("Executing on editor: ", editor);
+                self.undoField = {};
+                self.undoField.type = "pageBuilder-full";
+                self.undoField.value = options.wjeditor.getData();
+                self.undoField.to = aiCol.to;
 
-                self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
+                executionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response, final) => {
+                    let insertData = final;
+                    if (final === false && lastLength+300 < response.length && response.lastIndexOf("</section>") > response.length-60) {
+                        insertData = true;
+                        //insert only valid HTML code with complete sections
+                        response = response.substring(0, response.lastIndexOf("</section>")+10);
+                        lastLength = response.length;
+                    }
 
-                inputData.inputValue = editor.getData();
-                self.undoField.editors.push({instance: editor, value: inputData.inputValue});
-
-                let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
-                    //console.log("response="+response, "setting to editor: ", editor);
-                    editor.setData(response);
+                    if (insertData) options.wjeditor.pbInsertContent(response, mode, final);
                 });
-                //console.log("editorExecutionResult=", editorExecutionResult);
-                if (editorExecutionResult!=null) {
-                    totalTokens += editorExecutionResult.totalTokens;
 
-                    if (editorExecutionResult.stopped === true) {
-                        this._stoppedSignalReceived(button);
-                        return;
+                /*/wait for 10 seconds
+                await new Promise(resolve => setTimeout(resolve, 10000));
+
+                let response = `<section class="py-5 aaaa-apend text-center text-lg-start">
+<div class="container">
+<div class="row align-items-center g-5">
+<div class="col-12 col-lg-6">
+<h1 class="display-5 fw-bold">AAAA Spoľahlivý Opravár Vody, Plynu a&nbsp;Elektriny v&nbsp;Bratislave</h1>
+
+<p class="lead my-4">Profesionálne služby v&nbsp;oblasti vodovodných a&nbsp;plynových prípojok, ako aj odborné revízie elektriny. Rýchlo, kvalitne a&nbsp;za férovú cenu.</p>
+
+<p><a class="btn btn-primary btn-lg" href="#kontakt">Kontaktujte ma</a></p>
+</div>
+
+<div class="col-12 col-lg-6"><img alt="Ilustračný obrázok opravy vodovodného potrubia" class="img-fluid rounded-3 shadow-sm" src="/components/news/admin_imgplaceholder.png" /></div>
+</div>
+</div>
+</section>`;
+                options.wjeditor.pbInsertContent(response, mode, true);
+                executionResult = new AiExecutionResult();
+                executionResult.totalTokens = 100;
+                console.log("executionResult=", executionResult);
+
+                */
+                totalTokens = executionResult.totalTokens;
+            } else {
+
+                //get all PB editor instances and execute action on them separately
+                let editors = this.EDITOR.field(aiCol.to).s.opts.wjeditor.getWysiwygEditors();
+                let reuseApiInstance = false;
+
+                self.undoField = {};
+                self.undoField.type = "pageBuilder";
+                self.undoField.editors = [];
+                let successCount = 0;
+                let explanatoryText = null;
+                executionResult = new AiExecutionResult();
+
+                for (let i=0; i<editors.length; i++) {
+                    let editor = editors[i];
+                    if (i>0) reuseApiInstance = true;
+                    //console.log("Executing on editor: ", editor);
+
+                    self.setCurrentStatus("components.ai_assistants.editor.loading.js", false, (i+1)+"/"+editors.length);
+
+                    inputData.inputValue = editor.getData();
+                    self.undoField.editors.push({instance: editor, value: inputData.inputValue});
+
+                    let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
+                        //console.log("response="+response, "setting to editor: ", editor);
+                        editor.setData(response);
+                    });
+                    //console.log("editorExecutionResult=", editorExecutionResult);
+                    if (editorExecutionResult!=null) {
+                        totalTokens += editorExecutionResult.totalTokens;
+
+                        if (editorExecutionResult.stopped === true) {
+                            this._stoppedSignalReceived(button);
+                            return;
+                        }
+
+                        //preserve status to executionResults
+                        if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
+                        if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
+                        if (editorExecutionResult.errorText != null) executionResult.errorText = editorExecutionResult.errorText;
+                        if (editorExecutionResult.success === true) successCount++;
+
+                        if (editorExecutionResult.explanatoryText != null) {
+                            if (explanatoryText == null || explanatoryText.trim() === "") explanatoryText = editorExecutionResult.explanatoryText;
+                            else explanatoryText += "\n---\n" + editorExecutionResult.explanatoryText;
+                        }
+                        totalTokens += editorExecutionResult.totalTokens;
                     }
-
-                    //preserve status to executionResults
-                    if (editorExecutionResult.statusKey != null) executionResult.statusKey = editorExecutionResult.statusKey;
-                    if (editorExecutionResult.statusKeyParams != null) executionResult.statusKeyParams = editorExecutionResult.statusKeyParams;
-                    if (editorExecutionResult.errorText != null) executionResult.errorText = editorExecutionResult.errorText;
-                    if (editorExecutionResult.success === true) successCount++;
-
-                    if (editorExecutionResult.explanatoryText != null) {
-                        if (explanatoryText == null || explanatoryText.trim() === "") explanatoryText = editorExecutionResult.explanatoryText;
-                        else explanatoryText += "\n---\n" + editorExecutionResult.explanatoryText;
-                    }
-                    totalTokens += editorExecutionResult.totalTokens;
                 }
+
+                if (successCount === editors.length) executionResult.success = true;
+                executionResult.explanatoryText = explanatoryText;
             }
 
-            if (successCount === editors.length) executionResult.success = true;
-            executionResult.explanatoryText = explanatoryText;
-
         } else {
-            self.setCurrentStatus("components.ai_assistants.editor.loading.js");
 
             inputData.inputValue = self.EDITOR.get(from);
             try {

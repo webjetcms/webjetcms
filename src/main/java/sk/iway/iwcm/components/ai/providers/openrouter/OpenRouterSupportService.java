@@ -48,7 +48,7 @@ public abstract class OpenRouterSupportService {
         //Contents Array
         JSONArray messagesArray = new JSONArray();
         //Add parts
-        for (String content : contents) addMessage(messagesArray, content);
+        for (String content : contents) if(Tools.isNotEmpty(content)) addMessage(messagesArray, content);
 
         mainObject.put("messages", messagesArray);
         return mainObject;

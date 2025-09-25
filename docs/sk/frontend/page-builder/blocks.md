@@ -124,9 +124,11 @@ Odporúčame bloky generovať pomocou [PugJS](https://pugjs.org).
 
 ## CSS triedy pre obrázok
 
-Ak má obrázok nastavenú CSS triedu ```fixedSize-w-h-ip``` je automaticky po zmene adresy obrázka nastavený zadaný rozmer ```w``` a ```h```, ak je zadaný aj posledný údaj ```ip``` nastaví sa aj [bod záujmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). Napr. CSS trieda ```fixedSize-160-160-5``` automaticky generuje obrázok rozmeru 160 x 160 bodov s nastaveným bodom záujmu 5. Triedu odporúčame nastaviť na všetky ilustračné obrázky, pri ktorých je dôležitý ich rozmer.
+Ak má obrázok nastavenú CSS triedu ```fixedSize-w-h-ip``` je automaticky po zmene adresy obrázka nastavený zadaný rozmer ```w``` a ```h```, ak je zadaný aj posledný údaj ```ip``` nastaví sa aj [bod záujmu](../../frontend/thumb-servlet/README.md). Napr. CSS trieda ```fixedSize-160-160-5``` automaticky generuje obrázok rozmeru 160 x 160 bodov s nastaveným bodom záujmu 5. Triedu odporúčame nastaviť na všetky ilustračné obrázky, pri ktorých je dôležitý ich rozmer.
 
 Pri kliknutí na obrázok s CSS triedou ```fixedSize/w-100/autoimg``` sa ihneď otvorí okno vlastností obrázku pre jeho jednoduchú výmenu. Redaktor tak nemusí kliknúť na obrázok a následne v nástrojovej lište na ikonu zmeny obrázka.
+
+Ak obrázok obsahuje v URL adrese výraz `placeholder` alebo `stock` neotvorí sa dialógové okno výberu obrázka do priečinka s týmto obrázkom, ale do priečinka Média tejto stránky. Používateľ tak môže ľahko nahrať nový obrázok.
 
 ## Podpora kariet
 
