@@ -463,6 +463,8 @@ public class UpdateDatabase
 								//replace mariadb escapes, in pgsql you can escape using E' but only on first instance
 								sql = Tools.replace(sql, "\\'", "''");
 								sql = Tools.replace(sql, "\\\"", "\"");
+								//mariadb has \\" in instructions like <img src=\\"/components/...
+								sql = Tools.replace(sql, "\\\\\"", "\\\"");
 								sql = Tools.replace(sql, "\\n", "'||chr(10)||'");
 							}
 
