@@ -1,5 +1,8 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.SupportLogic;
@@ -18,7 +21,6 @@ public abstract class OpenAiSupportService extends SupportLogic {
     protected static final String OUTPUT = "output";
 
     protected enum ASSISTANT_FIELDS {
-        INSTRUCTIONS("instructions"),
         MODEL("model"),
         INPUT("input"),
         STORE("store"),
@@ -137,5 +139,29 @@ public abstract class OpenAiSupportService extends SupportLogic {
 
     public static String getApiKey() {
         return Constants.getString("ai_openAiAuthKey");
+    }
+
+    protected JSONObject getBaseMainObject(String systemInput, String... userInputs) {
+        JSONObject mainObject = new JSONObject();
+        JSONArray inputsArray = new JSONArray();
+
+        addInput(inputsArray, systemInput, true);
+
+        for(String userInput : userInputs) {
+            if (Tools.isNotEmpty(userInput)) addInput(inputsArray, userInput, false);
+        }
+
+        mainObject.put("input", inputsArray);
+
+        return mainObject;
+    }
+
+
+    protected void addInput(JSONArray inputsArray, String value, boolean isSystem) {
+        JSONObject input = new JSONObject()
+            .put("role", isSystem == true ? "system" : "user")
+            .put("content", value);
+
+        inputsArray.put(input);
     }
 }

@@ -34,10 +34,9 @@ public abstract class GeminiSupportService extends SupportLogic {
     }
 
     protected JSONObject getBaseMainObject(String... parts) {
-        //Main JSON object
         JSONObject mainObject = new JSONObject();
-        //Contents Array
         JSONArray contentsArray = new JSONArray();
+
         //Add parts
         for (String part : parts) {
             if (Tools.isNotEmpty(part)) addPart(contentsArray, part);

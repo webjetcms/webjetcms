@@ -1,7 +1,5 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
-import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.INPUT;
-import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.INSTRUCTIONS;
 import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.MODEL;
 import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.STORE;
 import static sk.iway.iwcm.components.ai.providers.openai.OpenAiSupportService.ASSISTANT_FIELDS.STREAM;
@@ -100,16 +98,12 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
+        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        mainObject.put(MODEL.value(), assistant.getModel());
+        mainObject.put(STORE.value(), !assistant.getUseTemporal());
+
         HttpPost post = new HttpPost(RESPONSES_URL);
-
-        JSONObject json = new JSONObject();
-        json.put(MODEL.value(), assistant.getModel());
-        json.put(STORE.value(), !assistant.getUseTemporal());
-        json.put(INSTRUCTIONS.value(), instructions);
-        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
-        else json.put(INPUT.value(), inputData.getInputValue());
-
-        post.setEntity(getRequestBody(json.toString()));
+        post.setEntity(getRequestBody(mainObject.toString()));
         addHeaders(post, true);
 
         return post;
@@ -123,16 +117,13 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        JSONObject json = new JSONObject();
-        json.put(MODEL.value(), assistant.getModel());
-        json.put(STORE.value(), !assistant.getUseTemporal());
-        json.put(INSTRUCTIONS.value(), instructions);
-        if (Tools.isNotEmpty(inputData.getUserPrompt())) json.put(INPUT.value(), inputData.getUserPrompt());
-        else json.put(INPUT.value(), inputData.getInputValue());
-        json.put(STREAM.value(), assistant.getUseStreaming());
+        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        mainObject.put(MODEL.value(), assistant.getModel());
+        mainObject.put(STORE.value(), !assistant.getUseTemporal());
+        mainObject.put(STREAM.value(), assistant.getUseStreaming());
 
         HttpPost post = new HttpPost(RESPONSES_URL);
-        post.setEntity(getRequestBody(json.toString()));
+        post.setEntity(getRequestBody(mainObject.toString()));
         addHeaders(post, true);
         post.setHeader("Accept", "text/event-stream");
 
@@ -218,11 +209,9 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     private HttpPost getEditImagePost(InputDataDTO inputData, String model, String instructions, Prop prop) throws IOException {
-        HttpPost post = new HttpPost(IMAGES_EDITS_URL);
-
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
-        //builder.addTextBody(MODEL.value(), "gpt-image-1");
+
         builder.addTextBody(MODEL.value(), model);
         builder.addTextBody("prompt", instructions);
         builder.addTextBody("n", inputData.getImageCount() == null ? "1" : inputData.getImageCount().toString());
@@ -245,8 +234,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
 
         //Set entity and headers
+        HttpPost post = new HttpPost(IMAGES_EDITS_URL);
         post.setEntity(builder.build());
-
         addHeaders(post, false);
 
         return post;
