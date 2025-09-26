@@ -23,6 +23,8 @@ public interface SupportLogicInterface {
     String getServiceName();
     int addUsageAndReturnTotal(StringBuilder sb, int addTokens, JsonNode root);
 
+    String getFinishError(JsonNode jsonNodeRes);
+
     HttpRequestBase getModelsRequest(HttpServletRequest request);
     List<LabelValue> extractModels(JsonNode root);
 
@@ -37,7 +39,6 @@ public interface SupportLogicInterface {
     }
 
     HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException;
-    String getFinishReason(JsonNode jsonNodeRes);
     ArrayNode getImages(JsonNode jsonNodeRes);
 
     String getImageFormat(JsonNode jsonNodeRes, JsonNode jsonImage);

@@ -20,6 +20,7 @@ public abstract class GeminiSupportService extends SupportLogic {
 
     protected static final String AUTH_KEY = "ai_geminiAuthKey";
     protected static final String SERVICE_NAME = "GeminiService";
+    protected static final String PARTS = "parts";
 
     protected void addPartWithFile(JSONArray contentsArray, String value, String mimeType, String fileData) {
         JSONObject inlineData = new JSONObject()
@@ -62,7 +63,7 @@ public abstract class GeminiSupportService extends SupportLogic {
 
         if(inlineData != null) parts.put(inlineData);
 
-        content.put("parts", parts);
+        content.put(PARTS, parts);
         contentsArray.put(content);
     }
 
@@ -78,14 +79,14 @@ public abstract class GeminiSupportService extends SupportLogic {
         JSONArray candidates = json.getJSONArray("candidates");
         JSONObject firstCandidate = candidates.getJSONObject(0);
         JSONObject content = firstCandidate.getJSONObject("content");
-        return content.getJSONArray("parts");
+        return content.getJSONArray(PARTS);
     }
 
     protected ArrayNode getParts(JsonNode root) {
         ArrayNode candidates = (ArrayNode) root.path("candidates");
         JsonNode firstCandidate = candidates.get(0);
         JsonNode content = firstCandidate.path("content");
-        return (ArrayNode) content.path("parts");
+        return (ArrayNode) content.path(PARTS);
     }
 
     public static String getApiKey() {

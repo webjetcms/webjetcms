@@ -41,6 +41,9 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     private static final String MODELS_URL = "https://openrouter.ai/api/v1/models";
     private static final String RESPONSES_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+    private static final String CHOICES = "choices";
+    private static final String MODEL = "model";
+
     public String getProviderId() {
         return "openrouter";
     }
@@ -83,7 +86,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
         JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
-        mainObject.put("model", assistant.getModel());
+        mainObject.put(MODEL, assistant.getModel());
 
         HttpPost post = new HttpPost(RESPONSES_URL);
         post.setEntity(getRequestBody(mainObject.toString()));
@@ -93,7 +96,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public String extractResponseText(JsonNode jsonNodeRes) {
-        return jsonNodeRes.path("choices")
+        return jsonNodeRes.path(CHOICES)
                 .get(0)
                 .path("message")
                 .path("content")
@@ -102,7 +105,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
         JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
-            mainObject.put("model", assistant.getModel());
+            mainObject.put(MODEL, assistant.getModel());
             mainObject.put("stream", true);
 
             HttpPost post = new HttpPost(RESPONSES_URL);
@@ -131,7 +134,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
         }
 
         mainObject.put("messages", messagesArray);
-        mainObject.put("model", assistant.getModel());
+        mainObject.put(MODEL, assistant.getModel());
 
         HttpPost httpPost = new HttpPost(RESPONSES_URL);
         setHeaders(httpPost, true);
@@ -140,19 +143,19 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
         return httpPost;
     }
 
-    public String getFinishReason(JsonNode jsonNodeRes) {
+    public String getFinishError(JsonNode jsonNodeRes) {
        try {
-            ArrayNode choices = (ArrayNode) jsonNodeRes.path("choices");
-           JsonNode firstChoice = choices.get(0);
-            return firstChoice.path("finish_reason").asText("");
+            ArrayNode choices = (ArrayNode) jsonNodeRes.path(CHOICES);
+            JsonNode firstChoice = choices.get(0);
+            return handleFinishReasonValue( firstChoice.path("finish_reason").asText("") );
         } catch(Exception e) {
             Logger.error(GeminiService.class, "Fetting finish_reason : " + e);
-            return "";
+            return null;
         }
     }
 
     public ArrayNode getImages(JsonNode jsonNodeRes) {
-        ArrayNode choices = (ArrayNode) jsonNodeRes.path("choices");
+        ArrayNode choices = (ArrayNode) jsonNodeRes.path(CHOICES);
         JsonNode firstChoice = choices.get(0);
         JsonNode message = firstChoice.path("message");
         return (ArrayNode) message.path("images");

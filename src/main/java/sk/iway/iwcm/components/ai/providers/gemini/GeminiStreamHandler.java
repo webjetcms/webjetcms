@@ -56,6 +56,14 @@ public class GeminiStreamHandler {
 
             if(skip(line)) continue;
 
+            if(line.startsWith("\"finishReason\":")) {
+                // Check finish reason, if needed, throws error
+                line = line.substring(15);
+                line = line.trim().replaceAll("[\",]", "");
+                if("STOP".equalsIgnoreCase(line) == false)
+                    throw new IllegalStateException(line);
+            }
+
             if(line.startsWith("\"candidates\":")) {
                 waitingForText = true;
                 continue;

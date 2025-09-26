@@ -177,7 +177,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         return httpPost;
     }
 
-    public String getFinishReason(JsonNode jsonNodeRes) {
+    public String getFinishError(JsonNode jsonNodeRes) {
         // Extract finishReason from Jackson JsonNode response
         String finishReason = null;
         try {
@@ -194,7 +194,10 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
         } catch (Exception e) {
             Logger.error(GeminiService.class, e);
         }
-        return finishReason;
+
+        //Gemini do not give better explanation that just this (unlike OpenAI with detail object)
+        if(Tools.isEmpty(finishReason) || "STOP".equalsIgnoreCase(finishReason)) return null; //its ok
+        else return finishReason; // NOT ok
     }
 
     public ArrayNode getImages(JsonNode jsonNodeRes) {

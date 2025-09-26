@@ -78,6 +78,12 @@ public abstract class SupportLogic implements SupportLogicInterface {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNodeRes = mapper.readTree(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
 
+            String finishError = getFinishError(jsonNodeRes);
+            if(Tools.isNotEmpty(finishError)) {
+                responseDto.setError(finishError);
+                return responseDto;
+            }
+
             String responseText = extractResponseText(jsonNodeRes);
             responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
 
@@ -132,9 +138,9 @@ public abstract class SupportLogic implements SupportLogicInterface {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNodeRes = mapper.readTree(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
 
-            String finishReason = getFinishReason(jsonNodeRes);
-            if (Tools.isNotEmpty(finishReason) && "STOP".equalsIgnoreCase(finishReason) == false) {
-                responseDto.setError(finishReason);
+            String finishError = getFinishError(jsonNodeRes);
+            if(Tools.isNotEmpty(finishError)) {
+                responseDto.setError(finishError);
                 return responseDto;
             }
 

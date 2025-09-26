@@ -15,6 +15,8 @@ public abstract class OpenAiSupportService extends SupportLogic {
     protected static final String IMAGES_EDITS_URL = "https://api.openai.com/v1/images/edits";
     protected static final String RESPONSES_URL = "https://api.openai.com/v1/responses";
 
+    protected static final String OUTPUT = "output";
+
     protected enum ASSISTANT_FIELDS {
         INSTRUCTIONS("instructions"),
         MODEL("model"),

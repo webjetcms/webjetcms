@@ -116,7 +116,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public String extractResponseText(JsonNode jsonNodeRes) {
-        ArrayNode data = (ArrayNode) jsonNodeRes.path("output");
+        ArrayNode data = (ArrayNode) jsonNodeRes.path(OUTPUT);
         JsonNode firstMessage = data.get(0);
         ArrayNode contentArray = (ArrayNode) firstMessage.path("content");
         return  contentArray.get(0).path("text").asText();
@@ -156,9 +156,24 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         }
     }
 
-    public String getFinishReason(JsonNode jsonNodeRes) {
-        //TODO
-        return "";
+    public String getFinishError(JsonNode jsonNodeRes) {
+        // OpenAI in new reponse API use STATUS instead of finish_reason
+
+        // Need to be in try catch because IMAGES for example do not return status :)
+        String status = null;
+        try { status= jsonNodeRes.path(OUTPUT).get(0).path("status").asText("");
+        } catch(Exception e) { return null; }
+
+        if("completed".equalsIgnoreCase(status)) {
+            //All good
+            return null;
+        } else if("incomplete".equalsIgnoreCase(status)) {
+            // Problem, try extract reason
+            return jsonNodeRes.path(OUTPUT).get(0).path("incomplete_details").path("reason").asText(status);
+        } else {
+            // UNKNOWN
+            return status;
+        }
     }
 
     public ArrayNode getImages(JsonNode jsonNodeRes) {

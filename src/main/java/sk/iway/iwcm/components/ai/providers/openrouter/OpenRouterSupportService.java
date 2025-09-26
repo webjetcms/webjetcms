@@ -70,4 +70,12 @@ public abstract class OpenRouterSupportService extends SupportLogic {
 
         messagesArray.put(message);
     }
+
+    public static String handleFinishReasonValue(String finishReason) {
+        if(Tools.isEmpty(finishReason) || "STOP".equalsIgnoreCase(finishReason)) return null; // good
+        else if("length".equalsIgnoreCase(finishReason)) return "The model reached the max_tokens limit before it could stop naturally.";
+        else if("content_filter".equalsIgnoreCase(finishReason)) return "The output was flagged/blocked by the content filter.";
+        else if("tool_calls".equalsIgnoreCase(finishReason)) return "The model stopped because it emitted a tool (function) call.";
+        else return finishReason; //Jut in case
+    }
 }

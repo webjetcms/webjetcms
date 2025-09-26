@@ -202,10 +202,11 @@ public class AiService {
         for(AiInterface aiInterface : aiInterfaces) {
             if(aiInterface.isInit() == true && aiInterface.getProviderId().equals(assistant.getProvider())) {
                 bonusHtml = aiInterface.getBonusHtml(assistant, prop);
+                break;
             }
         }
 
-        if (Tools.isNotEmpty(bonusHtml)) {
+        if (Tools.isEmpty(bonusHtml)) {
             return bonusHtml;
         }
 

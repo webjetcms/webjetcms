@@ -16,6 +16,7 @@ public class OpenRouterStreamHandler {
 
     boolean waitingForUsage = false;
     int totalTokenCount = 0;
+    ObjectMapper mapper = new ObjectMapper();
     IncludesHandler includeHandler;
 
     public OpenRouterStreamHandler(Map<Integer, String> replacedIncludes) {
@@ -23,7 +24,6 @@ public class OpenRouterStreamHandler {
     }
 
     public final JsonNode getUsageChunk() {
-        ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
 
         ObjectNode usage = mapper.createObjectNode();
@@ -34,7 +34,6 @@ public class OpenRouterStreamHandler {
     }
 
     public final void handleBufferedReader(BufferedReader reader, BufferedWriter writer) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         String line;
 
         while ((line = reader.readLine()) != null) {
@@ -45,6 +44,8 @@ public class OpenRouterStreamHandler {
                 String data = line.substring(6);
 
                 if("[DONE]".equals(data)) break;
+
+                doFinishReasonCheck(data);
 
                 String content = "";
                 String finishReason = "";
@@ -76,4 +77,13 @@ public class OpenRouterStreamHandler {
         }
     }
 
+    private final void doFinishReasonCheck(String data) {
+        try {
+            JsonNode root = mapper.readTree(data);
+            String err = OpenRouterSupportService.handleFinishReasonValue( root.path("choices").get(0).path("finish_reason").asText(null) );
+            if(Tools.isNotEmpty(err)) throw new IllegalStateException(err);
+        } catch (Exception e) {
+            // Do nothing
+        }
+    }
 }
