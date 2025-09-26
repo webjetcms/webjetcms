@@ -148,6 +148,14 @@ public abstract class SupportLogic implements SupportLogicInterface {
             try {
                 long datePart = Tools.getNow();
                 for(JsonNode jsonImage : imagesArr) {
+
+                    // TODO - temporal fix for google gemini retarded bug, where first (maybe not allways first) child in array is "text": "`" and not an actual image
+                    try {
+                        if(jsonImage.has("text") == true) continue;
+                    } catch(Exception e) {
+                        // All good, do nothing
+                    }
+
                     String format = getImageFormat(jsonNodeRes, jsonImage);
                     String base64Image = getImageBase64(jsonNodeRes, jsonImage);
 
