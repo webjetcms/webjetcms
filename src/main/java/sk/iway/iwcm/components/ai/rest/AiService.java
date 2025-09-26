@@ -206,7 +206,7 @@ public class AiService {
             }
         }
 
-        if (Tools.isEmpty(bonusHtml)) {
+        if (Tools.isNotEmpty(bonusHtml)) {
             return bonusHtml;
         }
 
@@ -251,7 +251,7 @@ public class AiService {
             );
         }
 
-        throw new IllegalStateException( getSomethingWrongErr(Prop.getInstance(request)) );
+        return null;
     }
 
     private AssistantDefinitionEntity getAssistant(Long assistantId, AssistantDefinitionRepository assistantRepo, Prop prop) {

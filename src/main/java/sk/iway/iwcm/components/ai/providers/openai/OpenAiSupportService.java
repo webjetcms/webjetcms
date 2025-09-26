@@ -1,7 +1,8 @@
 package sk.iway.iwcm.components.ai.providers.openai;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -19,6 +20,7 @@ public abstract class OpenAiSupportService extends SupportLogic {
     protected static final String RESPONSES_URL = "https://api.openai.com/v1/responses";
 
     protected static final String OUTPUT = "output";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     protected enum ASSISTANT_FIELDS {
         MODEL("model"),
@@ -141,9 +143,9 @@ public abstract class OpenAiSupportService extends SupportLogic {
         return Constants.getString("ai_openAiAuthKey");
     }
 
-    protected JSONObject getBaseMainObject(String systemInput, String... userInputs) {
-        JSONObject mainObject = new JSONObject();
-        JSONArray inputsArray = new JSONArray();
+    protected ObjectNode getBaseMainObject(String systemInput, String... userInputs) {
+        ObjectNode mainObject = MAPPER.createObjectNode();
+        ArrayNode inputsArray = MAPPER.createArrayNode();
 
         addInput(inputsArray, systemInput, true);
 
@@ -151,17 +153,16 @@ public abstract class OpenAiSupportService extends SupportLogic {
             if (Tools.isNotEmpty(userInput)) addInput(inputsArray, userInput, false);
         }
 
-        mainObject.put("input", inputsArray);
+        mainObject.set("input", inputsArray);
 
         return mainObject;
     }
 
-
-    protected void addInput(JSONArray inputsArray, String value, boolean isSystem) {
-        JSONObject input = new JSONObject()
-            .put("role", isSystem == true ? "system" : "user")
+    protected void addInput(ArrayNode inputsArray, String value, boolean isSystem) {
+        ObjectNode input = MAPPER.createObjectNode()
+            .put("role", isSystem ? "system" : "user")
             .put("content", value);
 
-        inputsArray.put(input);
+        inputsArray.add(input);
     }
 }

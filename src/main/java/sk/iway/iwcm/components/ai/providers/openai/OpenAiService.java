@@ -21,12 +21,12 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -98,7 +98,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
         mainObject.put(MODEL.value(), assistant.getModel());
         mainObject.put(STORE.value(), !assistant.getUseTemporal());
 
@@ -117,7 +117,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
         mainObject.put(MODEL.value(), assistant.getModel());
         mainObject.put(STORE.value(), !assistant.getUseTemporal());
         mainObject.put(STREAM.value(), assistant.getUseStreaming());
@@ -242,10 +242,7 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
     }
 
     private HttpPost getCreateImagePost(InputDataDTO inputData, String model, String instructions) {
-        HttpPost post = new HttpPost(IMAGES_GENERATION_URL);
-
-        JSONObject json = new JSONObject();
-        //json.put(MODEL.value(), "gpt-image-1");
+        ObjectNode json = mapper.createObjectNode();
         json.put(MODEL.value(), model);
         json.put("prompt", instructions);
         json.put("n", inputData.getImageCount() == null ? 1 : inputData.getImageCount());
@@ -261,8 +258,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
             json.put("response_format", "b64_json");
         }
 
+        HttpPost post = new HttpPost(IMAGES_GENERATION_URL);
         post.setEntity(getRequestBody(json.toString()));
-
         addHeaders(post, true);
 
         return post;
