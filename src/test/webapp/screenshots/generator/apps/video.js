@@ -8,7 +8,7 @@ Scenario('video app screens', ({ I, DT, Document, Apps }) => {
 
     Apps.insertApp('Video', '#components-video-title', null, false);
 
-    I.switchTo('#cke_121_iframe');
+    I.switchTo('iframe[src$="webjetcomponet.jsp"]');
     I.switchTo('#editorComponent');
 
     Document.screenshot("/redactor/apps/video/editor-source.png");

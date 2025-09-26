@@ -463,6 +463,23 @@ export function renderColor(td, type, rowData, row) {
     }
 }
 
+export function renderIcon(td, type, rowData, row) {
+    if (td === "" || td === null || typeof td == "undefined") {
+        return "";
+    }
+    if (type == "sort" || type == "filter" ) {
+        return prepareForSearch(td);
+    } else {
+        //console.log("renderColor, td=", td, " rowData=", rowData, " row=", row);
+        var icon = WJ.escapeHtml(td);
+        if (icon != "") {
+            return '<span class="dt-icon-box"><i class="ti ti-' + icon + '"></i></span>' + renderTd(row, icon, rowData);
+        } else {
+            return renderTd(row, icon, rowData);
+        }
+    }
+}
+
 export function renderJson(td, type, rowData, row) {
 
     //console.log("Using DT render json, rowData=", rowData, "row=", row, "td=", td, "type=", type);

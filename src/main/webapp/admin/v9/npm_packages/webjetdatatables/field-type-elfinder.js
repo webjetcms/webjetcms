@@ -9,7 +9,7 @@ export function typeElfinder() {
         if (conf._prepend != null) {
             if (val.indexOf(".jpg")!=-1 || val.indexOf(".jpeg")!=-1 || val.indexOf(".gif")!=-1 || val.indexOf(".png")!=-1) {
                 conf._prepend.addClass("has-image");
-                conf._prepend.css("background-image", "url("+val+")");
+                conf._prepend.css("background-image", "url("+WJ.urlAddParam(val, "v", (new Date().getTime()))+")");
             } else {
                 conf._prepend.removeClass("has-image");
                 conf._prepend.css("background-image", "none");

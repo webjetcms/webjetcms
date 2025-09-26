@@ -3,6 +3,7 @@ package sk.iway.iwcm.io;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -84,6 +85,10 @@ public class IwcmFile
 	public IwcmFile(IwcmFile parent,String child)
 	{
 		this(parent.getAbsolutePath(),child);
+	}
+
+	public IwcmFile(Path path) {
+		this(path.toAbsolutePath().toString());
 	}
 
 	public static IwcmFile fromVirtualPath(String path)

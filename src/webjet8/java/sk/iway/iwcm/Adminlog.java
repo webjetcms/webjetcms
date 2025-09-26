@@ -187,6 +187,8 @@ public class Adminlog
 
 	public static final int TYPE_TRANSLATION = 1063;
 
+	public static final int TYPE_AI = 1064;
+
 	//toto musi byt public aby to vedel ziskat adminlog.jsp
 	private static final Integer[] TYPY_ARRAY;
 

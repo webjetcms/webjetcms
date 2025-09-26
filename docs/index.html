@@ -127,6 +127,7 @@
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.js"></script>
 
   <script>
     var languages = ['sk', 'en', 'cs'];
@@ -141,7 +142,7 @@
             href = "https://github.com/webjetcms/webjetcms/tree/main"+href.substring(i);
           }
 
-          if (href.indexOf("http")==0) {
+          if (href.indexOf("http")==0 || href.indexOf("://")!=-1) {
             var rendered = originalRender(href, title, text);
             rendered = rendered.replace('href="', 'target="_blank" href="');
             return rendered;

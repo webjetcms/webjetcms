@@ -1155,7 +1155,7 @@ public class EditorService {
 		{
 			String cssFile = stCss.nextToken();
 			//bootstrap neparsujeme, to by bol masaker
-			if (cssFile.contains("bootstrap.min.css") || cssFile.contains("bootstrap.css")) continue;
+			if (cssFile.contains("bootstrap.min.css") || cssFile.contains("bootstrap.css") || cssFile.contains("fontawesome")) continue;
 
 			//PathFilter.getRealPath je pouzity z dovodu najdenia custom_path pre vyvoj
 			IwcmFile file = new IwcmFile(PathFilter.getCustomPathRealPath(cssFile));

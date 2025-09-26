@@ -39,6 +39,7 @@ export function footerCallback(TABLE) {
         let tfoot = $("#" + DATA.id + "_wrapper").find(".dt-scroll-footInner > table > tfoot");
         if(tfoot != undefined && tfoot.length > 0) {
             tfoot.html(tr);
+            tfoot.parents(".dt-scroll-foot").show();
         }
     }
 }

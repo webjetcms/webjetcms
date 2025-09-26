@@ -56,6 +56,7 @@ exports.config = {
       restart: restart,
       keepCookies: true,
       keepBrowserState: true,
+      ignoreHTTPSErrors: true,
       /* este nefunguje, vid https://github.com/microsoft/playwright/pull/3526
       ,
       chromium: {

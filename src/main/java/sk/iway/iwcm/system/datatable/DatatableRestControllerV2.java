@@ -2071,7 +2071,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 							}
 						}
 					}
-					if (isDisabled) {
+					//we allow updateDate, for others you can set alwaysCopyProperties=true in annotation
+					if (isDisabled && field.getName().equals("lastUpdate")==false) {
 						ignoreProperties.add(field.getName());
 						continue;
 					}

@@ -2,3 +2,4 @@
 - Do not suggest change from if(statement == false) to if(!statement).
 - Do not suggest change from if(statement == true) to if(statement).
 - Do not suggest change Avoid explicit boolean comparison.
+- ALWAYS write comments in English.

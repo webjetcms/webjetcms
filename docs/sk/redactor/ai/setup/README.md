@@ -1,0 +1,2 @@
+- create API KEY https://aistudio.google.com/app/apikey
+- add java dependency google-genai

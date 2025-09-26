@@ -225,6 +225,33 @@ input[type="checkbox"] {
   border-color: rgb(0, 99, 251) !important;
 }
 
+.btn-ai-undo {
+    font-size: 14px;
+    line-height: 22.4px;
+    padding: 3px 8px;
+}
+
+.btn-ai .ti-sparkles {
+    color: #8A3EFF;
+    display: inline-block;
+}
+
+i.ti-sparkles {
+    transform: rotate(186deg);
+}
+
+a.zoom-in {
+  bottom: 8px;
+  right: 8px;
+  background-color: #8A3EFF;
+  border-radius: 6px;
+  padding: 6px;
+  padding-bottom: 4px;
+  width: 32px;
+  color: white;
+  cursor: zoom-in;
+}
+
 .youtube-thumbnail {
   display: none;
 }

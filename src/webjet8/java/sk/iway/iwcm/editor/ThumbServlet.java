@@ -129,7 +129,7 @@ public class ThumbServlet extends HttpServlet
 			return;
 		}
 
-		if ( (imagePath.startsWith("images/")==false && imagePath.startsWith("files/")==false && imagePath.startsWith("shared/")==false && imagePath.startsWith("video/")==false && imagePath.startsWith("templates/")==false && imagePath.indexOf("grideditor")==-1 && imagePath.indexOf("thumb")==-1) || imagePath.indexOf("..")!=-1)
+		if ( (imagePath.startsWith("images/")==false && imagePath.startsWith("files/")==false && imagePath.startsWith("shared/")==false && imagePath.startsWith("video/")==false && imagePath.startsWith("templates/")==false && imagePath.indexOf("grideditor")==-1 && imagePath.indexOf("thumb")==-1 && imagePath.indexOf("placeholder")==-1 && imagePath.indexOf("stock")==-1) || imagePath.indexOf("..")!=-1)
 		{
 			sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 			response.setStatus(404);
