@@ -19,12 +19,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
@@ -104,7 +103,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
-        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        // Build base request body
+        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
@@ -120,7 +120,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
         //Prepare body object
-        JSONObject mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
+        ObjectNode mainObject = getBaseMainObject(instructions, inputData.getInputValue(), inputData.getUserPrompt());
 
         HttpPost httpPost = new HttpPost(BASE_URL + assistant.getModel() + ":streamGenerateContent");
         setHeaders(httpPost, request);
@@ -156,8 +156,8 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public HttpRequestBase getImageResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request, Prop prop) throws IOException {
-        JSONObject mainObject = new JSONObject();
-        JSONArray contentsArray = new JSONArray();
+        ObjectNode mainObject = MAPPER.createObjectNode();
+        ArrayNode contentsArray = MAPPER.createArrayNode();
 
         if(inputData.getInputValueType().equals(InputDataDTO.InputValueType.IMAGE)) {
             //ITS IMAGE EDIT - I GOT IMAGE to edit AND I WILL RETURN IMAGE
@@ -168,7 +168,7 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
             addPart(contentsArray, instructions);
         }
 
-        mainObject.put("contents", contentsArray);
+        mainObject.set("contents", contentsArray);
 
         HttpPost httpPost = new HttpPost( BASE_URL + assistant.getModel() + ":generateContent");
         setHeaders(httpPost, request);
