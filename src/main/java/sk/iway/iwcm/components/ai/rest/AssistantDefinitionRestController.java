@@ -102,25 +102,6 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     }
 
     @Override
-    public AssistantDefinitionEntity editItem(AssistantDefinitionEntity entity, long id) {
-        //Get entity from DB
-        AssistantDefinitionEntity existingEntity = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Entity with id " + id + " not found"));
-
-        //Safety measure, for disabled fields
-        entity.setCreated(existingEntity.getCreated());
-
-        return repo.save(entity);
-    }
-
-    @Override
-    public AssistantDefinitionEntity insertItem(AssistantDefinitionEntity entity) {
-        entity.setCreated(new Date());
-        entity.setDomainId(CloudToolsForCore.getDomainId());
-
-        return repo.save(entity);
-    }
-
-    @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
         page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
@@ -134,6 +115,8 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     public void beforeSave(AssistantDefinitionEntity entity) {
         //
         aiAssistantsService.prepareBeforeSave(entity, getProp());
+
+        entity.setLastUpdate(new Date());
 
         //Default logic
         if(entity.getKeepHtml() == null) entity.setKeepHtml(false);

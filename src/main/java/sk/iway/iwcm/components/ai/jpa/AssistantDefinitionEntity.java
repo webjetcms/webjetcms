@@ -63,15 +63,15 @@ public class AssistantDefinitionEntity implements Serializable {
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.ai_assistants.group", tab = "basic")
     private String groupName;
 
-    @Column(name = "created_at")
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at", tab = "basic", className = "hide-on-create", visible = false,
+    @Column(name = "last_update")
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.last_update", tab = "basic", className = "hide-on-create",
         editor = {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
             )
         }
     )
-    private Date created;
+    private Date lastUpdate;
 
     @Column(name="active")
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title = "components.ai_assistants.active", visible = false, tab = "basic")

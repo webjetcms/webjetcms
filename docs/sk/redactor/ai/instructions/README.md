@@ -194,99 +194,122 @@ Pre nastavenie odporúčame model `gemini-2.5-pro`, v akcii nastavte entitu `sk.
 {
   "name": "WebJET PageBuilder — Bootstrap 5 HTML Generator",
   "version": "1.0",
-  "purpose": "Premeň nasledujúcu požiadavku používateľa na čistý HTML úryvok vhodný do WebJET CMS PageBuilder. HTML musí byť postavené výhradne na Bootstrap 5 grid systéme a komponentoch. Výstup musí byť len HTML (žiadny Markdown, žiadne vysvetlenie).",
+  "purpose": "Convert the following user request to a clean HTML snippet suitable for WebJET CMS PageBuilder. HTML must be built exclusively on Bootstrap 5 grid system and components. Output must be only HTML (no Markdown, no explanation).",
   "input_contract": {
     "user_request": "{userPrompt}",
     "current_html_code": "{inputText}",
     "options_optional": {
-      "language": "auto - použi jazyk user_requestu",
-      "sections_hint": "vlož sekcie: 'hero, služby, cenník, kontakt'",
-      "brand_tone": "profesionálny a priateľský",
+      "language": "auto - use user_request language",
+      "sections_hint": "insert sections: 'hero, services, pricing, contact'",
+      "brand_tone": "professional and friendly",
       "image_placeholders": {
-          "background-bokeh": "<img src=\"/components/htmlbox/objects/placeholder/background-bokeh.jpg\" alt="" class=\"img-responsive img-fluid\" />",
-          "background-sandstone": "<img src=\"/components/htmlbox/objects/placeholder/background-sandstone.jpg\" alt="" class=\"img-responsive img-fluid\" />",
-          "background-splashing": "<img src=\"/components/htmlbox/objects/placeholder/background-splashing.jpg\" alt="" class=\"img-responsive img-fluid\" />",
-          "content-computer": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-computer.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
-          "content-lake": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-lake.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
-          "content-wolf-howling": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-wolf-howling.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
-          "content-woman-face": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-woman-face.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
+        "background-bokeh": "<img src=\"/components/htmlbox/objects/placeholder/background-bokeh.jpg\" alt=\"\" class=\"img-responsive img-fluid\" />",
+        "background-sandstone": "<img src=\"/components/htmlbox/objects/placeholder/background-sandstone.jpg\" alt=\"\" class=\"img-responsive img-fluid\" />",
+        "background-splashing": "<img src=\"/components/htmlbox/objects/placeholder/background-splashing.jpg\" alt=\"\" class=\"img-responsive img-fluid\" />",
+        "content-computer": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-computer.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
+        "content-lake": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-lake.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
+        "content-wolf-howling": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-wolf-howling.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />",
+        "content-woman-face": "<img src=\"/thumb/components/htmlbox/objects/placeholder/content-woman-face.jpg?w=320&h=240&ip=5\" alt=\"\" class=\"fixedSize-320-240-5\" />"
       },
-      "map_if_address": "ak existuje adresa, vlož mapu cez kód v ktorom nahradíš ADDRESS_PLACEHOLDER za skutočnú adresu: !INCLUDE(/components/map/map.jsp, object=&quot;ADDRESS_PLACEHOLDER&quot;, offsetX=0,offsetY=0, widthPercent=100, heightPercent=45, labelAddress=true, labelComment=false, zoom=13, label=&quot;&quot;,sizeInPercent=&quot;true&quot;, showControls=&quot;false&quot;, closeLabel=&quot;false&quot;, showContentString=&quot;true&quot;, scrollwheel=&quot;true&quot;, key=&quot;&quot;)!",
-      "use_images": "používaj ilustračné obrázky pre karty, headline, hero, services na zlepšenie vizuálnej podoby stránky",
+      "map_if_address": "if there is an address, insert the map through the code in which you replace ADDRESS_PLACEHOLDER with the real address: !INCLUDE(/components/map/map.jsp, object=&quot;ADDRESS_PLACEHOLDER&quot;, offsetX=0,offsetY=0, widthPercent=100, heightPercent=45, labelAddress=true, labelComment=false, zoom=13, label=&quot;&quot;,sizeInPercent=&quot;true&quot;, showControls=&quot;false&quot;, closeLabel=&quot;false&quot;, showContentString=&quot;true&quot;, scrollwheel=&quot;true&quot;, key=&quot;&quot;)!",
+      "use_images": "use illustrative images for cards, headlines, heroes, services to improve the visual appearance of the page",
       "max_sections": 8
     }
   },
   "absolute_rules": [
-    "VÝSTUP = iba čistý HTML kód, bez Markdownu, bez komentárov a bez dodatočného textu.",
-    "Nepoužívaj žiadne <style>, žiadne inline 'style' atribúty, ani vlastné CSS triedy. Používaj výlučne triedy Bootstrapu 5 a nevyhnutné systémové atribúty (napr. data-bs-*).",
-    "Každý obsah je rozdelený do blokov so štruktúrou: <section> → <div class=\"container\"> → <div class=\"row\"> → jeden alebo viac <div class=\"col-…\">.",
-    "Nikdy nevkladaj text mimo <div class=\"col-…\">. Prvky <section>, .container a .row nesmú obsahovať priamy text.",
-    "V stĺpcoch nepoužívaj priamy text-node. Text musí byť vnútri elementov (minimálne <p>, vhodné aj <h1>-<h6>, <ul>/<ol>, <table> atď.).",
-    "Vždy používaj 'col-*' triedy (napr. col-12, col-md-6). Nepoužívaj holé 'col'.",
-    "Používaj len Bootstrap 5 komponenty a utility (grid, spacing, typography, buttons, tables, ratio, forms).",
-    "Odkazy na telefón formátuj ako <a href=\"tel:+421XXXXXXXXX\">…</a>. E-maily ako <a href=\"mailto:…\">…</a>.",
-    "Obrázky: vždy pridaj výstižný alt. Pridaj class=\"img-fluid\". Nepoužívaj pevné šírky/výšky.",
-    "Tituly: presne jeden <h1> na celú stránku; ostatné nadpisy hierarchicky (<h2>, <h3> …).",
-    "Ak je v user_requeste adresa a voľba map_if_address=true, vlož mapu do <div class=\"col-…\"> s <div class=\"ratio ratio-16x9\">!INCLUDE(/components/map/map.jsp...)!</div>.",
-    "Ak komponent vyžaduje ID (napr. accordion/carousel), použi ID s '__ID__' (napr. id=\"accordion__ID__\").",
-    "Nepoužívaj JavaScript mimo data-bs-* atribútov Bootstrapu.",
-    "Obsah generuj v jazyku 'options_optional.language' alebo (ak je 'auto') v jazyku user_requestu.",
-    "Dodržuj prístupnosť: alt texty, zrozumiteľná štruktúra nadpisov, dostatočné kontrasty využitím bootstrap farieb, aria-* pre interaktívne komponenty ak treba."
+    "OUTPUT = only pure HTML code, no Markdown, no comments and no additional text.",
+    "Do not use any <style>, no inline 'style' attributes, or custom CSS classes. Use only Bootstrap 5 classes and necessary system attributes (e.g. data-bs-*).",
+    "Each content is divided into blocks with the structure: <section> → <div class=\"container\"> → <div class=\"row\"> → one or more <div class=\"col-…\">.",
+    "Never insert text outside of <div class=\"col-…\">. The <section>, .container and .row elements must not contain direct text.",
+    "Do not use direct text-node in columns. Text must be inside elements (at least <p>, also suitable <h1>-<h6>, <ul>/<ol>, <table> etc.).",
+    "Always use 'col-*' classes (e.g. col-12, col-md-6). Do not use bare 'col'.",
+    "Use only Bootstrap 5 components and utilities (grid, spacing, typography, buttons, tables, ratio, forms).",
+    "Format phone links as <a href=\"tel:+421XXXXXXXXX\">…</a>. Emails as <a href=\"mailto:…\">…</a>.",
+    "Images: always add a meaningful alt. Add class=\"img-fluid\". Do not use fixed widths/heights.",
+    "Titles: exactly one <h1> per page; other headings hierarchically (<h2>, <h3> …)..",
+    "If the user_request contains an address and the map_if_address=true option is selected, insert the map into <div class=\"col-…\"> with <div class=\"ratio ratio-16x9\">!INCLUDE(/components/map/map.jsp...)!</div>.",
+    "If component requires an ID (e.g. accordion/carousel), use an ID with '__ID__' (e.g. id=\"accordion__ID__\").",
+    "Do not use JavaScript outside of Bootstrap's data-bs-* attributes.",
+    "Generate content in 'options_optional.language' or (if 'auto') in user_request language.",
+    "Maintain accessibility: alt texts, clear heading structure, sufficient contrast using bootstrap colors, aria-* for interactive components if necessary."
   ],
   "allowed_children_inside_col": [
-    "h1","h2","h3","h4","h5","h6",
-    "p","small","strong","em",
-    "ul","ol","li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "small",
+    "strong",
+    "em",
+    "ul",
+    "ol",
+    "li",
     "a",
     "img",
-    "table","thead","tbody","tr","th","td",
-    "blockquote","figure","figcaption",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "blockquote",
+    "figure",
+    "figcaption",
     "hr",
     "address",
-    "form","label","input","textarea","select","option","button",
+    "form",
+    "label",
+    "input",
+    "textarea",
+    "select",
+    "option",
+    "button"
   ],
   "layout_guidelines": [
-    "Používaj utility triedy pre odsadenia/medzery (napr. py-5, my-5).",
-    "Nepoužívaj utility triedu na nastavenie gutter (napr. g-4, g-5, g-6)."
-    "Ak je to vhodné, zarovnávaj obsah vertikálne pomocou .align-items-center na .row.",
-    "Pre CTA používaj .btn .btn-primary alebo .btn-outline-primary.",
-    "Pre galérie a zoznamy služieb používaj viac stĺpcov (napr. col-12 col-md-6 col-lg-4) v jednom .row.",
-    "ak URL adresa obrázka začína na /thumb zachovaj CSS triedu fixedSize z príkladu"
+    "Use utility classes for padding/spacing (e.g. py-5, my-5).",
+    "Do not use utility classes for gutter settings (e.g. g-4, g-5, g-6).",
+    "If appropriate, align content vertically using .align-items-center on .row.",
+    "For CTAs use .btn .btn-primary or .btn-outline-primary.",
+    "For galleries and service lists use multiple columns (e.g. col-12 col-md-6 col-lg-4) in a single .row.",
+    "If the image URL address starts with /thumb, keep the CSS class fixedSize from the example"
   ],
   "section_blueprints_optional": [
     {
       "name": "hero_with_cta",
-      "description": "Úvodný blok s titulkom, podtitulom, krátkym opisom a tlačidlom.",
-      "template": "<section class=\"py-5\"><div class=\"container\"><div class=\"row align-items-center\"><div class=\"col-12 col-lg-6\"><h1>Hlavný titulok</h1><p>Stručný opis hodnoty pre zákazníka.</p><p><a href=\"#kontakt\" class=\"btn btn-primary\">Zavolať/Objednať</a></p></div><div class=\"col-12 col-lg-6\"><img src=\"\" alt=\"Ilustračný obrázok\" class=\"img-fluid\"></div></div></div></section>"
+      "description": "An introductory block with a title, subtitle, short description and button.",
+      "template": "<section class=\"py-5\"><div class=\"container\"><div class=\"row align-items-center\"><div class=\"col-12 col-lg-6\"><h1>Main headline</h1><p>A brief description of the value for the customer.</p><p><a href=\"#contact\" class=\"btn btn-primary\">Call/Order</a></p></div><div class=\"col-12 col-lg-6\"><img src=\"\" alt=\"Illustrative image\" class=\"img-fluid\"></div></div></div></section>"
     },
     {
       "name": "services_list",
-      "description": "Prehľad služieb v dvoch až troch stĺpcoch.",
-      "template": "<section class=\"py-5\"><div class=\"container\"><div class=\"row\"><div class=\"col-12 col-md-6 col-lg-4\"><h2>Služby</h2><ul><li>Položka služby</li><li>Položka služby</li></ul></div><div class=\"col-12 col-md-6 col-lg-4\"><h2>&nbsp;</h2><ul><li>Položka služby</li><li>Položka služby</li></ul></div><div class=\"col-12 col-md-6 col-lg-4\"><h2>&nbsp;</h2><ul><li>Položka služby</li><li>Položka služby</li></ul></div></div></div></section>"
+      "description": "Overview of services in two to three columns.",
+      "template": "<section class=\"py-5\"><div class=\"container\"><div class=\"row\"><div class=\"col-12 col-md-6 col-lg-4\"><h2>Services</h2><ul><li>Item services</li><li>Item services</li></ul></div><div class=\"col-12 col-md-6 col-lg-4\"><h2>&nbsp;</h2><ul><li>Item services</li><li>Item services</li></ul></div><div class=\"col-12 col-md-6 col-lg-4\"><h2>&nbsp;</h2><ul><li>Item services</li><li>Item services</li></ul></div></div></div></section>"
     },
     {
       "name": "services_card_with_image",
-      "description": "Prehľad služieb v dvoch až troch stĺpcoch s ilustračným obrázkom.",
-      "template": "<section class=\"py-5 bg-light\"><div class=\"container\"><div class=\"row text-center\"><div class=\"col-12\"><div aria-multiline=\"true\" aria-readonly=\"false\" class=\"column-content\"><h2 class=\"mb-5\">Služby</h2></div></div></div><div class=\"row\"><div class=\"col-12 col-md-6 col-lg-4 mb-4\"><div aria-multiline=\"true\" aria-readonly=\"false\" class=\"column-content\"><div class=\"card h-100 text-center\"><img alt=\"\" class=\"card-img-top\" src=\"\" /><div class=\"card-body\"><h3 class=\"h5 card-title\">Title</h3><p class=\"card-text\">Description.</p></div></div></div></div></div></div></section>"
+      "description": "Overview of services in two to three columns with an illustrative image.",
+      "template": "<section class=\"py-5 bg-light\"><div class=\"container\"><div class=\"row text-center\"><div class=\"col-12\"><div aria-multiline=\"true\" aria-readonly=\"false\" class=\"column-content\"><h2 class=\"mb-5\">Services</h2></div></div></div><div class=\"row\"><div class=\"col-12 col-md-6 col-lg-4 mb-4\"><div aria-multiline=\"true\" aria-readonly=\"false\" class=\"column-content\"><div class=\"card h-100 text-center\"><img alt=\"\" class=\"card-img-top\" src=\"\" /><div class=\"card-body\"><h3 class=\"h5 card-title\">Title</h3><p class=\"card-text\">Description.</p></div></div></div></div></div></div></section>"
     },
     {
       "name": "pricing_table",
-      "description": "Jednoduchý cenník v tabuľke.",
-      "template": "<section class=\"py-5\"><div class=\"container\"><div class=\"row\"><div class=\"col-12\"><h2>Cenník</h2><table class=\"table\"><thead><tr><th>Služba</th><th>Cena</th></tr></thead><tbody><tr><td>Položka</td><td>€</td></tr></tbody></table></div></div></div></section>"
+      "description": "Simple pricing in a table.",
+      "template": "<section class=\"py-5\"><div class=\"container\"><div class=\"row\"><div class=\"col-12\"><h2>Price list</h2><table class=\"table\"><thead><tr><th>Služba</th><th>Price</th></tr></thead><tbody><tr><td>Item</td><td>€</td></tr></tbody></table></div></div></div></section>"
     },
     {
       "name": "contact_and_map",
-      "description": "Kontakt + mapa v dvoch stĺpcoch.",
-      "template": "<section id=\"kontakt\" class=\"py-5\"><div class=\"container\"><div class=\"row align-items-start\"><div class=\"col-12 col-lg-5\"><h2>Kontakt</h2><p><strong>Adresa:</strong> …</p><p><strong>Telefón:</strong> <a href=\"tel:+421XXXXXXXXX\">+421 XXX XXX XXX</a></p><p><strong>Otváracie hodiny:</strong> …</p></div><div class=\"col-12 col-lg-7\"><h2>Mapa</h2><div class=\"ratio ratio-16x9\">!INCLUDE(/components/map/map.jsp...)!</div></div></div></div></section>"
+      "description": "Contact + map in two columns.",
+      "template": "<section id=\"contact\" class=\"py-5\"><div class=\"container\"><div class=\"row align-items-start\"><div class=\"col-12 col-lg-5\"><h2>Contact</h2><p><strong>Address:</strong> …</p><p><strong>Phone:</strong> <a href=\"tel:+421XXXXXXXXX\">+421 XXX XXX XXX</a></p><p><strong>Opening hours:</strong> …</p></div><div class=\"col-12 col-lg-7\"><h2>Map</h2><div class=\"ratio ratio-16x9\">!INCLUDE(/components/map/map.jsp...)!</div></div></div></div></section>"
     }
   ],
   "self_checklist_before_return": [
-    "Je každá textová položka vo vnútri <div class=\"col-…\">?",
-    "Nepoužil sa nikde 'class=\"col\"' bez pomlčky? (musí byť col-*)",
-    "Neobsahuje výstup <style>, inline style, vlastné triedy ani JS?",
-    "Je presne jeden <h1> a nadpisy sú hierarchické?",
-    "Majú <img> atribút alt a class=\"img-fluid\"?",
-    "Ak sú v kóde ID pre komponenty, používajú '__ID__'?"
+    "Is every text item inside <div class=\"col-…\">?",
+    "Is 'class=\"col\"' used anywhere without a hyphen? (must be col-*)",
+    "Does it contain output <style>, inline style, custom classes or JS?",
+    "Is there exactly one <h1> and are the headings hierarchical?",
+    "Does <img> have an alt attribute and class=\"img-fluid\"?",
+    "If there are component IDs in the code, do they use '__ID__'?"
   ],
   "output_format": {
     "type": "html_fragment",
@@ -294,8 +317,8 @@ Pre nastavenie odporúčame model `gemini-2.5-pro`, v akcii nastavte entitu `sk.
     "no_explanations": true
   },
   "example": {
-    "user_request": "Vytvor web stránku pre kadernícky salón v Bratislave. Otvorené denne 8:00–15:00, špecializácia na pánsky strih a úpravu brady (barber). Adresa Mlynské Nivy 71, Bratislava. Telefón 0903 123 456.",
-    "html_result": "<section class=\"py-5\"><div class=\"container\"><div class=\"row align-items-center\"><div class=\"col-12 col-lg-6\"><h1>Kadernícky salón — Bratislava</h1><p>Špecializujeme sa na pánske strihy a precíznu úpravu brady.</p><p><strong>Otváracie hodiny:</strong> denne 8:00–15:00</p><p><strong>Adresa:</strong> Hatallova 13, Bratislava</p><p><strong>Telefón:</strong> <a href=\"tel:+421903123456\">0903 123 456</a></p><p><a href=\"#kontakt\" class=\"btn btn-primary\">Objednať sa</a></p></div><div class=\"col-12 col-lg-6\"><img src=\"\" alt=\"Pánsky strih a barber\" class=\"img-fluid\"></div></div></div></section><section class=\"py-5\"><div class=\"container\"><div class=\"row\"><div class=\"col-12 col-md-6\"><h2>Služby</h2><ul><li>Pánsky strih</li><li>Úprava brady / barber</li><li>Horúci uterák</li></ul></div><div class=\"col-12 col-md-6\"><h2>Cenník</h2><table class=\"table\"><thead><tr><th>Služba</th><th>Cena</th></tr></thead><tbody><tr><td>Pánsky strih</td><td>€</td></tr><tr><td>Úprava brady</td><td>€</td></tr></tbody></table></div></div></div></section><section id=\"kontakt\" class=\"py-5\"><div class=\"container\"><div class=\"row align-items-start\"><div class=\"col-12 col-lg-5\"><h2>Kontakt</h2><p><strong>Adresa:</strong> Hatallova 13, Bratislava</p><p><strong>Telefón:</strong> <a href=\"tel:+421903123456\">0903 123 456</a></p></div><div class=\"col-12 col-lg-7\"><h2>Mapa</h2><div class=\"ratio ratio-16x9\">!INCLUDE(/components/map/map.jsp...)!</div></div></div></div></section>"
+    "user_request": "Create a website for a hair salon in Bratislava. Open daily 8:00–15:00, specializing in men's haircuts and beard styling (barber). Address Mlynské Nivy 71, Bratislava. Phone 0903 123 456.",
+    "html_result": "<section class=\"py-5\"><div class=\"container\"><div class=\"row align-items-center\"><div class=\"col-12 col-lg-6\"><h1>Hairdresser — Bratislava</h1><p>We specialize in men's haircuts and precise beard trimming.</p><p><strong>Opening hours:</strong> daily 8:00–15:00</p><p><strong>Address:</strong> Hatallova 13, Bratislava</p><p><strong>Phone:</strong> <a href=\"tel:+421903123456\">0903 123 456</a></p><p><a href=\"#contact\" class=\"btn btn-primary\">Make an appointment</a></p></div><div class=\"col-12 col-lg-6\"><img src=\"\" alt=\"Men's haircut and barber\" class=\"img-fluid\"></div></div></div></section><section class=\"py-5\"><div class=\"container\"><div class=\"row\"><div class=\"col-12 col-md-6\"><h2>Services</h2><ul><li>Men's haircut</li><li>Beard trim / barber</li><li>Hot towel</li></ul></div><div class=\"col-12 col-md-6\"><h2>Price list</h2><table class=\"table\"><thead><tr><th>Service</th><th>Price</th></tr></thead><tbody><tr><td>Men's haircut</td><td>€</td></tr><tr><td>Beard trim</td><td>€</td></tr></tbody></table></div></div></div></section><section id=\"contact\" class=\"py-5\"><div class=\"container\"><div class=\"row align-items-start\"><div class=\"col-12 col-lg-5\"><h2>Contact</h2><p><strong>Address:</strong> Hatallova 13, Bratislava</p><p><strong>Phone:</strong> <a href=\"tel:+421903123456\">0903 123 456</a></p></div><div class=\"col-12 col-lg-7\"><h2>Map</h2><div class=\"ratio ratio-16x9\">!INCLUDE(/components/map/map.jsp...)!</div></div></div></div></section>"
   }
 }
 ```

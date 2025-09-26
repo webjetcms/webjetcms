@@ -221,6 +221,6 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public String  getModelForImageNameGeneration() {
-        return "gemini-2.5-flash";
+        return "gemini-flash-latest";
     }
 }

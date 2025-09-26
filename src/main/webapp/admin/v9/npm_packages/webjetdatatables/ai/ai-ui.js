@@ -439,9 +439,15 @@ export class AiUserInterface {
 
         //when user double clicks on textarea and it is empty fill it with placeholder value
         let userPromptTextarea = contentContainer.find("#ai-user-prompt");
-        userPromptTextarea.on('dblclick', function() {
-            if ($(this).val() == null || $(this).val().trim() === "") {
-                $(this).val($(this).attr("placeholder"));
+        userPromptTextarea.on('dblclick keydown', function(e) {
+            if (e.type === 'dblclick' || (e.type === 'keydown' && e.key === 'Tab')) {
+                if ($(this).val() == null || $(this).val().trim() === "") {
+                    $(this).val($(this).attr("placeholder"));
+                    // Prevent focus change on Tab so user can immediately continue typing
+                    if (e.type === 'keydown' && e.key === 'Tab') {
+                        e.preventDefault();
+                    }
+                }
             }
         });
 
