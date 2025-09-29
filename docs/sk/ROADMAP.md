@@ -75,6 +75,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť.
 - [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).
 - [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
+- [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
 
 ## 2024
 

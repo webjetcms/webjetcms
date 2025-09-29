@@ -458,6 +458,16 @@ public class UpdateDatabase
 								sql = Tools.replace(sql, "ENGINE=MyISAM", "ENGINE="+defaultEngine);
 								sql = Tools.replace(sql, "engine=MyISAM", "ENGINE="+defaultEngine);
 							}
+
+							if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
+								//replace mariadb escapes, in pgsql you can escape using E' but only on first instance
+								sql = Tools.replace(sql, "\\'", "''");
+								sql = Tools.replace(sql, "\\\"", "\"");
+								//mariadb has \\" in instructions like <img src=\\"/components/...
+								sql = Tools.replace(sql, "\\\\\"", "\\\"");
+								sql = Tools.replace(sql, "\\n", "'||chr(10)||'");
+							}
+
 							Logger.println(UpdateDatabase.class, "["+counter+"/"+count+"] "+sql);
 							counter++;
 

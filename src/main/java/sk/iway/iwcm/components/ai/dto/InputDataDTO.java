@@ -13,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.Html2Text;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.i18n.Prop;
 
 import org.apache.http.entity.ContentType;
@@ -62,6 +63,9 @@ public class InputDataDTO {
 
     public void removeHtml() {
         if(Tools.isEmpty(inputValue)) return;
+        //remove include
+        inputValue = SearchTools.removeCommands(inputValue);
+        //remove HTML tags
         Html2Text html2Text = new Html2Text(inputValue);
         inputValue = html2Text.getText();
     }
