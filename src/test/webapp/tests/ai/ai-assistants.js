@@ -16,10 +16,13 @@ let defaultValue = "TO CHANGE TEXT";
 let containerAiContent = "#toast-container-ai-content";
 let btnAiAction = "button.btn-ai-action";
 let btnAiAssistants = "button.btn-ai[aria-label='AI asistent']";
-let toastContainerAiContent = ".toast.toast-info > .toast-message > #toast-container-ai-content";
 
-Scenario('zakladne testy @baseTest', async ({I, DTE, DataTables}) => {
+Scenario('zakladne testy @baseTest', async ({I, DT, DTE, DataTables}) => {
     I.amOnPage("/admin/v9/settings/ai-assistants/");
+
+    await DT.showColumn("Použiť pre Entitu");
+    await DT.showColumn("Cieľové pole");
+
     await DataTables.baseTest({
         dataTable: 'aiAssistantsDataTable',
         perms: 'cmp_ai_tools',
@@ -46,6 +49,10 @@ Scenario('zakladne testy @baseTest', async ({I, DTE, DataTables}) => {
             //I.wait(20);
         },
     });
+
+    I.relogin("admin");
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.resetTable();
 });
 
 Scenario('ai_assistants editor logic', async ({I, DTE}) => {
@@ -100,9 +107,8 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
 
     within("div#toast-container-ai", () => {
         I.seeElement( locate(btnAiAction).withText("Vytvoriť zhrnutie") );
-        I.seeElement( locate(btnAiAction).withText("Vytvoriť zoznam kľúčových slov") );
-        I.seeElement( locate(btnAiAction).withText("Opraviť gramatiku") );
-        I.seeElement( locate(btnAiAction).withText("Preložiť do angličtiny") );
+        I.seeElement( locate(btnAiAction).withText("SEO Meta popis") );
+        I.seeElement( locate(btnAiAction).withText("Napísať nový text/článok") );
 
         I.dontSeeElement( locate(btnAiAction).withText("Vytvoriť nový obrázok") );
         I.dontSeeElement( locate(btnAiAction).withText("Odstrániť pozadie") );
@@ -114,9 +120,8 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
     I.waitForVisible("#toast-container-ai");
     within("div#toast-container-ai", () => {
         I.dontSeeElement( locate(btnAiAction).withText("Vytvoriť zhrnutie") );
-        I.dontSeeElement( locate(btnAiAction).withText("Vytvoriť zoznam kľúčových slov") );
-        I.dontSeeElement( locate(btnAiAction).withText("Opraviť gramatiku") );
-        I.dontSeeElement( locate(btnAiAction).withText("Preložiť do angličtiny") );
+        I.dontSeeElement( locate(btnAiAction).withText("SEO Meta popis") );
+        I.dontSeeElement( locate(btnAiAction).withText("Napísať nový text/článok") );
 
         I.seeElement( locate(btnAiAction).withText("Vytvoriť nový obrázok") );
         I.seeElement( locate(btnAiAction).withText("Odstrániť pozadie") );
@@ -140,55 +145,61 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
 
 /* AI assistant with TEXT response */
 
-Scenario('test OpenAI AI text answers', async ({I, DT, DTE}) => {
+Scenario('test OpenAI AI text answers', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
 
-    I.fillField("#DTE_Field_htmlData", defaultValue);
-
     I.say("TRY basic TEXT answer without stream");
+        I.clickCss("#pills-dt-datatableInit-fields-tab");
+        I.fillField("#DTE_Field_fieldS", defaultValue);
 
-        kokosText(I, "htmlData", "Vytvoriť zoznam kľúčových slov", openAiId, "ti.ti-tags");
+        runTextAnswer(I, "fieldS", "Vytvoriť zoznam kľúčových slov", openAiId, "ti.ti-tags");
 
-        const valueA = await I.grabValueFrom('#DTE_Field_htmlData');
+        const valueA = await I.grabValueFrom('#DTE_Field_fieldS');
         I.assertNotContain(valueA, defaultValue);
         let parts = valueA.split("|");
         I.assertEqual(5, parts.length);
 
-    I.say("Rever value ancd check all");
-        I.click( locate("div.toast.toast-info > div.toast-message > div#toast-container-ai-content > div.current-status > div.text-end > button.btn-ai-undo").withText("Zrušiť zmenu") );
-        I.waitForInvisible("div.toast.toast-info");
-        const valueB = await I.grabValueFrom('#DTE_Field_htmlData');
+    I.say("Revert value and check");
+        I.click( locate(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-undo").withText("Zrušiť zmenu") );
+        I.waitForVisible( locate(btnAiAction).withText("Vytvoriť zoznam kľúčových slov") );
+        const valueB = await I.grabValueFrom('#DTE_Field_fieldS');
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
-        kokosText(I, "htmlData", "Vytvoriť zhrnutie", openAiId, "ti.ti-list-letters");
+        I.clickCss("#pills-dt-datatableInit-perex-tab");
+        I.fillField("#DTE_Field_htmlData", defaultValue);
+
+        runTextAnswer(I, "htmlData", "Vytvoriť zhrnutie", openAiId, "ti.ti-list-letters");
+
         const valueC = await I.grabValueFrom('#DTE_Field_htmlData');
         //Theer is no other way how to check value
         I.assertNotContain(valueC, defaultValue);
 });
 
-Scenario('test Gemini AI text answers', async ({I, DT, DTE}) => {
+Scenario('test Gemini AI text answers', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
 
-    I.fillField("#DTE_Field_htmlData", defaultValue);
-
     I.say("TRY basic TEXT answer without stream");
+        I.clickCss("#pills-dt-datatableInit-fields-tab");
+        I.fillField("#DTE_Field_fieldS", defaultValue);
 
-        kokosText(I, "htmlData", "Vytvoriť zoznam kľúčových slov", geminiId, "ti.ti-tags");
+        runTextAnswer(I, "fieldS", "Vytvoriť zoznam kľúčových slov", geminiId, "ti.ti-tags");
 
-        const valueA = await I.grabValueFrom('#DTE_Field_htmlData');
+        const valueA = await I.grabValueFrom('#DTE_Field_fieldS');
         I.assertNotContain(valueA, defaultValue);
         let parts = valueA.split("|");
         I.assertEqual(5, parts.length);
 
-    I.say("Rever value ancd check all");
-        I.click( locate("div.toast.toast-info > div.toast-message > div#toast-container-ai-content > div.current-status > div.text-end > button.btn-ai-undo").withText("Zrušiť zmenu") );
-        I.waitForInvisible("div.toast.toast-info");
-        const valueB = await I.grabValueFrom('#DTE_Field_htmlData');
+    I.say("Revert value ancd check all");
+        I.click( locate(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-undo").withText("Zrušiť zmenu") );
+        I.waitForVisible( locate(btnAiAction).withText("Vytvoriť zoznam kľúčových slov") );
+        const valueB = await I.grabValueFrom('#DTE_Field_fieldS');
         I.assertEqual(defaultValue, valueB);
 
     I.say("TRY the TEXT answer WITH stream");
-        kokosText(I, "htmlData", "Vytvoriť zhrnutie", geminiId, "ti.ti-list-letters");
+        I.clickCss("#pills-dt-datatableInit-perex-tab");
+        I.fillField("#DTE_Field_htmlData", defaultValue);
+        runTextAnswer(I, "htmlData", "Vytvoriť zhrnutie", geminiId, "ti.ti-list-letters");
         const valueC = await I.grabValueFrom('#DTE_Field_htmlData');
         //Theer is no other way how to check value
         I.assertNotContain(valueC, defaultValue);
@@ -196,7 +207,7 @@ Scenario('test Gemini AI text answers', async ({I, DT, DTE}) => {
 
 /* AI assistant with IMAGE response - WITHOUT user promp (user input) */
 
-Scenario('test OpenAI AI image answers - no user input', async ({I, DT, DTE}) => {
+Scenario('test OpenAI AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", openAiId, "ti.ti-photo-x");
@@ -213,10 +224,10 @@ Scenario('test OpenAI AI image answers - no user input', async ({I, DT, DTE}) =>
     I.say("Check name selection");
     I.seeElement( locate("#toast-ai-name-selection").find( locate("button#rewrite").withText("Prepísať súbor") ) );
     I.seeElement( locate("#toast-ai-name-selection").find( locate("button#rename").withText("Premenovať súbor na:") ) );
-    I.seeElement( locate("#toast-ai-name-selection").find( locate("button#back").withText("Zrušiť uloženie") ) );
+    I.seeElement( locate("#toast-ai-name-selection").find( locate("button#back").withText("Zrušiť") ) );
 
-    I.say("Go backk and check that buttons are not visible");
-    I.click(locate("button#back").withText("Zrušiť uloženie"));
+    I.say("Go back and check that buttons are not visible");
+    I.click(locate("button#back").withText("Zrušiť"));
     I.dontSeeElement("#toast-ai-name-selection");
 
     I.say("Now click back so you go back to assistants selection");
@@ -225,7 +236,7 @@ Scenario('test OpenAI AI image answers - no user input', async ({I, DT, DTE}) =>
     I.seeElement( locate('button.btn-ai-action').withText("Odstrániť pozadie").withChild(locate('span.provider').withText(openAiId)));
 });
 
-Scenario('test Gemini AI image answers - no user input', async ({I, DT, DTE}) => {
+Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", geminiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", geminiId, "ti.ti-photo-x");
@@ -236,7 +247,7 @@ Scenario('test Gemini AI image answers - no user input', async ({I, DT, DTE}) =>
 
 /* AI assistant with IMAGE response - WITH user promp (user input) AND maybe miage settings like quality, if provider supports it */
 
-Scenario('test OpenAI AI image answers - WITH user input', async ({I, DT, DTE}) => {
+Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openAiId);
@@ -261,7 +272,7 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DT, DTE}) 
     checkImages(I, 2);
 });
 
-Scenario('test Gemini AI image answers - WITH user input', async ({I, DT, DTE}) => {
+Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", geminiId);
@@ -319,75 +330,77 @@ function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = fa
     I.say("checkBaseWaitDialog");
 
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > button").withText("Späť") );
-    I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > i." + icon) );
-    I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > span").withText(assistantName) );
-    I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > span.provider").withText("(" + provider + ")") );
+    I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > i." + icon) );
+    I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span").withText(assistantName) );
+    I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > span.provider").withText("(" + provider + ")") );
 
     if(hasContainer === false) {
-        I.seeElement( locate(toastContainerAiContent + " > .current-status > span").withText("AI už na tom pracuje...") );
-        I.seeElement( locate(toastContainerAiContent + " > .current-status > span > i.ti.ti-exclamation-circle") );
+        I.seeElement( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje...") );
+        I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-exclamation-circle") );
     } else {
-        I.seeElement( locate(toastContainerAiContent + " > .chat-error-container > .current-status > span").withText("AI už na tom pracuje...") );
-        I.seeElement( locate(toastContainerAiContent + " > .chat-error-container > .current-status > span > i.ti.ti-exclamation-circle") );
+        I.seeElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje...") );
+        I.seeElement( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span > i.ti.ti-exclamation-circle") );
     }
 }
 
 function waiToEndText(I) {
     I.say("waiToEndText");
 
-    I.waitForInvisible( locate(toastContainerAiContent + " > .current-status > span").withText("AI už na tom pracuje...") );
-    I.seeElement( locate(toastContainerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
-    I.seeElement( locate(toastContainerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
+    I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje...") );
+    I.seeElement( locate(containerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
+    I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
 
 function waiToEndImage(I, hasContainer = false) {
     I.say("waiToEndImage");
 
     if(hasContainer === false) {
-        I.waitForInvisible( locate(toastContainerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 60 );
-        I.seeElement( locate(toastContainerAiContent + " > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
-        I.seeElement( locate(toastContainerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
+        I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
+        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
+        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
     } else {
-        I.waitForInvisible( locate(toastContainerAiContent + " > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 60 );
-        I.seeElement( locate(toastContainerAiContent + " > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
-        I.seeElement( locate(toastContainerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
+        I.waitForInvisible( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 180 );
+        I.seeElement( locate(containerAiContent + "  > .chat-error-container > div.current-status > span").withText("Hotovo! Bolo použitých") );
+        I.seeElement( locate(containerAiContent + " > .chat-error-container > div.current-status > span > i.ti.ti-circle-check") );
     }
 
-    I.seeElement( locate(toastContainerAiContent + " > div").withText("Názov obrázku") );
+    I.seeElement( locate(containerAiContent + " > div").withText("Názov obrázku") );
 
-    I.seeElement( locate(toastContainerAiContent + " > .ai-image-preview-div") );
-    I.seeElement( locate(toastContainerAiContent + " > .image-info") );
-    I.seeElement( locate(toastContainerAiContent + " > .button-div.text-end") );
+    I.seeElement( locate(containerAiContent + " > .ai-image-preview-div") );
+    I.seeElement( locate(containerAiContent + " > .image-info") );
+    I.seeElement( locate(containerAiContent + " > .button-div.text-end") );
 }
 
-function kokosText(I, field, assistantName, provider, icon) {
+function runTextAnswer(I, field, assistantName, provider, icon) {
     startAssistant(I, field, assistantName, provider);
 
     checkBaseWaitDialog(I, assistantName, provider, icon);
 
     waiToEndText(I);
-    I.seeElement( locate(toastContainerAiContent + " > .current-status > .text-end > button.btn-ai-undo").withText("Zrušiť zmenu") );
+
+    I.waitForVisible( locate(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-undo").withText("Zrušiť zmenu"), 5);
+    I.seeElement(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-undo > i.ti-arrow-back");
 }
 
 function checkImages(I, imagesCount) {
     I.say("checkImages");
 
     //Verify number of visible images
-    I.seeNumberOfVisibleElements( locate(toastContainerAiContent + " > .ai-image-preview-div > .image-preview"), imagesCount );
+    I.seeNumberOfVisibleElements( locate(containerAiContent + " > .ai-image-preview-div > .image-preview"), imagesCount );
 
     //Check that every preview has image and button
     for(let i = 0; i < imagesCount; i++) {
-        I.seeElement( locate(toastContainerAiContent + " > .ai-image-preview-div > div:nth-child(" + (i+1) +  ") > img") );
-        I.seeElement( locate(toastContainerAiContent + " > .ai-image-preview-div > div:nth-child(" + (i+1) +  ") > a.zoom-in") );
+        I.seeElement( locate(containerAiContent + " > .ai-image-preview-div > div:nth-child(" + (i+1) +  ") > img") );
+        I.seeElement( locate(containerAiContent + " > .ai-image-preview-div > div:nth-child(" + (i+1) +  ") > a.zoom-in") );
     }
 }
 
 function checkImageInfo(I) {
     I.say("checkImageInfo");
 
-    I.seeElement( locate(toastContainerAiContent + " > .image-info > div:nth-child(1) > label").withText("Názov obrázku") );
-    I.seeInField( locate(toastContainerAiContent + " > .image-info > div:nth-child(1) > input"), originalImageName);
+    I.seeElement( locate(containerAiContent + " > .image-info > div:nth-child(1) > label").withText("Názov obrázku") );
+    I.seeInField( locate(containerAiContent + " > .image-info > div:nth-child(1) > input"), originalImageName);
 
-    I.seeElement( locate(toastContainerAiContent + " > .image-info > div:nth-child(2) > label").withText("Umiestnenie") );
-    I.seeInField( locate(toastContainerAiContent + " > .image-info > div:nth-child(2)").find("input.form-control"), originalImageLocation);
+    I.seeElement( locate(containerAiContent + " > .image-info > div:nth-child(2) > label").withText("Umiestnenie") );
+    I.seeInField( locate(containerAiContent + " > .image-info > div:nth-child(2)").find("input.form-control"), originalImageLocation);
 }
