@@ -1121,7 +1121,7 @@ const WJ = (() => {
 
             if (typeof tooltipText != "undefined" && tooltipText.length > 0) {
                 //console.log("Tooltiptext=", tooltipText);
-                tooltipText = WJ.parseMarkdown(tooltipText);
+                tooltipText = WJ.parseMarkdown(tooltipText, {"removeLastBr": true});
                 //console.log("Tooltiptext parsed=", tooltipText);
                 $el.attr("title", tooltipText);
                 conf.html = true;
