@@ -478,12 +478,10 @@ export class EditorAi {
 
             inputData.inputValue = self.EDITOR.get(from);
             try {
-                if (self._getColumnType(column, aiCol.to) === "text") {
-                    self.undoField = {};
-                    self.undoField.type = "field";
-                    self.undoField.value = self.EDITOR.get(aiCol.to);
-                    self.undoField.to = aiCol.to;
-                }
+                self.undoField = {};
+                self.undoField.type = "field";
+                self.undoField.value = self.EDITOR.get(aiCol.to);
+                self.undoField.to = aiCol.to;
             } catch (error) {
                 console.error("Error setting undoField:", error);
             }
@@ -509,7 +507,7 @@ export class EditorAi {
             if (executionResult!=null) totalTokens += executionResult.totalTokens;
         }
 
-        //console.log("executionResult=", executionResult, "totalTokens=", totalTokens);
+        //console.log("executionResult=", executionResult, "totalTokens=", totalTokens, "stopped=", self.stopped);
 
         if (executionResult == null) {
             self.setError();
@@ -525,7 +523,7 @@ export class EditorAi {
                 self.setCurrentStatus("components.ai_assistants.stat.totalTokens.js", false, totalTokens);
             }
 
-            if (executionResult.stopped === true) {
+            if (executionResult.stopped === true || self.stopped === true) {
                 this._stoppedSignalReceived(button);
                 return;
             }
@@ -542,6 +540,9 @@ export class EditorAi {
 
         if (this.isUndo()) {
             this.undo();
+        } else {
+            //return to list of AI assistants as failsafe
+            $("#toast-container-ai .header-back-button .btn-outline-secondary").trigger("click");
         }
     }
 
