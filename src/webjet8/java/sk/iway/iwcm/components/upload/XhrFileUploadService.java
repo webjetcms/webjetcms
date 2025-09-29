@@ -220,8 +220,13 @@ public class XhrFileUploadService {
         String originalFilename = file.getName();
 
         if (originalFilename.startsWith(FINAL_PREFIX)) {
-            originalFilename = originalFilename.substring(FINAL_PREFIX.length())
-                            .split(SEPARATOR)[0] + originalFilename.substring(originalFilename.lastIndexOf('.'));
+            String baseName = originalFilename.substring(FINAL_PREFIX.length()).split(SEPARATOR)[0];
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex != -1) {
+                originalFilename = baseName + originalFilename.substring(dotIndex);
+            } else {
+                originalFilename = baseName;
+            }
         }
 
         if (dirVirtualPath.startsWith("/images") || dirVirtualPath.startsWith("/files"))
@@ -299,7 +304,9 @@ public class XhrFileUploadService {
         if (!baseDir.exists() || !baseDir.isDirectory()) {
             return null;
         }
-        Optional<IwcmFile> finalFile = Arrays.stream(baseDir.listFiles(file -> file.getName().startsWith(FINAL_PREFIX))).findFirst();
+        IwcmFile[] files = baseDir.listFiles(file -> file.getName().startsWith(FINAL_PREFIX));
+        if (files == null) return null;
+        Optional<IwcmFile> finalFile = Arrays.stream(files).findFirst();
         return finalFile.orElse(null);
     }
 }

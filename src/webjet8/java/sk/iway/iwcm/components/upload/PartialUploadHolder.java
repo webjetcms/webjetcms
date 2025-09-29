@@ -1,9 +1,10 @@
 package sk.iway.iwcm.components.upload;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PartialUploadHolder {
+public class PartialUploadHolder implements Serializable {
     private static final long serialVersionUID = 1L;
     private int chunks;
     private String name;
