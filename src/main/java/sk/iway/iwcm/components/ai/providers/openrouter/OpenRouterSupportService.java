@@ -2,14 +2,17 @@ package sk.iway.iwcm.components.ai.providers.openrouter;
 
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.providers.SupportLogic;
 
 public abstract class OpenRouterSupportService extends SupportLogic {
+
+    protected static final ObjectMapper MAPPER = new ObjectMapper();
 
     public String getServiceName() {
         return "OpenRouter";
@@ -31,44 +34,38 @@ public abstract class OpenRouterSupportService extends SupportLogic {
         return new StringEntity(stringBody, java.nio.charset.StandardCharsets.UTF_8);
     }
 
-    protected JSONObject getBaseMainObject(String... contents) {
-        //Main JSON object
-        JSONObject mainObject = new JSONObject();
-        //Contents Array
-        JSONArray messagesArray = new JSONArray();
-        //Add parts
-        for (String content : contents) if(Tools.isNotEmpty(content)) addMessage(messagesArray, content);
-
-        mainObject.put("messages", messagesArray);
+    protected ObjectNode getBaseMainObject(String... contents) {
+        ObjectNode mainObject = MAPPER.createObjectNode();
+        ArrayNode messagesArray = MAPPER.createArrayNode();
+        for (String content : contents) if (Tools.isNotEmpty(content)) addMessage(messagesArray, content);
+        mainObject.set("messages", messagesArray);
         return mainObject;
     }
 
-    protected void addMessageWithImage(JSONArray messagesArray, String value, String format, String base64Img) {
-        JSONObject imageMsg = new JSONObject()
-            .put("role", "user");
+    protected void addMessageWithImage(ArrayNode messagesArray, String value, String format, String base64Img) {
+        ObjectNode imageMsg = MAPPER.createObjectNode();
+        imageMsg.put("role", "user");
 
-        JSONObject imageUrl = new JSONObject()
-            .put("url", "data:" + format + ";base64," + base64Img);
+        ObjectNode imageUrl = MAPPER.createObjectNode();
+        imageUrl.put("url", "data:" + format + ";base64," + base64Img);
 
-         JSONArray content = new JSONArray()
-            .put(
-                new JSONObject()
-                    .put("type", "image_url")
-                    .put("image_url", imageUrl)
-            );
+        ArrayNode content = MAPPER.createArrayNode();
+        ObjectNode contentItem = MAPPER.createObjectNode();
+        contentItem.put("type", "image_url");
+        contentItem.set("image_url", imageUrl);
+        content.add(contentItem);
 
-        imageMsg.put("content", content);
-        messagesArray.put(imageMsg);
+        imageMsg.set("content", content);
+        messagesArray.add(imageMsg);
 
         addMessage(messagesArray, value);
     }
 
-    protected void addMessage(JSONArray messagesArray, String value) {
-        JSONObject message = new JSONObject()
-            .put("role", "user")
-            .put("content", value);
-
-        messagesArray.put(message);
+    protected void addMessage(ArrayNode messagesArray, String value) {
+        ObjectNode message = MAPPER.createObjectNode();
+        message.put("role", "user");
+        message.put("content", value);
+        messagesArray.add(message);
     }
 
     public static String handleFinishReasonValue(String finishReason) {
