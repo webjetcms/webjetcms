@@ -91,6 +91,8 @@ export class AiRestExecutor {
                         totalTokens += parsed.totalTokens;
                         if (parsed.error) {
                             executionResult.errorText = parsed.error;
+                        } else {
+                            executionResult.success = true;
                         }
                     }
                 }

@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.users.UsersDB;
@@ -50,10 +52,29 @@ public class AiTaskRegistry {
     }
 
     public final AssistantResponseDTO runAssistantTask(Callable<AssistantResponseDTO> task, InputDataDTO inputData, HttpServletRequest request) {
+        // Capture current RequestBean (thread-local) from caller thread
+        RequestBean captured = SetCharacterEncodingFilter.getCurrentRequestBean();
+
+        // Wrap original task to propagate RequestBean into executor thread
+        Callable<AssistantResponseDTO> contextTask = () -> {
+            RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
+            try {
+                if (captured != null) {
+                    SetCharacterEncodingFilter.setCurrentRequestBean(captured);
+                }
+                return task.call();
+            } finally {
+                // Restore previous (avoid leaking context into pooled thread)
+                if (previous != null || captured != null) {
+                    SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+                }
+            }
+        };
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         // submit task
-        Future<AssistantResponseDTO> future = executor.submit(task);
+        Future<AssistantResponseDTO> future = executor.submit(contextTask);
 
         //store it
         put(inputData.getAssistantId(), inputData.getTimestamp(), future, request);

@@ -63,7 +63,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
             totalTokens = usage.path("total_tokens").asInt(0);
             sb.append("\t totalTokenCount: ").append(totalTokens + addToken).append("\n");
         }
-        return totalTokens;
+        return totalTokens + addToken;
     }
 
     public HttpRequestBase getModelsRequest (HttpServletRequest request) {

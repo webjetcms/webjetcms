@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
@@ -37,6 +39,8 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
 public abstract class SupportLogic implements SupportLogicInterface {
+
+    public static final String AUDIT_AI_RESPONSE_KEY = "AI response";
 
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
@@ -130,12 +134,15 @@ public abstract class SupportLogic implements SupportLogicInterface {
         String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
 
         CloseableHttpClient client = HttpClients.createDefault();
+        String responseText = null;
         try (CloseableHttpResponse response = client.execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                 handleErrorMessage(response, prop, getServiceName(), "getAiImageResponse");
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNodeRes = mapper.readTree(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+            responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            if (responseText != null) RequestBean.addAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY, DB.prepareString(responseText, 5000).trim());
+            JsonNode jsonNodeRes = mapper.readTree(responseText);
 
             String finishError = getFinishError(jsonNodeRes);
             if(Tools.isNotEmpty(finishError)) {
@@ -148,7 +155,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
                 long datePart = Tools.getNow();
                 for(JsonNode jsonImage : imagesArr) {
 
-                    // TODO - temporal fix for google gemini retarded bug, where first (maybe not allways first) child in array is "text": "`" and not an actual image
+                    //temporal fix for google gemini retarded bug, where first (maybe not allways first) child in array is "text": "`" and not an actual image
                     try {
                         if(jsonImage.has("text") == true) continue;
                     } catch(Exception e) {
@@ -184,12 +191,19 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
 
     private void handleUsage(AssistantResponseDTO responseDto, AssistantDefinitionEntity assistant, JsonNode jsonNodeRes, int addTokens, AiStatRepository statRepo, HttpServletRequest request) {
+
+        //remove response if successful
+        RequestBean.removeAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY);
+
         StringBuilder sb = new StringBuilder("");
         sb.append(getServiceName()).append(" -> run was succesfull");
         sb.append("\n\n");
-        sb.append("Assitant name : ").append(assistant.getName()).append("\n");
-        sb.append("From field : ").append(assistant.getFieldFrom()).append("\n");
-        sb.append("To field : ").append(assistant.getFieldTo()).append("\n");
+        sb.append("Assistant ID: ").append(assistant.getId()).append("\n");
+        if (Tools.isNotEmpty(assistant.getName())) sb.append("Assistant name: ").append(assistant.getName()).append("\n");
+        if (Tools.isNotEmpty(assistant.getProvider())) sb.append("Provider: ").append(assistant.getProvider()).append("\n");
+        if (Tools.isNotEmpty(assistant.getModel())) sb.append("Model: ").append(assistant.getModel()).append("\n");
+        if (Tools.isNotEmpty(assistant.getFieldFrom())) sb.append("Field from: ").append(assistant.getFieldFrom()).append("\n");
+        if (Tools.isNotEmpty(assistant.getFieldTo())) sb.append("Field to: ").append(assistant.getFieldTo()).append("\n");
         sb.append("\n");
         sb.append("Action cost: \n");
         int totalTokens = addUsageAndReturnTotal(sb, addTokens, jsonNodeRes);
@@ -253,6 +267,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
         AssistantDefinitionEntity fakeAssistant = new AssistantDefinitionEntity();
         fakeAssistant.setId(-1L);
+        fakeAssistant.setName("Image name generator");
+        fakeAssistant.setProvider(assistant.getProvider());
         fakeAssistant.setModel( getModelForImageNameGeneration() );
         fakeAssistant.setUseStreaming(false);
         fakeAssistant.setInstructions(instructionValuePair.getFirst());

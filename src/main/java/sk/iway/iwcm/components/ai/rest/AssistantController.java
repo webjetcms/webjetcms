@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.components.ai.dto.AssistantResponseDTO;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -78,6 +81,8 @@ public class AssistantController {
         } catch (Exception e) {
             e.printStackTrace();
             exceptionMessage = e.getLocalizedMessage();
+            if (Tools.isNotEmpty(inputData.getUserPrompt())) RequestBean.addAuditValue("userPrompt", inputData.getUserPrompt());
+            Adminlog.add(Adminlog.TYPE_AI, "AI image generation error: " + exceptionMessage, 0L, -1L);
         }
 
         if (responseDto == null) {

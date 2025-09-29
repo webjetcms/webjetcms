@@ -380,3 +380,11 @@ Scenario('ai-assistants pagebuilder-chat', async ({ I, DT, DTE, Document }) => {
 
     I.switchTo();
 });
+
+Scenario('OpenRouter', async ({ I, DT, DTE, Document }) => {
+    I.amOnPage("https://openrouter.ai/models?max_price=0");
+
+    await I.clickIfVisible("button:has-text('Accept')");
+
+    Document.screenshot("/redactor/ai/settings/openrouter.png", 1280, 1000);
+});
