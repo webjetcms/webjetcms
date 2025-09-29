@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -221,6 +222,6 @@ public class GeminiService extends GeminiSupportService implements AiInterface {
     }
 
     public String  getModelForImageNameGeneration() {
-        return "gemini-flash-latest";
+        return Constants.getString("ai_gemini_generateFileNameModel");
     }
 }

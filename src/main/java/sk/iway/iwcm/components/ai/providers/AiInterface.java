@@ -7,10 +7,11 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.entity.StringEntity;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
@@ -51,12 +52,14 @@ public interface AiInterface {
             //Value is something special
             if(Tools.isNotEmpty(inputData.getUserPrompt()) == true) value = inputData.getUserPrompt();
             else {
-                //
+                // Try to parse instructions JSON and inspect inputText field
                 try {
-                    JSONObject setInstructions = new JSONObject( assistant.getInstructions() );
-                    if(setInstructions.has("inputText") == true) value = inputData.getInputValue();
+                    ObjectMapper mapper = getObjectMapper();
+                    JsonNode setInstructions = mapper.readTree(assistant.getInstructions());
+                    if(setInstructions.has("inputText")) value = inputData.getInputValue();
                     if(Tools.isEmpty(value)) value = joinAllValues(AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null) , ".");
-                } catch (JSONException e) {
+                } catch (Exception e) {
+                    // Not a JSON structure, just use raw instructions text
                     value = assistant.getInstructions();
                 }
 
@@ -69,31 +72,39 @@ public interface AiInterface {
     }
 
     public static String joinAllValues(String json, String delimiter) {
-        Object root = new JSONTokener(json).nextValue();
+        if (Tools.isEmpty(json)) return "";
         List<String> values = new ArrayList<>();
-        collectValues(root, values);
+        try {
+            JsonNode root = getObjectMapper().readTree(json);
+            collectValues(root, values);
+        } catch (JsonProcessingException e) {
+            // Not JSON, just return raw string
+            return json;
+        }
         return String.join(delimiter, values);
     }
 
-    public static void collectValues(Object node, List<String> out) {
-        if (node == JSONObject.NULL || node == null) return;
+    public static void collectValues(JsonNode node, List<String> out) {
+        if (node == null || node.isNull()) return;
 
-        if (node instanceof JSONObject obj) {
-        List<String> keys = new ArrayList<>(obj.keySet());
-        for (String k : keys) collectValues(obj.get(k), out);
-        return;
+        if (node.isObject()) {
+            ObjectNode obj = (ObjectNode) node;
+            obj.fieldNames().forEachRemaining(f -> collectValues(obj.get(f), out));
+            return;
         }
-
-        if (node instanceof JSONArray arr) {
-        for (int i = 0; i < arr.length(); i++) collectValues(arr.get(i), out);
-        return;
+        if (node.isArray()) {
+            ArrayNode arr = (ArrayNode) node;
+            for (JsonNode child : arr) collectValues(child, out);
+            return;
         }
+        if (node.isTextual()) out.add(node.asText());
+        else if (node.isNumber()) out.add(node.numberValue().toString());
+        else if (node.isBoolean()) out.add(Boolean.toString(node.booleanValue()));
+        // other node types (binary, POJO) are ignored for aggregation
+    }
 
-        // Scalar types
-        if (node instanceof String s) out.add(s);
-        else if (node instanceof Number n) out.add(n.toString());
-        else if (node instanceof Boolean b) out.add(Boolean.toString(b));
-        // (skip nulls)
+    static ObjectMapper getObjectMapper() {
+        return new ObjectMapper();
     }
 
     default StringEntity getRequestBody(String stringBody) {

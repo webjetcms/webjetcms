@@ -17,7 +17,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -212,36 +211,27 @@ public abstract class SupportLogic implements SupportLogicInterface {
             String responseBody = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode array = mapper.readTree(responseBody);
+            JsonNode root = mapper.readTree(responseBody);
 
-            //Gemini send it aj array with objects ... OpenAI just as object (we need to handle it)
-            JSONObject jsonObject;
-            if(array.isArray()) {
-                jsonObject = new JSONObject(array.get(0).toString());
-            } else {
-                jsonObject = new JSONObject(responseBody);
+            // Gemini sends an array with one object; OpenAI sends a single object
+            JsonNode objNode = root.isArray() && root.size() > 0 ? root.get(0) : root;
+            if (objNode == null || objNode.isMissingNode()) return defaultErrMsg;
+
+            JsonNode errorNode = objNode.get("error");
+            if (errorNode == null || errorNode.isMissingNode()) return defaultErrMsg;
+
+            // Handle OpenRouter error detail message metadata.raw
+            JsonNode metadataNode = errorNode.get("metadata");
+            if (metadataNode != null && metadataNode.has("raw")) {
+                String raw = metadataNode.get("raw").asText(null);
+                if (Tools.isNotEmpty(raw)) return " (" + code + ") " + raw;
             }
 
-            if (jsonObject.has("error")) {
-                JSONObject error = jsonObject.getJSONObject("error");
-
-                //This handles OpenRouter error detail message
-                if(error.has("metadata")) {
-                    JSONObject errMetadata = error.getJSONObject("metadata");
-                    if(errMetadata.has("raw")) {
-                        return " (" + code + ") " + errMetadata.getString("raw");
-                    }
-                }
-
-                if (error.has("message")) {
-                    String errorMessage = error.getString("message");
-                    return " (" + code + ") " + errorMessage;
-                } else {
-                    return defaultErrMsg;
-                }
-            } else {
-                return defaultErrMsg;
+            JsonNode messageNode = errorNode.get("message");
+            if (messageNode != null && Tools.isNotEmpty(messageNode.asText())) {
+                return " (" + code + ") " + messageNode.asText();
             }
+            return defaultErrMsg;
         } catch (IOException ex) {
             return defaultErrMsg;
         }

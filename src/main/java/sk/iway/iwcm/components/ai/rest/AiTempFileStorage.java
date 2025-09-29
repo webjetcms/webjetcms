@@ -66,6 +66,9 @@ public class AiTempFileStorage {
     }
 
     public static String addImage(String base64, String fileName, String fileFormat, Path fileFolder) throws IOException {
+
+        if(fileFormat.startsWith(".") == false) fileFormat = "." + fileFormat;
+
         IwcmFile tempUploadFile = new IwcmFile( File.createTempFile(fileName, fileFormat, fileFolder.toFile()) );
 
         byte[] imageBytes = Base64.getDecoder().decode(base64);

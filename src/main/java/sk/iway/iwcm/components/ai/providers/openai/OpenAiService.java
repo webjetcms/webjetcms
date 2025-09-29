@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
@@ -181,8 +182,8 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
         return jsonImage.path("b64_json").asText(null);
     }
 
-    public String  getModelForImageNameGeneration() {
-        return "gpt-4.1-mini";
+    public String getModelForImageNameGeneration() {
+        return Constants.getString("ai_openAi_generateFileNameModel");
     }
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
