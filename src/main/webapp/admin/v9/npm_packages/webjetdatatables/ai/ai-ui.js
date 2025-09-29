@@ -415,6 +415,8 @@ export class AiUserInterface {
         $("#toast-container-ai .toast-title").html(header);
 
         $("#toast-container-ai .toast-title .btn-outline-secondary").on('click', () => {
+            $("#toast-ai-name-selection").hide();
+            $("#toast-container-ai-content").show();
             this.generateAssistentOptions(button, column);
         });
     }
