@@ -16,8 +16,9 @@ import java.util.concurrent.Callable;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -304,14 +305,15 @@ public class AiService {
     }
 
     public String checkExistance(String fileLocation, String currentName, String generatedName) throws IOException {
-        JSONArray response = new JSONArray();
+        ObjectMapper mapper = new ObjectMapper();
+        ArrayNode response = mapper.createArrayNode();
 
-        if(Tools.isEmpty(fileLocation) == true) throw new IOException("XX");
+        if (Tools.isEmpty(fileLocation) == true) throw new IOException("XX");
 
-        Path location = Paths.get( Tools.getRealPath(fileLocation) );
+        Path location = Paths.get(Tools.getRealPath(fileLocation));
 
         if (Files.notExists(location)) {
-            //In this scenario ... location do not exist YET, so no re-write can happen
+            //In this scenario ... location does not exist YET, so no re-write can happen
             putAnswer(response, currentName, false);
             putAnswer(response, generatedName, false);
             return response.toString();
@@ -325,11 +327,10 @@ public class AiService {
         return response.toString();
     }
 
-    private void putAnswer(JSONArray response, String name, boolean doExist) {
-        JSONObject newObject = new JSONObject();
+    private void putAnswer(ArrayNode response, String name, boolean doExist) {
+        ObjectNode newObject = response.addObject();
         newObject.put("name", name);
         newObject.put("doExist", doExist);
-        response.put(newObject);
     }
 
     private boolean containFileName(Path location, String targetName) throws IOException {

@@ -157,6 +157,10 @@ public class ConstantsV9 {
 		Constants.setString("ai_geminiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k aistudio.google.com");
 		Constants.setString("ai_openRouterAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k openrouter.ai");
 		Constants.setString("ai_generateFileNamePrompt", "Generate VERY short, filesystem-safe name for file (lowercase, hyphens). Try generate name as short as possible but meningfull to USER. Do not add explanations, return ONLY generated name.", Constants.MOD_AI_ASSISTANTS, "");
+
+		Constants.setString("ai_openAi_generateFileNameModel", "", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate ai file name");
+		Constants.setString("ai_gemini_generateFileNameModel", "", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate ai file name");
+		Constants.setString("ai_openRouter_generateFileNameModel", "", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate ai file name");
 	}
 
 	/**

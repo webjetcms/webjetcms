@@ -16,12 +16,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.dto.InputDataDTO;
@@ -193,8 +194,7 @@ public class OpenRouterService extends OpenRouterSupportService implements AiInt
     }
 
     public String getModelForImageNameGeneration() {
-        // TODO - model must be selected ... but which one ??
-        return null;
+       return Constants.getString("ai_openRouter_generateFileNameModel");
     }
 
     public String getBonusHtml(AssistantDefinitionEntity assistant, Prop prop) {
