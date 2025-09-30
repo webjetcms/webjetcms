@@ -175,7 +175,7 @@ export class AiRestExecutor {
         if (wholeText == null || wholeText.trim().length == 0) return parsedJson;
 
         let startBlock = wholeText.indexOf("```html");
-        if (startBlock==0) {
+        if (startBlock!=-1) {
             //if it starts with ```html markdown
             let endBlock = wholeText.indexOf("```", startBlock + 7);
             if (endBlock == -1) {
@@ -200,7 +200,15 @@ export class AiRestExecutor {
             parsedJson.explanatoryText = parsedJson.explanatoryText.replace(/&amp;lt;!--/g, "&lt!--").replace(/--&amp;gt;/g, "--&gt;");
         }
 
-        //console.log("Parsed JSON:", parsedJson);
+        //if html contains body tags, extract only body content
+        if (parsedJson.html != null) {
+            let bodyStart = parsedJson.html.indexOf("<body");
+            let bodyEnd = parsedJson.html.indexOf("</body>");
+            if (bodyStart != -1 && bodyEnd != -1) {
+                bodyStart = parsedJson.html.indexOf(">", bodyStart);
+                parsedJson.html = parsedJson.html.substring(bodyStart+1, bodyEnd).trim();
+            }
+        }
 
         return parsedJson;
     }

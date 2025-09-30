@@ -445,6 +445,16 @@ export class EditorAi {
 
                     let editorExecutionResult = await this._executeSingleAction(button, column, aiCol, inputData, reuseApiInstance, (response) => {
                         //console.log("response="+response, "setting to editor: ", editor);
+
+                        //if response contains section wrapped extract only inner part, it is often wrapped by AI into section element, but we are allready inside outer section
+                        let startSection = response.indexOf("<section");
+                        let endSection = response.lastIndexOf("</section>");
+                        if (startSection != -1 && endSection != -1) {
+                            //move to end of <section tag
+                            startSection = response.indexOf(">", startSection);
+                            response = response.substring(startSection+1, endSection+10);
+                        }
+
                         if (self.stopped === false) editor.setData(response);
                     });
                     //console.log("editorExecutionResult=", editorExecutionResult);
@@ -466,7 +476,6 @@ export class EditorAi {
                             if (explanatoryText == null || explanatoryText.trim() === "") explanatoryText = editorExecutionResult.explanatoryText;
                             else explanatoryText += "\n---\n" + editorExecutionResult.explanatoryText;
                         }
-                        totalTokens += editorExecutionResult.totalTokens;
                     }
                 }
 

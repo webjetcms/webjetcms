@@ -1019,6 +1019,9 @@ const WJ = (() => {
         htmlText = htmlText.replace(/</gi, "&amp;lt;")
             .replace(/>/gi, "&amp;gt;");
 
+        //return back ->
+        htmlText = htmlText.replace(/-&amp;gt;/gi, "-&gt;")
+
         //console.log(htmlText);
 
         //For us is very inportant to end file with \n\n -> in case of embedded tree, using "-"

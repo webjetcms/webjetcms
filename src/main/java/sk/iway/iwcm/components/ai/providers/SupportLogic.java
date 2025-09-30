@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
@@ -75,11 +76,16 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
         CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
                 handleErrorMessage(response, prop, "", "getAiResponse");
+            }
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNodeRes = mapper.readTree(EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8));
+
+            String responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            Logger.debug(this, "AI response: " + responseText);
+
+            JsonNode jsonNodeRes = mapper.readTree(responseText);
 
             String finishError = getFinishError(jsonNodeRes);
             if(Tools.isNotEmpty(finishError)) {
@@ -87,7 +93,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
                 return responseDto;
             }
 
-            String responseText = extractResponseText(jsonNodeRes);
+            responseText = extractResponseText(jsonNodeRes);
             responseDto.setResponse( replacedIncludes.isEmpty() ? responseText : IncludesHandler.returnIncludesToPlaceholders(responseText, replacedIncludes) );
 
             //Usage
@@ -106,15 +112,15 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
         CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
-            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
+            if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
                 handleErrorMessage(response, prop, getServiceName(), "getAiStreamResponse");
+            }
 
             HttpEntity entity = response.getEntity();
             String encoding = getStreamEncoding(entity);
 
             try (InputStream inputStream = entity.getContent();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, encoding))) {
-
                     JsonNode usage = handleBufferedReader(reader, writer, replacedIncludes);
                     handleUsage(responseDto, assistant, usage, 0, statRepo, request);
             }
@@ -141,6 +147,7 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
             ObjectMapper mapper = new ObjectMapper();
             responseText = EntityUtils.toString(response.getEntity(), java.nio.charset.StandardCharsets.UTF_8);
+            Logger.debug(this, "AI image response: " + DB.prepareString(responseText, 5000));
             if (responseText != null) RequestBean.addAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY, DB.prepareString(responseText, 5000).trim());
             JsonNode jsonNodeRes = mapper.readTree(responseText);
 
