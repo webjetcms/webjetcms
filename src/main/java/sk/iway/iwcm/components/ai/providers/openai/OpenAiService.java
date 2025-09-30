@@ -112,9 +112,21 @@ public class OpenAiService extends OpenAiSupportService implements AiInterface {
 
     public String extractResponseText(JsonNode jsonNodeRes) {
         ArrayNode data = (ArrayNode) jsonNodeRes.path(OUTPUT);
-        JsonNode firstMessage = data.get(0);
-        ArrayNode contentArray = (ArrayNode) firstMessage.path("content");
-        return  contentArray.get(0).path("text").asText();
+        ArrayNode contentArray = null;
+
+        for(int i = 0; i < data.size(); i++) {
+            JsonNode message = data.get(i);
+            try {
+                contentArray = (ArrayNode) message.path("content");
+                break;
+            } catch (Exception e) {
+                //DO nothing ... wanted content can be in X message
+            }
+        }
+
+        if(contentArray == null || contentArray.isEmpty()) throw new IllegalStateException("COntent not found.");
+
+        return contentArray.get(0).path("text").asText();
     }
 
     public HttpRequestBase getStremResponseRequest(String instructions, InputDataDTO inputData, AssistantDefinitionEntity assistant, HttpServletRequest request) {
