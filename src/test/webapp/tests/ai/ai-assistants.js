@@ -11,6 +11,7 @@ let originalImageLocation = "/images/gallery/test/editor/";
 
 let openAiId = "OpenAI";
 let geminiId = "Gemini";
+let openRouterId = "OpenRouter";
 
 let defaultValue = "TO CHANGE TEXT";
 let containerAiContent = "#toast-container-ai-content";
@@ -146,13 +147,28 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
 /* AI assistant with TEXT response */
 
 Scenario('test OpenAI AI text answers', async ({I, DTE}) => {
+    textAnswerTest(I, DTE, openAiId);
+});
+
+Scenario('test Gemini AI text answers', async ({I, DTE}) => {
+    textAnswerTest(I, DTE, geminiId);
+});
+
+Scenario('test OpenRouter AI text answers', async ({I, DTE}) => {
+    textAnswerTest(I, DTE, openRouterId);
+});
+
+/**
+ * THE asistants MUST BE IDENTICAL - only provider change
+ */
+async function textAnswerTest(I, DTE, aiProviderId) {
     openPageAndPerexTab(I, DTE);
 
     I.say("TRY basic TEXT answer without stream");
         I.clickCss("#pills-dt-datatableInit-fields-tab");
         I.fillField("#DTE_Field_fieldS", defaultValue);
 
-        runTextAnswer(I, "fieldS", "Vytvoriť zoznam kľúčových slov", openAiId, "ti.ti-tags");
+        runTextAnswer(I, "fieldS", "Vytvoriť zoznam kľúčových slov", aiProviderId, "ti.ti-tags");
 
         const valueA = await I.grabValueFrom('#DTE_Field_fieldS');
         I.assertNotContain(valueA, defaultValue);
@@ -169,44 +185,17 @@ Scenario('test OpenAI AI text answers', async ({I, DTE}) => {
         I.clickCss("#pills-dt-datatableInit-perex-tab");
         I.fillField("#DTE_Field_htmlData", defaultValue);
 
-        runTextAnswer(I, "htmlData", "Vytvoriť zhrnutie", openAiId, "ti.ti-list-letters");
+        runTextAnswer(I, "htmlData", "Vytvoriť zhrnutie", aiProviderId, "ti.ti-list-letters");
 
         const valueC = await I.grabValueFrom('#DTE_Field_htmlData');
         //Theer is no other way how to check value
         I.assertNotContain(valueC, defaultValue);
-});
+}
 
-Scenario('test Gemini AI text answers', async ({I, DTE}) => {
-    openPageAndPerexTab(I, DTE);
-
-    I.say("TRY basic TEXT answer without stream");
-        I.clickCss("#pills-dt-datatableInit-fields-tab");
-        I.fillField("#DTE_Field_fieldS", defaultValue);
-
-        runTextAnswer(I, "fieldS", "Vytvoriť zoznam kľúčových slov", geminiId, "ti.ti-tags");
-
-        const valueA = await I.grabValueFrom('#DTE_Field_fieldS');
-        I.assertNotContain(valueA, defaultValue);
-        let parts = valueA.split("|");
-        I.assertEqual(5, parts.length);
-
-    I.say("Revert value ancd check all");
-        I.click( locate(containerAiContent + " > .ai-status-buttons-container > .text-end > button.btn-ai-undo").withText("Zrušiť zmenu") );
-        I.waitForVisible( locate(btnAiAction).withText("Vytvoriť zoznam kľúčových slov") );
-        const valueB = await I.grabValueFrom('#DTE_Field_fieldS');
-        I.assertEqual(defaultValue, valueB);
-
-    I.say("TRY the TEXT answer WITH stream");
-        I.clickCss("#pills-dt-datatableInit-perex-tab");
-        I.fillField("#DTE_Field_htmlData", defaultValue);
-        runTextAnswer(I, "htmlData", "Vytvoriť zhrnutie", geminiId, "ti.ti-list-letters");
-        const valueC = await I.grabValueFrom('#DTE_Field_htmlData');
-        //Theer is no other way how to check value
-        I.assertNotContain(valueC, defaultValue);
-});
 
 /* AI assistant with IMAGE response - WITHOUT user promp (user input) */
 
+//For OpenAI is tets more extended, so we can cover more things. Rest of providers do just baisc test they works.
 Scenario('test OpenAI AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
@@ -240,6 +229,15 @@ Scenario('test Gemini AI image answers - no user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Odstrániť pozadie", geminiId);
     checkBaseWaitDialog(I, "Odstrániť pozadie", geminiId, "ti.ti-photo-x");
+    waiToEndImage(I);
+    checkImages(I, 1);
+    checkImageInfo(I);
+});
+
+Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) => {
+    openPageAndPerexTab(I, DTE);
+    startAssistant(I, "perexImage", "Odstrániť pozadie", openRouterId);
+    checkBaseWaitDialog(I, "Odstrániť pozadie", openRouterId, "ti.ti-photo-x");
     waiToEndImage(I);
     checkImages(I, 1);
     checkImageInfo(I);
@@ -282,11 +280,30 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
 
     // GEMINI do not have image settings like OpenAI .. aka count, quality and size
 
-    I.say("Request 2 images of a car");
+    I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) )
 
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", geminiId, "ti.ti-photo-ai", true);
+    waiToEndImage(I, true);
+    checkImages(I, 1);
+});
+
+Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) => {
+    openPageAndPerexTab(I, DTE);
+    openPageAndPerexTab(I, DTE);
+    startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openRouterId);
+
+    I.say("CHECK user input");
+    I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
+
+    // OpenRouter have image settings like OpenAI ... BUT we do not implement them
+
+    I.say("Request image of a car");
+    I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
+    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) )
+
+    checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
     checkImages(I, 1);
 });
