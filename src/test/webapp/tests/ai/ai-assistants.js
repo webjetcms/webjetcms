@@ -247,7 +247,6 @@ Scenario('test OpenRouter AI image answers - no user input', async ({I, DTE}) =>
 
 Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     openPageAndPerexTab(I, DTE);
-    openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openAiId);
 
     I.say("CHECK user input");
@@ -263,7 +262,7 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
     I.say("Request 2 images of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
     I.fillField(locate(containerAiContent).find("input#bonusContent-imageCount"), 2);
-    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) )
+    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openAiId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
@@ -271,7 +270,6 @@ Scenario('test OpenAI AI image answers - WITH user input', async ({I, DTE}) => {
 });
 
 Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
-    openPageAndPerexTab(I, DTE);
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", geminiId);
 
@@ -282,7 +280,7 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
 
     I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
-    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) )
+    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", geminiId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
@@ -290,7 +288,6 @@ Scenario('test Gemini AI image answers - WITH user input', async ({I, DTE}) => {
 });
 
 Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) => {
-    openPageAndPerexTab(I, DTE);
     openPageAndPerexTab(I, DTE);
     startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openRouterId);
 
@@ -301,11 +298,68 @@ Scenario('test OpenRouter AI image answers - WITH user input', async ({I, DTE}) 
 
     I.say("Request image of a car");
     I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
-    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) )
+    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
 
     checkBaseWaitDialog(I, "Vytvoriť nový obrázok", openRouterId, "ti.ti-photo-ai", true);
     waiToEndImage(I, true);
     checkImages(I, 1);
+});
+
+/* STOP assistant logic tests */
+
+Scenario('STOP text answer without stream', async ({I, DTE}) => {
+    openPageAndPerexTab(I, DTE);
+
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
+    I.fillField("#DTE_Field_fieldS", defaultValue);
+    startAssistant(I, "fieldS", "Vytvoriť zoznam kľúčových slov", openAiId,);
+
+    I.waitForVisible( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.click( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.waitForVisible( locate('button.btn-ai-action').withText("Vytvoriť zoznam kľúčových slov").withChild(locate('span.provider').withText(openAiId)), 5 );
+
+    const value = await I.grabValueFrom('#DTE_Field_fieldS');
+    I.assertContain(value, defaultValue);
+});
+
+Scenario('STOP text answer WITH stream', async ({I, DTE}) => {
+    openPageAndPerexTab(I, DTE);
+    I.fillField("#DTE_Field_htmlData", defaultValue);
+    startAssistant(I, "htmlData", "Vytvoriť zhrnutie", openAiId);
+
+    I.waitForVisible( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.click( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.waitForVisible( locate('button.btn-ai-action').withText("Vytvoriť zhrnutie").withChild(locate('span.provider').withText(openAiId)), 5 );
+
+    const value = await I.grabValueFrom('#DTE_Field_htmlData');
+    I.assertContain(value, defaultValue);
+});
+
+Scenario('STOP IMAGE answer without user prompts', async ({I, DTE}) => {
+    openPageAndPerexTab(I, DTE);
+    startAssistant(I, "perexImage", "Odstrániť pozadie", openAiId);
+
+    I.waitForVisible( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.click( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.waitForVisible( locate('button.btn-ai-action').withText("Odstrániť pozadie").withChild(locate('span.provider').withText(openAiId)), 5 );
+});
+
+Scenario('STOP IMAGE answer WITH user prompts', async ({I, DTE}) => {
+    openPageAndPerexTab(I, DTE);
+    startAssistant(I, "perexImage", "Vytvoriť nový obrázok", openAiId);
+
+    I.say("Request 2 images of a car");
+    I.waitForElement(locate(containerAiContent).find("textarea#ai-user-prompt"));
+    I.fillField(locate(containerAiContent).find("textarea#ai-user-prompt"), "car black and white");
+    I.fillField(locate(containerAiContent).find("input#bonusContent-imageCount"), 2);
+    I.click( locate(containerAiContent).find(locate(".text-end > button").withText("Generovať")) );
+
+    I.waitForVisible( locate(containerAiContent).find("button.btn-ai-stop") );
+    I.click( locate(containerAiContent).find("button.btn-ai-stop") );
+
+    I.waitForInvisible( locate(containerAiContent + " > .user-prompt-container > .chat-error-container > .current-status > span").withText("AI už na tom pracuje..."), 10);
+    I.seeElement( locate(containerAiContent).find("textarea#ai-user-prompt") );
+    I.seeElement( locate(containerAiContent).find("input#bonusContent-imageCount") );
 });
 
 /* Support functions */
