@@ -2,7 +2,7 @@
 
 Aby ste pridali podporu pre nového poskytovateľa (`provider`), musíte splniť nasledujúce podmienky:
 
-- vytvoriť 2 triedy s anotáciou `@Service`, ideálne v balíku `sk.iway.iwcm.components.ai.providers.PROVIDER_NAME`, kde už existujú implementácie pre `openai`, `gemini` a `browser`
+- vytvoriť 2 triedy s anotáciou `@Service`, ideálne v balíku `sk.iway.iwcm.components.ai.providers.PROVIDER_NAME`, kde už existujú implementácie pre `openai`, `gemini`, `openrouter` a `browser`
 - jedna trieda musí implementovať rozhranie [AiInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) a implementovať všetky povinné metódy
 - druhá trieda musí implementovať rozhranie [AiAssitantsInterface](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiAssitantsInterface.java) a implementovať všetky povinné metódy
 
