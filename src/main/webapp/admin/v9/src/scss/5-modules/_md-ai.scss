@@ -556,7 +556,7 @@
             display: inline-block;
         }
     }
-    &.ai-action-generate-image {
+    &.ai-action-generate-image, &.ai-action-edit-image {
         //hide continue and OK buttons in image-dialog, because we have special insert buttons
         .ai-status-buttons-container {
             display: none !important;

@@ -20,11 +20,12 @@ V tejto časti si preberieme, ako pridať/nastaviť nového **AI asistenta**. Pr
 
 Táto karta obsahuje základné informácie o asistentovi ako názov, ikona alebo dátum vytvorenia. Obsahuje polia:
 
-- **Unikátny názov** – unikátny názov asistenta, ktorý sa využíva ako identifikátor (používateľ ho nevidí).
-- **Názov pre používateľa** – názov asistenta, ktorý sa zobrazí používateľovi a nemusí byť unikátny. Ak ho nenastavíte, použije sa **Unikátny názov**.
-- **Ikona** – názov ikony, ktorá sa bude zobrazovať spolu s poľom **Názov pre používateľa**. Zoznam ikon nájdete na `https://tabler.io/icons`.
-- **Skupina** – podľa nej sa asistenti vizuálne členia (nemá vplyv na funkcionalitu).
-- **Vytvorené** – dátumové pole, ktoré sa nedá upraviť a zobrazí sa iba pri editácii asistenta (pri vytváraní sa automaticky nastaví).
+- **Názov asistenta** – interný identifikátor asistenta (používateľ ho nevidí). Musí byť unikátny v kombinácii s hodnotou **Poskytovateľ** (t. j. rovnaký názov môžete použiť pre viacerých asistentov, ale každý musí mať iného poskytovateľa).
+- **Názov pre používateľa** – zobrazený názov v rozhraní. Nemusí byť unikátny. Ak nie je vyplnený, použije sa hodnota z poľa **Názov asistenta**. Môžete zadať aj prekladový kľúč (hodnota kľúča sa zobrazí v poli pod ním).
+- **Ikona** – názov ikony zo stránky https://tabler.io/icons. Zobrazuje sa spolu s poľom **Názov pre používateľa**. Zadajte len identifikátor ikony (bez URL).
+- **Skupina** – logické alebo vizuálne zoskupenie asistentov v rozhraní. Nemá vplyv na spracovanie ani výsledok.
+- **Vytvorené** – systémom generovaný dátum vytvorenia. Nedá sa upraviť a zobrazí sa len pri editácii existujúceho asistenta.
+- **Povoliť používanie** – ak nie je zapnuté, asistent sa nezobrazuje používateľom a nie je možné ho spustiť (slúži ako rýchla deaktivácia).
 
 ![](datatable-basic-tab.png)
 
@@ -40,8 +41,6 @@ Na tejto karte nastavujete, akú akciu má AI asistent vykonávať, odkiaľ bude
 - **Použiť pre Entitu** – vyberáte entitu (tabuľku), v ktorej bude asistent dostupný. Pri písaní sa automaticky zobrazia všetky podporované entity.
 - **Zdrojové pole** – určujete pole z vybranej entity, z ktorého má asistent čerpať dáta pri vykonávaní akcie. Toto pole nie je povinné; vyberte ho len v prípade, že sú potrebné vstupné dáta. Zobrazia sa všetky polia danej entity.
 - **Cieľové pole** – vyberáte pole v entite, kde sa uloží výsledok akcie asistenta alebo kde bude asistent dostupný. Opäť sa zobrazia všetky polia danej entity.
-- **Požadovať vstup od používateľa** – ak je táto možnosť zapnutá, pred spustením asistenta bude používateľ vyzvaný na zadanie vstupného textu (napríklad špecifikácia obrázka, ktorý má byť vygenerovaný).
-- **Popis požiadavky** – doplnková nápoveda, ktorá sa zobrazí používateľovi pri zadávaní vstupu. Vyplňte ju len v prípade, že je zapnutá možnosť **Požadovať vstup od používateľa**.
 
 ![](datatable-action-tab.png)
 
@@ -66,7 +65,7 @@ Ak v entite nechcete, aby sa pre pole zobrazovali možnosti AI nástrojov, stač
 	private String description;
 ```
 
-### Karta - Provider
+### Karta - Poskytovateľ
 
 Táto karta slúži na výber poskytovateľa AI služieb, ktorý bude použitý na spracovanie požiadavky asistenta. Vo výberovom poli sa zobrazia všetci dostupní a správne nakonfigurovaní poskytovatelia (napríklad tí, ktorí majú zadaný API kľúč). Po výbere konkrétneho poskytovateľa sa môžu zobraziť ďalšie špecifické nastavenia podľa možností daného poskytovateľa. Napríklad pri poskytovateľovi `OpenAI` je možné vybrať konkrétny model na spracovanie požiadavky, zatiaľ čo iní poskytovatelia môžu ponúkať iné alebo obmedzené možnosti konfigurácie.
 
@@ -81,6 +80,12 @@ Táto karta je kľúčová pre správne fungovanie asistenta. Obsahuje jedno pol
 ### Karta - Pokročilé
 
 Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré umožňujú detailnejšie prispôsobiť jeho správanie podľa vašich potrieb. Dostupné nastavenia sa môžu líšiť v závislosti od vybraného poskytovateľa AI služieb. Odporúčame meniť tieto nastavenia len vtedy, ak presne viete, aký bude ich vplyv na fungovanie asistenta, keďže môžu ovplyvniť jeho výsledky alebo spôsob interakcie s používateľom.
+
+- **Zachovať HTML kód** – ak je zapnuté, HTML značky zo zdrojového poľa sa neodstránia a odošlú sa poskytovateľovi tak, ako sú. Zapnite iba v prípade, že model potrebuje pracovať so štruktúrovaným HTML (napr. analýza alebo úprava obsahu). Inak ponechajte vypnuté kvôli čistejšiemu vstupu.
+- **Využiť postupné načítanie** – odpoveď sa bude zobrazovať po častiach (streamovanie) namiesto jedného bloku. Vhodné pri dlhších generovaných textoch, aby mal používateľ okamžitú spätnú väzbu. Funguje iba pre textové výstupy.
+- **Zapnuť dočasný chat** – kontext a výmena správ sa po ukončení relácie neukladajú. Použite pri citlivom alebo jednorazovom dopyte. História nebude k dispozícii pre ďalšie pokračovanie.
+- **Požadovať vstup od používateľa** – pred spustením asistenta musí používateľ zadať vlastný vstup (napr. zadanie témy, doplňujúcej inštrukcie alebo kľúčových slov). Ak je vypnuté, asistent beží bez dodatočného vstupu.
+- **Popis požiadavky** – krátka nápoveda zobrazovaná pri poli na zadanie vstupu (uľahčuje používateľovi pochopiť, čo má napísať). Môže byť zadaný aj prekladový kľúč; jeho vyhodnotená hodnota sa zobrazí v poli pod ním.
 
 ![](datatable-advanced-tab.png)
 
