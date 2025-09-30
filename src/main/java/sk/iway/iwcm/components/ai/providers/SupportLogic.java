@@ -184,6 +184,11 @@ public abstract class SupportLogic implements SupportLogicInterface {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            if (imagesArr.size() == 0) {
+                //force log response for debug
+                if (responseText != null) RequestBean.addAuditValue(SupportLogic.AUDIT_AI_RESPONSE_KEY+"_success", DB.prepareString(responseText, 5000).trim());
+            }
         }
 
         return responseDto;
