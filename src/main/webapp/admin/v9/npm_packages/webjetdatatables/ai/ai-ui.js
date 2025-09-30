@@ -260,7 +260,6 @@ export class AiUserInterface {
         } else {
             contentContainer.html(html);
 
-
             if (statusClass === "ai-status-success" && this.editorAiInstance.isUndo()) {
                 //generate undo button, on click call undo on editorAiInstance
                 let undoButton = $('<div class="text-end"><button class="btn btn-outline-secondary btn-ai-undo" type="button"><i class="ti ti-arrow-back"></i> ' + WJ.translate("components.ai_assistants.editor.undo.js")+'</button></div>');

@@ -556,6 +556,12 @@
             display: inline-block;
         }
     }
+    &.ai-action-generate-image {
+        //hide continue and OK buttons in image-dialog, because we have special insert buttons
+        .ai-status-buttons-container {
+            display: none !important;
+        }
+    }
 }
 
 .tooltip-ai {
