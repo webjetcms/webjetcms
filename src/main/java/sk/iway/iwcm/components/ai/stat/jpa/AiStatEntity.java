@@ -46,7 +46,7 @@ public class AiStatEntity {
     private String assistantAction;
 
     @Column(name = "created")
-    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.created_at")
+    @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "components.ai_assistants.stats.created_at")
     private Date created;
 
     @Transient
