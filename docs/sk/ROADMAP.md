@@ -25,7 +25,7 @@ Vysvetlenie použitých piktogramov:
 - [x] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite` (#57789).
 - [ ] Presun JSP súborov, Java tried a JavaScript knižníc starej verzie 8 do `obsolete` jar archívu, ktorý nebude štandardnou súčasťou WebJET CMS. Môže byť použitý na starých projektoch, kde zatiaľ nie je vykonaná aktualizácia všetkých zákazníckych aplikácií na `Spring` verzie, ale bez podpory a aktualizácií zo strany WebJET CMS.
 - [ ] Štatistika - mapa kliknutí - obnovenie funkcionality, vyriešenie problému responzívnosti (samostatná evidencia podľa šírky okna).
-- [ ] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok.
+- [ ] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok (#58053).
 - [ ] Log súbory - filtrovať podľa mena inštalácie.
 - [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
 - [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
@@ -71,6 +71,12 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Do testov v GitHube pridať verifikáciu `autoupdate` pre všetky podporované databázové servery - čiže inicializovať prázdnu databázu a overiť všetky `autoupdate` a overiť, že prejdú bez chyby. Spraviť ako samostatnú pipeline.
 - [ ] Galéria - umožniť zmenu cesty galérie (priečinku) a nastaviť všetko s tým spojené.
 - [ ] +Konfigurácia - doplniť stĺpec skupina s hodnotou `modules` konfiguračnej premennej (výberové pole, môže mať viac hodnôt). Doplniť možnosť zobraziť aj nenastavené premenné (čiže kompletný zoznam). Vytvoriť nástroj na vygenerovanie všetkých premenných podľa skupín/modulov do `md` súboru v dokumentácii pre prehľad všetkých premenných.
+- [ ] +Ak mám neuloženú stránku s titulkom Upratovanie a už existuje iná stránka s názvom Upratovanie, tak novo nahraté obrázky sa pred jej uložením nahrajú do priečinka `upratovanie`. Ale keď sa stránka uloží, získa URL adresu upratovanie-2.html a ďalšie obrázky sa už nahrajú do priečinka `upratovanie-2`. Je potrebné upraviť kód v `getPageUploadSubDir` tak, aby namiesto priameho použitia titulku stránky skúsil získať URL adresu pre novú stránku a to potom použil.
+- [ ] +HTTP hlavičky - rozšíriť maximálnu veľkosť hodnoty HTTP hlavičky na viac ako 255 znakov, pre `Content-Security-Policy` je to nedostatočná veľkosť.
+- [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).
+- [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
+- [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
+- [ ] +Pridať možnosť nastaviť typ `textarea` ako je v AI asistentoch aj s číslami riadkov, napr. do skriptov alebo inde, kde sa predpokladá písanie kódu.
 
 ## 2024
 

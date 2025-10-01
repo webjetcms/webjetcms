@@ -440,6 +440,27 @@ public class UpdateDatabase
 
 								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);
 
+								if (constrainKey==null) {
+									constrainSql = """
+											SELECT kc.name AS constraint_name,
+												t.name  AS table_name,
+												STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS columns
+											FROM sys.key_constraints kc
+											JOIN sys.tables t          ON kc.parent_object_id = t.object_id
+											JOIN sys.indexes i         ON kc.unique_index_id = i.index_id AND i.object_id = t.object_id
+											JOIN sys.index_columns ic  ON ic.object_id = t.object_id AND ic.index_id = i.index_id
+											JOIN sys.columns c         ON c.object_id = t.object_id AND c.column_id = ic.column_id
+											WHERE kc.type = 'UQ'
+											AND t.name = N'%s'
+											AND SCHEMA_NAME(t.schema_id) = N'dbo'
+											GROUP BY kc.name, t.name
+											ORDER BY constraint_name;
+											""".formatted(tableName);
+									constrainKey = new SimpleQuery(dbName).forString(constrainSql);
+								}
+
+								if (constrainKey==null) continue;
+
 								String replaceText = sql.substring(i, sql.indexOf("}", i)+1);
 								sql = Tools.replace(sql, replaceText, constrainKey);
 							}
@@ -458,10 +479,34 @@ public class UpdateDatabase
 								sql = Tools.replace(sql, "ENGINE=MyISAM", "ENGINE="+defaultEngine);
 								sql = Tools.replace(sql, "engine=MyISAM", "ENGINE="+defaultEngine);
 							}
+
+							if (Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL || Constants.DB_TYPE == Constants.DB_MSSQL) {
+								//replace mariadb escapes, in pgsql you can escape using E' but only on first instance
+								sql = Tools.replace(sql, "\\'", "''");
+								sql = Tools.replace(sql, "\\\"", "\"");
+								//mariadb has \\" in instructions like <img src=\\"/components/...
+								sql = Tools.replace(sql, "\\\\\"", "\\\"");
+
+								if (Constants.DB_TYPE == Constants.DB_MSSQL) {
+									//convert literal backslash-n to real newline character
+								sql = Tools.replace(sql, "\\n", "\n");
+								} else {
+									sql = Tools.replace(sql, "\\n", "'||chr(10)||'");
+								}
+							}
+
 							Logger.println(UpdateDatabase.class, "["+counter+"/"+count+"] "+sql);
 							counter++;
 
+							if (db_conn.isClosed()) {
+								db_conn = DBPool.getConnection(dbName);
+							}
+
 							sta = db_conn.createStatement();
+							if (Constants.DB_TYPE == Constants.DB_MSSQL && sql.indexOf('{') != -1) {
+                                // Disable JDBC escape processing to prevent treating {placeholders} as JDBC escapes
+                                try { sta.setEscapeProcessing(false); } catch (SQLException ignore) {}
+                            }
 							sta.execute(sql);
 							sta.close();
 
