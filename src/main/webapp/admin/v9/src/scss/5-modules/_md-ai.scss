@@ -526,11 +526,19 @@
                 }
             }
         }
-        input, textarea, select, .header-back-button .btn {
+        input, textarea, select, .header-back-button .btn, div.btn-group {
             //disable form elements
             background-color: var(--wj-nice-gray);
             color: var(--wj-dark-60);
             pointer-events: none;
+        }
+        div.btn-group {
+            label {
+                border-color: var(--wj-nice-gray-300);
+            }
+            .btn-check:checked + .btn {
+                background-color: var(--wj-nice-gray-300) !important;
+            }
         }
         .user-prompt-container .btn-primary {
             //status will be same as with normal fields - ai is working on it

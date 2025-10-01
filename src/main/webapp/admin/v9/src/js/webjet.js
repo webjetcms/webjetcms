@@ -1104,6 +1104,11 @@ const WJ = (() => {
 
         //console.log(htmlText);
 
+        //return back &amp;lt; to &lt; and gt;
+        htmlText = htmlText.replace(/&amp;lt;/gi, "&lt;")
+            .replace(/&amp;gt;/gi, "&gt;")
+            .replace(/&amp;quot;/gi, "&quot;");
+
         return htmlText.trim()
     }
 
