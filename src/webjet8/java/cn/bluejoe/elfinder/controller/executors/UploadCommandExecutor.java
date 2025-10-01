@@ -1,4 +1,3 @@
-
 package cn.bluejoe.elfinder.controller.executors;
 
 import java.io.File;
@@ -393,13 +392,15 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				};
 
 				// chunked upload
+				boolean fileUploaded = false;
 				if (request.getParameter("cid") != null)
 				{
-					processChunkUpload(request, filesMap, fw);
-					if (added.size() > 0)
+					String chunkedFileName = processChunkUpload(request, filesMap, fw);
+					if (Tools.isNotEmpty(chunkedFileName))
 					{
-						FsItemEx newFileEx = added.get(added.size()-1);
-						fileName = newFileEx.getName();
+						fileUploaded = true;
+						directory = getDirectory(chunkedFileName);
+						fileName = getFilename(chunkedFileName);
 					}
 				}
 				else
@@ -411,6 +412,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 						IwcmFsDB.writeFiletoDest(fi.getInputStream(), newFile, (int)fi.getSize(), true);
 
 						Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "elfinder upload, path="+dir.getPath()+directory+"/"+fileName, -1, -1);
+						fileUploaded = true;
 					}
 					else
 					{
@@ -418,117 +420,120 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					}
 				}
 
-				IwcmFile newFileIwcm = new IwcmFile(newFile);
-				if (newFileIwcm.exists()) {
-					fi.delete();
-					FsItemEx fsItem = new FsItemEx(dir, fileName);
-					if (!dir.isFolder()) {
-						fsItem = dir;
-					}
+				if (fileUploaded) {
 
-					if (Tools.isEmpty(directory)) {
-						added.add(fsItem);
-					}
-					else {
-						FsItemEx itemDirectory = fileItemExFromDirectory(dir, directory);
-						if (!added.contains(itemDirectory)) {
-							added.add(itemDirectory);
+					IwcmFile newFileIwcm = new IwcmFile(newFile);
+					if (newFileIwcm.exists()) {
+						fi.delete();
+						FsItemEx fsItem = new FsItemEx(dir, fileName);
+						if (!dir.isFolder()) {
+							fsItem = dir;
 						}
-					}
-				}
 
-				//POZOR: vo WJ9 je toto presunute do UploadService, pozor ale na cast VideoConvert, kde sa pracuje s FsItem kvoli premenovaniu, to tu treba zachovat
-
-				//kvoli chunked uploadu musime zrekonstruovat nanovo
-				newFileIwcm = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/"+fileName));
-
-				//vycisti metadata
-				MetadataCleaner.removeMetadata(newFileIwcm);
-
-				//ak je treba, aplikujem vodotlac na obrazky
-				GalleryDB.applyWatermarkOnUpload(newFileIwcm);
-
-				// ak je to povolene, pokusime sa skonvertovat CMYK obrazok na RGB
-				ImageTools.convertCmykToRgb(newFileIwcm.getAbsolutePath());
-
-				//ak je to JPG obrazok, skusime ziskat datum vytvorenia fotografie na zaklade EXIF metadat
-				Date dateCreated = GalleryDB.getExifDateOriginal(newFileIwcm);
-
-				if (VideoConvert.isVideoFile(fileName))
-				{
-					if (fileName.endsWith("."+Constants.getString("defaultVideoFormat"))==false)
-					{
-						//nie je to mp4, treba skonvertovat
-						UploadFileForm my_form = new UploadFileForm();
-						my_form.setBitRate(Constants.getInt("defaultVideoBitrate"));
-						my_form.setVideoWidth(Constants.getInt("defaultVideoWidth"));
-						my_form.setVideoHeight(Constants.getInt("defaultVideoHeight"));
-						my_form.setKeepOriginalVideo(false);
-
-						//zmaz povodny added mpg subor
-						for (FsItemEx item : added)
-						{
-							if (item.getPath().endsWith(fileName))
-							{
-								added.remove(item);
-								break;
+						if (Tools.isEmpty(directory)) {
+							added.add(fsItem);
+						}
+						else {
+							FsItemEx itemDirectory = fileItemExFromDirectory(dir, directory);
+							if (!added.contains(itemDirectory)) {
+								added.add(itemDirectory);
 							}
 						}
-
-						String fileURL = VideoConvert.convert(my_form, newFileIwcm.getVirtualPath(), request);
-						Logger.debug(this.getClass(), "Converted video: "+fileURL);
-						if (Tools.isNotEmpty(fileURL) && fileURL.lastIndexOf("/")>1)
-						{
-							String videoFileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
-							added.add(new FsItemEx(dir, videoFileName));
-							added.add(new FsItemEx(dir, Tools.replace(videoFileName, "."+Constants.getString("defaultVideoFormat"), ".jpg")));
-						}
 					}
-					else
+
+					//POZOR: vo WJ9 je toto presunute do UploadService, pozor ale na cast VideoConvert, kde sa pracuje s FsItem kvoli premenovaniu, to tu treba zachovat
+
+					//kvoli chunked uploadu musime zrekonstruovat nanovo
+					newFileIwcm = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/"+fileName));
+
+					//vycisti metadata
+					MetadataCleaner.removeMetadata(newFileIwcm);
+
+					//ak je treba, aplikujem vodotlac na obrazky
+					GalleryDB.applyWatermarkOnUpload(newFileIwcm);
+
+					// ak je to povolene, pokusime sa skonvertovat CMYK obrazok na RGB
+					ImageTools.convertCmykToRgb(newFileIwcm.getAbsolutePath());
+
+					//ak je to JPG obrazok, skusime ziskat datum vytvorenia fotografie na zaklade EXIF metadat
+					Date dateCreated = GalleryDB.getExifDateOriginal(newFileIwcm);
+
+					if (VideoConvert.isVideoFile(fileName))
 					{
-						//pre mp4 vytvorime len screenshot
-						String image = VideoConvert.makeScreenshot(newFileIwcm.getAbsolutePath(), null);
-						if (image != null)
-                        {
-                            String imageFilename = new IwcmFile(image).getName();
+						if (fileName.endsWith("."+Constants.getString("defaultVideoFormat"))==false)
+						{
+							//nie je to mp4, treba skonvertovat
+							UploadFileForm my_form = new UploadFileForm();
+							my_form.setBitRate(Constants.getInt("defaultVideoBitrate"));
+							my_form.setVideoWidth(Constants.getInt("defaultVideoWidth"));
+							my_form.setVideoHeight(Constants.getInt("defaultVideoHeight"));
+							my_form.setKeepOriginalVideo(false);
 
-                            if (Tools.isEmpty(directory))
-                            {
-                                added.add(new FsItemEx(dir, imageFilename));
-                            }
-                        }
+							//zmaz povodny added mpg subor
+							for (FsItemEx item : added)
+							{
+								if (item.getPath().endsWith(fileName))
+								{
+									added.remove(item);
+									break;
+								}
+							}
+
+							String fileURL = VideoConvert.convert(my_form, newFileIwcm.getVirtualPath(), request);
+							Logger.debug(this.getClass(), "Converted video: "+fileURL);
+							if (Tools.isNotEmpty(fileURL) && fileURL.lastIndexOf("/")>1)
+							{
+								String videoFileName = fileURL.substring(fileURL.lastIndexOf("/") + 1);
+								added.add(new FsItemEx(dir, directory, videoFileName));
+								added.add(new FsItemEx(dir, directory, Tools.replace(videoFileName, "."+Constants.getString("defaultVideoFormat"), ".jpg")));
+							}
+						}
+						else
+						{
+							//pre mp4 vytvorime len screenshot
+							String image = VideoConvert.makeScreenshot(newFileIwcm.getAbsolutePath(), null);
+							if (image != null)
+							{
+								String imageFilename = new IwcmFile(image).getName();
+
+								if (Tools.isEmpty(directory))
+								{
+									added.add(new FsItemEx(dir, imageFilename));
+								}
+							}
+						}
 					}
-				}
 
-				if (FileTools.isImage(newFileIwcm.getName())) {
-					if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {
-						//we must replace o_ file because it will be used in resize process instead of new file
-						IwcmFile orig = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/o_"+fileName));
-						if (orig.exists()) {
-							FileTools.copyFile(newFileIwcm, orig);
+					if (FileTools.isImage(newFileIwcm.getName())) {
+						if (GalleryDB.isGalleryFolder(dir.getPath()+directory)) {
+							//we must replace o_ file because it will be used in resize process instead of new file
+							IwcmFile orig = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/o_"+fileName));
+							if (orig.exists()) {
+								FileTools.copyFile(newFileIwcm, orig);
+							}
+
+							GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir.getPath()+directory);
+							added.add(new FsItemEx(dir, directory, "s_"+fileName));
+							added.add(new FsItemEx(dir, directory, "o_"+fileName));
+						} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
+							GalleryDB.setImage(dir.getPath()+directory, fileName);
 						}
 
-						GalleryDB.resizePicture(newFileIwcm.getAbsolutePath(), dir.getPath()+directory);
-						added.add(new FsItemEx(dir, "s_"+fileName));
-						added.add(new FsItemEx(dir, "o_"+fileName));
-					} else if (Constants.getBoolean("imageAlwaysCreateGalleryBean")) {
-						GalleryDB.setImage(dir.getPath()+directory, fileName);
+						//zapise datum vytvorenia fotografie (ak vieme ziskat)
+						if (dateCreated != null) {
+							GalleryDB.setUploadDateImage(dir.getPath()+directory, fileName, dateCreated.getTime());
+						}
 					}
 
-					//zapise datum vytvorenia fotografie (ak vieme ziskat)
-					if (dateCreated != null) {
-						GalleryDB.setUploadDateImage(dir.getPath()+directory, fileName, dateCreated.getTime());
+					//ak existuje adresar files, treba indexovat
+					if (FileIndexer.isFileIndexerConfigured())
+					{
+						List<ResultBean> indexedFiles = new ArrayList<>();
+						FileIndexerTools.indexFile(dir.getPath() + directory + "/" + fileName, indexedFiles, request);
 					}
-				}
 
-				//ak existuje adresar files, treba indexovat
-				if (FileIndexer.isFileIndexerConfigured())
-				{
-					List<ResultBean> indexedFiles = new ArrayList<>();
-					FileIndexerTools.indexFile(dir.getPath() + directory + "/" + fileName, indexedFiles, request);
+					UploadFileAction.reflectionLoader(request, user, dir.getPath() + directory + "/" + fileName);
 				}
-
-				UploadFileAction.reflectionLoader(request, user, dir.getPath() + directory + "/" + fileName);
 			}
 		}
 		else
@@ -545,7 +550,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		}
 	}
 
-	private void processChunkUpload(HttpServletRequest request, Map<String,FileItem> filesMap, FileWriter fw)
+	private String processChunkUpload(HttpServletRequest request, Map<String,FileItem> filesMap, FileWriter fw)
 				throws NumberFormatException, IOException
 		{
 			// cid : unique id of chunked uploading file
@@ -601,7 +606,9 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 
 					// remove from application context
 					parts.removeFromApplicationContext(request);
+					return fileName;
 				}
 			}
+			return null;
 		}
 }

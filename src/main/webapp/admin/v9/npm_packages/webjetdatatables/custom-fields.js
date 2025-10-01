@@ -603,6 +603,9 @@ export function update(EDITOR, action) {
 
             vm.component('webjet-dte-jstree', window.VueTools.getComponent('webjet-dte-jstree'));
             vm.mount(conf._el);
+
+            //return original docId value to field instead of JSON string
+            if (typeof v.originalValue != "undefined" && v.originalValue != null) textFieldInput.val(v.originalValue);
         }
 
         //JICH - add
