@@ -668,7 +668,7 @@ export function update(EDITOR, action) {
                 WJ.initTooltip(button, 'tooltip-ai');
             }
         });
-    }, 1000);
+    }, 1300);
 
     //Find label of booleanText field and set empty string
     if(booleanTextFields.length > 0) {

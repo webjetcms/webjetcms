@@ -27,7 +27,7 @@ public class OpenAiAssistantsService implements AiAssitantsInterface {
     }
 
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
-        if(Tools.isEmpty(assistantEnity.getModel())) assistantEnity.setModel("gpt-3.5-turbo");
+        if(Tools.isEmpty(assistantEnity.getModel())) assistantEnity.setModel("gpt-5-mini");
     }
 
     public void setProviderSpecificOptions(DatatablePageImpl<AssistantDefinitionEntity> page, Prop prop) {

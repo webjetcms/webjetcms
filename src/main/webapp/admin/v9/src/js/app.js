@@ -71,10 +71,13 @@ global.WjPasswordStrength = WjPasswordStrength;
 
 import '../js/datatables-upload.js';
 
+//set backCompact for elfinder, when you update elfinder check, if it is still needed
 import './ui-config.js';
+
 import 'jquery-ui/ui/widgets/draggable';
 import 'jquery-ui/ui/widgets/droppable';
 import 'jquery-ui/ui/widgets/autocomplete';
+//this is required for elfinder
 import 'jquery-ui/ui/widgets/selectable';
 import 'jquery-ui/ui/widgets/resizable';
 import 'jquery-ui/ui/widgets/controlgroup';

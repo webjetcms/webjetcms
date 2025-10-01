@@ -82,9 +82,6 @@ public class AiTaskRegistry {
         try {
             // Return resposne
             return future.get();
-
-            // TODO - do we want to set timeout for request/task ?
-            // return future.get(30, TimeUnit.SECONDS);
         } catch (CancellationException e) {
             // Task was cancelled - Its OK
             return null;

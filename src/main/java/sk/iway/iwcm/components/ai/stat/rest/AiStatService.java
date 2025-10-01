@@ -174,8 +174,7 @@ public class AiStatService {
             assistantsNames.put(assistant.getId(), assistant.getName() + " (" + assistant.getProvider() + ")");
         }
 
-        return assistantsNames
-        ;
+        return assistantsNames;
     }
 
     public static Specification<AiStatEntity> getSpecification(Map<String, String> params, Pageable pageable) {

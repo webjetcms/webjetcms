@@ -16,7 +16,7 @@ Viac o parametroch nájdete v časti [nastavenia](../settings/README.md).
 
 ## Koláčové grafy
 
-Koláčové grafy znázorňujú rozdelenie TOP 5 (vrátane zvyšných ako kombinácie **Ostatné**) najčastejšie používaných AI asistentov a tých s najvyššou spotrebou tokenov v rámci zvoleného obdobia. Tieto vizualizácie vám umožnia rýchlo identifikovať najvyužívanejších asistentov a oblasti s najväčším čerpaním zdrojov.
+Koláčové grafy znázorňujú rozdelenie TOP 5 (vrátane zvyšných ako kombinácie **Ostatné**) najčastejšie používaných AI asistentov a tých s najvyššou spotrebou tokenov v rámci zvoleného obdobia. Tieto vizualizácie vám umožnia rýchlo identifikovať najpoužívanejších asistentov a oblasti s najväčším čerpaním zdrojov.
 
 ![](graph-1.png)
 
@@ -26,7 +26,7 @@ Tento graf zobrazuje počet využití jednotlivých AI asistentov v konkrétnych
 
 ![](graph-2.png)
 
-## Počet použitých tokenov AI asistentami za jednotlivé dni
+## Počet použitých tokenov AI asistentmi za jednotlivé dni
 
 Tento graf zobrazuje, koľko tokenov (zdrojov) jednotliví AI asistenti spotrebovali počas jednotlivých dní v danom období. Spotreba tokenov nemusí priamo súvisieť s počtom využití – graf vám však pomôže odhaliť asistentov s nadmernou spotrebou a zvážiť optimalizáciu ich inštrukcií na zníženie nákladov.
 
@@ -34,6 +34,6 @@ Tento graf zobrazuje, koľko tokenov (zdrojov) jednotliví AI asistenti spotrebo
 
 ## Tabuľka
 
-Sekcia štatistika na záver ponúka ja tabuľku, kde je prehľad všetkých volaní asistentov za zvolené obdobie. Obsahuje aj stĺpec používateľ, takže si viete pozrieť aj to, kto najčastejšie a na čo používa AI asistebntov.
+Sekcia štatistika na záver ponúka ja tabuľku, kde je prehľad všetkých volaní asistentov za zvolené obdobie. Obsahuje aj stĺpec používateľ, takže si viete pozrieť aj to, kto najčastejšie a na čo používa AI asistentov.
 
 ![](datatable.png)

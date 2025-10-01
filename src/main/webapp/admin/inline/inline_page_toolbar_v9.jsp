@@ -346,7 +346,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
      */
     function setEditorsContent(wjAppField, editorsContent, i = null) {
         //returns array of all editors HTML code
-        var counter = 0;
         $("[data-wjapp='pageBuilder']").each(function(index)
         {
             if (wjAppField != $(this).data("wjappfield")) return;

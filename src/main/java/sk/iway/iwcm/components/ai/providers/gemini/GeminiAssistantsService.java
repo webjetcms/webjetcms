@@ -33,7 +33,7 @@ public class GeminiAssistantsService implements AiAssitantsInterface {
 
     @Override
     public void prepareBeforeSave(AssistantDefinitionEntity assistantEnity) {
-       if(Tools.isEmpty(assistantEnity.getModel())) assistantEnity.setModel("gemini-2.5-flash");
+       if(Tools.isEmpty(assistantEnity.getModel())) assistantEnity.setModel("gemini-pro-latest");
     }
 
     @Override

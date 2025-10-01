@@ -2382,6 +2382,17 @@
                 </void>
             </object>
         </void>
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>1.10.2025</string></void>
+                <void property="desc"><string>crontab - delete AI images</string></void>
+                <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('AI - Remove temp images', '0', '22', '4', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTempFileRemover', NULL, 'true', 'all')</string></void>
+                <void property="mssql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('AI - Remove temp images', '0', '22', '4', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTempFileRemover', NULL, 'true', 'all')</string></void>
+                <void property="oracle"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('AI - Remove temp images', '0', '22', '4', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTempFileRemover', NULL, 1, 'all')</string></void>
+                <void property="pgsql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('AI - Remove temp images', '0', '22', '4', '*', '*', '*', '*', 'sk.iway.iwcm.components.ai.rest.AiTempFileRemover', NULL, true, 'all')</string></void>
+            </object>
+        </void>
 
     </object>
 </java>

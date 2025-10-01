@@ -83,7 +83,7 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 
 - **Zachovať HTML kód** – ak je zapnuté, HTML značky zo zdrojového poľa sa neodstránia a odošlú sa poskytovateľovi tak, ako sú. Zapnite iba v prípade, že model potrebuje pracovať so štruktúrovaným HTML (napr. analýza alebo úprava obsahu). Inak ponechajte vypnuté kvôli čistejšiemu vstupu.
 - **Využiť postupné načítanie** – odpoveď sa bude zobrazovať po častiach (streamovanie) namiesto jedného bloku. Vhodné pri dlhších generovaných textoch, aby mal používateľ okamžitú spätnú väzbu. Funguje iba pre textové výstupy.
-- **Zapnuť dočasný chat** – kontext a výmena správ sa po ukončení relácie neukladajú. Použite pri citlivom alebo jednorazovom dopyte. História nebude k dispozícii pre ďalšie pokračovanie.
+- **Zapnúť dočasný chat** – kontext a výmena správ sa po ukončení relácie neukladajú. Použite pri citlivom alebo jednorazovom dopyte. História nebude k dispozícii pre ďalšie pokračovanie.
 - **Požadovať vstup od používateľa** – pred spustením asistenta musí používateľ zadať vlastný vstup (napr. zadanie témy, doplňujúcej inštrukcie alebo kľúčových slov). Ak je vypnuté, asistent beží bez dodatočného vstupu.
 - **Popis požiadavky** – krátka nápoveda zobrazovaná pri poli na zadanie vstupu (uľahčuje používateľovi pochopiť, čo má napísať). Môže byť zadaný aj prekladový kľúč; jeho vyhodnotená hodnota sa zobrazí v poli pod ním.
 
@@ -107,7 +107,7 @@ API kľúč získate registráciou na stránke [OpenAI](https://platform.openai.
 
 ### Gemini
 
-Gemini, podobne ako OpenAI, patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. Vo WebJET CMS je jeho API už integrované – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `ai_geminiAuthKey`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
+Gemini, podobne ako OpenAI, patrí medzi najznámejších a najpoužívanejších poskytovateľov AI služieb. Vo WebJET CMS je jeho API už integrované cez nástroj [AI Studio](https://aistudio.google.com/) – na aktiváciu stačí zadať váš API kľúč do konfiguračnej premennej `ai_geminiAuthKey`. Pri zadávaní kľúča odporúčame využiť možnosť **Šifrovať** pre vyššiu bezpečnosť.
 
 Aktuálne je podporovaná integrácia pre tieto typy požiadaviek:
 
@@ -132,6 +132,8 @@ Pokročilé nastavenia (kvóty, fakturácia, rotácia kľúčov, štatistiky) n�
 Služba [OpenRouter](https://openrouter.ai) prepája rôznych poskytovateľov AI služieb do jedného spoločného API. Technicky vašu požiadavku smeruje na API daného poskytovateľa, výhoda je, že nepotrebujete mať vytvorené účty u viacerých poskytovateľov, ale máte jeden účet v OpenRouter, ktorý používate pre viacero poskytovateľov AI služieb. Mnoho modelov je dostupných zdarma, služba je teda výhodná aj na testovanie/skúšanie možností AI modelov.
 
 Pre používanie platených modelov do služby môžete doplniť fixný kredit, alebo nastaviť automatické dopĺňanie kreditu, ak sa spotrebuje. Dostupné sú aj štatistiky využitia jednotlivých modelov.
+
+Vygenerovaný API kľúč nastavte do konfiguračnej premennej `ai_openRouterAuthKey`.
 
 ![](openrouter.png)
 

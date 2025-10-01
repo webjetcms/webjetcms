@@ -39,6 +39,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
+/**
+ * Support logic for AI model integration - common methods
+ */
 public abstract class SupportLogic implements SupportLogicInterface {
 
     public static final String AUDIT_AI_RESPONSE_KEY = "AI response";

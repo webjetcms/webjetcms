@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-// Nastav back-compat pred načítaním akýchkoľvek jquery-ui widgetov, potrebuje to elfinder
+// set back-compat before loading any jquery-ui widgets, elfinder needs it
 $.uiBackCompat = true;
 
-export default $; // voliteľné, aby sme mali istotu že bundler nezahodí súbor
+export default $; // optional, to ensure the bundler doesn't discard the file

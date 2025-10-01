@@ -805,6 +805,7 @@ window.WJ.DataTable.mergeColumns = function (columns, obj) {
 
 function initAiOtherButtons() {
     try {
+        //fake editor object for EditorAI
         let EDITOR = {
             get: function(fieldName) {
                 let inputField = $(".form-control[name='"+fieldName+"']");

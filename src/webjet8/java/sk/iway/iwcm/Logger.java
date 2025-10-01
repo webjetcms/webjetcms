@@ -706,6 +706,11 @@ public class Logger
 		return "\u001B[0m";
 	}
 
+	/**
+	 * Removes ANSI color codes from the given message.
+	 * @param message
+	 * @return
+	 */
 	public static String unwrapAnsiColors(String message) {
 		if (message == null) {
 			return null;
