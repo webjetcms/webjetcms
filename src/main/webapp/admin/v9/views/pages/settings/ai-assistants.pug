@@ -77,9 +77,67 @@ block content
                         getTranslatedKey($("#DTE_Field_userPromptLabel").val(), "editorFields-translatedUserPromptLabel");
                     });
 
+                    // Initialize instructions editor enhancements (line numbers, tab insert, whitespace toggle)
+                    initInstructionsEnhancements();
+
                     eventsBinded = true;
+                } else {
+                    // Ensure enhancements applied on subsequent opens
+                    initInstructionsEnhancements();
                 }
             });
+
+            function initInstructionsEnhancements() {
+                var $ta = $("#DTE_Field_instructions");
+                if (!$ta.length || $ta.data("enhanced")) return;
+
+                // Wrap textarea with editor container and add gutter
+                $ta.wrap('<div class="instructions-editor"></div>');
+                $('<div class="instructions-line-numbers" aria-hidden="true"></div>').insertBefore($ta);
+
+                // Apply initial classes
+                var $taContainer = $ta.parent();
+                $taContainer.addClass("ws-nowrap monospace");
+
+                function updateLineNumbers() {
+                    var lines = $ta.val().split('\n').length || 1;
+                    var buf = [];
+                    for (var i=1; i<=lines; i++) buf.push('<div>'+i+'</div>');
+                    $ta.prev('.instructions-line-numbers').html(buf.join(''));
+                }
+
+                // Insert tab character at caret
+                $ta.on('keydown', function(ev) {
+                    if (ev.key === 'Tab') {
+                        ev.preventDefault();
+                        var start = this.selectionStart;
+                        var end = this.selectionEnd;
+                        var val = $ta.val();
+                        $ta.val(val.substring(0,start) + "\t" + val.substring(end));
+                        // Move caret
+                        this.selectionStart = this.selectionEnd = start + 1;
+                        updateLineNumbers();
+                    }
+                });
+
+                // Toggle white-space mode on double click (pre <-> nowrap)
+                $ta.on('dblclick', function() {
+                    if ($taContainer.hasClass('ws-pre')) {
+                        $taContainer.removeClass('ws-pre').addClass('ws-nowrap');
+                    } else {
+                        $taContainer.removeClass('ws-nowrap').addClass('ws-pre');
+                    }
+                });
+
+                // Sync line numbers with content and scroll
+                $ta.on('input', updateLineNumbers);
+                $ta.on('scroll', function() {
+                    $ta.prev('.instructions-line-numbers').scrollTop(this.scrollTop);
+                });
+
+                updateLineNumbers();
+                $ta.data("enhanced", true);
+            }
 
             function changeFieldsVisibility(provider, action) {
                 $.ajax({
@@ -133,8 +191,54 @@ block content
         });
 
     style.
+        /* Removed !important so JS toggle can work */
+        .instructions-editor.ws-pre textarea{ white-space: break-spaces !important; overflow-wrap: normal; }
+        .instructions-editor.ws-pre .instructions-line-numbers { display: none; }
+        .instructions-editor.ws-nowrap textarea{ white-space: nowrap !important; overflow-x: auto; }
+        .instructions-editor {
+            display: flex;
+            border: 1px solid var(--wj-nice-gray-300);
+            background: #fff;
+            height: 502px;
+            position: relative;
+            margin-left: 6px;
+            border-radius: var(--wj-border-radius);
+        }
+        .instructions-editor textarea, .instructions-editor .instructions-line-numbers {
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 1.2;
+            tab-size: 2;
+        }
+        .instructions-editor textarea {
+            flex: 1;
+            border: none;
+            resize: vertical;
+            padding: 4px 8px;
+            outline: none;
+        }
+        .instructions-line-numbers {
+            background: #f5f5f7;
+            color: #666;
+            border-right: 1px solid #ddd;
+            padding: 4px 6px 4px 4px;
+            text-align: right;
+            min-width: 5ch;
+            user-select: none;
+            overflow: hidden;
+            border-top-left-radius: var(--wj-border-radius);
+            border-bottom-left-radius: var(--wj-border-radius);
+        }
+        .instructions-line-numbers div { padding: 0; }
         div.DTE_Field_Name_instructions label { display: none; }
-        textarea.textarea-code { white-space: pre-line !important; }
+        textarea.textarea-code { white-space: pre-line; }
+        textarea.textarea-code:focus { outline: none; box-shadow: none; }
+        .input-group > .instructions-editor {
+            position: relative;
+            flex: 1 1 auto;
+            width: 1%;
+            min-width: 0;
+        }
 
         label[for='DTE_Field_editorFields-translatedDescription'] { visibility: hidden; }
         div.DTE_Field_Name_editorFields\.translatedDescription div.form-group-tooltip { display: none; }
