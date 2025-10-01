@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.layout.MenuService;
@@ -56,7 +57,7 @@ public class ThymeleafAdminController {
     * @param request HttpServletRequest
     * @return String
     */
-   @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[^.]*}" })
+   @GetMapping({ "/admin/v9/", "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[a-zA-Z0-9_-]*}/" })
    public ModelAndView defaultHandler(@PathVariable(required = false) String page,
          @PathVariable(required = false) String subpage,
          @RequestParam(required = false) final MultiValueMap<String, String> allParams,
@@ -90,7 +91,7 @@ public class ThymeleafAdminController {
       return new ModelAndView(forward);
    }
 
-   @PostMapping(path = { "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[^.]*}" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+   @PostMapping(path = { "/admin/v9/{page}/", "/admin/v9/{page}/{subpage:[a-zA-Z0-9_-]*}/" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
    public ModelAndView defaultHandlerPost(@PathVariable(required = false) String page,
          @PathVariable(required = false) String subpage,
          @RequestParam(required = false) final MultiValueMap<String, String> allParams,
@@ -113,8 +114,7 @@ public class ThymeleafAdminController {
     * @param request HttpServletRequest
     * @return String
     */
-   @GetMapping({ "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[^.]+}" })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
+   @GetMapping({ "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[a-zA-Z0-9_-]*}/" })
    public ModelAndView appHandler(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,
@@ -158,8 +158,7 @@ public class ThymeleafAdminController {
       return new ModelAndView(forward);
    }
 
-   @PostMapping(path = { "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[^.]+}" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-   @PreAuthorize(value = "@WebjetSecurityService.isAdmin()")
+   @PostMapping(path = { "/apps/{app}/admin/", "/apps/{app}/admin/index.html", "/apps/{app}/admin/{subpage:[a-zA-Z0-9_-]*}/" }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
    public ModelAndView appHandlerPost(
            @PathVariable String app,
            @PathVariable(required = false) String subpage,

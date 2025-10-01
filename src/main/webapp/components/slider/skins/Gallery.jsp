@@ -79,7 +79,7 @@ jQuery(document).ready(function(){
         slideinterval: <%=pageParams.getIntValue("autoplay_interval",5000)%>,
 
         fullwidth:<%=pageParams.getBooleanValue("fullWidthSlider",false)%>,
-        
+
         randomplay: <%=pageParams.getBooleanValue("random_play",false)%>,
 
         scalemode:"fill",

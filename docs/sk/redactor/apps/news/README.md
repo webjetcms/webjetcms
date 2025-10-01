@@ -4,7 +4,7 @@ Aplikácia Novinky, vloží do stránky zoznam web stránok v zadanom priečinku
 
 ![](news.png)
 
-# Zoznam noviniek
+## Zoznam noviniek
 
 Zoznam noviniek v administrácii je podobný zoznamu web stránok, ale neobsahuje stromovú štruktúru. Nachádza sa v menu Príspevky/Novinky. V hornej časti je možné vybrať priečinok pre zobrazenie v tabuľke.
 
@@ -19,11 +19,11 @@ Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../
 
 ![](admin-edit.png)
 
-# Nastavenie aplikácie vo web stránke
+## Nastavenie aplikácie vo web stránke
 
 Aplikácia vložená do web stránky má nasledovné karty:
 
-## Parametre aplikácie
+### Parametre aplikácie
 
 V záložke parametre aplikácie nastavujete základné správanie aplikácie a jej nastavenia.
 
@@ -32,20 +32,20 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
 - Adresár - ID adresárov (priečinkov web stránok), z ktorých sa budú vyberať novinky (stránky). Tlačítkom Pridať, môžete vybrať viac ID adresárov.
 - Zahrnúť podadresáre - zvolením tejto možnosti sa načítajú novinky aj z podadresárov zvolených adresárov z poľa Adresár.
 - Typy stránok - výber stránok podľa dátumovej platnosti
-    - Aktuálne – je platný dátum začiatku a konca - zobrazia sa len novinky, ktorých dátum platnosti (začiatok a koniec pulikovania) je v rozmedzí aktuálneho dátumu.
-    - Staré – zobrazia sa novinky, ktoré majú dátum konca v minulosti (archív).
-    - Všetky – zobrazia sa novinky bez ohľadu na dátum začiatku a konca ich publikovania.
-    - Nasledujúce – zobrazia sa len novinky, ktoré majú dátum začiatku publikovania v budúcnosti.
-    - Aktuálne platné - zobrazia sa len novinky s vyplneným dátumom začiatku (koniec nemusí byť vyplnený) a konca ktorých rozsah je platný v aktuálny dátum a čas.
+  - Aktuálne – je platný dátum začiatku a konca - zobrazia sa len novinky, ktorých dátum platnosti (začiatok a koniec pulikovania) je v rozmedzí aktuálneho dátumu.
+  - Staré – zobrazia sa novinky, ktoré majú dátum konca v minulosti (archív).
+  - Všetky – zobrazia sa novinky bez ohľadu na dátum začiatku a konca ich publikovania.
+  - Nasledujúce – zobrazia sa len novinky, ktoré majú dátum začiatku publikovania v budúcnosti.
+  - Aktuálne platné - zobrazia sa len novinky s vyplneným dátumom začiatku (koniec nemusí byť vyplnený) a konca ktorých rozsah je platný v aktuálny dátum a čas.
 - Usporiadať podľa - určuje spôsob usporiadania zoznamu noviniek
-    - Priority
-    - Dátumu začiatku publikovania
-    - Dátumu konania
-    - Dátumu poslednej zmeny
-    - Názvu stránky
-    - Miesta
-    - ID stránky
-    - Ratingu - hodnotenia stránky (napr. pri použití eshopu) - hodnotenie sa nastavuje pomocou aplikácie hodnotenie stránky.
+  - Priority
+  - Dátumu začiatku publikovania
+  - Dátumu konania
+  - Dátumu poslednej zmeny
+  - Názvu stránky
+  - Miesta
+  - ID stránky
+  - Ratingu - hodnotenia stránky (napr. pri použití eshopu) - hodnotenie sa nastavuje pomocou aplikácie hodnotenie stránky.
 - Vzostupne - štandardne sa usporiada zoznam zostupne (napr. od najnovšej novinky po najstaršiu), zaškrtnutím tohto poľa bude usporiadanie naopak - od najstaršej po najnovšiu
 - Stránkovanie - ak zaškrtnete zobrazí sa aj stránkovanie zoznamu noviniek (ak je počet noviniek väčší ako hodnota v poli Počet položiek na stránke)
 - Počet položiek na stránke - počet zobrazených noviniek na jednej stránke, ak je stránkovanie nezaškrtnuté podľa tejto hodnoty sa načíta z databázy počet noviniek, vhodné napr. na úvodnú stránku kde chcete mať zobrazené napr. 3 novinky a odkaz na zoznam všetkých noviniek, ale stránkovanie nechcete zobraziť.
@@ -57,92 +57,15 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
 - Vložiť triedy do `Velocity` šablóny - špeciálne pole pre programátora, ktorým je možné zadefinovať Java triedu (program), ktorú je možné následne použiť v šablóne. Ak nemáte presné inštrukcie čo do tohto poľa vložiť ponechajte ho prázdne.
 - Čas vyrovnávacej pamäte (minúty) - počet minút pamätania zoznamu noviniek. Načítanie zoznamu noviniek môže byť náročné na výkon databázy, odporúčame nastaviť vyrovnávaciu pamäť na minimálne 10 minút. Urýchli to zobrazenie stránky (hlavne ak je zoznam noviniek napr. na úvodnej stránke).
 
-## Šablóna
+### Šablóna
 
 V karte šablóna volíte vizuálny spôsob zobrazenia zoznamu noviniek.
 
 ![](editor-dialog-templates.png)
 
-Ak máte právo Novinky a tlačové správy - Vytvorenie a úprava šablón môžete vytvoriť novú dizajnovú šablónu noviniek a upravovať existujúce. Dizajnové šablóny noviniek sa upravujú vo vlastnom editore. Štandardne odporúčame robiť len drobné úpravy v HTML kóde šablóny a využiť možnosti ktoré vám ponúka kontextové menu v editore šablón noviniek.
+Ak máte právo [Novinky - úprava šablón](../../../frontend/templates/news/README.md) môžete vytvoriť novú dizajnovú šablónu noviniek a upravovať existujúce.
 
-Šablóny noviniek používajú [Velocity Engine](https://velocity.apache.org/engine/2.3/vtl-reference.html) pre zobrazenie, je teda možné definovať cykly, podmienky a iný programový kód. Pripravené sú šablóny s jedným, dvoma aj troma stĺpcami. Šablóny odporúčame editovať len používateľmi, ktorý vedia čo robia a poznajú syntax `Velocity Engine`. Odporúčame vychádzať z pripravených šablón a prípadne ich len upravovať. Štandardný redaktor by nemal mať právo na editáciu šablón noviniek, mal by ich len používať.
-
-Pri úprave šablón je v dialógovom okne dostupné kontextové menu (keď kliknete pravým tlačidlom do poľa HTML kód alebo HTML kód stránkovania) pomocou ktorého ľahko vložíte programové bloky. Šablóny je možné duplikovať, odporúčame vám teda začať vytvorením kópie existujúcej šablóny a následne len upraviť HTML kód.
-
-Náhľadový obrázok pre šablónu uložte do `/components/news/images/MENO-SABLONY.png`.
-
-Niekoľko ukážok práce s pokročilými objektami:
-
-```velocity
-//nastavenie premennej podla pageParams objektu:
-#set ($anonymousQuestions = $pageParams.getBooleanValue("anonymousQuestions", false))
-
-//nastavenie premennej:
-#set ($fileType = $media.mediaLink.split("[.]"))
-
-//prechod cez zoznam perex skupin a nastavenie CSS triedy podla mena perex skupiny
-<div class="grid-item grid-item-$doc.docId
-#foreach($perexGroup in $doc.perexGroupNames)
-    #if ($perexGroup == "news-red")
-    grid-item-red
-    #elseif ($perexGroup == "news-green")
-    grid-item-green
-    #elseif ($perexGroup == "news-blue")
-    grid-item-blue
-    #end
-#end
-" data-doc-id="$doc.docId">
-
-//nacitanie medii a vypis
-#foreach($media in $MediaDB.getMedia($doc, "files"))
-    #set ($fileType = $media.mediaLink.split("[.]"))
-    #if($fileType[1].equals('jpg') || $fileType[1].equals('png') || $fileType[1].equals('gif')) <a rel='wjimageviewer' href="$media.mediaLink"  > <img  src="$media.mediaLink " alt="" class="media-img myModalImg" style="height: 100%;" /></a> #end
-#end
-
-//nacitanie medii a vypis
-<div class="row"> #foreach($media in $MediaDB.getMedia($doc, "files"))
-    #set ($fileType = $media.mediaLink.split("[.]"))
-    #if(!$fileType[1].equals('jpg') && !$fileType[1].equals('png') && !$fileType[1].equals('gif')) <a href="$media.mediaLink" class="col-md-4 text-truncate icon-$fileType[1]" target="_blank"> $media.mediaTitleSk</a> #end
-#end </div>
-
-//vypis diskusnych prispevkov
-//vyzaduje pridanie sk.iway.iwcm.forum.ForumDB do parametra Vlozit triedu do Velocity sablony
-#set($forumDb = $ForumDB.getForumFieldsForDoc(null, $doc.docId))
-#set($commentCount = $forumDb.size())
-#set($showComment = 3)
-#set($e = $commentCount - $showComment)
-#foreach($forum in $forumDb)
-    <div class="comment" #if($foreach.count > $e)style="display:block;"#end>
-    <div class="comment-header"> <img src="/thumb$forum.getAuthorPhoto('/templates/intranet/assets/images/css/avatar.png')?w=35&h=35&ip=5" class="mr-3" alt="Fotka používateľa $forum.autorFullName"/>$forum.autorFullName <span>$forum.questionDateDisplayDate $forum.questionDateDisplayTime</span> </div>
-    <p>$forum.question</p>
-</div>
-#end
-
-//vypis texu podla prihlaseneho/neprihlaseneho pouzivatela
-#if ($actionBean.getCurrentUser()) LOGGED #end
-#if (!$actionBean.getCurrentUser()) NOT-LOGGED #end
-
-//zoznam vsetkych stranok ako odkazy - standardne $pages pouziva format 1 2 3 ... 7 8 9, pagesAll obsahuje 1 2 3 4 5 6 7 8 9
-//v pages je objekt PaginationInfo, obsahuje property label, pageNumber, url, active, actual, first, last, link a getLi() pre ziskanie celeho HTML kodu LI elementu
-$pagesAll
-//celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
-$totalPages
-
-//podmienene zobrazenie ak je zadany perex obrazok
-#if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
-```
-
-Ak potrebujete zobrazovať dátum prvého uloženia web stránky nastavte konf. premennú `editorAutoFillPublishStart` na hodnotu `true`. Po nastavení bude editor automaticky vypĺňať pole Dátum začiatku v karte Perex v editore aktuálnym dátumom. Tento dátum je možné v prípade potreby aj manuálne zmeniť. Následne v šablóne môžete použiť nasledovné objekty:
-
-```velocity
-//datum a cas posledneho ulozenia
-$doc.lastUpdateDate $doc.lastUpdateTime
-
-//datum a cas vytvorenia
-$doc.publishStartString
-```
-
-## Perex skupiny
+### Perex skupiny
 
 V karte Perex skupiny môžete vytvárať podmienky pre zobrazenie noviniek len zo zvolených perex skupín. Používajú sa na označenie napr. Top správy na úvodnej stránke a podobne.
 
@@ -152,23 +75,23 @@ Zároveň ak potrebujete so zoznamu vylúčiť perex skupinu nastavte ju do poľ
 
 Používa sa to v prípade, ak máte na úvodnej stránke v hornej časti sekciu TOP Novinky kde zobrazujete novinky označené príznakom TOP a následne pod tým máte zoznam ostatných noviniek. Vylúčením perex skupiny TOP z druhého zoznamu noviniek zamedzíte duplicite.
 
-## Filter
+### Filter
 
 V karte filter môžete definovať pokročilé možnosti zobrazenia noviniek podľa databázových atribútov a podmienok. Medzi jednotlivými podmienkami sa používa `A/AND`, teda musia byť splnené všetky zadané podmienky filtra.
 
 ![](editor-dialog-filter.png)
 
-## Novinky
+### Novinky
 
 V karte novinky sa zobrazí zoznam noviniek, ktoré sa načítajú podľa zvolených adresárov z karty Parametre aplikácie. Vidíte tak zoznam noviniek a môžete jednoducho existujúce novinky upravovať (upraviť nadpis, fotografiu, prípadne text novinky). Rovnako môžete vytvoriť novú novinku.
 
 ![](editor-dialog-newslist.png)
 
-# Vyhľadávanie
+## Vyhľadávanie
 
 Aplikácia podporuje aj dynamické vyhľadávanie/filtrovanie noviniek priamo na web stránke pomocou URL parametrov. Viete tak vo web stránke pridať filtrovanie zobrazených noviniek podľa želania návštevníka (napr. podľa kategórie, dátumov atď). Vyhľadávanie/filtrovanie sa zadáva do URL parametrov vo formáte:
 
-```
+```txt
 search[fieldName_searchType]=value
 search[title_co]=test
 ```
@@ -189,12 +112,12 @@ pričom hodnota searchType môže má nasledovné možnosti:
 
 Pri zadávaní URL parametrov môže nastať problém z odmietnutím hodnoty `[]` a zobrazením chyby `400 - Bad Request`, v takom prípade použite náhradu `[=%5B, ]=%5D`, príklad volania:
 
-```
+```txt
 /zo-sveta-financii/?search%5Btitle_co%5D=konsolidacia
 ```
 
 URL parameter search sa môže vyskytovať viac krát, pre viaceré parametre sa použije spojenie `AND`.
 
-# Možné konfiguračné premenné
+## Možné konfiguračné premenné
 
 - ```newsAdminGroupIds``` - Zoznam ID priečinkov s novinkami. ID sú oddelené čiarkami.

@@ -7,7 +7,7 @@ Before(({ login }) => {
 });
 
 Scenario('Payment methods logic tests', async ({I, DT, DTE, Document}) => {
-    I.amOnPage('/apps/eshop/admin/payment-methods');
+    I.amOnPage('/apps/eshop/admin/payment-methods/');
     Document.switchDomain("test23.tau27.iway.sk");
 
     I.say('Cant see certain buttons');
@@ -50,7 +50,7 @@ Scenario('Payment methods logic tests', async ({I, DT, DTE, Document}) => {
 });
 
 Scenario('cleanup', ({ I, DT, DTE }) => {
-    I.amOnPage('/apps/eshop/admin/payment-methods');
+    I.amOnPage('/apps/eshop/admin/payment-methods/');
     I.see("test23.tau27.iway.sk", "div.js-domain-toggler div.filter-option-inner-inner");
 
     DT.filterContains("paymentMethodName", paymentMethodName);

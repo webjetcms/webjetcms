@@ -4,8 +4,8 @@
             <input type="text" class="form-control" v-bind:value="[grp.fullPath ? ((grp.domainName && grp.domainName != '' && click.indexOf('alldomains')!=-1 ? grp.domainName+':' : '')+grp?.fullPath?.replaceAll('&'+'#'+'47;', '/')) : grp?.virtualPath?.replaceAll('&'+'#'+'47;', '/')]" disabled="disabled" />
 
             <button @click="toggleModals" class="btn btn-outline-secondary  btn-vue-jstree-item-edit" type="button" v-tooltip:top="$WJ.translate('button.select')"><i class="ti ti-focus-2"></i></button>
-            <button @click="removeFolder" v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-group-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
-            <button @click="removePage" v-if="click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-page-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
+            <button @click="removeFolder" v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-group-null')==0 || click.indexOf('dt-tree-groupid-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
+            <button @click="removePage" v-if="click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-page-null')==0 || click.indexOf('dt-tree-pageid-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
             <button @click="removeById" v-if="click.indexOf('dt-tree-dir-array')==0 || click.indexOf('dt-tree-universal-array')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
 
         </div>
@@ -64,6 +64,13 @@
                     this.grp.groupId=-1;
                     this.grp.fullPath = "";
                     this.grp.virtualPath = "";
+                } else if(this.$props.click == "dt-tree-groupid-null") {
+                    this.$emit("remove-item", this.grp.groupId);
+                    this.grp.groupId=-1;
+                    this.grp.id = "";
+                    this.grp.virtualPath = "";
+                    this.grp.fullPath = "";
+                    $(`#${this.idKey}`).val('');
                 }
                 else {
                     //console.log("Emiting");
@@ -72,12 +79,14 @@
             },
             removePage() {
                 //console.log("REMOVE PAGE, this.grp=", this.grp); //= handluje to priamo field-type-json.js.remove method
-                if (this.$props.click == "dt-tree-page-null") {
+                if (this.$props.click == "dt-tree-page-null" || this.$props.click == "dt-tree-pageid-null") {
                     //set also ID, because component.pug use id as priority
+                    if (this.$props.click == "dt-tree-pageid-null") this.$emit("remove-item", this.grp.docId);
                     this.grp.id=-1;
                     this.grp.docId=-1;
                     this.grp.fullPath = "";
                     this.grp.virtualPath = "";
+                    $(`#${this.idKey}`).val('');
                 }
                 else {
                     this.$emit("remove-item", this.grp.docId);

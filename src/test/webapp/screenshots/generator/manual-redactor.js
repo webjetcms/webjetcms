@@ -342,6 +342,35 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
 
 });
 
+Scenario('custom-fields 2', async({ I, DT, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=134906");
+    DTE.waitForEditor();
+
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
+    DT.waitForLoader();
+
+    I.resizeWindow(1280, 800);
+
+    I.executeScript(function() {
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldA').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldA').css("padding-bottom", "10px");
+
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldB').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldB').css("padding-bottom", "10px");
+
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldC').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldC').css("padding-bottom", "10px");
+
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldD').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldD').css("padding-bottom", "10px");
+    });
+
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldA", "/frontend/webpages/customfields/webpages-group.png");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldB", "/frontend/webpages/customfields/webpages-group-null.png");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldC", "/frontend/webpages/customfields/webpages-doc.png");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldD", "/frontend/webpages/customfields/webpages-doc-null.png");
+});
+
 Scenario('datatable-duplicate', ({ I, Document }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.jstreeNavigate(["Test stavov"]);

@@ -5,7 +5,7 @@ Before(({ login }) => {
 });
 
 Scenario('Payment methods logic tests', ({I, DT, DTE, Document}) => {
-    I.amOnPage('/apps/eshop/admin/payment-methods');
+    I.amOnPage('/apps/eshop/admin/payment-methods/');
 
     Document.screenshot("/redactor/apps/eshop/payment-methods/datatable.png");
 

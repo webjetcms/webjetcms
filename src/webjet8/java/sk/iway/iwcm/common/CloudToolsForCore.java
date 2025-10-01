@@ -825,5 +825,34 @@ public class CloudToolsForCore {
         }
         return rootGroupId;
     }
+
+    /**
+     * Returns domain name by its alias
+     * If domain name is not found, returns null.
+     * @param domainAlias
+     * @return
+     */
+    public static String getDomainByAlias(String domainAlias) {
+        if(Tools.isEmpty(domainAlias)) return null;
+
+        for(String domain : GroupsDB.getInstance().getAllDomainsList()) {
+            String foundAlias =  MultiDomainFilter.getDomainAlias(domain);
+            if(domainAlias.equals(foundAlias)) return domain;
+        }
+
+        //We did not found match
+        return null;
+    }
+
+    /**
+     * Returns domain ID by its alias.
+     * If domain name is not found, returns default domain ID using getDomainId().
+     * @param domainAlias
+     * @return
+     */
+    public static int getDomainIdByAlias(String domainAlias) {
+        int domainId = GroupsDB.getDomainId( getDomainByAlias(domainAlias) );
+        return domainId == -1 ? getDomainId() : domainId;
+    }
 }
 

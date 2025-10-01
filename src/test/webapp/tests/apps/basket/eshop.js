@@ -122,8 +122,8 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.say("Proceeding to payment 1");
     I.waitForVisible(locate("button.btn-primary").withText("Zaplatiť"), 10);
     I.click(locate("button.btn-primary").withText("Zaplatiť"));
-    I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
-    I.clickCss("//div[contains(text(), 'Platobná karta')]");
+    I.waitForText("Platobná karta", 10, "p");
+    I.click(locate("p").withText("Platobná karta"));
 
     await SL.doGoPayCardPayment(I, false);
 
@@ -158,14 +158,17 @@ Scenario("GoPay test unsuccessful, try to pay again and verify invoice", async (
     I.clickCss("#payForOrderBtn");
     I.click(locate("button.btn-primary").withText("Zaplatiť"));
     I.waitForText("Zvoľte platobnú metódu", 10);
-    I.clickCss("//div[contains(text(), 'Bankový prevod')]");
-    I.clickCss("//div[contains(text(), 'Tatra banka')]");
+
+    I.waitForText("Bankový prevod", 10, "p");
+    I.click(locate("p").withText("Bankový prevod"));
+    I.waitForText("Tatra banka", 10, "p");
+    I.click(locate("p").withText("Tatra banka"));
+
     I.clickCss('button[data-cy="bankSubmit"]');
     I.waitForElement("#confirm");
     I.clickCss("#confirm");
     I.waitForText("Platba prebehla úspešne.", 30);
-  }
-);
+});
 
 Scenario("GoPay test", async ({ I, DT, DTE }) => {
   const testerName = "autotest-goPay-" + randomNumber;
@@ -188,8 +191,8 @@ Scenario("GoPay test", async ({ I, DT, DTE }) => {
   I.say("Proceeding to payment 3");
   I.waitForVisible(locate("button.btn-primary").withText("Zaplatiť"), 10);
   I.click(locate("button.btn-primary").withText("Zaplatiť"));
-  I.waitForElement("//div[contains(text(), 'Platobná karta')]", 10);
-  I.clickCss("//div[contains(text(), 'Platobná karta')]");
+  I.waitForText("Platobná karta", 10, "p");
+  I.click(locate("p").withText("Platobná karta"));
 
   // GoPay payment
   await SL.doGoPayCardPayment(I, true);

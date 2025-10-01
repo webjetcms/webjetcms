@@ -301,27 +301,34 @@ public class TranslationKeyEntity {
     }
 
     public String getOriginalValue(char a) {
-        switch (a) {
-            case 'A':
-                return originalValueA;
-            case 'B':
-                return originalValueB;
-            case 'C':
-                return originalValueC;
-            case 'D':
-                return originalValueD;
-            case 'E':
-                return originalValueE;
-            case 'F':
-                return originalValueF;
-            case 'G':
-                return originalValueG;
-            case 'H':
-                return originalValueH;
-            case 'I':
-                return originalValueI;
-            case 'J':
-                return originalValueJ;
+        // Return the original value for the given field letter (A-J), case-insensitive.
+        switch (Character.toUpperCase(a)) {
+            case 'A': return originalValueA;
+            case 'B': return originalValueB;
+            case 'C': return originalValueC;
+            case 'D': return originalValueD;
+            case 'E': return originalValueE;
+            case 'F': return originalValueF;
+            case 'G': return originalValueG;
+            case 'H': return originalValueH;
+            case 'I': return originalValueI;
+            case 'J': return originalValueJ;
+            default: return null;
+        }
+    }
+
+    public String getFieldValue(char a) {
+        switch (Character.toUpperCase(a)) {
+            case 'A': return fieldA;
+            case 'B': return fieldB;
+            case 'C': return fieldC;
+            case 'D': return fieldD;
+            case 'E': return fieldE;
+            case 'F': return fieldF;
+            case 'G': return fieldG;
+            case 'H': return fieldH;
+            case 'I': return fieldI;
+            case 'J': return fieldJ;
             default: return null;
         }
     }

@@ -69,7 +69,18 @@ export function typeElfinder() {
 
             //odkaz na prepend div
             conf._prepend = null;
-            if (isImage || isVideo) conf._prepend = htmlCode.find(".input-group-text");
+            if (isVideo) conf._prepend = htmlCode.find(".input-group-text");
+            if (isImage) {
+                conf._prepend = htmlCode.find(".input-group-text");
+
+                //add on click handler - open background-image on new tab on click
+                conf._prepend.on("click", function() {
+                    var imageUrl = conf._input.val();
+                    if (imageUrl) {
+                        window.open(imageUrl, "_blank");
+                    }
+                });
+            }
 
             return htmlCode;
         },

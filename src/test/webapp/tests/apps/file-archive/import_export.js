@@ -12,6 +12,11 @@ Before(({ I, login }) => {
 });
 
 Scenario('Upload a file, export that file, delete and try to import again', async ({ I, DTE, DT }) => {
+
+    //cleanup
+    I.closeOtherTabs();
+    I.relogin('admin');
+
     const exportImportPdfFileName = 'archive_export_import.pdf';
     const replacePdfFileName = 'archive_replace.pdf';
     const originalPdfFileName= 'blank/archive_replace.pdf';
@@ -47,8 +52,8 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     I.see('Hlavný dokument : files/archiv/archive_replace.pdf');
     I.see('Naplanovaný hlavný dokument : files/archiv/files/archiv_insert_later/files/archiv/archive_file_test_fifth.pdf');
     I.wait(3);
-    await I.handleDownloads(`${exportedZipFileName}`);
-    I.click(locate("div#dialogCentralRow a.download-archive-link").withText("/files/protected/archiv/file_archiv_export_aceintegration_"));
+    await I.handleDownloads(`downloads/${exportedZipFileName}`);
+    I.click(locate("div#dialogCentralRow a.download-archive-link"));
     I.wait(5);
 
     // 3. Vymazanie súboru a nahradenie
@@ -64,9 +69,9 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
     DTE.save('fileArchiveDataTable');
 
     // 4. Importovanie
-    I.say("Phase4 - Importing the file");
+    I.say("Phase4 - Importing the file " + exportedZipFileName);
     //I.amInPath('../../../build/test/downloads');
-    await SL.importFile('../../../build/test/'+exportedZipFileName);
+    await SL.importFile('../../../build/test/downloads/'+exportedZipFileName);
 
     // 5. Verifikovanie
     I.say("Phase5 - Verification");

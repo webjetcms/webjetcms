@@ -490,7 +490,7 @@
         </exec>
     </target>
 
-    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy version to Maven staging repository">
+    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
         <exec executable="mvn">
             <arg value="-e"/>
             <arg value="-X"/>

@@ -143,7 +143,7 @@ export function typeJson() {
                 let newJson = fixNullData(conf.jsonData, conf.className);
                 //conf.vm._instance.data.data = newJson;
                 conf.vm.data = newJson;
-                //console.log("Updated, newJson=", newJson, ", data=", conf.vm._instance.data.data);
+                //console.log("Updated, newJson=", newJson, ", data=", conf.vm.data);
             }
         },
 
