@@ -89,7 +89,10 @@ block content
 
             function initInstructionsEnhancements() {
                 var $ta = $("#DTE_Field_instructions");
-                if (!$ta.length || $ta.data("enhanced")) return;
+                if (!$ta.length || $ta.data("enhanced")) {
+                    updateLineNumbers();
+                    return;
+                }
 
                 // Wrap textarea with editor container and add gutter
                 $ta.wrap('<div class="instructions-editor"></div>');
@@ -228,6 +231,7 @@ block content
             overflow: hidden;
             border-top-left-radius: var(--wj-border-radius);
             border-bottom-left-radius: var(--wj-border-radius);
+            padding-bottom: 25px; /* account for textarea scrollbars */
         }
         .instructions-line-numbers div { padding: 0; }
         div.DTE_Field_Name_instructions label { display: none; }

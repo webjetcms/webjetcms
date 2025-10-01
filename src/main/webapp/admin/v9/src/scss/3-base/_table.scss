@@ -1469,12 +1469,21 @@ textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small text
     margin-right: 5px;
     margin-bottom: 5px;
 }
+//variant with textarea-code in textarea element
 .input-group:has(.textarea-code) {
     width: 892px;
     margin-bottom: 5px;
     .textarea-code {
         //if there is ai/button in group we need to be smaller
         width: 842px;
+        margin-right: 0px;
+        margin-bottom: 0px;
+    }
+}
+//varianf with textare-code on DTE div
+div.DTE_Field.textarea-code .input-group {
+    margin-bottom: 5px;
+    textarea.form-control {
         margin-right: 0px;
         margin-bottom: 0px;
     }

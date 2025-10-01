@@ -76,6 +76,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Integrácia AI nástrojov, pomocníkov, asistentov (#57997).
 - [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
 - [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
+- [ ] +Pridať možnosť nastaviť typ `textarea` ako je v AI asistentoch aj s číslami riadkov, napr. do skriptov alebo inde, kde sa predpokladá písanie kódu.
 
 ## 2024
 

@@ -705,4 +705,14 @@ public class Logger
 	private static String getAnsiColorCodeReset() {
 		return "\u001B[0m";
 	}
+
+	public static String unwrapAnsiColors(String message) {
+		if (message == null) {
+			return null;
+		}
+		if (loggerUseAnsiColors == null || loggerUseAnsiColors.booleanValue() == false) {
+			return message;
+		}
+		return message.replaceAll("\u001B\\[[;\\d]*m", "");
+	}
 }
