@@ -137,7 +137,7 @@ public class WelcomeDataBackTime
 			}
 			*/
 
-				List<Column> errorPages = StatTableDB.getErrorPages(99999, calendarFrom.getTime(), calendarTo.getTime(), null);
+				List<Column> errorPages = StatTableDB.getErrorPages(99999, calendarFrom.getTime(), calendarTo.getTime(), null, false);
 			/*for (Column c : errorPages)
 			{
 				statErrorNumber += c.getIntColumn5();

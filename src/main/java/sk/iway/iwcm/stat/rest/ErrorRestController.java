@@ -44,7 +44,7 @@ public class ErrorRestController extends DatatableRestControllerV2<ErrorDTO, Lon
         //Process params from request into FilterHeaderDto
         FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
 
-        List<ErrorDTO> items = columnsToItems(StatTableDB.getErrorPages(Constants.getInt("datatablesExportMaxRows", 1000), filter.getDateFrom(), filter.getDateTo(), filter.getUrl(), getRequest().getParameter("searchErrorMessage"), getRequest().getParameter("searchCount")));
+        List<ErrorDTO> items = columnsToItems(StatTableDB.getErrorPages(Constants.getInt("datatablesExportMaxRows", 1000), filter.getDateFrom(), filter.getDateTo(), filter.getUrl(), getRequest().getParameter("searchErrorMessage"), getRequest().getParameter("searchCount"), filter.getFilterBotsOut()));
 
         PagedListHolder<ErrorDTO> holder = new PagedListHolder<>(items);
 
