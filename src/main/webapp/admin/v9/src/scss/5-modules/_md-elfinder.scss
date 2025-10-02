@@ -351,6 +351,15 @@ html.pg-iframe {
     background-color: transparent !important;
 }
 
+// tabler icons do NOT have icons for video files like mp4/avi/mov... for tshi reason we just set generic viedo icon
+.elfinder-cwd-icon-video { background: none !important; }
+.elfinder-cwd-icon-video::before {
+    font-family: 'tabler-icons-filled' !important;
+    content: $ti-icon-video !important;
+    color: #63697A !important;
+    background-color: transparent !important;
+}
+
 .elfinder-cwd-icon-pdf { background: none !important; }
 .elfinder-cwd-icon-pdf::before {
     font-family: 'tabler-icons-filled' !important;
