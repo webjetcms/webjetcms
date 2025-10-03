@@ -91,7 +91,7 @@ var EditorItemFieldRenderer = (function () {
             if (this.editorItemFields[this.name].comment) {
                 comment = '<div class="comment col-sm-8 offset-sm-4">' + this.editorItemFields[this.name].comment + '</div>';
             }
-            if ("checkbox" == this.editorItemFields[this.name].type) {
+            if ("checkbox" == this.editorItemFields[this.name].type || "checkboxRight" == this.editorItemFields[this.name].type) {
                 if ("true" == this.value || true == this.value) this.value = "checked";
                 else this.value = "";
             }

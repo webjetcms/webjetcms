@@ -44,7 +44,8 @@ pageContext.include("/sk/iway/iwcm/components/news/News.action");
 	input[type="radio"], input[type="checkbox"] {margin-top: 2px;}
 	.tab-pane .tab-page {padding-top: 20px;}
 	#pageSize,
-	#truncate {width: auto;}
+	#truncate,
+	#subGroupsDepth {width: auto;}
 	.value,
 	.operationsBox {display: inline-block;}
 	.operationsBox {padding: 0 10px;}
@@ -788,6 +789,13 @@ function escapeHtml(unsafe) {
 				</div>
 
 				<div class="form-group">
+					<label for="subGroupsDepth" class="col-sm-3 control-label"><iwcm:text key="components.news.subGroupsDepth"/></label>
+					<div class="col-sm-6">
+						<stripes:text name="subGroupsDepth" id="subGroupsDepth" size="5" maxlength="5" class="form-control" />
+					</div>
+				</div>
+
+				<div class="form-group">
 					<label for="publishType" class="col-sm-3 control-label"><iwcm:text key="components.news.publishtype"/></label>
 					<div class="col-sm-6">
 						<stripes:select name="publishType" id="publishType" class="form-control">
@@ -881,12 +889,13 @@ function escapeHtml(unsafe) {
 				</div>
 
 				<div class="form-group">
-					<div class="col-sm-offset-3 col-sm-9">
-						<div class="checkbox">
-							<label>
-								<stripes:checkbox name="removeDefaultDocs" value="true"></stripes:checkbox> <iwcm:text key="components.news.remove_default_docs"/>
-							</label>
-						</div>
+					<label for="docMode" class="col-sm-3 control-label"><iwcm:text key="components.news.doc_mode.title"/></label>
+					<div class="col-sm-6">
+							<stripes:select name="docMode" id="docMode" class="form-control">
+								<option <c:if test="${actionBean.docMode eq 0}">selected="selected"</c:if> value="0"><iwcm:text key="components.news.doc_mode.all"/></option>
+								<option <c:if test="${actionBean.docMode eq 1}">selected="selected"</c:if> value="1"><iwcm:text key="components.news.doc_mode.only"/></option>
+								<option <c:if test="${actionBean.docMode eq 2}">selected="selected"</c:if> value="2"><iwcm:text key="components.news.doc_mode.exclude"/></option>
+							</stripes:select>
 					</div>
 				</div>
 
