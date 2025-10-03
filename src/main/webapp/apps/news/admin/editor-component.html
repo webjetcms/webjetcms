@@ -1,0 +1,325 @@
+<script>
+
+	let docFields = [];
+	let defaultFilters = [];
+
+	function getOption(value, text) {
+		let option = $("<option></option>");
+		option.attr("value", value);
+		option.text(text);
+		return option;
+	}
+
+	function deleteFilters() {
+		const filters = $("#filtersTable tbody tr");
+		const checkedFilters = filters.find("input.filter-row-select:checked").closest("tr");
+		checkedFilters.remove();
+
+		// If no more filters, remove the table
+		if($("#filtersTable tbody tr").length === 0) {
+			$("#filtersTable").remove();
+			$("#filtersTable").remove();
+		}
+	}
+
+	function getFilterSelect(type) {
+		let filterSelect = $("<select class='form-select-sm form-control form-select'></select>");
+
+		if("Integer" === type || "Date" === type) {
+			filterSelect.append( getOption("gt", ">") );
+			filterSelect.append( getOption("ge", ">=") );
+			filterSelect.append( getOption("eq", "=") );
+			filterSelect.append( getOption("lt", "<") );
+			filterSelect.append( getOption("le", "<=") );
+		} else if("String" === type) {
+			filterSelect.append( getOption("eq", "[[#{datatables.select.equals.js}]]") );
+			filterSelect.append( getOption("sw", "[[#{datatables.select.startwith.js}]]") );
+			filterSelect.append( getOption("ew", "[[#{datatables.select.endwith.js}]]") );
+			filterSelect.append( getOption("co", "[[#{datatables.select.contains.js}]]") );
+		} else if("Boolean" === type) {
+			filterSelect.append( getOption("true", "true") );
+			filterSelect.append( getOption("false", "false") );
+		}
+
+		return filterSelect;
+	}
+
+	function getInput(type) {
+		if("Integer" === type) {
+			return $("<input type='number' class='form-control form-control-sm' />");
+		} else if("Date" === type) {
+			return $("<input type='date' class='dt-datetime form-control form-control-sm' />");
+		} else if("String" === type) {
+			return $("<input type='text' class='form-control form-control-sm' />");
+		} else {
+			return $("<span class='class='form-control form-control-sm text-muted small'>n/a</span>");
+		}
+	}
+
+	function fieldChange(field) {
+		//Find field type
+		let fieldType = null;
+		for(let i = 0; i < docFields.length; i++) {
+			if(docFields[i].label === field.value) {
+				fieldType = docFields[i].value;
+				break;
+			}
+		}
+
+		//Find parent TR
+		let parent = $(field).closest("tr");
+
+		//replace filter select
+		parent.find("td.operatorTd > select").remove();
+		parent.find("td.operatorTd").append(getFilterSelect(fieldType));
+
+		//Replace input field
+		parent.find("td.valueTd > input").remove();
+		parent.find("td.valueTd").append( getInput(fieldType) );
+	}
+
+	function getFieldType(field) {
+		for(let i = 0; i < docFields.length; i++) {
+			if(docFields[i].label === field) {
+				return docFields[i].value;
+			}
+		}
+		return null;
+	}
+
+	function addFilter(selectedField, selectedFilter, inputValue) {
+		// Ensure filters table exists
+		let filtersWrapper = $("div#filtersDiv");
+
+		if(selectedField == null || selectedField === "") {
+			selectedField = docFields.length > 0 ? docFields[0].label : null;
+		}
+
+		let filtersTable = filtersWrapper.children("table#filtersTable");
+		if(filtersTable.length === 0) {
+			filtersTable = $(`
+				<table id="filtersTable" class="table table-sm align-middle mb-2">
+					<thead>
+						<tr>
+							<th style="width:5%">&nbsp;</th>
+							<th style="width:20%">[[#{components.news.filter.doc_fields}]]</th>
+							<th style="width:20%">[[#{components.news.filter.operator}]]</th>
+							<th style="width:50%">[[#{components.news.filter.value}]]</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			`);
+			$("div.dt-header-row").after(filtersTable);
+		}
+
+		let fieldType = getFieldType(selectedField);
+		if("Boolean" === fieldType) {
+			selectedFilter = inputValue;
+		}
+
+		let tr = $("<tr></tr>");
+
+		// Select row checkbox
+		let actionTd = $("<td class='text-center'></td>");
+		let selectCb = $("<input type='checkbox' class='form-check-input filter-row-select' />");
+		actionTd.append(selectCb);
+		tr.append(actionTd);
+
+		// Field select
+		let fieldTd = $("<td class='fieldTd'></td>");
+		let fieldSelect = $("<select class='fieldSelect form-select form-select-sm'></select>");
+		for(let i=0; i<docFields.length; i++) {
+			let opt = $("<option></option>").attr("value", docFields[i].label).text(docFields[i].original);
+			fieldSelect.append(opt);
+		}
+		fieldSelect.val(selectedField);
+		fieldSelect.on("change", function() { fieldChange(this); });
+		fieldTd.append(fieldSelect);
+		tr.append(fieldTd);
+
+		// Operator select
+		let operatorTd = $("<td class='operatorTd'></td>");
+		let operatorSelect = getFilterSelect(fieldType);
+		if(selectedFilter != null && selectedFilter !== "") {
+			operatorSelect.val(selectedFilter);
+		}
+		operatorTd.append(operatorSelect);
+		tr.append(operatorTd);
+
+		// Value input (skip for Boolean)
+		let valueTd = $("<td class='valueTd'></td>");
+		if("Boolean" !== fieldType) {
+			let valueInput = getInput(fieldType);
+			valueInput.removeClass("col-sm").addClass("form-control form-control-sm");
+			if(inputValue != null && inputValue !== "") {
+				valueInput.val(inputValue);
+			}
+			valueTd.append(valueInput);
+		} else {
+			valueTd.append($("<span class='text-muted small'>n/a</span>"));
+		}
+		tr.append(valueTd);
+
+		filtersTable.find("tbody").append(tr);
+
+		return;
+	}
+
+	function appAfterInit(response, datatable, componentPath) {
+		//console.log("appAfterInit, response=", response, "datatable=", datatable);
+		console.log("componentPath=", componentPath);
+
+		window.addEventListener("WJ.DTE.opened", function (e) {
+			docFields = response.options.docFields;
+
+			$("#pills-dt-component-datatable-news-tab").on("click", function() {
+				let params = datatable.EDITOR.get();
+				delete params['id'];
+
+				//debugger;
+
+				let include = "!INCLUDE(" + componentPath;
+				if (Object.keys(params).length > 0) {
+					include += ", " + convertObjectToInludeParams(params);
+				}
+				include += ")!";
+
+				let safeLink = encodeURI(include);
+				safeLink = safeLink.replace(/\+/g, "%2B");
+
+				const newsListIframe = $("iframe#newsListIframe");
+				if(newsListIframe != null && newsListIframe.length > 0) {
+					let link = "/apps/news/admin/?include=" + safeLink;
+					newsListIframe.attr("src", link);
+				}
+			});
+
+			// Insert filter header
+			let addButton = $("<button class='btn btn-sm btn-success' type='button' title='[[#{components.news.add_filter}]]'><span><i class='ti ti-plus'></i></span></button>");
+			addButton.on("click", function() { addFilter(); });
+
+			let deleteButton = $("<button class='btn btn-sm btn-danger' type='button' title='[[#{components.news.remove_filter}]]s'><span><i class='ti ti-trash'></i></span></button>");
+			deleteButton.on("click", function() { deleteFilters(); });
+
+			let header = $("<div class='dt-header-row clearfix wp-header' ><div class='row'><div class='dt-buttons'></div></div></div>");
+			header.find("div.dt-buttons").append(addButton);
+			header.find("div.dt-buttons").append(deleteButton);
+			$("div#filtersDiv").prepend(header);
+
+			WJ.initTooltip($('button.btn-success, button.btn-danger'));
+
+			// Push filter into table
+			for(let i = 0; i < defaultFilters.length; i++) {
+				addFilter(defaultFilters[i].field, defaultFilters[i].operator, defaultFilters[i].value);
+			}
+
+			// Set names and add class
+			const templates = $("#pills-dt-component-datatable-templates").find("div.image_radio_item");
+			console.log("templates=", templates);
+			for(let i = 0; i < templates.length; i++) {
+				let value = $(templates[i]).find("input").val();
+
+				$(templates[i]).find("label").append("<span>" + value + "</span>");
+				$(templates[i]).find("label").addClass("custom-template");
+			}
+
+			// Center images
+			$("#pills-dt-component-datatable-templates").find("div.DTE_Field_InputControl").css("text-align", "center");
+		});
+	}
+
+	function appGetComponentCode(componentPath, params, componentDatatable, isInsert) {
+		let include = "!INCLUDE(" + componentPath;
+		include += ", " + convertObjectToInludeParams(params);
+
+		//Add filters
+		const filters = $("#filtersTable tbody tr");
+		for(let i = 0; i < filters.length; i++) {
+			let filterRow = $(filters[i]);
+			let field = filterRow.find("td.fieldTd select").first().val();
+			let operator = filterRow.find("td.operatorTd select").first().val();
+
+			let value;
+			let input = filterRow.find("td.valueTd input");
+			if(input == null || input.length === 0) {
+				//Boolean (value stored in select that we called operator)
+				value = operator;
+				operator = "eq";
+			} else {
+				value = input.val();
+			}
+
+			if(value == null || value === "") {
+				continue; // nothing to filter
+			}
+
+			include += ", filter[" + field + "_" + operator + "]=" + value;
+		}
+
+		//Set template
+		const templates = $("#pills-dt-component-datatable-templates").find("input.form-check-input:checked");
+		if(templates != null && templates.length > 0) {
+			let template = $(templates[0]).val();
+			include += ", template=" + template;
+		}
+
+		include += ")!";
+		return include;
+	}
+
+	function appBeforeXhr(data) {
+		let paramsString = data.parameters;
+		let params = paramsString.split(",");
+
+		for(let i = 0; i < params.length; i++) {
+			let param = params[i].trim();
+			if(param.startsWith("filter[")) {
+				param = param.substring(7); //remove filter[
+				let parts = param.split("]=");
+
+				if(parts.length !== 2) {
+					console.warn("Invalid filter param:", param);
+					continue;
+				}
+
+				let fieldAndOperator = parts[0];
+				let fieldParts = fieldAndOperator.split("_");
+				if(fieldParts.length !== 2) {
+					console.warn("Invalid filter field and operator:", fieldAndOperator);
+					continue;
+				}
+
+				let field = fieldParts[0];
+				let operator = fieldParts[1];
+				let value = parts[1].replace("]", "");
+
+				defaultFilters.push( { field: field, operator: operator, value: value } );
+			}
+		}
+	}
+</script>
+
+<style>
+	#filtersDiv {
+		input.form-check-input {
+			line-height: 1;
+			font-size: 18px;
+			content: "\eb2c";
+			color: #868ea5;
+			border: 2px solid;
+		}
+
+		input.form-check-input:checked {
+			border: none;
+		}
+
+		.dt-header-row { margin: 0px; }
+		.dt-buttons { max-height: none !important; }
+	}
+
+	.custom-template {
+		display: grid;
+		text-align: left !important;
+	}
+</style>
