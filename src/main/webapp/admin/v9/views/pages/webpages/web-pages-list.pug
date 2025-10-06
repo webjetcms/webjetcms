@@ -781,7 +781,7 @@ block content
                         }
 
                         //show pages DT if last one is folders
-                        if ($("#groups-datatable_wrapper").css("display")=="block") {
+                        if ($("#groups-datatable_wrapper").is(":visible")) {
                             $("#datatableInit_wrapper").show();
                             $("#groups-datatable_wrapper").hide();
                         }
