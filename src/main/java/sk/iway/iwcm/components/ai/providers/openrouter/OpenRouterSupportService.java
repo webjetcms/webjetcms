@@ -27,6 +27,11 @@ public abstract class OpenRouterSupportService extends SupportLogic {
         if(Tools.isEmpty(apiKey)) throw new IllegalStateException("OpenRouter API key is not set.");
         http.setHeader("Authorization", "Bearer " + apiKey);
         if(addContentType) http.setHeader("Content-Type", "application/json; charset=utf-8");
+
+        //Optional. Site URL for rankings on openrouter.ai
+        http.setHeader("HTTP-Referer", "https://www.webjetcms.com/");
+        //Optional. Site title for rankings on openrouter.ai
+        http.setHeader("X-Title", "WebJET CMS");
     }
 
     public final StringEntity getRequestBody(String stringBody) {

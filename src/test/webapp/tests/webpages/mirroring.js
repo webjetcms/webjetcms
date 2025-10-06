@@ -28,11 +28,11 @@ let cz_mirroring_id;
 let sk_mirroring_copy_id;
 
 Scenario('Mirroring 1 - Structure prepare', async ({I, DT, DTE, Document}) => {
-    sk_mirroring = "sk_mirroring_" + randomNumber;
-    sk_mirroring_child_A = "sk_mirroring_child_A_" + randomNumber;
-    sk_mirroring_child_B = "sk_mirroring_child_B_" + randomNumber;
-    cz_mirroring = "cz_mirroring_" + randomNumber;
-    sk_mirroring_copy = "sk_mirroring_copy_" + randomNumber;
+    sk_mirroring = "sk-autotest-" + randomNumber;
+    sk_mirroring_child_A = "sk-autotest-chA-" + randomNumber;
+    sk_mirroring_child_B = "sk-autotest-chB-" + randomNumber;
+    cz_mirroring = "cz-autotest-" + randomNumber;
+    sk_mirroring_copy = "sk-autotest-copy-" + randomNumber;
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     Document.switchDomain("mirroring.tau27.iway.sk");

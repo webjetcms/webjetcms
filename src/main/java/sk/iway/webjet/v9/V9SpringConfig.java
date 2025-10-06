@@ -54,6 +54,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.system.logging",
     "sk.iway.iwcm.system.adminlog",
     "sk.iway.iwcm.system.monitoring.rest",
+    "sk.iway.iwcm.system.jpa",
     "sk.iway.iwcm.system.ntlm",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.users",

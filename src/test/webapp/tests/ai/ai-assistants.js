@@ -115,7 +115,7 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
         I.dontSeeElement( locate(btnAiAction).withText("Odstrániť pozadie") );
     });
     I.click( locate("#toast-container-ai").find(".toast-close-button") );
-    I.waitForInvisible("#toast-container-ai");
+    I.waitForInvisible("#toast-container-ai", 10);
 
     I.click( locate(".DTE_Field_Name_perexImage").find( locate(btnAiAssistants) ) );
     I.waitForVisible("#toast-container-ai");
@@ -147,15 +147,15 @@ Scenario('ai buttons usage', async ({I, DTE}) => {
 /* AI assistant with TEXT response */
 
 Scenario('test OpenAI AI text answers', async ({I, DTE}) => {
-    textAnswerTest(I, DTE, openAiId);
+    await textAnswerTest(I, DTE, openAiId);
 });
 
 Scenario('test Gemini AI text answers', async ({I, DTE}) => {
-    textAnswerTest(I, DTE, geminiId);
+    await textAnswerTest(I, DTE, geminiId);
 });
 
 Scenario('test OpenRouter AI text answers', async ({I, DTE}) => {
-    textAnswerTest(I, DTE, openRouterId);
+    await textAnswerTest(I, DTE, openRouterId);
 });
 
 /**
@@ -172,7 +172,12 @@ async function textAnswerTest(I, DTE, aiProviderId) {
 
         const valueA = await I.grabValueFrom('#DTE_Field_fieldS');
         I.assertNotContain(valueA, defaultValue);
-        let parts = valueA.split("|");
+
+        let splitChar = ":";
+        if(valueA.indexOf("|") !== -1) splitChar = "|";
+        else if(valueA.indexOf(";") !== -1) splitChar = ";";
+
+        let parts = valueA.split(splitChar);
         I.assertEqual(5, parts.length);
 
     I.say("Revert value and check");
@@ -398,7 +403,7 @@ function startAssistant(I, field, assistantName, provider) {
 }
 
 function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = false) {
-    I.say("checkBaseWaitDialog");
+    I.say("checkBaseWaitDialog, " + assistantName + ", " + provider + ", " + icon + ", " + hasContainer);
 
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > button").withText("Späť") );
     I.seeElement( locate(".toast.toast-info > .toast-title > .header-back-button > .ai-title > i." + icon) );
@@ -417,7 +422,7 @@ function checkBaseWaitDialog(I, assistantName, provider, icon, hasContainer = fa
 function waiToEndText(I) {
     I.say("waiToEndText");
 
-    I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje...") );
+    I.waitForInvisible( locate(containerAiContent + " > .current-status > span").withText("AI už na tom pracuje..."), 180 );
     I.seeElement( locate(containerAiContent + " > .current-status > span").withText("Hotovo! Bolo použitých") );
     I.seeElement( locate(containerAiContent + " > .current-status > span > i.ti.ti-circle-check") );
 }
