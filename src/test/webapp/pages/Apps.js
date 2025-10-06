@@ -151,5 +151,12 @@ module.exports = {
         I.switchTo();
         if (shouldClickOkButton)
             I.clickCss('.cke_dialog_ui_button_ok');
+    },
+
+    confirm() {
+        I.switchTo();
+        I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_ok");
+        //wait for component preview to load
+        I.wait(3);
     }
 }

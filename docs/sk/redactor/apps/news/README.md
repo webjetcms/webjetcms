@@ -37,6 +37,7 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
     - Všetky – zobrazia sa novinky bez ohľadu na dátum začiatku a konca ich publikovania.
     - Nasledujúce – zobrazia sa len novinky, ktoré majú dátum začiatku publikovania v budúcnosti.
     - Aktuálne platné - zobrazia sa len novinky s vyplneným dátumom začiatku (koniec nemusí byť vyplnený) a konca ktorých rozsah je platný v aktuálny dátum a čas.
+- Režim zobrazenia hlavných stránok - nastavuje zobrazenie hlavných stránok pod priečinkov. Často máte štruktúru Novinky a v ňom roky 2025, 2026 a podobne. V zozname noviniek nechcete zobrazovať hlavné stránky týchto priečinkov, keďže je to typicky stránka so zoznamom. Alebo naopak, potrebujete zobraziť len hlavné stránky pod priečinkov.
 - Usporiadať podľa - určuje spôsob usporiadania zoznamu noviniek
     - Priority
     - Dátumu začiatku publikovania

@@ -809,6 +809,17 @@ function escapeHtml(unsafe) {
 				</div>
 
 				<div class="form-group">
+					<label for="docMode" class="col-sm-3 control-label"><iwcm:text key="components.news.doc_mode.title"/></label>
+					<div class="col-sm-6">
+							<stripes:select name="docMode" id="docMode" class="form-control">
+								<option <c:if test="${actionBean.docMode eq 0}">selected="selected"</c:if> value="0"><iwcm:text key="components.news.doc_mode.all"/></option>
+								<option <c:if test="${actionBean.docMode eq 1}">selected="selected"</c:if> value="1"><iwcm:text key="components.news.doc_mode.only"/></option>
+								<option <c:if test="${actionBean.docMode eq 2}">selected="selected"</c:if> value="2"><iwcm:text key="components.news.doc_mode.exclude"/></option>
+							</stripes:select>
+					</div>
+				</div>
+
+				<div class="form-group">
 					<label for="orderType" class="col-sm-3 control-label"><iwcm:text key="components.news.ordertype"/></label>
 					<div class="col-sm-6">
 						<stripes:select name="order" id="orderType" class="form-control">
@@ -885,17 +896,6 @@ function escapeHtml(unsafe) {
 								<stripes:checkbox name="checkDuplicity" value="true"></stripes:checkbox> <iwcm:text key="components.news.check_duplicty"/>
 							</label>
 						</div>
-					</div>
-				</div>
-
-				<div class="form-group">
-					<label for="docMode" class="col-sm-3 control-label"><iwcm:text key="components.news.doc_mode.title"/></label>
-					<div class="col-sm-6">
-							<stripes:select name="docMode" id="docMode" class="form-control">
-								<option <c:if test="${actionBean.docMode eq 0}">selected="selected"</c:if> value="0"><iwcm:text key="components.news.doc_mode.all"/></option>
-								<option <c:if test="${actionBean.docMode eq 1}">selected="selected"</c:if> value="1"><iwcm:text key="components.news.doc_mode.only"/></option>
-								<option <c:if test="${actionBean.docMode eq 2}">selected="selected"</c:if> value="2"><iwcm:text key="components.news.doc_mode.exclude"/></option>
-							</stripes:select>
 					</div>
 				</div>
 
@@ -1014,7 +1014,7 @@ function escapeHtml(unsafe) {
 							<c:forEach items="${fieldEnum}" var="enumValue">
 								<option data-field-type="${enumValue.fieldTypeString}">${enumValue}</option>
 							</c:forEach>
-						<select>
+						</select>
 
 						<div class="operationsBox">
 							<div class="operationsString operations">
@@ -1074,7 +1074,7 @@ function escapeHtml(unsafe) {
 									<c:set var="fieldType" value="${fn:replace(enumValue, '_', '')}"></c:set>
 									<option <c:if test="${key eq fieldType}">selected="selected"</c:if> data-field-type="${enumValue.fieldTypeString}">${enumValue}</option>
 								</c:forEach>
-							<select>
+							</select>
 
 							<div class="operationsBox">
 								<div class="operationsString operations">
