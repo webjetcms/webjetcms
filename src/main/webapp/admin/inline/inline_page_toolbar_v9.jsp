@@ -207,6 +207,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function getSaveData()
     {
+        //console.log("Som getSaveData()");
+
         var saveData = {
             editable : []
         };
@@ -223,7 +225,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
             if ($(this).data('plugin_ninjaPageBuilder') === undefined)
             {
-                console.log("PageBuilder is not defined, skipping");
+                //console.log("PageBuilder["+wjAppField+"] is not defined, skipping");
                 return;
             }
 
@@ -260,6 +262,114 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         });
 
         return saveData;
+    }
+
+    function getWysiwygEditors(wjAppField) {
+        //returns array of all editors HTML code
+        let wysiwygEditors = [];
+
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            var node = pageBuilderInstance.getClearNode();
+
+            var editableElements = node.find("*[class*='editableElement']");
+            editableElements.each(function()
+            {
+                var editorName =  $(this).attr("data-ckeditor-instance");
+                var editor = CKEDITOR.instances[editorName];
+                wysiwygEditors.push(editor);
+            });
+        });
+        return wysiwygEditors;
+    }
+
+    /**
+     * Returns ARRAY of content in all editors in wjAppField
+     */
+    function getEditorsContent(wjAppField) {
+        //returns array of all editors HTML code
+        let editorsContent = [];
+
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                //console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            var node = pageBuilderInstance.getClearNode();
+
+            var editableElements = node.find("*[class*='editableElement']");
+            editableElements.each(function()
+            {
+                var editorName =  $(this).attr("data-ckeditor-instance");
+                var editorData = CKEDITOR.instances[editorName].getData();
+                editorsContent.push(editorData);
+            });
+        });
+        return editorsContent;
+    }
+
+    function markPbElements(wjAppField) {
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                //console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            pageBuilderInstance.mark_grid_elements();
+
+            initPageBuilderEditors($(this));
+        });
+    }
+
+    /**
+     * Set content in all editors in wjAppField from editorsContent (ARRAY). If i is set it will set only i editor.
+     */
+    function setEditorsContent(wjAppField, editorsContent, i = null) {
+        //returns array of all editors HTML code
+        $("[data-wjapp='pageBuilder']").each(function(index)
+        {
+            if (wjAppField != $(this).data("wjappfield")) return;
+
+            if ($(this).data('plugin_ninjaPageBuilder') === undefined)
+            {
+                //console.log("PageBuilder is not defined, skipping");
+                return;
+            }
+
+            var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
+            var node = pageBuilderInstance.getClearNode();
+
+            var editableElements = node.find("*[class*='editableElement']");
+            var counter = 0;
+            editableElements.each(function()
+            {
+                var editorName =  $(this).attr("data-ckeditor-instance");
+                var editor = CKEDITOR.instances[editorName];
+                if (i==null) editor.setData(editorsContent[counter]);
+                else if (i==counter) editor.setData(editorsContent);
+                counter++;
+            });
+        });
     }
 
     $(document).ready(()=> {
@@ -509,7 +619,7 @@ if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
     </div>
 </div>
 <div id="inlineEditorToolbarTopPlaceHolder"></div>
-<div id="wjInline-docdata" data-wjapp="pageBuilder" data-wjappkey="<%=doc.getDocId()%>" data-wjappfield="doc_data">
+<div id="wjInline-docdata" data-wjapp="pageBuilder" data-wjappkey="<%=doc.getDocId()%>" data-wjapptemp="<%=doc.getTempId()%>" data-wjappfield="doc_data">
     <% if ("true".equals(request.getParameter("inlineEditingNewPage"))) { %>
         <p><iwcm:text key='editor.newDocumentName'/></p>
     <%

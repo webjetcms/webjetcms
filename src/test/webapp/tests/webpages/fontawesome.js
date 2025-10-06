@@ -31,9 +31,9 @@ Scenario('Validate FontAwesome dialog and screenshot comparison for taxi icon', 
     Document.setConfigValue('editorFontAwesomeCustomIcons', '');
     navigateToEditor(I, DTE);
     openFontAwesomeDialog(I);
-    I.fillField('#cke_144_textInput', 'Super Magic Wand');
+    I.fillField('#cke_146_textInput', 'Super Magic Wand');
     I.dontSeeElement('#fontawesome-data > a > .fa.fa-wand-magic-sparkles');
-    I.fillField('#cke_144_textInput', 'taxi');
+    I.fillField('#cke_146_textInput', 'taxi');
     await Document.compareScreenshotElement('#fontawesome-data > a > .fa.fa.taxi', 'fontawesome-taxi.png', null, null, 12);
 });
 
@@ -41,6 +41,6 @@ Scenario('Verify FontAwesome dialog and icon presence when defaultEditorFontAwes
     Document.setConfigValue('editorFontAwesomeCustomIcons', defaultEditorFontAwesomeCustomIcons);
     navigateToEditor(I, DTE);
     openFontAwesomeDialog(I);
-    I.fillField('#cke_144_textInput', 'Super Magic Wand');
+    I.fillField('#cke_146_textInput', 'Super Magic Wand');
     I.seeElement('#fontawesome-data > a > .fa.fa-wand-magic-sparkles');
 });

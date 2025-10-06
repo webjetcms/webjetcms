@@ -49,12 +49,14 @@ import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
 import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
+import * as fieldTypeIcon from './field-type-icon';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
 import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
+import {EditorAi} from './editor-ai'
 
 const bootstrap = window.bootstrap = require('bootstrap');
 import $ from 'jquery';
@@ -644,7 +646,8 @@ export const dataTableInit = options => {
                 col.editor.className = col.className;
                 col.editor.renderFormat = col.renderFormat;
                 col.editor.array = col.array;
-
+                if (typeof col.ai != "undefined") col.editor.ai = col.ai;
+                if (typeof col.entityDecode != "undefined") col.editor.entityDecode = col.entityDecode;
 
                 if ("datetime" === col.editor.type || "date" === col.editor.type ||  "timehm" === col.editor.type || "timehms" === col.editor.type) {
                     let defaultFormat = "L HH:mm:ss";
@@ -852,7 +855,8 @@ export const dataTableInit = options => {
                 $("#" + dte._bootstrapDisplay.id).modal("show");
                 //firni event
                 WJ.dispatchEvent('WJ.DTE.open', {
-                    dte: dte
+                    dte: dte,
+                    id: dte.TABLE.DATA.id,
                 });
                 setTimeout(()=> {
                     WJ.dispatchEvent('WJ.DTE.opened', {
@@ -982,7 +986,8 @@ export const dataTableInit = options => {
 
             //firni event
             WJ.dispatchEvent('WJ.DTE.open', {
-                dte: dte
+                dte: dte,
+                id: dte.TABLE.DATA.id
             });
         }
 
@@ -1056,6 +1061,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
         $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
+        $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
 
         fieldTypeSelectEditable.typeSelectEditable();
 
@@ -2279,7 +2285,7 @@ export const dataTableInit = options => {
 
         $.fn.dataTable.ext.errMode = function(settings, tn, msg) {
             console.error("DataTables error: ", msg, "tn=", tn, "settings=", settings);
-            WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
+            //WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
             dtWJ.stateResetLocalStorage(settings);
             dtWJ.stateReset(TABLE);
             if (msg.indexOf("ColReorder - column count mismatch") != -1) {
@@ -2646,6 +2652,14 @@ export const dataTableInit = options => {
                     className: "dt-style-color",
                     render: function (td, type, rowData, row) {
                         return dtConfig.renderColor(td, type, rowData, row);
+                    }
+
+                },
+                {
+                    targets: "dt-format-icon",
+                    className: "dt-style-icon",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderIcon(td, type, rowData, row);
                     }
 
                 }
@@ -3634,6 +3648,8 @@ export const dataTableInit = options => {
     TABLE.getAjaxUrl = function() {
         return TABLE.DATA.url;
     }
+
+    var editorAi = new EditorAi(EDITOR);
 
     return TABLE;
 }

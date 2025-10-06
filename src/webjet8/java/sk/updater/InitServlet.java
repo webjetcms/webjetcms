@@ -776,7 +776,6 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/extra_priority_message/ReminderDocumentDB$ReminderItem.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/extra_priority_message/ReminderDocumentDB$ReminderMapper.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/extra_priority_message/ReminderDocumentDB.class");
-		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gallery/ImageEditorListener.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gdpr/CookieManagerAction.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/gdpr/GdprActionBean.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/importWebPages/ImportZipFileAction$1.class");

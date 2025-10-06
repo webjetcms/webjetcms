@@ -66,11 +66,11 @@
         },
         {
             "type": "java",
-            "name": "Debug NN DB",
+            "name": "Debug MS SQL DB",
             "request": "attach",
             "hostName": "localhost",
             "port": 5005,
-            "preLaunchTask": "appStartNNDB",
+            "preLaunchTask": "appStartMSSQL",
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",

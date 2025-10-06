@@ -26,16 +26,18 @@ public class ImageEditorListener {
     protected void setInitalData(final WebjetEvent<ThymeleafEvent> event) {
         ModelMap model = event.getSource().getModel();
 
-        List<OptionDto> perexGroupsOptions = new java.util.ArrayList<>();
-        for(PerexGroupsEntity perex : perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId())) {
-            perexGroupsOptions.add(new OptionDto(perex.getPerexGroupName(), String.valueOf(perex.getId()), null));
-        }
-
         try {
-            model.addAttribute("perexGroupsOptions", JsonTools.objectToJSON(perexGroupsOptions));
+            List<OptionDto> perexGroupsOptions = new java.util.ArrayList<>();
+            for(PerexGroupsEntity perex : perexGroupsRepository.findAllByDomainIdOrderByPerexGroupNameAsc(CloudToolsForCore.getDomainId())) {
+                perexGroupsOptions.add(new OptionDto(perex.getPerexGroupName(), String.valueOf(perex.getId()), null));
+            }
+
+            String data = JsonTools.objectToJSON(perexGroupsOptions);
+            model.addAttribute("perexGroupsOptions", data);
+
         } catch (Exception e) {
             Logger.error(ImageEditorListener.class, "Error setting initial data", e);
-            model.addAttribute("perexGroupsOptions", null);
+            model.addAttribute("perexGroupsOptions", "[]");
         }
     }
 }

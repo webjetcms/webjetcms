@@ -1,0 +1,31 @@
+#https://gist.github.com/pbthorste/2dd302939ad84ab26932e9e18b7428d8
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+# Switch to root to install fulltext - apt-get won't work unless you switch users!
+USER root
+
+# Install dependencies - these are required to make changes to apt-get below
+RUN apt-get update && \
+    apt-get install -yq gnupg gnupg2 gnupg1 ca-certificates curl apt-transport-https && \
+# download certificate chain for packages.microsoft.com
+    openssl s_client -showcerts -connect packages.microsoft.com:443 -servername packages.microsoft.com </dev/null 2>/dev/null | \
+        awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/ { print $0 }' > msft-chain.pem && \
+# Split the certificate chain into individual certificates
+    awk 'split_after == 1 {n++;split_after=0} /END CERTIFICATE/ {split_after=1} {print > "msft-cert" n ".crt"}' < msft-chain.pem && \
+#install the certificates into the system
+    cp msft-cert*.crt /usr/local/share/ca-certificates/ && \
+# refresh the certificate store
+    update-ca-certificates && \
+# Install SQL Server package links - why aren't these already embedded in the image?  How weird.
+    curl https://packages.microsoft.com/keys/microsoft.asc -o /var/opt/mssql/ms-key.cer && \
+    apt-key add /var/opt/mssql/ms-key.cer && \
+    curl https://packages.microsoft.com/config/ubuntu/22.04/mssql-server-2022.list -o /etc/apt/sources.list.d/mssql-server-2022.list && \
+    apt-get update && \
+# Install SQL Server full-text-search - this only works if you add the packages references into apt-get above
+    apt-get install -y mssql-server-fts && \
+# Cleanup - remove the links to Microsoft packages that we added earlier
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists
+
+# Run SQL Server process
+ENTRYPOINT [ "/opt/mssql/bin/sqlservr" ]

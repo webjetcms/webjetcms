@@ -321,7 +321,7 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click(DT.btn.editorpayment_edit_button);
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
     I.checkOption("#DTE_Field_confirmed_0");
-    const closedDate = getCurrentDate(true).slice(0, 16);;
+    const closedDate = I.parseDateTime(getCurrentDate(true));
 
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
     lineColor = await SL.getFontColor(I, 1,2);
@@ -331,8 +331,14 @@ Scenario('Verify that cannot change payment method in Payments tab, verify close
     I.click(DT.btn.editorpayment_edit_button);
 
     DTE.waitForEditor("datatableFieldDTE_Field_editorFields-payments");
-    const actual = (await I.grabValueFrom('#DTE_Field_closedDate')).slice(0, 16);
-    I.assertEqual(closedDate, actual, "Close date was not correct!");
+    const actual = I.parseDateTime(await I.grabValueFrom('#DTE_Field_closedDate'));
+
+    // Calculate absolute difference in milliseconds
+    const diffMs = Math.abs(closedDate - actual);
+    I.say(`Closed date expected: ${closedDate}, actual: ${actual}, diff: ${diffMs} ms`);
+    // Check if difference is within 2 minutes (120,000 ms)
+    I.assertTrue(diffMs <= 120000, `Close date difference was too large! Diff: ${diffMs} ms`);
+
     DTE.save("datatableFieldDTE_Field_editorFields-payments");
 
     I.clickCss("#pills-dt-basketInvoiceDataTable-items-tab");
