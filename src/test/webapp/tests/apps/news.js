@@ -220,14 +220,14 @@ function verifyDocMode(docMode, subGroupsDepth, I, Apps) {
         } else {
             I.dontSee(mainFolder, "p");
             I.dontSee(mainFolderLevel2, "p");
-            I.dontSee(newsPageSubfolderLevel2, "h3 a")
+            I.dontSee(newsPageSubfolderLevel2, "h3 a");
         }
     }
 
     I.switchTo();
 }
 
-Scenario("docMode and subGroupsDepth @current", ({ I, DT, DTE, Apps }) => {
+Scenario("docMode and subGroupsDepth", ({ I, DT, DTE, Apps }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=146543");
 

@@ -31,6 +31,7 @@ V záložke parametre aplikácie nastavujete základné správanie aplikácie a 
 
 - Adresár - ID adresárov (priečinkov web stránok), z ktorých sa budú vyberať novinky (stránky). Tlačítkom Pridať, môžete vybrať viac ID adresárov.
 - Zahrnúť podadresáre - zvolením tejto možnosti sa načítajú novinky aj z podadresárov zvolených adresárov z poľa Adresár.
+- Hĺbka podpriečinkov - pri zobrazení noviniek z pod priečinkov je možné nastaviť maximálnu hĺbku hľadania pod priečinkov. Hodnota menej ako 1 nastaví hľadanie bez obmedzení.
 - Typy stránok - výber stránok podľa dátumovej platnosti
     - Aktuálne – je platný dátum začiatku a konca - zobrazia sa len novinky, ktorých dátum platnosti (začiatok a koniec pulikovania) je v rozmedzí aktuálneho dátumu.
     - Staré – zobrazia sa novinky, ktoré majú dátum konca v minulosti (archív).
