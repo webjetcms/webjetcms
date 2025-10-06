@@ -77,6 +77,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] +V editácii profilu sa nezobrazí API kľúč po jeho vygenerovaní, notifikácie sa neprenesú do rodičovského okna.
 - [ ] +Formuláre - upraviť ochranu formulárov tak, aby sa nepoužíval `document.write`.
 - [ ] +Pridať možnosť nastaviť typ `textarea` ako je v AI asistentoch aj s číslami riadkov, napr. do skriptov alebo inde, kde sa predpokladá písanie kódu.
+- [ ] +Novinky - presunúť pole `contextClasses` z aplikácie novinky do šablóny noviniek. Pole nastaviť ako `hidden` aby zostalo funkčné (niekde môže byť nastavené), ak je prázdne použiť hodnotu zo šablóny. Musia teda fungovať obe možnosti, možno spojiť obe hodnoty do jedného zoznamu.
+
 
 ## 2024
 
