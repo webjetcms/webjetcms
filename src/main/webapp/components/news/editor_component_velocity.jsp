@@ -715,6 +715,13 @@ function escapeHtml(unsafe) {
 				</div>
 
 				<div class="form-group">
+					<label for="contextClasses" class="col-sm-3 control-label"><iwcm:text key="components.news.contextClasses"/></label>
+					<div class="col-sm-6">
+						<stripes:text name="contextClasses" id="contextClasses" size="3" class="form-control"></stripes:text>
+					</div>
+				</div>
+
+				<div class="form-group">
 					<label for="pageSize" class="col-sm-3 control-label"><iwcm:text key="components.news.cacheMinutes"/></label>
 					<div class="col-sm-6">
 						<stripes:text style="width: auto;" name="cacheMinutes" id="cacheMinutes" size="3" maxlength="3" class="form-control"></stripes:text>
