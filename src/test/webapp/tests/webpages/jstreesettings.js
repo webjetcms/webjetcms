@@ -181,7 +181,7 @@ Scenario('Automaticke rozbalenie domeny-odhlasenie @singlethread', ({ I }) => {
     I.logout();
 });
 
-Scenario('jstree zobrazenie v datatabulke @singlethread', ({ I, DT }) => {
+Scenario('jstree zobrazenie v datatabulke @singlethread', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
     //reset
@@ -216,6 +216,20 @@ Scenario('jstree zobrazenie v datatabulke @singlethread', ({ I, DT }) => {
     I.see("Test stavov", "#groups-datatable");
     I.dontSee("Zaheslovaný", "#groups-datatable");
     I.dontSee("Tento nie je interný", "#groups-datatable");
+
+    I.clickCss("#pills-folders-tab");
+    DT.waitForLoader();
+    I.seeElement("#datatableInit_wrapper");
+    I.dontSeeElement("#groups-datatable_wrapper");
+
+    I.waitForText("Jet portal 4 - testovacia stranka", 10, "#datatableInit");
+    I.click("Jet portal 4 - testovacia stranka", "#datatableInit");
+    DTE.waitForEditor();
+    I.seeInField("#DTE_Field_title", "Jet portal 4 - testovacia stranka");
+    DTE.cancel();
+
+    I.jstreeClick(["Newsletter"]);
+    I.waitForText("Registracia do newslettera - simple", 10, "#datatableInit");
 });
 
 Scenario('nastavenie sirky stlpcov @singlethread', ({ I }) => {

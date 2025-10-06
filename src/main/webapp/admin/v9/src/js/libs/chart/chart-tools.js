@@ -627,7 +627,7 @@ async function createLineChart(root, chartForm) {
             });
             tooltip.label.setAll({
                 fill: am5.color("#FFFFFF"),
-                textAlign: "middle",
+                textAlign: "center",
                 textValign: "middle"
             });
             series.set("tooltip", tooltip);
@@ -779,7 +779,7 @@ async function createBarChart(root, chartForm) {
     })
     tooltip.label.setAll({
         fill: am5.color("#FFFFFF"),
-        textAlign: "middle",
+        textAlign: "center",
         textValign: "middle"
     });
     series.set("tooltip", tooltip);
