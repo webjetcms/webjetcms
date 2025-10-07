@@ -116,33 +116,13 @@ public class WelcomeDataBackTime
 		{
 			try
 			{
-			/*
-			String multiwebSql = "";
-			if(InitServlet.isTypeCloud())
-			{
-				multiwebSql = " AND query_string LIKE '%"+CloudToolsForCore.getDomainName()+"%'";
-			}
 
-			String table_stat_error = "stat_error" + "_" + calendarTo.get(Calendar.YEAR) + "_" + (calendarTo.get(Calendar.MONTH) + 1);
-			String sql_stat_error = "select sum(count) from  " + table_stat_error + " where week = ? ";
-			int week = calendarFrom.get(Calendar.WEEK_OF_YEAR)+1;
-			//.get(Calendar.WEEK_OF_YEAR)+1 lebo calendarFrom je cas presne pred tyzdnom a v tabulke su zaznamy iba podla cisel tyzdnov.
-			//To znamena ze ak by nebolo +1 dostaly by sme zaznamy v celom minulom tyzdni (pondelok-nedela), takto je to v aktualnom
-			statErrorNumber = new SimpleQuery().forInt(sql_stat_error+multiwebSql, week);
-			if (calendarFrom.get(Calendar.MONTH) + 1 == calendarTo.get(Calendar.MONTH))
-			{
-				table_stat_error = "stat_error" + "_" + calendarFrom.get(Calendar.YEAR) + "_" + (calendarFrom.get(Calendar.MONTH) + 1);
-				sql_stat_error = "select sum(count) from  " + table_stat_error + " where week = ? ";
-				statErrorNumber += new SimpleQuery().forInt(sql_stat_error+multiwebSql, week);
-			}
-			*/
 
 				List<Column> errorPages = StatTableDB.getErrorPages(99999, calendarFrom.getTime(), calendarTo.getTime(), null, false);
-			/*for (Column c : errorPages)
-			{
-				statErrorNumber += c.getIntColumn5();
-			}*/
-				statErrorNumber = errorPages.size();
+				for (Column c : errorPages)
+				{
+					statErrorNumber += c.getIntColumn5();
+				}
 
 				Logger.debug(WelcomeDataBackTime.class, "statErrorNumber: " + statErrorNumber);
 			} catch (Exception e)

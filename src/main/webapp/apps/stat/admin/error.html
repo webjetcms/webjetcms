@@ -38,6 +38,11 @@
                 //console.log('onPreXhr, url=', $('#searchUrl').val());
                 data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
                 data.fixed_searchurl = $('#searchUrl').val();
+            },
+            summary: {
+                mode: "datatable",
+                columns: ["count"],
+                title: "[[#{components.summary.total_title}]]",
             }
         });
 

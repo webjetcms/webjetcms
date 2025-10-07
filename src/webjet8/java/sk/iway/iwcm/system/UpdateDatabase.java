@@ -2451,10 +2451,7 @@ public class UpdateDatabase
 				StringBuilder sql = new StringBuilder("ALTER TABLE stat_error");
 				sql.append(suffixes[s]);
 				sql.append(' ');
-
-				if (Constants.DB_TYPE==Constants.DB_ORACLE) sql.append("ADD (browser_ua_id INT)");
-				else if (Constants.DB_TYPE==Constants.DB_MSSQL) sql.append("ADD browser_ua_id INT");
-				else sql.append("ADD browser_ua_id INT");
+				sql.append("ADD browser_ua_id INT");
 
 				ps = db_conn.prepareStatement(sql.toString());
 				ps.execute();

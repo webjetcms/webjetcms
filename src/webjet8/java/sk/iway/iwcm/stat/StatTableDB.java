@@ -458,7 +458,7 @@ public class StatTableDB {
 	 * @return				Vrati sa zoznam stranok, ktore zodpovedaju filtrovacim parametrom, ak citanie z databazy prebehne v poriadku. Inak sa vrati prazdny zoznam.
 	 */
 	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, boolean withoutBots) {
-		return getErrorPages(max_size, from, to, url, null, null, false);
+		return getErrorPages(max_size, from, to, url, null, null, withoutBots);
 	}
 
 	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, String errorText, String countRange, boolean withoutBots)
@@ -493,7 +493,7 @@ public class StatTableDB {
 			//remove bots
 			sql += whitelistedQuery;
 
-			sql += " GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC, url DESC, query_string DESC, browser_ua_id DESC";
+			sql += " GROUP BY url, year, week, query_string, browser_ua_id ORDER BY year DESC, week DESC, count DESC, url DESC, query_string DESC, browser_ua_id DESC";
 
 			Logger.debug(StatTableDB.class, "getErrorPages sql:"+sql);
 
@@ -510,16 +510,25 @@ public class StatTableDB {
 				Column col;
 				int count = 0;
 
+				//there can be multiple rows with different browser_ua_id, we need to group them into one column object
+				Map<String, Column> tempMap = new HashMap<>();
 				while (rs.next() && count < max_size)
 				{
-					col = new Column();
-					col.setIntColumn1(rs.getInt("year"));
-					col.setIntColumn2(rs.getInt("week"));
-					col.setColumn3(DB.getDbString(rs, "url"));
-					col.setColumn4(DB.getDbString(rs, "query_string"));
-					col.setIntColumn5(rs.getInt("count"));
-					ret.add(col);
-					count++;
+					String key = rs.getInt("year")+";"+rs.getInt("week")+";"+DB.getDbString(rs, "url")+";"+DB.getDbString(rs, "query_string");
+					col = tempMap.get(key);
+					if (col == null)
+					{
+						col = new Column();
+						col.setIntColumn1(rs.getInt("year"));
+						col.setIntColumn2(rs.getInt("week"));
+						col.setColumn3(DB.getDbString(rs, "url"));
+						col.setColumn4(DB.getDbString(rs, "query_string"));
+						col.setIntColumn5(0);
+						tempMap.put(key, col);
+						ret.add(col);
+						count++;
+					}
+					col.setIntColumn5(col.getIntColumn5() + rs.getInt("count"));
 				}
 
 				rs.close();

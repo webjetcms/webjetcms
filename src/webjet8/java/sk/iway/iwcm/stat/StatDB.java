@@ -674,7 +674,7 @@ public class StatDB extends DB
 
 		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week, browserUaId, CloudToolsForCore.getDomainId()};
 
-		String update = "UPDATE stat_error"+StatNewDB.getTableSuffix("stat_error")+" SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week= ? AND browser_ua_id=? AND domain_id=?";
+		String update = "UPDATE stat_error"+StatNewDB.getTableSuffix("stat_error")+" SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week=? AND browser_ua_id=? AND domain_id=?";
 		String insert = "INSERT INTO stat_error"+StatNewDB.getTableSuffix("stat_error")+" (url, query_string, year, week, browser_ua_id, domain_id, count) VALUES (?, ?, ?, ?, ?, ?, 1)";
 
 		StatWriteBuffer.addUpdateInsertPair(update, insert, "stat_error", params);

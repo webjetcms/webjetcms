@@ -22,6 +22,9 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     private List<NotifyBean> notify;
 
+    //you can send summary data directly in response
+    private Map<String, Long> summary = null;
+
     public DatatablePageImpl(List<T> content) {
         //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
         super(content, PageRequest.of(0, content.size() < 1 ? 1 : content.size(), Sort.unsorted()), content.size());
@@ -129,5 +132,20 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     public void setNotify(List<NotifyBean> notify) {
         this.notify = notify;
+    }
+
+    public Map<String, Long> getSummary() {
+        return summary;
+    }
+
+    public void setSummary(Map<String, Long> summary) {
+        this.summary = summary;
+    }
+
+    public void addSummary(String key, Long value) {
+        if (this.summary == null) {
+            this.summary = new Hashtable<>();
+        }
+        this.summary.put(key, value);
     }
 }

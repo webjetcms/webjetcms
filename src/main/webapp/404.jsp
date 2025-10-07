@@ -223,8 +223,6 @@ if(null != exportDatBean){
 	return;
 }
 
-
-
 UrlRedirectBean redirectBean = null;
 
 //znak ^ sa interne spracovava ako ? kvoli handlingu parametrov (aka exact match)
@@ -307,7 +305,7 @@ if (path.endsWith(".gif") || path.endsWith(".jpg") || path.endsWith(".png") || p
 {
 	Logger.warn("404.jsp", "404 ("+Constants.getInstallName()+"): " + path+"?"+request.getQueryString());
 	//posli rovno chybu 404 do prehliadaca
-   return;
+   	return;
 }
 else if (PathFilter.checkWebAccess(request, path)==true)
 {
