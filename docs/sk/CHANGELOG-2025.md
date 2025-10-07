@@ -87,9 +87,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ### Štatistika
 
 - V sekcií [návštevnosť](redactor/apps/stat/README.md#návštevnosť) pridaný sumárny počet Videní, Návštev a Počet rôznych používateľov pre ľahký prehľad celkovej návštevnosti za zvolené obdobie (#57929).
-- V sekcií [chybné stránky](redactor/apps/stat/README.md#chybné-stránky) pridané filtrovanie podľa botov (#58053).
 
 ![](redactor/apps/stat/stats-page.png)
+
+- V sekcií [chybné stránky](redactor/apps/stat/README.md#chybné-stránky) pridané filtrovanie podľa botov (aplikuje sa len na novo zaznamenané údaje) a sumárny počet v pätičke (#58053).
+
+![](redactor/apps/stat/error-page.png)
 
 ### Voliteľné polia
 
