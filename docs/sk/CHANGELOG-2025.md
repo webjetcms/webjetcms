@@ -90,6 +90,10 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 ![](redactor/apps/stat/stats-page.png)
 
+- V sekcií [chybné stránky](redactor/apps/stat/README.md#chybné-stránky) pridané filtrovanie podľa botov (aplikuje sa len na novo zaznamenané údaje) a sumárny počet v pätičke. Je potrebné upraviť stránku `404.jsp` vo vašom projekte pridaním objektu `request` do volania `StatDB.addError(statPath, referer, request);` (#58053).
+
+![](redactor/apps/stat/error-page.png)
+
 ### Voliteľné polia
 
 - Pridaná podpora pre nové typy [voliteľných polí](frontend/webpages/customfields/README.md):

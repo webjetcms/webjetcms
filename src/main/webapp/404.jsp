@@ -223,8 +223,6 @@ if(null != exportDatBean){
 	return;
 }
 
-
-
 UrlRedirectBean redirectBean = null;
 
 //znak ^ sa interne spracovava ako ? kvoli handlingu parametrov (aka exact match)
@@ -294,7 +292,7 @@ if (referer != null)
 }
 
 //zapis do logu
-StatDB.addError(statPath, referer);
+StatDB.addError(statPath, referer, request);
 
 if ("/components/gdpr/jscripts/jquery.cookie.js".equals(path)) {
 	//Bezpecnost - odstranena stara verzia jquery.cookie.js v aplikacii GDPR, nahradena verziou v _common adresari.
@@ -307,7 +305,7 @@ if (path.endsWith(".gif") || path.endsWith(".jpg") || path.endsWith(".png") || p
 {
 	Logger.warn("404.jsp", "404 ("+Constants.getInstallName()+"): " + path+"?"+request.getQueryString());
 	//posli rovno chybu 404 do prehliadaca
-   return;
+   	return;
 }
 else if (PathFilter.checkWebAccess(request, path)==true)
 {

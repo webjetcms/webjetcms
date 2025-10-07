@@ -553,9 +553,13 @@ export const dataTableInit = options => {
             var dtToolbarRowHeight = 48;
             var dtScrollHeadHeight = 66;
             var dtFooterHeight = 48;
+            var dtSummaryHeight = 0;
 
             if (DATA.autoHeight === true && typeof DATA.defaultSearch === "object" && DATA.defaultSearch != null) {
                 dtScrollHeadHeight = dtScrollHeadHeight + 31;
+            }
+            if (typeof DATA.summary == "object" && DATA.summary != null) {
+                dtSummaryHeight = 37;
             }
 
             if ($(window).width()<1200) {
@@ -565,7 +569,7 @@ export const dataTableInit = options => {
 
             var scrollbarWidth = dtWJ.getScrollbarWidth();
 
-            height = height - headerHeight - breadcrumbHeight - dtToolbarRowHeight - dtScrollHeadHeight - dtFooterHeight - scrollbarWidth;
+            height = height - headerHeight - breadcrumbHeight - dtToolbarRowHeight - dtScrollHeadHeight - dtFooterHeight - dtSummaryHeight - scrollbarWidth;
             //console.log("height=", height, "headerHeight=", headerHeight, "breadcrumbHeight=", breadcrumbHeight, "dtToolbarRowHeight=", dtToolbarRowHeight, "dtScrollHeadHeight=", dtScrollHeadHeight, "dtFooterHeight=", dtFooterHeight, "scrollbarWidth=", scrollbarWidth);
 
             pageLength = Math.floor(height / 41);
@@ -2937,6 +2941,7 @@ export const dataTableInit = options => {
                         data.recordsFiltered = totalElements;
                         data.options = sourceData.options || {};
                         data.notify = sourceData.notify || null;
+                        data.summary = sourceData.summary || null;
 
                         //WJ.log("fnCallback2, data=", data);
                         fnCallback(data);

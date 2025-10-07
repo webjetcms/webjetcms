@@ -1,7 +1,7 @@
 package sk.iway.iwcm.system.datatable;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +21,9 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
     private Map<String, List<OptionDto>> options = null; //NOSONAR
 
     private List<NotifyBean> notify;
+
+    //you can send summary data directly in response
+    private Map<String, Long> summary = null;
 
     public DatatablePageImpl(List<T> content) {
         //we can't use super(content) because Pageable.unpaged() throws exception on Json serialization
@@ -42,7 +45,7 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     private List<OptionDto> getFieldOptions(String field) {
         if (options == null) {
-            options = new Hashtable<>();
+            options = new HashMap<>();
         }
         List<OptionDto> fieldOptions = options.get(field);
         if (fieldOptions == null) {
@@ -129,5 +132,20 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     public void setNotify(List<NotifyBean> notify) {
         this.notify = notify;
+    }
+
+    public Map<String, Long> getSummary() {
+        return summary;
+    }
+
+    public void setSummary(Map<String, Long> summary) {
+        this.summary = summary;
+    }
+
+    public void addSummary(String key, Long value) {
+        if (this.summary == null) {
+            this.summary = new HashMap<>();
+        }
+        this.summary.put(key, value);
     }
 }
