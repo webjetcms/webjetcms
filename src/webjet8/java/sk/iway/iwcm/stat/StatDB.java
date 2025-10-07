@@ -669,8 +669,11 @@ public class StatDB extends DB
 		int year = cal.get(Calendar.YEAR);
 		int week = cal.get(Calendar.WEEK_OF_YEAR);
 
-		BrowserDetector browser = request == null ? null : BrowserDetector.getInstance(request);
-		Integer browserUaId = browser == null ? 0 : browser.getBrowserUaId();
+		int browserUaId = 0;
+		if (request != null) {
+			BrowserDetector browser = request == null ? null : BrowserDetector.getInstance(request);
+			if (browser != null) browserUaId = browser.getBrowserUaId();
+		}
 
 		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week, browserUaId, CloudToolsForCore.getDomainId()};
 

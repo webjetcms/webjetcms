@@ -109,6 +109,7 @@ public class UpdateDatabase
 		disabledItemsConfigRights();
 
 		updateStatViewsColumns();
+		updateStatErrorColumns();
 
 		updateStopwords();
 
@@ -120,8 +121,6 @@ public class UpdateDatabase
 		statErrorAddDomainId();
 
 		updateInvoiceContacts();
-
-		updateStatErrorColumns();
 
 		Logger.println(UpdateDatabase.class,"----- Database updated  -----");
 	}
@@ -2422,7 +2421,9 @@ public class UpdateDatabase
 		}
 	}
 
-
+	/**
+	 * Add browser_ua_id into stat_error* tables
+	 */
 	public static void updateStatErrorColumns()
 	{
 		String note = "16.09.2025 [sivan] pridanie stlpca browser_ua_id do stat_error";
