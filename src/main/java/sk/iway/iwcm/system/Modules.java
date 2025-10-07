@@ -415,7 +415,8 @@ public class Modules
 									if (Tools.isNotEmpty(sTmp)) subModule.setItemKey(sTmp.trim());
 
 									sTmp = prop.getProperty("leftSubmenu"+s+"DefaultDisabled");
-									if ("true".equals(sTmp) || m.isDefaultDisabled()) subModule.setDefaultDisabled(true);
+									if ("false".equals(sTmp)) subModule.setDefaultDisabled(false);
+									else if ("true".equals(sTmp) || m.isDefaultDisabled()) subModule.setDefaultDisabled(true);
 
 									sTmp = prop.getProperty("leftSubmenu"+s+"Icon");
 									if (Tools.isNotEmpty(sTmp)) subModule.setMenuIcon(sTmp.trim());
