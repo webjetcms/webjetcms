@@ -209,7 +209,7 @@ function _setFooterFromJson(json, api, tr, title) {
             console.log("Error getting column width, e=", e);
         }
 
-        console.log("setFooterFromJson, columnId=", columnId, " json=", json, " title=", title);
+        //console.log("setFooterFromJson, columnId=", columnId, " json=", json, " title=", title);
 
         if(counter++ == 0) {
             //Special column, if TITLE is set, we add it
@@ -218,7 +218,6 @@ function _setFooterFromJson(json, api, tr, title) {
                 b.find("b").text(title);
                 td.append(b);
                 tr.append(td);
-                console.log("Set title in footer=", title);
             } else {
                 //If TITLE is not set, we add an empty cell
                 tr.append(td);
@@ -227,8 +226,6 @@ function _setFooterFromJson(json, api, tr, title) {
         }
 
         if(columnId in json) {
-            console.log("Setting footer columnId=", columnId, " to value=", json[columnId]);
-
             let b = $("<b></b>");
             b.html('<div class="datatable-column-width">' + json[columnId] + '</div>');
             td.append(b);

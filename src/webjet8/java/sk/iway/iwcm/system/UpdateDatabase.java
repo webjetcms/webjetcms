@@ -2440,6 +2440,7 @@ public class UpdateDatabase
 		long from = cal.getTimeInMillis();
 
 		String[] suffixes = StatNewDB.getTableSuffix(from, to);
+		StringBuilder sql = null;
 		for (int s=0; s<suffixes.length; s++)
 		{
 			try
@@ -2448,20 +2449,10 @@ public class UpdateDatabase
 
 				db_conn = DBPool.getConnection();
 
-				StringBuilder sql = new StringBuilder("ALTER TABLE stat_error");
+				sql = new StringBuilder("ALTER TABLE stat_error");
 				sql.append(suffixes[s]);
 				sql.append(' ');
-				sql.append("ADD browser_ua_id INT");
-
-				ps = db_conn.prepareStatement(sql.toString());
-				ps.execute();
-				ps.close();
-				ps = null;
-
-				//nastav prazdne hodnoty
-				sql = new StringBuilder("UPDATE stat_error");
-				sql.append(suffixes[s]);
-				sql.append(" SET browser_ua_id=0");
+				sql.append("ADD browser_ua_id INT NOT NULL DEFAULT 0");
 
 				ps = db_conn.prepareStatement(sql.toString());
 				ps.execute();
@@ -2474,7 +2465,8 @@ public class UpdateDatabase
 			{
 				if (ex.getMessage().indexOf("exist")==-1 && ex.getMessage().indexOf("duplicate")==-1)
 				{
-					sk.iway.iwcm.Logger.error(ex);
+					Logger.error(UpdateDatabase.class, "Error updating stat_error"+suffixes[s]+" - "+sql+" - "+ex.getMessage());
+					//sk.iway.iwcm.Logger.error(ex);
 				}
 			}
 			finally

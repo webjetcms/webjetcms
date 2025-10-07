@@ -477,7 +477,7 @@ public class StatTableDB {
 			PreparedStatement ps = null;
 			ResultSet rs = null;
 
-			String sql = "SELECT DISTINCT year, week, url, query_string, sum(count) as count, browser_ua_id FROM stat_error"+suffixes[s]+" ";
+			String sql = "SELECT DISTINCT year, week, url, query_string, sum(count) as count FROM stat_error"+suffixes[s]+" ";
 			sql += StatDB.getYearTimeSQL(from, to, true);
 
 			List<Object> params = new ArrayList<>();
@@ -493,7 +493,7 @@ public class StatTableDB {
 			//remove bots
 			sql += whitelistedQuery;
 
-			sql += " GROUP BY url, year, week, query_string, browser_ua_id ORDER BY year DESC, week DESC, count DESC, url DESC, query_string DESC, browser_ua_id DESC";
+			sql += " GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC, url DESC, query_string DESC";
 
 			Logger.debug(StatTableDB.class, "getErrorPages sql:"+sql);
 
@@ -511,24 +511,16 @@ public class StatTableDB {
 				int count = 0;
 
 				//there can be multiple rows with different browser_ua_id, we need to group them into one column object
-				Map<String, Column> tempMap = new HashMap<>();
 				while (rs.next() && count < max_size)
 				{
-					String key = rs.getInt("year")+";"+rs.getInt("week")+";"+DB.getDbString(rs, "url")+";"+DB.getDbString(rs, "query_string");
-					col = tempMap.get(key);
-					if (col == null)
-					{
-						col = new Column();
-						col.setIntColumn1(rs.getInt("year"));
-						col.setIntColumn2(rs.getInt("week"));
-						col.setColumn3(DB.getDbString(rs, "url"));
-						col.setColumn4(DB.getDbString(rs, "query_string"));
-						col.setIntColumn5(0);
-						tempMap.put(key, col);
-						ret.add(col);
-						count++;
-					}
-					col.setIntColumn5(col.getIntColumn5() + rs.getInt("count"));
+					col = new Column();
+					col.setIntColumn1(rs.getInt("year"));
+					col.setIntColumn2(rs.getInt("week"));
+					col.setColumn3(DB.getDbString(rs, "url"));
+					col.setColumn4(DB.getDbString(rs, "query_string"));
+					col.setIntColumn5(rs.getInt("count"));
+					ret.add(col);
+					count++;
 				}
 
 				rs.close();

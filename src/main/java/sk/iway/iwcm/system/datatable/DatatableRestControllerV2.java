@@ -692,7 +692,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			// Get all valid column names from the entity class, because columns[] is unsafe input/parameter
 			Set<String> validColumns = new HashSet<>();
 			for (Field field : clazz.getDeclaredFields()) {
-				if (Number.class.isAssignableFrom(field.getType())) {
+				Class<?> type = field.getType();
+				if (Number.class.isAssignableFrom(type)
+						|| (type.isPrimitive() && (type == int.class || type == long.class || type == double.class || type == float.class || type == short.class || type == byte.class))) {
 					validColumns.add(field.getName());
 				}
 			}

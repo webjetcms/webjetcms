@@ -1,7 +1,7 @@
 package sk.iway.iwcm.system.datatable;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +45,7 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     private List<OptionDto> getFieldOptions(String field) {
         if (options == null) {
-            options = new Hashtable<>();
+            options = new HashMap<>();
         }
         List<OptionDto> fieldOptions = options.get(field);
         if (fieldOptions == null) {
@@ -144,7 +144,7 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
 
     public void addSummary(String key, Long value) {
         if (this.summary == null) {
-            this.summary = new Hashtable<>();
+            this.summary = new HashMap<>();
         }
         this.summary.put(key, value);
     }
