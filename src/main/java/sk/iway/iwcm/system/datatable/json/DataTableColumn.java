@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
@@ -29,6 +30,7 @@ import sk.iway.iwcm.components.ai.rest.AiService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
@@ -88,6 +90,7 @@ public class DataTableColumn {
         if (requestAttributes==null) return;
 
         HttpServletRequest request = requestAttributes.getRequest();
+        Identity user = UsersDB.getCurrentUser(request);
         Prop prop = Prop.getInstance(request);
 
         setPropertiesFromFieldType(field);
@@ -99,7 +102,7 @@ public class DataTableColumn {
         addEditIcon(field);
 
         //we need this to be last because it uses this.className, this.renderType etc
-        setAiPropertiesFromField(controller, field, prop);
+        setAiPropertiesFromField(controller, field, prop, user);
     }
 
     private void setPropertiesFromFieldType(Field field) {
@@ -327,8 +330,10 @@ public class DataTableColumn {
     }
 
     @SuppressWarnings("rawtypes")
-    private void setAiPropertiesFromField(Class controller, Field field, Prop prop) {
-        ai = AiService.getAiAssistantsForField(field.getName(), controller.getName(), this, prop);
+    private void setAiPropertiesFromField(Class controller, Field field, Prop prop, Identity user) {
+        if (user.isEnabledItem("cmp_ai_button")) {
+            ai = AiService.getAiAssistantsForField(field.getName(), controller.getName(), this, prop);
+        }
     }
 
     /**

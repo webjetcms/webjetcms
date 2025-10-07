@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
@@ -29,13 +30,14 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * REST controller for AI assistants - handles XHR requests from UI
  */
 @RestController
 @RequestMapping("/admin/rest/ai/assistant/")
-@PreAuthorize("@WebjetSecurityService.isAdmin()") //AI assistants can be in any module, so check just for admin perms
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_ai_button')")
 public class AssistantController {
 
     private final AiService aiService;
@@ -182,8 +184,11 @@ public class AssistantController {
         column.setName(fieldName);
         column.setRenderFormat(renderFormat);
 
-        List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
-        column.setAi(ai); //set also to column for future use
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user != null && user.isEnabledItem("cmp_ai_button")) {
+            List<DataTableAi> ai = AiService.getAiAssistantsForField(fieldName, javaClassName, column, sk.iway.iwcm.i18n.Prop.getInstance(request));
+            column.setAi(ai); //set also to column for future use
+        }
 
         return column;
     }
