@@ -168,7 +168,6 @@
 
 	function appAfterInit(response, datatable, componentPath) {
 		//console.log("appAfterInit, response=", response, "datatable=", datatable);
-		console.log("componentPath=", componentPath);
 
 		window.addEventListener("WJ.DTE.opened", function (e) {
 			docFields = response.options.docFields;
@@ -176,8 +175,6 @@
 			$("#pills-dt-component-datatable-news-tab").on("click", function() {
 				let params = datatable.EDITOR.get();
 				delete params['id'];
-
-				//debugger;
 
 				let include = "!INCLUDE(" + componentPath;
 				if (Object.keys(params).length > 0) {
@@ -216,12 +213,20 @@
 
 			// Set names and add class
 			const templates = $("#pills-dt-component-datatable-templates").find("div.image_radio_item");
-			console.log("templates=", templates);
+
+			let selectedTemplate = response.data.template;
+			if(selectedTemplate != null && selectedTemplate.startsWith("news.template.")) {
+				selectedTemplate = selectedTemplate.substring("news.template.".length);
+			} else { selectedTemplate = null; }
+
 			for(let i = 0; i < templates.length; i++) {
 				let value = $(templates[i]).find("input").val();
-
 				$(templates[i]).find("label").append("<span>" + value + "</span>");
 				$(templates[i]).find("label").addClass("custom-template");
+
+				if(selectedTemplate != null && selectedTemplate === value) {
+					$(templates[i]).find("label").trigger( "click" );
+				}
 			}
 
 			// Center images
@@ -257,19 +262,13 @@
 			include += ", filter[" + field + "_" + operator + "]=" + value;
 		}
 
-		//Set template
-		const templates = $("#pills-dt-component-datatable-templates").find("input.form-check-input:checked");
-		if(templates != null && templates.length > 0) {
-			let template = $(templates[0]).val();
-			include += ", template=" + template;
-		}
-
 		include += ")!";
 		return include;
 	}
 
 	function appBeforeXhr(data) {
 		let paramsString = data.parameters;
+		if(paramsString == null || paramsString === "") { return; }
 		let params = paramsString.split(",");
 
 		for(let i = 0; i < params.length; i++) {

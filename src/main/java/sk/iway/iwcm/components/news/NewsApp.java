@@ -12,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.components.news.NewsActionBean.PublishType;
+import sk.iway.iwcm.components.news.NewsQuery.OrderEnum;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesEntity;
 import sk.iway.iwcm.components.news.templates.jpa.NewsTemplatesRepository;
 import sk.iway.iwcm.doc.DocDB;
@@ -53,6 +56,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class NewsApp extends WebjetComponentAbstract  {
 
     @JsonIgnore
@@ -66,10 +70,10 @@ public class NewsApp extends WebjetComponentAbstract  {
     @DataTableColumn(inputType = DataTableColumnType.JSON, title="components.news.groupids", tab = "basic", visible=false, filter=false, orderable=false, className = "dt-tree-group-array", editor = {
         @DataTableColumnEditor(attr = {@DataTableColumnEditorAttr(key = "data-dt-json-addbutton", value = "editor.json.addGroup") })
     })
-    private List<GroupDetails> groupIds;
+    protected List<GroupDetails> groupIds;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.export.expandGroupIds")
-    private Boolean alsoSubGroups;
+    protected Boolean alsoSubGroups = false;
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.publishtype",
         editor = @DataTableColumnEditor(
@@ -82,7 +86,7 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     )
-    private String publishType;
+    protected String publishType = PublishType.NEW.name();
 
     @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title = "components.news.ordertype",
         editor = @DataTableColumnEditor(
@@ -98,31 +102,31 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     )
-    private String order = "save_date";
+    protected String order = OrderEnum.DATE.name();
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.asc")
-    private Boolean ascending = true;
+    protected Boolean ascending = true;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.paging")
-    private Boolean paging;
+    protected Boolean paging = false;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.pageSize")
-    private Integer pageSize = 10;
+    protected Integer pageSize = 10;
 
     @DataTableColumn(inputType = DataTableColumnType.NUMBER, tab = "basic", title = "components.news.offset")
-    private Integer offset = 0;
+    protected Integer offset = 0;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.noPerexCheck")
-    private Boolean perexNotRequired;
+    protected Boolean perexNotRequired = false;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.no_data")
-    private Boolean loadData;
+    protected Boolean loadData = false;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.check_duplicty")
-    private Boolean checkDuplicity;
+    protected Boolean checkDuplicity;
 
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title = "components.news.remove_default_docs")
-    private Boolean removeDefaultDocs;
+    protected Boolean removeDefaultDocs;
 
     @DataTableColumn(
         inputType = DataTableColumnType.IMAGE_RADIO,
@@ -130,7 +134,7 @@ public class NewsApp extends WebjetComponentAbstract  {
         tab = "templates",
         className = "image-radio-horizontal image-radio-fullwidth"
     )
-    private String template;
+    protected String template;
 
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "perex", title="components.news.perexGroup", editor = {
         @DataTableColumnEditor(
@@ -139,7 +143,7 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     })
-	private Integer[] perexGroup;
+	protected Integer[] perexGroup;
 
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "perex", title="components.news.perexGroupNot", editor = {
         @DataTableColumnEditor(
@@ -148,12 +152,12 @@ public class NewsApp extends WebjetComponentAbstract  {
             }
         )
     })
-	private Integer[] perexGroupNot;
+	protected Integer[] perexGroupNot;
 
     @Override
     public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, List<OptionDto>> options = new HashMap<>();
-        List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups(componentRequest.getGroupId());
+        List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups();
         List<OptionDto> perexGroupOptions = new ArrayList<>();
         for (PerexGroupBean pg : perexGroups) {
             perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), ""+pg.getPerexGroupId(), null));
@@ -175,4 +179,14 @@ public class NewsApp extends WebjetComponentAbstract  {
 
         return options;
     }
+
+    public int getPageSize()
+	{
+		return pageSize == null ? 10 : pageSize.intValue();
+	}
+
+    public int getOffset()
+	{
+		return offset == null ? 0 : offset.intValue();
+	}
 }

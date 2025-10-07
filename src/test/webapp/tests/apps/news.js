@@ -44,7 +44,7 @@ Scenario('logoff', ({ I }) => {
     I.logout();
 });
 
-Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
+Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=10");
     DTE.waitForEditor();
 
@@ -62,14 +62,13 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.waitForElement("#tabLink1")
+    I.waitForElement("#pills-dt-component-datatable-basic-tab")
     I.wait(3);
 
     //
     I.say("check pages only from group 24");
-    I.switchTo("#componentIframeWindowTab");
-    I.waitForElement("th.dt-th-title input", 20);
-
+    I.clickCss("#pills-dt-component-datatable-news-tab");
+    I.switchTo("#newsListIframe");
     DT.waitForLoader("newsDataTable");
     I.see("Zo sveta financií");
     I.dontSee("Produktová stránka - B verzia");
@@ -81,14 +80,18 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.clickCss("#tabLink1");
-    I.fillField("#groupIds", "24,25");
+    I.clickCss("#pills-dt-component-datatable-basic-tab");
+    I.clickCss("button.btn-vue-jstree-add");
+    I.waitForVisible("div#jsTree");
+    I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText("Jet portal 4").find('.jstree-icon.jstree-ocl'));
+    I.click(locate('a.jstree-anchor').withText("Produktová stránka"));
+    I.waitForInvisible("div#jsTree");
 
     //
     I.say("check pages from group 24 and 25");
-    I.clickCss("#tabLink5");
+    I.clickCss("#pills-dt-component-datatable-news-tab");
     I.wait(3);
-    I.switchTo("#componentIframeWindowTab");
+    I.switchTo("#newsListIframe");
     I.waitForElement("th.dt-th-title input", 20);
 
     DT.waitForLoader("newsDataTable");
@@ -98,7 +101,7 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE, Document }) => {
     I.switchTo();
 });
 
-Scenario('show perex groups by selected groupIds pageParams', async ({ I, DT, DTE, Document }) => {
+Scenario('show perex groups by selected groupIds pageParams @current', async ({ I, DT, DTE, Document }) => {
     //perex groups may be show only on selected folders
     //when you setup news component it will show it by current folder
     //they should be dependent also on selected groupIds by pageParams
@@ -107,9 +110,15 @@ Scenario('show perex groups by selected groupIds pageParams', async ({ I, DT, DT
 
     Document.editorComponentOpen();
 
-    I.waitForElement("#tabLink3")
-    I.clickCss("#tabLink3"); //znacky
+    I.waitForElement("#pills-dt-component-datatable-perex-tab")
+    I.clickCss("#pills-dt-component-datatable-perex-tab"); //znacky
+
+    pause();
+
+    I.seeElement( locate(".DTE_Field_Name_perexGroup").find("label") )
+
     let options = await I.grabHTMLFrom('#disabledItemsLeft1');
+
     I.assertContain(options, "podnikanie (id:2)");
     I.assertNotContain(options, "Newsletter perex skupina (id:10)");
 
