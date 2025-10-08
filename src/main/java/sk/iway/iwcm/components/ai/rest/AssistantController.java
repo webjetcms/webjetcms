@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.UploadFileTools;
@@ -30,7 +29,6 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.system.datatable.json.DataTableAi;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
-import sk.iway.iwcm.users.UsersDB;
 
 /**
  * REST controller for AI assistants - handles XHR requests from UI
