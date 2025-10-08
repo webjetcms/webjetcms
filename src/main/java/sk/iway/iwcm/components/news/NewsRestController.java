@@ -123,7 +123,8 @@ public class NewsRestController extends WebpagesDatatable {
                 String trashDirName = propSystem.getText("config.trash_dir");
 
                 //we dont have any ids, try to search for NEWS include in all groups
-                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%'");
+                // -------------------------- set by GroupsDB if parent folder doesnt exists
+                List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%' AND file_name NOT LIKE '--------------------------'");
                 Set<String> duplicityCheck = new HashSet<>();
 
                 for (String data : dataList) {
